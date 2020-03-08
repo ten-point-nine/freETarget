@@ -225,8 +225,8 @@ void send_score
 {
   int x, y;                   // Shot location in mm X, Y
 
-  x = x_time * speed_of_sound(23.0);
-  y = y_time * speed_of_sound(23.0);
+  x = x_time * speed_of_sound(23.0) * CLOCK_PERIOD;
+  y = y_time * speed_of_sound(23.0) * CLOCK_PERIOD;
 
   Serial.print("{\"id\":\"freETarget\", \"value\":{");
   Serial.print(shot); Serial.print(", ");

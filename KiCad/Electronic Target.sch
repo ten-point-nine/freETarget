@@ -4,10 +4,10 @@ EELAYER END
 $Descr B 17000 11000
 encoding utf-8
 Sheet 1 1
-Title "eTarget"
+Title "freETarget"
 Date "2020-02-16"
-Rev "AX"
-Comp "Ten_Point_Nine"
+Rev "2.0.X"
+Comp "github.com/ten-point-nine/freETarget"
 Comment1 ""
 Comment2 ""
 Comment3 ""
@@ -22,17 +22,6 @@ F 1 "74HC74" H 4750 3390 50  0000 C CNN
 F 2 "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm" H 4750 3000 50  0001 C CNN
 F 3 "74xx/74hc_hct74.pdf" H 4750 3000 50  0001 C CNN
 	1    4750 3000
-	1    0    0    -1  
-$EndComp
-$Comp
-L Connector_Generic:Conn_2Rows-09Pins J1
-U 1 1 5E499562
-P 900 4050
-F 0 "J1" H 950 4467 50  0000 C CNN
-F 1 "BERG 5x2" H 950 4376 50  0000 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_2x05_P2.54mm_Vertical" H 900 4050 50  0001 C CNN
-F 3 "~" H 900 4050 50  0001 C CNN
-	1    900  4050
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -146,7 +135,7 @@ U 1 1 5E4DBC95
 P 9600 3150
 F 0 "U5" H 9950 4050 50  0000 C CNN
 F 1 "74LV8154" H 9950 3950 50  0000 C CNN
-F 2 "Package_SO:SOIC-20W_7.5x12.8mm_P1.27mm" H 9350 3800 50  0001 C CNN
+F 2 "Package_SO:TSSOP-20_4.4x6.5mm_P0.65mm" H 9350 3800 50  0001 C CNN
 F 3 "http://www.ti.com/lit/ds/symlink/sn74lv8154.pdf" H 9350 3800 50  0001 C CNN
 	1    9600 3150
 	1    0    0    -1  
@@ -157,7 +146,7 @@ U 1 1 5E4DD22C
 P 9600 5050
 F 0 "U6" H 10100 5950 50  0000 C CNN
 F 1 "74LV8154" H 10100 5850 50  0000 C CNN
-F 2 "Package_SO:SOIC-20W_7.5x12.8mm_P1.27mm" H 9350 5700 50  0001 C CNN
+F 2 "Package_SO:TSSOP-20_4.4x6.5mm_P0.65mm" H 9350 5700 50  0001 C CNN
 F 3 "http://www.ti.com/lit/ds/symlink/sn74lv8154.pdf" H 9350 5700 50  0001 C CNN
 	1    9600 5050
 	1    0    0    -1  
@@ -887,7 +876,7 @@ U 1 1 5F543E6F
 P 11900 2300
 F 0 "D1" V 11939 2182 50  0000 R CNN
 F 1 "RED" V 11850 2200 50  0000 R CNN
-F 2 "Resistor_SMD:R_0805_2012Metric" H 11900 2300 50  0001 C CNN
+F 2 "Resistor_SMD:R_1210_3225Metric" H 11900 2300 50  0001 C CNN
 F 3 "~" H 11900 2300 50  0001 C CNN
 	1    11900 2300
 	0    -1   -1   0   
@@ -898,7 +887,7 @@ U 1 1 5F587F5A
 P 12300 2300
 F 0 "D2" V 12339 2182 50  0000 R CNN
 F 1 "RED" V 12250 2250 50  0000 R CNN
-F 2 "Resistor_SMD:R_0805_2012Metric" H 12300 2300 50  0001 C CNN
+F 2 "Resistor_SMD:R_1210_3225Metric" H 12300 2300 50  0001 C CNN
 F 3 "~" H 12300 2300 50  0001 C CNN
 	1    12300 2300
 	0    -1   -1   0   
@@ -909,7 +898,7 @@ U 1 1 5F588BB8
 P 12700 2300
 F 0 "D3" V 12739 2182 50  0000 R CNN
 F 1 "RED" V 12648 2182 50  0000 R CNN
-F 2 "Resistor_SMD:R_0805_2012Metric" H 12700 2300 50  0001 C CNN
+F 2 "Resistor_SMD:R_1210_3225Metric" H 12700 2300 50  0001 C CNN
 F 3 "~" H 12700 2300 50  0001 C CNN
 	1    12700 2300
 	0    -1   -1   0   
@@ -990,20 +979,19 @@ Wire Wire Line
 	600  4150 600  4250
 Wire Wire Line
 	700  4250 600  4250
-Connection ~ 600  4250
 $Comp
 L power:GND #PWR02
 U 1 1 5E5FBFD2
-P 600 4450
-F 0 "#PWR02" H 600 4200 50  0001 C CNN
-F 1 "GND" H 605 4277 50  0000 C CNN
-F 2 "" H 600 4450 50  0001 C CNN
-F 3 "" H 600 4450 50  0001 C CNN
-	1    600  4450
+P 600 5100
+F 0 "#PWR02" H 600 4850 50  0001 C CNN
+F 1 "GND" H 605 4927 50  0000 C CNN
+F 2 "" H 600 5100 50  0001 C CNN
+F 3 "" H 600 5100 50  0001 C CNN
+	1    600  5100
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	600  4250 600  4450
+	600  4900 600  5100
 $Comp
 L Device:C C2
 U 1 1 5E60D561
@@ -1414,4 +1402,165 @@ Wire Wire Line
 	16250 700  16250 4550
 Text Notes 1050 9950 0    50   ~ 0
 Copyright 2020 ten-point-nine\n\nPermission is hereby granted, free of charge, to any person obtaining a copy \nof this software and associated documentation files (the "Software"), to deal\nin the Software without restriction, including without limitation the rights to \nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies \nof the Software, and to permit persons to whom the Software is furnished to \ndo so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in \nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, \nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES \nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND \nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT \nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, \nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING \nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE \nOR OTHER DEALINGS IN THE SOFTWARE.
+$Comp
+L Connector_Generic:Conn_2Rows-11Pins J1
+U 1 1 5E60F8C1
+P 900 4050
+F 0 "J1" H 950 4467 50  0000 C CNN
+F 1 "BERG 2x6" H 950 4376 50  0000 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_2x06_P2.54mm_Vertical" H 900 4050 50  0001 C CNN
+F 3 "~" H 900 4050 50  0001 C CNN
+	1    900  4050
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	15350 7150 15550 7150
+Wire Wire Line
+	15550 7150 15550 8000
+Wire Wire Line
+	15550 8000 1200 8000
+Wire Wire Line
+	700  4350 700  4450
+Wire Wire Line
+	700  4450 850  4450
+$Comp
+L Device:CP C10
+U 1 1 5E63BC82
+P 850 4750
+F 0 "C10" H 968 4796 50  0000 L CNN
+F 1 "10uF0" H 968 4705 50  0000 L CNN
+F 2 "Resistor_SMD:R_1206_3216Metric" H 888 4600 50  0001 C CNN
+F 3 "~" H 850 4750 50  0001 C CNN
+	1    850  4750
+	1    0    0    -1  
+$EndComp
+Connection ~ 1200 4450
+Wire Wire Line
+	1200 4450 1200 4250
+Wire Wire Line
+	1200 4450 1200 8000
+Wire Wire Line
+	850  4900 600  4900
+Wire Wire Line
+	600  4900 600  4250
+Connection ~ 600  4900
+Connection ~ 600  4250
+Connection ~ 850  4450
+Wire Wire Line
+	850  4450 1200 4450
+Wire Wire Line
+	850  4450 850  4600
+$Comp
+L power:GND #PWR0101
+U 1 1 5E81744C
+P 4150 5950
+F 0 "#PWR0101" H 4150 5700 50  0001 C CNN
+F 1 "GND" H 4155 5777 50  0000 C CNN
+F 2 "" H 4150 5950 50  0001 C CNN
+F 3 "" H 4150 5950 50  0001 C CNN
+	1    4150 5950
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4150 5950 4150 5800
+Wire Wire Line
+	4150 5800 4450 5800
+$Comp
+L Comparator:LM339 U1
+U 5 1 5E66D255
+P 8400 9150
+F 0 "U1" H 8358 9196 50  0000 L CNN
+F 1 "LM339" H 8358 9105 50  0000 L CNN
+F 2 "" H 8350 9250 50  0001 C CNN
+F 3 "https://www.st.com/resource/en/datasheet/lm139.pdf" H 8450 9350 50  0001 C CNN
+	5    8400 9150
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	10100 8850 10100 8750
+Wire Wire Line
+	8300 8850 8300 8750
+Wire Wire Line
+	8300 8750 9200 8750
+Wire Wire Line
+	8300 9450 8300 9750
+Wire Wire Line
+	8300 9750 9200 9750
+$Comp
+L power:VCC #PWR0102
+U 1 1 5E71100C
+P 9200 8550
+F 0 "#PWR0102" H 9200 8400 50  0001 C CNN
+F 1 "VCC" H 9215 8723 50  0000 C CNN
+F 2 "" H 9200 8550 50  0001 C CNN
+F 3 "" H 9200 8550 50  0001 C CNN
+	1    9200 8550
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0103
+U 1 1 5E711F81
+P 9200 9900
+F 0 "#PWR0103" H 9200 9650 50  0001 C CNN
+F 1 "GND" H 9205 9727 50  0000 C CNN
+F 2 "" H 9200 9900 50  0001 C CNN
+F 3 "" H 9200 9900 50  0001 C CNN
+	1    9200 9900
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9200 8750 9200 8550
+Connection ~ 9200 8750
+Wire Wire Line
+	9200 8750 10100 8750
+Wire Wire Line
+	9200 9750 9200 9900
+Connection ~ 9200 9750
+Wire Wire Line
+	10100 8750 11100 8750
+Connection ~ 10100 8750
+Wire Wire Line
+	9200 9750 10100 9750
+$Comp
+L 74xx:74HC74 U2
+U 3 1 5E7E0862
+P 9200 9250
+F 0 "U2" H 9430 9296 50  0000 L CNN
+F 1 "74HC74" H 9430 9205 50  0000 L CNN
+F 2 "" H 9200 9250 50  0001 C CNN
+F 3 "74xx/74hc_hct74.pdf" H 9200 9250 50  0001 C CNN
+	3    9200 9250
+	1    0    0    -1  
+$EndComp
+$Comp
+L 74xx:74HC74 U3
+U 3 1 5E7E29B3
+P 10100 9250
+F 0 "U3" H 10330 9296 50  0000 L CNN
+F 1 "74HC74" H 10330 9205 50  0000 L CNN
+F 2 "" H 10100 9250 50  0001 C CNN
+F 3 "74xx/74hc_hct74.pdf" H 10100 9250 50  0001 C CNN
+	3    10100 9250
+	1    0    0    -1  
+$EndComp
+$Comp
+L 74xx:74HC00 U4
+U 5 1 5E7E4AD5
+P 11100 9250
+F 0 "U4" H 11330 9296 50  0000 L CNN
+F 1 "74HC00" H 11330 9205 50  0000 L CNN
+F 2 "" H 11100 9250 50  0001 C CNN
+F 3 "http://www.ti.com/lit/gpn/sn74hc00" H 11100 9250 50  0001 C CNN
+	5    11100 9250
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9200 8850 9200 8750
+Wire Wire Line
+	9200 9650 9200 9750
+Wire Wire Line
+	10100 9650 10100 9750
+Connection ~ 10100 9750
+Wire Wire Line
+	10100 9750 11100 9750
 $EndSCHEMATC
