@@ -7,6 +7,7 @@ bool is_running(void);                        // Return TRUE if a shot has been 
 void set_LED(unsigned int led, bool state);   // Manage the LEDs
 unsigned int read_DIP(void);                  // Read the DIP switch register
 unsigned int read_counters(unsigned int direction);
+void stop_counters(void);                     // Turn off the counter registers
 
 /*
  *  Port Definitions

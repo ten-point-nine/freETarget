@@ -4,10 +4,10 @@ EELAYER END
 $Descr B 17000 11000
 encoding utf-8
 Sheet 1 1
-Title "eTarget"
+Title "freETarget"
 Date "2020-02-16"
-Rev "AX"
-Comp "Ten_Point_Nine"
+Rev "2.0.X"
+Comp "github.com/ten-point-nine/freETarget"
 Comment1 ""
 Comment2 ""
 Comment3 ""

@@ -10,6 +10,7 @@
  */
 #include "gpio.h"
 #include "compute_hit.h"
+#include "analog_io.h"
 
 /*
  * Compilation Flags
@@ -27,8 +28,6 @@
 #define SHOT_TIME     300       // Wait 300 ms for the shot to end
 
 
-
-
 /*
  * Target Geometry
  */
@@ -42,7 +41,6 @@ int           shot_count;       // Shot counter
 unsigned long time_out;
 
 
-const char* which_one[4] = {"  <<NORTH>>  ", "  <<EAST>>  ", "  <<SOUTH>>  ", "  <<WEST>>  "};
 
 /*----------------------------------------------------------------
  * 
@@ -66,6 +64,7 @@ void setup()
  */
   init_gpio();
   init_sensors();
+  init_analog_io();
 
 /*
  * All done, begin the program
