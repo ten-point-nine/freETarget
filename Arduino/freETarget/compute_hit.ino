@@ -56,6 +56,13 @@ double speed_of_sound(double temperature)
  *
  *----------------------------------------------------------------
  *
+ *                             N     (+,+)
+ *                             
+ *                             
+ *                      W      0--R-->E
+ *
+ *
+ *               (-,-)         S 
  * 
  *--------------------------------------------------------------*/
 void init_sensors(void)
@@ -63,19 +70,19 @@ void init_sensors(void)
 
   s[N].x = 0;
   s[N].y = RADIUS;
-  s[N].angle_offset = atan2(s[N].x, s[N].y) + PI_ON_4;
+  s[N].angle_offset = atan2(s[N].x, s[N].y);
 
   s[E].x = RADIUS;
   s[E].y = 0;
-  s[E].angle_offset =  s[N].angle_offset + PI_ON_2;
+  s[E].angle_offset = atan2(s[E].x, s[E].y);
 
   s[S].x = 0;
   s[S].y = -RADIUS;
-  s[S].angle_offset = s[E].angle_offset + PI_ON_2;
+  s[S].angle_offset = atan2(s[S].x, s[S].y);
 
   s[W].x = -RADIUS;
   s[W].y = 0;
-  s[W].angle_offset = s[S].angle_offset + PI_ON_2;
+  s[W].angle_offset = atan2(s[W].x, s[W].y);
 
   Serial.print("\n\rSensors Ready");
   return;
@@ -118,6 +125,7 @@ void compute_hit(double* ptr_x, double* ptr_y)
    Serial.print("  West: 0x");    Serial.print(timer_value[W], HEX); Serial.print("  ms:"); Serial.print(timer_value[W] / OSCILLATOR_MHZ);
    Serial.println();
    }
+   
 /*
  * Determine the location of the reference counter (longest time)
  */
@@ -127,7 +135,7 @@ void compute_hit(double* ptr_x, double* ptr_y)
   {
     if ( timer_value[i] > reference )
     {
-      reference = timer_value[i];;
+      reference = timer_value[i];
       location = i;
     }
   }
@@ -137,7 +145,7 @@ void compute_hit(double* ptr_x, double* ptr_y)
  */
   for (i=0; i != 4; i++)
   {
-    s[i].count = timer_value[location] - reference;
+    s[i].count = reference - timer_value[location];
   }
 
 /*  
@@ -152,6 +160,8 @@ void compute_hit(double* ptr_x, double* ptr_y)
     {
       find_cxcy(i, location, estimate);         // Find the location
     }
+    cramers_rule(&x, &y);
+    
     r1 = sqrt(sq(s[N].cx - s[S].cx) + sq(s[N].cy - s[S].cy)); // Distance 
     r2 = sqrt(sq(s[E].cx - s[E].cx) + sq(s[W].cy - s[W].cy)); // Distance
     error = min(r1, r2);
@@ -159,8 +169,9 @@ void compute_hit(double* ptr_x, double* ptr_y)
   }
 
 /*
- *  We have the four computed locations, average and that's the hit
+ *  We have the four computed locations, Use Cramer's rule to find the intersection
  */
+  cramers_rule();
   x = 0;
   y = 0;
   for (i=0; i != 4; i++ )
@@ -184,8 +195,26 @@ void compute_hit(double* ptr_x, double* ptr_y)
  * Calaculate where the shot seems to lie
  *
  *----------------------------------------------------------------
-
+ *
+ *  Using the law of Cosines
  *  
+ *                    C
+ *                 /     \   
+ *             b             a  
+ *          /                   \
+ *     A ------------ c ----------  B
+ *  
+ *  a^2 = b^2 + c^2 - 2(bc)cos(A)
+ *  
+ *  Rearranging terms
+ *            ( a^2 - b^2 - c^2 )
+ *  A = arccos( ----------------)
+ *            (      -2bc       )
+ *            
+ *  In our system, a is the estimate for the shot location
+ *                 b is the measured time + estimate of the shot location
+ *                 c is the fixed distance between the sensors
+ *                 
  *--------------------------------------------------------------*/
 
 void find_cxcy
@@ -195,14 +224,67 @@ void find_cxcy
      double   estimate      // Estimated location of shot
      )
 {
-  s[i].angle_P = acos( sq(estimate) - K_SQUARED/(2.0*(s[i].count + estimate) * K));
-  s[i].cx = s[i].x + (s[i].count + estimate) * cos(s[i].angle_P + s[i].angle_offset);
-  s[i].cy = s[i].y + (s[i].count + estimate) * sin(s[i].angle_P + s[i].angle_offset);
+  double a, b, c;
+
+  c = float(K);
+  b = s[i].count + estimate;
+  a = estimate;
+  
+  s[i].angle_P = acos( sq(a) - sq(b) - sq(c)/(2.0 * b * c);
+  s[i].cx = s[i].x + (b) * cos(s[i].angle_P + s[i].angle_offset);
+  s[i].cy = s[i].y + (b) * sin(s[i].angle_P + s[i].angle_offset);
   
   return;
 }
 
+/*----------------------------------------------------------------
+ *
+ * void cramers_rule()
+ *
+ * Find the intersection of the coordinates found from find_xy
+ *
+ *----------------------------------------------------------------
+ *
+ *  Cramer's rule allows us to find the intersection of two lines
+ *  or four coordinates
+ *  
+ *                         N(x,y)
+ *           W(x,y)                
+ *                        I            E(x,y)
+ *                        
+ *                     S(x,y)
+ *                     
+ *  Step 1, Convert the opposing pair or points to a slope and
+ *          intercept of the form Y = mx + b
+ *          
+ *  Step 2, Using a and b, use Cramer's rule to find the intersection
+ *  
+ *--------------------------------------------------------------*/
+void cramers_rule
+  (
+  double* x,      // Return computed value for X
+  double* y       // Return computed value for Y
+  )
+{
+  double det_a, det_b, det_c;   // Determinants
+  double ma, ba, mb, bb;
+  det_a = 
+/*  
+ *    Find the slope and intercept of the N-S line (rise over run)
+ */
+  ma = (s[N].y - s[S].y) / (s[N].x - s[S].x);  // Slope
+  ba = s[N].y - (s[N].x * m);
 
+/*  
+ *    Find the slope and intercept of the NW-E line (rise over run)
+ */
+  mb = (s[W].y - s[E].y) / (s[W].x - s[E].x);  // Slope
+  bb = s[W].y - (s[W].x * m);
+
+/* 
+ *  
+ */
+}
 
 /*----------------------------------------------------------------
  *
