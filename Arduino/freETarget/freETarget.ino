@@ -8,40 +8,10 @@
  *----------------------------------------------------------------
  *
  */
+#include "freETarget.h"
 #include "gpio.h"
 #include "compute_hit.h"
 #include "analog_io.h"
-
-/*
- * Compilation Flags
- */
- #define TRACE_PWM      true
- 
- // Trace the PWM registers
-#define TRACE_COUNTERS true  // Trace the COUNTER values
-#define ONE_SHOT       false // Just capture one shot
-#define CLOCK_TEST     true  // Just sample the clock inputs
-#define SHOW_PLOT      false // Disable the 2D graph
- 
-
-#define ONE_SECOND    1000      // 1000 ms delay
-#define SHOT_TIME     300       // Wait 300 ms for the shot to end
-
-#define RUNNING_MODE_CALIBRATION 1
-#define VERBOSE_TRACE            2
-
-/*
- * Target Geometry
- */
-#define RIFLE   (46.0 / 2.0)       // Rifle target, 46 mm
-#define PISTOL  (75.0 /2.0 )       // Pistol target, 75 m
-
-/*
- * Variables
- */
-int           shot_count;       // Shot counter
-unsigned long time_out;
-
 
 
 /*----------------------------------------------------------------
@@ -59,7 +29,7 @@ void setup()
  *  Setup the serial port
  */
   Serial.begin(115200);
-  Serial.println("\n\rfreETarget");
+  Serial.println("\n\rfreETarget V2.0X");
 
 /*
  *  Set up the port pins
@@ -110,9 +80,10 @@ void loop()
 /*
  *  Check for special operating modes
  */
-  default"
+  default:
   case SET_MODE:
     running_mode = read_DIP();
+    
     if ( running_mode & RUNNING_MODE_CALIBRATION )
     {
       cal_analog();
@@ -147,11 +118,10 @@ void loop()
  *  Aquire the shot              
  */  
   case AQUIRE:
-  Serial.print("!");
     if ( (micros() - now) > SHOT_TIME )
-      {
-      state = REDUCE;
+      { 
       stop_counters();
+      state = REDUCE;
       }
     break;
 
@@ -159,9 +129,22 @@ void loop()
  *  Reduce the data to a score
  */
   case REDUCE:
-//    compute_hit(&x_time, &y_time);
+    set_LED(LED_S, false);     // 
+    set_LED(LED_X, false);     // No longer processing
+    set_LED(LED_Y, true);      // Reducing the shot
+    compute_hit(&x_time, &y_time);
     send_score(shot, x_time, y_time);
-    state = SET_MODE;
+    state = WASTE;
+    break;
+
+/*
+ *  Wait here to make sure the RUN lines are no longer set
+ */
+  case WASTE:
+    if ( is_running() == 0 )
+    {
+      state = SET_MODE;
+    }
     break;
     }
   }

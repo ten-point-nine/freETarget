@@ -40,42 +40,6 @@ unsigned int read_reference(void)
   return analogRead(V_REFERENCE);
 }
 
-/*----------------------------------------------------------------
- * 
- * bool set_reference(void)
- * 
- * Set the referenced voltage.  Return true if adjusted
- * 
- *--------------------------------------------------------------*/
-bool last_return = false;
-unsigned int pwm_reference, pwm_control;
-
-bool set_reference(void)
-{
-/*
- * Check the pwm_reference every 1/5 second
- */
-  if ( time_out <= micros() )
-  {    
-    time_out = micros() + 500000;
-    pwm_reference = (float)analogRead(V_REFERENCE);
-  }
-/*
- * Out of tolerence, adjust
- */
-    else
-    {
-      debug_trace();
-  
-      analogWrite(REF_OUT, (int)pwm_control);
-      last_return = true;
-    }
-
-/*
- * All done, return
- */
-  return last_return;
-}
 
 /*----------------------------------------------------------------
  * 

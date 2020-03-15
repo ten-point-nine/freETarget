@@ -8,14 +8,7 @@
 
 #include "mechanical.h"
 
-#define NOT_FOUND -1000     // No minimum found
 
-#define SEC_PER_COUNT (1.0/4000000.0) // 4MHz count
-
-#define N 0
-#define E 1
-#define S 2
-#define W 3
 
 #define THRESHOLD 1
 
@@ -67,7 +60,7 @@ double speed_of_sound(double temperature)
  *--------------------------------------------------------------*/
 void init_sensors(void)
 {
-#if(0)
+
   s[N].x = 0;
   s[N].y = RADIUS;
   s[N].angle_offset = atan2(s[N].x, s[N].y) + PI_ON_4;
@@ -83,7 +76,8 @@ void init_sensors(void)
   s[W].x = -RADIUS;
   s[W].y = 0;
   s[W].angle_offset = s[S].angle_offset + PI_ON_2;
-#endif
+
+  Serial.print("\n\rSensors Ready");
   return;
 }
 /*----------------------------------------------------------------
@@ -99,23 +93,31 @@ void init_sensors(void)
 
 void compute_hit(double* ptr_x, double* ptr_y)
 {
-  double reference;         // Time of reference counter
-  int    location;          // Sensor chosen for reference location
-  double timer_value[4];    // Array of timer values
-  int    i, j;
-  double estimate;          // Estimated position
-  double error;             // Location error
-  double r1, r2;            // Distance between points
-  double x, y;              // Computed location
+  double        reference;         // Time of reference counter
+  int           location;          // Sensor chosen for reference location
+  unsigned int  timer_value[4];    // Array of timer values
+  int           i, j;
+  double        estimate;          // Estimated position
+  double        error;             // Location error
+  double        r1, r2;            // Distance between points
+  double        x, y;              // Computed location
   
 /*
  *  Read in the counter values 
  */
- timer_value[N] = read_counter(NORTH_HI);
- timer_value[E] = read_counter(EAST_HI);
- timer_value[S] = read_counter(SOUTH_HI);
- timer_value[W] = read_counter(WEST_HI);
- 
+ timer_value[N] = read_counter(N);
+ timer_value[E] = read_counter(E);
+ timer_value[S] = read_counter(S);
+ timer_value[W] = read_counter(W);
+
+ if ( read_DIP() & VERBOSE_TRACE )
+   {
+   Serial.print("\n\rNorth: 0x"); Serial.print(timer_value[N], HEX); Serial.print("  ms:"); Serial.print(timer_value[N] / OSCILLATOR_MHZ);
+   Serial.print("  East: 0x");    Serial.print(timer_value[E], HEX); Serial.print("  ms:"); Serial.print(timer_value[E] / OSCILLATOR_MHZ);
+   Serial.print("  South: 0x");   Serial.print(timer_value[S], HEX); Serial.print("  ms:"); Serial.print(timer_value[S] / OSCILLATOR_MHZ);
+   Serial.print("  West: 0x");    Serial.print(timer_value[W], HEX); Serial.print("  ms:"); Serial.print(timer_value[W] / OSCILLATOR_MHZ);
+   Serial.println();
+   }
 /*
  * Determine the location of the reference counter (longest time)
  */
@@ -228,7 +230,7 @@ void send_score
   x = x_time * speed_of_sound(23.0) * CLOCK_PERIOD;
   y = y_time * speed_of_sound(23.0) * CLOCK_PERIOD;
 
-  Serial.print("{\"shot\":\""); Serial.print(shot);
+  Serial.print("{\"shot\":"); Serial.print(shot);
   Serial.print(", \"x\":");     Serial.print(x); 
   Serial.print(", \"y\":");     Serial.print(y); Serial.print("}");
   Serial.println();

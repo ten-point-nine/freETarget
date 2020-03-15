@@ -13,13 +13,13 @@ struct GPIO {
 };
 
 GPIO init_table[] = {
-  {D0, INPUT_PULLUP, 0 },
-  {D1, INPUT_PULLUP, 0 },
-  {D2, INPUT_PULLUP, 0 },
-  {D3, INPUT_PULLUP, 0 },
-  {D4, INPUT_PULLUP, 0 },     
-  {D5, INPUT_PULLUP, 0 },
-  {D6, INPUT_PULLUP, 0 },
+  {D0,       INPUT_PULLUP, 0 },
+  {D1,       INPUT_PULLUP, 0 },
+  {D2,       INPUT_PULLUP, 0 },
+  {D3,       INPUT_PULLUP, 0 },
+  {D4,       INPUT_PULLUP, 0 },     
+  {D5,       INPUT_PULLUP, 0 },
+  {D6,       INPUT_PULLUP, 0 },
 
   {NORTH_HI, OUTPUT, 1},
   {NORTH_LO, OUTPUT, 1},
@@ -35,19 +35,19 @@ GPIO init_table[] = {
   {RUN_SOUTH, INPUT_PULLUP, 0},
   {RUN_WEST,  INPUT_PULLUP, 0},     
 
-  {QUIET,  OUTPUT, 1},
-  {READ_N, OUTPUT, 1},
-  {CLR_N,  OUTPUT, 1},
-  {STOP_N, OUTPUT, 1},
+  {QUIET,   OUTPUT, 1},
+  {RCLK,    OUTPUT, 1},
+  {CLR_N,   OUTPUT, 1},
+  {STOP_N,  OUTPUT, 1},
 
-  {DIP_A, INPUT_PULLUP, 0},
-  {DIP_B, INPUT_PULLUP, 0},
-  {DIP_C, INPUT_PULLUP, 0},
-  {DIP_D, INPUT_PULLUP, 0},  
+  {DIP_A,   INPUT_PULLUP, 0},
+  {DIP_B,   INPUT_PULLUP, 0},
+  {DIP_C,   INPUT_PULLUP, 0},
+  {DIP_D,   INPUT_PULLUP, 0},  
 
-  {LED_S,  OUTPUT, 1},
-  {LED_X, OUTPUT, 1},
-  {LED_Y,  OUTPUT, 1},
+  {LED_S,   OUTPUT, 1},
+  {LED_X,   OUTPUT, 1},
+  {LED_Y,   OUTPUT, 1},
   
   {EOF, EOF, EOF} };
 
@@ -104,7 +104,7 @@ void init_gpio(void)
  *-----------------------------------------------------*/
 int port_list[] = {D7, D6, D5, D4, D3, D2, D1, D0};
 
-int read_port(void)
+unsigned int read_port(void)
 {
   int i;
   int return_value = 0;
@@ -115,7 +115,7 @@ int read_port(void)
   for (i=0; i != 8; i++)
     {
     return_value <<= 1;
-    return_value += digitalRead(port_list[i]);
+    return_value |= digitalRead(port_list[i]);
     }
 
  /*
@@ -144,32 +144,32 @@ unsigned int read_counter
   (
   unsigned int direction         // What direction are we reading?
   )
-  {
+{
   int i;
-  int return_value;     // 16 bit port value
+  unsigned int return_value_LO, return_value_HI;     // 16 bit port value
 /*
  *  Reset all of the address bits
  */
-   for (i=0; i != 8; i++)
-     {
-     digitalWrite(direction_register[i], 1);
-     }
+  for (i=0; i != 8; i++)
+    {
+    digitalWrite(direction_register[i], 1);
+    }
 
 /*
  *  Set the direction line to low
  */
   digitalWrite(direction_register[direction * 2 + 0], 0);
-  return_value = read_port() << 8;
+  return_value_HI = read_port();
   digitalWrite(direction_register[direction * 2 + 0], 1);
   digitalWrite(direction_register[direction * 2 + 1], 0);
-  return_value += read_port();
+  return_value_LO = read_port();
   digitalWrite(direction_register[direction * 2 + 1], 1);
 
 /*
  *  All done, return
  */
-  return return_value;
-  }
+  return (return_value_HI << 8) + return_value_LO;
+}
 
 /*-----------------------------------------------------
  * 
@@ -206,21 +206,36 @@ unsigned int is_running (void)
  /*
   *  Return the running mask
   */
-Serial.println(i);
   return i;
   }
 
-/*
- *  Arm the system
- */
+/*-----------------------------------------------------
+ * 
+ * function: arm_counterw
+ * 
+ * brief: Strobe the control lines to start a new cycle
+ * 
+ * return: NONE
+ * 
+ *-----------------------------------------------------
+ *
+ * The counters are armed by
+ * 
+ *   Stopping the current cycle
+ *   Taking the counters out of read
+ *   Making sure the oscillator is running
+ *   Clearing the counters
+ *   Enabling the counters to run again
+ * 
+ *-----------------------------------------------------*/
 void arm_counters(void)
   {
   digitalWrite(STOP_N, 0);    // Cycle the stop just to make sure
-  digitalWrite(READ_N,  1);   // Take out of read mode
-  digitalWrite(QUIET, 1);     // Arm the counter
-  digitalWrite(CLR_N, 0);     // Reset the counters 
-  digitalWrite(CLR_N, 1);     // Remove the counter reset 
-  digitalWrite(STOP_N,  1);   // Let the counters run
+  digitalWrite(RCLK,   0);    // Set READ CLOCK to LOW
+  digitalWrite(QUIET,  1);    // Arm the counter
+  digitalWrite(CLR_N,  0);    // Reset the counters 
+  digitalWrite(CLR_N,  1);    // Remove the counter reset 
+  digitalWrite(STOP_N, 1);    // Let the counters run
 
   return;
   }
@@ -230,10 +245,10 @@ void arm_counters(void)
  */
 void stop_counters(void)
   {
-  digitalWrite(STOP_N,  0);   // Stop the counters
-  digitalWrite(READ_N,  0);   // Prepare to read
-  digitalWrite(QUIET, 1);   // Kill the oscillator
-  
+  digitalWrite(STOP_N,0);   // Stop the counters
+  digitalWrite(QUIET, 0);   // Kill the oscillator
+  digitalWrite(RCLK,  1);   // Prepare to read
+ 
   return;
   }
 
@@ -258,7 +273,7 @@ unsigned int read_DIP(void)
   
   return_value =  (digitalRead(DIP_A) << 0) + (digitalRead(DIP_B) << 1) + (digitalRead(DIP_C) << 2) + (digitalRead(DIP_D) << 3);
 
-  return ~return_value;
+  return (~return_value) & 0x0f;
 }  
 
 /*

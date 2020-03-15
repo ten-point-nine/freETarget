@@ -37,7 +37,7 @@ bool read_in(unsigned int port);              // Read the selected port
 #define RUN_WEST    28
 
 #define QUIET       29
-#define READ_N      40
+#define RCLK        40
 #define CLR_N       39
 #define STOP_N      52       
 
@@ -46,9 +46,9 @@ bool read_in(unsigned int port);              // Read the selected port
 #define DIP_C       11
 #define DIP_D       12
 
-#define LED_S        2
+#define LED_S        4
 #define LED_X        3
-#define LED_Y        4
+#define LED_Y        2
 
 #define NORTH     0
 #define EAST      1
