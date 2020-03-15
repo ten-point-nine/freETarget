@@ -228,10 +228,9 @@ void send_score
   x = x_time * speed_of_sound(23.0) * CLOCK_PERIOD;
   y = y_time * speed_of_sound(23.0) * CLOCK_PERIOD;
 
-  Serial.print("{\"id\":\"freETarget\", \"value\":{");
-  Serial.print(shot); Serial.print(", ");
-  Serial.print(x); Serial.print(", ");
-  Serial.print(y); Serial.print("} }");
+  Serial.print("{\"shot\":\""); Serial.print(shot);
+  Serial.print(", \"x\":");     Serial.print(x); 
+  Serial.print(", \"y\":");     Serial.print(y); Serial.print("}");
   Serial.println();
 
   return;

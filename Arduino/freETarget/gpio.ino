@@ -35,10 +35,10 @@ GPIO init_table[] = {
   {RUN_SOUTH, INPUT_PULLUP, 0},
   {RUN_WEST,  INPUT_PULLUP, 0},     
 
-  {QUIET, OUTPUT, 1},
-  {READ,  OUTPUT, 1},
-  {CLEAR, OUTPUT, 1},
-  {STOP,  OUTPUT, 1},
+  {QUIET,  OUTPUT, 1},
+  {READ_N, OUTPUT, 1},
+  {CLR_N,  OUTPUT, 1},
+  {STOP_N, OUTPUT, 1},
 
   {DIP_A, INPUT_PULLUP, 0},
   {DIP_B, INPUT_PULLUP, 0},
@@ -50,6 +50,7 @@ GPIO init_table[] = {
   {LED_Y,  OUTPUT, 1},
   
   {EOF, EOF, EOF} };
+
 
 /*-----------------------------------------------------
  * 
@@ -81,7 +82,8 @@ void init_gpio(void)
   }
 /*
  * All done, return
- */
+ */  
+  Serial.print("\n\rGPIO Ready");
   return;
 }
 
@@ -103,7 +105,7 @@ void init_gpio(void)
 int port_list[] = {D7, D6, D5, D4, D3, D2, D1, D0};
 
 int read_port(void)
-  {
+{
   int i;
   int return_value = 0;
 
@@ -120,7 +122,7 @@ int read_port(void)
   * Return the result 
   */
   return return_value;
-  }
+}
 
 /*-----------------------------------------------------
  * 
@@ -179,29 +181,33 @@ unsigned int read_counter
  * 
  *-----------------------------------------------------
  *
- * Read in the running registers, and if any one of them
- * is zero, return a true
+ * Read in the running registers, and return a 1 for every
+ * register that is running.
  * 
  *-----------------------------------------------------*/
 
-bool is_running (void)
-  {
-  if ( digitalRead(RUN_NORTH) == 0 )
-    return true;
+unsigned int is_running (void)
+{
+  unsigned int i;
+  i = 0;
+  
+  if ( digitalRead(RUN_NORTH) == 1 )
+    i += 1;
     
-  if ( digitalRead(RUN_EAST) == 0 )
-    return true;
+  if ( digitalRead(RUN_EAST) == 1 )
+    i += 2;
 
-  if ( digitalRead(RUN_SOUTH) == 0 )
-    return true;
+  if ( digitalRead(RUN_SOUTH) == 1 )
+    i += 4;
     
-  if ( digitalRead(RUN_WEST)== 0 )
-    return true;  
+  if ( digitalRead(RUN_WEST)== 1 )
+    i += 8;  
 
  /*
-  *  Nothing is running, return false
+  *  Return the running mask
   */
-  return false;
+Serial.println(i);
+  return i;
   }
 
 /*
@@ -209,11 +215,12 @@ bool is_running (void)
  */
 void arm_counters(void)
   {
-  digitalWrite(READ,  1);  // Take out of read mode
-  digitalWrite(QUIET, 0);  // Arm the counter
-  digitalWrite(CLEAR, 0);  // Reset the counters 
-  digitalWrite(CLEAR, 1);  // Remove the counter reset 
-  digitalWrite(STOP,  1);  // Let the counters run
+  digitalWrite(STOP_N, 0);    // Cycle the stop just to make sure
+  digitalWrite(READ_N,  1);   // Take out of read mode
+  digitalWrite(QUIET, 1);     // Arm the counter
+  digitalWrite(CLR_N, 0);     // Reset the counters 
+  digitalWrite(CLR_N, 1);     // Remove the counter reset 
+  digitalWrite(STOP_N,  1);   // Let the counters run
 
   return;
   }
@@ -223,26 +230,54 @@ void arm_counters(void)
  */
 void stop_counters(void)
   {
-  digitalWrite(STOP,  0);   // Stop the counters
-  digitalWrite(READ,  0);   // Prepare to read
+  digitalWrite(STOP_N,  0);   // Stop the counters
+  digitalWrite(READ_N,  0);   // Prepare to read
   digitalWrite(QUIET, 1);   // Kill the oscillator
   
   return;
   }
 
-/*
- *  Read the DIP switch
- */
+/*-----------------------------------------------------
+ * 
+ * function: read_DIP
+ * 
+ * brief: READ the jumper block setting
+ * 
+ * return: TRUE for every position with a jumper installed
+ * 
+ *-----------------------------------------------------
+ *
+ * The DIP register is read and formed into a word.
+ * The word is complimented to return a 1 for every
+ * jumper that is installed.
+ * 
+ *-----------------------------------------------------*/
 unsigned int read_DIP(void)
-  {
-  return (digitalRead(DIP_A) << 3) + (digitalRead(DIP_B) << 2) + (digitalRead(DIP_C) << 1) + digitalRead(DIP_D);
-  }  
+{
+  unsigned int return_value;
+  
+  return_value =  (digitalRead(DIP_A) << 0) + (digitalRead(DIP_B) << 1) + (digitalRead(DIP_C) << 2) + (digitalRead(DIP_D) << 3);
+
+  return ~return_value;
+}  
 
 /*
  * Turn a LED on or off
  */
 void set_LED(unsigned int led, bool state)
   {
-  digitalWrite(led, 1 - state);     // ON = LOW
+  if ( state == 0 )
+    digitalWrite(led, 1);     // ON = LOW
+  else
+    digitalWrite(led, 0);
+    
   return;  
   }
+
+/* 
+ *  HAL Discrete IN
+ */
+bool read_in(unsigned int port)
+{
+  return digitalRead(port);
+}

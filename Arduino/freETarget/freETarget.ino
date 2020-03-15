@@ -27,6 +27,8 @@
 #define ONE_SECOND    1000      // 1000 ms delay
 #define SHOT_TIME     300       // Wait 300 ms for the shot to end
 
+#define RUNNING_MODE_CALIBRATION 1
+#define VERBOSE_TRACE            2
 
 /*
  * Target Geometry
@@ -69,7 +71,7 @@ void setup()
 /*
  * All done, begin the program
  */
- Serial.print("\n\rReady");
+ Serial.print("\n\rfreETarget Ready");
  return;
 }
 
@@ -81,33 +83,50 @@ void setup()
  * 
  *----------------------------------------------------------------
  */
-#define ARM           0         // State is ready to ARM
+#define SET_MODE      0         // Set the operating mode
+#define ARM    (SET_MODE+1)     // State is ready to ARM
 #define WAIT    (ARM+1)         // ARM the circuit
 #define AQUIRE (WAIT+1)         // Aquire the shot
 #define REDUCE (AQUIRE+1)       // Reduce the data
 #define WASTE  (REDUCE+1)
+
 void loop() 
 {
-  unsigned int state = ARM;
+  unsigned int state = SET_MODE;
   unsigned long now;
   unsigned int shot = 0;
   double x_time, y_time;        // Location in time
+  unsigned int running_mode;
   
  while (1)
  {
+
+
 /*
  * Cycle through the state machine
  */
   switch (state)
   {
 /*
+ *  Check for special operating modes
+ */
+  default"
+  case SET_MODE:
+    running_mode = read_DIP();
+    if ( running_mode & RUNNING_MODE_CALIBRATION )
+    {
+      cal_analog();
+    }
+    state = ARM;
+    break;
+/*
  * Arm the circuit
  */
-  default:
   case ARM:
     arm_counters();
     set_LED(LED_S, true);     // Show we are waiting
     set_LED(LED_X, false);    // No longer processing
+    set_LED(LED_Y, false);   
     state = WAIT;
     break;
     
@@ -115,7 +134,7 @@ void loop()
  * Wait for the shot
  */
   case WAIT:
-    if ( is_running() )         // Shot detected
+    if ( is_running() != 0 )    // Shot detected
       {
       set_LED(LED_S, false);    // No longer waiting
       set_LED(LED_X, true);     // Starting processing
@@ -128,6 +147,7 @@ void loop()
  *  Aquire the shot              
  */  
   case AQUIRE:
+  Serial.print("!");
     if ( (micros() - now) > SHOT_TIME )
       {
       state = REDUCE;
@@ -139,9 +159,9 @@ void loop()
  *  Reduce the data to a score
  */
   case REDUCE:
-    compute_hit(&x_time, &y_time);
+//    compute_hit(&x_time, &y_time);
     send_score(shot, x_time, y_time);
-    state = ARM;
+    state = SET_MODE;
     break;
     }
   }

@@ -1240,10 +1240,10 @@ Wire Wire Line
 Wire Wire Line
 	12300 1850 12300 1700
 $Comp
-L Connector_Generic:Conn_01x01 TP10
+L Connector_Generic:Conn_01x01 GND1
 U 1 1 5E67E5A3
 P 4950 9600
-F 0 "TP10" V 4822 9680 50  0000 L CNN
+F 0 "GND1" V 4822 9680 50  0000 L CNN
 F 1 "TP" V 4913 9680 50  0000 L CNN
 F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 4950 9600 50  0001 C CNN
 F 3 "~" H 4950 9600 50  0001 C CNN
@@ -1251,10 +1251,10 @@ F 3 "~" H 4950 9600 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L Connector_Generic:Conn_01x01 TP9
+L Connector_Generic:Conn_01x01 VCC1
 U 1 1 5E67FBE5
 P 4950 8900
-F 0 "TP9" V 4914 8812 50  0000 R CNN
+F 0 "VCC1" V 4914 8812 50  0000 R CNN
 F 1 "TP" V 4823 8812 50  0000 R CNN
 F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 4950 8900 50  0001 C CNN
 F 3 "~" H 4950 8900 50  0001 C CNN
@@ -1262,10 +1262,10 @@ F 3 "~" H 4950 8900 50  0001 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L Connector_Generic:Conn_01x01 TP5
+L Connector_Generic:Conn_01x01 RN1
 U 1 1 5E68091C
 P 5250 3350
-F 0 "TP5" V 5400 3300 50  0000 L CNN
+F 0 "RN1" V 5400 3300 50  0000 L CNN
 F 1 "TP" V 5500 3300 50  0000 L CNN
 F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 5250 3350 50  0001 C CNN
 F 3 "~" H 5250 3350 50  0001 C CNN
@@ -1273,10 +1273,10 @@ F 3 "~" H 5250 3350 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L Connector_Generic:Conn_01x01 TP6
+L Connector_Generic:Conn_01x01 RE1
 U 1 1 5E6ADD2E
 P 5350 4350
-F 0 "TP6" V 5500 4300 50  0000 L CNN
+F 0 "RE1" V 5500 4300 50  0000 L CNN
 F 1 "TP" V 5600 4300 50  0000 L CNN
 F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 5350 4350 50  0001 C CNN
 F 3 "~" H 5350 4350 50  0001 C CNN
@@ -1284,10 +1284,10 @@ F 3 "~" H 5350 4350 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L Connector_Generic:Conn_01x01 TP7
+L Connector_Generic:Conn_01x01 RS1
 U 1 1 5E6AED5F
 P 5450 5300
-F 0 "TP7" V 5600 5250 50  0000 L CNN
+F 0 "RS1" V 5600 5250 50  0000 L CNN
 F 1 "TP" V 5700 5250 50  0000 L CNN
 F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 5450 5300 50  0001 C CNN
 F 3 "~" H 5450 5300 50  0001 C CNN
@@ -1295,10 +1295,10 @@ F 3 "~" H 5450 5300 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L Connector_Generic:Conn_01x01 TP8
+L Connector_Generic:Conn_01x01 RW1
 U 1 1 5E6AFDE2
 P 5550 6250
-F 0 "TP8" V 5700 6200 50  0000 L CNN
+F 0 "RW1" V 5700 6200 50  0000 L CNN
 F 1 "TP" V 5800 6200 50  0000 L CNN
 F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 5550 6250 50  0001 C CNN
 F 3 "~" H 5550 6250 50  0001 C CNN
@@ -1310,7 +1310,7 @@ L Connector_Generic:Conn_01x01 TP4
 U 1 1 5E6B0EAE
 P 3400 5650
 F 0 "TP4" V 3550 5600 50  0000 L CNN
-F 1 "TP" V 3650 5600 50  0000 L CNN
+F 1 "WE" V 3650 5600 50  0000 L CNN
 F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 3400 5650 50  0001 C CNN
 F 3 "~" H 3400 5650 50  0001 C CNN
 	1    3400 5650
@@ -1324,7 +1324,7 @@ L Connector_Generic:Conn_01x01 TP3
 U 1 1 5E6B2DA6
 P 3400 4700
 F 0 "TP3" V 3550 4650 50  0000 L CNN
-F 1 "TP" V 3650 4650 50  0000 L CNN
+F 1 "SO" V 3650 4650 50  0000 L CNN
 F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 3400 4700 50  0001 C CNN
 F 3 "~" H 3400 4700 50  0001 C CNN
 	1    3400 4700
@@ -1334,10 +1334,10 @@ Connection ~ 3400 4900
 Wire Wire Line
 	3400 4900 4150 4900
 $Comp
-L Connector_Generic:Conn_01x01 TP2
+L Connector_Generic:Conn_01x01 EA1
 U 1 1 5E6B38EB
 P 3350 3750
-F 0 "TP2" V 3500 3700 50  0000 L CNN
+F 0 "EA1" V 3500 3700 50  0000 L CNN
 F 1 "TP" V 3600 3700 50  0000 L CNN
 F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 3350 3750 50  0001 C CNN
 F 3 "~" H 3350 3750 50  0001 C CNN
@@ -1348,10 +1348,10 @@ Connection ~ 3350 3950
 Wire Wire Line
 	3350 3950 4150 3950
 $Comp
-L Connector_Generic:Conn_01x01 TP1
+L Connector_Generic:Conn_01x01 NO1
 U 1 1 5E6B4742
 P 3300 2750
-F 0 "TP1" V 3450 2700 50  0000 L CNN
+F 0 "NO1" V 3450 2700 50  0000 L CNN
 F 1 "TP" V 3550 2700 50  0000 L CNN
 F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 3300 2750 50  0001 C CNN
 F 3 "~" H 3300 2750 50  0001 C CNN
@@ -1602,7 +1602,7 @@ U 1 1 5F39A5E4
 P 16050 5700
 F 0 "R9" H 16120 5746 50  0000 L CNN
 F 1 "4K7" H 16120 5655 50  0000 L CNN
-F 2 "" V 15980 5700 50  0001 C CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" V 15980 5700 50  0001 C CNN
 F 3 "~" H 16050 5700 50  0001 C CNN
 	1    16050 5700
 	1    0    0    -1  
@@ -1613,7 +1613,7 @@ U 1 1 5F39B55C
 P 16050 6100
 F 0 "R10" H 16120 6146 50  0000 L CNN
 F 1 "4K7" H 16120 6055 50  0000 L CNN
-F 2 "" V 15980 6100 50  0001 C CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" V 15980 6100 50  0001 C CNN
 F 3 "~" H 16050 6100 50  0001 C CNN
 	1    16050 6100
 	1    0    0    -1  

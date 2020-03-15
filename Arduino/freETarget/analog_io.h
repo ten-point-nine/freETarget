@@ -2,7 +2,10 @@
  * Global functions
  */
 
-void init_analog_io(void);      // Setup the analog hardware
+void init_analog_io(void);          // Setup the analog hardware
+unsigned int read_reference(void);  // Read the feedback channel
+void show_analog(void);             // Display the analog values
+void cal_analog(void);              // Calibrate the analog threshold
 
 /*
  *  Port Definitions
@@ -14,6 +17,5 @@ void init_analog_io(void);      // Setup the analog hardware
 #define WEST_ANA     4          // West Analog Input
 
 #define REF_OUT      7          // Reference Output
-#define REF_IN       0          // Reference Input
+#define V_REFERENCE  0          // Reference Input
 
-#define EOF 0xFF
