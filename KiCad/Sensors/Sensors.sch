@@ -16,15 +16,15 @@ $EndDescr
 $Comp
 L SPU0410LR5H-QB-7:SPU0410LR5H-QB-7 MK1
 U 1 1 5E68DAEF
-P 2400 2550
-F 0 "MK1" H 2507 3017 50  0000 C CNN
-F 1 "SPU0410LR5H-QB-7" H 2507 2926 50  0000 C CNN
-F 2 "SnapEDA:MIC_SPU0410LR5H-QB-7" H 2400 2550 50  0001 L BNN
-F 3 "Knowles" H 2400 2550 50  0001 L BNN
-F 4 "Manufacturer Recommendations" H 2400 2550 50  0001 L BNN "Field4"
-F 5 "1.2mm" H 2400 2550 50  0001 L BNN "Field5"
-F 6 "H" H 2400 2550 50  0001 L BNN "Field6"
-	1    2400 2550
+P 1950 2550
+F 0 "MK1" H 2057 3017 50  0000 C CNN
+F 1 "SPU0410LR5H-QB-7" H 2057 2926 50  0000 C CNN
+F 2 "SnapEDA:MIC_SPU0410LR5H-QB-7" H 1950 2550 50  0001 L BNN
+F 3 "Knowles" H 1950 2550 50  0001 L BNN
+F 4 "Manufacturer Recommendations" H 1950 2550 50  0001 L BNN "Field4"
+F 5 "1.2mm" H 1950 2550 50  0001 L BNN "Field5"
+F 6 "H" H 1950 2550 50  0001 L BNN "Field6"
+	1    1950 2550
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -40,8 +40,6 @@ F 3 "http://www.ti.com/lit/ds/symlink/opa1641.pdf" H 6050 2550 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	5950 2850 5350 2850
-Wire Wire Line
-	4500 2850 4500 2750
 Wire Wire Line
 	6350 2550 6600 2550
 $Comp
@@ -218,8 +216,6 @@ Wire Wire Line
 Wire Wire Line
 	8850 3100 8350 3100
 Wire Wire Line
-	4300 3100 4300 2350
-Wire Wire Line
 	8350 2800 8350 3100
 Connection ~ 8350 3100
 $Comp
@@ -254,52 +250,145 @@ Wire Wire Line
 	5950 2850 5950 3400
 Connection ~ 8350 3400
 Wire Wire Line
-	9500 2700 9500 2800
-Wire Wire Line
 	9500 2800 9050 2800
 Wire Wire Line
 	9500 2400 9050 2400
-$Comp
-L Connector_Generic:Conn_01x04 J2
-U 1 1 5E71DC34
-P 3900 1200
-F 0 "J2" H 3818 1517 50  0000 C CNN
-F 1 "Conn_01x04" H 3818 1426 50  0000 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_2x02_P2.54mm_Vertical" H 3900 1200 50  0001 C CNN
-F 3 "~" H 3900 1200 50  0001 C CNN
-	1    3900 1200
-	-1   0    0    -1  
-$EndComp
-Wire Wire Line
-	4100 1400 4300 1400
-Wire Wire Line
-	4300 1400 4300 2350
-Wire Wire Line
-	4100 1100 9050 1100
-Wire Wire Line
-	9050 1100 9050 2050
 Connection ~ 9050 2050
 Wire Wire Line
-	3000 2750 4500 2750
+	2550 2750 2800 2750
+$Comp
+L Connector_Generic:Conn_01x01 J2
+U 1 1 5E7A3796
+P 2300 900
+F 0 "J2" H 2218 675 50  0000 C CNN
+F 1 "Conn_01x01" H 2218 766 50  0000 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 2300 900 50  0001 C CNN
+F 3 "~" H 2300 900 50  0001 C CNN
+	1    2300 900 
+	-1   0    0    1   
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x01 J3
+U 1 1 5E7A476B
+P 2300 1500
+F 0 "J3" H 2218 1275 50  0000 C CNN
+F 1 "Conn_01x01" H 2218 1366 50  0000 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 2300 1500 50  0001 C CNN
+F 3 "~" H 2300 1500 50  0001 C CNN
+	1    2300 1500
+	-1   0    0    1   
+$EndComp
 Wire Wire Line
-	3000 2550 4700 2550
+	2500 1500 2800 1500
 Wire Wire Line
-	3000 2350 4300 2350
-Connection ~ 4300 2350
+	2800 1500 2800 2750
+$Comp
+L Device:R R7
+U 1 1 5E7A9A5C
+P 3800 800
+F 0 "R7" V 3593 800 50  0000 C CNN
+F 1 "10k0" V 3684 800 50  0000 C CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" V 3730 800 50  0001 C CNN
+F 3 "~" H 3800 800 50  0001 C CNN
+	1    3800 800 
+	0    1    1    0   
+$EndComp
 Wire Wire Line
-	4300 3100 8350 3100
+	3300 900  3300 1000
 Wire Wire Line
-	4500 2850 5350 2850
+	9050 800  9050 2050
 Wire Wire Line
-	4500 2750 4500 1300
+	3300 800  3300 900 
+Connection ~ 3300 900 
 Wire Wire Line
-	4500 1300 4100 1300
-Connection ~ 4500 2750
+	3650 1000 3300 1000
 Wire Wire Line
-	4100 1200 4700 1200
+	2500 900  3300 900 
 Wire Wire Line
-	4700 1200 4700 2550
-Connection ~ 4700 2550
+	2550 2550 3300 2550
+Connection ~ 2800 2750
 Wire Wire Line
-	4700 2550 4900 2550
+	3300 1000 3300 2550
+Connection ~ 3300 1000
+Connection ~ 3300 2550
+Wire Wire Line
+	3300 2550 4900 2550
+Wire Wire Line
+	4350 1000 4350 2350
+Wire Wire Line
+	4350 3100 6350 3100
+Wire Wire Line
+	2550 2350 4350 2350
+Connection ~ 4350 2350
+Wire Wire Line
+	4350 2350 4350 3100
+Wire Wire Line
+	3950 1000 4350 1000
+Wire Wire Line
+	3950 800  9050 800 
+Wire Wire Line
+	5200 2850 5200 2750
+Wire Wire Line
+	2800 2750 5200 2750
+Wire Wire Line
+	5200 2850 5350 2850
+$Comp
+L Device:R R8
+U 1 1 5E7AA2E7
+P 3800 1000
+F 0 "R8" V 3700 850 50  0000 C CNN
+F 1 "10K0" V 3700 1200 50  0000 C CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" V 3730 1000 50  0001 C CNN
+F 3 "~" H 3800 1000 50  0001 C CNN
+	1    3800 1000
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	3300 800  3650 800 
+$Comp
+L power:GND #PWR0101
+U 1 1 5E80E4F5
+P 9500 3100
+F 0 "#PWR0101" H 9500 2850 50  0001 C CNN
+F 1 "GND" H 9505 2927 50  0000 C CNN
+F 2 "" H 9500 3100 50  0001 C CNN
+F 3 "" H 9500 3100 50  0001 C CNN
+	1    9500 3100
+	1    0    0    -1  
+$EndComp
+Connection ~ 9500 2800
+$Comp
+L power:VCC #PWR0102
+U 1 1 5E810249
+P 9500 1900
+F 0 "#PWR0102" H 9500 1750 50  0001 C CNN
+F 1 "VCC" H 9515 2073 50  0000 C CNN
+F 2 "" H 9500 1900 50  0001 C CNN
+F 3 "" H 9500 1900 50  0001 C CNN
+	1    9500 1900
+	1    0    0    -1  
+$EndComp
+Connection ~ 9500 2400
+Wire Wire Line
+	9500 1900 9500 2400
+Wire Wire Line
+	9500 2800 9500 3100
+Wire Wire Line
+	9500 2700 9500 2800
+$Comp
+L power:+3.3V #PWR?
+U 1 1 5E81B6EE
+P 6350 3000
+F 0 "#PWR?" H 6350 2850 50  0001 C CNN
+F 1 "+3.3V" H 6365 3173 50  0000 C CNN
+F 2 "" H 6350 3000 50  0001 C CNN
+F 3 "" H 6350 3000 50  0001 C CNN
+	1    6350 3000
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6350 3000 6350 3100
+Connection ~ 6350 3100
+Wire Wire Line
+	6350 3100 8350 3100
 $EndSCHEMATC
