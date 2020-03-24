@@ -7,30 +7,25 @@
  *---------------------------------------------------------------*/
 
 #include "mechanical.h"
+#include "compute_hit.h"
+#include "freETarget.h"
+#include "compute_hit.h"
 
+#define THRESHOLD (0.001)
 
+#define PI_ON_4 (3.14159269d / 4.0d)
+#define PI_ON_2 (3.14159269d / 2.0d)
 
-#define THRESHOLD 1
+#define R(x)  (((x)+location) % 4)    // Rotate the target by location points
 
-#define PI_ON_4 (atan(1))
-#define PI_ON_2 (2.0 * PI_ON_4)
 /*
  *  Variables
  */
-struct sensor
-{
-  double angle_P;       // Left Angle
-  double count;         // Counter value
-  double x;             // Sensor Location (X)
-  double y;             // Sensor Location (Y)
-  double cx;            // Coputed cx calue
-  double cy;            // Computed cy value
-  double angle_offset;  // How much the angle is rotated
-};
 
+sensor_t s[4];
 
-struct sensor s[4];
-
+unsigned int bit_mask[] = {0x01, 0x02, 0x04, 0x08};
+unsigned int timer_value[4];    // Array of timer values
   
 /*----------------------------------------------------------------
  *
@@ -45,7 +40,16 @@ struct sensor s[4];
 
 double speed_of_sound(double temperature)
 {
-  return (331.3 + 0.606 * temperature) * 1000.0 / 1000000.0; 
+  double speed;
+
+  speed = (331.3d + 0.606d * temperature) * 1000.0d / 1000000.0d; 
+  
+  if ( read_DIP() & VERBOSE_TRACE )
+    {
+    Serial.print("\n\rSpeed of sound:"); Serial.print(speed);
+    }
+
+  return speed;  
 }
 
 /*----------------------------------------------------------------
@@ -67,22 +71,21 @@ double speed_of_sound(double temperature)
  *--------------------------------------------------------------*/
 void init_sensors(void)
 {
-
+  s[N].index = N;
   s[N].x = 0;
-  s[N].y = RADIUS;
-  s[N].angle_offset = atan2(s[N].x, s[N].y);
+  s[N].y = RADIUS /10.0;
 
-  s[E].x = RADIUS;
+  s[E].index = E;
+  s[E].x = RADIUS /10.0;
   s[E].y = 0;
-  s[E].angle_offset = atan2(s[E].x, s[E].y);
 
+  s[S].index = S;
   s[S].x = 0;
-  s[S].y = -RADIUS;
-  s[S].angle_offset = atan2(s[S].x, s[S].y);
+  s[S].y = -RADIUS / 10.0;
 
-  s[W].x = -RADIUS;
+  s[W].index = W;
+  s[W].x = -RADIUS / 10.0;
   s[W].y = 0;
-  s[W].angle_offset = atan2(s[W].x, s[W].y);
 
   Serial.print("\n\rSensors Ready");
   return;
@@ -98,24 +101,36 @@ void init_sensors(void)
  * See freETarget documentaton for algorithm
  *--------------------------------------------------------------*/
 
-void compute_hit(double* ptr_x, double* ptr_y)
+unsigned int compute_hit
+  (
+  unsigned int shot,                // Shot being processed
+  history_t* h                      // Storing the results
+  )
 {
   double        reference;         // Time of reference counter
   int           location;          // Sensor chosen for reference location
-  unsigned int  timer_value[4];    // Array of timer values
   int           i, j;
   double        estimate;          // Estimated position
-  double        error;             // Location error
+  double        last_estimate, error; // Location error
   double        r1, r2;            // Distance between points
   double        x, y;              // Computed location
+  double        x_avg, y_avg;      // Running average location
+  double        smallest;          // Smallest non-zero value measured
+  unsigned int  sensor_status;     // Sensor collection status
   
 /*
  *  Read in the counter values 
  */
- timer_value[N] = read_counter(N);
- timer_value[E] = read_counter(E);
- timer_value[S] = read_counter(S);
- timer_value[W] = read_counter(W);
+ for (i=N; i <= W; i++)
+ {
+   timer_value[N] = read_counter(N);
+ }
+
+#ifdef SAMPLE_CALCULATIONS
+void sample_calculations (void);
+  sensor_status = 0x0F;
+  sample_calculations();
+#endif
 
  if ( read_DIP() & VERBOSE_TRACE )
    {
@@ -123,7 +138,6 @@ void compute_hit(double* ptr_x, double* ptr_y)
    Serial.print("  East: 0x");    Serial.print(timer_value[E], HEX); Serial.print("  ms:"); Serial.print(timer_value[E] / OSCILLATOR_MHZ);
    Serial.print("  South: 0x");   Serial.print(timer_value[S], HEX); Serial.print("  ms:"); Serial.print(timer_value[S] / OSCILLATOR_MHZ);
    Serial.print("  West: 0x");    Serial.print(timer_value[W], HEX); Serial.print("  ms:"); Serial.print(timer_value[W] / OSCILLATOR_MHZ);
-   Serial.println();
    }
    
 /*
@@ -131,7 +145,7 @@ void compute_hit(double* ptr_x, double* ptr_y)
  */
   reference = timer_value[N];
   location = N;
-  for (i=1; i != 4; i++);
+  for (i=E; i <= W; i++)
   {
     if ( timer_value[i] > reference )
     {
@@ -139,58 +153,127 @@ void compute_hit(double* ptr_x, double* ptr_y)
       location = i;
     }
   }
-
+  
+ if ( read_DIP() & VERBOSE_TRACE )
+   {
+   Serial.print("\n\rreference: "); Serial.print(reference); Serial.print("  location:"); Serial.print(location);
+   }
+   
 /*
  * Correct the time to remove the shortest distance
  */
-  for (i=0; i != 4; i++)
+  for (i=N; i <= W; i++)
   {
-    s[i].count = reference - timer_value[location];
+    if ( (sensor_status & bit_mask[R(i)]) != 0 )
+    {
+      s[R(i)].count = reference - timer_value[R(i)];
+      s[R(i)].is_valid = true;
+    }
+    else
+    {
+      s[R(i)].count = reference - timer_value[R(i)];
+      s[R(i)].is_valid = false;
+    }
   }
+
+ if ( read_DIP() & VERBOSE_TRACE )
+   {
+   Serial.print("\n\rCounts");
+   Serial.print("\n\rNorth: "); Serial.print(s[R(N + location)].count); Serial.print("  East: "); Serial.print(s[R(E + location)].count);
+   Serial.print(" South: ");    Serial.print(s[R(S + location)].count); Serial.print("  West: "); Serial.print(s[R(W + location)].count);
+   }
+/*
+ * Find the smallest non-zero value
+ */
+  smallest = 1.0e10;
+  for (i=N; i <= W; i++)
+  {
+    if ( (s[i].count != 0) 
+        && (s[i].count < smallest ) )
+    {
+      smallest = s[i].count;
+    }
+  }
+
+/*
+ *  Prime the estimate based on the smallest identified time.
+ */
+ reference = reference / 10.0d;
+ estimate = ((sqrt(2.0d) * RADIUS) - smallest) / 2.0d;
+ estimate = estimate / 10.0d;
+ estimate = estimate + 0.1d;
+ 
+ if ( read_DIP() & VERBOSE_TRACE )
+   {
+   Serial.print("\n\rRadius: "); Serial.print(RADIUS); Serial.print("smallest:"); Serial.print(smallest); Serial.print(" . estimate: "); Serial.print(estimate);
+   }
+/*
+ * Fill up the structure with the counter geometry
+ * Rotated so that the longest time points north
+ */
+  for (i=N; i <= W; i++)
+  {
+    s[R(i)].b = s[R(i)].count;
+    s[R(i)].c = sqrt(2.0d) * RADIUS;
+  }
+  for (i=N; i <= W; i++)
+  {
+    s[R(i)].a = s[R(i+1)].b;
+  }
+
+#ifdef  SAMPLE_CALCULATIONS
+  for (i=N; i <= W; i++)
+  {
+    s[i].a = s[i].a / 10.0d;
+    s[i].b = s[i].b / 10.0d;
+    s[i].c = s[i].c / 10.0d;
+  }
+#endif
 
 /*  
  *  Loop and calculate the unknown radius (estimate)
  */
-  estimate = 0;                 // Start at 0 radius
   error = 999999;               // Start with a big error
-
+  
   while (error > THRESHOLD )
   {
-    for (i=0; i != 4; i++)
-    {
-      find_cxcy(i, location, estimate);         // Find the location
-    }
-    cramers_rule(&x, &y);
+    x_avg = 0;                     // Zero out the average values
+    y_avg = 0;
+    last_estimate = estimate;
     
-    r1 = sqrt(sq(s[N].cx - s[S].cx) + sq(s[N].cy - s[S].cy)); // Distance 
-    r2 = sqrt(sq(s[E].cx - s[E].cx) + sq(s[W].cy - s[W].cy)); // Distance
-    error = min(r1, r2);
-    estimate = estimate + error;
-  }
+    for (i=N; i <= W; i++)        // Calculate X/Y for each sensor
+    {
+      find_xy(&s[R(i)], estimate);// Locate the shot
+      x_avg += s[R(i)].xs;        // Keep the running average
+      y_avg += s[R(i)].ys;
+    }
 
-/*
- *  We have the four computed locations, Use Cramer's rule to find the intersection
- */
-  cramers_rule();
-  x = 0;
-  y = 0;
-  for (i=0; i != 4; i++ )
-  {
-    x += s[i].cx;
-    y += s[i].cy;
+    x_avg /= 4.0d;                // Work out the average intercept
+    y_avg /= 4.0d;
+
+    estimate = sqrt(sq(s[N].x - x_avg) + sq(s[N].y - y_avg));
+    error = abs(last_estimate - estimate);
+
+    if ( read_DIP() & VERBOSE_TRACE )
+    {
+      Serial.print("\n\rx_avg:");  Serial.print(x_avg);   Serial.print("  y_avg:"); Serial.print(y_avg); Serial.print(" estimate:"),  Serial.print(estimate);  Serial.print(" error:"); Serial.print(error);
+      Serial.println();
+    }
   }
-  *ptr_x /= 4.0;
-  *ptr_y /= 4.0;
   
-  /*
-   * All done return
-   */
+ /*
+  * All done return
+  */
 
-  return;
+  h->shot = shot;
+  h->x = x_avg;
+  h->y = y_avg;
+  return location;
 }
+
 /*----------------------------------------------------------------
  *
- * find_cxcy
+ * find_xy
  *
  * Calaculate where the shot seems to lie
  *
@@ -217,75 +300,121 @@ void compute_hit(double* ptr_x, double* ptr_y)
  *                 
  *--------------------------------------------------------------*/
 
-void find_cxcy
+void find_xy
     (
-     unsigned int i,        // Index to be operatated on
-     unsigned int location, // Location of shortest sensor
-     double   estimate      // Estimated location of shot
+     sensor_t* s,           // Index to be operatated on
+     double estimate        // Estimated position   
      )
 {
-  double a, b, c;
+  double ae, be;            // Locations with error added
+  double rotation;          // Angle shot is rotated through
+  
+  ae = s->a + estimate;     // Dimenstion with error included
+  be = s->b + estimate;
+  
+  s->angle_A = acos( (sq(ae) - sq(be) - sq(s->c))/(-2.0d * be * s->c));
 
-  c = float(K);
-  b = s[i].count + estimate;
-  a = estimate;
-  
-  s[i].angle_P = acos( sq(a) - sq(b) - sq(c)/(2.0 * b * c);
-  s[i].cx = s[i].x + (b) * cos(s[i].angle_P + s[i].angle_offset);
-  s[i].cy = s[i].y + (b) * sin(s[i].angle_P + s[i].angle_offset);
-  
+/*
+ *  Compute the X,Y based on the detection sensor
+ */
+  switch (s->index)
+  {
+    case (N): 
+      rotation = PI_ON_2 - PI_ON_4 - s->angle_A;
+      s->xs = s->x + ((be) * sin(rotation));
+      s->ys = s->y - ((be) * cos(rotation));
+      break;
+      
+    case (E): 
+      rotation = s->angle_A - PI_ON_4;
+      s->xs = s->x - ((be) * cos(rotation));
+      s->ys = s->y + ((be) * sin(rotation));
+      break;
+      
+    case (S): 
+      rotation = s->angle_A + PI_ON_4;
+      s->xs = s->x - ((be) * cos(rotation));
+      s->ys = s->y + ((be) * sin(rotation));
+      break;
+      
+    case (W): 
+      rotation = PI_ON_2 - PI_ON_4 - s->angle_A;
+      s->xs = s->x + ((be) * cos(rotation));
+      s->ys = s->y + ((be) * sin(rotation));
+      break;
+  }
+
+/*
+ * Debugging
+ */
+  if ( read_DIP() & VERBOSE_TRACE )
+  {
+    Serial.print("\n\rindex:"); Serial.print(s->index) ; 
+    Serial.print(" a:");        Serial.print(s->a);       Serial.print("  b:");  Serial.print(s->b);
+    Serial.print(" ae:");       Serial.print(ae);         Serial.print("  be:"); Serial.print(be);    Serial.print(" c:"),  Serial.print(s->c);
+    Serial.print(" cos:");      Serial.print(cos(rotation)); Serial.print(" sin: "); Serial.print(sin(rotation));
+    Serial.print(" angle_A:");  Serial.print(s->angle_A); Serial.print("  x:");  Serial.print(s->x);  Serial.print(" y:");  Serial.print(s->y);
+    Serial.print(" rotation:"); Serial.print(rotation);   Serial.print("  xs:"); Serial.print(s->xs); Serial.print(" ys:"); Serial.print(s->ys);
+  }
+ 
+/*
+ *  All done, return
+ */
   return;
 }
 
 /*----------------------------------------------------------------
  *
- * void cramers_rule()
+ * void rotate_shot()
  *
- * Find the intersection of the coordinates found from find_xy
+ * Rotate the target back into the correct position
  *
  *----------------------------------------------------------------
- *
- *  Cramer's rule allows us to find the intersection of two lines
- *  or four coordinates
- *  
- *                         N(x,y)
- *           W(x,y)                
- *                        I            E(x,y)
- *                        
- *                     S(x,y)
- *                     
- *  Step 1, Convert the opposing pair or points to a slope and
- *          intercept of the form Y = mx + b
- *          
- *  Step 2, Using a and b, use Cramer's rule to find the intersection
- *  
+ * 
+ * Previosuly the shot was rotated so that the impact was processed
+ * as-if it came from the north sensor.
+ * 
+ * This funciton rotates the impact back into the correct quadrant.
+ *    
  *--------------------------------------------------------------*/
-void cramers_rule
+void rotate_shot
   (
-  double* x,      // Return computed value for X
-  double* y       // Return computed value for Y
+  unsigned int location,        // Sensor that detected the shot
+  history_t* h                  // History of the shot
   )
 {
-  double det_a, det_b, det_c;   // Determinants
-  double ma, ba, mb, bb;
-  det_a = 
-/*  
- *    Find the slope and intercept of the N-S line (rise over run)
- */
-  ma = (s[N].y - s[S].y) / (s[N].x - s[S].x);  // Slope
-  ba = s[N].y - (s[N].x * m);
+  double tx, ty;                // Working X and Y positions.
+  switch (location)
+  {
+    case N:                     // North sensor, no change
+      break;                
 
-/*  
- *    Find the slope and intercept of the NW-E line (rise over run)
- */
-  mb = (s[W].y - s[E].y) / (s[W].x - s[E].x);  // Slope
-  bb = s[W].y - (s[W].x * m);
+    case E:
+      tx = h->y;
+      ty = -(h->x);
+      h->y = tx;
+      h->x = ty;
+      break;
 
-/* 
- *  
+    case S:
+      h->x = -h->x;
+      h->y = -h->y;
+      break;
+
+    case W: 
+      tx = h->y;
+      ty = -(h->x);
+      h->y = -tx;
+      h->x = -ty;
+      break;
+  }
+
+/*
+ *  All done, return
  */
+  return;
 }
-
+  
 /*----------------------------------------------------------------
  *
  * void send_score(void)
@@ -296,26 +425,34 @@ void cramers_rule
  * 
  * The score is sent as:
  * 
- * {"id":"freETarget", "value":{shot, x, y}}
+ * {"shot":"freETarget", "value":{shot, x, y}}
  *    
  *--------------------------------------------------------------*/
 
 void send_score
   (
-  unsigned int shot,          // Current shot number
-           double x_time,     // X location of shot
-           double y_time      // Y location of shot
+  history_t* h                // History record
   )
 {
-  int x, y;                   // Shot location in mm X, Y
-
-  x = x_time * speed_of_sound(23.0) * CLOCK_PERIOD;
-  y = y_time * speed_of_sound(23.0) * CLOCK_PERIOD;
-
-  Serial.print("{\"shot\":"); Serial.print(shot);
+  double x, y;                   // Shot location in mm X, Y
+  double radius;
+  double angle;
+  
+  x = h->x * speed_of_sound(23.0) * CLOCK_PERIOD;
+  y = h->y * speed_of_sound(23.0) * CLOCK_PERIOD;
+  radius = sqrt(sq(x) + sq(y));
+  angle = atan2(x, y) / PI_ON_2 * 180.0d;
+  
+  Serial.print("{\"shot\":");   Serial.print(h->shot);
   Serial.print(", \"x\":");     Serial.print(x); 
-  Serial.print(", \"y\":");     Serial.print(y); Serial.print("}");
+  Serial.print(", \"y\":");     Serial.print(y); 
+  Serial.print(", \"r\":");     Serial.print(radius);
+  Serial.print(", \"a\":");     Serial.print(angle);
+  Serial.print("}");
   Serial.println();
 
   return;
 }
+
+
+

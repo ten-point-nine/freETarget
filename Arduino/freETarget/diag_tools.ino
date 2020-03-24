@@ -47,6 +47,27 @@ void show_counters(void)
   /*
    * All done return
    */
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * void sample_calculations()
+ *
+ * Setup a known target for sample calculations
+ *
+ *----------------------------------------------------------------
+ * 
+ * See excel spread sheet sample calculations.xls
+ *    
+ *--------------------------------------------------------------*/
+#define BASELINE 1000
+void sample_calculations (void)
+{
+  timer_value[N] = BASELINE - 316;
+  timer_value[E] = BASELINE - 447;
+  timer_value[S] = BASELINE - 707;
+  timer_value[W] = BASELINE - 633;
 
   return;
 }

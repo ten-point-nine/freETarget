@@ -13,6 +13,7 @@
 #include "compute_hit.h"
 #include "analog_io.h"
 
+history_t history[100];
 
 /*----------------------------------------------------------------
  * 
@@ -67,6 +68,8 @@ void loop()
   unsigned int shot = 0;
   double x_time, y_time;        // Location in time
   unsigned int running_mode;
+  unsigned int sensor_status;   // Record which sensors contain valid data
+  unsigned int location;        // Sensor location 
   
  while (1)
  {
@@ -99,13 +102,15 @@ void loop()
     set_LED(LED_X, false);    // No longer processing
     set_LED(LED_Y, false);   
     state = WAIT;
+    sensor_status = 0;
     break;
     
 /*
  * Wait for the shot
  */
   case WAIT:
-    if ( is_running() != 0 )    // Shot detected
+    sensor_status |= is_running();
+    if ( sensor_status != 0 )    // Shot detected
       {
       set_LED(LED_S, false);    // No longer waiting
       set_LED(LED_X, true);     // Starting processing
@@ -132,9 +137,11 @@ void loop()
     set_LED(LED_S, false);     // 
     set_LED(LED_X, false);     // No longer processing
     set_LED(LED_Y, true);      // Reducing the shot
-    compute_hit(&x_time, &y_time);
-    send_score(shot, x_time, y_time);
+    location = compute_hit(shot, &history[shot]);
+    rotate_shot(location, &history[shot]);  // Rotate the shot back onto the target
+    send_score(&history[shot]);
     state = WASTE;
+    shot++;                   
     break;
 
 /*
