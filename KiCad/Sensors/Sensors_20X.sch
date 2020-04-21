@@ -4,29 +4,15 @@ EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
-Title ""
-Date ""
-Rev ""
+Title "freETarget Sensor Module"
+Date "April 4, 2020"
+Rev "1.0.X"
 Comp ""
-Comment1 ""
+Comment1 "General purpose version for sensor development"
 Comment2 ""
 Comment3 ""
 Comment4 ""
 $EndDescr
-$Comp
-L SPU0410LR5H-QB-7:SPU0410LR5H-QB-7 MK1
-U 1 1 5E68DAEF
-P 2600 4000
-F 0 "MK1" H 2707 4467 50  0000 C CNN
-F 1 "SPU0410LR5H-QB-7" H 2707 4376 50  0000 C CNN
-F 2 "SnapEDA:MIC_SPU0410LR5H-QB-7" H 2600 4000 50  0001 L BNN
-F 3 "Knowles" H 2600 4000 50  0001 L BNN
-F 4 "Manufacturer Recommendations" H 2600 4000 50  0001 L BNN "Field4"
-F 5 "1.2mm" H 2600 4000 50  0001 L BNN "Field5"
-F 6 "H" H 2600 4000 50  0001 L BNN "Field6"
-	1    2600 4000
-	1    0    0    -1  
-$EndComp
 $Comp
 L Amplifier_Operational:OPA1641 U1
 U 1 1 5E698E2D
@@ -39,18 +25,16 @@ F 3 "http://www.ti.com/lit/ds/symlink/opa1641.pdf" H 6700 4000 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	6600 4300 6000 4300
-Wire Wire Line
 	7000 4000 7250 4000
 $Comp
 L Device:C C1
 U 1 1 5E6A1DD7
-P 5700 4000
-F 0 "C1" V 5448 4000 50  0000 C CNN
-F 1 "22pf" V 5539 4000 50  0000 C CNN
-F 2 "Resistor_SMD:R_0805_2012Metric" H 5738 3850 50  0001 C CNN
-F 3 "~" H 5700 4000 50  0001 C CNN
-	1    5700 4000
+P 5450 4100
+F 0 "C1" V 5198 4100 50  0000 C CNN
+F 1 "22pf" V 5289 4100 50  0000 C CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" H 5488 3950 50  0001 C CNN
+F 3 "~" H 5450 4100 50  0001 C CNN
+	1    5450 4100
 	0    1    1    0   
 $EndComp
 $Comp
@@ -58,7 +42,7 @@ L Device:R R5
 U 1 1 5E6A29B1
 P 6700 3300
 F 0 "R5" V 6493 3300 50  0000 C CNN
-F 1 "22k0" V 6584 3300 50  0000 C CNN
+F 1 "200K0" V 6584 3300 50  0000 C CNN
 F 2 "Resistor_SMD:R_0805_2012Metric" V 6630 3300 50  0001 C CNN
 F 3 "~" H 6700 3300 50  0001 C CNN
 	1    6700 3300
@@ -67,34 +51,20 @@ $EndComp
 $Comp
 L Device:R R1
 U 1 1 5E6A320A
-P 6150 4150
-F 0 "R1" V 5943 4150 50  0000 C CNN
-F 1 "22r0" V 6034 4150 50  0000 C CNN
-F 2 "Resistor_SMD:R_0805_2012Metric" V 6080 4150 50  0001 C CNN
-F 3 "~" H 6150 4150 50  0001 C CNN
-	1    6150 4150
-	0    1    1    0   
+P 6150 4350
+F 0 "R1" H 6300 4300 50  0000 C CNN
+F 1 "2K0" H 6300 4400 50  0000 C CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" V 6080 4350 50  0001 C CNN
+F 3 "~" H 6150 4350 50  0001 C CNN
+	1    6150 4350
+	-1   0    0    1   
 $EndComp
-Wire Wire Line
-	6400 3900 5850 3900
-Wire Wire Line
-	5850 3900 5850 4000
 Wire Wire Line
 	7250 4000 7250 3850
 Wire Wire Line
 	7250 3300 6850 3300
 Wire Wire Line
-	6550 3300 6300 3300
-Wire Wire Line
-	6300 3300 6300 4100
-Wire Wire Line
-	6400 4100 6300 4100
-Connection ~ 6300 4100
-Wire Wire Line
-	6300 4100 6300 4150
-Wire Wire Line
-	6000 4150 6000 4300
-Connection ~ 6000 4300
+	6150 3300 6150 4100
 $Comp
 L Device:R R4
 U 1 1 5E6F20B4
@@ -180,7 +150,6 @@ Wire Wire Line
 	9700 3850 9700 3500
 Wire Wire Line
 	9700 4150 9500 4150
-Connection ~ 6600 4300
 Wire Wire Line
 	9500 4250 9700 4250
 Connection ~ 9700 4250
@@ -223,73 +192,28 @@ F 1 "10u0" H 8915 4655 50  0000 L CNN
 F 2 "Resistor_SMD:R_1206_3216Metric" H 8800 4700 50  0001 C CNN
 F 3 "~" H 8800 4700 50  0001 C CNN
 	1    8800 4700
-	1    0    0    -1  
+	-1   0    0    1   
 $EndComp
 Wire Wire Line
 	9700 4250 9700 4850
-Wire Wire Line
-	8800 4850 6600 4850
-Wire Wire Line
-	6600 4300 6600 4850
-Connection ~ 8800 4850
 Wire Wire Line
 	10150 4250 9700 4250
 Wire Wire Line
 	10150 3850 9700 3850
 Connection ~ 9700 3500
-Wire Wire Line
-	3200 4200 3450 4200
 $Comp
 L Device:R R7
 U 1 1 5E7A9A5C
-P 4450 2250
-F 0 "R7" V 4243 2250 50  0000 C CNN
-F 1 "10k0" V 4334 2250 50  0000 C CNN
-F 2 "Resistor_SMD:R_0805_2012Metric" V 4380 2250 50  0001 C CNN
-F 3 "~" H 4450 2250 50  0001 C CNN
-	1    4450 2250
-	0    1    1    0   
+P 3950 2850
+F 0 "R7" V 3743 2850 50  0000 C CNN
+F 1 "2K2" V 3834 2850 50  0000 C CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" V 3880 2850 50  0001 C CNN
+F 3 "~" H 3950 2850 50  0001 C CNN
+	1    3950 2850
+	-1   0    0    1   
 $EndComp
 Wire Wire Line
 	9700 2250 9700 3500
-Wire Wire Line
-	4300 2450 3950 2450
-Wire Wire Line
-	3200 4000 3950 4000
-Connection ~ 3450 4200
-Wire Wire Line
-	3950 2450 3950 4000
-Connection ~ 3950 2450
-Connection ~ 3950 4000
-Wire Wire Line
-	3950 4000 5550 4000
-Wire Wire Line
-	5000 2450 5000 3800
-Wire Wire Line
-	3200 3800 5000 3800
-Wire Wire Line
-	4600 2450 5000 2450
-Wire Wire Line
-	4600 2250 8350 2250
-Wire Wire Line
-	5850 4300 5850 4200
-Wire Wire Line
-	3450 4200 5850 4200
-Wire Wire Line
-	5850 4300 6000 4300
-$Comp
-L Device:R R8
-U 1 1 5E7AA2E7
-P 4450 2450
-F 0 "R8" V 4350 2300 50  0000 C CNN
-F 1 "10K0" V 4350 2650 50  0000 C CNN
-F 2 "Resistor_SMD:R_0805_2012Metric" V 4380 2450 50  0001 C CNN
-F 3 "~" H 4450 2450 50  0001 C CNN
-	1    4450 2450
-	0    1    1    0   
-$EndComp
-Wire Wire Line
-	3950 2250 4300 2250
 $Comp
 L power:GND #PWR0101
 U 1 1 5E80E4F5
@@ -321,30 +245,15 @@ Wire Wire Line
 Wire Wire Line
 	10150 4150 10150 4250
 $Comp
-L power:+3.3V #PWR0103
-U 1 1 5E81B6EE
-P 7000 4450
-F 0 "#PWR0103" H 7000 4300 50  0001 C CNN
-F 1 "+3.3V" H 7015 4623 50  0000 C CNN
-F 2 "" H 7000 4450 50  0001 C CNN
-F 3 "" H 7000 4450 50  0001 C CNN
-	1    7000 4450
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	7000 4450 7000 4550
-Wire Wire Line
-	3450 2550 3450 4200
-$Comp
 L CMC-2742PBJ-A:CMC-2742PBJ-A MK2
 U 1 1 5E7C8206
-P 2250 2450
-F 0 "MK2" H 2357 2731 50  0000 C CNN
-F 1 "CMC-2742PBJ-A" H 2357 2640 50  0000 C CNN
-F 2 "CUI_CMC-2742PBJ-A" H 2250 2450 50  0001 L BNN
-F 3 "CUI INC" H 2250 2450 50  0001 L BNN
-F 4 "Manufacturer recommendations" H 2250 2450 50  0001 L BNN "Field4"
-	1    2250 2450
+P 2250 4200
+F 0 "MK2" H 2357 4481 50  0000 C CNN
+F 1 "CMC-2742PBJ-A" H 2357 4390 50  0000 C CNN
+F 2 "CUI_CMC-2742PBJ-A" H 2250 4200 50  0001 L BNN
+F 3 "CUI INC" H 2250 4200 50  0001 L BNN
+F 4 "Manufacturer recommendations" H 2250 4200 50  0001 L BNN "Field4"
+	1    2250 4200
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -359,11 +268,7 @@ F 3 "~" H 9200 4050 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	7000 4550 8800 4550
-Wire Wire Line
 	8800 4550 9500 4550
-Wire Wire Line
-	8800 4850 9700 4850
 Wire Wire Line
 	9000 4250 8800 4250
 Wire Wire Line
@@ -420,18 +325,54 @@ Connection ~ 8350 2700
 Text Notes 8650 2550 0    50   ~ 0
 Temperature Sensor\nNORTH only
 Wire Wire Line
-	3950 2250 3950 2350
+	2550 4300 3450 4300
 Wire Wire Line
-	2550 2550 3450 2550
+	8800 4850 9700 4850
 Wire Wire Line
-	2550 2350 3950 2350
-Connection ~ 3950 2350
+	8800 4550 6600 4550
 Wire Wire Line
-	3950 2350 3950 2450
+	6600 4550 6600 4300
+Text Label 9050 4550 0    50   ~ 0
+-5V0
+Connection ~ 6150 4100
 Wire Wire Line
-	7000 4550 5000 4550
+	6150 4200 6150 4100
 Wire Wire Line
-	5000 4550 5000 3800
-Connection ~ 7000 4550
-Connection ~ 5000 3800
+	6150 4500 6150 4850
+Wire Wire Line
+	5600 4100 6150 4100
+Wire Wire Line
+	6150 4100 6400 4100
+Wire Wire Line
+	3950 4100 5300 4100
+Wire Wire Line
+	3450 4850 6150 4850
+Connection ~ 6150 4850
+Wire Wire Line
+	6150 4850 6350 4850
+Connection ~ 8800 4850
+Wire Wire Line
+	6150 3300 6550 3300
+Wire Wire Line
+	6400 3900 6350 3900
+Wire Wire Line
+	6350 3900 6350 4850
+Connection ~ 6350 4850
+Wire Wire Line
+	6350 4850 8800 4850
+Text Label 9850 4250 0    50   ~ 0
+GND
+Text Label 9800 3850 0    50   ~ 0
+5V0
+Wire Wire Line
+	3950 3000 3950 4100
+Wire Wire Line
+	3950 2250 3950 2700
+Wire Wire Line
+	3950 2250 8350 2250
+Wire Wire Line
+	3450 4300 3450 4850
+Wire Wire Line
+	2550 4100 3950 4100
+Connection ~ 3950 4100
 $EndSCHEMATC

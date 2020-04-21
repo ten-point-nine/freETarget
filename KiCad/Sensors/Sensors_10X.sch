@@ -4,11 +4,11 @@ EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
-Title ""
-Date ""
-Rev ""
+Title "freETarget Sensor Module"
+Date "April 4, 2020"
+Rev "1.0.X"
 Comp ""
-Comment1 ""
+Comment1 "General purpose version for sensor development"
 Comment2 ""
 Comment3 ""
 Comment4 ""
