@@ -264,7 +264,6 @@ void sample_calculations (void);
  /*
   * All done return
   */
-
   h->shot = shot;
   h->x = x_avg;
   h->y = y_avg;
@@ -443,7 +442,7 @@ void send_score
   radius = sqrt(sq(x) + sq(y));
   angle = atan2(x, y) / PI_ON_2 * 180.0d;
   
-  Serial.print("{\"shot\":");   Serial.print(h->shot);
+  Serial.print("{\"shot\":");   Serial.print(h->shot + 1);
   Serial.print(", \"x\":");     Serial.print(x); 
   Serial.print(", \"y\":");     Serial.print(y); 
   Serial.print(", \"r\":");     Serial.print(radius);
