@@ -219,6 +219,7 @@ void sample_calculations (void);
   {
     s[i].b = s[i].count;
     s[i].c = sqrt(2.0d) * RADIUS / speed_of_sound(temperature_C()) * OSCILLATOR_MHZ;
+    Serial.print("  C   "); Serial.print(s[i].c);
   }
   for (i=N; i <= W; i++)
   {

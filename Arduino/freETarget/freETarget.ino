@@ -87,13 +87,11 @@ void loop()
   case SET_MODE:
     running_mode = read_DIP();
     
-    if ( running_mode & RUNNING_MODE_CALIBRATION )
+    while (read_DIP() & RUNNING_MODE_CALIBRATION)
     {
-      while (1)
-      {
       cal_analog();
+      temperature_C();
       delay(ONE_SECOND/2);
-      }
     }
     state = ARM;
     break;

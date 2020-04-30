@@ -147,17 +147,20 @@ void show_analog(void)
  * Read the temperature sensor and return temperature in degrees C
  * 
  *--------------------------------------------------------------*/
+ #define ICE_ZERO  (840)
+ #define RTD_SCALE (1.8d)
+ 
  double temperature_C(void)
 {
-  unsigned int raw;
+  double return_value;
 
-  raw = analogRead(RTD);
+  return_value = (double)(analogRead(RTD) - ICE_ZERO) * RTD_SCALE ;
 
   if ( read_DIP() & VERBOSE_TRACE )
     {
-    Serial.print("\n\rRTD:"); Serial.print(raw);
+    Serial.print("\n\rTemperature (RTD):"); Serial.print(analogRead(RTD)); Serial.print("   (C):"); Serial.print(return_value);
     }
-
-  return raw;
+    
+  return return_value;
 
 }
