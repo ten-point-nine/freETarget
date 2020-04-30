@@ -46,7 +46,7 @@ double speed_of_sound(double temperature)
   
   if ( read_DIP() & VERBOSE_TRACE )
     {
-    Serial.print("\n\rSpeed of sound: "); Serial.print(speed); Serial.print("mm/us");
+    Serial.print("\n\rSpeed of sound:"); Serial.print(speed);
     }
 
   return speed;  
@@ -71,24 +71,20 @@ double speed_of_sound(double temperature)
  *--------------------------------------------------------------*/
 void init_sensors(void)
 {
-  double s_speed;         // Speed of sound
-  double temperature;     // Temperature in C
-
-  s_speed = speed_of_sound(23.0);
   s[N].index = N;
   s[N].x = 0;
-  s[N].y = RADIUS / s_speed * OSCILLATOR_MHZ;
+  s[N].y = RADIUS;
 
   s[E].index = E;
-  s[E].x = s[N].y;
+  s[E].x = RADIUS;
   s[E].y = 0;
 
   s[S].index = S;
   s[S].x = 0;
-  s[S].y = -s[N].y;
+  s[S].y = -RADIUS;
 
   s[W].index = W;
-  s[W].x = -s[E].x;
+  s[W].x = -RADIUS;
   s[W].y = 0;
 
   Serial.print("\n\rSensors Ready");
@@ -218,7 +214,7 @@ void sample_calculations (void);
   for (i=N; i <= W; i++)
   {
     s[i].b = s[i].count;
-    s[i].c = sqrt(2.0d) * RADIUS / speed_of_sound(temperature_C()) * OSCILLATOR_MHZ;
+    s[i].c = sqrt(2.0d) * RADIUS / speed_of_sound(temperature()) * OSCILLATOR;
   }
   for (i=N; i <= W; i++)
   {

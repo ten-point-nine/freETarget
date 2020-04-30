@@ -138,26 +138,3 @@ void show_analog(void)
   return;
 
 }
-
-
-/*----------------------------------------------------------------
- * 
- * double temperature_C()
- * 
- * Read the temperature sensor and return temperature in degrees C
- * 
- *--------------------------------------------------------------*/
- double temperature_C(void)
-{
-  unsigned int raw;
-
-  raw = analogRead(RTD);
-
-  if ( read_DIP() & VERBOSE_TRACE )
-    {
-    Serial.print("\n\rRTD:"); Serial.print(raw);
-    }
-
-  return raw;
-
-}
