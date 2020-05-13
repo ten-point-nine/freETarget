@@ -10,6 +10,7 @@
 #include "compute_hit.h"
 #include "freETarget.h"
 #include "compute_hit.h"
+#include "analog_io.h"
 
 #define THRESHOLD (0.001)
 
@@ -74,7 +75,8 @@ void init_sensors(void)
   double s_speed;         // Speed of sound
   double temperature;     // Temperature in C
 
-  s_speed = speed_of_sound(23.0);
+  s_speed = speed_of_sound(temperature_C());
+  
   s[N].index = N;
   s[N].x = 0;
   s[N].y = RADIUS / s_speed * OSCILLATOR_MHZ;
@@ -121,6 +123,13 @@ unsigned int compute_hit
   double        x_avg, y_avg;      // Running average location
   double        smallest;          // Smallest non-zero value measured
   unsigned int  sensor_status;     // Sensor collection status
+  double        length_c;          // lenght of side C
+
+/*
+ * Compute the length of the outer box in clock cycles
+ */
+  s_of_sound = speed_of_sound(temperature_C());
+  length_c = sqrt(2.0d) * RADIUS / s_of_sound * OSCILLATOR_MHZ;
   
 /*
  *  Read in the counter values 
@@ -138,10 +147,10 @@ void sample_calculations (void);
 
  if ( read_DIP() & VERBOSE_TRACE )
    {
-   Serial.print("\n\rNorth: 0x"); Serial.print(timer_value[N], HEX); Serial.print("  ms:"); Serial.print(timer_value[N] / OSCILLATOR_MHZ);
-   Serial.print("  East: 0x");    Serial.print(timer_value[E], HEX); Serial.print("  ms:"); Serial.print(timer_value[E] / OSCILLATOR_MHZ);
-   Serial.print("  South: 0x");   Serial.print(timer_value[S], HEX); Serial.print("  ms:"); Serial.print(timer_value[S] / OSCILLATOR_MHZ);
-   Serial.print("  West: 0x");    Serial.print(timer_value[W], HEX); Serial.print("  ms:"); Serial.print(timer_value[W] / OSCILLATOR_MHZ);
+   Serial.print("\n\rNorth: 0x"); Serial.print(timer_value[N], HEX); Serial.print("  us:"); Serial.print(timer_value[N] / OSCILLATOR_MHZ);
+   Serial.print("  East: 0x");    Serial.print(timer_value[E], HEX); Serial.print("  us:"); Serial.print(timer_value[E] / OSCILLATOR_MHZ);
+   Serial.print("  South: 0x");   Serial.print(timer_value[S], HEX); Serial.print("  us:"); Serial.print(timer_value[S] / OSCILLATOR_MHZ);
+   Serial.print("  West: 0x");    Serial.print(timer_value[W], HEX); Serial.print("  us:"); Serial.print(timer_value[W] / OSCILLATOR_MHZ);
    }
    
 /*
@@ -169,16 +178,8 @@ void sample_calculations (void);
  */
   for (i=N; i <= W; i++)
   {
-    if ( (sensor_status & bit_mask[R(i)]) != 0 )
-    {
-      s[i].count = reference - timer_value[R(i)];
-      s[i].is_valid = true;
-    }
-    else
-    {
-      s[i].count = reference - timer_value[R(i)];
-      s[i].is_valid = false;
-    }
+    s[i].count = reference - timer_value[R(i)];
+    s[i].is_valid = ((sensor_status & bit_mask[R(i)]) != 0);
   }
 
  if ( read_DIP() & VERBOSE_TRACE )
@@ -203,13 +204,11 @@ void sample_calculations (void);
 /*
  *  Prime the estimate based on the smallest identified time.
  */
- estimate = ((sqrt(2.0d) * RADIUS) - smallest) / 2.0d;
- estimate = estimate / 10.0d;
- estimate = estimate + 0.1d;
+ estimate = length_c / 1.414d - smallest + 1.0d;
  
  if ( read_DIP() & VERBOSE_TRACE )
    {
-   Serial.print("\n\rRadius: "); Serial.print(RADIUS); Serial.print("  smallest:"); Serial.print(smallest); Serial.print(" estimate: "); Serial.print(estimate);
+   Serial.print("\n\restimate: "); Serial.print(estimate);
    }
 /*
  * Fill up the structure with the counter geometry
@@ -218,9 +217,9 @@ void sample_calculations (void);
   for (i=N; i <= W; i++)
   {
     s[i].b = s[i].count;
-    s[i].c = sqrt(2.0d) * RADIUS / speed_of_sound(temperature_C()) * OSCILLATOR_MHZ;
-    Serial.print("  C   "); Serial.print(s[i].c);
+    s[i].c = length_c;
   }
+  
   for (i=N; i <= W; i++)
   {
     s[i].a = s[(i+1) % 4].b;
@@ -381,6 +380,8 @@ void find_xy
  * This funciton rotates the impact back into the correct quadrant.
  *    
  *--------------------------------------------------------------*/
+unsigned int rotate[] = {0, 90, 180, 270};
+
 void rotate_shot
   (
   unsigned int location,        // Sensor that detected the shot
@@ -388,31 +389,57 @@ void rotate_shot
   )
 {
   double tx, ty;                // Working X and Y positions.
+  double angle;                 // Computed Angle
+  double radius;                // Computed Radius
+/*
+ * Correct the input for the fact that the sensors are out by 45 degrees 
+ */
+  tx = h->x;
+  ty = h->y;
+
+  radius = sqrt(sq(tx) + sq(ty));
+  angle = atan2(tx, ty) - PI_ON_4;
+  tx = radius * cos(angle);
+  ty = radius * sin(angle);
+
+/*
+ *  Rotated back to North up
+ */
+
+  if ( read_DIP() & VERBOSE_TRACE )
+  {
+    Serial.print("\n\rRotating Shot (In) x:"); Serial.print(h->x); Serial.print(" y:"); Serial.print(h->y); Serial.print("  degrees:"); Serial.print(rotate[location]);
+  }
+  
+
   switch (location)
   {
     case N:                     // North sensor, no change
+      h->x = tx;
+      h->y = ty;
       break;                
 
     case E:
-      tx = h->y;
-      ty = -(h->x);
       h->y = tx;
       h->x = ty;
       break;
 
     case S:
-      h->x = -h->x;
-      h->y = -h->y;
+      h->x = -tx;
+      h->y = -ty;
       break;
 
     case W: 
-      tx = h->y;
-      ty = -(h->x);
       h->y = -tx;
       h->x = -ty;
       break;
   }
-
+  
+  if ( read_DIP() & VERBOSE_TRACE )
+  {
+    Serial.print("\n\rRotating Shot (Out) x:"); Serial.print(h->x); Serial.print(" y:"); Serial.print(h->y);
+  }
+  
 /*
  *  All done, return
  */
@@ -442,8 +469,8 @@ void send_score
   double radius;
   double angle;
   
-  x = h->x * speed_of_sound(23.0) * CLOCK_PERIOD;
-  y = h->y * speed_of_sound(23.0) * CLOCK_PERIOD;
+  x = h->x * s_of_sound * CLOCK_PERIOD;
+  y = h->y * s_of_sound * CLOCK_PERIOD;
   radius = sqrt(sq(x) + sq(y));
   angle = atan2(x, y) / PI_ON_2 * 180.0d;
   
@@ -452,6 +479,12 @@ void send_score
   Serial.print(", \"y\":");     Serial.print(y); 
   Serial.print(", \"r\":");     Serial.print(radius);
   Serial.print(", \"a\":");     Serial.print(angle);
+
+  Serial.print(", \"N\":");     Serial.print(timer_value[N]);
+  Serial.print(", \"E\":");     Serial.print(timer_value[E]);
+  Serial.print(", \"S\":");     Serial.print(timer_value[S]);
+  Serial.print(", \"W\":");     Serial.print(timer_value[W]);
+
   Serial.print("}");
   Serial.println();
 
