@@ -14,6 +14,7 @@
 #include "analog_io.h"
 
 history_t history[100];
+double        s_of_sound;        // Speed of sound
 
 /*----------------------------------------------------------------
  * 
@@ -59,7 +60,8 @@ void setup()
 #define WAIT    (ARM+1)         // ARM the circuit
 #define AQUIRE (WAIT+1)         // Aquire the shot
 #define REDUCE (AQUIRE+1)       // Reduce the data
-#define WASTE  (REDUCE+1)
+#define WASTE  (REDUCE+1)       // Wait for the shot to end
+#define SHOW_ERROR (WASTE+1)    // Got a trigger, but was defective
 
 void loop() 
 {
@@ -125,11 +127,19 @@ void loop()
  *  Aquire the shot              
  */  
   case AQUIRE:
-    if ( (micros() - now) > SHOT_TIME )
-      { 
-      stop_counters();
-      state = REDUCE;
+    sensor_status |= is_running();        // Remember all of the running timers
+    if ( (micros() - now) > SHOT_TIME )   // Enough time already
+    { 
+      if ( sensor_status == 0x0f )        // Need to have all 4 counters trip
+      {
+        state = REDUCE;                   // Before we can decode all of the data.
       }
+      else
+      {
+        state = SHOW_ERROR;
+      }
+      stop_counters();
+    }
     break;
 
 /*
@@ -157,18 +167,4 @@ void loop()
   }
 }
 
-/*----------------------------------------------------------------
- * 
- * void debug_trace() 
- * 
- * Put debug information on the console
- * 
- *--------------------------------------------------------------*/
-void debug_trace (void)
-{
-#if (TRACE_PWM == true )
 
-#endif
-
-  return;
-}

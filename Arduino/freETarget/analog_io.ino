@@ -129,7 +129,12 @@ void show_analog(void)
   Serial.print(" RE: ");     Serial.print(read_in(RUN_EAST));
   Serial.print(" RS: ");     Serial.print(read_in(RUN_SOUTH));
   Serial.print(" RW: ");     Serial.print(read_in(RUN_WEST));
-    
+
+  if ( read_in(RUN_NORTH) && read_in(RUN_EAST) && read_in(RUN_SOUTH) && read_in(RUN_WEST))
+    {
+    Serial.print(" **** ");
+    }
+
   Serial.println();
 
   digitalWrite(STOP_N,  0);   // Clear the flip flops
@@ -146,19 +151,47 @@ void show_analog(void)
  * 
  * Read the temperature sensor and return temperature in degrees C
  * 
+ *----------------------------------------------------------------
+ *
+ *  CALIBRATION:  
+ *  1 - Set ROOM_ZERO to 0
+ *  2 - Set RTD_SCALE to 1.0d
+ *  3 - Measure Room Temperature Ex 23C
+ *  4 - Set RTD_ZERO to the ADC value
+ *  5 - Change and measure the temperature
+ *  6 - Scale the RTD scale accordingl 
+ *  
  *--------------------------------------------------------------*/
- #define ICE_ZERO  (840)
- #define RTD_SCALE (1.8d)
+ #define ROOM_TEMPERATURE 22.0
+ #define ROOM_ZERO       (324)
+ #define RTD_SCALE      (0.1d)
+ #define N_TEMP_SAMPLES (11)  // Must be 1 < N_TEMP_SAMPLES < 15 
  
  double temperature_C(void)
 {
   double return_value;
+  unsigned int raw;
+  unsigned int i;
 
-  return_value = (double)(analogRead(RTD) - ICE_ZERO) * RTD_SCALE ;
+/*
+ * Take a number of samples to average reading
+ */
+  raw = 0;
+  for (i=0; i != N_TEMP_SAMPLES; i++)
+  {
+    raw += analogRead(RTD);
+    delay(10);
+  }
+
+  raw /= N_TEMP_SAMPLES;
+
+  raw = analogRead(RTD);
+  
+  return_value =  ROOM_TEMPERATURE + (double)(raw - ROOM_ZERO) * RTD_SCALE ;
 
   if ( read_DIP() & VERBOSE_TRACE )
     {
-    Serial.print("\n\rTemperature (RTD):"); Serial.print(analogRead(RTD)); Serial.print("   (C):"); Serial.print(return_value);
+    Serial.print("\n\rTemperature (RAW):"); Serial.print(raw); Serial.print("   (C):"); Serial.print(return_value);
     }
     
   return return_value;

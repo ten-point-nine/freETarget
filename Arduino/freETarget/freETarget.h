@@ -42,5 +42,7 @@ struct history
 
 typedef struct history history_t;
 
+extern double s_of_sound;
+
 #endif
 
