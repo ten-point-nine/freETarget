@@ -513,16 +513,11 @@ MIC_SOUTH
 Text Label 1350 1500 0    50   ~ 0
 MIC_WEST
 Wire Wire Line
-	600  1400 700  1400
-Wire Wire Line
-	600  1400 600  1300
-Wire Wire Line
 	600  1300 700  1300
 Wire Wire Line
 	600  1300 600  1200
 Wire Wire Line
 	600  1200 700  1200
-Connection ~ 600  1300
 $Comp
 L power:VCC #PWR01
 U 1 1 5EB19E36
@@ -951,10 +946,6 @@ Wire Wire Line
 	5050 3150 5250 3150
 Wire Wire Line
 	700  1500 600  1500
-Wire Wire Line
-	600  1500 600  1600
-Wire Wire Line
-	700  1600 600  1600
 $Comp
 L power:GND #PWR02
 U 1 1 5E5FBFD2
@@ -1356,10 +1347,7 @@ F 3 "~" H 850 2100 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	850  2250 600  2250
-Wire Wire Line
-	600  2250 600  1600
 Connection ~ 600  2250
-Connection ~ 600  1600
 Connection ~ 850  1800
 Wire Wire Line
 	850  1800 850  1950
@@ -1612,10 +1600,6 @@ F 3 "~" H 900 1400 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	1200 1600 1500 1600
-Wire Wire Line
-	1500 1600 1500 1800
-Wire Wire Line
 	10850 8700 11650 8700
 Wire Wire Line
 	10850 9700 11650 9700
@@ -1666,26 +1650,9 @@ Connection ~ 6050 9350
 Wire Wire Line
 	850  1800 1500 1800
 Wire Wire Line
-	1200 1700 1950 1700
-Wire Wire Line
-	16400 8200 16400 6700
-Wire Wire Line
-	16400 6700 15750 6700
-Wire Wire Line
-	15750 6700 15750 5400
-Wire Wire Line
-	15350 5400 15750 5400
-Text Label 15500 5400 0    50   ~ 0
-TEMP
-Wire Wire Line
-	1950 1700 1950 8200
-Wire Wire Line
-	1950 8200 16400 8200
-Wire Wire Line
 	1500 1800 1500 8400
 Wire Wire Line
 	3900 8400 3900 9200
-Connection ~ 1500 1800
 $Comp
 L Device:R R11
 U 1 1 5EAD205F
@@ -1725,4 +1692,30 @@ Wire Wire Line
 Wire Wire Line
 	3900 9550 4350 9550
 Connection ~ 4350 9550
+Wire Wire Line
+	600  1500 600  2250
+Wire Wire Line
+	700  1400 600  1400
+Wire Wire Line
+	600  1400 600  1500
+Connection ~ 600  1500
+Wire Wire Line
+	700  1600 700  1700
+Connection ~ 700  1700
+Wire Wire Line
+	15700 4500 15350 4500
+Wire Wire Line
+	15700 4600 15350 4600
+Text Label 15450 4500 0    50   ~ 0
+SDA
+Text Label 15450 4600 0    50   ~ 0
+SCL
+Wire Wire Line
+	1200 1700 1700 1700
+Wire Wire Line
+	1200 1600 1700 1600
+Text Label 1350 1600 0    50   ~ 0
+SDA
+Text Label 1350 1700 0    50   ~ 0
+SCL
 $EndSCHEMATC
