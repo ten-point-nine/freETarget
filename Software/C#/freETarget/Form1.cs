@@ -16,15 +16,24 @@ namespace freETarget
 {
     public partial class frmMainWindow : Form
     {
-        bool isConnected = false;
+
+        public const string AirPistol = "Air Pistol";
+        public const string AirRifle = "Air Rifle";
+
+        public const decimal airPistolRange = 75m;
+        public const decimal airRifleRange = 21.9455m;
+
+        private bool isConnected = false;
         private delegate void SafeCallDelegate(string text, Shot shot);
         private delegate void SafeCallDelegate2(string text);
-        List<Shot> shots = new List<Shot>();
-        int score = 0;
-        decimal decimalScore = 0m;
-        int innerX = 0; 
+        private List<Shot> shots = new List<Shot>();
+        private int score = 0;
+        private decimal decimalScore = 0m;
+        private int innerX = 0; 
+        public static string[] supportedTargets = new string[] { AirPistol, AirRifle};
+        private decimal currentRange = 0;
 
-        public struct Shot
+    public struct Shot
         {
             public int count;
             public decimal x;
@@ -278,7 +287,7 @@ namespace freETarget
                 }
             }catch(FormatException ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine("Could not parse: " + json + " Error: " + ex.Message);
                 Shot err = new Shot();
                 err.count = -1;
                 return err;
@@ -291,13 +300,15 @@ namespace freETarget
 
         private void determineScore(ref Shot shot)
         {
-            //75 is the radius of the target circle
-            if (shot.radius <= 75)
+            decimal scoreFactor = currentRange / 9.9m; //range divided by 10.9 - 1 (1 being the minimum score that can be hit on the outside of the target)
+            Console.WriteLine(scoreFactor);
+
+            if (shot.radius <= currentRange)
             {
                 decimal t = shot.radius;
-                decimal t2 = (t / 7.73m); //empirically determined constant
+                decimal t2 = (t / scoreFactor); 
                 decimal score = 10.9m - t2;
-               
+
                 shot.decimalScore = Math.Round(score, 1);
                 shot.score = (int)Math.Floor(shot.decimalScore);
             }
@@ -306,6 +317,7 @@ namespace freETarget
                 shot.score = 0;
                 shot.decimalScore = 0;
             }
+            
         }
 
         private void imgArrow_LoadCompleted(object sender, AsyncCompletedEventArgs e)
@@ -326,6 +338,7 @@ namespace freETarget
                 Properties.Settings.Default.baudRate = int.Parse(settingsFrom.txtBaud.Text);
                 Properties.Settings.Default.displayDebugConsole = settingsFrom.chkDisplayConsole.Checked;
                 Properties.Settings.Default.portName = settingsFrom.cmbPorts.GetItemText(settingsFrom.cmbPorts.SelectedItem);
+                Properties.Settings.Default.defaultTarget = settingsFrom.cmbWeapons.GetItemText(settingsFrom.cmbWeapons.SelectedItem);
                 Properties.Settings.Default.Save();
 
                 displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
@@ -348,12 +361,7 @@ namespace freETarget
 
         private void frmMainWindow_Load(object sender, EventArgs e)
         {
-            
-        }
-
-        private void frmMainWindow_Shown(object sender, EventArgs e)
-        {
-            displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
+            cmbWeapon.Items.AddRange(supportedTargets);
         }
 
         private void frmMainWindow_FormClosing(object sender, FormClosingEventArgs e)
@@ -366,6 +374,30 @@ namespace freETarget
 
                 statusText.Text = "Disconnected";
             }
+        }
+
+        private void frmMainWindow_Shown(object sender, EventArgs e)
+        {
+            displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
+            Console.WriteLine(Properties.Settings.Default.defaultTarget);
+            cmbWeapon.SelectedItem = Properties.Settings.Default.defaultTarget;
+        }
+
+        private void cmbWeapon_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if(cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirPistol){
+                imgTarget.Image = imgAirPistol.Image;
+                currentRange = airPistolRange;
+            }else if(cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirRifle)
+            {
+                imgTarget.Image = imgAirRifle.Image;
+                currentRange = airRifleRange;
+            }
+            else
+            {
+                imgTarget.Image = imgTarget.ErrorImage;
+            }
+            
         }
     }
 

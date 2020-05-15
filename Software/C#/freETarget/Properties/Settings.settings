@@ -14,5 +14,8 @@
     <Setting Name="displayDebugConsole" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="defaultTarget" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Air Pistol</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -38,13 +38,15 @@
             this.label3 = new System.Windows.Forms.Label();
             this.cmbPorts = new System.Windows.Forms.ComboBox();
             this.chkDisplayConsole = new System.Windows.Forms.CheckBox();
+            this.cmbWeapons = new System.Windows.Forms.ComboBox();
+            this.label4 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(155, 114);
+            this.btnOK.Location = new System.Drawing.Point(153, 144);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 0;
@@ -55,7 +57,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(74, 114);
+            this.btnCancel.Location = new System.Drawing.Point(72, 144);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
@@ -65,7 +67,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 9);
+            this.label1.Location = new System.Drawing.Point(12, 13);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(35, 13);
             this.label1.TabIndex = 2;
@@ -74,7 +76,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 35);
+            this.label2.Location = new System.Drawing.Point(12, 38);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(26, 13);
             this.label2.TabIndex = 4;
@@ -82,14 +84,14 @@
             // 
             // txtBaud
             // 
-            this.txtBaud.Location = new System.Drawing.Point(82, 58);
+            this.txtBaud.Location = new System.Drawing.Point(100, 60);
             this.txtBaud.Name = "txtBaud";
             this.txtBaud.Size = new System.Drawing.Size(121, 20);
             this.txtBaud.TabIndex = 6;
             // 
             // txtName
             // 
-            this.txtName.Location = new System.Drawing.Point(82, 6);
+            this.txtName.Location = new System.Drawing.Point(100, 9);
             this.txtName.Name = "txtName";
             this.txtName.Size = new System.Drawing.Size(121, 20);
             this.txtName.TabIndex = 7;
@@ -97,7 +99,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 61);
+            this.label3.Location = new System.Drawing.Point(12, 64);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(58, 13);
             this.label3.TabIndex = 9;
@@ -106,7 +108,7 @@
             // cmbPorts
             // 
             this.cmbPorts.FormattingEnabled = true;
-            this.cmbPorts.Location = new System.Drawing.Point(82, 32);
+            this.cmbPorts.Location = new System.Drawing.Point(100, 34);
             this.cmbPorts.Name = "cmbPorts";
             this.cmbPorts.Size = new System.Drawing.Size(121, 21);
             this.cmbPorts.TabIndex = 11;
@@ -114,18 +116,37 @@
             // chkDisplayConsole
             // 
             this.chkDisplayConsole.AutoSize = true;
-            this.chkDisplayConsole.Location = new System.Drawing.Point(15, 84);
+            this.chkDisplayConsole.Location = new System.Drawing.Point(15, 114);
             this.chkDisplayConsole.Name = "chkDisplayConsole";
             this.chkDisplayConsole.Size = new System.Drawing.Size(136, 17);
             this.chkDisplayConsole.TabIndex = 12;
             this.chkDisplayConsole.Text = "Display Debug Console";
             this.chkDisplayConsole.UseVisualStyleBackColor = true;
             // 
+            // cmbWeapons
+            // 
+            this.cmbWeapons.FormattingEnabled = true;
+            this.cmbWeapons.Location = new System.Drawing.Point(100, 85);
+            this.cmbWeapons.Name = "cmbWeapons";
+            this.cmbWeapons.Size = new System.Drawing.Size(121, 21);
+            this.cmbWeapons.TabIndex = 13;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(12, 89);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(75, 13);
+            this.label4.TabIndex = 14;
+            this.label4.Text = "Default Target";
+            // 
             // frmSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(242, 149);
+            this.ClientSize = new System.Drawing.Size(240, 179);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.cmbWeapons);
             this.Controls.Add(this.chkDisplayConsole);
             this.Controls.Add(this.cmbPorts);
             this.Controls.Add(this.label3);
@@ -159,5 +180,7 @@
         private System.Windows.Forms.Label label3;
         public System.Windows.Forms.ComboBox cmbPorts;
         public System.Windows.Forms.CheckBox chkDisplayConsole;
+        public System.Windows.Forms.ComboBox cmbWeapons;
+        private System.Windows.Forms.Label label4;
     }
 }

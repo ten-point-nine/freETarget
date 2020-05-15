@@ -70,5 +70,17 @@ namespace freETarget.Properties {
                 this["displayDebugConsole"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Air Pistol")]
+        public string defaultTarget {
+            get {
+                return ((string)(this["defaultTarget"]));
+            }
+            set {
+                this["defaultTarget"] = value;
+            }
+        }
     }
 }

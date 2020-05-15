@@ -32,6 +32,8 @@ namespace freETarget
                 }
             }
 
+            cmbWeapons.Items.AddRange(frmMainWindow.supportedTargets);
+
             loadSettings();
         }
 
@@ -41,6 +43,7 @@ namespace freETarget
             txtBaud.Text = Properties.Settings.Default.baudRate.ToString();
             chkDisplayConsole.Checked = Properties.Settings.Default.displayDebugConsole;
             cmbPorts.SelectedItem = Properties.Settings.Default.portName;
+            cmbWeapons.SelectedItem = Properties.Settings.Default.defaultTarget;
 
         }
     }
