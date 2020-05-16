@@ -26,12 +26,15 @@ namespace freETarget
         private bool isConnected = false;
         private delegate void SafeCallDelegate(string text, Shot shot);
         private delegate void SafeCallDelegate2(string text);
+        private delegate int SafeCallDelegate3();
         private List<Shot> shots = new List<Shot>();
         private int score = 0;
         private decimal decimalScore = 0m;
         private int innerX = 0; 
         public static string[] supportedTargets = new string[] { AirPistol, AirRifle};
         private decimal currentRange = 0;
+
+        private Bitmap ghostTarget = null;
 
     public struct Shot
         {
@@ -77,7 +80,7 @@ namespace freETarget
             }
             else
             {
-                statusText.Text = "Error parsing shot " + indata;
+               
                 displayError("Error parsing shot " + indata);
             }
         
@@ -126,8 +129,11 @@ namespace freETarget
             {
                 txtOutput.AppendText(text);
                 txtOutput.AppendText(Environment.NewLine);
+                //statusText.Text = text;
             }
         }
+
+
 
         //write data to text box
         private void writeShotData (string json, Shot shot)
@@ -171,22 +177,46 @@ namespace freETarget
             }
         }
 
+        private int getZoom()
+        {
+            if (trkZoom.InvokeRequired)
+            {
+                int r = 2;
+                trkZoom.Invoke(new MethodInvoker(delegate
+                {
+                    r = trkZoom.Value;
+                }));
+                return r;
+            }
+            else
+            {
+                return trkZoom.Value;
+            }
+        }
+
         //draw shot on target imagebox
         private void drawShot(Shot shot)
         {
             //transform shot coordinates to imagebox coordinates
             decimal x = transformX(shot.x, shot.y);
             decimal y = transformY(shot.x, shot.y);
-            //Console.WriteLine("X:" + x + " - Y: " + y);
 
             //draw shot on target
             Brush b = new SolidBrush(Color.Blue);
             Pen p = new Pen(Color.LightSkyBlue);
-            Graphics it = imgTarget.CreateGraphics();
+            Bitmap bmpTarget = new Bitmap(ghostTarget);
+            Graphics it = Graphics.FromImage(bmpTarget);
             it.SmoothingMode = SmoothingMode.AntiAlias;
-            it.FillEllipse(b, new Rectangle(new Point((int)Math.Round(x - 8), (int)Math.Round(y - 8)), new Size(11, 11)));
-            it.DrawEllipse(p, new Rectangle(new Point((int)Math.Round(x - 8), (int)Math.Round(y - 8)), new Size(11, 11)));
+            it.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            it.FillEllipse(b, new Rectangle(new Point((int)Math.Round(x - 6), (int)Math.Round(y - 6)), new Size(11, 11)));
+            it.DrawEllipse(p, new Rectangle(new Point((int)Math.Round(x - 6), (int)Math.Round(y - 6)), new Size(11, 11)));
+            ghostTarget = bmpTarget; //save target image to cache, unzoomed
 
+            //zoom target
+            int zoom = getZoom();
+            Size newSize = new Size((int)(bmpTarget.Width *  zoom / 2m), (int)(bmpTarget.Height * zoom / 2m));
+            Bitmap bmpZoomed = new Bitmap(bmpTarget, newSize);
+            imgTarget.Image = bmpZoomed;
 
             //draw direction arrow
             Bitmap bmp = new Bitmap(imgArrow.Image);
@@ -300,7 +330,7 @@ namespace freETarget
 
         private void determineScore(ref Shot shot)
         {
-            decimal scoreFactor = currentRange / 9.9m; //range divided by 10.9 - 1 (1 being the minimum score that can be hit on the outside of the target)
+            decimal scoreFactor = currentRange / 9.8m; //range divided by 10.9 - 1.1 (1.1 being the minimum score that can be hit/displayed)
 
             if (shot.radius <= currentRange)
             {
@@ -386,17 +416,34 @@ namespace freETarget
         {
             if(cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirPistol){
                 imgTarget.Image = imgAirPistol.Image;
+                ghostTarget = new Bitmap(imgAirPistol.Image);
                 currentRange = airPistolRange;
+                trkZoom.Value = 2;
             }else if(cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirRifle)
             {
                 imgTarget.Image = imgAirRifle.Image;
+                ghostTarget = new Bitmap(imgAirRifle.Image);
                 currentRange = airRifleRange;
+                trkZoom.Value = 2;
             }
             else
             {
                 imgTarget.Image = imgTarget.ErrorImage;
             }
             
+        }
+
+        private void trkZoom_ValueChanged(object sender, EventArgs e)
+        {
+            Bitmap bmpTarget = new Bitmap(ghostTarget);
+            Graphics it = Graphics.FromImage(bmpTarget);
+            it.SmoothingMode = SmoothingMode.AntiAlias;
+            it.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            ghostTarget = bmpTarget;
+            int zoom = getZoom();
+            Size newSize = new Size((int)(bmpTarget.Width * zoom / 2m), (int)(bmpTarget.Height * zoom / 2m));
+            Bitmap bmpZoomed = new Bitmap(bmpTarget, newSize);
+            imgTarget.Image = bmpZoomed;
         }
     }
 
