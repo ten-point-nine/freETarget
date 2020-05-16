@@ -77,8 +77,8 @@ namespace freETarget
             }
             else
             {
-                statusText.Text = "Error parsing shot";
-                displayError("Error parsing shot");
+                statusText.Text = "Error parsing shot " + indata;
+                displayError("Error parsing shot " + indata);
             }
         
             
@@ -301,7 +301,6 @@ namespace freETarget
         private void determineScore(ref Shot shot)
         {
             decimal scoreFactor = currentRange / 9.9m; //range divided by 10.9 - 1 (1 being the minimum score that can be hit on the outside of the target)
-            Console.WriteLine(scoreFactor);
 
             if (shot.radius <= currentRange)
             {
@@ -325,7 +324,7 @@ namespace freETarget
             if (e.Error != null)
             {
                 // You got the Error image, e.Error tells you why
-                Console.WriteLine(e.Error);
+                Console.WriteLine("Image load error! "+e.Error);
             }
         }
 

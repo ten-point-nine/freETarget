@@ -9,14 +9,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using TargetSimulator.Properties;
 
 namespace TargetSimulator
 {
 
     public partial class Form1 : Form
     {
+        public const decimal distanceBetweenSensors = 150; //in milimiters
+
+        private int range = (int)Math.Round(distanceBetweenSensors * 10 / 2, 0);
         bool isConnected = false;
-        int count = 0;
+        int count = 1;
         String[] ports;
 
 
@@ -45,11 +49,12 @@ namespace TargetSimulator
 
         private void btnConnect_Click(object sender, EventArgs e)
         {
+            Console.WriteLine("Range " + range);
             if (isConnected == false)
             {
                 string selectedPort = comboBox1.GetItemText(comboBox1.SelectedItem);
                 serialPort1.PortName = selectedPort;
-                serialPort1.BaudRate = 115200; 
+                serialPort1.BaudRate = Settings.Default.BaudRate; 
                 serialPort1.WriteTimeout = 500;
                 serialPort1.Open();
                 btnConnect.Text = "Disconnect";
@@ -66,7 +71,7 @@ namespace TargetSimulator
                 btnTopRight.Enabled = true;
 
                 statusText.Text = "Connected";
-                count = 0;
+                count = 1;
                 
             } else {
                 serialPort1.Close();
@@ -94,9 +99,9 @@ namespace TargetSimulator
         private void timer1_Tick(object sender, EventArgs e)
         {
             var rand = new Random();
-            timer1.Interval = rand.Next(100, 300);
-            decimal xPos = rand.Next(-750, 750) / 10m;
-            decimal yPos = rand.Next(-750, 750) / 10m;
+            timer1.Interval = rand.Next(100, 300); //time between automated shots
+            decimal xPos = rand.Next(-range, range) / 10m;
+            decimal yPos = rand.Next(-range, range) / 10m;
             generateAndSend(xPos,yPos);
         }
 
@@ -155,8 +160,8 @@ namespace TargetSimulator
         private void btnShot_Click(object sender, EventArgs e)
         {
             var rand = new Random();
-            decimal xPos = rand.Next(-750, 750) / 10m;
-            decimal yPos = rand.Next(-750, 750) / 10m;
+            decimal xPos = rand.Next(-range, range) / 10m;
+            decimal yPos = rand.Next(-range, range) / 10m;
             generateAndSend(xPos, yPos);
         }
 
@@ -169,7 +174,7 @@ namespace TargetSimulator
 
         private void btnLeft_Click(object sender, EventArgs e)
         {
-            decimal xPos = -75;
+            decimal xPos = -range / 10m;
             decimal yPos = 0;
             generateAndSend(xPos, yPos);
         }
@@ -177,35 +182,35 @@ namespace TargetSimulator
         private void btnTop_Click(object sender, EventArgs e)
         {
             decimal xPos = 0;
-            decimal yPos = 75;
+            decimal yPos = range / 10m;
             generateAndSend(xPos, yPos);
         }
 
         private void btnBottom_Click(object sender, EventArgs e)
         {
             decimal xPos = 0;
-            decimal yPos = -75;
+            decimal yPos = -range / 10m;
             generateAndSend(xPos, yPos);
         }
 
         private void btnRight_Click(object sender, EventArgs e)
         {
-            decimal xPos = 75;
+            decimal xPos = range / 10m;
             decimal yPos = 0;
             generateAndSend(xPos, yPos);
         }
 
         private void btnTopRight_Click(object sender, EventArgs e)
         {
-            decimal xPos = 75;
-            decimal yPos = 75;
+            decimal xPos = range / 10m;
+            decimal yPos = range / 10m;
             generateAndSend(xPos, yPos);
         }
 
         private void btnHalfway_Click(object sender, EventArgs e)
         {
-            decimal xPos = 37.5m;
-            decimal yPos = 37.5m;
+            decimal xPos = range / 20m;
+            decimal yPos = range / 20m;
             generateAndSend(xPos, yPos);
         }
     }
