@@ -16,15 +16,27 @@ namespace freETarget
 {
     public partial class frmMainWindow : Form
     {
-        bool isConnected = false;
+
+        public const string AirPistol = "Air Pistol";
+        public const string AirRifle = "Air Rifle";
+
+        public const decimal airPistolRange = 75m;
+        public const decimal airRifleRange = 21.9455m;
+
+        private bool isConnected = false;
         private delegate void SafeCallDelegate(string text, Shot shot);
         private delegate void SafeCallDelegate2(string text);
-        List<Shot> shots = new List<Shot>();
-        int score = 0;
-        decimal decimalScore = 0m;
-        int innerX = 0; 
+        private delegate int SafeCallDelegate3();
+        private List<Shot> shots = new List<Shot>();
+        private int score = 0;
+        private decimal decimalScore = 0m;
+        private int innerX = 0; 
+        public static string[] supportedTargets = new string[] { AirPistol, AirRifle};
+        private decimal currentRange = 0;
 
-        public struct Shot
+        private Bitmap ghostTarget = null;
+
+    public struct Shot
         {
             public int count;
             public decimal x;
@@ -68,8 +80,8 @@ namespace freETarget
             }
             else
             {
-                statusText.Text = "Error parsing shot";
-                displayError("Error parsing shot");
+               
+                displayError("Error parsing shot " + indata);
             }
         
             
@@ -117,8 +129,11 @@ namespace freETarget
             {
                 txtOutput.AppendText(text);
                 txtOutput.AppendText(Environment.NewLine);
+                //statusText.Text = text;
             }
         }
+
+
 
         //write data to text box
         private void writeShotData (string json, Shot shot)
@@ -162,22 +177,46 @@ namespace freETarget
             }
         }
 
+        private int getZoom()
+        {
+            if (trkZoom.InvokeRequired)
+            {
+                int r = 2;
+                trkZoom.Invoke(new MethodInvoker(delegate
+                {
+                    r = trkZoom.Value;
+                }));
+                return r;
+            }
+            else
+            {
+                return trkZoom.Value;
+            }
+        }
+
         //draw shot on target imagebox
         private void drawShot(Shot shot)
         {
             //transform shot coordinates to imagebox coordinates
             decimal x = transformX(shot.x, shot.y);
             decimal y = transformY(shot.x, shot.y);
-            //Console.WriteLine("X:" + x + " - Y: " + y);
 
             //draw shot on target
             Brush b = new SolidBrush(Color.Blue);
             Pen p = new Pen(Color.LightSkyBlue);
-            Graphics it = imgTarget.CreateGraphics();
+            Bitmap bmpTarget = new Bitmap(ghostTarget);
+            Graphics it = Graphics.FromImage(bmpTarget);
             it.SmoothingMode = SmoothingMode.AntiAlias;
-            it.FillEllipse(b, new Rectangle(new Point((int)Math.Round(x - 8), (int)Math.Round(y - 8)), new Size(11, 11)));
-            it.DrawEllipse(p, new Rectangle(new Point((int)Math.Round(x - 8), (int)Math.Round(y - 8)), new Size(11, 11)));
+            it.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            it.FillEllipse(b, new Rectangle(new Point((int)Math.Round(x - 6), (int)Math.Round(y - 6)), new Size(11, 11)));
+            it.DrawEllipse(p, new Rectangle(new Point((int)Math.Round(x - 6), (int)Math.Round(y - 6)), new Size(11, 11)));
+            ghostTarget = bmpTarget; //save target image to cache, unzoomed
 
+            //zoom target
+            int zoom = getZoom();
+            Size newSize = new Size((int)(bmpTarget.Width *  zoom / 2m), (int)(bmpTarget.Height * zoom / 2m));
+            Bitmap bmpZoomed = new Bitmap(bmpTarget, newSize);
+            imgTarget.Image = bmpZoomed;
 
             //draw direction arrow
             Bitmap bmp = new Bitmap(imgArrow.Image);
@@ -278,7 +317,7 @@ namespace freETarget
                 }
             }catch(FormatException ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine("Could not parse: " + json + " Error: " + ex.Message);
                 Shot err = new Shot();
                 err.count = -1;
                 return err;
@@ -291,13 +330,14 @@ namespace freETarget
 
         private void determineScore(ref Shot shot)
         {
-            //75 is the radius of the target circle
-            if (shot.radius <= 75)
+            decimal scoreFactor = currentRange / 9.8m; //range divided by 10.9 - 1.1 (1.1 being the minimum score that can be hit/displayed)
+
+            if (shot.radius <= currentRange)
             {
                 decimal t = shot.radius;
-                decimal t2 = (t / 7.73m); //empirically determined constant
+                decimal t2 = (t / scoreFactor); 
                 decimal score = 10.9m - t2;
-               
+
                 shot.decimalScore = Math.Round(score, 1);
                 shot.score = (int)Math.Floor(shot.decimalScore);
             }
@@ -306,6 +346,7 @@ namespace freETarget
                 shot.score = 0;
                 shot.decimalScore = 0;
             }
+            
         }
 
         private void imgArrow_LoadCompleted(object sender, AsyncCompletedEventArgs e)
@@ -313,7 +354,7 @@ namespace freETarget
             if (e.Error != null)
             {
                 // You got the Error image, e.Error tells you why
-                Console.WriteLine(e.Error);
+                Console.WriteLine("Image load error! "+e.Error);
             }
         }
 
@@ -326,6 +367,7 @@ namespace freETarget
                 Properties.Settings.Default.baudRate = int.Parse(settingsFrom.txtBaud.Text);
                 Properties.Settings.Default.displayDebugConsole = settingsFrom.chkDisplayConsole.Checked;
                 Properties.Settings.Default.portName = settingsFrom.cmbPorts.GetItemText(settingsFrom.cmbPorts.SelectedItem);
+                Properties.Settings.Default.defaultTarget = settingsFrom.cmbWeapons.GetItemText(settingsFrom.cmbWeapons.SelectedItem);
                 Properties.Settings.Default.Save();
 
                 displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
@@ -348,12 +390,7 @@ namespace freETarget
 
         private void frmMainWindow_Load(object sender, EventArgs e)
         {
-            
-        }
-
-        private void frmMainWindow_Shown(object sender, EventArgs e)
-        {
-            displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
+            cmbWeapon.Items.AddRange(supportedTargets);
         }
 
         private void frmMainWindow_FormClosing(object sender, FormClosingEventArgs e)
@@ -366,6 +403,47 @@ namespace freETarget
 
                 statusText.Text = "Disconnected";
             }
+        }
+
+        private void frmMainWindow_Shown(object sender, EventArgs e)
+        {
+            displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
+            Console.WriteLine(Properties.Settings.Default.defaultTarget);
+            cmbWeapon.SelectedItem = Properties.Settings.Default.defaultTarget;
+        }
+
+        private void cmbWeapon_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if(cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirPistol){
+                imgTarget.Image = imgAirPistol.Image;
+                ghostTarget = new Bitmap(imgAirPistol.Image);
+                currentRange = airPistolRange;
+                trkZoom.Value = 2;
+            }else if(cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirRifle)
+            {
+                imgTarget.Image = imgAirRifle.Image;
+                ghostTarget = new Bitmap(imgAirRifle.Image);
+                currentRange = airRifleRange;
+                trkZoom.Value = 2;
+            }
+            else
+            {
+                imgTarget.Image = imgTarget.ErrorImage;
+            }
+            
+        }
+
+        private void trkZoom_ValueChanged(object sender, EventArgs e)
+        {
+            Bitmap bmpTarget = new Bitmap(ghostTarget);
+            Graphics it = Graphics.FromImage(bmpTarget);
+            it.SmoothingMode = SmoothingMode.AntiAlias;
+            it.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            ghostTarget = bmpTarget;
+            int zoom = getZoom();
+            Size newSize = new Size((int)(bmpTarget.Width * zoom / 2m), (int)(bmpTarget.Height * zoom / 2m));
+            Bitmap bmpZoomed = new Bitmap(bmpTarget, newSize);
+            imgTarget.Image = bmpZoomed;
         }
     }
 

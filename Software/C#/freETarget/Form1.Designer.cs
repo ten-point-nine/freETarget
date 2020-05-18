@@ -48,9 +48,17 @@
             this.label2 = new System.Windows.Forms.Label();
             this.imgArrow = new System.Windows.Forms.PictureBox();
             this.button1 = new System.Windows.Forms.Button();
+            this.cmbWeapon = new System.Windows.Forms.ComboBox();
+            this.imgAirPistol = new System.Windows.Forms.PictureBox();
+            this.imgAirRifle = new System.Windows.Forms.PictureBox();
+            this.trkZoom = new System.Windows.Forms.TrackBar();
+            this.label3 = new System.Windows.Forms.Label();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.imgTarget)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.imgArrow)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.imgAirPistol)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.imgAirRifle)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trkZoom)).BeginInit();
             this.SuspendLayout();
             // 
             // serialPort
@@ -73,7 +81,7 @@
             this.statusText});
             this.statusStrip1.Location = new System.Drawing.Point(0, 544);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(722, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(1186, 22);
             this.statusStrip1.SizingGrip = false;
             this.statusStrip1.TabIndex = 1;
             this.statusStrip1.Text = "statusStrip";
@@ -101,7 +109,6 @@
             // imgTarget
             // 
             this.imgTarget.BackColor = System.Drawing.Color.Linen;
-            this.imgTarget.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.imgTarget.Image = ((System.Drawing.Image)(resources.GetObject("imgTarget.Image")));
             this.imgTarget.InitialImage = null;
             this.imgTarget.Location = new System.Drawing.Point(217, 37);
@@ -109,7 +116,7 @@
             this.imgTarget.MinimumSize = new System.Drawing.Size(500, 500);
             this.imgTarget.Name = "imgTarget";
             this.imgTarget.Size = new System.Drawing.Size(500, 500);
-            this.imgTarget.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.imgTarget.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.imgTarget.TabIndex = 4;
             this.imgTarget.TabStop = false;
             this.imgTarget.WaitOnLoad = true;
@@ -228,11 +235,64 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
+            // cmbWeapon
+            // 
+            this.cmbWeapon.FormattingEnabled = true;
+            this.cmbWeapon.Location = new System.Drawing.Point(217, 9);
+            this.cmbWeapon.Name = "cmbWeapon";
+            this.cmbWeapon.Size = new System.Drawing.Size(121, 21);
+            this.cmbWeapon.TabIndex = 12;
+            this.cmbWeapon.SelectedIndexChanged += new System.EventHandler(this.cmbWeapon_SelectedIndexChanged);
+            // 
+            // imgAirPistol
+            // 
+            this.imgAirPistol.Image = ((System.Drawing.Image)(resources.GetObject("imgAirPistol.Image")));
+            this.imgAirPistol.Location = new System.Drawing.Point(1059, 43);
+            this.imgAirPistol.Name = "imgAirPistol";
+            this.imgAirPistol.Size = new System.Drawing.Size(47, 30);
+            this.imgAirPistol.TabIndex = 13;
+            this.imgAirPistol.TabStop = false;
+            // 
+            // imgAirRifle
+            // 
+            this.imgAirRifle.Image = ((System.Drawing.Image)(resources.GetObject("imgAirRifle.Image")));
+            this.imgAirRifle.Location = new System.Drawing.Point(1059, 116);
+            this.imgAirRifle.Name = "imgAirRifle";
+            this.imgAirRifle.Size = new System.Drawing.Size(47, 29);
+            this.imgAirRifle.TabIndex = 14;
+            this.imgAirRifle.TabStop = false;
+            this.imgAirRifle.Visible = false;
+            // 
+            // trkZoom
+            // 
+            this.trkZoom.LargeChange = 1;
+            this.trkZoom.Location = new System.Drawing.Point(467, 6);
+            this.trkZoom.Maximum = 12;
+            this.trkZoom.Minimum = 2;
+            this.trkZoom.Name = "trkZoom";
+            this.trkZoom.Size = new System.Drawing.Size(104, 45);
+            this.trkZoom.TabIndex = 15;
+            this.trkZoom.Value = 2;
+            this.trkZoom.ValueChanged += new System.EventHandler(this.trkZoom_ValueChanged);
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(427, 9);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(34, 13);
+            this.label3.TabIndex = 16;
+            this.label3.Text = "Zoom";
+            // 
             // frmMainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(722, 566);
+            this.ClientSize = new System.Drawing.Size(1186, 566);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.imgAirRifle);
+            this.Controls.Add(this.imgAirPistol);
+            this.Controls.Add(this.cmbWeapon);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.imgArrow);
             this.Controls.Add(this.label2);
@@ -244,6 +304,7 @@
             this.Controls.Add(this.txtOutput);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.btnConnect);
+            this.Controls.Add(this.trkZoom);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
@@ -251,10 +312,14 @@
             this.Text = "freETarget";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMainWindow_FormClosing);
             this.Load += new System.EventHandler(this.frmMainWindow_Load);
+            this.Shown += new System.EventHandler(this.frmMainWindow_Shown);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.imgTarget)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.imgArrow)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.imgAirPistol)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.imgAirRifle)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trkZoom)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -280,6 +345,11 @@
         private System.Windows.Forms.PictureBox imgArrow;
         private System.Windows.Forms.ImageList imgListDirections;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.ComboBox cmbWeapon;
+        private System.Windows.Forms.PictureBox imgAirPistol;
+        private System.Windows.Forms.PictureBox imgAirRifle;
+        private System.Windows.Forms.TrackBar trkZoom;
+        private System.Windows.Forms.Label label3;
     }
 }
 
