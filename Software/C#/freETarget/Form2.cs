@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.IO.Ports;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -32,6 +34,14 @@ namespace freETarget
                 }
             }
 
+            ArrayList ColorList = new ArrayList();
+            Type colorType = typeof(System.Drawing.Color);
+            PropertyInfo[] propInfoList = colorType.GetProperties(BindingFlags.Static | BindingFlags.DeclaredOnly | BindingFlags.Public);
+            foreach (PropertyInfo c in propInfoList)
+            {
+                this.cmbColor.Items.Add(c.Name);
+            }
+
             cmbWeapons.Items.AddRange(frmMainWindow.supportedTargets);
 
             loadSettings();
@@ -44,7 +54,24 @@ namespace freETarget
             chkDisplayConsole.Checked = Properties.Settings.Default.displayDebugConsole;
             cmbPorts.SelectedItem = Properties.Settings.Default.portName;
             cmbWeapons.SelectedItem = Properties.Settings.Default.defaultTarget;
+            cmbColor.SelectedItem = Properties.Settings.Default.targetColor.Name;
+        }
 
+        private void cmbColor_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            e.DrawBackground();
+
+            Graphics g = e.Graphics;
+            Rectangle rect = e.Bounds;
+            if (e.Index >= 0)
+            {
+                string n = ((ComboBox)sender).Items[e.Index].ToString();
+                Font f = new Font("Microsoft Sans Serif", 8.25f, FontStyle.Regular);
+                Color c = Color.FromName(n);
+                Brush b = new SolidBrush(c);
+                g.DrawString(n, f, Brushes.Black, rect.X, rect.Top);
+                g.FillRectangle(b, rect.X + 130, rect.Y + 5, rect.Width - 5, rect.Height - 7);
+            }
         }
     }
 }

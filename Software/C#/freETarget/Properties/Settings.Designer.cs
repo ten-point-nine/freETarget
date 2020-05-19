@@ -82,5 +82,17 @@ namespace freETarget.Properties {
                 this["defaultTarget"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Moccasin")]
+        public global::System.Drawing.Color targetColor {
+            get {
+                return ((global::System.Drawing.Color)(this["targetColor"]));
+            }
+            set {
+                this["targetColor"] = value;
+            }
+        }
     }
 }

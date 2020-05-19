@@ -1,5 +1,7 @@
-﻿using System;
+﻿using freETarget.Properties;
+using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
@@ -17,26 +19,60 @@ namespace freETarget
     public partial class frmMainWindow : Form
     {
 
+        //target sizes per ISSF rules
+        const decimal targetSize = 170; //mm
+
+
+        const decimal outterRingPistol = 155.5m; //mm
+        const decimal ring2Pistol = 139.5m; //mm
+        const decimal ring3Pistol = 123.5m; //mm
+        const decimal ring4Pistol = 107.5m; //mm
+        const decimal ring5Pistol = 91.5m; //mm
+        const decimal ring6Pistol = 75.5m; //mm
+        const decimal ring7Pistol = 59.5m; //mm
+        const decimal ring8Pistol = 43.5m; //mm
+        const decimal ring9Pistol = 27.5m; //mm
+        const decimal ring10Pistol = 11.5m; //mm
+        const decimal innerRingPistol = 5m; //mm
+
+        decimal[] ringsPistol = new decimal[] { outterRingPistol, ring2Pistol, ring3Pistol, ring4Pistol, ring5Pistol, ring6Pistol, ring7Pistol, ring8Pistol, ring9Pistol, ring10Pistol, innerRingPistol };
+
+        const decimal outterRingRifle = 45.5m; //mm
+        const decimal ring2Rifle = 40.5m; //mm
+        const decimal ring3Rifle = 35.5m; //mm
+        const decimal ring4Rifle = 30.5m; //mm
+        const decimal ring5Rifle = 25.5m; //mm
+        const decimal ring6Rifle = 20.5m; //mm
+        const decimal ring7Rifle = 15.5m; //mm
+        const decimal ring8Rifle = 10.5m; //mm
+        const decimal ring9Rifle = 5.5m; //mm
+        const decimal ring10Rifle = 0.5m; //mm
+
+        decimal[] ringsRifle = new decimal[] { outterRingRifle, ring2Rifle, ring3Rifle, ring4Rifle, ring5Rifle, ring6Rifle, ring7Rifle, ring8Rifle, ring9Rifle, ring10Rifle };
+
+        public const decimal pelletCaliber = 4.5m;
+
+        
+
         public const string AirPistol = "Air Pistol";
         public const string AirRifle = "Air Rifle";
 
-        public const decimal airPistolRange = 75m;
-        public const decimal airRifleRange = 21.9455m;
+        public static string[] supportedTargets = new string[] { AirPistol, AirRifle };
 
         private bool isConnected = false;
         private delegate void SafeCallDelegate(string text, Shot shot);
         private delegate void SafeCallDelegate2(string text);
-        private delegate int SafeCallDelegate3();
-        private List<Shot> shots = new List<Shot>();
+        private delegate void SafeCallDelegate3();
+        
         private int score = 0;
         private decimal decimalScore = 0m;
         private int innerX = 0; 
-        public static string[] supportedTargets = new string[] { AirPistol, AirRifle};
+        
         private decimal currentRange = 0;
 
-        private Bitmap ghostTarget = null;
+        private List<Shot> shots = new List<Shot>();
 
-    public struct Shot
+        public struct Shot
         {
             public int count;
             public decimal x;
@@ -75,8 +111,11 @@ namespace freETarget
                     innerX++;
                 }
 
-                drawShot(shot);
+
+                drawArrow(shot);
                 writeShotData(indata, shot);
+                var d = new SafeCallDelegate3(formResize); //draw shot
+                this.Invoke(d);
             }
             else
             {
@@ -181,7 +220,7 @@ namespace freETarget
         {
             if (trkZoom.InvokeRequired)
             {
-                int r = 2;
+                int r = 1;
                 trkZoom.Invoke(new MethodInvoker(delegate
                 {
                     r = trkZoom.Value;
@@ -195,29 +234,51 @@ namespace freETarget
         }
 
         //draw shot on target imagebox
-        private void drawShot(Shot shot)
+        private void drawShot(Shot shot, Graphics it, int targetSize, decimal zoomFactor, int l)
         {
             //transform shot coordinates to imagebox coordinates
-            decimal x = transformX(shot.x, shot.y);
-            decimal y = transformY(shot.x, shot.y);
+
+            PointF x = transform((float)shot.x, (float)shot.y, targetSize, zoomFactor);
 
             //draw shot on target
-            Brush b = new SolidBrush(Color.Blue);
+            int count = shots.Count;
+            Color c = Color.FromArgb(0, 0, 255);
             Pen p = new Pen(Color.LightSkyBlue);
-            Bitmap bmpTarget = new Bitmap(ghostTarget);
-            Graphics it = Graphics.FromImage(bmpTarget);
+            Brush bText = new SolidBrush(Color.LightSkyBlue);
+            if (l == count - 1)
+            {
+                c = Color.Aqua;
+                p = new Pen(Color.Blue);
+                bText = new SolidBrush(Color.Blue);
+            }
+
+           
+            Brush b = new SolidBrush(c);
+            
+
             it.SmoothingMode = SmoothingMode.AntiAlias;
             it.InterpolationMode = InterpolationMode.HighQualityBicubic;
-            it.FillEllipse(b, new Rectangle(new Point((int)Math.Round(x - 6), (int)Math.Round(y - 6)), new Size(11, 11)));
-            it.DrawEllipse(p, new Rectangle(new Point((int)Math.Round(x - 6), (int)Math.Round(y - 6)), new Size(11, 11)));
-            ghostTarget = bmpTarget; //save target image to cache, unzoomed
 
-            //zoom target
-            int zoom = getZoom();
-            Size newSize = new Size((int)(bmpTarget.Width *  zoom / 2m), (int)(bmpTarget.Height * zoom / 2m));
-            Bitmap bmpZoomed = new Bitmap(bmpTarget, newSize);
-            imgTarget.Image = bmpZoomed;
+            float peletSize = getDimension(targetSize, pelletCaliber, zoomFactor);
 
+            x.X -= peletSize / 2;
+            x.Y -= peletSize / 2;
+
+            it.FillEllipse(b, new RectangleF(x, new SizeF(peletSize, peletSize)));
+            it.DrawEllipse(p, new RectangleF(x, new SizeF(peletSize, peletSize)));
+
+            StringFormat format = new StringFormat();
+            format.LineAlignment = StringAlignment.Center;
+            format.Alignment = StringAlignment.Center;
+
+            Font f = new Font("Arial", peletSize/3);
+
+            x.X += 0.2f; //small adjustment for the number to be centered
+            x.Y += 0.3f;
+            it.DrawString(shot.count.ToString(), f, bText, new RectangleF(x, new SizeF(peletSize, peletSize)), format);
+        }
+
+        private void drawArrow(Shot shot) {
             //draw direction arrow
             Bitmap bmp = new Bitmap(imgArrow.Image);
             Graphics g = Graphics.FromImage(bmp);
@@ -255,29 +316,44 @@ namespace freETarget
             imgArrow.Image = bmp;
 
             //save drawn image (arrow) to imagelist for listview column
-            imgListDirections.Images.Add(shot.count.ToString(),imgArrow.Image);
+            try
+            {
+                imgListDirections.Images.Add(shot.count.ToString(), imgArrow.Image);
+            }catch(Exception ex)
+            {
+                Console.WriteLine("Error adding image to list " + ex.Message);
+            }
         }
 
-        private decimal transformX (decimal xp, decimal yp)
+        private PointF transform(float xp, float yp, float size, decimal zoomFactor)
         {
             //matrix magic from: https://docs.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/samples/jj635757(v=vs.85)
-            decimal a = 0.3m;
-            decimal b = 0;
-            decimal c = -75;
-            decimal d = 75;
 
-            decimal ret = (a * xp + b * yp - b * d - a * c) / (a * a + b * b);
-            return ret;
-        }
+            System.Numerics.Matrix4x4 M = new System.Numerics.Matrix4x4(0, 0, 1, 0,
+                                                                        0, 0, 0, 1,
+                                                                        size, size, 1, 0,
+                                                                        -size, size, 0, 1);
 
-        private decimal transformY (decimal xp, decimal yp)
-        {
-            decimal a = 0.3m;
-            decimal b = 0;
-            decimal c = -75;
-            decimal d = 75;
+            System.Numerics.Matrix4x4 Minverted = new System.Numerics.Matrix4x4();
+            System.Numerics.Matrix4x4.Invert(M, out Minverted);
 
-            decimal ret = (b * xp - a * yp - b * c + a * d) / (a * a + b * b);
+            float shotRange = (float)(targetSize * zoomFactor) / 2f;
+            System.Numerics.Matrix4x4 xyPrime = new System.Numerics.Matrix4x4(  -shotRange,0,0,0, 
+                                                                                shotRange,0,0,0, 
+                                                                                shotRange,0,0,0, 
+                                                                                -shotRange,0,0,0);
+
+            System.Numerics.Matrix4x4 abcd = System.Numerics.Matrix4x4.Multiply(Minverted, xyPrime);
+
+            float a = abcd.M11;
+            float b = abcd.M21;
+            float c = abcd.M31;
+            float d = abcd.M41;
+
+            float x = (a * xp + b * yp - b * d - a * c) / (a * a + b * b);
+            float y = (b * xp - a * yp - b * c + a * d) / (a * a + b * b);
+
+            PointF ret = new PointF(x,y);
             return ret;
         }
 
@@ -330,7 +406,7 @@ namespace freETarget
 
         private void determineScore(ref Shot shot)
         {
-            decimal scoreFactor = currentRange / 9.8m; //range divided by 10.9 - 1.1 (1.1 being the minimum score that can be hit/displayed)
+            decimal scoreFactor = currentRange / 9.9m; //range divided by 10.9 - 1.0 (1.0 being the minimum score that can be hit/displayed)
 
             if (shot.radius <= currentRange)
             {
@@ -358,7 +434,7 @@ namespace freETarget
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void btnConfig_Click(object sender, EventArgs e)
         {
             frmSettings settingsFrom = new frmSettings();
             if (settingsFrom.ShowDialog(this) == DialogResult.OK)
@@ -368,7 +444,10 @@ namespace freETarget
                 Properties.Settings.Default.displayDebugConsole = settingsFrom.chkDisplayConsole.Checked;
                 Properties.Settings.Default.portName = settingsFrom.cmbPorts.GetItemText(settingsFrom.cmbPorts.SelectedItem);
                 Properties.Settings.Default.defaultTarget = settingsFrom.cmbWeapons.GetItemText(settingsFrom.cmbWeapons.SelectedItem);
+                Properties.Settings.Default.targetColor = Color.FromName(settingsFrom.cmbColor.GetItemText(settingsFrom.cmbColor.SelectedItem)) ;
                 Properties.Settings.Default.Save();
+                
+                imgTarget.BackColor = Settings.Default.targetColor;
 
                 displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
             }
@@ -378,19 +457,16 @@ namespace freETarget
 
         private void displayDebugConsole(bool display)
         {
-            if (display)
-            {
-                frmMainWindow.ActiveForm.Width = 1061;
-            }
-            else
-            {
-                frmMainWindow.ActiveForm.Width = 738;
-            }
+            txtOutput.Visible = display;
+            formResize();
         }
 
         private void frmMainWindow_Load(object sender, EventArgs e)
         {
             cmbWeapon.Items.AddRange(supportedTargets);
+            setTarget();
+            formResize();
+            imgTarget.BackColor = Settings.Default.targetColor;
         }
 
         private void frmMainWindow_FormClosing(object sender, FormClosingEventArgs e)
@@ -408,42 +484,196 @@ namespace freETarget
         private void frmMainWindow_Shown(object sender, EventArgs e)
         {
             displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
-            Console.WriteLine(Properties.Settings.Default.defaultTarget);
             cmbWeapon.SelectedItem = Properties.Settings.Default.defaultTarget;
         }
 
         private void cmbWeapon_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if(cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirPistol){
-                imgTarget.Image = imgAirPistol.Image;
-                ghostTarget = new Bitmap(imgAirPistol.Image);
-                currentRange = airPistolRange;
-                trkZoom.Value = 2;
-            }else if(cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirRifle)
-            {
-                imgTarget.Image = imgAirRifle.Image;
-                ghostTarget = new Bitmap(imgAirRifle.Image);
-                currentRange = airRifleRange;
-                trkZoom.Value = 2;
-            }
-            else
-            {
-                imgTarget.Image = imgTarget.ErrorImage;
-            }
+            setTarget();
             
+        }
+
+        private void setTarget()
+        {
+            if (cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirPistol)
+            {
+                trkZoom.Minimum = 1;
+                trkZoom.Maximum = 5;
+                trkZoom.Value = 1;
+
+                currentRange = outterRingPistol / 2m + pelletCaliber / 2m; //maximum range that can score a point 155.5 / 2 + 4.5 / 2 = 80mm
+            }
+            else if (cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirRifle)
+            {
+                trkZoom.Minimum = 0;
+                trkZoom.Maximum = 5;
+                trkZoom.Value = 0;
+
+                currentRange = outterRingRifle / 2m + pelletCaliber / 2m; //maximum range that can score a point = 25mm
+            }
+
+            clearShots();
+            drawTarget();
         }
 
         private void trkZoom_ValueChanged(object sender, EventArgs e)
         {
-            Bitmap bmpTarget = new Bitmap(ghostTarget);
+            drawTarget();
+
+        }
+
+        private void imgTarget_Paint(object sender, PaintEventArgs e)
+        {
+           // drawTarget();
+        }
+
+        private void frmMainWindow_Resize(object sender, EventArgs e)
+        {
+            formResize();
+        }
+
+        private void formResize()
+        {
+            int rightBorder = 10;
+            if (Settings.Default.displayDebugConsole == true)
+            {
+                rightBorder = txtOutput.Width + 10;
+            }
+            int height = this.ClientSize.Height - 10 - statusStrip1.Height - imgTarget.Top;
+            int width = this.ClientSize.Width - rightBorder - imgTarget.Left;
+
+            if (height < width)
+            {
+                imgTarget.Height = height;
+                imgTarget.Width = height;
+            }
+            else
+            {
+                imgTarget.Height = width;
+                imgTarget.Width = width;
+                
+            }
+
+            drawTarget();
+        }
+
+        private void drawTarget()
+        {
+            if (cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == "")
+            {
+                cmbWeapon.SelectedItem = Properties.Settings.Default.defaultTarget;
+            }
+
+            if (cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirPistol)
+            {
+                imgTarget.Image = paintTarget(imgTarget.Height, 7, ringsPistol, (decimal)(1 / (decimal)getZoom()), false);
+            }
+            else if (cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirRifle)
+            {
+                imgTarget.Image = paintTarget(imgTarget.Height, 4, ringsRifle, (decimal)(1 / Math.Pow(2, getZoom())), true);
+            }
+           
+        }
+
+        private float getDimension(decimal currentTargetSize , decimal milimiters, decimal zoomFactor)
+        {
+            return (float)((currentTargetSize * milimiters) / (targetSize * zoomFactor));
+        }
+
+        private Bitmap paintTarget(int dimension, int blackRingCutoff, decimal[] rings, decimal zoomFactor, bool solidInner)
+        {
+            Pen penBlack = new Pen(Color.Black);
+            Pen penWhite = new Pen(Settings.Default.targetColor);
+            Brush brushBlack = new SolidBrush(Color.Black);
+            Brush brushWhite = new SolidBrush(Settings.Default.targetColor);
+
+
+            Bitmap bmpTarget = new Bitmap(dimension, dimension);
             Graphics it = Graphics.FromImage(bmpTarget);
             it.SmoothingMode = SmoothingMode.AntiAlias;
-            it.InterpolationMode = InterpolationMode.HighQualityBicubic;
-            ghostTarget = bmpTarget;
-            int zoom = getZoom();
-            Size newSize = new Size((int)(bmpTarget.Width * zoom / 2m), (int)(bmpTarget.Height * zoom / 2m));
-            Bitmap bmpZoomed = new Bitmap(bmpTarget, newSize);
-            imgTarget.Image = bmpZoomed;
+
+
+
+            int r = 1;
+            for (int i = 0; i < rings.Length; i++)
+            {
+
+                Pen p = null;
+                Brush b = null;
+                Brush bText = null;
+                if (r < blackRingCutoff)
+                {
+                    p = penBlack;
+                    b = brushWhite;
+                    bText = brushBlack;
+                }
+                else
+                {
+                    p = penWhite;
+                    b = brushBlack;
+                    bText = brushWhite;
+                }
+                //float circle = (float)((dimension * rings[i]) / (targetSize * zoomFactor));
+                float circle = getDimension(dimension, rings[i], zoomFactor);
+                float center = (float)(dimension / 2);
+                float x = center - (circle / 2);
+                float y = center + (circle / 2);
+
+                if (solidInner && i == rings.Length - 1) //rifle target - last ring (10) is a solid dot
+                {
+                    it.FillEllipse(brushWhite, x, x, circle, circle);
+                }
+                else
+                {
+                    it.FillEllipse(b, x, x, circle, circle);
+                    it.DrawEllipse(p, x, x, circle, circle);
+                }
+
+
+                if (r < 9) //for ring 9 and after no text is displayed
+                {
+                    float nextCircle = getDimension(dimension, rings[i + 1], zoomFactor);
+                    float diff = circle - nextCircle;
+                    float fontSize = diff / 8f; //8 is empirically determinted for best look
+                    Font f = new Font("Arial", fontSize);
+
+                    StringFormat format = new StringFormat();
+                    format.LineAlignment = StringAlignment.Center;
+                    format.Alignment = StringAlignment.Center;
+
+                    it.DrawString(r.ToString(), f, bText, center, x + (diff / 4), format);
+                    it.DrawString(r.ToString(), f, bText, center, y - (diff / 4), format);
+                    it.DrawString(r.ToString(), f, bText, x + (diff / 4), center, format);
+                    it.DrawString(r.ToString(), f, bText, y - (diff / 4), center, format);
+                }
+
+                r++;
+            }
+
+            it.DrawRectangle(penBlack, 0, 0, dimension - 1, dimension - 1);
+
+            int index = 0;
+            foreach(Shot shot in shots)
+            {
+                drawShot(shot, it, dimension, zoomFactor, index++);
+            }
+
+            return bmpTarget;
+        }
+
+        private void btnClear_Click(object sender, EventArgs e)
+        {
+            clearShots();
+        }
+
+        private void clearShots()
+        {
+            shots.Clear();
+            formResize();
+            shotsList.Items.Clear();
+            txtLastShot.Text = "";
+            imgArrow.Image = new Bitmap(imgArrow.Width, imgArrow.Height) ;
+            txtTotal.Text = "";
         }
     }
 
