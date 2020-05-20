@@ -16,7 +16,7 @@ namespace TargetSimulator
 
     public partial class Form1 : Form
     {
-        public const decimal distanceBetweenSensors = 150; //in milimiters
+        public const decimal distanceBetweenSensors = 160; //in milimiters
 
         private int range = (int)Math.Round(distanceBetweenSensors * 10 / 2, 0);
         bool isConnected = false;
@@ -69,6 +69,7 @@ namespace TargetSimulator
                 btnRight.Enabled = true;
                 btnTop.Enabled = true;
                 btnTopRight.Enabled = true;
+                btnShoot.Enabled = true;
 
                 statusText.Text = "Connected";
                 count = 1;
@@ -88,6 +89,7 @@ namespace TargetSimulator
                 btnRight.Enabled = false;
                 btnTop.Enabled = false;
                 btnTopRight.Enabled = false;
+                btnShoot.Enabled = false;
 
                 timer1.Enabled = false;
                 btnTimer.Text = "Start Timer";
@@ -111,7 +113,7 @@ namespace TargetSimulator
             decimal radius = (decimal)pitagora(xPos, yPos);
             decimal angle = (decimal)findDegree((float)yPos, (float)xPos);
 
-            string command = "{\"shot\":" + count + ", \"x\":" + xPos.ToString("F1", CultureInfo.InvariantCulture) + ", \"y\":" + yPos.ToString("F1", CultureInfo.InvariantCulture) + ", \"r\":" + radius.ToString("F2", CultureInfo.InvariantCulture) + ", \"a\":" + angle.ToString("F2", CultureInfo.InvariantCulture) + "}";
+            string command = "{\"shot\":" + count + ", \"x\":" + xPos.ToString("F2", CultureInfo.InvariantCulture) + ", \"y\":" + yPos.ToString("F2", CultureInfo.InvariantCulture) + ", \"r\":" + radius.ToString("F2", CultureInfo.InvariantCulture) + ", \"a\":" + angle.ToString("F2", CultureInfo.InvariantCulture) + "}";
             
           
             txtOutput.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:ffff") + " | ");
@@ -212,6 +214,20 @@ namespace TargetSimulator
             decimal xPos = range / 20m;
             decimal yPos = range / 20m;
             generateAndSend(xPos, yPos);
+        }
+
+        private void bthShoot_Click(object sender, EventArgs e)
+        {
+
+            try
+            {
+                decimal xPos = Decimal.Parse(txtX.Text, CultureInfo.InvariantCulture);
+                decimal yPos = Decimal.Parse(txtY.Text, CultureInfo.InvariantCulture);
+                generateAndSend(xPos, yPos);
+            }catch(Exception ex)
+            {
+                Console.WriteLine("Parse error: " + ex.Message);
+            }
         }
     }
 }
