@@ -52,6 +52,9 @@
             this.trkZoom = new System.Windows.Forms.TrackBar();
             this.label3 = new System.Windows.Forms.Label();
             this.btnClear = new System.Windows.Forms.Button();
+            this.txtTime = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.timer = new System.Windows.Forms.Timer(this.components);
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.imgTarget)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.imgArrow)).BeginInit();
@@ -131,7 +134,7 @@
             this.shotsList.Location = new System.Drawing.Point(7, 37);
             this.shotsList.MultiSelect = false;
             this.shotsList.Name = "shotsList";
-            this.shotsList.Size = new System.Drawing.Size(204, 435);
+            this.shotsList.Size = new System.Drawing.Size(204, 408);
             this.shotsList.SmallImageList = this.imgListDirections;
             this.shotsList.StateImageList = this.imgListDirections;
             this.shotsList.TabIndex = 5;
@@ -171,17 +174,18 @@
             // txtTotal
             // 
             this.txtTotal.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.txtTotal.Location = new System.Drawing.Point(56, 515);
+            this.txtTotal.Location = new System.Drawing.Point(56, 489);
             this.txtTotal.Name = "txtTotal";
             this.txtTotal.ReadOnly = true;
             this.txtTotal.Size = new System.Drawing.Size(155, 20);
             this.txtTotal.TabIndex = 6;
+            this.txtTotal.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // label1
             // 
             this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(19, 518);
+            this.label1.Location = new System.Drawing.Point(17, 492);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(31, 13);
             this.label1.TabIndex = 7;
@@ -191,7 +195,7 @@
             // 
             this.txtLastShot.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.txtLastShot.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.txtLastShot.Location = new System.Drawing.Point(75, 477);
+            this.txtLastShot.Location = new System.Drawing.Point(75, 451);
             this.txtLastShot.Name = "txtLastShot";
             this.txtLastShot.ReadOnly = true;
             this.txtLastShot.Size = new System.Drawing.Size(100, 31);
@@ -202,7 +206,7 @@
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(17, 486);
+            this.label2.Location = new System.Drawing.Point(17, 460);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(52, 13);
             this.label2.TabIndex = 9;
@@ -214,7 +218,7 @@
             this.imgArrow.BackColor = System.Drawing.Color.White;
             this.imgArrow.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.imgArrow.Image = ((System.Drawing.Image)(resources.GetObject("imgArrow.Image")));
-            this.imgArrow.Location = new System.Drawing.Point(181, 477);
+            this.imgArrow.Location = new System.Drawing.Point(181, 451);
             this.imgArrow.Name = "imgArrow";
             this.imgArrow.Size = new System.Drawing.Size(30, 30);
             this.imgArrow.TabIndex = 10;
@@ -223,6 +227,7 @@
             // 
             // btnConfig
             // 
+            this.btnConfig.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnConfig.Image = ((System.Drawing.Image)(resources.GetObject("btnConfig.Image")));
             this.btnConfig.Location = new System.Drawing.Point(690, 4);
             this.btnConfig.Name = "btnConfig";
@@ -269,11 +274,37 @@
             this.btnClear.UseVisualStyleBackColor = true;
             this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
             // 
+            // txtTime
+            // 
+            this.txtTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.txtTime.Location = new System.Drawing.Point(56, 515);
+            this.txtTime.Name = "txtTime";
+            this.txtTime.ReadOnly = true;
+            this.txtTime.Size = new System.Drawing.Size(155, 20);
+            this.txtTime.TabIndex = 18;
+            this.txtTime.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
+            // label4
+            // 
+            this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(17, 518);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(30, 13);
+            this.label4.TabIndex = 19;
+            this.label4.Text = "Time";
+            // 
+            // timer
+            // 
+            this.timer.Tick += new System.EventHandler(this.timer_Tick);
+            // 
             // frmMainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(724, 566);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.txtTime);
             this.Controls.Add(this.btnClear);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.cmbWeapon);
@@ -331,6 +362,9 @@
         private System.Windows.Forms.TrackBar trkZoom;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button btnClear;
+        private System.Windows.Forms.TextBox txtTime;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Timer timer;
     }
 }
 

@@ -65,7 +65,7 @@ namespace freETarget {
 
         public const decimal pelletCaliber = 4.5m;
 
-
+        private DateTime connectTime;
 
         public const string AirPistol = "Air Pistol";
         public const string AirRifle = "Air Rifle";
@@ -141,6 +141,8 @@ namespace freETarget {
                 try {
                     serialPort.Open();
 
+                    connectTime =  DateTime.Now;
+                    timer.Enabled = true;
 
                     btnConnect.Text = "Disconnect";
                     isConnected = true;
@@ -153,8 +155,10 @@ namespace freETarget {
                 serialPort.Close();
                 btnConnect.Text = "Connect";
                 isConnected = false;
+                clearShots();
 
                 statusText.Text = "Disconnected";
+                timer.Enabled = false;
             }
         }
 
@@ -190,7 +194,7 @@ namespace freETarget {
                 txtOutput.AppendText(json);
 
                 //write to total textbox
-                txtTotal.Text = score.ToString() + " ( " + decimalScore.ToString() + " ) - " + innerX.ToString() + "x";
+                txtTotal.Text = shots.Count + " shots : " +  score.ToString() + " ( " + decimalScore.ToString() + " ) - " + innerX.ToString() + "x";
 
                 //write to last shot textbox
                 string lastShot = shot.decimalScore.ToString();
@@ -636,11 +640,18 @@ namespace freETarget {
             txtLastShot.Text = "";
             imgArrow.Image = new Bitmap(imgArrow.Width, imgArrow.Height);
             txtTotal.Text = "";
+            txtTime.Text = "";
         }
 
         private double linearInterpolation(float x1, float y1, float x2, float y2, float x) {
             double y = ((x2 - x) * y1 + (x - x1) * y2) / (x2 - x1);
             return y;
+        }
+
+        private void timer_Tick(object sender, EventArgs e) {
+            DateTime now = DateTime.Now;
+            TimeSpan ts = now - connectTime;
+            txtTime.Text = ts.ToString(@"hh\:mm\:ss");
         }
     }
 
