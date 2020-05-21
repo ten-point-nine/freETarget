@@ -42,13 +42,14 @@
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.cmbColor = new System.Windows.Forms.ComboBox();
+            this.chkDrawMeanG = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(248, 172);
+            this.btnOK.Location = new System.Drawing.Point(248, 185);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 0;
@@ -59,7 +60,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(167, 172);
+            this.btnCancel.Location = new System.Drawing.Point(167, 185);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
@@ -119,7 +120,7 @@
             // chkDisplayConsole
             // 
             this.chkDisplayConsole.AutoSize = true;
-            this.chkDisplayConsole.Location = new System.Drawing.Point(15, 138);
+            this.chkDisplayConsole.Location = new System.Drawing.Point(15, 161);
             this.chkDisplayConsole.Name = "chkDisplayConsole";
             this.chkDisplayConsole.Size = new System.Drawing.Size(136, 17);
             this.chkDisplayConsole.TabIndex = 12;
@@ -164,11 +165,22 @@
             this.cmbColor.TabIndex = 16;
             this.cmbColor.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.cmbColor_DrawItem);
             // 
+            // chkDrawMeanG
+            // 
+            this.chkDrawMeanG.AutoSize = true;
+            this.chkDrawMeanG.Location = new System.Drawing.Point(15, 138);
+            this.chkDrawMeanG.Name = "chkDrawMeanG";
+            this.chkDrawMeanG.Size = new System.Drawing.Size(113, 17);
+            this.chkDrawMeanG.TabIndex = 17;
+            this.chkDrawMeanG.Text = "Draw Mean Group";
+            this.chkDrawMeanG.UseVisualStyleBackColor = true;
+            // 
             // frmSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(335, 207);
+            this.ClientSize = new System.Drawing.Size(335, 220);
+            this.Controls.Add(this.chkDrawMeanG);
             this.Controls.Add(this.cmbColor);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
@@ -210,5 +222,6 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
         public System.Windows.Forms.ComboBox cmbColor;
+        public System.Windows.Forms.CheckBox chkDrawMeanG;
     }
 }

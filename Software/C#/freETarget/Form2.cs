@@ -55,6 +55,7 @@ namespace freETarget
             cmbPorts.SelectedItem = Properties.Settings.Default.portName;
             cmbWeapons.SelectedItem = Properties.Settings.Default.defaultTarget;
             cmbColor.SelectedItem = Properties.Settings.Default.targetColor.Name;
+            chkDrawMeanG.Checked = Properties.Settings.Default.drawMeanGroup;
         }
 
         private void cmbColor_DrawItem(object sender, DrawItemEventArgs e)

@@ -50,6 +50,9 @@
             this.btnShoot = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
+            this.btnImport = new System.Windows.Forms.Button();
+            this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
+            this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.status.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -90,25 +93,25 @@
             // 
             // btnShot
             // 
-            this.btnShot.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnShot.Enabled = false;
             this.btnShot.Location = new System.Drawing.Point(416, 10);
             this.btnShot.Name = "btnShot";
             this.btnShot.Size = new System.Drawing.Size(75, 23);
             this.btnShot.TabIndex = 3;
             this.btnShot.Text = "Take a Shot";
+            this.toolTip.SetToolTip(this.btnShot, "Takes a random shot");
             this.btnShot.UseVisualStyleBackColor = true;
             this.btnShot.Click += new System.EventHandler(this.btnShot_Click);
             // 
             // btnTimer
             // 
-            this.btnTimer.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnTimer.Enabled = false;
             this.btnTimer.Location = new System.Drawing.Point(502, 10);
             this.btnTimer.Name = "btnTimer";
             this.btnTimer.Size = new System.Drawing.Size(75, 23);
             this.btnTimer.TabIndex = 4;
             this.btnTimer.Text = "Start Timer";
+            this.toolTip.SetToolTip(this.btnTimer, "Generate random shots in a quick succesion");
             this.btnTimer.UseVisualStyleBackColor = true;
             this.btnTimer.Click += new System.EventHandler(this.btnTimer_Click);
             // 
@@ -227,6 +230,7 @@
             this.btnShoot.Size = new System.Drawing.Size(75, 23);
             this.btnShoot.TabIndex = 15;
             this.btnShoot.Text = "Shoot";
+            this.toolTip.SetToolTip(this.btnShoot, "Takes a shot at the X,Y coordinates");
             this.btnShoot.UseVisualStyleBackColor = true;
             this.btnShoot.Click += new System.EventHandler(this.bthShoot_Click);
             // 
@@ -248,11 +252,28 @@
             this.label2.TabIndex = 17;
             this.label2.Text = "Y:";
             // 
+            // btnImport
+            // 
+            this.btnImport.Enabled = false;
+            this.btnImport.Location = new System.Drawing.Point(501, 69);
+            this.btnImport.Name = "btnImport";
+            this.btnImport.Size = new System.Drawing.Size(75, 23);
+            this.btnImport.TabIndex = 18;
+            this.btnImport.Text = "Import...";
+            this.toolTip.SetToolTip(this.btnImport, "Imports a TargetScan App CVS exported file");
+            this.btnImport.UseVisualStyleBackColor = true;
+            this.btnImport.Click += new System.EventHandler(this.btnImport_Click);
+            // 
+            // openFileDialog
+            // 
+            this.openFileDialog.Filter = "TargetScan App file|*.csv";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(589, 541);
+            this.Controls.Add(this.btnImport);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.btnShoot);
@@ -303,6 +324,9 @@
         private System.Windows.Forms.Button btnShoot;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button btnImport;
+        private System.Windows.Forms.OpenFileDialog openFileDialog;
+        private System.Windows.Forms.ToolTip toolTip;
     }
 }
 

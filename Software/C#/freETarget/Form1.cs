@@ -11,6 +11,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -41,7 +42,7 @@ namespace freETarget {
         const float pistol2Y = 10.5f;
 
 
-        decimal[] ringsPistol = new decimal[] { outterRingPistol, ring2Pistol, ring3Pistol, ring4Pistol, ring5Pistol, ring6Pistol, ring7Pistol, ring8Pistol, ring9Pistol, ring10Pistol, innerRingPistol };
+        readonly decimal[] ringsPistol = new decimal[] { outterRingPistol, ring2Pistol, ring3Pistol, ring4Pistol, ring5Pistol, ring6Pistol, ring7Pistol, ring8Pistol, ring9Pistol, ring10Pistol, innerRingPistol };
 
         const decimal outterRingRifle = 45.5m; //mm
         const decimal ring2Rifle = 40.5m; //mm
@@ -61,7 +62,7 @@ namespace freETarget {
         const float rifle2X = 2.25f;
         const float rifle2Y = 10.1f;
 
-        decimal[] ringsRifle = new decimal[] { outterRingRifle, ring2Rifle, ring3Rifle, ring4Rifle, ring5Rifle, ring6Rifle, ring7Rifle, ring8Rifle, ring9Rifle, ring10Rifle };
+        readonly decimal[] ringsRifle = new decimal[] { outterRingRifle, ring2Rifle, ring3Rifle, ring4Rifle, ring5Rifle, ring6Rifle, ring7Rifle, ring8Rifle, ring9Rifle, ring10Rifle };
 
         public const decimal pelletCaliber = 4.5m;
 
@@ -80,8 +81,11 @@ namespace freETarget {
         private int score = 0;
         private decimal decimalScore = 0m;
         private int innerX = 0;
+        private decimal xbar = 0;
+        private decimal ybar = 0;
+        private decimal rbar = 0;
 
-        private decimal currentRange = 0;
+        //private decimal currentRange = 0;
         private string currentTarget = Settings.Default.defaultTarget;
 
         private List<Shot> shots = new List<Shot>();
@@ -211,7 +215,37 @@ namespace freETarget {
                 shotsList.Items.Add(item);
                 shotsList.EnsureVisible(shotsList.Items.Count - 1);
 
+                calculateMeanRadius(out rbar, out xbar, out ybar);
+                txtMeanRadius.Text = Math.Round(rbar, 1).ToString();
+                txtWindage.Text = Math.Round(Math.Abs(xbar), 1).ToString();
+                drawWindageAndElevation(xbar, ybar);
+                txtElevation.Text = Math.Round(Math.Abs(ybar), 1).ToString();
+                txtMaxSpread.Text = Math.Round(calculateMaxSpread(), 1).ToString();
+
             }
+        }
+
+        private void drawWindageAndElevation(decimal xbar, decimal ybar) {
+            Graphics g = imgWindage.CreateGraphics();
+            g.Clear(this.BackColor);
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            Pen arr = new Pen(Color.Black);
+            arr.CustomEndCap = new AdjustableArrowCap(3, 3, true);
+            if (xbar < 0) {
+                g.DrawLine(arr, imgWindage.Width - 2, (imgWindage.Height / 2) - 2, 2, (imgWindage.Height / 2) - 2);
+            } else {
+                g.DrawLine(arr, 2, (imgWindage.Height / 2) - 2, imgWindage.Width - 2, (imgWindage.Height / 2) - 2);
+            }
+
+            Graphics g2 = imgElevation.CreateGraphics();
+            g2.Clear(this.BackColor);
+            g2.SmoothingMode = SmoothingMode.AntiAlias;
+            if (ybar < 0) {
+                g2.DrawLine(arr, (imgElevation.Height / 2) - 2, 2, (imgElevation.Height / 2) - 2, imgElevation.Width - 2);
+            } else {
+                g2.DrawLine(arr, (imgElevation.Height / 2) - 2, imgElevation.Width - 2, (imgElevation.Height / 2) - 2, 2);
+            }
+
         }
 
         private int getZoom() {
@@ -309,6 +343,8 @@ namespace freETarget {
             } catch (Exception ex) {
                 Console.WriteLine("Error adding image to list " + ex.Message);
             }
+
+            Thread.Sleep(100);
         }
 
         private PointF transform(float xp, float yp, float size, decimal zoomFactor) {
@@ -443,6 +479,7 @@ namespace freETarget {
                 Properties.Settings.Default.portName = settingsFrom.cmbPorts.GetItemText(settingsFrom.cmbPorts.SelectedItem);
                 Properties.Settings.Default.defaultTarget = settingsFrom.cmbWeapons.GetItemText(settingsFrom.cmbWeapons.SelectedItem);
                 Properties.Settings.Default.targetColor = Color.FromName(settingsFrom.cmbColor.GetItemText(settingsFrom.cmbColor.SelectedItem));
+                Properties.Settings.Default.drawMeanGroup = settingsFrom.chkDrawMeanG.Checked;
                 Properties.Settings.Default.Save();
 
                 imgTarget.BackColor = Settings.Default.targetColor;
@@ -491,14 +528,14 @@ namespace freETarget {
                 trkZoom.Maximum = 5;
                 trkZoom.Value = 1;
 
-                currentRange = outterRingPistol / 2m + pelletCaliber / 2m; //maximum range that can score a point 155.5 / 2 + 4.5 / 2 = 80mm
+               // currentRange = outterRingPistol / 2m + pelletCaliber / 2m; //maximum range that can score a point 155.5 / 2 + 4.5 / 2 = 80mm
                 currentTarget = AirPistol;
             } else if (cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirRifle) {
                 trkZoom.Minimum = 0;
                 trkZoom.Maximum = 5;
                 trkZoom.Value = 0;
 
-                currentRange = outterRingRifle / 2m + pelletCaliber / 2m; //maximum range that can score a point = 25mm
+                //currentRange = outterRingRifle / 2m + pelletCaliber / 2m; //maximum range that can score a point = 25mm
                 currentTarget = AirRifle;
             }
 
@@ -545,11 +582,12 @@ namespace freETarget {
             }
 
             if (cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirPistol) {
-                imgTarget.Image = paintTarget(imgTarget.Height, 7, ringsPistol, (decimal)(1 / (decimal)getZoom()), false);
+                decimal zoomFactor = (decimal)(1 / (decimal)getZoom());
+                imgTarget.Image = paintTarget(imgTarget.Height, 7, ringsPistol, zoomFactor, false);
             } else if (cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirRifle) {
-                imgTarget.Image = paintTarget(imgTarget.Height, 4, ringsRifle, (decimal)(1 / Math.Pow(2, getZoom())), true);
+                decimal zoomFactor = (decimal)(1 / Math.Pow(2, getZoom()));
+                imgTarget.Image = paintTarget(imgTarget.Height, 4, ringsRifle, zoomFactor, true);
             }
-
         }
 
         private float getDimension(decimal currentTargetSize, decimal milimiters, decimal zoomFactor) {
@@ -562,12 +600,9 @@ namespace freETarget {
             Brush brushBlack = new SolidBrush(Color.Black);
             Brush brushWhite = new SolidBrush(Settings.Default.targetColor);
 
-
             Bitmap bmpTarget = new Bitmap(dimension, dimension);
             Graphics it = Graphics.FromImage(bmpTarget);
             it.SmoothingMode = SmoothingMode.AntiAlias;
-
-
 
             int r = 1;
             for (int i = 0; i < rings.Length; i++) {
@@ -598,7 +633,6 @@ namespace freETarget {
                     it.DrawEllipse(p, x, x, circle, circle);
                 }
 
-
                 if (r < 9) //for ring 9 and after no text is displayed
                 {
                     float nextCircle = getDimension(dimension, rings[i + 1], zoomFactor);
@@ -615,7 +649,6 @@ namespace freETarget {
                     it.DrawString(r.ToString(), f, bText, x + (diff / 4), center, format);
                     it.DrawString(r.ToString(), f, bText, y - (diff / 4), center, format);
                 }
-
                 r++;
             }
 
@@ -626,7 +659,26 @@ namespace freETarget {
                 drawShot(shot, it, dimension, zoomFactor, index++);
             }
 
+            if (Settings.Default.drawMeanGroup) {
+                drawMeanGroup(it, dimension, zoomFactor);
+            }
+
             return bmpTarget;
+        }
+        private void drawMeanGroup(Graphics it, decimal currentTargetSize, decimal zoomFactor) {
+            if (shots.Count >= 2) {
+                float circle = getDimension(currentTargetSize, rbar*2, zoomFactor);
+
+                PointF x = transform((float)xbar, (float)ybar, (float)currentTargetSize, zoomFactor);
+                Pen p = new Pen(Color.Red, 2);
+
+                it.DrawEllipse(p, x.X - (circle / 2), x.Y - (circle / 2), circle, circle);
+
+                float cross = 5; // center of group cross is always the same size - 5 pixels
+
+                it.DrawLine(p, x.X - cross, x.Y, x.X + cross, x.Y);
+                it.DrawLine(p, x.X, x.Y - cross, x.X, x.Y + cross);
+            }
         }
 
         private void btnClear_Click(object sender, EventArgs e) {
@@ -637,10 +689,25 @@ namespace freETarget {
             shots.Clear();
             formResize();
             shotsList.Items.Clear();
+            shotsList.Refresh();
             txtLastShot.Text = "";
             imgArrow.Image = new Bitmap(imgArrow.Width, imgArrow.Height);
+            imgArrow.Refresh();
+            Application.DoEvents();
             txtTotal.Text = "";
             txtTime.Text = "";
+            txtWindage.Text = "";
+            txtElevation.Text = "";
+            txtMaxSpread.Text = "";
+            txtMeanRadius.Text = "";
+            imgElevation.CreateGraphics().Clear(this.BackColor);
+            imgWindage.CreateGraphics().Clear(this.BackColor);
+            score = 0;
+            decimalScore = 0;
+            innerX = 0;
+            xbar = 0;
+            ybar = 0;
+            rbar = 0;
         }
 
         private double linearInterpolation(float x1, float y1, float x2, float y2, float x) {
@@ -652,6 +719,44 @@ namespace freETarget {
             DateTime now = DateTime.Now;
             TimeSpan ts = now - connectTime;
             txtTime.Text = ts.ToString(@"hh\:mm\:ss");
+        }
+
+        private void calculateMeanRadius( out decimal rbar, out decimal xbar, out decimal ybar) {
+
+            decimal xsum = 0;
+            decimal ysum = 0;
+
+            foreach(Shot shot in shots) {
+                xsum += shot.x;
+                ysum += shot.y;
+            }
+
+            xbar = xsum / (decimal)shots.Count;
+            ybar = ysum / (decimal)shots.Count;
+
+            decimal[] r = new decimal[shots.Count];
+            for(int i=0; i< shots.Count; i++) {
+                r[i] = (decimal)Math.Sqrt((double)(((shots[i].x - xbar) * (shots[i].x - xbar)) + ((shots[i].y - ybar) * (shots[i].y - ybar))));
+            }
+
+            decimal rsum = 0;
+            foreach(decimal ri in r) {
+                rsum += ri;
+            }
+
+            rbar = rsum / shots.Count;
+
+        }
+
+        private decimal calculateMaxSpread() {
+            List<double> spreads = new List<double>();
+            for(int i = 0; i < shots.Count; i++) {
+                for(int j = 0; j < shots.Count; j++) {
+                    spreads.Add(Math.Sqrt( Math.Pow ((double)shots[i].x - (double)shots[j].x, 2) - Math.Pow((double)shots[i].y - (double)shots[j].y, 2)));
+                }
+            }
+
+            return (decimal)spreads.Max();
         }
     }
 

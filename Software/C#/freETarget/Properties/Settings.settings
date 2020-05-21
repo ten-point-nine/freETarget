@@ -20,5 +20,8 @@
     <Setting Name="targetColor" Type="System.Drawing.Color" Scope="User">
       <Value Profile="(Default)">Moccasin</Value>
     </Setting>
+    <Setting Name="drawMeanGroup" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
