@@ -40,13 +40,16 @@
             this.chkDisplayConsole = new System.Windows.Forms.CheckBox();
             this.cmbWeapons = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.cmbColor = new System.Windows.Forms.ComboBox();
+            this.chkDrawMeanG = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(153, 144);
+            this.btnOK.Location = new System.Drawing.Point(248, 185);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 0;
@@ -57,7 +60,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(72, 144);
+            this.btnCancel.Location = new System.Drawing.Point(167, 185);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
@@ -86,20 +89,20 @@
             // 
             this.txtBaud.Location = new System.Drawing.Point(100, 60);
             this.txtBaud.Name = "txtBaud";
-            this.txtBaud.Size = new System.Drawing.Size(121, 20);
+            this.txtBaud.Size = new System.Drawing.Size(190, 20);
             this.txtBaud.TabIndex = 6;
             // 
             // txtName
             // 
-            this.txtName.Location = new System.Drawing.Point(100, 9);
+            this.txtName.Location = new System.Drawing.Point(100, 8);
             this.txtName.Name = "txtName";
-            this.txtName.Size = new System.Drawing.Size(121, 20);
+            this.txtName.Size = new System.Drawing.Size(190, 20);
             this.txtName.TabIndex = 7;
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 64);
+            this.label3.Location = new System.Drawing.Point(12, 63);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(58, 13);
             this.label3.TabIndex = 9;
@@ -107,16 +110,17 @@
             // 
             // cmbPorts
             // 
+            this.cmbPorts.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbPorts.FormattingEnabled = true;
             this.cmbPorts.Location = new System.Drawing.Point(100, 34);
             this.cmbPorts.Name = "cmbPorts";
-            this.cmbPorts.Size = new System.Drawing.Size(121, 21);
+            this.cmbPorts.Size = new System.Drawing.Size(190, 21);
             this.cmbPorts.TabIndex = 11;
             // 
             // chkDisplayConsole
             // 
             this.chkDisplayConsole.AutoSize = true;
-            this.chkDisplayConsole.Location = new System.Drawing.Point(15, 114);
+            this.chkDisplayConsole.Location = new System.Drawing.Point(15, 161);
             this.chkDisplayConsole.Name = "chkDisplayConsole";
             this.chkDisplayConsole.Size = new System.Drawing.Size(136, 17);
             this.chkDisplayConsole.TabIndex = 12;
@@ -125,26 +129,60 @@
             // 
             // cmbWeapons
             // 
+            this.cmbWeapons.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbWeapons.FormattingEnabled = true;
             this.cmbWeapons.Location = new System.Drawing.Point(100, 85);
             this.cmbWeapons.Name = "cmbWeapons";
-            this.cmbWeapons.Size = new System.Drawing.Size(121, 21);
+            this.cmbWeapons.Size = new System.Drawing.Size(190, 21);
             this.cmbWeapons.TabIndex = 13;
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(12, 89);
+            this.label4.Location = new System.Drawing.Point(12, 88);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(75, 13);
             this.label4.TabIndex = 14;
             this.label4.Text = "Default Target";
             // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(12, 113);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(65, 13);
+            this.label5.TabIndex = 15;
+            this.label5.Text = "Target Color";
+            // 
+            // cmbColor
+            // 
+            this.cmbColor.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            this.cmbColor.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbColor.FormattingEnabled = true;
+            this.cmbColor.Location = new System.Drawing.Point(100, 111);
+            this.cmbColor.Name = "cmbColor";
+            this.cmbColor.Size = new System.Drawing.Size(190, 21);
+            this.cmbColor.TabIndex = 16;
+            this.cmbColor.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.cmbColor_DrawItem);
+            // 
+            // chkDrawMeanG
+            // 
+            this.chkDrawMeanG.AutoSize = true;
+            this.chkDrawMeanG.Location = new System.Drawing.Point(15, 138);
+            this.chkDrawMeanG.Name = "chkDrawMeanG";
+            this.chkDrawMeanG.Size = new System.Drawing.Size(113, 17);
+            this.chkDrawMeanG.TabIndex = 17;
+            this.chkDrawMeanG.Text = "Draw Mean Group";
+            this.chkDrawMeanG.UseVisualStyleBackColor = true;
+            // 
             // frmSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(240, 179);
+            this.ClientSize = new System.Drawing.Size(335, 220);
+            this.Controls.Add(this.chkDrawMeanG);
+            this.Controls.Add(this.cmbColor);
+            this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.cmbWeapons);
             this.Controls.Add(this.chkDisplayConsole);
@@ -182,5 +220,8 @@
         public System.Windows.Forms.CheckBox chkDisplayConsole;
         public System.Windows.Forms.ComboBox cmbWeapons;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label5;
+        public System.Windows.Forms.ComboBox cmbColor;
+        public System.Windows.Forms.CheckBox chkDrawMeanG;
     }
 }

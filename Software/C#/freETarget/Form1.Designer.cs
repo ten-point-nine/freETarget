@@ -47,18 +47,30 @@
             this.txtLastShot = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.imgArrow = new System.Windows.Forms.PictureBox();
-            this.button1 = new System.Windows.Forms.Button();
+            this.btnConfig = new System.Windows.Forms.Button();
             this.cmbWeapon = new System.Windows.Forms.ComboBox();
-            this.imgAirPistol = new System.Windows.Forms.PictureBox();
-            this.imgAirRifle = new System.Windows.Forms.PictureBox();
             this.trkZoom = new System.Windows.Forms.TrackBar();
             this.label3 = new System.Windows.Forms.Label();
+            this.btnClear = new System.Windows.Forms.Button();
+            this.txtTime = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.timer = new System.Windows.Forms.Timer(this.components);
+            this.txtMeanRadius = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.txtMaxSpread = new System.Windows.Forms.TextBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.txtWindage = new System.Windows.Forms.TextBox();
+            this.txtElevation = new System.Windows.Forms.TextBox();
+            this.imgWindage = new System.Windows.Forms.PictureBox();
+            this.imgElevation = new System.Windows.Forms.PictureBox();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.imgTarget)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.imgArrow)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.imgAirPistol)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.imgAirRifle)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.trkZoom)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.imgWindage)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.imgElevation)).BeginInit();
             this.SuspendLayout();
             // 
             // serialPort
@@ -81,7 +93,7 @@
             this.statusText});
             this.statusStrip1.Location = new System.Drawing.Point(0, 544);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1186, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(724, 22);
             this.statusStrip1.SizingGrip = false;
             this.statusStrip1.TabIndex = 1;
             this.statusStrip1.Text = "statusStrip";
@@ -95,9 +107,9 @@
             // txtOutput
             // 
             this.txtOutput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.txtOutput.BackColor = System.Drawing.SystemColors.Window;
-            this.txtOutput.Location = new System.Drawing.Point(723, 37);
+            this.txtOutput.Location = new System.Drawing.Point(402, 37);
             this.txtOutput.Multiline = true;
             this.txtOutput.Name = "txtOutput";
             this.txtOutput.ReadOnly = true;
@@ -108,18 +120,16 @@
             // 
             // imgTarget
             // 
-            this.imgTarget.BackColor = System.Drawing.Color.Linen;
-            this.imgTarget.Image = ((System.Drawing.Image)(resources.GetObject("imgTarget.Image")));
+            this.imgTarget.BackColor = System.Drawing.Color.Moccasin;
             this.imgTarget.InitialImage = null;
             this.imgTarget.Location = new System.Drawing.Point(217, 37);
-            this.imgTarget.MaximumSize = new System.Drawing.Size(500, 500);
-            this.imgTarget.MinimumSize = new System.Drawing.Size(500, 500);
             this.imgTarget.Name = "imgTarget";
             this.imgTarget.Size = new System.Drawing.Size(500, 500);
             this.imgTarget.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.imgTarget.TabIndex = 4;
             this.imgTarget.TabStop = false;
             this.imgTarget.WaitOnLoad = true;
+            this.imgTarget.Paint += new System.Windows.Forms.PaintEventHandler(this.imgTarget_Paint);
             // 
             // shotsList
             // 
@@ -136,7 +146,7 @@
             this.shotsList.Location = new System.Drawing.Point(7, 37);
             this.shotsList.MultiSelect = false;
             this.shotsList.Name = "shotsList";
-            this.shotsList.Size = new System.Drawing.Size(204, 435);
+            this.shotsList.Size = new System.Drawing.Size(204, 354);
             this.shotsList.SmallImageList = this.imgListDirections;
             this.shotsList.StateImageList = this.imgListDirections;
             this.shotsList.TabIndex = 5;
@@ -176,17 +186,18 @@
             // txtTotal
             // 
             this.txtTotal.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.txtTotal.Location = new System.Drawing.Point(56, 515);
+            this.txtTotal.Location = new System.Drawing.Point(41, 435);
             this.txtTotal.Name = "txtTotal";
             this.txtTotal.ReadOnly = true;
-            this.txtTotal.Size = new System.Drawing.Size(155, 20);
+            this.txtTotal.Size = new System.Drawing.Size(170, 20);
             this.txtTotal.TabIndex = 6;
+            this.txtTotal.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // label1
             // 
             this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(19, 518);
+            this.label1.Location = new System.Drawing.Point(4, 438);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(31, 13);
             this.label1.TabIndex = 7;
@@ -196,7 +207,7 @@
             // 
             this.txtLastShot.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.txtLastShot.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.txtLastShot.Location = new System.Drawing.Point(75, 477);
+            this.txtLastShot.Location = new System.Drawing.Point(75, 397);
             this.txtLastShot.Name = "txtLastShot";
             this.txtLastShot.ReadOnly = true;
             this.txtLastShot.Size = new System.Drawing.Size(100, 31);
@@ -207,7 +218,7 @@
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(17, 486);
+            this.label2.Location = new System.Drawing.Point(4, 406);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(52, 13);
             this.label2.TabIndex = 9;
@@ -215,64 +226,45 @@
             // 
             // imgArrow
             // 
+            this.imgArrow.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.imgArrow.BackColor = System.Drawing.Color.White;
             this.imgArrow.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.imgArrow.Image = ((System.Drawing.Image)(resources.GetObject("imgArrow.Image")));
-            this.imgArrow.Location = new System.Drawing.Point(181, 477);
+            this.imgArrow.Location = new System.Drawing.Point(181, 397);
             this.imgArrow.Name = "imgArrow";
             this.imgArrow.Size = new System.Drawing.Size(30, 30);
             this.imgArrow.TabIndex = 10;
             this.imgArrow.TabStop = false;
             this.imgArrow.LoadCompleted += new System.ComponentModel.AsyncCompletedEventHandler(this.imgArrow_LoadCompleted);
             // 
-            // button1
+            // btnConfig
             // 
-            this.button1.Image = ((System.Drawing.Image)(resources.GetObject("button1.Image")));
-            this.button1.Location = new System.Drawing.Point(690, 6);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(27, 27);
-            this.button1.TabIndex = 11;
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.btnConfig.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnConfig.Image = ((System.Drawing.Image)(resources.GetObject("btnConfig.Image")));
+            this.btnConfig.Location = new System.Drawing.Point(690, 4);
+            this.btnConfig.Name = "btnConfig";
+            this.btnConfig.Size = new System.Drawing.Size(27, 27);
+            this.btnConfig.TabIndex = 11;
+            this.btnConfig.UseVisualStyleBackColor = true;
+            this.btnConfig.Click += new System.EventHandler(this.btnConfig_Click);
             // 
             // cmbWeapon
             // 
-            this.cmbWeapon.FormattingEnabled = true;
-            this.cmbWeapon.Location = new System.Drawing.Point(217, 9);
+            this.cmbWeapon.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbWeapon.Location = new System.Drawing.Point(217, 8);
             this.cmbWeapon.Name = "cmbWeapon";
             this.cmbWeapon.Size = new System.Drawing.Size(121, 21);
             this.cmbWeapon.TabIndex = 12;
             this.cmbWeapon.SelectedIndexChanged += new System.EventHandler(this.cmbWeapon_SelectedIndexChanged);
             // 
-            // imgAirPistol
-            // 
-            this.imgAirPistol.Image = ((System.Drawing.Image)(resources.GetObject("imgAirPistol.Image")));
-            this.imgAirPistol.Location = new System.Drawing.Point(1059, 43);
-            this.imgAirPistol.Name = "imgAirPistol";
-            this.imgAirPistol.Size = new System.Drawing.Size(47, 30);
-            this.imgAirPistol.TabIndex = 13;
-            this.imgAirPistol.TabStop = false;
-            // 
-            // imgAirRifle
-            // 
-            this.imgAirRifle.Image = ((System.Drawing.Image)(resources.GetObject("imgAirRifle.Image")));
-            this.imgAirRifle.Location = new System.Drawing.Point(1059, 116);
-            this.imgAirRifle.Name = "imgAirRifle";
-            this.imgAirRifle.Size = new System.Drawing.Size(47, 29);
-            this.imgAirRifle.TabIndex = 14;
-            this.imgAirRifle.TabStop = false;
-            this.imgAirRifle.Visible = false;
-            // 
             // trkZoom
             // 
             this.trkZoom.LargeChange = 1;
             this.trkZoom.Location = new System.Drawing.Point(467, 6);
-            this.trkZoom.Maximum = 12;
-            this.trkZoom.Minimum = 2;
+            this.trkZoom.Maximum = 5;
             this.trkZoom.Name = "trkZoom";
             this.trkZoom.Size = new System.Drawing.Size(104, 45);
             this.trkZoom.TabIndex = 15;
-            this.trkZoom.Value = 2;
             this.trkZoom.ValueChanged += new System.EventHandler(this.trkZoom_ValueChanged);
             // 
             // label3
@@ -284,16 +276,159 @@
             this.label3.TabIndex = 16;
             this.label3.Text = "Zoom";
             // 
+            // btnClear
+            // 
+            this.btnClear.Location = new System.Drawing.Point(89, 8);
+            this.btnClear.Name = "btnClear";
+            this.btnClear.Size = new System.Drawing.Size(75, 23);
+            this.btnClear.TabIndex = 17;
+            this.btnClear.Text = "Clear";
+            this.btnClear.UseVisualStyleBackColor = true;
+            this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
+            // 
+            // txtTime
+            // 
+            this.txtTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.txtTime.Location = new System.Drawing.Point(41, 515);
+            this.txtTime.Name = "txtTime";
+            this.txtTime.ReadOnly = true;
+            this.txtTime.Size = new System.Drawing.Size(170, 20);
+            this.txtTime.TabIndex = 18;
+            this.txtTime.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
+            // label4
+            // 
+            this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(4, 518);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(30, 13);
+            this.label4.TabIndex = 19;
+            this.label4.Text = "Time";
+            // 
+            // timer
+            // 
+            this.timer.Tick += new System.EventHandler(this.timer_Tick);
+            // 
+            // txtMeanRadius
+            // 
+            this.txtMeanRadius.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.txtMeanRadius.Location = new System.Drawing.Point(175, 488);
+            this.txtMeanRadius.Name = "txtMeanRadius";
+            this.txtMeanRadius.ReadOnly = true;
+            this.txtMeanRadius.Size = new System.Drawing.Size(36, 20);
+            this.txtMeanRadius.TabIndex = 20;
+            this.txtMeanRadius.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
+            // label5
+            // 
+            this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(105, 491);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(70, 13);
+            this.label5.TabIndex = 21;
+            this.label5.Text = "Mean Radius";
+            // 
+            // txtMaxSpread
+            // 
+            this.txtMaxSpread.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.txtMaxSpread.Location = new System.Drawing.Point(175, 462);
+            this.txtMaxSpread.Name = "txtMaxSpread";
+            this.txtMaxSpread.ReadOnly = true;
+            this.txtMaxSpread.Size = new System.Drawing.Size(36, 20);
+            this.txtMaxSpread.TabIndex = 22;
+            this.txtMaxSpread.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
+            // label6
+            // 
+            this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(111, 465);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(64, 13);
+            this.label6.TabIndex = 23;
+            this.label6.Text = "Max Spread";
+            // 
+            // label7
+            // 
+            this.label7.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(4, 465);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(50, 13);
+            this.label7.TabIndex = 24;
+            this.label7.Text = "Windage";
+            // 
+            // label8
+            // 
+            this.label8.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(4, 491);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(51, 13);
+            this.label8.TabIndex = 25;
+            this.label8.Text = "Elevation";
+            // 
+            // txtWindage
+            // 
+            this.txtWindage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.txtWindage.Location = new System.Drawing.Point(53, 462);
+            this.txtWindage.Name = "txtWindage";
+            this.txtWindage.ReadOnly = true;
+            this.txtWindage.Size = new System.Drawing.Size(29, 20);
+            this.txtWindage.TabIndex = 26;
+            this.txtWindage.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
+            // txtElevation
+            // 
+            this.txtElevation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.txtElevation.Location = new System.Drawing.Point(53, 488);
+            this.txtElevation.Name = "txtElevation";
+            this.txtElevation.ReadOnly = true;
+            this.txtElevation.Size = new System.Drawing.Size(29, 20);
+            this.txtElevation.TabIndex = 27;
+            this.txtElevation.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
+            // imgWindage
+            // 
+            this.imgWindage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.imgWindage.Location = new System.Drawing.Point(82, 462);
+            this.imgWindage.Name = "imgWindage";
+            this.imgWindage.Size = new System.Drawing.Size(20, 20);
+            this.imgWindage.TabIndex = 28;
+            this.imgWindage.TabStop = false;
+            // 
+            // imgElevation
+            // 
+            this.imgElevation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.imgElevation.Location = new System.Drawing.Point(82, 488);
+            this.imgElevation.Name = "imgElevation";
+            this.imgElevation.Size = new System.Drawing.Size(20, 20);
+            this.imgElevation.TabIndex = 29;
+            this.imgElevation.TabStop = false;
+            // 
             // frmMainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1186, 566);
+            this.ClientSize = new System.Drawing.Size(724, 566);
+            this.Controls.Add(this.imgElevation);
+            this.Controls.Add(this.imgWindage);
+            this.Controls.Add(this.txtElevation);
+            this.Controls.Add(this.txtWindage);
+            this.Controls.Add(this.label8);
+            this.Controls.Add(this.label7);
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.txtMaxSpread);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.txtMeanRadius);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.txtTime);
+            this.Controls.Add(this.btnClear);
             this.Controls.Add(this.label3);
-            this.Controls.Add(this.imgAirRifle);
-            this.Controls.Add(this.imgAirPistol);
             this.Controls.Add(this.cmbWeapon);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.btnConfig);
             this.Controls.Add(this.imgArrow);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.txtLastShot);
@@ -305,21 +440,21 @@
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.btnConnect);
             this.Controls.Add(this.trkZoom);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MaximizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(740, 604);
             this.Name = "frmMainWindow";
             this.Text = "freETarget";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMainWindow_FormClosing);
             this.Load += new System.EventHandler(this.frmMainWindow_Load);
             this.Shown += new System.EventHandler(this.frmMainWindow_Shown);
+            this.Resize += new System.EventHandler(this.frmMainWindow_Resize);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.imgTarget)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.imgArrow)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.imgAirPistol)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.imgAirRifle)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.trkZoom)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.imgWindage)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.imgElevation)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -344,12 +479,24 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.PictureBox imgArrow;
         private System.Windows.Forms.ImageList imgListDirections;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button btnConfig;
         private System.Windows.Forms.ComboBox cmbWeapon;
-        private System.Windows.Forms.PictureBox imgAirPistol;
-        private System.Windows.Forms.PictureBox imgAirRifle;
         private System.Windows.Forms.TrackBar trkZoom;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Button btnClear;
+        private System.Windows.Forms.TextBox txtTime;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Timer timer;
+        private System.Windows.Forms.TextBox txtMeanRadius;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox txtMaxSpread;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.TextBox txtWindage;
+        private System.Windows.Forms.TextBox txtElevation;
+        private System.Windows.Forms.PictureBox imgWindage;
+        private System.Windows.Forms.PictureBox imgElevation;
     }
 }
 
