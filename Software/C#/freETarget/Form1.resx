@@ -151,9 +151,30 @@
         DgAAAABJRU5ErkJggg==
 </value>
   </data>
+  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>460, 17</value>
+  </metadata>
   <metadata name="timer.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>380, 17</value>
   </metadata>
+  <data name="btnCalibration.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAe
+        vwAAHr8BQ/1smgAAAAd0SU1FB+QFFRUDJOPlDWAAAAKeSURBVDhPhVRfS9twFP01MWlS18amaWrtH9aa
+        xPqBfBA28YvsYQM71w3252XDBx8EEaawImzfQRB8U/bkiyDoB3C0ju2c/H5tQ5ayhwPpvfec3HPvbUSn
+        086FYVebhyhaFeWy0/d9rx+GqyKrhgiCrtbrhVpcsLYW6POAIlGpuCee557wOatmgigK9HmCCwDIFKBg
+        eQjRoRSMRQnWpHnzBEMBCyvLy35/cdG+1HV9rOvauFCwLxljTgmneBmC7KLZXNkQQjyYpnEPgTeOUzwv
+        Fp+c89kwFu41TfvVbjc3skSTgrAwFftTq1U/IVdYX48E5veV6PUigSUVmGNNQnRqPykY22RnJKgF5EjA
+        DL8RihzHWINOH6T9eKZpwVBwPrB5h5gtiTJerVb2IbCvBEnMsVPDMO7IScR1WhCT7WEBVyh4TZuyKC7k
+        Ldo4Cb4EL5dx2kftLhZ1Rf5EQ7ju0kvM5wg4xjZHjlM687zKIWeGY/4MoTzmuol5bULQgsgX5tD1YalU
+        PMP2R+SCc1Sv117BjvcW8zl13fIPnga2ecG7w4u++371AIJWu93YbjTq23yG0AFzrIHgBTnkAtBYeocZ
+        ziyj/Z/oYId2JtakzcCEmJlheYecWQyWU0sZYCm3mJmF2HQpiO/B/p4kyqWgkXw+b97Wav4gEU+fDb4U
+        udyYwrJr2ZE6m6Ei8iOAs/EHOLERzqZFrtL497BbrcZzHi1Ed2mT1uTQ3WNuH52ZzLEGc32mXpJ52Aqx
+        6BY6/Q1LN9jcC26T2+czfN5A7BFiW8pFgpspSPDj0HmKY/5oWflr/CMeCdu2rhljTnWW4s0VjC2AQFI8
+        w1Ni8lvmZjaT4P83S3AK2uIHlsiymAZvB3+t7KREvNEPONz3/xMMgq7+F1cB6+d9SlfWAAAAAElFTkSu
+        QmCC
+</value>
+  </data>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         AAABAAQAQEAAAAEAIAAoQAAARgAAACAgAAABACAAKBAAAG5AAAAYGAAAAQAgACgJAACWUAAAEBAAAAEA

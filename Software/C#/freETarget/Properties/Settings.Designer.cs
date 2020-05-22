@@ -106,5 +106,29 @@ namespace freETarget.Properties {
                 this["drawMeanGroup"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public decimal calibrationX {
+            get {
+                return ((decimal)(this["calibrationX"]));
+            }
+            set {
+                this["calibrationX"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public decimal calibrationY {
+            get {
+                return ((decimal)(this["calibrationY"]));
+            }
+            set {
+                this["calibrationY"] = value;
+            }
+        }
     }
 }
