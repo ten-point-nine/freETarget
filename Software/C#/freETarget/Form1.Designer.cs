@@ -65,6 +65,8 @@
             this.txtElevation = new System.Windows.Forms.TextBox();
             this.imgWindage = new System.Windows.Forms.PictureBox();
             this.imgElevation = new System.Windows.Forms.PictureBox();
+            this.btnCalibration = new System.Windows.Forms.Button();
+            this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.imgTarget)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.imgArrow)).BeginInit();
@@ -245,6 +247,7 @@
             this.btnConfig.Name = "btnConfig";
             this.btnConfig.Size = new System.Drawing.Size(27, 27);
             this.btnConfig.TabIndex = 11;
+            this.toolTip.SetToolTip(this.btnConfig, "Settings");
             this.btnConfig.UseVisualStyleBackColor = true;
             this.btnConfig.Click += new System.EventHandler(this.btnConfig_Click);
             // 
@@ -408,11 +411,24 @@
             this.imgElevation.TabIndex = 29;
             this.imgElevation.TabStop = false;
             // 
+            // btnCalibration
+            // 
+            this.btnCalibration.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCalibration.Image = ((System.Drawing.Image)(resources.GetObject("btnCalibration.Image")));
+            this.btnCalibration.Location = new System.Drawing.Point(657, 4);
+            this.btnCalibration.Name = "btnCalibration";
+            this.btnCalibration.Size = new System.Drawing.Size(27, 27);
+            this.btnCalibration.TabIndex = 30;
+            this.toolTip.SetToolTip(this.btnCalibration, "Calibration");
+            this.btnCalibration.UseVisualStyleBackColor = true;
+            this.btnCalibration.Click += new System.EventHandler(this.btnCalibration_Click);
+            // 
             // frmMainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(724, 566);
+            this.Controls.Add(this.btnCalibration);
             this.Controls.Add(this.imgElevation);
             this.Controls.Add(this.imgWindage);
             this.Controls.Add(this.txtElevation);
@@ -497,6 +513,8 @@
         private System.Windows.Forms.TextBox txtElevation;
         private System.Windows.Forms.PictureBox imgWindage;
         private System.Windows.Forms.PictureBox imgElevation;
+        private System.Windows.Forms.ToolTip toolTip;
+        private System.Windows.Forms.Button btnCalibration;
     }
 }
 

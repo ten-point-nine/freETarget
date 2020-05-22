@@ -85,7 +85,9 @@ namespace freETarget {
         private decimal ybar = 0;
         private decimal rbar = 0;
 
-        //private decimal currentRange = 0;
+        public decimal calibrationX = 0;
+        public decimal calibrationY = 0;
+
         private string currentTarget = Settings.Default.defaultTarget;
 
         private List<Shot> shots = new List<Shot>();
@@ -103,7 +105,15 @@ namespace freETarget {
 
         public frmMainWindow() {
             InitializeComponent();
+            this.calibrationX = Settings.Default.calibrationX;
+            this.calibrationY = Settings.Default.calibrationY;
 
+            if (calibrationX == 0 && calibrationY == 0) {
+                btnCalibration.BackColor = this.BackColor;
+            } else {
+                btnCalibration.BackColor = Settings.Default.targetColor;
+            }
+            toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY);
         }
 
 
@@ -128,7 +138,7 @@ namespace freETarget {
 
                 drawArrow(shot);
                 writeShotData(indata, shot);
-                var d = new SafeCallDelegate3(formResize); //draw shot
+                var d = new SafeCallDelegate3(targetRefresh); //draw shot
                 this.Invoke(d);
             } else {
 
@@ -215,13 +225,19 @@ namespace freETarget {
                 shotsList.Items.Add(item);
                 shotsList.EnsureVisible(shotsList.Items.Count - 1);
 
+                computeShotStatistics();
+
+            }
+        }
+
+        private void computeShotStatistics() {
+            if (shots.Count > 1) {
                 calculateMeanRadius(out rbar, out xbar, out ybar);
                 txtMeanRadius.Text = Math.Round(rbar, 1).ToString();
                 txtWindage.Text = Math.Round(Math.Abs(xbar), 1).ToString();
                 drawWindageAndElevation(xbar, ybar);
                 txtElevation.Text = Math.Round(Math.Abs(ybar), 1).ToString();
                 txtMaxSpread.Text = Math.Round(calculateMaxSpread(), 1).ToString();
-
             }
         }
 
@@ -264,7 +280,7 @@ namespace freETarget {
         private void drawShot(Shot shot, Graphics it, int targetSize, decimal zoomFactor, int l) {
             //transform shot coordinates to imagebox coordinates
 
-            PointF x = transform((float)shot.x, (float)shot.y, targetSize, zoomFactor);
+            PointF x = transform((float)getShotX(shot), (float)getShotY(shot), targetSize, zoomFactor);
 
             //draw shot on target
             int count = shots.Count;
@@ -492,13 +508,13 @@ namespace freETarget {
 
         private void displayDebugConsole(bool display) {
             txtOutput.Visible = display;
-            formResize();
+            targetRefresh();
         }
 
         private void frmMainWindow_Load(object sender, EventArgs e) {
             cmbWeapon.Items.AddRange(supportedTargets);
             setTarget();
-            formResize();
+            targetRefresh();
             imgTarget.BackColor = Settings.Default.targetColor;
         }
 
@@ -553,10 +569,10 @@ namespace freETarget {
         }
 
         private void frmMainWindow_Resize(object sender, EventArgs e) {
-            formResize();
+            targetRefresh();
         }
 
-        private void formResize() {
+        private void targetRefresh() {
             int rightBorder = 10;
             if (Settings.Default.displayDebugConsole == true) {
                 rightBorder = txtOutput.Width + 10;
@@ -687,7 +703,7 @@ namespace freETarget {
 
         private void clearShots() {
             shots.Clear();
-            formResize();
+            targetRefresh();
             shotsList.Items.Clear();
             shotsList.Refresh();
             txtLastShot.Text = "";
@@ -727,8 +743,8 @@ namespace freETarget {
             decimal ysum = 0;
 
             foreach(Shot shot in shots) {
-                xsum += shot.x;
-                ysum += shot.y;
+                xsum += getShotX(shot);
+                ysum += getShotY(shot);
             }
 
             xbar = xsum / (decimal)shots.Count;
@@ -757,6 +773,62 @@ namespace freETarget {
             }
 
             return (decimal)spreads.Max();
+        }
+
+        private decimal getShotX(Shot shot) {
+            return shot.x + calibrationX;
+        }
+
+        private decimal getShotY(Shot shot) {
+            return shot.y + calibrationY;
+        }
+
+        private void btnCalibration_Click(object sender, EventArgs e) {
+            frmCalibration frmCal = new frmCalibration(this);
+            frmCal.Show();
+        }
+
+        public void calibrateX(decimal increment) {
+            calibrationX += increment;
+            computeShotStatistics();
+            targetRefresh();
+
+            if(calibrationX == 0 && calibrationY == 0) {
+                btnCalibration.BackColor = this.BackColor;
+            } else {
+                btnCalibration.BackColor = Settings.Default.targetColor;
+            }
+
+            toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY);
+        }
+
+        public void calibrateY(decimal increment) {
+            calibrationY += increment;
+            computeShotStatistics();
+            targetRefresh();
+
+            if (calibrationX == 0 && calibrationY == 0) {
+                btnCalibration.BackColor = this.BackColor;
+            } else {
+                btnCalibration.BackColor = Settings.Default.targetColor;
+            }
+            toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY);
+        }
+
+        public void resetCalibration() {
+            calibrationX = 0;
+            calibrationY = 0;
+            computeShotStatistics();
+            targetRefresh();
+
+            btnCalibration.BackColor = this.BackColor;
+            toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY);
+        }
+
+        public void saveCalibration() {
+            Settings.Default.calibrationX = calibrationX;
+            Settings.Default.calibrationY = calibrationY;
+            Settings.Default.Save();
         }
     }
 
