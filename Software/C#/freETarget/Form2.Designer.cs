@@ -43,13 +43,16 @@
             this.label5 = new System.Windows.Forms.Label();
             this.cmbColor = new System.Windows.Forms.ComboBox();
             this.chkDrawMeanG = new System.Windows.Forms.CheckBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.rdb60 = new System.Windows.Forms.RadioButton();
+            this.rdb40 = new System.Windows.Forms.RadioButton();
             this.SuspendLayout();
             // 
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(248, 185);
+            this.btnOK.Location = new System.Drawing.Point(248, 230);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 0;
@@ -60,7 +63,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(167, 185);
+            this.btnCancel.Location = new System.Drawing.Point(167, 230);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
@@ -120,7 +123,7 @@
             // chkDisplayConsole
             // 
             this.chkDisplayConsole.AutoSize = true;
-            this.chkDisplayConsole.Location = new System.Drawing.Point(15, 161);
+            this.chkDisplayConsole.Location = new System.Drawing.Point(16, 188);
             this.chkDisplayConsole.Name = "chkDisplayConsole";
             this.chkDisplayConsole.Size = new System.Drawing.Size(136, 17);
             this.chkDisplayConsole.TabIndex = 12;
@@ -148,7 +151,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(12, 113);
+            this.label5.Location = new System.Drawing.Point(12, 114);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(65, 13);
             this.label5.TabIndex = 15;
@@ -168,18 +171,52 @@
             // chkDrawMeanG
             // 
             this.chkDrawMeanG.AutoSize = true;
-            this.chkDrawMeanG.Location = new System.Drawing.Point(15, 138);
+            this.chkDrawMeanG.Location = new System.Drawing.Point(16, 165);
             this.chkDrawMeanG.Name = "chkDrawMeanG";
             this.chkDrawMeanG.Size = new System.Drawing.Size(113, 17);
             this.chkDrawMeanG.TabIndex = 17;
             this.chkDrawMeanG.Text = "Draw Mean Group";
             this.chkDrawMeanG.UseVisualStyleBackColor = true;
             // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(13, 140);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(115, 13);
+            this.label6.TabIndex = 18;
+            this.label6.Text = "Match number of shots";
+            // 
+            // rdb60
+            // 
+            this.rdb60.AutoSize = true;
+            this.rdb60.Location = new System.Drawing.Point(225, 140);
+            this.rdb60.Name = "rdb60";
+            this.rdb60.Size = new System.Drawing.Size(65, 17);
+            this.rdb60.TabIndex = 19;
+            this.rdb60.TabStop = true;
+            this.rdb60.Text = "60 shots";
+            this.rdb60.UseVisualStyleBackColor = true;
+            // 
+            // rdb40
+            // 
+            this.rdb40.AutoSize = true;
+            this.rdb40.Location = new System.Drawing.Point(144, 139);
+            this.rdb40.Name = "rdb40";
+            this.rdb40.Size = new System.Drawing.Size(65, 17);
+            this.rdb40.TabIndex = 20;
+            this.rdb40.TabStop = true;
+            this.rdb40.Text = "40 shots";
+            this.rdb40.UseVisualStyleBackColor = true;
+            // 
             // frmSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(335, 220);
+            this.ClientSize = new System.Drawing.Size(335, 265);
+            this.Controls.Add(this.rdb40);
+            this.Controls.Add(this.rdb60);
+            this.Controls.Add(this.label6);
             this.Controls.Add(this.chkDrawMeanG);
             this.Controls.Add(this.cmbColor);
             this.Controls.Add(this.label5);
@@ -223,5 +260,8 @@
         private System.Windows.Forms.Label label5;
         public System.Windows.Forms.ComboBox cmbColor;
         public System.Windows.Forms.CheckBox chkDrawMeanG;
+        private System.Windows.Forms.Label label6;
+        public System.Windows.Forms.RadioButton rdb60;
+        public System.Windows.Forms.RadioButton rdb40;
     }
 }

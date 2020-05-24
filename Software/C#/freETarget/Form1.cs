@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
+using System.Deployment.Internal;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO.Ports;
 using System.Linq;
@@ -14,6 +16,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace freETarget {
     public partial class frmMainWindow : Form {
@@ -67,11 +70,12 @@ namespace freETarget {
         public const decimal pelletCaliber = 4.5m;
 
         private DateTime connectTime;
+        private DateTime limitTime;
 
-        public const string AirPistol = "Air Pistol";
-        public const string AirRifle = "Air Rifle";
+        //public const string AirPistol = "Air Pistol";
+        //public const string AirRifle = "Air Rifle";
 
-        public static string[] supportedTargets = new string[] { AirPistol, AirRifle };
+        //public static string[] supportedTargets = new string[] { AirPistol, AirRifle };
 
         private bool isConnected = false;
         private delegate void SafeCallDelegate(string text, Shot shot);
@@ -88,11 +92,14 @@ namespace freETarget {
         public decimal calibrationX = 0;
         public decimal calibrationY = 0;
 
-        private string currentTarget = Settings.Default.defaultTarget;
+        private Session currentSession;
 
         private List<Shot> shots = new List<Shot>();
 
+        private Session[] sessions = new Session[6];
+
         public struct Shot {
+            public int index;
             public int count;
             public decimal x;
             public decimal y;
@@ -101,6 +108,22 @@ namespace freETarget {
             public int score;
             public decimal decimalScore;
             public bool innerTen;
+            public DateTime timestamp;
+        }
+
+        public enum TargetType {
+            Pistol,
+            Rifle
+        }
+
+        public struct Session {
+            public string name;
+            public bool practice;
+            public TargetType type;
+            public int shotsNumber;
+            public bool decimalScoring;
+            public bool final;
+            public int minutes;
         }
 
         public frmMainWindow() {
@@ -114,9 +137,106 @@ namespace freETarget {
                 btnCalibration.BackColor = Settings.Default.targetColor;
             }
             toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY);
+
+            initSessions();
+            initBreakdownChart();
+
         }
 
+        private void initSessions() {
+            Session airPistolPractice = new Session();
+            airPistolPractice.decimalScoring = false;
+            airPistolPractice.final = false;
+            airPistolPractice.name = "Air Pistol Practice";
+            airPistolPractice.shotsNumber = -1;
+            airPistolPractice.type = TargetType.Pistol;
+            airPistolPractice.practice = true;
+            airPistolPractice.minutes = -1;
+            sessions[0] = airPistolPractice;
 
+
+            Session airPistolMatch = new Session();
+            airPistolMatch.decimalScoring = false;
+            airPistolMatch.final = false;
+            airPistolMatch.name = "Air Pistol Match";
+            airPistolMatch.shotsNumber = Settings.Default.MatchShots;
+            airPistolMatch.type = TargetType.Pistol;
+            airPistolMatch.practice = false;
+            if (airPistolMatch.shotsNumber == 60) {
+                airPistolMatch.minutes = 75;
+            } else if (airPistolMatch.shotsNumber == 40) {
+                airPistolMatch.minutes = 50;
+            } else {
+                airPistolMatch.minutes = -1;
+            }
+            sessions[1] = airPistolMatch;
+
+            Session airPistolFinal = new Session();
+            airPistolFinal.decimalScoring = true;
+            airPistolFinal.final = true;
+            airPistolFinal.name = "Air Pistol Final";
+            airPistolFinal.shotsNumber = 24;
+            airPistolFinal.type = TargetType.Pistol;
+            airPistolFinal.practice = false;
+            airPistolFinal.minutes = -1;
+            sessions[2] = airPistolFinal;
+
+
+            Session airRiflePractice = new Session();
+            airRiflePractice.decimalScoring = true;
+            airRiflePractice.final = false;
+            airRiflePractice.name = "Air Rifle Practice";
+            airRiflePractice.shotsNumber = -1;
+            airRiflePractice.type = TargetType.Rifle;
+            airRiflePractice.practice = true;
+            airRiflePractice.minutes = -1;
+            sessions[3] = airRiflePractice;
+
+
+            Session airRifleMatch = new Session();
+            airRifleMatch.decimalScoring = true;
+            airRifleMatch.final = false;
+            airRifleMatch.name = "Air Rifle Match";
+            airRifleMatch.shotsNumber = Settings.Default.MatchShots;
+            airRifleMatch.type = TargetType.Rifle;
+            airRifleMatch.practice = false;
+            if (airRifleMatch.shotsNumber == 60) {
+                airRifleMatch.minutes = 75;
+            } else if (airRifleMatch.shotsNumber == 40) {
+                airRifleMatch.minutes = 50;
+            } else {
+                airRifleMatch.minutes = -1;
+            }
+            sessions[4] = airRifleMatch;
+
+            Session airRifleFinal = new Session();
+            airRifleFinal.decimalScoring = true;
+            airRifleFinal.final = true;
+            airRifleFinal.name = "Air Rifle Final";
+            airRifleFinal.shotsNumber = 24;
+            airRifleFinal.type = TargetType.Rifle;
+            airRifleFinal.practice = false;
+            airRifleFinal.minutes = -1;
+            sessions[5] = airRifleFinal;
+
+        }
+
+        private void initBreakdownChart() {
+            Series series = chartBreakdown.Series[0];
+            series.Points.AddXY("X", 0);
+            series.Points.AddXY("10", 0);
+            series.Points.AddXY("9", 0);
+            series.Points.AddXY("8", 0);
+            series.Points.AddXY("7", 0);
+            series.Points.AddXY("6", 0);
+            series.Points.AddXY("5", 0);
+            series.Points.AddXY("4", 0);
+            series.Points.AddXY("3", 0);
+            series.Points.AddXY("2", 0);
+            series.Points.AddXY("1", 0);
+            series.Points.AddXY("0", 0);
+            chartBreakdown.Update();
+        }
 
         private void serialPort_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e) {
             //received data from serial port
@@ -134,6 +254,7 @@ namespace freETarget {
                 if (shot.innerTen) {
                     innerX++;
                 }
+                shot.index = shots.Count - 1;
 
 
                 drawArrow(shot);
@@ -161,6 +282,13 @@ namespace freETarget {
                     btnConnect.Text = "Disconnect";
                     isConnected = true;
                     statusText.Text = "Connected to " + serialPort.PortName;
+
+                    shotsList.Enabled = true;
+                    btnCalibration.Enabled = true;
+                    trkZoom.Enabled = true;
+                    tcSessionType.Enabled = true;
+                    tcSessionType.Refresh();
+
                 } catch (Exception ex) {
                     statusText.Text = "Error opening serial port: " + ex.Message;
                 }
@@ -173,7 +301,16 @@ namespace freETarget {
 
                 statusText.Text = "Disconnected";
                 timer.Enabled = false;
+
+                shotsList.Enabled = false;
+                btnCalibration.Enabled = false;
+                trkZoom.Enabled = false;
+                tcSessionType.Enabled = false;
+                tcSessionType.Refresh();
             }
+
+            setTarget();
+            targetRefresh();
         }
 
         //output errors to the status bar at the bottom
@@ -226,6 +363,8 @@ namespace freETarget {
                 shotsList.EnsureVisible(shotsList.Items.Count - 1);
 
                 computeShotStatistics();
+                writeToGrid(shot);
+                fillBreakdownChart(shots);
 
             }
         }
@@ -321,7 +460,7 @@ namespace freETarget {
 
         private void drawArrow(Shot shot) {
             //draw direction arrow
-            Bitmap bmp = new Bitmap(imgArrow.Image);
+            Bitmap bmp = new Bitmap(imgArrow.Width, imgArrow.Height);
             Graphics g = Graphics.FromImage(bmp);
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.Clear(Color.White);
@@ -425,6 +564,8 @@ namespace freETarget {
 
             determineScore(ref ret);
 
+            ret.timestamp = DateTime.Now;
+
             return ret;
         }
 
@@ -433,7 +574,7 @@ namespace freETarget {
             //using liner interpolation with the "official" values found here: http://targettalk.org/viewtopic.php?p=100591#p100591
 
 
-            if (currentTarget == AirPistol) {
+            if (currentSession.type == TargetType.Pistol) {
                 double score = linearInterpolation(pistol1X, pistol1Y, pistol2X, pistol2Y, (float)shot.radius);
 
                 shot.decimalScore = (decimal) (Math.Truncate(score*10)) / 10m;
@@ -451,7 +592,7 @@ namespace freETarget {
                 } else {
                     shot.innerTen = false;
                 }
-            } else if (currentTarget == AirRifle) {
+            } else if (currentSession.type == TargetType.Rifle) {
                 double score = linearInterpolation(rifle1X, rifle1Y, rifle2X, rifle2Y, (float)shot.radius);
 
                 shot.decimalScore = (decimal)(Math.Truncate(score * 10)) / 10m;
@@ -474,7 +615,7 @@ namespace freETarget {
                     shot.innerTen = false;
                 }
             } else {
-                Console.WriteLine("Unknown current target " + currentTarget);
+                Console.WriteLine("Unknown current target " + currentSession.name);
             }
 
         }
@@ -496,10 +637,16 @@ namespace freETarget {
                 Properties.Settings.Default.defaultTarget = settingsFrom.cmbWeapons.GetItemText(settingsFrom.cmbWeapons.SelectedItem);
                 Properties.Settings.Default.targetColor = Color.FromName(settingsFrom.cmbColor.GetItemText(settingsFrom.cmbColor.SelectedItem));
                 Properties.Settings.Default.drawMeanGroup = settingsFrom.chkDrawMeanG.Checked;
+                if (settingsFrom.rdb60.Checked) {
+                    Properties.Settings.Default.MatchShots = 60;
+                } else if (settingsFrom.rdb40.Checked) {
+                    Properties.Settings.Default.MatchShots = 40;
+                } else {
+                    Properties.Settings.Default.MatchShots = -1;
+                }
                 Properties.Settings.Default.Save();
 
-                imgTarget.BackColor = Settings.Default.targetColor;
-
+                initSessions();
                 displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
             }
 
@@ -512,7 +659,20 @@ namespace freETarget {
         }
 
         private void frmMainWindow_Load(object sender, EventArgs e) {
-            cmbWeapon.Items.AddRange(supportedTargets);
+
+            foreach (Session s in sessions) {
+                if (s.name.Contains(Settings.Default.defaultTarget.Trim())) {
+                    currentSession = s;
+                    break;
+                }
+            }
+
+            foreach(TabPage tab in tcSessionType.TabPages) {
+                if (currentSession.name.Contains(tab.Text.Trim())) {
+                    tcSessionType.SelectedTab = tab;
+                }
+            }
+
             setTarget();
             targetRefresh();
             imgTarget.BackColor = Settings.Default.targetColor;
@@ -530,33 +690,41 @@ namespace freETarget {
 
         private void frmMainWindow_Shown(object sender, EventArgs e) {
             displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
-            cmbWeapon.SelectedItem = Properties.Settings.Default.defaultTarget;
-        }
-
-        private void cmbWeapon_SelectedIndexChanged(object sender, EventArgs e) {
-            setTarget();
-
         }
 
         private void setTarget() {
-            if (cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirPistol) {
+            foreach(Session s in sessions) {
+                if(s.name.Contains(tcSessionType.SelectedTab.Text.Trim())) {
+                    currentSession = s;
+                    break;
+                }
+            }
+
+            connectTime = DateTime.Now;
+            if (currentSession.minutes > 0) {
+                limitTime = DateTime.Now.AddMinutes(currentSession.minutes);
+            } else {
+                limitTime = DateTime.MinValue;
+            }
+
+            if (currentSession.type == TargetType.Pistol) {
                 trkZoom.Minimum = 1;
                 trkZoom.Maximum = 5;
                 trkZoom.Value = 1;
 
                // currentRange = outterRingPistol / 2m + pelletCaliber / 2m; //maximum range that can score a point 155.5 / 2 + 4.5 / 2 = 80mm
-                currentTarget = AirPistol;
-            } else if (cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirRifle) {
+
+            } else if (currentSession.type == TargetType.Rifle) {
                 trkZoom.Minimum = 0;
                 trkZoom.Maximum = 5;
                 trkZoom.Value = 0;
 
                 //currentRange = outterRingRifle / 2m + pelletCaliber / 2m; //maximum range that can score a point = 25mm
-                currentTarget = AirRifle;
             }
 
             clearShots();
             drawTarget();
+            drawSessionName(tcSessionType.SelectedTab.BackColor);
         }
 
         private void trkZoom_ValueChanged(object sender, EventArgs e) {
@@ -573,10 +741,8 @@ namespace freETarget {
         }
 
         private void targetRefresh() {
-            int rightBorder = 10;
-            if (Settings.Default.displayDebugConsole == true) {
-                rightBorder = txtOutput.Width + 10;
-            }
+            int rightBorder = gridTargets.Width + 35;
+
             int height = this.ClientSize.Height - 10 - statusStrip1.Height - imgTarget.Top;
             int width = this.ClientSize.Width - rightBorder - imgTarget.Left;
 
@@ -588,19 +754,17 @@ namespace freETarget {
                 imgTarget.Width = width;
 
             }
+            txtOutput.Left = imgTarget.Left + imgTarget.Width + 5;
+            txtOutput.Width = gridTargets.Left - (imgTarget.Left + imgTarget.Width) - 8;
 
             drawTarget();
         }
 
         private void drawTarget() {
-            if (cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == "") {
-                cmbWeapon.SelectedItem = Properties.Settings.Default.defaultTarget;
-            }
-
-            if (cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirPistol) {
+            if (currentSession.type == TargetType.Pistol) {
                 decimal zoomFactor = (decimal)(1 / (decimal)getZoom());
                 imgTarget.Image = paintTarget(imgTarget.Height, 7, ringsPistol, zoomFactor, false);
-            } else if (cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirRifle) {
+            } else if (currentSession.type == TargetType.Rifle) {
                 decimal zoomFactor = (decimal)(1 / Math.Pow(2, getZoom()));
                 imgTarget.Image = paintTarget(imgTarget.Height, 4, ringsRifle, zoomFactor, true);
             }
@@ -616,9 +780,13 @@ namespace freETarget {
             Brush brushBlack = new SolidBrush(Color.Black);
             Brush brushWhite = new SolidBrush(Settings.Default.targetColor);
 
+
+
             Bitmap bmpTarget = new Bitmap(dimension, dimension);
             Graphics it = Graphics.FromImage(bmpTarget);
             it.SmoothingMode = SmoothingMode.AntiAlias;
+
+            it.FillRectangle(brushWhite, 0, 0, dimension - 1, dimension - 1);
 
             int r = 1;
             for (int i = 0; i < rings.Length; i++) {
@@ -679,6 +847,25 @@ namespace freETarget {
                 drawMeanGroup(it, dimension, zoomFactor);
             }
 
+            if (currentSession.practice) {
+                //draw triangle in corner
+                float sixth = dimension / 6f;
+                PointF[] points = new PointF[3];
+                points[0].X = 5 * sixth;
+                points[0].Y = 0;
+
+                points[1].X = dimension;
+                points[1].Y = sixth;
+
+                points[2].X = dimension;
+                points[2].Y = 0;
+
+                it.FillPolygon(brushBlack, points);
+            }
+
+            if (isConnected == false) {
+                bmpTarget = ToGrayScale(bmpTarget);
+            }
             return bmpTarget;
         }
         private void drawMeanGroup(Graphics it, decimal currentTargetSize, decimal zoomFactor) {
@@ -724,6 +911,8 @@ namespace freETarget {
             xbar = 0;
             ybar = 0;
             rbar = 0;
+            gridTargets.Rows.Clear();
+            clearBreakdownChart();
         }
 
         private double linearInterpolation(float x1, float y1, float x2, float y2, float x) {
@@ -733,8 +922,24 @@ namespace freETarget {
 
         private void timer_Tick(object sender, EventArgs e) {
             DateTime now = DateTime.Now;
-            TimeSpan ts = now - connectTime;
-            txtTime.Text = ts.ToString(@"hh\:mm\:ss");
+            TimeSpan ts;
+            if (limitTime == DateTime.MinValue) {
+                ts = now - connectTime;
+                txtTime.BackColor = SystemColors.Control;
+            } else {
+                ts = limitTime - now;
+                if(TimeSpan.Compare(ts, TimeSpan.FromMinutes(10))<=0) { //last 10 minutes displayed in red
+                    
+                    txtTime.BackColor = Color.Red;
+                } else {
+                    txtTime.BackColor = SystemColors.Control;
+                }
+             
+            }
+            string day = now.ToString("yyyy-MM-dd");
+            txtTime.Text = day + "  " + ts.ToString(@"hh\:mm\:ss");
+
+
         }
 
         private void calculateMeanRadius( out decimal rbar, out decimal xbar, out decimal ybar) {
@@ -830,6 +1035,189 @@ namespace freETarget {
             Settings.Default.calibrationY = calibrationY;
             Settings.Default.Save();
         }
+
+        public Bitmap ToGrayScale(Bitmap original) {
+            //create a blank bitmap the same size as original
+            Bitmap newBitmap = new Bitmap(original.Width, original.Height);
+
+            //get a graphics object from the new image
+            using (Graphics g = Graphics.FromImage(newBitmap)) {
+
+                //create the grayscale ColorMatrix
+                ColorMatrix colorMatrix = new ColorMatrix(
+                   new float[][]
+                   {
+             new float[] {.3f, .3f, .3f, 0, 0},
+             new float[] {.59f, .59f, .59f, 0, 0},
+             new float[] {.11f, .11f, .11f, 0, 0},
+             new float[] {0, 0, 0, 1, 0},
+             new float[] {0, 0, 0, 0, 1}
+                   });
+
+                //create some image attributes
+                using (ImageAttributes attributes = new ImageAttributes()) {
+
+                    //set the color matrix attribute
+                    attributes.SetColorMatrix(colorMatrix);
+
+                    //draw the original image on the new image
+                    //using the grayscale color matrix
+                    g.DrawImage(original, new Rectangle(0, 0, original.Width, original.Height),
+                                0, 0, original.Width, original.Height, GraphicsUnit.Pixel, attributes);
+                }
+            }
+            return newBitmap;
+        }
+
+        private void tabControl1_DrawItem(object sender, DrawItemEventArgs e) {
+            Color backC = tcSessionType.TabPages[e.Index].BackColor;
+            Color foreC = tcSessionType.TabPages[e.Index].ForeColor;
+            if (tcSessionType.Enabled==false) {
+                int grayScale = (int)((backC.R * 0.3) + (backC.G * 0.59) + (backC.B * 0.11));
+                backC = Color.FromArgb(backC.A, grayScale, grayScale, grayScale);
+            } 
+
+            e.Graphics.FillRectangle(new SolidBrush(backC), e.Bounds);
+            Rectangle paddedBounds = e.Bounds;
+            paddedBounds.Inflate(-2, -2);
+            StringFormat format1h = new StringFormat(StringFormatFlags.DirectionVertical | StringFormatFlags.DirectionRightToLeft);
+            e.Graphics.DrawString(tcSessionType.TabPages[e.Index].Text, this.Font, new SolidBrush(foreC), paddedBounds, format1h);
+        }
+
+        private void tcSessionType_SelectedIndexChanged(object sender, EventArgs e) {
+            setTarget();
+        }
+
+        private void drawSessionName(Color color) {
+
+            Bitmap bmpTarget = new Bitmap(imgSessionName.Width, imgSessionName.Height);
+            Graphics g = Graphics.FromImage(bmpTarget);
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            //Graphics g = imgSessionName.CreateGraphics();
+            if (isConnected) {
+                g.Clear(color);
+            } else {
+                g.Clear(Color.Black);
+            }
+            Font f = new Font("Tahoma", 10, FontStyle.Bold);
+            Brush b = new SolidBrush(Color.Black);
+            StringFormat format = new StringFormat();
+            format.LineAlignment = StringAlignment.Center;
+            format.Alignment = StringAlignment.Center;
+
+            string name = Settings.Default.name + " - " + currentSession.name;
+            if (currentSession.shotsNumber > 0) {
+                name += " " + currentSession.shotsNumber;
+            }
+            g.DrawString(name, f, b, imgSessionName.ClientRectangle, format);
+
+            imgSessionName.Image = bmpTarget;
+        }
+
+        private void writeToGrid(Shot shot) {
+            int rowShot = 0;
+            int cellShot = 0;
+            if (currentSession.final == false) {
+                rowShot = shot.index / 10;
+                cellShot = shot.index % 10;
+            } else {
+                //final - 2 rows of 5 shots and than rows of 2 shots
+                if (shot.index < 5) {
+                    //first row
+                    rowShot = 0;
+                    cellShot = shot.index % 5;
+                } else if (shot.index >= 5 && shot.index < 10) {
+                    //second row
+                    rowShot = 1;
+                    cellShot = shot.index % 5;
+                } else {
+                    //row of 2
+                    rowShot = (shot.index - 6) / 2;
+                    cellShot = shot.index % 2;
+                    Console.WriteLine("index:" + shot.index + " rowShot:" + rowShot + " cellShot:" + cellShot);
+                }
+            }
+
+            DataGridViewRow row = null;
+
+            if (gridTargets.Rows.Count < rowShot + 1) { //no row, add it
+                int index = gridTargets.Rows.Add();
+                row = gridTargets.Rows[index];
+                row.HeaderCell.Value = "T" + (rowShot + 1);
+            } else {
+                row = gridTargets.Rows[rowShot];
+            }
+
+            DataGridViewCell cell = row.Cells[cellShot];
+            if (currentSession.final == true || currentSession.decimalScoring) {
+                cell.Value = shot.decimalScore.ToString(CultureInfo.InvariantCulture);
+            } else {
+                cell.Value = shot.score;
+            }
+
+            DataGridViewCell totalCell = row.Cells[10];
+            decimal total = 0;
+            for (int i = 0; i < row.Cells.Count - 1; i++) {
+                if (row.Cells[i].Value != null) {
+                    total += Decimal.Parse(row.Cells[i].Value.ToString(), CultureInfo.InvariantCulture);
+                }
+            }
+            totalCell.Value = total;
+
+            gridTargets.ClearSelection();
+        }
+
+        private void fillBreakdownChart(List<Shot> shotList) {
+            int[] breakdown = new int[12];
+            foreach(Shot s in shotList) {
+                if (s.score == 10) {
+                    if (s.innerTen) {
+                        breakdown[0]++;
+                    } else {
+                        breakdown[1]++;
+                    }
+                } else {
+                    breakdown[11 - s.score]++;
+                }
+            }
+
+            for(int i = 0; i < chartBreakdown.Series[0].Points.Count; i++) {
+                DataPoint p = chartBreakdown.Series[0].Points[i];
+                p.SetValueY(breakdown[i]);
+            }
+
+            chartBreakdown.ResetAutoValues();
+            chartBreakdown.Update();
+        }
+
+        private void clearBreakdownChart() {
+            for (int i = 0; i < chartBreakdown.Series[0].Points.Count; i++) {
+                DataPoint p = chartBreakdown.Series[0].Points[i];
+                p.SetValueY(0);
+            }
+
+            chartBreakdown.ResetAutoValues();
+            chartBreakdown.Update();
+        }
+
+        private void imgSessionName_Click(object sender, EventArgs e) {
+            gridTargets.ClearSelection();
+        }
+
+        private void gridTargets_Click(object sender, EventArgs e) {
+
+            if (gridTargets.SelectedRows.Count > 0) {
+                DataGridViewRow row = gridTargets.SelectedRows[0];
+
+                String s = "";
+                foreach (DataGridViewCell cell in row.Cells) {
+                    s += cell.Value + " ";
+                }
+
+                Console.WriteLine(s);
+            }
+        }
+
     }
 
 
