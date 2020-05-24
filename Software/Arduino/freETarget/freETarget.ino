@@ -72,10 +72,9 @@ void loop()
   unsigned int running_mode;
   unsigned int sensor_status;   // Record which sensors contain valid data
   unsigned int location;        // Sensor location 
-  
+
  while (1)
  {
-
 
 /*
  * Cycle through the state machine
@@ -91,9 +90,9 @@ void loop()
     
     while (read_DIP() & RUNNING_MODE_CALIBRATION)
     {
-      cal_analog();
+ //     cal_analog();
       temperature_C();
-      delay(ONE_SECOND/2);
+//      delay(ONE_SECOND/2);
     }
     state = ARM;
     break;

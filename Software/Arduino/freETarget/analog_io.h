@@ -23,3 +23,6 @@ double temperature_C(void);         // Temperature in degrees C
 #define RTD          6          // RTD input
 
 #define TO_VOLTS(x) ( ((x) * 5.0) / 1024.0 )
+
+#define TEMP_IC   (0x9E >> 1)
+

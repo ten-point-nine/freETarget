@@ -7,6 +7,7 @@
  * ----------------------------------------------------*/
 #include "analog_io.h"
 #include "gpio.h"
+#include "Wire.h"
 
 /*----------------------------------------------------------------
  * 
@@ -21,7 +22,8 @@ void init_analog_io(void)
     
   pinMode(REF_OUT, OUTPUT);
   analogWrite(REF_OUT, 0);  // Prime the PWM
-
+  Wire.begin();
+  
 /*
  * All done, begin the program
  */
@@ -153,45 +155,46 @@ void show_analog(void)
  * 
  *----------------------------------------------------------------
  *
- *  CALIBRATION:  
- *  1 - Set ROOM_ZERO to 0
- *  2 - Set RTD_SCALE to 1.0d
- *  3 - Measure Room Temperature Ex 23C
- *  4 - Set RTD_ZERO to the ADC value
- *  5 - Change and measure the temperature
- *  6 - Scale the RTD scale accordingl 
- *  
+ * See TI Documentation for LM75
+ *
  *--------------------------------------------------------------*/
- #define ROOM_TEMPERATURE 22.0
- #define ROOM_ZERO       (324)
- #define RTD_SCALE      (0.1d)
- #define N_TEMP_SAMPLES (11)  // Must be 1 < N_TEMP_SAMPLES < 15 
- 
- double temperature_C(void)
+ #define RTD_SCALE      (0.5)   // 1/2C / LSB
+
+double temperature_C(void)
 {
   double return_value;
   unsigned int raw;
   unsigned int i;
 
 /*
- * Take a number of samples to average reading
+ *  Point to the temperature register
  */
-  raw = 0;
-  for (i=0; i != N_TEMP_SAMPLES; i++)
-  {
-    raw += analogRead(RTD);
-    delay(10);
-  }
+  Wire.beginTransmission(TEMP_IC);
+  Wire.write(0),
+  Wire.endTransmission();
 
-  raw /= N_TEMP_SAMPLES;
-
-  raw = analogRead(RTD);
+/*
+ * Read in the temperature register
+ */
+  Wire.requestFrom(TEMP_IC, 2);
+  raw = Wire.read();
+  raw <<= 8;
+  raw += Wire.read();
+  raw >>= 7;
   
-  return_value =  ROOM_TEMPERATURE + (double)(raw - ROOM_ZERO) * RTD_SCALE ;
-
-  if ( read_DIP() & VERBOSE_TRACE )
+  if ( raw & 0x0100 )
     {
-    Serial.print("\n\rTemperature (RAW):"); Serial.print(raw); Serial.print("   (C):"); Serial.print(return_value);
+    raw |= 0xFF00;      // Sign extend
+    }
+
+/*
+ *  Return the temperature in C
+ */
+  return_value =  (double)(raw) * RTD_SCALE ;
+
+  if ( read_DIP() & (VERBOSE_TRACE | RUNNING_MODE_CALIBRATION) )
+    {
+    Serial.print("\n\rTemperature (RAW): 0x"); Serial.print(raw, HEX); Serial.print("   (C):"); Serial.print(return_value);
     }
     
   return return_value;
