@@ -484,6 +484,9 @@ void send_score
   Serial.print(", \"E\":");     Serial.print(timer_value[E]);
   Serial.print(", \"S\":");     Serial.print(timer_value[S]);
   Serial.print(", \"W\":");     Serial.print(timer_value[W]);
+  
+  Serial.print(", \"V\":");     Serial.print(analogRead(V_REFERENCE));
+  Serial.print(", \"T\":");     Serial.print(temperature_C());
 
   Serial.print("}");
   Serial.println();

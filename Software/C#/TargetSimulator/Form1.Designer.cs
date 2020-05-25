@@ -54,7 +54,6 @@
             this.btnImport = new System.Windows.Forms.Button();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
-            this.chkChamp = new System.Windows.Forms.CheckBox();
             this.status.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -270,23 +269,11 @@
             // 
             this.openFileDialog.Filter = "TargetScan App file|*.csv";
             // 
-            // chkChamp
-            // 
-            this.chkChamp.AutoSize = true;
-            this.chkChamp.Location = new System.Drawing.Point(251, 14);
-            this.chkChamp.Name = "chkChamp";
-            this.chkChamp.Size = new System.Drawing.Size(86, 17);
-            this.chkChamp.TabIndex = 19;
-            this.chkChamp.Text = "Good scores";
-            this.chkChamp.UseVisualStyleBackColor = true;
-            this.chkChamp.CheckedChanged += new System.EventHandler(this.chkChamp_CheckedChanged);
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(589, 541);
-            this.Controls.Add(this.chkChamp);
             this.Controls.Add(this.btnImport);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
@@ -342,7 +329,6 @@
         private System.Windows.Forms.Button btnImport;
         private System.Windows.Forms.OpenFileDialog openFileDialog;
         private System.Windows.Forms.ToolTip toolTip;
-        private System.Windows.Forms.CheckBox chkChamp;
     }
 }
 
