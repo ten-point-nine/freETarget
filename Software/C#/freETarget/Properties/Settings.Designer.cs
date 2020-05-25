@@ -142,5 +142,17 @@ namespace freETarget.Properties {
                 this["MatchShots"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool OnlySeries {
+            get {
+                return ((bool)(this["OnlySeries"]));
+            }
+            set {
+                this["OnlySeries"] = value;
+            }
+        }
     }
 }

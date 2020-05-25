@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
             this.btnConnect = new System.Windows.Forms.Button();
@@ -305,8 +306,9 @@
             this.Controls.Add(this.txtOutput);
             this.Controls.Add(this.btnConnect);
             this.Controls.Add(this.comboBox1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "Target Simulator";
             this.status.ResumeLayout(false);
             this.status.PerformLayout();
             this.ResumeLayout(false);

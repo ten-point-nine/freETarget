@@ -46,13 +46,14 @@
             this.label6 = new System.Windows.Forms.Label();
             this.rdb60 = new System.Windows.Forms.RadioButton();
             this.rdb40 = new System.Windows.Forms.RadioButton();
+            this.chkSeries = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(248, 230);
+            this.btnOK.Location = new System.Drawing.Point(248, 254);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 0;
@@ -63,7 +64,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(167, 230);
+            this.btnCancel.Location = new System.Drawing.Point(167, 254);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
@@ -123,7 +124,7 @@
             // chkDisplayConsole
             // 
             this.chkDisplayConsole.AutoSize = true;
-            this.chkDisplayConsole.Location = new System.Drawing.Point(16, 188);
+            this.chkDisplayConsole.Location = new System.Drawing.Point(12, 211);
             this.chkDisplayConsole.Name = "chkDisplayConsole";
             this.chkDisplayConsole.Size = new System.Drawing.Size(136, 17);
             this.chkDisplayConsole.TabIndex = 12;
@@ -171,7 +172,7 @@
             // chkDrawMeanG
             // 
             this.chkDrawMeanG.AutoSize = true;
-            this.chkDrawMeanG.Location = new System.Drawing.Point(16, 165);
+            this.chkDrawMeanG.Location = new System.Drawing.Point(12, 165);
             this.chkDrawMeanG.Name = "chkDrawMeanG";
             this.chkDrawMeanG.Size = new System.Drawing.Size(113, 17);
             this.chkDrawMeanG.TabIndex = 17;
@@ -181,7 +182,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(13, 140);
+            this.label6.Location = new System.Drawing.Point(12, 140);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(115, 13);
             this.label6.TabIndex = 18;
@@ -209,11 +210,22 @@
             this.rdb40.Text = "40 shots";
             this.rdb40.UseVisualStyleBackColor = true;
             // 
+            // chkSeries
+            // 
+            this.chkSeries.AutoSize = true;
+            this.chkSeries.Location = new System.Drawing.Point(12, 188);
+            this.chkSeries.Name = "chkSeries";
+            this.chkSeries.Size = new System.Drawing.Size(178, 17);
+            this.chkSeries.TabIndex = 21;
+            this.chkSeries.Text = "Display only current series target";
+            this.chkSeries.UseVisualStyleBackColor = true;
+            // 
             // frmSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(335, 265);
+            this.ClientSize = new System.Drawing.Size(335, 289);
+            this.Controls.Add(this.chkSeries);
             this.Controls.Add(this.rdb40);
             this.Controls.Add(this.rdb60);
             this.Controls.Add(this.label6);
@@ -263,5 +275,6 @@
         private System.Windows.Forms.Label label6;
         public System.Windows.Forms.RadioButton rdb60;
         public System.Windows.Forms.RadioButton rdb40;
+        public System.Windows.Forms.CheckBox chkSeries;
     }
 }

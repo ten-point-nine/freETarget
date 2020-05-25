@@ -56,6 +56,7 @@ namespace freETarget
             cmbWeapons.SelectedItem = Properties.Settings.Default.defaultTarget;
             cmbColor.SelectedItem = Properties.Settings.Default.targetColor.Name;
             chkDrawMeanG.Checked = Properties.Settings.Default.drawMeanGroup;
+            chkSeries.Checked = Properties.Settings.Default.OnlySeries;
             if (Properties.Settings.Default.MatchShots == 60) {
                 rdb60.Checked = true;
                 rdb40.Checked = false;
