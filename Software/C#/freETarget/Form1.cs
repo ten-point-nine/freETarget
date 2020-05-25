@@ -22,55 +22,6 @@ using System.Windows.Forms.DataVisualization.Charting;
 namespace freETarget {
     public partial class frmMainWindow : Form {
 
-        //target sizes per ISSF rules
-        const decimal targetSize = 170; //mm
-
-        const decimal outterRingPistol = 155.5m; //mm
-        const decimal ring2Pistol = 139.5m; //mm
-        const decimal ring3Pistol = 123.5m; //mm
-        const decimal ring4Pistol = 107.5m; //mm
-        const decimal ring5Pistol = 91.5m; //mm
-        const decimal ring6Pistol = 75.5m; //mm
-        const decimal ring7Pistol = 59.5m; //mm
-        const decimal ring8Pistol = 43.5m; //mm
-        const decimal ring9Pistol = 27.5m; //mm
-        const decimal ring10Pistol = 11.5m; //mm
-        const decimal innerRingPistol = 5m; //mm
-
-        const decimal innerTenRadiusPistol = 4.75m;
-
-        const float pistol1X = 5.6f; //oficial scoring dimentions
-        const float pistol1Y = 10.3f;
-        const float pistol2X = 4f;
-        const float pistol2Y = 10.5f;
-
-
-        readonly decimal[] ringsPistol = new decimal[] { outterRingPistol, ring2Pistol, ring3Pistol, ring4Pistol, ring5Pistol, ring6Pistol, ring7Pistol, ring8Pistol, ring9Pistol, ring10Pistol, innerRingPistol };
-
-        const decimal outterRingRifle = 45.5m; //mm
-        const decimal ring2Rifle = 40.5m; //mm
-        const decimal ring3Rifle = 35.5m; //mm
-        const decimal ring4Rifle = 30.5m; //mm
-        const decimal ring5Rifle = 25.5m; //mm
-        const decimal ring6Rifle = 20.5m; //mm
-        const decimal ring7Rifle = 15.5m; //mm
-        const decimal ring8Rifle = 10.5m; //mm
-        const decimal ring9Rifle = 5.5m; //mm
-        const decimal ring10Rifle = 0.5m; //mm
-
-        const decimal innerTenRadiusRifle = 2.0m;
-
-        const float rifle1X = 2.50f; //oficial scoring dimentions
-        const float rifle1Y = 10.0f;
-        const float rifle2X = 2.25f;
-        const float rifle2Y = 10.1f;
-
-        readonly decimal[] ringsRifle = new decimal[] { outterRingRifle, ring2Rifle, ring3Rifle, ring4Rifle, ring5Rifle, ring6Rifle, ring7Rifle, ring8Rifle, ring9Rifle, ring10Rifle };
-
-        public const decimal pelletCaliber = 4.5m;
-
-        //end ISSF constants
-
         private bool isConnected = false;
         private delegate void SafeCallDelegate(string text, Shot shot);
         private delegate void SafeCallDelegate2(string text);
@@ -80,54 +31,6 @@ namespace freETarget {
         public decimal calibrationY = 0;
 
         private Session currentSession;
-
-        private Session[] availableSessions = new Session[6];
-
-        /*      private DateTime connectTime;
-              private DateTime limitTime;
-
-              private int score = 0;
-              private decimal decimalScore = 0m;
-              private int innerX = 0;
-              private decimal xbar = 0;
-              private decimal ybar = 0;
-              private decimal rbar = 0;
-
-
-
-
-
-              private List<Shot> shots = new List<Shot>();
-
-
-
-              public struct Shot {
-                  public int index;
-                  public int count;
-                  public decimal x;
-                  public decimal y;
-                  public decimal radius;
-                  public decimal angle;
-                  public int score;
-                  public decimal decimalScore;
-                  public bool innerTen;
-                  public DateTime timestamp;
-              }
-
-              public enum TargetType {
-                  Pistol,
-                  Rifle
-              }
-
-              public struct Session {
-                  public string name;
-                  public bool practice;
-                  public TargetType type;
-                  public int shotsNumber;
-                  public bool decimalScoring;
-                  public bool final;
-                  public int minutes;
-              }*/
 
         public frmMainWindow() {
             InitializeComponent();
@@ -141,86 +44,7 @@ namespace freETarget {
             }
             toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY);
 
-            initSessions();
             initBreakdownChart();
-
-        }
-
-        private void initSessions() {
-            Session airPistolPractice = new Session();
-            airPistolPractice.decimalScoring = false;
-            airPistolPractice.final = false;
-            airPistolPractice.name = "Air Pistol Practice";
-            airPistolPractice.numberOfShots = -1;
-            airPistolPractice.type = Session.TargetType.Pistol;
-            airPistolPractice.practice = true;
-            airPistolPractice.minutes = -1;
-            availableSessions[0] = airPistolPractice;
-
-
-            Session airPistolMatch = new Session();
-            airPistolMatch.decimalScoring = false;
-            airPistolMatch.final = false;
-            airPistolMatch.name = "Air Pistol Match";
-            airPistolMatch.numberOfShots = Settings.Default.MatchShots;
-            airPistolMatch.type = Session.TargetType.Pistol;
-            airPistolMatch.practice = false;
-            if (airPistolMatch.numberOfShots == 60) {
-                airPistolMatch.minutes = 75;
-            } else if (airPistolMatch.numberOfShots == 40) {
-                airPistolMatch.minutes = 50;
-            } else {
-                airPistolMatch.minutes = -1;
-            }
-            availableSessions[1] = airPistolMatch;
-
-            Session airPistolFinal = new Session();
-            airPistolFinal.decimalScoring = true;
-            airPistolFinal.final = true;
-            airPistolFinal.name = "Air Pistol Final";
-            airPistolFinal.numberOfShots = 24;
-            airPistolFinal.type = Session.TargetType.Pistol;
-            airPistolFinal.practice = false;
-            airPistolFinal.minutes = -1;
-            availableSessions[2] = airPistolFinal;
-
-
-            Session airRiflePractice = new Session();
-            airRiflePractice.decimalScoring = true;
-            airRiflePractice.final = false;
-            airRiflePractice.name = "Air Rifle Practice";
-            airRiflePractice.numberOfShots = -1;
-            airRiflePractice.type = Session.TargetType.Rifle;
-            airRiflePractice.practice = true;
-            airRiflePractice.minutes = -1;
-            availableSessions[3] = airRiflePractice;
-
-
-            Session airRifleMatch = new Session();
-            airRifleMatch.decimalScoring = true;
-            airRifleMatch.final = false;
-            airRifleMatch.name = "Air Rifle Match";
-            airRifleMatch.numberOfShots = Settings.Default.MatchShots;
-            airRifleMatch.type = Session.TargetType.Rifle;
-            airRifleMatch.practice = false;
-            if (airRifleMatch.numberOfShots == 60) {
-                airRifleMatch.minutes = 75;
-            } else if (airRifleMatch.numberOfShots == 40) {
-                airRifleMatch.minutes = 50;
-            } else {
-                airRifleMatch.minutes = -1;
-            }
-            availableSessions[4] = airRifleMatch;
-
-            Session airRifleFinal = new Session();
-            airRifleFinal.decimalScoring = true;
-            airRifleFinal.final = true;
-            airRifleFinal.name = "Air Rifle Final";
-            airRifleFinal.numberOfShots = 24;
-            airRifleFinal.type = Session.TargetType.Rifle;
-            airRifleFinal.practice = false;
-            airRifleFinal.minutes = -1;
-            availableSessions[5] = airRifleFinal;
 
         }
 
@@ -250,15 +74,7 @@ namespace freETarget {
             //parse input data to shot structure and determine score
             Shot shot = parseJson(indata);
             if (shot.count >= 0) {
-                currentSession.Shots.Add(shot);
-                currentSession.score += shot.score;
-                currentSession.decimalScore += shot.decimalScore;
-
-                if (shot.innerTen) {
-                    currentSession.innerX++;
-                }
-                shot.index = currentSession.Shots.Count - 1;
-
+                currentSession.addShot(shot);
 
                 drawArrow(shot);
                 writeShotData(indata, shot);
@@ -279,7 +95,7 @@ namespace freETarget {
                 try {
                     serialPort.Open();
 
-                    currentSession.startTime =  DateTime.Now;
+                    currentSession.start();
                     timer.Enabled = true;
 
                     btnConnect.Text = "Disconnect";
@@ -333,7 +149,7 @@ namespace freETarget {
 
 
 
-        //write data to text box
+        //write shot data
         private void writeShotData(string json, Shot shot) {
             //special code for UI thread safety
             if (txtOutput.InvokeRequired) {
@@ -367,31 +183,40 @@ namespace freETarget {
                 shotsList.Items.Add(item);
                 shotsList.EnsureVisible(shotsList.Items.Count - 1);
 
-                computeShotStatistics();
+                computeShotStatistics(getShotList());
                 writeToGrid(shot);
                 fillBreakdownChart(currentSession.Shots);
 
             }
         }
 
-        private void computeShotStatistics() {
-            if (currentSession.Shots.Count > 1) {
-                decimal localRbar = currentSession.rbar;
-                decimal localXbar = currentSession.xbar;
-                decimal localYbar = currentSession.ybar;
-                calculateMeanRadius(out localRbar, out localXbar, out localYbar, currentSession.Shots);
+        private void computeShotStatistics(List<Shot> shotList) {
+            if (shotList.Count > 1) {
+                decimal localRbar;
+                decimal localXbar;
+                decimal localYbar;
+                calculateMeanRadius(out localRbar, out localXbar, out localYbar, shotList);
                 currentSession.rbar = localRbar;
                 currentSession.xbar = localXbar;
                 currentSession.ybar = localYbar;
 
-                txtMeanRadius.Text = Math.Round(currentSession.rbar, 1).ToString();
-                txtWindage.Text = Math.Round(Math.Abs(currentSession.xbar), 1).ToString();
-                drawWindageAndElevation(currentSession.xbar, currentSession.ybar);
-                txtElevation.Text = Math.Round(Math.Abs(currentSession.ybar), 1).ToString();
-                txtMaxSpread.Text = Math.Round(calculateMaxSpread(currentSession.Shots), 1).ToString();
+                txtMeanRadius.Text = Math.Round(localRbar, 1).ToString();
+                txtWindage.Text = Math.Round(Math.Abs(localXbar), 1).ToString();
+                txtElevation.Text = Math.Round(Math.Abs(localYbar), 1).ToString();
+                drawWindageAndElevation(localXbar, localYbar);
+                
+                txtMaxSpread.Text = Math.Round(calculateMaxSpread(shotList), 1).ToString();
+            } else {
+                txtMeanRadius.Text = "";
+                txtWindage.Text = "";
+                txtElevation.Text = "";
+                txtMaxSpread.Text = "";
+                imgElevation.CreateGraphics().Clear(this.BackColor);
+                imgWindage.CreateGraphics().Clear(this.BackColor);
             }
         }
 
+        //draw 2 small arrows next to windage and elevation
         private void drawWindageAndElevation(decimal xbar, decimal ybar) {
             Bitmap bmp = new Bitmap(imgWindage.Width, imgWindage.Height);
             Graphics g = Graphics.FromImage(bmp);
@@ -440,7 +265,7 @@ namespace freETarget {
             PointF x = transform((float)getShotX(shot), (float)getShotY(shot), targetSize, zoomFactor);
 
             //draw shot on target
-            int count = currentSession.Shots.Count;
+            int count = getShotList().Count;
             Color c = Color.FromArgb(0, 0, 255);
             Pen p = new Pen(Color.LightSkyBlue);
             Brush bText = new SolidBrush(Color.LightSkyBlue);
@@ -457,7 +282,7 @@ namespace freETarget {
             it.SmoothingMode = SmoothingMode.AntiAlias;
             it.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
-            float peletSize = getDimension(targetSize, pelletCaliber, zoomFactor);
+            float peletSize = getDimension(targetSize, ISSF.pelletCaliber, zoomFactor);
 
             x.X -= peletSize / 2;
             x.Y -= peletSize / 2;
@@ -472,7 +297,7 @@ namespace freETarget {
             Font f = new Font("Arial", peletSize / 3);
 
             x.X += 0.2f; //small adjustment for the number to be centered
-            x.Y += 0.3f;
+            x.Y += 1f;
             it.DrawString(shot.count.ToString(), f, bText, new RectangleF(x, new SizeF(peletSize, peletSize)), format);
         }
 
@@ -528,10 +353,10 @@ namespace freETarget {
                                                                         size, size, 1, 0,
                                                                        -size, size, 0, 1);
 
-            System.Numerics.Matrix4x4 Minverted = new System.Numerics.Matrix4x4();
+            System.Numerics.Matrix4x4 Minverted;
             System.Numerics.Matrix4x4.Invert(M, out Minverted);
 
-            float shotRange = (float)(targetSize * zoomFactor) / 2f;
+            float shotRange = (float)(ISSF.targetSize * zoomFactor) / 2f;
             System.Numerics.Matrix4x4 xyPrime = new System.Numerics.Matrix4x4(-shotRange, 0, 0, 0,
                                                                                 shotRange, 0, 0, 0,
                                                                                 shotRange, 0, 0, 0,
@@ -580,63 +405,13 @@ namespace freETarget {
                 return err;
             }
 
-            determineScore(ref ret);
+            ret.computeScore(currentSession.targetType);
 
             ret.timestamp = DateTime.Now;
 
             return ret;
         }
 
-        private void determineScore(ref Shot shot) {
-
-            //using liner interpolation with the "official" values found here: http://targettalk.org/viewtopic.php?p=100591#p100591
-
-
-            if (currentSession.type == Session.TargetType.Pistol) {
-                double score = linearInterpolation(pistol1X, pistol1Y, pistol2X, pistol2Y, (float)shot.radius);
-
-                shot.decimalScore = (decimal) (Math.Truncate(score*10)) / 10m;
-                shot.decimalScore += 0.0m; //add a decimal is the result is an integer
-
-                if (shot.decimalScore < 1) { //shot outside the target
-                    shot.decimalScore = 0;
-                }
-
-                shot.score = (int)Math.Floor(shot.decimalScore);
-
-                //determine if inner ten (X)
-                if (shot.radius <= innerTenRadiusPistol) {
-                    shot.innerTen = true;
-                } else {
-                    shot.innerTen = false;
-                }
-            } else if (currentSession.type == Session.TargetType.Rifle) {
-                double score = linearInterpolation(rifle1X, rifle1Y, rifle2X, rifle2Y, (float)shot.radius);
-
-                shot.decimalScore = (decimal)(Math.Truncate(score * 10)) / 10m;
-                shot.decimalScore += 0.0m; //add a decimal is the result is an integer
-
-                if (shot.decimalScore >= 11m) { //the linear interpolation returns 11.000003814 for 0 (dead centre)
-                    shot.decimalScore = 10.9m;
-                }
-
-                if (shot.decimalScore < 1) {//shot outside the target
-                    shot.decimalScore = 0;
-                }
-
-                shot.score = (int)Math.Floor(shot.decimalScore);
-
-                //determine if inner ten (X)
-                if (shot.radius <= innerTenRadiusRifle) {
-                    shot.innerTen = true;
-                } else {
-                    shot.innerTen = false;
-                }
-            } else {
-                Console.WriteLine("Unknown current target " + currentSession.name);
-            }
-
-        }
 
         private void imgArrow_LoadCompleted(object sender, AsyncCompletedEventArgs e) {
             if (e.Error != null) {
@@ -665,7 +440,7 @@ namespace freETarget {
                 }
                 Properties.Settings.Default.Save();
 
-                initSessions();
+                computeShotStatistics(getShotList());
                 displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
             }
 
@@ -678,16 +453,10 @@ namespace freETarget {
         }
 
         private void frmMainWindow_Load(object sender, EventArgs e) {
-
-            foreach (Session s in availableSessions) {
-                if (s.name.Contains(Settings.Default.defaultTarget.Trim())) {
-                    currentSession = s;
-                    break;
-                }
-            }
+            currentSession = Session.createNewSession(Settings.Default.defaultTarget.Trim());
 
             foreach(TabPage tab in tcSessionType.TabPages) {
-                if (currentSession.name.Contains(tab.Text.Trim())) {
+                if (currentSession.sessionType.Name.Contains(tab.Text.Trim())) {
                     tcSessionType.SelectedTab = tab;
                 }
             }
@@ -712,28 +481,17 @@ namespace freETarget {
         }
 
         private void setTarget() {
-            foreach(Session s in availableSessions) {
-                if(s.name.Contains(tcSessionType.SelectedTab.Text.Trim())) {
-                    currentSession = s;
-                    break;
-                }
-            }
+            currentSession = Session.createNewSession(tcSessionType.SelectedTab.Text.Trim());
+            currentSession.start();
 
-            currentSession.startTime = DateTime.Now;
-            if (currentSession.minutes > 0) {
-                currentSession.endTime = DateTime.Now.AddMinutes(currentSession.minutes);
-            } else {
-                currentSession.endTime = DateTime.MinValue;
-            }
-
-            if (currentSession.type == Session.TargetType.Pistol) {
+            if (currentSession.targetType == Session.TargetType.Pistol) {
                 trkZoom.Minimum = 1;
                 trkZoom.Maximum = 5;
                 trkZoom.Value = 1;
 
                // currentRange = outterRingPistol / 2m + pelletCaliber / 2m; //maximum range that can score a point 155.5 / 2 + 4.5 / 2 = 80mm
 
-            } else if (currentSession.type == Session.TargetType.Rifle) {
+            } else if (currentSession.targetType == Session.TargetType.Rifle) {
                 trkZoom.Minimum = 0;
                 trkZoom.Maximum = 5;
                 trkZoom.Value = 0;
@@ -749,10 +507,6 @@ namespace freETarget {
         private void trkZoom_ValueChanged(object sender, EventArgs e) {
             drawTarget();
 
-        }
-
-        private void imgTarget_Paint(object sender, PaintEventArgs e) {
-            // drawTarget();
         }
 
         private void frmMainWindow_Resize(object sender, EventArgs e) {
@@ -780,17 +534,17 @@ namespace freETarget {
         }
 
         private void drawTarget() {
-            if (currentSession.type == Session.TargetType.Pistol) {
+            if (currentSession.targetType == Session.TargetType.Pistol) {
                 decimal zoomFactor = (decimal)(1 / (decimal)getZoom());
-                imgTarget.Image = paintTarget(imgTarget.Height, 7, ringsPistol, zoomFactor, false);
-            } else if (currentSession.type == Session.TargetType.Rifle) {
+                imgTarget.Image = paintTarget(imgTarget.Height, 7, ISSF.ringsPistol, zoomFactor, false);
+            } else if (currentSession.targetType == Session.TargetType.Rifle) {
                 decimal zoomFactor = (decimal)(1 / Math.Pow(2, getZoom()));
-                imgTarget.Image = paintTarget(imgTarget.Height, 4, ringsRifle, zoomFactor, true);
+                imgTarget.Image = paintTarget(imgTarget.Height, 4, ISSF.ringsRifle, zoomFactor, true);
             }
         }
 
         private float getDimension(decimal currentTargetSize, decimal milimiters, decimal zoomFactor) {
-            return (float)((currentTargetSize * milimiters) / (targetSize * zoomFactor));
+            return (float)((currentTargetSize * milimiters) / (ISSF.targetSize * zoomFactor));
         }
 
         private Bitmap paintTarget(int dimension, int blackRingCutoff, decimal[] rings, decimal zoomFactor, bool solidInner) {
@@ -810,9 +564,9 @@ namespace freETarget {
             int r = 1;
             for (int i = 0; i < rings.Length; i++) {
 
-                Pen p = null;
-                Brush b = null;
-                Brush bText = null;
+                Pen p;
+                Brush b;
+                Brush bText;
                 if (r < blackRingCutoff) {
                     p = penBlack;
                     b = brushWhite;
@@ -822,7 +576,7 @@ namespace freETarget {
                     b = brushBlack;
                     bText = brushWhite;
                 }
-                //float circle = (float)((dimension * rings[i]) / (targetSize * zoomFactor));
+
                 float circle = getDimension(dimension, rings[i], zoomFactor);
                 float center = (float)(dimension / 2);
                 float x = center - (circle / 2);
@@ -858,7 +612,7 @@ namespace freETarget {
             it.DrawRectangle(penBlack, 0, 0, dimension - 1, dimension - 1);
 
             int index = 0;
-            foreach (Shot shot in currentSession.Shots) {
+            foreach (Shot shot in getShotList()) {
                 drawShot(shot, it, dimension, zoomFactor, index++);
             }
 
@@ -883,12 +637,12 @@ namespace freETarget {
             }
 
             if (isConnected == false) {
-                bmpTarget = ToGrayScale(bmpTarget);
+                bmpTarget = toGrayScale(bmpTarget);
             }
             return bmpTarget;
         }
         private void drawMeanGroup(Graphics it, decimal currentTargetSize, decimal zoomFactor) {
-            if (currentSession.Shots.Count >= 2) {
+            if (getShotList().Count >= 2) {
                 float circle = getDimension(currentTargetSize, currentSession.rbar *2, zoomFactor);
 
                 PointF x = transform((float)currentSession.xbar, (float)currentSession.ybar, (float)currentTargetSize, zoomFactor);
@@ -909,7 +663,7 @@ namespace freETarget {
 
         private void clearShots() {
             
-            currentSession.Clear();
+            currentSession.clear();
             targetRefresh();
             shotsList.Items.Clear();
             shotsList.Refresh();
@@ -927,11 +681,6 @@ namespace freETarget {
             imgWindage.CreateGraphics().Clear(this.BackColor);
             gridTargets.Rows.Clear();
             clearBreakdownChart();
-        }
-
-        private double linearInterpolation(float x1, float y1, float x2, float y2, float x) {
-            double y = ((x2 - x) * y1 + (x - x1) * y2) / (x2 - x1);
-            return y;
         }
 
         private void timer_Tick(object sender, EventArgs e) {
@@ -1016,7 +765,7 @@ namespace freETarget {
 
         public void calibrateX(decimal increment) {
             calibrationX += increment;
-            computeShotStatistics();
+            computeShotStatistics(getShotList());
             targetRefresh();
 
             if(calibrationX == 0 && calibrationY == 0) {
@@ -1030,7 +779,7 @@ namespace freETarget {
 
         public void calibrateY(decimal increment) {
             calibrationY += increment;
-            computeShotStatistics();
+            computeShotStatistics(getShotList());
             targetRefresh();
 
             if (calibrationX == 0 && calibrationY == 0) {
@@ -1044,7 +793,7 @@ namespace freETarget {
         public void resetCalibration() {
             calibrationX = 0;
             calibrationY = 0;
-            computeShotStatistics();
+            computeShotStatistics(getShotList());
             targetRefresh();
 
             btnCalibration.BackColor = this.BackColor;
@@ -1057,7 +806,7 @@ namespace freETarget {
             Settings.Default.Save();
         }
 
-        public Bitmap ToGrayScale(Bitmap original) {
+        public Bitmap toGrayScale(Bitmap original) {
             //create a blank bitmap the same size as original
             Bitmap newBitmap = new Bitmap(original.Width, original.Height);
 
@@ -1114,7 +863,6 @@ namespace freETarget {
             Bitmap bmpTarget = new Bitmap(imgSessionName.Width, imgSessionName.Height);
             Graphics g = Graphics.FromImage(bmpTarget);
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            //Graphics g = imgSessionName.CreateGraphics();
             if (isConnected) {
                 g.Clear(color);
             } else {
@@ -1126,7 +874,7 @@ namespace freETarget {
             format.LineAlignment = StringAlignment.Center;
             format.Alignment = StringAlignment.Center;
 
-            string name = Settings.Default.name + " - " + currentSession.name;
+            string name = Settings.Default.name + " - " + currentSession.sessionType;
             if (currentSession.numberOfShots > 0) {
                 name += " " + currentSession.numberOfShots;
             }
@@ -1135,21 +883,9 @@ namespace freETarget {
             imgSessionName.Image = bmpTarget;
         }
 
-        private bool isNewSeries(Shot shot, Session session) {
-            if(session.final == false) {
-               return (shot.index % 10 == 0) ?  true :  false;
-            } else {
-                if (shot.index < 10) {
-                    return (shot.index % 5 == 0) ? true : false; 
-                } else {
-                    return (shot.index % 2 == 0) ? true : false;
-                }
-            }
-        }
-
         private void writeToGrid(Shot shot) {
-            int rowShot = 0;
-            int cellShot = 0;
+            int rowShot;
+            int cellShot;
             if (currentSession.final == false) {
                 rowShot = shot.index / 10;
                 cellShot = shot.index % 10;
@@ -1167,11 +903,10 @@ namespace freETarget {
                     //row of 2
                     rowShot = (shot.index - 6) / 2;
                     cellShot = shot.index % 2;
-                    Console.WriteLine("index:" + shot.index + " rowShot:" + rowShot + " cellShot:" + cellShot);
                 }
             }
 
-            DataGridViewRow row = null;
+            DataGridViewRow row;
 
             if (gridTargets.Rows.Count < rowShot + 1) { //no row, add it
                 int index = gridTargets.Rows.Add();
@@ -1264,6 +999,14 @@ namespace freETarget {
             g.DrawLine(new Pen(Color.White), 1, panel2.Height - 2, panel2.Width - 2, panel2.Height - 2);
             g.DrawLine(new Pen(Color.White), 1, 1, 1, panel2.Height - 2);
             g.DrawLine(new Pen(Color.White), panel2.Width - 2, 1, panel2.Width - 2, panel2.Height - 2);
+        }
+
+        private List<Shot> getShotList() {
+            if (Settings.Default.OnlySeries) {
+                return currentSession.CurrentSeries;
+            } else {
+                return currentSession.Shots;
+            }
         }
     }
 

@@ -179,7 +179,6 @@ namespace freETarget
             this.imgTarget.TabIndex = 4;
             this.imgTarget.TabStop = false;
             this.imgTarget.WaitOnLoad = true;
-            this.imgTarget.Paint += new System.Windows.Forms.PaintEventHandler(this.imgTarget_Paint);
             // 
             // shotsList
             // 
