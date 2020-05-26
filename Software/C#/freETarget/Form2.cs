@@ -27,7 +27,6 @@ namespace freETarget
             foreach (string port in ports)
             {
                 cmbPorts.Items.Add(port);
-                Console.WriteLine(port);
                 if (ports[0] != null)
                 {
                     cmbPorts.SelectedItem = ports[0];
@@ -42,7 +41,8 @@ namespace freETarget
                 this.cmbColor.Items.Add(c.Name);
             }
 
-            cmbWeapons.Items.AddRange(frmMainWindow.supportedTargets);
+            cmbWeapons.Items.Add("Air Pistol Practice");
+            cmbWeapons.Items.Add("Air Rifle Practice");
 
             loadSettings();
         }
@@ -56,6 +56,17 @@ namespace freETarget
             cmbWeapons.SelectedItem = Properties.Settings.Default.defaultTarget;
             cmbColor.SelectedItem = Properties.Settings.Default.targetColor.Name;
             chkDrawMeanG.Checked = Properties.Settings.Default.drawMeanGroup;
+            chkSeries.Checked = Properties.Settings.Default.OnlySeries;
+            if (Properties.Settings.Default.MatchShots == 60) {
+                rdb60.Checked = true;
+                rdb40.Checked = false;
+            } else if (Properties.Settings.Default.MatchShots == 40) {
+                rdb60.Checked = false;
+                rdb40.Checked = true;
+            } else {
+                rdb60.Checked = false;
+                rdb40.Checked = false;
+            }
         }
 
         private void cmbColor_DrawItem(object sender, DrawItemEventArgs e)

@@ -4,104 +4,33 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
+using System.Deployment.Internal;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO.Ports;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace freETarget {
     public partial class frmMainWindow : Form {
-
-        //target sizes per ISSF rules
-        const decimal targetSize = 170; //mm
-
-
-        const decimal outterRingPistol = 155.5m; //mm
-        const decimal ring2Pistol = 139.5m; //mm
-        const decimal ring3Pistol = 123.5m; //mm
-        const decimal ring4Pistol = 107.5m; //mm
-        const decimal ring5Pistol = 91.5m; //mm
-        const decimal ring6Pistol = 75.5m; //mm
-        const decimal ring7Pistol = 59.5m; //mm
-        const decimal ring8Pistol = 43.5m; //mm
-        const decimal ring9Pistol = 27.5m; //mm
-        const decimal ring10Pistol = 11.5m; //mm
-        const decimal innerRingPistol = 5m; //mm
-
-        const decimal innerTenRadiusPistol = 4.75m;
-
-        const float pistol1X = 5.6f;
-        const float pistol1Y = 10.3f;
-        const float pistol2X = 4f;
-        const float pistol2Y = 10.5f;
-
-
-        readonly decimal[] ringsPistol = new decimal[] { outterRingPistol, ring2Pistol, ring3Pistol, ring4Pistol, ring5Pistol, ring6Pistol, ring7Pistol, ring8Pistol, ring9Pistol, ring10Pistol, innerRingPistol };
-
-        const decimal outterRingRifle = 45.5m; //mm
-        const decimal ring2Rifle = 40.5m; //mm
-        const decimal ring3Rifle = 35.5m; //mm
-        const decimal ring4Rifle = 30.5m; //mm
-        const decimal ring5Rifle = 25.5m; //mm
-        const decimal ring6Rifle = 20.5m; //mm
-        const decimal ring7Rifle = 15.5m; //mm
-        const decimal ring8Rifle = 10.5m; //mm
-        const decimal ring9Rifle = 5.5m; //mm
-        const decimal ring10Rifle = 0.5m; //mm
-
-        const decimal innerTenRadiusRifle = 2.0m;
-
-        const float rifle1X = 2.50f;
-        const float rifle1Y = 10.0f;
-        const float rifle2X = 2.25f;
-        const float rifle2Y = 10.1f;
-
-        readonly decimal[] ringsRifle = new decimal[] { outterRingRifle, ring2Rifle, ring3Rifle, ring4Rifle, ring5Rifle, ring6Rifle, ring7Rifle, ring8Rifle, ring9Rifle, ring10Rifle };
-
-        public const decimal pelletCaliber = 4.5m;
-
-        private DateTime connectTime;
-
-        public const string AirPistol = "Air Pistol";
-        public const string AirRifle = "Air Rifle";
-
-        public static string[] supportedTargets = new string[] { AirPistol, AirRifle };
 
         private bool isConnected = false;
         private delegate void SafeCallDelegate(string text, Shot shot);
         private delegate void SafeCallDelegate2(string text);
         private delegate void SafeCallDelegate3();
 
-        private int score = 0;
-        private decimal decimalScore = 0m;
-        private int innerX = 0;
-        private decimal xbar = 0;
-        private decimal ybar = 0;
-        private decimal rbar = 0;
-
         public decimal calibrationX = 0;
         public decimal calibrationY = 0;
 
-        private string currentTarget = Settings.Default.defaultTarget;
-
-        private List<Shot> shots = new List<Shot>();
-
-        public struct Shot {
-            public int count;
-            public decimal x;
-            public decimal y;
-            public decimal radius;
-            public decimal angle;
-            public int score;
-            public decimal decimalScore;
-            public bool innerTen;
-        }
+        private Session currentSession;
 
         public frmMainWindow() {
             InitializeComponent();
@@ -114,9 +43,27 @@ namespace freETarget {
                 btnCalibration.BackColor = Settings.Default.targetColor;
             }
             toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY);
+
+            initBreakdownChart();
+
         }
 
-
+        private void initBreakdownChart() {
+            Series series = chartBreakdown.Series[0];
+            series.Points.AddXY("X", 0);
+            series.Points.AddXY("10", 0);
+            series.Points.AddXY("9", 0);
+            series.Points.AddXY("8", 0);
+            series.Points.AddXY("7", 0);
+            series.Points.AddXY("6", 0);
+            series.Points.AddXY("5", 0);
+            series.Points.AddXY("4", 0);
+            series.Points.AddXY("3", 0);
+            series.Points.AddXY("2", 0);
+            series.Points.AddXY("1", 0);
+            series.Points.AddXY("0", 0);
+            chartBreakdown.Update();
+        }
 
         private void serialPort_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e) {
             //received data from serial port
@@ -127,14 +74,7 @@ namespace freETarget {
             //parse input data to shot structure and determine score
             Shot shot = parseJson(indata);
             if (shot.count >= 0) {
-                shots.Add(shot);
-                score += shot.score;
-                decimalScore += shot.decimalScore;
-
-                if (shot.innerTen) {
-                    innerX++;
-                }
-
+                currentSession.addShot(shot);
 
                 drawArrow(shot);
                 writeShotData(indata, shot);
@@ -155,12 +95,20 @@ namespace freETarget {
                 try {
                     serialPort.Open();
 
-                    connectTime =  DateTime.Now;
+                    currentSession.start();
                     timer.Enabled = true;
 
                     btnConnect.Text = "Disconnect";
                     isConnected = true;
                     statusText.Text = "Connected to " + serialPort.PortName;
+
+                    btnConnect.ImageKey = "disconnect";
+                    shotsList.Enabled = true;
+                    btnCalibration.Enabled = true;
+                    trkZoom.Enabled = true;
+                    tcSessionType.Enabled = true;
+                    tcSessionType.Refresh();
+
                 } catch (Exception ex) {
                     statusText.Text = "Error opening serial port: " + ex.Message;
                 }
@@ -173,7 +121,17 @@ namespace freETarget {
 
                 statusText.Text = "Disconnected";
                 timer.Enabled = false;
+                btnConnect.ImageKey = "connect";
+
+                shotsList.Enabled = false;
+                btnCalibration.Enabled = false;
+                trkZoom.Enabled = false;
+                tcSessionType.Enabled = false;
+                tcSessionType.Refresh();
             }
+
+            setTarget();
+            targetRefresh();
         }
 
         //output errors to the status bar at the bottom
@@ -191,7 +149,7 @@ namespace freETarget {
 
 
 
-        //write data to text box
+        //write shot data
         private void writeShotData(string json, Shot shot) {
             //special code for UI thread safety
             if (txtOutput.InvokeRequired) {
@@ -208,7 +166,7 @@ namespace freETarget {
                 txtOutput.AppendText(json);
 
                 //write to total textbox
-                txtTotal.Text = shots.Count + " shots : " +  score.ToString() + " ( " + decimalScore.ToString() + " ) - " + innerX.ToString() + "x";
+                txtTotal.Text = currentSession.Shots.Count + " shots : " + currentSession.score.ToString() + " ( " + currentSession.decimalScore.ToString() + " ) - " + currentSession.innerX.ToString() + "x";
 
                 //write to last shot textbox
                 string lastShot = shot.decimalScore.ToString();
@@ -225,24 +183,43 @@ namespace freETarget {
                 shotsList.Items.Add(item);
                 shotsList.EnsureVisible(shotsList.Items.Count - 1);
 
-                computeShotStatistics();
+                computeShotStatistics(getShotList());
+                writeToGrid(shot);
+                fillBreakdownChart(currentSession.Shots);
 
             }
         }
 
-        private void computeShotStatistics() {
-            if (shots.Count > 1) {
-                calculateMeanRadius(out rbar, out xbar, out ybar);
-                txtMeanRadius.Text = Math.Round(rbar, 1).ToString();
-                txtWindage.Text = Math.Round(Math.Abs(xbar), 1).ToString();
-                drawWindageAndElevation(xbar, ybar);
-                txtElevation.Text = Math.Round(Math.Abs(ybar), 1).ToString();
-                txtMaxSpread.Text = Math.Round(calculateMaxSpread(), 1).ToString();
+        private void computeShotStatistics(List<Shot> shotList) {
+            if (shotList.Count > 1) {
+                decimal localRbar;
+                decimal localXbar;
+                decimal localYbar;
+                calculateMeanRadius(out localRbar, out localXbar, out localYbar, shotList);
+                currentSession.rbar = localRbar;
+                currentSession.xbar = localXbar;
+                currentSession.ybar = localYbar;
+
+                txtMeanRadius.Text = Math.Round(localRbar, 1).ToString();
+                txtWindage.Text = Math.Round(Math.Abs(localXbar), 1).ToString();
+                txtElevation.Text = Math.Round(Math.Abs(localYbar), 1).ToString();
+                drawWindageAndElevation(localXbar, localYbar);
+                
+                txtMaxSpread.Text = Math.Round(calculateMaxSpread(shotList), 1).ToString();
+            } else {
+                txtMeanRadius.Text = "";
+                txtWindage.Text = "";
+                txtElevation.Text = "";
+                txtMaxSpread.Text = "";
+                imgElevation.CreateGraphics().Clear(this.BackColor);
+                imgWindage.CreateGraphics().Clear(this.BackColor);
             }
         }
 
+        //draw 2 small arrows next to windage and elevation
         private void drawWindageAndElevation(decimal xbar, decimal ybar) {
-            Graphics g = imgWindage.CreateGraphics();
+            Bitmap bmp = new Bitmap(imgWindage.Width, imgWindage.Height);
+            Graphics g = Graphics.FromImage(bmp);
             g.Clear(this.BackColor);
             g.SmoothingMode = SmoothingMode.AntiAlias;
             Pen arr = new Pen(Color.Black);
@@ -253,15 +230,20 @@ namespace freETarget {
                 g.DrawLine(arr, 2, (imgWindage.Height / 2) - 2, imgWindage.Width - 2, (imgWindage.Height / 2) - 2);
             }
 
-            Graphics g2 = imgElevation.CreateGraphics();
-            g2.Clear(this.BackColor);
-            g2.SmoothingMode = SmoothingMode.AntiAlias;
+
+            imgWindage.Image = bmp;
+
+            bmp = new Bitmap(imgElevation.Width, imgElevation.Height);
+            g = Graphics.FromImage(bmp);
+            g.Clear(this.BackColor);
+            g.SmoothingMode = SmoothingMode.AntiAlias;
             if (ybar < 0) {
-                g2.DrawLine(arr, (imgElevation.Height / 2) - 2, 2, (imgElevation.Height / 2) - 2, imgElevation.Width - 2);
+                g.DrawLine(arr, (imgElevation.Height / 2) - 2, 2, (imgElevation.Height / 2) - 2, imgElevation.Width - 2);
             } else {
-                g2.DrawLine(arr, (imgElevation.Height / 2) - 2, imgElevation.Width - 2, (imgElevation.Height / 2) - 2, 2);
+                g.DrawLine(arr, (imgElevation.Height / 2) - 2, imgElevation.Width - 2, (imgElevation.Height / 2) - 2, 2);
             }
 
+            imgElevation.Image = bmp;
         }
 
         private int getZoom() {
@@ -283,7 +265,7 @@ namespace freETarget {
             PointF x = transform((float)getShotX(shot), (float)getShotY(shot), targetSize, zoomFactor);
 
             //draw shot on target
-            int count = shots.Count;
+            int count = getShotList().Count;
             Color c = Color.FromArgb(0, 0, 255);
             Pen p = new Pen(Color.LightSkyBlue);
             Brush bText = new SolidBrush(Color.LightSkyBlue);
@@ -300,7 +282,7 @@ namespace freETarget {
             it.SmoothingMode = SmoothingMode.AntiAlias;
             it.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
-            float peletSize = getDimension(targetSize, pelletCaliber, zoomFactor);
+            float peletSize = getDimension(targetSize, ISSF.pelletCaliber, zoomFactor);
 
             x.X -= peletSize / 2;
             x.Y -= peletSize / 2;
@@ -315,13 +297,13 @@ namespace freETarget {
             Font f = new Font("Arial", peletSize / 3);
 
             x.X += 0.2f; //small adjustment for the number to be centered
-            x.Y += 0.3f;
+            x.Y += 1f;
             it.DrawString(shot.count.ToString(), f, bText, new RectangleF(x, new SizeF(peletSize, peletSize)), format);
         }
 
         private void drawArrow(Shot shot) {
             //draw direction arrow
-            Bitmap bmp = new Bitmap(imgArrow.Image);
+            Bitmap bmp = new Bitmap(imgArrow.Width, imgArrow.Height);
             Graphics g = Graphics.FromImage(bmp);
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.Clear(Color.White);
@@ -371,10 +353,10 @@ namespace freETarget {
                                                                         size, size, 1, 0,
                                                                        -size, size, 0, 1);
 
-            System.Numerics.Matrix4x4 Minverted = new System.Numerics.Matrix4x4();
+            System.Numerics.Matrix4x4 Minverted;
             System.Numerics.Matrix4x4.Invert(M, out Minverted);
 
-            float shotRange = (float)(targetSize * zoomFactor) / 2f;
+            float shotRange = (float)(ISSF.targetSize * zoomFactor) / 2f;
             System.Numerics.Matrix4x4 xyPrime = new System.Numerics.Matrix4x4(-shotRange, 0, 0, 0,
                                                                                 shotRange, 0, 0, 0,
                                                                                 shotRange, 0, 0, 0,
@@ -423,61 +405,13 @@ namespace freETarget {
                 return err;
             }
 
-            determineScore(ref ret);
+            ret.computeScore(currentSession.targetType);
+
+            ret.timestamp = DateTime.Now;
 
             return ret;
         }
 
-        private void determineScore(ref Shot shot) {
-
-            //using liner interpolation with the "official" values found here: http://targettalk.org/viewtopic.php?p=100591#p100591
-
-
-            if (currentTarget == AirPistol) {
-                double score = linearInterpolation(pistol1X, pistol1Y, pistol2X, pistol2Y, (float)shot.radius);
-
-                shot.decimalScore = (decimal) (Math.Truncate(score*10)) / 10m;
-                shot.decimalScore += 0.0m; //add a decimal is the result is an integer
-
-                if (shot.decimalScore < 1) { //shot outside the target
-                    shot.decimalScore = 0;
-                }
-
-                shot.score = (int)Math.Floor(shot.decimalScore);
-
-                //determine if inner ten (X)
-                if (shot.radius <= innerTenRadiusPistol) {
-                    shot.innerTen = true;
-                } else {
-                    shot.innerTen = false;
-                }
-            } else if (currentTarget == AirRifle) {
-                double score = linearInterpolation(rifle1X, rifle1Y, rifle2X, rifle2Y, (float)shot.radius);
-
-                shot.decimalScore = (decimal)(Math.Truncate(score * 10)) / 10m;
-                shot.decimalScore += 0.0m; //add a decimal is the result is an integer
-
-                if (shot.decimalScore >= 11m) { //the linear interpolation returns 11.000003814 for 0 (dead centre)
-                    shot.decimalScore = 10.9m;
-                }
-
-                if (shot.decimalScore < 1) {//shot outside the target
-                    shot.decimalScore = 0;
-                }
-
-                shot.score = (int)Math.Floor(shot.decimalScore);
-
-                //determine if inner ten (X)
-                if (shot.radius <= innerTenRadiusRifle) {
-                    shot.innerTen = true;
-                } else {
-                    shot.innerTen = false;
-                }
-            } else {
-                Console.WriteLine("Unknown current target " + currentTarget);
-            }
-
-        }
 
         private void imgArrow_LoadCompleted(object sender, AsyncCompletedEventArgs e) {
             if (e.Error != null) {
@@ -496,10 +430,17 @@ namespace freETarget {
                 Properties.Settings.Default.defaultTarget = settingsFrom.cmbWeapons.GetItemText(settingsFrom.cmbWeapons.SelectedItem);
                 Properties.Settings.Default.targetColor = Color.FromName(settingsFrom.cmbColor.GetItemText(settingsFrom.cmbColor.SelectedItem));
                 Properties.Settings.Default.drawMeanGroup = settingsFrom.chkDrawMeanG.Checked;
+                Properties.Settings.Default.OnlySeries = settingsFrom.chkSeries.Checked;
+                if (settingsFrom.rdb60.Checked) {
+                    Properties.Settings.Default.MatchShots = 60;
+                } else if (settingsFrom.rdb40.Checked) {
+                    Properties.Settings.Default.MatchShots = 40;
+                } else {
+                    Properties.Settings.Default.MatchShots = -1;
+                }
                 Properties.Settings.Default.Save();
 
-                imgTarget.BackColor = Settings.Default.targetColor;
-
+                computeShotStatistics(getShotList());
                 displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
             }
 
@@ -512,7 +453,14 @@ namespace freETarget {
         }
 
         private void frmMainWindow_Load(object sender, EventArgs e) {
-            cmbWeapon.Items.AddRange(supportedTargets);
+            currentSession = Session.createNewSession(Settings.Default.defaultTarget.Trim());
+
+            foreach(TabPage tab in tcSessionType.TabPages) {
+                if (currentSession.sessionType.Name.Contains(tab.Text.Trim())) {
+                    tcSessionType.SelectedTab = tab;
+                }
+            }
+
             setTarget();
             targetRefresh();
             imgTarget.BackColor = Settings.Default.targetColor;
@@ -530,33 +478,30 @@ namespace freETarget {
 
         private void frmMainWindow_Shown(object sender, EventArgs e) {
             displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
-            cmbWeapon.SelectedItem = Properties.Settings.Default.defaultTarget;
-        }
-
-        private void cmbWeapon_SelectedIndexChanged(object sender, EventArgs e) {
-            setTarget();
-
         }
 
         private void setTarget() {
-            if (cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirPistol) {
+            currentSession = Session.createNewSession(tcSessionType.SelectedTab.Text.Trim());
+            currentSession.start();
+
+            if (currentSession.targetType == Session.TargetType.Pistol) {
                 trkZoom.Minimum = 1;
                 trkZoom.Maximum = 5;
                 trkZoom.Value = 1;
 
                // currentRange = outterRingPistol / 2m + pelletCaliber / 2m; //maximum range that can score a point 155.5 / 2 + 4.5 / 2 = 80mm
-                currentTarget = AirPistol;
-            } else if (cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirRifle) {
+
+            } else if (currentSession.targetType == Session.TargetType.Rifle) {
                 trkZoom.Minimum = 0;
                 trkZoom.Maximum = 5;
                 trkZoom.Value = 0;
 
                 //currentRange = outterRingRifle / 2m + pelletCaliber / 2m; //maximum range that can score a point = 25mm
-                currentTarget = AirRifle;
             }
 
             clearShots();
             drawTarget();
+            drawSessionName(tcSessionType.SelectedTab.BackColor);
         }
 
         private void trkZoom_ValueChanged(object sender, EventArgs e) {
@@ -564,19 +509,13 @@ namespace freETarget {
 
         }
 
-        private void imgTarget_Paint(object sender, PaintEventArgs e) {
-            // drawTarget();
-        }
-
         private void frmMainWindow_Resize(object sender, EventArgs e) {
             targetRefresh();
         }
 
         private void targetRefresh() {
-            int rightBorder = 10;
-            if (Settings.Default.displayDebugConsole == true) {
-                rightBorder = txtOutput.Width + 10;
-            }
+            int rightBorder = gridTargets.Width + 35;
+
             int height = this.ClientSize.Height - 10 - statusStrip1.Height - imgTarget.Top;
             int width = this.ClientSize.Width - rightBorder - imgTarget.Left;
 
@@ -588,26 +527,24 @@ namespace freETarget {
                 imgTarget.Width = width;
 
             }
+            txtOutput.Left = imgTarget.Left + imgTarget.Width + 5;
+            txtOutput.Width = gridTargets.Left - (imgTarget.Left + imgTarget.Width) - 8;
 
             drawTarget();
         }
 
         private void drawTarget() {
-            if (cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == "") {
-                cmbWeapon.SelectedItem = Properties.Settings.Default.defaultTarget;
-            }
-
-            if (cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirPistol) {
+            if (currentSession.targetType == Session.TargetType.Pistol) {
                 decimal zoomFactor = (decimal)(1 / (decimal)getZoom());
-                imgTarget.Image = paintTarget(imgTarget.Height, 7, ringsPistol, zoomFactor, false);
-            } else if (cmbWeapon.GetItemText(cmbWeapon.SelectedItem) == AirRifle) {
+                imgTarget.Image = paintTarget(imgTarget.Height, 7, ISSF.ringsPistol, zoomFactor, false);
+            } else if (currentSession.targetType == Session.TargetType.Rifle) {
                 decimal zoomFactor = (decimal)(1 / Math.Pow(2, getZoom()));
-                imgTarget.Image = paintTarget(imgTarget.Height, 4, ringsRifle, zoomFactor, true);
+                imgTarget.Image = paintTarget(imgTarget.Height, 4, ISSF.ringsRifle, zoomFactor, true);
             }
         }
 
         private float getDimension(decimal currentTargetSize, decimal milimiters, decimal zoomFactor) {
-            return (float)((currentTargetSize * milimiters) / (targetSize * zoomFactor));
+            return (float)((currentTargetSize * milimiters) / (ISSF.targetSize * zoomFactor));
         }
 
         private Bitmap paintTarget(int dimension, int blackRingCutoff, decimal[] rings, decimal zoomFactor, bool solidInner) {
@@ -616,16 +553,20 @@ namespace freETarget {
             Brush brushBlack = new SolidBrush(Color.Black);
             Brush brushWhite = new SolidBrush(Settings.Default.targetColor);
 
+
+
             Bitmap bmpTarget = new Bitmap(dimension, dimension);
             Graphics it = Graphics.FromImage(bmpTarget);
             it.SmoothingMode = SmoothingMode.AntiAlias;
 
+            it.FillRectangle(brushWhite, 0, 0, dimension - 1, dimension - 1);
+
             int r = 1;
             for (int i = 0; i < rings.Length; i++) {
 
-                Pen p = null;
-                Brush b = null;
-                Brush bText = null;
+                Pen p;
+                Brush b;
+                Brush bText;
                 if (r < blackRingCutoff) {
                     p = penBlack;
                     b = brushWhite;
@@ -635,7 +576,7 @@ namespace freETarget {
                     b = brushBlack;
                     bText = brushWhite;
                 }
-                //float circle = (float)((dimension * rings[i]) / (targetSize * zoomFactor));
+
                 float circle = getDimension(dimension, rings[i], zoomFactor);
                 float center = (float)(dimension / 2);
                 float x = center - (circle / 2);
@@ -671,7 +612,7 @@ namespace freETarget {
             it.DrawRectangle(penBlack, 0, 0, dimension - 1, dimension - 1);
 
             int index = 0;
-            foreach (Shot shot in shots) {
+            foreach (Shot shot in getShotList()) {
                 drawShot(shot, it, dimension, zoomFactor, index++);
             }
 
@@ -679,13 +620,32 @@ namespace freETarget {
                 drawMeanGroup(it, dimension, zoomFactor);
             }
 
+            if (currentSession.practice) {
+                //draw triangle in corner
+                float sixth = dimension / 6f;
+                PointF[] points = new PointF[3];
+                points[0].X = 5 * sixth;
+                points[0].Y = 0;
+
+                points[1].X = dimension;
+                points[1].Y = sixth;
+
+                points[2].X = dimension;
+                points[2].Y = 0;
+
+                it.FillPolygon(brushBlack, points);
+            }
+
+            if (isConnected == false) {
+                bmpTarget = toGrayScale(bmpTarget);
+            }
             return bmpTarget;
         }
         private void drawMeanGroup(Graphics it, decimal currentTargetSize, decimal zoomFactor) {
-            if (shots.Count >= 2) {
-                float circle = getDimension(currentTargetSize, rbar*2, zoomFactor);
+            if (getShotList().Count >= 2) {
+                float circle = getDimension(currentTargetSize, currentSession.rbar *2, zoomFactor);
 
-                PointF x = transform((float)xbar, (float)ybar, (float)currentTargetSize, zoomFactor);
+                PointF x = transform((float)currentSession.xbar, (float)currentSession.ybar, (float)currentTargetSize, zoomFactor);
                 Pen p = new Pen(Color.Red, 2);
 
                 it.DrawEllipse(p, x.X - (circle / 2), x.Y - (circle / 2), circle, circle);
@@ -702,7 +662,8 @@ namespace freETarget {
         }
 
         private void clearShots() {
-            shots.Clear();
+            
+            currentSession.clear();
             targetRefresh();
             shotsList.Items.Clear();
             shotsList.Refresh();
@@ -718,26 +679,40 @@ namespace freETarget {
             txtMeanRadius.Text = "";
             imgElevation.CreateGraphics().Clear(this.BackColor);
             imgWindage.CreateGraphics().Clear(this.BackColor);
-            score = 0;
-            decimalScore = 0;
-            innerX = 0;
-            xbar = 0;
-            ybar = 0;
-            rbar = 0;
-        }
-
-        private double linearInterpolation(float x1, float y1, float x2, float y2, float x) {
-            double y = ((x2 - x) * y1 + (x - x1) * y2) / (x2 - x1);
-            return y;
+            gridTargets.Rows.Clear();
+            clearBreakdownChart();
         }
 
         private void timer_Tick(object sender, EventArgs e) {
             DateTime now = DateTime.Now;
-            TimeSpan ts = now - connectTime;
-            txtTime.Text = ts.ToString(@"hh\:mm\:ss");
+            TimeSpan ts;
+
+            Color c;
+            if (currentSession.endTime == DateTime.MinValue) {
+                ts = now - currentSession.startTime;
+                c = SystemColors.WindowText;
+            } else {
+                ts = currentSession.endTime - now;
+                if(TimeSpan.Compare(ts, TimeSpan.FromMinutes(10))<=0) { //last 10 minutes displayed in red
+                    
+                    c = Color.Red;
+                } else {
+                    c = SystemColors.WindowText;
+                }
+             
+            }
+            string day = now.ToString("yyyy-MM-dd");
+            string time = ts.ToString(@"hh\:mm\:ss");
+            txtTime.Text = day + "             " + time;
+
+            txtTime.Select(txtTime.Text.IndexOf(day), day.Length);
+            txtTime.SelectionFont = new Font(txtTime.Font.FontFamily, 8.25F);
+            txtTime.Select(txtTime.Text.IndexOf(time), day.Length);
+            txtTime.SelectionFont = new Font(txtTime.Font.FontFamily, 12F,FontStyle.Bold);
+            txtTime.SelectionColor = c;
         }
 
-        private void calculateMeanRadius( out decimal rbar, out decimal xbar, out decimal ybar) {
+        private void calculateMeanRadius( out decimal rbar, out decimal xbar, out decimal ybar, List<Shot> shots) {
 
             decimal xsum = 0;
             decimal ysum = 0;
@@ -764,7 +739,7 @@ namespace freETarget {
 
         }
 
-        private decimal calculateMaxSpread() {
+        private decimal calculateMaxSpread(List<Shot> shots) {
             List<double> spreads = new List<double>();
             for(int i = 0; i < shots.Count; i++) {
                 for(int j = 0; j < shots.Count; j++) {
@@ -790,7 +765,7 @@ namespace freETarget {
 
         public void calibrateX(decimal increment) {
             calibrationX += increment;
-            computeShotStatistics();
+            computeShotStatistics(getShotList());
             targetRefresh();
 
             if(calibrationX == 0 && calibrationY == 0) {
@@ -804,7 +779,7 @@ namespace freETarget {
 
         public void calibrateY(decimal increment) {
             calibrationY += increment;
-            computeShotStatistics();
+            computeShotStatistics(getShotList());
             targetRefresh();
 
             if (calibrationX == 0 && calibrationY == 0) {
@@ -818,7 +793,7 @@ namespace freETarget {
         public void resetCalibration() {
             calibrationX = 0;
             calibrationY = 0;
-            computeShotStatistics();
+            computeShotStatistics(getShotList());
             targetRefresh();
 
             btnCalibration.BackColor = this.BackColor;
@@ -829,6 +804,209 @@ namespace freETarget {
             Settings.Default.calibrationX = calibrationX;
             Settings.Default.calibrationY = calibrationY;
             Settings.Default.Save();
+        }
+
+        public Bitmap toGrayScale(Bitmap original) {
+            //create a blank bitmap the same size as original
+            Bitmap newBitmap = new Bitmap(original.Width, original.Height);
+
+            //get a graphics object from the new image
+            using (Graphics g = Graphics.FromImage(newBitmap)) {
+
+                //create the grayscale ColorMatrix
+                ColorMatrix colorMatrix = new ColorMatrix(
+                   new float[][]
+                   {
+             new float[] {.3f, .3f, .3f, 0, 0},
+             new float[] {.59f, .59f, .59f, 0, 0},
+             new float[] {.11f, .11f, .11f, 0, 0},
+             new float[] {0, 0, 0, 1, 0},
+             new float[] {0, 0, 0, 0, 1}
+                   });
+
+                //create some image attributes
+                using (ImageAttributes attributes = new ImageAttributes()) {
+
+                    //set the color matrix attribute
+                    attributes.SetColorMatrix(colorMatrix);
+
+                    //draw the original image on the new image
+                    //using the grayscale color matrix
+                    g.DrawImage(original, new Rectangle(0, 0, original.Width, original.Height),
+                                0, 0, original.Width, original.Height, GraphicsUnit.Pixel, attributes);
+                }
+            }
+            return newBitmap;
+        }
+
+        private void tabControl1_DrawItem(object sender, DrawItemEventArgs e) {
+            Color backC = tcSessionType.TabPages[e.Index].BackColor;
+            Color foreC = tcSessionType.TabPages[e.Index].ForeColor;
+            if (tcSessionType.Enabled==false) {
+                int grayScale = (int)((backC.R * 0.3) + (backC.G * 0.59) + (backC.B * 0.11));
+                backC = Color.FromArgb(backC.A, grayScale, grayScale, grayScale);
+            } 
+
+            e.Graphics.FillRectangle(new SolidBrush(backC), e.Bounds);
+            Rectangle paddedBounds = e.Bounds;
+            paddedBounds.Inflate(-2, -2);
+            StringFormat format1h = new StringFormat(StringFormatFlags.DirectionVertical | StringFormatFlags.DirectionRightToLeft);
+            e.Graphics.DrawString(tcSessionType.TabPages[e.Index].Text, this.Font, new SolidBrush(foreC), paddedBounds, format1h);
+        }
+
+        private void tcSessionType_SelectedIndexChanged(object sender, EventArgs e) {
+            setTarget();
+        }
+
+        private void drawSessionName(Color color) {
+
+            Bitmap bmpTarget = new Bitmap(imgSessionName.Width, imgSessionName.Height);
+            Graphics g = Graphics.FromImage(bmpTarget);
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            if (isConnected) {
+                g.Clear(color);
+            } else {
+                g.Clear(Color.Black);
+            }
+            Font f = new Font("Tahoma", 10, FontStyle.Bold);
+            Brush b = new SolidBrush(Color.Black);
+            StringFormat format = new StringFormat();
+            format.LineAlignment = StringAlignment.Center;
+            format.Alignment = StringAlignment.Center;
+
+            string name = Settings.Default.name + " - " + currentSession.sessionType;
+            if (currentSession.numberOfShots > 0) {
+                name += " " + currentSession.numberOfShots;
+            }
+            g.DrawString(name, f, b, imgSessionName.ClientRectangle, format);
+
+            imgSessionName.Image = bmpTarget;
+        }
+
+        private void writeToGrid(Shot shot) {
+            int rowShot;
+            int cellShot;
+            if (currentSession.final == false) {
+                rowShot = shot.index / 10;
+                cellShot = shot.index % 10;
+            } else {
+                //final - 2 rows of 5 shots and than rows of 2 shots
+                if (shot.index < 5) {
+                    //first row
+                    rowShot = 0;
+                    cellShot = shot.index % 5;
+                } else if (shot.index >= 5 && shot.index < 10) {
+                    //second row
+                    rowShot = 1;
+                    cellShot = shot.index % 5;
+                } else {
+                    //row of 2
+                    rowShot = (shot.index - 6) / 2;
+                    cellShot = shot.index % 2;
+                }
+            }
+
+            DataGridViewRow row;
+
+            if (gridTargets.Rows.Count < rowShot + 1) { //no row, add it
+                int index = gridTargets.Rows.Add();
+                row = gridTargets.Rows[index];
+                row.HeaderCell.Value = "T" + (rowShot + 1);
+            } else {
+                row = gridTargets.Rows[rowShot];
+            }
+
+            DataGridViewCell cell = row.Cells[cellShot];
+            if (currentSession.final == true || currentSession.decimalScoring) {
+                cell.Value = shot.decimalScore.ToString(CultureInfo.InvariantCulture);
+            } else {
+                cell.Value = shot.score;
+            }
+
+            DataGridViewCell totalCell = row.Cells[10];
+            decimal total = 0;
+            for (int i = 0; i < row.Cells.Count - 1; i++) {
+                if (row.Cells[i].Value != null) {
+                    total += Decimal.Parse(row.Cells[i].Value.ToString(), CultureInfo.InvariantCulture);
+                }
+            }
+            totalCell.Value = total;
+
+            gridTargets.ClearSelection();
+        }
+
+        private void fillBreakdownChart(List<Shot> shotList) {
+            int[] breakdown = new int[12];
+            foreach(Shot s in shotList) {
+                if (s.score == 10) {
+                    if (s.innerTen) {
+                        breakdown[0]++;
+                    } else {
+                        breakdown[1]++;
+                    }
+                } else {
+                    breakdown[11 - s.score]++;
+                }
+            }
+
+            for(int i = 0; i < chartBreakdown.Series[0].Points.Count; i++) {
+                DataPoint p = chartBreakdown.Series[0].Points[i];
+                p.SetValueY(breakdown[i]);
+            }
+
+            chartBreakdown.ResetAutoValues();
+            chartBreakdown.Update();
+        }
+
+        private void clearBreakdownChart() {
+            for (int i = 0; i < chartBreakdown.Series[0].Points.Count; i++) {
+                DataPoint p = chartBreakdown.Series[0].Points[i];
+                p.SetValueY(0);
+            }
+
+            chartBreakdown.ResetAutoValues();
+            chartBreakdown.Update();
+        }
+
+        private void imgSessionName_Click(object sender, EventArgs e) {
+            gridTargets.ClearSelection();
+        }
+
+        private void gridTargets_Click(object sender, EventArgs e) {
+
+            if (gridTargets.SelectedRows.Count > 0) {
+                DataGridViewRow row = gridTargets.SelectedRows[0];
+
+                String s = "";
+                foreach (DataGridViewCell cell in row.Cells) {
+                    s += cell.Value + " ";
+                }
+
+                Console.WriteLine(s);
+            }
+        }
+
+        //custom paint for richtextbox to show like a textbox
+        private void panel2_Paint(object sender, PaintEventArgs e) {
+            Graphics g = panel2.CreateGraphics();
+            g.DrawLine(new Pen(Color.FromArgb(171, 173, 179)), 0, 0, panel2.Width - 1, 0);
+            g.DrawLine(new Pen(Color.FromArgb(227, 233, 239)), 0, panel2.Height - 1, panel2.Width - 1, panel2.Height - 1);
+            g.DrawLine(new Pen(Color.FromArgb(226, 227, 234)), 0, 0, 0, panel2.Height - 1);
+            g.DrawLine(new Pen(Color.FromArgb(219, 223, 230)), panel2.Width - 1, 0, panel2.Width - 1, panel2.Height - 1);
+
+
+            g.DrawLine(new Pen(Color.White), 1, 1, panel2.Width - 2, 1);
+            g.DrawLine(new Pen(Color.White), 1, panel2.Height - 2, panel2.Width - 2, panel2.Height - 2);
+            g.DrawLine(new Pen(Color.White), 1, 1, 1, panel2.Height - 2);
+            g.DrawLine(new Pen(Color.White), panel2.Width - 2, 1, panel2.Width - 2, panel2.Height - 2);
+        }
+
+        private List<Shot> getShotList() {
+            if (Settings.Default.OnlySeries) {
+                return currentSession.CurrentSeries;
+            } else {
+                return currentSession.Shots;
+            }
         }
     }
 

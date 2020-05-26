@@ -256,5 +256,14 @@ namespace TargetSimulator
                 }
             }
         }
+
+        private void chkChamp_CheckedChanged(object sender, EventArgs e) {
+            Console.WriteLine("CHECKED");
+            if (chkChamp.Checked) {
+                range = 150;
+            } else {
+                range = (int)Math.Round(distanceBetweenSensors * 10 / 2, 0);
+            }
+        }
     }
 }

@@ -15,7 +15,7 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="defaultTarget" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Air Pistol</Value>
+      <Value Profile="(Default)">Air Pistol Practice</Value>
     </Setting>
     <Setting Name="targetColor" Type="System.Drawing.Color" Scope="User">
       <Value Profile="(Default)">Moccasin</Value>
@@ -28,6 +28,12 @@
     </Setting>
     <Setting Name="calibrationY" Type="System.Decimal" Scope="User">
       <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="MatchShots" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">60</Value>
+    </Setting>
+    <Setting Name="OnlySeries" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

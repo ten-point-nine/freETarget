@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
             this.btnConnect = new System.Windows.Forms.Button();
@@ -53,6 +54,7 @@
             this.btnImport = new System.Windows.Forms.Button();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+            this.chkChamp = new System.Windows.Forms.CheckBox();
             this.status.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -268,11 +270,23 @@
             // 
             this.openFileDialog.Filter = "TargetScan App file|*.csv";
             // 
+            // chkChamp
+            // 
+            this.chkChamp.AutoSize = true;
+            this.chkChamp.Location = new System.Drawing.Point(251, 14);
+            this.chkChamp.Name = "chkChamp";
+            this.chkChamp.Size = new System.Drawing.Size(86, 17);
+            this.chkChamp.TabIndex = 19;
+            this.chkChamp.Text = "Good scores";
+            this.chkChamp.UseVisualStyleBackColor = true;
+            this.chkChamp.CheckedChanged += new System.EventHandler(this.chkChamp_CheckedChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(589, 541);
+            this.Controls.Add(this.chkChamp);
             this.Controls.Add(this.btnImport);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
@@ -292,8 +306,9 @@
             this.Controls.Add(this.txtOutput);
             this.Controls.Add(this.btnConnect);
             this.Controls.Add(this.comboBox1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "Target Simulator";
             this.status.ResumeLayout(false);
             this.status.PerformLayout();
             this.ResumeLayout(false);
@@ -327,6 +342,7 @@
         private System.Windows.Forms.Button btnImport;
         private System.Windows.Forms.OpenFileDialog openFileDialog;
         private System.Windows.Forms.ToolTip toolTip;
+        private System.Windows.Forms.CheckBox chkChamp;
     }
 }
 

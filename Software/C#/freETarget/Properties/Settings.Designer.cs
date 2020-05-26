@@ -73,7 +73,7 @@ namespace freETarget.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Air Pistol")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Air Pistol Practice")]
         public string defaultTarget {
             get {
                 return ((string)(this["defaultTarget"]));
@@ -128,6 +128,30 @@ namespace freETarget.Properties {
             }
             set {
                 this["calibrationY"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("60")]
+        public int MatchShots {
+            get {
+                return ((int)(this["MatchShots"]));
+            }
+            set {
+                this["MatchShots"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool OnlySeries {
+            get {
+                return ((bool)(this["OnlySeries"]));
+            }
+            set {
+                this["OnlySeries"] = value;
             }
         }
     }
