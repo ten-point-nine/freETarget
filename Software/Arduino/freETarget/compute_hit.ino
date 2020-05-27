@@ -27,7 +27,8 @@ sensor_t s[4];
 
 unsigned int bit_mask[] = {0x01, 0x02, 0x04, 0x08};
 unsigned int timer_value[4];    // Array of timer values
-  
+double       length_c;          // length of side C
+
 /*----------------------------------------------------------------
  *
  * double speed_of_sound(double temperature)
@@ -45,9 +46,10 @@ double speed_of_sound(double temperature)
 
   speed = (331.3d + 0.606d * temperature) * 1000.0d / 1000000.0d; 
   
-  if ( read_DIP() & VERBOSE_TRACE )
+  if ( (read_DIP() & VERBOSE_TRACE) || (SAMPLE_CALCULATIONS != 0) )
     {
     Serial.print("\n\rSpeed of sound: "); Serial.print(speed); Serial.print("mm/us");
+    Serial.print("  Worst case delay: "); Serial.print(RADIUS * 2.0 / speed * OSCILLATOR_MHZ); Serial.print(" counts");
     }
 
   return speed;  
@@ -72,14 +74,12 @@ double speed_of_sound(double temperature)
  *--------------------------------------------------------------*/
 void init_sensors(void)
 {
-  double s_speed;         // Speed of sound
-  double temperature;     // Temperature in C
-
-  s_speed = speed_of_sound(temperature_C());
+  s_of_sound = speed_of_sound(temperature_C());
+  length_c = sqrt(2.0d) * RADIUS / s_of_sound * OSCILLATOR_MHZ;
   
   s[N].index = N;
   s[N].x = 0;
-  s[N].y = RADIUS / s_speed * OSCILLATOR_MHZ;
+  s[N].y = RADIUS / s_of_sound * OSCILLATOR_MHZ;
 
   s[E].index = E;
   s[E].x = s[N].y;
@@ -92,8 +92,7 @@ void init_sensors(void)
   s[W].index = W;
   s[W].x = -s[E].x;
   s[W].y = 0;
-
-  Serial.print("\n\rSensors Ready");
+  
   return;
 }
 /*----------------------------------------------------------------
@@ -123,34 +122,29 @@ unsigned int compute_hit
   double        x_avg, y_avg;      // Running average location
   double        smallest;          // Smallest non-zero value measured
   unsigned int  sensor_status;     // Sensor collection status
-  double        length_c;          // lenght of side C
 
 /*
- * Compute the length of the outer box in clock cycles
+ *  Compute the current geometry based on the speed of sound
  */
-  s_of_sound = speed_of_sound(temperature_C());
-  length_c = sqrt(2.0d) * RADIUS / s_of_sound * OSCILLATOR_MHZ;
+  init_sensors();
   
 /*
  *  Read in the counter values 
  */
+#if ( SAMPLE_CALCULATIONS == false )
  for (i=N; i <= W; i++)
  {
    timer_value[i] = read_counter(i);
  }
-
-#if SAMPLE_CALCULATIONS
-void sample_calculations (void);
-  sensor_status = 0x0F;
-  sample_calculations();
 #endif
 
- if ( read_DIP() & VERBOSE_TRACE )
+ if ( (read_DIP() & VERBOSE_TRACE) || (SAMPLE_CALCULATIONS != 0))
    {
    Serial.print("\n\rNorth: 0x"); Serial.print(timer_value[N], HEX); Serial.print("  us:"); Serial.print(timer_value[N] / OSCILLATOR_MHZ);
    Serial.print("  East: 0x");    Serial.print(timer_value[E], HEX); Serial.print("  us:"); Serial.print(timer_value[E] / OSCILLATOR_MHZ);
    Serial.print("  South: 0x");   Serial.print(timer_value[S], HEX); Serial.print("  us:"); Serial.print(timer_value[S] / OSCILLATOR_MHZ);
    Serial.print("  West: 0x");    Serial.print(timer_value[W], HEX); Serial.print("  us:"); Serial.print(timer_value[W] / OSCILLATOR_MHZ);
+   Serial.print(" length_c: "); Serial.print(length_c);     Serial.print(" cycles");
    }
    
 /*
@@ -167,9 +161,9 @@ void sample_calculations (void);
     }
   }
   
- if ( read_DIP() & VERBOSE_TRACE )
+ if ( (read_DIP() & VERBOSE_TRACE) || (SAMPLE_CALCULATIONS != 0))
    {
-   Serial.print("\n\rreference: "); Serial.print(reference); Serial.print("  location:"); Serial.print(location);
+   Serial.print("\n\rReference: "); Serial.print(reference); Serial.print("  location:"); Serial.print(location);
    }
    
 /*
@@ -182,10 +176,10 @@ void sample_calculations (void);
     s[i].is_valid = ((sensor_status & bit_mask[R(i)]) != 0);
   }
 
- if ( read_DIP() & VERBOSE_TRACE )
+ if ( (read_DIP() & VERBOSE_TRACE) || (SAMPLE_CALCULATIONS != 0))
    {
-   Serial.print("\n\rCounts");
-   Serial.print("\n\rNorth: "); Serial.print(s[N].count); Serial.print("  East: "); Serial.print(s[E].count);
+   Serial.print("\n\rCounts ");
+   Serial.print(" North: "); Serial.print(s[N].count); Serial.print("  East: "); Serial.print(s[E].count);
    Serial.print(" South: ");    Serial.print(s[S].count); Serial.print("  West: "); Serial.print(s[W].count);
    }
 /*
@@ -194,8 +188,7 @@ void sample_calculations (void);
   smallest = 1.0e10;
   for (i=N; i <= W; i++)
   {
-    if ( (s[i].count != 0) 
-        && (s[i].count < smallest ) )
+    if ( s[i].count < smallest )
     {
       smallest = s[i].count;
     }
@@ -204,9 +197,9 @@ void sample_calculations (void);
 /*
  *  Prime the estimate based on the smallest identified time.
  */
- estimate = length_c / 1.414d - smallest + 1.0d;
+ estimate = length_c - smallest + 1.0d;
  
- if ( read_DIP() & VERBOSE_TRACE )
+ if ( (read_DIP() & VERBOSE_TRACE) || (SAMPLE_CALCULATIONS != 0) )
    {
    Serial.print("\n\restimate: "); Serial.print(estimate);
    }
@@ -224,15 +217,6 @@ void sample_calculations (void);
   {
     s[i].a = s[(i+1) % 4].b;
   }
-
-#if (SAMPLE_CALCULATIONS)
-  for (i=N; i <= W; i++)
-  {
-    s[i].a = s[i].a / 10.0d;
-    s[i].b = s[i].b / 10.0d;
-    s[i].c = s[i].c / 10.0d;
-  }
-#endif
 
 /*  
  *  Loop and calculate the unknown radius (estimate)
@@ -258,7 +242,7 @@ void sample_calculations (void);
     estimate = sqrt(sq(s[N].x - x_avg) + sq(s[N].y - y_avg));
     error = abs(last_estimate - estimate);
 
-    if ( read_DIP() & VERBOSE_TRACE )
+    if ( (read_DIP() & VERBOSE_TRACE) || (SAMPLE_CALCULATIONS != 0))
     {
       Serial.print("\n\rx_avg:");  Serial.print(x_avg);   Serial.print("  y_avg:"); Serial.print(y_avg); Serial.print(" estimate:"),  Serial.print(estimate);  Serial.print(" error:"); Serial.print(error);
       Serial.println();
@@ -350,7 +334,7 @@ void find_xy
 /*
  * Debugging
  */
-  if ( read_DIP() & VERBOSE_TRACE )
+  if ( (read_DIP() & VERBOSE_TRACE) || (SAMPLE_CALCULATIONS != 0))
   {
     Serial.print("\n\rindex:"); Serial.print(s->index) ; 
     Serial.print(" a:");        Serial.print(s->a);       Serial.print("  b:");  Serial.print(s->b);
@@ -389,24 +373,17 @@ void rotate_shot
   )
 {
   double tx, ty;                // Working X and Y positions.
-  double angle;                 // Computed Angle
-  double radius;                // Computed Radius
+
 /*
  * Correct the input for the fact that the sensors are out by 45 degrees 
  */
   tx = h->x;
   ty = h->y;
 
-  radius = sqrt(sq(tx) + sq(ty));
-  angle = atan2(tx, ty) - PI_ON_4;
-  tx = radius * cos(angle);
-  ty = radius * sin(angle);
-
 /*
  *  Rotated back to North up
  */
-
-  if ( read_DIP() & VERBOSE_TRACE )
+  if ( (read_DIP() & VERBOSE_TRACE) || (SAMPLE_CALCULATIONS != 0))
   {
     Serial.print("\n\rRotating Shot (In) x:"); Serial.print(h->x); Serial.print(" y:"); Serial.print(h->y); Serial.print("  degrees:"); Serial.print(rotate[location]);
   }
@@ -420,8 +397,8 @@ void rotate_shot
       break;                
 
     case E:
-      h->y = tx;
       h->x = ty;
+      h->y = -tx;
       break;
 
     case S:
@@ -430,12 +407,12 @@ void rotate_shot
       break;
 
     case W: 
-      h->y = -tx;
-      h->x = -ty;
+      h->x = -tx;
+      h->y =  ty;
       break;
   }
   
-  if ( read_DIP() & VERBOSE_TRACE )
+  if ( (read_DIP() & VERBOSE_TRACE) || (SAMPLE_CALCULATIONS != 0))
   {
     Serial.print("\n\rRotating Shot (Out) x:"); Serial.print(h->x); Serial.print(" y:"); Serial.print(h->y);
   }
@@ -472,8 +449,9 @@ void send_score
   x = h->x * s_of_sound * CLOCK_PERIOD;
   y = h->y * s_of_sound * CLOCK_PERIOD;
   radius = sqrt(sq(x) + sq(y));
-  angle = atan2(x, y) / PI_ON_2 * 180.0d;
-  
+  angle = atan2(h->y, h->x) / PI * 180.0d;
+
+  Serial.println();
   Serial.print("{\"shot\":");   Serial.print(h->shot + 1);
   Serial.print(", \"x\":");     Serial.print(x); 
   Serial.print(", \"y\":");     Serial.print(y); 
@@ -485,7 +463,7 @@ void send_score
   Serial.print(", \"S\":");     Serial.print(timer_value[S]);
   Serial.print(", \"W\":");     Serial.print(timer_value[W]);
   
-  Serial.print(", \"V\":");     Serial.print(analogRead(V_REFERENCE));
+  Serial.print(", \"V\":");     Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
   Serial.print(", \"T\":");     Serial.print(temperature_C());
 
   Serial.print("}");

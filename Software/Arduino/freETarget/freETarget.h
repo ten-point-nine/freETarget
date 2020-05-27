@@ -14,19 +14,19 @@
 /*
  * Compilation Flags
  */
- #define TRACE_PWM      true
- 
- // Trace the PWM registers
-#define SAMPLE_CALCULATIONS false     // Trace the COUNTER values
+#define SAMPLE_CALCULATIONS false    // Trace the COUNTER values
+void sample_calculations (unsigned int ch);
 
- 
-#define OSCILLATOR_MHZ     8    // 8000 cycles in 1 ms
+/*
+ * Oscillator Features
+ */
+#define OSCILLATOR_MHZ   8.0    // 8000 cycles in 1 ms
+#define CLOCK_PERIOD  (1.0/OSCILLATOR_MHZ)          // Seconds per bit
 #define ONE_SECOND      1000    // 1000 ms delay
-#define SHOT_TIME        500    // Wait 500 ms for the shot to end
+#define SHOT_TIME       1000    // Wait 1 ms for the shot to end
 
-#define RUNNING_MODE_CALIBRATION 1
-#define VERBOSE_TRACE            2
-
+#define RUNNING_MODE_CALIBRATION 1 + (0 << 4)
+#define VERBOSE_TRACE            2 + (2 << 4)
 
 #define N 0
 #define E 1

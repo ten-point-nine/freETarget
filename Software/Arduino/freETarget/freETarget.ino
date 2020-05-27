@@ -72,10 +72,28 @@ void loop()
   unsigned int running_mode;
   unsigned int sensor_status;   // Record which sensors contain valid data
   unsigned int location;        // Sensor location 
+  unsigned int ch_h, ch_l;      // Input character
 
- while (1)
- {
-
+  while (1)
+  {
+ #if ( SAMPLE_CALCULATIONS != 0 )
+    while (1)
+    {
+      while ( Serial.available() != 3 )
+        continue;
+      ch_h = (Serial.read() - '0') & 0x0f;
+      ch_l = (Serial.read() - '0') & 0x0f;
+      Serial.println();
+      Serial.println("*************************");
+      sample_calculations((ch_h*10) + ch_l);
+      location = compute_hit(shot, &history[shot]);
+      rotate_shot(location, &history[shot]);  // Rotate the shot back onto the target
+      send_score(&history[shot]);
+      while ( Serial.available() != 0 )
+        Serial.read();
+    }
+ #endif
+ 
 /*
  * Cycle through the state machine
  */
@@ -90,9 +108,9 @@ void loop()
     
     while (read_DIP() & RUNNING_MODE_CALIBRATION)
     {
- //     cal_analog();
+      cal_analog();
       temperature_C();
-//      delay(ONE_SECOND/2);
+      delay(ONE_SECOND/2);
     }
     state = ARM;
     break;
@@ -115,8 +133,6 @@ void loop()
     sensor_status |= is_running();
     if ( sensor_status != 0 )    // Shot detected
       {
-      set_LED(LED_S, false);    // No longer waiting
-      set_LED(LED_X, true);     // Starting processing
       state = AQUIRE;
       now = micros();           // Remember the starting time
       }
@@ -159,7 +175,7 @@ void loop()
  *  Wait here to make sure the RUN lines are no longer set
  */
   case WASTE:
-    delay(200);
+    delay(1000);
     state = SET_MODE;
     break;
     }

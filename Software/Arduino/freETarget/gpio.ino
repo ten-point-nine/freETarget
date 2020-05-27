@@ -266,6 +266,7 @@ void stop_counters(void)
  * The word is complimented to return a 1 for every
  * jumper that is installed.
  * 
+ * Return 0xF0 to allow for compile time testing
  *-----------------------------------------------------*/
 unsigned int read_DIP(void)
 {
@@ -273,7 +274,7 @@ unsigned int read_DIP(void)
   
   return_value =  (digitalRead(DIP_A) << 0) + (digitalRead(DIP_B) << 1) + (digitalRead(DIP_C) << 2) + (digitalRead(DIP_D) << 3);
 
-  return (~return_value) & 0x0f;
+  return (~return_value) & 0x0f | 0xF0;
 }  
 
 /*

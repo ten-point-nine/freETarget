@@ -192,7 +192,7 @@ double temperature_C(void)
  */
   return_value =  (double)(raw) * RTD_SCALE ;
 
-  if ( read_DIP() & (VERBOSE_TRACE | RUNNING_MODE_CALIBRATION) )
+  if ( (read_DIP() & (VERBOSE_TRACE | RUNNING_MODE_CALIBRATION)) || (SAMPLE_CALCULATIONS != 0))
     {
     Serial.print("\n\rTemperature (RAW): 0x"); Serial.print(raw, HEX); Serial.print("   (C):"); Serial.print(return_value);
     }
