@@ -1,6 +1,8 @@
 ﻿using freETarget.Properties;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -13,13 +15,17 @@ namespace freETarget {
             Rifle
         }
 
+        public enum SessionType {
+            Practice,
+            Match,
+            Final
+        }
 
-        public SessionType sessionType { get; set; }
+        public CourseOfFire courseOfFire { get; set; }
         public TargetType targetType { get; set; }
         public int numberOfShots { get; set; }
         public bool decimalScoring { get; set; }
-        public bool final { get; set; }
-        public bool practice { get; set; }
+        public SessionType sessionType;
         public int minutes { get; set; }
         public int score { get; set; }
         public decimal decimalScore { get; set; }
@@ -39,10 +45,12 @@ namespace freETarget {
 
         private List<List<Shot>> allSeries = new List<List<Shot>>();
 
-        public DateTime startTime { get; private set; }
-        public DateTime endTime { get; private set; }
+        private DateTime startTime;
+        private DateTime endTime;
 
-        public Session() {
+        private VirtualRO currentFinal = null;
+
+        protected Session() {
 
         }
 
@@ -60,71 +68,73 @@ namespace freETarget {
         }
 
         public static Session createNewSession(string name) {
-            return createNewSession(SessionType.GetSessionType(name));
+            return createNewSession(CourseOfFire.GetSessionType(name));
         }
-        public static Session createNewSession(SessionType sessionType) {
+        public static Session createNewSession(CourseOfFire sessionType) {
             Session newSession = new Session();
 
-            if (sessionType.Equals(SessionType.AirPistolPractice)) {
+            if (sessionType.Equals(CourseOfFire.AirPistolPractice)) {
                 newSession.decimalScoring = false;
-                newSession.final = false;
-                newSession.sessionType = SessionType.AirPistolPractice;
+                newSession.sessionType = SessionType.Practice;
+                newSession.courseOfFire = CourseOfFire.AirPistolPractice;
                 newSession.numberOfShots = -1;
                 newSession.targetType = TargetType.Pistol;
-                newSession.practice = true;
                 newSession.minutes = -1;
-            } else if (sessionType.Equals(SessionType.AirPistolMatch)) {
+            } else if (sessionType.Equals(CourseOfFire.AirPistolMatch)) {
                 newSession.decimalScoring = false;
-                newSession.final = false;
-                newSession.sessionType = SessionType.AirPistolMatch;
+                newSession.sessionType = SessionType.Match;
+                newSession.courseOfFire = CourseOfFire.AirPistolMatch;
                 newSession.numberOfShots = Settings.Default.MatchShots;
-                newSession.targetType = TargetType.Pistol;
-                newSession.practice = false;
-                if (newSession.numberOfShots == 60) {
-                    newSession.minutes = 75;
-                } else if (newSession.numberOfShots == 40) {
-                    newSession.minutes = 50;
+                if(Settings.Default.MatchShots == 60) {
+                    newSession.numberOfShots = ISSF.match60NoOfShots;
+                    newSession.minutes = ISSF.match60Time;
+                } else if (Settings.Default.MatchShots == 40)  {
+                    newSession.numberOfShots = ISSF.match40NoOfShots;
+                    newSession.minutes = ISSF.match40Time;
                 } else {
+                    newSession.numberOfShots = -1;
                     newSession.minutes = -1;
                 }
-            } else if (sessionType.Equals(SessionType.AirPistolFinal)) {
-                newSession.decimalScoring = true;
-                newSession.final = true;
-                newSession.sessionType = SessionType.AirPistolFinal;
-                newSession.numberOfShots = 24;
                 newSession.targetType = TargetType.Pistol;
-                newSession.practice = false;
-                newSession.minutes = -1;
-            } else if (sessionType.Equals(SessionType.AirRiflePractice)) {
+            } else if (sessionType.Equals(CourseOfFire.AirPistolFinal)) {
                 newSession.decimalScoring = true;
-                newSession.final = false;
-                newSession.sessionType = SessionType.AirRiflePractice;
+                newSession.sessionType = SessionType.Final;
+                newSession.courseOfFire = CourseOfFire.AirPistolFinal;
+                newSession.numberOfShots = ISSF.finalNoOfShots;
+                newSession.targetType = TargetType.Pistol;
+                newSession.minutes = -1;
+                newSession.currentFinal = new VirtualRO();
+            } else if (sessionType.Equals(CourseOfFire.AirRiflePractice)) {
+                newSession.decimalScoring = true;
+                newSession.sessionType = SessionType.Practice;
+                newSession.courseOfFire = CourseOfFire.AirRiflePractice;
                 newSession.numberOfShots = -1;
                 newSession.targetType = TargetType.Rifle;
-                newSession.practice = true;
                 newSession.minutes = -1;
-            } else if (sessionType.Equals(SessionType.AirRifleMatch)) {
+            } else if (sessionType.Equals(CourseOfFire.AirRifleMatch)) {
                 newSession.decimalScoring = true;
-                newSession.final = false;
-                newSession.sessionType = SessionType.AirRifleMatch;
+                newSession.sessionType = SessionType.Match;
+                newSession.courseOfFire = CourseOfFire.AirRifleMatch;
                 newSession.numberOfShots = Settings.Default.MatchShots;
                 newSession.targetType = TargetType.Rifle;
-                newSession.practice = false;
-                if (newSession.numberOfShots == 60) {
-                    newSession.minutes = 75;
-                } else if (newSession.numberOfShots == 40) {
-                    newSession.minutes = 50;
+                if (Settings.Default.MatchShots == 60) {
+                    newSession.numberOfShots = ISSF.match60NoOfShots;
+                    newSession.minutes = ISSF.match60Time;
+                } else if (Settings.Default.MatchShots == 40) {
+                    newSession.numberOfShots = ISSF.match40NoOfShots;
+                    newSession.minutes = ISSF.match40Time;
                 } else {
+                    newSession.numberOfShots = -1;
                     newSession.minutes = -1;
                 }
-            } else if (sessionType.Equals(SessionType.AirRifleFinal)) {
+            } else if (sessionType.Equals(CourseOfFire.AirRifleFinal)) {
                 newSession.decimalScoring = true;
-                newSession.final = true;
-                newSession.sessionType = SessionType.AirRifleFinal;
-                newSession.numberOfShots = 24;
+                newSession.sessionType = SessionType.Final;
+                newSession.courseOfFire = CourseOfFire.AirRifleFinal;
+                newSession.numberOfShots = ISSF.finalNoOfShots;
                 newSession.targetType = TargetType.Rifle;
-                newSession.practice = false;
                 newSession.minutes = -1;
+                newSession.currentFinal = new VirtualRO();
             } else {
                 return null;
             }
@@ -144,7 +154,7 @@ namespace freETarget {
             s.index = this.Shots.Count - 1;
 
             bool newSeries;
-            if (this.final == false) {
+            if (sessionType != SessionType.Final) {
                 newSeries = (s.index % 10 == 0);
             } else {
                 if (s.index < 10) {
@@ -171,6 +181,57 @@ namespace freETarget {
                 this.endTime = DateTime.Now.AddMinutes(this.minutes);
             } else {
                 this.endTime = DateTime.MinValue;
+            }
+        }
+
+        public string getTime(out Color c) { //it is called every 500 miliseconds by a timer
+            DateTime now = DateTime.Now;
+            TimeSpan ts;
+            string command = "";
+            if (sessionType != SessionType.Final) {
+                if (endTime == DateTime.MinValue) {
+                    ts = now - startTime;
+                } else {
+                    ts = endTime - now;
+                    if(ts < TimeSpan.Zero) {
+                        command = "End";
+                    }
+            
+                }
+            } else { //final - do per series timers
+                if (currentFinal != null) {
+                    ts = currentFinal.getTime(out command);
+                } else {
+                    ts = TimeSpan.FromSeconds(-1);
+                    Console.WriteLine("VirtualRO not initialized");
+                }
+            }
+
+            if (sessionType == SessionType.Practice) {
+                c = Color.White;
+            }else if (sessionType == SessionType.Match) {
+                if (TimeSpan.Compare(ts, TimeSpan.FromSeconds(60)) <= 0) { //last 60 seconds displayed in red
+                    c = Color.Red;
+                } else if (TimeSpan.Compare(ts, TimeSpan.FromMinutes(10)) <= 0) { //last 10 minutes displayed in orange
+                    c = Color.Orange;
+                } else {
+                    c = Color.White;
+                }
+            } else { //final
+                if (TimeSpan.Compare(ts, TimeSpan.FromSeconds(5)) <= 0) { //last 5 seconds displayed in red
+                    c = Color.Red;
+                } else if (TimeSpan.Compare(ts, TimeSpan.FromSeconds(15)) <= 0) { //last 15 seconds displayed in orange
+                    c = Color.Orange;
+                } else {
+                    c = Color.White;
+                }
+            }
+
+            if (ts < TimeSpan.Zero) {
+                c = Color.DeepSkyBlue;
+                return "@"+command;
+            } else {
+                return ts.ToString(@"hhmmss"); 
             }
         }
 

@@ -46,6 +46,12 @@ namespace freETarget {
 
             initBreakdownChart();
 
+            digitalClock.segments[1].ColonShow = true;
+            digitalClock.segments[3].ColonShow = true;
+            digitalClock.segments[1].ColonOn = true;
+            digitalClock.segments[3].ColonOn = true;
+            digitalClock.ResizeSegments();
+
         }
 
         private void initBreakdownChart() {
@@ -266,7 +272,7 @@ namespace freETarget {
 
             //draw shot on target
             int count = getShotList().Count;
-            Color c = Color.FromArgb(0, 0, 255);
+            Color c = Color.FromArgb(200, 0, 0, 255); //semitransparent shots
             Pen p = new Pen(Color.LightSkyBlue);
             Brush bText = new SolidBrush(Color.LightSkyBlue);
             if (l == count - 1) {
@@ -456,7 +462,7 @@ namespace freETarget {
             currentSession = Session.createNewSession(Settings.Default.defaultTarget.Trim());
 
             foreach(TabPage tab in tcSessionType.TabPages) {
-                if (currentSession.sessionType.Name.Contains(tab.Text.Trim())) {
+                if (currentSession.courseOfFire.Name.Contains(tab.Text.Trim())) {
                     tcSessionType.SelectedTab = tab;
                 }
             }
@@ -620,7 +626,7 @@ namespace freETarget {
                 drawMeanGroup(it, dimension, zoomFactor);
             }
 
-            if (currentSession.practice) {
+            if (currentSession.sessionType == Session.SessionType.Practice) {
                 //draw triangle in corner
                 float sixth = dimension / 6f;
                 PointF[] points = new PointF[3];
@@ -685,31 +691,25 @@ namespace freETarget {
 
         private void timer_Tick(object sender, EventArgs e) {
             DateTime now = DateTime.Now;
-            TimeSpan ts;
+            Color c = Color.White;
 
-            Color c;
-            if (currentSession.endTime == DateTime.MinValue) {
-                ts = now - currentSession.startTime;
-                c = SystemColors.WindowText;
+            txtTime.Text = DateTime.Now.ToString("yyyy-MM-dd  HH:mm:ss");
+            string time = currentSession.getTime(out c);
+
+            if (time.StartsWith("@")) {
+                digitalClock.segments[1].ColonShow = false;
+                digitalClock.segments[3].ColonShow = false;
+                digitalClock.segments[1].ColonOn = false;
+                digitalClock.segments[3].ColonOn = false;
             } else {
-                ts = currentSession.endTime - now;
-                if(TimeSpan.Compare(ts, TimeSpan.FromMinutes(10))<=0) { //last 10 minutes displayed in red
-                    
-                    c = Color.Red;
-                } else {
-                    c = SystemColors.WindowText;
-                }
-             
+                digitalClock.segments[1].ColonShow = true;
+                digitalClock.segments[3].ColonShow = true;
+                digitalClock.segments[1].ColonOn = true;
+                digitalClock.segments[3].ColonOn = true;
             }
-            string day = now.ToString("yyyy-MM-dd");
-            string time = ts.ToString(@"hh\:mm\:ss");
-            txtTime.Text = day + "             " + time;
+            digitalClock.Value = time;
+            digitalClock.ColorLight = c;
 
-            txtTime.Select(txtTime.Text.IndexOf(day), day.Length);
-            txtTime.SelectionFont = new Font(txtTime.Font.FontFamily, 8.25F);
-            txtTime.Select(txtTime.Text.IndexOf(time), day.Length);
-            txtTime.SelectionFont = new Font(txtTime.Font.FontFamily, 12F,FontStyle.Bold);
-            txtTime.SelectionColor = c;
         }
 
         private void calculateMeanRadius( out decimal rbar, out decimal xbar, out decimal ybar, List<Shot> shots) {
@@ -874,7 +874,7 @@ namespace freETarget {
             format.LineAlignment = StringAlignment.Center;
             format.Alignment = StringAlignment.Center;
 
-            string name = Settings.Default.name + " - " + currentSession.sessionType;
+            string name = Settings.Default.name + " - " + currentSession.courseOfFire;
             if (currentSession.numberOfShots > 0) {
                 name += " " + currentSession.numberOfShots;
             }
@@ -886,7 +886,7 @@ namespace freETarget {
         private void writeToGrid(Shot shot) {
             int rowShot;
             int cellShot;
-            if (currentSession.final == false) {
+            if (currentSession.sessionType != Session.SessionType.Final) {
                 rowShot = shot.index / 10;
                 cellShot = shot.index % 10;
             } else {
@@ -917,7 +917,7 @@ namespace freETarget {
             }
 
             DataGridViewCell cell = row.Cells[cellShot];
-            if (currentSession.final == true || currentSession.decimalScoring) {
+            if (currentSession.decimalScoring) {
                 cell.Value = shot.decimalScore.ToString(CultureInfo.InvariantCulture);
             } else {
                 cell.Value = shot.score;
@@ -984,21 +984,6 @@ namespace freETarget {
 
                 Console.WriteLine(s);
             }
-        }
-
-        //custom paint for richtextbox to show like a textbox
-        private void panel2_Paint(object sender, PaintEventArgs e) {
-            Graphics g = panel2.CreateGraphics();
-            g.DrawLine(new Pen(Color.FromArgb(171, 173, 179)), 0, 0, panel2.Width - 1, 0);
-            g.DrawLine(new Pen(Color.FromArgb(227, 233, 239)), 0, panel2.Height - 1, panel2.Width - 1, panel2.Height - 1);
-            g.DrawLine(new Pen(Color.FromArgb(226, 227, 234)), 0, 0, 0, panel2.Height - 1);
-            g.DrawLine(new Pen(Color.FromArgb(219, 223, 230)), panel2.Width - 1, 0, panel2.Width - 1, panel2.Height - 1);
-
-
-            g.DrawLine(new Pen(Color.White), 1, 1, panel2.Width - 2, 1);
-            g.DrawLine(new Pen(Color.White), 1, panel2.Height - 2, panel2.Width - 2, panel2.Height - 2);
-            g.DrawLine(new Pen(Color.White), 1, 1, 1, panel2.Height - 2);
-            g.DrawLine(new Pen(Color.White), panel2.Width - 2, 1, panel2.Width - 2, panel2.Height - 2);
         }
 
         private List<Shot> getShotList() {
