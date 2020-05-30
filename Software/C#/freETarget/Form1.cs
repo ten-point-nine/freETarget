@@ -32,8 +32,12 @@ namespace freETarget {
 
         private Session currentSession;
 
+        private StorageController storage;
         public frmMainWindow() {
             InitializeComponent();
+
+            storage = new StorageController();
+
             this.calibrationX = Settings.Default.calibrationX;
             this.calibrationY = Settings.Default.calibrationY;
 
@@ -115,29 +119,36 @@ namespace freETarget {
                     tcSessionType.Enabled = true;
                     tcSessionType.Refresh();
 
+                    setTarget();
+                    targetRefresh();
+
                 } catch (Exception ex) {
                     statusText.Text = "Error opening serial port: " + ex.Message;
                 }
 
             } else {
-                serialPort.Close();
-                btnConnect.Text = "Connect";
-                isConnected = false;
-                clearShots();
+                if (!clearShots()) {
+                    serialPort.Close();
+                    btnConnect.Text = "Connect";
+                    isConnected = false;
 
-                statusText.Text = "Disconnected";
-                timer.Enabled = false;
-                btnConnect.ImageKey = "connect";
 
-                shotsList.Enabled = false;
-                btnCalibration.Enabled = false;
-                trkZoom.Enabled = false;
-                tcSessionType.Enabled = false;
-                tcSessionType.Refresh();
+                    statusText.Text = "Disconnected";
+                    timer.Enabled = false;
+                    btnConnect.ImageKey = "connect";
+
+                    shotsList.Enabled = false;
+                    btnCalibration.Enabled = false;
+                    trkZoom.Enabled = false;
+                    tcSessionType.Enabled = false;
+                    tcSessionType.Refresh();
+
+                    setTarget();
+                    targetRefresh();
+                }
             }
 
-            setTarget();
-            targetRefresh();
+
         }
 
         //output errors to the status bar at the bottom
@@ -179,9 +190,9 @@ namespace freETarget {
                 txtLastShot.Text = lastShot + inner;
 
                 //write score to listview
-                ListViewItem item = new ListViewItem(new string[] { "" }, shot.count.ToString());
+                ListViewItem item = new ListViewItem(new string[] { "" }, (shot.index+1).ToString());
                 item.UseItemStyleForSubItems = false;
-                ListViewItem.ListViewSubItem countItem = item.SubItems.Add(shot.count.ToString());
+                ListViewItem.ListViewSubItem countItem = item.SubItems.Add((shot.index+1).ToString());
                 countItem.Font = new Font("MS Sans Serif", 7, FontStyle.Italic);
                 ListViewItem.ListViewSubItem scoreItem = item.SubItems.Add(shot.score.ToString());
                 ListViewItem.ListViewSubItem decimalItem = item.SubItems.Add(shot.decimalScore.ToString() + inner);
@@ -304,7 +315,7 @@ namespace freETarget {
 
             x.X += 0.2f; //small adjustment for the number to be centered
             x.Y += 1f;
-            it.DrawString(shot.count.ToString(), f, bText, new RectangleF(x, new SizeF(peletSize, peletSize)), format);
+            it.DrawString((shot.index+1).ToString(), f, bText, new RectangleF(x, new SizeF(peletSize, peletSize)), format);
         }
 
         private void drawArrow(Shot shot) {
@@ -343,7 +354,7 @@ namespace freETarget {
 
             //save drawn image (arrow) to imagelist for listview column
             try {
-                imgListDirections.Images.Add(shot.count.ToString(), imgArrow.Image);
+                imgListDirections.Images.Add((shot.index+1).ToString(), imgArrow.Image);
             } catch (Exception ex) {
                 Console.WriteLine("Error adding image to list " + ex.Message);
             }
@@ -387,7 +398,16 @@ namespace freETarget {
             //parse json shot data
             Shot ret = new Shot();
             json = json.Trim();
-            string t1 = json.Substring(1, json.Length - 2); //cut the bracket in front and the newline and bracket at the end
+
+            int indexOpenBracket = json.IndexOf('{');
+            int indexClosedBracket = json.IndexOf('}');
+            if(indexClosedBracket==-1 || indexOpenBracket == -1) {
+                Console.WriteLine("Could not find brackets for : " + json);
+                Shot err = new Shot();
+                err.count = -1;
+                return err;
+            }
+            string t1 = json.Substring(indexOpenBracket+1, indexClosedBracket-1); //shot from the first open bracket to the first closed bracket. ignore the rest
             string[] t2 = t1.Split(',');
             try {
                 foreach (string t3 in t2) {
@@ -458,8 +478,9 @@ namespace freETarget {
             targetRefresh();
         }
 
+        //called once at application start
         private void frmMainWindow_Load(object sender, EventArgs e) {
-            currentSession = Session.createNewSession(Settings.Default.defaultTarget.Trim());
+            currentSession = Session.createNewSession(Settings.Default.defaultTarget.Trim(), Settings.Default.name);
 
             foreach(TabPage tab in tcSessionType.TabPages) {
                 if (currentSession.courseOfFire.Name.Contains(tab.Text.Trim())) {
@@ -474,11 +495,18 @@ namespace freETarget {
 
         private void frmMainWindow_FormClosing(object sender, FormClosingEventArgs e) {
             if (isConnected) {
+                if (clearShots()) {
+                    e.Cancel = true;
+                    return;
+                }
+
                 serialPort.Close();
                 btnConnect.Text = "Connect";
                 isConnected = false;
 
                 statusText.Text = "Disconnected";
+
+
             }
         }
 
@@ -487,7 +515,11 @@ namespace freETarget {
         }
 
         private void setTarget() {
-            currentSession = Session.createNewSession(tcSessionType.SelectedTab.Text.Trim());
+            if (currentSession.Shots.Count > 0) {
+                storage.storeSession(currentSession);
+                toolTip.Show("Session saved", imgTarget,2000);
+            }
+            currentSession = Session.createNewSession(tcSessionType.SelectedTab.Text.Trim(), Settings.Default.name);
             currentSession.start();
 
             if (currentSession.targetType == Session.TargetType.Pistol) {
@@ -667,8 +699,19 @@ namespace freETarget {
             clearShots();
         }
 
-        private void clearShots() {
-            
+        private bool clearShots() {
+            if (currentSession.Shots.Count > 0) {
+                DialogResult result = MessageBox.Show("Current session is unsaved. Do you want to save it?", "Save session", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+
+                if (result == DialogResult.Yes) {
+                    storage.storeSession(currentSession);
+                    toolTip.Show("Session saved", imgTarget,2000);
+
+                } else if(result == DialogResult.Cancel) {
+                    return true;
+                }
+            }
+
             currentSession.clear();
             targetRefresh();
             shotsList.Items.Clear();
@@ -687,6 +730,9 @@ namespace freETarget {
             imgWindage.CreateGraphics().Clear(this.BackColor);
             gridTargets.Rows.Clear();
             clearBreakdownChart();
+            digitalClock.Value = "";
+
+            return false;
         }
 
         private void timer_Tick(object sender, EventArgs e) {
@@ -991,6 +1037,36 @@ namespace freETarget {
                 return currentSession.CurrentSeries;
             } else {
                 return currentSession.Shots;
+            }
+        }
+
+        private void btnJournal_Click(object sender, EventArgs e) {
+            if (isConnected) {
+                if (!clearShots()) {
+                    serialPort.Close();
+                    btnConnect.Text = "Connect";
+                    isConnected = false;
+
+
+                    statusText.Text = "Disconnected";
+                    timer.Enabled = false;
+                    btnConnect.ImageKey = "connect";
+
+                    shotsList.Enabled = false;
+                    btnCalibration.Enabled = false;
+                    trkZoom.Enabled = false;
+                    tcSessionType.Enabled = false;
+                    tcSessionType.Refresh();
+
+                    setTarget();
+                    targetRefresh();
+
+                    frmJournal form = new frmJournal();
+                    form.Show();
+                }
+            } else {
+                frmJournal form = new frmJournal();
+                form.Show();
             }
         }
     }

@@ -45,10 +45,19 @@ namespace freETarget {
 
         private List<List<Shot>> allSeries = new List<List<Shot>>();
 
-        private DateTime startTime;
-        private DateTime endTime;
+        public DateTime startTime;
+        public DateTime endTime;
 
         private VirtualRO currentFinal = null;
+
+        public string user;
+        public decimal averageScore;
+        public TimeSpan averageTimePerShot;
+        public TimeSpan shortestShot;
+        public TimeSpan longestShot;
+        public int actualNumberOfShots;
+        public string diaryEntry = "";
+        public long id= -1;
 
         protected Session() {
 
@@ -67,10 +76,10 @@ namespace freETarget {
             this.AllSeries.Clear();
         }
 
-        public static Session createNewSession(string name) {
-            return createNewSession(CourseOfFire.GetSessionType(name));
+        public static Session createNewSession(string name, string user) {
+            return createNewSession(CourseOfFire.GetCourseOfFire(name), Settings.Default.name, Settings.Default.MatchShots);
         }
-        public static Session createNewSession(CourseOfFire sessionType) {
+        public static Session createNewSession(CourseOfFire sessionType, string user, int noOfShots) {
             Session newSession = new Session();
 
             if (sessionType.Equals(CourseOfFire.AirPistolPractice)) {
@@ -84,11 +93,11 @@ namespace freETarget {
                 newSession.decimalScoring = false;
                 newSession.sessionType = SessionType.Match;
                 newSession.courseOfFire = CourseOfFire.AirPistolMatch;
-                newSession.numberOfShots = Settings.Default.MatchShots;
-                if(Settings.Default.MatchShots == 60) {
+                newSession.numberOfShots = noOfShots;
+                if(noOfShots == 60) {
                     newSession.numberOfShots = ISSF.match60NoOfShots;
                     newSession.minutes = ISSF.match60Time;
-                } else if (Settings.Default.MatchShots == 40)  {
+                } else if (noOfShots == 40)  {
                     newSession.numberOfShots = ISSF.match40NoOfShots;
                     newSession.minutes = ISSF.match40Time;
                 } else {
@@ -115,12 +124,12 @@ namespace freETarget {
                 newSession.decimalScoring = true;
                 newSession.sessionType = SessionType.Match;
                 newSession.courseOfFire = CourseOfFire.AirRifleMatch;
-                newSession.numberOfShots = Settings.Default.MatchShots;
+                newSession.numberOfShots = noOfShots;
                 newSession.targetType = TargetType.Rifle;
-                if (Settings.Default.MatchShots == 60) {
+                if (noOfShots == 60) {
                     newSession.numberOfShots = ISSF.match60NoOfShots;
                     newSession.minutes = ISSF.match60Time;
-                } else if (Settings.Default.MatchShots == 40) {
+                } else if (noOfShots == 40) {
                     newSession.numberOfShots = ISSF.match40NoOfShots;
                     newSession.minutes = ISSF.match40Time;
                 } else {
@@ -233,6 +242,46 @@ namespace freETarget {
             } else {
                 return ts.ToString(@"hhmmss"); 
             }
+        }
+
+        public void prepareForSaving() {
+            this.user = Settings.Default.name;
+            this.endTime = DateTime.Now;
+            this.actualNumberOfShots = this.shots.Count;
+
+            decimal sum = 0;
+            TimeSpan shortest = TimeSpan.MaxValue;
+            TimeSpan longest = TimeSpan.MinValue;
+
+            for(int i = 0; i<shots.Count;i++) {
+                Shot s = shots[i];
+                if (i == 0) {
+                    s.shotDuration = s.timestamp - this.startTime;
+                } else {
+                    s.shotDuration = s.timestamp - shots[i - 1].timestamp;
+                }
+
+                if (s.shotDuration > longest) {
+                    longest = s.shotDuration;
+                }
+
+                if(s.shotDuration < shortest) {
+                    shortest = s.shotDuration;
+                    Console.WriteLine(shortest.ToString());
+                }
+
+                if (this.decimalScoring) {
+                    sum += s.decimalScore;
+                } else {
+                    sum += s.score;
+                }
+
+            }
+
+            this.averageTimePerShot = TimeSpan.FromTicks( (shots[shots.Count - 1].timestamp - shots[0].timestamp).Ticks /  shots.Count);
+            this.longestShot = longest;
+            this.shortestShot = shortest;
+            this.averageScore = sum / actualNumberOfShots;
         }
 
     }

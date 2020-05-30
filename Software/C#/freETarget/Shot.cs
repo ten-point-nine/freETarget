@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace freETarget {
     class Shot {
@@ -16,6 +18,7 @@ namespace freETarget {
         public decimal decimalScore;
         public bool innerTen;
         public DateTime timestamp;
+        public TimeSpan shotDuration;
 
         public void computeScore(Session.TargetType type) {
             //using liner interpolation with the "official" values found here: http://targettalk.org/viewtopic.php?p=100591#p100591
@@ -70,6 +73,42 @@ namespace freETarget {
         private double linearInterpolation(float x1, float y1, float x2, float y2, float x) {
             double y = ((x2 - x) * y1 + (x - x1) * y2) / (x2 - x1);
             return y;
+        }
+
+        public override string ToString() {
+            string ret = "";
+            ret +=  index + ",";
+            ret += count + ",";
+            ret += x.ToString("F2", CultureInfo.InvariantCulture) + ",";
+            ret += y.ToString("F2", CultureInfo.InvariantCulture) + ",";
+            ret += radius.ToString("F2", CultureInfo.InvariantCulture) + ",";
+            ret += angle.ToString("F2", CultureInfo.InvariantCulture) + ",";
+            ret += score + ",";
+            ret += decimalScore.ToString("F1", CultureInfo.InvariantCulture) + ",";
+            ret += innerTen + ",";
+            ret += timestamp.ToString("yyyy-MM-dd hh:mm:ss") + ",";
+            ret += shotDuration.TotalSeconds.ToString("F2", CultureInfo.InvariantCulture);
+
+            return ret;
+        }
+
+        public static Shot Parse(string input) {
+            Shot shot = new Shot();
+            string[] s = input.Split(',');
+            shot.index = int.Parse(s[0]);
+            shot.count = int.Parse(s[1]);
+            shot.x = decimal.Parse(s[2], CultureInfo.InvariantCulture);
+            shot.y = decimal.Parse(s[3], CultureInfo.InvariantCulture);
+            shot.radius = decimal.Parse(s[4], CultureInfo.InvariantCulture);
+            shot.angle = decimal.Parse(s[5], CultureInfo.InvariantCulture);
+            shot.score = int.Parse(s[6]);
+            shot.decimalScore = decimal.Parse(s[7], CultureInfo.InvariantCulture);
+            shot.innerTen = bool.Parse(s[8]);
+            shot.timestamp = DateTime.Parse(s[9]);
+            double d = double.Parse(s[10], CultureInfo.InvariantCulture);
+            shot.shotDuration = TimeSpan.FromSeconds(d);
+
+            return shot;
         }
 
     }

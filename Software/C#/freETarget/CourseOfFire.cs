@@ -18,7 +18,7 @@ namespace freETarget {
         public static CourseOfFire AirRifleFinal { get { return new CourseOfFire("Air Rifle Final"); } }
 
  
-        public static CourseOfFire GetSessionType(string name) {
+        public static CourseOfFire GetCourseOfFire(string name) {
             if (CourseOfFire.AirPistolPractice.Name.Contains(name)) {
                 return AirPistolPractice;
             } else if (CourseOfFire.AirPistolMatch.Name.Contains(name)) {

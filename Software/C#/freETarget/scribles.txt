@@ -11,3 +11,26 @@ x2p,y2p:75,-75
 
 155.5 - 150
 45.5 - 43.891
+
+
+id - INT
+courseOfFire - TEXT
+targetType - INT
+numberOfShots - INT
+decimalScoring - bool (INT)
+sessionType - int
+minutes - int
+score - int
+decimalScore - decimal (REAL)
+innerX - int
+xBar - decimal (REAL)
+ybar - decimal (REAL)
+rbar - decimal (REAL)
+shots - TEXT
+allSeries - TEXT
+startTime - date (TEXT)
+endTime - date (TEXT)
+user -TEXT
+averageScore - decimal (REAL)
+actualNumberOfShots - int
+diary - TEXT
