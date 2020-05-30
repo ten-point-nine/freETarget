@@ -1,4 +1,5 @@
-﻿using System;
+﻿using freETarget.Properties;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Speech.Synthesis;
@@ -29,7 +30,7 @@ namespace freETarget {
 
         private readonly SpeechSynthesizer synth;
 
-        private const int readyDelay = 3;
+        private const int readyDelay = 3; //seconds
         private const int loadDelay = 5;
         private const int betweenSeries = 15;
         private const int betweenShots = 7;
@@ -48,22 +49,19 @@ namespace freETarget {
                 command = "Ready";
             } else if (ts <= TimeSpan.Zero && firstSeries == true && firstSeriesLoadCommand == false) {
                 string speach = "For the first competition series, LOAD!";
-                Console.WriteLine(speach);
-                synth.SpeakAsync(speach);
+                speakCommand(speach);
                 nextCommand = DateTime.Now + TimeSpan.FromSeconds(loadDelay);
                 firstSeriesLoadCommand = true;
                 command = "Load";
             } else if (ts <= TimeSpan.Zero && firstSeriesLoadCommand == true && firstSeriesStartCommand == false) {
                 string speach = "START!";
-                Console.WriteLine(speach);
-                synth.SpeakAsync(speach);
+                speakCommand(speach);
                 nextCommand = DateTime.Now + TimeSpan.FromSeconds(ISSF.finalSeriesTime);
                 command = "Start";
                 firstSeriesStartCommand = true;
             } else if (ts <= TimeSpan.Zero && firstSeriesStartCommand == true && firstSeriesStopCommand == false) {
                 string speach = "STOP!";
-                Console.WriteLine(speach);
-                synth.SpeakAsync(speach);
+                speakCommand(speach);
                 nextCommand = DateTime.Now + TimeSpan.FromSeconds(betweenSeries);
                 firstSeriesStopCommand = true;
                 shotsCount += 5;
@@ -74,22 +72,19 @@ namespace freETarget {
                 command = "Ready";
             } else if (ts <= TimeSpan.Zero && secondSeries == true && secondSeriesLoadCommand == false) {
                 string speach = "For the next competition series, LOAD!";
-                Console.WriteLine(speach);
-                synth.SpeakAsync(speach);
+                speakCommand(speach);
                 nextCommand = DateTime.Now + TimeSpan.FromSeconds(loadDelay);
                 secondSeriesLoadCommand = true;
                 command = "Load";
             } else if (ts <= TimeSpan.Zero && secondSeriesLoadCommand == true && secondSeriesStartCommand == false) {
                 string speach = "START!";
-                Console.WriteLine(speach);
-                synth.SpeakAsync(speach);
+                speakCommand(speach);
                 nextCommand = DateTime.Now + TimeSpan.FromSeconds(ISSF.finalSeriesTime);
                 command = "Start";
                 secondSeriesStartCommand = true;
             } else if (ts <= TimeSpan.Zero && secondSeriesStartCommand == true && secondSeriesStopCommand == false) {
                 string speach = "STOP!";
-                Console.WriteLine(speach);
-                synth.SpeakAsync(speach);
+                speakCommand(speach);
                 nextCommand = DateTime.Now + TimeSpan.FromSeconds(betweenSeries);
                 secondSeriesStopCommand = true;
                 command = "Stop";
@@ -100,22 +95,19 @@ namespace freETarget {
                 command = "Ready";
             } else if (ts <= TimeSpan.Zero && singleShot == true && singleShotLoadCommand == false) {
                 string speach = "For the next competition shot, LOAD!";
-                Console.WriteLine(speach);
-                synth.SpeakAsync(speach);
+                speakCommand(speach);
                 nextCommand = DateTime.Now + TimeSpan.FromSeconds(loadDelay);
                 singleShotLoadCommand = true;
                 command = "Load";
             } else if (ts <= TimeSpan.Zero && singleShotLoadCommand == true && singleShotStartCommand == false) {
                 string speach = "START!";
-                Console.WriteLine(speach);
-                synth.SpeakAsync(speach);
+                speakCommand(speach);
                 nextCommand = DateTime.Now + TimeSpan.FromSeconds(ISSF.singleShotTime);
                 command = "Start";
                 singleShotStartCommand = true;
             } else if (ts <= TimeSpan.Zero && singleShotStartCommand == true && singleShotStopCommand == false) {
                 string speach = "STOP!";
-                Console.WriteLine(speach);
-                synth.SpeakAsync(speach);
+                speakCommand(speach);
                 shotsCount += 1;
                 if (shotsCount % 2 == 0) {
                     nextCommand = DateTime.Now + TimeSpan.FromSeconds(betweenSeries); //more time between odd shots - eliminations announcements
@@ -138,8 +130,7 @@ namespace freETarget {
                 command = "End";
                 finished = true;
                 string speach = "Unload! Results are final!";
-                Console.WriteLine(speach);
-                synth.SpeakAsync(speach);
+                speakCommand(speach);
             } else if (finished == true) {
                 command = "End";
             }
@@ -147,5 +138,10 @@ namespace freETarget {
             return ts;
         }
 
+        private void speakCommand(string speach) {
+            if (Settings.Default.voiceCommands) {
+                synth.SpeakAsync(speach);
+            }
+        }
     }
 }

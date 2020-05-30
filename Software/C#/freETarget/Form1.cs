@@ -457,6 +457,7 @@ namespace freETarget {
                 Properties.Settings.Default.targetColor = Color.FromName(settingsFrom.cmbColor.GetItemText(settingsFrom.cmbColor.SelectedItem));
                 Properties.Settings.Default.drawMeanGroup = settingsFrom.chkDrawMeanG.Checked;
                 Properties.Settings.Default.OnlySeries = settingsFrom.chkSeries.Checked;
+                Properties.Settings.Default.voiceCommands = settingsFrom.chkVoice.Checked;
                 if (settingsFrom.rdb60.Checked) {
                     Properties.Settings.Default.MatchShots = 60;
                 } else if (settingsFrom.rdb40.Checked) {

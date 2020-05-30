@@ -47,13 +47,14 @@
             this.rdb60 = new System.Windows.Forms.RadioButton();
             this.rdb40 = new System.Windows.Forms.RadioButton();
             this.chkSeries = new System.Windows.Forms.CheckBox();
+            this.chkVoice = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(248, 254);
+            this.btnOK.Location = new System.Drawing.Point(248, 267);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 0;
@@ -64,7 +65,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(167, 254);
+            this.btnCancel.Location = new System.Drawing.Point(167, 267);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
@@ -220,11 +221,22 @@
             this.chkSeries.Text = "Display only current series target";
             this.chkSeries.UseVisualStyleBackColor = true;
             // 
+            // chkVoice
+            // 
+            this.chkVoice.AutoSize = true;
+            this.chkVoice.Location = new System.Drawing.Point(12, 234);
+            this.chkVoice.Name = "chkVoice";
+            this.chkVoice.Size = new System.Drawing.Size(133, 17);
+            this.chkVoice.TabIndex = 22;
+            this.chkVoice.Text = "Final Voice Commands";
+            this.chkVoice.UseVisualStyleBackColor = true;
+            // 
             // frmSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(335, 289);
+            this.ClientSize = new System.Drawing.Size(335, 302);
+            this.Controls.Add(this.chkVoice);
             this.Controls.Add(this.chkSeries);
             this.Controls.Add(this.rdb40);
             this.Controls.Add(this.rdb60);
@@ -276,5 +288,6 @@
         public System.Windows.Forms.RadioButton rdb60;
         public System.Windows.Forms.RadioButton rdb40;
         public System.Windows.Forms.CheckBox chkSeries;
+        public System.Windows.Forms.CheckBox chkVoice;
     }
 }
