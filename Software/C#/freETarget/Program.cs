@@ -22,6 +22,7 @@ namespace freETarget
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new frmMainWindow());
 
+
         }
 
     }

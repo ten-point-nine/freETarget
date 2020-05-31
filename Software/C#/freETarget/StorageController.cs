@@ -63,6 +63,82 @@ namespace freETarget {
             return ret;
         }
 
+        public List<decimal> findScoresForUser(string user, EventType eventType) {
+            SQLiteConnection con = new SQLiteConnection(connString);
+            con.Open();
+            SQLiteCommand cmd = new SQLiteCommand("select averageScore " +
+                "  from Sessions where user = @user and courseOfFire = @cof ", con);
+            cmd.Parameters.AddWithValue("@cof", eventType.Name);
+            cmd.Parameters.AddWithValue("@user", user);
+            SQLiteDataReader rdr = cmd.ExecuteReader();
+
+            List<decimal> ret = new List<decimal>();
+            while (rdr.Read()) {
+                decimal decimalScore = rdr.GetDecimal(0);
+                ret.Add(decimalScore);
+            }
+            rdr.Close();
+            con.Close();
+            return ret;
+        }
+
+        public List<decimal> findRBarForUser(string user, EventType eventType) {
+            SQLiteConnection con = new SQLiteConnection(connString);
+            con.Open();
+            SQLiteCommand cmd = new SQLiteCommand("select rbar " +
+                "  from Sessions where user = @user and courseOfFire = @cof ", con);
+            cmd.Parameters.AddWithValue("@cof", eventType.Name);
+            cmd.Parameters.AddWithValue("@user", user);
+            SQLiteDataReader rdr = cmd.ExecuteReader();
+
+            List<decimal> ret = new List<decimal>();
+            while (rdr.Read()) {
+                decimal rBar = rdr.GetDecimal(0);
+                ret.Add(rBar);
+            }
+            rdr.Close();
+            con.Close();
+            return ret;
+        }
+
+        public List<decimal> findXBarForUser(string user, EventType eventType) {
+            SQLiteConnection con = new SQLiteConnection(connString);
+            con.Open();
+            SQLiteCommand cmd = new SQLiteCommand("select xbar " +
+                "  from Sessions where user = @user and courseOfFire = @cof ", con);
+            cmd.Parameters.AddWithValue("@cof", eventType.Name);
+            cmd.Parameters.AddWithValue("@user", user);
+            SQLiteDataReader rdr = cmd.ExecuteReader();
+
+            List<decimal> ret = new List<decimal>();
+            while (rdr.Read()) {
+                decimal xBar = rdr.GetDecimal(0);
+                ret.Add(xBar);
+            }
+            rdr.Close();
+            con.Close();
+            return ret;
+        }
+
+        public List<decimal> findYBarForUser(string user, EventType eventType) {
+            SQLiteConnection con = new SQLiteConnection(connString);
+            con.Open();
+            SQLiteCommand cmd = new SQLiteCommand("select ybar " +
+                "  from Sessions where user = @user and courseOfFire = @cof ", con);
+            cmd.Parameters.AddWithValue("@cof", eventType.Name);
+            cmd.Parameters.AddWithValue("@user", user);
+            SQLiteDataReader rdr = cmd.ExecuteReader();
+
+            List<decimal> ret = new List<decimal>();
+            while (rdr.Read()) {
+                decimal yBar = rdr.GetDecimal(0);
+                ret.Add(yBar);
+            }
+            rdr.Close();
+            con.Close();
+            return ret;
+        }
+
         public Session findSession(long id) {
             SQLiteConnection con = new SQLiteConnection(connString);
             con.Open();
@@ -73,7 +149,7 @@ namespace freETarget {
             SQLiteDataReader rdr = cmd.ExecuteReader();
             rdr.Read();
 
-            EventType cof = EventType.GetCourseOfFire(rdr.GetString(0));
+            EventType cof = EventType.GetEvent(rdr.GetString(0));
             int numberOfShots = rdr.GetInt32(1);
             string user = rdr.GetString(2);
 

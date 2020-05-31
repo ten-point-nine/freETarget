@@ -18,7 +18,7 @@ namespace freETarget {
         public static EventType AirRifleFinal { get { return new EventType("Air Rifle Final"); } }
 
  
-        public static EventType GetCourseOfFire(string name) {
+        public static EventType GetEvent(string name) {
             if (EventType.AirPistolPractice.Name.Contains(name)) {
                 return AirPistolPractice;
             } else if (EventType.AirPistolMatch.Name.Contains(name)) {

@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace freETarget {
     public partial class frmJournal : Form {
@@ -17,47 +19,46 @@ namespace freETarget {
         frmMainWindow mainWindow;
         private bool isLoading = false;
 
-        private static frmJournal instance;
 
-        public static frmJournal getInstance(frmMainWindow mainWin) {
-            if (instance != null) {
-                return instance;
-            } else {
-                instance = new frmJournal(mainWin);
-                return instance;
-            }
-        }
-
-        private frmJournal(frmMainWindow mainWin) {
+        public frmJournal(frmMainWindow mainWin) {
             InitializeComponent();
             storage = new StorageController();
             this.mainWindow = mainWin;
         }
 
         private void frmJournal_Load(object sender, EventArgs e) {
-            List<string> userList = storage.findAllUsers();
+            loadData();
 
+        }
+
+        private void loadData() {
+            List<string> userList = storage.findAllUsers();
+            cmbUsers.Items.Clear();
             cmbUsers.Items.AddRange(userList.ToArray());
 
             if (userList.Count > 0) {
                 cmbUsers.SelectedIndex = 0;
                 loadSessionsInList();
+                loadStatistics();
             }
         }
 
         private void cmbUsers_SelectedIndexChanged(object sender, EventArgs e) {
             loadSessionsInList();
+            loadStatistics();
             enableDisableButtons(false, true);
         }
 
-        private void tabCoursesOfFire_SelectedIndexChanged(object sender, EventArgs e) {
+        private void tabEvents_SelectedIndexChanged(object sender, EventArgs e) {
+            tabDetails.SelectedIndex = 0;
             loadSessionsInList();
+            loadStatistics();
             enableDisableButtons(false, true);
         }
 
         private void loadSessionsInList() {
             lstbSessions.Items.Clear();
-            EventType currentCOF = EventType.GetCourseOfFire(tabCoursesOfFire.SelectedTab.Text.Trim());
+            EventType currentCOF = EventType.GetEvent(tabEvents.SelectedTab.Text.Trim());
             if (cmbUsers.SelectedItem != null) {
                 List<ListBoxSessionItem> list = storage.findSessionsForUser(cmbUsers.SelectedItem.ToString(), currentCOF);
                 foreach (ListBoxSessionItem item in list) {
@@ -66,10 +67,142 @@ namespace freETarget {
             }
         }
 
+        private void loadStatistics() {
+            clearCharts();
+            EventType currentEvent = EventType.GetEvent(tabEvents.SelectedTab.Text.Trim());
+            if (cmbUsers.SelectedItem != null) {
+                loadScoreStatistics(cmbUsers.SelectedItem.ToString(), currentEvent);
+                loadMeanRadiusStatistics(cmbUsers.SelectedItem.ToString(), currentEvent);
+                loadWindageStatistics(cmbUsers.SelectedItem.ToString(), currentEvent);
+                loadElevationStatistics(cmbUsers.SelectedItem.ToString(), currentEvent);
+            }
+        }
+
+        private void loadScoreStatistics(string user, EventType eventType) {
+            List<decimal> list = storage.findScoresForUser(user, eventType);
+            if (list.Count < 1) {
+                return;
+            }
+            Series series = chartScore.Series[0];
+            decimal sum = 0;
+            decimal min = 1000000;
+            for (int i = 0; i < list.Count; i++) {
+                series.Points.AddXY(i, list[i]);
+                if (i >= list.Count - 10) {
+                    sum += list[i];
+                }
+                if (min > list[i]) {
+                    min = list[i];
+                }
+            }
+            decimal avg = sum / 10;
+            chartScore.Series[0].Name = "Last 10 sessions average score: " + avg.ToString("F2",CultureInfo.InvariantCulture);
+            chartScore.ChartAreas[0].AxisY.Minimum = (double)min-1;
+            chartScore.ResetAutoValues();
+            chartScore.Update();
+        }
+
+        private void loadMeanRadiusStatistics(string user, EventType eventType) {
+            List<decimal> list = storage.findRBarForUser(user, eventType);
+            if (list.Count < 1) {
+                return;
+            }
+            Series series = chartMeanRadius.Series[0];
+            decimal sum = 0;
+            decimal min = 1000000;
+            for (int i = 0; i < list.Count; i++) {
+                series.Points.AddXY(i, list[i]);
+                if (min > list[i]) {
+                    min = list[i];
+                }
+                if (i >= list.Count - 10) {
+                    sum += list[i];
+                }
+            }
+            decimal avg = sum / 10;
+            chartMeanRadius.Series[0].Name = "Last 10 sessions average mean radius: " + avg.ToString("F2", CultureInfo.InvariantCulture);
+            chartMeanRadius.ChartAreas[0].AxisY.Minimum = (double)min-1;
+            chartMeanRadius.ResetAutoValues();
+            chartMeanRadius.Update();
+        }
+
+        private void loadWindageStatistics(string user, EventType eventType) {
+            List<decimal> list = storage.findXBarForUser(user, eventType);
+            if (list.Count < 1) {
+                return;
+            }
+            Series series = chartWindage.Series[0];
+            decimal sum = 0;
+            for (int i = 0; i < list.Count; i++) {
+                series.Points.AddXY(i, list[i]);
+                if (i >= list.Count - 10) {
+                    sum += list[i];
+                }
+            }
+            decimal avg = sum / 10;
+            chartWindage.Series[0].Name = "Last 10 sessions average windage: " + avg.ToString("F2", CultureInfo.InvariantCulture);
+            chartWindage.ResetAutoValues();
+            chartWindage.Update();
+        }
+
+        private void loadElevationStatistics(string user, EventType eventType) {
+            List<decimal> list = storage.findYBarForUser(user, eventType);
+            if (list.Count < 1) {
+                return;
+            }
+            Series series = chartElevation.Series[0];
+            decimal sum = 0;
+            for (int i = 0; i < list.Count; i++) {
+                series.Points.AddXY(i, list[i]);
+                if (i >= list.Count - 10) {
+                    sum += list[i];
+                }
+            }
+            decimal avg = sum / 10;
+            chartElevation.Series[0].Name = "Last 10 sessions average elevation: " + avg.ToString("F2", CultureInfo.InvariantCulture);
+            chartElevation.ResetAutoValues();
+            chartElevation.Update();
+        }
+
+        private void clearCharts() {
+            for (int i = 0; i < chartScore.Series[0].Points.Count; i++) {
+                DataPoint p = chartScore.Series[0].Points[i];
+                p.SetValueY(0);
+            }
+            chartScore.ChartAreas[0].AxisY.Minimum = 0;
+            chartScore.ResetAutoValues();
+            chartScore.Update();
+
+
+            for (int i = 0; i < chartMeanRadius.Series[0].Points.Count; i++) {
+                DataPoint p = chartMeanRadius.Series[0].Points[i];
+                p.SetValueY(0);
+            }
+            chartMeanRadius.ChartAreas[0].AxisY.Minimum = 0;
+            chartMeanRadius.ResetAutoValues();
+            chartMeanRadius.Update();
+
+
+            for (int i = 0; i < chartWindage.Series[0].Points.Count; i++) {
+                DataPoint p = chartWindage.Series[0].Points[i];
+                p.SetValueY(0);
+            }
+            chartWindage.ResetAutoValues();
+            chartWindage.Update();
+
+
+            for (int i = 0; i < chartElevation.Series[0].Points.Count; i++) {
+                DataPoint p = chartElevation.Series[0].Points[i];
+                p.SetValueY(0);
+            }
+            chartElevation.ResetAutoValues();
+            chartElevation.Update();
+        }
+
         private void tabSessions_DrawItem(object sender, DrawItemEventArgs e) {
-            Color backC = tabCoursesOfFire.TabPages[e.Index].BackColor;
-            Color foreC = tabCoursesOfFire.TabPages[e.Index].ForeColor;
-            if (tabCoursesOfFire.Enabled == false) {
+            Color backC = tabEvents.TabPages[e.Index].BackColor;
+            Color foreC = tabEvents.TabPages[e.Index].ForeColor;
+            if (tabEvents.Enabled == false) {
                 int grayScale = (int)((backC.R * 0.3) + (backC.G * 0.59) + (backC.B * 0.11));
                 backC = Color.FromArgb(backC.A, grayScale, grayScale, grayScale);
             }
@@ -78,13 +211,13 @@ namespace freETarget {
             Rectangle paddedBounds = e.Bounds;
             paddedBounds.Inflate(-2, -2);
             StringFormat format1h = new StringFormat(StringFormatFlags.DirectionVertical | StringFormatFlags.DirectionRightToLeft);
-            e.Graphics.DrawString(tabCoursesOfFire.TabPages[e.Index].Text, this.Font, new SolidBrush(foreC), paddedBounds, format1h);
+            e.Graphics.DrawString(tabEvents.TabPages[e.Index].Text, this.Font, new SolidBrush(foreC), paddedBounds, format1h);
         }
 
         private void btnClose_Click(object sender, EventArgs e) {
             mainWindow.clearSession();
             mainWindow.btnConnect.Enabled = true;
-            this.Hide();
+            this.Close();
         }
 
         private void lstbSessions_SelectedIndexChanged(object sender, EventArgs e) {
@@ -141,10 +274,8 @@ namespace freETarget {
                 e.Cancel = true;
                 return;
             }
-            e.Cancel = true;
             mainWindow.clearSession();
             mainWindow.btnConnect.Enabled = true;
-            this.Hide();
         }
 
         private void btnDelete_Click(object sender, EventArgs e) {
@@ -154,6 +285,7 @@ namespace freETarget {
                 if (item != null) {
                     storage.deleteSession(item.id);
                     loadSessionsInList();
+                    loadStatistics();
                     enableDisableButtons(false, true);
                 }
                 

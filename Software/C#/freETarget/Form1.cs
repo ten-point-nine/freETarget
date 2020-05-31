@@ -1115,14 +1115,22 @@ namespace freETarget {
                     initNewSession();
                     targetRefresh();
 
-                    frmJournal form = frmJournal.getInstance(this);
-                    form.Show();
+                    showJournalForm();
                 }
             } else {
-                frmJournal form = frmJournal.getInstance(this);
-                form.Show();
+                showJournalForm();
             }
             btnConnect.Enabled = false;
+        }
+
+        private void showJournalForm() {
+            frmJournal form = (frmJournal)Application.OpenForms["frmJournal"];
+            if (form != null) {
+                form.BringToFront();
+            } else {
+                form = new frmJournal(this);
+                form.Show();
+            }
         }
 
         public void loadSession(Session session) {

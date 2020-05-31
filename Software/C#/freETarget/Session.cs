@@ -199,7 +199,7 @@ namespace freETarget {
         }
 
         public static Session createNewSession(string name, string user) {
-            return createNewSession(EventType.GetCourseOfFire(name), Settings.Default.name, Settings.Default.MatchShots);
+            return createNewSession(EventType.GetEvent(name), Settings.Default.name, Settings.Default.MatchShots);
         }
         public static Session createNewSession(EventType sessionType, string user, int noOfShots) {
             Session newSession = new Session();
