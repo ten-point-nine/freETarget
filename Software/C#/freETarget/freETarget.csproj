@@ -111,7 +111,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Session.cs" />
-    <Compile Include="CourseOfFire.cs" />
+    <Compile Include="EventType.cs" />
     <Compile Include="SevenSegment.cs">
       <SubType>UserControl</SubType>
     </Compile>

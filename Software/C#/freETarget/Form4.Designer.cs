@@ -176,20 +176,26 @@
             // btnDelete
             // 
             this.btnDelete.Enabled = false;
+            this.btnDelete.Image = ((System.Drawing.Image)(resources.GetObject("btnDelete.Image")));
+            this.btnDelete.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnDelete.Location = new System.Drawing.Point(160, 6);
             this.btnDelete.Name = "btnDelete";
             this.btnDelete.Size = new System.Drawing.Size(75, 23);
             this.btnDelete.TabIndex = 5;
             this.btnDelete.Text = "Delete";
+            this.btnDelete.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.btnDelete.UseVisualStyleBackColor = true;
+            this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
             // 
             // pGridSession
             // 
             this.pGridSession.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.pGridSession.DisabledItemForeColor = System.Drawing.SystemColors.ControlText;
             this.pGridSession.Location = new System.Drawing.Point(160, 36);
             this.pGridSession.Name = "pGridSession";
+            this.pGridSession.PropertySort = System.Windows.Forms.PropertySort.Categorized;
             this.pGridSession.Size = new System.Drawing.Size(322, 403);
             this.pGridSession.TabIndex = 4;
             this.pGridSession.ToolbarVisible = false;
@@ -197,33 +203,44 @@
             // btnDiary
             // 
             this.btnDiary.Enabled = false;
+            this.btnDiary.Image = ((System.Drawing.Image)(resources.GetObject("btnDiary.Image")));
             this.btnDiary.Location = new System.Drawing.Point(403, 6);
             this.btnDiary.Name = "btnDiary";
             this.btnDiary.Size = new System.Drawing.Size(75, 23);
             this.btnDiary.TabIndex = 3;
-            this.btnDiary.Text = "Diary Entry";
+            this.btnDiary.Text = "Diary";
+            this.btnDiary.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnDiary.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.btnDiary.UseVisualStyleBackColor = true;
             this.btnDiary.Click += new System.EventHandler(this.btnDiary_Click);
             // 
             // btnPrint
             // 
             this.btnPrint.Enabled = false;
+            this.btnPrint.Image = ((System.Drawing.Image)(resources.GetObject("btnPrint.Image")));
             this.btnPrint.Location = new System.Drawing.Point(322, 6);
             this.btnPrint.Name = "btnPrint";
             this.btnPrint.Size = new System.Drawing.Size(75, 23);
             this.btnPrint.TabIndex = 2;
             this.btnPrint.Text = "Print";
+            this.btnPrint.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnPrint.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.btnPrint.UseVisualStyleBackColor = true;
+            this.btnPrint.Click += new System.EventHandler(this.btnPrint_Click);
             // 
             // btnLoadSession
             // 
             this.btnLoadSession.Enabled = false;
+            this.btnLoadSession.Image = ((System.Drawing.Image)(resources.GetObject("btnLoadSession.Image")));
+            this.btnLoadSession.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnLoadSession.Location = new System.Drawing.Point(241, 6);
             this.btnLoadSession.Name = "btnLoadSession";
             this.btnLoadSession.Size = new System.Drawing.Size(75, 23);
             this.btnLoadSession.TabIndex = 1;
-            this.btnLoadSession.Text = "Load Session";
+            this.btnLoadSession.Text = "Load";
+            this.btnLoadSession.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.btnLoadSession.UseVisualStyleBackColor = true;
+            this.btnLoadSession.Click += new System.EventHandler(this.btnLoadSession_Click);
             // 
             // lstbSessions
             // 
@@ -259,6 +276,7 @@
             this.MinimumSize = new System.Drawing.Size(551, 564);
             this.Name = "frmJournal";
             this.Text = "Journal";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmJournal_FormClosing);
             this.Load += new System.EventHandler(this.frmJournal_Load);
             this.tabCoursesOfFire.ResumeLayout(false);
             this.tabDetails.ResumeLayout(false);

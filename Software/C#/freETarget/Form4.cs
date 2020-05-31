@@ -14,9 +14,24 @@ namespace freETarget {
 
         private StorageController storage;
         private Session currentSession = null;
-        public frmJournal() {
+        frmMainWindow mainWindow;
+        private bool isLoading = false;
+
+        private static frmJournal instance;
+
+        public static frmJournal getInstance(frmMainWindow mainWin) {
+            if (instance != null) {
+                return instance;
+            } else {
+                instance = new frmJournal(mainWin);
+                return instance;
+            }
+        }
+
+        private frmJournal(frmMainWindow mainWin) {
             InitializeComponent();
             storage = new StorageController();
+            this.mainWindow = mainWin;
         }
 
         private void frmJournal_Load(object sender, EventArgs e) {
@@ -32,17 +47,17 @@ namespace freETarget {
 
         private void cmbUsers_SelectedIndexChanged(object sender, EventArgs e) {
             loadSessionsInList();
-            enableDisableButtons(false);
+            enableDisableButtons(false, true);
         }
 
         private void tabCoursesOfFire_SelectedIndexChanged(object sender, EventArgs e) {
             loadSessionsInList();
-            enableDisableButtons(false);
+            enableDisableButtons(false, true);
         }
 
         private void loadSessionsInList() {
             lstbSessions.Items.Clear();
-            CourseOfFire currentCOF = CourseOfFire.GetCourseOfFire(tabCoursesOfFire.SelectedTab.Text.Trim());
+            EventType currentCOF = EventType.GetCourseOfFire(tabCoursesOfFire.SelectedTab.Text.Trim());
             if (cmbUsers.SelectedItem != null) {
                 List<ListBoxSessionItem> list = storage.findSessionsForUser(cmbUsers.SelectedItem.ToString(), currentCOF);
                 foreach (ListBoxSessionItem item in list) {
@@ -67,17 +82,18 @@ namespace freETarget {
         }
 
         private void btnClose_Click(object sender, EventArgs e) {
-            this.Close();
+            mainWindow.clearSession();
+            mainWindow.btnConnect.Enabled = true;
+            this.Hide();
         }
 
         private void lstbSessions_SelectedIndexChanged(object sender, EventArgs e) {
             ListBoxSessionItem item = (ListBoxSessionItem)lstbSessions.SelectedItem;
             if (item != null) {
-                Console.WriteLine("id: " + item.id);
                 Session session = storage.findSession(item.id);
                 pGridSession.SelectedObject = session;
                 currentSession = session;
-                enableDisableButtons(true);
+                enableDisableButtons(true, true);
             }
         }
 
@@ -88,29 +104,64 @@ namespace freETarget {
                     diary.initPage();
                 } else {
                     string rtfText= currentSession.diaryEntry;
-
                     diary.trtbPage.Rtf = rtfText;
                 }
                 if (diary.ShowDialog() == DialogResult.OK) {
-                    MemoryStream ms = new MemoryStream();
-
                     string s = diary.trtbPage.Rtf;
-                    Console.WriteLine("rich text: "+s);
                     currentSession.diaryEntry = s;
                     storage.updateDiary(currentSession.id, currentSession.diaryEntry);
                 }
             }
         }
 
-        private void enableDisableButtons(bool input) {
+        private void enableDisableButtons(bool input, bool clearSession) {
             btnDelete.Enabled = input;
             btnDiary.Enabled = input;
             btnLoadSession.Enabled = input;
             btnPrint.Enabled = input;
-            if (!input) {
-                currentSession = null;
-                pGridSession.SelectedObject = null;
-            } 
+            if (clearSession) {
+                if (!input) {
+                    currentSession = null;
+                    pGridSession.SelectedObject = null;
+                }
+            }
+        }
+
+        private void btnLoadSession_Click(object sender, EventArgs e) {
+            isLoading = true;
+            enableDisableButtons(false, false);
+            Application.DoEvents();
+            mainWindow.loadSession(currentSession);
+            enableDisableButtons(true, false);
+            isLoading = false;
+        }
+
+        private void frmJournal_FormClosing(object sender, FormClosingEventArgs e) {
+            if (isLoading) {
+                e.Cancel = true;
+                return;
+            }
+            e.Cancel = true;
+            mainWindow.clearSession();
+            mainWindow.btnConnect.Enabled = true;
+            this.Hide();
+        }
+
+        private void btnDelete_Click(object sender, EventArgs e) {
+            DialogResult result = MessageBox.Show("Are you sure you want to permanently delete this session?", "Delete session", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if(result == DialogResult.Yes) {
+                ListBoxSessionItem item = (ListBoxSessionItem)lstbSessions.SelectedItem;
+                if (item != null) {
+                    storage.deleteSession(item.id);
+                    loadSessionsInList();
+                    enableDisableButtons(false, true);
+                }
+                
+            }
+        }
+
+        private void btnPrint_Click(object sender, EventArgs e) {
+
         }
     }
 }

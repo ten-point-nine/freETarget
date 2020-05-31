@@ -27,12 +27,12 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmDiary));
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.trtbPage = new freETarget.TransparentRTB();
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.miBold = new System.Windows.Forms.ToolStripMenuItem();
             this.miItalic = new System.Windows.Forms.ToolStripMenuItem();
             this.miIncreaseSize = new System.Windows.Forms.ToolStripMenuItem();
             this.miDecreaseSize = new System.Windows.Forms.ToolStripMenuItem();
+            this.trtbPage = new freETarget.TransparentRTB();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -40,7 +40,7 @@
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(386, 12);
+            this.btnOK.Location = new System.Drawing.Point(286, 12);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 1;
@@ -52,27 +52,13 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(386, 41);
+            this.btnCancel.Location = new System.Drawing.Point(286, 41);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 3;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
-            // 
-            // trtbPage
-            // 
-            this.trtbPage.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.trtbPage.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.trtbPage.ContextMenuStrip = this.contextMenuStrip;
-            this.trtbPage.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.trtbPage.Location = new System.Drawing.Point(0, 0);
-            this.trtbPage.Name = "trtbPage";
-            this.trtbPage.Size = new System.Drawing.Size(472, 444);
-            this.trtbPage.TabIndex = 2;
-            this.trtbPage.Text = "";
             // 
             // contextMenuStrip
             // 
@@ -112,18 +98,32 @@
             this.miDecreaseSize.Text = "Decrease size";
             this.miDecreaseSize.Click += new System.EventHandler(this.miDecreaseSize_Click);
             // 
+            // trtbPage
+            // 
+            this.trtbPage.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.trtbPage.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.trtbPage.ContextMenuStrip = this.contextMenuStrip;
+            this.trtbPage.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.trtbPage.Location = new System.Drawing.Point(0, 0);
+            this.trtbPage.Name = "trtbPage";
+            this.trtbPage.Size = new System.Drawing.Size(385, 423);
+            this.trtbPage.TabIndex = 2;
+            this.trtbPage.Text = "";
+            // 
             // frmDiary
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("$this.BackgroundImage")));
-            this.ClientSize = new System.Drawing.Size(473, 445);
+            this.ClientSize = new System.Drawing.Size(386, 424);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.trtbPage);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
-            this.MaximumSize = new System.Drawing.Size(697, 700);
+            this.MaximumSize = new System.Drawing.Size(490, 650);
             this.MinimumSize = new System.Drawing.Size(300, 300);
             this.Name = "frmDiary";
             this.Text = "Diary Entry";

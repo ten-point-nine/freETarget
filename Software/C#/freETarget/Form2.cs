@@ -13,8 +13,9 @@ using System.Windows.Forms;
 
 namespace freETarget
 {
-    public partial class frmSettings : Form
-    {
+    public partial class frmSettings : Form { 
+
+
         public frmSettings()
         {
             InitializeComponent();
@@ -86,5 +87,6 @@ namespace freETarget
                 g.FillRectangle(b, rect.X + 130, rect.Y + 5, rect.Width - 5, rect.Height - 7);
             }
         }
+
     }
 }

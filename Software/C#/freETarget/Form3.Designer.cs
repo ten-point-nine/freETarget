@@ -129,6 +129,7 @@
             this.Name = "frmCalibration";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Calibration";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmCalibration_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
 

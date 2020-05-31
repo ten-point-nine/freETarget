@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms.DataVisualization.Charting;
 
 namespace freETarget {
-    class Shot {
+    public class Shot {
         public int index;
         public int count;
         public decimal x;

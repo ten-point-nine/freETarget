@@ -26,11 +26,12 @@ namespace freETarget {
                 ret.Add(rdr.GetString(0));
             }
 
+            rdr.Close();
             con.Close();
             return ret;
         }
 
-        public List<ListBoxSessionItem> findSessionsForUser(string user, CourseOfFire cof) {
+        public List<ListBoxSessionItem> findSessionsForUser(string user, EventType cof) {
             SQLiteConnection con = new SQLiteConnection(connString);
             con.Open();
             SQLiteCommand cmd = new SQLiteCommand("select id, decimalScoring, score, decimalScore,innerX, startTime " +
@@ -57,6 +58,7 @@ namespace freETarget {
                 }  
             }
 
+            rdr.Close();
             con.Close();
             return ret;
         }
@@ -65,13 +67,13 @@ namespace freETarget {
             SQLiteConnection con = new SQLiteConnection(connString);
             con.Open();
             SQLiteCommand cmd = new SQLiteCommand("select courseOfFire, numberOfShots, user, score, decimalScore,innerX, xBar, yBar, rBar," +
-                " shots, allSeries, startTime, endTime, averageScore, actualNumberOfShots, diary, averageShotDuration, longestShot, shortestShot " +
+                " shots, startTime, endTime, averageScore, actualNumberOfShots, diary, averageShotDuration, longestShot, shortestShot " +
                 "  from Sessions where id = @id", con);
             cmd.Parameters.AddWithValue("@id", id);
             SQLiteDataReader rdr = cmd.ExecuteReader();
             rdr.Read();
 
-            CourseOfFire cof = CourseOfFire.GetCourseOfFire(rdr.GetString(0));
+            EventType cof = EventType.GetCourseOfFire(rdr.GetString(0));
             int numberOfShots = rdr.GetInt32(1);
             string user = rdr.GetString(2);
 
@@ -83,17 +85,17 @@ namespace freETarget {
             session.ybar = rdr.GetDecimal(7);
             session.rbar = rdr.GetDecimal(8);
             session.Shots = convertStringToListOfShots(rdr.GetString(9));
-            session.AllSeries = convertStringToListOfListOfShots(rdr.GetString(10));
-            session.startTime = convertStringToDate(rdr.GetString(11));
-            session.endTime = convertStringToDate(rdr.GetString(12));
-            session.averageScore = rdr.GetDecimal(13);
-            session.actualNumberOfShots = rdr.GetInt32(14);
-            session.diaryEntry = rdr.GetString(15);
-            session.averageTimePerShot = convertDecimalToTimespan(rdr.GetDecimal(16));
-            session.longestShot = convertDecimalToTimespan(rdr.GetDecimal(17));
-            session.shortestShot = convertDecimalToTimespan(rdr.GetDecimal(18));
+            session.startTime = convertStringToDate(rdr.GetString(10));
+            session.endTime = convertStringToDate(rdr.GetString(11));
+            session.averageScore = rdr.GetDecimal(12);
+            session.actualNumberOfShots = rdr.GetInt32(13);
+            session.diaryEntry = rdr.GetString(14);
+            session.averageTimePerShot = convertDecimalToTimespan(rdr.GetDecimal(15));
+            session.longestShot = convertDecimalToTimespan(rdr.GetDecimal(16));
+            session.shortestShot = convertDecimalToTimespan(rdr.GetDecimal(17));
             session.id = id;
 
+            rdr.Close();
             con.Close();
             return session;
         }
@@ -117,14 +119,14 @@ namespace freETarget {
             SQLiteCommand cmd = new SQLiteCommand(con);
             cmd.CommandText = "INSERT INTO Sessions(" +
                 "courseOfFire, targetType, numberOfShots, decimalScoring, sessionType, minutes, score, decimalScore, " +
-                "innerX, xBar, ybar, rbar, shots, allSeries, startTime, endTime, user, averageScore, " +
+                "innerX, xBar, ybar, rbar, shots, startTime, endTime, user, averageScore, " +
                 "actualNumberOfShots, diary, averageShotDuration, longestShot, shortestShot " +
                 ") VALUES(@courseOfFire, @targetType, @numberOfShots, @decimalScoring, @sessionType, @minutes, @score, @decimalScore," +
-                "@innerX, @xBar, @ybar, @rbar, @shots, @allSeries, @startTime, @endTime, @user, @averageScore, @actualNumberOfShots, @diary," +
+                "@innerX, @xBar, @ybar, @rbar, @shots, @startTime, @endTime, @user, @averageScore, @actualNumberOfShots, @diary," +
                 " @averageShotDuration, @longestShot, @shortestShot)";
 
             session.prepareForSaving();
-            cmd.Parameters.AddWithValue("@courseOfFire", session.courseOfFire.Name);
+            cmd.Parameters.AddWithValue("@courseOfFire", session.eventType.Name);
             cmd.Parameters.AddWithValue("@targetType", session.targetType);
             cmd.Parameters.AddWithValue("@numberOfShots", session.numberOfShots);
             cmd.Parameters.AddWithValue("@decimalScoring", convertBoolToInt(session.decimalScoring));
@@ -137,7 +139,6 @@ namespace freETarget {
             cmd.Parameters.AddWithValue("@ybar", session.ybar.ToString("F2", CultureInfo.InvariantCulture));
             cmd.Parameters.AddWithValue("@rbar", session.rbar.ToString("F2", CultureInfo.InvariantCulture));
             cmd.Parameters.AddWithValue("@shots", convertListOfShotsToString(session.Shots));
-            cmd.Parameters.AddWithValue("@allSeries", convertListOfListOfShotsToString(session.AllSeries));
             cmd.Parameters.AddWithValue("@startTime", convertDatetimeToString(session.startTime));
             cmd.Parameters.AddWithValue("@endTime", convertDatetimeToString(session.endTime));
             cmd.Parameters.AddWithValue("@user", session.user);
@@ -153,6 +154,19 @@ namespace freETarget {
             cmd.ExecuteNonQuery();
             con.Close();
             Console.WriteLine("Session saved");
+        }
+
+        public void deleteSession(long id) {
+            SQLiteConnection con = new SQLiteConnection(connString);
+            con.Open();
+        
+            SQLiteCommand cmd = new SQLiteCommand(con);
+            cmd.CommandText = "DELETE FROM Sessions WHERE id = @id";
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Prepare();
+            cmd.ExecuteNonQuery();
+            Console.WriteLine("Session " + id + "deleted ");
+            con.Close();
         }
 
         private int convertBoolToInt(bool input) {
@@ -183,14 +197,6 @@ namespace freETarget {
             return ret.Substring(0,ret.Length-1);
         }
 
-        private string convertListOfListOfShotsToString(List<List<Shot>> input) {
-            string ret = "";
-            foreach(List<Shot> list in input) {
-                ret += convertListOfShotsToString(list) + "/";
-            }
-            return ret.Substring(0, ret.Length - 1);
-        }
-
         private DateTime convertStringToDate(string input) {
             return DateTime.Parse(input);
         }
@@ -204,16 +210,6 @@ namespace freETarget {
                 list.Add(shot);
             }
             return list;
-        }
-
-        private List<List<Shot>> convertStringToListOfListOfShots(string input) {
-            List<List<Shot>> ret = new List<List<Shot>>();
-            string[] list = input.Split('/');
-            foreach(string s in list) {
-                ret.Add(convertStringToListOfShots(s));
-            }
-
-            return ret;
         }
     }
 

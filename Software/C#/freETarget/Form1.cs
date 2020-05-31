@@ -22,10 +22,18 @@ using System.Windows.Forms.DataVisualization.Charting;
 namespace freETarget {
     public partial class frmMainWindow : Form {
 
-        private bool isConnected = false;
-        private delegate void SafeCallDelegate(string text, Shot shot);
+        public enum Status {
+            NOT_CONNECTED,
+            CONNECTED,
+            LOADED
+        }
+        private Status currentStatus = Status.NOT_CONNECTED;
+        private bool gridSeriesSelected = false;
+        
+        private delegate void SafeCallDelegate(Shot shot);
         private delegate void SafeCallDelegate2(string text);
         private delegate void SafeCallDelegate3();
+        private delegate void SafeCallDelegate4(string text, bool flag);
 
         public decimal calibrationX = 0;
         public decimal calibrationY = 0;
@@ -58,6 +66,25 @@ namespace freETarget {
 
         }
 
+        //called once at application start
+        private void frmMainWindow_Load(object sender, EventArgs e) {
+            initDefaultSession();
+        }
+
+        private void initDefaultSession() {
+            currentSession = Session.createNewSession(Settings.Default.defaultTarget.Trim(), Settings.Default.name);
+
+            foreach (TabPage tab in tcSessionType.TabPages) {
+                if (currentSession.eventType.Name.Contains(tab.Text.Trim())) {
+                    tcSessionType.SelectedTab = tab;
+                }
+            }
+
+            initNewSession();
+            targetRefresh();
+            imgTarget.BackColor = Settings.Default.targetColor;
+        }
+
         private void initBreakdownChart() {
             Series series = chartBreakdown.Series[0];
             series.Points.AddXY("X", 0);
@@ -86,20 +113,21 @@ namespace freETarget {
             if (shot.count >= 0) {
                 currentSession.addShot(shot);
 
-                drawArrow(shot);
-                writeShotData(indata, shot);
+
+                writeShotToDebug(indata);
+                displayShotData(shot);
                 var d = new SafeCallDelegate3(targetRefresh); //draw shot
                 this.Invoke(d);
             } else {
 
-                displayError("Error parsing shot " + indata);
+                displayMessage("Error parsing shot " + indata, false);
             }
 
 
         }
 
         private void btnConnect_Click(object sender, EventArgs e) {
-            if (isConnected == false) {
+            if (currentStatus == Status.NOT_CONNECTED) {
                 serialPort.PortName = Properties.Settings.Default.portName;
                 serialPort.BaudRate = Properties.Settings.Default.baudRate;
                 try {
@@ -109,7 +137,7 @@ namespace freETarget {
                     timer.Enabled = true;
 
                     btnConnect.Text = "Disconnect";
-                    isConnected = true;
+                    currentStatus = Status.CONNECTED;
                     statusText.Text = "Connected to " + serialPort.PortName;
 
                     btnConnect.ImageKey = "disconnect";
@@ -119,7 +147,7 @@ namespace freETarget {
                     tcSessionType.Enabled = true;
                     tcSessionType.Refresh();
 
-                    setTarget();
+                    initNewSession();
                     targetRefresh();
 
                 } catch (Exception ex) {
@@ -130,7 +158,7 @@ namespace freETarget {
                 if (!clearShots()) {
                     serialPort.Close();
                     btnConnect.Text = "Connect";
-                    isConnected = false;
+                    currentStatus = Status.NOT_CONNECTED;
 
 
                     statusText.Text = "Disconnected";
@@ -143,7 +171,7 @@ namespace freETarget {
                     tcSessionType.Enabled = false;
                     tcSessionType.Refresh();
 
-                    setTarget();
+                    initNewSession();
                     targetRefresh();
                 }
             }
@@ -151,27 +179,44 @@ namespace freETarget {
 
         }
 
-        //output errors to the status bar at the bottom
-        private void displayError(string text) {
+        //output messages
+        public void displayMessage(string text, bool showToolTip) {
             if (txtOutput.InvokeRequired) {
-                var d = new SafeCallDelegate2(displayError);
-                txtOutput.Invoke(d, new object[] { text });
+                var d = new SafeCallDelegate4(displayMessage);
+                txtOutput.Invoke(d, new object[] { text, toolTip });
                 return;
             } else {
+                Console.WriteLine(text);
                 txtOutput.AppendText(text);
                 txtOutput.AppendText(Environment.NewLine);
+                if (showToolTip) {
+                    toolTip.Show("Session saved", imgTarget, 2000);
+                }
+
                 //statusText.Text = text;
             }
         }
 
 
+        private void writeShotToDebug(string json) {
+            if (txtOutput.InvokeRequired) {
+                var d = new SafeCallDelegate2(writeShotToDebug);
+                txtOutput.Invoke(d, new object[] { json});
+                return;
+            } else {
+
+                //write to console window (raw input string)
+                txtOutput.AppendText(json);
+            }
+        }
+
 
         //write shot data
-        private void writeShotData(string json, Shot shot) {
+        private void displayShotData(Shot shot) {
             //special code for UI thread safety
             if (txtOutput.InvokeRequired) {
-                var d = new SafeCallDelegate(writeShotData);
-                txtOutput.Invoke(d, new object[] { json, shot });
+                var d = new SafeCallDelegate(displayShotData);
+                txtOutput.Invoke(d, new object[] { shot });
                 return;
             } else {
                 string inner = "";
@@ -179,15 +224,14 @@ namespace freETarget {
                     inner = " *";
                 }
 
-                //write to console window (raw input string)
-                txtOutput.AppendText(json);
-
                 //write to total textbox
-                txtTotal.Text = currentSession.Shots.Count + " shots : " + currentSession.score.ToString() + " ( " + currentSession.decimalScore.ToString() + " ) - " + currentSession.innerX.ToString() + "x";
+                txtTotal.Text = getShots().Count + " shots : " + currentSession.score.ToString() + " ( " + currentSession.decimalScore.ToString() + " ) - " + currentSession.innerX.ToString() + "x";
 
                 //write to last shot textbox
                 string lastShot = shot.decimalScore.ToString();
                 txtLastShot.Text = lastShot + inner;
+
+                drawArrow(shot);
 
                 //write score to listview
                 ListViewItem item = new ListViewItem(new string[] { "" }, (shot.index+1).ToString());
@@ -202,7 +246,7 @@ namespace freETarget {
 
                 computeShotStatistics(getShotList());
                 writeToGrid(shot);
-                fillBreakdownChart(currentSession.Shots);
+                fillBreakdownChart(getShots());
 
             }
         }
@@ -479,23 +523,10 @@ namespace freETarget {
             targetRefresh();
         }
 
-        //called once at application start
-        private void frmMainWindow_Load(object sender, EventArgs e) {
-            currentSession = Session.createNewSession(Settings.Default.defaultTarget.Trim(), Settings.Default.name);
 
-            foreach(TabPage tab in tcSessionType.TabPages) {
-                if (currentSession.courseOfFire.Name.Contains(tab.Text.Trim())) {
-                    tcSessionType.SelectedTab = tab;
-                }
-            }
-
-            setTarget();
-            targetRefresh();
-            imgTarget.BackColor = Settings.Default.targetColor;
-        }
 
         private void frmMainWindow_FormClosing(object sender, FormClosingEventArgs e) {
-            if (isConnected) {
+            if (currentStatus == Status.CONNECTED) {
                 if (clearShots()) {
                     e.Cancel = true;
                     return;
@@ -503,7 +534,7 @@ namespace freETarget {
 
                 serialPort.Close();
                 btnConnect.Text = "Connect";
-                isConnected = false;
+                currentStatus = Status.NOT_CONNECTED;
 
                 statusText.Text = "Disconnected";
 
@@ -515,32 +546,37 @@ namespace freETarget {
             displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
         }
 
-        private void setTarget() {
+        private void initNewSession() {
             if (currentSession.Shots.Count > 0) {
                 storage.storeSession(currentSession);
-                toolTip.Show("Session saved", imgTarget,2000);
+                displayMessage("Session saved", true);
+                
             }
             currentSession = Session.createNewSession(tcSessionType.SelectedTab.Text.Trim(), Settings.Default.name);
             currentSession.start();
 
-            if (currentSession.targetType == Session.TargetType.Pistol) {
+            setTrkZoom(currentSession.targetType);
+
+            clearShots();
+            drawTarget();
+            drawSessionName();
+        }
+
+        private void setTrkZoom(Session.TargetType weapon) {
+            if (weapon == Session.TargetType.Pistol) {
                 trkZoom.Minimum = 1;
                 trkZoom.Maximum = 5;
                 trkZoom.Value = 1;
 
-               // currentRange = outterRingPistol / 2m + pelletCaliber / 2m; //maximum range that can score a point 155.5 / 2 + 4.5 / 2 = 80mm
+                // currentRange = outterRingPistol / 2m + pelletCaliber / 2m; //maximum range that can score a point 155.5 / 2 + 4.5 / 2 = 80mm
 
-            } else if (currentSession.targetType == Session.TargetType.Rifle) {
+            } else if (weapon == Session.TargetType.Rifle) {
                 trkZoom.Minimum = 0;
                 trkZoom.Maximum = 5;
                 trkZoom.Value = 0;
 
                 //currentRange = outterRingRifle / 2m + pelletCaliber / 2m; //maximum range that can score a point = 25mm
             }
-
-            clearShots();
-            drawTarget();
-            drawSessionName(tcSessionType.SelectedTab.BackColor);
         }
 
         private void trkZoom_ValueChanged(object sender, EventArgs e) {
@@ -675,7 +711,7 @@ namespace freETarget {
                 it.FillPolygon(brushBlack, points);
             }
 
-            if (isConnected == false) {
+            if (currentStatus == Status.NOT_CONNECTED) {
                 bmpTarget = toGrayScale(bmpTarget);
             }
             return bmpTarget;
@@ -706,7 +742,7 @@ namespace freETarget {
 
                 if (result == DialogResult.Yes) {
                     storage.storeSession(currentSession);
-                    toolTip.Show("Session saved", imgTarget,2000);
+                    displayMessage("Session saved", true);
 
                 } else if(result == DialogResult.Cancel) {
                     return true;
@@ -732,6 +768,7 @@ namespace freETarget {
             gridTargets.Rows.Clear();
             clearBreakdownChart();
             digitalClock.Value = "";
+            digitalClock.ColorLight = Color.White;
 
             return false;
         }
@@ -806,7 +843,7 @@ namespace freETarget {
         }
 
         private void btnCalibration_Click(object sender, EventArgs e) {
-            frmCalibration frmCal = new frmCalibration(this);
+            frmCalibration frmCal = frmCalibration.getInstance(this);
             frmCal.Show();
         }
 
@@ -902,15 +939,23 @@ namespace freETarget {
         }
 
         private void tcSessionType_SelectedIndexChanged(object sender, EventArgs e) {
-            setTarget();
+            initNewSession();
         }
 
-        private void drawSessionName(Color color) {
+        private void drawSessionName() {
+
+            Color color = Color.Black;
+            foreach (TabPage tab in tcSessionType.TabPages) {
+                if (currentSession.eventType.Name.Contains(tab.Text.Trim())) {
+                    color = tab.BackColor;
+                    break;
+                }
+            }
 
             Bitmap bmpTarget = new Bitmap(imgSessionName.Width, imgSessionName.Height);
             Graphics g = Graphics.FromImage(bmpTarget);
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            if (isConnected) {
+            if (currentStatus == Status.CONNECTED || currentStatus == Status.LOADED) {
                 g.Clear(color);
             } else {
                 g.Clear(Color.Black);
@@ -921,7 +966,7 @@ namespace freETarget {
             format.LineAlignment = StringAlignment.Center;
             format.Alignment = StringAlignment.Center;
 
-            string name = Settings.Default.name + " - " + currentSession.courseOfFire;
+            string name = Settings.Default.name + " - " + currentSession.eventType;
             if (currentSession.numberOfShots > 0) {
                 name += " " + currentSession.numberOfShots;
             }
@@ -980,6 +1025,7 @@ namespace freETarget {
             totalCell.Value = total;
 
             gridTargets.ClearSelection();
+            gridSeriesSelected = false;
         }
 
         private void fillBreakdownChart(List<Shot> shotList) {
@@ -1017,36 +1063,43 @@ namespace freETarget {
 
         private void imgSessionName_Click(object sender, EventArgs e) {
             gridTargets.ClearSelection();
+            gridSeriesSelected = false;
+            computeShotStatistics(getShotList());
+            targetRefresh();
         }
 
         private void gridTargets_Click(object sender, EventArgs e) {
-
             if (gridTargets.SelectedRows.Count > 0) {
-                DataGridViewRow row = gridTargets.SelectedRows[0];
-
-                String s = "";
-                foreach (DataGridViewCell cell in row.Cells) {
-                    s += cell.Value + " ";
-                }
-
-                Console.WriteLine(s);
+                gridSeriesSelected = true;
+                int rowIndex = gridTargets.CurrentCell.RowIndex;
+                currentSession.CurrentSeries = currentSession.AllSeries[rowIndex];
+                computeShotStatistics(getShotList());
+                targetRefresh();
             }
         }
 
         private List<Shot> getShotList() {
-            if (Settings.Default.OnlySeries) {
+            if (Settings.Default.OnlySeries || gridSeriesSelected) {
                 return currentSession.CurrentSeries;
+            } else {
+                return getShots();
+            }
+        }
+
+        private List<Shot> getShots() {
+            if(currentStatus == Status.LOADED) {
+                return currentSession.LoadedShots;
             } else {
                 return currentSession.Shots;
             }
         }
 
         private void btnJournal_Click(object sender, EventArgs e) {
-            if (isConnected) {
+            if (currentStatus == Status.CONNECTED) {
                 if (!clearShots()) {
                     serialPort.Close();
                     btnConnect.Text = "Connect";
-                    isConnected = false;
+                    currentStatus = Status.NOT_CONNECTED;
 
 
                     statusText.Text = "Disconnected";
@@ -1059,16 +1112,61 @@ namespace freETarget {
                     tcSessionType.Enabled = false;
                     tcSessionType.Refresh();
 
-                    setTarget();
+                    initNewSession();
                     targetRefresh();
 
-                    frmJournal form = new frmJournal();
+                    frmJournal form = frmJournal.getInstance(this);
                     form.Show();
                 }
             } else {
-                frmJournal form = new frmJournal();
+                frmJournal form = frmJournal.getInstance(this);
                 form.Show();
             }
+            btnConnect.Enabled = false;
+        }
+
+        public void loadSession(Session session) {
+            if(this.currentSession.id == session.id) {
+                displayMessage("Session "+ session.id + " already loaded", true);
+                return;
+            }
+            this.currentSession = session;
+            this.currentStatus = Status.LOADED;
+            this.currentSession.AllSeries.Clear();
+           
+            trkZoom.Enabled = true;
+            shotsList.Enabled = true;
+            setTrkZoom(currentSession.targetType);
+            drawSessionName();
+
+            shotsList.Items.Clear();
+            shotsList.Refresh();
+            gridTargets.Rows.Clear();
+            clearBreakdownChart();
+
+            foreach (Shot s in currentSession.Shots) {
+
+                currentSession.addLoadedShot(s);
+                displayShotData(s);
+                Application.DoEvents();
+                targetRefresh();
+            }
+
+            displayMessage("Session " + session.id + " loaded", false);
+        }
+
+        public void clearSession() {
+            initDefaultSession();
+            this.currentStatus = Status.NOT_CONNECTED;
+            shotsList.Items.Clear();
+            shotsList.Refresh();
+            gridTargets.Rows.Clear();
+            clearBreakdownChart();
+            targetRefresh();
+            trkZoom.Enabled = false;
+            shotsList.Enabled = false;
+            setTrkZoom(currentSession.targetType);
+            drawSessionName();
         }
     }
 

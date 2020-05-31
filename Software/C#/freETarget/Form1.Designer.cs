@@ -851,7 +851,7 @@ namespace freETarget
         #endregion
 
         private System.IO.Ports.SerialPort serialPort;
-        private System.Windows.Forms.Button btnConnect;
+        public System.Windows.Forms.Button btnConnect;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel statusText;
         public System.Windows.Forms.TextBox txtOutput;

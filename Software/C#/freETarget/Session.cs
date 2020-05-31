@@ -1,6 +1,7 @@
 ﻿using freETarget.Properties;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -9,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace freETarget {
-    class Session {
+    public class Session {
         public enum TargetType {
             Pistol,
             Rifle
@@ -21,43 +22,164 @@ namespace freETarget {
             Final
         }
 
-        public CourseOfFire courseOfFire { get; set; }
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session configuration")]
+        [DisplayName("Event")]
+        [Description("Competition event type")]
+        public EventType eventType { get; set; }
+
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session configuration")]
+        [DisplayName("Target Type")]
+        [Description("Type of target used by this event")]
         public TargetType targetType { get; set; }
+
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session configuration")]
+        [DisplayName("Events shot count")]
+        [Description("Maximum number of shots in this event")]
         public int numberOfShots { get; set; }
+
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session configuration")]
+        [DisplayName("Decimal scoring")]
+        [Description("Flag if this event uses decimal scoring")]
         public bool decimalScoring { get; set; }
-        public SessionType sessionType;
+
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session configuration")]
+        [DisplayName("Session Type")]
+        [Description("Type of this session")]
+        public SessionType sessionType { get; set; }
+
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session configuration")]
+        [DisplayName("Event duration")]
+        [Description("Duration in minutes for this event. -1 is the duration is unlimited")]
         public int minutes { get; set; }
+
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Description("Number of shots in this session")]
+        [Category("Session data")]
+        [DisplayName("Session Shots")]
+        public int actualNumberOfShots { get; set; }
+
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session data")]
+        [DisplayName("Score")]
+        [Description("The integer score for this session")]
         public int score { get; set; }
+
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session data")]
+        [DisplayName("Decimal score")]
+        [Description("The decimal score for this session")]
         public decimal decimalScore { get; set; }
+
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session data")]
+        [DisplayName("Average score")]
+        [Description("Average shot score for this session")]
+        public decimal averageScore { get; set; }
+
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session data")]
+        [DisplayName("Inner tens")]
+        [Description("Number of inner tens (Xs) in this session")]
         public int innerX { get; set; }
+
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session data")]
+        [DisplayName("Windage")]
+        [Description("Median point of impact horizontal deviation. Negative to the left, positive to the right")]
         public decimal xbar { get; set; }
+
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session data")]
+        [DisplayName("Elevation")]
+        [Description("Median point of impact vertical deviation. Negative down, positive up")]
         public decimal ybar { get; set; }
+
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session data")]
+        [DisplayName("Mean radius")]
+        [Description("Radius of the mean group")]
         public decimal rbar { get; set; }
 
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session data")]
+        [DisplayName("Start time")]
+        [Description("Time when the session started")]
+        public DateTime startTime { get; set; }
+
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session data")]
+        [DisplayName("End time")]
+        [Description("Time when the session ended (was saved)")]
+        public DateTime endTime { get; set; }
+
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session data")]
+        [DisplayName("Average time")]
+        [Description("Average time between 2 shots")]
+        public TimeSpan averageTimePerShot { get; set; }
+
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session data")]
+        [DisplayName("Shortest shot")]
+        [Description("Shortest time interval between 2 shots")]
+        public TimeSpan shortestShot { get; set; }
+
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session data")]
+        [DisplayName("Longest shot")]
+        [Description("Longest time interval between 2 shots")]
+        public TimeSpan longestShot { get; set; }
+
+
+
+        [Browsable(false)]
+        public string diaryEntry = "";
+
+        [Browsable(false)]
+        public long id= -1;
+
+        private VirtualRO currentFinal = null;
+
+        [Browsable(false)]
+        public string user { get; set; }
 
         internal List<Shot> Shots { get => shots; set => shots = value; }
         internal List<Shot> CurrentSeries { get => currentSeries; set => currentSeries = value; }
         internal List<List<Shot>> AllSeries { get => allSeries; set => allSeries = value; }
+        internal List<Shot> LoadedShots { get => loadedShots; set => loadedShots = value; }
 
         private List<Shot> shots = new List<Shot>();
+
+        private List<Shot> loadedShots = new List<Shot>();
 
         private List<Shot> currentSeries = new List<Shot>();
 
         private List<List<Shot>> allSeries = new List<List<Shot>>();
-
-        public DateTime startTime;
-        public DateTime endTime;
-
-        private VirtualRO currentFinal = null;
-
-        public string user;
-        public decimal averageScore;
-        public TimeSpan averageTimePerShot;
-        public TimeSpan shortestShot;
-        public TimeSpan longestShot;
-        public int actualNumberOfShots;
-        public string diaryEntry = "";
-        public long id= -1;
 
         protected Session() {
 
@@ -77,22 +199,22 @@ namespace freETarget {
         }
 
         public static Session createNewSession(string name, string user) {
-            return createNewSession(CourseOfFire.GetCourseOfFire(name), Settings.Default.name, Settings.Default.MatchShots);
+            return createNewSession(EventType.GetCourseOfFire(name), Settings.Default.name, Settings.Default.MatchShots);
         }
-        public static Session createNewSession(CourseOfFire sessionType, string user, int noOfShots) {
+        public static Session createNewSession(EventType sessionType, string user, int noOfShots) {
             Session newSession = new Session();
 
-            if (sessionType.Equals(CourseOfFire.AirPistolPractice)) {
+            if (sessionType.Equals(EventType.AirPistolPractice)) {
                 newSession.decimalScoring = false;
                 newSession.sessionType = SessionType.Practice;
-                newSession.courseOfFire = CourseOfFire.AirPistolPractice;
+                newSession.eventType = EventType.AirPistolPractice;
                 newSession.numberOfShots = -1;
                 newSession.targetType = TargetType.Pistol;
                 newSession.minutes = -1;
-            } else if (sessionType.Equals(CourseOfFire.AirPistolMatch)) {
+            } else if (sessionType.Equals(EventType.AirPistolMatch)) {
                 newSession.decimalScoring = false;
                 newSession.sessionType = SessionType.Match;
-                newSession.courseOfFire = CourseOfFire.AirPistolMatch;
+                newSession.eventType = EventType.AirPistolMatch;
                 newSession.numberOfShots = noOfShots;
                 if(noOfShots == 60) {
                     newSession.numberOfShots = ISSF.match60NoOfShots;
@@ -105,25 +227,25 @@ namespace freETarget {
                     newSession.minutes = -1;
                 }
                 newSession.targetType = TargetType.Pistol;
-            } else if (sessionType.Equals(CourseOfFire.AirPistolFinal)) {
+            } else if (sessionType.Equals(EventType.AirPistolFinal)) {
                 newSession.decimalScoring = true;
                 newSession.sessionType = SessionType.Final;
-                newSession.courseOfFire = CourseOfFire.AirPistolFinal;
+                newSession.eventType = EventType.AirPistolFinal;
                 newSession.numberOfShots = ISSF.finalNoOfShots;
                 newSession.targetType = TargetType.Pistol;
                 newSession.minutes = -1;
                 newSession.currentFinal = new VirtualRO();
-            } else if (sessionType.Equals(CourseOfFire.AirRiflePractice)) {
+            } else if (sessionType.Equals(EventType.AirRiflePractice)) {
                 newSession.decimalScoring = true;
                 newSession.sessionType = SessionType.Practice;
-                newSession.courseOfFire = CourseOfFire.AirRiflePractice;
+                newSession.eventType = EventType.AirRiflePractice;
                 newSession.numberOfShots = -1;
                 newSession.targetType = TargetType.Rifle;
                 newSession.minutes = -1;
-            } else if (sessionType.Equals(CourseOfFire.AirRifleMatch)) {
+            } else if (sessionType.Equals(EventType.AirRifleMatch)) {
                 newSession.decimalScoring = true;
                 newSession.sessionType = SessionType.Match;
-                newSession.courseOfFire = CourseOfFire.AirRifleMatch;
+                newSession.eventType = EventType.AirRifleMatch;
                 newSession.numberOfShots = noOfShots;
                 newSession.targetType = TargetType.Rifle;
                 if (noOfShots == 60) {
@@ -136,10 +258,10 @@ namespace freETarget {
                     newSession.numberOfShots = -1;
                     newSession.minutes = -1;
                 }
-            } else if (sessionType.Equals(CourseOfFire.AirRifleFinal)) {
+            } else if (sessionType.Equals(EventType.AirRifleFinal)) {
                 newSession.decimalScoring = true;
                 newSession.sessionType = SessionType.Final;
-                newSession.courseOfFire = CourseOfFire.AirRifleFinal;
+                newSession.eventType = EventType.AirRifleFinal;
                 newSession.numberOfShots = ISSF.finalNoOfShots;
                 newSession.targetType = TargetType.Rifle;
                 newSession.minutes = -1;
@@ -152,7 +274,7 @@ namespace freETarget {
             return newSession;
         }
 
-        public bool addShot(Shot s) {
+        public void addShot(Shot s) {
             this.Shots.Add(s);
             this.score += s.score;
             this.decimalScore += s.decimalScore;
@@ -162,6 +284,21 @@ namespace freETarget {
             }
             s.index = this.Shots.Count - 1;
 
+            if (this.allSeries.Count > 0) {
+                this.currentSeries = this.allSeries[this.allSeries.Count - 1];
+            }
+            addToSeries(s);
+
+        }
+
+
+        public void addLoadedShot(Shot s) {
+            this.LoadedShots.Add(s);
+
+            addToSeries(s);
+        }
+
+        public void addToSeries(Shot s) {
             bool newSeries;
             if (sessionType != SessionType.Final) {
                 newSeries = (s.index % 10 == 0);
@@ -180,8 +317,6 @@ namespace freETarget {
             } else {
                 currentSeries.Add(s);
             }
-
-            return newSeries;
         }
 
         public void start() {

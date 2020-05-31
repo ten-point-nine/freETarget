@@ -12,10 +12,21 @@ using System.Windows.Forms;
 namespace freETarget {
     public partial class frmCalibration : Form {
 
+        private static frmCalibration instance;
+
         frmMainWindow mainWindow;
-        public frmCalibration(frmMainWindow mainWin) {
+        private frmCalibration(frmMainWindow mainWin) {
             InitializeComponent();
             this.mainWindow = mainWin;
+        }
+
+        public static frmCalibration getInstance(frmMainWindow mainWin) {
+            if (instance != null) {
+                return instance;
+            } else {
+                instance = new frmCalibration(mainWin);
+                return instance;
+            }
         }
 
         private void btnUp_Click(object sender, EventArgs e) {
@@ -61,6 +72,11 @@ namespace freETarget {
             }
 
             return ret;
+        }
+
+        private void frmCalibration_FormClosing(object sender, FormClosingEventArgs e) {
+            e.Cancel = true;
+            this.Hide();
         }
     }
 }
