@@ -29,7 +29,7 @@ namespace freETarget {
         }
         private Status currentStatus = Status.NOT_CONNECTED;
         private bool gridSeriesSelected = false;
-        
+        private string incomingJSON = "";               // Cumulative serial message
         private delegate void SafeCallDelegate(Shot shot);
         private delegate void SafeCallDelegate2(string text);
         private delegate void SafeCallDelegate3();
@@ -102,27 +102,54 @@ namespace freETarget {
             chartBreakdown.Update();
         }
 
+        /*---------------------------------------------------------------------
+         * 
+         * serialPort_DataReceived()
+         * 
+         * Serial port received handler
+         * 
+         *---------------------------------------------------------------------
+         * 
+         * This function is called when the target emits a shot message.
+         * 
+         * Shot messages are a JSON packet of the form { message } <newline>
+         * This function accumulates the incoming messages until a newline has
+         * been received and then parses the message.
+         * 
+         * IMPORTANT
+         * It is possible for this function to be called with a partial JSON
+         * message thus the incoming messages are concatinated until the
+         * newline arrives indicating a complete message ready to be parsed
+         * 
+         *--------------------------------------------------------------------*/
         private void serialPort_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e) {
             //received data from serial port
             SerialPort sp = (SerialPort)sender;
             string indata = sp.ReadExisting();
-            //Console.WriteLine(indata);
+            incomingJSON += indata;                         // Accumulate the input
+            while (incomingJSON.IndexOf("}") != (-1))          // Got a new line?  Yes, then complete
+            {
+                Console.WriteLine(incomingJSON);
 
-            //parse input data to shot structure and determine score
-            Shot shot = parseJson(indata);
-            if (shot.count >= 0) {
-                currentSession.addShot(shot);
+                //parse input data to shot structure and determine score
+                Shot shot = parseJson(incomingJSON);
+                if (shot.count >= 0)
+                {
+                    currentSession.addShot(shot);
 
 
-                writeShotToDebug(indata);
-                displayShotData(shot);
-                var d = new SafeCallDelegate3(targetRefresh); //draw shot
-                this.Invoke(d);
-            } else {
+                    writeShotToDebug(indata);
+                    displayShotData(shot);
+                    var d = new SafeCallDelegate3(targetRefresh); //draw shot
+                    this.Invoke(d);
+                }
+                else
+                {
 
-                displayMessage("Error parsing shot " + indata, false);
+                    displayMessage("Error parsing shot " + incomingJSON, false);
+                }
             }
-
+             incomingJSON = incomingJSON.Substring(incomingJSON.IndexOf("}")+1);  // Discard the messages and keep what remains
 
         }
 
@@ -130,6 +157,9 @@ namespace freETarget {
             if (currentStatus == Status.NOT_CONNECTED) {
                 serialPort.PortName = Properties.Settings.Default.portName;
                 serialPort.BaudRate = Properties.Settings.Default.baudRate;
+                serialPort.DataBits = 8;
+                serialPort.DtrEnable = true;
+
                 try {
                     serialPort.Open();
 
@@ -445,13 +475,16 @@ namespace freETarget {
 
             int indexOpenBracket = json.IndexOf('{');
             int indexClosedBracket = json.IndexOf('}');
-            if(indexClosedBracket==-1 || indexOpenBracket == -1) {
-                Console.WriteLine("Could not find brackets for : " + json);
+            if( (indexClosedBracket == (-1) )
+                 || (indexOpenBracket == (-1))
+                 || (json.IndexOf("nan") != (-1)) )
+             {
+                Console.WriteLine("Error in JSON string : " + json);
                 Shot err = new Shot();
                 err.count = -1;
                 return err;
             }
-            string t1 = json.Substring(indexOpenBracket+1, indexClosedBracket-1); //shot from the first open bracket to the first closed bracket. ignore the rest
+            string t1 = json.Substring(indexOpenBracket+1, indexClosedBracket - indexOpenBracket - 1); //shot from the first open bracket to the first closed bracket. ignore the rest
             string[] t2 = t1.Split(',');
             try {
                 foreach (string t3 in t2) {
