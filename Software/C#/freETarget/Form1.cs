@@ -126,10 +126,12 @@ namespace freETarget {
             //received data from serial port
             SerialPort sp = (SerialPort)sender;
             string indata = sp.ReadExisting();
+            Console.WriteLine("Received: " + indata);
             incomingJSON += indata;                         // Accumulate the input
-            while (incomingJSON.IndexOf("}") != (-1))          // Got a new line?  Yes, then complete
-            {
-                Console.WriteLine(incomingJSON);
+            if (incomingJSON.IndexOf("}") == (-1)) {         //message not complete? wait until a future event fires with more data
+                return; 
+            } else { //json completed. parse it
+                Console.WriteLine("Complete json: " + incomingJSON);
 
                 //parse input data to shot structure and determine score
                 Shot shot = parseJson(incomingJSON);
@@ -142,14 +144,17 @@ namespace freETarget {
                     displayShotData(shot);
                     var d = new SafeCallDelegate3(targetRefresh); //draw shot
                     this.Invoke(d);
+
+                    incomingJSON = incomingJSON.Substring(incomingJSON.IndexOf("}") + 1);  // Discard the current parsed json and keep what remains
                 }
                 else
                 {
-
+                    //error parsing json. keep trying at next event
                     displayMessage("Error parsing shot " + incomingJSON, false);
                 }
             }
-             incomingJSON = incomingJSON.Substring(incomingJSON.IndexOf("}")+1);  // Discard the messages and keep what remains
+            
+           
 
         }
 
@@ -475,9 +480,7 @@ namespace freETarget {
 
             int indexOpenBracket = json.IndexOf('{');
             int indexClosedBracket = json.IndexOf('}');
-            if( (indexClosedBracket == (-1) )
-                 || (indexOpenBracket == (-1))
-                 || (json.IndexOf("nan") != (-1)) )
+            if( (indexClosedBracket == (-1) )  || (indexOpenBracket == (-1)) || (json.IndexOf("nan") != (-1)) )
              {
                 Console.WriteLine("Error in JSON string : " + json);
                 Shot err = new Shot();

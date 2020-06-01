@@ -97,7 +97,8 @@ namespace freETarget {
             }
             decimal avg = sum / 10;
             chartScore.Series[0].Name = "Last 10 sessions average score: " + avg.ToString("F2",CultureInfo.InvariantCulture);
-            chartScore.ChartAreas[0].AxisY.Minimum = (double)min-1;
+            chartScore.ChartAreas[0].AxisY.Minimum = (double)min - 1;
+            chartScore.ChartAreas[0].AxisY.Maximum = 10;
             chartScore.ResetAutoValues();
             chartScore.Update();
         }
@@ -110,10 +111,14 @@ namespace freETarget {
             Series series = chartMeanRadius.Series[0];
             decimal sum = 0;
             decimal min = 1000000;
+            decimal max = -1000000;
             for (int i = 0; i < list.Count; i++) {
                 series.Points.AddXY(i, list[i]);
                 if (min > list[i]) {
                     min = list[i];
+                }
+                if(max < list[i]) {
+                    max = list[i];
                 }
                 if (i >= list.Count - 10) {
                     sum += list[i];
@@ -121,7 +126,8 @@ namespace freETarget {
             }
             decimal avg = sum / 10;
             chartMeanRadius.Series[0].Name = "Last 10 sessions average mean radius: " + avg.ToString("F2", CultureInfo.InvariantCulture);
-            chartMeanRadius.ChartAreas[0].AxisY.Minimum = (double)min-1;
+            chartMeanRadius.ChartAreas[0].AxisY.Minimum = (double)min - 1;
+            chartMeanRadius.ChartAreas[0].AxisY.Maximum = (double)max + 1;
             chartMeanRadius.ResetAutoValues();
             chartMeanRadius.Update();
         }
@@ -133,14 +139,24 @@ namespace freETarget {
             }
             Series series = chartWindage.Series[0];
             decimal sum = 0;
+            decimal min = 1000000;
+            decimal max = -1000000;
             for (int i = 0; i < list.Count; i++) {
                 series.Points.AddXY(i, list[i]);
                 if (i >= list.Count - 10) {
                     sum += list[i];
                 }
+                if (min > list[i]) {
+                    min = list[i];
+                }
+                if (max < list[i]) {
+                    max = list[i];
+                }
             }
             decimal avg = sum / 10;
             chartWindage.Series[0].Name = "Last 10 sessions average windage: " + avg.ToString("F2", CultureInfo.InvariantCulture);
+            chartWindage.ChartAreas[0].AxisY.Minimum = (double)min - 1;
+            chartWindage.ChartAreas[0].AxisY.Maximum = (double)max + 1;
             chartWindage.ResetAutoValues();
             chartWindage.Update();
         }
@@ -152,51 +168,39 @@ namespace freETarget {
             }
             Series series = chartElevation.Series[0];
             decimal sum = 0;
+            decimal min = 1000000;
+            decimal max = -1000000;
             for (int i = 0; i < list.Count; i++) {
                 series.Points.AddXY(i, list[i]);
                 if (i >= list.Count - 10) {
                     sum += list[i];
                 }
+                if (min > list[i]) {
+                    min = list[i];
+                }
+                if (max < list[i]) {
+                    max = list[i];
+                }
             }
             decimal avg = sum / 10;
             chartElevation.Series[0].Name = "Last 10 sessions average elevation: " + avg.ToString("F2", CultureInfo.InvariantCulture);
+            chartElevation.ChartAreas[0].AxisY.Minimum = (double)min - 1;
+            chartElevation.ChartAreas[0].AxisY.Maximum = (double)max + 1;
             chartElevation.ResetAutoValues();
             chartElevation.Update();
         }
 
         private void clearCharts() {
-            for (int i = 0; i < chartScore.Series[0].Points.Count; i++) {
-                DataPoint p = chartScore.Series[0].Points[i];
-                p.SetValueY(0);
+
+            Chart[] charts = new Chart[] { chartScore, chartMeanRadius, chartWindage, chartElevation };
+
+            foreach(Chart c in charts) {
+                c.Series[0].Name = "Last 10 sessions average";
+                c.Series[0].Points.Clear();
+                c.ChartAreas[0].AxisY.Minimum = 0;
+                c.ResetAutoValues();
+                c.Update();
             }
-            chartScore.ChartAreas[0].AxisY.Minimum = 0;
-            chartScore.ResetAutoValues();
-            chartScore.Update();
-
-
-            for (int i = 0; i < chartMeanRadius.Series[0].Points.Count; i++) {
-                DataPoint p = chartMeanRadius.Series[0].Points[i];
-                p.SetValueY(0);
-            }
-            chartMeanRadius.ChartAreas[0].AxisY.Minimum = 0;
-            chartMeanRadius.ResetAutoValues();
-            chartMeanRadius.Update();
-
-
-            for (int i = 0; i < chartWindage.Series[0].Points.Count; i++) {
-                DataPoint p = chartWindage.Series[0].Points[i];
-                p.SetValueY(0);
-            }
-            chartWindage.ResetAutoValues();
-            chartWindage.Update();
-
-
-            for (int i = 0; i < chartElevation.Series[0].Points.Count; i++) {
-                DataPoint p = chartElevation.Series[0].Points[i];
-                p.SetValueY(0);
-            }
-            chartElevation.ResetAutoValues();
-            chartElevation.Update();
         }
 
         private void tabSessions_DrawItem(object sender, DrawItemEventArgs e) {
