@@ -146,6 +146,9 @@ namespace freETarget {
                     this.Invoke(d);
 
                     incomingJSON = incomingJSON.Substring(incomingJSON.IndexOf("}") + 1);  // Discard the current parsed json and keep what remains
+                    if (incomingJSON.IndexOf("}") != -1) {
+                        serialPort_DataReceived(sender, e); //call the event again to parse the remains. maybe there is another full message in there
+                    }
                 }
                 else
                 {
