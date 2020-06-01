@@ -466,6 +466,8 @@ void send_score
   Serial.print(", \"V\":");     Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
   Serial.print(", \"T\":");     Serial.print(temperature_C());
 
+  Serial.print(", \"I\":");     Serial.print(SOFTWARE_VERSION);
+  
   Serial.print("}");
   Serial.println();
 

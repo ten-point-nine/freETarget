@@ -83,7 +83,6 @@ void init_gpio(void)
 /*
  * All done, return
  */  
-  Serial.print("\n\rGPIO Ready");
   return;
 }
 

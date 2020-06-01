@@ -11,6 +11,8 @@
 #ifndef _FREETARGET_H
 #define _FREETARGET_H
 
+#define SOFTWARE_VERSION "2.0"
+
 /*
  * Compilation Flags
  */
@@ -26,7 +28,7 @@ void sample_calculations (unsigned int ch);
 #define SHOT_TIME       1000    // Wait 1 ms for the shot to end
 
 #define RUNNING_MODE_CALIBRATION 1 + (0 << 4)
-#define VERBOSE_TRACE            2 + (2 << 4)
+#define VERBOSE_TRACE            2 + (0 << 4)
 
 #define N 0
 #define E 1

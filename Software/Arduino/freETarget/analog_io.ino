@@ -27,7 +27,7 @@ void init_analog_io(void)
 /*
  * All done, begin the program
  */
- Serial.print("\n\rAnalog I/O Ready");
+  return;
 }
 
 /*----------------------------------------------------------------

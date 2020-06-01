@@ -43,7 +43,6 @@ void setup()
 /*
  * All done, begin the program
  */
- Serial.print("\n\rfreETarget Ready");
  return;
 }
 
