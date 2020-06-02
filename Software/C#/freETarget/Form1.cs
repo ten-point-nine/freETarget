@@ -123,6 +123,7 @@ namespace freETarget {
          * 
          *--------------------------------------------------------------------*/
         private void serialPort_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e) {
+            Application.DoEvents();
             //received data from serial port
             SerialPort sp = (SerialPort)sender;
             string indata = sp.ReadExisting();
@@ -147,7 +148,9 @@ namespace freETarget {
 
                     incomingJSON = incomingJSON.Substring(incomingJSON.IndexOf("}") + 1);  // Discard the current parsed json and keep what remains
                     if (incomingJSON.IndexOf("}") != -1) {
+
                         serialPort_DataReceived(sender, e); //call the event again to parse the remains. maybe there is another full message in there
+
                     }
                 }
                 else
@@ -221,7 +224,7 @@ namespace freETarget {
         public void displayMessage(string text, bool showToolTip) {
             if (txtOutput.InvokeRequired) {
                 var d = new SafeCallDelegate4(displayMessage);
-                txtOutput.Invoke(d, new object[] { text, toolTip });
+                txtOutput.Invoke(d, new object[] { text, showToolTip });
                 return;
             } else {
                 Console.WriteLine(text);
@@ -302,7 +305,7 @@ namespace freETarget {
                 txtMeanRadius.Text = Math.Round(localRbar, 1).ToString();
                 txtWindage.Text = Math.Round(Math.Abs(localXbar), 1).ToString();
                 txtElevation.Text = Math.Round(Math.Abs(localYbar), 1).ToString();
-                drawWindageAndElevation(localXbar, localYbar);
+                drawWindageAndElevationArrows(localXbar, localYbar);
                 
                 txtMaxSpread.Text = Math.Round(calculateMaxSpread(shotList), 1).ToString();
             } else {
@@ -316,7 +319,7 @@ namespace freETarget {
         }
 
         //draw 2 small arrows next to windage and elevation
-        private void drawWindageAndElevation(decimal xbar, decimal ybar) {
+        private void drawWindageAndElevationArrows(decimal xbar, decimal ybar) {
             Bitmap bmp = new Bitmap(imgWindage.Width, imgWindage.Height);
             Graphics g = Graphics.FromImage(bmp);
             g.Clear(this.BackColor);
@@ -675,6 +678,22 @@ namespace freETarget {
 
             it.FillRectangle(brushWhite, 0, 0, dimension - 1, dimension - 1);
 
+            if (currentSession.sessionType == Session.SessionType.Practice) {
+                //draw triangle in corner
+                float sixth = dimension / 6f;
+                PointF[] points = new PointF[3];
+                points[0].X = 5 * sixth;
+                points[0].Y = 0;
+
+                points[1].X = dimension;
+                points[1].Y = sixth;
+
+                points[2].X = dimension;
+                points[2].Y = 0;
+
+                it.FillPolygon(brushBlack, points);
+            }
+
             int r = 1;
             for (int i = 0; i < rings.Length; i++) {
 
@@ -734,21 +753,7 @@ namespace freETarget {
                 drawMeanGroup(it, dimension, zoomFactor);
             }
 
-            if (currentSession.sessionType == Session.SessionType.Practice) {
-                //draw triangle in corner
-                float sixth = dimension / 6f;
-                PointF[] points = new PointF[3];
-                points[0].X = 5 * sixth;
-                points[0].Y = 0;
 
-                points[1].X = dimension;
-                points[1].Y = sixth;
-
-                points[2].X = dimension;
-                points[2].Y = 0;
-
-                it.FillPolygon(brushBlack, points);
-            }
 
             if (currentStatus == Status.NOT_CONNECTED) {
                 bmpTarget = toGrayScale(bmpTarget);
@@ -835,6 +840,7 @@ namespace freETarget {
 
         }
 
+        //computes the average radius of all the shots
         private void calculateMeanRadius( out decimal rbar, out decimal xbar, out decimal ybar, List<Shot> shots) {
 
             decimal xsum = 0;
@@ -862,7 +868,8 @@ namespace freETarget {
 
         }
 
-        private decimal calculateMaxSpread(List<Shot> shots) {
+        //computes group size (maxium distance between 2 shots), but measuring from the center of the shot, not outside
+        private decimal calculateMaxSpread(List<Shot> shots) { 
             List<double> spreads = new List<double>();
             for(int i = 0; i < shots.Count; i++) {
                 for(int j = 0; j < shots.Count; j++) {
