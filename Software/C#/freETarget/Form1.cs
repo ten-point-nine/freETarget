@@ -231,10 +231,9 @@ namespace freETarget {
                 txtOutput.AppendText(text);
                 txtOutput.AppendText(Environment.NewLine);
                 if (showToolTip) {
-                    toolTip.Show("Session saved", imgTarget, 2000);
+                    this.Focus();
+                    toolTip.Show(text, imgTarget, 2000);
                 }
-
-                //statusText.Text = text;
             }
         }
 
@@ -306,8 +305,9 @@ namespace freETarget {
                 txtWindage.Text = Math.Round(Math.Abs(localXbar), 1).ToString();
                 txtElevation.Text = Math.Round(Math.Abs(localYbar), 1).ToString();
                 drawWindageAndElevationArrows(localXbar, localYbar);
-                
-                txtMaxSpread.Text = Math.Round(calculateMaxSpread(shotList), 1).ToString();
+
+                currentSession.groupSize = Math.Round(calculateMaxSpread(shotList), 1);
+                txtMaxSpread.Text = currentSession.groupSize.ToString();
             } else {
                 txtMeanRadius.Text = "";
                 txtWindage.Text = "";
@@ -544,6 +544,7 @@ namespace freETarget {
                 Properties.Settings.Default.drawMeanGroup = settingsFrom.chkDrawMeanG.Checked;
                 Properties.Settings.Default.OnlySeries = settingsFrom.chkSeries.Checked;
                 Properties.Settings.Default.voiceCommands = settingsFrom.chkVoice.Checked;
+                Properties.Settings.Default.pdfPath = settingsFrom.txtPDFlocation.Text;
                 if (settingsFrom.rdb60.Checked) {
                     Properties.Settings.Default.MatchShots = 60;
                 } else if (settingsFrom.rdb40.Checked) {
@@ -623,7 +624,6 @@ namespace freETarget {
 
         private void trkZoom_ValueChanged(object sender, EventArgs e) {
             drawTarget();
-
         }
 
         private void frmMainWindow_Resize(object sender, EventArgs e) {
@@ -678,21 +678,7 @@ namespace freETarget {
 
             it.FillRectangle(brushWhite, 0, 0, dimension - 1, dimension - 1);
 
-            if (currentSession.sessionType == Session.SessionType.Practice) {
-                //draw triangle in corner
-                float sixth = dimension / 6f;
-                PointF[] points = new PointF[3];
-                points[0].X = 5 * sixth;
-                points[0].Y = 0;
 
-                points[1].X = dimension;
-                points[1].Y = sixth;
-
-                points[2].X = dimension;
-                points[2].Y = 0;
-
-                it.FillPolygon(brushBlack, points);
-            }
 
             int r = 1;
             for (int i = 0; i < rings.Length; i++) {
@@ -740,6 +726,22 @@ namespace freETarget {
                     it.DrawString(r.ToString(), f, bText, y - (diff / 4), center, format);
                 }
                 r++;
+            }
+
+            if (currentSession.sessionType == Session.SessionType.Practice) {
+                //draw triangle in corner
+                float sixth = dimension / 6f;
+                PointF[] points = new PointF[3];
+                points[0].X = 5 * sixth;
+                points[0].Y = 0;
+
+                points[1].X = dimension;
+                points[1].Y = sixth;
+
+                points[2].X = dimension;
+                points[2].Y = 0;
+
+                it.FillPolygon(brushBlack, points);
             }
 
             it.DrawRectangle(penBlack, 0, 0, dimension - 1, dimension - 1);
@@ -1221,6 +1223,10 @@ namespace freETarget {
             shotsList.Enabled = false;
             setTrkZoom(currentSession.targetType);
             drawSessionName();
+        }
+
+        private void imgLogo_Click(object sender, EventArgs e) {
+            MessageBox.Show("Copyright (c) 2020 Azmodan -> youtube.com/ArmeVechi");
         }
     }
 

@@ -59,6 +59,7 @@ namespace freETarget
             chkDrawMeanG.Checked = Properties.Settings.Default.drawMeanGroup;
             chkSeries.Checked = Properties.Settings.Default.OnlySeries;
             chkVoice.Checked = Properties.Settings.Default.voiceCommands;
+            txtPDFlocation.Text = Properties.Settings.Default.pdfPath;
             if (Properties.Settings.Default.MatchShots == 60) {
                 rdb60.Checked = true;
                 rdb40.Checked = false;
@@ -88,5 +89,12 @@ namespace freETarget
             }
         }
 
+        private void btnBrowse_Click(object sender, EventArgs e) {
+            folderBrowserDialog.SelectedPath = txtPDFlocation.Text;
+            SendKeys.Send("{TAB}{TAB}{RIGHT}");
+            if (folderBrowserDialog.ShowDialog() == DialogResult.OK) {
+                txtPDFlocation.Text = folderBrowserDialog.SelectedPath;
+            }
+        }
     }
 }

@@ -7,6 +7,8 @@ using System.Data.SQLite;
 using System.Security.Cryptography.X509Certificates;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using System.Windows.Forms;
 
 namespace freETarget {
     class StorageController {
@@ -36,7 +38,7 @@ namespace freETarget {
             con.Open();
             SQLiteCommand cmd = new SQLiteCommand("select id, decimalScoring, score, decimalScore,innerX, startTime " +
                 "  from Sessions where user = @user and courseOfFire = @cof " +
-                "  order by startTime desc", con);
+                "  order by id desc", con);
             cmd.Parameters.AddWithValue("@cof", cof.Name);
             cmd.Parameters.AddWithValue("@user", user);
             SQLiteDataReader rdr = cmd.ExecuteReader();
@@ -67,7 +69,7 @@ namespace freETarget {
             SQLiteConnection con = new SQLiteConnection(connString);
             con.Open();
             SQLiteCommand cmd = new SQLiteCommand("select averageScore " +
-                "  from Sessions where user = @user and courseOfFire = @cof ", con);
+                "  from Sessions where user = @user and courseOfFire = @cof  order by id desc", con);
             cmd.Parameters.AddWithValue("@cof", eventType.Name);
             cmd.Parameters.AddWithValue("@user", user);
             SQLiteDataReader rdr = cmd.ExecuteReader();
@@ -86,7 +88,7 @@ namespace freETarget {
             SQLiteConnection con = new SQLiteConnection(connString);
             con.Open();
             SQLiteCommand cmd = new SQLiteCommand("select rbar " +
-                "  from Sessions where user = @user and courseOfFire = @cof ", con);
+                "  from Sessions where user = @user and courseOfFire = @cof  order by id desc", con);
             cmd.Parameters.AddWithValue("@cof", eventType.Name);
             cmd.Parameters.AddWithValue("@user", user);
             SQLiteDataReader rdr = cmd.ExecuteReader();
@@ -105,7 +107,7 @@ namespace freETarget {
             SQLiteConnection con = new SQLiteConnection(connString);
             con.Open();
             SQLiteCommand cmd = new SQLiteCommand("select xbar " +
-                "  from Sessions where user = @user and courseOfFire = @cof ", con);
+                "  from Sessions where user = @user and courseOfFire = @cof  order by id desc", con);
             cmd.Parameters.AddWithValue("@cof", eventType.Name);
             cmd.Parameters.AddWithValue("@user", user);
             SQLiteDataReader rdr = cmd.ExecuteReader();
@@ -124,7 +126,7 @@ namespace freETarget {
             SQLiteConnection con = new SQLiteConnection(connString);
             con.Open();
             SQLiteCommand cmd = new SQLiteCommand("select ybar " +
-                "  from Sessions where user = @user and courseOfFire = @cof ", con);
+                "  from Sessions where user = @user and courseOfFire = @cof  order by id desc", con);
             cmd.Parameters.AddWithValue("@cof", eventType.Name);
             cmd.Parameters.AddWithValue("@user", user);
             SQLiteDataReader rdr = cmd.ExecuteReader();
@@ -143,7 +145,7 @@ namespace freETarget {
             SQLiteConnection con = new SQLiteConnection(connString);
             con.Open();
             SQLiteCommand cmd = new SQLiteCommand("select courseOfFire, numberOfShots, user, score, decimalScore,innerX, xBar, yBar, rBar," +
-                " shots, startTime, endTime, averageScore, actualNumberOfShots, diary, averageShotDuration, longestShot, shortestShot " +
+                " shots, startTime, endTime, averageScore, actualNumberOfShots, diary, averageShotDuration, longestShot, shortestShot, groupSize, hash " +
                 "  from Sessions where id = @id", con);
             cmd.Parameters.AddWithValue("@id", id);
             SQLiteDataReader rdr = cmd.ExecuteReader();
@@ -169,7 +171,16 @@ namespace freETarget {
             session.averageTimePerShot = convertDecimalToTimespan(rdr.GetDecimal(15));
             session.longestShot = convertDecimalToTimespan(rdr.GetDecimal(16));
             session.shortestShot = convertDecimalToTimespan(rdr.GetDecimal(17));
+            session.groupSize = rdr.GetDecimal(18);
             session.id = id;
+
+            string hash = rdr.GetString(19);
+            if(VerifyMd5Hash(getControlString(session), hash) == false) {
+                MessageBox.Show("MD5 check failed. Session data corrupted/modified.","Error loading session",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                rdr.Close();
+                con.Close();
+                return null;
+            }
 
             rdr.Close();
             con.Close();
@@ -196,10 +207,10 @@ namespace freETarget {
             cmd.CommandText = "INSERT INTO Sessions(" +
                 "courseOfFire, targetType, numberOfShots, decimalScoring, sessionType, minutes, score, decimalScore, " +
                 "innerX, xBar, ybar, rbar, shots, startTime, endTime, user, averageScore, " +
-                "actualNumberOfShots, diary, averageShotDuration, longestShot, shortestShot " +
+                "actualNumberOfShots, diary, averageShotDuration, longestShot, shortestShot, groupSize, hash " +
                 ") VALUES(@courseOfFire, @targetType, @numberOfShots, @decimalScoring, @sessionType, @minutes, @score, @decimalScore," +
                 "@innerX, @xBar, @ybar, @rbar, @shots, @startTime, @endTime, @user, @averageScore, @actualNumberOfShots, @diary," +
-                " @averageShotDuration, @longestShot, @shortestShot)";
+                " @averageShotDuration, @longestShot, @shortestShot, @groupSize, @hash)";
 
             session.prepareForSaving();
             cmd.Parameters.AddWithValue("@courseOfFire", session.eventType.Name);
@@ -209,11 +220,12 @@ namespace freETarget {
             cmd.Parameters.AddWithValue("@sessionType", session.sessionType);
             cmd.Parameters.AddWithValue("@minutes", session.minutes);
             cmd.Parameters.AddWithValue("@score", session.score);
-            cmd.Parameters.AddWithValue("@decimalScore", session.decimalScore.ToString("F1", CultureInfo.InvariantCulture));
+            cmd.Parameters.AddWithValue("@decimalScore", session.decimalScore);
             cmd.Parameters.AddWithValue("@innerX", session.innerX);
-            cmd.Parameters.AddWithValue("@xBar", session.xbar.ToString("F2", CultureInfo.InvariantCulture));
-            cmd.Parameters.AddWithValue("@ybar", session.ybar.ToString("F2", CultureInfo.InvariantCulture));
-            cmd.Parameters.AddWithValue("@rbar", session.rbar.ToString("F2", CultureInfo.InvariantCulture));
+            cmd.Parameters.AddWithValue("@xBar", session.xbar);
+            cmd.Parameters.AddWithValue("@ybar", session.ybar);
+            cmd.Parameters.AddWithValue("@rbar", session.rbar);
+            cmd.Parameters.AddWithValue("@groupSize", session.groupSize);
             cmd.Parameters.AddWithValue("@shots", convertListOfShotsToString(session.Shots));
             cmd.Parameters.AddWithValue("@startTime", convertDatetimeToString(session.startTime));
             cmd.Parameters.AddWithValue("@endTime", convertDatetimeToString(session.endTime));
@@ -224,12 +236,18 @@ namespace freETarget {
             cmd.Parameters.AddWithValue("@averageShotDuration", convertTimespanToDecimal(session.averageTimePerShot));
             cmd.Parameters.AddWithValue("@longestShot", convertTimespanToDecimal(session.longestShot));
             cmd.Parameters.AddWithValue("@shortestShot", convertTimespanToDecimal(session.shortestShot));
+            string controlString = getControlString(session);
+            cmd.Parameters.AddWithValue("@hash", GetMd5Hash(controlString));
 
             cmd.Prepare();
 
             cmd.ExecuteNonQuery();
             con.Close();
             Console.WriteLine("Session saved");
+        }
+
+        public string getControlString(Session session) {
+            return session.score + "~" + session.decimalScore + "~" + session.innerX + "~" + convertListOfShotsToString(session.Shots) + "~" + session.user + "~" + session.actualNumberOfShots;
         }
 
         public void deleteSession(long id) {
@@ -287,6 +305,44 @@ namespace freETarget {
             }
             return list;
         }
+
+
+        static string GetMd5Hash(string input) {
+            MD5 md5Hash = MD5.Create();
+
+            // Convert the input string to a byte array and compute the hash.
+            byte[] data = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(input));
+
+            // Create a new Stringbuilder to collect the bytes
+            // and create a string.
+            StringBuilder sBuilder = new StringBuilder();
+
+            // Loop through each byte of the hashed data
+            // and format each one as a hexadecimal string.
+            for (int i = 0; i < data.Length; i++) {
+                sBuilder.Append(data[i].ToString("x2"));
+            }
+
+            // Return the hexadecimal string.
+            return sBuilder.ToString();
+        }
+
+        // Verify a hash against a string.
+        static bool VerifyMd5Hash(string input, string hash) {
+            MD5 md5Hash = MD5.Create();
+
+            // Hash the input.
+            string hashOfInput = GetMd5Hash(input);
+
+            // Create a StringComparer an compare the hashes.
+            StringComparer comparer = StringComparer.OrdinalIgnoreCase;
+
+            if (0 == comparer.Compare(hashOfInput, hash)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 
     public class ListBoxSessionItem {
@@ -300,7 +356,7 @@ namespace freETarget {
             this.id = id;
         }
         public override string ToString() {
-            return date + "\t" + score;
+            return date + " (" + id + ")" + "\t" + score;
         }
     }
 }

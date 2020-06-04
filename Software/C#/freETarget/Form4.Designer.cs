@@ -63,6 +63,7 @@
             this.chartWindage = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.chartElevation = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.imgLogo = new System.Windows.Forms.PictureBox();
             this.tabEvents.SuspendLayout();
             this.tabDetails.SuspendLayout();
             this.tabSessionList.SuspendLayout();
@@ -76,6 +77,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.chartWindage)).BeginInit();
             this.groupBox4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chartElevation)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.imgLogo)).BeginInit();
             this.SuspendLayout();
             // 
             // cmbUsers
@@ -185,7 +187,7 @@
             this.tabDetails.Location = new System.Drawing.Point(12, 43);
             this.tabDetails.Name = "tabDetails";
             this.tabDetails.SelectedIndex = 0;
-            this.tabDetails.Size = new System.Drawing.Size(496, 471);
+            this.tabDetails.Size = new System.Drawing.Size(496, 504);
             this.tabDetails.TabIndex = 3;
             // 
             // tabSessionList
@@ -199,7 +201,7 @@
             this.tabSessionList.Location = new System.Drawing.Point(4, 22);
             this.tabSessionList.Name = "tabSessionList";
             this.tabSessionList.Padding = new System.Windows.Forms.Padding(3);
-            this.tabSessionList.Size = new System.Drawing.Size(488, 445);
+            this.tabSessionList.Size = new System.Drawing.Size(488, 478);
             this.tabSessionList.TabIndex = 0;
             this.tabSessionList.Text = "Sessions";
             this.tabSessionList.UseVisualStyleBackColor = true;
@@ -227,7 +229,7 @@
             this.pGridSession.Location = new System.Drawing.Point(160, 36);
             this.pGridSession.Name = "pGridSession";
             this.pGridSession.PropertySort = System.Windows.Forms.PropertySort.Categorized;
-            this.pGridSession.Size = new System.Drawing.Size(318, 403);
+            this.pGridSession.Size = new System.Drawing.Size(318, 436);
             this.pGridSession.TabIndex = 4;
             this.pGridSession.ToolbarVisible = false;
             // 
@@ -280,7 +282,7 @@
             this.lstbSessions.FormattingEnabled = true;
             this.lstbSessions.Location = new System.Drawing.Point(6, 6);
             this.lstbSessions.Name = "lstbSessions";
-            this.lstbSessions.Size = new System.Drawing.Size(147, 433);
+            this.lstbSessions.Size = new System.Drawing.Size(147, 459);
             this.lstbSessions.TabIndex = 0;
             this.lstbSessions.SelectedIndexChanged += new System.EventHandler(this.lstbSessions_SelectedIndexChanged);
             // 
@@ -290,7 +292,7 @@
             this.tabStats.Location = new System.Drawing.Point(4, 22);
             this.tabStats.Name = "tabStats";
             this.tabStats.Padding = new System.Windows.Forms.Padding(3);
-            this.tabStats.Size = new System.Drawing.Size(488, 445);
+            this.tabStats.Size = new System.Drawing.Size(488, 478);
             this.tabStats.TabIndex = 1;
             this.tabStats.Text = "Statistics";
             this.tabStats.UseVisualStyleBackColor = true;
@@ -314,7 +316,7 @@
             this.tableLayoutPanelStatistics.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 200F));
             this.tableLayoutPanelStatistics.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 200F));
             this.tableLayoutPanelStatistics.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 200F));
-            this.tableLayoutPanelStatistics.Size = new System.Drawing.Size(482, 439);
+            this.tableLayoutPanelStatistics.Size = new System.Drawing.Size(482, 472);
             this.tableLayoutPanelStatistics.TabIndex = 0;
             // 
             // groupBox1
@@ -506,11 +508,22 @@
             this.chartElevation.TabIndex = 3;
             this.chartElevation.Text = "chart4";
             // 
+            // imgLogo
+            // 
+            this.imgLogo.Image = ((System.Drawing.Image)(resources.GetObject("imgLogo.Image")));
+            this.imgLogo.Location = new System.Drawing.Point(220, 23);
+            this.imgLogo.Name = "imgLogo";
+            this.imgLogo.Size = new System.Drawing.Size(128, 27);
+            this.imgLogo.TabIndex = 4;
+            this.imgLogo.TabStop = false;
+            this.imgLogo.Visible = false;
+            // 
             // frmJournal
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(535, 526);
+            this.ClientSize = new System.Drawing.Size(535, 559);
+            this.Controls.Add(this.imgLogo);
             this.Controls.Add(this.tabDetails);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.tabEvents);
@@ -535,6 +548,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.chartWindage)).EndInit();
             this.groupBox4.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.chartElevation)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.imgLogo)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -568,5 +582,6 @@
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.GroupBox groupBox4;
+        private System.Windows.Forms.PictureBox imgLogo;
     }
 }

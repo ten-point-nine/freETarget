@@ -22,6 +22,14 @@ namespace freETarget {
             Final
         }
 
+
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session data")]
+        [DisplayName("Session ID")]
+        [Description("Unique ID given to the session when it was saved")]
+        public long id { get; set; }
+
         [Browsable(true)]
         [ReadOnly(true)]
         [Category("Session configuration")]
@@ -120,6 +128,14 @@ namespace freETarget {
         [Description("Radius of the mean group")]
         public decimal rbar { get; set; }
 
+
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [Category("Session data")]
+        [DisplayName("Group size")]
+        [Description("Dimension of the group - the maximum distance between 2 shots, calculated from the center of the holes")]
+        public decimal groupSize { get; set; }
+
         [Browsable(true)]
         [ReadOnly(true)]
         [Category("Session data")]
@@ -160,10 +176,9 @@ namespace freETarget {
         [Browsable(false)]
         public string diaryEntry = "";
 
-        [Browsable(false)]
-        public long id= -1;
 
-        private VirtualRO currentFinal = null;
+
+    private VirtualRO currentFinal = null;
 
         [Browsable(false)]
         public string user { get; set; }
@@ -203,6 +218,7 @@ namespace freETarget {
         }
         public static Session createNewSession(EventType sessionType, string user, int noOfShots) {
             Session newSession = new Session();
+            newSession.user = user;
 
             if (sessionType.Equals(EventType.AirPistolPractice)) {
                 newSession.decimalScoring = false;
@@ -402,7 +418,6 @@ namespace freETarget {
 
                 if(s.shotDuration < shortest) {
                     shortest = s.shotDuration;
-                    Console.WriteLine(shortest.ToString());
                 }
 
                 if (this.decimalScoring) {
@@ -418,6 +433,5 @@ namespace freETarget {
             this.shortestShot = shortest;
             this.averageScore = sum / actualNumberOfShots;
         }
-
     }
 }

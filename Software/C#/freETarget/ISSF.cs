@@ -62,5 +62,8 @@ namespace freETarget {
         public const int match40NoOfShots = 40;
         public const int match40Time = 50;//seconds
 
+        public const int pistolBlackRings = 7;
+        public const int rifleBlackRings = 4;
+
     }
 }

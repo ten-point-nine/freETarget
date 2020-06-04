@@ -38,5 +38,8 @@
     <Setting Name="voiceCommands" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="pdfPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">.</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

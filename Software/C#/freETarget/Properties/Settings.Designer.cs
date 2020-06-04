@@ -166,5 +166,17 @@ namespace freETarget.Properties {
                 this["voiceCommands"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute(".")]
+        public string pdfPath {
+            get {
+                return ((string)(this["pdfPath"]));
+            }
+            set {
+                this["pdfPath"] = value;
+            }
+        }
     }
 }

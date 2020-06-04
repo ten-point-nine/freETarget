@@ -48,13 +48,17 @@
             this.rdb40 = new System.Windows.Forms.RadioButton();
             this.chkSeries = new System.Windows.Forms.CheckBox();
             this.chkVoice = new System.Windows.Forms.CheckBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.txtPDFlocation = new System.Windows.Forms.TextBox();
+            this.btnBrowse = new System.Windows.Forms.Button();
+            this.folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog();
             this.SuspendLayout();
             // 
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(248, 267);
+            this.btnOK.Location = new System.Drawing.Point(242, 290);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 0;
@@ -65,7 +69,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(167, 267);
+            this.btnCancel.Location = new System.Drawing.Point(161, 290);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
@@ -75,7 +79,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 13);
+            this.label1.Location = new System.Drawing.Point(12, 12);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(35, 13);
             this.label1.TabIndex = 2;
@@ -84,7 +88,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 38);
+            this.label2.Location = new System.Drawing.Point(12, 37);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(26, 13);
             this.label2.TabIndex = 4;
@@ -92,7 +96,7 @@
             // 
             // txtBaud
             // 
-            this.txtBaud.Location = new System.Drawing.Point(100, 60);
+            this.txtBaud.Location = new System.Drawing.Point(100, 59);
             this.txtBaud.Name = "txtBaud";
             this.txtBaud.Size = new System.Drawing.Size(190, 20);
             this.txtBaud.TabIndex = 6;
@@ -117,7 +121,7 @@
             // 
             this.cmbPorts.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbPorts.FormattingEnabled = true;
-            this.cmbPorts.Location = new System.Drawing.Point(100, 34);
+            this.cmbPorts.Location = new System.Drawing.Point(100, 33);
             this.cmbPorts.Name = "cmbPorts";
             this.cmbPorts.Size = new System.Drawing.Size(190, 21);
             this.cmbPorts.TabIndex = 11;
@@ -125,7 +129,7 @@
             // chkDisplayConsole
             // 
             this.chkDisplayConsole.AutoSize = true;
-            this.chkDisplayConsole.Location = new System.Drawing.Point(12, 211);
+            this.chkDisplayConsole.Location = new System.Drawing.Point(15, 238);
             this.chkDisplayConsole.Name = "chkDisplayConsole";
             this.chkDisplayConsole.Size = new System.Drawing.Size(136, 17);
             this.chkDisplayConsole.TabIndex = 12;
@@ -136,7 +140,7 @@
             // 
             this.cmbWeapons.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbWeapons.FormattingEnabled = true;
-            this.cmbWeapons.Location = new System.Drawing.Point(100, 85);
+            this.cmbWeapons.Location = new System.Drawing.Point(100, 84);
             this.cmbWeapons.Name = "cmbWeapons";
             this.cmbWeapons.Size = new System.Drawing.Size(190, 21);
             this.cmbWeapons.TabIndex = 13;
@@ -164,7 +168,7 @@
             this.cmbColor.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
             this.cmbColor.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbColor.FormattingEnabled = true;
-            this.cmbColor.Location = new System.Drawing.Point(100, 111);
+            this.cmbColor.Location = new System.Drawing.Point(100, 110);
             this.cmbColor.Name = "cmbColor";
             this.cmbColor.Size = new System.Drawing.Size(190, 21);
             this.cmbColor.TabIndex = 16;
@@ -173,7 +177,7 @@
             // chkDrawMeanG
             // 
             this.chkDrawMeanG.AutoSize = true;
-            this.chkDrawMeanG.Location = new System.Drawing.Point(12, 165);
+            this.chkDrawMeanG.Location = new System.Drawing.Point(15, 192);
             this.chkDrawMeanG.Name = "chkDrawMeanG";
             this.chkDrawMeanG.Size = new System.Drawing.Size(113, 17);
             this.chkDrawMeanG.TabIndex = 17;
@@ -183,7 +187,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(12, 140);
+            this.label6.Location = new System.Drawing.Point(12, 167);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(115, 13);
             this.label6.TabIndex = 18;
@@ -192,7 +196,7 @@
             // rdb60
             // 
             this.rdb60.AutoSize = true;
-            this.rdb60.Location = new System.Drawing.Point(225, 140);
+            this.rdb60.Location = new System.Drawing.Point(228, 167);
             this.rdb60.Name = "rdb60";
             this.rdb60.Size = new System.Drawing.Size(65, 17);
             this.rdb60.TabIndex = 19;
@@ -203,7 +207,7 @@
             // rdb40
             // 
             this.rdb40.AutoSize = true;
-            this.rdb40.Location = new System.Drawing.Point(144, 139);
+            this.rdb40.Location = new System.Drawing.Point(147, 166);
             this.rdb40.Name = "rdb40";
             this.rdb40.Size = new System.Drawing.Size(65, 17);
             this.rdb40.TabIndex = 20;
@@ -214,7 +218,7 @@
             // chkSeries
             // 
             this.chkSeries.AutoSize = true;
-            this.chkSeries.Location = new System.Drawing.Point(12, 188);
+            this.chkSeries.Location = new System.Drawing.Point(15, 215);
             this.chkSeries.Name = "chkSeries";
             this.chkSeries.Size = new System.Drawing.Size(178, 17);
             this.chkSeries.TabIndex = 21;
@@ -224,18 +228,51 @@
             // chkVoice
             // 
             this.chkVoice.AutoSize = true;
-            this.chkVoice.Location = new System.Drawing.Point(12, 234);
+            this.chkVoice.Location = new System.Drawing.Point(15, 261);
             this.chkVoice.Name = "chkVoice";
-            this.chkVoice.Size = new System.Drawing.Size(133, 17);
+            this.chkVoice.Size = new System.Drawing.Size(145, 17);
             this.chkVoice.TabIndex = 22;
-            this.chkVoice.Text = "Final Voice Commands";
+            this.chkVoice.Text = "Voice commands in finals";
             this.chkVoice.UseVisualStyleBackColor = true;
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(12, 140);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(68, 13);
+            this.label7.TabIndex = 23;
+            this.label7.Text = "PDF location";
+            // 
+            // txtPDFlocation
+            // 
+            this.txtPDFlocation.Location = new System.Drawing.Point(100, 136);
+            this.txtPDFlocation.Name = "txtPDFlocation";
+            this.txtPDFlocation.Size = new System.Drawing.Size(190, 20);
+            this.txtPDFlocation.TabIndex = 24;
+            // 
+            // btnBrowse
+            // 
+            this.btnBrowse.Location = new System.Drawing.Point(291, 135);
+            this.btnBrowse.Name = "btnBrowse";
+            this.btnBrowse.Size = new System.Drawing.Size(25, 20);
+            this.btnBrowse.TabIndex = 25;
+            this.btnBrowse.Text = "...";
+            this.btnBrowse.UseVisualStyleBackColor = true;
+            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
+            // 
+            // folderBrowserDialog
+            // 
+            this.folderBrowserDialog.RootFolder = System.Environment.SpecialFolder.MyComputer;
             // 
             // frmSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(335, 302);
+            this.ClientSize = new System.Drawing.Size(329, 325);
+            this.Controls.Add(this.btnBrowse);
+            this.Controls.Add(this.txtPDFlocation);
+            this.Controls.Add(this.label7);
             this.Controls.Add(this.chkVoice);
             this.Controls.Add(this.chkSeries);
             this.Controls.Add(this.rdb40);
@@ -289,5 +326,9 @@
         public System.Windows.Forms.RadioButton rdb40;
         public System.Windows.Forms.CheckBox chkSeries;
         public System.Windows.Forms.CheckBox chkVoice;
+        private System.Windows.Forms.Label label7;
+        public System.Windows.Forms.TextBox txtPDFlocation;
+        private System.Windows.Forms.Button btnBrowse;
+        private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog;
     }
 }

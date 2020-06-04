@@ -1,8 +1,10 @@
-﻿using System;
+﻿using freETarget.Properties;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -228,6 +230,9 @@ namespace freETarget {
             ListBoxSessionItem item = (ListBoxSessionItem)lstbSessions.SelectedItem;
             if (item != null) {
                 Session session = storage.findSession(item.id);
+                if (session == null) {
+                    return;
+                }
                 pGridSession.SelectedObject = session;
                 currentSession = session;
                 enableDisableButtons(true, true);
@@ -297,7 +302,10 @@ namespace freETarget {
         }
 
         private void btnPrint_Click(object sender, EventArgs e) {
-
+            var stream = new System.IO.MemoryStream();
+            imgLogo.Image.Save(stream, ImageFormat.Png);
+            stream.Position = 0;
+            PDFGenerator.generateAndSavePDF(currentSession, Settings.Default.pdfPath, stream);
         }
     }
 }
