@@ -191,6 +191,10 @@ double temperature_C(void)
  *  Return the temperature in C
  */
   return_value =  (double)(raw) * RTD_SCALE ;
+  
+#if (SAMPLE_CALCULATIONS )
+  return_value = 23.0;
+#endif
 
   if ( (read_DIP() & (VERBOSE_TRACE | RUNNING_MODE_CALIBRATION)) || (SAMPLE_CALCULATIONS != 0))
     {
