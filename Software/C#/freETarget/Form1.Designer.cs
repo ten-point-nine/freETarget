@@ -97,9 +97,9 @@ namespace freETarget
             this.tabRifleMatch = new System.Windows.Forms.TabPage();
             this.tabRifleFinal = new System.Windows.Forms.TabPage();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.digitalClock = new freETarget.SevenSegmentArray();
             this.btnJournal = new System.Windows.Forms.Button();
             this.imgLogo = new System.Windows.Forms.PictureBox();
+            this.digitalClock = new freETarget.SevenSegmentArray();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.imgTarget)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.imgArrow)).BeginInit();
@@ -111,8 +111,8 @@ namespace freETarget
             ((System.ComponentModel.ISupportInitialize)(this.chartBreakdown)).BeginInit();
             this.tcSessionType.SuspendLayout();
             this.panel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.digitalClock)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.imgLogo)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.digitalClock)).BeginInit();
             this.SuspendLayout();
             // 
             // serialPort
@@ -659,10 +659,12 @@ namespace freETarget
             this.chartBreakdown.PaletteCustomColors = new System.Drawing.Color[] {
         System.Drawing.Color.Blue};
             series1.ChartArea = "ChartArea1";
+            series1.CustomProperties = "LabelStyle=Top";
             series1.IsValueShownAsLabel = true;
             series1.IsVisibleInLegend = false;
             series1.Legend = "Legend1";
             series1.Name = "Series1";
+            series1.SmartLabelStyle.AllowOutsidePlotArea = System.Windows.Forms.DataVisualization.Charting.LabelOutsidePlotAreaStyle.No;
             this.chartBreakdown.Series.Add(series1);
             this.chartBreakdown.Size = new System.Drawing.Size(391, 148);
             this.chartBreakdown.TabIndex = 4;
@@ -755,24 +757,6 @@ namespace freETarget
             this.panel1.Size = new System.Drawing.Size(390, 148);
             this.panel1.TabIndex = 33;
             // 
-            // digitalClock
-            // 
-            this.digitalClock.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.digitalClock.ArrayCount = 6;
-            this.digitalClock.ColorBackground = System.Drawing.Color.Black;
-            this.digitalClock.ColorDark = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
-            this.digitalClock.ColorLight = System.Drawing.Color.White;
-            this.digitalClock.DecimalShow = false;
-            this.digitalClock.ElementPadding = new System.Windows.Forms.Padding(4);
-            this.digitalClock.ElementWidth = 10;
-            this.digitalClock.ItalicFactor = 0F;
-            this.digitalClock.Location = new System.Drawing.Point(723, 56);
-            this.digitalClock.Name = "digitalClock";
-            this.digitalClock.Size = new System.Drawing.Size(390, 76);
-            this.digitalClock.TabIndex = 35;
-            this.digitalClock.TabStop = false;
-            this.digitalClock.Value = null;
-            // 
             // btnJournal
             // 
             this.btnJournal.ImageIndex = 2;
@@ -797,6 +781,24 @@ namespace freETarget
             this.imgLogo.TabIndex = 37;
             this.imgLogo.TabStop = false;
             this.imgLogo.Click += new System.EventHandler(this.imgLogo_Click);
+            // 
+            // digitalClock
+            // 
+            this.digitalClock.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.digitalClock.ArrayCount = 6;
+            this.digitalClock.ColorBackground = System.Drawing.Color.Black;
+            this.digitalClock.ColorDark = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
+            this.digitalClock.ColorLight = System.Drawing.Color.White;
+            this.digitalClock.DecimalShow = false;
+            this.digitalClock.ElementPadding = new System.Windows.Forms.Padding(4);
+            this.digitalClock.ElementWidth = 10;
+            this.digitalClock.ItalicFactor = 0F;
+            this.digitalClock.Location = new System.Drawing.Point(723, 56);
+            this.digitalClock.Name = "digitalClock";
+            this.digitalClock.Size = new System.Drawing.Size(390, 76);
+            this.digitalClock.TabIndex = 35;
+            this.digitalClock.TabStop = false;
+            this.digitalClock.Value = null;
             // 
             // frmMainWindow
             // 
@@ -857,8 +859,8 @@ namespace freETarget
             ((System.ComponentModel.ISupportInitialize)(this.chartBreakdown)).EndInit();
             this.tcSessionType.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.digitalClock)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.imgLogo)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.digitalClock)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

@@ -41,5 +41,8 @@
     <Setting Name="pdfPath" Type="System.String" Scope="User">
       <Value Profile="(Default)">.</Value>
     </Setting>
+    <Setting Name="targetDistance" Type="System.Decimal" Scope="User">
+      <Value Profile="(Default)">10</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -1,9 +1,11 @@
-﻿using System;
+﻿using PdfSharp.Drawing.BarCodes;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Reflection;
@@ -60,6 +62,7 @@ namespace freETarget
             chkSeries.Checked = Properties.Settings.Default.OnlySeries;
             chkVoice.Checked = Properties.Settings.Default.voiceCommands;
             txtPDFlocation.Text = Properties.Settings.Default.pdfPath;
+            txtDistance.Text = Properties.Settings.Default.targetDistance.ToString();
             if (Properties.Settings.Default.MatchShots == 60) {
                 rdb60.Checked = true;
                 rdb40.Checked = false;
@@ -95,6 +98,38 @@ namespace freETarget
             if (folderBrowserDialog.ShowDialog() == DialogResult.OK) {
                 txtPDFlocation.Text = folderBrowserDialog.SelectedPath;
             }
+        }
+
+        private void btnOK_Click(object sender, EventArgs e) {
+            try {
+                int.Parse(txtBaud.Text);
+                
+            }catch(Exception) {
+                MessageBox.Show("Baud rate is not a number","Validation error",MessageBoxButtons.OK,MessageBoxIcon.Exclamation);
+                return;
+            }
+
+            try {
+                int.Parse(txtDistance.Text);
+
+            } catch (Exception) {
+                MessageBox.Show("Distance is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return;
+            }
+
+            if(int.Parse(txtDistance.Text) > 10 || int.Parse(txtDistance.Text)< 3) {
+                MessageBox.Show("Target distance must be between 3 and 10 meters", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return;
+            }
+
+            if (!Directory.Exists(txtPDFlocation.Text)) {
+                MessageBox.Show("PDF save location must exist", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return;
+            }
+            
+
+            DialogResult = DialogResult.OK;
+            this.Close();
         }
     }
 }
