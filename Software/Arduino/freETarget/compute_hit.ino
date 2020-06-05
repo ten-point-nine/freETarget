@@ -186,7 +186,7 @@ unsigned int compute_hit
  * Find the smallest non-zero value
  */
   smallest = 1.0e10;
-  for (i=N; i <= W; i++)
+  for (i=N+1; i <= W; i++)
   {
     if ( s[i].count < smallest )
     {
