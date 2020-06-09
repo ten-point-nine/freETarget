@@ -13,9 +13,10 @@
 #include "compute_hit.h"
 #include "analog_io.h"
 
-history_t history[100];
+history_t history;
 double        s_of_sound;        // Speed of sound
-
+unsigned int shot = 0;
+  
 /*----------------------------------------------------------------
  * 
  * void setup()
@@ -66,32 +67,14 @@ void loop()
 {
   unsigned int state = SET_MODE;
   unsigned long now;
-  unsigned int shot = 0;
   double x_time, y_time;        // Location in time
   unsigned int running_mode;
   unsigned int sensor_status;   // Record which sensors contain valid data
   unsigned int location;        // Sensor location 
-  unsigned int ch_h, ch_l;      // Input character
 
-  while (1)
-  {
- #if ( SAMPLE_CALCULATIONS != 0 )
-    while (1)
-    {
-      while ( Serial.available() != 3 )
-        continue;
-      ch_h = (Serial.read() - '0') & 0x0f;
-      ch_l = (Serial.read() - '0') & 0x0f;
-      Serial.println();
-      Serial.println("*************************");
-      sample_calculations((ch_h*10) + ch_l);
-      location = compute_hit(shot, &history[shot]);
-      rotate_shot(location, &history[shot]);  // Rotate the shot back onto the target
-      send_score(&history[shot]);
-      while ( Serial.available() != 0 )
-        Serial.read();
-    }
- #endif
+#if ( SAMPLE_CALCULATIONS != 0 )
+  unit_test();
+#endif
  
 /*
  * Cycle through the state machine
@@ -163,9 +146,9 @@ void loop()
     set_LED(LED_S, false);     // 
     set_LED(LED_X, false);     // No longer processing
     set_LED(LED_Y, true);      // Reducing the shot
-    location = compute_hit(shot, &history[shot]);
-    rotate_shot(location, &history[shot]);  // Rotate the shot back onto the target
-    send_score(&history[shot]);
+    location = compute_hit(shot, &history);
+    rotate_shot(location, &history);  // Rotate the shot back onto the target
+    send_score(&history, shot);
     state = WASTE;
     shot++;                   
     break;
@@ -178,7 +161,11 @@ void loop()
     state = SET_MODE;
     break;
     }
-  }
+
+/*
+ * All done, exit for now
+ */
+  return;
 }
 
 

@@ -46,7 +46,7 @@ double speed_of_sound(double temperature)
 
   speed = (331.3d + 0.606d * temperature) * 1000.0d / 1000000.0d; 
   
-  if ( (read_DIP() & VERBOSE_TRACE) || (SAMPLE_CALCULATIONS != 0) )
+  if ( read_DIP() & VERBOSE_TRACE )
     {
     Serial.print("\n\rSpeed of sound: "); Serial.print(speed); Serial.print("mm/us");
     Serial.print("  Worst case delay: "); Serial.print(RADIUS * 2.0 / speed * OSCILLATOR_MHZ); Serial.print(" counts");
@@ -114,7 +114,7 @@ unsigned int compute_hit
 {
   double        reference;         // Time of reference counter
   int           location;          // Sensor chosen for reference location
-  int           i, j;
+  int           i, j, count;
   double        estimate;          // Estimated position
   double        last_estimate, error; // Location error
   double        r1, r2;            // Distance between points
@@ -138,7 +138,7 @@ unsigned int compute_hit
  }
 #endif
 
- if ( (read_DIP() & VERBOSE_TRACE) || (SAMPLE_CALCULATIONS != 0))
+ if ( read_DIP() & VERBOSE_TRACE )
    {
    Serial.print("\n\rNorth: 0x"); Serial.print(timer_value[N], HEX); Serial.print("  us:"); Serial.print(timer_value[N] / OSCILLATOR_MHZ);
    Serial.print("  East: 0x");    Serial.print(timer_value[E], HEX); Serial.print("  us:"); Serial.print(timer_value[E] / OSCILLATOR_MHZ);
@@ -161,7 +161,7 @@ unsigned int compute_hit
     }
   }
   
- if ( (read_DIP() & VERBOSE_TRACE) || (SAMPLE_CALCULATIONS != 0))
+ if ( read_DIP() & VERBOSE_TRACE )
    {
    Serial.print("\n\rReference: "); Serial.print(reference); Serial.print("  location:"); Serial.print(location);
    }
@@ -176,7 +176,7 @@ unsigned int compute_hit
     s[i].is_valid = ((sensor_status & bit_mask[R(i)]) != 0);
   }
 
- if ( (read_DIP() & VERBOSE_TRACE) || (SAMPLE_CALCULATIONS != 0))
+ if ( read_DIP() & VERBOSE_TRACE )
    {
    Serial.print("\n\rCounts ");
    Serial.print(" North: "); Serial.print(s[N].count); Serial.print("  East: "); Serial.print(s[E].count);
@@ -199,7 +199,7 @@ unsigned int compute_hit
  */
  estimate = length_c - smallest + 1.0d;
  
- if ( (read_DIP() & VERBOSE_TRACE) || (SAMPLE_CALCULATIONS != 0) )
+ if ( read_DIP() & VERBOSE_TRACE )
    {
    Serial.print("\n\restimate: "); Serial.print(estimate);
    }
@@ -222,6 +222,7 @@ unsigned int compute_hit
  *  Loop and calculate the unknown radius (estimate)
  */
   error = 999999;               // Start with a big error
+  count = 0;
   
   while (error > THRESHOLD )
   {
@@ -242,10 +243,15 @@ unsigned int compute_hit
     estimate = sqrt(sq(s[N].x - x_avg) + sq(s[N].y - y_avg));
     error = abs(last_estimate - estimate);
 
-    if ( (read_DIP() & VERBOSE_TRACE) || (SAMPLE_CALCULATIONS != 0))
+    if ( read_DIP() & VERBOSE_TRACE )
     {
       Serial.print("\n\rx_avg:");  Serial.print(x_avg);   Serial.print("  y_avg:"); Serial.print(y_avg); Serial.print(" estimate:"),  Serial.print(estimate);  Serial.print(" error:"); Serial.print(error);
       Serial.println();
+    }
+    count++;
+    if ( count > 20 )
+    {
+      break;
     }
   }
   
@@ -298,9 +304,16 @@ void find_xy
   
   ae = s->a + estimate;     // Dimenstion with error included
   be = s->b + estimate;
-  
-  s->angle_A = acos( (sq(ae) - sq(be) - sq(s->c))/(-2.0d * be * s->c));
 
+  if ( (ae + be) < s->c )   // Check for an accumulated round off error
+    {
+    s->angle_A = 0;         // Yes, then force to zero.
+    }
+  else
+    {  
+    s->angle_A = acos( (sq(ae) - sq(be) - sq(s->c))/(-2.0d * be * s->c));
+    }
+  
 /*
  *  Compute the X,Y based on the detection sensor
  */
@@ -329,12 +342,15 @@ void find_xy
       s->xs = s->x + ((be) * cos(rotation));
       s->ys = s->y + ((be) * sin(rotation));
       break;
+
+    default:
+      Serial.print("\n\nUnknown Rotation:"); Serial.print(s->index);
   }
 
 /*
  * Debugging
  */
-  if ( (read_DIP() & VERBOSE_TRACE) || (SAMPLE_CALCULATIONS != 0))
+  if ( read_DIP() & VERBOSE_TRACE )
   {
     Serial.print("\n\rindex:"); Serial.print(s->index) ; 
     Serial.print(" a:");        Serial.print(s->a);       Serial.print("  b:");  Serial.print(s->b);
@@ -383,7 +399,7 @@ void rotate_shot
 /*
  *  Rotated back to North up
  */
-  if ( (read_DIP() & VERBOSE_TRACE) || (SAMPLE_CALCULATIONS != 0))
+  if ( read_DIP() & VERBOSE_TRACE )
   {
     Serial.print("\n\rRotating Shot (In) x:"); Serial.print(h->x); Serial.print(" y:"); Serial.print(h->y); Serial.print("  degrees:"); Serial.print(rotate[location]);
   }
@@ -412,7 +428,7 @@ void rotate_shot
       break;
   }
   
-  if ( (read_DIP() & VERBOSE_TRACE) || (SAMPLE_CALCULATIONS != 0))
+  if ( read_DIP() & VERBOSE_TRACE )
   {
     Serial.print("\n\rRotating Shot (Out) x:"); Serial.print(h->x); Serial.print(" y:"); Serial.print(h->y);
   }
@@ -439,12 +455,14 @@ void rotate_shot
 
 void send_score
   (
-  history_t* h                // History record
+  history_t* h,                   // History record
+  int shot                        // Current shot
   )
 {
   double x, y;                   // Shot location in mm X, Y
   double radius;
   double angle;
+  double volts;
   
   x = h->x * s_of_sound * CLOCK_PERIOD;
   y = h->y * s_of_sound * CLOCK_PERIOD;
@@ -452,7 +470,7 @@ void send_score
   angle = atan2(h->y, h->x) / PI * 180.0d;
 
   Serial.println();
-  Serial.print("{\"shot\":");   Serial.print(h->shot + 1);
+  Serial.print("{\"shot\":");   Serial.print(shot);
   Serial.print(", \"x\":");     Serial.print(x); 
   Serial.print(", \"y\":");     Serial.print(y); 
   Serial.print(", \"r\":");     Serial.print(radius);
@@ -463,7 +481,7 @@ void send_score
   Serial.print(", \"S\":");     Serial.print(timer_value[S]);
   Serial.print(", \"W\":");     Serial.print(timer_value[W]);
   
-  Serial.print(", \"V\":");     Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
+  Serial.print(", \"V\":");     volts = analogRead(V_REFERENCE); Serial.print(TO_VOLTS(volts));
   Serial.print(", \"T\":");     Serial.print(temperature_C());
 
   Serial.print(", \"I\":");     Serial.print(SOFTWARE_VERSION);

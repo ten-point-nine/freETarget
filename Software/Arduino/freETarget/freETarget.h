@@ -16,8 +16,8 @@
 /*
  * Compilation Flags
  */
-#define SAMPLE_CALCULATIONS false    // Trace the COUNTER values
-void sample_calculations (unsigned int ch);
+#define SAMPLE_CALCULATIONS true    // Trace the COUNTER values
+bool sample_calculations (unsigned int sample, unsigned int rotation);
 
 /*
  * Oscillator Features
@@ -29,6 +29,8 @@ void sample_calculations (unsigned int ch);
 
 #define RUNNING_MODE_CALIBRATION 1 + (0 << 4)
 #define VERBOSE_TRACE            2 + (0 << 4)
+#define PISTOL                   4 + (4 << 4)
+#define SPIRAL                   8 + (8 << 4)
 
 #define N 0
 #define E 1
