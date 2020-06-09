@@ -54,7 +54,16 @@ namespace freETarget {
             } else {
                 btnCalibration.BackColor = Settings.Default.targetColor;
             }
+
+            if (Properties.Settings.Default.targetDistance != 10) {
+                btnConfig.BackColor = Properties.Settings.Default.targetColor;
+            } else {
+                btnConfig.BackColor = this.BackColor;
+            }
+
             toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY);
+
+            toolTip.SetToolTip(btnConfig, "Setting - Target distance: " + Properties.Settings.Default.targetDistance);
 
             initBreakdownChart();
 
@@ -478,6 +487,11 @@ namespace freETarget {
             return ret;
         }
 
+        private decimal getScaledDimension(decimal input) {
+            decimal ret = 10 * input / Settings.Default.targetDistance;
+            ret = decimal.Round(ret, 2, MidpointRounding.AwayFromZero);
+            return ret;
+        }
 
         private Shot parseJson(string json) {
             //parse json shot data
@@ -501,11 +515,11 @@ namespace freETarget {
                     if (t4[0].Contains("shot")) {
                         ret.count = int.Parse(t4[1], CultureInfo.InvariantCulture);
                     } else if (t4[0].Contains("x")) {
-                        ret.x = decimal.Parse(t4[1], CultureInfo.InvariantCulture);
+                        ret.x = getScaledDimension(decimal.Parse(t4[1], CultureInfo.InvariantCulture));
                     } else if (t4[0].Contains("y")) {
-                        ret.y = decimal.Parse(t4[1], CultureInfo.InvariantCulture);
+                        ret.y = getScaledDimension(decimal.Parse(t4[1], CultureInfo.InvariantCulture));
                     } else if (t4[0].Contains("r")) {
-                        ret.radius = decimal.Parse(t4[1], CultureInfo.InvariantCulture);
+                        ret.radius = getScaledDimension(decimal.Parse(t4[1], CultureInfo.InvariantCulture));
                     } else if (t4[0].Contains("a")) {
                         ret.angle = decimal.Parse(t4[1], CultureInfo.InvariantCulture);
                     }
@@ -516,6 +530,8 @@ namespace freETarget {
                 err.count = -1;
                 return err;
             }
+
+            Console.WriteLine("Shot X:" + ret.x + " Y:" + ret.y + " R:" + ret.radius + " A:" + ret.angle);
 
             ret.computeScore(currentSession.targetType);
 
@@ -545,6 +561,15 @@ namespace freETarget {
                 Properties.Settings.Default.OnlySeries = settingsFrom.chkSeries.Checked;
                 Properties.Settings.Default.voiceCommands = settingsFrom.chkVoice.Checked;
                 Properties.Settings.Default.pdfPath = settingsFrom.txtPDFlocation.Text;
+                Properties.Settings.Default.targetDistance = int.Parse(settingsFrom.txtDistance.Text);
+
+                if (Properties.Settings.Default.targetDistance != 10) {
+                    btnConfig.BackColor = Properties.Settings.Default.targetColor;
+                } else {
+                    btnConfig.BackColor = SystemColors.Control;
+                }
+                toolTip.SetToolTip(btnConfig, "Setting - Target distance: " + Properties.Settings.Default.targetDistance);
+
                 if (settingsFrom.rdb60.Checked) {
                     Properties.Settings.Default.MatchShots = 60;
                 } else if (settingsFrom.rdb40.Checked) {

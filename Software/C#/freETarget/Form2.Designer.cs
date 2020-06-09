@@ -52,24 +52,26 @@
             this.txtPDFlocation = new System.Windows.Forms.TextBox();
             this.btnBrowse = new System.Windows.Forms.Button();
             this.folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog();
+            this.label8 = new System.Windows.Forms.Label();
+            this.txtDistance = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(242, 290);
+            this.btnOK.Location = new System.Drawing.Point(242, 311);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 0;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(161, 290);
+            this.btnCancel.Location = new System.Drawing.Point(161, 311);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
@@ -129,7 +131,7 @@
             // chkDisplayConsole
             // 
             this.chkDisplayConsole.AutoSize = true;
-            this.chkDisplayConsole.Location = new System.Drawing.Point(15, 238);
+            this.chkDisplayConsole.Location = new System.Drawing.Point(15, 260);
             this.chkDisplayConsole.Name = "chkDisplayConsole";
             this.chkDisplayConsole.Size = new System.Drawing.Size(136, 17);
             this.chkDisplayConsole.TabIndex = 12;
@@ -177,7 +179,7 @@
             // chkDrawMeanG
             // 
             this.chkDrawMeanG.AutoSize = true;
-            this.chkDrawMeanG.Location = new System.Drawing.Point(15, 192);
+            this.chkDrawMeanG.Location = new System.Drawing.Point(15, 214);
             this.chkDrawMeanG.Name = "chkDrawMeanG";
             this.chkDrawMeanG.Size = new System.Drawing.Size(113, 17);
             this.chkDrawMeanG.TabIndex = 17;
@@ -187,7 +189,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(12, 167);
+            this.label6.Location = new System.Drawing.Point(12, 189);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(115, 13);
             this.label6.TabIndex = 18;
@@ -196,7 +198,7 @@
             // rdb60
             // 
             this.rdb60.AutoSize = true;
-            this.rdb60.Location = new System.Drawing.Point(228, 167);
+            this.rdb60.Location = new System.Drawing.Point(228, 189);
             this.rdb60.Name = "rdb60";
             this.rdb60.Size = new System.Drawing.Size(65, 17);
             this.rdb60.TabIndex = 19;
@@ -207,7 +209,7 @@
             // rdb40
             // 
             this.rdb40.AutoSize = true;
-            this.rdb40.Location = new System.Drawing.Point(147, 166);
+            this.rdb40.Location = new System.Drawing.Point(147, 188);
             this.rdb40.Name = "rdb40";
             this.rdb40.Size = new System.Drawing.Size(65, 17);
             this.rdb40.TabIndex = 20;
@@ -218,7 +220,7 @@
             // chkSeries
             // 
             this.chkSeries.AutoSize = true;
-            this.chkSeries.Location = new System.Drawing.Point(15, 215);
+            this.chkSeries.Location = new System.Drawing.Point(15, 237);
             this.chkSeries.Name = "chkSeries";
             this.chkSeries.Size = new System.Drawing.Size(178, 17);
             this.chkSeries.TabIndex = 21;
@@ -228,7 +230,7 @@
             // chkVoice
             // 
             this.chkVoice.AutoSize = true;
-            this.chkVoice.Location = new System.Drawing.Point(15, 261);
+            this.chkVoice.Location = new System.Drawing.Point(15, 283);
             this.chkVoice.Name = "chkVoice";
             this.chkVoice.Size = new System.Drawing.Size(145, 17);
             this.chkVoice.TabIndex = 22;
@@ -265,11 +267,29 @@
             // 
             this.folderBrowserDialog.RootFolder = System.Environment.SpecialFolder.MyComputer;
             // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(12, 165);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(131, 13);
+            this.label8.TabIndex = 26;
+            this.label8.Text = "Distance to target (meters)";
+            // 
+            // txtDistance
+            // 
+            this.txtDistance.Location = new System.Drawing.Point(147, 162);
+            this.txtDistance.Name = "txtDistance";
+            this.txtDistance.Size = new System.Drawing.Size(143, 20);
+            this.txtDistance.TabIndex = 27;
+            // 
             // frmSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(329, 325);
+            this.ClientSize = new System.Drawing.Size(329, 346);
+            this.Controls.Add(this.txtDistance);
+            this.Controls.Add(this.label8);
             this.Controls.Add(this.btnBrowse);
             this.Controls.Add(this.txtPDFlocation);
             this.Controls.Add(this.label7);
@@ -330,5 +350,7 @@
         public System.Windows.Forms.TextBox txtPDFlocation;
         private System.Windows.Forms.Button btnBrowse;
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog;
+        private System.Windows.Forms.Label label8;
+        public System.Windows.Forms.TextBox txtDistance;
     }
 }

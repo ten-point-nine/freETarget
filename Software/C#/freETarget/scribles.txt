@@ -34,3 +34,9 @@ user -TEXT
 averageScore - decimal (REAL)
 actualNumberOfShots - int
 diary - TEXT
+
+
+BC * ae / ab = ef
+bc = ef*ab/ae
+
+new range = 10 * old range / new distance

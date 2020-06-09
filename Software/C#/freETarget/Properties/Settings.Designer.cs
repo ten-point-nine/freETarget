@@ -178,5 +178,17 @@ namespace freETarget.Properties {
                 this["pdfPath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        public decimal targetDistance {
+            get {
+                return ((decimal)(this["targetDistance"]));
+            }
+            set {
+                this["targetDistance"] = value;
+            }
+        }
     }
 }
