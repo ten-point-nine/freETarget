@@ -12,8 +12,8 @@
 
 const char* which_one[4] = {"  <<NORTH>>  ", "  <<EAST>>  ", "  <<SOUTH>>  ", "  <<WEST>>  "};
 
-#define RX(Z,X,Y) (8000 - (sqrt(sq(((X)  / s_of_sound * OSCILLATOR_MHZ )-s[(Z)].x) + sq(((Y) / s_of_sound * OSCILLATOR_MHZ)-s[(Z)].y))))
-#define TEST_SAMPLES 500
+#define RX(S,H,V) (8000 - ((sqrt(sq((H)-s[(S)].x) + sq((V)-s[(S)].y))) / 0.33 * OSCILLATOR_MHZ))
+
 
 
 /*----------------------------------------------------------------
@@ -114,7 +114,7 @@ void unit_test(void)
   bool more_samples;
   unsigned int location;
 
-//  Serial.print("\n\rEnter Test Number (00 for all):");
+  Serial.print("\n\rEnter Test Number (00 for all):");
   
   while (1)
   {
@@ -123,13 +123,14 @@ void unit_test(void)
   */
    if ( (read_DIP() & SPIRAL) != 0 )
     {
-    for ( k = 0; k != TEST_SAMPLES; k++)
+    for ( k = 0; k != 60; k++)
       {
       sample_calculations(k, 0);
       location = compute_hit(shot, &history);
- //     rotate_shot(location, &history);  // Rotate the shot back onto the target
+      rotate_shot(location, &history);  // Rotate the shot back onto the target
       send_score(&history, shot);
       shot++;
+      delay(250);
       }
     for (;;);
     }
@@ -204,14 +205,15 @@ bool sample_calculations (unsigned int sample, unsigned int rotation)
     angle = (PI_ON_4) / 5.0 * ((double)sample);
     if ( read_DIP() & PISTOL )
       {
-      radius = 0.99 * RADIUS_PISTOL * (double)sample / TEST_SAMPLES;
+      radius = RADIUS_PISTOL * (double)sample / 60.0;
       }
     else
       {
-      radius = RADIUS_RIFLE * (double)sample / TEST_SAMPLES;
+      radius = RADIUS_RIFLE * (double)sample / 60.0;
       }
     x = radius * cos(angle);
     y = radius * sin(angle);
+    Serial.print(x); Serial.print(y); Serial.print(angle);
     timer_value[N] = RX(N, x, y);
     timer_value[E] = RX(E, x, y);
     timer_value[S] = RX(S, x, y);
@@ -226,7 +228,9 @@ bool sample_calculations (unsigned int sample, unsigned int rotation)
     {
     if ( sample > sizeof(sample_scores) / sizeof(int) / 4 )
       return false;
-      
+    
+    Serial.print("\n\rSample calculations:"); Serial.print(sample); 
+  
     timer_value[N] = sample_scores[sample][(N + rotation) & 3];
     timer_value[E] = sample_scores[sample][(E + rotation) & 3];
     timer_value[S] = sample_scores[sample][(S + rotation) & 3];
@@ -235,3 +239,4 @@ bool sample_calculations (unsigned int sample, unsigned int rotation)
   return true;
 }
 #endif
+

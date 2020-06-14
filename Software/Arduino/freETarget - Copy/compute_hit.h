@@ -5,15 +5,6 @@
 #define _COMPUTE_HIT_H
 
 /*
- * What score items will be included in the JSON
- */
-#define S_SHOT      true
-#define S_XY        true
-#define S_RA        true
-#define S_COUNTERS  true
-#define S_MISC      true
-
-/*
  *  Local Structures
  */
 struct sensor
@@ -42,3 +33,4 @@ void rotate_hit(unsigned int location, history_t* h);       // Rotate the shot b
 void find_xy(sensor_t* s, double estimate);                 // Estimated position   
 
 #endif
+

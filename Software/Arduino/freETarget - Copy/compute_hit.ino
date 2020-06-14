@@ -14,9 +14,8 @@
 
 #define THRESHOLD (0.001)
 
-#define PI      (3.14159269d)
-#define PI_ON_4 (PI / 4.0d)
-#define PI_ON_2 (PI / 2.0d)
+#define PI_ON_4 (3.14159269d / 4.0d)
+#define PI_ON_2 (3.14159269d / 2.0d)
 
 #define R(x)  (((x)+location) % 4)    // Rotate the target by location points
 
@@ -173,8 +172,8 @@ unsigned int compute_hit
  */
   for (i=N; i <= W; i++)
   {
-    s[i].count = reference - timer_value[i];
-    s[i].is_valid = ((sensor_status & bit_mask[i]) != 0);
+    s[i].count = reference - timer_value[R(i)];
+    s[i].is_valid = ((sensor_status & bit_mask[R(i)]) != 0);
   }
 
  if ( read_DIP() & VERBOSE_TRACE )
@@ -204,7 +203,6 @@ unsigned int compute_hit
    {
    Serial.print("\n\restimate: "); Serial.print(estimate);
    }
-
 /*
  * Fill up the structure with the counter geometry
  * Rotated so that the longest time points north
@@ -242,7 +240,7 @@ unsigned int compute_hit
     x_avg /= 4.0d;                // Work out the average intercept
     y_avg /= 4.0d;
 
-    estimate = sqrt(sq(s[location].x - x_avg) + sq(s[location].y - y_avg));
+    estimate = sqrt(sq(s[N].x - x_avg) + sq(s[N].y - y_avg));
     error = abs(last_estimate - estimate);
 
     if ( read_DIP() & VERBOSE_TRACE )
@@ -297,7 +295,7 @@ unsigned int compute_hit
 
 void find_xy
     (
-     sensor_t* s,           // Sensor to be operatated on
+     sensor_t* s,           // Index to be operatated on
      double estimate        // Estimated position   
      )
 {
@@ -353,14 +351,14 @@ void find_xy
  * Debugging
  */
   if ( read_DIP() & VERBOSE_TRACE )
-    {
+  {
     Serial.print("\n\rindex:"); Serial.print(s->index) ; 
     Serial.print(" a:");        Serial.print(s->a);       Serial.print("  b:");  Serial.print(s->b);
     Serial.print(" ae:");       Serial.print(ae);         Serial.print("  be:"); Serial.print(be);    Serial.print(" c:"),  Serial.print(s->c);
     Serial.print(" cos:");      Serial.print(cos(rotation)); Serial.print(" sin: "); Serial.print(sin(rotation));
     Serial.print(" angle_A:");  Serial.print(s->angle_A); Serial.print("  x:");  Serial.print(s->x);  Serial.print(" y:");  Serial.print(s->y);
     Serial.print(" rotation:"); Serial.print(rotation);   Serial.print("  xs:"); Serial.print(s->xs); Serial.print(" ys:"); Serial.print(s->ys);
-    }
+  }
  
 /*
  *  All done, return
@@ -471,37 +469,28 @@ void send_score
   radius = sqrt(sq(x) + sq(y));
   angle = atan2(h->y, h->x) / PI * 180.0d;
 
-#if ( S_SHOT )
-  Serial.print("{\"shot\":");   Serial.print(shot); Serial.print(", ");
-#endif
+  Serial.println();
+  Serial.print("{\"shot\":");   Serial.print(shot);
+  Serial.print(", \"x\":");     Serial.print(x); 
+  Serial.print(", \"y\":");     Serial.print(y); 
+  Serial.print(", \"r\":");     Serial.print(radius);
+  Serial.print(", \"a\":");     Serial.print(angle);
 
-#if ( S_XY )
-  Serial.print("\"x\":");     Serial.print(x);  Serial.print(", ");
-  Serial.print("\"y\":");     Serial.print(y);  Serial.print(", ");
-#endif
+  Serial.print(", \"N\":");     Serial.print(timer_value[N]);
+  Serial.print(", \"E\":");     Serial.print(timer_value[E]);
+  Serial.print(", \"S\":");     Serial.print(timer_value[S]);
+  Serial.print(", \"W\":");     Serial.print(timer_value[W]);
+  
+  Serial.print(", \"V\":");     volts = analogRead(V_REFERENCE); Serial.print(TO_VOLTS(volts));
+  Serial.print(", \"T\":");     Serial.print(temperature_C());
 
-#if ( S_RA )
-  Serial.print("\"r\":");     Serial.print(radius); Serial.print(", ");
-  Serial.print("\"a\":");     Serial.print(angle);  Serial.print(", ");
-#endif
-
-#if ( S_COUNTERS )
-  Serial.print("\"N\":");     Serial.print(timer_value[N]); Serial.print(", ");
-  Serial.print("\"E\":");     Serial.print(timer_value[E]); Serial.print(", ");
-  Serial.print("\"S\":");     Serial.print(timer_value[S]); Serial.print(", ");
-  Serial.print("\"W\":");     Serial.print(timer_value[W]); Serial.print(", ");
-#endif
-
-#if ( S_MISC )
-  Serial.print("\"V\":");     volts = analogRead(V_REFERENCE); Serial.print(TO_VOLTS(volts)); Serial.print(", ");
-  Serial.print("\"T\":");     Serial.print(temperature_C());   Serial.print(", ");
-  Serial.print("\"I\":");     Serial.print(SOFTWARE_VERSION);
-#endif
-
-#if ( S_SHOT )
+  Serial.print(", \"I\":");     Serial.print(SOFTWARE_VERSION);
+  
   Serial.print("}");
-#endif
   Serial.println();
 
   return;
 }
+
+
+

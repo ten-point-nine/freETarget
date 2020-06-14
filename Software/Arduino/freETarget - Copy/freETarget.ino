@@ -32,7 +32,7 @@ void setup()
  *  Setup the serial port
  */
   Serial.begin(115200);
-//  Serial.println("\n\rfreETarget V2.0X");
+  Serial.println("\n\rfreETarget V2.0X");
 
 /*
  *  Set up the port pins
@@ -147,7 +147,7 @@ void loop()
     set_LED(LED_X, false);     // No longer processing
     set_LED(LED_Y, true);      // Reducing the shot
     location = compute_hit(shot, &history);
-//    rotate_shot(location, &history);  // Rotate the shot back onto the target
+    rotate_shot(location, &history);  // Rotate the shot back onto the target
     send_score(&history, shot);
     state = WASTE;
     shot++;                   
@@ -167,3 +167,5 @@ void loop()
  */
   return;
 }
+
+
