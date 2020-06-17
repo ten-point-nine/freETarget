@@ -1,5 +1,8 @@
 ﻿freETarget software
 
+the program uses 2 external libraries: System.Data.SQLite and PdfSharp. Use Visual Studio NuGet Packages tool to import these 2 libraries into the workspace.
+The Setup project will build an installation kit for the software.
+
 PC software for displaying data from the electronic target received over the COM serial port. The PC connects to the target using a USB cable. 
 -	Supports air pistol and air target events; practice, match and final
 -	Displays score in integer or decimal format
