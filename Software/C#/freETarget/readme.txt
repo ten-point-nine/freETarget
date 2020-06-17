@@ -1,4 +1,4 @@
-freETarget software
+﻿freETarget software
 
 PC software for displaying data from the electronic target received over the COM serial port. The PC connects to the target using a USB cable. 
 -	Supports air pistol and air target events; practice, match and final
@@ -17,4 +17,4 @@ PC software for displaying data from the electronic target received over the COM
 -	Each session has its own diary entry page for noting impressions of the training
 -	PDF generated for each session with all the results
 -	Visually distinctive “not connected” status
-- Variable target distance (3 to 10 meters)
+- 	Variable target distance (3 to 10 meters)

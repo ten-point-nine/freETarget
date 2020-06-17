@@ -175,10 +175,18 @@ namespace freETarget {
 
         private void btnConnect_Click(object sender, EventArgs e) {
             if (currentStatus == Status.NOT_CONNECTED) {
+
+                if (Properties.Settings.Default.portName == null || Properties.Settings.Default.portName.Trim() == "") {
+                    MessageBox.Show("No COM port selected. Please go to the Settings dialog and select a port.", "Cannot connect", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    return;
+                }
+
                 serialPort.PortName = Properties.Settings.Default.portName;
                 serialPort.BaudRate = Properties.Settings.Default.baudRate;
                 serialPort.DataBits = 8;
                 serialPort.DtrEnable = true;
+
+
 
                 try {
                     serialPort.Open();
@@ -568,7 +576,7 @@ namespace freETarget {
                 } else {
                     btnConfig.BackColor = SystemColors.Control;
                 }
-                toolTip.SetToolTip(btnConfig, "Setting - Target distance: " + Properties.Settings.Default.targetDistance);
+                toolTip.SetToolTip(btnConfig, "Settings - Target distance: " + Properties.Settings.Default.targetDistance);
 
                 if (settingsFrom.rdb60.Checked) {
                     Properties.Settings.Default.MatchShots = 60;
@@ -765,8 +773,8 @@ namespace freETarget {
 
                 points[2].X = dimension;
                 points[2].Y = 0;
-
-                it.FillPolygon(brushBlack, points);
+                Brush brushBlue = new SolidBrush(Color.DarkBlue);
+                it.FillPolygon(brushBlue, points);
             }
 
             it.DrawRectangle(penBlack, 0, 0, dimension - 1, dimension - 1);

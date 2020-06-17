@@ -54,12 +54,15 @@
             this.folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog();
             this.label8 = new System.Windows.Forms.Label();
             this.txtDistance = new System.Windows.Forms.TextBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.linkLabel = new System.Windows.Forms.LinkLabel();
             this.SuspendLayout();
             // 
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.Location = new System.Drawing.Point(242, 311);
+            this.btnOK.Location = new System.Drawing.Point(242, 416);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 0;
@@ -71,7 +74,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(161, 311);
+            this.btnCancel.Location = new System.Drawing.Point(161, 416);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
@@ -283,11 +286,44 @@
             this.txtDistance.Size = new System.Drawing.Size(143, 20);
             this.txtDistance.TabIndex = 27;
             // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.label9.Location = new System.Drawing.Point(12, 331);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(219, 13);
+            this.label9.TabIndex = 28;
+            this.label9.Text = "freETarget Project  -  v 1.0   (c) 2020";
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(12, 354);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(191, 13);
+            this.label10.TabIndex = 29;
+            this.label10.Text = "Open Source Electronic System Target";
+            // 
+            // linkLabel
+            // 
+            this.linkLabel.AutoSize = true;
+            this.linkLabel.Location = new System.Drawing.Point(12, 377);
+            this.linkLabel.Name = "linkLabel";
+            this.linkLabel.Size = new System.Drawing.Size(219, 13);
+            this.linkLabel.TabIndex = 30;
+            this.linkLabel.TabStop = true;
+            this.linkLabel.Text = "https://github.com/ten-point-nine/freETarget";
+            this.linkLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
+            // 
             // frmSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(329, 346);
+            this.ClientSize = new System.Drawing.Size(329, 451);
+            this.Controls.Add(this.linkLabel);
+            this.Controls.Add(this.label10);
+            this.Controls.Add(this.label9);
             this.Controls.Add(this.txtDistance);
             this.Controls.Add(this.label8);
             this.Controls.Add(this.btnBrowse);
@@ -352,5 +388,8 @@
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog;
         private System.Windows.Forms.Label label8;
         public System.Windows.Forms.TextBox txtDistance;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.LinkLabel linkLabel;
     }
 }
