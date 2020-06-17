@@ -708,7 +708,7 @@ namespace freETarget
             this.tabPistolMatch.Location = new System.Drawing.Point(23, 4);
             this.tabPistolMatch.Name = "tabPistolMatch";
             this.tabPistolMatch.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPistolMatch.Size = new System.Drawing.Size(173, 429);
+            this.tabPistolMatch.Size = new System.Drawing.Size(173, 438);
             this.tabPistolMatch.TabIndex = 1;
             this.tabPistolMatch.Text = "Pistol Match ";
             // 
@@ -717,7 +717,7 @@ namespace freETarget
             this.tabPistolFinal.BackColor = System.Drawing.Color.Red;
             this.tabPistolFinal.Location = new System.Drawing.Point(23, 4);
             this.tabPistolFinal.Name = "tabPistolFinal";
-            this.tabPistolFinal.Size = new System.Drawing.Size(173, 429);
+            this.tabPistolFinal.Size = new System.Drawing.Size(173, 438);
             this.tabPistolFinal.TabIndex = 2;
             this.tabPistolFinal.Text = "Pistol Final";
             // 
@@ -726,7 +726,7 @@ namespace freETarget
             this.tabRiflePractice.BackColor = System.Drawing.Color.LimeGreen;
             this.tabRiflePractice.Location = new System.Drawing.Point(23, 4);
             this.tabRiflePractice.Name = "tabRiflePractice";
-            this.tabRiflePractice.Size = new System.Drawing.Size(173, 429);
+            this.tabRiflePractice.Size = new System.Drawing.Size(173, 438);
             this.tabRiflePractice.TabIndex = 3;
             this.tabRiflePractice.Text = "Rifle Practice";
             // 
@@ -735,16 +735,16 @@ namespace freETarget
             this.tabRifleMatch.BackColor = System.Drawing.Color.Turquoise;
             this.tabRifleMatch.Location = new System.Drawing.Point(23, 4);
             this.tabRifleMatch.Name = "tabRifleMatch";
-            this.tabRifleMatch.Size = new System.Drawing.Size(173, 429);
+            this.tabRifleMatch.Size = new System.Drawing.Size(173, 438);
             this.tabRifleMatch.TabIndex = 4;
             this.tabRifleMatch.Text = "Rifle Match ";
             // 
             // tabRifleFinal
             // 
             this.tabRifleFinal.BackColor = System.Drawing.Color.DodgerBlue;
-            this.tabRifleFinal.Location = new System.Drawing.Point(42, 4);
+            this.tabRifleFinal.Location = new System.Drawing.Point(23, 4);
             this.tabRifleFinal.Name = "tabRifleFinal";
-            this.tabRifleFinal.Size = new System.Drawing.Size(154, 429);
+            this.tabRifleFinal.Size = new System.Drawing.Size(173, 438);
             this.tabRifleFinal.TabIndex = 5;
             this.tabRifleFinal.Text = "Rifle Final";
             // 
