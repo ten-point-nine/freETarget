@@ -301,9 +301,9 @@
             this.label10.AutoSize = true;
             this.label10.Location = new System.Drawing.Point(12, 354);
             this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(191, 13);
+            this.label10.Size = new System.Drawing.Size(193, 13);
             this.label10.TabIndex = 29;
-            this.label10.Text = "Open Source Electronic System Target";
+            this.label10.Text = "Open Source Electronic Scoring Target";
             // 
             // linkLabel
             // 
