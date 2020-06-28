@@ -239,11 +239,17 @@ namespace freETarget {
             string controlString = getControlString(session);
             cmd.Parameters.AddWithValue("@hash", GetMd5Hash(controlString));
 
-            cmd.Prepare();
+            try {
+                cmd.Prepare();
 
-            cmd.ExecuteNonQuery();
-            con.Close();
-            Console.WriteLine("Session saved");
+                cmd.ExecuteNonQuery();
+
+                Console.WriteLine("Session saved");
+            } catch(Exception ex){
+                MessageBox.Show("Error saving session to the database. Make sure you have write access to the folder." + Environment.NewLine + ex.Message, "Error writing to DB", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            } finally {
+                con.Close();
+            }
         }
 
         public string getControlString(Session session) {
