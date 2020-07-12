@@ -190,5 +190,17 @@ namespace freETarget.Properties {
                 this["targetDistance"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool scoreVoice {
+            get {
+                return ((bool)(this["scoreVoice"]));
+            }
+            set {
+                this["scoreVoice"] = value;
+            }
+        }
     }
 }

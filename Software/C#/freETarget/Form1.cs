@@ -152,6 +152,9 @@ namespace freETarget {
 
                     writeShotToDebug(indata);
                     displayShotData(shot);
+                    VirtualRO vro = new VirtualRO();
+                    vro.speakShot(shot);
+
                     var d = new SafeCallDelegate3(targetRefresh); //draw shot
                     this.Invoke(d);
 
@@ -570,6 +573,7 @@ namespace freETarget {
                 Properties.Settings.Default.voiceCommands = settingsFrom.chkVoice.Checked;
                 Properties.Settings.Default.pdfPath = settingsFrom.txtPDFlocation.Text;
                 Properties.Settings.Default.targetDistance = int.Parse(settingsFrom.txtDistance.Text);
+                Properties.Settings.Default.scoreVoice = settingsFrom.chkScoreVoice.Checked;
 
                 if (Properties.Settings.Default.targetDistance != 10) {
                     btnConfig.BackColor = Properties.Settings.Default.targetColor;
