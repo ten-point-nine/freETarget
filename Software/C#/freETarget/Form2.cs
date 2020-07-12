@@ -48,6 +48,9 @@ namespace freETarget
             cmbWeapons.Items.Add("Air Rifle Practice");
 
             loadSettings();
+
+            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            lblVersion.Text = "freETarget Project  -  v"+ assembly.GetName().Version.Major + "." + assembly.GetName().Version.Minor + "." + assembly.GetName().Version.Build + "   (c) 2020";
         }
 
         private void loadSettings()
@@ -63,6 +66,7 @@ namespace freETarget
             chkVoice.Checked = Properties.Settings.Default.voiceCommands;
             txtPDFlocation.Text = Properties.Settings.Default.pdfPath;
             txtDistance.Text = Properties.Settings.Default.targetDistance.ToString();
+            chkScoreVoice.Checked = Properties.Settings.Default.scoreVoice;
             if (Properties.Settings.Default.MatchShots == 60) {
                 rdb60.Checked = true;
                 rdb40.Checked = false;
@@ -130,6 +134,10 @@ namespace freETarget
 
             DialogResult = DialogResult.OK;
             this.Close();
+        }
+
+        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
+            System.Diagnostics.Process.Start(linkLabel.Text);
         }
     }
 }

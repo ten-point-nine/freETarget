@@ -169,7 +169,7 @@ namespace freETarget.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(".")]
+        [global::System.Configuration.DefaultSettingValueAttribute(".\\pdf")]
         public string pdfPath {
             get {
                 return ((string)(this["pdfPath"]));
@@ -188,6 +188,18 @@ namespace freETarget.Properties {
             }
             set {
                 this["targetDistance"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool scoreVoice {
+            get {
+                return ((bool)(this["scoreVoice"]));
+            }
+            set {
+                this["scoreVoice"] = value;
             }
         }
     }

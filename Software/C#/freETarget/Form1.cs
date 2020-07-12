@@ -152,6 +152,9 @@ namespace freETarget {
 
                     writeShotToDebug(indata);
                     displayShotData(shot);
+                    VirtualRO vro = new VirtualRO();
+                    vro.speakShot(shot);
+
                     var d = new SafeCallDelegate3(targetRefresh); //draw shot
                     this.Invoke(d);
 
@@ -175,10 +178,18 @@ namespace freETarget {
 
         private void btnConnect_Click(object sender, EventArgs e) {
             if (currentStatus == Status.NOT_CONNECTED) {
+
+                if (Properties.Settings.Default.portName == null || Properties.Settings.Default.portName.Trim() == "") {
+                    MessageBox.Show("No COM port selected. Please go to the Settings dialog and select a port.", "Cannot connect", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    return;
+                }
+
                 serialPort.PortName = Properties.Settings.Default.portName;
                 serialPort.BaudRate = Properties.Settings.Default.baudRate;
                 serialPort.DataBits = 8;
                 serialPort.DtrEnable = true;
+
+
 
                 try {
                     serialPort.Open();
@@ -562,13 +573,14 @@ namespace freETarget {
                 Properties.Settings.Default.voiceCommands = settingsFrom.chkVoice.Checked;
                 Properties.Settings.Default.pdfPath = settingsFrom.txtPDFlocation.Text;
                 Properties.Settings.Default.targetDistance = int.Parse(settingsFrom.txtDistance.Text);
+                Properties.Settings.Default.scoreVoice = settingsFrom.chkScoreVoice.Checked;
 
                 if (Properties.Settings.Default.targetDistance != 10) {
                     btnConfig.BackColor = Properties.Settings.Default.targetColor;
                 } else {
                     btnConfig.BackColor = SystemColors.Control;
                 }
-                toolTip.SetToolTip(btnConfig, "Setting - Target distance: " + Properties.Settings.Default.targetDistance);
+                toolTip.SetToolTip(btnConfig, "Settings - Target distance: " + Properties.Settings.Default.targetDistance);
 
                 if (settingsFrom.rdb60.Checked) {
                     Properties.Settings.Default.MatchShots = 60;
@@ -765,8 +777,8 @@ namespace freETarget {
 
                 points[2].X = dimension;
                 points[2].Y = 0;
-
-                it.FillPolygon(brushBlack, points);
+                Brush brushBlue = new SolidBrush(Color.DarkBlue);
+                it.FillPolygon(brushBlue, points);
             }
 
             it.DrawRectangle(penBlack, 0, 0, dimension - 1, dimension - 1);
