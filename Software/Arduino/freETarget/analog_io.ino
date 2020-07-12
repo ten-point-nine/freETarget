@@ -42,6 +42,23 @@ unsigned int read_reference(void)
   return analogRead(V_REFERENCE);
 }
 
+/*----------------------------------------------------------------
+ * 
+ * unsigned int revision(void)
+ * 
+ * Return the board revision
+ * 
+ *--------------------------------------------------------------
+ *
+ *  Read the analog value from the resistor divider, keep only
+ *  the top 4 bits, and return the version number.
+ *--------------------------------------------------------------*/
+static unsigned int version[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+  
+unsigned int revision(void)
+{
+  return version[analogRead(ANALOG_VERSION) >> 8];
+}
 
 /*----------------------------------------------------------------
  * 
@@ -92,7 +109,7 @@ void cal_analog(void)
 
   steps = 1000.0 * TO_VOLTS(reference - max_analog()) / 250.0;
   
-  Serial.print(steps); Serial.print("  ");
+  Serial.println(); Serial.print(steps); Serial.print("  ");
 
   if ( steps > 7 )
     {
@@ -106,42 +123,6 @@ void cal_analog(void)
 /*
  * All done, return
  */
-  return;
-
-}
-
-/*----------------------------------------------------------------
- * 
- * void show_analog()
- * 
- * Read and print the analog vlaue
- * 
- *--------------------------------------------------------------*/
-void show_analog(void)
-{
-  Serial.println();
-  Serial.print("Ref: ");     Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
-  Serial.print("  North: "); Serial.print(TO_VOLTS(analogRead(NORTH_ANA)));
-  Serial.print("  East: ");  Serial.print(TO_VOLTS(analogRead(EAST_ANA)));
-  Serial.print("  South: "); Serial.print(TO_VOLTS(analogRead(SOUTH_ANA)));
-  Serial.print("  West: ");  Serial.print(TO_VOLTS(analogRead(WEST_ANA)));
-  Serial.print("  Max: ");   Serial.print(TO_VOLTS(max_analog()));
-
-  Serial.print(" RN: ");     Serial.print(read_in(RUN_NORTH));
-  Serial.print(" RE: ");     Serial.print(read_in(RUN_EAST));
-  Serial.print(" RS: ");     Serial.print(read_in(RUN_SOUTH));
-  Serial.print(" RW: ");     Serial.print(read_in(RUN_WEST));
-
-  if ( read_in(RUN_NORTH) && read_in(RUN_EAST) && read_in(RUN_SOUTH) && read_in(RUN_WEST))
-    {
-    Serial.print(" **** ");
-    }
-
-  Serial.println();
-
-  digitalWrite(STOP_N,  0);   // Clear the flip flops
-  digitalWrite(STOP_N,  1);   // Let them go again
-  
   return;
 
 }
@@ -195,11 +176,6 @@ double temperature_C(void)
 #if (SAMPLE_CALCULATIONS )
   return_value = 23.0;
 #endif
-
-  if ( read_DIP() & (VERBOSE_TRACE | RUNNING_MODE_CALIBRATION) )
-    {
-    Serial.print("\n\rTemperature (RAW): 0x"); Serial.print(raw, HEX); Serial.print("   (C):"); Serial.print(return_value);
-    }
     
   return return_value;
 

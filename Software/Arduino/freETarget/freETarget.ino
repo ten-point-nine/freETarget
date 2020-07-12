@@ -32,7 +32,7 @@ void setup()
  *  Setup the serial port
  */
   Serial.begin(115200);
-//  Serial.println("\n\rfreETarget V2.0X");
+  Serial.println("\n\rfreETarget V2.1");
 
 /*
  *  Set up the port pins
@@ -86,13 +86,9 @@ void loop()
  */
   default:
   case SET_MODE:
-    running_mode = read_DIP();
-    
-    while (read_DIP() & RUNNING_MODE_CALIBRATION)
+    while (read_DIP() & SELF_TEST)
     {
-      cal_analog();
-      temperature_C();
-      delay(ONE_SECOND/2);
+      self_test();
     }
     state = ARM;
     break;
@@ -147,7 +143,6 @@ void loop()
     set_LED(LED_X, false);     // No longer processing
     set_LED(LED_Y, true);      // Reducing the shot
     location = compute_hit(shot, &history);
-//    rotate_shot(location, &history);  // Rotate the shot back onto the target
     send_score(&history, shot);
     state = WASTE;
     shot++;                   

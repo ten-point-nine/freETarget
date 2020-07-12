@@ -10,11 +10,88 @@
 #include "mechanical.h"
 #include "gpio.h"
 
-const char* which_one[4] = {"  <<NORTH>>  ", "  <<EAST>>  ", "  <<SOUTH>>  ", "  <<WEST>>  "};
+const char* which_one[4] = {"N:", "   E:", "   S: ", "   W: "};
 
 #define RX(Z,X,Y) (8000 - (sqrt(sq(((X)  / s_of_sound * OSCILLATOR_MHZ )-s[(Z)].x) + sq(((Y) / s_of_sound * OSCILLATOR_MHZ)-s[(Z)].y))))
 #define TEST_SAMPLES 500
 
+/*----------------------------------------------------------------
+ *
+ * void self_test
+ *
+ * Execute self tests based on the jumper settings
+ *
+ *----------------------------------------------------------------
+ * 
+ * TEST 0 - Flash LEDs
+ * 
+ * 
+ * Estimate 0.02mm / delta count   
+ *   --> 400 counts -> 8mm
+ *   
+ *--------------------------------------------------------------*/
+unsigned int tick;
+
+void self_test(void)
+{
+  unsigned int dip;
+
+  dip = (read_DIP() & 0x0E) >> 1;
+  
+/*
+ *  Update the timer
+ */
+  tick++;
+
+/*
+ * Figure out what test to run
+ */
+  switch (dip)
+  {
+    case 0:           // Jumpers x-x-x  Flash LEDs and show revision
+      Serial.print("\nBD Rev:"); Serial.print(revision());     
+      Serial.print("   Temperature: "); Serial.print(temperature_C()) ;  Serial.print("'C");
+      digitalWrite(LED_S, (~tick) & 1);
+      digitalWrite(LED_X, (~tick) & 2);
+      digitalWrite(LED_Y, (~tick) & 4);
+      delay(500);
+      break;
+      
+    case 1:           // Jumpers x-x-I  Show the cunter registes
+      arm_counters();
+      stop_counters();
+      show_counters();
+      delay(500);
+      break;
+
+    case 2:         // Jumpers x-I-x   Display analog voltages as a scope trace
+      show_analog();                      // Display the sensor inputs
+      break;
+      
+    case 3:
+
+      break;
+
+    case 4:
+      break;
+
+    case 5:
+
+      break;
+
+    case 6:
+      break;
+      
+    case 7:
+
+      break;
+  }
+
+ /* 
+  *  All done, return;
+  */
+    return;
+}
 
 /*----------------------------------------------------------------
  *
@@ -28,33 +105,77 @@ const char* which_one[4] = {"  <<NORTH>>  ", "  <<EAST>>  ", "  <<SOUTH>>  ", " 
 
 void show_counters(void)
 {
-  double timer_value[4];    // Array of timer values
+  unsigned int timer_value[4];    // Array of timer values
   int    i;
   
 /*
  *  Read in the counter values 
  */
- timer_value[N] = read_counter(NORTH_HI);
- timer_value[E] = read_counter(EAST_HI);
- timer_value[S] = read_counter(SOUTH_HI);
- timer_value[W] = read_counter(WEST_HI);
+ timer_value[N] = read_counter(N);
+ timer_value[E] = read_counter(E);
+ timer_value[S] = read_counter(S);
+ timer_value[W] = read_counter(W);
 
 /*
  * Determine the location of the reference counter (longest time)
  */
+  Serial.println();
   for (i=0; i != 4; i++)
   {
     Serial.print(which_one[i]);
     Serial.print(timer_value[i]);
-    Serial.println();
   }
-  
+
+
   /*
    * All done return
    */
   return;
 }
 
+/*----------------------------------------------------------------
+ * 
+ * void show_analog()
+ * 
+ * Read and display as a 4 channel scope trace
+ * 
+ *--------------------------------------------------------------*/
+unsigned int channel[] = {NORTH_ANA, EAST_ANA, SOUTH_ANA, WEST_ANA};
+#define SCALE         0.1        // Multiply volts by 64
+#define FULL_SCALE    20        // Limit to 16 values
+
+void show_analog(void)
+{
+  unsigned int i, j, k;
+
+/*
+ * Output as a scope trace
+ */
+  Serial.print("\nRef:"); Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print("  ");
+  
+   for (i=N; i != W + 1; i++)
+  {
+    Serial.print(which_one[i]);
+    j = analogRead(channel[i]) * SCALE;
+    if ( j > FULL_SCALE-1 )
+    {
+      j = FULL_SCALE-1;
+    }
+    for ( k=0; k != FULL_SCALE; k++)
+    {
+      if ( k == j )
+        Serial.print("*");
+      else
+        Serial.print(" ");
+    }
+  }
+
+ /*
+  * All done.
+  */
+  return;
+
+}
 #if ( SAMPLE_CALCULATIONS == true )
 /*----------------------------------------------------------------
  *
@@ -127,7 +248,6 @@ void unit_test(void)
       {
       sample_calculations(k, 0);
       location = compute_hit(shot, &history);
- //     rotate_shot(location, &history);  // Rotate the shot back onto the target
       send_score(&history, shot);
       shot++;
       }
@@ -166,7 +286,6 @@ void unit_test(void)
         if ( more_samples )
           {
           location = compute_hit(shot, &history);
-          rotate_shot(location, &history);  // Rotate the shot back onto the target
           send_score(&history, shot);
           shot++;
           }

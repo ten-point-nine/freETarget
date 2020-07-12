@@ -7,6 +7,7 @@ unsigned int read_reference(void);  // Read the feedback channel
 void show_analog(void);             // Display the analog values
 void cal_analog(void);              // Calibrate the analog threshold
 double temperature_C(void);         // Temperature in degrees C
+unsigned int revision(void);        // Return the board revision
 
 /*
  *  Port Definitions
