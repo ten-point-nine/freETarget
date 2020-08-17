@@ -139,5 +139,9 @@ namespace freETarget
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
             System.Diagnostics.Process.Start(linkLabel.Text);
         }
+
+        private void linkLabel1_LinkClicked_1(object sender, LinkLabelLinkClickedEventArgs e) {
+            System.Diagnostics.Process.Start(linkLabel1.Text);
+        }
     }
 }

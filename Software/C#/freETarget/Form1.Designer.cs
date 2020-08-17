@@ -34,10 +34,10 @@ namespace freETarget
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMainWindow));
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
             System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.serialPort = new System.IO.Ports.SerialPort(this.components);
             this.btnConnect = new System.Windows.Forms.Button();
             this.imgListIcons = new System.Windows.Forms.ImageList(this.components);
@@ -77,17 +77,6 @@ namespace freETarget
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.imgSessionName = new System.Windows.Forms.PictureBox();
             this.gridTargets = new System.Windows.Forms.DataGridView();
-            this.column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column5 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column6 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column7 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column8 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column9 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column10 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnTotal = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.chartBreakdown = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.tcSessionType = new System.Windows.Forms.TabControl();
             this.tabPistolPractice = new System.Windows.Forms.TabPage();
@@ -100,6 +89,17 @@ namespace freETarget
             this.btnJournal = new System.Windows.Forms.Button();
             this.imgLogo = new System.Windows.Forms.PictureBox();
             this.digitalClock = new freETarget.SevenSegmentArray();
+            this.column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Column2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Column3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Column4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Column5 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Column6 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Column7 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Column8 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Column9 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Column10 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnTotal = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.imgTarget)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.imgArrow)).BeginInit();
@@ -146,7 +146,7 @@ namespace freETarget
             this.statusText});
             this.statusStrip1.Location = new System.Drawing.Point(0, 544);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1141, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(1152, 22);
             this.statusStrip1.SizingGrip = false;
             this.statusStrip1.TabIndex = 1;
             this.statusStrip1.Text = "statusStrip";
@@ -162,7 +162,7 @@ namespace freETarget
             this.txtOutput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtOutput.BackColor = System.Drawing.SystemColors.Window;
-            this.txtOutput.Location = new System.Drawing.Point(389, 37);
+            this.txtOutput.Location = new System.Drawing.Point(400, 37);
             this.txtOutput.Multiline = true;
             this.txtOutput.Name = "txtOutput";
             this.txtOutput.ReadOnly = true;
@@ -239,6 +239,7 @@ namespace freETarget
             // txtTotal
             // 
             this.txtTotal.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.txtTotal.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.txtTotal.Location = new System.Drawing.Point(40, 430);
             this.txtTotal.Name = "txtTotal";
             this.txtTotal.ReadOnly = true;
@@ -294,7 +295,7 @@ namespace freETarget
             // 
             this.btnConfig.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnConfig.Image = ((System.Drawing.Image)(resources.GetObject("btnConfig.Image")));
-            this.btnConfig.Location = new System.Drawing.Point(1107, 4);
+            this.btnConfig.Location = new System.Drawing.Point(1118, 4);
             this.btnConfig.Name = "btnConfig";
             this.btnConfig.Size = new System.Drawing.Size(27, 27);
             this.btnConfig.TabIndex = 11;
@@ -464,7 +465,7 @@ namespace freETarget
             this.btnCalibration.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCalibration.Enabled = false;
             this.btnCalibration.Image = ((System.Drawing.Image)(resources.GetObject("btnCalibration.Image")));
-            this.btnCalibration.Location = new System.Drawing.Point(1074, 4);
+            this.btnCalibration.Location = new System.Drawing.Point(1085, 4);
             this.btnCalibration.Name = "btnCalibration";
             this.btnCalibration.Size = new System.Drawing.Size(27, 27);
             this.btnCalibration.TabIndex = 30;
@@ -476,9 +477,9 @@ namespace freETarget
             // 
             this.imgSessionName.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.imgSessionName.BackColor = System.Drawing.Color.Black;
-            this.imgSessionName.Location = new System.Drawing.Point(723, 37);
+            this.imgSessionName.Location = new System.Drawing.Point(729, 37);
             this.imgSessionName.Name = "imgSessionName";
-            this.imgSessionName.Size = new System.Drawing.Size(390, 19);
+            this.imgSessionName.Size = new System.Drawing.Size(395, 19);
             this.imgSessionName.TabIndex = 1;
             this.imgSessionName.TabStop = false;
             this.imgSessionName.Click += new System.EventHandler(this.imgSessionName_Click);
@@ -512,7 +513,7 @@ namespace freETarget
             this.Column9,
             this.Column10,
             this.ColumnTotal});
-            this.gridTargets.Location = new System.Drawing.Point(723, 132);
+            this.gridTargets.Location = new System.Drawing.Point(729, 132);
             this.gridTargets.MultiSelect = false;
             this.gridTargets.Name = "gridTargets";
             this.gridTargets.ReadOnly = true;
@@ -529,9 +530,178 @@ namespace freETarget
             this.gridTargets.RowTemplate.ReadOnly = true;
             this.gridTargets.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.gridTargets.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.gridTargets.Size = new System.Drawing.Size(390, 251);
+            this.gridTargets.Size = new System.Drawing.Size(395, 251);
             this.gridTargets.TabIndex = 0;
             this.gridTargets.Click += new System.EventHandler(this.gridTargets_Click);
+            // 
+            // chartBreakdown
+            // 
+            this.chartBreakdown.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.chartBreakdown.BackColor = System.Drawing.SystemColors.ControlDark;
+            this.chartBreakdown.BorderlineColor = System.Drawing.Color.Black;
+            chartArea1.AxisX.Interval = 1D;
+            chartArea1.AxisX.LineWidth = 0;
+            chartArea1.AxisX.MajorGrid.LineWidth = 0;
+            chartArea1.AxisX.MajorTickMark.Enabled = false;
+            chartArea1.AxisY.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
+            chartArea1.AxisY.MajorGrid.LineWidth = 0;
+            chartArea1.BackColor = System.Drawing.SystemColors.ControlDark;
+            chartArea1.Name = "ChartArea1";
+            chartArea1.Position.Auto = false;
+            chartArea1.Position.Height = 100F;
+            chartArea1.Position.Width = 100F;
+            this.chartBreakdown.ChartAreas.Add(chartArea1);
+            legend1.Name = "Legend1";
+            this.chartBreakdown.Legends.Add(legend1);
+            this.chartBreakdown.Location = new System.Drawing.Point(-1, -2);
+            this.chartBreakdown.Name = "chartBreakdown";
+            this.chartBreakdown.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.None;
+            this.chartBreakdown.PaletteCustomColors = new System.Drawing.Color[] {
+        System.Drawing.Color.Blue};
+            series1.ChartArea = "ChartArea1";
+            series1.CustomProperties = "LabelStyle=Bottom";
+            series1.IsValueShownAsLabel = true;
+            series1.IsVisibleInLegend = false;
+            series1.LabelForeColor = System.Drawing.Color.White;
+            series1.Legend = "Legend1";
+            series1.Name = "Series1";
+            series1.SmartLabelStyle.AllowOutsidePlotArea = System.Windows.Forms.DataVisualization.Charting.LabelOutsidePlotAreaStyle.No;
+            this.chartBreakdown.Series.Add(series1);
+            this.chartBreakdown.Size = new System.Drawing.Size(395, 148);
+            this.chartBreakdown.TabIndex = 4;
+            this.chartBreakdown.Text = "chart1";
+            // 
+            // tcSessionType
+            // 
+            this.tcSessionType.Alignment = System.Windows.Forms.TabAlignment.Left;
+            this.tcSessionType.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.tcSessionType.Controls.Add(this.tabPistolPractice);
+            this.tcSessionType.Controls.Add(this.tabPistolMatch);
+            this.tcSessionType.Controls.Add(this.tabPistolFinal);
+            this.tcSessionType.Controls.Add(this.tabRiflePractice);
+            this.tcSessionType.Controls.Add(this.tabRifleMatch);
+            this.tcSessionType.Controls.Add(this.tabRifleFinal);
+            this.tcSessionType.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
+            this.tcSessionType.Enabled = false;
+            this.tcSessionType.Location = new System.Drawing.Point(1130, 40);
+            this.tcSessionType.Multiline = true;
+            this.tcSessionType.Name = "tcSessionType";
+            this.tcSessionType.SelectedIndex = 0;
+            this.tcSessionType.Size = new System.Drawing.Size(200, 446);
+            this.tcSessionType.TabIndex = 32;
+            this.tcSessionType.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.tabControl1_DrawItem);
+            this.tcSessionType.SelectedIndexChanged += new System.EventHandler(this.tcSessionType_SelectedIndexChanged);
+            // 
+            // tabPistolPractice
+            // 
+            this.tabPistolPractice.BackColor = System.Drawing.Color.Gold;
+            this.tabPistolPractice.Location = new System.Drawing.Point(23, 4);
+            this.tabPistolPractice.Name = "tabPistolPractice";
+            this.tabPistolPractice.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPistolPractice.Size = new System.Drawing.Size(173, 438);
+            this.tabPistolPractice.TabIndex = 0;
+            this.tabPistolPractice.Text = "Pistol Practice";
+            // 
+            // tabPistolMatch
+            // 
+            this.tabPistolMatch.BackColor = System.Drawing.Color.Orange;
+            this.tabPistolMatch.Location = new System.Drawing.Point(23, 4);
+            this.tabPistolMatch.Name = "tabPistolMatch";
+            this.tabPistolMatch.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPistolMatch.Size = new System.Drawing.Size(173, 438);
+            this.tabPistolMatch.TabIndex = 1;
+            this.tabPistolMatch.Text = "Pistol Match ";
+            // 
+            // tabPistolFinal
+            // 
+            this.tabPistolFinal.BackColor = System.Drawing.Color.Red;
+            this.tabPistolFinal.Location = new System.Drawing.Point(23, 4);
+            this.tabPistolFinal.Name = "tabPistolFinal";
+            this.tabPistolFinal.Size = new System.Drawing.Size(173, 438);
+            this.tabPistolFinal.TabIndex = 2;
+            this.tabPistolFinal.Text = "Pistol Final";
+            // 
+            // tabRiflePractice
+            // 
+            this.tabRiflePractice.BackColor = System.Drawing.Color.LimeGreen;
+            this.tabRiflePractice.Location = new System.Drawing.Point(23, 4);
+            this.tabRiflePractice.Name = "tabRiflePractice";
+            this.tabRiflePractice.Size = new System.Drawing.Size(173, 438);
+            this.tabRiflePractice.TabIndex = 3;
+            this.tabRiflePractice.Text = "Rifle Practice";
+            // 
+            // tabRifleMatch
+            // 
+            this.tabRifleMatch.BackColor = System.Drawing.Color.Turquoise;
+            this.tabRifleMatch.Location = new System.Drawing.Point(23, 4);
+            this.tabRifleMatch.Name = "tabRifleMatch";
+            this.tabRifleMatch.Size = new System.Drawing.Size(173, 438);
+            this.tabRifleMatch.TabIndex = 4;
+            this.tabRifleMatch.Text = "Rifle Match ";
+            // 
+            // tabRifleFinal
+            // 
+            this.tabRifleFinal.BackColor = System.Drawing.Color.DodgerBlue;
+            this.tabRifleFinal.Location = new System.Drawing.Point(23, 4);
+            this.tabRifleFinal.Name = "tabRifleFinal";
+            this.tabRifleFinal.Size = new System.Drawing.Size(173, 438);
+            this.tabRifleFinal.TabIndex = 5;
+            this.tabRifleFinal.Text = "Rifle Final";
+            // 
+            // panel1
+            // 
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel1.Controls.Add(this.chartBreakdown);
+            this.panel1.Location = new System.Drawing.Point(729, 385);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(395, 148);
+            this.panel1.TabIndex = 33;
+            // 
+            // btnJournal
+            // 
+            this.btnJournal.ImageIndex = 2;
+            this.btnJournal.ImageList = this.imgListIcons;
+            this.btnJournal.Location = new System.Drawing.Point(99, 8);
+            this.btnJournal.Name = "btnJournal";
+            this.btnJournal.Size = new System.Drawing.Size(85, 23);
+            this.btnJournal.TabIndex = 36;
+            this.btnJournal.Text = "Journal";
+            this.btnJournal.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btnJournal.UseVisualStyleBackColor = true;
+            this.btnJournal.Click += new System.EventHandler(this.btnJournal_Click);
+            // 
+            // imgLogo
+            // 
+            this.imgLogo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.imgLogo.BackColor = System.Drawing.Color.Transparent;
+            this.imgLogo.Image = ((System.Drawing.Image)(resources.GetObject("imgLogo.Image")));
+            this.imgLogo.Location = new System.Drawing.Point(950, 5);
+            this.imgLogo.Name = "imgLogo";
+            this.imgLogo.Size = new System.Drawing.Size(129, 24);
+            this.imgLogo.TabIndex = 37;
+            this.imgLogo.TabStop = false;
+            this.imgLogo.Click += new System.EventHandler(this.imgLogo_Click);
+            // 
+            // digitalClock
+            // 
+            this.digitalClock.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.digitalClock.ArrayCount = 6;
+            this.digitalClock.ColorBackground = System.Drawing.Color.Black;
+            this.digitalClock.ColorDark = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
+            this.digitalClock.ColorLight = System.Drawing.Color.White;
+            this.digitalClock.DecimalShow = false;
+            this.digitalClock.ElementPadding = new System.Windows.Forms.Padding(4);
+            this.digitalClock.ElementWidth = 10;
+            this.digitalClock.ItalicFactor = 0F;
+            this.digitalClock.Location = new System.Drawing.Point(729, 56);
+            this.digitalClock.Name = "digitalClock";
+            this.digitalClock.Size = new System.Drawing.Size(395, 76);
+            this.digitalClock.TabIndex = 35;
+            this.digitalClock.TabStop = false;
+            this.digitalClock.Value = null;
             // 
             // column1
             // 
@@ -632,180 +802,13 @@ namespace freETarget
             this.ColumnTotal.ReadOnly = true;
             this.ColumnTotal.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.ColumnTotal.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.ColumnTotal.Width = 35;
-            // 
-            // chartBreakdown
-            // 
-            this.chartBreakdown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.chartBreakdown.BackColor = System.Drawing.SystemColors.ControlDark;
-            this.chartBreakdown.BorderlineColor = System.Drawing.Color.Black;
-            chartArea1.AxisX.Interval = 1D;
-            chartArea1.AxisX.LineWidth = 0;
-            chartArea1.AxisX.MajorGrid.LineWidth = 0;
-            chartArea1.AxisX.MajorTickMark.Enabled = false;
-            chartArea1.AxisY.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
-            chartArea1.AxisY.MajorGrid.LineWidth = 0;
-            chartArea1.BackColor = System.Drawing.SystemColors.ControlDark;
-            chartArea1.Name = "ChartArea1";
-            chartArea1.Position.Auto = false;
-            chartArea1.Position.Height = 100F;
-            chartArea1.Position.Width = 100F;
-            this.chartBreakdown.ChartAreas.Add(chartArea1);
-            legend1.Name = "Legend1";
-            this.chartBreakdown.Legends.Add(legend1);
-            this.chartBreakdown.Location = new System.Drawing.Point(-2, -2);
-            this.chartBreakdown.Name = "chartBreakdown";
-            this.chartBreakdown.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.None;
-            this.chartBreakdown.PaletteCustomColors = new System.Drawing.Color[] {
-        System.Drawing.Color.Blue};
-            series1.ChartArea = "ChartArea1";
-            series1.CustomProperties = "LabelStyle=Bottom";
-            series1.IsValueShownAsLabel = true;
-            series1.IsVisibleInLegend = false;
-            series1.LabelForeColor = System.Drawing.Color.White;
-            series1.Legend = "Legend1";
-            series1.Name = "Series1";
-            series1.SmartLabelStyle.AllowOutsidePlotArea = System.Windows.Forms.DataVisualization.Charting.LabelOutsidePlotAreaStyle.No;
-            this.chartBreakdown.Series.Add(series1);
-            this.chartBreakdown.Size = new System.Drawing.Size(391, 148);
-            this.chartBreakdown.TabIndex = 4;
-            this.chartBreakdown.Text = "chart1";
-            // 
-            // tcSessionType
-            // 
-            this.tcSessionType.Alignment = System.Windows.Forms.TabAlignment.Left;
-            this.tcSessionType.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.tcSessionType.Controls.Add(this.tabPistolPractice);
-            this.tcSessionType.Controls.Add(this.tabPistolMatch);
-            this.tcSessionType.Controls.Add(this.tabPistolFinal);
-            this.tcSessionType.Controls.Add(this.tabRiflePractice);
-            this.tcSessionType.Controls.Add(this.tabRifleMatch);
-            this.tcSessionType.Controls.Add(this.tabRifleFinal);
-            this.tcSessionType.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
-            this.tcSessionType.Enabled = false;
-            this.tcSessionType.Location = new System.Drawing.Point(1119, 40);
-            this.tcSessionType.Multiline = true;
-            this.tcSessionType.Name = "tcSessionType";
-            this.tcSessionType.SelectedIndex = 0;
-            this.tcSessionType.Size = new System.Drawing.Size(200, 446);
-            this.tcSessionType.TabIndex = 32;
-            this.tcSessionType.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.tabControl1_DrawItem);
-            this.tcSessionType.SelectedIndexChanged += new System.EventHandler(this.tcSessionType_SelectedIndexChanged);
-            // 
-            // tabPistolPractice
-            // 
-            this.tabPistolPractice.BackColor = System.Drawing.Color.Gold;
-            this.tabPistolPractice.Location = new System.Drawing.Point(23, 4);
-            this.tabPistolPractice.Name = "tabPistolPractice";
-            this.tabPistolPractice.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPistolPractice.Size = new System.Drawing.Size(173, 438);
-            this.tabPistolPractice.TabIndex = 0;
-            this.tabPistolPractice.Text = "Pistol Practice";
-            // 
-            // tabPistolMatch
-            // 
-            this.tabPistolMatch.BackColor = System.Drawing.Color.Orange;
-            this.tabPistolMatch.Location = new System.Drawing.Point(23, 4);
-            this.tabPistolMatch.Name = "tabPistolMatch";
-            this.tabPistolMatch.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPistolMatch.Size = new System.Drawing.Size(173, 438);
-            this.tabPistolMatch.TabIndex = 1;
-            this.tabPistolMatch.Text = "Pistol Match ";
-            // 
-            // tabPistolFinal
-            // 
-            this.tabPistolFinal.BackColor = System.Drawing.Color.Red;
-            this.tabPistolFinal.Location = new System.Drawing.Point(23, 4);
-            this.tabPistolFinal.Name = "tabPistolFinal";
-            this.tabPistolFinal.Size = new System.Drawing.Size(173, 438);
-            this.tabPistolFinal.TabIndex = 2;
-            this.tabPistolFinal.Text = "Pistol Final";
-            // 
-            // tabRiflePractice
-            // 
-            this.tabRiflePractice.BackColor = System.Drawing.Color.LimeGreen;
-            this.tabRiflePractice.Location = new System.Drawing.Point(23, 4);
-            this.tabRiflePractice.Name = "tabRiflePractice";
-            this.tabRiflePractice.Size = new System.Drawing.Size(173, 438);
-            this.tabRiflePractice.TabIndex = 3;
-            this.tabRiflePractice.Text = "Rifle Practice";
-            // 
-            // tabRifleMatch
-            // 
-            this.tabRifleMatch.BackColor = System.Drawing.Color.Turquoise;
-            this.tabRifleMatch.Location = new System.Drawing.Point(23, 4);
-            this.tabRifleMatch.Name = "tabRifleMatch";
-            this.tabRifleMatch.Size = new System.Drawing.Size(173, 438);
-            this.tabRifleMatch.TabIndex = 4;
-            this.tabRifleMatch.Text = "Rifle Match ";
-            // 
-            // tabRifleFinal
-            // 
-            this.tabRifleFinal.BackColor = System.Drawing.Color.DodgerBlue;
-            this.tabRifleFinal.Location = new System.Drawing.Point(23, 4);
-            this.tabRifleFinal.Name = "tabRifleFinal";
-            this.tabRifleFinal.Size = new System.Drawing.Size(173, 438);
-            this.tabRifleFinal.TabIndex = 5;
-            this.tabRifleFinal.Text = "Rifle Final";
-            // 
-            // panel1
-            // 
-            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel1.Controls.Add(this.chartBreakdown);
-            this.panel1.Location = new System.Drawing.Point(723, 389);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(390, 148);
-            this.panel1.TabIndex = 33;
-            // 
-            // btnJournal
-            // 
-            this.btnJournal.ImageIndex = 2;
-            this.btnJournal.ImageList = this.imgListIcons;
-            this.btnJournal.Location = new System.Drawing.Point(99, 8);
-            this.btnJournal.Name = "btnJournal";
-            this.btnJournal.Size = new System.Drawing.Size(85, 23);
-            this.btnJournal.TabIndex = 36;
-            this.btnJournal.Text = "Journal";
-            this.btnJournal.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
-            this.btnJournal.UseVisualStyleBackColor = true;
-            this.btnJournal.Click += new System.EventHandler(this.btnJournal_Click);
-            // 
-            // imgLogo
-            // 
-            this.imgLogo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.imgLogo.BackColor = System.Drawing.Color.Transparent;
-            this.imgLogo.Image = ((System.Drawing.Image)(resources.GetObject("imgLogo.Image")));
-            this.imgLogo.Location = new System.Drawing.Point(939, 5);
-            this.imgLogo.Name = "imgLogo";
-            this.imgLogo.Size = new System.Drawing.Size(129, 24);
-            this.imgLogo.TabIndex = 37;
-            this.imgLogo.TabStop = false;
-            this.imgLogo.Click += new System.EventHandler(this.imgLogo_Click);
-            // 
-            // digitalClock
-            // 
-            this.digitalClock.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.digitalClock.ArrayCount = 6;
-            this.digitalClock.ColorBackground = System.Drawing.Color.Black;
-            this.digitalClock.ColorDark = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
-            this.digitalClock.ColorLight = System.Drawing.Color.White;
-            this.digitalClock.DecimalShow = false;
-            this.digitalClock.ElementPadding = new System.Windows.Forms.Padding(4);
-            this.digitalClock.ElementWidth = 10;
-            this.digitalClock.ItalicFactor = 0F;
-            this.digitalClock.Location = new System.Drawing.Point(723, 56);
-            this.digitalClock.Name = "digitalClock";
-            this.digitalClock.Size = new System.Drawing.Size(390, 76);
-            this.digitalClock.TabIndex = 35;
-            this.digitalClock.TabStop = false;
-            this.digitalClock.Value = null;
+            this.ColumnTotal.Width = 41;
             // 
             // frmMainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1141, 566);
+            this.ClientSize = new System.Drawing.Size(1152, 566);
             this.Controls.Add(this.imgLogo);
             this.Controls.Add(this.btnJournal);
             this.Controls.Add(this.txtTime);
@@ -841,7 +844,7 @@ namespace freETarget
             this.Controls.Add(this.label4);
             this.Controls.Add(this.txtOutput);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MinimumSize = new System.Drawing.Size(1142, 604);
+            this.MinimumSize = new System.Drawing.Size(1000, 600);
             this.Name = "frmMainWindow";
             this.Text = "freETarget";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMainWindow_FormClosing);
@@ -914,6 +917,12 @@ namespace freETarget
         private System.Windows.Forms.TabPage tabRifleMatch;
         private System.Windows.Forms.TabPage tabRifleFinal;
         private System.Windows.Forms.PictureBox imgSessionName;
+        private System.Windows.Forms.DataVisualization.Charting.Chart chartBreakdown;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.ImageList imgListIcons;
+        private freETarget.SevenSegmentArray digitalClock;
+        private System.Windows.Forms.Button btnJournal;
+        private System.Windows.Forms.PictureBox imgLogo;
         private System.Windows.Forms.DataGridViewTextBoxColumn column1;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column2;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column3;
@@ -925,12 +934,6 @@ namespace freETarget
         private System.Windows.Forms.DataGridViewTextBoxColumn Column9;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column10;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnTotal;
-        private System.Windows.Forms.DataVisualization.Charting.Chart chartBreakdown;
-        private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.ImageList imgListIcons;
-        private freETarget.SevenSegmentArray digitalClock;
-        private System.Windows.Forms.Button btnJournal;
-        private System.Windows.Forms.PictureBox imgLogo;
     }
 }
 

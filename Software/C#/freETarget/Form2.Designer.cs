@@ -58,12 +58,15 @@
             this.label10 = new System.Windows.Forms.Label();
             this.linkLabel = new System.Windows.Forms.LinkLabel();
             this.chkScoreVoice = new System.Windows.Forms.CheckBox();
+            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.Location = new System.Drawing.Point(242, 427);
+            this.btnOK.Location = new System.Drawing.Point(242, 468);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 0;
@@ -75,7 +78,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(161, 427);
+            this.btnCancel.Location = new System.Drawing.Point(161, 468);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
@@ -291,7 +294,7 @@
             // 
             this.lblVersion.AutoSize = true;
             this.lblVersion.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.lblVersion.Location = new System.Drawing.Point(12, 353);
+            this.lblVersion.Location = new System.Drawing.Point(30, 20);
             this.lblVersion.Name = "lblVersion";
             this.lblVersion.Size = new System.Drawing.Size(25, 13);
             this.lblVersion.TabIndex = 28;
@@ -300,7 +303,7 @@
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(12, 376);
+            this.label10.Location = new System.Drawing.Point(30, 43);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(193, 13);
             this.label10.TabIndex = 29;
@@ -309,7 +312,7 @@
             // linkLabel
             // 
             this.linkLabel.AutoSize = true;
-            this.linkLabel.Location = new System.Drawing.Point(12, 399);
+            this.linkLabel.Location = new System.Drawing.Point(30, 87);
             this.linkLabel.Name = "linkLabel";
             this.linkLabel.Size = new System.Drawing.Size(219, 13);
             this.linkLabel.TabIndex = 30;
@@ -327,15 +330,37 @@
             this.chkScoreVoice.Text = "Score spoken";
             this.chkScoreVoice.UseVisualStyleBackColor = true;
             // 
+            // linkLabel1
+            // 
+            this.linkLabel1.AutoSize = true;
+            this.linkLabel1.Location = new System.Drawing.Point(30, 65);
+            this.linkLabel1.Name = "linkLabel1";
+            this.linkLabel1.Size = new System.Drawing.Size(128, 13);
+            this.linkLabel1.TabIndex = 32;
+            this.linkLabel1.TabStop = true;
+            this.linkLabel1.Text = "https://free-e-target.com/";
+            this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked_1);
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.label10);
+            this.groupBox1.Controls.Add(this.linkLabel1);
+            this.groupBox1.Controls.Add(this.lblVersion);
+            this.groupBox1.Controls.Add(this.linkLabel);
+            this.groupBox1.Location = new System.Drawing.Point(16, 346);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(301, 111);
+            this.groupBox1.TabIndex = 33;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "About";
+            // 
             // frmSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(329, 462);
+            this.ClientSize = new System.Drawing.Size(329, 503);
+            this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.chkScoreVoice);
-            this.Controls.Add(this.linkLabel);
-            this.Controls.Add(this.label10);
-            this.Controls.Add(this.lblVersion);
             this.Controls.Add(this.txtDistance);
             this.Controls.Add(this.label8);
             this.Controls.Add(this.btnBrowse);
@@ -368,6 +393,8 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Settings";
             this.Load += new System.EventHandler(this.frmSettings_Load);
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -404,5 +431,7 @@
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.LinkLabel linkLabel;
         public System.Windows.Forms.CheckBox chkScoreVoice;
+        private System.Windows.Forms.LinkLabel linkLabel1;
+        private System.Windows.Forms.GroupBox groupBox1;
     }
 }
