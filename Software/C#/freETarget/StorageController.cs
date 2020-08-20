@@ -18,6 +18,23 @@ namespace freETarget {
             
         }
 
+        public String checkDB() {
+            try {
+                SQLiteConnection con = new SQLiteConnection(connString);
+                con.Open();
+                SQLiteCommand cmd = new SQLiteCommand("select count(*) from Sessions", con);
+                Object obj = cmd.ExecuteScalar();
+
+                //TODO: add some database versioning and/or integrity check
+
+                Console.WriteLine("DB check: " + obj + " rows");
+                con.Close();
+            }catch(Exception ex) {
+                return ex.Message;
+            }
+            return null;
+        }
+
         public List<string> findAllUsers() {
             SQLiteConnection con = new SQLiteConnection(connString);
             con.Open();

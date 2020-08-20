@@ -624,6 +624,12 @@ namespace freETarget {
 
         private void frmMainWindow_Shown(object sender, EventArgs e) {
             displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
+
+            String testDB = storage.checkDB();
+            if (testDB != null) {
+                MessageBox.Show("Database check failed. Please check your installation. " + Environment.NewLine + Environment.NewLine + testDB + Environment.NewLine + Environment.NewLine + "The application will now exit!" , "Database problem", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Environment.Exit(0);
+            }
         }
 
         private void initNewSession() {
