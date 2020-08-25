@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace freETarget {
     public class Session {
@@ -214,7 +215,12 @@ namespace freETarget {
         }
 
         public static Session createNewSession(string name, string user) {
-            return createNewSession(EventType.GetEvent(name), Settings.Default.name, Settings.Default.MatchShots);
+            EventType et = EventType.GetEvent(name);
+            if (et == null) {
+                MessageBox.Show("Could not identify event: " + name + Environment.NewLine + Environment.NewLine + "Please check the application configuration file." + Environment.NewLine + "The application will now exit!", "Error creating session",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                Environment.Exit(0);
+            }
+            return createNewSession(et, Settings.Default.name, Settings.Default.MatchShots);
         }
         public static Session createNewSession(EventType sessionType, string user, int noOfShots) {
             Session newSession = new Session();
@@ -283,6 +289,7 @@ namespace freETarget {
                 newSession.minutes = -1;
                 newSession.currentFinal = new VirtualRO();
             } else {
+                Console.WriteLine("Could not identify event type " + sessionType);
                 return null;
             }
 

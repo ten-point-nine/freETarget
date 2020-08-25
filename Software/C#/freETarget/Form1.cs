@@ -694,12 +694,16 @@ namespace freETarget {
         }
 
         private void drawTarget() {
-            if (currentSession.targetType == Session.TargetType.Pistol) {
-                decimal zoomFactor = (decimal)(1 / (decimal)getZoom());
-                imgTarget.Image = paintTarget(imgTarget.Height, 7, ISSF.ringsPistol, zoomFactor, false);
-            } else if (currentSession.targetType == Session.TargetType.Rifle) {
-                decimal zoomFactor = (decimal)(1 / Math.Pow(2, getZoom()));
-                imgTarget.Image = paintTarget(imgTarget.Height, 4, ISSF.ringsRifle, zoomFactor, true);
+            if (currentSession != null) {
+                if (currentSession.targetType == Session.TargetType.Pistol) {
+                    decimal zoomFactor = (decimal)(1 / (decimal)getZoom());
+                    imgTarget.Image = paintTarget(imgTarget.Height, 7, ISSF.ringsPistol, zoomFactor, false);
+                } else if (currentSession.targetType == Session.TargetType.Rifle) {
+                    decimal zoomFactor = (decimal)(1 / Math.Pow(2, getZoom()));
+                    imgTarget.Image = paintTarget(imgTarget.Height, 4, ISSF.ringsRifle, zoomFactor, true);
+                }
+            } else {
+                Console.WriteLine("Current session is null");
             }
         }
 

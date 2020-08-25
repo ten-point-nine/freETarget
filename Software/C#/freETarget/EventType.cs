@@ -32,6 +32,7 @@ namespace freETarget {
             } else if (EventType.AirRifleFinal.Name.Contains(name)) {
                 return AirRifleFinal;
             } else {
+                Console.WriteLine("Unknown event: " + name);
                 return null;
             }
         }
