@@ -202,5 +202,101 @@ namespace freETarget.Properties {
                 this["scoreVoice"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Aqua")]
+        public global::System.Drawing.Color score10BackgroundColor {
+            get {
+                return ((global::System.Drawing.Color)(this["score10BackgroundColor"]));
+            }
+            set {
+                this["score10BackgroundColor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Aqua")]
+        public global::System.Drawing.Color score9BackgroundColor {
+            get {
+                return ((global::System.Drawing.Color)(this["score9BackgroundColor"]));
+            }
+            set {
+                this["score9BackgroundColor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Aqua")]
+        public global::System.Drawing.Color scoreDefaultBackgroundColor {
+            get {
+                return ((global::System.Drawing.Color)(this["scoreDefaultBackgroundColor"]));
+            }
+            set {
+                this["scoreDefaultBackgroundColor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Blue")]
+        public global::System.Drawing.Color scoreOldBackgroundColor {
+            get {
+                return ((global::System.Drawing.Color)(this["scoreOldBackgroundColor"]));
+            }
+            set {
+                this["scoreOldBackgroundColor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Blue")]
+        public global::System.Drawing.Color score10PenColor {
+            get {
+                return ((global::System.Drawing.Color)(this["score10PenColor"]));
+            }
+            set {
+                this["score10PenColor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Blue")]
+        public global::System.Drawing.Color score9PenColor {
+            get {
+                return ((global::System.Drawing.Color)(this["score9PenColor"]));
+            }
+            set {
+                this["score9PenColor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Blue")]
+        public global::System.Drawing.Color scoreDefaultPenColor {
+            get {
+                return ((global::System.Drawing.Color)(this["scoreDefaultPenColor"]));
+            }
+            set {
+                this["scoreDefaultPenColor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("LightSkyBlue")]
+        public global::System.Drawing.Color scoreOldPenColor {
+            get {
+                return ((global::System.Drawing.Color)(this["scoreOldPenColor"]));
+            }
+            set {
+                this["scoreOldPenColor"] = value;
+            }
+        }
     }
 }

@@ -388,13 +388,26 @@ namespace freETarget {
 
             //draw shot on target
             int count = getShotList().Count;
-            Color c = Color.FromArgb(200, 0, 0, 255); //semitransparent shots
-            Pen p = new Pen(Color.LightSkyBlue);
-            Brush bText = new SolidBrush(Color.LightSkyBlue);
-            if (l == count - 1) {
-                c = Color.Aqua;
-                p = new Pen(Color.Blue);
-                bText = new SolidBrush(Color.Blue);
+
+            Color c = Color.FromArgb(200, Settings.Default.scoreOldBackgroundColor); //semitransparent old shots
+            Pen p = new Pen(Settings.Default.scoreOldPenColor);
+            Brush bText = new SolidBrush(Settings.Default.scoreOldPenColor);
+
+
+            if (l == count - 1) { //last (current) shot
+                if (shot.decimalScore > 9.9m) {
+                    c =  Settings.Default.score10BackgroundColor; 
+                    p = new Pen(Settings.Default.score10PenColor);
+                    bText = new SolidBrush(Settings.Default.score10PenColor);
+                } else if (shot.decimalScore > 8.9m && shot.decimalScore <= 9.9m) {
+                    c =  Settings.Default.score9BackgroundColor; 
+                    p = new Pen(Settings.Default.score9PenColor);
+                    bText = new SolidBrush(Settings.Default.score9PenColor);
+                } else {
+                    c = Settings.Default.scoreDefaultBackgroundColor;
+                    p = new Pen(Settings.Default.scoreDefaultPenColor);
+                    bText = new SolidBrush(Settings.Default.scoreDefaultPenColor);
+                }
             }
 
 
@@ -593,6 +606,15 @@ namespace freETarget {
 
                 computeShotStatistics(getShotList());
                 displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
+
+                Properties.Settings.Default.score10BackgroundColor = Color.FromName(settingsFrom.cmb10Back.GetItemText(settingsFrom.cmb10Back.SelectedItem));
+                Properties.Settings.Default.score10PenColor = Color.FromName(settingsFrom.cmb10Pen.GetItemText(settingsFrom.cmb10Pen.SelectedItem));
+                Properties.Settings.Default.score9BackgroundColor = Color.FromName(settingsFrom.cmb9Back.GetItemText(settingsFrom.cmb9Back.SelectedItem));
+                Properties.Settings.Default.score9PenColor = Color.FromName(settingsFrom.cmb9Pen.GetItemText(settingsFrom.cmb9Pen.SelectedItem));
+                Properties.Settings.Default.scoreDefaultBackgroundColor = Color.FromName(settingsFrom.cmbDefBack.GetItemText(settingsFrom.cmbDefBack.SelectedItem));
+                Properties.Settings.Default.scoreDefaultPenColor = Color.FromName(settingsFrom.cmbDefPen.GetItemText(settingsFrom.cmbDefPen.SelectedItem));
+                Properties.Settings.Default.scoreOldBackgroundColor = Color.FromName(settingsFrom.cmbOldBack.GetItemText(settingsFrom.cmbOldBack.SelectedItem));
+                Properties.Settings.Default.scoreOldPenColor = Color.FromName(settingsFrom.cmbOldPen.GetItemText(settingsFrom.cmbOldPen.SelectedItem));
             }
 
             settingsFrom.Dispose();

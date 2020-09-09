@@ -42,6 +42,14 @@ namespace freETarget
             foreach (PropertyInfo c in propInfoList)
             {
                 this.cmbColor.Items.Add(c.Name);
+                this.cmb10Pen.Items.Add(c.Name);
+                this.cmb10Back.Items.Add(c.Name);
+                this.cmb9Pen.Items.Add(c.Name);
+                this.cmb9Back.Items.Add(c.Name);
+                this.cmbDefPen.Items.Add(c.Name);
+                this.cmbDefBack.Items.Add(c.Name);
+                this.cmbOldPen.Items.Add(c.Name);
+                this.cmbOldBack.Items.Add(c.Name);
             }
 
             cmbWeapons.Items.Add("Air Pistol Practice");
@@ -77,6 +85,15 @@ namespace freETarget
                 rdb60.Checked = false;
                 rdb40.Checked = false;
             }
+
+            cmb10Pen.SelectedItem = Properties.Settings.Default.score10PenColor.Name;
+            cmb10Back.SelectedItem = Properties.Settings.Default.score10BackgroundColor.Name;
+            cmb9Pen.SelectedItem = Properties.Settings.Default.score9PenColor.Name;
+            cmb9Back.SelectedItem = Properties.Settings.Default.score9BackgroundColor.Name;
+            cmbDefPen.SelectedItem = Properties.Settings.Default.scoreDefaultPenColor.Name;
+            cmbDefBack.SelectedItem = Properties.Settings.Default.scoreDefaultBackgroundColor.Name;
+            cmbOldPen.SelectedItem = Properties.Settings.Default.scoreOldPenColor.Name;
+            cmbOldBack.SelectedItem = Properties.Settings.Default.scoreOldBackgroundColor.Name;
         }
 
         private void cmbColor_DrawItem(object sender, DrawItemEventArgs e)
