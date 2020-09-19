@@ -48,9 +48,9 @@ namespace freETarget {
                 this.decimalScore = (decimal)(Math.Truncate(score * 10)) / 10m;
                 this.decimalScore += 0.0m; //add a decimal is the result is an integer
 
-                if (this.decimalScore >= 11m) { //the linear interpolation returns 11.000003814 for 0 (dead centre)
+                /*if (this.decimalScore >= 11m) { //the linear interpolation returns 11.000003814 for 0 (dead centre)
                     this.decimalScore = 10.9m;
-                }
+                }*/
 
                 if (this.decimalScore < 1) {//shot outside the target
                     this.decimalScore = 0;

@@ -37,6 +37,7 @@ namespace freETarget {
 
         public decimal calibrationX = 0;
         public decimal calibrationY = 0;
+        public decimal calibrationAngle = 0;
 
         private Session currentSession;
 
@@ -951,12 +952,35 @@ namespace freETarget {
             return (decimal)spreads.Max();
         }
 
+        private PointF RotatePoint(PointF pointToRotate, PointF centerPoint, float angleInDegrees) {
+            double angleInRadians = angleInDegrees * (Math.PI / 180);
+            double cosTheta = Math.Cos(angleInRadians);
+            double sinTheta = Math.Sin(angleInRadians);
+            return new PointF {
+                X =
+                    (int)
+                    (cosTheta * (pointToRotate.X - centerPoint.X) -
+                    sinTheta * (pointToRotate.Y - centerPoint.Y) + centerPoint.X),
+                Y =
+                    (int)
+                    (sinTheta * (pointToRotate.X - centerPoint.X) +
+                    cosTheta * (pointToRotate.Y - centerPoint.Y) + centerPoint.Y)
+            };
+
+        }
+
         private decimal getShotX(Shot shot) {
-            return shot.x + calibrationX;
+            PointF p = new PointF((float)(shot.x + calibrationX), (float)shot.y);
+            PointF rotP = RotatePoint(p, new PointF(0, 0), (float)calibrationAngle);
+            return (decimal)rotP.X;
+
         }
 
         private decimal getShotY(Shot shot) {
-            return shot.y + calibrationY;
+            PointF p = new PointF((float)(shot.x), (float)(shot.y + calibrationY));
+            PointF rotP = RotatePoint(p, new PointF(0, 0), (float)calibrationAngle);
+            return (decimal)rotP.Y;
+            //return shot.y + calibrationY;
         }
 
         private void btnCalibration_Click(object sender, EventArgs e) {
@@ -969,13 +993,13 @@ namespace freETarget {
             computeShotStatistics(getShotList());
             targetRefresh();
 
-            if(calibrationX == 0 && calibrationY == 0) {
+            if(calibrationX == 0 && calibrationY == 0 && calibrationAngle ==0) {
                 btnCalibration.BackColor = this.BackColor;
             } else {
                 btnCalibration.BackColor = Settings.Default.targetColor;
             }
 
-            toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY);
+            toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
         }
 
         public void calibrateY(decimal increment) {
@@ -983,27 +1007,42 @@ namespace freETarget {
             computeShotStatistics(getShotList());
             targetRefresh();
 
-            if (calibrationX == 0 && calibrationY == 0) {
+            if (calibrationX == 0 && calibrationY == 0 && calibrationAngle == 0) {
                 btnCalibration.BackColor = this.BackColor;
             } else {
                 btnCalibration.BackColor = Settings.Default.targetColor;
             }
-            toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY);
+            toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
+        }
+
+        public void calibrateAngle(decimal angle) {
+            calibrationAngle += angle;
+            computeShotStatistics(getShotList());
+            targetRefresh();
+
+            if (calibrationX == 0 && calibrationY == 0 && calibrationAngle == 0) {
+                btnCalibration.BackColor = this.BackColor;
+            } else {
+                btnCalibration.BackColor = Settings.Default.targetColor;
+            }
+            toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
         }
 
         public void resetCalibration() {
             calibrationX = 0;
             calibrationY = 0;
+            calibrationAngle = 0;
             computeShotStatistics(getShotList());
             targetRefresh();
 
             btnCalibration.BackColor = this.BackColor;
-            toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY);
+            toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
         }
 
         public void saveCalibration() {
             Settings.Default.calibrationX = calibrationX;
             Settings.Default.calibrationY = calibrationY;
+            Settings.Default.calibrationAngle = calibrationAngle;
             Settings.Default.Save();
         }
 

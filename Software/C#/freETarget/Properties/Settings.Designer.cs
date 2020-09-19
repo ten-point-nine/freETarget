@@ -298,5 +298,17 @@ namespace freETarget.Properties {
                 this["scoreOldPenColor"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public decimal calibrationAngle {
+            get {
+                return ((decimal)(this["calibrationAngle"]));
+            }
+            set {
+                this["calibrationAngle"] = value;
+            }
+        }
     }
 }

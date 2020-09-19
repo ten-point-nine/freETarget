@@ -65,10 +65,29 @@ namespace freETarget {
 
             if (ret < 0.01m) {
                 ret = 0.01m;
+                txtIncrement.Text = ret.ToString();
             }
 
             if(ret > 10) {
                 ret = 10;
+                txtIncrement.Text = ret.ToString();
+            }
+
+            return ret;
+        }
+
+        private decimal getAngle() {
+            string s = txtAngle.Text;
+            decimal ret = 1m;
+            try {
+                ret = Decimal.Parse(s, CultureInfo.InvariantCulture);
+            } catch (Exception ex) {
+                Console.WriteLine("parse error " + ex.Message);
+            }
+
+            if (ret < 0.01m) {
+                ret = 0.01m;
+                txtAngle.Text = ret.ToString();
             }
 
             return ret;
@@ -77,6 +96,14 @@ namespace freETarget {
         private void frmCalibration_FormClosing(object sender, FormClosingEventArgs e) {
             e.Cancel = true;
             this.Hide();
+        }
+
+        private void btnClockwise_Click(object sender, EventArgs e) {
+            mainWindow.calibrateAngle(-getAngle());
+        }
+
+        private void btnAntiClockwise_Click(object sender, EventArgs e) {
+            mainWindow.calibrateAngle(getAngle());
         }
     }
 }

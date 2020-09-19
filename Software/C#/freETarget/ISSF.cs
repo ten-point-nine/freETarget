@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 namespace freETarget {
     class ISSF {
 
+        public const decimal pelletCaliber = 4.5m;
+
         //target sizes per ISSF rules
         public const decimal targetSize = 170; //mm
 
@@ -22,7 +24,7 @@ namespace freETarget {
         public const decimal ring10Pistol = 11.5m; //mm
         public const decimal innerRingPistol = 5m; //mm
 
-        public const decimal innerTenRadiusPistol = 4.75m;
+        public const decimal innerTenRadiusPistol = innerRingPistol / 2m + pelletCaliber / 2m; //4.75m;
 
         public const float pistol1X = 5.6f; //oficial scoring dimentions
         public const float pistol1Y = 10.3f;
@@ -43,16 +45,16 @@ namespace freETarget {
         public const decimal ring9Rifle = 5.5m; //mm
         public const decimal ring10Rifle = 0.5m; //mm
 
-        public const decimal innerTenRadiusRifle = 2.0m;
+        public const decimal innerTenRadiusRifle = pelletCaliber / 2m - ring10Rifle / 2m; //2.0m; ISSF rules states: Inner Ten = When the 10 ring (dot) has been shot out completely
 
-        public const float rifle1X = 2.50f; //oficial scoring dimentions
-        public const float rifle1Y = 10.0f;
-        public const float rifle2X = 2.25f;
-        public const float rifle2Y = 10.1f;
+        public const float rifle1X = 15.00f; //oficial scoring dimentions
+        public const float rifle1Y = 5.0f;
+        public const float rifle2X = 0.25f;
+        public const float rifle2Y = 10.9f;
 
         public static readonly decimal[] ringsRifle = new decimal[] { outterRingRifle, ring2Rifle, ring3Rifle, ring4Rifle, ring5Rifle, ring6Rifle, ring7Rifle, ring8Rifle, ring9Rifle, ring10Rifle };
 
-        public const decimal pelletCaliber = 4.5m;
+        
 
         public const int finalSeriesTime = 250; //seconds
         public const int singleShotTime = 50; //seconds

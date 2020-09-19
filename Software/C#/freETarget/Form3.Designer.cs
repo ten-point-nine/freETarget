@@ -33,6 +33,9 @@
             this.btnClose = new System.Windows.Forms.Button();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.txtIncrement = new System.Windows.Forms.TextBox();
+            this.btnClockwise = new System.Windows.Forms.Button();
+            this.btnAntiClockwise = new System.Windows.Forms.Button();
+            this.txtAngle = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // btnLeft
@@ -88,7 +91,8 @@
             // 
             // btnClose
             // 
-            this.btnClose.Location = new System.Drawing.Point(104, 126);
+            this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnClose.Location = new System.Drawing.Point(104, 176);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(97, 23);
             this.btnClose.TabIndex = 5;
@@ -110,11 +114,44 @@
             this.txtIncrement.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.toolTip.SetToolTip(this.txtIncrement, "Calibration increment; between 0.01 and 10");
             // 
+            // btnClockwise
+            // 
+            this.btnClockwise.Image = ((System.Drawing.Image)(resources.GetObject("btnClockwise.Image")));
+            this.btnClockwise.Location = new System.Drawing.Point(12, 130);
+            this.btnClockwise.Name = "btnClockwise";
+            this.btnClockwise.Size = new System.Drawing.Size(30, 30);
+            this.btnClockwise.TabIndex = 7;
+            this.btnClockwise.UseVisualStyleBackColor = true;
+            this.btnClockwise.Click += new System.EventHandler(this.btnClockwise_Click);
+            // 
+            // btnAntiClockwise
+            // 
+            this.btnAntiClockwise.Image = ((System.Drawing.Image)(resources.GetObject("btnAntiClockwise.Image")));
+            this.btnAntiClockwise.Location = new System.Drawing.Point(83, 130);
+            this.btnAntiClockwise.Name = "btnAntiClockwise";
+            this.btnAntiClockwise.Size = new System.Drawing.Size(30, 30);
+            this.btnAntiClockwise.TabIndex = 8;
+            this.btnAntiClockwise.UseVisualStyleBackColor = true;
+            this.btnAntiClockwise.Click += new System.EventHandler(this.btnAntiClockwise_Click);
+            // 
+            // txtAngle
+            // 
+            this.txtAngle.Location = new System.Drawing.Point(50, 136);
+            this.txtAngle.Name = "txtAngle";
+            this.txtAngle.Size = new System.Drawing.Size(26, 20);
+            this.txtAngle.TabIndex = 9;
+            this.txtAngle.Text = "1";
+            this.txtAngle.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.toolTip.SetToolTip(this.txtAngle, "Calibration increment; between 0.01 and 10");
+            // 
             // frmCalibration
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(213, 161);
+            this.ClientSize = new System.Drawing.Size(213, 211);
+            this.Controls.Add(this.txtAngle);
+            this.Controls.Add(this.btnAntiClockwise);
+            this.Controls.Add(this.btnClockwise);
             this.Controls.Add(this.txtIncrement);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.btnReset);
@@ -145,5 +182,8 @@
         private System.Windows.Forms.Button btnClose;
         private System.Windows.Forms.ToolTip toolTip;
         private System.Windows.Forms.TextBox txtIncrement;
+        private System.Windows.Forms.Button btnClockwise;
+        private System.Windows.Forms.Button btnAntiClockwise;
+        private System.Windows.Forms.TextBox txtAngle;
     }
 }
