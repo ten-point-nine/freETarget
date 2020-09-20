@@ -24,6 +24,7 @@ namespace freETarget {
 
         public enum Status {
             NOT_CONNECTED,
+            CONECTING,
             CONNECTED,
             LOADED
         }
@@ -39,9 +40,16 @@ namespace freETarget {
         public decimal calibrationY = 0;
         public decimal calibrationAngle = 0;
 
+        //accumulator of ALL incoming text from the arduino. it will all be displayed in the arduino window
+        public StringBuilderWrapper output = new StringBuilderWrapper();
+
         private Session currentSession;
 
         private StorageController storage;
+
+
+
+
         public frmMainWindow() {
             InitializeComponent();
 
@@ -137,43 +145,53 @@ namespace freETarget {
             //received data from serial port
             SerialPort sp = (SerialPort)sender;
             string indata = sp.ReadExisting();
-            Console.WriteLine("Received: " + indata);
+
+            if (indata.Contains("freETarget")) {
+                var d = new SafeCallDelegate3(connectDone); //confirm connect
+                this.Invoke(d);
+            }
+
+            output.Add(indata);
+
+            Console.WriteLine("\nReceived: " + indata.Trim());
             incomingJSON += indata;                         // Accumulate the input
-            if (incomingJSON.IndexOf("}") == (-1)) {         //message not complete? wait until a future event fires with more data
-                return; 
-            } else { //json completed. parse it
-                Console.WriteLine("Complete json: " + incomingJSON);
 
-                //parse input data to shot structure and determine score
-                Shot shot = parseJson(incomingJSON);
-                if (shot.count >= 0)
-                {
-                    currentSession.addShot(shot);
+            int indexOpenBracket = incomingJSON.IndexOf('{');
+            if (indexOpenBracket > -1) {
+                int indexClosedBracket = incomingJSON.IndexOf('}', indexOpenBracket);
+
+                if (indexClosedBracket > -1) {
+
+                    String message = incomingJSON.Substring(indexOpenBracket + 1, indexClosedBracket - indexOpenBracket - 1);
+                    incomingJSON = incomingJSON.Substring(indexClosedBracket);
+
+                    Console.WriteLine("Complete json message: " + message);
+
+                    //parse json message. might be a shot data or a test message
+                    Shot shot = parseJson(message);
+
+                    if (shot!=null && shot.count >= 0) {
+                        currentSession.addShot(shot);
 
 
-                    writeShotToDebug(indata);
-                    displayShotData(shot);
-                    VirtualRO vro = new VirtualRO();
-                    vro.speakShot(shot);
+                        displayMessage(message, false);
+                        displayShotData(shot);
+                        VirtualRO vro = new VirtualRO();
+                        vro.speakShot(shot);
 
-                    var d = new SafeCallDelegate3(targetRefresh); //draw shot
-                    this.Invoke(d);
+                        var d = new SafeCallDelegate3(targetRefresh); //draw shot
+                        this.Invoke(d);
 
-                    incomingJSON = incomingJSON.Substring(incomingJSON.IndexOf("}") + 1);  // Discard the current parsed json and keep what remains
-                    if (incomingJSON.IndexOf("}") != -1) {
+                        if (incomingJSON.IndexOf("}") != -1) {
 
-                        serialPort_DataReceived(sender, e); //call the event again to parse the remains. maybe there is another full message in there
-
+                            serialPort_DataReceived(sender, e); //call the event again to parse the remains. maybe there is another full message in there
+                        }
+                    } else {
+                        //error parsing json. keep trying at next event
+                        //displayMessage("Error parsing shot " + incomingJSON, false);
                     }
                 }
-                else
-                {
-                    //error parsing json. keep trying at next event
-                    displayMessage("Error parsing shot " + incomingJSON, false);
-                }
             }
-            
-           
 
         }
 
@@ -194,23 +212,9 @@ namespace freETarget {
 
                 try {
                     serialPort.Open();
-
-                    currentSession.start();
-                    timer.Enabled = true;
-
-                    btnConnect.Text = "Disconnect";
-                    currentStatus = Status.CONNECTED;
-                    statusText.Text = "Connected to " + serialPort.PortName;
-
-                    btnConnect.ImageKey = "disconnect";
-                    shotsList.Enabled = true;
-                    btnCalibration.Enabled = true;
-                    trkZoom.Enabled = true;
-                    tcSessionType.Enabled = true;
-                    tcSessionType.Refresh();
-
-                    initNewSession();
-                    targetRefresh();
+                    currentStatus = Status.CONECTING;
+                    statusText.Text = "Connecting...";
+                    btnConnect.Text = "Cancel";
 
                 } catch (Exception ex) {
                     statusText.Text = "Error opening serial port: " + ex.Message;
@@ -229,6 +233,7 @@ namespace freETarget {
 
                     shotsList.Enabled = false;
                     btnCalibration.Enabled = false;
+                    btnArduino.Enabled = false;
                     trkZoom.Enabled = false;
                     tcSessionType.Enabled = false;
                     tcSessionType.Refresh();
@@ -239,6 +244,27 @@ namespace freETarget {
             }
 
 
+        }
+
+        private void connectDone() {
+
+            currentSession.start();
+            timer.Enabled = true;
+
+            btnConnect.Text = "Disconnect";
+            currentStatus = Status.CONNECTED;
+            statusText.Text = "Connected to " + serialPort.PortName;
+
+            btnConnect.ImageKey = "disconnect";
+            shotsList.Enabled = true;
+            btnCalibration.Enabled = true;
+            btnArduino.Enabled = true;
+            trkZoom.Enabled = true;
+            tcSessionType.Enabled = true;
+            tcSessionType.Refresh();
+
+            initNewSession();
+            targetRefresh();
         }
 
         //output messages
@@ -259,7 +285,7 @@ namespace freETarget {
         }
 
 
-        private void writeShotToDebug(string json) {
+/*        private void writeShotToDebug(string json) {
             if (txtOutput.InvokeRequired) {
                 var d = new SafeCallDelegate2(writeShotToDebug);
                 txtOutput.Invoke(d, new object[] { json});
@@ -269,7 +295,7 @@ namespace freETarget {
                 //write to console window (raw input string)
                 txtOutput.AppendText(json);
             }
-        }
+        }*/
 
 
         //write shot data
@@ -512,57 +538,64 @@ namespace freETarget {
             return ret;
         }
 
+  
         private decimal getScaledDimension(decimal input) {
             decimal ret = 10 * input / Settings.Default.targetDistance;
             ret = decimal.Round(ret, 2, MidpointRounding.AwayFromZero);
             return ret;
         }
 
+
+        /**
+        *  incoming message contains all the data without the accolades
+        */
         private Shot parseJson(string json) {
             //parse json shot data
-            Shot ret = new Shot();
-            json = json.Trim();
 
-            int indexOpenBracket = json.IndexOf('{');
-            int indexClosedBracket = json.IndexOf('}');
-            if( (indexClosedBracket == (-1) )  || (indexOpenBracket == (-1)) || (json.IndexOf("nan") != (-1)) )
-             {
-                Console.WriteLine("Error in JSON string : " + json);
-                Shot err = new Shot();
-                err.count = -1;
-                return err;
-            }
-            string t1 = json.Substring(indexOpenBracket+1, indexClosedBracket - indexOpenBracket - 1); //shot from the first open bracket to the first closed bracket. ignore the rest
-            string[] t2 = t1.Split(',');
-            try {
-                foreach (string t3 in t2) {
-                    string[] t4 = t3.Split(':');
-                    if (t4[0].Contains("shot")) {
-                        ret.count = int.Parse(t4[1], CultureInfo.InvariantCulture);
-                    } else if (t4[0].Contains("x")) {
-                        ret.x = getScaledDimension(decimal.Parse(t4[1], CultureInfo.InvariantCulture));
-                    } else if (t4[0].Contains("y")) {
-                        ret.y = getScaledDimension(decimal.Parse(t4[1], CultureInfo.InvariantCulture));
-                    } else if (t4[0].Contains("r")) {
-                        ret.radius = getScaledDimension(decimal.Parse(t4[1], CultureInfo.InvariantCulture));
-                    } else if (t4[0].Contains("a")) {
-                        ret.angle = decimal.Parse(t4[1], CultureInfo.InvariantCulture);
+
+            string[] t2 = json.Split(',');
+
+            if (t2[0].Contains("shot")) {
+                Shot ret = new Shot();
+                try {
+                    foreach (string t3 in t2) {
+                        string[] t4 = t3.Split(':');
+                        if (t4[0].Contains("shot")) {
+                            ret.count = int.Parse(t4[1], CultureInfo.InvariantCulture);
+                        } else if (t4[0].Contains("x")) {
+                            ret.x = getScaledDimension(decimal.Parse(t4[1], CultureInfo.InvariantCulture));
+                        } else if (t4[0].Contains("y")) {
+                            ret.y = getScaledDimension(decimal.Parse(t4[1], CultureInfo.InvariantCulture));
+                        } else if (t4[0].Contains("r")) {
+                            ret.radius = getScaledDimension(decimal.Parse(t4[1], CultureInfo.InvariantCulture));
+                        } else if (t4[0].Contains("a")) {
+                            ret.angle = decimal.Parse(t4[1], CultureInfo.InvariantCulture);
+                        }
                     }
+                } catch (FormatException ex) {
+                    Console.WriteLine("Could not parse: " + json + " Error: " + ex.Message);
+                    Shot err = new Shot();
+                    err.count = -1;
+                    return err;
                 }
-            } catch (FormatException ex) {
-                Console.WriteLine("Could not parse: " + json + " Error: " + ex.Message);
-                Shot err = new Shot();
-                err.count = -1;
-                return err;
+
+                Console.WriteLine("Shot X:" + ret.x + " Y:" + ret.y + " R:" + ret.radius + " A:" + ret.angle);
+
+                ret.computeScore(currentSession.targetType);
+
+                ret.timestamp = DateTime.Now;
+
+                return ret;
+
+            } else if (t2[0].Contains("timer")) {
+                // bad shot. do anything?
+                displayMessage("Bad shot reported by the target: " + json, false);
+                return null;
+            } else {
+                return null; 
             }
 
-            Console.WriteLine("Shot X:" + ret.x + " Y:" + ret.y + " R:" + ret.radius + " A:" + ret.angle);
 
-            ret.computeScore(currentSession.targetType);
-
-            ret.timestamp = DateTime.Now;
-
-            return ret;
         }
 
 
@@ -1336,7 +1369,27 @@ namespace freETarget {
         private void imgLogo_Click(object sender, EventArgs e) {
             MessageBox.Show("Copyright (c) 2020 Azmodan -> youtube.com/ArmeVechi");
         }
+
+        private void btnArduino_Click(object sender, EventArgs e) {
+            frmArduino frmArd = frmArduino.getInstance(this);
+            frmArd.Show();
+        }
     }
 
+    /**
+     * Custom StringBuilder with an event triggered when text is appended, for use in binding it to a textbox
+     */
+    public class StringBuilderWrapper {
+        private StringBuilder _builder = new StringBuilder();
+        public EventHandler TextChanged;
+        public void Add(string text) {
+            _builder.Append(text);
+            if (TextChanged != null)
+                TextChanged(this, null);
+        }
+        public string Text {
+            get { return _builder.ToString(); }
+        }
+    }
 
 }

@@ -76,7 +76,10 @@ namespace TargetSimulator
 
                 statusText.Text = "Connected";
                 count = 1;
-                
+
+                serialPort1.Write("freETarget Simulator" + Environment.NewLine);
+
+
             } else {
                 serialPort1.Close();
                 btnConnect.Text = "Connect";
@@ -117,12 +120,11 @@ namespace TargetSimulator
             decimal radius = (decimal)pitagora(xPos, yPos);
             decimal angle = (decimal)findDegree((float)yPos, (float)xPos);
 
-            string command = "{\"shot\":" + count + ", \"x\":" + xPos.ToString("F2", CultureInfo.InvariantCulture) + ", \"y\":" + yPos.ToString("F2", CultureInfo.InvariantCulture) + ", \"r\":" + radius.ToString("F2", CultureInfo.InvariantCulture) + ", \"a\":" + angle.ToString("F2", CultureInfo.InvariantCulture) +"}";
+            string command = "{\"shot\":" + count + ", \"x\":" + xPos.ToString("F2", CultureInfo.InvariantCulture) + ", \"y\":" + yPos.ToString("F2", CultureInfo.InvariantCulture) + ", \"r\":" + radius.ToString("F2", CultureInfo.InvariantCulture) + ", \"a\":" + angle.ToString("F2", CultureInfo.InvariantCulture) +"}" + Environment.NewLine;
             
           
             txtOutput.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:ffff") + " | ");
             txtOutput.AppendText(command);
-            txtOutput.AppendText(Environment.NewLine);
 
             try
             {
