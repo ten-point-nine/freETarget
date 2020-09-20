@@ -32,12 +32,12 @@ namespace freETarget
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMainWindow));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.serialPort = new System.IO.Ports.SerialPort(this.components);
             this.btnConnect = new System.Windows.Forms.Button();
             this.imgListIcons = new System.Windows.Forms.ImageList(this.components);
@@ -75,6 +75,7 @@ namespace freETarget
             this.imgElevation = new System.Windows.Forms.PictureBox();
             this.btnCalibration = new System.Windows.Forms.Button();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+            this.btnArduino = new System.Windows.Forms.Button();
             this.imgSessionName = new System.Windows.Forms.PictureBox();
             this.gridTargets = new System.Windows.Forms.DataGridView();
             this.column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -100,7 +101,6 @@ namespace freETarget
             this.btnJournal = new System.Windows.Forms.Button();
             this.imgLogo = new System.Windows.Forms.PictureBox();
             this.digitalClock = new freETarget.SevenSegmentArray();
-            this.btnArduino = new System.Windows.Forms.Button();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.imgTarget)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.imgArrow)).BeginInit();
@@ -474,6 +474,19 @@ namespace freETarget
             this.btnCalibration.UseVisualStyleBackColor = true;
             this.btnCalibration.Click += new System.EventHandler(this.btnCalibration_Click);
             // 
+            // btnArduino
+            // 
+            this.btnArduino.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnArduino.Enabled = false;
+            this.btnArduino.Image = ((System.Drawing.Image)(resources.GetObject("btnArduino.Image")));
+            this.btnArduino.Location = new System.Drawing.Point(1052, 4);
+            this.btnArduino.Name = "btnArduino";
+            this.btnArduino.Size = new System.Drawing.Size(27, 27);
+            this.btnArduino.TabIndex = 38;
+            this.toolTip.SetToolTip(this.btnArduino, "Arduino");
+            this.btnArduino.UseVisualStyleBackColor = true;
+            this.btnArduino.Click += new System.EventHandler(this.btnArduino_Click);
+            // 
             // imgSessionName
             // 
             this.imgSessionName.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -493,14 +506,14 @@ namespace freETarget
             this.gridTargets.AllowUserToResizeRows = false;
             this.gridTargets.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridTargets.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridTargets.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.gridTargets.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             this.gridTargets.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.column1,
@@ -518,13 +531,13 @@ namespace freETarget
             this.gridTargets.MultiSelect = false;
             this.gridTargets.Name = "gridTargets";
             this.gridTargets.ReadOnly = true;
-            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            this.gridTargets.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            this.gridTargets.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.gridTargets.RowHeadersWidth = 52;
             this.gridTargets.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
             this.gridTargets.RowTemplate.DefaultCellStyle.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
@@ -627,8 +640,8 @@ namespace freETarget
             // 
             // ColumnTotal
             // 
-            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.ColumnTotal.DefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.ColumnTotal.DefaultCellStyle = dataGridViewCellStyle2;
             this.ColumnTotal.HeaderText = "Total";
             this.ColumnTotal.Name = "ColumnTotal";
             this.ColumnTotal.ReadOnly = true;
@@ -643,34 +656,34 @@ namespace freETarget
             | System.Windows.Forms.AnchorStyles.Right)));
             this.chartBreakdown.BackColor = System.Drawing.SystemColors.ControlDark;
             this.chartBreakdown.BorderlineColor = System.Drawing.Color.Black;
-            chartArea2.AxisX.Interval = 1D;
-            chartArea2.AxisX.LineWidth = 0;
-            chartArea2.AxisX.MajorGrid.LineWidth = 0;
-            chartArea2.AxisX.MajorTickMark.Enabled = false;
-            chartArea2.AxisY.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
-            chartArea2.AxisY.MajorGrid.LineWidth = 0;
-            chartArea2.BackColor = System.Drawing.SystemColors.ControlDark;
-            chartArea2.Name = "ChartArea1";
-            chartArea2.Position.Auto = false;
-            chartArea2.Position.Height = 100F;
-            chartArea2.Position.Width = 100F;
-            this.chartBreakdown.ChartAreas.Add(chartArea2);
-            legend2.Name = "Legend1";
-            this.chartBreakdown.Legends.Add(legend2);
+            chartArea1.AxisX.Interval = 1D;
+            chartArea1.AxisX.LineWidth = 0;
+            chartArea1.AxisX.MajorGrid.LineWidth = 0;
+            chartArea1.AxisX.MajorTickMark.Enabled = false;
+            chartArea1.AxisY.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
+            chartArea1.AxisY.MajorGrid.LineWidth = 0;
+            chartArea1.BackColor = System.Drawing.SystemColors.ControlDark;
+            chartArea1.Name = "ChartArea1";
+            chartArea1.Position.Auto = false;
+            chartArea1.Position.Height = 100F;
+            chartArea1.Position.Width = 100F;
+            this.chartBreakdown.ChartAreas.Add(chartArea1);
+            legend1.Name = "Legend1";
+            this.chartBreakdown.Legends.Add(legend1);
             this.chartBreakdown.Location = new System.Drawing.Point(-1, -2);
             this.chartBreakdown.Name = "chartBreakdown";
             this.chartBreakdown.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.None;
             this.chartBreakdown.PaletteCustomColors = new System.Drawing.Color[] {
         System.Drawing.Color.Blue};
-            series2.ChartArea = "ChartArea1";
-            series2.CustomProperties = "LabelStyle=Bottom";
-            series2.IsValueShownAsLabel = true;
-            series2.IsVisibleInLegend = false;
-            series2.LabelForeColor = System.Drawing.Color.White;
-            series2.Legend = "Legend1";
-            series2.Name = "Series1";
-            series2.SmartLabelStyle.AllowOutsidePlotArea = System.Windows.Forms.DataVisualization.Charting.LabelOutsidePlotAreaStyle.No;
-            this.chartBreakdown.Series.Add(series2);
+            series1.ChartArea = "ChartArea1";
+            series1.CustomProperties = "LabelStyle=Bottom";
+            series1.IsValueShownAsLabel = true;
+            series1.IsVisibleInLegend = false;
+            series1.LabelForeColor = System.Drawing.Color.White;
+            series1.Legend = "Legend1";
+            series1.Name = "Series1";
+            series1.SmartLabelStyle.AllowOutsidePlotArea = System.Windows.Forms.DataVisualization.Charting.LabelOutsidePlotAreaStyle.No;
+            this.chartBreakdown.Series.Add(series1);
             this.chartBreakdown.Size = new System.Drawing.Size(395, 148);
             this.chartBreakdown.TabIndex = 4;
             this.chartBreakdown.Text = "chart1";
@@ -804,19 +817,6 @@ namespace freETarget
             this.digitalClock.TabIndex = 35;
             this.digitalClock.TabStop = false;
             this.digitalClock.Value = null;
-            // 
-            // btnArduino
-            // 
-            this.btnArduino.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnArduino.Enabled = false;
-            this.btnArduino.Image = ((System.Drawing.Image)(resources.GetObject("btnArduino.Image")));
-            this.btnArduino.Location = new System.Drawing.Point(1052, 4);
-            this.btnArduino.Name = "btnArduino";
-            this.btnArduino.Size = new System.Drawing.Size(27, 27);
-            this.btnArduino.TabIndex = 38;
-            this.toolTip.SetToolTip(this.btnArduino, "Calibration");
-            this.btnArduino.UseVisualStyleBackColor = true;
-            this.btnArduino.Click += new System.EventHandler(this.btnArduino_Click);
             // 
             // frmMainWindow
             // 

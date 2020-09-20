@@ -57,8 +57,9 @@ namespace freETarget {
 
             this.calibrationX = Settings.Default.calibrationX;
             this.calibrationY = Settings.Default.calibrationY;
+            this.calibrationAngle = Settings.Default.calibrationAngle;
 
-            if (calibrationX == 0 && calibrationY == 0) {
+            if (calibrationX == 0 && calibrationY == 0 && calibrationAngle == 0) {
                 btnCalibration.BackColor = this.BackColor;
             } else {
                 btnCalibration.BackColor = Settings.Default.targetColor;
@@ -70,7 +71,7 @@ namespace freETarget {
                 btnConfig.BackColor = this.BackColor;
             }
 
-            toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY);
+            toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
 
             toolTip.SetToolTip(btnConfig, "Setting - Target distance: " + Properties.Settings.Default.targetDistance);
 
@@ -146,6 +147,7 @@ namespace freETarget {
             SerialPort sp = (SerialPort)sender;
             string indata = sp.ReadExisting();
 
+            //first incoming from target after port open is "freETarget VX.x" - use this to confirm connection
             if (indata.Contains("freETarget")) {
                 var d = new SafeCallDelegate3(connectDone); //confirm connect
                 this.Invoke(d);
@@ -187,8 +189,7 @@ namespace freETarget {
                             serialPort_DataReceived(sender, e); //call the event again to parse the remains. maybe there is another full message in there
                         }
                     } else {
-                        //error parsing json. keep trying at next event
-                        //displayMessage("Error parsing shot " + incomingJSON, false);
+                        //some other non-shot message from target. ignore ..for now (it will be displayed in the arduino window
                     }
                 }
             }
@@ -211,6 +212,9 @@ namespace freETarget {
 
 
                 try {
+
+                    //open port. the target (arduino) will send a text "freETarget VX.X" on connect. 
+                    //software will wait for this text to confirm succesfull connection
                     serialPort.Open();
                     currentStatus = Status.CONECTING;
                     statusText.Text = "Connecting...";
@@ -246,6 +250,9 @@ namespace freETarget {
 
         }
 
+        /**
+         * received connection text from target. connection established
+         */
         private void connectDone() {
 
             currentSession.start();
