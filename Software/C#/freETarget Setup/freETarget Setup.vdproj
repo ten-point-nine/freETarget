@@ -82,13 +82,7 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_3AFD6F7D5D8B1D87A8F74D1C4C751A36"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_39002736FEFD4D78A96BB2339FA9C02B"
+        "OwnerKey" = "8:_B18C4057E682438CB1FBAFA19B5EAB78"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -100,7 +94,7 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_B18C4057E682438CB1FBAFA19B5EAB78"
+        "OwnerKey" = "8:_39002736FEFD4D78A96BB2339FA9C02B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -121,6 +115,12 @@
         "OwnerKey" = "8:_AC48D9380AAEAFD6E7E340AC94314588"
         "MsmSig" = "8:_UNDEFINED"
         }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_3AFD6F7D5D8B1D87A8F74D1C4C751A36"
+        "MsmSig" = "8:_UNDEFINED"
+        }
     }
     "Configurations"
     {
@@ -139,6 +139,14 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+            }
         }
         "Release"
         {
@@ -155,6 +163,14 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+            }
         }
     }
     "Deployable"
@@ -1055,7 +1071,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_B18C4057E682438CB1FBAFA19B5EAB78"
             {
-            "SourcePath" = "8:..\\freETarget\\obj\\Release\\freETarget.exe"
+            "SourcePath" = "8:..\\freETarget\\obj\\Debug\\freETarget.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_9981CD01648E4C95AF344740FDDEA8C9"

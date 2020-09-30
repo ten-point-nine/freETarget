@@ -147,10 +147,10 @@ namespace freETarget {
             SerialPort sp = (SerialPort)sender;
             string indata = sp.ReadExisting();
 
-            //first incoming from target after port open is "freETarget VX.x" - use this to confirm connection
+            //first incoming text from target after port open is "freETarget VX.x" - use this to confirm connection
             if (indata.Contains("freETarget")) {
-                var d = new SafeCallDelegate3(connectDone); //confirm connect
-                this.Invoke(d);
+                var d = new SafeCallDelegate2(connectDone); //confirm connect
+                this.Invoke(d, new object[] { indata.Trim() });
             }
 
             output.Add(indata);
@@ -253,14 +253,15 @@ namespace freETarget {
         /**
          * received connection text from target. connection established
          */
-        private void connectDone() {
+        private void connectDone(String target) {
 
             currentSession.start();
             timer.Enabled = true;
 
             btnConnect.Text = "Disconnect";
             currentStatus = Status.CONNECTED;
-            statusText.Text = "Connected to " + serialPort.PortName;
+            statusText.Text = "Connected to " + target + " on " + serialPort.PortName;
+            displayMessage("Connected to " + target, false);
 
             btnConnect.ImageKey = "disconnect";
             shotsList.Enabled = true;
