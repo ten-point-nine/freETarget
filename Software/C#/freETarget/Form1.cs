@@ -999,11 +999,11 @@ namespace freETarget {
             double sinTheta = Math.Sin(angleInRadians);
             return new PointF {
                 X =
-                    (int)
+                    (float)
                     (cosTheta * (pointToRotate.X - centerPoint.X) -
                     sinTheta * (pointToRotate.Y - centerPoint.Y) + centerPoint.X),
                 Y =
-                    (int)
+                    (float)
                     (sinTheta * (pointToRotate.X - centerPoint.X) +
                     cosTheta * (pointToRotate.Y - centerPoint.Y) + centerPoint.Y)
             };
