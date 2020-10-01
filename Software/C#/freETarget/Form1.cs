@@ -969,7 +969,7 @@ namespace freETarget {
 
             decimal[] r = new decimal[shots.Count];
             for(int i=0; i< shots.Count; i++) {
-                r[i] = (decimal)Math.Sqrt((double)(((shots[i].x - xbar) * (shots[i].x - xbar)) + ((shots[i].y - ybar) * (shots[i].y - ybar))));
+                r[i] = (decimal)Math.Sqrt((double)(((getShotX(shots[i]) - xbar) * (getShotX(shots[i]) - xbar)) + ((getShotY(shots[i]) - ybar) * (getShotY(shots[i]) - ybar))));
             }
 
             decimal rsum = 0;
@@ -986,7 +986,17 @@ namespace freETarget {
             List<double> spreads = new List<double>();
             for(int i = 0; i < shots.Count; i++) {
                 for(int j = 0; j < shots.Count; j++) {
-                    spreads.Add(Math.Sqrt( Math.Pow ((double)shots[i].x - (double)shots[j].x, 2) - Math.Pow((double)shots[i].y - (double)shots[j].y, 2)));
+                    double powX = Math.Pow((double)getShotX(shots[i]) - (double)getShotX(shots[j]), 2);
+                    double powY = Math.Pow((double)getShotY(shots[i]) - (double)getShotY(shots[j]), 2);
+                    double sqrt;
+                    if (powX > powY) {
+                        sqrt = Math.Sqrt(powX - powY);
+                    } else {
+                        sqrt = Math.Sqrt(powY - powX);
+                    }
+                    
+                    Console.WriteLine("powX: " + powX + " powY: " + powY + " sqrt: " + sqrt);
+                    spreads.Add(sqrt);
                 }
             }
 
@@ -1021,7 +1031,6 @@ namespace freETarget {
             PointF p = new PointF((float)(shot.x), (float)(shot.y + calibrationY));
             PointF rotP = RotatePoint(p, new PointF(0, 0), (float)calibrationAngle);
             return (decimal)rotP.Y;
-            //return shot.y + calibrationY;
         }
 
         private void btnCalibration_Click(object sender, EventArgs e) {
