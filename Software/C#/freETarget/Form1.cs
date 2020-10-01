@@ -244,6 +244,9 @@ namespace freETarget {
 
                     initNewSession();
                     targetRefresh();
+
+                    frmArduino ard = frmArduino.getInstance(this);
+                    ard.Hide();
                 }
             }
 
@@ -708,7 +711,7 @@ namespace freETarget {
             setTrkZoom(currentSession.targetType);
 
             clearShots();
-            drawTarget();
+            targetRefresh();
             drawSessionName();
         }
 
@@ -730,7 +733,7 @@ namespace freETarget {
         }
 
         private void trkZoom_ValueChanged(object sender, EventArgs e) {
-            drawTarget();
+            targetRefresh();
         }
 
         private void frmMainWindow_Resize(object sender, EventArgs e) {
@@ -994,8 +997,6 @@ namespace freETarget {
                     } else {
                         sqrt = Math.Sqrt(powY - powX);
                     }
-                    
-                    Console.WriteLine("powX: " + powX + " powY: " + powY + " sqrt: " + sqrt);
                     spreads.Add(sqrt);
                 }
             }
