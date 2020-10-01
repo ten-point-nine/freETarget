@@ -21,9 +21,7 @@ unsigned int revision(void);        // Return the board revision
 #define REF_OUT      7          // Reference Output
 #define V_REFERENCE  0          // Reference Input
 #define ANALOG_VERSION 5        // Analog Version Input
-#define RTD          6          // RTD input
 
-#define TO_VOLTS(x) ( ((x) * 5.0) / 1024.0 )
+#define TO_VOLTS(x) ( ((double)(x) * 5.0) / 1024.0 )
 
 #define TEMP_IC   (0x9E >> 1)
-
