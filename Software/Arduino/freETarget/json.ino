@@ -1,0 +1,307 @@
+/*-------------------------------------------------------
+ * 
+ * JSON.ino
+ * 
+ * JSON driver
+ * 
+ * ----------------------------------------------------*/
+
+#include <EEPROM.h>
+#include "json.h"
+
+static char input_JSON[128];
+
+unsigned int json_dip_switch;               // DIP switch overwritten by JSON message
+double       json_sensor_dia = DIAMETER;    // Sensor daiamter overwitten by JSON message
+unsigned int json_paper_time = 0;           // Time paper motor is applied
+unsigned int json_echo;                     // Test String 
+double       json_d_echo;                   // Test String
+unsigned int json_test;                     // Self test to be performed
+
+#define IS_VOID    0
+#define IS_INT16   1
+#define IS_FLOAT   2
+#define IS_DOUBLE  3
+#define JSON_DEBUG false                    // TRUE to echo DEBUG messages
+
+ void show_echo(void);                // Display the current settings
+static void show_test(void);                // Execute the self test once
+static void show_test0(void);               // Help Menu
+
+
+static void nop(void);
+
+typedef struct  {
+  char*           token;  // JSON token string, ex "RADIUS": 
+  unsigned int*   value;  // Where value is stored 
+  double*       d_value;  // Where value is stored 
+  unsigned int  convert;  // Conversion type
+  void       (*f)(void);  // Function to execute with message
+  unsigned int  non_vol;  // Storage in NON-VOL
+} json_message;
+
+  
+static json_message JSON[] = {
+  {"\"DIP\":",        &json_dip_switch, 0,                IS_INT16,  0,         NONVOL_DIP_SWITCH },    // 0
+  {"\"ECHO\":",       &json_echo,       0,                IS_INT16,  &show_echo,                0 },    // 1
+  {"\"PAPER\":",      &json_paper_time, 0,                IS_INT16,  0,         NONVOL_PAPER_TIME },    // 2
+  {"\"SENSOR\":",     0,                &json_sensor_dia, IS_FLOAT,  0,         NONVOL_SENSOR_DIA },    // 3
+  {"\"TEST\":",       &json_test,       0,                IS_INT16,  &show_test,NONVOL_TEST_MODE  },    // 4
+  { 0, 0, 0, 0, 0, 0}
+};
+
+int instr(char* s1, char* s2);
+
+/*-----------------------------------------------------
+ * 
+ * function: read_JSON()
+ * 
+ * brief: Accumulate input from the serial port
+ * 
+ * return: None
+ * 
+ *-----------------------------------------------------
+ *
+ * The format of the JSON stings used here is
+ * 
+ * { "LABLE":value }
+ * 
+ * {"ECHO":23"}
+ * {"ECHO":12, "DIP":8}
+ * {"DIP":9, "SENSOR":230.0, "ECHO":32}
+ * {"TEST":7, "ECHO":5}
+ * 
+ * Find the lable, ex "DIP": and save in the
+ * corresponding memory location
+ * 
+ *-----------------------------------------------------*/
+static uint16_t in_JSON = 0;
+static bool not_found;
+
+void read_JSON(void)
+{
+static int16_t got_right;
+unsigned int  i, j, x;
+int     k;
+char    ch;
+double  y;
+
+/*
+ * See if anything is waiting and if so, add it in
+ */
+  while ( Serial.available() != 0 )
+  {
+    ch = Serial.read();
+#if ( JSON_DEBUG == true )
+    Serial.print(ch);
+#endif
+
+/*
+ * Parse the stream
+ */
+    switch (ch)
+    {
+      case ' ':                             // Ignore spaces
+        break;
+  
+      case '{':
+        in_JSON = 0;
+        input_JSON[0] = 0;
+        got_right = 0;
+        break;
+
+      case '}':
+        if ( in_JSON != 0 )
+        {
+          got_right = in_JSON;
+        }
+        break;
+
+      default:
+        input_JSON[in_JSON] = ch;            // Add in the latest
+        if ( in_JSON < (sizeof(input_JSON)-1) )
+        {
+        in_JSON++;
+        }
+        input_JSON[in_JSON] = 0;            // Null terminate
+        break;
+    }
+  }
+  
+  if ( got_right == 0 )
+  {
+    return;
+  }
+  
+/*
+ * Found out where the braces are, extract the contents.
+ */
+  not_found = true;
+  for ( i=0; i != got_right; i++)                             // Go across the JSON input 
+  {
+    j = 0;
+
+    while ( JSON[j].token != 0 )                              // Cycle through the tokens
+    {
+      k = instr(&input_JSON[i], JSON[j].token );              // Compare the input against the list of JSON tags
+
+      if ( k > 0 )
+      {
+        not_found = false;
+        k++;
+        switch ( JSON[j].convert )
+        {
+          default:
+          case IS_VOID:
+          break;
+            
+          case IS_INT16:
+            x = atoi(&input_JSON[i+k-1]);
+            *JSON[j].value = x;                              // Save the value
+            if ( JSON[j].non_vol != 0 )
+            {
+              EEPROM.put(JSON[j].non_vol, x);               // Store into NON-VOL
+            }
+            break;
+  
+          case IS_FLOAT:
+          case IS_DOUBLE:
+            y = atoi(&input_JSON[i+k-1]);
+            *JSON[j].d_value = y;                           // Save the value
+            if ( JSON[j].non_vol != 0 )
+            {
+              EEPROM.put(JSON[j].non_vol, y);               // Store into NON-VOL
+            }
+            break;
+        }
+        if ( JSON[j].f != 0 )                              // Call the handler if it is available
+        {
+          JSON[j].f();
+        }
+      } 
+     j++;
+   }
+  }
+/*
+ * Report an error if input not found
+ */
+  if ( not_found == true )
+  {
+    Serial.print("\n\r{\"JSON\":0, "); 
+    j = 0;    
+    while ( JSON[j].token != 0 ) 
+    {
+      Serial.print(JSON[j].token); Serial.print("0, ");
+      j++;
+    }
+    Serial.print(" \"VERSION\": "); Serial.print(SOFTWARE_VERSION); Serial.print("}\n\r"); 
+  }
+  
+/*
+ * All done
+ */   
+  in_JSON   = 0;                // Start Over
+  got_right = 0;                // Neet to wait for a new Right Bracket
+  input_JSON[in_JSON] = 0;      // Clear the input
+  return;
+}
+
+// Compare two strings.  Return -1 if not equal, end of string if equal
+// S1 Long String, S2 Short String . if ( instr("CAT Sam", "CAT") == 3)
+int instr(char* s1, char* s2)
+{
+  int return_value = -1;
+  int i;
+
+  i=0;
+  while ( (*s1 != 0) && (*s2 != 0) )
+  {
+    if ( *s1 != *s2 )
+    {
+      return -1;
+    }
+    s1++;
+    s2++;
+    i++;
+  }
+
+/*
+ * Reached the end of the comparison string
+ */
+  if ( *s2 == 0 )
+  {
+    return i;
+  }
+  return -1;
+}
+/*-----------------------------------------------------
+ * 
+ * function: show_echo
+ * 
+ * brief: Display the current settings
+ * 
+ * return: None
+ * 
+ *-----------------------------------------------------
+ *
+ * Loop and display the settings
+ * 
+ *-----------------------------------------------------*/
+
+void show_echo(void)
+{
+  unsigned int i;
+  
+  Serial.print("\n\r{");
+
+  i=0;
+  while (JSON[i].token != 0 )
+  {
+    switch ( JSON[i].convert )
+    {
+      default:
+      case IS_VOID:
+        break;
+          
+      case IS_INT16:
+        Serial.print(JSON[i].token);
+        Serial.print(*JSON[i].value); Serial.print(", ");
+        break;
+
+      case IS_FLOAT:
+      case IS_DOUBLE:
+        Serial.print(JSON[i].token);
+        Serial.print(*JSON[i].d_value); Serial.print(", ");
+        break;
+    }
+    i++;
+  }
+    
+  EEPROM.get(NONVOL_INIT, i);
+  Serial.print(" \"INIT\": "); Serial.print(i); Serial.print(", ");
+  Serial.print(" \"V_REF\": "); Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print(", ");
+  Serial.print(" \"VERSION\": "); Serial.print(SOFTWARE_VERSION); Serial.print("}\n\r");
+
+/*
+ *  All done, return
+ */
+  return;
+}
+
+/*-----------------------------------------------------
+ * 
+ * function: show_test
+ * 
+ * brief: Execute one iteration of the self test
+ * 
+ * return: None
+ * 
+ *----------------------------------------------------*/
+
+static void show_test(void)
+ {
+  Serial.print("\n\rSelf Test:"); Serial.print(json_test); Serial.print("\n\r");
+  
+  self_test(json_test);
+  return;
+ }

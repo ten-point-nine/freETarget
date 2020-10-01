@@ -5,6 +5,7 @@
  * General purpose GPIO driver
  * 
  * ----------------------------------------------------*/
+#include "json.h"
 
 struct GPIO {
   byte port;
@@ -49,6 +50,8 @@ GPIO init_table[] = {
   {LED_X,   OUTPUT, 1},
   {LED_Y,   OUTPUT, 1},
   
+  {PAPER,   OUTPUT, 1},               // Paper drive active low
+    
   {EOF, EOF, EOF} };
 
 
@@ -114,13 +117,13 @@ unsigned int read_port(void)
   for (i=0; i != 8; i++)
     {
     return_value <<= 1;
-    return_value |= digitalRead(port_list[i]);
+    return_value |= digitalRead(port_list[i]) & 1;
     }
 
  /*
   * Return the result 
   */
-  return return_value;
+  return (return_value & 0x00ff);
 }
 
 /*-----------------------------------------------------
@@ -199,7 +202,7 @@ unsigned int is_running (void)
   if ( digitalRead(RUN_SOUTH) == 1 )
     i += 4;
     
-  if ( digitalRead(RUN_WEST)== 1 )
+  if ( digitalRead(RUN_WEST) == 1 )
     i += 8;  
 
  /*
@@ -244,7 +247,7 @@ void arm_counters(void)
  */
 void stop_counters(void)
   {
-//  digitalWrite(STOP_N,0);   // Stop the counters
+  digitalWrite(STOP_N,0);   // Stop the counters
   digitalWrite(QUIET, 0);   // Kill the oscillator
   digitalWrite(RCLK,  1);   // Prepare to read
  
@@ -265,15 +268,18 @@ void stop_counters(void)
  * The word is complimented to return a 1 for every
  * jumper that is installed.
  * 
- * Return 0xF0 to allow for compile time testing
+ * OR in the json_dip_switch to allow remote testing
+ * OR in  0xF0 to allow for compile time testing
  *-----------------------------------------------------*/
 unsigned int read_DIP(void)
 {
   unsigned int return_value;
   
-  return_value =  (digitalRead(DIP_A) << 0) + (digitalRead(DIP_B) << 1) + (digitalRead(DIP_C) << 2) + (digitalRead(DIP_D) << 3);
+  return_value =  (~((digitalRead(DIP_A) << 0) + (digitalRead(DIP_B) << 1) + (digitalRead(DIP_C) << 2) + (digitalRead(DIP_D) << 3))) & 0x0F;  // DIP Switch
+  return_value |= json_dip_switch;  // JSON message
+  return_value |= 0xF0;             // COMPILE TIME
 
-  return (~return_value) & 0x0f | 0xF0;
+  return return_value;
 }  
 
 /*
@@ -296,3 +302,15 @@ bool read_in(unsigned int port)
 {
   return digitalRead(port);
 }
+
+/*
+ * Pull in timer registers
+ */
+void get_timers(void)
+{
+  timer_value[N] = read_counter(N);  
+  timer_value[E] = read_counter(E);
+  timer_value[S] = read_counter(S);
+  timer_value[W] = read_counter(W);
+}
+ 

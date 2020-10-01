@@ -5,18 +5,21 @@
  * 
  * Software to run the Air-Rifle / Small Bore Electronic Target
  * 
- *----------------------------------------------------------------
- *
+ *--------------------------------------------------------------
+ *--
  */
 #include "freETarget.h"
 #include "gpio.h"
 #include "compute_hit.h"
 #include "analog_io.h"
+#include "json.h"
+#include "EEPROM.h"
+#include "nonvol.h"
 
 history_t history;
 double        s_of_sound;        // Speed of sound
 unsigned int shot = 0;
-  
+
 /*----------------------------------------------------------------
  * 
  * void setup()
@@ -25,25 +28,59 @@ unsigned int shot = 0;
  * 
  *----------------------------------------------------------------
  */
+void show_echo(void);
 void setup() 
 {
   int i;
+  int nonvol_init;
+  
 /*
  *  Setup the serial port
  */
   Serial.begin(115200);
-  Serial.println("\n\rfreETarget V2.1");
-
+  Serial.print("\n\rfreETarget "); Serial.println(SOFTWARE_VERSION);
+  
+/*
+ * Initialize variables
+ */
+  EEPROM.get(NONVOL_INIT, nonvol_init);
+  if ( nonvol_init != 0xABCD )                        // Has this already been initialized
+  {
+    Serial.print("\n\rInitializing NON-VOL");
+    json_dip_switch = 0;
+    EEPROM.put(NONVOL_DIP_SWITCH, json_dip_switch);   // No, set up the defaults
+    json_sensor_dia = 230.0;
+    EEPROM.put(NONVOL_SENSOR_DIA, json_sensor_dia);
+    json_paper_time = 0;
+    EEPROM.put(NONVOL_PAPER_TIME, json_paper_time);
+    nonvol_init = 0xabcd;
+    EEPROM.put(NONVOL_INIT, nonvol_init);
+    json_test = 0;
+    EEPROM.put(NONVOL_TEST_MODE, json_test);
+  }
+  EEPROM.get(NONVOL_DIP_SWITCH, json_dip_switch);     // Read the nonvol settings
+  EEPROM.get(NONVOL_SENSOR_DIA, json_sensor_dia);
+  EEPROM.get(NONVOL_PAPER_TIME, json_paper_time);
+  EEPROM.get(NONVOL_TEST_MODE,  json_test);
+  
 /*
  *  Set up the port pins
  */
   init_gpio();
   init_sensors();
   init_analog_io();
+  for (i=0; i !=4; i++)
+  {
+    digitalWrite(LED_S, ~(1 << i) & 1);
+    digitalWrite(LED_X, ~(1 << i) & 2);
+    digitalWrite(LED_Y, ~(1 << i) & 4);
+    delay(250);
+  }
 
 /*
  * All done, begin the program
  */
+ show_echo();
  return;
 }
 
@@ -61,58 +98,67 @@ void setup()
 #define AQUIRE (WAIT+1)         // Aquire the shot
 #define REDUCE (AQUIRE+1)       // Reduce the data
 #define WASTE  (REDUCE+1)       // Wait for the shot to end
-#define SHOW_ERROR (WASTE+1)    // Got a trigger, but was defective
+#define SEND_ERROR (WASTE+1)    // Got a trigger, but was defective
 
+unsigned int state = SET_MODE;
+unsigned long now;
+double x_time, y_time;          // Location in time
+unsigned int running_mode;
+unsigned int sensor_status;     // Record which sensors contain valid data
+unsigned int location;          // Sensor location 
+unsigned int i, j;              // Iteration Counter
 void loop() 
 {
-  unsigned int state = SET_MODE;
-  unsigned long now;
-  double x_time, y_time;        // Location in time
-  unsigned int running_mode;
-  unsigned int sensor_status;   // Record which sensors contain valid data
-  unsigned int location;        // Sensor location 
 
-#if ( SAMPLE_CALCULATIONS != 0 )
-  unit_test();
-#endif
- 
+/*
+ * Take care of any commands coming through
+ */
+  read_JSON();
+  
 /*
  * Cycle through the state machine
  */
   switch (state)
   {
+
 /*
  *  Check for special operating modes
  */
   default:
   case SET_MODE:
-    while (read_DIP() & SELF_TEST)
+    if ( json_test == 0 )       // No self test started
     {
-      self_test();
+      state = ARM;              // Carry on to the target
     }
-    state = ARM;
+    else
+    {
+      self_test(json_test);     // Run the self test
+    }
     break;
 /*
  * Arm the circuit
  */
   case ARM:
+    if ( read_DIP() & (VERBOSE_TRACE) )
+    {
+      Serial.print("\n\n\rWaiting...");
+    }
     arm_counters();
     set_LED(LED_S, true);     // Show we are waiting
     set_LED(LED_X, false);    // No longer processing
     set_LED(LED_Y, false);   
-    state = WAIT;
     sensor_status = 0;
+    state = WAIT;
     break;
     
 /*
  * Wait for the shot
  */
   case WAIT:
-    sensor_status |= is_running();
-    if ( sensor_status != 0 )    // Shot detected
+    if ( is_running() != 0 )              // Shot detected
       {
       state = AQUIRE;
-      now = micros();           // Remember the starting time
+      now = micros();                     // Remember the starting time
       }
      break;
 
@@ -123,26 +169,36 @@ void loop()
     sensor_status |= is_running();        // Remember all of the running timers
     if ( (micros() - now) > SHOT_TIME )   // Enough time already
     { 
-      if ( sensor_status == 0x0f )        // Need to have all 4 counters trip
+      switch ( hamming(sensor_status) )   // Determine how many sensors were tripped
       {
-        state = REDUCE;                   // Before we can decode all of the data.
+        default:
+        case 0:                           // 1, 2, No solution is possilble
+        case 1:
+        case 2:
+          state = SEND_ERROR;
+          break;
+
+        case 3:
+        case 4:
+          state = REDUCE;                 // 3, 4 Have enough data to performe the calculations
+          break;
       }
-      else
-      {
-        state = SHOW_ERROR;
-      }
-      stop_counters();
     }
     break;
 
 /*
  *  Reduce the data to a score
  */
-  case REDUCE:
-    set_LED(LED_S, false);     // 
+  case REDUCE:   
+    stop_counters(); 
+    if ( read_DIP() & (VERBOSE_TRACE) )
+    {
+      Serial.print("\n\rReducing...");
+    }
+    set_LED(LED_S, false);
     set_LED(LED_X, false);     // No longer processing
     set_LED(LED_Y, true);      // Reducing the shot
-    location = compute_hit(shot, &history);
+    location = compute_hit(sensor_status, shot, &history);
     send_score(&history, shot);
     state = WASTE;
     shot++;                   
@@ -152,8 +208,40 @@ void loop()
  *  Wait here to make sure the RUN lines are no longer set
  */
   case WASTE:
-    delay(1000);
+    delay(1000);                              // Hang out for a second
+    if ( json_paper_time != 0 )
+    {
+      if ( read_DIP() & (VERBOSE_TRACE) )
+      {
+        Serial.print("\n\rAdvancing paper...");
+      } 
+      digitalWrite(PAPER, PAPER_ON);          // Advance the motor drive time
+      for (i=0; i != json_paper_time; i++ )
+      {
+        j = 7 * (1.0 - ((float)i / float(json_paper_time)));
+        set_LED(LED_S, j & 1);                // Show the paper advancing
+        set_LED(LED_X, j & 2);                // 
+        set_LED(LED_Y, j & 4);                // 
+        delay(10);                            // in 10ms increments
+      }
+      digitalWrite(PAPER, PAPER_OFF);
+    }
     state = SET_MODE;
+    break;
+
+/*    
+ * Show an error occured
+ */
+  case SEND_ERROR:     
+    if ( read_DIP() & (VERBOSE_TRACE) )
+    {
+      Serial.print("\n\rBad read...\n\r");
+    } 
+    set_LED(LED_S, true);       // Showing an error
+    set_LED(LED_X, true);       // 
+    set_LED(LED_Y, true);       // 
+    send_timer(sensor_status);
+    state = WASTE;              // Advance the paper in case there is a hole
     break;
     }
 

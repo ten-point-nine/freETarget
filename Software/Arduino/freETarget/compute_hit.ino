@@ -11,6 +11,7 @@
 #include "freETarget.h"
 #include "compute_hit.h"
 #include "analog_io.h"
+#include "json.h"
 
 #define THRESHOLD (0.001)
 
@@ -26,9 +27,9 @@
 
 sensor_t s[4];
 
-unsigned int bit_mask[] = {0x01, 0x02, 0x04, 0x08};
-unsigned int timer_value[4];    // Array of timer values
-double       length_c;          // length of side C
+unsigned int  bit_mask[] = {0x01, 0x02, 0x04, 0x08};
+unsigned long timer_value[4];    // Array of timer values
+double        length_c;          // length of side C
 
 /*----------------------------------------------------------------
  *
@@ -47,10 +48,10 @@ double speed_of_sound(double temperature)
 
   speed = (331.3d + 0.606d * temperature) * 1000.0d / 1000000.0d; 
   
-  if ( read_DIP() & VERBOSE_TRACE )
+  if ( read_DIP() & (VERBOSE_TRACE) )
     {
     Serial.print("\n\rSpeed of sound: "); Serial.print(speed); Serial.print("mm/us");
-    Serial.print("  Worst case delay: "); Serial.print(RADIUS * 2.0 / speed * OSCILLATOR_MHZ); Serial.print(" counts");
+    Serial.print("  Worst case delay: "); Serial.print(json_sensor_dia / speed * OSCILLATOR_MHZ); Serial.print(" counts");
     }
 
   return speed;  
@@ -60,7 +61,7 @@ double speed_of_sound(double temperature)
  *
  * void init_sensors()
  *
- *Setup the constants in the strucure
+ * Setup the constants in the strucure
  *
  *----------------------------------------------------------------
  *
@@ -76,11 +77,11 @@ double speed_of_sound(double temperature)
 void init_sensors(void)
 {
   s_of_sound = speed_of_sound(temperature_C());
-  length_c = sqrt(2.0d) * RADIUS / s_of_sound * OSCILLATOR_MHZ;
+  length_c = sqrt(2.0d) * (json_sensor_dia / 2.0) / s_of_sound * OSCILLATOR_MHZ;
   
   s[N].index = N;
   s[N].x = 0;
-  s[N].y = RADIUS / s_of_sound * OSCILLATOR_MHZ;
+  s[N].y = (json_sensor_dia / 2) / s_of_sound * OSCILLATOR_MHZ;
 
   s[E].index = E;
   s[E].x = s[N].y;
@@ -109,6 +110,7 @@ void init_sensors(void)
 
 unsigned int compute_hit
   (
+  unsigned int sensor_status,       // Bits read from status register
   unsigned int shot,                // Shot being processed
   history_t* h                      // Storing the results
   )
@@ -122,8 +124,8 @@ unsigned int compute_hit
   double        x, y;              // Computed location
   double        x_avg, y_avg;      // Running average location
   double        smallest;          // Smallest non-zero value measured
-  unsigned int  sensor_status;     // Sensor collection status
-
+  double        constillation;     // How many constillations did we compute
+  
 /*
  *  Compute the current geometry based on the speed of sound
  */
@@ -132,20 +134,17 @@ unsigned int compute_hit
 /*
  *  Read in the counter values 
  */
-#if ( SAMPLE_CALCULATIONS == false )
- for (i=N; i <= W; i++)
- {
-   timer_value[i] = read_counter(i);
- }
-#endif
-
- if ( read_DIP() & VERBOSE_TRACE )
+  timer_value[N] = read_counter(N);
+  timer_value[E] = read_counter(E);
+  timer_value[S] = read_counter(S);
+  timer_value[W] = read_counter(W);
+  if ( read_DIP() & VERBOSE_TRACE )
    {
-   Serial.print("\n\rNorth: 0x"); Serial.print(timer_value[N], HEX); Serial.print("  us:"); Serial.print(timer_value[N] / OSCILLATOR_MHZ);
-   Serial.print("  East: 0x");    Serial.print(timer_value[E], HEX); Serial.print("  us:"); Serial.print(timer_value[E] / OSCILLATOR_MHZ);
-   Serial.print("  South: 0x");   Serial.print(timer_value[S], HEX); Serial.print("  us:"); Serial.print(timer_value[S] / OSCILLATOR_MHZ);
-   Serial.print("  West: 0x");    Serial.print(timer_value[W], HEX); Serial.print("  us:"); Serial.print(timer_value[W] / OSCILLATOR_MHZ);
-   Serial.print(" length_c: "); Serial.print(length_c);     Serial.print(" cycles");
+   Serial.print("\n\rNorth: 0x"); Serial.print(timer_value[N], HEX); Serial.print(" "); Serial.print(timer_value[N] / OSCILLATOR_MHZ); Serial.print("us "); 
+   Serial.print("  East: 0x");    Serial.print(timer_value[E], HEX); Serial.print(" "); Serial.print(timer_value[E] / OSCILLATOR_MHZ); Serial.print("us "); 
+   Serial.print("  South: 0x");   Serial.print(timer_value[S], HEX); Serial.print(" "); Serial.print(timer_value[S] / OSCILLATOR_MHZ); Serial.print("us "); 
+   Serial.print("  West: 0x");    Serial.print(timer_value[W], HEX); Serial.print(" "); Serial.print(timer_value[W] / OSCILLATOR_MHZ); Serial.print("us "); 
+   Serial.print(" length_c: ");   Serial.print(length_c);            Serial.print(" cycles");
    }
    
 /*
@@ -179,9 +178,9 @@ unsigned int compute_hit
 
  if ( read_DIP() & VERBOSE_TRACE )
    {
-   Serial.print("\n\rCounts ");
+   Serial.print("\n\rReference - timer ");
    Serial.print(" North: "); Serial.print(s[N].count); Serial.print("  East: "); Serial.print(s[E].count);
-   Serial.print(" South: ");    Serial.print(s[S].count); Serial.print("  West: "); Serial.print(s[W].count);
+   Serial.print(" South: "); Serial.print(s[S].count); Serial.print("  West: "); Serial.print(s[W].count);
    }
 /*
  * Find the smallest non-zero value
@@ -231,16 +230,20 @@ unsigned int compute_hit
     x_avg = 0;                     // Zero out the average values
     y_avg = 0;
     last_estimate = estimate;
-    
+
+    constillation = 0.0;
     for (i=N; i <= W; i++)        // Calculate X/Y for each sensor
     {
-      find_xy(&s[i], estimate);// Locate the shot
-      x_avg += s[i].xs;        // Keep the running average
-      y_avg += s[i].ys;
+      if ( find_xy(&s[i], estimate) )
+      {
+        x_avg += s[i].xs;        // Keep the running average
+        y_avg += s[i].ys;
+        constillation += 1.0;
+      }
     }
 
-    x_avg /= 4.0d;                // Work out the average intercept
-    y_avg /= 4.0d;
+    x_avg /= constillation;                // Work out the average intercept
+    y_avg /= constillation;
 
     estimate = sqrt(sq(s[location].x - x_avg) + sq(s[location].y - y_avg));
     error = abs(last_estimate - estimate);
@@ -271,6 +274,8 @@ unsigned int compute_hit
  * find_xy
  *
  * Calaculate where the shot seems to lie
+ * 
+ * Return: TRUE if the shot was computed correctly
  *
  *----------------------------------------------------------------
  *
@@ -295,7 +300,7 @@ unsigned int compute_hit
  *                 
  *--------------------------------------------------------------*/
 
-void find_xy
+bool find_xy
     (
      sensor_t* s,           // Sensor to be operatated on
      double estimate        // Estimated position   
@@ -303,7 +308,22 @@ void find_xy
 {
   double ae, be;            // Locations with error added
   double rotation;          // Angle shot is rotated through
-  
+
+/*
+ * Check to see if the sensor data is correct.  If not, return an error
+ */
+  if ( s->is_valid == false )
+  {
+    if ( read_DIP() & VERBOSE_TRACE )
+    {
+      Serial.print("\n\rSensor: "); Serial.print(s->index); Serial.print(" no data");
+    }
+    return false;           // Sensor did not trigger.
+  }
+
+/*
+ * It looks like we have valid data.  Carry on
+ */
   ae = s->a + estimate;     // Dimenstion with error included
   be = s->b + estimate;
 
@@ -346,7 +366,11 @@ void find_xy
       break;
 
     default:
-      Serial.print("\n\nUnknown Rotation:"); Serial.print(s->index);
+      if ( read_DIP() & VERBOSE_TRACE )
+      {
+        Serial.print("\n\nUnknown Rotation:"); Serial.print(s->index);
+      }
+      break;
   }
 
 /*
@@ -365,7 +389,7 @@ void find_xy
 /*
  *  All done, return
  */
-  return;
+  return true;
 }
   
 /*----------------------------------------------------------------
@@ -378,7 +402,10 @@ void find_xy
  * 
  * The score is sent as:
  * 
- * {"shot":"freETarget", "value":{shot, x, y}}
+ * {"shot":n, "x":x, "y":y, "r(adius)":r, "a(ngle)": a, debugging info ..... }
+ * 
+ * It is up to the PC program to convert x & y or radius and angle
+ * into a meaningful score relative to the target.
  *    
  *--------------------------------------------------------------*/
 
@@ -391,7 +418,7 @@ void send_score
   double x, y;                   // Shot location in mm X, Y
   double radius;
   double angle;
-  double volts;
+  unsigned int volts;
   
   x = h->x * s_of_sound * CLOCK_PERIOD;
   y = h->y * s_of_sound * CLOCK_PERIOD;
@@ -417,10 +444,15 @@ void send_score
   Serial.print("\"E\":");     Serial.print(timer_value[E]); Serial.print(", ");
   Serial.print("\"S\":");     Serial.print(timer_value[S]); Serial.print(", ");
   Serial.print("\"W\":");     Serial.print(timer_value[W]); Serial.print(", ");
+  Serial.print("\"n\":");     Serial.print((double)s[N].count / OSCILLATOR_MHZ); Serial.print(", ");
+  Serial.print("\"e\":");     Serial.print((double)s[E].count / OSCILLATOR_MHZ); Serial.print(", ");
+  Serial.print("\"s\":");     Serial.print((double)s[S].count / OSCILLATOR_MHZ); Serial.print(", ");
+  Serial.print("\"w\":");     Serial.print((double)s[W].count / OSCILLATOR_MHZ); Serial.print(", ");
 #endif
 
-#if ( S_MISC )
-  Serial.print("\"V\":");     volts = analogRead(V_REFERENCE); Serial.print(TO_VOLTS(volts)); Serial.print(", ");
+#if ( S_MISC ) 
+  volts = analogRead(V_REFERENCE);
+  Serial.print("\"V\":");     Serial.print(TO_VOLTS(volts)); Serial.print(", ");
   Serial.print("\"T\":");     Serial.print(temperature_C());   Serial.print(", ");
   Serial.print("\"I\":");     Serial.print(SOFTWARE_VERSION);
 #endif
@@ -432,3 +464,96 @@ void send_score
 
   return;
 }
+
+
+/*----------------------------------------------------------------
+ *
+ * void show_timer(void)
+ *
+ * Display a timer message to identify errors
+ *
+ *----------------------------------------------------------------
+ * 
+ * The error is sent as:
+ * 
+ * {"error": Run Latch, timer information .... }
+ *    
+ *--------------------------------------------------------------*/
+
+void send_timer
+  (
+  int sensor_status                        // Flip Flop Input
+  )
+{
+  char cardinal[] = "NESW";
+  int i;
+
+  get_timers();
+  
+  Serial.print("{\"timer\": \"");
+  for (i=0; i != 4; i++ )
+  {
+    if ( sensor_status & (1<<i) )
+    {
+      Serial.print(cardinal[i]);
+    }
+    else
+    {
+      Serial.print('.');
+    }
+  }
+  
+  Serial.print("\", ");
+  Serial.print("\"N\":");     Serial.print(timer_value[N]);                     Serial.print(", ");
+  Serial.print("\"E\":");     Serial.print(timer_value[E]);                     Serial.print(", ");
+  Serial.print("\"S\":");     Serial.print(timer_value[S]);                     Serial.print(", ");
+  Serial.print("\"W\":");     Serial.print(timer_value[W]);                     Serial.print(", ");
+  Serial.print("\"V\":");     Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));  Serial.print(", ");
+  Serial.print("\"I\":");     Serial.print(SOFTWARE_VERSION);
+  Serial.print("}");      
+
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * unsigned int hamming()
+ *
+ * Compute the Hamming weight of the input
+ *
+ *----------------------------------------------------------------
+ *    
+ * Add up all of the 1's in the sample.
+ * 
+ *--------------------------------------------------------------*/
+
+ unsigned int hamming
+   (
+   unsigned int sample
+   )
+ {
+  unsigned int i;
+
+  i = 0;
+  while (sample)
+  {
+    if ( sample & 1 )
+    {
+      i++;                  // Add up the number of 1s
+    }
+    sample >>= 1;
+    sample &= 0x7FFF;
+  }
+  
+  if ( read_DIP() & VERBOSE_TRACE )
+    {
+    Serial.print("\n\rHamming weight: "); Serial.print(i);
+    }
+
+ /*
+  * All done, return
+  */
+  return i;
+ }
+
+
