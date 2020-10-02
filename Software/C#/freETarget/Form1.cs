@@ -9,6 +9,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Globalization;
+using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -47,7 +48,7 @@ namespace freETarget {
 
         private StorageController storage;
 
-
+        private String logFile = "";
 
 
         public frmMainWindow() {
@@ -83,6 +84,66 @@ namespace freETarget {
             digitalClock.segments[3].ColonOn = true;
             digitalClock.ResizeSegments();
 
+            initLog();
+
+        }
+
+        private void initLog() {
+            //init log location
+            string exeLocation = System.Reflection.Assembly.GetEntryAssembly().Location;
+            string logDirectory = exeLocation.Substring(0, exeLocation.LastIndexOf(@"\")) + @"\log\";
+            if (!Directory.Exists(logDirectory)) {
+                try {
+                    Directory.CreateDirectory(logDirectory);
+                }catch(Exception ex) {
+                    Console.WriteLine(ex.Message);
+
+                    //if there is no write permission at exe location, write log in C:\Users\<user>\AppData\Roaming\freETarget\log
+                    logDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\freETarget\log\";
+                    Directory.CreateDirectory(logDirectory);
+                }
+            }
+
+            string logfilename = "freETarget." + DateTime.Now.ToString("yyyy.MM.dd") + ".log";
+            if (!File.Exists(logDirectory + logfilename)) {
+                FileStream log = null;
+                try {
+                    log = File.Create(logDirectory + logfilename);
+                    logFile = logDirectory + logfilename;
+                } catch(Exception ex) {
+                    Console.WriteLine(ex.Message);
+                    logFile = null;
+                } finally {
+                    log.Close();
+                }
+
+            } else {
+                logFile = logDirectory + logfilename;
+            }
+
+            if (Properties.Settings.Default.fileLogging) {
+                displayMessage("Log location: " + logFile, false);
+            }
+        }
+
+        public static void log(String s, String logFile) {
+            if (s == null || s == "" || logFile == null) {
+                return;
+            }
+
+            if (Properties.Settings.Default.fileLogging) { //log enabled from settings
+
+                try {
+                    //Opens a new file stream which allows asynchronous reading and writing
+                    using (StreamWriter sw = new StreamWriter(new FileStream(logFile, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))) {
+
+                        sw.WriteLine(DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff") + " | " + s.Trim());
+
+                    }
+                } catch (Exception) {
+                    //oh well...
+                }
+            }
         }
 
         //called once at application start
@@ -153,7 +214,8 @@ namespace freETarget {
                 this.Invoke(d, new object[] { indata.Trim() });
             }
 
-            output.Add(indata);
+            output.add(indata);
+            log(indata, logFile);
 
             Console.WriteLine("\nReceived: " + indata.Trim());
             incomingJSON += indata;                         // Accumulate the input
@@ -226,27 +288,7 @@ namespace freETarget {
 
             } else {
                 if (!clearShots()) {
-                    serialPort.Close();
-                    btnConnect.Text = "Connect";
-                    currentStatus = Status.NOT_CONNECTED;
-
-
-                    statusText.Text = "Disconnected";
-                    timer.Enabled = false;
-                    btnConnect.ImageKey = "connect";
-
-                    shotsList.Enabled = false;
-                    btnCalibration.Enabled = false;
-                    btnArduino.Enabled = false;
-                    trkZoom.Enabled = false;
-                    tcSessionType.Enabled = false;
-                    tcSessionType.Refresh();
-
-                    initNewSession();
-                    targetRefresh();
-
-                    frmArduino ard = frmArduino.getInstance(this);
-                    ard.Hide();
+                    disconnect();
                 }
             }
 
@@ -632,6 +674,7 @@ namespace freETarget {
                 Properties.Settings.Default.pdfPath = settingsFrom.txtPDFlocation.Text;
                 Properties.Settings.Default.targetDistance = int.Parse(settingsFrom.txtDistance.Text);
                 Properties.Settings.Default.scoreVoice = settingsFrom.chkScoreVoice.Checked;
+                Properties.Settings.Default.fileLogging = settingsFrom.chkLog.Checked;
 
                 if (Properties.Settings.Default.targetDistance != 10) {
                     btnConfig.BackColor = Properties.Settings.Default.targetColor;
@@ -1304,30 +1347,37 @@ namespace freETarget {
         private void btnJournal_Click(object sender, EventArgs e) {
             if (currentStatus == Status.CONNECTED) {
                 if (!clearShots()) {
-                    serialPort.Close();
-                    btnConnect.Text = "Connect";
-                    currentStatus = Status.NOT_CONNECTED;
-
-
-                    statusText.Text = "Disconnected";
-                    timer.Enabled = false;
-                    btnConnect.ImageKey = "connect";
-
-                    shotsList.Enabled = false;
-                    btnCalibration.Enabled = false;
-                    trkZoom.Enabled = false;
-                    tcSessionType.Enabled = false;
-                    tcSessionType.Refresh();
-
-                    initNewSession();
-                    targetRefresh();
-
+                    disconnect();
                     showJournalForm();
                 }
             } else {
                 showJournalForm();
             }
             btnConnect.Enabled = false;
+        }
+
+        private void disconnect() {
+            serialPort.Close();
+            btnConnect.Text = "Connect";
+            currentStatus = Status.NOT_CONNECTED;
+
+
+            statusText.Text = "Disconnected";
+            timer.Enabled = false;
+            btnConnect.ImageKey = "connect";
+
+            shotsList.Enabled = false;
+            btnCalibration.Enabled = false;
+            btnArduino.Enabled = false;
+            trkZoom.Enabled = false;
+            tcSessionType.Enabled = false;
+            tcSessionType.Refresh();
+
+            initNewSession();
+            targetRefresh();
+
+            frmArduino ard = frmArduino.getInstance(this);
+            ard.Hide();
         }
 
         private void showJournalForm() {
@@ -1400,7 +1450,7 @@ namespace freETarget {
     public class StringBuilderWrapper {
         private StringBuilder _builder = new StringBuilder();
         public EventHandler TextChanged;
-        public void Add(string text) {
+        public void add(string text) {
             _builder.Append(text);
             if (TextChanged != null)
                 TextChanged(this, null);
