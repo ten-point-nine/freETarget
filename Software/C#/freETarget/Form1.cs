@@ -822,12 +822,13 @@ namespace freETarget {
         }
 
         private Bitmap paintTarget(int dimension, int blackRingCutoff, decimal[] rings, decimal zoomFactor, bool solidInner) {
+            if(dimension == 0) { //window is minimized. nothing to paint
+                return null; 
+            }
             Pen penBlack = new Pen(Color.Black);
             Pen penWhite = new Pen(Settings.Default.targetColor);
             Brush brushBlack = new SolidBrush(Color.Black);
             Brush brushWhite = new SolidBrush(Settings.Default.targetColor);
-
-
 
             Bitmap bmpTarget = new Bitmap(dimension, dimension);
             Graphics it = Graphics.FromImage(bmpTarget);
@@ -1357,7 +1358,12 @@ namespace freETarget {
         }
 
         private void disconnect() {
-            serialPort.Close();
+            try {
+                serialPort.Close();
+            }catch(IOException) {
+                MessageBox.Show("Error closing the serial port. Please try again.","Error disconnecting",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                return;
+            }
             btnConnect.Text = "Connect";
             currentStatus = Status.NOT_CONNECTED;
 
