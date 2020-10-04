@@ -432,12 +432,22 @@ void send_score
   double radius;
   double angle;
   unsigned int volts;
-  
+
+ /* 
+  *  Work out the hole in perfect coordinates
+  */
   x = h->x * s_of_sound * CLOCK_PERIOD;
   y = h->y * s_of_sound * CLOCK_PERIOD;
   radius = sqrt(sq(x) + sq(y));
   angle = atan2(h->y, h->x) / PI * 180.0d;
 
+/*
+ * Rotate the result based on the construction
+ */
+  angle += json_sensor_angle;
+  x = radius * cos(PI * angle / 180.0d);
+  y = radius * sin(PI * angle / 180.0d);
+  
 #if ( S_SHOT )
   Serial.print("{\"shot\":");   Serial.print(shot); Serial.print(", ");
 #endif

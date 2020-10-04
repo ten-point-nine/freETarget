@@ -18,6 +18,7 @@ unsigned int json_echo;                     // Test String
 double       json_d_echo;                   // Test String
 unsigned int json_test;                     // Self test to be performed
 unsigned int json_offset;                   // Offset applied to pellet diameter
+         int json_sensor_angle = 0;         // Angle sensors have been shifted by (Signed number)
 
 #define IS_VOID    0
 #define IS_INT16   1
@@ -43,12 +44,13 @@ typedef struct  {
 
   
 static json_message JSON[] = {
-  {"\"DIP\":",        &json_dip_switch, 0,                IS_INT16,  0,         NONVOL_DIP_SWITCH },    // 0
-  {"\"ECHO\":",       &json_echo,       0,                IS_INT16,  &show_echo,                0 },    // 1
-  {"\"OFFSET\":",     &json_offset,     0,                IS_INT16,  0,         NONVOL_OFFSET     },    // 2
-  {"\"PAPER\":",      &json_paper_time, 0,                IS_INT16,  0,         NONVOL_PAPER_TIME },    // 3
-  {"\"SENSOR\":",     0,                &json_sensor_dia, IS_FLOAT,  0,         NONVOL_SENSOR_DIA },    // 4
-  {"\"TEST\":",       &json_test,       0,                IS_INT16,  &show_test,NONVOL_TEST_MODE  },    // 5
+  {"\"ANGLE\":",   (unsigned int*)&json_sensor_angle, 0,                IS_INT16,  0,         NONVOL_SENSOR_ANGLE},    // 0
+  {"\"DIP\":",     &json_dip_switch,                  0,                IS_INT16,  0,         NONVOL_DIP_SWITCH  },    // 1
+  {"\"ECHO\":",    &json_echo,                        0,                IS_INT16,  &show_echo,                0  },    // 2
+  {"\"OFFSET\":",  &json_offset,                      0,                IS_INT16,  0,         NONVOL_OFFSET      },    // 3
+  {"\"PAPER\":",   &json_paper_time,                  0,                IS_INT16,  0,         NONVOL_PAPER_TIME  },    // 4
+  {"\"SENSOR\":",  0,                                 &json_sensor_dia, IS_FLOAT,  0,         NONVOL_SENSOR_DIA  },    // 5
+  {"\"TEST\":",    &json_test,                        0,                IS_INT16,  &show_test,NONVOL_TEST_MODE   },    // 6
   { 0, 0, 0, 0, 0, 0}
 };
 

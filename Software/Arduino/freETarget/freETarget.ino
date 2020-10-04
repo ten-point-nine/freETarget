@@ -60,23 +60,34 @@ void setup()
     EEPROM.put(NONVOL_TEST_MODE, json_test);
     json_offset = 45;
     EEPROM.put(NONVOL_OFFSET, json_offset);
-
+    json_sensor_angle = 0;
+    EEPROM.put(NONVOL_SENSOR_ANGLE, json_sensor_angle);
   }
+
   EEPROM.get(NONVOL_DIP_SWITCH, json_dip_switch);     // Read the nonvol settings
   EEPROM.get(NONVOL_SENSOR_DIA, json_sensor_dia);
 
   EEPROM.get(NONVOL_TEST_MODE,  json_test);
+  
   EEPROM.get(NONVOL_PAPER_TIME, json_paper_time);
   if ( (json_paper_time * PAPER_STEP) > (PAPER_LIMIT) )
   {
     json_paper_time = 0;                              // Check for an infinit loop
     EEPROM.put(NONVOL_PAPER_TIME, json_paper_time);   // and limit motor on time
   }
+  
   EEPROM.get(NONVOL_OFFSET,  json_offset);
   if ( json_offset > 100 )
   {
     json_offset = 45;                              // Check for an undefined pellet
     EEPROM.put(NONVOL_OFFSET, json_offset);        // Default to a 4.5mm pellet
+  }
+  
+  EEPROM.get(NONVOL_SENSOR_ANGLE,  json_sensor_angle);
+  if ( abs(json_sensor_angle) > 90 )
+  {
+    json_sensor_angle = 0;                        // Check for an undefined pellet
+    EEPROM.put(NONVOL_OFFSET, json_sensor_angle); // Default to a 4.5mm pellet
   }
 /*
  *  Set up the port pins
