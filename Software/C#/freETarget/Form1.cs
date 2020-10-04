@@ -9,6 +9,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Globalization;
+using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -47,7 +48,7 @@ namespace freETarget {
 
         private StorageController storage;
 
-
+        private String logFile = "";
 
 
         public frmMainWindow() {
@@ -83,6 +84,66 @@ namespace freETarget {
             digitalClock.segments[3].ColonOn = true;
             digitalClock.ResizeSegments();
 
+            initLog();
+
+        }
+
+        private void initLog() {
+            //init log location
+            string exeLocation = System.Reflection.Assembly.GetEntryAssembly().Location;
+            string logDirectory = exeLocation.Substring(0, exeLocation.LastIndexOf(@"\")) + @"\log\";
+            if (!Directory.Exists(logDirectory)) {
+                try {
+                    Directory.CreateDirectory(logDirectory);
+                }catch(Exception ex) {
+                    Console.WriteLine(ex.Message);
+
+                    //if there is no write permission at exe location, write log in C:\Users\<user>\AppData\Roaming\freETarget\log
+                    logDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\freETarget\log\";
+                    Directory.CreateDirectory(logDirectory);
+                }
+            }
+
+            string logfilename = "freETarget." + DateTime.Now.ToString("yyyy.MM.dd") + ".log";
+            if (!File.Exists(logDirectory + logfilename)) {
+                FileStream log = null;
+                try {
+                    log = File.Create(logDirectory + logfilename);
+                    logFile = logDirectory + logfilename;
+                } catch(Exception ex) {
+                    Console.WriteLine(ex.Message);
+                    logFile = null;
+                } finally {
+                    log.Close();
+                }
+
+            } else {
+                logFile = logDirectory + logfilename;
+            }
+
+            if (Properties.Settings.Default.fileLogging) {
+                displayMessage("Log location: " + logFile, false);
+            }
+        }
+
+        public static void log(String s, String logFile) {
+            if (s == null || s == "" || logFile == null) {
+                return;
+            }
+
+            if (Properties.Settings.Default.fileLogging) { //log enabled from settings
+
+                try {
+                    //Opens a new file stream which allows asynchronous reading and writing
+                    using (StreamWriter sw = new StreamWriter(new FileStream(logFile, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))) {
+
+                        sw.WriteLine(DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff") + " | " + s.Trim());
+
+                    }
+                } catch (Exception) {
+                    //oh well...
+                }
+            }
         }
 
         //called once at application start
@@ -153,7 +214,8 @@ namespace freETarget {
                 this.Invoke(d, new object[] { indata.Trim() });
             }
 
-            output.Add(indata);
+            output.add(indata);
+            log(indata, logFile);
 
             Console.WriteLine("\nReceived: " + indata.Trim());
             incomingJSON += indata;                         // Accumulate the input
@@ -226,24 +288,7 @@ namespace freETarget {
 
             } else {
                 if (!clearShots()) {
-                    serialPort.Close();
-                    btnConnect.Text = "Connect";
-                    currentStatus = Status.NOT_CONNECTED;
-
-
-                    statusText.Text = "Disconnected";
-                    timer.Enabled = false;
-                    btnConnect.ImageKey = "connect";
-
-                    shotsList.Enabled = false;
-                    btnCalibration.Enabled = false;
-                    btnArduino.Enabled = false;
-                    trkZoom.Enabled = false;
-                    tcSessionType.Enabled = false;
-                    tcSessionType.Refresh();
-
-                    initNewSession();
-                    targetRefresh();
+                    disconnect();
                 }
             }
 
@@ -629,6 +674,7 @@ namespace freETarget {
                 Properties.Settings.Default.pdfPath = settingsFrom.txtPDFlocation.Text;
                 Properties.Settings.Default.targetDistance = int.Parse(settingsFrom.txtDistance.Text);
                 Properties.Settings.Default.scoreVoice = settingsFrom.chkScoreVoice.Checked;
+                Properties.Settings.Default.fileLogging = settingsFrom.chkLog.Checked;
 
                 if (Properties.Settings.Default.targetDistance != 10) {
                     btnConfig.BackColor = Properties.Settings.Default.targetColor;
@@ -708,7 +754,7 @@ namespace freETarget {
             setTrkZoom(currentSession.targetType);
 
             clearShots();
-            drawTarget();
+            targetRefresh();
             drawSessionName();
         }
 
@@ -730,7 +776,7 @@ namespace freETarget {
         }
 
         private void trkZoom_ValueChanged(object sender, EventArgs e) {
-            drawTarget();
+            targetRefresh();
         }
 
         private void frmMainWindow_Resize(object sender, EventArgs e) {
@@ -776,12 +822,13 @@ namespace freETarget {
         }
 
         private Bitmap paintTarget(int dimension, int blackRingCutoff, decimal[] rings, decimal zoomFactor, bool solidInner) {
+            if(dimension == 0) { //window is minimized. nothing to paint
+                return null; 
+            }
             Pen penBlack = new Pen(Color.Black);
             Pen penWhite = new Pen(Settings.Default.targetColor);
             Brush brushBlack = new SolidBrush(Color.Black);
             Brush brushWhite = new SolidBrush(Settings.Default.targetColor);
-
-
 
             Bitmap bmpTarget = new Bitmap(dimension, dimension);
             Graphics it = Graphics.FromImage(bmpTarget);
@@ -969,7 +1016,7 @@ namespace freETarget {
 
             decimal[] r = new decimal[shots.Count];
             for(int i=0; i< shots.Count; i++) {
-                r[i] = (decimal)Math.Sqrt((double)(((shots[i].x - xbar) * (shots[i].x - xbar)) + ((shots[i].y - ybar) * (shots[i].y - ybar))));
+                r[i] = (decimal)Math.Sqrt((double)(((getShotX(shots[i]) - xbar) * (getShotX(shots[i]) - xbar)) + ((getShotY(shots[i]) - ybar) * (getShotY(shots[i]) - ybar))));
             }
 
             decimal rsum = 0;
@@ -986,7 +1033,15 @@ namespace freETarget {
             List<double> spreads = new List<double>();
             for(int i = 0; i < shots.Count; i++) {
                 for(int j = 0; j < shots.Count; j++) {
-                    spreads.Add(Math.Sqrt( Math.Pow ((double)shots[i].x - (double)shots[j].x, 2) - Math.Pow((double)shots[i].y - (double)shots[j].y, 2)));
+                    double powX = Math.Pow((double)getShotX(shots[i]) - (double)getShotX(shots[j]), 2);
+                    double powY = Math.Pow((double)getShotY(shots[i]) - (double)getShotY(shots[j]), 2);
+                    double sqrt;
+                    if (powX > powY) {
+                        sqrt = Math.Sqrt(powX - powY);
+                    } else {
+                        sqrt = Math.Sqrt(powY - powX);
+                    }
+                    spreads.Add(sqrt);
                 }
             }
 
@@ -999,11 +1054,11 @@ namespace freETarget {
             double sinTheta = Math.Sin(angleInRadians);
             return new PointF {
                 X =
-                    (int)
+                    (float)
                     (cosTheta * (pointToRotate.X - centerPoint.X) -
                     sinTheta * (pointToRotate.Y - centerPoint.Y) + centerPoint.X),
                 Y =
-                    (int)
+                    (float)
                     (sinTheta * (pointToRotate.X - centerPoint.X) +
                     cosTheta * (pointToRotate.Y - centerPoint.Y) + centerPoint.Y)
             };
@@ -1021,7 +1076,6 @@ namespace freETarget {
             PointF p = new PointF((float)(shot.x), (float)(shot.y + calibrationY));
             PointF rotP = RotatePoint(p, new PointF(0, 0), (float)calibrationAngle);
             return (decimal)rotP.Y;
-            //return shot.y + calibrationY;
         }
 
         private void btnCalibration_Click(object sender, EventArgs e) {
@@ -1294,30 +1348,42 @@ namespace freETarget {
         private void btnJournal_Click(object sender, EventArgs e) {
             if (currentStatus == Status.CONNECTED) {
                 if (!clearShots()) {
-                    serialPort.Close();
-                    btnConnect.Text = "Connect";
-                    currentStatus = Status.NOT_CONNECTED;
-
-
-                    statusText.Text = "Disconnected";
-                    timer.Enabled = false;
-                    btnConnect.ImageKey = "connect";
-
-                    shotsList.Enabled = false;
-                    btnCalibration.Enabled = false;
-                    trkZoom.Enabled = false;
-                    tcSessionType.Enabled = false;
-                    tcSessionType.Refresh();
-
-                    initNewSession();
-                    targetRefresh();
-
+                    disconnect();
                     showJournalForm();
                 }
             } else {
                 showJournalForm();
             }
             btnConnect.Enabled = false;
+        }
+
+        private void disconnect() {
+            try {
+                serialPort.Close();
+            }catch(IOException) {
+                MessageBox.Show("Error closing the serial port. Please try again.","Error disconnecting",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                return;
+            }
+            btnConnect.Text = "Connect";
+            currentStatus = Status.NOT_CONNECTED;
+
+
+            statusText.Text = "Disconnected";
+            timer.Enabled = false;
+            btnConnect.ImageKey = "connect";
+
+            shotsList.Enabled = false;
+            btnCalibration.Enabled = false;
+            btnArduino.Enabled = false;
+            trkZoom.Enabled = false;
+            tcSessionType.Enabled = false;
+            tcSessionType.Refresh();
+
+            initNewSession();
+            targetRefresh();
+
+            frmArduino ard = frmArduino.getInstance(this);
+            ard.Hide();
         }
 
         private void showJournalForm() {
@@ -1390,7 +1456,7 @@ namespace freETarget {
     public class StringBuilderWrapper {
         private StringBuilder _builder = new StringBuilder();
         public EventHandler TextChanged;
-        public void Add(string text) {
+        public void add(string text) {
             _builder.Append(text);
             if (TextChanged != null)
                 TextChanged(this, null);

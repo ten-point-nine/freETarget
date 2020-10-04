@@ -55,6 +55,7 @@
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.chkChamp = new System.Windows.Forms.CheckBox();
+            this.btnImportLog = new System.Windows.Forms.Button();
             this.status.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -261,7 +262,7 @@
             this.btnImport.Name = "btnImport";
             this.btnImport.Size = new System.Drawing.Size(75, 23);
             this.btnImport.TabIndex = 18;
-            this.btnImport.Text = "Import...";
+            this.btnImport.Text = "Import TS...";
             this.toolTip.SetToolTip(this.btnImport, "Imports a TargetScan App CVS exported file");
             this.btnImport.UseVisualStyleBackColor = true;
             this.btnImport.Click += new System.EventHandler(this.btnImport_Click);
@@ -281,11 +282,23 @@
             this.chkChamp.UseVisualStyleBackColor = true;
             this.chkChamp.CheckedChanged += new System.EventHandler(this.chkChamp_CheckedChanged);
             // 
+            // btnImportLog
+            // 
+            this.btnImportLog.Enabled = false;
+            this.btnImportLog.Location = new System.Drawing.Point(420, 66);
+            this.btnImportLog.Name = "btnImportLog";
+            this.btnImportLog.Size = new System.Drawing.Size(75, 26);
+            this.btnImportLog.TabIndex = 20;
+            this.btnImportLog.Text = "Import log...";
+            this.btnImportLog.UseVisualStyleBackColor = true;
+            this.btnImportLog.Click += new System.EventHandler(this.btnImportLog_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(589, 541);
+            this.Controls.Add(this.btnImportLog);
             this.Controls.Add(this.chkChamp);
             this.Controls.Add(this.btnImport);
             this.Controls.Add(this.label2);
@@ -343,6 +356,7 @@
         private System.Windows.Forms.OpenFileDialog openFileDialog;
         private System.Windows.Forms.ToolTip toolTip;
         private System.Windows.Forms.CheckBox chkChamp;
+        private System.Windows.Forms.Button btnImportLog;
     }
 }
 

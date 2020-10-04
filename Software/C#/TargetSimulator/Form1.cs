@@ -73,6 +73,7 @@ namespace TargetSimulator
                 btnTopRight.Enabled = true;
                 btnShoot.Enabled = true;
                 btnImport.Enabled = true;
+                btnImportLog.Enabled = true;
 
                 statusText.Text = "Connected";
                 count = 1;
@@ -97,6 +98,7 @@ namespace TargetSimulator
                 btnTopRight.Enabled = false;
                 btnShoot.Enabled = false;
                 btnImport.Enabled = false;
+                btnImportLog.Enabled = false;
 
                 timer1.Enabled = false;
                 btnTimer.Text = "Start Timer";
@@ -237,6 +239,7 @@ namespace TargetSimulator
         }
 
         private void btnImport_Click(object sender, EventArgs e) {
+            openFileDialog.Filter = "TargetScan App file|*.csv";
             DialogResult r = openFileDialog.ShowDialog();
             if ( r == DialogResult.OK) {
                 StreamReader sr = new StreamReader(openFileDialog.FileName);
@@ -264,6 +267,37 @@ namespace TargetSimulator
                 range = 150;
             } else {
                 range = (int)Math.Round(distanceBetweenSensors * 10 / 2, 0);
+            }
+        }
+
+        private void btnImportLog_Click(object sender, EventArgs e) {
+            openFileDialog.Filter = "Cleaned log file|*.logc";
+            DialogResult r = openFileDialog.ShowDialog();
+            if (r == DialogResult.OK) {
+                StreamReader sr = new StreamReader(openFileDialog.FileName);
+                string fileData = sr.ReadToEnd();
+                string[] lines = fileData.Split('\n');
+                for (int i = 0; i < lines.Length; i++) {
+                    string line = lines[i];
+                    if (line != "") {
+
+                        line += Environment.NewLine;
+                        txtOutput.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:ffff") + " | ");
+                        txtOutput.AppendText(line);
+
+                        try {
+                            serialPort1.WriteLine(line);
+                        } catch (TimeoutException ex) {
+                            statusText.Text = "Error writing to port: (" + count + ") " + ex.Message;
+                            Console.WriteLine("ERROR: (" + count + ") " + ex.Message);
+                            timer1.Enabled = false;
+                            btnTimer.Text = "Start Timer";
+                        }
+
+                        Thread.Sleep(300);
+                        Application.DoEvents();
+                    }
+                }
             }
         }
     }
