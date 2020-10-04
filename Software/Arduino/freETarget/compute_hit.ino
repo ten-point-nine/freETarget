@@ -129,6 +129,7 @@ unsigned int compute_hit
 {
   double        reference;         // Time of reference counter
   int           location;          // Sensor chosen for reference location
+  int           discard;           // Discard the smallest timer value
   int           i, j, count;
   double        estimate;          // Estimated position
   double        last_estimate, error; // Location error
@@ -195,18 +196,23 @@ unsigned int compute_hit
    Serial.print(" North: "); Serial.print(s[N].count); Serial.print("  East: "); Serial.print(s[E].count);
    Serial.print(" South: "); Serial.print(s[S].count); Serial.print("  West: "); Serial.print(s[W].count);
    }
+
+ 
 /*
- * Find the smallest non-zero value
+ * Find the smallest non-zero value, this is the sensor furthest away from the sensor
  */
-  smallest = 1.0e10;
+  smallest = s[N].count;
+  discard = N;
   for (i=N+1; i <= W; i++)
   {
     if ( s[i].count < smallest )
     {
       smallest = s[i].count;
+      discard = i;
     }
   }
-
+  s[discard].is_valid = false;    // Throw away the shortest time.
+  
 /*
  *  Prime the estimate based on the smallest identified time.
  */
@@ -232,10 +238,12 @@ unsigned int compute_hit
     s[i].a = s[(i+1) % 4].b;
   }
 
+
+  
 /*  
  *  Loop and calculate the unknown radius (estimate)
  */
-  error = 999999;               // Start with a big error
+  error = 999999;                  // Start with a big error
   count = 0;
   
   while (error > THRESHOLD )
@@ -255,7 +263,7 @@ unsigned int compute_hit
       }
     }
 
-    x_avg /= constillation;                // Work out the average intercept
+    x_avg /= constillation;      // Work out the average intercept
     y_avg /= constillation;
 
     estimate = sqrt(sq(s[location].x - x_avg) + sq(s[location].y - y_avg));
@@ -447,7 +455,10 @@ void send_score
   angle += json_sensor_angle;
   x = radius * cos(PI * angle / 180.0d);
   y = radius * sin(PI * angle / 180.0d);
-  
+
+/* 
+ *  Display the results
+ */
 #if ( S_SHOT )
   Serial.print("{\"shot\":");   Serial.print(shot); Serial.print(", ");
 #endif
