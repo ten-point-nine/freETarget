@@ -75,7 +75,6 @@ namespace freETarget
             txtPDFlocation.Text = Properties.Settings.Default.pdfPath;
             txtDistance.Text = Properties.Settings.Default.targetDistance.ToString();
             chkScoreVoice.Checked = Properties.Settings.Default.scoreVoice;
-            chkLog.Checked = Properties.Settings.Default.fileLogging;
             if (Properties.Settings.Default.MatchShots == 60) {
                 rdb60.Checked = true;
                 rdb40.Checked = false;

@@ -310,17 +310,5 @@ namespace freETarget.Properties {
                 this["calibrationAngle"] = value;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool fileLogging {
-            get {
-                return ((bool)(this["fileLogging"]));
-            }
-            set {
-                this["fileLogging"] = value;
-            }
-        }
     }
 }

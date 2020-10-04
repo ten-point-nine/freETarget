@@ -80,7 +80,6 @@
             this.cmbOldPen = new System.Windows.Forms.ComboBox();
             this.label9 = new System.Windows.Forms.Label();
             this.cmbOldBack = new System.Windows.Forms.ComboBox();
-            this.chkLog = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPageGeneral.SuspendLayout();
@@ -391,7 +390,6 @@
             // 
             // tabPageGeneral
             // 
-            this.tabPageGeneral.Controls.Add(this.chkLog);
             this.tabPageGeneral.Controls.Add(this.chkVoice);
             this.tabPageGeneral.Controls.Add(this.label1);
             this.tabPageGeneral.Controls.Add(this.chkScoreVoice);
@@ -619,16 +617,6 @@
             this.cmbOldBack.TabIndex = 17;
             this.cmbOldBack.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.cmbColor_DrawItem);
             // 
-            // chkLog
-            // 
-            this.chkLog.AutoSize = true;
-            this.chkLog.Location = new System.Drawing.Point(13, 209);
-            this.chkLog.Name = "chkLog";
-            this.chkLog.Size = new System.Drawing.Size(96, 17);
-            this.chkLog.TabIndex = 32;
-            this.chkLog.Text = "Enable logging";
-            this.chkLog.UseVisualStyleBackColor = true;
-            // 
             // frmSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -712,6 +700,5 @@
         public System.Windows.Forms.ComboBox cmbOldPen;
         private System.Windows.Forms.Label label9;
         public System.Windows.Forms.ComboBox cmbOldBack;
-        public System.Windows.Forms.CheckBox chkLog;
     }
 }

@@ -127,7 +127,7 @@
             this.txtPaper.Name = "txtPaper";
             this.txtPaper.Size = new System.Drawing.Size(90, 20);
             this.txtPaper.TabIndex = 8;
-            this.txtPaper.Text = "0";
+            this.txtPaper.Text = "65535";
             // 
             // txtSensor
             // 
