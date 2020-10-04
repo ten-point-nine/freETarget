@@ -11,5 +11,5 @@ extern double        json_sensor_dia; // Sensor radius overwitten by JSON messag
 extern unsigned int  json_paper_time; // Time to turn on paper backer motor
 extern unsigned int  json_echo;       // Value to ech
 extern unsigned int  json_test;       // Self test to be performed
-
+extern unsigned int  json_offset;     // Bullet/Pellet offset (pellet dia x 10, ex 0.177 --> 4.5 = 45)
 #endif _JSON_H_

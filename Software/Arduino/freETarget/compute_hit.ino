@@ -30,6 +30,7 @@ sensor_t s[4];
 unsigned int  bit_mask[] = {0x01, 0x02, 0x04, 0x08};
 unsigned long timer_value[4];    // Array of timer values
 double        length_c;          // length of side C
+unsigned int  pellet_offset;     // Time offset to compensate for pellet diameter
 
 /*----------------------------------------------------------------
  *
@@ -76,9 +77,17 @@ double speed_of_sound(double temperature)
  *--------------------------------------------------------------*/
 void init_sensors(void)
 {
+
+/*
+ * Determine the speed of sound and ajust
+ */
   s_of_sound = speed_of_sound(temperature_C());
   length_c = sqrt(2.0d) * (json_sensor_dia / 2.0) / s_of_sound * OSCILLATOR_MHZ;
-  
+  pellet_offset = (double)json_offset / s_of_sound / 2.0;
+
+ /*
+  * Work out the geometry of the sensors
+  */
   s[N].index = N;
   s[N].x = 0;
   s[N].y = (json_sensor_dia / 2) / s_of_sound * OSCILLATOR_MHZ;
@@ -94,7 +103,10 @@ void init_sensors(void)
   s[W].index = W;
   s[W].x = -s[E].x;
   s[W].y = 0;
-  
+
+ /* 
+  *  All done, return
+  */
   return;
 }
 /*----------------------------------------------------------------
@@ -134,10 +146,11 @@ unsigned int compute_hit
 /*
  *  Read in the counter values 
  */
-  timer_value[N] = read_counter(N);
-  timer_value[E] = read_counter(E);
-  timer_value[S] = read_counter(S);
-  timer_value[W] = read_counter(W);
+  timer_value[N] = read_counter(N) + pellet_offset;   // Counter plus offset for pellet diameter
+  timer_value[E] = read_counter(E) + pellet_offset;
+  timer_value[S] = read_counter(S) + pellet_offset;
+  timer_value[W] = read_counter(W) + pellet_offset;
+  
   if ( read_DIP() & VERBOSE_TRACE )
    {
    Serial.print("\n\rNorth: 0x"); Serial.print(timer_value[N], HEX); Serial.print(" "); Serial.print(timer_value[N] / OSCILLATOR_MHZ); Serial.print("us "); 

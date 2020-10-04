@@ -15,6 +15,7 @@
 #include "json.h"
 #include "EEPROM.h"
 #include "nonvol.h"
+#include "mechanical.h"
 
 history_t history;
 double        s_of_sound;        // Speed of sound
@@ -38,7 +39,7 @@ void setup()
  *  Setup the serial port
  */
   Serial.begin(115200);
-  Serial.print("\n\rfreETarget "); Serial.println(SOFTWARE_VERSION);
+  Serial.print("\n\rfreETarget "); Serial.print(SOFTWARE_VERSION); Serial.print("\n\r");
   
 /*
  * Initialize variables
@@ -57,12 +58,26 @@ void setup()
     EEPROM.put(NONVOL_INIT, nonvol_init);
     json_test = 0;
     EEPROM.put(NONVOL_TEST_MODE, json_test);
+    json_offset = 45;
+    EEPROM.put(NONVOL_OFFSET, json_offset);
+
   }
   EEPROM.get(NONVOL_DIP_SWITCH, json_dip_switch);     // Read the nonvol settings
   EEPROM.get(NONVOL_SENSOR_DIA, json_sensor_dia);
-  EEPROM.get(NONVOL_PAPER_TIME, json_paper_time);
+
   EEPROM.get(NONVOL_TEST_MODE,  json_test);
-  
+  EEPROM.get(NONVOL_PAPER_TIME, json_paper_time);
+  if ( (json_paper_time * PAPER_STEP) > (PAPER_LIMIT) )
+  {
+    json_paper_time = 0;                              // Check for an infinit loop
+    EEPROM.put(NONVOL_PAPER_TIME, json_paper_time);   // and limit motor on time
+  }
+  EEPROM.get(NONVOL_OFFSET,  json_offset);
+  if ( json_offset > 100 )
+  {
+    json_offset = 45;                              // Check for an undefined pellet
+    EEPROM.put(NONVOL_OFFSET, json_offset);        // Default to a 4.5mm pellet
+  }
 /*
  *  Set up the port pins
  */
@@ -209,6 +224,10 @@ void loop()
  */
   case WASTE:
     delay(1000);                              // Hang out for a second
+    if ( (json_paper_time * PAPER_STEP) > (PAPER_LIMIT) )
+    {
+      json_paper_time = 0;                    // Check for an infinit loop
+    }
     if ( json_paper_time != 0 )
     {
       if ( read_DIP() & (VERBOSE_TRACE) )
@@ -222,7 +241,7 @@ void loop()
         set_LED(LED_S, j & 1);                // Show the paper advancing
         set_LED(LED_X, j & 2);                // 
         set_LED(LED_Y, j & 4);                // 
-        delay(10);                            // in 10ms increments
+        delay(PAPER_STEP);                    // in 100ms increments
       }
       digitalWrite(PAPER, PAPER_OFF);
     }
