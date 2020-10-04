@@ -356,7 +356,7 @@ namespace freETarget {
 
             decimal[] r = new decimal[shots.Count];
             for (int i = 0; i < shots.Count; i++) {
-                r[i] = (decimal)Math.Sqrt((double)(((shots[i].x - xbar) * (shots[i].x - xbar)) + ((shots[i].y - ybar) * (shots[i].y - ybar))));
+                r[i] = (decimal)Math.Sqrt((double)(((getShotX(shots[i]) - xbar) * (getShotX(shots[i]) - xbar)) + ((getShotY(shots[i]) - ybar) * (getShotY(shots[i]) - ybar))));
             }
 
             decimal rsum = 0;
@@ -891,7 +891,7 @@ namespace freETarget {
             List<double> spreads = new List<double>();
             for (int i = 0; i < shots.Count; i++) {
                 for (int j = 0; j < shots.Count; j++) {
-                    spreads.Add(Math.Sqrt(Math.Pow((double)shots[i].x - (double)shots[j].x, 2) - Math.Pow((double)shots[i].y - (double)shots[j].y, 2)));
+                    spreads.Add(Math.Sqrt(Math.Pow((double)getShotX(shots[i]) - (double)getShotX(shots[j]), 2) - Math.Pow((double)getShotY(shots[i]) - (double)getShotY(shots[j]), 2)));
                 }
             }
 
