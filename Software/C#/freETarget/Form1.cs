@@ -23,6 +23,13 @@ using System.Windows.Forms.DataVisualization.Charting;
 namespace freETarget {
     public partial class frmMainWindow : Form {
 
+        public const uint ES_CONTINUOUS = 0x80000000;
+        public const uint ES_SYSTEM_REQUIRED = 0x00000001;
+        public const uint ES_DISPLAY_REQUIRED = 0x00000002;
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern uint SetThreadExecutionState([In] uint esFlags);
+
         public enum Status {
             NOT_CONNECTED,
             CONECTING,
@@ -299,8 +306,6 @@ namespace freETarget {
          * received connection text from target. connection established
          */
         private void connectDone(String target) {
-
-            currentSession.start();
             timer.Enabled = true;
 
             btnConnect.Text = "Disconnect";
@@ -315,6 +320,8 @@ namespace freETarget {
             trkZoom.Enabled = true;
             tcSessionType.Enabled = true;
             tcSessionType.Refresh();
+
+            SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED); //disable screensave while connected
 
             initNewSession();
             targetRefresh();
@@ -722,12 +729,7 @@ namespace freETarget {
                     return;
                 }
 
-                serialPort.Close();
-                btnConnect.Text = "Connect";
-                currentStatus = Status.NOT_CONNECTED;
-
-                statusText.Text = "Disconnected";
-
+                disconnect();
 
             }
         }
@@ -1384,6 +1386,8 @@ namespace freETarget {
 
             frmArduino ard = frmArduino.getInstance(this);
             ard.Hide();
+
+            SetThreadExecutionState(ES_CONTINUOUS); //reenable screensaver
         }
 
         private void showJournalForm() {

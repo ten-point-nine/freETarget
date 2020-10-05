@@ -86,5 +86,13 @@ namespace freETarget {
         private void btnTest_Click(object sender, EventArgs e) {
             mainWindow.serialPort.Write("{\"TEST\":" + txtTest.Text + "}");
         }
+
+        private void btnOffset_Click(object sender, EventArgs e) {
+            mainWindow.serialPort.Write("{\"OFFSET\":" + txtOffset.Text + "}");
+        }
+
+        private void btnAngle_Click(object sender, EventArgs e) {
+            mainWindow.serialPort.Write("{\"ANGLE\":" + txtAngle.Text + "}");
+        }
     }
 }

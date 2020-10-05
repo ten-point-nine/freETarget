@@ -36,12 +36,16 @@
             this.txtSensor = new System.Windows.Forms.TextBox();
             this.txtTest = new System.Windows.Forms.TextBox();
             this.ckbAutoscroll = new System.Windows.Forms.CheckBox();
+            this.txtOffset = new System.Windows.Forms.TextBox();
+            this.btnOffset = new System.Windows.Forms.Button();
+            this.txtAngle = new System.Windows.Forms.TextBox();
+            this.btnAngle = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnClose
             // 
             this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnClose.Location = new System.Drawing.Point(549, 9);
+            this.btnClose.Location = new System.Drawing.Point(756, 9);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(75, 23);
             this.btnClose.TabIndex = 0;
@@ -60,7 +64,7 @@
             this.txtOutput.Name = "txtOutput";
             this.txtOutput.ReadOnly = true;
             this.txtOutput.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtOutput.Size = new System.Drawing.Size(615, 148);
+            this.txtOutput.Size = new System.Drawing.Size(822, 161);
             this.txtOutput.TabIndex = 2;
             // 
             // btnEcho
@@ -95,7 +99,7 @@
             // 
             // btnSensor
             // 
-            this.btnSensor.Location = new System.Drawing.Point(360, 10);
+            this.btnSensor.Location = new System.Drawing.Point(296, 9);
             this.btnSensor.Name = "btnSensor";
             this.btnSensor.Size = new System.Drawing.Size(75, 23);
             this.btnSensor.TabIndex = 5;
@@ -105,7 +109,7 @@
             // 
             // btnTest
             // 
-            this.btnTest.Location = new System.Drawing.Point(360, 39);
+            this.btnTest.Location = new System.Drawing.Point(296, 38);
             this.btnTest.Name = "btnTest";
             this.btnTest.Size = new System.Drawing.Size(75, 23);
             this.btnTest.TabIndex = 6;
@@ -131,7 +135,7 @@
             // 
             // txtSensor
             // 
-            this.txtSensor.Location = new System.Drawing.Point(264, 12);
+            this.txtSensor.Location = new System.Drawing.Point(200, 11);
             this.txtSensor.Name = "txtSensor";
             this.txtSensor.Size = new System.Drawing.Size(90, 20);
             this.txtSensor.TabIndex = 9;
@@ -139,7 +143,7 @@
             // 
             // txtTest
             // 
-            this.txtTest.Location = new System.Drawing.Point(264, 41);
+            this.txtTest.Location = new System.Drawing.Point(200, 40);
             this.txtTest.Name = "txtTest";
             this.txtTest.Size = new System.Drawing.Size(90, 20);
             this.txtTest.TabIndex = 10;
@@ -151,18 +155,58 @@
             this.ckbAutoscroll.AutoSize = true;
             this.ckbAutoscroll.Checked = true;
             this.ckbAutoscroll.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ckbAutoscroll.Location = new System.Drawing.Point(547, 80);
+            this.ckbAutoscroll.Location = new System.Drawing.Point(754, 80);
             this.ckbAutoscroll.Name = "ckbAutoscroll";
             this.ckbAutoscroll.Size = new System.Drawing.Size(72, 17);
             this.ckbAutoscroll.TabIndex = 11;
             this.ckbAutoscroll.Text = "Autoscroll";
             this.ckbAutoscroll.UseVisualStyleBackColor = true;
             // 
+            // txtOffset
+            // 
+            this.txtOffset.Location = new System.Drawing.Point(200, 70);
+            this.txtOffset.Name = "txtOffset";
+            this.txtOffset.Size = new System.Drawing.Size(90, 20);
+            this.txtOffset.TabIndex = 13;
+            this.txtOffset.Text = "45";
+            // 
+            // btnOffset
+            // 
+            this.btnOffset.Location = new System.Drawing.Point(296, 68);
+            this.btnOffset.Name = "btnOffset";
+            this.btnOffset.Size = new System.Drawing.Size(75, 23);
+            this.btnOffset.TabIndex = 12;
+            this.btnOffset.Text = "OFFSET";
+            this.btnOffset.UseVisualStyleBackColor = true;
+            this.btnOffset.Click += new System.EventHandler(this.btnOffset_Click);
+            // 
+            // txtAngle
+            // 
+            this.txtAngle.Location = new System.Drawing.Point(388, 10);
+            this.txtAngle.Name = "txtAngle";
+            this.txtAngle.Size = new System.Drawing.Size(90, 20);
+            this.txtAngle.TabIndex = 15;
+            this.txtAngle.Text = "0";
+            // 
+            // btnAngle
+            // 
+            this.btnAngle.Location = new System.Drawing.Point(484, 10);
+            this.btnAngle.Name = "btnAngle";
+            this.btnAngle.Size = new System.Drawing.Size(75, 23);
+            this.btnAngle.TabIndex = 14;
+            this.btnAngle.Text = "ANGLE";
+            this.btnAngle.UseVisualStyleBackColor = true;
+            this.btnAngle.Click += new System.EventHandler(this.btnAngle_Click);
+            // 
             // frmArduino
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(631, 262);
+            this.ClientSize = new System.Drawing.Size(838, 275);
+            this.Controls.Add(this.txtAngle);
+            this.Controls.Add(this.btnAngle);
+            this.Controls.Add(this.txtOffset);
+            this.Controls.Add(this.btnOffset);
             this.Controls.Add(this.ckbAutoscroll);
             this.Controls.Add(this.txtTest);
             this.Controls.Add(this.txtSensor);
@@ -200,5 +244,9 @@
         private System.Windows.Forms.TextBox txtSensor;
         private System.Windows.Forms.TextBox txtTest;
         private System.Windows.Forms.CheckBox ckbAutoscroll;
+        private System.Windows.Forms.TextBox txtOffset;
+        private System.Windows.Forms.Button btnOffset;
+        private System.Windows.Forms.TextBox txtAngle;
+        private System.Windows.Forms.Button btnAngle;
     }
 }
