@@ -88,7 +88,7 @@ namespace freETarget {
         }
 
         private void btnOffset_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"OFFSET\":" + txtOffset.Text + "}");
+            mainWindow.serialPort.Write("{\"CALIBRE_x10\":" + txtOffset.Text + "}");
         }
 
         private void btnAngle_Click(object sender, EventArgs e) {

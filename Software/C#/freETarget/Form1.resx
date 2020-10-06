@@ -128,7 +128,7 @@
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAACQ
-        CgAAAk1TRnQBSQFMAgEBAwEAAYgBAQGIAQEBEAEAARABAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        CgAAAk1TRnQBSQFMAgEBAwEAAXABAgFwAQIBEAEAARABAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
         AwABQAMAARADAAEBAQABCAYAAQQYAAGAAgABgAMAAoABAAGAAwABgAEAAYABAAKAAgADwAEAAcAB3AHA
         AQAB8AHKAaYBAAEzBQABMwEAATMBAAEzAQACMwIAAxYBAAMcAQADIgEAAykBAANVAQADTQEAA0IBAAM5
         AQABgAF8Af8BAAJQAf8BAAGTAQAB1gEAAf8B7AHMAQABxgHWAe8BAAHWAucBAAGQAakBrQIAAf8BMwMA
@@ -191,9 +191,6 @@
         faW+Ut/rFBbyYCdYy6IqzQAAAABJRU5ErkJggg==
 </value>
   </data>
-  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>460, 17</value>
-  </metadata>
   <data name="btnConfig.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAe
@@ -210,6 +207,9 @@
         DgAAAABJRU5ErkJggg==
 </value>
   </data>
+  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>460, 17</value>
+  </metadata>
   <metadata name="timer.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>380, 17</value>
   </metadata>
@@ -231,13 +231,10 @@
         QmCC
 </value>
   </data>
-  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>460, 17</value>
-  </metadata>
   <data name="btnArduino.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAe
-        vQAAHr0BPAOvEwAAACt0RVh0Q3JlYXRpb24gVGltZQBEIDIwIHNlcC4gMjAyMCAxNzoyMToyMyArMDIw
+        vAAAHrwB7kRN9wAAACt0RVh0Q3JlYXRpb24gVGltZQBEIDIwIHNlcC4gMjAyMCAxNzoyMToyMyArMDIw
         MJKc5FYAAAAHdElNRQfkCRQOFSsC/WPTAAADK0lEQVQ4T4VUSUxTYRAevHqRg8bEeDBxQb1pAopnl4So
         BzkRvXrSRMUleJASeQVKEdlR9h3a1xZElAJtCSicIBQDFTBACxQoYSkChR78nP+9h8YtTjLpdOabr/9s
         pX/JqM93VZJtnaclw84pKWMnVbZ2jXi9V7Xw/2VmaSk63driOJ6ZEyZjLii7UFW2hS/N0uz0BQIxGvzv
@@ -379,6 +376,9 @@
         B/C/dvYEka7DyN/BVanSHwDsOAPATh6TVgAAAABJRU5ErkJggg==
 </value>
   </data>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>41</value>
+  </metadata>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         AAABAAQAQEAAAAEAIAAoQAAARgAAACAgAAABACAAKBAAAG5AAAAYGAAAAQAgACgJAACWUAAAEBAAAAEA

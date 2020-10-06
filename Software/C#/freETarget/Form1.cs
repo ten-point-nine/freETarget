@@ -373,10 +373,10 @@ namespace freETarget {
                 }
 
                 //write to total textbox
-                txtTotal.Text = getShots().Count + " shots : " + currentSession.score.ToString() + " ( " + currentSession.decimalScore.ToString() + " ) - " + currentSession.innerX.ToString() + "x";
+                txtTotal.Text = getShots().Count + ": " + currentSession.score.ToString() + " (" + currentSession.decimalScore.ToString(CultureInfo.InvariantCulture) + ") -" + currentSession.innerX.ToString() + "x";
 
                 //write to last shot textbox
-                string lastShot = shot.decimalScore.ToString();
+                string lastShot = shot.decimalScore.ToString(CultureInfo.InvariantCulture);
                 txtLastShot.Text = lastShot + inner;
 
                 drawArrow(shot);
@@ -385,9 +385,11 @@ namespace freETarget {
                 ListViewItem item = new ListViewItem(new string[] { "" }, (shot.index+1).ToString());
                 item.UseItemStyleForSubItems = false;
                 ListViewItem.ListViewSubItem countItem = item.SubItems.Add((shot.index+1).ToString());
-                countItem.Font = new Font("MS Sans Serif", 7, FontStyle.Italic);
+                countItem.Font = new Font("MS Sans Serif", 9.75f, FontStyle.Italic|FontStyle.Bold);
                 ListViewItem.ListViewSubItem scoreItem = item.SubItems.Add(shot.score.ToString());
-                ListViewItem.ListViewSubItem decimalItem = item.SubItems.Add(shot.decimalScore.ToString() + inner);
+                scoreItem.Font = new Font("MS Sans Serif", 9.75f,  FontStyle.Bold);
+                ListViewItem.ListViewSubItem decimalItem = item.SubItems.Add(shot.decimalScore.ToString(CultureInfo.InvariantCulture) + inner);
+                decimalItem.Font = new Font("MS Sans Serif", 9.75f, FontStyle.Bold);
 
                 shotsList.Items.Add(item);
                 shotsList.EnsureVisible(shotsList.Items.Count - 1);
@@ -531,9 +533,11 @@ namespace freETarget {
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.Clear(Color.White);
 
+            int margin = 3;
+
             if (shot.decimalScore < 10.9m) {
-                RectangleF range = new RectangleF(5, 5, 19, 19);
-                double xp = 14.0, yp = 14.0;
+                RectangleF range = new RectangleF(margin, margin, imgArrow.Width-margin*3, imgArrow.Height-margin*3);
+                double xp = 18.0, yp = 18.0;
                 double θ = (double)shot.angle * (Math.PI / 180);
 
                 double[] t = new double[4];
@@ -548,12 +552,12 @@ namespace freETarget {
                 var X2 = xp + t[2] * Math.Cos(θ);
                 var Y2 = yp + t[2] * Math.Sin(θ);
 
-                Pen arr = new Pen(Color.Black);
-                arr.CustomEndCap = new AdjustableArrowCap(3, 3, true);
+                Pen arr = new Pen(Color.Black,2);
+                arr.CustomEndCap = new AdjustableArrowCap(6, 6, true);
                 g.DrawLine(arr, (float)X1, (float)Y2, (float)X2, (float)Y1);
             } else { //if 10.9 draw a dot
                 Brush br = new SolidBrush(Color.Black);
-                g.FillEllipse(br, new Rectangle(new Point(13, 13), new Size(4, 4)));
+                g.FillEllipse(br, new Rectangle(new Point((imgArrow.Width/2)-4, (imgArrow.Height/2)-4), new Size(6, 6)));
             }
 
             imgArrow.Image = bmp;
