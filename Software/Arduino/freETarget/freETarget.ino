@@ -4,9 +4,7 @@
  * 
  * Software to run the Air-Rifle / Small Bore Electronic Target
  * 
- *--------------------------------------------------------------
- *--
- */
+ *-------------------------------------------------------------*/
 #include "freETarget.h"
 #include "gpio.h"
 #include "compute_hit.h"

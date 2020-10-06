@@ -89,21 +89,21 @@ void init_sensors(void)
   * Work out the geometry of the sensors
   */
   s[N].index = N;
-  s[N].x = 0;
-  s[N].y = (json_sensor_dia / 2) / s_of_sound * OSCILLATOR_MHZ;
+  s[N].x = json_north_x / s_of_sound * OSCILLATOR_MHZ;
+  s[N].y = json_north_y / s_of_sound * OSCILLATOR_MHZ;
 
   s[E].index = E;
-  s[E].x = s[N].y;
-  s[E].y = 0;
+  s[E].x = json_east_x / s_of_sound * OSCILLATOR_MHZ;
+  s[E].y = json_east_y / s_of_sound * OSCILLATOR_MHZ;
 
   s[S].index = S;
-  s[S].x = 0;
-  s[S].y = -s[N].y;
+  s[S].x = json_south_x / s_of_sound * OSCILLATOR_MHZ;
+  s[S].y = json_south_y / s_of_sound * OSCILLATOR_MHZ;
 
   s[W].index = W;
-  s[W].x = -s[E].x;
-  s[W].y = 0;
-
+  s[W].x = json_west_x / s_of_sound * OSCILLATOR_MHZ;
+  s[W].y = json_west_y / s_of_sound * OSCILLATOR_MHZ;
+Serial.println(s[W].x);
  /* 
   *  All done, return
   */
@@ -225,13 +225,12 @@ unsigned int compute_hit
 
 /*
  * Fill up the structure with the counter geometry
- * Rotated so that the longest time points north
  */
   for (i=N; i <= W; i++)
   {
     s[i].b = s[i].count;
-    s[i].c = length_c;
-  }
+    s[i].c = sqrt(sq(s[(i) % 4].x - s[(i+1) % 4].x) + sq(s[(i) % 4].y - s[(i+1) % 4].y));
+   }
   
   for (i=N; i <= W; i++)
   {
@@ -486,9 +485,9 @@ void send_score
 
 #if ( S_MISC ) 
   volts = analogRead(V_REFERENCE);
-  Serial.print("\"V\":");     Serial.print(TO_VOLTS(volts)); Serial.print(", ");
-  Serial.print("\"T\":");     Serial.print(temperature_C());   Serial.print(", ");
-  Serial.print("\"I\":");     Serial.print(SOFTWARE_VERSION);
+  Serial.print("\"V_REF\":");     Serial.print(TO_VOLTS(volts)); Serial.print(", ");
+  Serial.print("\"T\":");         Serial.print(temperature_C());   Serial.print(", ");
+  Serial.print("\"VERSION\":");   Serial.print(SOFTWARE_VERSION);
 #endif
 
 #if ( S_SHOT )
@@ -544,7 +543,7 @@ void send_timer
   Serial.print("\"W\":");     Serial.print(timer_value[W]);                     Serial.print(", ");
   Serial.print("\"V\":");     Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));  Serial.print(", ");
   Serial.print("\"I\":");     Serial.print(SOFTWARE_VERSION);
-  Serial.print("}");      
+  Serial.print("}\n\r");      
 
   return;
 }

@@ -11,15 +11,23 @@
 
 static char input_JSON[128];
 
-unsigned int json_dip_switch;               // DIP switch overwritten by JSON message
-double       json_sensor_dia = DIAMETER;    // Sensor daiamter overwitten by JSON message
-unsigned int json_paper_time = 0;           // Time paper motor is applied
-unsigned int json_echo;                     // Test String 
-double       json_d_echo;                   // Test String
-unsigned int json_test;                     // Self test to be performed
-unsigned int json_calibre_x10;              // Offset applied to pellet diameter (calibre)
-         int json_sensor_angle = 0;         // Angle sensors have been shifted by (Signed number)
-
+int     json_dip_switch;               // DIP switch overwritten by JSON message
+double  json_sensor_dia = DIAMETER;    // Sensor daiamter overwitten by JSON message
+int     json_paper_time = 0;           // Time paper motor is applied
+int     json_echo;                     // Test String 
+int     json_test;                     // Self test to be performed
+int     json_calibre_x10;              // Offset applied to pellet diameter (calibre)
+int     json_sensor_angle = 0;         // Angle sensors have been shifted by (Signed number)    
+              
+int     json_north_x;                  // X position of North sensor
+int     json_north_y;                  // Y position of North sensor
+int     json_east_x;                   // X position of East sensor
+int     json_east_y;                   // Y position of East sensor
+int     json_south_x;                  // X position of South sensor
+int     json_south_y;                  // Y position of South sensor
+int     json_west_x;                   // X position of West sensor
+int     json_west_y;                   // Y position of West sensor
+         
 #define IS_VOID    0
 #define IS_INT16   1
 #define IS_FLOAT   2
@@ -35,7 +43,7 @@ static void nop(void);
 
 typedef struct  {
   char*           token;  // JSON token string, ex "RADIUS": 
-  unsigned int*   value;  // Where value is stored 
+  int*            value;  // Where value is stored 
   double*       d_value;  // Where value is stored 
   unsigned int  convert;  // Conversion type
   void       (*f)(void);  // Function to execute with message
@@ -44,13 +52,21 @@ typedef struct  {
 
   
 static json_message JSON[] = {
-  {"\"ANGLE\":",       (unsigned int*)&json_sensor_angle, 0,                IS_INT16,  0,         NONVOL_SENSOR_ANGLE},    // 0
-  {"\"CALIBREx10\":",  &json_calibre_x10,                 0,                IS_INT16,  0,         NONVOL_CALIBRE_X10 },    // 1
-  {"\"DIP\":",         &json_dip_switch,                  0,                IS_INT16,  0,         NONVOL_DIP_SWITCH  },    // 2
-  {"\"ECHO\":",        &json_echo,                        0,                IS_INT16,  &show_echo,                0  },    // 3
-  {"\"PAPER\":",       &json_paper_time,                  0,                IS_INT16,  0,         NONVOL_PAPER_TIME  },    // 4
-  {"\"SENSOR\":",      0,                                 &json_sensor_dia, IS_FLOAT,  0,         NONVOL_SENSOR_DIA  },    // 5
-  {"\"TEST\":",        &json_test,                        0,                IS_INT16,  &show_test,NONVOL_TEST_MODE   },    // 6
+  {"\"ANGLE\":",       &json_sensor_angle, 0,                IS_INT16,  0,             NONVOL_SENSOR_ANGLE},    //  0
+  {"\"CALIBREx10\":",  &json_calibre_x10,                 0,                IS_INT16,  0,             NONVOL_CALIBRE_X10 },    //  1
+  {"\"DIP\":",         &json_dip_switch,                  0,                IS_INT16,  0,             NONVOL_DIP_SWITCH  },    //  2
+  {"\"ECHO\":",        &json_echo,                        0,                IS_INT16,  &show_echo,                    0  },    //  3
+  {"\"PAPER\":",       &json_paper_time,                  0,                IS_INT16,  0,             NONVOL_PAPER_TIME  },    //  4
+  {"\"SENSOR\":",      0,                                 &json_sensor_dia, IS_FLOAT,  &gen_position, NONVOL_SENSOR_DIA  },    //  5
+  {"\"TEST\":",        &json_test,                        0,                IS_INT16,  &show_test,    NONVOL_TEST_MODE   },    //  6
+  {"\"NORTH_X\":",     &json_north_x,                     0,                IS_INT16,  0,             NONVOL_NORTH_X     },    //  7
+  {"\"NORTH_Y\":",     &json_north_y,                     0,                IS_INT16,  0,             NONVOL_NORTH_Y     },    //  8
+  {"\"EAST_X\":",      &json_east_x,                      0,                IS_INT16,  0,             NONVOL_EAST_X      },    //  9
+  {"\"EAST_Y\":",      &json_east_y,                      0,                IS_INT16,  0,             NONVOL_EAST_Y      },    // 10
+  {"\"SOUTH_X\":",     &json_south_x,                     0,                IS_INT16,  0,             NONVOL_SOUTH_X     },    // 11
+  {"\"SOUTH_Y\":",     &json_south_y,                     0,                IS_INT16,  0,             NONVOL_SOUTH_Y     },    // 12
+  {"\"WEST_X\":",      &json_west_x,                      0,                IS_INT16,  0,             NONVOL_WEST_X      },    // 13
+  {"\"WEST_Y\":",      &json_west_y,                      0,                IS_INT16,  0,             NONVOL_WEST_Y      },    // 14
   { 0, 0, 0, 0, 0, 0}
 };
 
@@ -284,7 +300,7 @@ void show_echo(void)
   EEPROM.get(NONVOL_INIT, i);
   Serial.print(" \"INIT\":"); Serial.print(i); Serial.print(", ");
   Serial.print(" \"V_REF\":"); Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print(", ");
-  Serial.print(" \"VERSION\""); Serial.print(SOFTWARE_VERSION); Serial.print("}\n\r");
+  Serial.print(" \"VERSION\":"); Serial.print(SOFTWARE_VERSION); Serial.print("}\n\r");
 
 /*
  *  All done, return
@@ -309,3 +325,4 @@ static void show_test(void)
   self_test(json_test);
   return;
  }
+
