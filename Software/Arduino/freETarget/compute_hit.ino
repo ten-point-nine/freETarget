@@ -29,7 +29,6 @@ sensor_t s[4];
 
 unsigned int  bit_mask[] = {0x01, 0x02, 0x04, 0x08};
 unsigned long timer_value[4];    // Array of timer values
-double        length_c;          // length of side C
 unsigned int  pellet_calibre;    // Time offset to compensate for pellet diameter
 
 /*----------------------------------------------------------------
@@ -82,7 +81,6 @@ void init_sensors(void)
  * Determine the speed of sound and ajust
  */
   s_of_sound = speed_of_sound(temperature_C());
-  length_c = sqrt(2.0d) * (json_sensor_dia / 2.0) / s_of_sound * OSCILLATOR_MHZ;
   pellet_calibre = (double)json_calibre_x10 / s_of_sound / 2.0 / 10.0;
 
  /*
@@ -103,7 +101,7 @@ void init_sensors(void)
   s[W].index = W;
   s[W].x = json_west_x / s_of_sound * OSCILLATOR_MHZ;
   s[W].y = json_west_y / s_of_sound * OSCILLATOR_MHZ;
-Serial.println(s[W].x);
+  
  /* 
   *  All done, return
   */
@@ -158,7 +156,6 @@ unsigned int compute_hit
    Serial.print("  East: 0x");    Serial.print(timer_value[E], HEX); Serial.print(" "); Serial.print(timer_value[E] / OSCILLATOR_MHZ); Serial.print("us "); 
    Serial.print("  South: 0x");   Serial.print(timer_value[S], HEX); Serial.print(" "); Serial.print(timer_value[S] / OSCILLATOR_MHZ); Serial.print("us "); 
    Serial.print("  West: 0x");    Serial.print(timer_value[W], HEX); Serial.print(" "); Serial.print(timer_value[W] / OSCILLATOR_MHZ); Serial.print("us "); 
-   Serial.print(" length_c: ");   Serial.print(length_c);            Serial.print(" cycles");
    }
    
 /*
@@ -197,7 +194,20 @@ unsigned int compute_hit
    Serial.print(" South: "); Serial.print(s[S].count); Serial.print("  West: "); Serial.print(s[W].count);
    }
 
- 
+/*
+ * Fill up the structure with the counter geometry
+ */
+  for (i=N; i <= W; i++)
+  {
+    s[i].b = s[i].count;
+    s[i].c = sqrt(sq(s[(i) % 4].x - s[(i+1) % 4].x) + sq(s[(i) % 4].y - s[(i+1) % 4].y));
+   }
+  
+  for (i=N; i <= W; i++)
+  {
+    s[i].a = s[(i+1) % 4].b;
+  }
+  
 /*
  * Find the smallest non-zero value, this is the sensor furthest away from the sensor
  */
@@ -213,35 +223,15 @@ unsigned int compute_hit
   }
   s[discard].is_valid = false;    // Throw away the shortest time.
   
-/*
- *  Prime the estimate based on the smallest identified time.
- */
- estimate = length_c - smallest + 1.0d;
- 
- if ( read_DIP() & VERBOSE_TRACE )
-   {
-   Serial.print("\n\restimate: "); Serial.print(estimate);
-   }
-
-/*
- * Fill up the structure with the counter geometry
- */
-  for (i=N; i <= W; i++)
-  {
-    s[i].b = s[i].count;
-    s[i].c = sqrt(sq(s[(i) % 4].x - s[(i+1) % 4].x) + sq(s[(i) % 4].y - s[(i+1) % 4].y));
-   }
-  
-  for (i=N; i <= W; i++)
-  {
-    s[i].a = s[(i+1) % 4].b;
-  }
-
-
-  
 /*  
  *  Loop and calculate the unknown radius (estimate)
  */
+  estimate = s[N].c - smallest + 1.0d;
+ 
+  if ( read_DIP() & VERBOSE_TRACE )
+   {
+   Serial.print("\n\restimate: "); Serial.print(estimate);
+   }
   error = 999999;                  // Start with a big error
   count = 0;
   
