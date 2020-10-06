@@ -30,7 +30,7 @@ sensor_t s[4];
 unsigned int  bit_mask[] = {0x01, 0x02, 0x04, 0x08};
 unsigned long timer_value[4];    // Array of timer values
 double        length_c;          // length of side C
-unsigned int  pellet_offset;     // Time offset to compensate for pellet diameter
+unsigned int  pellet_calibre;    // Time offset to compensate for pellet diameter
 
 /*----------------------------------------------------------------
  *
@@ -83,7 +83,7 @@ void init_sensors(void)
  */
   s_of_sound = speed_of_sound(temperature_C());
   length_c = sqrt(2.0d) * (json_sensor_dia / 2.0) / s_of_sound * OSCILLATOR_MHZ;
-  pellet_offset = (double)json_offset / s_of_sound / 2.0;
+  pellet_calibre = (double)json_calibre_x10 / s_of_sound / 2.0 / 10.0;
 
  /*
   * Work out the geometry of the sensors
@@ -147,10 +147,10 @@ unsigned int compute_hit
 /*
  *  Read in the counter values 
  */
-  timer_value[N] = read_counter(N) + pellet_offset;   // Counter plus offset for pellet diameter
-  timer_value[E] = read_counter(E) + pellet_offset;
-  timer_value[S] = read_counter(S) + pellet_offset;
-  timer_value[W] = read_counter(W) + pellet_offset;
+  timer_value[N] = read_counter(N) + pellet_calibre;   // Counter plus offset for pellet diameter
+  timer_value[E] = read_counter(E) + pellet_calibre;
+  timer_value[S] = read_counter(S) + pellet_calibre;
+  timer_value[W] = read_counter(W) + pellet_calibre;
   
   if ( read_DIP() & VERBOSE_TRACE )
    {
