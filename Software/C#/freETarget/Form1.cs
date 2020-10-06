@@ -92,7 +92,8 @@ namespace freETarget {
             digitalClock.ResizeSegments();
 
             initLog();
-
+            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            statusVersion.Text = "v" + assembly.GetName().Version.Major + "." + assembly.GetName().Version.Minor + "." + assembly.GetName().Version.Build;
         }
 
         private void initLog() {
