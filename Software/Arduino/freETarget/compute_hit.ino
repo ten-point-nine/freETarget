@@ -120,9 +120,10 @@ void init_sensors(void)
 
 unsigned int compute_hit
   (
-  unsigned int sensor_status,       // Bits read from status register
-  unsigned int shot,                // Shot being processed
-  history_t* h                      // Storing the results
+  unsigned int sensor_status,      // Bits read from status register
+  unsigned int shot,               // Shot being processed
+  history_t*   h,                  // Storing the results
+  bool         test_mode           // Fake counters in test mode
   )
 {
   double        reference;         // Time of reference counter
@@ -141,14 +142,14 @@ unsigned int compute_hit
  *  Compute the current geometry based on the speed of sound
  */
   init_sensors();
-  
-/*
- *  Read in the counter values 
- */
-  timer_value[N] = read_counter(N) + pellet_calibre;   // Counter plus offset for pellet diameter
-  timer_value[E] = read_counter(E) + pellet_calibre;
-  timer_value[S] = read_counter(S) + pellet_calibre;
-  timer_value[W] = read_counter(W) + pellet_calibre;
+
+  if ( test_mode == false )                              // Skip if using test values
+  {
+    timer_value[N] = read_counter(N) + pellet_calibre;   // Counter plus offset for pellet diameter
+    timer_value[E] = read_counter(E) + pellet_calibre;
+    timer_value[S] = read_counter(S) + pellet_calibre;
+    timer_value[W] = read_counter(W) + pellet_calibre;  
+  }
   
   if ( read_DIP() & VERBOSE_TRACE )
    {
@@ -179,7 +180,6 @@ unsigned int compute_hit
    
 /*
  * Correct the time to remove the shortest distance
- * Also rotate the reference sensor into the NORTH location
  */
   for (i=N; i <= W; i++)
   {
@@ -221,7 +221,7 @@ unsigned int compute_hit
       discard = i;
     }
   }
-  s[discard].is_valid = false;    // Throw away the shortest time.
+//  s[discard].is_valid = false;    // Throw away the shortest time. (test pathc removed)
   
 /*  
  *  Loop and calculate the unknown radius (estimate)
@@ -234,7 +234,10 @@ unsigned int compute_hit
    }
   error = 999999;                  // Start with a big error
   count = 0;
-  
+
+ /*
+  * Iterate to minimize the error
+  */
   while (error > THRESHOLD )
   {
     x_avg = 0;                     // Zero out the average values

@@ -279,7 +279,7 @@ static void show_analog_on_PC(void)
 
 /*----------------------------------------------------------------
  *
- * void sample_calculations()
+ * void  unit_test()
  *
  * Setup a known target for sample calculations
  *
@@ -306,7 +306,7 @@ void unit_test(void)
   for ( i = 0; i != TEST_SAMPLES; i++)
   {
     sample_calculations(i);
-    location = compute_hit(0x0F, i, &history);
+    location = compute_hit(0x0F, i, &history, true);
     send_score(&history, i);
   }
 
@@ -337,7 +337,7 @@ static void sample_calculations (unsigned int sample)
   timer_value[E] = RX(E, x, y);
   timer_value[S] = RX(S, x, y);
   timer_value[W] = RX(W, x, y);
-
+  
 /*
  * All done, return
  */

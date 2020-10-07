@@ -36,7 +36,7 @@ typedef struct sensor sensor_t;
  *  Public Funcitons
  */
 void init_sensors(void);                                    // Initialize sensor structure
-unsigned int compute_hit(unsigned int sensor_status, unsigned int shot, history_t* h);  // Find the location of the shot
+unsigned int compute_hit(unsigned int sensor_status, unsigned int shot, history_t* h, bool test_mode);  // Find the location of the shot
 void send_score(history_t* h, int shot, double s_of_sound); // Send the shot
 void rotate_hit(unsigned int location, history_t* h);       // Rotate the shot back into the correct quadrant
 bool find_xy(sensor_t* s, double estimate);                 // Estimated position   

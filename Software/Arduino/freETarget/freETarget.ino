@@ -177,7 +177,7 @@ void loop()
     set_LED(LED_S, false);
     set_LED(LED_X, false);     // No longer processing
     set_LED(LED_Y, true);      // Reducing the shot
-    location = compute_hit(sensor_status, shot, &history);
+    location = compute_hit(sensor_status, shot, &history, false);
     send_score(&history, shot);
     state = WASTE;
     shot++;                   
