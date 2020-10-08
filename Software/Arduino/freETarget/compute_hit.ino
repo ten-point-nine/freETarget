@@ -88,18 +88,18 @@ void init_sensors(void)
   */
   s[N].index = N;
   s[N].x = json_north_x / s_of_sound * OSCILLATOR_MHZ;
-  s[N].y = json_north_y / s_of_sound * OSCILLATOR_MHZ;
+  s[N].y = (json_sensor_dia /2.0d + json_north_y) / s_of_sound * OSCILLATOR_MHZ;
 
   s[E].index = E;
-  s[E].x = json_east_x / s_of_sound * OSCILLATOR_MHZ;
-  s[E].y = json_east_y / s_of_sound * OSCILLATOR_MHZ;
+  s[E].x = (json_sensor_dia /2.0d + json_east_x) / s_of_sound * OSCILLATOR_MHZ;
+  s[E].y = (0.0d + json_east_y) / s_of_sound * OSCILLATOR_MHZ;
 
   s[S].index = S;
-  s[S].x = json_south_x / s_of_sound * OSCILLATOR_MHZ;
-  s[S].y = json_south_y / s_of_sound * OSCILLATOR_MHZ;
+  s[S].x = 0.0d + json_south_x / s_of_sound * OSCILLATOR_MHZ;
+  s[S].y = (json_sensor_dia/ 2.0d + json_south_y) / s_of_sound * OSCILLATOR_MHZ;
 
   s[W].index = W;
-  s[W].x = json_west_x / s_of_sound * OSCILLATOR_MHZ;
+  s[W].x = (json_sensor_dia / 2.0d  + json_west_x) / s_of_sound * OSCILLATOR_MHZ;
   s[W].y = json_west_y / s_of_sound * OSCILLATOR_MHZ;
   
  /* 
@@ -442,7 +442,7 @@ void send_score
   angle = atan2(h->y, h->x) / PI * 180.0d;
 
 /*
- * Rotate the result based on the construction
+ * Rotate the result based on the construction, and recompute the hit
  */
   angle += json_sensor_angle;
   x = radius * cos(PI * angle / 180.0d);
@@ -479,7 +479,7 @@ void send_score
 #if ( S_MISC ) 
   volts = analogRead(V_REFERENCE);
   Serial.print("\"V_REF\":");     Serial.print(TO_VOLTS(volts)); Serial.print(", ");
-  Serial.print("\"T\":");         Serial.print(temperature_C());   Serial.print(", ");
+  Serial.print("\"T\":");         Serial.print(temperature_C()); Serial.print(", ");
   Serial.print("\"VERSION\":");   Serial.print(SOFTWARE_VERSION);
 #endif
 

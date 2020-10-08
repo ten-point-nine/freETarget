@@ -34,7 +34,7 @@ void read_nonvol(void)
     json_dip_switch = 0;
     EEPROM.put(NONVOL_DIP_SWITCH, json_dip_switch);   // No, set up the defaults
     json_sensor_dia = 230.0;
-    EEPROM.put(NONVOL_SENSOR_DIA, json_sensor_dia);
+    EEPROM.put(NONVOL_SENSOR_DIA, json_sensor_dia); 
     json_paper_time = 0;
     EEPROM.put(NONVOL_PAPER_TIME, json_paper_time);
     nonvol_init = 0xabcd;
@@ -99,6 +99,9 @@ void read_nonvol(void)
  * 
  *---------------------------------------------------------------
  *
+ *  This function resets the offsets to 0 whenever a new 
+ *  sensor diameter is entered.
+ *  
  *------------------------------------------------------------*/
 void gen_position(void)
 {
@@ -106,15 +109,15 @@ void gen_position(void)
   * Work out the geometry of the sensors
   */
   json_north_x = 0;
-  json_north_y = (json_sensor_dia / 2.0);
+  json_north_y = 0;
   
-  json_east_x = json_north_y;
+  json_east_x = 0;
   json_east_y = 0;
 
   json_south_x = 0;
-  json_south_y = -json_north_y;
+  json_south_y = 0;
   
-  json_west_x = -json_east_x;
+  json_west_x = 0;
   json_west_y = 0;
 
  /*
