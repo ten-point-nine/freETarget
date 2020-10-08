@@ -1,3 +1,7 @@
+#ifndef _NONVOL_H
+#define _NONVOL_H
+ void reinit_nonvol(void);
+
 /*
  * NON Vol Storage
  */
@@ -18,3 +22,6 @@
 #define NONVOL_SOUTH_Y        (NONVOL_SOUTH_X      + sizeof(int) + 2)        // Exact Y position of sensor
 #define NONVOL_WEST_X         (NONVOL_SOUTH_Y      + sizeof(int) + 2)        // Exact X position of sensor
 #define NONVOL_WEST_Y         (NONVOL_WEST_X       + sizeof(int) + 2)        // Exact Y position of sensor
+
+#endif
+

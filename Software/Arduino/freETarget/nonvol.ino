@@ -8,6 +8,31 @@
 #include "nonvol.h"
 
 /*----------------------------------------------------------------
+ *
+ * void reinit_nonvol()
+ * 
+ * Reinitialize the nonvol storage
+ * 
+ *---------------------------------------------------------------
+ *
+ *  Force the init to a bad value and then do a read_nonvol
+ *  
+ *------------------------------------------------------------*/
+ void reinit_nonvol(void)
+ {
+    int nonvol_init = 0;                    // Corrupt the semephore
+    EEPROM.put(NONVOL_INIT, nonvol_init);
+    
+    read_nonvol();                          // Regen the numbers
+    Serial.print("\n\rReset to factory defaults\n\r");
+    show_echo();
+ /*
+  * Nothing more to do, return
+  */
+    return;
+ }
+ 
+/*----------------------------------------------------------------
  * 
  * void read_nonvol()
  * 
@@ -37,15 +62,15 @@ void read_nonvol(void)
     EEPROM.put(NONVOL_SENSOR_DIA, json_sensor_dia); 
     json_paper_time = 0;
     EEPROM.put(NONVOL_PAPER_TIME, json_paper_time);
-    nonvol_init = 0xabcd;
-    EEPROM.put(NONVOL_INIT, nonvol_init);
     json_test = 0;
     EEPROM.put(NONVOL_TEST_MODE, json_test);
     json_calibre_x10 = 45;
     EEPROM.put(NONVOL_CALIBRE_X10, json_calibre_x10);
     json_sensor_angle = 0;
     EEPROM.put(NONVOL_SENSOR_ANGLE, json_sensor_angle);
-    gen_position();
+    gen_position();    
+    nonvol_init = 0xabcd;
+    EEPROM.put(NONVOL_INIT, nonvol_init);
   }
 
 /*
