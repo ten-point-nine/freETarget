@@ -81,8 +81,8 @@ void init_sensors(void)
  * Determine the speed of sound and ajust
  */
   s_of_sound = speed_of_sound(temperature_C());
-  pellet_calibre = (double)json_calibre_x10 / s_of_sound / 2.0 / 10.0;
-
+  pellet_calibre = ((double)json_calibre_x10 / s_of_sound / 2.0d / 10.0d) * OSCILLATOR_MHZ; // Clock adjustement
+  
  /*
   * Work out the geometry of the sensors
   */
@@ -530,12 +530,12 @@ void send_timer
   }
   
   Serial.print("\", ");
-  Serial.print("\"N\":");     Serial.print(timer_value[N]);                     Serial.print(", ");
-  Serial.print("\"E\":");     Serial.print(timer_value[E]);                     Serial.print(", ");
-  Serial.print("\"S\":");     Serial.print(timer_value[S]);                     Serial.print(", ");
-  Serial.print("\"W\":");     Serial.print(timer_value[W]);                     Serial.print(", ");
-  Serial.print("\"V\":");     Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));  Serial.print(", ");
-  Serial.print("\"I\":");     Serial.print(SOFTWARE_VERSION);
+  Serial.print("\"N\":");       Serial.print(timer_value[N]);                     Serial.print(", ");
+  Serial.print("\"E\":");       Serial.print(timer_value[E]);                     Serial.print(", ");
+  Serial.print("\"S\":");       Serial.print(timer_value[S]);                     Serial.print(", ");
+  Serial.print("\"W\":");       Serial.print(timer_value[W]);                     Serial.print(", ");
+  Serial.print("\"V_REF\":");   Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));  Serial.print(", ");
+  Serial.print("\"Version\":"); Serial.print(SOFTWARE_VERSION);
   Serial.print("}\n\r");      
 
   return;
