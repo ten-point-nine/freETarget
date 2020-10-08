@@ -73,7 +73,7 @@ namespace freETarget {
                 btnCalibration.BackColor = Settings.Default.targetColor;
             }
 
-            if (Properties.Settings.Default.targetDistance != 10) {
+            if (Properties.Settings.Default.targetDistance != 100) {
                 btnConfig.BackColor = Properties.Settings.Default.targetColor;
             } else {
                 btnConfig.BackColor = this.BackColor;
@@ -81,7 +81,7 @@ namespace freETarget {
 
             toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
 
-            toolTip.SetToolTip(btnConfig, "Setting - Target distance: " + Properties.Settings.Default.targetDistance);
+            toolTip.SetToolTip(btnConfig, "Setting - Target distance percent: " + Properties.Settings.Default.targetDistance);
 
             initBreakdownChart();
 
@@ -309,10 +309,71 @@ namespace freETarget {
         private void connectDone(String target) {
             timer.Enabled = true;
 
+
+            //send sensor and hardware parameters to target
+            Thread.Sleep(1000);
+            serialPort.Write("{\"SENSOR\":" + Properties.Settings.Default.SensorDiameter.ToString() + "}");
+            Console.WriteLine("{\"SENSOR\":" + Properties.Settings.Default.SensorDiameter.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"PAPER\":" + Properties.Settings.Default.Paper.ToString() + "}");
+            Console.WriteLine("{\"PAPER\":" + Properties.Settings.Default.Paper.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"ANGLE\":" + Properties.Settings.Default.Angle.ToString() + "}");
+            Console.WriteLine("{\"ANGLE\":" + Properties.Settings.Default.Angle.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"CALIBRE_x10\":" + Properties.Settings.Default.Calibre.ToString() + "}");
+            Console.WriteLine("{\"CALIBRE_x10\":" + Properties.Settings.Default.Calibre.ToString() + "}");
+            
+            Thread.Sleep(100);
+            serialPort.Write("{\"NORTH_X\":" + Properties.Settings.Default.SensorNorthX.ToString() + "}");
+            Console.WriteLine("{\"NORTH_X\":" + Properties.Settings.Default.SensorNorthX.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"NORTH_Y\":" + Properties.Settings.Default.SensorNorthY.ToString() + "}");
+            Console.WriteLine("{\"NORTH_Y\":" + Properties.Settings.Default.SensorNorthY.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"EAST_X\":" + Properties.Settings.Default.SensorEastX.ToString() + "}");
+            Console.WriteLine("{\"EAST_X\":" + Properties.Settings.Default.SensorEastX.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"EAST_Y\":" + Properties.Settings.Default.SensorEastY.ToString() + "}");
+            Console.WriteLine("{\"EAST_Y\":" + Properties.Settings.Default.SensorEastY.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"SOUTH_X\":" + Properties.Settings.Default.SensorSouthX.ToString() + "}");
+            Console.WriteLine("{\"SOUTH_X\":" + Properties.Settings.Default.SensorSouthX.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"SOUTH_Y\":" + Properties.Settings.Default.SensorSouthY.ToString() + "}");
+            Console.WriteLine("{\"SOUTH_Y\":" + Properties.Settings.Default.SensorSouthY.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"WEST_X\":" + Properties.Settings.Default.SensorWestX.ToString() + "}");
+            Console.WriteLine("{\"WEST_X\":" + Properties.Settings.Default.SensorWestX.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"WEST_Y\":" + Properties.Settings.Default.SensorWestY.ToString() + "}");
+            Console.WriteLine("{\"WEST_Y\":" + Properties.Settings.Default.SensorWestY.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"ECHO\":0}");
+            Thread.Sleep(100);
+
+
             btnConnect.Text = "Disconnect";
             currentStatus = Status.CONNECTED;
-            statusText.Text = "Connected to " + target + " on " + serialPort.PortName;
-            displayMessage("Connected to " + target, false);
+            String t = target;
+            if (t.IndexOf(Environment.NewLine) > -1) {
+                t = t.Substring(0, t.IndexOf(Environment.NewLine));
+            }
+            statusText.Text = "Connected to " + t + " on " + serialPort.PortName;
+            displayMessage("Connected to " + t, false);
+
+            Application.DoEvents();
 
             btnConnect.ImageKey = "disconnect";
             shotsList.Enabled = true;
@@ -605,7 +666,7 @@ namespace freETarget {
 
   
         private decimal getScaledDimension(decimal input) {
-            decimal ret = 10 * input / Settings.Default.targetDistance;
+            decimal ret = 100 * input / Settings.Default.targetDistance;
             ret = decimal.Round(ret, 2, MidpointRounding.AwayFromZero);
             return ret;
         }
@@ -688,12 +749,12 @@ namespace freETarget {
                 Properties.Settings.Default.scoreVoice = settingsFrom.chkScoreVoice.Checked;
                 Properties.Settings.Default.fileLogging = settingsFrom.chkLog.Checked;
 
-                if (Properties.Settings.Default.targetDistance != 10) {
+                if (Properties.Settings.Default.targetDistance != 100) {
                     btnConfig.BackColor = Properties.Settings.Default.targetColor;
                 } else {
                     btnConfig.BackColor = SystemColors.Control;
                 }
-                toolTip.SetToolTip(btnConfig, "Settings - Target distance: " + Properties.Settings.Default.targetDistance);
+                toolTip.SetToolTip(btnConfig, "Settings - Target distance percent: " + Properties.Settings.Default.targetDistance);
 
                 if (settingsFrom.rdb60.Checked) {
                     Properties.Settings.Default.MatchShots = 60;
@@ -715,6 +776,21 @@ namespace freETarget {
                 Properties.Settings.Default.scoreDefaultPenColor = Color.FromName(settingsFrom.cmbDefPen.GetItemText(settingsFrom.cmbDefPen.SelectedItem));
                 Properties.Settings.Default.scoreOldBackgroundColor = Color.FromName(settingsFrom.cmbOldBack.GetItemText(settingsFrom.cmbOldBack.SelectedItem));
                 Properties.Settings.Default.scoreOldPenColor = Color.FromName(settingsFrom.cmbOldPen.GetItemText(settingsFrom.cmbOldPen.SelectedItem));
+
+                Properties.Settings.Default.SensorDiameter = decimal.Parse(settingsFrom.txtSensorDiameter.Text);
+
+                Properties.Settings.Default.SensorNorthX = int.Parse(settingsFrom.txtNorthX.Text);
+                Properties.Settings.Default.SensorNorthY = int.Parse(settingsFrom.txtNorthY.Text);
+                Properties.Settings.Default.SensorWestX = int.Parse(settingsFrom.txtWestX.Text);
+                Properties.Settings.Default.SensorWestY = int.Parse(settingsFrom.txtWestY.Text);
+                Properties.Settings.Default.SensorSouthX = int.Parse(settingsFrom.txtSouthX.Text);
+                Properties.Settings.Default.SensorSouthY = int.Parse(settingsFrom.txtSouthY.Text);
+                Properties.Settings.Default.SensorEastX = int.Parse(settingsFrom.txtEastX.Text);
+                Properties.Settings.Default.SensorEastY = int.Parse(settingsFrom.txtEastY.Text);
+
+                Properties.Settings.Default.Calibre = int.Parse(settingsFrom.txtCalibre.Text);
+                Properties.Settings.Default.Angle = int.Parse(settingsFrom.txtAngle.Text);
+                Properties.Settings.Default.Paper = int.Parse(settingsFrom.txtPaper.Text);
             }
 
             settingsFrom.Dispose();

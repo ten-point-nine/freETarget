@@ -493,12 +493,13 @@ namespace freETarget
             this.btnCalibration.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCalibration.Enabled = false;
             this.btnCalibration.Image = ((System.Drawing.Image)(resources.GetObject("btnCalibration.Image")));
-            this.btnCalibration.Location = new System.Drawing.Point(1075, 4);
+            this.btnCalibration.Location = new System.Drawing.Point(733, 3);
             this.btnCalibration.Name = "btnCalibration";
             this.btnCalibration.Size = new System.Drawing.Size(27, 27);
             this.btnCalibration.TabIndex = 30;
             this.toolTip.SetToolTip(this.btnCalibration, "Calibration");
             this.btnCalibration.UseVisualStyleBackColor = true;
+            this.btnCalibration.Visible = false;
             this.btnCalibration.Click += new System.EventHandler(this.btnCalibration_Click);
             // 
             // btnArduino
@@ -506,7 +507,7 @@ namespace freETarget
             this.btnArduino.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnArduino.Enabled = false;
             this.btnArduino.Image = ((System.Drawing.Image)(resources.GetObject("btnArduino.Image")));
-            this.btnArduino.Location = new System.Drawing.Point(1042, 4);
+            this.btnArduino.Location = new System.Drawing.Point(1075, 4);
             this.btnArduino.Name = "btnArduino";
             this.btnArduino.Size = new System.Drawing.Size(27, 27);
             this.btnArduino.TabIndex = 38;
@@ -821,7 +822,7 @@ namespace freETarget
             this.imgLogo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.imgLogo.BackColor = System.Drawing.Color.Transparent;
             this.imgLogo.Image = ((System.Drawing.Image)(resources.GetObject("imgLogo.Image")));
-            this.imgLogo.Location = new System.Drawing.Point(902, 6);
+            this.imgLogo.Location = new System.Drawing.Point(935, 6);
             this.imgLogo.Name = "imgLogo";
             this.imgLogo.Size = new System.Drawing.Size(129, 24);
             this.imgLogo.TabIndex = 37;
