@@ -329,7 +329,7 @@ static void sample_calculations (unsigned int sample)
  * Generate a spiral pattern
  */
   angle = (PI_ON_4) / 5.0 * ((double)sample);
-  radius = 0.99 * (json_sensor_dia/2.0) * (double)sample / TEST_SAMPLES;
+  radius = 0.99d * (json_sensor_dia/2.0) / sqrt(2.0d) * (double)sample / TEST_SAMPLES;
 
   x = radius * cos(angle);
   y = radius * sin(angle);

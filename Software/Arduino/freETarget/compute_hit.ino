@@ -96,10 +96,10 @@ void init_sensors(void)
 
   s[S].index = S;
   s[S].x = 0.0d + json_south_x / s_of_sound * OSCILLATOR_MHZ;
-  s[S].y = (json_sensor_dia/ 2.0d + json_south_y) / s_of_sound * OSCILLATOR_MHZ;
+  s[S].y = -(json_sensor_dia/ 2.0d + json_south_y) / s_of_sound * OSCILLATOR_MHZ;
 
   s[W].index = W;
-  s[W].x = (json_sensor_dia / 2.0d  + json_west_x) / s_of_sound * OSCILLATOR_MHZ;
+  s[W].x = -(json_sensor_dia / 2.0d  + json_west_x) / s_of_sound * OSCILLATOR_MHZ;
   s[W].y = json_west_y / s_of_sound * OSCILLATOR_MHZ;
   
  /* 
