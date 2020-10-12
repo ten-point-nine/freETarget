@@ -217,7 +217,7 @@ namespace freETarget {
             string indata = sp.ReadExisting();
 
             //first incoming text from target after port open is "freETarget VX.x" - use this to confirm connection
-            if (indata.Contains("freETarget")) {
+            if (indata.Contains("freETarget") && currentStatus == Status.CONECTING) {
                 var d = new SafeCallDelegate2(connectDone); //confirm connect
                 this.Invoke(d, new object[] { indata.Trim() });
             }
@@ -307,6 +307,7 @@ namespace freETarget {
          * received connection text from target. connection established
          */
         private void connectDone(String target) {
+
             timer.Enabled = true;
 
 
@@ -326,7 +327,7 @@ namespace freETarget {
             Thread.Sleep(100);
             serialPort.Write("{\"CALIBRE_x10\":" + Properties.Settings.Default.Calibre.ToString() + "}");
             Console.WriteLine("{\"CALIBRE_x10\":" + Properties.Settings.Default.Calibre.ToString() + "}");
-            
+
             Thread.Sleep(100);
             serialPort.Write("{\"NORTH_X\":" + Properties.Settings.Default.SensorNorthX.ToString() + "}");
             Console.WriteLine("{\"NORTH_X\":" + Properties.Settings.Default.SensorNorthX.ToString() + "}");
@@ -383,10 +384,11 @@ namespace freETarget {
             tcSessionType.Enabled = true;
             tcSessionType.Refresh();
 
-            SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED); //disable screensave while connected
+            SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED); //disable screensaver while connected
 
             initNewSession();
             targetRefresh();
+            
         }
 
         //output messages
@@ -405,19 +407,6 @@ namespace freETarget {
                 }
             }
         }
-
-
-/*        private void writeShotToDebug(string json) {
-            if (txtOutput.InvokeRequired) {
-                var d = new SafeCallDelegate2(writeShotToDebug);
-                txtOutput.Invoke(d, new object[] { json});
-                return;
-            } else {
-
-                //write to console window (raw input string)
-                txtOutput.AppendText(json);
-            }
-        }*/
 
 
         //write shot data
@@ -823,6 +812,8 @@ namespace freETarget {
                 MessageBox.Show("Database check failed. Please check your installation. " + Environment.NewLine + Environment.NewLine + testDB + Environment.NewLine + Environment.NewLine + "The application will now exit!" , "Database problem", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Environment.Exit(0);
             }
+
+            trkZoom.Focus();
         }
 
         private void initNewSession() {
@@ -1532,6 +1523,23 @@ namespace freETarget {
         private void btnArduino_Click(object sender, EventArgs e) {
             frmArduino frmArd = frmArduino.getInstance(this);
             frmArd.Show();
+        }
+
+        private void mouseWheel(object sender, MouseEventArgs e) {
+            ((HandledMouseEventArgs)e).Handled = true;//disable default mouse wheel
+            if (e.Delta > 0) {
+                if (trkZoom.Value < trkZoom.Maximum) {
+                    trkZoom.Value++;
+                }
+            } else {
+                if (trkZoom.Value > trkZoom.Minimum) {
+                    trkZoom.Value--;
+                }
+            }
+        }
+
+        private void imgTarget_Click(object sender, EventArgs e) {
+            trkZoom.Focus();
         }
     }
 

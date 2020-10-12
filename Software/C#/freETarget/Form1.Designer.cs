@@ -152,7 +152,7 @@ namespace freETarget
             this.statusVersion});
             this.statusStrip1.Location = new System.Drawing.Point(0, 540);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1142, 24);
+            this.statusStrip1.Size = new System.Drawing.Size(1139, 24);
             this.statusStrip1.SizingGrip = false;
             this.statusStrip1.TabIndex = 1;
             this.statusStrip1.Text = "statusStrip";
@@ -166,7 +166,7 @@ namespace freETarget
             // toolStripStatusLabel1
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(1047, 19);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(1044, 19);
             this.toolStripStatusLabel1.Spring = true;
             // 
             // statusVersion
@@ -184,7 +184,7 @@ namespace freETarget
             this.txtOutput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtOutput.BackColor = System.Drawing.SystemColors.Window;
-            this.txtOutput.Location = new System.Drawing.Point(390, 37);
+            this.txtOutput.Location = new System.Drawing.Point(387, 37);
             this.txtOutput.Multiline = true;
             this.txtOutput.Name = "txtOutput";
             this.txtOutput.ReadOnly = true;
@@ -204,6 +204,7 @@ namespace freETarget
             this.imgTarget.TabIndex = 4;
             this.imgTarget.TabStop = false;
             this.imgTarget.WaitOnLoad = true;
+            this.imgTarget.Click += new System.EventHandler(this.imgTarget_Click);
             // 
             // shotsList
             // 
@@ -319,7 +320,7 @@ namespace freETarget
             // 
             this.btnConfig.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnConfig.Image = ((System.Drawing.Image)(resources.GetObject("btnConfig.Image")));
-            this.btnConfig.Location = new System.Drawing.Point(1108, 4);
+            this.btnConfig.Location = new System.Drawing.Point(1105, 4);
             this.btnConfig.Name = "btnConfig";
             this.btnConfig.Size = new System.Drawing.Size(27, 27);
             this.btnConfig.TabIndex = 11;
@@ -337,6 +338,7 @@ namespace freETarget
             this.trkZoom.Size = new System.Drawing.Size(104, 45);
             this.trkZoom.TabIndex = 15;
             this.trkZoom.ValueChanged += new System.EventHandler(this.trkZoom_ValueChanged);
+            this.trkZoom.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.mouseWheel);
             // 
             // label3
             // 
@@ -493,7 +495,7 @@ namespace freETarget
             this.btnCalibration.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCalibration.Enabled = false;
             this.btnCalibration.Image = ((System.Drawing.Image)(resources.GetObject("btnCalibration.Image")));
-            this.btnCalibration.Location = new System.Drawing.Point(733, 3);
+            this.btnCalibration.Location = new System.Drawing.Point(899, 4);
             this.btnCalibration.Name = "btnCalibration";
             this.btnCalibration.Size = new System.Drawing.Size(27, 27);
             this.btnCalibration.TabIndex = 30;
@@ -507,7 +509,7 @@ namespace freETarget
             this.btnArduino.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnArduino.Enabled = false;
             this.btnArduino.Image = ((System.Drawing.Image)(resources.GetObject("btnArduino.Image")));
-            this.btnArduino.Location = new System.Drawing.Point(1075, 4);
+            this.btnArduino.Location = new System.Drawing.Point(1072, 4);
             this.btnArduino.Name = "btnArduino";
             this.btnArduino.Size = new System.Drawing.Size(27, 27);
             this.btnArduino.TabIndex = 38;
@@ -519,7 +521,7 @@ namespace freETarget
             // 
             this.imgSessionName.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.imgSessionName.BackColor = System.Drawing.Color.Black;
-            this.imgSessionName.Location = new System.Drawing.Point(719, 37);
+            this.imgSessionName.Location = new System.Drawing.Point(716, 37);
             this.imgSessionName.Name = "imgSessionName";
             this.imgSessionName.Size = new System.Drawing.Size(395, 19);
             this.imgSessionName.TabIndex = 1;
@@ -555,7 +557,7 @@ namespace freETarget
             this.Column9,
             this.Column10,
             this.ColumnTotal});
-            this.gridTargets.Location = new System.Drawing.Point(719, 132);
+            this.gridTargets.Location = new System.Drawing.Point(716, 132);
             this.gridTargets.MultiSelect = false;
             this.gridTargets.Name = "gridTargets";
             this.gridTargets.ReadOnly = true;
@@ -728,7 +730,7 @@ namespace freETarget
             this.tcSessionType.Controls.Add(this.tabRifleFinal);
             this.tcSessionType.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
             this.tcSessionType.Enabled = false;
-            this.tcSessionType.Location = new System.Drawing.Point(1120, 40);
+            this.tcSessionType.Location = new System.Drawing.Point(1117, 40);
             this.tcSessionType.Multiline = true;
             this.tcSessionType.Name = "tcSessionType";
             this.tcSessionType.SelectedIndex = 0;
@@ -798,7 +800,7 @@ namespace freETarget
             this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panel1.Controls.Add(this.chartBreakdown);
-            this.panel1.Location = new System.Drawing.Point(719, 383);
+            this.panel1.Location = new System.Drawing.Point(716, 383);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(395, 148);
             this.panel1.TabIndex = 33;
@@ -822,7 +824,7 @@ namespace freETarget
             this.imgLogo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.imgLogo.BackColor = System.Drawing.Color.Transparent;
             this.imgLogo.Image = ((System.Drawing.Image)(resources.GetObject("imgLogo.Image")));
-            this.imgLogo.Location = new System.Drawing.Point(935, 6);
+            this.imgLogo.Location = new System.Drawing.Point(932, 6);
             this.imgLogo.Name = "imgLogo";
             this.imgLogo.Size = new System.Drawing.Size(129, 24);
             this.imgLogo.TabIndex = 37;
@@ -840,7 +842,7 @@ namespace freETarget
             this.digitalClock.ElementPadding = new System.Windows.Forms.Padding(4);
             this.digitalClock.ElementWidth = 10;
             this.digitalClock.ItalicFactor = 0F;
-            this.digitalClock.Location = new System.Drawing.Point(719, 56);
+            this.digitalClock.Location = new System.Drawing.Point(716, 56);
             this.digitalClock.Name = "digitalClock";
             this.digitalClock.Size = new System.Drawing.Size(395, 76);
             this.digitalClock.TabIndex = 35;
@@ -851,7 +853,7 @@ namespace freETarget
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1142, 564);
+            this.ClientSize = new System.Drawing.Size(1139, 564);
             this.Controls.Add(this.btnArduino);
             this.Controls.Add(this.imgLogo);
             this.Controls.Add(this.btnJournal);
