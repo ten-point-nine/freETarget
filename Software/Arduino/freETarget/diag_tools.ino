@@ -47,7 +47,7 @@ void self_test(uint16_t test)
  */
   tick++;
   volts = TO_VOLTS(analogRead(V_REFERENCE));
-  
+
 /*
  * Figure out what test to run
  */
@@ -140,11 +140,9 @@ void self_test(uint16_t test)
       
     case 7: 
       unit_test( SPIRAL );                    // Generate a spiral
-      Serial.print("\n\rspiral\n\r");
       break;
 
      case 8: 
-     Serial.print("\n\rgrid\n\r");
       unit_test( GRID );                     // Generate a grid
       break;   
   }
@@ -316,7 +314,7 @@ void unit_test( unsigned int mode )
   */
   for ( i = 0; i != TEST_SAMPLES; i++)
   {
-    sample_calculations(i, mode);
+    sample_calculations(mode, i);
     location = compute_hit(0x0F, i, &history, true);
     send_score(&history, i);
   }
@@ -378,9 +376,9 @@ static void sample_calculations
   {
     step_size = (0.99d * (json_sensor_dia / sqrt(2.0d) / (double)GRID_SIZE));
 
-    x = step_size * (sample % GRID_SIZE);
-    y = step_size * (sample / GRID_SIZE);
-Serial.print(x);
+    x = -(0.99d * (json_sensor_dia / 2.0d / sqrt(2.0d))) + (step_size / 2) + step_size * (sample % GRID_SIZE);
+    y =  (0.99d * (json_sensor_dia / 2.0d / sqrt(2.0d))) - (step_size / 2) - step_size * (sample / GRID_SIZE);
+
     if ( sqrt(sq(x) + sq(y)) >= (0.99d * (json_sensor_dia / 2.0d / sqrt(2.0d))))
     {      
       angle = atan2(y,x);
