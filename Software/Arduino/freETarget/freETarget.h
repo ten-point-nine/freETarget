@@ -11,7 +11,7 @@
 #ifndef _FREETARGET_H
 #define _FREETARGET_H
 
-#define SOFTWARE_VERSION "\"2.2.3 October 8, 2020\""
+#define SOFTWARE_VERSION "\"2.2.4 October 13, 2020\""
 
 /*
  * Compilation Flags
@@ -52,4 +52,3 @@ extern double     s_of_sound;
 
 
 #endif
-

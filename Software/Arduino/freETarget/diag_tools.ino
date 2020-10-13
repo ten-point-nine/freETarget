@@ -16,10 +16,14 @@ const char  nesw[] = {"NESW"};
 
 #define TICK(x) (((x) / 0.33) * OSCILLATOR_MHZ)   // Distance in clock ticks
 #define RX(Z,X,Y) (16000 - (sqrt(sq(TICK(x)-s[(Z)].x) + sq(TICK(y)-s[(Z)].y))))
-#define TEST_SAMPLES 500
+#define GRID_SIZE     21                          // Want an odd numbered grid pattern
+#define TEST_SAMPLES (GRID_SIZE * GRID_SIZE )     // Total number of samples
+
+#define SPIRAL  0                                 // Pattern to be generated
+#define GRID    1
 
 static void show_analog_on_PC(void);
-static void sample_calculations(unsigned int step);
+static void sample_calculations(unsigned int step, unsigned int mode);
 
 /*----------------------------------------------------------------
  *
@@ -61,6 +65,7 @@ void self_test(uint16_t test)
       Serial.print("\n\r5 - Oscilloscope (PC)");
       Serial.print("\n\r6 - Advance paper backer");
       Serial.print("\n\r7 - Spiral Unit Test");
+      Serial.print("\n\r8 - Grid calibration pattern");
       Serial.print("\n\r");
       break;
 
@@ -134,8 +139,14 @@ void self_test(uint16_t test)
       break;
       
     case 7: 
-      unit_test();                    // Generate a spiral
+      unit_test( SPIRAL );                    // Generate a spiral
+      Serial.print("\n\rspiral\n\r");
       break;
+
+     case 8: 
+     Serial.print("\n\rgrid\n\r");
+      unit_test( GRID );                     // Generate a grid
+      break;   
   }
 
  /* 
@@ -295,7 +306,7 @@ static void show_analog_on_PC(void)
 /*
  * Prompt the user for a test number and execute the test.
  */
-void unit_test(void)
+void unit_test( unsigned int mode )
 {
   unsigned int i;
   unsigned int location;
@@ -305,7 +316,7 @@ void unit_test(void)
   */
   for ( i = 0; i != TEST_SAMPLES; i++)
   {
-    sample_calculations(i);
+    sample_calculations(i, mode);
     location = compute_hit(0x0F, i, &history, true);
     send_score(&history, i);
   }
@@ -316,28 +327,74 @@ void unit_test(void)
   return;
 }
 
+/*----------------------------------------------------------------
+ *
+ * void  sample_calculations()
+ *
+ * Work out the clock values to generate a particular pattern
+ *
+ *----------------------------------------------------------------
+ * 
+ * This function is used to generate a test pattern that the
+ * PC or Arduino software is compared to.
+ *   
+ *--------------------------------------------------------------*/
 /*
  * Fill up counters with sample values.  Return false if the sample does not exist
  */
-static void sample_calculations (unsigned int sample)
+static void sample_calculations
+  (
+  unsigned int mode,            // What test mode are we generating
+  unsigned int sample           // Current sample number
+  )
 {
-  double angle;
+  double x, y;                  // Resulting target position
+  double angle;                 // Polar coordinates
   double radius;
-  double x, y;
 
+  double step_size;             // Rectangular coordinates
+  unsigned int points;          // Number of points on each side
+  
 /*
  * Generate a spiral pattern
  */
-  angle = (PI_ON_4) / 5.0 * ((double)sample);
-  radius = 0.99d * (json_sensor_dia/2.0) / sqrt(2.0d) * (double)sample / TEST_SAMPLES;
+  if ( mode == SPIRAL )
+  {
+    angle = (PI_ON_4) / 5.0 * ((double)sample);
+    radius = 0.99d * (json_sensor_dia/2.0) / sqrt(2.0d) * (double)sample / TEST_SAMPLES;
 
-  x = radius * cos(angle);
-  y = radius * sin(angle);
-  timer_value[N] = RX(N, x, y);
-  timer_value[E] = RX(E, x, y);
-  timer_value[S] = RX(S, x, y);
-  timer_value[W] = RX(W, x, y);
-  
+    x = radius * cos(angle);
+    y = radius * sin(angle);
+    timer_value[N] = RX(N, x, y);
+    timer_value[E] = RX(E, x, y);
+    timer_value[S] = RX(S, x, y);
+    timer_value[W] = RX(W, x, y);
+  }
+
+/* 
+ *  Generate a rectangular grid with variable spacing
+ */
+  if ( mode == GRID )
+  {
+    step_size = (0.99d * (json_sensor_dia / sqrt(2.0d) / (double)GRID_SIZE));
+
+    x = step_size * (sample % GRID_SIZE);
+    y = step_size * (sample / GRID_SIZE);
+Serial.print(x);
+    if ( sqrt(sq(x) + sq(y)) >= (0.99d * (json_sensor_dia / 2.0d / sqrt(2.0d))))
+    {      
+      angle = atan2(y,x);
+      radius = 0.99d * (json_sensor_dia/2.0) / sqrt(2.0d);
+      x = radius * cos(angle);
+      y = radius * sin(angle);
+    }
+    
+    timer_value[N] = RX(N, x, y);
+    timer_value[E] = RX(E, x, y);
+    timer_value[S] = RX(S, x, y);
+    timer_value[W] = RX(W, x, y);
+  }
+
 /*
  * All done, return
  */
