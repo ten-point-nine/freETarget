@@ -309,17 +309,20 @@ void unit_test(unsigned int mode)
 {
   unsigned int i;
   unsigned int location;
-
+  unsigned int shot_number;
+  
  /*
   * Auto Generate spiral
   */
+  shot_number = 1;
   for ( i = 0; i != TEST_SAMPLES; i++)
   {
     if ( sample_calculations(mode, i) )
     {
     location = compute_hit(0x0F, i, &history, true);
-    send_score(&history, i);
-    delay(250);
+    send_score(&history, shot_number);
+    shot_number++;
+    delay(500);
     }
   }
 
