@@ -314,6 +314,7 @@ void unit_test(unsigned int mode)
  /*
   * Auto Generate spiral
   */
+  init_sensors();
   shot_number = 1;
   for ( i = 0; i != TEST_SAMPLES; i++)
   {
@@ -387,7 +388,7 @@ static bool sample_calculations
 
     ix = -GRID_SIDE/2 + (sample % GRID_SIDE);      // How many steps
     iy = GRID_SIDE/2 - (sample / GRID_SIDE);
-  
+
     x = (double)ix * grid_step;
     y = (double)iy * grid_step;
 
