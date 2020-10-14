@@ -12,30 +12,30 @@
 
 static char input_JSON[128];
 
-int     json_dip_switch;               // DIP switch overwritten by JSON message
-double  json_sensor_dia = DIAMETER;    // Sensor daiamter overwitten by JSON message
-int     json_paper_time = 0;           // Time paper motor is applied
-int     json_echo;                     // Test String 
-int     json_test;                     // Self test to be performed
-int     json_calibre_x10;              // Offset applied to pellet diameter (calibre)
-int     json_sensor_angle = 0;         // Angle sensors have been shifted by (Signed number)    
-              
-int     json_north_x;                  // X position of North sensor
-int     json_north_y;                  // Y position of North sensor
-int     json_east_x;                   // X position of East sensor
-int     json_east_y;                   // Y position of East sensor
-int     json_south_x;                  // X position of South sensor
-int     json_south_y;                  // Y position of South sensor
-int     json_west_x;                   // X position of West sensor
-int     json_west_y;                   // Y position of West sensor
-         
+int     json_dip_switch;            // DIP switch overwritten by JSON message
+double  json_sensor_dia = DIAMETER; // Sensor daiamter overwitten by JSON message
+int     json_sensor_angle = 0;      // Angle sensors are rotated through
+int     json_paper_time = 0;        // Time paper motor is applied
+int     json_echo;                  // Test String 
+double  json_d_echo;                // Test String
+int     json_test;                  // Self test to be performed
+int     json_calibre_x10;           // Pellet Calibre
+int     json_north_x;               // North Adjustment
+int     json_north_y;
+int     json_east_x;                // East Adjustment
+int     json_east_y;
+int     json_south_x;               // South Adjustment
+int     json_south_y;
+int     json_west_x;                // WestAdjustment
+int     json_west_y;
+
 #define IS_VOID    0
 #define IS_INT16   1
 #define IS_FLOAT   2
 #define IS_DOUBLE  3
 #define JSON_DEBUG false                    // TRUE to echo DEBUG messages
 
- void show_echo(void);                // Display the current settings
+       void show_echo(void);                // Display the current settings
 static void show_test(void);                // Execute the self test once
 static void show_test0(void);               // Help Menu
 
@@ -57,7 +57,7 @@ static json_message JSON[] = {
   {"\"CALIBREx10\":",  &json_calibre_x10,                 0,                IS_INT16,  0,             NONVOL_CALIBRE_X10 },    //  1
   {"\"DIP\":",         &json_dip_switch,                  0,                IS_INT16,  0,             NONVOL_DIP_SWITCH  },    //  2
   {"\"ECHO\":",        &json_echo,                        0,                IS_INT16,  &show_echo,                    0  },    //  3
-  {"\"INIT\":",        0,                                 0,                IS_INT16,  &reinit_nonvol,                0  },    //  4  
+  {"\"INIT\":",        0,                                 0,                IS_VOID,   &reinit_nonvol,                0  },    //  4  
   {"\"PAPER\":",       &json_paper_time,                  0,                IS_INT16,  0,             NONVOL_PAPER_TIME  },    //  5
   {"\"SENSOR\":",      0,                                 &json_sensor_dia, IS_FLOAT,  &gen_position, NONVOL_SENSOR_DIA  },    //  6
   {"\"TEST\":",        &json_test,                        0,                IS_INT16,  &show_test,    NONVOL_TEST_MODE   },    //  7
@@ -327,4 +327,3 @@ static void show_test(void)
   self_test(json_test);
   return;
  }
-

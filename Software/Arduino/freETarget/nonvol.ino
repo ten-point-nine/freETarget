@@ -34,6 +34,33 @@
  
 /*----------------------------------------------------------------
  * 
+ * void init_nonvol()
+ * 
+ * Initialize the NONVOL back to factory settings
+ * 
+ *---------------------------------------------------------------
+ *
+ * The variable NONVOL_INIT is corrupted and the NONVOL read back
+ * in and initialized.
+ * 
+ *------------------------------------------------------------*/
+void init_nonvol(void)
+{
+  unsigned int nonvol_init;
+
+  nonvol_init = 0;                        // Corrupt the init location
+  EEPROM.put(NONVOL_INIT, nonvol_init);
+  read_nonvol();                          // Force in new values
+  show_echo();                            // Display these settings
+  
+/*
+ * All done, return
+ */
+  return;
+}
+
+/*----------------------------------------------------------------
+ * 
  * void read_nonvol()
  * 
  * Read nonvol and set up variables

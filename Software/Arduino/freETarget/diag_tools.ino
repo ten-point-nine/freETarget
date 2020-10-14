@@ -16,14 +16,15 @@ const char  nesw[] = {"NESW"};
 
 #define TICK(x) (((x) / 0.33) * OSCILLATOR_MHZ)   // Distance in clock ticks
 #define RX(Z,X,Y) (16000 - (sqrt(sq(TICK(x)-s[(Z)].x) + sq(TICK(y)-s[(Z)].y))))
-#define GRID_SIZE     21                          // Want an odd numbered grid pattern
-#define TEST_SAMPLES (GRID_SIZE * GRID_SIZE )     // Total number of samples
+#define GRID_SIDE 21
+#define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
 
-#define SPIRAL  0                                 // Pattern to be generated
-#define GRID    1
+#define SPIRAL  0           // Spiral test pattern
+#define GRID    1           // Grid test pattern
 
 static void show_analog_on_PC(void);
-static void sample_calculations(unsigned int step, unsigned int mode);
+static void unit_test(unsigned int mode);
+static bool sample_calculations(unsigned int mode, unsigned int sample);
 
 /*----------------------------------------------------------------
  *
@@ -139,14 +140,12 @@ void self_test(uint16_t test)
       break;
       
     case 7: 
-      unit_test( SPIRAL );                    // Generate a spiral
-      Serial.print("\n\rspiral\n\r");
+      unit_test( SPIRAL );                    // Generate a spirall
       break;
 
-     case 8: 
-     Serial.print("\n\rgrid\n\r");
-      unit_test( GRID );                     // Generate a grid
-      break;   
+    case 8:
+      unit_test(GRID);
+      break;  
   }
 
  /* 
@@ -306,7 +305,7 @@ static void show_analog_on_PC(void)
 /*
  * Prompt the user for a test number and execute the test.
  */
-void unit_test( unsigned int mode )
+void unit_test(unsigned int mode)
 {
   unsigned int i;
   unsigned int location;
@@ -316,9 +315,12 @@ void unit_test( unsigned int mode )
   */
   for ( i = 0; i != TEST_SAMPLES; i++)
   {
-    sample_calculations(i, mode);
+    if ( sample_calculations(mode, i) )
+    {
     location = compute_hit(0x0F, i, &history, true);
     send_score(&history, i);
+    delay(250);
+    }
   }
 
 /*
@@ -342,7 +344,7 @@ void unit_test( unsigned int mode )
 /*
  * Fill up counters with sample values.  Return false if the sample does not exist
  */
-static void sample_calculations
+static bool sample_calculations
   (
   unsigned int mode,            // What test mode are we generating
   unsigned int sample           // Current sample number
@@ -351,15 +353,17 @@ static void sample_calculations
   double x, y;                  // Resulting target position
   double angle;                 // Polar coordinates
   double radius;
-
+  int    ix, iy;
   double step_size;             // Rectangular coordinates
-  unsigned int points;          // Number of points on each side
+  double grid_step;
   
+  switch (mode)
+  {
 /*
  * Generate a spiral pattern
  */
-  if ( mode == SPIRAL )
-  {
+  default:
+  case SPIRAL:
     angle = (PI_ON_4) / 5.0 * ((double)sample);
     radius = 0.99d * (json_sensor_dia/2.0) / sqrt(2.0d) * (double)sample / TEST_SAMPLES;
 
@@ -369,34 +373,35 @@ static void sample_calculations
     timer_value[E] = RX(E, x, y);
     timer_value[S] = RX(S, x, y);
     timer_value[W] = RX(W, x, y);
-  }
+    break;
 
-/* 
- *  Generate a rectangular grid with variable spacing
+ /*
+ * Generate a grid
  */
-  if ( mode == GRID )
-  {
-    step_size = (0.99d * (json_sensor_dia / sqrt(2.0d) / (double)GRID_SIZE));
+  case GRID:
+    radius = 0.99d * (json_sensor_dia / 2.0d / sqrt(2.0d));
+    grid_step = radius * 2.0d / (double)GRID_SIDE;
 
-    x = step_size * (sample % GRID_SIZE);
-    y = step_size * (sample / GRID_SIZE);
-Serial.print(x);
-    if ( sqrt(sq(x) + sq(y)) >= (0.99d * (json_sensor_dia / 2.0d / sqrt(2.0d))))
-    {      
-      angle = atan2(y,x);
-      radius = 0.99d * (json_sensor_dia/2.0) / sqrt(2.0d);
-      x = radius * cos(angle);
-      y = radius * sin(angle);
+    ix = -GRID_SIDE/2 + (sample % GRID_SIDE);      // How many steps
+    iy = GRID_SIDE/2 - (sample / GRID_SIDE);
+  
+    x = (double)ix * grid_step;
+    y = (double)iy * grid_step;
+
+    if ( sqrt(sq(x) + sq(y)) > radius )
+    {
+      return false;
     }
-    
+
     timer_value[N] = RX(N, x, y);
     timer_value[E] = RX(E, x, y);
     timer_value[S] = RX(S, x, y);
     timer_value[W] = RX(W, x, y);
+    break;   
   }
-
+  
 /*
  * All done, return
  */
-  return;
+  return true;
 }

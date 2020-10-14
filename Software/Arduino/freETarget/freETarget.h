@@ -11,7 +11,8 @@
 #ifndef _FREETARGET_H
 #define _FREETARGET_H
 
-#define SOFTWARE_VERSION "\"2.2.4 October 13, 2020\""
+#define SOFTWARE_VERSION "\"2.2.4 October 14, 2020\""
+
 
 /*
  * Compilation Flags
