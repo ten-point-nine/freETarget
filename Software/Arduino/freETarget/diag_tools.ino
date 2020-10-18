@@ -318,7 +318,7 @@ static void show_analog_on_PC(void)
 /*
  * Prompt the user for a test number and execute the test.
  */
-void unit_test(unsigned int mode)
+static void unit_test(unsigned int mode)
 {
   unsigned int i;
   unsigned int location;
