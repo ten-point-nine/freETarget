@@ -53,7 +53,6 @@ unsigned int read_reference(void)
  *  Read the analog value from the resistor divider, keep only
  *  the top 4 bits, and return the version number.
  *--------------------------------------------------------------*/
-//                               0  1  2  3  4  5  6  7  8  9   A   B   C   D   E   F
 static unsigned int version[] = {2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
   
 unsigned int revision(void)
@@ -145,9 +144,11 @@ void cal_analog(void)
 double temperature_C(void)
 {
   double return_value;
-  unsigned int raw;
-  unsigned int i;
+  int raw;                // Allow for negative temperatures
+  int i;
 
+  raw = 0xffff;
+  
 /*
  *  Point to the temperature register
  */

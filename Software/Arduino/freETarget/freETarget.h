@@ -11,8 +11,7 @@
 #ifndef _FREETARGET_H
 #define _FREETARGET_H
 
-#define SOFTWARE_VERSION "\"2.2.6 October 16, 2020\""
-
+#define SOFTWARE_VERSION "\"2.2.3 October 8, 2020\""
 
 /*
  * Compilation Flags
@@ -32,8 +31,7 @@
  */
 //                      From DIP    From Software
 #define SELF_TEST       (1 << 0) + (0 << (4 + 0))
-#define VERBOSE_TRACE   (1 << 2) + (0 << (4 + 2))      
-#define SPIRAL          (1 << 3) + (0 << (4 + 3))
+#define VERBOSE_TRACE   (1 << 1) + (1 << (4 + 1))      
 
 #define N 0
 #define E 1

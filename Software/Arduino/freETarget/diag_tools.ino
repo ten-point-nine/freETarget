@@ -12,19 +12,13 @@
 #include "gpio.h"
 
 const char* which_one[4] = {"N:", "   E:", "   S: ", "   W: "};
-const char  nesw[] = {"NESW"};
 
 #define TICK(x) (((x) / 0.33) * OSCILLATOR_MHZ)   // Distance in clock ticks
 #define RX(Z,X,Y) (16000 - (sqrt(sq(TICK(x)-s[(Z)].x) + sq(TICK(y)-s[(Z)].y))))
-#define GRID_SIDE 21
-#define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
-
-#define SPIRAL  0           // Spiral test pattern
-#define GRID    1           // Grid test pattern
+#define TEST_SAMPLES 500
 
 static void show_analog_on_PC(void);
-static void unit_test(unsigned int mode);
-static bool sample_calculations(unsigned int mode, unsigned int sample);
+static void sample_calculations(unsigned int step);
 
 /*----------------------------------------------------------------
  *
@@ -66,7 +60,6 @@ void self_test(uint16_t test)
       Serial.print("\n\r5 - Oscilloscope (PC)");
       Serial.print("\n\r6 - Advance paper backer");
       Serial.print("\n\r7 - Spiral Unit Test");
-      Serial.print("\n\r8 - Grid calibration pattern");
       Serial.print("\n\r");
       break;
 
@@ -120,11 +113,16 @@ void self_test(uint16_t test)
       break;
 
     case 4:                             // Show the analog input
-      show_analog();                  
+      Serial.print("\n\rOscilloscope.  Press <ENTER> 5 times to exit");
+      while ( Serial.available() <= 5 ) // Need 5 characters on the serial port to end
+        show_analog();                  //
       break;
       
     case 5:
-      show_analog_on_PC();
+      while ( Serial.available() <= 5 )
+      {
+        show_analog_on_PC();
+      }
       break;
 
     case 6: 
@@ -135,12 +133,8 @@ void self_test(uint16_t test)
       break;
       
     case 7: 
-      unit_test( SPIRAL );                    // Generate a spirall
+      unit_test();                    // Generate a spiral
       break;
-
-    case 8:
-      unit_test(GRID);
-      break;  
   }
 
  /* 
@@ -167,72 +161,54 @@ void self_test(uint16_t test)
  *  
  *--------------------------------------------------------------*/
 unsigned int channel[] = {NORTH_ANA, EAST_ANA, SOUTH_ANA, WEST_ANA};
-unsigned int cycle = 0;
 
 unsigned int max_input[4];
 #define FULL_SCALE   128              // Max full scale is 128 (128 = 5V)
-#define SCALE        128/128          // Gain applied to analog input
+#define SCALE        128/1024         // Gain applied to analog input
 #define DECAY_RATE   16               // Decay rate for peak detection
-#define SAMPLE_TIME  (500000U)        // 500 x 1000 us
 
 void show_analog(void)
 {
-  unsigned int i, sample;
+  unsigned int i, j, k;
   char o_scope[FULL_SCALE];
-  unsigned long now;
-  
-  digitalWrite(LED_S, ~(1 << cycle) & 1);
-  digitalWrite(LED_X, ~(1 << cycle) & 2);
-  digitalWrite(LED_Y, ~(1 << cycle) & 4);
-  cycle = (cycle+1) % 4;
 
+  Serial.print("\n\r{\"OSCOPE\":\"");
  /*
   *  Clear the oscope line
   */
-  for ( i=0; i != FULL_SCALE; i++)              // Clear the oscope
+  for ( k=0; k != FULL_SCALE; k++)              // Clear the oscope
   {
-    o_scope[i] = ' ';
+    o_scope[k] = ' ';
   }
-  o_scope[FULL_SCALE-1] = 0;                    // Null terminate
+
 /*
  * Draw in the trip point
  */
   i = analogRead(V_REFERENCE) * SCALE;
   o_scope[i] = '|';
-
-/*
- * Sample the input for 250ms 
- */
-  max_input[N] = 0;
-  max_input[E] = 0;                             // Forget the maxium
-  max_input[S] = 0;
-  max_input[W] = 0;     
-  now = micros();
-  while ((micros() - now) <= SAMPLE_TIME ) // Enough time already
-    { 
-    for (i=N; i <= W; i++)
-      {
-      sample = analogRead(channel[i]) * SCALE;     // Read and scale the input
-      if ( sample >= FULL_SCALE -1 )
-      {
-        sample = FULL_SCALE-2;
-      }
-      if ( sample > max_input[i] )                 // Remember the max
-        {
-        max_input[i] = sample;
-        }
-      }
-    }
-
+  
  /*
   * Put the values into the line
   */
-   for (i=N; i <= W; i++)
+   for (i=N; i != W + 1; i++)
    {
+    if ( max_input[i] != 0 )                      // Capture the maxumum and decay it linearly
+    {
+      max_input[i]--;
+    }
+    
+    j = analogRead(channel[i]) * SCALE;           // Read and scale the input
+    
+    if ( j > max_input[i] )                       // Remember the max
+    {
+      max_input[i] = j;
+    }
+
     o_scope[max_input[i]] = nesw[i];
-   }
+
+  }
   
-  Serial.print("{\"OSCOPE\": "); Serial.print(o_scope);  Serial.print("\"}\n\r");     // Display the trace as JSON
+  Serial.print(o_scope);  Serial.print("\"}");     // Display the trace as JSON
 
  /*
   * All done.
@@ -318,26 +294,19 @@ static void show_analog_on_PC(void)
 /*
  * Prompt the user for a test number and execute the test.
  */
-void unit_test(unsigned int mode)
+void unit_test(void)
 {
   unsigned int i;
   unsigned int location;
-  unsigned int shot_number;
-  
+
  /*
   * Auto Generate spiral
   */
-  init_sensors();
-  shot_number = 1;
   for ( i = 0; i != TEST_SAMPLES; i++)
   {
-    if ( sample_calculations(mode, i) )
-    {
+    sample_calculations(i);
     location = compute_hit(0x0F, i, &history, true);
-    send_score(&history, shot_number);
-    shot_number++;
-    delay(500);
-    }
+    send_score(&history, i);
   }
 
 /*
@@ -346,79 +315,30 @@ void unit_test(unsigned int mode)
   return;
 }
 
-/*----------------------------------------------------------------
- *
- * void  sample_calculations()
- *
- * Work out the clock values to generate a particular pattern
- *
- *----------------------------------------------------------------
- * 
- * This function is used to generate a test pattern that the
- * PC or Arduino software is compared to.
- *   
- *--------------------------------------------------------------*/
 /*
  * Fill up counters with sample values.  Return false if the sample does not exist
  */
-static bool sample_calculations
-  (
-  unsigned int mode,            // What test mode are we generating
-  unsigned int sample           // Current sample number
-  )
+static void sample_calculations (unsigned int sample)
 {
-  double x, y;                  // Resulting target position
-  double angle;                 // Polar coordinates
+  double angle;
   double radius;
-  int    ix, iy;
-  double step_size;             // Rectangular coordinates
-  double grid_step;
-  
-  switch (mode)
-  {
+  double x, y;
+
 /*
  * Generate a spiral pattern
  */
-  default:
-  case SPIRAL:
-    angle = (PI_ON_4) / 5.0 * ((double)sample);
-    radius = 0.99d * (json_sensor_dia/2.0) / sqrt(2.0d) * (double)sample / TEST_SAMPLES;
+  angle = (PI_ON_4) / 5.0 * ((double)sample);
+  radius = 0.99d * (json_sensor_dia/2.0) / sqrt(2.0d) * (double)sample / TEST_SAMPLES;
 
-    x = radius * cos(angle);
-    y = radius * sin(angle);
-    timer_value[N] = RX(N, x, y);
-    timer_value[E] = RX(E, x, y);
-    timer_value[S] = RX(S, x, y);
-    timer_value[W] = RX(W, x, y);
-    break;
-
- /*
- * Generate a grid
- */
-  case GRID:
-    radius = 0.99d * (json_sensor_dia / 2.0d / sqrt(2.0d));
-    grid_step = radius * 2.0d / (double)GRID_SIDE;
-
-    ix = -GRID_SIDE/2 + (sample % GRID_SIDE);      // How many steps
-    iy = GRID_SIDE/2 - (sample / GRID_SIDE);
-
-    x = (double)ix * grid_step;
-    y = (double)iy * grid_step;
-
-    if ( sqrt(sq(x) + sq(y)) > radius )
-    {
-      return false;
-    }
-
-    timer_value[N] = RX(N, x, y);
-    timer_value[E] = RX(E, x, y);
-    timer_value[S] = RX(S, x, y);
-    timer_value[W] = RX(W, x, y);
-    break;   
-  }
+  x = radius * cos(angle);
+  y = radius * sin(angle);
+  timer_value[N] = RX(N, x, y);
+  timer_value[E] = RX(E, x, y);
+  timer_value[S] = RX(S, x, y);
+  timer_value[W] = RX(W, x, y);
   
 /*
  * All done, return
  */
-  return true;
+  return;
 }
