@@ -95,6 +95,22 @@ namespace freETarget
             cmbDefBack.SelectedItem = Properties.Settings.Default.scoreDefaultBackgroundColor.Name;
             cmbOldPen.SelectedItem = Properties.Settings.Default.scoreOldPenColor.Name;
             cmbOldBack.SelectedItem = Properties.Settings.Default.scoreOldBackgroundColor.Name;
+
+            txtSensorDiameter.Text = Properties.Settings.Default.SensorDiameter.ToString();
+
+            txtNorthX.Text = Properties.Settings.Default.SensorNorthX.ToString();
+            txtNorthY.Text = Properties.Settings.Default.SensorNorthY.ToString();
+            txtWestX.Text = Properties.Settings.Default.SensorWestX.ToString();
+            txtWestY.Text = Properties.Settings.Default.SensorWestY.ToString();
+            txtSouthX.Text = Properties.Settings.Default.SensorSouthX.ToString();
+            txtSouthY.Text = Properties.Settings.Default.SensorSouthY.ToString();
+            txtEastX.Text = Properties.Settings.Default.SensorEastX.ToString();
+            txtEastY.Text = Properties.Settings.Default.SensorEastY.ToString();
+
+            txtCalibre.Text = Properties.Settings.Default.Calibre.ToString();
+            txtAngle.Text = Properties.Settings.Default.Angle.ToString();
+            txtPaper.Text = Properties.Settings.Default.Paper.ToString();
+
         }
 
         private void cmbColor_DrawItem(object sender, DrawItemEventArgs e)
@@ -123,35 +139,11 @@ namespace freETarget
         }
 
         private void btnOK_Click(object sender, EventArgs e) {
-            try {
-                int.Parse(txtBaud.Text);
-                
-            }catch(Exception) {
-                MessageBox.Show("Baud rate is not a number","Validation error",MessageBoxButtons.OK,MessageBoxIcon.Exclamation);
-                return;
+
+            if (validateData()) {
+                DialogResult = DialogResult.OK;
+                this.Close();
             }
-
-            try {
-                int.Parse(txtDistance.Text);
-
-            } catch (Exception) {
-                MessageBox.Show("Distance is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return;
-            }
-
-            if(int.Parse(txtDistance.Text) > 10 || int.Parse(txtDistance.Text)< 3) {
-                MessageBox.Show("Target distance must be between 3 and 10 meters", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return;
-            }
-
-            if (!Directory.Exists(txtPDFlocation.Text)) {
-                MessageBox.Show("PDF save location must exist", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return;
-            }
-            
-
-            DialogResult = DialogResult.OK;
-            this.Close();
         }
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
@@ -160,6 +152,138 @@ namespace freETarget
 
         private void linkLabel1_LinkClicked_1(object sender, LinkLabelLinkClickedEventArgs e) {
             System.Diagnostics.Process.Start(linkLabel1.Text);
+        }
+
+        private bool validateData() {
+            //baud rate
+            if (!validNumber(txtBaud.Text)) {
+                MessageBox.Show("Baud rate is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+
+            //target distance
+            if (!validNumber(txtDistance.Text)) {
+                MessageBox.Show("Distance is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            } else {
+                if (int.Parse(txtDistance.Text) < 30) {
+                    MessageBox.Show("Minimum safe target distance is 3 meters, so a value of at least 30 must be entered", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    return false;
+                }
+            }
+
+            //pdf location
+            if (!Directory.Exists(txtPDFlocation.Text)) {
+                MessageBox.Show("PDF save location must exist", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+            //sensor diameter
+            if (!validDecimal(txtSensorDiameter.Text)) {
+                MessageBox.Show("Sensor diameter is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            } else {
+                if (decimal.Parse(txtSensorDiameter.Text) < 230) {
+                    MessageBox.Show("Sensor diameter is smaller than 230, the default value.", "Small diameter", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+
+            //northX
+            if (!validNumber(txtNorthX.Text)) {
+                MessageBox.Show("Offset for North X sensor is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+            //northY
+            if (!validNumber(txtNorthY.Text)) {
+                MessageBox.Show("Offset for North Y sensor is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+            //westX
+            if (!validNumber(txtWestX.Text)) {
+                MessageBox.Show("Offset for West X sensor is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+            //westY
+            if (!validNumber(txtWestY.Text)) {
+                MessageBox.Show("Offset for West Y sensor is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+            //southX
+            if (!validNumber(txtSouthX.Text)) {
+                MessageBox.Show("Offset for South X sensor is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+            //southY
+            if (!validNumber(txtSouthY.Text)) {
+                MessageBox.Show("Offset for South Y sensor is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+            //eastX
+            if (!validNumber(txtEastX.Text)) {
+                MessageBox.Show("Offset for East X sensor is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+            //easyY
+            if (!validNumber(txtEastY.Text)) {
+                MessageBox.Show("Offset for East Y sensor is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+            //calibre
+            if (!validNumber(txtCalibre.Text)) {
+                MessageBox.Show("Calibre is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            } else {
+                if (int.Parse(txtCalibre.Text) < 45) {
+                    MessageBox.Show("Calibre is cannot be smaller than 45 (4.5 mm x 10)", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    return false;
+                }
+            }
+
+            //paper
+            if (!validNumber(txtPaper.Text)) {
+                MessageBox.Show("Paper scroll time is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+            //angle
+            if (!validNumber(txtAngle.Text)) {
+                MessageBox.Show("Sensor angle is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            } else {
+                if (int.Parse(txtAngle.Text) < -45 || int.Parse(txtAngle.Text) > 45) {
+                    MessageBox.Show("Sensor angle must be between -45 to 45 degrees", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    return false;
+                }
+            }
+
+
+            return true;
+        }
+        private bool validNumber(String text) {
+            try {
+                int.Parse(text);
+                return true;
+
+            } catch (Exception) {
+                return false;
+            }
+        }
+
+        private bool validDecimal(String text) {
+            try {
+                decimal.Parse(text);
+                return true;
+
+            } catch (Exception) {
+                return false;
+            }
         }
     }
 }

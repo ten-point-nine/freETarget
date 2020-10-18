@@ -73,7 +73,7 @@ namespace freETarget {
                 btnCalibration.BackColor = Settings.Default.targetColor;
             }
 
-            if (Properties.Settings.Default.targetDistance != 10) {
+            if (Properties.Settings.Default.targetDistance != 100) {
                 btnConfig.BackColor = Properties.Settings.Default.targetColor;
             } else {
                 btnConfig.BackColor = this.BackColor;
@@ -81,7 +81,7 @@ namespace freETarget {
 
             toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
 
-            toolTip.SetToolTip(btnConfig, "Setting - Target distance: " + Properties.Settings.Default.targetDistance);
+            toolTip.SetToolTip(btnConfig, "Setting - Target distance percent: " + Properties.Settings.Default.targetDistance);
 
             initBreakdownChart();
 
@@ -92,7 +92,8 @@ namespace freETarget {
             digitalClock.ResizeSegments();
 
             initLog();
-
+            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            statusVersion.Text = "v" + assembly.GetName().Version.Major + "." + assembly.GetName().Version.Minor + "." + assembly.GetName().Version.Build;
         }
 
         private void initLog() {
@@ -216,7 +217,7 @@ namespace freETarget {
             string indata = sp.ReadExisting();
 
             //first incoming text from target after port open is "freETarget VX.x" - use this to confirm connection
-            if (indata.Contains("freETarget")) {
+            if (indata.Contains("freETarget") && currentStatus == Status.CONECTING) {
                 var d = new SafeCallDelegate2(connectDone); //confirm connect
                 this.Invoke(d, new object[] { indata.Trim() });
             }
@@ -306,12 +307,74 @@ namespace freETarget {
          * received connection text from target. connection established
          */
         private void connectDone(String target) {
+
             timer.Enabled = true;
+
+
+            //send sensor and hardware parameters to target
+            Thread.Sleep(1000);
+            serialPort.Write("{\"SENSOR\":" + Properties.Settings.Default.SensorDiameter.ToString() + "}");
+            Console.WriteLine("{\"SENSOR\":" + Properties.Settings.Default.SensorDiameter.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"PAPER\":" + Properties.Settings.Default.Paper.ToString() + "}");
+            Console.WriteLine("{\"PAPER\":" + Properties.Settings.Default.Paper.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"ANGLE\":" + Properties.Settings.Default.Angle.ToString() + "}");
+            Console.WriteLine("{\"ANGLE\":" + Properties.Settings.Default.Angle.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"CALIBRE_x10\":" + Properties.Settings.Default.Calibre.ToString() + "}");
+            Console.WriteLine("{\"CALIBRE_x10\":" + Properties.Settings.Default.Calibre.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"NORTH_X\":" + Properties.Settings.Default.SensorNorthX.ToString() + "}");
+            Console.WriteLine("{\"NORTH_X\":" + Properties.Settings.Default.SensorNorthX.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"NORTH_Y\":" + Properties.Settings.Default.SensorNorthY.ToString() + "}");
+            Console.WriteLine("{\"NORTH_Y\":" + Properties.Settings.Default.SensorNorthY.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"EAST_X\":" + Properties.Settings.Default.SensorEastX.ToString() + "}");
+            Console.WriteLine("{\"EAST_X\":" + Properties.Settings.Default.SensorEastX.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"EAST_Y\":" + Properties.Settings.Default.SensorEastY.ToString() + "}");
+            Console.WriteLine("{\"EAST_Y\":" + Properties.Settings.Default.SensorEastY.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"SOUTH_X\":" + Properties.Settings.Default.SensorSouthX.ToString() + "}");
+            Console.WriteLine("{\"SOUTH_X\":" + Properties.Settings.Default.SensorSouthX.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"SOUTH_Y\":" + Properties.Settings.Default.SensorSouthY.ToString() + "}");
+            Console.WriteLine("{\"SOUTH_Y\":" + Properties.Settings.Default.SensorSouthY.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"WEST_X\":" + Properties.Settings.Default.SensorWestX.ToString() + "}");
+            Console.WriteLine("{\"WEST_X\":" + Properties.Settings.Default.SensorWestX.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"WEST_Y\":" + Properties.Settings.Default.SensorWestY.ToString() + "}");
+            Console.WriteLine("{\"WEST_Y\":" + Properties.Settings.Default.SensorWestY.ToString() + "}");
+
+            Thread.Sleep(100);
+            serialPort.Write("{\"ECHO\":0}");
+            Thread.Sleep(100);
+
 
             btnConnect.Text = "Disconnect";
             currentStatus = Status.CONNECTED;
-            statusText.Text = "Connected to " + target + " on " + serialPort.PortName;
-            displayMessage("Connected to " + target, false);
+            String t = target;
+            if (t.IndexOf(Environment.NewLine) > -1) {
+                t = t.Substring(0, t.IndexOf(Environment.NewLine));
+            }
+            statusText.Text = "Connected to " + t + " on " + serialPort.PortName;
+            displayMessage("Connected to " + t, false);
+
+            Application.DoEvents();
 
             btnConnect.ImageKey = "disconnect";
             shotsList.Enabled = true;
@@ -321,10 +384,11 @@ namespace freETarget {
             tcSessionType.Enabled = true;
             tcSessionType.Refresh();
 
-            SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED); //disable screensave while connected
+            SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED); //disable screensaver while connected
 
             initNewSession();
             targetRefresh();
+            
         }
 
         //output messages
@@ -345,19 +409,6 @@ namespace freETarget {
         }
 
 
-/*        private void writeShotToDebug(string json) {
-            if (txtOutput.InvokeRequired) {
-                var d = new SafeCallDelegate2(writeShotToDebug);
-                txtOutput.Invoke(d, new object[] { json});
-                return;
-            } else {
-
-                //write to console window (raw input string)
-                txtOutput.AppendText(json);
-            }
-        }*/
-
-
         //write shot data
         private void displayShotData(Shot shot) {
             //special code for UI thread safety
@@ -372,10 +423,10 @@ namespace freETarget {
                 }
 
                 //write to total textbox
-                txtTotal.Text = getShots().Count + " shots : " + currentSession.score.ToString() + " ( " + currentSession.decimalScore.ToString() + " ) - " + currentSession.innerX.ToString() + "x";
+                txtTotal.Text = getShots().Count + ": " + currentSession.score.ToString() + " (" + currentSession.decimalScore.ToString(CultureInfo.InvariantCulture) + ") -" + currentSession.innerX.ToString() + "x";
 
                 //write to last shot textbox
-                string lastShot = shot.decimalScore.ToString();
+                string lastShot = shot.decimalScore.ToString(CultureInfo.InvariantCulture);
                 txtLastShot.Text = lastShot + inner;
 
                 drawArrow(shot);
@@ -384,9 +435,11 @@ namespace freETarget {
                 ListViewItem item = new ListViewItem(new string[] { "" }, (shot.index+1).ToString());
                 item.UseItemStyleForSubItems = false;
                 ListViewItem.ListViewSubItem countItem = item.SubItems.Add((shot.index+1).ToString());
-                countItem.Font = new Font("MS Sans Serif", 7, FontStyle.Italic);
+                countItem.Font = new Font("MS Sans Serif", 9.75f, FontStyle.Italic|FontStyle.Bold);
                 ListViewItem.ListViewSubItem scoreItem = item.SubItems.Add(shot.score.ToString());
-                ListViewItem.ListViewSubItem decimalItem = item.SubItems.Add(shot.decimalScore.ToString() + inner);
+                scoreItem.Font = new Font("MS Sans Serif", 9.75f,  FontStyle.Bold);
+                ListViewItem.ListViewSubItem decimalItem = item.SubItems.Add(shot.decimalScore.ToString(CultureInfo.InvariantCulture) + inner);
+                decimalItem.Font = new Font("MS Sans Serif", 9.75f, FontStyle.Bold);
 
                 shotsList.Items.Add(item);
                 shotsList.EnsureVisible(shotsList.Items.Count - 1);
@@ -530,9 +583,11 @@ namespace freETarget {
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.Clear(Color.White);
 
+            int margin = 3;
+
             if (shot.decimalScore < 10.9m) {
-                RectangleF range = new RectangleF(5, 5, 19, 19);
-                double xp = 14.0, yp = 14.0;
+                RectangleF range = new RectangleF(margin, margin, imgArrow.Width-margin*3, imgArrow.Height-margin*3);
+                double xp = 18.0, yp = 18.0;
                 double θ = (double)shot.angle * (Math.PI / 180);
 
                 double[] t = new double[4];
@@ -547,12 +602,12 @@ namespace freETarget {
                 var X2 = xp + t[2] * Math.Cos(θ);
                 var Y2 = yp + t[2] * Math.Sin(θ);
 
-                Pen arr = new Pen(Color.Black);
-                arr.CustomEndCap = new AdjustableArrowCap(3, 3, true);
+                Pen arr = new Pen(Color.Black,2);
+                arr.CustomEndCap = new AdjustableArrowCap(6, 6, true);
                 g.DrawLine(arr, (float)X1, (float)Y2, (float)X2, (float)Y1);
             } else { //if 10.9 draw a dot
                 Brush br = new SolidBrush(Color.Black);
-                g.FillEllipse(br, new Rectangle(new Point(13, 13), new Size(4, 4)));
+                g.FillEllipse(br, new Rectangle(new Point((imgArrow.Width/2)-4, (imgArrow.Height/2)-4), new Size(6, 6)));
             }
 
             imgArrow.Image = bmp;
@@ -600,7 +655,7 @@ namespace freETarget {
 
   
         private decimal getScaledDimension(decimal input) {
-            decimal ret = 10 * input / Settings.Default.targetDistance;
+            decimal ret = 100 * input / Settings.Default.targetDistance;
             ret = decimal.Round(ret, 2, MidpointRounding.AwayFromZero);
             return ret;
         }
@@ -683,12 +738,12 @@ namespace freETarget {
                 Properties.Settings.Default.scoreVoice = settingsFrom.chkScoreVoice.Checked;
                 Properties.Settings.Default.fileLogging = settingsFrom.chkLog.Checked;
 
-                if (Properties.Settings.Default.targetDistance != 10) {
+                if (Properties.Settings.Default.targetDistance != 100) {
                     btnConfig.BackColor = Properties.Settings.Default.targetColor;
                 } else {
                     btnConfig.BackColor = SystemColors.Control;
                 }
-                toolTip.SetToolTip(btnConfig, "Settings - Target distance: " + Properties.Settings.Default.targetDistance);
+                toolTip.SetToolTip(btnConfig, "Settings - Target distance percent: " + Properties.Settings.Default.targetDistance);
 
                 if (settingsFrom.rdb60.Checked) {
                     Properties.Settings.Default.MatchShots = 60;
@@ -710,6 +765,21 @@ namespace freETarget {
                 Properties.Settings.Default.scoreDefaultPenColor = Color.FromName(settingsFrom.cmbDefPen.GetItemText(settingsFrom.cmbDefPen.SelectedItem));
                 Properties.Settings.Default.scoreOldBackgroundColor = Color.FromName(settingsFrom.cmbOldBack.GetItemText(settingsFrom.cmbOldBack.SelectedItem));
                 Properties.Settings.Default.scoreOldPenColor = Color.FromName(settingsFrom.cmbOldPen.GetItemText(settingsFrom.cmbOldPen.SelectedItem));
+
+                Properties.Settings.Default.SensorDiameter = decimal.Parse(settingsFrom.txtSensorDiameter.Text);
+
+                Properties.Settings.Default.SensorNorthX = int.Parse(settingsFrom.txtNorthX.Text);
+                Properties.Settings.Default.SensorNorthY = int.Parse(settingsFrom.txtNorthY.Text);
+                Properties.Settings.Default.SensorWestX = int.Parse(settingsFrom.txtWestX.Text);
+                Properties.Settings.Default.SensorWestY = int.Parse(settingsFrom.txtWestY.Text);
+                Properties.Settings.Default.SensorSouthX = int.Parse(settingsFrom.txtSouthX.Text);
+                Properties.Settings.Default.SensorSouthY = int.Parse(settingsFrom.txtSouthY.Text);
+                Properties.Settings.Default.SensorEastX = int.Parse(settingsFrom.txtEastX.Text);
+                Properties.Settings.Default.SensorEastY = int.Parse(settingsFrom.txtEastY.Text);
+
+                Properties.Settings.Default.Calibre = int.Parse(settingsFrom.txtCalibre.Text);
+                Properties.Settings.Default.Angle = int.Parse(settingsFrom.txtAngle.Text);
+                Properties.Settings.Default.Paper = int.Parse(settingsFrom.txtPaper.Text);
             }
 
             settingsFrom.Dispose();
@@ -742,6 +812,8 @@ namespace freETarget {
                 MessageBox.Show("Database check failed. Please check your installation. " + Environment.NewLine + Environment.NewLine + testDB + Environment.NewLine + Environment.NewLine + "The application will now exit!" , "Database problem", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Environment.Exit(0);
             }
+
+            trkZoom.Focus();
         }
 
         private void initNewSession() {
@@ -1451,6 +1523,23 @@ namespace freETarget {
         private void btnArduino_Click(object sender, EventArgs e) {
             frmArduino frmArd = frmArduino.getInstance(this);
             frmArd.Show();
+        }
+
+        private void mouseWheel(object sender, MouseEventArgs e) {
+            ((HandledMouseEventArgs)e).Handled = true;//disable default mouse wheel
+            if (e.Delta > 0) {
+                if (trkZoom.Value < trkZoom.Maximum) {
+                    trkZoom.Value++;
+                }
+            } else {
+                if (trkZoom.Value > trkZoom.Minimum) {
+                    trkZoom.Value--;
+                }
+            }
+        }
+
+        private void imgTarget_Click(object sender, EventArgs e) {
+            trkZoom.Focus();
         }
     }
 

@@ -43,6 +43,8 @@ namespace freETarget
             this.imgListIcons = new System.Windows.Forms.ImageList(this.components);
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.statusText = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.statusVersion = new System.Windows.Forms.ToolStripStatusLabel();
             this.txtOutput = new System.Windows.Forms.TextBox();
             this.imgTarget = new System.Windows.Forms.PictureBox();
             this.shotsList = new System.Windows.Forms.ListView();
@@ -122,11 +124,12 @@ namespace freETarget
             // 
             // btnConnect
             // 
+            this.btnConnect.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.btnConnect.ImageIndex = 0;
             this.btnConnect.ImageList = this.imgListIcons;
-            this.btnConnect.Location = new System.Drawing.Point(7, 8);
+            this.btnConnect.Location = new System.Drawing.Point(7, 6);
             this.btnConnect.Name = "btnConnect";
-            this.btnConnect.Size = new System.Drawing.Size(85, 23);
+            this.btnConnect.Size = new System.Drawing.Size(100, 25);
             this.btnConnect.TabIndex = 0;
             this.btnConnect.Text = "Connect";
             this.btnConnect.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
@@ -144,10 +147,12 @@ namespace freETarget
             // statusStrip1
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.statusText});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 544);
+            this.statusText,
+            this.toolStripStatusLabel1,
+            this.statusVersion});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 540);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1152, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(1139, 24);
             this.statusStrip1.SizingGrip = false;
             this.statusStrip1.TabIndex = 1;
             this.statusStrip1.Text = "statusStrip";
@@ -155,20 +160,36 @@ namespace freETarget
             // statusText
             // 
             this.statusText.Name = "statusText";
-            this.statusText.Size = new System.Drawing.Size(39, 17);
+            this.statusText.Size = new System.Drawing.Size(39, 19);
             this.statusText.Text = "Ready";
+            // 
+            // toolStripStatusLabel1
+            // 
+            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(1044, 19);
+            this.toolStripStatusLabel1.Spring = true;
+            // 
+            // statusVersion
+            // 
+            this.statusVersion.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
+            this.statusVersion.BorderStyle = System.Windows.Forms.Border3DStyle.Etched;
+            this.statusVersion.Name = "statusVersion";
+            this.statusVersion.Size = new System.Drawing.Size(41, 19);
+            this.statusVersion.Text = "v1.0.0";
             // 
             // txtOutput
             // 
             this.txtOutput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtOutput.BackColor = System.Drawing.SystemColors.Window;
-            this.txtOutput.Location = new System.Drawing.Point(400, 37);
+            this.txtOutput.Location = new System.Drawing.Point(387, 37);
             this.txtOutput.Multiline = true;
             this.txtOutput.Name = "txtOutput";
             this.txtOutput.ReadOnly = true;
             this.txtOutput.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtOutput.Size = new System.Drawing.Size(328, 500);
+            this.txtOutput.Size = new System.Drawing.Size(328, 498);
             this.txtOutput.TabIndex = 3;
             this.txtOutput.WordWrap = false;
             // 
@@ -176,13 +197,14 @@ namespace freETarget
             // 
             this.imgTarget.BackColor = System.Drawing.Color.Transparent;
             this.imgTarget.InitialImage = null;
-            this.imgTarget.Location = new System.Drawing.Point(217, 37);
+            this.imgTarget.Location = new System.Drawing.Point(216, 37);
             this.imgTarget.Name = "imgTarget";
-            this.imgTarget.Size = new System.Drawing.Size(500, 500);
+            this.imgTarget.Size = new System.Drawing.Size(501, 500);
             this.imgTarget.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.imgTarget.TabIndex = 4;
             this.imgTarget.TabStop = false;
             this.imgTarget.WaitOnLoad = true;
+            this.imgTarget.Click += new System.EventHandler(this.imgTarget_Click);
             // 
             // shotsList
             // 
@@ -194,13 +216,15 @@ namespace freETarget
             this.col2,
             this.col3});
             this.shotsList.Enabled = false;
+            this.shotsList.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.shotsList.FullRowSelect = true;
             this.shotsList.GridLines = true;
+            this.shotsList.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
             this.shotsList.HideSelection = false;
             this.shotsList.Location = new System.Drawing.Point(7, 37);
             this.shotsList.MultiSelect = false;
             this.shotsList.Name = "shotsList";
-            this.shotsList.Size = new System.Drawing.Size(204, 349);
+            this.shotsList.Size = new System.Drawing.Size(200, 347);
             this.shotsList.SmallImageList = this.imgListDirections;
             this.shotsList.StateImageList = this.imgListDirections;
             this.shotsList.TabIndex = 5;
@@ -209,27 +233,27 @@ namespace freETarget
             // 
             // col4
             // 
-            this.col4.Text = "Direction";
+            this.col4.Text = "Dir";
             this.col4.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.col4.Width = 56;
+            this.col4.Width = 40;
             // 
             // col1
             // 
             this.col1.Text = "Shot";
             this.col1.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.col1.Width = 36;
+            this.col1.Width = 40;
             // 
             // col2
             // 
             this.col2.Text = "Score";
             this.col2.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.col2.Width = 40;
+            this.col2.Width = 48;
             // 
             // col3
             // 
-            this.col3.Text = "Decimal";
+            this.col3.Text = "Deci";
             this.col3.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.col3.Width = 51;
+            this.col3.Width = 50;
             // 
             // imgListDirections
             // 
@@ -240,11 +264,11 @@ namespace freETarget
             // txtTotal
             // 
             this.txtTotal.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.txtTotal.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.txtTotal.Location = new System.Drawing.Point(40, 430);
+            this.txtTotal.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.txtTotal.Location = new System.Drawing.Point(37, 431);
             this.txtTotal.Name = "txtTotal";
             this.txtTotal.ReadOnly = true;
-            this.txtTotal.Size = new System.Drawing.Size(170, 20);
+            this.txtTotal.Size = new System.Drawing.Size(170, 26);
             this.txtTotal.TabIndex = 6;
             this.txtTotal.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
@@ -252,7 +276,7 @@ namespace freETarget
             // 
             this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(3, 433);
+            this.label1.Location = new System.Drawing.Point(2, 438);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(31, 13);
             this.label1.TabIndex = 7;
@@ -261,11 +285,11 @@ namespace freETarget
             // txtLastShot
             // 
             this.txtLastShot.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.txtLastShot.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.txtLastShot.Location = new System.Drawing.Point(74, 392);
+            this.txtLastShot.Font = new System.Drawing.Font("Microsoft Sans Serif", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.txtLastShot.Location = new System.Drawing.Point(61, 390);
             this.txtLastShot.Name = "txtLastShot";
             this.txtLastShot.ReadOnly = true;
-            this.txtLastShot.Size = new System.Drawing.Size(100, 31);
+            this.txtLastShot.Size = new System.Drawing.Size(102, 38);
             this.txtLastShot.TabIndex = 8;
             this.txtLastShot.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
@@ -273,7 +297,7 @@ namespace freETarget
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(3, 401);
+            this.label2.Location = new System.Drawing.Point(4, 403);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(52, 13);
             this.label2.TabIndex = 9;
@@ -285,9 +309,9 @@ namespace freETarget
             this.imgArrow.BackColor = System.Drawing.Color.White;
             this.imgArrow.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.imgArrow.Image = ((System.Drawing.Image)(resources.GetObject("imgArrow.Image")));
-            this.imgArrow.Location = new System.Drawing.Point(180, 392);
+            this.imgArrow.Location = new System.Drawing.Point(169, 390);
             this.imgArrow.Name = "imgArrow";
-            this.imgArrow.Size = new System.Drawing.Size(30, 30);
+            this.imgArrow.Size = new System.Drawing.Size(38, 38);
             this.imgArrow.TabIndex = 10;
             this.imgArrow.TabStop = false;
             this.imgArrow.LoadCompleted += new System.ComponentModel.AsyncCompletedEventHandler(this.imgArrow_LoadCompleted);
@@ -296,7 +320,7 @@ namespace freETarget
             // 
             this.btnConfig.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnConfig.Image = ((System.Drawing.Image)(resources.GetObject("btnConfig.Image")));
-            this.btnConfig.Location = new System.Drawing.Point(1118, 4);
+            this.btnConfig.Location = new System.Drawing.Point(1105, 4);
             this.btnConfig.Name = "btnConfig";
             this.btnConfig.Size = new System.Drawing.Size(27, 27);
             this.btnConfig.TabIndex = 11;
@@ -314,6 +338,7 @@ namespace freETarget
             this.trkZoom.Size = new System.Drawing.Size(104, 45);
             this.trkZoom.TabIndex = 15;
             this.trkZoom.ValueChanged += new System.EventHandler(this.trkZoom_ValueChanged);
+            this.trkZoom.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.mouseWheel);
             // 
             // label3
             // 
@@ -339,12 +364,12 @@ namespace freETarget
             // 
             this.txtTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.txtTime.BackColor = System.Drawing.SystemColors.Control;
-            this.txtTime.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.txtTime.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.txtTime.ForeColor = System.Drawing.SystemColors.WindowText;
-            this.txtTime.Location = new System.Drawing.Point(37, 515);
+            this.txtTime.Location = new System.Drawing.Point(33, 511);
             this.txtTime.Name = "txtTime";
             this.txtTime.ReadOnly = true;
-            this.txtTime.Size = new System.Drawing.Size(174, 20);
+            this.txtTime.Size = new System.Drawing.Size(174, 26);
             this.txtTime.TabIndex = 18;
             this.txtTime.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
@@ -366,10 +391,11 @@ namespace freETarget
             // txtMeanRadius
             // 
             this.txtMeanRadius.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.txtMeanRadius.Location = new System.Drawing.Point(174, 483);
+            this.txtMeanRadius.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.txtMeanRadius.Location = new System.Drawing.Point(171, 486);
             this.txtMeanRadius.Name = "txtMeanRadius";
             this.txtMeanRadius.ReadOnly = true;
-            this.txtMeanRadius.Size = new System.Drawing.Size(36, 20);
+            this.txtMeanRadius.Size = new System.Drawing.Size(36, 22);
             this.txtMeanRadius.TabIndex = 20;
             this.txtMeanRadius.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
@@ -377,7 +403,7 @@ namespace freETarget
             // 
             this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(104, 486);
+            this.label5.Location = new System.Drawing.Point(101, 491);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(70, 13);
             this.label5.TabIndex = 21;
@@ -386,10 +412,11 @@ namespace freETarget
             // txtMaxSpread
             // 
             this.txtMaxSpread.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.txtMaxSpread.Location = new System.Drawing.Point(174, 457);
+            this.txtMaxSpread.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.txtMaxSpread.Location = new System.Drawing.Point(171, 460);
             this.txtMaxSpread.Name = "txtMaxSpread";
             this.txtMaxSpread.ReadOnly = true;
-            this.txtMaxSpread.Size = new System.Drawing.Size(36, 20);
+            this.txtMaxSpread.Size = new System.Drawing.Size(36, 22);
             this.txtMaxSpread.TabIndex = 22;
             this.txtMaxSpread.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
@@ -397,7 +424,7 @@ namespace freETarget
             // 
             this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(110, 460);
+            this.label6.Location = new System.Drawing.Point(107, 465);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(64, 13);
             this.label6.TabIndex = 23;
@@ -407,7 +434,7 @@ namespace freETarget
             // 
             this.label7.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(3, 460);
+            this.label7.Location = new System.Drawing.Point(3, 465);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(50, 13);
             this.label7.TabIndex = 24;
@@ -417,7 +444,7 @@ namespace freETarget
             // 
             this.label8.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(3, 486);
+            this.label8.Location = new System.Drawing.Point(3, 491);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(51, 13);
             this.label8.TabIndex = 25;
@@ -426,27 +453,29 @@ namespace freETarget
             // txtWindage
             // 
             this.txtWindage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.txtWindage.Location = new System.Drawing.Point(52, 457);
+            this.txtWindage.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.txtWindage.Location = new System.Drawing.Point(52, 460);
             this.txtWindage.Name = "txtWindage";
             this.txtWindage.ReadOnly = true;
-            this.txtWindage.Size = new System.Drawing.Size(29, 20);
+            this.txtWindage.Size = new System.Drawing.Size(29, 22);
             this.txtWindage.TabIndex = 26;
             this.txtWindage.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // txtElevation
             // 
             this.txtElevation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.txtElevation.Location = new System.Drawing.Point(52, 483);
+            this.txtElevation.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.txtElevation.Location = new System.Drawing.Point(52, 486);
             this.txtElevation.Name = "txtElevation";
             this.txtElevation.ReadOnly = true;
-            this.txtElevation.Size = new System.Drawing.Size(29, 20);
+            this.txtElevation.Size = new System.Drawing.Size(29, 22);
             this.txtElevation.TabIndex = 27;
             this.txtElevation.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // imgWindage
             // 
             this.imgWindage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.imgWindage.Location = new System.Drawing.Point(81, 457);
+            this.imgWindage.Location = new System.Drawing.Point(81, 461);
             this.imgWindage.Name = "imgWindage";
             this.imgWindage.Size = new System.Drawing.Size(20, 20);
             this.imgWindage.TabIndex = 28;
@@ -455,7 +484,7 @@ namespace freETarget
             // imgElevation
             // 
             this.imgElevation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.imgElevation.Location = new System.Drawing.Point(81, 483);
+            this.imgElevation.Location = new System.Drawing.Point(81, 487);
             this.imgElevation.Name = "imgElevation";
             this.imgElevation.Size = new System.Drawing.Size(20, 20);
             this.imgElevation.TabIndex = 29;
@@ -466,12 +495,13 @@ namespace freETarget
             this.btnCalibration.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCalibration.Enabled = false;
             this.btnCalibration.Image = ((System.Drawing.Image)(resources.GetObject("btnCalibration.Image")));
-            this.btnCalibration.Location = new System.Drawing.Point(1085, 4);
+            this.btnCalibration.Location = new System.Drawing.Point(899, 4);
             this.btnCalibration.Name = "btnCalibration";
             this.btnCalibration.Size = new System.Drawing.Size(27, 27);
             this.btnCalibration.TabIndex = 30;
             this.toolTip.SetToolTip(this.btnCalibration, "Calibration");
             this.btnCalibration.UseVisualStyleBackColor = true;
+            this.btnCalibration.Visible = false;
             this.btnCalibration.Click += new System.EventHandler(this.btnCalibration_Click);
             // 
             // btnArduino
@@ -479,7 +509,7 @@ namespace freETarget
             this.btnArduino.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnArduino.Enabled = false;
             this.btnArduino.Image = ((System.Drawing.Image)(resources.GetObject("btnArduino.Image")));
-            this.btnArduino.Location = new System.Drawing.Point(1052, 4);
+            this.btnArduino.Location = new System.Drawing.Point(1072, 4);
             this.btnArduino.Name = "btnArduino";
             this.btnArduino.Size = new System.Drawing.Size(27, 27);
             this.btnArduino.TabIndex = 38;
@@ -491,7 +521,7 @@ namespace freETarget
             // 
             this.imgSessionName.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.imgSessionName.BackColor = System.Drawing.Color.Black;
-            this.imgSessionName.Location = new System.Drawing.Point(729, 37);
+            this.imgSessionName.Location = new System.Drawing.Point(716, 37);
             this.imgSessionName.Name = "imgSessionName";
             this.imgSessionName.Size = new System.Drawing.Size(395, 19);
             this.imgSessionName.TabIndex = 1;
@@ -527,7 +557,7 @@ namespace freETarget
             this.Column9,
             this.Column10,
             this.ColumnTotal});
-            this.gridTargets.Location = new System.Drawing.Point(729, 132);
+            this.gridTargets.Location = new System.Drawing.Point(716, 132);
             this.gridTargets.MultiSelect = false;
             this.gridTargets.Name = "gridTargets";
             this.gridTargets.ReadOnly = true;
@@ -544,7 +574,7 @@ namespace freETarget
             this.gridTargets.RowTemplate.ReadOnly = true;
             this.gridTargets.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.gridTargets.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.gridTargets.Size = new System.Drawing.Size(395, 251);
+            this.gridTargets.Size = new System.Drawing.Size(395, 249);
             this.gridTargets.TabIndex = 0;
             this.gridTargets.Click += new System.EventHandler(this.gridTargets_Click);
             // 
@@ -700,7 +730,7 @@ namespace freETarget
             this.tcSessionType.Controls.Add(this.tabRifleFinal);
             this.tcSessionType.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
             this.tcSessionType.Enabled = false;
-            this.tcSessionType.Location = new System.Drawing.Point(1130, 40);
+            this.tcSessionType.Location = new System.Drawing.Point(1117, 40);
             this.tcSessionType.Multiline = true;
             this.tcSessionType.Name = "tcSessionType";
             this.tcSessionType.SelectedIndex = 0;
@@ -770,18 +800,19 @@ namespace freETarget
             this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panel1.Controls.Add(this.chartBreakdown);
-            this.panel1.Location = new System.Drawing.Point(729, 385);
+            this.panel1.Location = new System.Drawing.Point(716, 383);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(395, 148);
             this.panel1.TabIndex = 33;
             // 
             // btnJournal
             // 
+            this.btnJournal.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.btnJournal.ImageIndex = 2;
             this.btnJournal.ImageList = this.imgListIcons;
-            this.btnJournal.Location = new System.Drawing.Point(99, 8);
+            this.btnJournal.Location = new System.Drawing.Point(107, 6);
             this.btnJournal.Name = "btnJournal";
-            this.btnJournal.Size = new System.Drawing.Size(85, 23);
+            this.btnJournal.Size = new System.Drawing.Size(100, 25);
             this.btnJournal.TabIndex = 36;
             this.btnJournal.Text = "Journal";
             this.btnJournal.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
@@ -793,7 +824,7 @@ namespace freETarget
             this.imgLogo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.imgLogo.BackColor = System.Drawing.Color.Transparent;
             this.imgLogo.Image = ((System.Drawing.Image)(resources.GetObject("imgLogo.Image")));
-            this.imgLogo.Location = new System.Drawing.Point(912, 6);
+            this.imgLogo.Location = new System.Drawing.Point(932, 6);
             this.imgLogo.Name = "imgLogo";
             this.imgLogo.Size = new System.Drawing.Size(129, 24);
             this.imgLogo.TabIndex = 37;
@@ -811,7 +842,7 @@ namespace freETarget
             this.digitalClock.ElementPadding = new System.Windows.Forms.Padding(4);
             this.digitalClock.ElementWidth = 10;
             this.digitalClock.ItalicFactor = 0F;
-            this.digitalClock.Location = new System.Drawing.Point(729, 56);
+            this.digitalClock.Location = new System.Drawing.Point(716, 56);
             this.digitalClock.Name = "digitalClock";
             this.digitalClock.Size = new System.Drawing.Size(395, 76);
             this.digitalClock.TabIndex = 35;
@@ -822,7 +853,7 @@ namespace freETarget
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1152, 566);
+            this.ClientSize = new System.Drawing.Size(1139, 564);
             this.Controls.Add(this.btnArduino);
             this.Controls.Add(this.imgLogo);
             this.Controls.Add(this.btnJournal);
@@ -950,6 +981,8 @@ namespace freETarget
         private System.Windows.Forms.DataGridViewTextBoxColumn Column10;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnTotal;
         private System.Windows.Forms.Button btnArduino;
+        private System.Windows.Forms.ToolStripStatusLabel statusVersion;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
     }
 }
 

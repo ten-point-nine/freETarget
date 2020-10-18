@@ -71,7 +71,7 @@
             // 
             this.btnEcho.Location = new System.Drawing.Point(107, 10);
             this.btnEcho.Name = "btnEcho";
-            this.btnEcho.Size = new System.Drawing.Size(74, 24);
+            this.btnEcho.Size = new System.Drawing.Size(82, 23);
             this.btnEcho.TabIndex = 1;
             this.btnEcho.Text = "ECHO";
             this.btnEcho.UseVisualStyleBackColor = true;
@@ -81,7 +81,7 @@
             // 
             this.btnDip.Location = new System.Drawing.Point(107, 40);
             this.btnDip.Name = "btnDip";
-            this.btnDip.Size = new System.Drawing.Size(75, 23);
+            this.btnDip.Size = new System.Drawing.Size(82, 23);
             this.btnDip.TabIndex = 3;
             this.btnDip.Text = "DIP";
             this.btnDip.UseVisualStyleBackColor = true;
@@ -91,7 +91,7 @@
             // 
             this.btnPaper.Location = new System.Drawing.Point(107, 69);
             this.btnPaper.Name = "btnPaper";
-            this.btnPaper.Size = new System.Drawing.Size(75, 23);
+            this.btnPaper.Size = new System.Drawing.Size(82, 23);
             this.btnPaper.TabIndex = 4;
             this.btnPaper.Text = "PAPER";
             this.btnPaper.UseVisualStyleBackColor = true;
@@ -101,7 +101,7 @@
             // 
             this.btnSensor.Location = new System.Drawing.Point(296, 9);
             this.btnSensor.Name = "btnSensor";
-            this.btnSensor.Size = new System.Drawing.Size(75, 23);
+            this.btnSensor.Size = new System.Drawing.Size(82, 23);
             this.btnSensor.TabIndex = 5;
             this.btnSensor.Text = "SENSOR";
             this.btnSensor.UseVisualStyleBackColor = true;
@@ -111,7 +111,7 @@
             // 
             this.btnTest.Location = new System.Drawing.Point(296, 38);
             this.btnTest.Name = "btnTest";
-            this.btnTest.Size = new System.Drawing.Size(75, 23);
+            this.btnTest.Size = new System.Drawing.Size(82, 23);
             this.btnTest.TabIndex = 6;
             this.btnTest.Text = "TEST";
             this.btnTest.UseVisualStyleBackColor = true;
@@ -174,9 +174,9 @@
             // 
             this.btnOffset.Location = new System.Drawing.Point(296, 68);
             this.btnOffset.Name = "btnOffset";
-            this.btnOffset.Size = new System.Drawing.Size(75, 23);
+            this.btnOffset.Size = new System.Drawing.Size(82, 23);
             this.btnOffset.TabIndex = 12;
-            this.btnOffset.Text = "OFFSET";
+            this.btnOffset.Text = "CALIBREx10";
             this.btnOffset.UseVisualStyleBackColor = true;
             this.btnOffset.Click += new System.EventHandler(this.btnOffset_Click);
             // 
@@ -192,7 +192,7 @@
             // 
             this.btnAngle.Location = new System.Drawing.Point(484, 10);
             this.btnAngle.Name = "btnAngle";
-            this.btnAngle.Size = new System.Drawing.Size(75, 23);
+            this.btnAngle.Size = new System.Drawing.Size(82, 23);
             this.btnAngle.TabIndex = 14;
             this.btnAngle.Text = "ANGLE";
             this.btnAngle.UseVisualStyleBackColor = true;
