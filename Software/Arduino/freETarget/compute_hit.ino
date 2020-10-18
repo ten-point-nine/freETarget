@@ -30,7 +30,6 @@ sensor_t s[4];
 unsigned int  bit_mask[] = {0x01, 0x02, 0x04, 0x08};
 unsigned long timer_value[4];    // Array of timer values
 unsigned int  pellet_calibre;    // Time offset to compensate for pellet diameter
-char nesw[] = "NESW";
 
 /*----------------------------------------------------------------
  *
@@ -176,7 +175,7 @@ unsigned int compute_hit
   
  if ( read_DIP() & VERBOSE_TRACE )
    {
-   Serial.print("\n\rReference: "); Serial.print(reference); Serial.print("  location:"); Serial.print(nesw[location]);
+   Serial.print("\n\rReference: "); Serial.print(reference); Serial.print("  location:"); Serial.print(location);
    }
    
 /*
@@ -190,7 +189,7 @@ unsigned int compute_hit
 
  if ( read_DIP() & VERBOSE_TRACE )
    {
-   Serial.print("\n\rCounts ");
+   Serial.print("\n\rReference - timer ");
    Serial.print(" North: "); Serial.print(s[N].count); Serial.print("  East: "); Serial.print(s[E].count);
    Serial.print(" South: "); Serial.print(s[S].count); Serial.print("  West: "); Serial.print(s[W].count);
    }
@@ -253,7 +252,6 @@ unsigned int compute_hit
         x_avg += s[i].xs;        // Keep the running average
         y_avg += s[i].ys;
         constillation += 1.0;
-        Serial.print(constillation);
       }
     }
 
@@ -453,10 +451,8 @@ void send_score
 /* 
  *  Display the results
  */
-  Serial.print("{");
-  
 #if ( S_SHOT )
-  Serial.print("\"shot\":");   Serial.print(shot); Serial.print(", ");
+  Serial.print("{\"shot\":");   Serial.print(shot); Serial.print(", ");
 #endif
 
 #if ( S_XY )
@@ -464,25 +460,20 @@ void send_score
   Serial.print("\"y\":");     Serial.print(y);  Serial.print(", ");
 #endif
 
-#if ( S_POLAR )
+#if ( S_RA )
   Serial.print("\"r\":");     Serial.print(radius); Serial.print(", ");
   Serial.print("\"a\":");     Serial.print(angle);  Serial.print(", ");
 #endif
 
-#if ( S_SCORE ) 
-  Serial.print("\"score\":");     Serial.print( 10.9 * (radius / (json_sensor_dia / 2.0d / sqrt(2.0d)))); Serial.print(", ");
-  Serial.print("\"direction\":"); Serial.print(12.0d * (angle + 180.0d) / 360.0d);                        Serial.print(", ");
-#endif
-
 #if ( S_COUNTERS )
-  Serial.print("\"N\":");         Serial.print(timer_value[N]); Serial.print(", ");
-  Serial.print("\"E\":");         Serial.print(timer_value[E]); Serial.print(", ");
-  Serial.print("\"S\":");         Serial.print(timer_value[S]); Serial.print(", ");
-  Serial.print("\"W\":");         Serial.print(timer_value[W]); Serial.print(", ");
-  Serial.print("\"n\":");         Serial.print((double)s[N].count / OSCILLATOR_MHZ); Serial.print(", ");
-  Serial.print("\"e\":");         Serial.print((double)s[E].count / OSCILLATOR_MHZ); Serial.print(", ");
-  Serial.print("\"s\":");         Serial.print((double)s[S].count / OSCILLATOR_MHZ); Serial.print(", ");
-  Serial.print("\"w\":");         Serial.print((double)s[W].count / OSCILLATOR_MHZ); Serial.print(", ");
+  Serial.print("\"N\":");     Serial.print(timer_value[N]); Serial.print(", ");
+  Serial.print("\"E\":");     Serial.print(timer_value[E]); Serial.print(", ");
+  Serial.print("\"S\":");     Serial.print(timer_value[S]); Serial.print(", ");
+  Serial.print("\"W\":");     Serial.print(timer_value[W]); Serial.print(", ");
+  Serial.print("\"n\":");     Serial.print((double)s[N].count / OSCILLATOR_MHZ); Serial.print(", ");
+  Serial.print("\"e\":");     Serial.print((double)s[E].count / OSCILLATOR_MHZ); Serial.print(", ");
+  Serial.print("\"s\":");     Serial.print((double)s[S].count / OSCILLATOR_MHZ); Serial.print(", ");
+  Serial.print("\"w\":");     Serial.print((double)s[W].count / OSCILLATOR_MHZ); Serial.print(", ");
 #endif
 
 #if ( S_MISC ) 
@@ -492,7 +483,10 @@ void send_score
   Serial.print("\"VERSION\":");   Serial.print(SOFTWARE_VERSION);
 #endif
 
-  Serial.print("}\n\r");
+#if ( S_SHOT )
+  Serial.print("}");
+#endif
+  Serial.println();
 
   return;
 }
@@ -587,3 +581,5 @@ void send_timer
   */
   return i;
  }
+
+
