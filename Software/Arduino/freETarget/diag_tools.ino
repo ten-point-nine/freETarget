@@ -120,16 +120,11 @@ void self_test(uint16_t test)
       break;
 
     case 4:                             // Show the analog input
-      Serial.print("\n\rOscilloscope.  Press <ENTER> 5 times to exit");
-      while ( Serial.available() <= 5 ) // Need 5 characters on the serial port to end
-        show_analog();                  //
+      show_analog();                  
       break;
       
     case 5:
-      while ( Serial.available() <= 5 )
-      {
-        show_analog_on_PC();
-      }
+      show_analog_on_PC();
       break;
 
     case 6: 
@@ -172,54 +167,72 @@ void self_test(uint16_t test)
  *  
  *--------------------------------------------------------------*/
 unsigned int channel[] = {NORTH_ANA, EAST_ANA, SOUTH_ANA, WEST_ANA};
+unsigned int cycle = 0;
 
 unsigned int max_input[4];
 #define FULL_SCALE   128              // Max full scale is 128 (128 = 5V)
-#define SCALE        128/1024         // Gain applied to analog input
+#define SCALE        128/128          // Gain applied to analog input
 #define DECAY_RATE   16               // Decay rate for peak detection
+#define SAMPLE_TIME  (500000U)        // 500 x 1000 us
 
 void show_analog(void)
 {
-  unsigned int i, j, k;
+  unsigned int i, sample;
   char o_scope[FULL_SCALE];
+  unsigned long now;
+  
+  digitalWrite(LED_S, ~(1 << cycle) & 1);
+  digitalWrite(LED_X, ~(1 << cycle) & 2);
+  digitalWrite(LED_Y, ~(1 << cycle) & 4);
+  cycle = (cycle+1) % 4;
 
-  Serial.print("\n\r{\"OSCOPE\":\"");
  /*
   *  Clear the oscope line
   */
-  for ( k=0; k != FULL_SCALE; k++)              // Clear the oscope
+  for ( i=0; i != FULL_SCALE; i++)              // Clear the oscope
   {
-    o_scope[k] = ' ';
+    o_scope[i] = ' ';
   }
-
+  o_scope[FULL_SCALE-1] = 0;                    // Null terminate
 /*
  * Draw in the trip point
  */
   i = analogRead(V_REFERENCE) * SCALE;
   o_scope[i] = '|';
-  
+
+/*
+ * Sample the input for 250ms 
+ */
+  max_input[N] = 0;
+  max_input[E] = 0;                             // Forget the maxium
+  max_input[S] = 0;
+  max_input[W] = 0;     
+  now = micros();
+  while ((micros() - now) <= SAMPLE_TIME ) // Enough time already
+    { 
+    for (i=N; i <= W; i++)
+      {
+      sample = analogRead(channel[i]) * SCALE;     // Read and scale the input
+      if ( sample >= FULL_SCALE -1 )
+      {
+        sample = FULL_SCALE-2;
+      }
+      if ( sample > max_input[i] )                 // Remember the max
+        {
+        max_input[i] = sample;
+        }
+      }
+    }
+
  /*
   * Put the values into the line
   */
-   for (i=N; i != W + 1; i++)
+   for (i=N; i <= W; i++)
    {
-    if ( max_input[i] != 0 )                      // Capture the maxumum and decay it linearly
-    {
-      max_input[i]--;
-    }
-    
-    j = analogRead(channel[i]) * SCALE;           // Read and scale the input
-    
-    if ( j > max_input[i] )                       // Remember the max
-    {
-      max_input[i] = j;
-    }
-
     o_scope[max_input[i]] = nesw[i];
-
-  }
+   }
   
-  Serial.print(o_scope);  Serial.print("\"}");     // Display the trace as JSON
+  Serial.print("{\"OSCOPE\": "); Serial.print(o_scope);  Serial.print("\"}\n\r");     // Display the trace as JSON
 
  /*
   * All done.

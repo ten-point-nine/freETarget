@@ -300,10 +300,12 @@ void show_echo(void)
   }
     
   EEPROM.get(NONVOL_INIT, i);
-  Serial.print(" \"INIT\":"); Serial.print(i); Serial.print(", ");
-  Serial.print(" \"V_REF\":"); Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print(", ");
-  Serial.print(" \"VERSION\":"); Serial.print(SOFTWARE_VERSION); Serial.print("}\n\r");
-
+  Serial.print(" \"INIT\":");     Serial.print(i);                Serial.print(", ");
+  Serial.print(" \"V_REF\":");    Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print(", ");
+  Serial.print(" \"VERSION\":");  Serial.print(SOFTWARE_VERSION); Serial.print(", ");
+  Serial.print(" \"BRD REV\":");  Serial.print(revision()); 
+  Serial.print("}\n\r");
+  
 /*
  *  All done, return
  */
