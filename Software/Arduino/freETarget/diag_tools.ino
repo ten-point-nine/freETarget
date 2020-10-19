@@ -12,7 +12,6 @@
 #include "gpio.h"
 
 const char* which_one[4] = {"N:", "   E:", "   S: ", "   W: "};
-const char  nesw[] = {"NESW"};
 
 #define TICK(x) (((x) / 0.33) * OSCILLATOR_MHZ)   // Distance in clock ticks
 #define RX(Z,X,Y) (16000 - (sqrt(sq(TICK(x)-s[(Z)].x) + sq(TICK(y)-s[(Z)].y))))

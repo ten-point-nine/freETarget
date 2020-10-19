@@ -7,11 +7,12 @@
 /*
  * What score items will be included in the JSON
  */
-#define S_SHOT      true
-#define S_XY        true
-#define S_RA        true
-#define S_COUNTERS  true
-#define S_MISC      true
+#define S_SHOT      true        // Include the shot number
+#define S_XY        true        // Include X-Y coordinates
+#define S_POLAR     true        // Include polar coordinates
+#define S_COUNTERS  true        // Include counter values
+#define S_MISC      true        // Include miscelaneous diagnotics
+#define S_SCORE     true        // Include estimated score
 
 /*
  *  Local Structures

@@ -145,9 +145,11 @@ void cal_analog(void)
 double temperature_C(void)
 {
   double return_value;
-  unsigned int raw;
-  unsigned int i;
+  int raw;                // Allow for negative temperatures
+  int i;
 
+  raw = 0xffff;
+  
 /*
  *  Point to the temperature register
  */
