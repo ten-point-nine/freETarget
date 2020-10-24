@@ -57,9 +57,16 @@ void get_timers(void);                        // Read and return the counter reg
 #define SOUTH        2
 #define WEST         3
  
-#define PAPER       18                    // Paper advance drive active low
+#define PAPER       18                    // Paper advance drive active low (TX1)
 #define PAPER_ON     0
 #define PAPER_OFF    1
+
+#define J10_1      VCC
+#define J10_2        8
+#define J10-3        1
+#define J10_4       19
+#define J10_5       18
+#define J10_6      GND
 
 
 

@@ -12,10 +12,10 @@
 #include "compute_hit.h"
 #include "analog_io.h"
 #include "json.h"
+#include "arduino.h"
 
 #define THRESHOLD (0.001)
 
-#define PI      (3.14159269d)
 #define PI_ON_4 (PI / 4.0d)
 #define PI_ON_2 (PI / 2.0d)
 
@@ -29,8 +29,8 @@ sensor_t s[4];
 
 unsigned int  bit_mask[] = {0x01, 0x02, 0x04, 0x08};
 unsigned long timer_value[4];    // Array of timer values
-double        length_c;          // length of side C
 unsigned int  pellet_calibre;    // Time offset to compensate for pellet diameter
+char nesw[] = "NESW";
 
 /*----------------------------------------------------------------
  *
@@ -82,28 +82,27 @@ void init_sensors(void)
  * Determine the speed of sound and ajust
  */
   s_of_sound = speed_of_sound(temperature_C());
-  length_c = sqrt(2.0d) * (json_sensor_dia / 2.0) / s_of_sound * OSCILLATOR_MHZ;
-  pellet_calibre = (double)json_calibre_x10 / s_of_sound / 2.0 / 10.0;
-
+  pellet_calibre = ((double)json_calibre_x10 / s_of_sound / 2.0d / 10.0d) * OSCILLATOR_MHZ; // Clock adjustement
+  
  /*
   * Work out the geometry of the sensors
   */
   s[N].index = N;
-  s[N].x = 0;
-  s[N].y = (json_sensor_dia / 2) / s_of_sound * OSCILLATOR_MHZ;
+  s[N].x = json_north_x / s_of_sound * OSCILLATOR_MHZ;
+  s[N].y = (json_sensor_dia /2.0d + json_north_y) / s_of_sound * OSCILLATOR_MHZ;
 
   s[E].index = E;
-  s[E].x = s[N].y;
-  s[E].y = 0;
+  s[E].x = (json_sensor_dia /2.0d + json_east_x) / s_of_sound * OSCILLATOR_MHZ;
+  s[E].y = (0.0d + json_east_y) / s_of_sound * OSCILLATOR_MHZ;
 
   s[S].index = S;
-  s[S].x = 0;
-  s[S].y = -s[N].y;
+  s[S].x = 0.0d + json_south_x / s_of_sound * OSCILLATOR_MHZ;
+  s[S].y = -(json_sensor_dia/ 2.0d + json_south_y) / s_of_sound * OSCILLATOR_MHZ;
 
   s[W].index = W;
-  s[W].x = -s[E].x;
-  s[W].y = 0;
-
+  s[W].x = -(json_sensor_dia / 2.0d  + json_west_x) / s_of_sound * OSCILLATOR_MHZ;
+  s[W].y = json_west_y / s_of_sound * OSCILLATOR_MHZ;
+  
  /* 
   *  All done, return
   */
@@ -122,9 +121,10 @@ void init_sensors(void)
 
 unsigned int compute_hit
   (
-  unsigned int sensor_status,       // Bits read from status register
-  unsigned int shot,                // Shot being processed
-  history_t* h                      // Storing the results
+  unsigned int sensor_status,      // Bits read from status register
+  unsigned int shot,               // Shot being processed
+  history_t*   h,                  // Storing the results
+  bool         test_mode           // Fake counters in test mode
   )
 {
   double        reference;         // Time of reference counter
@@ -143,14 +143,14 @@ unsigned int compute_hit
  *  Compute the current geometry based on the speed of sound
  */
   init_sensors();
-  
-/*
- *  Read in the counter values 
- */
-  timer_value[N] = read_counter(N) + pellet_calibre;   // Counter plus offset for pellet diameter
-  timer_value[E] = read_counter(E) + pellet_calibre;
-  timer_value[S] = read_counter(S) + pellet_calibre;
-  timer_value[W] = read_counter(W) + pellet_calibre;
+
+  if ( test_mode == false )                              // Skip if using test values
+  {
+    timer_value[N] = read_counter(N) + pellet_calibre;   // Counter plus offset for pellet diameter
+    timer_value[E] = read_counter(E) + pellet_calibre;
+    timer_value[S] = read_counter(S) + pellet_calibre;
+    timer_value[W] = read_counter(W) + pellet_calibre;  
+  }
   
   if ( read_DIP() & VERBOSE_TRACE )
    {
@@ -158,7 +158,6 @@ unsigned int compute_hit
    Serial.print("  East: 0x");    Serial.print(timer_value[E], HEX); Serial.print(" "); Serial.print(timer_value[E] / OSCILLATOR_MHZ); Serial.print("us "); 
    Serial.print("  South: 0x");   Serial.print(timer_value[S], HEX); Serial.print(" "); Serial.print(timer_value[S] / OSCILLATOR_MHZ); Serial.print("us "); 
    Serial.print("  West: 0x");    Serial.print(timer_value[W], HEX); Serial.print(" "); Serial.print(timer_value[W] / OSCILLATOR_MHZ); Serial.print("us "); 
-   Serial.print(" length_c: ");   Serial.print(length_c);            Serial.print(" cycles");
    }
    
 /*
@@ -177,12 +176,11 @@ unsigned int compute_hit
   
  if ( read_DIP() & VERBOSE_TRACE )
    {
-   Serial.print("\n\rReference: "); Serial.print(reference); Serial.print("  location:"); Serial.print(location);
+   Serial.print("\n\rReference: "); Serial.print(reference); Serial.print("  location:"); Serial.print(nesw[location]);
    }
    
 /*
  * Correct the time to remove the shortest distance
- * Also rotate the reference sensor into the NORTH location
  */
   for (i=N; i <= W; i++)
   {
@@ -192,12 +190,25 @@ unsigned int compute_hit
 
  if ( read_DIP() & VERBOSE_TRACE )
    {
-   Serial.print("\n\rReference - timer ");
+   Serial.print("\n\rCounts ");
    Serial.print(" North: "); Serial.print(s[N].count); Serial.print("  East: "); Serial.print(s[E].count);
    Serial.print(" South: "); Serial.print(s[S].count); Serial.print("  West: "); Serial.print(s[W].count);
    }
 
- 
+/*
+ * Fill up the structure with the counter geometry
+ */
+  for (i=N; i <= W; i++)
+  {
+    s[i].b = s[i].count;
+    s[i].c = sqrt(sq(s[(i) % 4].x - s[(i+1) % 4].x) + sq(s[(i) % 4].y - s[(i+1) % 4].y));
+   }
+  
+  for (i=N; i <= W; i++)
+  {
+    s[i].a = s[(i+1) % 4].b;
+  }
+  
 /*
  * Find the smallest non-zero value, this is the sensor furthest away from the sensor
  */
@@ -211,41 +222,23 @@ unsigned int compute_hit
       discard = i;
     }
   }
-  s[discard].is_valid = false;    // Throw away the shortest time.
-  
-/*
- *  Prime the estimate based on the smallest identified time.
- */
- estimate = length_c - smallest + 1.0d;
- 
- if ( read_DIP() & VERBOSE_TRACE )
-   {
-   Serial.print("\n\restimate: "); Serial.print(estimate);
-   }
-
-/*
- * Fill up the structure with the counter geometry
- * Rotated so that the longest time points north
- */
-  for (i=N; i <= W; i++)
-  {
-    s[i].b = s[i].count;
-    s[i].c = length_c;
-  }
-  
-  for (i=N; i <= W; i++)
-  {
-    s[i].a = s[(i+1) % 4].b;
-  }
-
-
+//  s[discard].is_valid = false;    // Throw away the shortest time. (test pathc removed)
   
 /*  
  *  Loop and calculate the unknown radius (estimate)
  */
+  estimate = s[N].c - smallest + 1.0d;
+ 
+  if ( read_DIP() & VERBOSE_TRACE )
+   {
+   Serial.print("\n\restimate: "); Serial.print(estimate);
+   }
   error = 999999;                  // Start with a big error
   count = 0;
-  
+
+ /*
+  * Iterate to minimize the error
+  */
   while (error > THRESHOLD )
   {
     x_avg = 0;                     // Zero out the average values
@@ -450,7 +443,7 @@ void send_score
   angle = atan2(h->y, h->x) / PI * 180.0d;
 
 /*
- * Rotate the result based on the construction
+ * Rotate the result based on the construction, and recompute the hit
  */
   angle += json_sensor_angle;
   x = radius * cos(PI * angle / 180.0d);
@@ -459,8 +452,9 @@ void send_score
 /* 
  *  Display the results
  */
+  Serial.print("{");
 #if ( S_SHOT )
-  Serial.print("{\"shot\":");   Serial.print(shot); Serial.print(", ");
+  Serial.print("\"shot\":");   Serial.print(shot); Serial.print(", ");
 #endif
 
 #if ( S_XY )
@@ -468,9 +462,14 @@ void send_score
   Serial.print("\"y\":");     Serial.print(y);  Serial.print(", ");
 #endif
 
-#if ( S_RA )
+#if ( S_POLAR )
   Serial.print("\"r\":");     Serial.print(radius); Serial.print(", ");
   Serial.print("\"a\":");     Serial.print(angle);  Serial.print(", ");
+#endif
+
+#if ( S_SCORE ) 
+  Serial.print("\"score\":");     Serial.print( 10.9 * (radius / (json_sensor_dia / 2.0d / sqrt(2.0d)))); Serial.print(", ");
+  Serial.print("\"direction\":"); Serial.print(12.0d * (angle + 180.0d) / 360.0d);                        Serial.print(", ");
 #endif
 
 #if ( S_COUNTERS )
@@ -486,15 +485,12 @@ void send_score
 
 #if ( S_MISC ) 
   volts = analogRead(V_REFERENCE);
-  Serial.print("\"V\":");     Serial.print(TO_VOLTS(volts)); Serial.print(", ");
-  Serial.print("\"T\":");     Serial.print(temperature_C());   Serial.print(", ");
-  Serial.print("\"I\":");     Serial.print(SOFTWARE_VERSION);
+  Serial.print("\"V_REF\":");     Serial.print(TO_VOLTS(volts)); Serial.print(", ");
+  Serial.print("\"T\":");         Serial.print(temperature_C()); Serial.print(", ");
+  Serial.print("\"VERSION\":");   Serial.print(SOFTWARE_VERSION);
 #endif
 
-#if ( S_SHOT )
-  Serial.print("}");
-#endif
-  Serial.println();
+  Serial.print("}\n\r");
 
   return;
 }
@@ -538,13 +534,13 @@ void send_timer
   }
   
   Serial.print("\", ");
-  Serial.print("\"N\":");     Serial.print(timer_value[N]);                     Serial.print(", ");
-  Serial.print("\"E\":");     Serial.print(timer_value[E]);                     Serial.print(", ");
-  Serial.print("\"S\":");     Serial.print(timer_value[S]);                     Serial.print(", ");
-  Serial.print("\"W\":");     Serial.print(timer_value[W]);                     Serial.print(", ");
-  Serial.print("\"V\":");     Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));  Serial.print(", ");
-  Serial.print("\"I\":");     Serial.print(SOFTWARE_VERSION);
-  Serial.print("}");      
+  Serial.print("\"N\":");       Serial.print(timer_value[N]);                     Serial.print(", ");
+  Serial.print("\"E\":");       Serial.print(timer_value[E]);                     Serial.print(", ");
+  Serial.print("\"S\":");       Serial.print(timer_value[S]);                     Serial.print(", ");
+  Serial.print("\"W\":");       Serial.print(timer_value[W]);                     Serial.print(", ");
+  Serial.print("\"V_REF\":");   Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));  Serial.print(", ");
+  Serial.print("\"Version\":"); Serial.print(SOFTWARE_VERSION);
+  Serial.print("}\n\r");      
 
   return;
 }

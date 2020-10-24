@@ -4,9 +4,7 @@
  * 
  * Software to run the Air-Rifle / Small Bore Electronic Target
  * 
- *--------------------------------------------------------------
- *--
- */
+ *-------------------------------------------------------------*/
 #include "freETarget.h"
 #include "gpio.h"
 #include "compute_hit.h"
@@ -179,7 +177,7 @@ void loop()
     set_LED(LED_S, false);
     set_LED(LED_X, false);     // No longer processing
     set_LED(LED_Y, true);      // Reducing the shot
-    location = compute_hit(sensor_status, shot, &history);
+    location = compute_hit(sensor_status, shot, &history, false);
     send_score(&history, shot);
     state = WASTE;
     shot++;                   
