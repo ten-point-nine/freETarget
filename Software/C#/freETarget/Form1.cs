@@ -1491,14 +1491,17 @@ namespace freETarget {
             gridTargets.Rows.Clear();
             clearBreakdownChart();
 
-            foreach (Shot s in currentSession.Shots) {
+            frmJournal journalForm = (frmJournal)Application.OpenForms["frmJournal"];
 
+            foreach (Shot s in currentSession.Shots) {
                 currentSession.addLoadedShot(s);
                 displayShotData(s);
                 Application.DoEvents();
                 targetRefresh();
-                if (btnConnect.Enabled) {
-                    break;
+                if (journalForm != null) {
+                    if (!journalForm.isSessionLoading()) {
+                        break;
+                    }
                 }
             }
 
