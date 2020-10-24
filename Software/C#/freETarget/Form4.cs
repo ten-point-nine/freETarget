@@ -272,9 +272,11 @@ namespace freETarget {
         private void btnLoadSession_Click(object sender, EventArgs e) {
             isLoading = true;
             enableDisableButtons(false, false);
+            btnClose.Text = "Cancel";
             Application.DoEvents();
             mainWindow.loadSession(currentSession);
             enableDisableButtons(true, false);
+            btnClose.Text = "Close";
             isLoading = false;
         }
 
