@@ -221,8 +221,7 @@ namespace freETarget {
         }
 
         private void btnClose_Click(object sender, EventArgs e) {
-            mainWindow.clearSession();
-            mainWindow.btnConnect.Enabled = true;
+            isLoading = false;
             this.Close();
         }
 
@@ -306,6 +305,10 @@ namespace freETarget {
             imgLogo.Image.Save(stream, ImageFormat.Png);
             stream.Position = 0;
             PDFGenerator.generateAndSavePDF(currentSession, Settings.Default.pdfPath, stream);
+        }
+
+        public bool isSessionLoading() {
+            return isLoading;
         }
     }
 }

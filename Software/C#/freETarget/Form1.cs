@@ -675,15 +675,15 @@ namespace freETarget {
                 try {
                     foreach (string t3 in t2) {
                         string[] t4 = t3.Split(':');
-                        if (t4[0].Contains("shot")) {
+                        if (t4[0].Trim() == "\"shot\"") {
                             ret.count = int.Parse(t4[1], CultureInfo.InvariantCulture);
-                        } else if (t4[0].Contains("x")) {
+                        } else if (t4[0].Trim() == "\"x\"") {
                             ret.x = getScaledDimension(decimal.Parse(t4[1], CultureInfo.InvariantCulture));
-                        } else if (t4[0].Contains("y")) {
+                        } else if (t4[0].Trim() == "\"y\"") {
                             ret.y = getScaledDimension(decimal.Parse(t4[1], CultureInfo.InvariantCulture));
-                        } else if (t4[0].Contains("r")) {
+                        } else if (t4[0].Trim() == "\"r\"") {
                             ret.radius = getScaledDimension(decimal.Parse(t4[1], CultureInfo.InvariantCulture));
-                        } else if (t4[0].Contains("a")) {
+                        } else if (t4[0].Trim() == "\"a\"") {
                             ret.angle = decimal.Parse(t4[1], CultureInfo.InvariantCulture);
                         }
                     }
@@ -1491,12 +1491,18 @@ namespace freETarget {
             gridTargets.Rows.Clear();
             clearBreakdownChart();
 
-            foreach (Shot s in currentSession.Shots) {
+            frmJournal journalForm = (frmJournal)Application.OpenForms["frmJournal"];
 
+            foreach (Shot s in currentSession.Shots) {
                 currentSession.addLoadedShot(s);
                 displayShotData(s);
                 Application.DoEvents();
                 targetRefresh();
+                if (journalForm != null) {
+                    if (!journalForm.isSessionLoading()) {
+                        break;
+                    }
+                }
             }
 
             displayMessage("Session " + session.id + " loaded", false);

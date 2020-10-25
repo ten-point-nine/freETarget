@@ -1,0 +1,2 @@
+After the installation is complete, please go to the selected freETarget installation folder, and in the "drivers" subfolder, run the Arduino USB driver setup exe. 
+Run the "dpinst-amd64.exe" file for 64 bit systems, or "dpinst-x86.exe" for 32 bit systems.
