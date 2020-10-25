@@ -52,13 +52,15 @@ unsigned int read_reference(void)
  *
  *  Read the analog value from the resistor divider, keep only
  *  the top 4 bits, and return the version number.
+ *  
+ *  The analog input is a number 0-1024 
  *--------------------------------------------------------------*/
-//                               0  1  2  3  4  5  6  7  8  9   A   B   C   D   E   F
-static unsigned int version[] = {2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+//                               0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F
+static unsigned int version[] = {2, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0};
   
 unsigned int revision(void)
 {
-  return version[analogRead(ANALOG_VERSION) >> 8];
+  return version[analogRead(ANALOG_VERSION) * 16 / 1024];
 }
 
 /*----------------------------------------------------------------

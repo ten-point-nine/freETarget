@@ -36,6 +36,8 @@ void setup()
  */
   Serial.begin(115200);
   Serial.print("\n\rfreETarget "); Serial.print(SOFTWARE_VERSION); Serial.print("\n\r");
+  AUX_SERIAL.begin(115200);
+  AUX_SERIAL.print("\n\rfreETarget "); Serial.print(SOFTWARE_VERSION); Serial.print("\n\r");
   
 /*
  * Initialize variables

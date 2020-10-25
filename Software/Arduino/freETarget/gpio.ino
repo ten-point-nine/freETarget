@@ -14,43 +14,44 @@ struct GPIO {
 };
 
 GPIO init_table[] = {
-  {D0,       INPUT_PULLUP, 0 },
-  {D1,       INPUT_PULLUP, 0 },
-  {D2,       INPUT_PULLUP, 0 },
-  {D3,       INPUT_PULLUP, 0 },
-  {D4,       INPUT_PULLUP, 0 },     
-  {D5,       INPUT_PULLUP, 0 },
-  {D6,       INPUT_PULLUP, 0 },
+  {D0,          INPUT_PULLUP, 0 },
+  {D1,          INPUT_PULLUP, 0 },
+  {D2,          INPUT_PULLUP, 0 },
+  {D3,          INPUT_PULLUP, 0 },
+  {D4,          INPUT_PULLUP, 0 },     
+  {D5,          INPUT_PULLUP, 0 },
+  {D6,          INPUT_PULLUP, 0 },
 
-  {NORTH_HI, OUTPUT, 1},
-  {NORTH_LO, OUTPUT, 1},
-  {EAST_HI,  OUTPUT, 1},
-  {EAST_LO,  OUTPUT, 1},
-  {SOUTH_HI, OUTPUT, 1},
-  {SOUTH_LO, OUTPUT, 1},
-  {WEST_HI,  OUTPUT, 1},
-  {WEST_LO,  OUTPUT, 1},      
+  {NORTH_HI,    OUTPUT, 1},
+  {NORTH_LO,    OUTPUT, 1},
+  {EAST_HI,     OUTPUT, 1},
+  {EAST_LO,     OUTPUT, 1},
+  {SOUTH_HI,    OUTPUT, 1},
+  {SOUTH_LO,    OUTPUT, 1},
+  {WEST_HI,     OUTPUT, 1},
+  {WEST_LO,     OUTPUT, 1},      
 
-  {RUN_NORTH, INPUT_PULLUP, 0},
-  {RUN_EAST,  INPUT_PULLUP, 0},
-  {RUN_SOUTH, INPUT_PULLUP, 0},
-  {RUN_WEST,  INPUT_PULLUP, 0},     
+  {RUN_NORTH,   INPUT_PULLUP, 0},
+  {RUN_EAST,    INPUT_PULLUP, 0},
+  {RUN_SOUTH,   INPUT_PULLUP, 0},
+  {RUN_WEST,    INPUT_PULLUP, 0},     
 
-  {QUIET,   OUTPUT, 1},
-  {RCLK,    OUTPUT, 1},
-  {CLR_N,   OUTPUT, 1},
-  {STOP_N,  OUTPUT, 1},
-
-  {DIP_A,   INPUT_PULLUP, 0},
-  {DIP_B,   INPUT_PULLUP, 0},
-  {DIP_C,   INPUT_PULLUP, 0},
-  {DIP_D,   INPUT_PULLUP, 0},  
-
-  {LED_S,   OUTPUT, 1},
-  {LED_X,   OUTPUT, 1},
-  {LED_Y,   OUTPUT, 1},
+  {QUIET,       OUTPUT, 1},
+  {RCLK,        OUTPUT, 1},
+  {CLR_N,       OUTPUT, 1},
+  {STOP_N,      OUTPUT, 1},
+  {CLOCK_START, OUTPUT, 0},
   
-  {PAPER,   OUTPUT, 1},               // Paper drive active low
+  {DIP_A,       INPUT_PULLUP, 0},
+  {DIP_B,       INPUT_PULLUP, 0},
+  {DIP_C,       INPUT_PULLUP, 0},
+  {DIP_D,       INPUT_PULLUP, 0},  
+
+  {LED_S,       OUTPUT, 1},
+  {LED_X,       OUTPUT, 1},
+  {LED_Y,       OUTPUT, 1},
+  
+  {PAPER,       OUTPUT, 1},               // Paper drive active low
     
   {EOF, EOF, EOF} };
 

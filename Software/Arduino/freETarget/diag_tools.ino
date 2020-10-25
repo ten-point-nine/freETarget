@@ -18,8 +18,15 @@ const char* which_one[4] = {"N:", "   E:", "   S: ", "   W: "};
 #define GRID_SIDE 25
 #define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
 
-#define SPIRAL  0           // Spiral test pattern
-#define GRID    1           // Grid test pattern
+#define T_HELP      0       // Help test
+#define T_DIGITAL   1       // Digital test
+#define T_TRIGGER   2       // Test microphone trigger
+#define T_CLOCK     3       // Trigger clock internally
+#define T_OSCOPE    4       // Microphone digital oscilliscope
+#define T_OSCOPE_PC 5       // Display oscillisope on PC
+#define T_PAPER     6       // Advance paper backer
+#define T_SPIRAL    7       // Generate sprial pattern
+#define T_GRID      8       // Generate grid pattern
 
 static void show_analog_on_PC(void);
 static void unit_test(unsigned int mode);
@@ -41,6 +48,9 @@ void self_test(uint16_t test)
   double       volts;         // Reference Voltage
   unsigned int i;
   unsigned int sensor_status; // Sensor running inputs
+  unsigned int sample;        // Sample used for comparison
+  unsigned int random_delay;  // Random sampe time
+  bool         pass;
   
 /*
  *  Update the timer
@@ -57,10 +67,13 @@ void self_test(uint16_t test)
       json_test = 0;                            // Force to 0 
       EEPROM.put(NONVOL_TEST_MODE, json_test);  // and fall through
       
-    case 0:
+    case T_HELP:
       Serial.print("\n\r1 - Digital inputs");
       Serial.print("\n\r2 - Counter values (external trigger)");
-      Serial.print("\n\r3 - Counter values (internal trigger)");
+      if ( revision() >= 3 )
+      {
+        Serial.print("\n\r3 - Counter values (internal trigger)");
+      }
       Serial.print("\n\r4 - Oscilloscope");
       Serial.print("\n\r5 - Oscilloscope (PC)");
       Serial.print("\n\r6 - Advance paper backer");
@@ -69,76 +82,114 @@ void self_test(uint16_t test)
       Serial.print("\n\r");
       break;
 
-    case 1: 
-      Serial.print("\n\rBD Rev:"); Serial.print(revision()); Serial.print("\n\rDIP: 0x"); Serial.print(read_DIP(), HEX);    
-      Serial.print("\n\rTemperature: "); Serial.print(temperature_C()) ;  Serial.print("'C"); speed_of_sound(temperature_C());
+    case T_DIGITAL: 
+      Serial.print("\n\rBD Rev:");                    Serial.print(revision());       Serial.print("\n\rDIP: 0x"); Serial.print(read_DIP(), HEX);    
+      Serial.print("\n\rTemperature: ");              Serial.print(temperature_C());  Serial.print("'C");
+      Serial.print(speed_of_sound(temperature_C()));  Serial.print("mm/us");
       Serial.print("\n\rREF: "); Serial.print(volts); Serial.print("\n\r");
       for (tick=0; tick != 8; tick++)
       {
         digitalWrite(LED_S, (~tick) & 1);
         digitalWrite(LED_X, (~tick) & 2);
+
+
+        
         digitalWrite(LED_Y, (~tick) & 4);
         delay(250);
       }
       break;
 
-    case 2:                               // Show the timer values (Wait for analog input)
-    case 3:                               // Show the timer values (Trigger input)
-      if ( json_test == 3 )
-      {
-        Serial.print("\Clock test.  Output should be 8000 counts");
-        digitalWrite(CLOCK_START, 0);
-        digitalWrite(CLOCK_START, 1);     // Trigger the clocks from outside
-        delay(1000);  
-      }
-      Serial.print("\n\rWaiting for Trigger\n\e");
+    case T_TRIGGER:                       // Show the timer values (Wait for analog input)
+      Serial.print("\n\rWaiting for Trigger\n\r");
+    case T_CLOCK:                        // Show the timer values (Trigger input)
+      stop_counters();
       arm_counters();
+
+      digitalWrite(LED_S, 0);
+      digitalWrite(LED_X, 1);
+      digitalWrite(LED_Y, 1);
+      
+      if ( json_test == T_CLOCK )
+      {
+        if ( revision() >= 3 )  
+        {
+          random_delay = random(1, 6000);   // Pick a random delay time in us
+          Serial.print("\n\rRandom clock test: "); Serial.print(random_delay); Serial.print("us. All outputs must be the same. ");
+          digitalWrite(CLOCK_START, 0);
+          digitalWrite(CLOCK_START, 1);     // Trigger the clocks from the D input of the FF
+          digitalWrite(CLOCK_START, 0);
+          delayMicroseconds(random_delay);  // Delay a random time
+        }
+        else
+        {
+          Serial.print("\n\rThis test not supported on this hardware revision");
+          json_test = 0;
+          break;
+        }
+      }
+  
       while ( !is_running() )
       {
-        digitalWrite(LED_S, (~tick) & 1);
-        digitalWrite(LED_X, (~tick) & 2);
-        digitalWrite(LED_Y, (~tick) & 4);
-        tick <<= 1;
-        if ( tick & 8 )
-        {
-          tick = 1;
-        }
-        delay(100);
+        continue;
       }
       sensor_status = is_running();       // Remember all of the running timers
       stop_counters();
       timer_value[N] = read_counter(N);
       timer_value[E] = read_counter(E);
       timer_value[S] = read_counter(S);
-      timer_value[W] = read_counter(W);
+      timer_value[W] = read_counter(W); // Read the counters
+      if ( json_test == T_CLOCK )       // Test the results
+      {
+        sample = timer_value[N];
+        pass = true;
+
+        for(i=N; i<=W; i++)
+        {
+          if ( timer_value[i] != sample )
+          {
+            pass = false;                 // Make sure they all match
+          }
+        }
+
+        if ( pass == true )
+        {
+          Serial.print(" PASS\n\r");
+        }
+        else
+        {
+          Serial.print(" FAIL\n\r");
+        }
+      }
       send_timer(sensor_status);
-      digitalWrite(LED_S, 0);
-      digitalWrite(LED_X, 0);
+      
+      digitalWrite(LED_S, 1);
+      digitalWrite(LED_X, 1);
       digitalWrite(LED_Y, 0);
       delay(1000);
       break;
 
-    case 4:                             // Show the analog input
+    case T_OSCOPE:                       // Show the analog input
       show_analog();                  
       break;
       
-    case 5:
+    case T_OSCOPE_PC:
       show_analog_on_PC();
       break;
 
-    case 6: 
+    case T_PAPER: 
       Serial.print("\n\rAdvanciing backer paper");
       digitalWrite(PAPER, PAPER_ON);    // Advance the backer paper
       delay(json_paper_time * 10);
       digitalWrite(PAPER, PAPER_OFF);
+      json_test = 0;                    // Turn off this test
       break;
       
-    case 7: 
-      unit_test( SPIRAL );                    // Generate a spirall
+    case T_SPIRAL: 
+      unit_test( T_SPIRAL );            // Generate a spiral
       break;
 
-    case 8:
-      unit_test(GRID);
+    case T_GRID:
+      unit_test( T_GRID);               // Generate a grid
       break;  
   }
 
@@ -381,7 +432,7 @@ static bool sample_calculations
  * Generate a spiral pattern
  */
   default:
-  case SPIRAL:
+  case T_SPIRAL:
     angle = (PI_ON_4) / 5.0 * ((double)sample);
     radius = 0.99d * (json_sensor_dia/2.0) / sqrt(2.0d) * (double)sample / TEST_SAMPLES;
 
@@ -396,7 +447,7 @@ static bool sample_calculations
  /*
  * Generate a grid
  */
-  case GRID:
+  case T_GRID:
     radius = 0.99d * (json_sensor_dia / 2.0d / sqrt(2.0d));                      
     grid_step = radius * 2.0d / (double)GRID_SIDE;
 
