@@ -6,7 +6,7 @@ encoding utf-8
 Sheet 1 1
 Title "freETarget"
 Date "2020-02-16"
-Rev "2.1.X"
+Rev "2.2"
 Comp "github.com/ten-point-nine/freETarget"
 Comment1 ""
 Comment2 ""
@@ -1899,4 +1899,77 @@ F 3 "~" H 3900 8200 50  0001 C CNN
 	0    -1   -1   0   
 $EndComp
 Connection ~ 3900 8400
+$Comp
+L Connector_Generic:Conn_01x06 J6
+U 1 1 5F996624
+P 800 3750
+F 0 "J6" H 718 4167 50  0000 C CNN
+F 1 "Conn_01x06" H 800 4100 50  0000 C CNN
+F 2 "" H 800 3750 50  0001 C CNN
+F 3 "~" H 800 3750 50  0001 C CNN
+	1    800  3750
+	-1   0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR?
+U 1 1 5F9DF6CB
+P 1050 4300
+F 0 "#PWR?" H 1050 4050 50  0001 C CNN
+F 1 "GND" H 1055 4127 50  0000 C CNN
+F 2 "" H 1050 4300 50  0001 C CNN
+F 3 "" H 1050 4300 50  0001 C CNN
+	1    1050 4300
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:VCC #PWR?
+U 1 1 5F9E07B6
+P 1100 3250
+F 0 "#PWR?" H 1100 3100 50  0001 C CNN
+F 1 "VCC" H 1115 3423 50  0000 C CNN
+F 2 "" H 1100 3250 50  0001 C CNN
+F 3 "" H 1100 3250 50  0001 C CNN
+	1    1100 3250
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1100 3250 1100 3550
+Wire Wire Line
+	1100 3550 1000 3550
+Wire Wire Line
+	1050 4050 1000 4050
+Wire Wire Line
+	1050 4050 1050 4300
+Wire Wire Line
+	1300 3950 1000 3950
+Wire Wire Line
+	1300 3750 1000 3750
+Wire Wire Line
+	15550 3700 15350 3700
+Wire Wire Line
+	15550 3800 15350 3800
+Wire Wire Line
+	15550 4100 15350 4100
+Wire Wire Line
+	15550 4200 15350 4200
+Text Label 15350 3700 0    50   ~ 0
+SPARE
+Text Label 15350 3800 0    50   ~ 0
+PAPER*
+Text Label 15350 4100 0    50   ~ 0
+ARX
+Text Label 15350 4200 0    50   ~ 0
+ATX
+Text Label 1050 3950 0    50   ~ 0
+PAPER
+Wire Wire Line
+	1000 3850 1300 3850
+Text Label 1050 3850 0    50   ~ 0
+SPARE
+Wire Wire Line
+	1000 3650 1300 3650
+Text Label 1050 3650 0    50   ~ 0
+ATX
+Text Label 1050 3750 0    50   ~ 0
+ARX
 $EndSCHEMATC
