@@ -51,8 +51,9 @@ GPIO init_table[] = {
   {LED_X,       OUTPUT, 1},
   {LED_Y,       OUTPUT, 1},
   
-  {PAPER,       OUTPUT, 1},               // Paper drive active low
-    
+  {PAPER,       OUTPUT, 1},               // 18-Paper drive active low
+  {SPARE,       OUTPUT, 1},               // 18-Paper drive active low
+  
   {EOF, EOF, EOF} };
 
 

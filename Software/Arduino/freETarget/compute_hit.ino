@@ -453,45 +453,58 @@ void send_score
  *  Display the results
  */
   Serial.print("{");
+  AUX_SERIAL.print("{");
 #if ( S_SHOT )
-  Serial.print("\"shot\":");   Serial.print(shot); Serial.print(", ");
+  Serial.print("\"shot\":");      Serial.print(shot); Serial.print(", ");
+  AUX_SERIAL.print("\"shot\":");  AUX_SERIAL.print(shot); AUX_SERIAL.print(", ");
 #endif
 
 #if ( S_XY )
-  Serial.print("\"x\":");     Serial.print(x);  Serial.print(", ");
-  Serial.print("\"y\":");     Serial.print(y);  Serial.print(", ");
+  Serial.print("\"x\":");     Serial.print(x);    Serial.print(", ");
+  Serial.print("\"y\":");     Serial.print(y);    Serial.print(", ");
+  AUX_SERIAL.print("\"x\":"); AUX_SERIAL.print(x); AUX_SERIAL.print(", ");
+  AUX_SERIAL.print("\"y\":"); AUX_SERIAL.print(y); AUX_SERIAL.print(", ");
 #endif
 
 #if ( S_POLAR )
-  Serial.print("\"r\":");     Serial.print(radius); Serial.print(", ");
-  Serial.print("\"a\":");     Serial.print(angle);  Serial.print(", ");
-#endif
-
-#if ( S_SCORE ) 
-  Serial.print("\"score\":");     Serial.print( 10.9 * (radius / (json_sensor_dia / 2.0d / sqrt(2.0d)))); Serial.print(", ");
-  Serial.print("\"direction\":"); Serial.print(12.0d * (angle + 180.0d) / 360.0d);                        Serial.print(", ");
+  Serial.print("\"r\":");     Serial.print(radius);    Serial.print(", ");
+  Serial.print("\"a\":");     Serial.print(angle);     Serial.print(", ");
+  AUX_SERIAL.print("\"r\":"); AUX_SERIAL.print(radius); AUX_SERIAL.print(", ");
+  AUX_SERIAL.print("\"a\":"); AUX_SERIAL.print(angle);  AUX_SERIAL.print(", ");
 #endif
 
 #if ( S_COUNTERS )
-  Serial.print("\"N\":");     Serial.print(timer_value[N]); Serial.print(", ");
-  Serial.print("\"E\":");     Serial.print(timer_value[E]); Serial.print(", ");
-  Serial.print("\"S\":");     Serial.print(timer_value[S]); Serial.print(", ");
-  Serial.print("\"W\":");     Serial.print(timer_value[W]); Serial.print(", ");
-  Serial.print("\"n\":");     Serial.print((double)s[N].count / OSCILLATOR_MHZ); Serial.print(", ");
-  Serial.print("\"e\":");     Serial.print((double)s[E].count / OSCILLATOR_MHZ); Serial.print(", ");
-  Serial.print("\"s\":");     Serial.print((double)s[S].count / OSCILLATOR_MHZ); Serial.print(", ");
-  Serial.print("\"w\":");     Serial.print((double)s[W].count / OSCILLATOR_MHZ); Serial.print(", ");
+  Serial.print("\"N\":");     Serial.print(timer_value[N]);                           Serial.print(", ");
+  Serial.print("\"E\":");     Serial.print(timer_value[E]);                           Serial.print(", ");
+  Serial.print("\"S\":");     Serial.print(timer_value[S]);                           Serial.print(", ");
+  Serial.print("\"W\":");     Serial.print(timer_value[W]);                           Serial.print(", ");
+  Serial.print("\"n\":");     Serial.print((double)s[N].count / OSCILLATOR_MHZ);      Serial.print(", ");
+  Serial.print("\"e\":");     Serial.print((double)s[E].count / OSCILLATOR_MHZ);      Serial.print(", ");
+  Serial.print("\"s\":");     Serial.print((double)s[S].count / OSCILLATOR_MHZ);      Serial.print(", ");
+  Serial.print("\"w\":");     Serial.print((double)s[W].count / OSCILLATOR_MHZ);      Serial.print(", ");
+  AUX_SERIAL.print("\"N\":"); AUX_SERIAL.print(timer_value[N]);                       AUX_SERIAL.print(", ");
+  AUX_SERIAL.print("\"E\":"); AUX_SERIAL.print(timer_value[E]);                       AUX_SERIAL.print(", ");
+  AUX_SERIAL.print("\"S\":"); AUX_SERIAL.print(timer_value[S]);                       AUX_SERIAL.print(", ");
+  AUX_SERIAL.print("\"W\":"); AUX_SERIAL.print(timer_value[W]);                       AUX_SERIAL.print(", ");
+  AUX_SERIAL.print("\"n\":"); AUX_SERIAL.print((double)s[N].count / OSCILLATOR_MHZ);  AUX_SERIAL.print(", ");
+  AUX_SERIAL.print("\"e\":"); AUX_SERIAL.print((double)s[E].count / OSCILLATOR_MHZ);  AUX_SERIAL.print(", ");
+  AUX_SERIAL.print("\"s\":"); AUX_SERIAL.print((double)s[S].count / OSCILLATOR_MHZ);  AUX_SERIAL.print(", ");
+  AUX_SERIAL.print("\"w\":"); AUX_SERIAL.print((double)s[W].count / OSCILLATOR_MHZ);  AUX_SERIAL.print(", ");
 #endif
 
 #if ( S_MISC ) 
   volts = analogRead(V_REFERENCE);
-  Serial.print("\"V_REF\":");     Serial.print(TO_VOLTS(volts)); Serial.print(", ");
-  Serial.print("\"T\":");         Serial.print(temperature_C()); Serial.print(", ");
-  Serial.print("\"VERSION\":");   Serial.print(SOFTWARE_VERSION);
+  Serial.print("\"V_REF\":");       Serial.print(TO_VOLTS(volts));      Serial.print(", ");
+  Serial.print("\"T\":");           Serial.print(temperature_C());      Serial.print(", ");
+  Serial.print("\"VERSION\":");     Serial.print(SOFTWARE_VERSION);
+  AUX_SERIAL.print("\"V_REF\":");   AUX_SERIAL.print(TO_VOLTS(volts)); AUX_SERIAL.print(", ");
+  AUX_SERIAL.print("\"T\":");       AUX_SERIAL.print(temperature_C()); AUX_SERIAL.print(", ");
+  AUX_SERIAL.print("\"VERSION\":"); AUX_SERIAL.print(SOFTWARE_VERSION);
 #endif
 
   Serial.print("}\n\r");
-
+  AUX_SERIAL.print("}\n\r");
+  
   return;
 }
 

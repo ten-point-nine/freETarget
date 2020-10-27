@@ -8,8 +8,9 @@
 
 #include "freETarget.h"
 #include "mechanical.h"
-#include "analog_io.h";
+#include "analog_io.h"
 #include "gpio.h"
+#include "diag_tools.h"
 
 const char* which_one[4] = {"N:", "   E:", "   S: ", "   W: "};
 
@@ -84,9 +85,10 @@ void self_test(uint16_t test)
 
     case T_DIGITAL: 
       Serial.print("\n\rBD Rev:");                    Serial.print(revision());       Serial.print("\n\rDIP: 0x"); Serial.print(read_DIP(), HEX);    
-      Serial.print("\n\rTemperature: ");              Serial.print(temperature_C());  Serial.print("'C");
+      Serial.print("\n\rTemperature: ");              Serial.print(temperature_C());  Serial.print("'C ");
       Serial.print(speed_of_sound(temperature_C()));  Serial.print("mm/us");
-      Serial.print("\n\rREF: "); Serial.print(volts); Serial.print("\n\r");
+      Serial.print("\n\rV_REF: "); Serial.print(volts); 
+      Serial.print("\n\r");
       for (tick=0; tick != 8; tick++)
       {
         digitalWrite(LED_S, (~tick) & 1);
@@ -177,11 +179,12 @@ void self_test(uint16_t test)
       break;
 
     case T_PAPER: 
-      Serial.print("\n\rAdvanciing backer paper");
+      Serial.print("\n\rAdvanciing backer paper "); Serial.print(json_paper_time * 10); Serial.print(" ms");
       digitalWrite(PAPER, PAPER_ON);    // Advance the backer paper
       delay(json_paper_time * 10);
       digitalWrite(PAPER, PAPER_OFF);
       json_test = 0;                    // Turn off this test
+      Serial.print("\n\rDone");
       break;
       
     case T_SPIRAL: 

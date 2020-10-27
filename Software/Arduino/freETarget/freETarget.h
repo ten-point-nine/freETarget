@@ -11,14 +11,14 @@
 #ifndef _FREETARGET_H
 #define _FREETARGET_H
 
-#define SOFTWARE_VERSION "\"2.3.1 October 25, 2020\""
+#define SOFTWARE_VERSION "\"2.4.0 October 26, 2020\""
 
 
 /*
  * Compilation Flags
  */
 #define SAMPLE_CALCULATIONS false    // Trace the COUNTER values
-#define AUX_SERIAL    Serial1
+#define AUX_SERIAL    Serial3
 
 /*
  * Oscillator Features

@@ -61,11 +61,13 @@ void get_timers(void);                        // Read and return the counter reg
 #define PAPER_ON     0
 #define PAPER_OFF    1
 
+#define SPARE       19
+
 #define J10_1      VCC
-#define J10_2        8
-#define J10-3        1
-#define J10_4       19
-#define J10_5       18
+#define J10_2       14                    // TX3
+#define J10_3       15                    // RX3
+#define J10_4       19                    // RX1
+#define J10_5       18                    // TX1
 #define J10_6      GND
 
 
