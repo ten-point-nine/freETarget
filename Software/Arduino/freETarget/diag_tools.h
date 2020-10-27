@@ -15,4 +15,4 @@
 #define T_PAPER     6       // Advance paper backer
 #define T_SPIRAL    7       // Generate sprial pattern
 #define T_GRID      8       // Generate grid pattern
-
+#define T_PASS_THRU 9       // Serial port pass through

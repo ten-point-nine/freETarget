@@ -11,7 +11,7 @@
 #ifndef _FREETARGET_H
 #define _FREETARGET_H
 
-#define SOFTWARE_VERSION "\"2.4.0 October 26, 2020\""
+#define SOFTWARE_VERSION "\"2.4.0 October 27, 2020\""
 
 
 /*

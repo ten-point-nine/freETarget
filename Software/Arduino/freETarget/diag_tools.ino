@@ -19,16 +19,6 @@ const char* which_one[4] = {"N:", "   E:", "   S: ", "   W: "};
 #define GRID_SIDE 25
 #define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
 
-#define T_HELP      0       // Help test
-#define T_DIGITAL   1       // Digital test
-#define T_TRIGGER   2       // Test microphone trigger
-#define T_CLOCK     3       // Trigger clock internally
-#define T_OSCOPE    4       // Microphone digital oscilliscope
-#define T_OSCOPE_PC 5       // Display oscillisope on PC
-#define T_PAPER     6       // Advance paper backer
-#define T_SPIRAL    7       // Generate sprial pattern
-#define T_GRID      8       // Generate grid pattern
-
 static void show_analog_on_PC(void);
 static void unit_test(unsigned int mode);
 static bool sample_calculations(unsigned int mode, unsigned int sample);
@@ -48,6 +38,7 @@ void self_test(uint16_t test)
 {
   double       volts;         // Reference Voltage
   unsigned int i;
+  char         ch;
   unsigned int sensor_status; // Sensor running inputs
   unsigned int sample;        // Sample used for comparison
   unsigned int random_delay;  // Random sampe time
@@ -80,6 +71,10 @@ void self_test(uint16_t test)
       Serial.print("\n\r6 - Advance paper backer");
       Serial.print("\n\r7 - Spiral Unit Test");
       Serial.print("\n\r8 - Grid calibration pattern");
+      if ( revision() >= 3 )
+      {
+        Serial.print("\n\r9 - Aux port passthrough)");
+      }
       Serial.print("\n\r");
       break;
 
@@ -194,6 +189,21 @@ void self_test(uint16_t test)
     case T_GRID:
       unit_test( T_GRID);               // Generate a grid
       break;  
+
+    case T_PASS_THRU:
+      Serial.print("\n\rPass through active.  Cycle power to exit\n\r");
+      while (1)
+      {
+        if ( Serial.available() )
+        {
+          ch = Serial.read(); AUX_SERIAL.print(ch);
+        }
+        if ( AUX_SERIAL.available() )
+        {
+          ch = AUX_SERIAL.read(); Serial.print(ch);
+        }
+      }
+      break;
   }
 
  /* 

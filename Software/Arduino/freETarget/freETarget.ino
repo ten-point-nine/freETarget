@@ -13,7 +13,8 @@
 #include "EEPROM.h"
 #include "nonvol.h"
 #include "mechanical.h"
-#include 
+#include "diag_tools.h"
+
 history_t history;
 double        s_of_sound;        // Speed of sound
 unsigned int shot = 0;
@@ -43,7 +44,7 @@ void setup()
  * Initialize variables
  */
   read_nonvol();
-  
+
 /*
  *  Set up the port pins
  */
@@ -61,7 +62,8 @@ void setup()
 /*
  * All done, begin the program
  */ 
-  if ( json_test == T_PAPER )
+  if ( (json_test == T_PAPER)           // Abort paper test
+        || (json_test == T_PASS_THRU ) )// or pass through test 
   {
     json_test = T_HELP;
   }
@@ -98,15 +100,6 @@ unsigned int location;          // Sensor location
 unsigned int i, j;              // Iteration Counter
 void loop() 
 {
-  while(1)
-  {
-    digitalWrite(18, 0);
-    digitalWrite(19, 0);
-    delay(1000);
-    digitalWrite(18, 1);
-    digitalWrite(19, 1);
-    delay(1000);
-  }
 
 /*
  * Take care of any commands coming through
