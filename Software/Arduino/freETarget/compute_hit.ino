@@ -474,22 +474,14 @@ void send_score
 #endif
 
 #if ( S_COUNTERS )
-  Serial.print("\"N\":");     Serial.print(timer_value[N]);                           Serial.print(", ");
-  Serial.print("\"E\":");     Serial.print(timer_value[E]);                           Serial.print(", ");
-  Serial.print("\"S\":");     Serial.print(timer_value[S]);                           Serial.print(", ");
-  Serial.print("\"W\":");     Serial.print(timer_value[W]);                           Serial.print(", ");
-  Serial.print("\"n\":");     Serial.print((double)s[N].count / OSCILLATOR_MHZ);      Serial.print(", ");
-  Serial.print("\"e\":");     Serial.print((double)s[E].count / OSCILLATOR_MHZ);      Serial.print(", ");
-  Serial.print("\"s\":");     Serial.print((double)s[S].count / OSCILLATOR_MHZ);      Serial.print(", ");
-  Serial.print("\"w\":");     Serial.print((double)s[W].count / OSCILLATOR_MHZ);      Serial.print(", ");
-  AUX_SERIAL.print("\"N\":"); AUX_SERIAL.print(timer_value[N]);                       AUX_SERIAL.print(", ");
-  AUX_SERIAL.print("\"E\":"); AUX_SERIAL.print(timer_value[E]);                       AUX_SERIAL.print(", ");
-  AUX_SERIAL.print("\"S\":"); AUX_SERIAL.print(timer_value[S]);                       AUX_SERIAL.print(", ");
-  AUX_SERIAL.print("\"W\":"); AUX_SERIAL.print(timer_value[W]);                       AUX_SERIAL.print(", ");
-  AUX_SERIAL.print("\"n\":"); AUX_SERIAL.print((double)s[N].count / OSCILLATOR_MHZ);  AUX_SERIAL.print(", ");
-  AUX_SERIAL.print("\"e\":"); AUX_SERIAL.print((double)s[E].count / OSCILLATOR_MHZ);  AUX_SERIAL.print(", ");
-  AUX_SERIAL.print("\"s\":"); AUX_SERIAL.print((double)s[S].count / OSCILLATOR_MHZ);  AUX_SERIAL.print(", ");
-  AUX_SERIAL.print("\"w\":"); AUX_SERIAL.print((double)s[W].count / OSCILLATOR_MHZ);  AUX_SERIAL.print(", ");
+  Serial.print("\"N\":");     Serial.print(s[N].count);      Serial.print(", ");
+  Serial.print("\"E\":");     Serial.print(s[E].count);      Serial.print(", ");
+  Serial.print("\"S\":");     Serial.print(s[S].count);      Serial.print(", ");
+  Serial.print("\"W\":");     Serial.print(s[W].count);      Serial.print(", ");
+  AUX_SERIAL.print("\"N\":"); AUX_SERIAL.print(s[N].count);  AUX_SERIAL.print(", ");
+  AUX_SERIAL.print("\"E\":"); AUX_SERIAL.print(s[E].count);  AUX_SERIAL.print(", ");
+  AUX_SERIAL.print("\"W\":"); AUX_SERIAL.print(s[S].count);  AUX_SERIAL.print(", ");
+  AUX_SERIAL.print("\"S\":"); AUX_SERIAL.print(s[W].count);  AUX_SERIAL.print(", ");
 #endif
 
 #if ( S_MISC ) 
