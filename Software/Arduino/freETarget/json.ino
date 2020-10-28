@@ -303,7 +303,7 @@ void show_echo(void)
   Serial.print(" \"INIT\":");     Serial.print(i);                Serial.print(", ");
   Serial.print(" \"V_REF\":");    Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print(", ");
   Serial.print(" \"VERSION\":");  Serial.print(SOFTWARE_VERSION); Serial.print(", ");
-  Serial.print(" \"BRD REV\":");  Serial.print(revision()); 
+  Serial.print(" \"BRD_REV\":");  Serial.print(revision()); 
   Serial.print("}\n\r");
   
 /*

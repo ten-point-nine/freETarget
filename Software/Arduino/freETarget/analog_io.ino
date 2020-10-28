@@ -55,8 +55,8 @@ unsigned int read_reference(void)
  *  
  *  The analog input is a number 0-1024 
  *--------------------------------------------------------------*/
-//                               0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F
-static unsigned int version[] = {2, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0};
+//                                 0     1  2  3  4  5  6     7    8  9  A  B  C  D  E  F
+static unsigned int version[] = {REV_21, 0, 0, 0, 0, 0, 0, REV_22, 0, 0, 0, 0, 0, 0, 0, 0};
   
 unsigned int revision(void)
 {

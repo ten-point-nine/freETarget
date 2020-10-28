@@ -62,7 +62,7 @@ void self_test(uint16_t test)
     case T_HELP:
       Serial.print("\n\r1 - Digital inputs");
       Serial.print("\n\r2 - Counter values (external trigger)");
-      if ( revision() >= 3 )
+      if ( revision() >= REV_22 )
       {
         Serial.print("\n\r3 - Counter values (internal trigger)");
       }
@@ -71,7 +71,7 @@ void self_test(uint16_t test)
       Serial.print("\n\r6 - Advance paper backer");
       Serial.print("\n\r7 - Spiral Unit Test");
       Serial.print("\n\r8 - Grid calibration pattern");
-      if ( revision() >= 3 )
+      if ( revision() >= REV_22 )
       {
         Serial.print("\n\r9 - Aux port passthrough)");
       }
@@ -108,7 +108,7 @@ void self_test(uint16_t test)
       
       if ( json_test == T_CLOCK )
       {
-        if ( revision() >= 3 )  
+        if ( revision() >= REV_22 )  
         {
           random_delay = random(1, 6000);   // Pick a random delay time in us
           Serial.print("\n\rRandom clock test: "); Serial.print(random_delay); Serial.print("us. All outputs must be the same. ");
