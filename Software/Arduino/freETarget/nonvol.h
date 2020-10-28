@@ -26,5 +26,5 @@ void get_position(void);        // Reset the position values
 #define NONVOL_SOUTH_Y        (NONVOL_SOUTH_X     + sizeof(int) + 2)
 #define NONVOL_WEST_X         (NONVOL_SOUTH_Y     + sizeof(int) + 2)       // Offset applied to West sensor
 #define NONVOL_WEST_Y         (NONVOL_WEST_X      + sizeof(int) + 2)
-
+#define NONVOL_TRIP_POINT     (NONVOL_WEST_Y      + sizeof(int) + 2)       // Trip point in mV 
 #endif

@@ -96,6 +96,8 @@ void read_nonvol(void)
     json_sensor_angle = 0;
     EEPROM.put(NONVOL_SENSOR_ANGLE, json_sensor_angle);
     gen_position();    
+    json_trip_point = 1500; 
+    EEPROM.put(NONVOL_TRIP_POINT, json_trip_point);
     nonvol_init = 0xabcd;
     EEPROM.put(NONVOL_INIT, nonvol_init);
   }
@@ -136,7 +138,9 @@ void read_nonvol(void)
   EEPROM.get(NONVOL_SOUTH_Y, json_south_y);  
   EEPROM.get(NONVOL_WEST_X,  json_west_x);  
   EEPROM.get(NONVOL_WEST_Y,  json_west_y);  
-   
+
+  EEPROM.get(NONVOL_TRIP_POINT, json_trip_point);
+  
 /*
  * All done, begin the program
  */

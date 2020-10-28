@@ -18,6 +18,7 @@ const char* which_one[4] = {"N:", "   E:", "   S: ", "   W: "};
 #define RX(Z,X,Y) (16000 - (sqrt(sq(TICK(x)-s[(Z)].x) + sq(TICK(y)-s[(Z)].y))))
 #define GRID_SIDE 25
 #define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
+#define OVER_TRIP (0.1)                           // Trip point +/1 100mV
 
 static void show_analog_on_PC(void);
 static void unit_test(unsigned int mode);
@@ -60,21 +61,22 @@ void self_test(uint16_t test)
       EEPROM.put(NONVOL_TEST_MODE, json_test);  // and fall through
       
     case T_HELP:
-      Serial.print("\n\r1 - Digital inputs");
-      Serial.print("\n\r2 - Counter values (external trigger)");
+      Serial.print("\n\r 1 - Digital inputs");
+      Serial.print("\n\r 2 - Counter values (external trigger)");
       if ( revision() >= REV_22 )
       {
-        Serial.print("\n\r3 - Counter values (internal trigger)");
+        Serial.print("\n\r 3 - Counter values (internal trigger)");
       }
-      Serial.print("\n\r4 - Oscilloscope");
-      Serial.print("\n\r5 - Oscilloscope (PC)");
-      Serial.print("\n\r6 - Advance paper backer");
-      Serial.print("\n\r7 - Spiral Unit Test");
-      Serial.print("\n\r8 - Grid calibration pattern");
+      Serial.print("\n\r 4 - Oscilloscope");
+      Serial.print("\n\r 5 - Oscilloscope (PC)");
+      Serial.print("\n\r 6 - Advance paper backer");
+      Serial.print("\n\r 7 - Spiral Unit Test");
+      Serial.print("\n\r 8 - Grid calibration pattern");
       if ( revision() >= REV_22 )
       {
-        Serial.print("\n\r9 - Aux port passthrough)");
+        Serial.print("\n\r 9 - Aux port passthrough)");
       }
+      Serial.print("\n\r10 - Set detection trip point"); 
       Serial.print("\n\r");
       break;
 
@@ -184,10 +186,12 @@ void self_test(uint16_t test)
       
     case T_SPIRAL: 
       unit_test( T_SPIRAL );            // Generate a spiral
+      json_test = T_HELP;               // and stop the test
       break;
 
     case T_GRID:
       unit_test( T_GRID);               // Generate a grid
+      json_test = T_HELP;
       break;  
 
     case T_PASS_THRU:
@@ -201,6 +205,27 @@ void self_test(uint16_t test)
         if ( AUX_SERIAL.available() )
         {
           ch = AUX_SERIAL.read(); Serial.print(ch);
+        }
+      }
+      break;
+
+    case T_SET_TRIP:
+      Serial.print("\n\rSetting trip point.  Cycle power to exit\n\r");
+      while (1)
+      {
+        volts = TO_VOLTS(analogRead(V_REFERENCE));             // Read the DAC. 0-5V
+        volts = volts -(((double)json_trip_point) / 1000.0d);   // Subtract the trip point
+        if ( volts >= OVER_TRIP )
+        {
+          digitalWrite(LED_S, 0); digitalWrite(LED_X, 1);      digitalWrite(LED_Y, 1);
+        }
+        else if ( volts <= (-OVER_TRIP ) )
+        {
+          digitalWrite(LED_S, 1); digitalWrite(LED_X, 1);      digitalWrite(LED_Y, 0);
+        }
+        else
+        {
+          digitalWrite(LED_S, 1); digitalWrite(LED_X, 0);      digitalWrite(LED_Y, 1);
         }
       }
       break;

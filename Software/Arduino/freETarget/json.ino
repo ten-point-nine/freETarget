@@ -28,6 +28,7 @@ int     json_south_x;               // South Adjustment
 int     json_south_y;
 int     json_west_x;                // WestAdjustment
 int     json_west_y;
+int     json_trip_point;            // Detection trip point in mV
 
 #define IS_VOID    0
 #define IS_INT16   1
@@ -69,6 +70,7 @@ static json_message JSON[] = {
   {"\"SOUTH_Y\":",     &json_south_y,                     0,                IS_INT16,  0,             NONVOL_SOUTH_Y     },    // 13
   {"\"WEST_X\":",      &json_west_x,                      0,                IS_INT16,  0,             NONVOL_WEST_X      },    // 14
   {"\"WEST_Y\":",      &json_west_y,                      0,                IS_INT16,  0,             NONVOL_WEST_Y      },    // 15
+  {"\"TRIP_POINT\":",  &json_trip_point,                  0,                IS_INT16,  0,             NONVOL_TRIP_POINT  },    // 16
   { 0, 0, 0, 0, 0, 0}
 };
 
@@ -274,7 +276,7 @@ void show_echo(void)
 {
   unsigned int i;
   
-  Serial.print("\n\r{");
+  Serial.print("\n\r{\n\r");
 
   i=0;
   while (JSON[i].token != 0 )
@@ -287,24 +289,24 @@ void show_echo(void)
           
       case IS_INT16:
         Serial.print(JSON[i].token);
-        Serial.print(*JSON[i].value); Serial.print(", ");
+        Serial.print(*JSON[i].value); Serial.print(", \n\r");
         break;
 
       case IS_FLOAT:
       case IS_DOUBLE:
         Serial.print(JSON[i].token);
-        Serial.print(*JSON[i].d_value); Serial.print(", ");
+        Serial.print(*JSON[i].d_value); Serial.print(", \n\r");
         break;
     }
     i++;
   }
     
   EEPROM.get(NONVOL_INIT, i);
-  Serial.print(" \"INIT\":");     Serial.print(i);                Serial.print(", ");
-  Serial.print(" \"V_REF\":");    Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print(", ");
-  Serial.print(" \"VERSION\":");  Serial.print(SOFTWARE_VERSION); Serial.print(", ");
-  Serial.print(" \"BRD_REV\":");  Serial.print(revision()); 
-  Serial.print("}\n\r");
+  Serial.print("\"INIT\":");     Serial.print(i);                Serial.print(", \n\r");
+  Serial.print("\"V_REF\":");    Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print(", \n\r");
+  Serial.print("\"VERSION\":");  Serial.print(SOFTWARE_VERSION); Serial.print(", \n\r");
+  Serial.print("\"BRD_REV\":");  Serial.print(revision()); 
+  Serial.print("\n\r}\n\r");
   
 /*
  *  All done, return

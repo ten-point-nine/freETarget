@@ -60,17 +60,24 @@ void setup()
   }
 
 /*
- * All done, begin the program
+ * Turn off the self test
  */ 
-  if ( (json_test == T_PAPER)           // Abort paper test
-        || (json_test == T_PASS_THRU ) )// or pass through test 
+  switch (json_test)
   {
-    json_test = T_HELP;
+    case T_PAPER:
+    case T_PASS_THRU:
+    case T_SET_TRIP:
+      json_test = T_HELP;
+      break;
+
+    default:
+      Serial.print("\n\rStarting Test: "); Serial.print(json_test);
+      break;
   }
-  if ( json_test != T_HELP )
-  {
-    Serial.print("\n\rStarting Test: "); Serial.print(json_test);
-  }
+
+/*
+ * Ready to go
+ */
  show_echo();
  return;
 }
