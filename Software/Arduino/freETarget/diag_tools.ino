@@ -18,7 +18,7 @@ const char* which_one[4] = {"N:", "   E:", "   S: ", "   W: "};
 #define RX(Z,X,Y) (16000 - (sqrt(sq(TICK(x)-s[(Z)].x) + sq(TICK(y)-s[(Z)].y))))
 #define GRID_SIDE 25
 #define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
-#define OVER_TRIP (0.1)                           // Trip point +/1 100mV
+#define OVER_TRIP (0.025)                           // Trip point +/- 25mV
 
 static void show_analog_on_PC(void);
 static void unit_test(unsigned int mode);
