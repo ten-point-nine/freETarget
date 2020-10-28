@@ -34,7 +34,7 @@
  * DIP Switch enabled tests.  Set (0<<x) to (1<<x) to enable always
  */
 //                      From DIP    From Software
-#define SELF_TEST       (1 << 0) + (0 << (4 + 0))
+#define CALIBRATE       (1 << 0) + (0 << (4 + 0))
 #define VERBOSE_TRACE   (1 << 1) + (0 << (4 + 1))      
 
 #define N 0

@@ -64,6 +64,7 @@ void setup()
  */ 
   switch (json_test)
   {
+    case T_HELP:
     case T_PAPER:
     case T_PASS_THRU:
     case T_SET_TRIP:
@@ -124,6 +125,10 @@ void loop()
  */
   default:
   case SET_MODE:
+    if ( read_DIP() & CALIBRATE )
+    {
+      json_test = T_SET_TRIP;
+    }
     if ( json_test == 0 )       // No self test started
     {
       state = ARM;              // Carry on to the target
