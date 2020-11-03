@@ -16,9 +16,9 @@ const char* which_one[4] = {"N:", "   E:", "   S: ", "   W: "};
 
 #define TICK(x) (((x) / 0.33) * OSCILLATOR_MHZ)   // Distance in clock ticks
 #define RX(Z,X,Y) (16000 - (sqrt(sq(TICK(x)-s[(Z)].x) + sq(TICK(y)-s[(Z)].y))))
-#define GRID_SIDE 25
+#define GRID_SIDE 25                              // Should be an odd number
 #define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
-#define OVER_TRIP (0.025)                           // Trip point +/- 25mV
+#define OVER_TRIP (0.025)                         // Trip point +/- 25mV
 
 static void show_analog_on_PC(void);
 static void unit_test(unsigned int mode);
@@ -61,31 +61,31 @@ void self_test(uint16_t test)
       EEPROM.put(NONVOL_TEST_MODE, json_test);  // and fall through
       
     case T_HELP:
-      Serial.print("\n\r 1 - Digital inputs");
-      Serial.print("\n\r 2 - Counter values (external trigger)");
+      Serial.print("\r\n 1 - Digital inputs");
+      Serial.print("\r\n 2 - Counter values (external trigger)");
       if ( revision() >= REV_22 )
       {
-        Serial.print("\n\r 3 - Counter values (internal trigger)");
+        Serial.print("\r\n 3 - Counter values (internal trigger)");
       }
-      Serial.print("\n\r 4 - Oscilloscope");
-      Serial.print("\n\r 5 - Oscilloscope (PC)");
-      Serial.print("\n\r 6 - Advance paper backer");
-      Serial.print("\n\r 7 - Spiral Unit Test");
-      Serial.print("\n\r 8 - Grid calibration pattern");
+      Serial.print("\r\n 4 - Oscilloscope");
+      Serial.print("\r\n 5 - Oscilloscope (PC)");
+      Serial.print("\r\n 6 - Advance paper backer");
+      Serial.print("\r\n 7 - Spiral Unit Test");
+      Serial.print("\r\n 8 - Grid calibration pattern");
       if ( revision() >= REV_22 )
       {
-        Serial.print("\n\r 9 - Aux port passthrough)");
+        Serial.print("\r\n 9 - Aux port passthrough");
       }
-      Serial.print("\n\r10 - Set detection trip point"); 
-      Serial.print("\n\r");
+      Serial.print("\r\n10 - Set detection trip point"); 
+      Serial.print("\r\n");
       break;
 
     case T_DIGITAL: 
-      Serial.print("\n\rBD Rev:");                    Serial.print(revision());       Serial.print("\n\rDIP: 0x"); Serial.print(read_DIP(), HEX);    
-      Serial.print("\n\rTemperature: ");              Serial.print(temperature_C());  Serial.print("'C ");
+      Serial.print("\r\nBD Rev:");                    Serial.print(revision());       Serial.print("\r\nDIP: 0x"); Serial.print(read_DIP(), HEX);    
+      Serial.print("\r\nTemperature: ");              Serial.print(temperature_C());  Serial.print("'C ");
       Serial.print(speed_of_sound(temperature_C()));  Serial.print("mm/us");
-      Serial.print("\n\rV_REF: "); Serial.print(volts); 
-      Serial.print("\n\r");
+      Serial.print("\r\nV_REF: "); Serial.print(volts); 
+      Serial.print("\r\n");
       for (tick=0; tick != 8; tick++)
       {
         digitalWrite(LED_S, (~tick) & 1);
@@ -99,7 +99,7 @@ void self_test(uint16_t test)
       break;
 
     case T_TRIGGER:                       // Show the timer values (Wait for analog input)
-      Serial.print("\n\rWaiting for Trigger\n\r");
+      Serial.print("\r\nWaiting for Trigger\r\n");
     case T_CLOCK:                        // Show the timer values (Trigger input)
       stop_counters();
       arm_counters();
@@ -113,7 +113,7 @@ void self_test(uint16_t test)
         if ( revision() >= REV_22 )  
         {
           random_delay = random(1, 6000);   // Pick a random delay time in us
-          Serial.print("\n\rRandom clock test: "); Serial.print(random_delay); Serial.print("us. All outputs must be the same. ");
+          Serial.print("\r\nRandom clock test: "); Serial.print(random_delay); Serial.print("us. All outputs must be the same. ");
           digitalWrite(CLOCK_START, 0);
           digitalWrite(CLOCK_START, 1);     // Trigger the clocks from the D input of the FF
           digitalWrite(CLOCK_START, 0);
@@ -121,7 +121,7 @@ void self_test(uint16_t test)
         }
         else
         {
-          Serial.print("\n\rThis test not supported on this hardware revision");
+          Serial.print("\r\nThis test not supported on this hardware revision");
           json_test = 0;
           break;
         }
@@ -152,11 +152,11 @@ void self_test(uint16_t test)
 
         if ( pass == true )
         {
-          Serial.print(" PASS\n\r");
+          Serial.print(" PASS\r\n");
         }
         else
         {
-          Serial.print(" FAIL\n\r");
+          Serial.print(" FAIL\r\n");
         }
       }
       send_timer(sensor_status);
@@ -176,12 +176,12 @@ void self_test(uint16_t test)
       break;
 
     case T_PAPER: 
-      Serial.print("\n\rAdvanciing backer paper "); Serial.print(json_paper_time * 10); Serial.print(" ms");
+      Serial.print("\r\nAdvanciing backer paper "); Serial.print(json_paper_time * 10); Serial.print(" ms");
       digitalWrite(PAPER, PAPER_ON);    // Advance the backer paper
       delay(json_paper_time * 10);
       digitalWrite(PAPER, PAPER_OFF);
       json_test = 0;                    // Turn off this test
-      Serial.print("\n\rDone");
+      Serial.print("\r\nDone");
       break;
       
     case T_SPIRAL: 
@@ -191,11 +191,11 @@ void self_test(uint16_t test)
 
     case T_GRID:
       unit_test( T_GRID);               // Generate a grid
-      json_test = T_HELP;
+      json_test = T_HELP;               // and stop the test
       break;  
 
     case T_PASS_THRU:
-      Serial.print("\n\rPass through active.  Cycle power to exit\n\r");
+      Serial.print("\r\nPass through active.  Cycle power to exit\r\n");
       while (1)
       {
         if ( Serial.available() )
@@ -210,7 +210,7 @@ void self_test(uint16_t test)
       break;
 
     case T_SET_TRIP:
-      Serial.print("\n\rSetting trip point.  Cycle power to exit\n\r");
+      Serial.print("\r\nSetting trip point.  Cycle power to exit\r\n");
       while (1)
       {
         volts = TO_VOLTS(analogRead(V_REFERENCE));             // Read the DAC. 0-5V
@@ -320,7 +320,7 @@ void show_analog(void)
     o_scope[max_input[i]] = nesw[i];
    }
   
-  Serial.print("{\"OSCOPE\": "); Serial.print(o_scope);  Serial.print("\"}\n\r");     // Display the trace as JSON
+  Serial.print("{\"OSCOPE\": "); Serial.print(o_scope);  Serial.print("\"}\r\n");     // Display the trace as JSON
 
  /*
   * All done.

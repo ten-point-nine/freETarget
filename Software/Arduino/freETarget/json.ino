@@ -14,7 +14,7 @@ static char input_JSON[128];
 
 int     json_dip_switch;            // DIP switch overwritten by JSON message
 double  json_sensor_dia = DIAMETER; // Sensor daiamter overwitten by JSON message
-int     json_sensor_angle = 0;      // Angle sensors are rotated through
+int     json_sensor_angle;          // Angle sensors are rotated through
 int     json_paper_time = 0;        // Time paper motor is applied
 int     json_echo;                  // Test String 
 double  json_d_echo;                // Test String
@@ -29,6 +29,7 @@ int     json_south_y;
 int     json_west_x;                // WestAdjustment
 int     json_west_y;
 int     json_trip_point;            // Detection trip point in mV
+int     json_name_id;               // Name identifier
 
 #define IS_VOID    0
 #define IS_INT16   1
@@ -71,6 +72,7 @@ static json_message JSON[] = {
   {"\"WEST_X\":",      &json_west_x,                      0,                IS_INT16,  0,             NONVOL_WEST_X      },    // 14
   {"\"WEST_Y\":",      &json_west_y,                      0,                IS_INT16,  0,             NONVOL_WEST_Y      },    // 15
   {"\"TRIP_POINT\":",  &json_trip_point,                  0,                IS_INT16,  0,             NONVOL_TRIP_POINT  },    // 16
+  {"\"NAME_ID\":",     &json_name_id,                     0,                IS_INT16,  &show_names,   NONVOL_NAME_ID     },    // 17
   { 0, 0, 0, 0, 0, 0}
 };
 
@@ -211,14 +213,14 @@ double  y;
  */
   if ( not_found == true )
   {
-    Serial.print("\n\r{\"JSON\":0, "); 
+    Serial.print("\r\n{\"JSON\":0, "); 
     j = 0;    
     while ( JSON[j].token != 0 ) 
     {
       Serial.print(JSON[j].token); Serial.print("0, ");
       j++;
     }
-    Serial.print(" \"VERSION\": "); Serial.print(SOFTWARE_VERSION); Serial.print("}\n\r"); 
+    Serial.print(" \"VERSION\": "); Serial.print(SOFTWARE_VERSION); Serial.print("}\r\n"); 
   }
   
 /*
@@ -276,8 +278,9 @@ void show_echo(void)
 {
   unsigned int i;
   
-  Serial.print("\n\r{\n\r");
-
+  Serial.print("\r\n{\r\n");
+  Serial.print("\"NAME\":\""), Serial.print(names[json_name_id]); Serial.print("\", \r\n");
+  
   i=0;
   while (JSON[i].token != 0 )
   {
@@ -289,25 +292,58 @@ void show_echo(void)
           
       case IS_INT16:
         Serial.print(JSON[i].token);
-        Serial.print(*JSON[i].value); Serial.print(", \n\r");
+        Serial.print(*JSON[i].value); Serial.print(", \r\n");
         break;
 
       case IS_FLOAT:
       case IS_DOUBLE:
         Serial.print(JSON[i].token);
-        Serial.print(*JSON[i].d_value); Serial.print(", \n\r");
+        Serial.print(*JSON[i].d_value); Serial.print(", \r\n");
         break;
     }
     i++;
   }
     
   EEPROM.get(NONVOL_INIT, i);
-  Serial.print("\"INIT\":");     Serial.print(i);                Serial.print(", \n\r");
-  Serial.print("\"V_REF\":");    Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print(", \n\r");
-  Serial.print("\"VERSION\":");  Serial.print(SOFTWARE_VERSION); Serial.print(", \n\r");
+  Serial.print("\"INIT\":");     Serial.print(i);                Serial.print(", \r\n");
+  Serial.print("\"V_REF\":");    Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print(", \r\n");
+  Serial.print("\"VERSION\":");  Serial.print(SOFTWARE_VERSION); Serial.print(", \r\n");
   Serial.print("\"BRD_REV\":");  Serial.print(revision()); 
-  Serial.print("\n\r}\n\r");
+  Serial.print("\r\n}\r\n");
   
+/*
+ *  All done, return
+ */
+  return;
+}
+
+/*-----------------------------------------------------
+ * 
+ * function: show_names
+ * 
+ * brief: Display the list of names
+ * 
+ * return: None
+ * 
+ *-----------------------------------------------------
+ *
+ * Loop and display the settings
+ * 
+ *-----------------------------------------------------*/
+
+void show_names(void)
+{
+  unsigned int i;
+  
+  Serial.print("\r\n{\r\n");
+  
+  i=1;
+  while (names[i] != 0 )
+  {
+    Serial.print("\"NAME_"); Serial.print(i); Serial.print("\": \"");  Serial.print(names[i]); Serial.print("\", \r\n");
+    i++;
+  }
+  Serial.print("}\r\n");
 /*
  *  All done, return
  */
@@ -326,7 +362,7 @@ void show_echo(void)
 
 static void show_test(void)
  {
-  Serial.print("\n\rSelf Test:"); Serial.print(json_test); Serial.print("\n\r");
+  Serial.print("\r\nSelf Test:"); Serial.print(json_test); Serial.print("\r\n");
   
   self_test(json_test);
   return;

@@ -19,6 +19,11 @@ history_t history;
 double        s_of_sound;        // Speed of sound
 unsigned int shot = 0;
 
+char* names[] = { "ANON", "DOC", "DOPEY", "HAPPY", "GRUMPY", "BASHFUL", "SNEEZEY", "SLEEPY",
+                  "RUDOLF", "DONNER", "BLITXEM", "DASHER", "PRANCER", "VIXEN", "COMET", "CUPID", "DUNDER",
+                  "ODIN", "WODEN", "THOR", "BALDR",
+                  0};
+                  
 /*----------------------------------------------------------------
  * 
  * void setup()
@@ -37,14 +42,9 @@ void setup()
  */
   Serial.begin(115200);
   AUX_SERIAL.begin(115200); 
-  Serial.print("\n\rfreETarget ");     Serial.print(SOFTWARE_VERSION);      Serial.print("\n\r");
-  AUX_SERIAL.print("\n\rfreETarget "); AUX_SERIAL.print(SOFTWARE_VERSION);  AUX_SERIAL.print("\n\r");
+  Serial.print("\r\nfreETarget ");     Serial.print(SOFTWARE_VERSION);      Serial.print("\r\n");
+  AUX_SERIAL.print("\r\nfreETarget "); AUX_SERIAL.print(SOFTWARE_VERSION);  AUX_SERIAL.print("\r\n");
   
-/*
- * Initialize variables
- */
-  read_nonvol();
-
 /*
  *  Set up the port pins
  */
@@ -60,6 +60,11 @@ void setup()
   }
 
 /*
+ * Initialize variables
+ */
+  read_nonvol();
+
+/*
  * Turn off the self test
  */ 
   switch (json_test)
@@ -72,7 +77,7 @@ void setup()
       break;
 
     default:
-      Serial.print("\n\rStarting Test: "); Serial.print(json_test);
+      Serial.print("\r\nStarting Test: "); Serial.print(json_test);
       break;
   }
 
@@ -144,7 +149,7 @@ void loop()
   case ARM:
     if ( read_DIP() & (VERBOSE_TRACE) )
     {
-      Serial.print("\n\n\rWaiting...");
+      Serial.print("\n\r\nWaiting...");
     }
     arm_counters();
     set_LED(LED_S, true);     // Show we are waiting
@@ -196,7 +201,7 @@ void loop()
     stop_counters(); 
     if ( read_DIP() & (VERBOSE_TRACE) )
     {
-      Serial.print("\n\rReducing...");
+      Serial.print("\r\nReducing...");
     }
     set_LED(LED_S, false);
     set_LED(LED_X, false);     // No longer processing
@@ -220,7 +225,7 @@ void loop()
     {
       if ( read_DIP() & (VERBOSE_TRACE) )
       {
-        Serial.print("\n\rAdvancing paper...");
+        Serial.print("\r\nAdvancing paper...");
       } 
       digitalWrite(PAPER, PAPER_ON);          // Advance the motor drive time
       for (i=0; i != json_paper_time; i++ )
@@ -242,7 +247,7 @@ void loop()
   case SEND_ERROR:     
     if ( read_DIP() & (VERBOSE_TRACE) )
     {
-      Serial.print("\n\rBad read...\n\r");
+      Serial.print("\r\nBad read...\r\n");
     } 
     set_LED(LED_S, true);       // Showing an error
     set_LED(LED_X, true);       // 

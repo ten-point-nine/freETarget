@@ -51,7 +51,7 @@ double speed_of_sound(double temperature)
   
   if ( read_DIP() & (VERBOSE_TRACE) )
     {
-    Serial.print("\n\rSpeed of sound: "); Serial.print(speed); Serial.print("mm/us");
+    Serial.print("\r\nSpeed of sound: "); Serial.print(speed); Serial.print("mm/us");
     Serial.print("  Worst case delay: "); Serial.print(json_sensor_dia / speed * OSCILLATOR_MHZ); Serial.print(" counts");
     }
 
@@ -154,7 +154,7 @@ unsigned int compute_hit
   
   if ( read_DIP() & VERBOSE_TRACE )
    {
-   Serial.print("\n\rNorth: 0x"); Serial.print(timer_value[N], HEX); Serial.print(" "); Serial.print(timer_value[N] / OSCILLATOR_MHZ); Serial.print("us "); 
+   Serial.print("\r\nNorth: 0x"); Serial.print(timer_value[N], HEX); Serial.print(" "); Serial.print(timer_value[N] / OSCILLATOR_MHZ); Serial.print("us "); 
    Serial.print("  East: 0x");    Serial.print(timer_value[E], HEX); Serial.print(" "); Serial.print(timer_value[E] / OSCILLATOR_MHZ); Serial.print("us "); 
    Serial.print("  South: 0x");   Serial.print(timer_value[S], HEX); Serial.print(" "); Serial.print(timer_value[S] / OSCILLATOR_MHZ); Serial.print("us "); 
    Serial.print("  West: 0x");    Serial.print(timer_value[W], HEX); Serial.print(" "); Serial.print(timer_value[W] / OSCILLATOR_MHZ); Serial.print("us "); 
@@ -176,7 +176,7 @@ unsigned int compute_hit
   
  if ( read_DIP() & VERBOSE_TRACE )
    {
-   Serial.print("\n\rReference: "); Serial.print(reference); Serial.print("  location:"); Serial.print(nesw[location]);
+   Serial.print("\r\nReference: "); Serial.print(reference); Serial.print("  location:"); Serial.print(nesw[location]);
    }
    
 /*
@@ -190,7 +190,7 @@ unsigned int compute_hit
 
  if ( read_DIP() & VERBOSE_TRACE )
    {
-   Serial.print("\n\rCounts ");
+   Serial.print("\r\nCounts ");
    Serial.print(" North: "); Serial.print(s[N].count); Serial.print("  East: "); Serial.print(s[E].count);
    Serial.print(" South: "); Serial.print(s[S].count); Serial.print("  West: "); Serial.print(s[W].count);
    }
@@ -231,7 +231,7 @@ unsigned int compute_hit
  
   if ( read_DIP() & VERBOSE_TRACE )
    {
-   Serial.print("\n\restimate: "); Serial.print(estimate);
+   Serial.print("\r\nestimate: "); Serial.print(estimate);
    }
   error = 999999;                  // Start with a big error
   count = 0;
@@ -264,7 +264,7 @@ unsigned int compute_hit
 
     if ( read_DIP() & VERBOSE_TRACE )
     {
-      Serial.print("\n\rx_avg:");  Serial.print(x_avg);   Serial.print("  y_avg:"); Serial.print(y_avg); Serial.print(" estimate:"),  Serial.print(estimate);  Serial.print(" error:"); Serial.print(error);
+      Serial.print("\r\nx_avg:");  Serial.print(x_avg);   Serial.print("  y_avg:"); Serial.print(y_avg); Serial.print(" estimate:"),  Serial.print(estimate);  Serial.print(" error:"); Serial.print(error);
       Serial.println();
     }
     count++;
@@ -330,7 +330,7 @@ bool find_xy
   {
     if ( read_DIP() & VERBOSE_TRACE )
     {
-      Serial.print("\n\rSensor: "); Serial.print(s->index); Serial.print(" no data");
+      Serial.print("\r\nSensor: "); Serial.print(s->index); Serial.print(" no data");
     }
     return false;           // Sensor did not trigger.
   }
@@ -392,7 +392,7 @@ bool find_xy
  */
   if ( read_DIP() & VERBOSE_TRACE )
     {
-    Serial.print("\n\rindex:"); Serial.print(s->index) ; 
+    Serial.print("\r\nindex:"); Serial.print(s->index) ; 
     Serial.print(" a:");        Serial.print(s->a);       Serial.print("  b:");  Serial.print(s->b);
     Serial.print(" ae:");       Serial.print(ae);         Serial.print("  be:"); Serial.print(be);    Serial.print(" c:"),  Serial.print(s->c);
     Serial.print(" cos:");      Serial.print(cos(rotation)); Serial.print(" sin: "); Serial.print(sin(rotation));
@@ -455,6 +455,11 @@ void send_score
   Serial.print("{");
   AUX_SERIAL.print("{");
 #if ( S_SHOT )
+  if ( json_name_id != 0 )
+  {
+    Serial.print("\"name\":");      Serial.print(names[json_name_id]);     Serial.print(", ");
+    AUX_SERIAL.print("\"name\":");  AUX_SERIAL.print(names[json_name_id]); AUX_SERIAL.print(", ");
+  }
   Serial.print("\"shot\":");      Serial.print(shot); Serial.print(", ");
   AUX_SERIAL.print("\"shot\":");  AUX_SERIAL.print(shot); AUX_SERIAL.print(", ");
 #endif
@@ -474,14 +479,14 @@ void send_score
 #endif
 
 #if ( S_COUNTERS )
-  Serial.print("\"N\":");     Serial.print(s[N].count);      Serial.print(", ");
-  Serial.print("\"E\":");     Serial.print(s[E].count);      Serial.print(", ");
-  Serial.print("\"S\":");     Serial.print(s[S].count);      Serial.print(", ");
-  Serial.print("\"W\":");     Serial.print(s[W].count);      Serial.print(", ");
-  AUX_SERIAL.print("\"N\":"); AUX_SERIAL.print(s[N].count);  AUX_SERIAL.print(", ");
-  AUX_SERIAL.print("\"E\":"); AUX_SERIAL.print(s[E].count);  AUX_SERIAL.print(", ");
-  AUX_SERIAL.print("\"W\":"); AUX_SERIAL.print(s[S].count);  AUX_SERIAL.print(", ");
-  AUX_SERIAL.print("\"S\":"); AUX_SERIAL.print(s[W].count);  AUX_SERIAL.print(", ");
+  Serial.print("\"N\":");     Serial.print((int)s[N].count);      Serial.print(", ");
+  Serial.print("\"E\":");     Serial.print((int)s[E].count);      Serial.print(", ");
+  Serial.print("\"S\":");     Serial.print((int)s[S].count);      Serial.print(", ");
+  Serial.print("\"W\":");     Serial.print((int)s[W].count);      Serial.print(", ");
+  AUX_SERIAL.print("\"N\":"); AUX_SERIAL.print((int)s[N].count);  AUX_SERIAL.print(", ");
+  AUX_SERIAL.print("\"E\":"); AUX_SERIAL.print((int)s[E].count);  AUX_SERIAL.print(", ");
+  AUX_SERIAL.print("\"W\":"); AUX_SERIAL.print((int)s[S].count);  AUX_SERIAL.print(", ");
+  AUX_SERIAL.print("\"S\":"); AUX_SERIAL.print((int)s[W].count);  AUX_SERIAL.print(", ");
 #endif
 
 #if ( S_MISC ) 
@@ -494,8 +499,8 @@ void send_score
   AUX_SERIAL.print("\"VERSION\":"); AUX_SERIAL.print(SOFTWARE_VERSION);
 #endif
 
-  Serial.print("}\n\r");
-  AUX_SERIAL.print("}\n\r");
+  Serial.print("}\r\n");
+  AUX_SERIAL.print("}\r\n");
   
   return;
 }
@@ -545,7 +550,7 @@ void send_timer
   Serial.print("\"W\":");       Serial.print(timer_value[W]);                     Serial.print(", ");
   Serial.print("\"V_REF\":");   Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));  Serial.print(", ");
   Serial.print("\"Version\":"); Serial.print(SOFTWARE_VERSION);
-  Serial.print("}\n\r");      
+  Serial.print("}\r\n");      
 
   return;
 }
@@ -582,7 +587,7 @@ void send_timer
   
   if ( read_DIP() & VERBOSE_TRACE )
     {
-    Serial.print("\n\rHamming weight: "); Serial.print(i);
+    Serial.print("\r\nHamming weight: "); Serial.print(i);
     }
 
  /*

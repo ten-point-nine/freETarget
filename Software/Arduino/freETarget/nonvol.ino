@@ -24,7 +24,7 @@
     EEPROM.put(NONVOL_INIT, nonvol_init);
     
     read_nonvol();                          // Regen the numbers
-    Serial.print("\n\rReset to factory defaults\n\r");
+    Serial.print("\r\nReset to factory defaults\r\n");
     show_echo();
  /*
   * Nothing more to do, return
@@ -80,9 +80,11 @@ void read_nonvol(void)
  * Read the nonvol marker and if uninitialized then set up values
  */
   EEPROM.get(NONVOL_INIT, nonvol_init);
-  if ( nonvol_init != 0xABCD )                        // Has this already been initialized
+  Serial.print(nonvol_init); Serial.print(" "); Serial.print(read_DIP() & FACTORY);
+  if ( (nonvol_init != INIT_DONE)                       // EEPROM never programmed
+      || ((read_DIP() & FACTORY) != 0) )                       // Reset back to factory defaults
   {
-    Serial.print("\n\rInitializing NON-VOL");
+    Serial.print("\r\nInitializing NON-VOL");
     json_dip_switch = 0;
     EEPROM.put(NONVOL_DIP_SWITCH, json_dip_switch);   // No, set up the defaults
     json_sensor_dia = 230.0;
@@ -93,12 +95,14 @@ void read_nonvol(void)
     EEPROM.put(NONVOL_TEST_MODE, json_test);
     json_calibre_x10 = 45;
     EEPROM.put(NONVOL_CALIBRE_X10, json_calibre_x10);
-    json_sensor_angle = 0;
+    json_sensor_angle = 45;
     EEPROM.put(NONVOL_SENSOR_ANGLE, json_sensor_angle);
     gen_position();    
-    json_trip_point = 1500; 
+    json_trip_point = INIT_TRIP_POINT; 
     EEPROM.put(NONVOL_TRIP_POINT, json_trip_point);
-    nonvol_init = 0xabcd;
+    json_name_id = 0; 
+    EEPROM.put(NONVOL_NAME_ID, json_name_id);
+    nonvol_init = INIT_DONE;
     EEPROM.put(NONVOL_INIT, nonvol_init);
   }
 
@@ -126,10 +130,17 @@ void read_nonvol(void)
   EEPROM.get(NONVOL_SENSOR_ANGLE,  json_sensor_angle);
   if ( json_sensor_angle == 0xffff )
   {
-    json_sensor_angle = 0;                             // Check for an undefined pellet
+    json_sensor_angle = 45;                             // Check for an undefined Angle
     EEPROM.put(NONVOL_SENSOR_ANGLE, json_sensor_angle);// Default to a 4.5mm pellet
   }
 
+  EEPROM.get(NONVOL_NAME_ID,  json_name_id);
+  if ( json_name_id == 0xffff )
+  {
+    json_name_id = 0;                                 // Check for an undefined Name
+    EEPROM.put(NONVOL_NAME_ID, json_name_id);    // Default to a 4.5mm pellet
+  }
+  
   EEPROM.get(NONVOL_NORTH_X, json_north_x);  
   EEPROM.get(NONVOL_NORTH_Y, json_north_y);  
   EEPROM.get(NONVOL_EAST_X,  json_east_x);  

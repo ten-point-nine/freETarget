@@ -11,10 +11,12 @@
 #ifndef _FREETARGET_H
 #define _FREETARGET_H
 
-#define SOFTWARE_VERSION "\"2.4.1 October 28, 2020\""
+#define SOFTWARE_VERSION "\"2.5.0 November 3, 2020\""
 #define REV_21    21
 #define REV_22    22
 
+#define INIT_TRIP_POINT 1250        // Set the trip point to 1250 mV
+#define INIT_DONE       0xabcd      // Initialization complete signature
 
 /*
  * Compilation Flags
@@ -34,8 +36,10 @@
  * DIP Switch enabled tests.  Set (0<<x) to (1<<x) to enable always
  */
 //                      From DIP    From Software
-#define CALIBRATE       (1 << 0) + (0 << (4 + 0))
-#define VERBOSE_TRACE   (1 << 1) + (0 << (4 + 1))      
+#define CALIBRATE       (1 << 0) + (0 << (4 + 0))     // 1 Go to Calibration Mode
+#define VERBOSE_TRACE   (1 << 1) + (0 << (4 + 1))     // 2 Show the verbose software trace
+#define NOT_USED        (1 << 2) + (0 << (4 + 2))     // 4 Not yet used
+#define FACTORY         (1 << 3) + (0 << (4 + 3))     // 8 Reset all settings to factory defaults
 
 #define N 0
 #define E 1
@@ -53,5 +57,6 @@ typedef struct history history_t;
 
 extern double     s_of_sound;
 
+extern char* names[];
 
 #endif

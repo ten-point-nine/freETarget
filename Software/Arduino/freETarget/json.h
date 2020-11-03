@@ -22,4 +22,5 @@ extern int    json_south_y;
 extern int    json_west_x;        // WestAdjustment
 extern int    json_west_y;
 extern int    json_trip_point;    // Trip point in mV
+extern int    json_name_id;       // Name Identifier
 #endif _JSON_H_
