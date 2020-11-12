@@ -24,17 +24,27 @@ namespace freETarget {
             //using liner interpolation with the "official" values found here: http://targettalk.org/viewtopic.php?p=100591#p100591
 
 
+            double coef = 0d;
             if (type == Session.TargetType.Pistol) {
-                double score = linearInterpolation(ISSF.pistol1X, ISSF.pistol1Y, ISSF.pistol2X, ISSF.pistol2Y, (float)this.radius);
+                coef = 9.9d / (((float)ISSF.outterRingPistol / 2d) + ((float)ISSF.pelletCaliber / 2d));
+            } else if (type == Session.TargetType.Rifle) {
+                coef = 9.9d / (((float)ISSF.outterRingRifle / 2d) + ((float)ISSF.pelletCaliber / 2d));
+            }
 
-                this.decimalScore = (decimal)(Math.Truncate(score * 10)) / 10m;
-                this.decimalScore += 0.0m; //add a decimal is the result is an integer
+            double score = 10.9999d - (coef * (float)this.radius); //10.9999 is needed to get the incline just right. center should be almost 11
 
-                if (this.decimalScore < 1) { //shot outside the target
-                    this.decimalScore = 0;
-                }
+            this.decimalScore = (decimal)(Math.Truncate(score * 10)) / 10m;
+            this.decimalScore += 0.0m; //add a decimal if the result is an integer
 
-                this.score = (int)Math.Floor(this.decimalScore);
+
+            if (this.decimalScore < 1) { //shot outside the target
+                this.decimalScore = 0;
+            }
+
+            this.score = (int)Math.Floor(this.decimalScore);
+
+            if (type == Session.TargetType.Pistol) {
+                //double score = linearInterpolation(ISSF.pistol1X, ISSF.pistol1Y, ISSF.pistol2X, ISSF.pistol2Y, (float)this.radius);
 
                 //determine if inner ten (X)
                 if (this.radius <= ISSF.innerTenRadiusPistol) {
@@ -43,20 +53,7 @@ namespace freETarget {
                     this.innerTen = false;
                 }
             } else if (type == Session.TargetType.Rifle) {
-                double score = linearInterpolation(ISSF.rifle1X, ISSF.rifle1Y, ISSF.rifle2X, ISSF.rifle2Y, (float)this.radius);
-
-                this.decimalScore = (decimal)(Math.Truncate(score * 10)) / 10m;
-                this.decimalScore += 0.0m; //add a decimal is the result is an integer
-
-                /*if (this.decimalScore >= 11m) { //the linear interpolation returns 11.000003814 for 0 (dead centre)
-                    this.decimalScore = 10.9m;
-                }*/
-
-                if (this.decimalScore < 1) {//shot outside the target
-                    this.decimalScore = 0;
-                }
-
-                this.score = (int)Math.Floor(this.decimalScore);
+                //double score = linearInterpolation(ISSF.rifle1X, ISSF.rifle1Y, ISSF.rifle2X, ISSF.rifle2Y, (float)this.radius);
 
                 //determine if inner ten (X)
                 if (this.radius <= ISSF.innerTenRadiusRifle) {
@@ -70,10 +67,10 @@ namespace freETarget {
 
         }
 
-        private double linearInterpolation(float x1, float y1, float x2, float y2, float x) {
+/*        private double linearInterpolation(float x1, float y1, float x2, float y2, float x) {
             double y = ((x2 - x) * y1 + (x - x1) * y2) / (x2 - x1);
             return y;
-        }
+        }*/
 
         public override string ToString() {
             string ret = "";
@@ -92,7 +89,7 @@ namespace freETarget {
             return ret;
         }
 
-        public static Shot Parse(string input) {
+        public static Shot parse(string input) {
             Shot shot = new Shot();
             string[] s = input.Split(',');
             shot.index = int.Parse(s[0]);

@@ -841,7 +841,7 @@
             this.lblWarning.TabIndex = 18;
             this.lblWarning.Text = "WARNING! Modifying the parameters on the “Sensor” or “Hardware” page will not tak" +
     "e effect immediately. These values will be applied to the target firmware only a" +
-    "fter the next Connect.\r\n";
+    "fter the next Connect.";
             // 
             // label21
             // 

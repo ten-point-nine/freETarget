@@ -214,7 +214,7 @@ namespace freETarget {
             Application.DoEvents();
             //received data from serial port
             SerialPort sp = (SerialPort)sender;
-            string indata = sp.ReadExisting();
+            string indata = sp.ReadExisting().Replace("\n\r", Environment.NewLine); ;
 
             //first incoming text from target after port open is "freETarget VX.x" - use this to confirm connection
             if (indata.Contains("freETarget") && currentStatus == Status.CONECTING) {
@@ -225,7 +225,7 @@ namespace freETarget {
             output.add(indata);
             log(indata, logFile);
 
-            Console.WriteLine("\nReceived: " + indata.Trim());
+            Console.WriteLine(Environment.NewLine + "Received: " + indata.Trim());
             incomingJSON += indata;                         // Accumulate the input
 
             int indexOpenBracket = incomingJSON.IndexOf('{');
@@ -312,7 +312,7 @@ namespace freETarget {
 
 
             //send sensor and hardware parameters to target
-            Thread.Sleep(1000);
+            Thread.Sleep(1500);
             serialPort.Write("{\"SENSOR\":" + Properties.Settings.Default.SensorDiameter.ToString() + "}");
             Console.WriteLine("{\"SENSOR\":" + Properties.Settings.Default.SensorDiameter.ToString() + "}");
 
@@ -325,8 +325,8 @@ namespace freETarget {
             Console.WriteLine("{\"ANGLE\":" + Properties.Settings.Default.Angle.ToString() + "}");
 
             Thread.Sleep(100);
-            serialPort.Write("{\"CALIBRE_x10\":" + Properties.Settings.Default.Calibre.ToString() + "}");
-            Console.WriteLine("{\"CALIBRE_x10\":" + Properties.Settings.Default.Calibre.ToString() + "}");
+            serialPort.Write("{\"CALIBREx10\":" + Properties.Settings.Default.Calibre.ToString() + "}");
+            Console.WriteLine("{\"CALIBREx10\":" + Properties.Settings.Default.Calibre.ToString() + "}");
 
             Thread.Sleep(100);
             serialPort.Write("{\"NORTH_X\":" + Properties.Settings.Default.SensorNorthX.ToString() + "}");

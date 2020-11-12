@@ -323,7 +323,7 @@ namespace freETarget {
 
             string[] stringShots = input.Split('|');
             foreach (string s in stringShots) {
-                Shot shot = Shot.Parse(s);
+                Shot shot = Shot.parse(s);
                 list.Add(shot);
             }
             return list;

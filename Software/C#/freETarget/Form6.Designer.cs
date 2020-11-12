@@ -40,12 +40,14 @@
             this.btnOffset = new System.Windows.Forms.Button();
             this.txtAngle = new System.Windows.Forms.TextBox();
             this.btnAngle = new System.Windows.Forms.Button();
+            this.txtTripPoint = new System.Windows.Forms.TextBox();
+            this.btnTripPoint = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnClose
             // 
             this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnClose.Location = new System.Drawing.Point(756, 9);
+            this.btnClose.Location = new System.Drawing.Point(1027, 9);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(75, 23);
             this.btnClose.TabIndex = 0;
@@ -64,7 +66,7 @@
             this.txtOutput.Name = "txtOutput";
             this.txtOutput.ReadOnly = true;
             this.txtOutput.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtOutput.Size = new System.Drawing.Size(822, 161);
+            this.txtOutput.Size = new System.Drawing.Size(1093, 388);
             this.txtOutput.TabIndex = 2;
             // 
             // btnEcho
@@ -99,7 +101,7 @@
             // 
             // btnSensor
             // 
-            this.btnSensor.Location = new System.Drawing.Point(296, 9);
+            this.btnSensor.Location = new System.Drawing.Point(296, 10);
             this.btnSensor.Name = "btnSensor";
             this.btnSensor.Size = new System.Drawing.Size(82, 23);
             this.btnSensor.TabIndex = 5;
@@ -109,7 +111,7 @@
             // 
             // btnTest
             // 
-            this.btnTest.Location = new System.Drawing.Point(296, 38);
+            this.btnTest.Location = new System.Drawing.Point(296, 40);
             this.btnTest.Name = "btnTest";
             this.btnTest.Size = new System.Drawing.Size(82, 23);
             this.btnTest.TabIndex = 6;
@@ -143,7 +145,7 @@
             // 
             // txtTest
             // 
-            this.txtTest.Location = new System.Drawing.Point(200, 40);
+            this.txtTest.Location = new System.Drawing.Point(200, 42);
             this.txtTest.Name = "txtTest";
             this.txtTest.Size = new System.Drawing.Size(90, 20);
             this.txtTest.TabIndex = 10;
@@ -155,7 +157,7 @@
             this.ckbAutoscroll.AutoSize = true;
             this.ckbAutoscroll.Checked = true;
             this.ckbAutoscroll.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ckbAutoscroll.Location = new System.Drawing.Point(754, 80);
+            this.ckbAutoscroll.Location = new System.Drawing.Point(1025, 80);
             this.ckbAutoscroll.Name = "ckbAutoscroll";
             this.ckbAutoscroll.Size = new System.Drawing.Size(72, 17);
             this.ckbAutoscroll.TabIndex = 11;
@@ -164,7 +166,7 @@
             // 
             // txtOffset
             // 
-            this.txtOffset.Location = new System.Drawing.Point(200, 70);
+            this.txtOffset.Location = new System.Drawing.Point(200, 71);
             this.txtOffset.Name = "txtOffset";
             this.txtOffset.Size = new System.Drawing.Size(90, 20);
             this.txtOffset.TabIndex = 13;
@@ -172,7 +174,7 @@
             // 
             // btnOffset
             // 
-            this.btnOffset.Location = new System.Drawing.Point(296, 68);
+            this.btnOffset.Location = new System.Drawing.Point(296, 69);
             this.btnOffset.Name = "btnOffset";
             this.btnOffset.Size = new System.Drawing.Size(82, 23);
             this.btnOffset.TabIndex = 12;
@@ -182,7 +184,7 @@
             // 
             // txtAngle
             // 
-            this.txtAngle.Location = new System.Drawing.Point(388, 10);
+            this.txtAngle.Location = new System.Drawing.Point(388, 11);
             this.txtAngle.Name = "txtAngle";
             this.txtAngle.Size = new System.Drawing.Size(90, 20);
             this.txtAngle.TabIndex = 15;
@@ -198,11 +200,31 @@
             this.btnAngle.UseVisualStyleBackColor = true;
             this.btnAngle.Click += new System.EventHandler(this.btnAngle_Click);
             // 
+            // txtTripPoint
+            // 
+            this.txtTripPoint.Location = new System.Drawing.Point(388, 42);
+            this.txtTripPoint.Name = "txtTripPoint";
+            this.txtTripPoint.Size = new System.Drawing.Size(90, 20);
+            this.txtTripPoint.TabIndex = 17;
+            this.txtTripPoint.Text = "1250";
+            // 
+            // btnTripPoint
+            // 
+            this.btnTripPoint.Location = new System.Drawing.Point(484, 40);
+            this.btnTripPoint.Name = "btnTripPoint";
+            this.btnTripPoint.Size = new System.Drawing.Size(82, 23);
+            this.btnTripPoint.TabIndex = 16;
+            this.btnTripPoint.Text = "TRIP_POINT";
+            this.btnTripPoint.UseVisualStyleBackColor = true;
+            this.btnTripPoint.Click += new System.EventHandler(this.btnTripPoint_Click);
+            // 
             // frmArduino
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(838, 275);
+            this.ClientSize = new System.Drawing.Size(1109, 502);
+            this.Controls.Add(this.txtTripPoint);
+            this.Controls.Add(this.btnTripPoint);
             this.Controls.Add(this.txtAngle);
             this.Controls.Add(this.btnAngle);
             this.Controls.Add(this.txtOffset);
@@ -248,5 +270,7 @@
         private System.Windows.Forms.Button btnOffset;
         private System.Windows.Forms.TextBox txtAngle;
         private System.Windows.Forms.Button btnAngle;
+        private System.Windows.Forms.TextBox txtTripPoint;
+        private System.Windows.Forms.Button btnTripPoint;
     }
 }
