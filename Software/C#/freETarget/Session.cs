@@ -172,17 +172,17 @@ namespace freETarget {
         [Description("Longest time interval between 2 shots")]
         public TimeSpan longestShot { get; set; }
 
-
-
         [Browsable(false)]
         public string diaryEntry = "";
 
-
-
-    private VirtualRO currentFinal = null;
-
         [Browsable(false)]
         public string user { get; set; }
+
+
+
+
+
+        private VirtualRO currentFinal = null;
 
         internal List<Shot> Shots { get => shots; set => shots = value; }
         internal List<Shot> CurrentSeries { get => currentSeries; set => currentSeries = value; }

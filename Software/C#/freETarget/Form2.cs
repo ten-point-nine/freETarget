@@ -108,7 +108,6 @@ namespace freETarget
             txtEastY.Text = Properties.Settings.Default.SensorEastY.ToString();
 
             txtCalibre.Text = Properties.Settings.Default.Calibre.ToString();
-            txtAngle.Text = Properties.Settings.Default.Angle.ToString();
             txtPaper.Text = Properties.Settings.Default.Paper.ToString();
 
         }
@@ -250,17 +249,6 @@ namespace freETarget
             if (!validNumber(txtPaper.Text)) {
                 MessageBox.Show("Paper scroll time is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return false;
-            }
-
-            //angle
-            if (!validNumber(txtAngle.Text)) {
-                MessageBox.Show("Sensor angle is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return false;
-            } else {
-                if (int.Parse(txtAngle.Text) < -45 || int.Parse(txtAngle.Text) > 45) {
-                    MessageBox.Show("Sensor angle must be between -45 to 45 degrees", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    return false;
-                }
             }
 
 

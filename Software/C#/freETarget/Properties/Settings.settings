@@ -107,9 +107,6 @@
     <Setting Name="Calibre" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">45</Value>
     </Setting>
-    <Setting Name="Angle" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
     <Setting Name="Paper" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>

@@ -95,8 +95,6 @@
             this.lblWarning = new System.Windows.Forms.Label();
             this.label21 = new System.Windows.Forms.Label();
             this.txtPaper = new System.Windows.Forms.TextBox();
-            this.label20 = new System.Windows.Forms.Label();
-            this.txtAngle = new System.Windows.Forms.TextBox();
             this.label19 = new System.Windows.Forms.Label();
             this.txtCalibre = new System.Windows.Forms.TextBox();
             this.cmbPorts = new System.Windows.Forms.ComboBox();
@@ -816,8 +814,6 @@
             this.tabPageHardware.Controls.Add(this.lblWarning);
             this.tabPageHardware.Controls.Add(this.label21);
             this.tabPageHardware.Controls.Add(this.txtPaper);
-            this.tabPageHardware.Controls.Add(this.label20);
-            this.tabPageHardware.Controls.Add(this.txtAngle);
             this.tabPageHardware.Controls.Add(this.label19);
             this.tabPageHardware.Controls.Add(this.txtCalibre);
             this.tabPageHardware.Controls.Add(this.cmbPorts);
@@ -846,7 +842,7 @@
             // label21
             // 
             this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(13, 119);
+            this.label21.Location = new System.Drawing.Point(13, 92);
             this.label21.Name = "label21";
             this.label21.Size = new System.Drawing.Size(84, 13);
             this.label21.TabIndex = 17;
@@ -856,32 +852,12 @@
             // 
             this.helpProvider.SetHelpString(this.txtPaper, "Time in miliseconds to run motor that scrolls the paper. A larger time means more" +
         " paper is used for each shot");
-            this.txtPaper.Location = new System.Drawing.Point(109, 115);
+            this.txtPaper.Location = new System.Drawing.Point(109, 89);
             this.txtPaper.Name = "txtPaper";
             this.helpProvider.SetShowHelp(this.txtPaper, true);
             this.txtPaper.Size = new System.Drawing.Size(190, 20);
             this.txtPaper.TabIndex = 16;
             this.txtPaper.Text = "0";
-            // 
-            // label20
-            // 
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(13, 93);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(69, 13);
-            this.label20.TabIndex = 15;
-            this.label20.Text = "Sensor angle";
-            // 
-            // txtAngle
-            // 
-            this.helpProvider.SetHelpString(this.txtAngle, "Angle of the mounting of sensors. 0 when the sensors are mounted in the cardinal " +
-        "points. 45 when the sensors are mounted in the corners of the target");
-            this.txtAngle.Location = new System.Drawing.Point(109, 89);
-            this.txtAngle.Name = "txtAngle";
-            this.helpProvider.SetShowHelp(this.txtAngle, true);
-            this.txtAngle.Size = new System.Drawing.Size(190, 20);
-            this.txtAngle.TabIndex = 14;
-            this.txtAngle.Text = "0";
             // 
             // label19
             // 
@@ -1029,8 +1005,6 @@
         private System.Windows.Forms.TabPage tabPageHardware;
         private System.Windows.Forms.Label label21;
         public System.Windows.Forms.TextBox txtPaper;
-        private System.Windows.Forms.Label label20;
-        public System.Windows.Forms.TextBox txtAngle;
         private System.Windows.Forms.Label label19;
         public System.Windows.Forms.TextBox txtCalibre;
         private System.Windows.Forms.Label lblWarning;

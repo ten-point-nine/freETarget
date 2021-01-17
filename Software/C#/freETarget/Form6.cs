@@ -91,10 +91,6 @@ namespace freETarget {
             mainWindow.serialPort.Write("{\"CALIBREx10\":" + txtOffset.Text + "}");
         }
 
-        private void btnAngle_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"ANGLE\":" + txtAngle.Text + "}");
-        }
-
         private void btnTripPoint_Click(object sender, EventArgs e) {
             mainWindow.serialPort.Write("{\"TRIP_POINT\":" + txtTripPoint.Text + "}");
         }

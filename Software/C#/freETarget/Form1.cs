@@ -321,10 +321,6 @@ namespace freETarget {
             Console.WriteLine("{\"PAPER\":" + Properties.Settings.Default.Paper.ToString() + "}");
 
             Thread.Sleep(100);
-            serialPort.Write("{\"ANGLE\":" + Properties.Settings.Default.Angle.ToString() + "}");
-            Console.WriteLine("{\"ANGLE\":" + Properties.Settings.Default.Angle.ToString() + "}");
-
-            Thread.Sleep(100);
             serialPort.Write("{\"CALIBREx10\":" + Properties.Settings.Default.Calibre.ToString() + "}");
             Console.WriteLine("{\"CALIBREx10\":" + Properties.Settings.Default.Calibre.ToString() + "}");
 
@@ -778,7 +774,6 @@ namespace freETarget {
                 Properties.Settings.Default.SensorEastY = int.Parse(settingsFrom.txtEastY.Text);
 
                 Properties.Settings.Default.Calibre = int.Parse(settingsFrom.txtCalibre.Text);
-                Properties.Settings.Default.Angle = int.Parse(settingsFrom.txtAngle.Text);
                 Properties.Settings.Default.Paper = int.Parse(settingsFrom.txtPaper.Text);
             }
 

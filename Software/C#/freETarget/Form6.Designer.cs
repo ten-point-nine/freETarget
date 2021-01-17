@@ -38,8 +38,6 @@
             this.ckbAutoscroll = new System.Windows.Forms.CheckBox();
             this.txtOffset = new System.Windows.Forms.TextBox();
             this.btnOffset = new System.Windows.Forms.Button();
-            this.txtAngle = new System.Windows.Forms.TextBox();
-            this.btnAngle = new System.Windows.Forms.Button();
             this.txtTripPoint = new System.Windows.Forms.TextBox();
             this.btnTripPoint = new System.Windows.Forms.Button();
             this.SuspendLayout();
@@ -182,27 +180,9 @@
             this.btnOffset.UseVisualStyleBackColor = true;
             this.btnOffset.Click += new System.EventHandler(this.btnOffset_Click);
             // 
-            // txtAngle
-            // 
-            this.txtAngle.Location = new System.Drawing.Point(388, 11);
-            this.txtAngle.Name = "txtAngle";
-            this.txtAngle.Size = new System.Drawing.Size(90, 20);
-            this.txtAngle.TabIndex = 15;
-            this.txtAngle.Text = "0";
-            // 
-            // btnAngle
-            // 
-            this.btnAngle.Location = new System.Drawing.Point(484, 10);
-            this.btnAngle.Name = "btnAngle";
-            this.btnAngle.Size = new System.Drawing.Size(82, 23);
-            this.btnAngle.TabIndex = 14;
-            this.btnAngle.Text = "ANGLE";
-            this.btnAngle.UseVisualStyleBackColor = true;
-            this.btnAngle.Click += new System.EventHandler(this.btnAngle_Click);
-            // 
             // txtTripPoint
             // 
-            this.txtTripPoint.Location = new System.Drawing.Point(388, 42);
+            this.txtTripPoint.Location = new System.Drawing.Point(388, 11);
             this.txtTripPoint.Name = "txtTripPoint";
             this.txtTripPoint.Size = new System.Drawing.Size(90, 20);
             this.txtTripPoint.TabIndex = 17;
@@ -210,7 +190,7 @@
             // 
             // btnTripPoint
             // 
-            this.btnTripPoint.Location = new System.Drawing.Point(484, 40);
+            this.btnTripPoint.Location = new System.Drawing.Point(484, 9);
             this.btnTripPoint.Name = "btnTripPoint";
             this.btnTripPoint.Size = new System.Drawing.Size(82, 23);
             this.btnTripPoint.TabIndex = 16;
@@ -225,8 +205,6 @@
             this.ClientSize = new System.Drawing.Size(1109, 502);
             this.Controls.Add(this.txtTripPoint);
             this.Controls.Add(this.btnTripPoint);
-            this.Controls.Add(this.txtAngle);
-            this.Controls.Add(this.btnAngle);
             this.Controls.Add(this.txtOffset);
             this.Controls.Add(this.btnOffset);
             this.Controls.Add(this.ckbAutoscroll);
@@ -268,8 +246,6 @@
         private System.Windows.Forms.CheckBox ckbAutoscroll;
         private System.Windows.Forms.TextBox txtOffset;
         private System.Windows.Forms.Button btnOffset;
-        private System.Windows.Forms.TextBox txtAngle;
-        private System.Windows.Forms.Button btnAngle;
         private System.Windows.Forms.TextBox txtTripPoint;
         private System.Windows.Forms.Button btnTripPoint;
     }

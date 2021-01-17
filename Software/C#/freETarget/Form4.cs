@@ -115,7 +115,7 @@ namespace freETarget {
             decimal min = 1000000;
             decimal max = -1000000;
             for (int i = 0; i < list.Count; i++) {
-                series.Points.AddXY(i, list[i]);
+                series.Points.AddXY(i, Math.Round(list[i],2));
                 if (min > list[i]) {
                     min = list[i];
                 }
@@ -144,7 +144,7 @@ namespace freETarget {
             decimal min = 1000000;
             decimal max = -1000000;
             for (int i = 0; i < list.Count; i++) {
-                series.Points.AddXY(i, list[i]);
+                series.Points.AddXY(i, Math.Round( list[i],2));
                 if (i >= list.Count - 10) {
                     sum += list[i];
                 }
@@ -173,7 +173,7 @@ namespace freETarget {
             decimal min = 1000000;
             decimal max = -1000000;
             for (int i = 0; i < list.Count; i++) {
-                series.Points.AddXY(i, list[i]);
+                series.Points.AddXY(i, Math.Round(list[i],2));
                 if (i >= list.Count - 10) {
                     sum += list[i];
                 }
