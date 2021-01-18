@@ -45,7 +45,7 @@
             // btnClose
             // 
             this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnClose.Location = new System.Drawing.Point(1027, 9);
+            this.btnClose.Location = new System.Drawing.Point(782, 9);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(75, 23);
             this.btnClose.TabIndex = 0;
@@ -64,7 +64,7 @@
             this.txtOutput.Name = "txtOutput";
             this.txtOutput.ReadOnly = true;
             this.txtOutput.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtOutput.Size = new System.Drawing.Size(1093, 388);
+            this.txtOutput.Size = new System.Drawing.Size(848, 298);
             this.txtOutput.TabIndex = 2;
             // 
             // btnEcho
@@ -155,7 +155,7 @@
             this.ckbAutoscroll.AutoSize = true;
             this.ckbAutoscroll.Checked = true;
             this.ckbAutoscroll.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ckbAutoscroll.Location = new System.Drawing.Point(1025, 80);
+            this.ckbAutoscroll.Location = new System.Drawing.Point(780, 80);
             this.ckbAutoscroll.Name = "ckbAutoscroll";
             this.ckbAutoscroll.Size = new System.Drawing.Size(72, 17);
             this.ckbAutoscroll.TabIndex = 11;
@@ -202,7 +202,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1109, 502);
+            this.ClientSize = new System.Drawing.Size(864, 412);
             this.Controls.Add(this.txtTripPoint);
             this.Controls.Add(this.btnTripPoint);
             this.Controls.Add(this.txtOffset);
@@ -220,7 +220,7 @@
             this.Controls.Add(this.btnEcho);
             this.Controls.Add(this.txtOutput);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MinimumSize = new System.Drawing.Size(550, 300);
+            this.MinimumSize = new System.Drawing.Size(880, 450);
             this.Name = "frmArduino";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Arduino";

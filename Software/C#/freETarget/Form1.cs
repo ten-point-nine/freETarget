@@ -134,7 +134,11 @@ namespace freETarget {
             }
         }
 
-        public static void log(String s, String logFile) {
+        public void log(string s) {
+            log(s, this.logFile);
+        }
+
+        public void log(string s, string logFile) {
             if (s == null || s == "" || logFile == null) {
                 return;
             }
@@ -148,8 +152,9 @@ namespace freETarget {
                         sw.WriteLine(DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff") + " | " + s.Trim());
 
                     }
-                } catch (Exception) {
+                } catch (Exception ex) {
                     //oh well...
+                    Console.WriteLine("Error logging: " + ex.Message);
                 }
             }
         }
@@ -376,6 +381,7 @@ namespace freETarget {
             shotsList.Enabled = true;
             btnCalibration.Enabled = true;
             btnArduino.Enabled = true;
+            btnUpload.Enabled = false;
             trkZoom.Enabled = true;
             tcSessionType.Enabled = true;
             tcSessionType.Refresh();
@@ -1444,6 +1450,7 @@ namespace freETarget {
             shotsList.Enabled = false;
             btnCalibration.Enabled = false;
             btnArduino.Enabled = false;
+            btnUpload.Enabled = true;
             trkZoom.Enabled = false;
             tcSessionType.Enabled = false;
             tcSessionType.Refresh();
@@ -1541,6 +1548,11 @@ namespace freETarget {
 
         private void imgTarget_Click(object sender, EventArgs e) {
             trkZoom.Focus();
+        }
+
+        private void btnUpload_Click(object sender, EventArgs e) {
+            frmUpload upload = new frmUpload(this);
+            upload.ShowDialog();
         }
     }
 
