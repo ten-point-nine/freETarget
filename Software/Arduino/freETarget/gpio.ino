@@ -151,6 +151,7 @@ unsigned int read_counter
 {
   int i;
   unsigned int return_value_LO, return_value_HI;     // 16 bit port value
+  
 /*
  *  Reset all of the address bits
  */
@@ -158,13 +159,15 @@ unsigned int read_counter
     {
     digitalWrite(direction_register[i], 1);
     }
-
+  digitalWrite(RCLK,  1);   // Prepare to read
+  
 /*
  *  Set the direction line to low
  */
   digitalWrite(direction_register[direction * 2 + 0], 0);
   return_value_HI = read_port();
   digitalWrite(direction_register[direction * 2 + 0], 1);
+  
   digitalWrite(direction_register[direction * 2 + 1], 0);
   return_value_LO = read_port();
   digitalWrite(direction_register[direction * 2 + 1], 1);
@@ -245,14 +248,12 @@ void arm_counters(void)
   }
 
 /*
- *  Prepare to read the counters
+ *  Stop the oscillator
  */
 void stop_counters(void)
   {
   digitalWrite(STOP_N,0);   // Stop the counters
-  digitalWrite(QUIET, 0);   // Kill the oscillator
-  digitalWrite(RCLK,  1);   // Prepare to read
- 
+  digitalWrite(QUIET, 0);   // Kill the oscillator 
   return;
   }
 
@@ -305,14 +306,26 @@ bool read_in(unsigned int port)
   return digitalRead(port);
 }
 
-/*
- * Pull in timer registers
- */
-void get_timers(void)
+/*-----------------------------------------------------
+ * 
+ * function: read_timers
+ * 
+ * brief:   Read the timer registers
+ * 
+ * return:  All four timer registers read and stored
+ * 
+ *-----------------------------------------------------
+ *
+ * Force read each of the timers
+ * 
+ *-----------------------------------------------------*/
+void read_timers(void)
 {
   timer_value[N] = read_counter(N);  
   timer_value[E] = read_counter(E);
   timer_value[S] = read_counter(S);
   timer_value[W] = read_counter(W);
+
+  return;
 }
  

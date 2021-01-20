@@ -15,13 +15,15 @@
 #include "mechanical.h"
 #include "diag_tools.h"
 
-history_t history;
+history_t history;  
+
 double        s_of_sound;        // Speed of sound
 unsigned int shot = 0;
 
-char* names[] = { "ANON", "DOC", "DOPEY", "HAPPY", "GRUMPY", "BASHFUL", "SNEEZEY", "SLEEPY",
-                  "RUDOLF", "DONNER", "BLITXEM", "DASHER", "PRANCER", "VIXEN", "COMET", "CUPID", "DUNDER",
-                  "ODIN", "WODEN", "THOR", "BALDR",
+char* names[] = { "ANON",    "BOSS",   "MINION",
+                  "DOC",     "DOPEY",  "HAPPY",   "GRUMPY", "BASHFUL", "SNEEZEY", "SLEEPY",
+                  "RUDOLF",  "DONNER", "BLITXEM", "DASHER", "PRANCER", "VIXEN",   "COMET", "CUPID", "DUNDER",
+                  "ODIN",    "WODEN",   "THOR",   "BALDAR",
                   0};
                   
 /*----------------------------------------------------------------
@@ -32,7 +34,7 @@ char* names[] = { "ANON", "DOC", "DOPEY", "HAPPY", "GRUMPY", "BASHFUL", "SNEEZEY
  * 
  *----------------------------------------------------------------
  */
-void show_echo(void);
+
 void setup() 
 {
   int i;
@@ -42,9 +44,11 @@ void setup()
  */
   Serial.begin(115200);
   AUX_SERIAL.begin(115200); 
+  MINION_SERIAL.begin(115200);
+  
   Serial.print("\r\nfreETarget ");     Serial.print(SOFTWARE_VERSION);      Serial.print("\r\n");
   AUX_SERIAL.print("\r\nfreETarget "); AUX_SERIAL.print(SOFTWARE_VERSION);  AUX_SERIAL.print("\r\n");
-  
+
 /*
  *  Set up the port pins
  */
@@ -73,6 +77,7 @@ void setup()
     case T_PAPER:
     case T_PASS_THRU:
     case T_SET_TRIP:
+    case T_XFR_LOOP:
       json_test = T_HELP;
       break;
 
@@ -84,8 +89,27 @@ void setup()
 /*
  * Ready to go
  */
- show_echo();
- return;
+  show_echo();
+  
+  if ( read_DIP() & VERSION_2 )
+  {
+    Serial.print("\r\nVersion 2.2");
+  }
+  else
+  {
+    Serial.print("\r\nVersion 2.99");
+  }
+  
+  if ( read_DIP() & BOSS )
+  {
+    Serial.print("\r\nBOSS\r\n");
+  }
+  else
+  {
+    Serial.print("\r\nminion\r\n");
+  }
+  
+  return;
 }
 
 /*----------------------------------------------------------------
@@ -111,6 +135,9 @@ unsigned int running_mode;
 unsigned int sensor_status;     // Record which sensors contain valid data
 unsigned int location;          // Sensor location 
 unsigned int i, j;              // Iteration Counter
+int ch;
+unsigned int shot_number;
+
 void loop() 
 {
 
@@ -149,68 +176,97 @@ void loop()
   case ARM:
     if ( read_DIP() & (VERBOSE_TRACE) )
     {
-      Serial.print("\n\r\nWaiting...");
+      Serial.print("\r\n\nWaiting...");
     }
     arm_counters();
     set_LED(LED_S, true);     // Show we are waiting
     set_LED(LED_X, false);    // No longer processing
     set_LED(LED_Y, false);   
-    sensor_status = 0;
-    state = WAIT;
-    break;
+    state = WAIT;             // Fall through to WAIT
     
 /*
  * Wait for the shot
  */
   case WAIT:
-    if ( is_running() != 0 )              // Shot detected
+    if ( (read_DIP() & BOSS) == 0 )       // Am I a minion?
       {
-      state = AQUIRE;
-      now = micros();                     // Remember the starting time
+      ch = MINION_SERIAL.read();
+        
+      if ( (HI(ch) == '%') || (LO(ch) == '%'))  // me to go into 
+        {
+        self_test(T_XFR_LOOP);            // Transfer self test
+        }
       }
+    sensor_status = is_running();
+    if ( sensor_status != 0 )             // Shot detected
+    {
+      now = micros();                     // Remember the starting time
+      set_LED(LED_S, false);              // No longer waiting
+      set_LED(LED_X, true);               // Aquiring
+      if ( read_DIP() & (VERBOSE_TRACE) )
+      {
+        Serial.print("\r\nTriggered by:"); 
+        if ( sensor_status & 0x01 ) Serial.print("N");
+        else                        Serial.print("-");
+        if ( sensor_status & 0x02 ) Serial.print("E");
+        else                        Serial.print("-");
+        if ( sensor_status & 0x04 ) Serial.print("S");
+        else                        Serial.print("-");
+        if ( sensor_status & 0x08 ) Serial.print("W");
+        else                        Serial.print("-");
+      } 
+      state = AQUIRE;
+     }
      break;
 
 /*
  *  Aquire the shot              
  */  
   case AQUIRE:
-    sensor_status |= is_running();        // Remember all of the running timers
     if ( (micros() - now) > SHOT_TIME )   // Enough time already
     { 
-      switch ( hamming(sensor_status) )   // Determine how many sensors were tripped
-      {
-        default:
-        case 0:                           // 1, 2, No solution is possilble
-        case 1:
-        case 2:
-          state = SEND_ERROR;
-          break;
-
-        case 3:
-        case 4:
-          state = REDUCE;                 // 3, 4 Have enough data to performe the calculations
-          break;
-      }
+      stop_counters(); 
+      sensor_status = is_running();       // Remember all of the running timers
+      state = REDUCE;                     // 3, 4 Have enough data to performe the calculations
     }
     break;
 
+ 
 /*
  *  Reduce the data to a score
  */
   case REDUCE:   
-    stop_counters(); 
+     if ( read_DIP() & (VERBOSE_TRACE) )
+     {
+        sensor_status = is_running();
+        Serial.print("\r\nReceived by:"); 
+        if ( sensor_status & 0x01 ) Serial.print("N");
+        else                        Serial.print("-");
+        if ( sensor_status & 0x02 ) Serial.print("E");
+        else                        Serial.print("-");
+        if ( sensor_status & 0x04 ) Serial.print("S");
+        else                        Serial.print("-");
+        if ( sensor_status & 0x08 ) Serial.print("W");
+        else                        Serial.print("-");
+     } 
+      
     if ( read_DIP() & (VERBOSE_TRACE) )
     {
       Serial.print("\r\nReducing...");
     }
-    set_LED(LED_S, false);
-    set_LED(LED_X, false);     // No longer processing
-    set_LED(LED_Y, true);      // Reducing the shot
-    location = compute_hit(sensor_status, shot, &history, false);
-    send_score(&history, shot);
+    set_LED(LED_X, false);              // No longer aquiring
+    set_LED(LED_Y, true);               // Reducing the shot
+    location = compute_hit(sensor_status, &history, false);
+    if ( (read_DIP() & BOSS) == 0 )
+    {
+      state = ARM;
+      break;
+    }
+    send_score(&history, shot_number);
     state = WASTE;
-    shot++;                   
+    shot_number++;                   
     break;
+    
 
 /*
  *  Wait here to make sure the RUN lines are no longer set

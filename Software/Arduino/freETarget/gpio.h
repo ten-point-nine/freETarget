@@ -9,7 +9,7 @@ unsigned int read_DIP(void);                  // Read the DIP switch register
 unsigned int read_counter(unsigned int direction);
 void stop_counters(void);                     // Turn off the counter registers
 bool read_in(unsigned int port);              // Read the selected port
-void get_timers(void);                        // Read and return the counter registers
+void read_timers(void);                       // Read and return the counter registers
 
 /*
  *  Port Definitions

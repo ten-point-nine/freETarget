@@ -37,11 +37,13 @@ typedef struct sensor sensor_t;
  *  Public Funcitons
  */
 void init_sensors(void);                                    // Initialize sensor structure
-unsigned int compute_hit(unsigned int sensor_status, unsigned int shot, history_t* h, bool test_mode);  // Find the location of the shot
-void send_score(history_t* h, int shot, double s_of_sound); // Send the shot
+unsigned int compute_hit(unsigned int sensor_status, history_t* h, bool test_mode);  // Find the location of the shot
+void send_score(history_t* h, int shot);                    // Send the shot
 void rotate_hit(unsigned int location, history_t* h);       // Rotate the shot back into the correct quadrant
 bool find_xy(sensor_t* s, double estimate);                 // Estimated position   
 void send_timer(int sensor_status);                         // Show debugging information 
 unsigned int hamming(unsigned int s);                       // Compute the Hamming weight of the number
+bool poll_minion(void);                                      // Poll the minion for timing information
+void send_BOSS(void);                                        // Send minion data to the BOSS
 
 #endif

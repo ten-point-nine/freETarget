@@ -15,5 +15,11 @@
 #define T_PAPER      6       // Advance paper backer
 #define T_SPIRAL     7       // Generate sprial pattern
 #define T_GRID       8       // Generate grid pattern
-#define T_PASS_THRU  9       // Serial port pass through
-#define T_SET_TRIP  10       // Set the microphone trip po 
+#define T_ONCE       9       // Generate single calculation @ 45North
+#define T_PASS_THRU 10       // Serial port pass through
+#define T_SET_TRIP  11       // Set the microphone trip point
+#define T_XFR_LOOP  12       // Transfer loopback
+
+void self_test(uint16_t test);
+
+

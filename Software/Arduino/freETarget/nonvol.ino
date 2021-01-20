@@ -6,6 +6,8 @@
  * 
  * ----------------------------------------------------*/
 #include "nonvol.h"
+#include "freeTarget.h"
+#include "json.h"
 
 /*----------------------------------------------------------------
  *
@@ -80,7 +82,6 @@ void read_nonvol(void)
  * Read the nonvol marker and if uninitialized then set up values
  */
   EEPROM.get(NONVOL_INIT, nonvol_init);
-  Serial.print(nonvol_init); Serial.print(" "); Serial.print(read_DIP() & FACTORY);
   if ( (nonvol_init != INIT_DONE)                       // EEPROM never programmed
       || ((read_DIP() & FACTORY) != 0) )                       // Reset back to factory defaults
   {
@@ -95,13 +96,25 @@ void read_nonvol(void)
     EEPROM.put(NONVOL_TEST_MODE, json_test);
     json_calibre_x10 = 45;
     EEPROM.put(NONVOL_CALIBRE_X10, json_calibre_x10);
-    json_sensor_angle = 45;
-    EEPROM.put(NONVOL_SENSOR_ANGLE, json_sensor_angle);
+
     gen_position();    
-    json_trip_point = INIT_TRIP_POINT; 
-    EEPROM.put(NONVOL_TRIP_POINT, json_trip_point);
-    json_name_id = 0; 
+
+    if ( read_DIP() & BOSS )
+    {
+      json_trip_point = INIT_TRIP_POINT; 
+      json_name_id    = 1;                    // Boss
+    }
+    else
+    {
+      json_trip_point = INIT_TRIP_POINT_299; 
+      json_name_id    = 2;                    // Minion
+    }
+    EEPROM.put(NONVOL_TRIP_POINT, json_trip_point); 
     EEPROM.put(NONVOL_NAME_ID, json_name_id);
+
+    json_1_ring_x10 = 1555;
+    EEPROM.put(NONVOL_1_RINGx10, json_1_ring_x10);
+    
     nonvol_init = INIT_DONE;
     EEPROM.put(NONVOL_INIT, nonvol_init);
   }
@@ -126,6 +139,7 @@ void read_nonvol(void)
     json_calibre_x10 = 45;                            // Check for an undefined pellet
     EEPROM.put(NONVOL_CALIBRE_X10, json_calibre_x10); // Default to a 4.5mm pellet
   }
+  json_calibre_x10 = 0;                               // AMB
   
   EEPROM.get(NONVOL_SENSOR_ANGLE,  json_sensor_angle);
   if ( json_sensor_angle == 0xffff )
@@ -138,9 +152,13 @@ void read_nonvol(void)
   if ( json_name_id == 0xffff )
   {
     json_name_id = 0;                                 // Check for an undefined Name
-    EEPROM.put(NONVOL_NAME_ID, json_name_id);    // Default to a 4.5mm pellet
+    EEPROM.put(NONVOL_NAME_ID, json_name_id);         // Default to a 4.5mm pellet
   }
   
+  json_sensor_angle = 45;                            // AMB
+  
+  EEPROM.put(NONVOL_SENSOR_ANGLE, json_sensor_angle);
+    
   EEPROM.get(NONVOL_NORTH_X, json_north_x);  
   EEPROM.get(NONVOL_NORTH_Y, json_north_y);  
   EEPROM.get(NONVOL_EAST_X,  json_east_x);  
@@ -151,7 +169,7 @@ void read_nonvol(void)
   EEPROM.get(NONVOL_WEST_Y,  json_west_y);  
 
   EEPROM.get(NONVOL_TRIP_POINT, json_trip_point);
-  
+  EEPROM.get(NONVOL_1_RINGx10,  json_1_ring_x10);
 /*
  * All done, begin the program
  */
@@ -204,3 +222,4 @@ void gen_position(void)
   */
   return;
 }
+

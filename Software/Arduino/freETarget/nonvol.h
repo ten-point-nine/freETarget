@@ -2,9 +2,9 @@
 #ifndef _NONVOL_H
 #define _NONVOL_H
 
-void init_nonvol(void);         // Initialize nonvol memory
+void reinit_nonvol(void);       // Initialize nonvol memory
 void read_nonvol(void);         // Read in the locations
-void get_position(void);        // Reset the position values
+void gen_position(void);        // Reset the position values
 
 /*
  * NON Vol Storage
@@ -27,5 +27,7 @@ void get_position(void);        // Reset the position values
 #define NONVOL_WEST_Y         (NONVOL_WEST_X      + sizeof(int) + 2)
 #define NONVOL_TRIP_POINT     (NONVOL_WEST_Y      + sizeof(int) + 2)       // Trip point in mV 
 #define NONVOL_NAME_ID        (NONVOL_TRIP_POINT  + sizeof(int) + 2)       // Name Identifier
+#define NONVOL_1_RINGx10      (NONVOL_NAME_ID     + sizeof(int) + 2)       // Size of the 1 ring in mm
+
 
 #endif

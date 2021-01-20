@@ -5,6 +5,7 @@
 #define _JSON_H_
 
 void read_JSON(void);         // Scan the serial port looking for JSON input
+void show_echo(void);         // Display the settings
 
 extern int    json_dip_switch;    // DIP switch overwritten by JSON message
 extern double json_sensor_dia;    // Sensor radius overwitten by JSON message
@@ -23,4 +24,5 @@ extern int    json_west_x;        // WestAdjustment
 extern int    json_west_y;
 extern int    json_trip_point;    // Trip point in mV
 extern int    json_name_id;       // Name Identifier
+extern int    json_1_ring_x10;    // Size of 1 ring in mmx10
 #endif _JSON_H_

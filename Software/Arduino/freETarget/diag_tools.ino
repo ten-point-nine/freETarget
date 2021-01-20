@@ -12,7 +12,7 @@
 #include "gpio.h"
 #include "diag_tools.h"
 
-const char* which_one[4] = {"N:", "   E:", "   S: ", "   W: "};
+const char* which_one[4] = {"North: ", "East: ", "South: ", "West: "};
 
 #define TICK(x) (((x) / 0.33) * OSCILLATOR_MHZ)   // Distance in clock ticks
 #define RX(Z,X,Y) (16000 - (sqrt(sq(TICK(x)-s[(Z)].x) + sq(TICK(y)-s[(Z)].y))))
@@ -23,6 +23,8 @@ const char* which_one[4] = {"N:", "   E:", "   S: ", "   W: "};
 static void show_analog_on_PC(void);
 static void unit_test(unsigned int mode);
 static bool sample_calculations(unsigned int mode, unsigned int sample);
+
+void set_trip_pt(void){self_test(T_SET_TRIP);}
 
 /*----------------------------------------------------------------
  *
@@ -77,6 +79,7 @@ void self_test(uint16_t test)
         Serial.print("\r\n 9 - Aux port passthrough");
       }
       Serial.print("\r\n10 - Set detection trip point"); 
+      Serial.print("\r\n11 - BOSS-minion loopback test"); 
       Serial.print("\r\n");
       break;
 
@@ -185,15 +188,23 @@ void self_test(uint16_t test)
       break;
       
     case T_SPIRAL: 
+      Serial.print("\r\nSpiral Calculation\r\n");
       unit_test( T_SPIRAL );            // Generate a spiral
       json_test = T_HELP;               // and stop the test
       break;
 
     case T_GRID:
+      Serial.print("\r\nGrid Calculation\r\n");
       unit_test( T_GRID);               // Generate a grid
       json_test = T_HELP;               // and stop the test
       break;  
-
+      
+    case T_ONCE:
+      Serial.print("\r\nSingle Calculation\r\n");
+      unit_test( T_ONCE);               // Generate a SINGLE calculation
+      json_test = T_HELP;               // and stop the test
+      break;
+        
     case T_PASS_THRU:
       Serial.print("\r\nPass through active.  Cycle power to exit\r\n");
       while (1)
@@ -210,7 +221,7 @@ void self_test(uint16_t test)
       break;
 
     case T_SET_TRIP:
-      Serial.print("\r\nSetting trip point.  Cycle power to exit\r\n");
+      Serial.print("\r\nSetting trip point. @"); Serial.print(json_trip_point); Serial.print("mV. Cycle power to exit\r\n");
       while (1)
       {
         volts = TO_VOLTS(analogRead(V_REFERENCE));             // Read the DAC. 0-5V
@@ -226,6 +237,40 @@ void self_test(uint16_t test)
         else
         {
           digitalWrite(LED_S, 1); digitalWrite(LED_X, 0);      digitalWrite(LED_Y, 1);
+        }
+      }
+      break;
+
+   case T_XFR_LOOP:
+      if ( read_DIP() & BOSS )              // Boss side
+      {
+        Serial.print("\r\nBOSS loopback.\r\nType %%%% to start MINION.  \r\nCycle power to exit\r\n");
+        while (1)
+        {
+          if ( Serial.available() )           // Read the console and send it 
+          {
+            ch = Serial.read();
+            MINION_SERIAL.print(ch);
+          }
+          if ( MINION_SERIAL.available() )    // Read the minon port
+          {
+            ch = MINION_SERIAL.read();
+            Serial.print(ch);               
+          }
+        }
+      }
+      else
+      {   
+        Serial.print("\r\nMINION loopback.  \r\vEnter characters from BOSS port. \r\nCycle power to exit\r\n");
+        while (1)
+        {
+         if ( MINION_SERIAL.available() )    // Read the minon port
+          {
+            ch = MINION_SERIAL.read();
+            Serial.print(ch);               
+            ch++;
+            MINION_SERIAL.print(ch);         // add one and send it back
+          }
         }
       }
       break;
@@ -268,6 +313,7 @@ void show_analog(void)
   unsigned int i, sample;
   char o_scope[FULL_SCALE];
   unsigned long now;
+  char nesw[]="NESW";
   
   digitalWrite(LED_S, ~(1 << cycle) & 1);
   digitalWrite(LED_X, ~(1 << cycle) & 2);
@@ -421,10 +467,14 @@ static void unit_test(unsigned int mode)
   {
     if ( sample_calculations(mode, i) )
     {
-    location = compute_hit(0x0F, i, &history, true);
+    location = compute_hit(0x0F, &history, true);
     send_score(&history, shot_number);
     shot_number++;
-    delay(500);
+    delay(200);
+    }
+    if ( mode == T_ONCE )
+    {
+      break;
     }
   }
 
@@ -467,6 +517,24 @@ static bool sample_calculations
   switch (mode)
   {
 /*
+ * Generate a single calculation
+ */
+  case T_ONCE:
+    angle = 0;
+    radius =json_sensor_dia / sqrt(2.0d) / 2.0d;
+    
+    x = radius * cos(angle);
+    y = radius * sin(angle);
+    timer_value[N] = RX(N, x, y);
+    timer_value[E] = RX(E, x, y);
+    timer_value[S] = RX(S, x, y);
+    timer_value[W] = RX(W, x, y);
+    timer_value[W] -= 200;              // Inject an error into the West sensor
+
+    Serial.print("\r\nResult should be: ");   Serial.print("x:"); Serial.print(x); Serial.print(" y:"); Serial.print(y); Serial.print(" radius:"); Serial.print(radius); Serial.print(" angle:"); Serial.print(angle * 180.0d / PI);
+    break;
+
+ /*
  * Generate a spiral pattern
  */
   default:
@@ -495,10 +563,10 @@ static bool sample_calculations
     x = (double)ix * grid_step;                     // Compute the ideal X-Y location
     y = (double)iy * grid_step;
     polar = sqrt(sq(x) + sq(y));
-    angle = atan2(y, x) - PI * json_sensor_angle / 180.0d;
+    angle = atan2(y, x) - (PI * json_sensor_angle / 180.0d);
     x = polar * cos(angle);
     y = polar * sin(angle);                        // Rotate it through the sensor position.
-    
+
     if ( sqrt(sq(x) + sq(y)) > radius )
     {
       return false;
