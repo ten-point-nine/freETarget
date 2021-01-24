@@ -271,10 +271,15 @@ unsigned int compute_hit
 
   if ( read_DIP() & VERBOSE_TRACE )
   {
-    Serial.print("\r\nCounts ");
+    Serial.print("\r\nCounts       ");
     for (i=N; i <= W; i++)
     {
      Serial.print(*which_one[i]); Serial.print(s[i].count); Serial.print(" ");
+    }
+    Serial.print("\r\nMicroseconds ");
+    for (i=N; i <= W; i++)
+    {
+     Serial.print(*which_one[i]); Serial.print(((double)s[i].count) / ((double)OSCILLATOR_MHZ)); Serial.print(" ");
     }
   }
 

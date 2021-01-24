@@ -1,4 +1,4 @@
-/*----------------------------------------------------------------
+       /*----------------------------------------------------------------
  * 
  * freETarget
  * 
@@ -90,16 +90,7 @@ void setup()
  * Ready to go
  */
   show_echo();
-  
-  if ( read_DIP() & VERSION_2 )
-  {
-    Serial.print("\r\nVersion 2.2");
-  }
-  else
-  {
-    Serial.print("\r\nVersion 2.99");
-  }
-  
+    
   if ( read_DIP() & BOSS )
   {
     Serial.print("\r\nBOSS\r\n");
