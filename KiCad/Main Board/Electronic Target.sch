@@ -5,8 +5,8 @@ $Descr B 17000 11000
 encoding utf-8
 Sheet 1 1
 Title "freETarget"
-Date "2020-02-16"
-Rev "2.2"
+Date "2021-01-25"
+Rev "2.2B"
 Comp "github.com/ten-point-nine/freETarget"
 Comment1 ""
 Comment2 ""
@@ -858,7 +858,7 @@ Wire Wire Line
 Wire Wire Line
 	11900 2550 11900 2500
 $Comp
-L Electronic-Target-rescue:Arduino_Mega2560_Shield-arduino XA1
+L Electronic-Target-rescue:Arduino_Mega2560_Shield-arduino-Electronic-Target-rescue XA1
 U 1 1 5E539FDE
 P 14050 5650
 F 0 "XA1" H 14050 3269 60  0000 C CNN
@@ -1321,27 +1321,8 @@ Wire Wire Line
 	4150 6200 4150 6050
 Wire Wire Line
 	4150 6050 4450 6050
-$Comp
-L Comparator:LM339 U3
-U 5 1 5E66D255
-P 9500 9100
-F 0 "U3" H 9458 9146 50  0000 L CNN
-F 1 "LM339" H 9458 9055 50  0000 L CNN
-F 2 "" H 9450 9200 50  0001 C CNN
-F 3 "https://www.st.com/resource/en/datasheet/lm139.pdf" H 9550 9300 50  0001 C CNN
-	5    9500 9100
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
 	10850 8800 10850 8700
-Wire Wire Line
-	9400 8800 9400 8700
-Wire Wire Line
-	9400 8700 10050 8700
-Wire Wire Line
-	9400 9400 9400 9700
-Wire Wire Line
-	9400 9700 10050 9700
 $Comp
 L power:VCC #PWR013
 U 1 1 5E71100C
@@ -1565,19 +1546,13 @@ Wire Wire Line
 	10050 9700 10850 9700
 Connection ~ 10850 9700
 Wire Wire Line
-	9400 8700 8900 8700
-Wire Wire Line
 	8900 8700 8900 9050
-Connection ~ 9400 8700
 Connection ~ 8900 9050
-Connection ~ 9400 9700
 Wire Wire Line
 	8900 9350 8900 9700
 Connection ~ 8900 9350
-Wire Wire Line
-	8900 9700 9400 9700
 $Comp
-L Electronic-Target-rescue:NMA0505SC-NMA0505SC U8
+L Electronic-Target-rescue:NMA0505SC-NMA0505SC-Electronic-Target-rescue U8
 U 1 1 5ED14650
 P 5350 9200
 F 0 "U8" H 5350 9567 50  0000 C CNN
@@ -1603,15 +1578,8 @@ Wire Wire Line
 	6050 9550 6050 9350
 Connection ~ 6050 9350
 Wire Wire Line
-	1500 1800 1500 8400
-Wire Wire Line
-	3900 8400 3900 9200
-Wire Wire Line
 	4650 9100 4350 9100
-Connection ~ 3900 9200
 Connection ~ 4650 9550
-Wire Wire Line
-	1500 8400 3900 8400
 Wire Wire Line
 	3900 9200 4650 9200
 Wire Wire Line
@@ -1623,7 +1591,7 @@ Wire Wire Line
 	700  1600 700  1700
 Connection ~ 700  1700
 $Comp
-L Electronic-Target-rescue:LM75AIMX_NOPB-2020-05-12_18-19-55 U1
+L Electronic-Target-rescue:LM75AIMX_NOPB-2020-05-12_18-19-55-Electronic-Target-rescue U1
 U 1 1 5ED0FC30
 P 13400 1900
 F 0 "U1" H 14500 2287 60  0000 C CNN
@@ -1890,15 +1858,14 @@ NoConn ~ 13400 2100
 $Comp
 L Connector_Generic:Conn_01x01 V-5
 U 1 1 5EFA3B8D
-P 3900 8200
-F 0 "V-5" V 3864 8112 50  0000 R CNN
-F 1 "TP" V 3773 8112 50  0000 R CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 3900 8200 50  0001 C CNN
-F 3 "~" H 3900 8200 50  0001 C CNN
-	1    3900 8200
+P 3000 7900
+F 0 "V-5" V 2964 7812 50  0000 R CNN
+F 1 "TP" V 2873 7812 50  0000 R CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 3000 7900 50  0001 C CNN
+F 3 "~" H 3000 7900 50  0001 C CNN
+	1    3000 7900
 	0    -1   -1   0   
 $EndComp
-Connection ~ 3900 8400
 $Comp
 L Connector_Generic:Conn_01x06 J6
 U 1 1 5F996624
@@ -1972,4 +1939,37 @@ Text Label 1050 3650 0    50   ~ 0
 ATX
 Text Label 1050 3750 0    50   ~ 0
 ARX
+Wire Wire Line
+	8900 9700 10050 9700
+$Comp
+L Comparator:LM339 U3
+U 5 1 5E66D255
+P 4200 8200
+F 0 "U3" V 4158 8246 50  0000 L CNN
+F 1 "LM339" V 3961 8155 50  0000 L CNN
+F 2 "" H 4150 8300 50  0001 C CNN
+F 3 "https://www.st.com/resource/en/datasheet/lm139.pdf" H 4250 8400 50  0001 C CNN
+	5    4200 8200
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	8900 8700 10050 8700
+Wire Wire Line
+	1500 8100 1500 1800
+Wire Wire Line
+	1500 8100 3000 8100
+Connection ~ 3000 8100
+Wire Wire Line
+	3000 8100 3900 8100
+Connection ~ 3900 9200
+Connection ~ 3900 8100
+Wire Wire Line
+	3900 8100 3900 9200
+Wire Wire Line
+	6050 9050 6050 8100
+Wire Wire Line
+	6050 8100 4500 8100
+Connection ~ 6050 9050
+Text Notes 4500 8000 0    50   ~ 0
+IMPORTANT\nV- is referenced to -5VDC
 $EndSCHEMATC

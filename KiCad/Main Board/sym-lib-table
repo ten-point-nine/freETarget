@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name Electronic-Target-rescue)(type Legacy)(uri "${KIPRJMOD}/Electronic Target-rescue.lib")(options "")(descr ""))
+)

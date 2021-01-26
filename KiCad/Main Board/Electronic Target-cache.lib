@@ -412,11 +412,11 @@ X 3 3 0 -150 50 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# Electronic-Target-rescue_Arduino_Mega2560_Shield-arduino
+# Electronic-Target-rescue_Arduino_Mega2560_Shield-arduino-Electronic-Target-rescue
 #
-DEF Electronic-Target-rescue_Arduino_Mega2560_Shield-arduino XA 0 40 Y Y 1 F N
+DEF Electronic-Target-rescue_Arduino_Mega2560_Shield-arduino-Electronic-Target-rescue XA 0 40 Y Y 1 F N
 F0 "XA" 100 0 60 V V C CNN
-F1 "Electronic-Target-rescue_Arduino_Mega2560_Shield-arduino" -100 0 60 V V C CNN
+F1 "Electronic-Target-rescue_Arduino_Mega2560_Shield-arduino-Electronic-Target-rescue" -100 0 60 V V C CNN
 F2 "" 700 2750 60 H I C CNN
 F3 "" 700 2750 60 H I C CNN
 $FPLIST
@@ -559,11 +559,11 @@ X VIN VIN -1300 -2150 300 R 50 50 1 1 W
 ENDDRAW
 ENDDEF
 #
-# Electronic-Target-rescue_LM75AIMX_NOPB-2020-05-12_18-19-55
+# Electronic-Target-rescue_LM75AIMX_NOPB-2020-05-12_18-19-55-Electronic-Target-rescue
 #
-DEF Electronic-Target-rescue_LM75AIMX_NOPB-2020-05-12_18-19-55 U 0 10 Y Y 1 L N
+DEF Electronic-Target-rescue_LM75AIMX_NOPB-2020-05-12_18-19-55-Electronic-Target-rescue U 0 10 Y Y 1 L N
 F0 "U" 1100 400 60 H V C CNN
-F1 "Electronic-Target-rescue_LM75AIMX_NOPB-2020-05-12_18-19-55" 1100 300 60 H V C CNN
+F1 "Electronic-Target-rescue_LM75AIMX_NOPB-2020-05-12_18-19-55-Electronic-Target-rescue" 1100 300 60 H V C CNN
 F2 "M08A_TEX" 1100 240 60 H I C CNN
 F3 "" 0 0 60 H V C CNN
 $FPLIST
@@ -587,11 +587,11 @@ X VS+ 8 2200 0 300 L 59 59 1 1 U
 ENDDRAW
 ENDDEF
 #
-# Electronic-Target-rescue_NMA0505SC-NMA0505SC
+# Electronic-Target-rescue_NMA0505SC-NMA0505SC-Electronic-Target-rescue
 #
-DEF Electronic-Target-rescue_NMA0505SC-NMA0505SC U 0 40 Y Y 1 L N
+DEF Electronic-Target-rescue_NMA0505SC-NMA0505SC-Electronic-Target-rescue U 0 40 Y Y 1 L N
 F0 "U" -501 220 50 H V L BNN
-F1 "Electronic-Target-rescue_NMA0505SC-NMA0505SC" -501 -300 50 H V L BNN
+F1 "Electronic-Target-rescue_NMA0505SC-NMA0505SC-Electronic-Target-rescue" -501 -300 50 H V L BNN
 F2 "SIP600W50P254L1950H1000Q5" 0 0 50 H I L BNN
 F3 "muRata" 0 0 50 H I L BNN
 DRAW
