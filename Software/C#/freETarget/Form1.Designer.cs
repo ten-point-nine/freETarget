@@ -526,7 +526,7 @@ namespace freETarget
             this.btnUpload.Name = "btnUpload";
             this.btnUpload.Size = new System.Drawing.Size(27, 27);
             this.btnUpload.TabIndex = 39;
-            this.toolTip.SetToolTip(this.btnUpload, "Arduino");
+            this.toolTip.SetToolTip(this.btnUpload, "Firmware upload");
             this.btnUpload.UseVisualStyleBackColor = true;
             this.btnUpload.Click += new System.EventHandler(this.btnUpload_Click);
             // 

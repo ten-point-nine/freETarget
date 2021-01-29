@@ -25,6 +25,9 @@ namespace freETarget
 
         private void frmSettings_Load(object sender, EventArgs e)
         {
+
+            tabControl1.TabPages.RemoveAt(2);
+
             string[] ports = SerialPort.GetPortNames();
 
             foreach (string port in ports)

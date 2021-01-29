@@ -81,6 +81,7 @@ namespace freETarget {
             // 
             // btnClose
             // 
+            this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnClose.Location = new System.Drawing.Point(665, 38);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(75, 23);
@@ -100,8 +101,10 @@ namespace freETarget {
             this.Controls.Add(this.lblHexFile);
             this.Controls.Add(this.txtUploadConsole);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MinimizeBox = false;
             this.MinimumSize = new System.Drawing.Size(700, 350);
             this.Name = "frmUpload";
+            this.ShowInTaskbar = false;
             this.Text = "Upload firmware";
             this.ResumeLayout(false);
             this.PerformLayout();
