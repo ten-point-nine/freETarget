@@ -526,7 +526,7 @@ namespace freETarget {
         private void drawShot(Shot shot, Graphics it, int targetSize, decimal zoomFactor, int l) {
             //transform shot coordinates to imagebox coordinates
 
-            PointF x = transform((float)getShotX(shot), (float)getShotY(shot), targetSize, zoomFactor);
+            PointF x = transform((float)shot.getX(), (float)shot.getY(), targetSize, zoomFactor);
 
             //draw shot on target
             int count = getShotList().Count;
@@ -673,16 +673,16 @@ namespace freETarget {
             string[] t2 = json.Split(',');
 
             if (t2[0].Contains("shot")) {
-                Shot ret = new Shot();
+                Shot ret = new Shot(calibrationX,calibrationY, calibrationAngle);
                 try {
                     foreach (string t3 in t2) {
                         string[] t4 = t3.Split(':');
                         if (t4[0].Trim() == "\"shot\"") {
                             ret.count = int.Parse(t4[1], CultureInfo.InvariantCulture);
                         } else if (t4[0].Trim() == "\"x\"") {
-                            ret.x = getScaledDimension(decimal.Parse(t4[1], CultureInfo.InvariantCulture));
+                            ret.setX(getScaledDimension(decimal.Parse(t4[1], CultureInfo.InvariantCulture)));
                         } else if (t4[0].Trim() == "\"y\"") {
-                            ret.y = getScaledDimension(decimal.Parse(t4[1], CultureInfo.InvariantCulture));
+                            ret.setY(getScaledDimension(decimal.Parse(t4[1], CultureInfo.InvariantCulture)));
                         } else if (t4[0].Trim() == "\"r\"") {
                             ret.radius = getScaledDimension(decimal.Parse(t4[1], CultureInfo.InvariantCulture));
                         } else if (t4[0].Trim() == "\"a\"") {
@@ -691,12 +691,12 @@ namespace freETarget {
                     }
                 } catch (FormatException ex) {
                     Console.WriteLine("Could not parse: " + json + " Error: " + ex.Message);
-                    Shot err = new Shot();
+                    Shot err = new Shot(calibrationX, calibrationY, calibrationAngle);
                     err.count = -1;
                     return err;
                 }
 
-                Console.WriteLine("Shot X:" + ret.x + " Y:" + ret.y + " R:" + ret.radius + " A:" + ret.angle);
+                Console.WriteLine("Shot X:" + ret.getX() + " Y:" + ret.getY() + " R:" + ret.radius + " A:" + ret.angle);
 
                 ret.computeScore(currentSession.targetType);
 
@@ -1082,8 +1082,8 @@ namespace freETarget {
             decimal ysum = 0;
 
             foreach(Shot shot in shots) {
-                xsum += getShotX(shot);
-                ysum += getShotY(shot);
+                xsum += shot.getX();
+                ysum += shot.getY();
             }
 
             xbar = xsum / (decimal)shots.Count;
@@ -1091,7 +1091,7 @@ namespace freETarget {
 
             decimal[] r = new decimal[shots.Count];
             for(int i=0; i< shots.Count; i++) {
-                r[i] = (decimal)Math.Sqrt((double)(((getShotX(shots[i]) - xbar) * (getShotX(shots[i]) - xbar)) + ((getShotY(shots[i]) - ybar) * (getShotY(shots[i]) - ybar))));
+                r[i] = (decimal)Math.Sqrt((double)(((shots[i].getX() - xbar) * (shots[i].getX() - xbar)) + ((shots[i].getY() - ybar) * (shots[i].getY() - ybar))));
             }
 
             decimal rsum = 0;
@@ -1108,8 +1108,8 @@ namespace freETarget {
             List<double> spreads = new List<double>();
             for(int i = 0; i < shots.Count; i++) {
                 for(int j = 0; j < shots.Count; j++) {
-                    double powX = Math.Pow((double)getShotX(shots[i]) - (double)getShotX(shots[j]), 2);
-                    double powY = Math.Pow((double)getShotY(shots[i]) - (double)getShotY(shots[j]), 2);
+                    double powX = Math.Pow((double)shots[i].getX() - (double)shots[j].getX(), 2);
+                    double powY = Math.Pow((double)shots[i].getY() - (double)shots[j].getY(), 2);
                     double sqrt;
                     if (powX > powY) {
                         sqrt = Math.Sqrt(powX - powY);
@@ -1123,35 +1123,6 @@ namespace freETarget {
             return (decimal)spreads.Max();
         }
 
-        private PointF RotatePoint(PointF pointToRotate, PointF centerPoint, float angleInDegrees) {
-            double angleInRadians = angleInDegrees * (Math.PI / 180);
-            double cosTheta = Math.Cos(angleInRadians);
-            double sinTheta = Math.Sin(angleInRadians);
-            return new PointF {
-                X =
-                    (float)
-                    (cosTheta * (pointToRotate.X - centerPoint.X) -
-                    sinTheta * (pointToRotate.Y - centerPoint.Y) + centerPoint.X),
-                Y =
-                    (float)
-                    (sinTheta * (pointToRotate.X - centerPoint.X) +
-                    cosTheta * (pointToRotate.Y - centerPoint.Y) + centerPoint.Y)
-            };
-
-        }
-
-        private decimal getShotX(Shot shot) {
-            PointF p = new PointF((float)(shot.x + calibrationX), (float)shot.y);
-            PointF rotP = RotatePoint(p, new PointF(0, 0), (float)calibrationAngle);
-            return (decimal)rotP.X;
-
-        }
-
-        private decimal getShotY(Shot shot) {
-            PointF p = new PointF((float)(shot.x), (float)(shot.y + calibrationY));
-            PointF rotP = RotatePoint(p, new PointF(0, 0), (float)calibrationAngle);
-            return (decimal)rotP.Y;
-        }
 
         private void btnCalibration_Click(object sender, EventArgs e) {
             frmCalibration frmCal = frmCalibration.getInstance(this);
@@ -1160,7 +1131,18 @@ namespace freETarget {
 
         public void calibrateX(decimal increment) {
             calibrationX += increment;
-            computeShotStatistics(getShotList());
+            foreach (Shot shot in getShotList()) {
+                shot.calibrationX = calibrationX;
+                shot.computeScore(this.currentSession.targetType);
+            }
+            shotsList.Items.Clear();
+            shotsList.Refresh();
+            gridTargets.Rows.Clear();
+            clearBreakdownChart();
+            foreach (Shot shot in getShotList()) {
+                displayShotData(shot);
+            }
+            //computeShotStatistics(getShotList());
             targetRefresh();
 
             if(calibrationX == 0 && calibrationY == 0 && calibrationAngle ==0) {
@@ -1174,7 +1156,20 @@ namespace freETarget {
 
         public void calibrateY(decimal increment) {
             calibrationY += increment;
-            computeShotStatistics(getShotList());
+            foreach (Shot shot in getShotList()) {
+                shot.calibrationY = calibrationY;
+                shot.computeScore(this.currentSession.targetType);
+            }
+
+            shotsList.Items.Clear();
+            shotsList.Refresh();
+            gridTargets.Rows.Clear();
+            clearBreakdownChart();
+            foreach (Shot shot in getShotList()) {
+                displayShotData(shot);
+            }
+
+            //computeShotStatistics(getShotList());
             targetRefresh();
 
             if (calibrationX == 0 && calibrationY == 0 && calibrationAngle == 0) {
@@ -1187,7 +1182,18 @@ namespace freETarget {
 
         public void calibrateAngle(decimal angle) {
             calibrationAngle += angle;
-            computeShotStatistics(getShotList());
+            foreach (Shot shot in getShotList()) {
+                shot.calibrationAngle = calibrationAngle;
+                shot.computeScore(this.currentSession.targetType);
+            }
+            shotsList.Items.Clear();
+            shotsList.Refresh();
+            gridTargets.Rows.Clear();
+            clearBreakdownChart();
+            foreach (Shot shot in getShotList()) {
+                displayShotData(shot);
+            }
+                //computeShotStatistics(getShotList());
             targetRefresh();
 
             if (calibrationX == 0 && calibrationY == 0 && calibrationAngle == 0) {
@@ -1202,7 +1208,23 @@ namespace freETarget {
             calibrationX = 0;
             calibrationY = 0;
             calibrationAngle = 0;
-            computeShotStatistics(getShotList());
+
+            foreach (Shot shot in getShotList()) {
+                shot.calibrationX = calibrationX;
+                shot.calibrationY = calibrationY;
+                shot.calibrationAngle = calibrationAngle;
+                shot.computeScore(this.currentSession.targetType);
+            }
+
+            shotsList.Items.Clear();
+            shotsList.Refresh();
+            gridTargets.Rows.Clear();
+            clearBreakdownChart();
+            foreach (Shot shot in getShotList()) {
+                displayShotData(shot);
+            }
+
+            //computeShotStatistics(getShotList());
             targetRefresh();
 
             btnCalibration.BackColor = this.BackColor;

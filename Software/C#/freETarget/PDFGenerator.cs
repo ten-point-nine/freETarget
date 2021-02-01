@@ -287,11 +287,11 @@ namespace freETarget {
         }
 
         private static decimal getShotX(Shot shot) {
-            return shot.x;// + calibrationX;
+            return shot.getX();
         }
 
         private static decimal getShotY(Shot shot) {
-            return shot.y;// + calibrationY;
+            return shot.getY();
         }
 
         private static XPoint transform(float xp, float yp, float size, decimal zoomFactor, int xLoc, int yLoc) {

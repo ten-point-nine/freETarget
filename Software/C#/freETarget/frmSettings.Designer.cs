@@ -721,7 +721,7 @@
             // txtSouthX
             // 
             this.helpProvider.SetHelpString(this.txtSouthX, "Deviation from the ideal position on the X axis of the South sensor");
-            this.txtSouthX.Location = new System.Drawing.Point(190, 327);
+            this.txtSouthX.Location = new System.Drawing.Point(297, 326);
             this.txtSouthX.Name = "txtSouthX";
             this.helpProvider.SetShowHelp(this.txtSouthX, true);
             this.txtSouthX.Size = new System.Drawing.Size(29, 20);
@@ -731,7 +731,7 @@
             // txtSouthY
             // 
             this.helpProvider.SetHelpString(this.txtSouthY, "Deviation from the ideal position on the Y axis of the South sensor");
-            this.txtSouthY.Location = new System.Drawing.Point(121, 263);
+            this.txtSouthY.Location = new System.Drawing.Point(225, 253);
             this.txtSouthY.Name = "txtSouthY";
             this.helpProvider.SetShowHelp(this.txtSouthY, true);
             this.txtSouthY.Size = new System.Drawing.Size(29, 20);
@@ -741,7 +741,7 @@
             // txtWestX
             // 
             this.helpProvider.SetHelpString(this.txtWestX, "Deviation from the ideal position on the X axis of the West sensor");
-            this.txtWestX.Location = new System.Drawing.Point(75, 194);
+            this.txtWestX.Location = new System.Drawing.Point(82, 326);
             this.txtWestX.Name = "txtWestX";
             this.helpProvider.SetShowHelp(this.txtWestX, true);
             this.txtWestX.Size = new System.Drawing.Size(29, 20);
@@ -751,7 +751,7 @@
             // txtWestY
             // 
             this.helpProvider.SetHelpString(this.txtWestY, "Deviation from the ideal position on the Y axis of the West sensor");
-            this.txtWestY.Location = new System.Drawing.Point(7, 127);
+            this.txtWestY.Location = new System.Drawing.Point(14, 253);
             this.txtWestY.Name = "txtWestY";
             this.helpProvider.SetShowHelp(this.txtWestY, true);
             this.txtWestY.Size = new System.Drawing.Size(29, 20);
@@ -761,7 +761,7 @@
             // txtEastX
             // 
             this.helpProvider.SetHelpString(this.txtEastX, "Deviation from the ideal position on the X axis of the East sensor");
-            this.txtEastX.Location = new System.Drawing.Point(297, 215);
+            this.txtEastX.Location = new System.Drawing.Point(297, 108);
             this.txtEastX.Name = "txtEastX";
             this.helpProvider.SetShowHelp(this.txtEastX, true);
             this.txtEastX.Size = new System.Drawing.Size(29, 20);
@@ -771,7 +771,7 @@
             // txtEastY
             // 
             this.helpProvider.SetHelpString(this.txtEastY, "Deviation from the ideal position on the Y axis of the East sensor");
-            this.txtEastY.Location = new System.Drawing.Point(228, 150);
+            this.txtEastY.Location = new System.Drawing.Point(225, 42);
             this.txtEastY.Name = "txtEastY";
             this.helpProvider.SetShowHelp(this.txtEastY, true);
             this.txtEastY.Size = new System.Drawing.Size(29, 20);
@@ -781,7 +781,7 @@
             // txtNorthY
             // 
             this.helpProvider.SetHelpString(this.txtNorthY, "Deviation from the ideal position on the Y axis of the North sensor");
-            this.txtNorthY.Location = new System.Drawing.Point(121, 42);
+            this.txtNorthY.Location = new System.Drawing.Point(14, 42);
             this.txtNorthY.Name = "txtNorthY";
             this.helpProvider.SetShowHelp(this.txtNorthY, true);
             this.txtNorthY.Size = new System.Drawing.Size(29, 20);
@@ -791,7 +791,7 @@
             // txtNorthX
             // 
             this.helpProvider.SetHelpString(this.txtNorthX, "Deviation from the ideal position on the X axis of the North sensor");
-            this.txtNorthX.Location = new System.Drawing.Point(188, 108);
+            this.txtNorthX.Location = new System.Drawing.Point(82, 108);
             this.txtNorthX.Name = "txtNorthX";
             this.helpProvider.SetShowHelp(this.txtNorthX, true);
             this.txtNorthX.Size = new System.Drawing.Size(29, 20);
