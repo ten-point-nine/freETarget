@@ -24,7 +24,7 @@ namespace freETarget {
 
         public frmJournal(frmMainWindow mainWin) {
             InitializeComponent();
-            storage = new StorageController();
+            storage = new StorageController(mainWin);
             this.mainWindow = mainWin;
         }
 

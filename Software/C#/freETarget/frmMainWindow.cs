@@ -61,7 +61,9 @@ namespace freETarget {
         public frmMainWindow() {
             InitializeComponent();
 
-            storage = new StorageController();
+            initLog();
+
+            storage = new StorageController(this);
 
             this.calibrationX = Settings.Default.calibrationX;
             this.calibrationY = Settings.Default.calibrationY;
@@ -91,7 +93,7 @@ namespace freETarget {
             digitalClock.segments[3].ColonOn = true;
             digitalClock.ResizeSegments();
 
-            initLog();
+
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             statusVersion.Text = "v" + assembly.GetName().Version.Major + "." + assembly.GetName().Version.Minor + "." + assembly.GetName().Version.Build;
         }
