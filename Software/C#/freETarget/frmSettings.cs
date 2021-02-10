@@ -25,6 +25,7 @@ namespace freETarget
 
         private void frmSettings_Load(object sender, EventArgs e)
         {
+
             string[] ports = SerialPort.GetPortNames();
 
             foreach (string port in ports)
@@ -58,7 +59,7 @@ namespace freETarget
             loadSettings();
 
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            lblVersion.Text = "freETarget Project  -  v"+ assembly.GetName().Version.Major + "." + assembly.GetName().Version.Minor + "." + assembly.GetName().Version.Build + "   (c) 2020";
+            lblVersion.Text = "freETarget Project  -  v"+ assembly.GetName().Version.Major + "." + assembly.GetName().Version.Minor + "." + assembly.GetName().Version.Build + "   (c) 2020-2021";
         }
 
         private void loadSettings()

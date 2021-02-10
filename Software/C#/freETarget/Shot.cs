@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -10,15 +11,68 @@ namespace freETarget {
     public class Shot {
         public int index;
         public int count;
-        public decimal x;
-        public decimal y;
-        public decimal radius;
-        public decimal angle;
+        private decimal x;
+        private decimal y;
+        public decimal radius; //not used
+        public decimal angle; //not used
         public int score;
         public decimal decimalScore;
         public bool innerTen;
         public DateTime timestamp;
         public TimeSpan shotDuration;
+
+        public decimal calibrationX;
+        public decimal calibrationY;
+        public decimal calibrationAngle;
+
+        private Shot() {
+
+        }
+        
+        public Shot(decimal calibrateX, decimal calibrateY, decimal calibrateAngle) {
+            this.calibrationX = calibrateX;
+            this.calibrationY = calibrateY;
+            this.calibrationAngle = calibrateAngle;
+        }
+
+
+        private PointF RotatePoint(PointF pointToRotate, PointF centerPoint, float angleInDegrees) {
+            double angleInRadians = angleInDegrees * (Math.PI / 180);
+            double cosTheta = Math.Cos(angleInRadians);
+            double sinTheta = Math.Sin(angleInRadians);
+            return new PointF {
+                X =
+                    (float)
+                    (cosTheta * (pointToRotate.X - centerPoint.X) -
+                    sinTheta * (pointToRotate.Y - centerPoint.Y) + centerPoint.X),
+                Y =
+                    (float)
+                    (sinTheta * (pointToRotate.X - centerPoint.X) +
+                    cosTheta * (pointToRotate.Y - centerPoint.Y) + centerPoint.Y)
+            };
+
+        }
+
+        public decimal getX() {
+            PointF p = new PointF((float)(this.x + calibrationX), (float)this.y);
+            PointF rotP = RotatePoint(p, new PointF(0, 0), (float)this.calibrationAngle);
+            return (decimal)rotP.X;
+
+        }
+
+        public void setX(decimal nr) {
+            this.x = nr;
+        }
+
+        public decimal getY() {
+            PointF p = new PointF((float)(this.x), (float)(this.y + this.calibrationY));
+            PointF rotP = RotatePoint(p, new PointF(0, 0), (float)this.calibrationAngle);
+            return (decimal)rotP.Y;
+        }
+
+        public void setY(decimal nr) {
+            this.y = nr;
+        }
 
         public void computeScore(Session.TargetType type) {
             //using liner interpolation with the "official" values found here: http://targettalk.org/viewtopic.php?p=100591#p100591
@@ -31,7 +85,12 @@ namespace freETarget {
                 coef = 9.9d / (((float)ISSF.outterRingRifle / 2d) + ((float)ISSF.pelletCaliber / 2d));
             }
 
-            double score = 10.9999d - (coef * (float)this.radius); //10.9999 is needed to get the incline just right. center should be almost 11
+
+            float newRadius = recomputeRadiusFromXY(); //use the calculated radius from x,y instead of the received one. x and y are adjusted with calibration
+            this.radius = (decimal)newRadius;
+
+            double score = 10.9999d - (coef * newRadius); //10.9999 is needed to get the incline just right. center should be almost 11
+          
 
             this.decimalScore = (decimal)(Math.Truncate(score * 10)) / 10m;
             this.decimalScore += 0.0m; //add a decimal if the result is an integer
@@ -65,6 +124,10 @@ namespace freETarget {
                 Console.WriteLine("Unknown current target " + type);
             }
 
+        }
+
+        private float recomputeRadiusFromXY() {
+            return (float)Math.Sqrt(Math.Pow((double)(this.x + this.calibrationX) , 2) + Math.Pow((double)(this.y+this.calibrationY), 2));
         }
 
 /*        private double linearInterpolation(float x1, float y1, float x2, float y2, float x) {

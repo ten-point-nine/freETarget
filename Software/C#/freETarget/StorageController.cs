@@ -9,27 +9,70 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Windows.Forms;
+using System.IO;
 
 namespace freETarget {
     class StorageController {
 
         private string connString = "Data Source=./Storage.db;";
-        public StorageController() {
-            
+        private string templateConnString = "Data Source=./Storage.db;";
+        private frmMainWindow mainWindow;
+
+        public StorageController(frmMainWindow mainWindow) {
+            this.mainWindow = mainWindow;
+            string dbPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\freETarget";
+            if (Directory.Exists(dbPath)==false) {
+                Directory.CreateDirectory(dbPath);
+                File.Copy("./Storage.db", dbPath + "/Storage.db");
+                mainWindow.log("Database directory created at: " + dbPath);
+                mainWindow.displayMessage("Database directory created at: " + dbPath,false);
+            }
+
+            if(File.Exists(dbPath + "/Storage.db")==false) {
+                //the directory exists, but someone deleted the DB file :(
+                File.Copy("./Storage.db", dbPath + "/Storage.db");
+                mainWindow.log("Database file copied at: " + dbPath);
+                mainWindow.displayMessage("Database file copied at: " + dbPath, false);
+            }
+            connString = "Data Source=" + dbPath + "/Storage.db;";
         }
 
         public String checkDB() {
             try {
+                //step1: check if template database exists. if yes, get version
+
+                SQLiteConnection tempCon = new SQLiteConnection(templateConnString);
+                tempCon.Open();
+                SQLiteCommand cmdCon = new SQLiteCommand("select version from Version", tempCon);
+                int objCon = Convert.ToInt32(cmdCon.ExecuteScalar());
+
+                tempCon.Close();
+
+                //step2: check if user database exists. if yes, get version from user database
+
                 SQLiteConnection con = new SQLiteConnection(connString);
                 con.Open();
-                SQLiteCommand cmd = new SQLiteCommand("select count(*) from Sessions", con);
-                Object obj = cmd.ExecuteScalar();
+                SQLiteCommand cmd = new SQLiteCommand("select version from Version", con);
+                int obj = Convert.ToInt32(cmd.ExecuteScalar());
 
-                //TODO: add some database versioning and/or integrity check
-
-                Console.WriteLine("DB check: " + obj + " rows");
                 con.Close();
-            }catch(Exception ex) {
+
+                mainWindow.log("Template database version = " + objCon + "   -   User database version = " + obj);
+
+                //step3: compare versions. if different, copy template over user database
+
+                string dbPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\freETarget";
+                if (objCon != obj) {
+                    MessageBox.Show("User database at '"+ dbPath +"\\Storage.db' is a different version than this installation requires."+ Environment.NewLine 
+                        + "Overwriting user database with the template from this version", "Database problem", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                   
+                    File.Copy("./Storage.db", dbPath + "\\Storage.db",true);
+                    mainWindow.log("Database version mismatch.  '"+ dbPath + "\\Storage.db' overwritten with local template" );
+                }
+
+                mainWindow.displayMessage("User database at: " + dbPath,false);
+
+            } catch (Exception ex) {
                 return ex.Message;
             }
             return null;

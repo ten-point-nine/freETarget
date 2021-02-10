@@ -122,6 +122,8 @@ namespace TargetSimulator
             decimal radius = (decimal)pitagora(xPos, yPos);
             decimal angle = (decimal)findDegree((float)yPos, (float)xPos);
 
+            //Console.WriteLine("X: " + xPos + " Y: " + yPos + " Radius: " + radius);
+
             string command = "{\"shot\":" + count + ", \"x\":" + xPos.ToString("F2", CultureInfo.InvariantCulture) + ", \"y\":" + yPos.ToString("F2", CultureInfo.InvariantCulture) + ", \"r\":" + radius.ToString("F2", CultureInfo.InvariantCulture) + ", \"a\":" + angle.ToString("F2", CultureInfo.InvariantCulture) +"}" + Environment.NewLine;
             
           

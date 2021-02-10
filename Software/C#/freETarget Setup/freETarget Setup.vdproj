@@ -69,6 +69,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_2946D68053D64183893238F99DDAE4B4"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_2BB2FC03F2C643D18D5298DEF4F924F0"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -447,6 +453,18 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_E9B03993C68745018D90ECA22C3E3D2D"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_EA5F43D4212B4C79AC266A44DBDC09F7"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_F273AEC8AEDA43BEB44781A217C513BA"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -766,6 +784,26 @@
             "TargetName" = "8:arduino-org.inf"
             "Tag" = "8:"
             "Folder" = "8:_596F3DCDBC674A6297E381CA7EE0C033"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_2946D68053D64183893238F99DDAE4B4"
+            {
+            "SourcePath" = "8:..\\freETarget\\avrdude\\libusb0.dll"
+            "TargetName" = "8:libusb0.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_C6C9835BFD7E419398C0BC136CF842D8"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -2055,6 +2093,46 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E9B03993C68745018D90ECA22C3E3D2D"
+            {
+            "SourcePath" = "8:..\\freETarget\\avrdude\\avrdude.conf"
+            "TargetName" = "8:avrdude.conf"
+            "Tag" = "8:"
+            "Folder" = "8:_C6C9835BFD7E419398C0BC136CF842D8"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_EA5F43D4212B4C79AC266A44DBDC09F7"
+            {
+            "SourcePath" = "8:..\\freETarget\\avrdude\\avrdude.exe"
+            "TargetName" = "8:avrdude.exe"
+            "Tag" = "8:"
+            "Folder" = "8:_C6C9835BFD7E419398C0BC136CF842D8"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F273AEC8AEDA43BEB44781A217C513BA"
             {
             "SourcePath" = "8:drivers\\CP210x_6.7.4\\slabvcp.inf"
@@ -2369,6 +2447,17 @@
                     "Condition" = "8:"
                     "Transitive" = "11:FALSE"
                     "Property" = "8:_15B7B57C6D11425CBCCCD9B659B12A7A"
+                        "Folders"
+                        {
+                        }
+                    }
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_C6C9835BFD7E419398C0BC136CF842D8"
+                    {
+                    "Name" = "8:avrdude"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_C7AAFC15F2FA4B37861A4037E5A7A6A2"
                         "Folders"
                         {
                         }
@@ -3032,7 +3121,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_B18C4057E682438CB1FBAFA19B5EAB78"
             {
-            "SourcePath" = "8:..\\freETarget\\obj\\Debug\\freETarget.exe"
+            "SourcePath" = "8:..\\freETarget\\obj\\Release\\freETarget.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_9981CD01648E4C95AF344740FDDEA8C9"

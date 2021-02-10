@@ -33,9 +33,9 @@
             this.btnClose = new System.Windows.Forms.Button();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.txtIncrement = new System.Windows.Forms.TextBox();
+            this.txtAngle = new System.Windows.Forms.TextBox();
             this.btnClockwise = new System.Windows.Forms.Button();
             this.btnAntiClockwise = new System.Windows.Forms.Button();
-            this.txtAngle = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // btnLeft
@@ -92,7 +92,7 @@
             // btnClose
             // 
             this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnClose.Location = new System.Drawing.Point(104, 176);
+            this.btnClose.Location = new System.Drawing.Point(104, 88);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(97, 23);
             this.btnClose.TabIndex = 5;
@@ -114,6 +114,16 @@
             this.txtIncrement.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.toolTip.SetToolTip(this.txtIncrement, "Calibration increment; between 0.01 and 10");
             // 
+            // txtAngle
+            // 
+            this.txtAngle.Location = new System.Drawing.Point(50, 136);
+            this.txtAngle.Name = "txtAngle";
+            this.txtAngle.Size = new System.Drawing.Size(26, 20);
+            this.txtAngle.TabIndex = 9;
+            this.txtAngle.Text = "1";
+            this.txtAngle.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.toolTip.SetToolTip(this.txtAngle, "Calibration increment; between 0.01 and 10");
+            // 
             // btnClockwise
             // 
             this.btnClockwise.Image = ((System.Drawing.Image)(resources.GetObject("btnClockwise.Image")));
@@ -134,21 +144,11 @@
             this.btnAntiClockwise.UseVisualStyleBackColor = true;
             this.btnAntiClockwise.Click += new System.EventHandler(this.btnAntiClockwise_Click);
             // 
-            // txtAngle
-            // 
-            this.txtAngle.Location = new System.Drawing.Point(50, 136);
-            this.txtAngle.Name = "txtAngle";
-            this.txtAngle.Size = new System.Drawing.Size(26, 20);
-            this.txtAngle.TabIndex = 9;
-            this.txtAngle.Text = "1";
-            this.txtAngle.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.toolTip.SetToolTip(this.txtAngle, "Calibration increment; between 0.01 and 10");
-            // 
             // frmCalibration
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(213, 211);
+            this.ClientSize = new System.Drawing.Size(213, 123);
             this.Controls.Add(this.txtAngle);
             this.Controls.Add(this.btnAntiClockwise);
             this.Controls.Add(this.btnClockwise);
