@@ -12,28 +12,50 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Management;
 
 namespace freETarget
 {
-    public partial class frmSettings : Form { 
+    public partial class frmSettings : Form {
+
+        frmMainWindow mainWindow;
 
 
-        public frmSettings()
+        public frmSettings(frmMainWindow mainWin)
         {
             InitializeComponent();
+            this.mainWindow = mainWin;
         }
 
         private void frmSettings_Load(object sender, EventArgs e)
         {
 
-            string[] ports = SerialPort.GetPortNames();
 
-            foreach (string port in ports)
-            {
-                cmbPorts.Items.Add(port);
-                if (ports[0] != null)
-                {
-                    cmbPorts.SelectedItem = ports[0];
+            using (var devices = new ManagementObjectSearcher("SELECT * FROM WIN32_SerialPort")) {
+                string[] portnames = SerialPort.GetPortNames();
+
+                //detect names of devices connected to COM ports
+                var ports = devices.Get().Cast<ManagementBaseObject>().ToList();
+                var device_list = (from n in portnames
+                                   join p in ports on n equals p["DeviceID"].ToString()
+                                   select p["Caption"]).ToList();
+
+                //detect arduino on COM
+                bool arduinoFound = false;
+                for(int i = 0; i < portnames.Length; i++) {
+                    cmbPorts.Items.Add(portnames[i]);
+                    string portDevice = device_list[i].ToString();
+
+                    if (portDevice.Contains("Arduino")){
+                        cmbPorts.SelectedItem = portnames[i];
+                        mainWindow.log("Arduino device: '" + portDevice + "' found on port: " + portnames[i]);
+                        arduinoFound = true;
+                    }
+                }
+
+                //no arduino found, select first COM
+                if (arduinoFound == false && portnames.Length > 0) {
+                    cmbPorts.SelectedItem = portnames[0];
                 }
             }
 

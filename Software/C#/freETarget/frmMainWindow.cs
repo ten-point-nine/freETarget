@@ -63,6 +63,11 @@ namespace freETarget {
 
             initLog();
 
+            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            string v = "v" + assembly.GetName().Version.Major + "." + assembly.GetName().Version.Minor + "." + assembly.GetName().Version.Build;
+            log(Environment.NewLine + Environment.NewLine + "Starting freETarget - " + v + " ... ");
+            statusVersion.Text = v;
+
             storage = new StorageController(this);
 
             this.calibrationX = Settings.Default.calibrationX;
@@ -93,9 +98,6 @@ namespace freETarget {
             digitalClock.segments[3].ColonOn = true;
             digitalClock.ResizeSegments();
 
-
-            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            statusVersion.Text = "v" + assembly.GetName().Version.Major + "." + assembly.GetName().Version.Minor + "." + assembly.GetName().Version.Build;
         }
 
         private void initLog() {
@@ -375,6 +377,7 @@ namespace freETarget {
                 t = t.Substring(0, t.IndexOf(Environment.NewLine));
             }
             statusText.Text = "Connected to " + t + " on " + serialPort.PortName;
+            log("Connected to " + t + " on " + serialPort.PortName);
             displayMessage("Connected to " + t, false);
 
             Application.DoEvents();
@@ -726,7 +729,7 @@ namespace freETarget {
         }
 
         private void btnConfig_Click(object sender, EventArgs e) {
-            frmSettings settingsFrom = new frmSettings();
+            frmSettings settingsFrom = new frmSettings(this);
             if (settingsFrom.ShowDialog(this) == DialogResult.OK) {
                 Properties.Settings.Default.name = settingsFrom.txtName.Text;
                 Properties.Settings.Default.baudRate = int.Parse(settingsFrom.txtBaud.Text);

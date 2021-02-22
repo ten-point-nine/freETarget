@@ -18,26 +18,36 @@ namespace freETarget {
         private string templateConnString = "Data Source=./Storage.db;";
         private frmMainWindow mainWindow;
 
+        private bool initiated = false;
+
         public StorageController(frmMainWindow mainWindow) {
             this.mainWindow = mainWindow;
-            string dbPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\freETarget";
-            if (Directory.Exists(dbPath)==false) {
-                Directory.CreateDirectory(dbPath);
-                File.Copy("./Storage.db", dbPath + "/Storage.db");
-                mainWindow.log("Database directory created at: " + dbPath);
-                mainWindow.displayMessage("Database directory created at: " + dbPath,false);
-            }
+            try {
+                string dbPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\freETarget";
+                if (Directory.Exists(dbPath) == false) {
+                    Directory.CreateDirectory(dbPath);
+                    File.Copy("./Storage.db", dbPath + "/Storage.db");
+                    mainWindow.log("Database directory created at: " + dbPath);
+                    mainWindow.displayMessage("Database directory created at: " + dbPath, false);
+                } else if (File.Exists(dbPath + "/Storage.db") == false) {
+                    //the directory exists, but someone deleted the DB file :(
+                    File.Copy("./Storage.db", dbPath + "/Storage.db");
+                    mainWindow.log("Database file copied at: " + dbPath);
+                    mainWindow.displayMessage("Database file copied at: " + dbPath, false);
+                }
 
-            if(File.Exists(dbPath + "/Storage.db")==false) {
-                //the directory exists, but someone deleted the DB file :(
-                File.Copy("./Storage.db", dbPath + "/Storage.db");
-                mainWindow.log("Database file copied at: " + dbPath);
-                mainWindow.displayMessage("Database file copied at: " + dbPath, false);
+                connString = "Data Source=" + dbPath + "/Storage.db;";
+
+                initiated = true;
+            }catch(Exception ex) {
+                mainWindow.log("Exception in StorageController constructor: " + ex.Message);
             }
-            connString = "Data Source=" + dbPath + "/Storage.db;";
         }
 
         public String checkDB() {
+            if (initiated == false) {
+                return "StorageController constructor not initialized. Check the log.";
+            }
             try {
                 //step1: check if template database exists. if yes, get version
 
