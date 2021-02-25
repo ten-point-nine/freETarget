@@ -106,6 +106,9 @@
     </Compile>
     <Compile Include="PDFGenerator.cs" />
     <Compile Include="StorageController.cs" />
+    <Compile Include="targets\AirPistol.cs" />
+    <Compile Include="targets\AirRifle.cs" />
+    <Compile Include="targets\aTarget.cs" />
     <Compile Include="TransparentRTB.cs">
       <SubType>Component</SubType>
     </Compile>

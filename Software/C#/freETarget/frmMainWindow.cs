@@ -527,62 +527,6 @@ namespace freETarget {
             }
         }
 
-        //draw shot on target imagebox
-        private void drawShot(Shot shot, Graphics it, int targetSize, decimal zoomFactor, int l) {
-            //transform shot coordinates to imagebox coordinates
-
-            PointF x = transform((float)shot.getX(), (float)shot.getY(), targetSize, zoomFactor);
-
-            //draw shot on target
-            int count = getShotList().Count;
-
-            Color c = Color.FromArgb(200, Settings.Default.scoreOldBackgroundColor); //semitransparent old shots
-            Pen p = new Pen(Settings.Default.scoreOldPenColor);
-            Brush bText = new SolidBrush(Settings.Default.scoreOldPenColor);
-
-
-            if (l == count - 1) { //last (current) shot
-                if (shot.decimalScore > 9.9m) {
-                    c =  Settings.Default.score10BackgroundColor; 
-                    p = new Pen(Settings.Default.score10PenColor);
-                    bText = new SolidBrush(Settings.Default.score10PenColor);
-                } else if (shot.decimalScore > 8.9m && shot.decimalScore <= 9.9m) {
-                    c =  Settings.Default.score9BackgroundColor; 
-                    p = new Pen(Settings.Default.score9PenColor);
-                    bText = new SolidBrush(Settings.Default.score9PenColor);
-                } else {
-                    c = Settings.Default.scoreDefaultBackgroundColor;
-                    p = new Pen(Settings.Default.scoreDefaultPenColor);
-                    bText = new SolidBrush(Settings.Default.scoreDefaultPenColor);
-                }
-            }
-
-
-            Brush b = new SolidBrush(c);
-
-
-            it.SmoothingMode = SmoothingMode.AntiAlias;
-            it.InterpolationMode = InterpolationMode.HighQualityBicubic;
-
-            float peletSize = getDimension(targetSize, ISSF.pelletCaliber, zoomFactor);
-
-            x.X -= peletSize / 2;
-            x.Y -= peletSize / 2;
-
-            it.FillEllipse(b, new RectangleF(x, new SizeF(peletSize, peletSize)));
-            it.DrawEllipse(p, new RectangleF(x, new SizeF(peletSize, peletSize)));
-
-            StringFormat format = new StringFormat();
-            format.LineAlignment = StringAlignment.Center;
-            format.Alignment = StringAlignment.Center;
-
-            Font f = new Font("Arial", peletSize / 3);
-
-            x.X += 0.2f; //small adjustment for the number to be centered
-            x.Y += 1f;
-            it.DrawString((shot.index+1).ToString(), f, bText, new RectangleF(x, new SizeF(peletSize, peletSize)), format);
-        }
-
         private void drawArrow(Shot shot) {
             //draw direction arrow
             Bitmap bmp = new Bitmap(imgArrow.Width, imgArrow.Height);
@@ -629,37 +573,6 @@ namespace freETarget {
             Thread.Sleep(100);
         }
 
-        private PointF transform(float xp, float yp, float size, decimal zoomFactor) {
-            //matrix magic from: https://docs.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/samples/jj635757(v=vs.85)
-
-            System.Numerics.Matrix4x4 M = new System.Numerics.Matrix4x4(0, 0, 1, 0,
-                                                                        0, 0, 0, 1,
-                                                                        size, size, 1, 0,
-                                                                       -size, size, 0, 1);
-
-            System.Numerics.Matrix4x4 Minverted;
-            System.Numerics.Matrix4x4.Invert(M, out Minverted);
-
-            float shotRange = (float)(ISSF.targetSize * zoomFactor) / 2f;
-            System.Numerics.Matrix4x4 xyPrime = new System.Numerics.Matrix4x4(-shotRange, 0, 0, 0,
-                                                                                shotRange, 0, 0, 0,
-                                                                                shotRange, 0, 0, 0,
-                                                                               -shotRange, 0, 0, 0);
-
-            System.Numerics.Matrix4x4 abcd = System.Numerics.Matrix4x4.Multiply(Minverted, xyPrime);
-
-            float a = abcd.M11;
-            float b = abcd.M21;
-            float c = abcd.M31;
-            float d = abcd.M41;
-
-            float x = (a * xp + b * yp - b * d - a * c) / (a * a + b * b);
-            float y = (b * xp - a * yp - b * c + a * d) / (a * a + b * b);
-
-            PointF ret = new PointF(x, y);
-            return ret;
-        }
-
   
         private decimal getScaledDimension(decimal input) {
             decimal ret = 100 * input / Settings.Default.targetDistance;
@@ -703,7 +616,7 @@ namespace freETarget {
 
                 Console.WriteLine("Shot X:" + ret.getX() + " Y:" + ret.getY() + " R:" + ret.radius + " A:" + ret.angle);
 
-                ret.computeScore(currentSession.targetType);
+                ret.computeScore(currentSession.getTarget());
 
                 ret.timestamp = DateTime.Now;
 
@@ -831,28 +744,17 @@ namespace freETarget {
             currentSession = Session.createNewSession(tcSessionType.SelectedTab.Text.Trim(), Settings.Default.name);
             currentSession.start();
 
-            setTrkZoom(currentSession.targetType);
+            setTrkZoom(currentSession.getTarget());
 
             clearShots();
             targetRefresh();
             drawSessionName();
         }
 
-        private void setTrkZoom(Session.TargetType weapon) {
-            if (weapon == Session.TargetType.Pistol) {
-                trkZoom.Minimum = 1;
-                trkZoom.Maximum = 5;
-                trkZoom.Value = 1;
-
-                // currentRange = outterRingPistol / 2m + pelletCaliber / 2m; //maximum range that can score a point 155.5 / 2 + 4.5 / 2 = 80mm
-
-            } else if (weapon == Session.TargetType.Rifle) {
-                trkZoom.Minimum = 0;
-                trkZoom.Maximum = 5;
-                trkZoom.Value = 0;
-
-                //currentRange = outterRingRifle / 2m + pelletCaliber / 2m; //maximum range that can score a point = 25mm
-            }
+        private void setTrkZoom(targets.aTarget target) {
+            trkZoom.Minimum = target.getTrkZoomMinimum();
+            trkZoom.Maximum = target.getTrkZoomMaximum();
+            trkZoom.Value = target.getTrkZoomValue();
         }
 
         private void trkZoom_ValueChanged(object sender, EventArgs e) {
@@ -885,134 +787,10 @@ namespace freETarget {
 
         private void drawTarget() {
             if (currentSession != null) {
-                if (currentSession.targetType == Session.TargetType.Pistol) {
-                    decimal zoomFactor = (decimal)(1 / (decimal)getZoom());
-                    imgTarget.Image = paintTarget(imgTarget.Height, 7, ISSF.ringsPistol, zoomFactor, false);
-                } else if (currentSession.targetType == Session.TargetType.Rifle) {
-                    decimal zoomFactor = (decimal)(1 / Math.Pow(2, getZoom()));
-                    imgTarget.Image = paintTarget(imgTarget.Height, 4, ISSF.ringsRifle, zoomFactor, true);
-                }
+                bool notConnected = currentStatus == Status.NOT_CONNECTED;
+                imgTarget.Image = currentSession.getTarget().paintTarget(imgTarget.Height, getZoom(), notConnected, currentSession, getShotList());
             } else {
                 Console.WriteLine("Current session is null");
-            }
-        }
-
-        private float getDimension(decimal currentTargetSize, decimal milimiters, decimal zoomFactor) {
-            return (float)((currentTargetSize * milimiters) / (ISSF.targetSize * zoomFactor));
-        }
-
-        private Bitmap paintTarget(int dimension, int blackRingCutoff, decimal[] rings, decimal zoomFactor, bool solidInner) {
-            if(dimension == 0) { //window is minimized. nothing to paint
-                return null; 
-            }
-            Pen penBlack = new Pen(Color.Black);
-            Pen penWhite = new Pen(Settings.Default.targetColor);
-            Brush brushBlack = new SolidBrush(Color.Black);
-            Brush brushWhite = new SolidBrush(Settings.Default.targetColor);
-
-            Bitmap bmpTarget = new Bitmap(dimension, dimension);
-            Graphics it = Graphics.FromImage(bmpTarget);
-            it.SmoothingMode = SmoothingMode.AntiAlias;
-
-            it.FillRectangle(brushWhite, 0, 0, dimension - 1, dimension - 1);
-
-
-
-            int r = 1;
-            for (int i = 0; i < rings.Length; i++) {
-
-                Pen p;
-                Brush b;
-                Brush bText;
-                if (r < blackRingCutoff) {
-                    p = penBlack;
-                    b = brushWhite;
-                    bText = brushBlack;
-                } else {
-                    p = penWhite;
-                    b = brushBlack;
-                    bText = brushWhite;
-                }
-
-                float circle = getDimension(dimension, rings[i], zoomFactor);
-                float center = (float)(dimension / 2);
-                float x = center - (circle / 2);
-                float y = center + (circle / 2);
-
-                if (solidInner && i == rings.Length - 1) //rifle target - last ring (10) is a solid dot
-                {
-                    it.FillEllipse(brushWhite, x, x, circle, circle);
-                } else {
-                    it.FillEllipse(b, x, x, circle, circle);
-                    it.DrawEllipse(p, x, x, circle, circle);
-                }
-
-                if (r < 9) //for ring 9 and after no text is displayed
-                {
-                    float nextCircle = getDimension(dimension, rings[i + 1], zoomFactor);
-                    float diff = circle - nextCircle;
-                    float fontSize = diff / 8f; //8 is empirically determinted for best look
-                    Font f = new Font("Arial", fontSize);
-
-                    StringFormat format = new StringFormat();
-                    format.LineAlignment = StringAlignment.Center;
-                    format.Alignment = StringAlignment.Center;
-
-                    it.DrawString(r.ToString(), f, bText, center, x + (diff / 4), format);
-                    it.DrawString(r.ToString(), f, bText, center, y - (diff / 4), format);
-                    it.DrawString(r.ToString(), f, bText, x + (diff / 4), center, format);
-                    it.DrawString(r.ToString(), f, bText, y - (diff / 4), center, format);
-                }
-                r++;
-            }
-
-            if (currentSession.sessionType == Session.SessionType.Practice) {
-                //draw triangle in corner
-                float sixth = dimension / 6f;
-                PointF[] points = new PointF[3];
-                points[0].X = 5 * sixth;
-                points[0].Y = 0;
-
-                points[1].X = dimension;
-                points[1].Y = sixth;
-
-                points[2].X = dimension;
-                points[2].Y = 0;
-                Brush brushBlue = new SolidBrush(Color.DarkBlue);
-                it.FillPolygon(brushBlue, points);
-            }
-
-            it.DrawRectangle(penBlack, 0, 0, dimension - 1, dimension - 1);
-
-            int index = 0;
-            foreach (Shot shot in getShotList()) {
-                drawShot(shot, it, dimension, zoomFactor, index++);
-            }
-
-            if (Settings.Default.drawMeanGroup) {
-                drawMeanGroup(it, dimension, zoomFactor);
-            }
-
-
-
-            if (currentStatus == Status.NOT_CONNECTED) {
-                bmpTarget = toGrayScale(bmpTarget);
-            }
-            return bmpTarget;
-        }
-        private void drawMeanGroup(Graphics it, decimal currentTargetSize, decimal zoomFactor) {
-            if (getShotList().Count >= 2) {
-                float circle = getDimension(currentTargetSize, currentSession.rbar *2, zoomFactor);
-
-                PointF x = transform((float)currentSession.xbar, (float)currentSession.ybar, (float)currentTargetSize, zoomFactor);
-                Pen p = new Pen(Color.Red, 2);
-
-                it.DrawEllipse(p, x.X - (circle / 2), x.Y - (circle / 2), circle, circle);
-
-                float cross = 5; // center of group cross is always the same size - 5 pixels
-
-                it.DrawLine(p, x.X - cross, x.Y, x.X + cross, x.Y);
-                it.DrawLine(p, x.X, x.Y - cross, x.X, x.Y + cross);
             }
         }
 
@@ -1138,7 +916,7 @@ namespace freETarget {
             calibrationX += increment;
             foreach (Shot shot in getShotList()) {
                 shot.calibrationX = calibrationX;
-                shot.computeScore(this.currentSession.targetType);
+                shot.computeScore(this.currentSession.getTarget());
             }
             shotsList.Items.Clear();
             shotsList.Refresh();
@@ -1163,7 +941,7 @@ namespace freETarget {
             calibrationY += increment;
             foreach (Shot shot in getShotList()) {
                 shot.calibrationY = calibrationY;
-                shot.computeScore(this.currentSession.targetType);
+                shot.computeScore(this.currentSession.getTarget());
             }
 
             shotsList.Items.Clear();
@@ -1189,7 +967,7 @@ namespace freETarget {
             calibrationAngle += angle;
             foreach (Shot shot in getShotList()) {
                 shot.calibrationAngle = calibrationAngle;
-                shot.computeScore(this.currentSession.targetType);
+                shot.computeScore(this.currentSession.getTarget());
             }
             shotsList.Items.Clear();
             shotsList.Refresh();
@@ -1218,7 +996,7 @@ namespace freETarget {
                 shot.calibrationX = calibrationX;
                 shot.calibrationY = calibrationY;
                 shot.calibrationAngle = calibrationAngle;
-                shot.computeScore(this.currentSession.targetType);
+                shot.computeScore(this.currentSession.getTarget());
             }
 
             shotsList.Items.Clear();
@@ -1241,39 +1019,6 @@ namespace freETarget {
             Settings.Default.calibrationY = calibrationY;
             Settings.Default.calibrationAngle = calibrationAngle;
             Settings.Default.Save();
-        }
-
-        public Bitmap toGrayScale(Bitmap original) {
-            //create a blank bitmap the same size as original
-            Bitmap newBitmap = new Bitmap(original.Width, original.Height);
-
-            //get a graphics object from the new image
-            using (Graphics g = Graphics.FromImage(newBitmap)) {
-
-                //create the grayscale ColorMatrix
-                ColorMatrix colorMatrix = new ColorMatrix(
-                   new float[][]
-                   {
-             new float[] {.3f, .3f, .3f, 0, 0},
-             new float[] {.59f, .59f, .59f, 0, 0},
-             new float[] {.11f, .11f, .11f, 0, 0},
-             new float[] {0, 0, 0, 1, 0},
-             new float[] {0, 0, 0, 0, 1}
-                   });
-
-                //create some image attributes
-                using (ImageAttributes attributes = new ImageAttributes()) {
-
-                    //set the color matrix attribute
-                    attributes.SetColorMatrix(colorMatrix);
-
-                    //draw the original image on the new image
-                    //using the grayscale color matrix
-                    g.DrawImage(original, new Rectangle(0, 0, original.Width, original.Height),
-                                0, 0, original.Width, original.Height, GraphicsUnit.Pixel, attributes);
-                }
-            }
-            return newBitmap;
         }
 
         private void tabControl1_DrawItem(object sender, DrawItemEventArgs e) {
@@ -1512,7 +1257,7 @@ namespace freETarget {
            
             trkZoom.Enabled = true;
             shotsList.Enabled = true;
-            setTrkZoom(currentSession.targetType);
+            setTrkZoom(currentSession.getTarget());
             drawSessionName();
 
             shotsList.Items.Clear();
@@ -1547,7 +1292,7 @@ namespace freETarget {
             targetRefresh();
             trkZoom.Enabled = false;
             shotsList.Enabled = false;
-            setTrkZoom(currentSession.targetType);
+            setTrkZoom(currentSession.getTarget());
             drawSessionName();
         }
 

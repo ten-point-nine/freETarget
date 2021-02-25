@@ -74,17 +74,13 @@ namespace freETarget {
             this.y = nr;
         }
 
-        public void computeScore(Session.TargetType type) {
+        public void computeScore(targets.aTarget target) {
             //using liner interpolation with the "official" values found here: http://targettalk.org/viewtopic.php?p=100591#p100591
 
 
             double coef = 0d;
-            if (type == Session.TargetType.Pistol) {
-                coef = 9.9d / (((float)ISSF.outterRingPistol / 2d) + ((float)ISSF.pelletCaliber / 2d));
-            } else if (type == Session.TargetType.Rifle) {
-                coef = 9.9d / (((float)ISSF.outterRingRifle / 2d) + ((float)ISSF.pelletCaliber / 2d));
-            }
 
+            coef = 9.9d / (((float)target.getOutterRing() / 2d) + ((float)target.getProjectileCaliber() / 2d));
 
             float newRadius = recomputeRadiusFromXY(); //use the calculated radius from x,y instead of the received one. x and y are adjusted with calibration
             this.radius = (decimal)newRadius;
@@ -102,38 +98,16 @@ namespace freETarget {
 
             this.score = (int)Math.Floor(this.decimalScore);
 
-            if (type == Session.TargetType.Pistol) {
-                //double score = linearInterpolation(ISSF.pistol1X, ISSF.pistol1Y, ISSF.pistol2X, ISSF.pistol2Y, (float)this.radius);
-
-                //determine if inner ten (X)
-                if (this.radius <= ISSF.innerTenRadiusPistol) {
-                    this.innerTen = true;
-                } else {
-                    this.innerTen = false;
-                }
-            } else if (type == Session.TargetType.Rifle) {
-                //double score = linearInterpolation(ISSF.rifle1X, ISSF.rifle1Y, ISSF.rifle2X, ISSF.rifle2Y, (float)this.radius);
-
-                //determine if inner ten (X)
-                if (this.radius <= ISSF.innerTenRadiusRifle) {
-                    this.innerTen = true;
-                } else {
-                    this.innerTen = false;
-                }
+            if (this.radius <= target.getInnerTenRadius()) {
+                this.innerTen = true;
             } else {
-                Console.WriteLine("Unknown current target " + type);
+                this.innerTen = false;
             }
-
         }
 
         private float recomputeRadiusFromXY() {
             return (float)Math.Sqrt(Math.Pow((double)(this.x + this.calibrationX) , 2) + Math.Pow((double)(this.y+this.calibrationY), 2));
         }
-
-/*        private double linearInterpolation(float x1, float y1, float x2, float y2, float x) {
-            double y = ((x2 - x) * y1 + (x - x1) * y2) / (x2 - x1);
-            return y;
-        }*/
 
         public override string ToString() {
             string ret = "";

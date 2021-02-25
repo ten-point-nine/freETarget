@@ -37,7 +37,7 @@ namespace freETarget.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("COM8")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string portName {
             get {
                 return ((string)(this["portName"]));

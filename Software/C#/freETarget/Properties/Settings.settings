@@ -6,7 +6,7 @@
       <Value Profile="(Default)">Azmodan</Value>
     </Setting>
     <Setting Name="portName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">COM8</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="baudRate" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">115200</Value>

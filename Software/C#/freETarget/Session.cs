@@ -12,10 +12,6 @@ using System.Windows.Forms;
 
 namespace freETarget {
     public class Session {
-        public enum TargetType {
-            Pistol,
-            Rifle
-        }
 
         public enum SessionType {
             Practice,
@@ -43,7 +39,7 @@ namespace freETarget {
         [Category("Session configuration")]
         [DisplayName("Target Type")]
         [Description("Type of target used by this event")]
-        public TargetType targetType { get; set; }
+        public string targetType { get; set; }
 
         [Browsable(true)]
         [ReadOnly(true)]
@@ -179,6 +175,8 @@ namespace freETarget {
         public string user { get; set; }
 
 
+        [Browsable(false)]
+        private targets.aTarget target;
 
 
 
@@ -199,6 +197,14 @@ namespace freETarget {
 
         protected Session() {
 
+        }
+
+        public targets.aTarget getTarget() {
+            return this.target;
+        }
+
+        public void setTarget(targets.aTarget trgt) {
+            this.target = trgt;
         }
 
         public void clear() {
@@ -231,7 +237,8 @@ namespace freETarget {
                 newSession.sessionType = SessionType.Practice;
                 newSession.eventType = EventType.AirPistolPractice;
                 newSession.numberOfShots = -1;
-                newSession.targetType = TargetType.Pistol;
+                newSession.setTarget(new targets.AirPistol());
+                newSession.targetType = newSession.getTarget().getName();
                 newSession.minutes = -1;
             } else if (sessionType.Equals(EventType.AirPistolMatch)) {
                 newSession.decimalScoring = false;
@@ -248,13 +255,15 @@ namespace freETarget {
                     newSession.numberOfShots = -1;
                     newSession.minutes = -1;
                 }
-                newSession.targetType = TargetType.Pistol;
+                newSession.setTarget(new targets.AirPistol());
+                newSession.targetType = newSession.getTarget().getName();
             } else if (sessionType.Equals(EventType.AirPistolFinal)) {
                 newSession.decimalScoring = true;
                 newSession.sessionType = SessionType.Final;
                 newSession.eventType = EventType.AirPistolFinal;
                 newSession.numberOfShots = ISSF.finalNoOfShots;
-                newSession.targetType = TargetType.Pistol;
+                newSession.setTarget(new targets.AirPistol());
+                newSession.targetType = newSession.getTarget().getName();
                 newSession.minutes = -1;
                 newSession.currentFinal = new VirtualRO();
             } else if (sessionType.Equals(EventType.AirRiflePractice)) {
@@ -262,14 +271,16 @@ namespace freETarget {
                 newSession.sessionType = SessionType.Practice;
                 newSession.eventType = EventType.AirRiflePractice;
                 newSession.numberOfShots = -1;
-                newSession.targetType = TargetType.Rifle;
+                newSession.setTarget(new targets.AirRifle());
+                newSession.targetType = newSession.getTarget().getName();
                 newSession.minutes = -1;
             } else if (sessionType.Equals(EventType.AirRifleMatch)) {
                 newSession.decimalScoring = true;
                 newSession.sessionType = SessionType.Match;
                 newSession.eventType = EventType.AirRifleMatch;
                 newSession.numberOfShots = noOfShots;
-                newSession.targetType = TargetType.Rifle;
+                newSession.setTarget(new targets.AirRifle());
+                newSession.targetType = newSession.getTarget().getName();
                 if (noOfShots == 60) {
                     newSession.numberOfShots = ISSF.match60NoOfShots;
                     newSession.minutes = ISSF.match60Time;
@@ -285,7 +296,8 @@ namespace freETarget {
                 newSession.sessionType = SessionType.Final;
                 newSession.eventType = EventType.AirRifleFinal;
                 newSession.numberOfShots = ISSF.finalNoOfShots;
-                newSession.targetType = TargetType.Rifle;
+                newSession.setTarget(new targets.AirRifle());
+                newSession.targetType = newSession.getTarget().getName();
                 newSession.minutes = -1;
                 newSession.currentFinal = new VirtualRO();
             } else {

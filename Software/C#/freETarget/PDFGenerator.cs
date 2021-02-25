@@ -36,32 +36,17 @@ namespace freETarget {
             int pageNo = 1;
             //dimensions:  595 x 792 - good both for A4 and for Letter
 
-            int blackRings=0;
-            bool solidInner=false;
-            decimal[] rings=null;
-            if (session.targetType == Session.TargetType.Pistol) {
-                blackRings = ISSF.pistolBlackRings;
-                rings = ISSF.ringsPistol;
-                solidInner = false;
-            } else if (session.targetType == Session.TargetType.Rifle) {
-                blackRings = ISSF.rifleBlackRings;
-                rings = ISSF.ringsRifle;
-                solidInner = true;
-            } else {
-                Console.WriteLine("WTF");
-            }
+            int blackRings=session.getTarget().getBlackRings();
+            bool solidInner= session.getTarget().isSolidInner();
+            decimal[] rings= session.getTarget().getRings();
 
             XPen penBlack = new XPen(XColor.FromKnownColor(XKnownColor.Black), 0.75);
             XBrush brushBlack = new XSolidBrush(XColor.FromKnownColor(XKnownColor.Black));
             Font f = new Font("Arial", 12, GraphicsUnit.World);
 
             //session target
-            if (session.targetType == Session.TargetType.Pistol) {
-                paintTarget(250, 20, 20, blackRings, rings, 1, solidInner, session.Shots, firstPage);
-            } else {
-                paintTarget(250, 20, 20, blackRings, rings, 0.29m, solidInner, session.Shots, firstPage);
-            }
 
+            paintTarget(250, 20, 20, blackRings, rings, session.getTarget().getPDFZoomFactor(null), solidInner, session.Shots, firstPage, session.getTarget().getSize(), session.getTarget().getProjectileCaliber());
 
             //session data
 
@@ -89,24 +74,24 @@ namespace freETarget {
             //series 1
             if (session.AllSeries.Count > 0) {
                 int y = 295;
-                decimal zoom2 = getZoom(session.AllSeries[0], session.targetType);
-                paintTarget(150, 20, y, blackRings, rings, zoom2, solidInner, session.AllSeries[0], firstPage);
+                decimal zoom2 = session.getTarget().getPDFZoomFactor(session.AllSeries[0]);
+                paintTarget(150, 20, y, blackRings, rings, zoom2, solidInner, session.AllSeries[0], firstPage, session.getTarget().getSize(), session.getTarget().getProjectileCaliber());
                 printSeriesData(firstPage, 180, y, 395, 150, session.AllSeries[0], 1,session);
             }
 
             //series 2
             if (session.AllSeries.Count > 1) {
                 int y = 455;
-                decimal zoom2 = getZoom(session.AllSeries[1], session.targetType);
-                paintTarget(150, 20, y, blackRings, rings, zoom2, solidInner, session.AllSeries[1], firstPage);
+                decimal zoom2 = session.getTarget().getPDFZoomFactor(session.AllSeries[1]);
+                paintTarget(150, 20, y, blackRings, rings, zoom2, solidInner, session.AllSeries[1], firstPage, session.getTarget().getSize(), session.getTarget().getProjectileCaliber());
                 printSeriesData(firstPage, 180, y, 395, 150, session.AllSeries[1], 2, session);
             }
 
             //series 3
             if (session.AllSeries.Count > 2) {
                 int y = 615;
-                decimal zoom2 = getZoom(session.AllSeries[2], session.targetType);
-                paintTarget(150, 20, y, blackRings, rings, zoom2, solidInner, session.AllSeries[2], firstPage);
+                decimal zoom2 = session.getTarget().getPDFZoomFactor(session.AllSeries[2]);
+                paintTarget(150, 20, y, blackRings, rings, zoom2, solidInner, session.AllSeries[2], firstPage, session.getTarget().getSize(), session.getTarget().getProjectileCaliber());
                 printSeriesData(firstPage, 180, y, 395, 150, session.AllSeries[2], 3, session);
             }
 
@@ -123,8 +108,8 @@ namespace freETarget {
                         y = 20;
                     }
 
-                    decimal zoom2 = getZoom(session.AllSeries[p], session.targetType);
-                    paintTarget(150, 20, y, blackRings, rings, zoom2, solidInner, session.AllSeries[p], page);
+                    decimal zoom2 = session.getTarget().getPDFZoomFactor(session.AllSeries[p]);//getZoom(session.AllSeries[p], session.targetType);
+                    paintTarget(150, 20, y, blackRings, rings, zoom2, solidInner, session.AllSeries[p], page, session.getTarget().getSize(), session.getTarget().getProjectileCaliber());
                     printSeriesData(page, 180, y, 395, 150, session.AllSeries[p], p+1, session);
                     y += 170;
 
@@ -169,7 +154,7 @@ namespace freETarget {
         }
 
 
-        private static void paintTarget(int dimension, int xLoc, int yLoc, int blackRingCutoff, decimal[] rings, decimal zoomFactor, bool solidInner, List<Shot> shotsList, PdfPage page) {
+        private static void paintTarget(int dimension, int xLoc, int yLoc, int blackRingCutoff, decimal[] rings, decimal zoomFactor, bool solidInner, List<Shot> shotsList, PdfPage page, decimal targetSize, decimal projectileCaliber) {
             XPen penBlack = new XPen(XColor.FromKnownColor(XKnownColor.Black), 0.5);
             XPen penWhite = new XPen(XColor.FromKnownColor(XKnownColor.Linen), 0.5);
             XBrush brushBlack = new XSolidBrush(XColor.FromKnownColor(XKnownColor.Black));
@@ -198,7 +183,7 @@ namespace freETarget {
                     bText = brushWhite;
                 }
 
-                float circle = getDimension(dimension, rings[i], zoomFactor);
+                float circle = getDimension(dimension, rings[i], zoomFactor, targetSize);
                 float centerX = (dimension / 2) + xLoc ;
                 float centerY = (dimension / 2) + yLoc ;
                 float x = centerX - (circle / 2);
@@ -217,7 +202,7 @@ namespace freETarget {
 
                 if (r < 9) //for ring 9 and after no text is displayed
                 {
-                    float nextCircle = getDimension(dimension, rings[i + 1], zoomFactor);
+                    float nextCircle = getDimension(dimension, rings[i + 1], zoomFactor, targetSize);
                     float diff = circle - nextCircle;
                     float fontSize = diff / 6f;
                     Font f = new Font("Arial", fontSize, GraphicsUnit.World);
@@ -237,7 +222,7 @@ namespace freETarget {
             gfx.DrawRectangle(penBlack, xLoc, yLoc, dimension, dimension);
 
             foreach (Shot shot in shotsList) {
-                drawShot(shot, gfx, xLoc, yLoc, dimension, zoomFactor);
+                drawShot(shot, gfx, xLoc, yLoc, dimension, zoomFactor,projectileCaliber,targetSize);
             }
 
             decimal localRbar;
@@ -246,20 +231,20 @@ namespace freETarget {
 
             computeMeans(out localRbar, out localXbar, out localYbar, shotsList);
 
-            drawMeanGroup(gfx, dimension, zoomFactor,shotsList, localRbar, localXbar, localYbar, xLoc,yLoc);
+            drawMeanGroup(gfx, dimension, zoomFactor,shotsList, localRbar, localXbar, localYbar, xLoc,yLoc,targetSize);
 
             gfx.Dispose();
 
         }
 
-        private static float getDimension(decimal currentTargetSize, decimal milimiters, decimal zoomFactor) {
-            return (float)((currentTargetSize * milimiters) / (ISSF.targetSize * zoomFactor));
+        private static float getDimension(decimal currentTargetSize, decimal milimiters, decimal zoomFactor, decimal targetSize) {
+            return (float)((currentTargetSize * milimiters) / (targetSize * zoomFactor));
         }
 
-        private static void drawShot(Shot shot, XGraphics it, int xLoc, int yLoc, int targetSize, decimal zoomFactor) {
+        private static void drawShot(Shot shot, XGraphics it, int xLoc, int yLoc, int targetSize, decimal zoomFactor, decimal projectileCaliber, decimal realTargetSize) {
             //transform shot coordinates to imagebox coordinates
 
-            XPoint x = transform((float)getShotX(shot), (float)getShotY(shot), targetSize, zoomFactor, xLoc, yLoc);
+            XPoint x = transform((float)getShotX(shot), (float)getShotY(shot), targetSize, zoomFactor, xLoc, yLoc, realTargetSize);
 
             //draw shot on target
             XBrush b = new XSolidBrush(XColor.FromArgb(200, 135, 206, 250)); //semitransparent shots
@@ -269,7 +254,7 @@ namespace freETarget {
 
             it.SmoothingMode = XSmoothingMode.AntiAlias;
 
-            float peletSize = getDimension(targetSize, ISSF.pelletCaliber, zoomFactor);
+            float peletSize = getDimension(targetSize, projectileCaliber, zoomFactor, realTargetSize);
 
             x.X -= peletSize / 2;
             x.Y -= peletSize / 2;
@@ -294,7 +279,7 @@ namespace freETarget {
             return shot.getY();
         }
 
-        private static XPoint transform(float xp, float yp, float size, decimal zoomFactor, int xLoc, int yLoc) {
+        private static XPoint transform(float xp, float yp, float size, decimal zoomFactor, int xLoc, int yLoc, decimal targetSize) {
             //matrix magic from: https://docs.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/samples/jj635757(v=vs.85)
 
             System.Numerics.Matrix4x4 M = new System.Numerics.Matrix4x4(xLoc, yLoc, 1, 0,
@@ -305,7 +290,7 @@ namespace freETarget {
             System.Numerics.Matrix4x4 Minverted;
             System.Numerics.Matrix4x4.Invert(M, out Minverted);
 
-            float shotRange = (float)(ISSF.targetSize * zoomFactor) / 2f;
+            float shotRange = (float)(targetSize * zoomFactor) / 2f;
             System.Numerics.Matrix4x4 xyPrime = new System.Numerics.Matrix4x4(-shotRange, 0, 0, 0,
                                                                                 shotRange, 0, 0, 0,
                                                                                 shotRange, 0, 0, 0,
@@ -325,11 +310,11 @@ namespace freETarget {
             return ret;
         }
 
-        private static void drawMeanGroup(XGraphics it, decimal currentTargetSize, decimal zoomFactor, List<Shot> shotsList, decimal rBar, decimal xBar, decimal yBar, int xLoc, int yLoc) {
+        private static void drawMeanGroup(XGraphics it, decimal currentTargetSize, decimal zoomFactor, List<Shot> shotsList, decimal rBar, decimal xBar, decimal yBar, int xLoc, int yLoc, decimal realTargetSize) {
             if (shotsList.Count >= 2) {
-                float circle = getDimension(currentTargetSize, rBar * 2, zoomFactor);
+                float circle = getDimension(currentTargetSize, rBar * 2, zoomFactor, realTargetSize);
 
-                XPoint x = transform((float)xBar, (float)yBar, (float)currentTargetSize, zoomFactor,xLoc, yLoc);
+                XPoint x = transform((float)xBar, (float)yBar, (float)currentTargetSize, zoomFactor,xLoc, yLoc, realTargetSize);
                 XPen p = new XPen(XColor.FromKnownColor(XKnownColor.Red), 0.5);
 
                 it.DrawEllipse(p, x.X - (circle / 2), x.Y - (circle / 2), circle, circle);
@@ -366,39 +351,6 @@ namespace freETarget {
 
             rbar = rsum / shots.Count;
 
-        }
-
-        private static decimal getZoom(List<Shot> shotsList, Session.TargetType type) {
-            bool zoomed = true;
-            bool zoomed2 = true;
-            foreach(Shot s in shotsList) {
-                if (s.score < 6) {
-                    zoomed = false;
-                }
-                if (s.score < 1) {
-                    zoomed2 = false;
-                }
-
-            }
-
-            if (type == Session.TargetType.Pistol) {
-                if (zoomed) {
-                    return 0.5m;
-                } else {
-                    return 1;
-                }
-            } else { //rifle
-                if (zoomed) {
-                    return 0.12m;
-                } else {
-                    if (zoomed2) {
-                        return 0.29m;
-                    } else {
-                        return 1m;
-                    }
-                    
-                }
-            }
         }
 
         private static void printSessionData(PdfPage page, int x, int y, int width, int height, Session session) {
