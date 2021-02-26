@@ -65,7 +65,8 @@ namespace freETarget {
 
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             string v = "v" + assembly.GetName().Version.Major + "." + assembly.GetName().Version.Minor + "." + assembly.GetName().Version.Build;
-            log(Environment.NewLine + Environment.NewLine + "Starting freETarget - " + v + " ... ");
+            log(" ");
+            log("Starting freETarget - " + v + " ... ");
             statusVersion.Text = v;
 
             storage = new StorageController(this);
@@ -166,6 +167,7 @@ namespace freETarget {
         //called once at application start
         private void frmMainWindow_Load(object sender, EventArgs e) {
             initDefaultSession();
+            this.WindowState = FormWindowState.Maximized;
         }
 
         private void initDefaultSession() {
@@ -743,6 +745,7 @@ namespace freETarget {
             }
             currentSession = Session.createNewSession(tcSessionType.SelectedTab.Text.Trim(), Settings.Default.name);
             currentSession.start();
+            this.log("New Session '" + currentSession.ToString() + "' started");
 
             setTrkZoom(currentSession.getTarget());
 

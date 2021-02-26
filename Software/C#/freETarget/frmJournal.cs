@@ -260,6 +260,7 @@ namespace freETarget {
             btnDiary.Enabled = input;
             btnLoadSession.Enabled = input;
             btnPrint.Enabled = input;
+            btnGraph.Enabled = input;
             if (clearSession) {
                 if (!input) {
                     currentSession = null;
@@ -309,6 +310,11 @@ namespace freETarget {
 
         public bool isSessionLoading() {
             return isLoading;
+        }
+
+        private void btnGraph_Click(object sender, EventArgs e) {
+            frmGraph graph = new frmGraph(currentSession);
+            graph.ShowDialog();
         }
     }
 }

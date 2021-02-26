@@ -47,6 +47,7 @@
             this.btnClose = new System.Windows.Forms.Button();
             this.tabDetails = new System.Windows.Forms.TabControl();
             this.tabSessionList = new System.Windows.Forms.TabPage();
+            this.btnGraph = new System.Windows.Forms.Button();
             this.btnDelete = new System.Windows.Forms.Button();
             this.pGridSession = new System.Windows.Forms.PropertyGrid();
             this.btnDiary = new System.Windows.Forms.Button();
@@ -101,7 +102,7 @@
             this.tabEvents.Controls.Add(this.tabRifleMatch);
             this.tabEvents.Controls.Add(this.tabRifleFinal);
             this.tabEvents.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
-            this.tabEvents.Location = new System.Drawing.Point(514, 64);
+            this.tabEvents.Location = new System.Drawing.Point(545, 64);
             this.tabEvents.Multiline = true;
             this.tabEvents.Name = "tabEvents";
             this.tabEvents.SelectedIndex = 0;
@@ -169,7 +170,7 @@
             // btnClose
             // 
             this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnClose.Location = new System.Drawing.Point(448, 10);
+            this.btnClose.Location = new System.Drawing.Point(479, 10);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(75, 23);
             this.btnClose.TabIndex = 2;
@@ -187,11 +188,12 @@
             this.tabDetails.Location = new System.Drawing.Point(12, 43);
             this.tabDetails.Name = "tabDetails";
             this.tabDetails.SelectedIndex = 0;
-            this.tabDetails.Size = new System.Drawing.Size(496, 504);
+            this.tabDetails.Size = new System.Drawing.Size(527, 471);
             this.tabDetails.TabIndex = 3;
             // 
             // tabSessionList
             // 
+            this.tabSessionList.Controls.Add(this.btnGraph);
             this.tabSessionList.Controls.Add(this.btnDelete);
             this.tabSessionList.Controls.Add(this.pGridSession);
             this.tabSessionList.Controls.Add(this.btnDiary);
@@ -201,10 +203,24 @@
             this.tabSessionList.Location = new System.Drawing.Point(4, 22);
             this.tabSessionList.Name = "tabSessionList";
             this.tabSessionList.Padding = new System.Windows.Forms.Padding(3);
-            this.tabSessionList.Size = new System.Drawing.Size(488, 478);
+            this.tabSessionList.Size = new System.Drawing.Size(519, 445);
             this.tabSessionList.TabIndex = 0;
             this.tabSessionList.Text = "Sessions";
             this.tabSessionList.UseVisualStyleBackColor = true;
+            // 
+            // btnGraph
+            // 
+            this.btnGraph.Enabled = false;
+            this.btnGraph.Image = ((System.Drawing.Image)(resources.GetObject("btnGraph.Image")));
+            this.btnGraph.Location = new System.Drawing.Point(444, 6);
+            this.btnGraph.Name = "btnGraph";
+            this.btnGraph.Size = new System.Drawing.Size(65, 23);
+            this.btnGraph.TabIndex = 6;
+            this.btnGraph.Text = "Chart";
+            this.btnGraph.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnGraph.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btnGraph.UseVisualStyleBackColor = true;
+            this.btnGraph.Click += new System.EventHandler(this.btnGraph_Click);
             // 
             // btnDelete
             // 
@@ -213,7 +229,7 @@
             this.btnDelete.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnDelete.Location = new System.Drawing.Point(160, 6);
             this.btnDelete.Name = "btnDelete";
-            this.btnDelete.Size = new System.Drawing.Size(75, 23);
+            this.btnDelete.Size = new System.Drawing.Size(65, 23);
             this.btnDelete.TabIndex = 5;
             this.btnDelete.Text = "Delete";
             this.btnDelete.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
@@ -229,7 +245,7 @@
             this.pGridSession.Location = new System.Drawing.Point(160, 36);
             this.pGridSession.Name = "pGridSession";
             this.pGridSession.PropertySort = System.Windows.Forms.PropertySort.Categorized;
-            this.pGridSession.Size = new System.Drawing.Size(318, 436);
+            this.pGridSession.Size = new System.Drawing.Size(349, 403);
             this.pGridSession.TabIndex = 4;
             this.pGridSession.ToolbarVisible = false;
             // 
@@ -237,9 +253,9 @@
             // 
             this.btnDiary.Enabled = false;
             this.btnDiary.Image = ((System.Drawing.Image)(resources.GetObject("btnDiary.Image")));
-            this.btnDiary.Location = new System.Drawing.Point(403, 6);
+            this.btnDiary.Location = new System.Drawing.Point(373, 6);
             this.btnDiary.Name = "btnDiary";
-            this.btnDiary.Size = new System.Drawing.Size(75, 23);
+            this.btnDiary.Size = new System.Drawing.Size(65, 23);
             this.btnDiary.TabIndex = 3;
             this.btnDiary.Text = "Diary";
             this.btnDiary.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -251,9 +267,9 @@
             // 
             this.btnPrint.Enabled = false;
             this.btnPrint.Image = ((System.Drawing.Image)(resources.GetObject("btnPrint.Image")));
-            this.btnPrint.Location = new System.Drawing.Point(322, 6);
+            this.btnPrint.Location = new System.Drawing.Point(302, 6);
             this.btnPrint.Name = "btnPrint";
-            this.btnPrint.Size = new System.Drawing.Size(75, 23);
+            this.btnPrint.Size = new System.Drawing.Size(65, 23);
             this.btnPrint.TabIndex = 2;
             this.btnPrint.Text = "Print";
             this.btnPrint.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -266,9 +282,9 @@
             this.btnLoadSession.Enabled = false;
             this.btnLoadSession.Image = ((System.Drawing.Image)(resources.GetObject("btnLoadSession.Image")));
             this.btnLoadSession.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnLoadSession.Location = new System.Drawing.Point(241, 6);
+            this.btnLoadSession.Location = new System.Drawing.Point(231, 6);
             this.btnLoadSession.Name = "btnLoadSession";
-            this.btnLoadSession.Size = new System.Drawing.Size(75, 23);
+            this.btnLoadSession.Size = new System.Drawing.Size(65, 23);
             this.btnLoadSession.TabIndex = 1;
             this.btnLoadSession.Text = "Load";
             this.btnLoadSession.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
@@ -282,7 +298,7 @@
             this.lstbSessions.FormattingEnabled = true;
             this.lstbSessions.Location = new System.Drawing.Point(6, 6);
             this.lstbSessions.Name = "lstbSessions";
-            this.lstbSessions.Size = new System.Drawing.Size(147, 459);
+            this.lstbSessions.Size = new System.Drawing.Size(147, 420);
             this.lstbSessions.TabIndex = 0;
             this.lstbSessions.SelectedIndexChanged += new System.EventHandler(this.lstbSessions_SelectedIndexChanged);
             // 
@@ -292,7 +308,7 @@
             this.tabStats.Location = new System.Drawing.Point(4, 22);
             this.tabStats.Name = "tabStats";
             this.tabStats.Padding = new System.Windows.Forms.Padding(3);
-            this.tabStats.Size = new System.Drawing.Size(488, 478);
+            this.tabStats.Size = new System.Drawing.Size(519, 445);
             this.tabStats.TabIndex = 1;
             this.tabStats.Text = "Statistics";
             this.tabStats.UseVisualStyleBackColor = true;
@@ -316,7 +332,7 @@
             this.tableLayoutPanelStatistics.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 200F));
             this.tableLayoutPanelStatistics.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 200F));
             this.tableLayoutPanelStatistics.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 200F));
-            this.tableLayoutPanelStatistics.Size = new System.Drawing.Size(482, 472);
+            this.tableLayoutPanelStatistics.Size = new System.Drawing.Size(513, 439);
             this.tableLayoutPanelStatistics.TabIndex = 0;
             // 
             // groupBox1
@@ -325,7 +341,7 @@
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox1.Location = new System.Drawing.Point(3, 3);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(439, 194);
+            this.groupBox1.Size = new System.Drawing.Size(470, 194);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Scores";
@@ -363,7 +379,7 @@
             series1.SmartLabelStyle.CalloutLineWidth = 0;
             series1.SmartLabelStyle.Enabled = false;
             this.chartScore.Series.Add(series1);
-            this.chartScore.Size = new System.Drawing.Size(433, 175);
+            this.chartScore.Size = new System.Drawing.Size(464, 175);
             this.chartScore.TabIndex = 0;
             this.chartScore.Text = "chart1";
             // 
@@ -373,7 +389,7 @@
             this.groupBox2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox2.Location = new System.Drawing.Point(3, 203);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(439, 194);
+            this.groupBox2.Size = new System.Drawing.Size(470, 194);
             this.groupBox2.TabIndex = 5;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Mean Radius";
@@ -410,7 +426,7 @@
             series2.SmartLabelStyle.CalloutLineWidth = 0;
             series2.SmartLabelStyle.Enabled = false;
             this.chartMeanRadius.Series.Add(series2);
-            this.chartMeanRadius.Size = new System.Drawing.Size(433, 175);
+            this.chartMeanRadius.Size = new System.Drawing.Size(464, 175);
             this.chartMeanRadius.TabIndex = 1;
             this.chartMeanRadius.Text = "chart2";
             // 
@@ -420,7 +436,7 @@
             this.groupBox3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox3.Location = new System.Drawing.Point(3, 403);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(439, 194);
+            this.groupBox3.Size = new System.Drawing.Size(470, 194);
             this.groupBox3.TabIndex = 6;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Windage";
@@ -457,7 +473,7 @@
             series3.SmartLabelStyle.CalloutLineWidth = 0;
             series3.SmartLabelStyle.Enabled = false;
             this.chartWindage.Series.Add(series3);
-            this.chartWindage.Size = new System.Drawing.Size(433, 175);
+            this.chartWindage.Size = new System.Drawing.Size(464, 175);
             this.chartWindage.TabIndex = 2;
             this.chartWindage.Text = "chart3";
             // 
@@ -467,7 +483,7 @@
             this.groupBox4.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox4.Location = new System.Drawing.Point(3, 603);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(439, 194);
+            this.groupBox4.Size = new System.Drawing.Size(470, 194);
             this.groupBox4.TabIndex = 7;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Elevation";
@@ -504,7 +520,7 @@
             series4.SmartLabelStyle.CalloutLineWidth = 0;
             series4.SmartLabelStyle.Enabled = false;
             this.chartElevation.Series.Add(series4);
-            this.chartElevation.Size = new System.Drawing.Size(433, 175);
+            this.chartElevation.Size = new System.Drawing.Size(464, 175);
             this.chartElevation.TabIndex = 3;
             this.chartElevation.Text = "chart4";
             // 
@@ -522,14 +538,14 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(535, 559);
+            this.ClientSize = new System.Drawing.Size(566, 526);
             this.Controls.Add(this.imgLogo);
             this.Controls.Add(this.tabDetails);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.tabEvents);
             this.Controls.Add(this.cmbUsers);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MinimumSize = new System.Drawing.Size(551, 564);
+            this.MinimumSize = new System.Drawing.Size(582, 564);
             this.Name = "frmJournal";
             this.Text = "Journal";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmJournal_FormClosing);
@@ -583,5 +599,6 @@
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.PictureBox imgLogo;
+        private System.Windows.Forms.Button btnGraph;
     }
 }

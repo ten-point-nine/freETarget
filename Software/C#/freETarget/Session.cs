@@ -66,7 +66,7 @@ namespace freETarget {
         [ReadOnly(true)]
         [Category("Session configuration")]
         [DisplayName("Event duration")]
-        [Description("Duration in minutes for this event. -1 is the duration is unlimited")]
+        [Description("Duration in minutes for this event. -1 if the duration is unlimited")]
         public int minutes { get; set; }
 
         [Browsable(true)]
@@ -451,6 +451,10 @@ namespace freETarget {
             this.longestShot = longest;
             this.shortestShot = shortest;
             this.averageScore = sum / actualNumberOfShots;
+        }
+
+        public override string ToString() {
+            return this.eventType.ToString();
         }
     }
 }

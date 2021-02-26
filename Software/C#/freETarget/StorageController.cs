@@ -81,6 +81,7 @@ namespace freETarget {
                 }
 
                 mainWindow.displayMessage("User database at: " + dbPath,false);
+                mainWindow.log("User database at: " + dbPath);
 
             } catch (Exception ex) {
                 return ex.Message;
