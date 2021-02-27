@@ -45,7 +45,14 @@ namespace freETarget {
             chartArea1.AxisX.MajorTickMark.Enabled = false;
             chartArea1.AxisX.Title = "Time";
             chartArea1.AxisX.TitleFont = new System.Drawing.Font("Microsoft Sans Serif", 10F);
-            chartArea1.AxisY.Title = "Score";
+            chartArea1.AxisY.IntervalType = System.Windows.Forms.DataVisualization.Charting.DateTimeIntervalType.Number;
+            chartArea1.AxisY.IsStartedFromZero = false;
+            chartArea1.AxisY.LabelStyle.Interval = 1D;
+            chartArea1.AxisY.MajorGrid.Interval = 1D;
+            chartArea1.AxisY.MajorTickMark.Interval = 1D;
+            chartArea1.AxisY.Maximum = 11D;
+            chartArea1.AxisY.Minimum = 1D;
+            chartArea1.AxisY.Title = "Score (decimal)";
             chartArea1.AxisY.TitleFont = new System.Drawing.Font("Microsoft Sans Serif", 10F);
             chartArea1.Name = "ChartArea1";
             this.chart.ChartAreas.Add(chartArea1);
@@ -80,7 +87,7 @@ namespace freETarget {
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(800, 500);
             this.Name = "frmGraph";
-            this.Text = "frmGraph";
+            this.Text = "Time vs Score Chart";
             this.Load += new System.EventHandler(this.frmGraph_Load);
             ((System.ComponentModel.ISupportInitialize)(this.chart)).EndInit();
             this.ResumeLayout(false);

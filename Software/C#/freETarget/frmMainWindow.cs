@@ -65,8 +65,7 @@ namespace freETarget {
 
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             string v = "v" + assembly.GetName().Version.Major + "." + assembly.GetName().Version.Minor + "." + assembly.GetName().Version.Build;
-            log(" ");
-            log("Starting freETarget - " + v + " ... ");
+            log("------------------------------------------------------------------------\n\nStarting freETarget - " + v + " ... ");
             statusVersion.Text = v;
 
             storage = new StorageController(this);
@@ -379,7 +378,7 @@ namespace freETarget {
                 t = t.Substring(0, t.IndexOf(Environment.NewLine));
             }
             statusText.Text = "Connected to " + t + " on " + serialPort.PortName;
-            log("Connected to " + t + " on " + serialPort.PortName);
+            log("****************\nConnected to " + t + " on " + serialPort.PortName);
             displayMessage("Connected to " + t, false);
 
             Application.DoEvents();
@@ -745,7 +744,7 @@ namespace freETarget {
             }
             currentSession = Session.createNewSession(tcSessionType.SelectedTab.Text.Trim(), Settings.Default.name);
             currentSession.start();
-            this.log("New Session '" + currentSession.ToString() + "' started");
+            this.log("### New Session '" + currentSession.ToString() + "' started ###");
 
             setTrkZoom(currentSession.getTarget());
 
@@ -1215,6 +1214,8 @@ namespace freETarget {
                 return;
             }
             btnConnect.Text = "Connect";
+            displayMessage("Disconnected",false);
+            log("*********\nDisconnected.");
             currentStatus = Status.NOT_CONNECTED;
 
 
