@@ -14,20 +14,16 @@ using System.IO;
 namespace freETarget {
     class StorageController {
 
-        private string connString = null; 
+        private string connString = "Data Source=./Storage.db;";
         private string templateConnString = "Data Source=./Storage.db;";
         private frmMainWindow mainWindow;
 
         private bool initiated = false;
 
-        private string getDBPath() {
-            return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\freETarget\\database"; 
-        }
-
         public StorageController(frmMainWindow mainWindow) {
             this.mainWindow = mainWindow;
             try {
-                string dbPath = getDBPath();
+                string dbPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\freETarget";
                 if (Directory.Exists(dbPath) == false) {
                     Directory.CreateDirectory(dbPath);
                     File.Copy("./Storage.db", dbPath + "/Storage.db");
@@ -75,7 +71,7 @@ namespace freETarget {
 
                 //step3: compare versions. if different, copy template over user database
 
-                string dbPath = getDBPath();
+                string dbPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\freETarget";
                 if (objCon != obj) {
                     MessageBox.Show("User database at '"+ dbPath +"\\Storage.db' is a different version than this installation requires."+ Environment.NewLine 
                         + "Overwriting user database with the template from this version", "Database problem", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -88,7 +84,6 @@ namespace freETarget {
                 mainWindow.log("User database at: " + dbPath);
 
             } catch (Exception ex) {
-                mainWindow.log("Database exception: " + ex.Message + Environment.NewLine + ex.ToString());
                 return ex.Message;
             }
             return null;
