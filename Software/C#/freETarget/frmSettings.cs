@@ -44,12 +44,15 @@ namespace freETarget
                 bool arduinoFound = false;
                 for(int i = 0; i < portnames.Length; i++) {
                     cmbPorts.Items.Add(portnames[i]);
-                    string portDevice = device_list[i].ToString();
 
-                    if (portDevice.Contains("Arduino")){
-                        cmbPorts.SelectedItem = portnames[i];
-                        mainWindow.log("Arduino device: '" + portDevice + "' found on port: " + portnames[i]);
-                        arduinoFound = true;
+                    if (i < device_list.Count) {
+                        string portDevice = device_list[i].ToString();
+
+                        if (portDevice.Contains("Arduino")) {
+                            cmbPorts.SelectedItem = portnames[i];
+                            mainWindow.log("Arduino device: '" + portDevice + "' found on port: " + portnames[i]);
+                            arduinoFound = true;
+                        }
                     }
                 }
 
