@@ -1,0 +1,296 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L Connector_Generic:Conn_02x06_Odd_Even J1
+U 1 1 6046DE6F
+P 1850 1850
+F 0 "J1" H 1900 2267 50  0000 C CNN
+F 1 "Male Pins" H 1900 2176 50  0000 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_2x06_P2.54mm_Vertical" H 1850 1850 50  0001 C CNN
+F 3 "~" H 1850 1850 50  0001 C CNN
+	1    1850 1850
+	-1   0    0    -1  
+$EndComp
+$Comp
+L Connector_Generic:Conn_02x06_Odd_Even J4
+U 1 1 6046EF8D
+P 8950 1850
+F 0 "J4" H 9000 2267 50  0000 C CNN
+F 1 "Female Sockets" H 9000 2176 50  0000 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_2x06_P2.54mm_Vertical" H 8950 1850 50  0001 C CNN
+F 3 "~" H 8950 1850 50  0001 C CNN
+	1    8950 1850
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9250 1750 9250 1650
+Wire Wire Line
+	9250 950  1550 1000
+Wire Wire Line
+	1550 1000 1550 1650
+Connection ~ 9250 1650
+Wire Wire Line
+	9250 1650 9250 950 
+Connection ~ 1550 1650
+Wire Wire Line
+	1550 1650 1550 1750
+Wire Wire Line
+	1550 2050 1550 2150
+Connection ~ 1550 2150
+Connection ~ 9250 2150
+Wire Wire Line
+	9250 2150 9250 2050
+Wire Wire Line
+	9250 1850 9250 1950
+Wire Wire Line
+	9400 1950 9250 1950
+Connection ~ 9250 1950
+Wire Wire Line
+	1350 1950 1550 1950
+Wire Wire Line
+	1550 1850 1550 1950
+Connection ~ 1550 1950
+$Comp
+L Device:C C1
+U 1 1 60474937
+P 4950 1650
+F 0 "C1" V 5202 1650 50  0000 C CNN
+F 1 "0u01F" V 5111 1650 50  0000 C CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" H 4988 1500 50  0001 C CNN
+F 3 "~" H 4950 1650 50  0001 C CNN
+	1    4950 1650
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Device:C C2
+U 1 1 60474B13
+P 5400 1800
+F 0 "C2" V 5000 1800 50  0000 C CNN
+F 1 "0u01F" V 5100 1800 50  0000 C CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" H 5438 1650 50  0001 C CNN
+F 3 "~" H 5400 1800 50  0001 C CNN
+	1    5400 1800
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:C C3
+U 1 1 60475000
+P 5900 1950
+F 0 "C3" V 5350 1950 50  0000 C CNN
+F 1 "0u01F" V 5450 1950 50  0000 C CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" H 5938 1800 50  0001 C CNN
+F 3 "~" H 5900 1950 50  0001 C CNN
+	1    5900 1950
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:C C4
+U 1 1 604754FE
+P 6400 2100
+F 0 "C4" V 5700 2100 50  0000 C CNN
+F 1 "0u01F" V 5800 2100 50  0000 C CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" H 6438 1950 50  0001 C CNN
+F 3 "~" H 6400 2100 50  0001 C CNN
+	1    6400 2100
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:R R1
+U 1 1 60480418
+P 6950 3300
+F 0 "R1" H 7020 3346 50  0000 L CNN
+F 1 "10k0" H 7020 3255 50  0000 L CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" V 6880 3300 50  0001 C CNN
+F 3 "~" H 6950 3300 50  0001 C CNN
+	1    6950 3300
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R2
+U 1 1 60481091
+P 7350 3300
+F 0 "R2" H 7420 3346 50  0000 L CNN
+F 1 "10k0" H 7420 3255 50  0000 L CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" V 7280 3300 50  0001 C CNN
+F 3 "~" H 7350 3300 50  0001 C CNN
+	1    7350 3300
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R3
+U 1 1 60481AC8
+P 7800 3300
+F 0 "R3" H 7870 3346 50  0000 L CNN
+F 1 "10k0" H 7870 3255 50  0000 L CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" V 7730 3300 50  0001 C CNN
+F 3 "~" H 7800 3300 50  0001 C CNN
+	1    7800 3300
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R4
+U 1 1 60482458
+P 8200 3300
+F 0 "R4" H 8270 3346 50  0000 L CNN
+F 1 "10k0" H 8270 3255 50  0000 L CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" V 8130 3300 50  0001 C CNN
+F 3 "~" H 8200 3300 50  0001 C CNN
+	1    8200 3300
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8300 1800 8300 1750
+Wire Wire Line
+	8300 1750 8750 1750
+Wire Wire Line
+	8400 1950 8400 1850
+Wire Wire Line
+	8400 1850 8750 1850
+Wire Wire Line
+	8500 2100 8500 1950
+Wire Wire Line
+	8500 1950 8750 1950
+Wire Wire Line
+	2050 1650 4800 1650
+Wire Wire Line
+	2050 1750 4200 1750
+Wire Wire Line
+	4200 1800 4200 1750
+Wire Wire Line
+	4200 1800 5250 1800
+Wire Wire Line
+	4100 1950 4100 1850
+Wire Wire Line
+	4100 1850 2050 1850
+Wire Wire Line
+	2050 1950 4000 1950
+Wire Wire Line
+	4100 1950 5750 1950
+Wire Wire Line
+	4000 1950 4000 2100
+Wire Wire Line
+	4000 2100 6250 2100
+Wire Wire Line
+	6950 3450 6950 3650
+Connection ~ 6950 3650
+Wire Wire Line
+	6950 3650 1350 3650
+Wire Wire Line
+	7350 3450 7350 3650
+Connection ~ 7350 3650
+Wire Wire Line
+	7350 3650 6950 3650
+Wire Wire Line
+	7800 3450 7800 3650
+Connection ~ 7800 3650
+Wire Wire Line
+	7800 3650 7350 3650
+Wire Wire Line
+	8200 3450 8200 3650
+Connection ~ 8200 3650
+Wire Wire Line
+	8200 3650 7800 3650
+$Comp
+L power:GND #PWR?
+U 1 1 6048FB4B
+P 9400 2850
+F 0 "#PWR?" H 9400 2600 50  0001 C CNN
+F 1 "GND" H 9405 2677 50  0000 C CNN
+F 2 "" H 9400 2850 50  0001 C CNN
+F 3 "" H 9400 2850 50  0001 C CNN
+	1    9400 2850
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:VCC #PWR?
+U 1 1 604964DE
+P 9400 900
+F 0 "#PWR?" H 9400 750 50  0001 C CNN
+F 1 "VCC" H 9415 1073 50  0000 C CNN
+F 2 "" H 9400 900 50  0001 C CNN
+F 3 "" H 9400 900 50  0001 C CNN
+	1    9400 900 
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9250 950  9400 950 
+Wire Wire Line
+	9400 950  9400 900 
+Connection ~ 9250 950 
+Wire Wire Line
+	9400 1950 9400 2850
+Wire Wire Line
+	6550 2100 6950 2100
+Wire Wire Line
+	6050 1950 7350 1950
+Wire Wire Line
+	2050 2050 3900 2050
+Wire Wire Line
+	3900 2050 3900 2250
+Wire Wire Line
+	8600 2050 8750 2050
+Wire Wire Line
+	3900 2250 8600 2250
+Wire Wire Line
+	8600 2050 8600 2250
+Wire Wire Line
+	8750 2450 3800 2450
+Wire Wire Line
+	3800 2450 3800 2150
+Wire Wire Line
+	3800 2150 2050 2150
+Wire Wire Line
+	8750 2150 8750 2450
+Wire Wire Line
+	1550 3550 9250 3550
+Wire Wire Line
+	1350 1950 1350 3650
+Wire Wire Line
+	1550 2150 1550 3550
+Wire Wire Line
+	9250 2150 9250 3550
+Wire Wire Line
+	9950 3650 9950 1950
+Wire Wire Line
+	9950 1950 9400 1950
+Wire Wire Line
+	8200 3650 9950 3650
+Connection ~ 9400 1950
+Wire Wire Line
+	8200 1650 8200 3150
+Connection ~ 8200 1650
+Wire Wire Line
+	8200 1650 8750 1650
+Wire Wire Line
+	6950 2100 6950 3150
+Connection ~ 6950 2100
+Wire Wire Line
+	6950 2100 8500 2100
+Wire Wire Line
+	5100 1650 8200 1650
+Wire Wire Line
+	5550 1800 7800 1800
+Wire Wire Line
+	7800 3150 7800 1800
+Connection ~ 7800 1800
+Wire Wire Line
+	7800 1800 8300 1800
+Wire Wire Line
+	7350 3150 7350 1950
+Connection ~ 7350 1950
+Wire Wire Line
+	7350 1950 8400 1950
+$EndSCHEMATC
