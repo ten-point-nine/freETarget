@@ -6,6 +6,7 @@
  * 
  * ----------------------------------------------------*/
 #include "json.h"
+#include "analog_io.h"
 
 struct GPIO {
   byte port;
@@ -30,7 +31,7 @@ GPIO init_table[] = {
   {SOUTH_LO,    OUTPUT, 1},
   {WEST_HI,     OUTPUT, 1},
   {WEST_LO,     OUTPUT, 1},      
-
+        
   {RUN_NORTH,   INPUT_PULLUP, 0},
   {RUN_EAST,    INPUT_PULLUP, 0},
   {RUN_SOUTH,   INPUT_PULLUP, 0},
@@ -50,12 +51,19 @@ GPIO init_table[] = {
   {LED_S,       OUTPUT, 1},
   {LED_X,       OUTPUT, 1},
   {LED_Y,       OUTPUT, 1},
+
+  {LED_PWM,     OUTPUT, 1},
+  {RTS_U,       OUTPUT, 1},
+  {CTS_U,       INPUT_PULLUP, 0},
+
+  {FACE_SENSOR, INPUT_PULLUP, 0},
   
-  {PAPER,       OUTPUT, 1},               // 18-Paper drive active low
-  {SPARE,       OUTPUT, 1},               // 18-Paper drive active low
+  {SPARE_1,     OUTPUT, 1},               // 18-Paper drive active low
+  {SPARE_2,     INPUT_PULLUP, 0},
   
   {EOF, EOF, EOF} };
 
+void face_ISR(void);
 
 /*-----------------------------------------------------
  * 
@@ -85,6 +93,21 @@ void init_gpio(void)
     }
     i++;
   }
+
+/*
+ * Special case of the witness paper
+ */
+  pinMode(PAPER, OUTPUT);
+  if ( revision() < REV_300 )
+  { 
+
+    digitalWrite(PAPER, PAPER_OFF);
+  }
+  else 
+  {
+    digitalWrite(PAPER, PAPER_OFF_300);
+  }
+  
 /*
  * All done, return
  */  
@@ -237,13 +260,22 @@ unsigned int is_running (void)
  *-----------------------------------------------------*/
 void arm_counters(void)
   {
-  digitalWrite(STOP_N, 0);    // Cycle the stop just to make sure
-  digitalWrite(RCLK,   0);    // Set READ CLOCK to LOW
-  digitalWrite(QUIET,  1);    // Arm the counter
-  digitalWrite(CLR_N,  0);    // Reset the counters 
-  digitalWrite(CLR_N,  1);    // Remove the counter reset 
-  digitalWrite(STOP_N, 1);    // Let the counters run
+  digitalWrite(CLOCK_START, 0);   // Make sure Clock start is OFF
+  digitalWrite(STOP_N, 0);        // Cycle the stop just to make sure
+  digitalWrite(RCLK,   0);        // Set READ CLOCK to LOW
+  digitalWrite(QUIET,  1);        // Arm the counter
+  digitalWrite(CLR_N,  0);        // Reset the counters 
+  digitalWrite(CLR_N,  1);        // Remove the counter reset 
+  digitalWrite(STOP_N, 1);        // Let the counters run
 
+/*
+ *   Attach the interrupt
+ */
+  if ( revision() >= REV_300 )
+  {
+    attachInterrupt(digitalPinToInterrupt(FACE_SENSOR),  face_ISR, CHANGE);
+  }
+  
   return;
   }
 
@@ -278,7 +310,14 @@ unsigned int read_DIP(void)
 {
   unsigned int return_value;
   
-  return_value =  (~((digitalRead(DIP_A) << 0) + (digitalRead(DIP_B) << 1) + (digitalRead(DIP_C) << 2) + (digitalRead(DIP_D) << 3))) & 0x0F;  // DIP Switch
+  if ( revision() < REV_300 )          // The silkscreen was reversed in Version 3.0  oops
+  {
+    return_value =  (~((digitalRead(DIP_A) << 0) + (digitalRead(DIP_B) << 1) + (digitalRead(DIP_C) << 2) + (digitalRead(DIP_D) << 3))) & 0x0F;  // DIP Switch
+  }
+  else
+  {
+    return_value =  (~((digitalRead(DIP_D) << 0) + (digitalRead(DIP_C) << 1) + (digitalRead(DIP_B) << 2) + (digitalRead(DIP_A) << 3))) & 0x0F;  // DIP Switch
+  }
   return_value |= json_dip_switch;  // JSON message
   return_value |= 0xF0;             // COMPILE TIME
 
@@ -328,4 +367,96 @@ void read_timers(void)
 
   return;
 }
+
+/*-----------------------------------------------------
+ * 
+ * function: drive_paper
+ * 
+ * brief:    Turn on the witness paper motor for json_paper_time
+ * 
+ * return:  None
+ * 
+ *-----------------------------------------------------
+ *
+ * The function turns on the motor for the specified
+ * time.
+ * 
+ * There is a hardare change between Version 2.2 which
+ * used a transistor and 3.0 that uses a FET.
+ * The driving circuit is reversed in the two boards.
+ * 
+ *-----------------------------------------------------*/
+ void drive_paper(void)
+ {
+   if ( is_trace )
+   {
+     Serial.print("\r\nAdvancing paper...");
+   }
+    
+   if ( revision() < REV_300 )
+   {
+     digitalWrite(PAPER, PAPER_ON);          // Advance the motor drive time
+   }
+   else
+   {
+     digitalWrite(PAPER, PAPER_ON_300);          // Advance the motor drive time
+   }
+   
+   for (i=0; i != json_paper_time; i++ )
+   {
+     j = 7 * (1.0 - ((float)i / float(json_paper_time)));
+     set_LED(LED_S, j & 1);                // Show the paper advancing
+     set_LED(LED_X, j & 2);                // 
+     set_LED(LED_Y, j & 4);                // 
+     delay(PAPER_STEP);                    // in 100ms increments
+    }
+    
+   if ( revision() < REV_300 )
+   {
+     digitalWrite(PAPER, PAPER_OFF);          // Advance the motor drive time
+   }
+   else
+   {
+     digitalWrite(PAPER, PAPER_OFF_300);          // Advance the motor drive time
+     digitalWrite(PAPER, PAPER_OFF_300);          // Advance the motor drive time
+   }
+
+ /*
+  * All done, return
+  */
+  return;
+ }
+ 
+/*-----------------------------------------------------
+ * 
+ * function: face_ISR
+ * 
+ * brief:    Face Strike Interrupt Service Routint
+ * 
+ * return:   None
+ * 
+ *-----------------------------------------------------
+ *
+ * Sensor #5 is attached to the digital input #19 and
+ * is used to generate an interrrupt whenever a face
+ * strike has been detected.
+ * 
+ * The ISR simply counts the number of cycles.  Anything
+ * above 0 is an indication that sound was picked up
+ * on the front face.
+ * 
+ *-----------------------------------------------------*/
+ void face_ISR(void)
+ {
+  strike_count++;
+
+/*
+ *  Disable interrupts
+ */
+  if ( revision() >= REV_300 )
+  {
+    detachInterrupt(digitalPinToInterrupt(FACE_SENSOR));
+  }
+   return;
+ }
  

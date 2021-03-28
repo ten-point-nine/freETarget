@@ -35,6 +35,7 @@ unsigned long minion_value[4];    // Array of timers values from minion
 unsigned long minion_ref;         // Trip voltage from minion
 unsigned int  pellet_calibre;     // Time offset to compensate for pellet diameter
 static char nesw[]= "NESW";
+
 /*----------------------------------------------------------------
  *
  * double speed_of_sound(double temperature)
@@ -52,7 +53,7 @@ double speed_of_sound(double temperature)
 
   speed = (331.3d + 0.606d * temperature) * 1000.0d / 1000000.0d; 
   
-  if ( read_DIP() & (VERBOSE_TRACE) )
+  if ( is_trace )
     {
     Serial.print("\r\nSpeed of sound: "); Serial.print(speed); Serial.print("mm/us");
     Serial.print("  Worst case delay: "); Serial.print(json_sensor_dia / speed * OSCILLATOR_MHZ); Serial.print(" counts");
@@ -142,7 +143,7 @@ unsigned int compute_hit
   double        constillation;     // How many constillations did we compute
   int           v_ref;             // reference voltage for this board
   
-  if ( read_DIP() & VERBOSE_TRACE )
+  if ( is_trace )
   {
     Serial.print("\r\ncompute_hit()");
   }
@@ -160,82 +161,14 @@ unsigned int compute_hit
     read_timers();
   }
   
-  if ( read_DIP() & VERBOSE_TRACE )
-  {
-    if ( read_DIP() & BOSS )
-    {
-      Serial.print("\r\nBOSS\r\n");
-    }
-    else
-    {
-    Serial.print("\r\nminion\r\n");
-    } 
-
+  if ( is_trace )
+  { 
     for (i=N; i <= W; i++)
     {
       Serial.print(which_one[i]); Serial.print(timer_value[i]); Serial.print(" "); 
     }
   }
   
-/*
- * Compute the extrapolated values or send the clock values over to the master
- */
- 
-  if ( read_DIP() & BOSS )
-  {
-    if ( ((read_DIP() & VERSION_2) == 0) && poll_minion() )
-    {
-      if ( read_DIP() & (VERBOSE_TRACE) )
-      {
-        Serial.print("\r\nPolled v:"); Serial.print(v_ref); Serial.print(" r:"); Serial.print( minion_ref );
-        Serial.print("\r\nminion     ");
-        for (i=N; i <= W; i++)
-        {
-          Serial.print(which_one[i]); Serial.print(minion_value[i]); Serial.print("  ");
-        }
-
-        Serial.print("\r\nBOSS       ");
-        for (i=N; i <= W; i++)
-        {
-          Serial.print(which_one[i]); Serial.print(timer_value[i]); Serial.print("  ");
-        }
-        
-        Serial.print("\r\nCorrection ");
-        for (i=N; i <= W; i++)
-        {
-          Serial.print(which_one[i]); Serial.print((timer_value[i]- minion_value[i]) * (long)v_ref / (minion_ref -(long)v_ref)); Serial.print("  ");
-        }
-      }
-      for (i=N; i <= W; i++)
-      {
-        timer_value[i] += (timer_value[i]- minion_value[i]) * (long)v_ref / (minion_ref -(long)v_ref);
-      }
-      if ( read_DIP() & VERBOSE_TRACE )
-      {
-        Serial.print("\r\nAdjusted   ");
-        for (i=N; i <= W; i++)
-        {
-          Serial.print(which_one[i]); Serial.print(timer_value[i]); Serial.print("  ");
-        }
-      }
-    }
-    else
-    {
-      if ( read_DIP() & VERBOSE_TRACE )
-      {
-        Serial.print("\r\nMinion timed out!");
-      }
-    }
-    for (i=N; i <= W; i++)
-    {
-      timer_value[i] += pellet_calibre;
-    }
-  }
-  else
-  {
-    send_BOSS();
-    return 0;
-  }
 
 /*
  * Determine the location of the reference counter (longest time)
@@ -251,7 +184,7 @@ unsigned int compute_hit
     }
   }
   
- if ( read_DIP() & VERBOSE_TRACE )
+ if ( is_trace )
  {
    Serial.print("\r\nReference: "); Serial.print(reference); Serial.print("  location:"); Serial.print(nesw[location]);
  }
@@ -269,7 +202,7 @@ unsigned int compute_hit
     }
   }
 
-  if ( read_DIP() & VERBOSE_TRACE )
+  if ( is_trace )
   {
     Serial.print("\r\nCounts       ");
     for (i=N; i <= W; i++)
@@ -317,7 +250,7 @@ unsigned int compute_hit
  */
   estimate = s[N].c - smallest + 1.0d;
  
-  if ( read_DIP() & VERBOSE_TRACE )
+  if ( is_trace )
    {
    Serial.print("\r\nestimate: "); Serial.print(estimate);
    }
@@ -350,7 +283,7 @@ unsigned int compute_hit
     estimate = sqrt(sq(s[location].x - x_avg) + sq(s[location].y - y_avg));
     error = abs(last_estimate - estimate);
 
-    if ( read_DIP() & VERBOSE_TRACE )
+    if ( is_trace )
     {
       Serial.print("\r\nx_avg:");  Serial.print(x_avg);   Serial.print("  y_avg:"); Serial.print(y_avg); Serial.print(" estimate:"),  Serial.print(estimate);  Serial.print(" error:"); Serial.print(error);
       Serial.println();
@@ -416,7 +349,7 @@ bool find_xy
  */
   if ( s->is_valid == false )
   {
-    if ( read_DIP() & VERBOSE_TRACE )
+    if ( is_trace )
     {
       Serial.print("\r\nSensor: "); Serial.print(s->index); Serial.print(" no data");
     }
@@ -468,7 +401,7 @@ bool find_xy
       break;
 
     default:
-      if ( read_DIP() & VERBOSE_TRACE )
+      if ( is_trace )
       {
         Serial.print("\n\nUnknown Rotation:"); Serial.print(s->index);
       }
@@ -478,7 +411,7 @@ bool find_xy
 /*
  * Debugging
  */
-  if ( read_DIP() & VERBOSE_TRACE )
+  if ( is_trace )
     {
     Serial.print("\r\nindex:"); Serial.print(s->index) ; 
     Serial.print(" a:");        Serial.print(s->a);       Serial.print("  b:");  Serial.print(s->b);
@@ -514,7 +447,8 @@ bool find_xy
 void send_score
   (
   history_t* h,                   // History record
-  int shot                        // Current shot
+  int shot,                       // Current shot
+  int sensor_status               // Status at the time of the shot
   )
 {
   double x, y;                   // Shot location in mm X, Y
@@ -544,67 +478,96 @@ void send_score
 /* 
  *  Display the results
  */
-  Serial.print("\r\n{");
-  AUX_SERIAL.print("\r\n{");
+  PRINT("\r\n{");
   
 #if ( S_SHOT )
-  Serial.print("\"shot\":");      Serial.print(shot); Serial.print(", ");
-  AUX_SERIAL.print("\"shot\":");  AUX_SERIAL.print(shot); AUX_SERIAL.print(", ");
+  PRINT("\"shot\":");      PRINT(shot); PRINT(", ");
+  PRINT("\"miss\": 0, ");
+  strike_count = 0;
+  
   if ( json_name_id != 0 )
   {
-    Serial.print("\"name\":\"");      Serial.print(names[json_name_id]);     Serial.print("\", ");
-    AUX_SERIAL.print("\"name\":");  AUX_SERIAL.print(names[json_name_id]); AUX_SERIAL.print(", ");
+    PRINT("\"name\":\"");      PRINT(names[json_name_id]);     PRINT("\", ");
   }
 #endif
 
 #if ( S_SCORE )
   coeff = 9.9 / (((double)json_1_ring_x10 + (double)json_calibre_x10) / 20.0d);
   score = 10.9 - (coeff * radius);
-  Serial.print("\"score\":");      Serial.print(score); Serial.print(", ");
-  AUX_SERIAL.print("\"score\":");  AUX_SERIAL.print(score); AUX_SERIAL.print(", ");
+  PRINT("\"score\":");      PRINT(score); PRINT(", ");
   z = 360 - (((int)angle - 90) % 360);
   clock_face = (double)z / 30.0;
-  Serial.print("\"clock\":\"");    Serial.print((int)clock_face);     Serial.print(":");     Serial.print((int)(60*(clock_face-((int)clock_face))));     Serial.print("\", ");
-  AUX_SERIAL.print("\"clock:\"");  AUX_SERIAL.print((int)clock_face); AUX_SERIAL.print(":"); AUX_SERIAL.print((int)60*(clock_face-((int)clock_face))); AUX_SERIAL.print("\", ");
+  PRINT("\"clock\":\"");    PRINT((int)clock_face);     PRINT(":");     PRINT((int)(60*(clock_face-((int)clock_face))));     PRINT("\", ");
 #endif
 
 #if ( S_XY )
-  Serial.print("\"x\":");     Serial.print(x);    Serial.print(", ");
-  Serial.print("\"y\":");     Serial.print(y);    Serial.print(", ");
-  AUX_SERIAL.print("\"x\":"); AUX_SERIAL.print(x); AUX_SERIAL.print(", ");
-  AUX_SERIAL.print("\"y\":"); AUX_SERIAL.print(y); AUX_SERIAL.print(", ");
+  PRINT("\"x\":");     PRINT(x);    PRINT(", ");
+  PRINT("\"y\":");     PRINT(y);    PRINT(", ");
 #endif
 
 #if ( S_POLAR )
-  Serial.print("\"r\":");     Serial.print(radius);    Serial.print(", ");
-  Serial.print("\"a\":");     Serial.print(angle);     Serial.print(", ");
-  AUX_SERIAL.print("\"r\":"); AUX_SERIAL.print(radius); AUX_SERIAL.print(", ");
-  AUX_SERIAL.print("\"a\":"); AUX_SERIAL.print(angle);  AUX_SERIAL.print(", ");
+  PRINT("\"r\":");     PRINT(radius);    PRINT(", ");
+  PRINT("\"a\":");     PRINT(angle);     PRINT(", ");
 #endif
 
 #if ( S_COUNTERS )
-  Serial.print("\"N\":");     Serial.print((int)s[N].count);      Serial.print(", ");
-  Serial.print("\"E\":");     Serial.print((int)s[E].count);      Serial.print(", ");
-  Serial.print("\"S\":");     Serial.print((int)s[S].count);      Serial.print(", ");
-  Serial.print("\"W\":");     Serial.print((int)s[W].count);      Serial.print(", ");
-  AUX_SERIAL.print("\"N\":"); AUX_SERIAL.print((int)s[N].count);  AUX_SERIAL.print(", ");
-  AUX_SERIAL.print("\"E\":"); AUX_SERIAL.print((int)s[E].count);  AUX_SERIAL.print(", ");
-  AUX_SERIAL.print("\"W\":"); AUX_SERIAL.print((int)s[S].count);  AUX_SERIAL.print(", ");
-  AUX_SERIAL.print("\"S\":"); AUX_SERIAL.print((int)s[W].count);  AUX_SERIAL.print(", ");
+  PRINT("\", ");
+  PRINT("\"N\":");     PRINT((int)s[N].count);      PRINT(", ");
+  PRINT("\"E\":");     PRINT((int)s[E].count);      PRINT(", ");
+  PRINT("\"S\":");     PRINT((int)s[S].count);      PRINT(", ");
+  PRINT("\"W\":");     PRINT((int)s[W].count);      PRINT(", ");
 #endif
 
 #if ( S_MISC ) 
   volts = analogRead(V_REFERENCE);
-  Serial.print("\"V_REF\":");       Serial.print(TO_VOLTS(volts));      Serial.print(", ");
-  Serial.print("\"T\":");           Serial.print(temperature_C());      Serial.print(", ");
-  Serial.print("\"VERSION\":");     Serial.print(SOFTWARE_VERSION);
-  AUX_SERIAL.print("\"V_REF\":");   AUX_SERIAL.print(TO_VOLTS(volts)); AUX_SERIAL.print(", ");
-  AUX_SERIAL.print("\"T\":");       AUX_SERIAL.print(temperature_C()); AUX_SERIAL.print(", ");
-  AUX_SERIAL.print("\"VERSION\":"); AUX_SERIAL.print(SOFTWARE_VERSION);
+  PRINT("\"V_REF\":");       PRINT(TO_VOLTS(volts));      PRINT(", ");
+  PRINT("\"T\":");           PRINT(temperature_C());      PRINT(", ");
+  PRINT("\"VERSION\":");     PRINT(SOFTWARE_VERSION);
 #endif
 
-  Serial.print("}\r\n");
-  AUX_SERIAL.print("}\r\n");
+  PRINT("}\r\n");
+  
+  return;
+}
+ 
+/*----------------------------------------------------------------
+ *
+ * void send_miss(void)
+ *
+ * Send out a miss message
+ *
+ *----------------------------------------------------------------
+ * 
+ * This is an abbreviated score message to show a miss
+ *    
+ *--------------------------------------------------------------*/
+
+void send_miss
+  (
+  int shot                        // Current shot
+  )
+{
+  
+/* 
+ *  Display the results
+ */
+  PRINT("\r\n{");
+  
+#if ( S_SHOT )
+  PRINT("\"shot\":");      PRINT(shot); PRINT(", ");
+  PRINT("\"miss\": 1,"); 
+  
+  if ( json_name_id != 0 )
+  {
+    PRINT("\"name\":\"");      PRINT(names[json_name_id]);     PRINT("\", ");
+  }
+#endif
+
+#if ( S_XY )
+  PRINT("\"x\": 0, \"y\": 0")
+#endif
+
+  PRINT("}\r\n");
   
   return;
 }
@@ -629,7 +592,6 @@ void send_timer
   int sensor_status                        // Flip Flop Input
   )
 {
-  char cardinal[] = "NESW";
   int i;
 
   read_timers();
@@ -639,7 +601,7 @@ void send_timer
   {
     if ( sensor_status & (1<<i) )
     {
-      Serial.print(cardinal[i]);
+      Serial.print(nesw[i]);
     }
     else
     {
@@ -689,7 +651,7 @@ void send_timer
     sample &= 0x7FFF;
   }
   
-  if ( read_DIP() & VERBOSE_TRACE )
+  if ( is_trace )
     {
     Serial.print("\r\nHamming weight: "); Serial.print(i);
     }
@@ -700,207 +662,3 @@ void send_timer
   return i;
  }
  
-/*----------------------------------------------------------------
- *
- * Patches for Version 2.99
- *
- *----------------------------------------------------------------
- 
-/*----------------------------------------------------------------
- *
- * void poll_minion
- *
- * Poll the minion for clock data
- *
- *----------------------------------------------------------------
- * 
- * The minion uses a very simple protocol to transfer the
- * timing information off of the offset sample clocks
- * 
- * The messages comes back as :north, east, south, west, voltage
- *    
- *--------------------------------------------------------------*/
-#define P_q 0         // Wait for : to come back
-#define P_n 1         // Wait for north value to come back
-#define P_e 2         // Wait for east value to come back
-#define P_s 3         // Wait for south value to come back
-#define P_w 4         // Wait for west value to come back
-#define P_v 5         // Wait for V_REF value to come back
-#define P_x 6         // Exit state
-#define WDT_TIME 1000 // Watchdog timer value, 1000ms
-#define START_SENTINEL  ':'
-#define SPACE           ' '
-#define COMMA           ','
-#define QUERY           '?'
-#define BANG            '!'
-
-bool poll_minion(void)
-{
-  unsigned int  p_state;            // Operating state
-  unsigned int  wdt;                // watch dog timer
-  char          ch;                 //
-  unsigned int  i;
-
-  if ( read_DIP() & VERBOSE_TRACE )
-  {
-    Serial.print("\r\npoll_minion: ");
-  }
-
-  for (i=N; i <= W; i++)
-  {
-    minion_value[i] = 0;            // Reset the old counts
-  }
-  minion_ref = 0;
-  
-/*
- * Loop waiting for data to come back
- */
-  wdt = 0;
-  p_state = P_q;
-  i=0;
-  while ( p_state != P_x )          // Wait here for the state to be completed
-  {
-    if ( (wdt % 100) == 0 )
-    {
-      MINION_SERIAL.write(QUERY);
-    } 
-    
-    if ( MINION_SERIAL.available() != 0 )
-    {
-      ch = MINION_SERIAL.read();       // Read the input depending on the state
-      if ( read_DIP() & VERBOSE_TRACE )
-      {
-        Serial.print(ch);
-      }
-      if ( ch == COMMA )
-      {
-        continue;
-      }
-
-      if ( ch == BANG )
-      {
-        break;
-      }
-      
-      if ( ch != SPACE )
-      {
-        switch ( p_state )
-        {
-          default:
-          case P_q:                   // Wait for the start sentinel to arrive
-            if ( ch == START_SENTINEL )
-            {
-              p_state = P_n;
-              break;
-            }
-            break;
-
-          case P_n:                   // Bring in the timer
-          case P_e:
-          case P_s:
-          case P_w:
-            minion_value[p_state - P_n] *= 10;// Read in the value and
-            minion_value[p_state - P_n] += ch - '0';// save it
-            break;
-          
-          case P_v:                   // Bring in the voltage
-            minion_ref *= 10;         // Read in the value and
-            minion_ref += ch - '0';   // save it
-          break;
-
-        case P_x:
-          break;
-        }
-      } // end if (space)
-    }   // end if (available)
-    else
-    {
-      delay (100);
-      wdt += 100;
-    }
-    
-    if ( wdt >= WDT_TIME )
-    {
-      return false;
-    }
-  } // end while
-
-/*
- * The data is in
- */
-  return true;
-  
-}
-
-/*----------------------------------------------------------------
- *
- * void send_BOSS
- *
- * Send clock data to the master
- *
- *----------------------------------------------------------------
- * 
- * The minion will send the clock data to the master when
- * it receives a command.
- * 
- * Messsage ->   :north, east, south, west, voltage!
- *--------------------------------------------------------------*/
- void send_BOSS(void)
- {
-    char ch;
-    unsigned int wdt;
-
-  if ( read_DIP() & VERBOSE_TRACE )
-  {
-    Serial.print("\r\nsend_BOSS()");
-  } 
- /*
-  * Wait here until queried. Then send the message
-  */
-  wdt = 0;
-  while ( wdt <= WDT_TIME )
-  {
-    if ( MINION_SERIAL.available() )
-    {
-      ch = MINION_SERIAL.read();
-
-      if ( ch == QUERY )                  // Send the message
-      {
-        MINION_SERIAL.print(START_SENTINEL);
-        MINION_SERIAL.print(timer_value[N]);
-        MINION_SERIAL.print(',');
-        MINION_SERIAL.print(timer_value[E]);
-        MINION_SERIAL.print(',');
-        MINION_SERIAL.print(timer_value[S]);
-        MINION_SERIAL.print(',');
-        MINION_SERIAL.print(timer_value[W]);
-        MINION_SERIAL.print(',');
-        MINION_SERIAL.print(analogRead(V_REFERENCE)); 
-        MINION_SERIAL.print(BANG);
-        while ( MINION_SERIAL.available() )
-        {
-          MINION_SERIAL.read();
-        }
-        if ( read_DIP() & VERBOSE_TRACE )
-        {
-          Serial.print(" - Done");
-        } 
-        return;
-      }
-    }
-    else
-    {
-      delay(100);                           // Wait
-      wdt += 100;                           // but not too long
-    }
-  }
-
- /*
-  * All gone
-  */
-  if ( read_DIP() & VERBOSE_TRACE )
-  {
-    Serial.print(" - Failed");
-  } 
-  return;
- }

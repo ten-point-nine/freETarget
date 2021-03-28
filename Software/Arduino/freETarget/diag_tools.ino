@@ -1,3 +1,4 @@
+
 /*----------------------------------------------------------------
  *
  * diag_tools.ino
@@ -20,11 +21,10 @@ const char* which_one[4] = {"North: ", "East: ", "South: ", "West: "};
 #define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
 #define OVER_TRIP (0.025)                         // Trip point +/- 25mV
 
-static void show_analog_on_PC(void);
+static void show_analog_on_PC(int v);
 static void unit_test(unsigned int mode);
 static bool sample_calculations(unsigned int mode, unsigned int sample);
-
-void set_trip_pt(void){self_test(T_SET_TRIP);}
+void set_trip_point(int v);
 
 /*----------------------------------------------------------------
  *
@@ -36,16 +36,16 @@ void set_trip_pt(void){self_test(T_SET_TRIP);}
  *   
  *--------------------------------------------------------------*/
 unsigned int tick;
-
 void self_test(uint16_t test)
 {
   double       volts;         // Reference Voltage
   unsigned int i;
   char         ch;
   unsigned int sensor_status; // Sensor running inputs
-  unsigned int sample;        // Sample used for comparison
+  unsigned long sample;       // Sample used for comparison
   unsigned int random_delay;  // Random sampe time
   bool         pass;
+  unsigned long start_time;   // Running time
   
 /*
  *  Update the timer
@@ -65,7 +65,7 @@ void self_test(uint16_t test)
     case T_HELP:
       Serial.print("\r\n 1 - Digital inputs");
       Serial.print("\r\n 2 - Counter values (external trigger)");
-      if ( revision() >= REV_22 )
+      if ( revision() >= REV_220 )
       {
         Serial.print("\r\n 3 - Counter values (internal trigger)");
       }
@@ -74,31 +74,39 @@ void self_test(uint16_t test)
       Serial.print("\r\n 6 - Advance paper backer");
       Serial.print("\r\n 7 - Spiral Unit Test");
       Serial.print("\r\n 8 - Grid calibration pattern");
-      if ( revision() >= REV_22 )
+      Serial.print("\r\n 9 - One time calibration pattern");
+      Serial.print("\r\n 8 - Grid calibration pattern");
+      if ( revision() >= REV_220 )
       {
-        Serial.print("\r\n 9 - Aux port passthrough");
+        Serial.print("\r\n 10 - Aux port passthrough");
       }
-      Serial.print("\r\n10 - Set detection trip point"); 
-      Serial.print("\r\n11 - BOSS-minion loopback test"); 
+      Serial.print("\r\n11 - Set detection trip point"); 
+      Serial.print("\r\n12 - Transfer loopback");
+      Serial.print("\r\n13 - Serial port test");
+      Serial.print("\r\n14 - LED brightness test");
+      Serial.print("\r\n15 - Face strike test");
       Serial.print("\r\n");
       break;
 
     case T_DIGITAL: 
-      Serial.print("\r\nBD Rev:");                    Serial.print(revision());       Serial.print("\r\nDIP: 0x"); Serial.print(read_DIP(), HEX);    
+      Serial.print("\r\nTime:");                      Serial.print(micros());
+      Serial.print("\r\nBD Rev:");                    Serial.print(revision());       
+      Serial.print("\r\nDIP: 0x");                    Serial.print(read_DIP(), HEX); 
+      digitalWrite(STOP_N, 0);
+      digitalWrite(STOP_N, 1);                        // Reset the fun flip flop
+      Serial.print("\r\nRUN FlipFlop: 0x");           Serial.print(is_running(), HEX);   
       Serial.print("\r\nTemperature: ");              Serial.print(temperature_C());  Serial.print("'C ");
       Serial.print(speed_of_sound(temperature_C()));  Serial.print("mm/us");
-      Serial.print("\r\nV_REF: "); Serial.print(volts); 
+      Serial.print("\r\nV_REF: ");                    Serial.print(volts); 
       Serial.print("\r\n");
       for (tick=0; tick != 8; tick++)
       {
         digitalWrite(LED_S, (~tick) & 1);
         digitalWrite(LED_X, (~tick) & 2);
-
-
-        
         digitalWrite(LED_Y, (~tick) & 4);
         delay(250);
       }
+      json_test = T_HELP;               // and stop the test
       break;
 
     case T_TRIGGER:                       // Show the timer values (Wait for analog input)
@@ -113,7 +121,7 @@ void self_test(uint16_t test)
       
       if ( json_test == T_CLOCK )
       {
-        if ( revision() >= REV_22 )  
+        if ( revision() >= REV_220 )  
         {
           random_delay = random(1, 6000);   // Pick a random delay time in us
           Serial.print("\r\nRandom clock test: "); Serial.print(random_delay); Serial.print("us. All outputs must be the same. ");
@@ -171,20 +179,18 @@ void self_test(uint16_t test)
       break;
 
     case T_OSCOPE:                       // Show the analog input
-      show_analog();                  
+      show_analog(0);                  
       break;
       
     case T_OSCOPE_PC:
-      show_analog_on_PC();
+      show_analog_on_PC(0);
       break;
 
     case T_PAPER: 
       Serial.print("\r\nAdvanciing backer paper "); Serial.print(json_paper_time * 10); Serial.print(" ms");
-      digitalWrite(PAPER, PAPER_ON);    // Advance the backer paper
-      delay(json_paper_time * 10);
-      digitalWrite(PAPER, PAPER_OFF);
-      json_test = 0;                    // Turn off this test
+      drive_paper();
       Serial.print("\r\nDone");
+      json_test = T_HELP;
       break;
       
     case T_SPIRAL: 
@@ -221,65 +227,204 @@ void self_test(uint16_t test)
       break;
 
     case T_SET_TRIP:
-      Serial.print("\r\nSetting trip point. @"); Serial.print(json_trip_point); Serial.print("mV. Cycle power to exit\r\n");
-      while (1)
+      set_trip_point(0);
+      json_test = T_HELP;
+      break;
+
+    case T_SERIAL_PORT:
+      Serial.print("\r\nArduino Serial Port: Hello World\r\n");
+      AUX_SERIAL.print("\r\nAux Serial Port: Hello World\r\n");
+      DISPLAY_SERIAL.print("\r\nDisplay Serial Port: Hello World\r\n");
+      json_test = T_HELP;
+      break;
+
+    case T_LED:
+      Serial.print("\r\nRamping the LED");
+      for (i=0; i != 256; i++)
       {
-        volts = TO_VOLTS(analogRead(V_REFERENCE));             // Read the DAC. 0-5V
-        volts = volts -(((double)json_trip_point) / 1000.0d);   // Subtract the trip point
-        if ( volts >= OVER_TRIP )
+        analogWrite(LED_PWM, i);
+        delay(20);
+      }
+      for (i=255; i != -1; i--)
+      {
+        analogWrite(LED_PWM, i);
+        delay(20);
+      }
+      analogWrite(LED_PWM, 0);
+      Serial.print(" Done\r\n");
+      json_test = T_HELP;
+      break;
+
+      
+    case T_FACE:
+      Serial.print("\r\nFace strike test");
+      strike_count = 0;
+      EEPROM.put(NONVOL_TEST_MODE, T_HELP);     // Stop the test on the next boot cycle
+      while (1)
+      {        
+        if ( strike_count != 0 )
         {
-          digitalWrite(LED_S, 0); digitalWrite(LED_X, 1);      digitalWrite(LED_Y, 1);
-        }
-        else if ( volts <= (-OVER_TRIP ) )
-        {
-          digitalWrite(LED_S, 1); digitalWrite(LED_X, 1);      digitalWrite(LED_Y, 0);
+          set_LED(LED_S, true);     // If something comes in, 
+          set_LED(LED_X, true);
+          set_LED(LED_Y, true);     // turn on all of the LEDs
+          strike_count = 0;
         }
         else
         {
-          digitalWrite(LED_S, 1); digitalWrite(LED_X, 0);      digitalWrite(LED_Y, 1);
+          set_LED(LED_S, false);
+          set_LED(LED_X, false);
+          set_LED(LED_Y, false);
         }
+        delay(500);
       }
-      break;
 
-   case T_XFR_LOOP:
-      if ( read_DIP() & BOSS )              // Boss side
-      {
-        Serial.print("\r\nBOSS loopback.\r\nType %%%% to start MINION.  \r\nCycle power to exit\r\n");
-        while (1)
-        {
-          if ( Serial.available() )           // Read the console and send it 
-          {
-            ch = Serial.read();
-            MINION_SERIAL.print(ch);
-          }
-          if ( MINION_SERIAL.available() )    // Read the minon port
-          {
-            ch = MINION_SERIAL.read();
-            Serial.print(ch);               
-          }
-        }
-      }
-      else
-      {   
-        Serial.print("\r\nMINION loopback.  \r\vEnter characters from BOSS port. \r\nCycle power to exit\r\n");
-        while (1)
-        {
-         if ( MINION_SERIAL.available() )    // Read the minon port
-          {
-            ch = MINION_SERIAL.read();
-            Serial.print(ch);               
-            ch++;
-            MINION_SERIAL.print(ch);         // add one and send it back
-          }
-        }
-      }
       break;
   }
 
  /* 
   *  All done, return;
   */
+    if ( json_test == T_HELP )
+    {
+      EEPROM.put(NONVOL_TEST_MODE, T_HELP);     // Stop the test on the next boot cycle
+    }
     return;
+}
+
+/*----------------------------------------------------------------
+ * 
+ * void set_trip_point()
+ * 
+ * Read the pot and display the voltage on the LEDs as a grey code
+ * 
+ *----------------------------------------------------------------
+ *
+ *  The reference voltage is divided into 8 bands from 0.5 volt
+ *  to 1.5 volts in 1/8 volt increments.
+ *  
+ *  This function averages the voltage over 1/2 second and
+ *  determines what band the reference belongs in and displays
+ *  it on the LEDs as a Grey code.
+ *  
+ *  The function will remain here 
+ *     If started by a CAL jumper until the jumper is removed
+ *     If started by a {TEST} forever
+ *     
+ *  Calibration Display
+ *  
+ *  V_REF           S  X  Y
+ *  0.350           .  .  .
+ *  0.400           .  .  *
+ *  0.450           .  .  B
+ *  0.500           .  *  .
+ *  0.550           .  B  .
+ *  0.600           .  *  *
+ *  0.650           .  B  B
+ *  0.700           *  .  .
+ *  0.750           B  .  .
+ *  0.800           *  .  *
+ *  0.900           B  .  B
+ *  1.000           *  *  .
+ *  1.100           B  B  .
+ *  1.200           *  *  *
+ *  1.3^^           B  B  B
+ *  
+ *  Calibration Modes 
+ *  No Jumpers          Regular Range
+ *  CAL_LOW             Reduced Detection
+ *  CAL_HI              Increased Detetion
+ *  CAL_LOW + CAL_HIGH  Set LED brightness
+ *  
+ *--------------------------------------------------------------*/
+#define CT(x) (1023l * (long)(x+25) / 5000l )   // 1/16 volt = 12.8 counts
+const unsigned int volts_to_LED[] = {     0,       1,     0x81,       2,     0x82,       3,      0x83,     4,    0x84,      5,      0x85,      6,      0x86,       7,      255 };
+const unsigned int mv_to_counts[] = {  CT(350), CT(400), CT(450), CT(500),  CT(550), CT(600), CT(650), CT(700), CT(750), CT(800), CT(900), CT(1000), CT(1100), CT(1200)};
+
+void set_trip_point(int t)
+{
+  unsigned long start_time;                                 // Starting time of average loop 
+  unsigned long sample;                                     // Counts read from ADC
+  unsigned int  blink;                                      // Blink the LEDs on an over flow
+  unsigned int start_DIP;                                   // Starting value of the DIP switch
+  
+  Serial.print("\r\nSetting trip point. Cycle power to exit\r\n");
+  blink = 0;
+  start_DIP = read_DIP();
+  
+/*
+ * Loop forever and display the voltage as a grey code
+ */
+  while ( ((start_DIP & CALIBRATE) ==  0) || ((read_DIP() & CALIBRATE) != 0) )
+  {
+    start_time = millis();
+    sample = 0;
+    i=0;
+    while ( millis() - start_time < (ONE_SECOND/10) )      // Read voltage for 1/10 second
+    {
+      sample += analogRead(V_REFERENCE);                    // Read the ADC. 0-1023V
+      i++;                                                  // and keep a running total
+    }
+    sample /= i;                                            // Get the average
+
+    switch (read_DIP() & ( CAL_LOW + CAL_HIGH ) )
+    {   
+      case (CAL_LOW):                                       // Low Calibration 
+        sample *= 3;
+        sample /= 2;
+        break;
+        
+      case (CAL_HIGH):                                      // Set scale if the high range
+        sample *= 2;
+        sample /= 3;
+        break;
+     
+      default:
+        break;
+    }
+
+    if ( (read_DIP() & ( CAL_LOW + CAL_HIGH )) == (CAL_LOW + CAL_HIGH) )
+    {
+        json_LED_PWM = sample / 4;                         // Scale to 0-256
+        json_LED_PWM *= 100;
+        json_LED_PWM /= 256;                               // Scale 0-100%
+        EEPROM.put(NONVOL_LED_PWM, json_LED_PWM);
+        set_LED_PWM(json_LED_PWM);
+        continue;
+    }
+    
+ /*
+  * Determine what band it belongs to 
+  */
+   i = 0;
+   while (volts_to_LED[i] != 255)
+   {
+     if ( sample <= mv_to_counts[i] )
+     {
+      break;
+     }
+     i++;
+   }
+   
+   blink ^= 7;
+   ch = volts_to_LED[i];
+   if ( ch & 0x80 )
+   {
+     ch ^= blink;
+     ch &= volts_to_LED[i]; 
+   }
+   if ( volts_to_LED[i] == 255 )
+   {
+    ch = blink;
+   }
+   ch = ~ch;
+   Serial.print("\r\nV_Ref: "); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
+   digitalWrite(LED_S, ch & 4); digitalWrite(LED_X, ch & 2); digitalWrite(LED_Y, ch & 1);
+ }
+
+ /*
+  * Return
+  */
+  return;
 }
 
 /*----------------------------------------------------------------
@@ -308,12 +453,11 @@ unsigned int max_input[4];
 #define DECAY_RATE   16               // Decay rate for peak detection
 #define SAMPLE_TIME  (500000U)        // 500 x 1000 us
 
-void show_analog(void)
+void show_analog(int v)
 {
   unsigned int i, sample;
   char o_scope[FULL_SCALE];
   unsigned long now;
-  char nesw[]="NESW";
   
   digitalWrite(LED_S, ~(1 << cycle) & 1);
   digitalWrite(LED_X, ~(1 << cycle) & 2);
@@ -387,7 +531,7 @@ void show_analog(void)
  * .program  
  *--------------------------------------------------------------*/
 
-static void show_analog_on_PC(void)
+static void show_analog_on_PC(int v)
 {
   unsigned int i, j, k;
   char o_scope[FULL_SCALE];
@@ -468,7 +612,8 @@ static void unit_test(unsigned int mode)
     if ( sample_calculations(mode, i) )
     {
     location = compute_hit(0x0F, &history, true);
-    send_score(&history, shot_number);
+    sensor_status = 0xF;
+    send_score(&history, shot_number, sensor_status);
     shot_number++;
     delay(200);
     }

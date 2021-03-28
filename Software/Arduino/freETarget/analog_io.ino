@@ -5,6 +5,8 @@
  * General purpose Analog driver
  * 
  * ----------------------------------------------------*/
+
+#include "freETarget.h"
 #include "analog_io.h"
 #include "gpio.h"
 #include "Wire.h"
@@ -15,13 +17,10 @@
  * 
  * Initialize the analog I/O
  * 
- *----------------------------------------------------------------
- */
+ *--------------------------------------------------------------*/
 void init_analog_io(void)
 {
-    
-  pinMode(REF_OUT, OUTPUT);
-  analogWrite(REF_OUT, 0);  // Prime the PWM
+  pinMode(LED_PWM, OUTPUT);
   Wire.begin();
   
 /*
@@ -29,6 +28,36 @@ void init_analog_io(void)
  */
   return;
 }
+
+/*----------------------------------------------------------------
+ * 
+ * void set_LED_PWM()
+ * void blink_LED_PWM()
+ * void set_LED_off()
+ * *
+ * Program the PWM value
+ * 
+ *----------------------------------------------------------------
+ *
+ * json_LED_PWM is a number 0-100 %  It must be scaled 0-255
+ * 
+ *--------------------------------------------------------------*/
+static unsigned int led_pwm = 0;
+
+void set_LED_PWM(int percent)
+{
+  if ( percent != led_pwm )
+  {
+    led_pwm = percent * 256 / 100;
+    analogWrite(LED_PWM, led_pwm);  // Prime the PWM
+  }
+  
+/*
+ * All done, begin the program
+ */
+  return;
+}
+
 
 /*----------------------------------------------------------------
  * 
@@ -55,8 +84,8 @@ unsigned int read_reference(void)
  *  
  *  The analog input is a number 0-1024 
  *--------------------------------------------------------------*/
-//                                 0     1  2  3  4  5  6     7    8  9  A  B  C  D  E  F
-static unsigned int version[] = {REV_21, 0, 0, 0, 0, 0, 0, REV_22, 0, 0, 0, 0, 0, 0, 0, 0};
+//                                 0      1  2  3     4     5  6      7    8  9   A   B   C   D   E   F
+static unsigned int version[] = {REV_210, 1, 2, 3, REV_300, 5, 6, REV_220, 8, 9, 10, 11, 12, 13, 14, 15};
   
 unsigned int revision(void)
 {
@@ -107,7 +136,7 @@ void cal_analog(void)
   uint16_t reference;
   uint16_t steps;
   
-  show_analog();
+  show_analog(0);
   reference = analogRead(V_REFERENCE);
 
   steps = 1000.0 * TO_VOLTS(reference - max_analog()) / 250.0;

@@ -28,9 +28,11 @@ int     json_south_x;               // South Adjustment
 int     json_south_y;
 int     json_west_x;                // WestAdjustment
 int     json_west_y;
-int     json_trip_point;            // Detection trip point in mV
 int     json_name_id;               // Name identifier
 int     json_1_ring_x10;            // Size of the 1 ring in mm
+int     json_LED_PWM;               // LED control value 
+int     json_power_save;            // Power down time
+int     json_send_miss;             // Send a miss message
 
 #define IS_VOID    0
 #define IS_INT16   1
@@ -38,43 +40,47 @@ int     json_1_ring_x10;            // Size of the 1 ring in mm
 #define IS_DOUBLE  3
 #define JSON_DEBUG false                    // TRUE to echo DEBUG messages
 
-       void show_echo(void);                // Display the current settings
-static void show_test(void);                // Execute the self test once
-static void show_test0(void);               // Help Menu
-static void show_names(void);               // Display the names
-
+       void show_echo(int v);               // Display the current settings
+static void show_test(int v);               // Execute the self test once
+static void show_test0(int v);              // Help Menu
+static void show_names(int v);
 static void nop(void);
 
 typedef struct  {
-  char*           token;  // JSON token string, ex "RADIUS": 
-  int*            value;  // Where value is stored 
-  double*       d_value;  // Where value is stored 
-  unsigned int  convert;  // Conversion type
-  void       (*f)(void);  // Function to execute with message
-  unsigned int  non_vol;  // Storage in NON-VOL
+  char*           token;    // JSON token string, ex "RADIUS": 
+  int*            value;    // Where value is stored 
+  double*       d_value;    // Where value is stored 
+  unsigned int  convert;    // Conversion type
+  void       (*f)(int x);   // Function to execute with message
+  unsigned int  non_vol;    // Storage in NON-VOL
 } json_message;
 
   
 static json_message JSON[] = {
-  {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT16,  0,             NONVOL_SENSOR_ANGLE},    //  0
-  {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT16,  0,             NONVOL_CALIBRE_X10 },    //  1
-  {"\"DIP\":",            &json_dip_switch,                  0,                IS_INT16,  0,             NONVOL_DIP_SWITCH  },    //  2
-  {"\"ECHO\":",           &json_echo,                        0,                IS_INT16,  &show_echo,                    0  },    //  3
-  {"\"INIT\":",           0,                                 0,                IS_VOID,   &reinit_nonvol,                0  },    //  4  
-  {"\"PAPER\":",          &json_paper_time,                  0,                IS_INT16,  0,             NONVOL_PAPER_TIME  },    //  5
-  {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  &gen_position, NONVOL_SENSOR_DIA  },    //  6
-  {"\"TEST\":",           &json_test,                        0,                IS_INT16,  &show_test,    NONVOL_TEST_MODE   },    //  7
-  {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT16,  0,             NONVOL_NORTH_X     },    //  8
-  {"\"NORTH_Y\":",        &json_north_y,                     0,                IS_INT16,  0,             NONVOL_NORTH_Y     },    //  9
-  {"\"EAST_X\":",         &json_east_x,                      0,                IS_INT16,  0,             NONVOL_EAST_X      },    // 10
-  {"\"EAST_Y\":",         &json_east_y,                      0,                IS_INT16,  0,             NONVOL_EAST_Y      },    // 11
-  {"\"SOUTH_X\":",        &json_south_x,                     0,                IS_INT16,  0,             NONVOL_SOUTH_X     },    // 12
-  {"\"SOUTH_Y\":",        &json_south_y,                     0,                IS_INT16,  0,             NONVOL_SOUTH_Y     },    // 13
-  {"\"WEST_X\":",         &json_west_x,                      0,                IS_INT16,  0,             NONVOL_WEST_X      },    // 14
-  {"\"WEST_Y\":",         &json_west_y,                      0,                IS_INT16,  0,             NONVOL_WEST_Y      },    // 15
-  {"\"TRIP_POINT\":",     &json_trip_point,                  0,                IS_INT16,  &set_trip_pt,  NONVOL_TRIP_POINT  },    // 16
-  {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT16,  &show_names,   NONVOL_NAME_ID     },    // 17
-  {"\"TRGT_1_RINGx10\":", &json_1_ring_x10,                  0,                IS_INT16,  0,             NONVOL_1_RINGx10   },    // 18
+//    token                 value stored in RAM     double stored in RAM         type     service fcn()     NONVOL location
+  {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT16,  0,                NONVOL_SENSOR_ANGLE},    //
+  {"\"CAL\":",            0,                                 0,                IS_VOID,   &set_trip_point,                  0  },    //
+  {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT16,  0,                NONVOL_CALIBRE_X10 },    //
+  {"\"DIP\":",            &json_dip_switch,                  0,                IS_INT16,  0,                NONVOL_DIP_SWITCH  },    //
+  {"\"ECHO\":",           &json_echo,                        0,                IS_INT16,  &show_echo,                       0  },    //
+  {"\"INIT\"",            0,                                 0,                IS_VOID,   &init_nonvol,                     0  },    //
+  {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT16,  &set_LED_PWM,     NONVOL_LED_PWM     },    //
+  {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT16,  &show_names,      NONVOL_NAME_ID     },    //
+  {"\"PAPER\":",          &json_paper_time,                  0,                IS_INT16,  0,                NONVOL_PAPER_TIME  },    //
+  {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT16,  0,                NONVOL_POWER_SAVE  },    //
+  {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT16,  0,                NONVOL_SEND_MISS   },    //
+  {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  &gen_position,    NONVOL_SENSOR_DIA  },    //
+  {"\"TEST\":",           &json_test,                        0,                IS_INT16,  &show_test,       NONVOL_TEST_MODE   },    //
+  {"\"TRGT_1_RINGx10\":", &json_1_ring_x10,                  0,                IS_INT16,  0,                NONVOL_1_RINGx10   },    //
+  {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT16,  0,                NONVOL_NORTH_X     },    //
+  {"\"NORTH_Y\":",        &json_north_y,                     0,                IS_INT16,  0,                NONVOL_NORTH_Y     },    //
+  {"\"EAST_X\":",         &json_east_x,                      0,                IS_INT16,  0,                NONVOL_EAST_X      },    //
+  {"\"EAST_Y\":",         &json_east_y,                      0,                IS_INT16,  0,                NONVOL_EAST_Y      },    //
+  {"\"SOUTH_X\":",        &json_south_x,                     0,                IS_INT16,  0,                NONVOL_SOUTH_X     },    //
+  {"\"SOUTH_Y\":",        &json_south_y,                     0,                IS_INT16,  0,                NONVOL_SOUTH_Y     },    //
+  {"\"WEST_X\":",         &json_west_x,                      0,                IS_INT16,  0,                NONVOL_WEST_X      },    //
+  {"\"WEST_Y\":",         &json_west_y,                      0,                IS_INT16,  0,                NONVOL_WEST_Y      },    //
+
   { 0, 0, 0, 0, 0, 0}
 };
 
@@ -106,19 +112,24 @@ int instr(char* s1, char* s2);
 static uint16_t in_JSON = 0;
 static bool not_found;
 
-void read_JSON(void)
+bool read_JSON(void)
 {
 static int16_t got_right;
 unsigned int  i, j, x;
 int     k;
 char    ch;
 double  y;
+bool    return_value;
 
+  return_value = false;
+  
 /*
  * See if anything is waiting and if so, add it in
  */
   while (Serial.available() != 0)
   {
+    return_value = true;
+    
     ch = Serial.read();
 #if ( JSON_DEBUG == true )
     Serial.print(ch);
@@ -162,7 +173,7 @@ double  y;
   
   if ( got_right == 0 )
   {
-    return;
+    return return_value;
   }
   
 /*
@@ -208,7 +219,7 @@ double  y;
         }
         if ( JSON[j].f != 0 )                              // Call the handler if it is available
         {
-          JSON[j].f();
+          JSON[j].f(x);
         }
       } 
      j++;
@@ -235,7 +246,7 @@ double  y;
   in_JSON   = 0;                // Start Over
   got_right = 0;                // Neet to wait for a new Right Bracket
   input_JSON[in_JSON] = 0;      // Clear the input
-  return;
+  return return_value;
 }
 
 // Compare two strings.  Return -1 if not equal, end of string if equal
@@ -280,7 +291,7 @@ int instr(char* s1, char* s2)
  * 
  *-----------------------------------------------------*/
 
-void show_echo(void)
+void show_echo(int v)
 {
   unsigned int i;
   
@@ -309,7 +320,7 @@ void show_echo(void)
     }
     i++;
   }
-    
+
   EEPROM.get(NONVOL_INIT, i);
   Serial.print("\"INIT\":");     Serial.print(i);                Serial.print(", \r\n");
   Serial.print("\"V_REF\":");    Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print(", \r\n");
@@ -337,7 +348,7 @@ void show_echo(void)
  * 
  *-----------------------------------------------------*/
 
-static void show_names(void)
+static void show_names(int v)
 {
   unsigned int i;
   
@@ -366,10 +377,10 @@ static void show_names(void)
  * 
  *----------------------------------------------------*/
 
-static void show_test(void)
+static void show_test(int test_number)
  {
-  Serial.print("\r\nSelf Test:"); Serial.print(json_test); Serial.print("\r\n");
+  Serial.print("\r\nSelf Test:"); Serial.print(test_number); Serial.print("\r\n");
   
-  self_test(json_test);
+  self_test(test_number);
   return;
  }

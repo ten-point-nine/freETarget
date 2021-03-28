@@ -4,8 +4,8 @@
 #ifndef _JSON_H_
 #define _JSON_H_
 
-void read_JSON(void);         // Scan the serial port looking for JSON input
-void show_echo(void);         // Display the settings
+bool read_JSON(void);             // Scan the serial port looking for JSON input
+void show_echo(int v);            // Display the settings
 
 extern int    json_dip_switch;    // DIP switch overwritten by JSON message
 extern double json_sensor_dia;    // Sensor radius overwitten by JSON message
@@ -22,7 +22,11 @@ extern int    json_south_x;       // South Adjustment
 extern int    json_south_y;
 extern int    json_west_x;        // WestAdjustment
 extern int    json_west_y;
-extern int    json_trip_point;    // Trip point in mV
+extern int    json_spare_1;       // Not used
 extern int    json_name_id;       // Name Identifier
 extern int    json_1_ring_x10;    // Size of 1 ring in mmx10
+extern int    json_LED_PWM;       // PWM Setting (%)
+extern int    json_power_save;    // How long to run target before turning off LEDs
+extern int    json_send_miss;     // Sent the miss message when TRUE
+
 #endif _JSON_H_

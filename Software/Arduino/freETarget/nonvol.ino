@@ -8,31 +8,6 @@
 #include "nonvol.h"
 #include "freeTarget.h"
 #include "json.h"
-
-/*----------------------------------------------------------------
- *
- * void reinit_nonvol()
- * 
- * Reinitialize the nonvol storage
- * 
- *---------------------------------------------------------------
- *
- *  Force the init to a bad value and then do a read_nonvol
- *  
- *------------------------------------------------------------*/
- void reinit_nonvol(void)
- {
-    int nonvol_init = 0;                    // Corrupt the semephore
-    EEPROM.put(NONVOL_INIT, nonvol_init);
-    
-    read_nonvol();                          // Regen the numbers
-    Serial.print("\r\nReset to factory defaults\r\n");
-    show_echo();
- /*
-  * Nothing more to do, return
-  */
-    return;
- }
  
 /*----------------------------------------------------------------
  * 
@@ -46,15 +21,16 @@
  * in and initialized.
  * 
  *------------------------------------------------------------*/
-void init_nonvol(void)
+void init_nonvol(int v)
 {
   unsigned int nonvol_init;
 
   nonvol_init = 0;                        // Corrupt the init location
   EEPROM.put(NONVOL_INIT, nonvol_init);
+  Serial.print("\r\nReset to factory defaults\r\n");
   read_nonvol();                          // Force in new values
-  show_echo();                            // Display these settings
-  
+  show_echo(0);                           // Display these settings
+  set_trip_point(0);
 /*
  * All done, return
  */
@@ -86,37 +62,20 @@ void read_nonvol(void)
       || ((read_DIP() & FACTORY) != 0) )                       // Reset back to factory defaults
   {
     Serial.print("\r\nInitializing NON-VOL");
-    json_dip_switch = 0;
-    EEPROM.put(NONVOL_DIP_SWITCH, json_dip_switch);   // No, set up the defaults
-    json_sensor_dia = 230.0;
-    EEPROM.put(NONVOL_SENSOR_DIA, json_sensor_dia); 
-    json_paper_time = 0;
-    EEPROM.put(NONVOL_PAPER_TIME, json_paper_time);
-    json_test = 0;
-    EEPROM.put(NONVOL_TEST_MODE, json_test);
-    json_calibre_x10 = 45;
-    EEPROM.put(NONVOL_CALIBRE_X10, json_calibre_x10);
-
-    gen_position();    
-
-    if ( read_DIP() & BOSS )
-    {
-      json_trip_point = INIT_TRIP_POINT; 
-      json_name_id    = 1;                    // Boss
-    }
-    else
-    {
-      json_trip_point = INIT_TRIP_POINT_299; 
-      json_name_id    = 2;                    // Minion
-    }
-    EEPROM.put(NONVOL_TRIP_POINT, json_trip_point); 
-    EEPROM.put(NONVOL_NAME_ID, json_name_id);
-
-    json_1_ring_x10 = 1555;
-    EEPROM.put(NONVOL_1_RINGx10, json_1_ring_x10);
+    gen_position(0); 
+    EEPROM.put(NONVOL_DIP_SWITCH,  0);   // No, set up the defaults
+    EEPROM.put(NONVOL_SENSOR_DIA,  230.0); 
+    EEPROM.put(NONVOL_PAPER_TIME,  0);
+    EEPROM.put(NONVOL_TEST_MODE,   0);
+    EEPROM.put(NONVOL_CALIBRE_X10, 45);
+    EEPROM.put(NONVOL_LED_PWM,     50);
+    EEPROM.put(NONVOL_POWER_SAVE, 30);
+    EEPROM.put(NONVOL_NAME_ID,    1);
+    EEPROM.put(NONVOL_1_RINGx10, 1555);
+    EEPROM.put(NONVOL_SEND_MISS, false);
     
     nonvol_init = INIT_DONE;
-    EEPROM.put(NONVOL_INIT, nonvol_init);
+    EEPROM.put(NONVOL_INIT, INIT_DONE);
   }
 
 /*
@@ -125,6 +84,7 @@ void read_nonvol(void)
   EEPROM.get(NONVOL_DIP_SWITCH, json_dip_switch);     // Read the nonvol settings
   EEPROM.get(NONVOL_SENSOR_DIA, json_sensor_dia);
   EEPROM.get(NONVOL_TEST_MODE,  json_test);
+  EEPROM.get(NONVOL_LED_PWM,    json_LED_PWM);
   
   EEPROM.get(NONVOL_PAPER_TIME, json_paper_time);
   if ( (json_paper_time * PAPER_STEP) > (PAPER_LIMIT) )
@@ -168,8 +128,12 @@ void read_nonvol(void)
   EEPROM.get(NONVOL_WEST_X,  json_west_x);  
   EEPROM.get(NONVOL_WEST_Y,  json_west_y);  
 
-  EEPROM.get(NONVOL_TRIP_POINT, json_trip_point);
   EEPROM.get(NONVOL_1_RINGx10,  json_1_ring_x10);
+
+  EEPROM.get(NONVOL_POWER_SAVE, json_power_save);
+  EEPROM.get(NONVOL_LED_PWM,    json_LED_PWM);
+  EEPROM.get(NONVOL_SEND_MISS,  json_send_miss);
+  
 /*
  * All done, begin the program
  */
@@ -188,7 +152,7 @@ void read_nonvol(void)
  *  sensor diameter is entered.
  *  
  *------------------------------------------------------------*/
-void gen_position(void)
+void gen_position(int v)
 {
  /*
   * Work out the geometry of the sensors

@@ -10,6 +10,7 @@ unsigned int read_counter(unsigned int direction);
 void stop_counters(void);                     // Turn off the counter registers
 bool read_in(unsigned int port);              // Read the selected port
 void read_timers(void);                       // Read and return the counter registers
+void drive_paper(void);                       // Turn on the paper motor
 
 /*
  *  Port Definitions
@@ -48,6 +49,9 @@ void read_timers(void);                       // Read and return the counter reg
 #define DIP_C       11
 #define DIP_D       12
 
+#define CTS_U        7
+#define RTS_U        6
+#define LED_PWM      5          // PWM Port
 #define LED_S        4
 #define LED_X        3
 #define LED_Y        2
@@ -56,12 +60,21 @@ void read_timers(void);                       // Read and return the counter reg
 #define EAST         1
 #define SOUTH        2
 #define WEST         3
- 
-#define PAPER       18                    // Paper advance drive active low (TX1)
-#define PAPER_ON     0
-#define PAPER_OFF    1
+#define TRIP_NORTH   0x01
+#define TRIP_EAST    0x02
+#define TRIP_SOUTH   0x04
+#define TRIP_WEST    0x08
 
-#define SPARE       19
+#define PAPER        18                    // Paper advance drive active low (TX1)
+#define PAPER_ON      0
+#define PAPER_OFF     1
+#define PAPER_ON_300  1
+#define PAPER_OFF_300 0
+
+#define FACE_SENSOR  19
+
+#define SPARE_1      22
+#define SPARE_2      23
 
 #define J10_1      VCC
 #define J10_2       14                    // TX3
