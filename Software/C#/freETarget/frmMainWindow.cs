@@ -765,6 +765,7 @@ namespace freETarget {
 
         private void frmMainWindow_Resize(object sender, EventArgs e) {
             targetRefresh();
+            tcSessionType.Height = this.Height - 156;
         }
 
         private void targetRefresh() {
@@ -1033,9 +1034,23 @@ namespace freETarget {
 
             e.Graphics.FillRectangle(new SolidBrush(backC), e.Bounds);
             Rectangle paddedBounds = e.Bounds;
-            paddedBounds.Inflate(-2, -2);
+
+            bool sel = false;
+            if (tcSessionType.SelectedIndex == e.Index) {
+                sel = true;
+            }
+           
+            paddedBounds.Inflate(-3, -3);
+
             StringFormat format1h = new StringFormat(StringFormatFlags.DirectionVertical | StringFormatFlags.DirectionRightToLeft);
-            e.Graphics.DrawString(tcSessionType.TabPages[e.Index].Text, this.Font, new SolidBrush(foreC), paddedBounds, format1h);
+            Font f;
+            if (sel) {
+                f = new Font(e.Font,FontStyle.Bold| FontStyle.Italic);
+                paddedBounds.X = 0;
+            } else {
+                f = new Font(e.Font, FontStyle.Bold);
+            }
+            e.Graphics.DrawString(tcSessionType.TabPages[e.Index].Text, f, new SolidBrush(foreC), paddedBounds, format1h);
         }
 
         private void tcSessionType_SelectedIndexChanged(object sender, EventArgs e) {
