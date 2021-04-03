@@ -15,7 +15,7 @@ namespace freETarget {
     class StorageController {
 
         private string connString = null;
-        private string templateConnString = "Data Source=./Storage.db;";
+        private string templateConnString = "Data Source=.\\Storage.db;";
         private frmMainWindow mainWindow;
 
         private bool initiated = false;
@@ -31,12 +31,12 @@ namespace freETarget {
                 string dbPath = getDBPath();
                 if (Directory.Exists(dbPath) == false) {
                     Directory.CreateDirectory(dbPath);
-                    File.Copy("./Storage.db", dbPath + "\\Storage.db");
+                    File.Copy(".\\Storage.db", dbPath + "\\Storage.db");
                     mainWindow.log("Database directory created at: " + dbPath);
                     mainWindow.displayMessage("Database directory created at: " + dbPath, false);
-                } else if (File.Exists(dbPath + "/Storage.db") == false) {
+                } else if (File.Exists(dbPath + "\\Storage.db") == false) {
                     //the directory exists, but someone deleted the DB file :(
-                    File.Copy("./Storage.db", dbPath + "\\Storage.db");
+                    File.Copy(".\\Storage.db", dbPath + "\\Storage.db");
                     mainWindow.log("Database file copied at: " + dbPath);
                     mainWindow.displayMessage("Database file copied at: " + dbPath, false);
                 }
@@ -81,7 +81,7 @@ namespace freETarget {
                     MessageBox.Show("User database at '"+ dbPath +"\\Storage.db' is a different version than this installation requires."+ Environment.NewLine 
                         + "Overwriting user database with the template from this version", "Database problem", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                    
-                    File.Copy("./Storage.db", dbPath + "\\Storage.db",true);
+                    File.Copy(".\\Storage.db", dbPath + "\\Storage.db",true);
                     mainWindow.log("Database version mismatch.  '"+ dbPath + "\\Storage.db' overwritten with local template" );
                 }
 
