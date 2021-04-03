@@ -31,17 +31,17 @@ namespace freETarget {
                 string dbPath = getDBPath();
                 if (Directory.Exists(dbPath) == false) {
                     Directory.CreateDirectory(dbPath);
-                    File.Copy("./Storage.db", dbPath + "/Storage.db");
+                    File.Copy("./Storage.db", dbPath + "\\Storage.db");
                     mainWindow.log("Database directory created at: " + dbPath);
                     mainWindow.displayMessage("Database directory created at: " + dbPath, false);
                 } else if (File.Exists(dbPath + "/Storage.db") == false) {
                     //the directory exists, but someone deleted the DB file :(
-                    File.Copy("./Storage.db", dbPath + "/Storage.db");
+                    File.Copy("./Storage.db", dbPath + "\\Storage.db");
                     mainWindow.log("Database file copied at: " + dbPath);
                     mainWindow.displayMessage("Database file copied at: " + dbPath, false);
                 }
 
-                connString = "Data Source=" + dbPath + "/Storage.db;";
+                connString = "Data Source=" + dbPath + "\\Storage.db;";
 
                 initiated = true;
             }catch(Exception ex) {
@@ -89,7 +89,10 @@ namespace freETarget {
                 mainWindow.log("User database at: " + dbPath);
 
             } catch (Exception ex) {
-                mainWindow.log("Database exception: " + ex.Message + Environment.NewLine + ex.ToString());
+                mainWindow.log("Database exception: " + ex.Message + 
+                    Environment.NewLine + "Template connection string: " + templateConnString +
+                    Environment.NewLine + "User connection string: " + connString + 
+                    Environment.NewLine + ex.ToString());
                 return ex.Message;
             }
             return null;
