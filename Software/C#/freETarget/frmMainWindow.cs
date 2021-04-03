@@ -765,7 +765,8 @@ namespace freETarget {
 
         private void frmMainWindow_Resize(object sender, EventArgs e) {
             targetRefresh();
-            tcSessionType.Height = this.Height - 156;
+            tcSessionType.Height = this.Height - 100;
+            Console.WriteLine(this.Height);
         }
 
         private void targetRefresh() {
