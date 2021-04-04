@@ -72,7 +72,7 @@ void read_nonvol(void)
     EEPROM.put(NONVOL_POWER_SAVE, 30);
     EEPROM.put(NONVOL_NAME_ID,    1);
     EEPROM.put(NONVOL_1_RINGx10, 1555);
-    EEPROM.put(NONVOL_SEND_MISS, false);
+    EEPROM.put(NONVOL_SEND_MISS,  0);
     
     nonvol_init = INIT_DONE;
     EEPROM.put(NONVOL_INIT, INIT_DONE);

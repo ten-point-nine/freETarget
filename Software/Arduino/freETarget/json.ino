@@ -322,10 +322,11 @@ void show_echo(int v)
   }
 
   EEPROM.get(NONVOL_INIT, i);
-  Serial.print("\"INIT\":");     Serial.print(i);                Serial.print(", \r\n");
-  Serial.print("\"V_REF\":");    Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print(", \r\n");
-  Serial.print("\"VERSION\":");  Serial.print(SOFTWARE_VERSION); Serial.print(", \r\n");
-  Serial.print("\"BRD_REV\":");  Serial.print(revision()); 
+  Serial.print("\"INIT\":");        Serial.print(i);                Serial.print(", \r\n");
+  Serial.print("\"TEMPERATURE\":"); Serial.print(temperature_C());  Serial.print(", \r\n");
+  Serial.print("\"V_REF\":");       Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print(", \r\n");
+  Serial.print("\"VERSION\":");     Serial.print(SOFTWARE_VERSION); Serial.print(", \r\n");
+  Serial.print("\"BRD_REV\":");     Serial.print(revision()); 
   Serial.print("\r\n}\r\n");
   
 /*

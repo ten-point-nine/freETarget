@@ -57,12 +57,17 @@ void setup()
   init_gpio();
   init_sensors();
   init_analog_io();
-  for (i=0; i !=4; i++)
+
+/*
+ * Run the powe on self test
+ */
+  POST_1();                           // Cycle the LEDs
+  if ( POST_2() == false )            // If the timers fail, 
   {
-    digitalWrite(LED_S, ~(1 << i) & 1);
-    digitalWrite(LED_X, ~(1 << i) & 2);
-    digitalWrite(LED_Y, ~(1 << i) & 4);
-    delay(250);
+    while( 1 )
+    {
+      continue;                       // Don't continue to the application
+    }
   }
 
 /*

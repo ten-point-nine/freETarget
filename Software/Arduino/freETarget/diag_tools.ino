@@ -290,7 +290,127 @@ void self_test(uint16_t test)
     }
     return;
 }
+  
+/*----------------------------------------------------------------
+ * 
+ * void POST_1()
+ * 
+ * Show the LEDs are working
+ * 
+ *----------------------------------------------------------------
+ *
+ *  Cycle the LEDs to show that the board has woken up and has
+ *  freETarget software in it.
+ *  
+ *--------------------------------------------------------------*/
 
+ void POST_1(void)
+ {
+   unsigned int i;
+   
+  for (i=0; i !=4; i++)
+  {
+    digitalWrite(LED_S, ~(1 << i) & 1);
+    digitalWrite(LED_X, ~(1 << i) & 2);
+    digitalWrite(LED_Y, ~(1 << i) & 4);
+    delay(250);
+  }
+
+  return;
+ }
+
+/*----------------------------------------------------------------
+ * 
+ * void POST_2()
+ * 
+ * Verify the counter circuit operation
+ * 
+ *----------------------------------------------------------------
+ *
+ *  Trigger the counters from inside the circuit board and 
+ *  read back the results and look for an expected value.
+ *  
+ *  Return TRUE if the complete circuit is working
+ *  
+ *--------------------------------------------------------------*/
+ bool POST_2(void)
+ {
+   unsigned int i, j;            // Iteration counter
+   unsigned int random_delay;    // Delay duration
+   unsigned int sensor_status;   // Sensor status
+   int          x;               // Time difference (signed)
+
+/*
+ * The test only works on V2.2 and higher
+ */
+  if ( revision() < REV_220 )
+  {
+    return true;                   // Fake a positive response  
+  }
+
+/*
+ * Do the test 5x looking for stuck bits.
+ * 
+ */
+  for (i=0; i!= 5; i++)
+  {
+/*
+ *  Test 1, Trigger the circuit and make sure all of the running states are triggered
+ */
+    digitalWrite(LED_S, 0);           // Show first test starting
+    digitalWrite(LED_X, 1);
+    digitalWrite(LED_Y, 0);
+
+    random_delay = random(1, 6000);   // Pick a random delay time in us
+    stop_counters();                  // Get the circuit ready
+    arm_counters();
+
+    digitalWrite(CLOCK_START, 0);
+    digitalWrite(CLOCK_START, 1);     // Trigger the clocks from the D input of the FF
+    digitalWrite(CLOCK_START, 0);
+    delayMicroseconds(random_delay);  // Delay a random time
+  
+    sensor_status = is_running();     // Remember all of the running timers
+    stop_counters();
+
+    if ( sensor_status != 0x0F )      // The circuit was triggered but not all
+    {                                 // FFs latched
+      return false;
+    }
+
+/*
+ * Test 2. Read back the counters and make sure they match
+ */
+    delay(50);
+    digitalWrite(LED_S, 0);           // Show second test starting
+    digitalWrite(LED_X, 0);
+    digitalWrite(LED_Y, 1);
+
+    random_delay *= 8;                // Convert to clock ticks
+    for (j=N; j != (W+1); j++ )       // Check all of the counters
+    {
+      x = read_counter(j) - random_delay;
+ 
+      if ( x < 0 )
+      {
+        x = -x;                       // Get the absolute value
+      }
+
+      if ( x > 1000 )                 // The time should be 
+      {                               // Within 1000 counts.
+        return false;                 // since there is delay  in
+      }                               // Turning off the counters
+    }
+    delay(50);
+  }
+  
+/*
+ * Got here, the test completed successfully
+ */
+  return true;
+}
+  
+ 
 /*----------------------------------------------------------------
  * 
  * void set_trip_point()

@@ -24,5 +24,6 @@
 #define T_FACE        15       // Test the face detector
 
 void self_test(uint16_t test);
-
+void POST_1(void);              // Verify the LED operation
+bool POST_2(void);              // Verify the counter operation
 
