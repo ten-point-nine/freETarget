@@ -2451,11 +2451,4 @@ F 3 "~" H 13450 1600 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	3900 7700 12750 7700
-Wire Wire Line
-	4350 6150 4350 7800
-Wire Wire Line
-	4350 7800 12750 7800
-Connection ~ 4350 6150
-Text Label 12050 7800 0    50   ~ 0
-CLK_START*
 $EndSCHEMATC
