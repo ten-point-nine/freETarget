@@ -13,9 +13,9 @@
 
 /*----------------------------------------------------------------
  * 
- * void init_analog()
+ * function: init_analog()
  * 
- * Initialize the analog I/O
+ * brief: Initialize the analog I/O
  * 
  *--------------------------------------------------------------*/
 void init_analog_io(void)
@@ -31,9 +31,9 @@ void init_analog_io(void)
 
 /*----------------------------------------------------------------
  * 
- * void set_LED_PWM()
- * void blink_LED_PWM()
- * void set_LED_off()
+ * function: set_LED_PWM()
+ * function: blink_LED_PWM()
+ * function: set_LED_off()
  * 
  * Program the PWM value
  * 
@@ -61,9 +61,9 @@ void set_LED_PWM(int percent)
 
 /*----------------------------------------------------------------
  * 
- * unsigned int read_feedback(void)
+ * function: read_feedback(void)
  * 
- * return the reference voltage
+ * brief: return the reference voltage
  * 
  *--------------------------------------------------------------*/
 unsigned int read_reference(void)
@@ -73,9 +73,9 @@ unsigned int read_reference(void)
 
 /*----------------------------------------------------------------
  * 
- * unsigned int revision(void)
+ * function: revision(void)
  * 
- * Return the board revision
+ * brief: Return the board revision
  * 
  *--------------------------------------------------------------
  *
@@ -94,9 +94,9 @@ unsigned int revision(void)
 
 /*----------------------------------------------------------------
  * 
- * void max_analog
+ * function: max_analog
  * 
- * Return the value of the largest analog input
+ * brief: Return the value of the largest analog input
  * 
  *--------------------------------------------------------------*/
 uint16_t max_analog(void)
@@ -119,9 +119,9 @@ uint16_t max_analog(void)
 }
 /*----------------------------------------------------------------
  * 
- * void cal_analog
+ * function: cal_analog
  * 
- * Use the Pots to calibrate the analog input threshold
+ * brief: Use the Pots to calibrate the analog input threshold
  * 
  *---------------------------------------------------------------
  *
@@ -161,9 +161,9 @@ void cal_analog(void)
 
 /*----------------------------------------------------------------
  * 
- * double temperature_C()
+ * funciton: temperature_C()
  * 
- * Read the temperature sensor and return temperature in degrees C
+ * brief: Read the temperature sensor and return temperature in degrees C
  * 
  *----------------------------------------------------------------
  *

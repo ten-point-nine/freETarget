@@ -11,6 +11,8 @@ void stop_counters(void);                     // Turn off the counter registers
 bool read_in(unsigned int port);              // Read the selected port
 void read_timers(void);                       // Read and return the counter registers
 void drive_paper(void);                       // Turn on the paper motor
+void enable_interrupt(void);                  // Turn on the face strike interrupt
+void disable_interrupt(void);                 // Turn off the face strike interrupt
 
 /*
  *  Port Definitions

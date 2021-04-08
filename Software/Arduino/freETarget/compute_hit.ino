@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------
  *
- * Compute_hit
+ * Compute_hit.ino
  *
  * Determine the score
  *
@@ -34,13 +34,13 @@ unsigned long timer_value[4];     // Array of timer values
 unsigned long minion_value[4];    // Array of timers values from minion
 unsigned long minion_ref;         // Trip voltage from minion
 unsigned int  pellet_calibre;     // Time offset to compensate for pellet diameter
-static char nesw[]= "NESW";
+
 
 /*----------------------------------------------------------------
  *
- * double speed_of_sound(double temperature)
+ * function: speed_of_sound
  *
- * Return the speed of sound (mm / us)
+ * brief: Return the speed of sound (mm / us)
  *
  *----------------------------------------------------------------
  *
@@ -64,9 +64,9 @@ double speed_of_sound(double temperature)
 
 /*----------------------------------------------------------------
  *
- * void init_sensors()
+ * function: init_sensors()
  *
- * Setup the constants in the strucure
+ * brief: Setup the constants in the strucure
  *
  *----------------------------------------------------------------
  *
@@ -114,9 +114,9 @@ void init_sensors(void)
 }
 /*----------------------------------------------------------------
  *
- * void compute_hit()
+ * funtion: compute_hit
  *
- * determine the location of the hit
+ * brief: Determine the location of the hit
  *
  *----------------------------------------------------------------
  *
@@ -306,11 +306,11 @@ unsigned int compute_hit
 
 /*----------------------------------------------------------------
  *
- * find_xy
+ * function: find_xy
  *
- * Calaculate where the shot seems to lie
+ * brief: Calaculate where the shot seems to lie
  * 
- * Return: TRUE if the shot was computed correctly
+ * return: TRUE if the shot was computed correctly
  *
  *----------------------------------------------------------------
  *
@@ -429,9 +429,9 @@ bool find_xy
   
 /*----------------------------------------------------------------
  *
- * void send_score(void)
+ * function: send_score
  *
- * Send the score out over the serial port
+ * brief: Send the score out over the serial port
  *
  *----------------------------------------------------------------
  * 
@@ -483,7 +483,6 @@ void send_score
 #if ( S_SHOT )
   PRINT("\"shot\":");      PRINT(shot); PRINT(", ");
   PRINT("\"miss\": 0, ");
-  strike_count = 0;
   
   if ( json_name_id != 0 )
   {
@@ -532,9 +531,9 @@ void send_score
  
 /*----------------------------------------------------------------
  *
- * void send_miss(void)
+ * vfunction: send_miss
  *
- * Send out a miss message
+ * brief: Send out a miss message
  *
  *----------------------------------------------------------------
  * 
@@ -575,9 +574,9 @@ void send_miss
 
 /*----------------------------------------------------------------
  *
- * void show_timer(void)
+ * function: show_timer
  *
- * Display a timer message to identify errors
+ * brief: Display a timer message to identify errors
  *
  *----------------------------------------------------------------
  * 
@@ -623,9 +622,9 @@ void send_timer
 
 /*----------------------------------------------------------------
  *
- * unsigned int hamming()
+ * function: hamming
  *
- * Compute the Hamming weight of the input
+ * breif: Compute the Hamming weight of the input
  *
  *----------------------------------------------------------------
  *    

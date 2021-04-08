@@ -241,7 +241,7 @@ unsigned int is_running (void)
 
 /*-----------------------------------------------------
  * 
- * function: arm_counterw
+ * function: arm_counters
  * 
  * brief: Strobe the control lines to start a new cycle
  * 
@@ -267,17 +267,11 @@ void arm_counters(void)
   digitalWrite(CLR_N,  0);        // Reset the counters 
   digitalWrite(CLR_N,  1);        // Remove the counter reset 
   digitalWrite(STOP_N, 1);        // Let the counters run
-
-/*
- *   Attach the interrupt
- */
-  if ( revision() >= REV_300 )
-  {
-    attachInterrupt(digitalPinToInterrupt(FACE_SENSOR),  face_ISR, CHANGE);
-  }
   
   return;
   }
+
+
 
 /*
  *  Stop the oscillator
@@ -289,6 +283,39 @@ void stop_counters(void)
   return;
   }
 
+/*-----------------------------------------------------
+ * 
+ * function: enable_interrupt
+ * function: disable_interrupt
+ * 
+ * brief: Turn on the face interrupt
+ * 
+ * return: NONE
+ * 
+ *-----------------------------------------------------
+ *
+ * Enable interrupts works by attaching an interrupt
+ * 
+ *-----------------------------------------------------*/
+void enable_interrupt(void)
+{
+  if ( revision() >= REV_300 )
+  {
+    attachInterrupt(digitalPinToInterrupt(FACE_SENSOR),  face_ISR, CHANGE);
+  }
+  
+  return;
+}
+
+void disable_interrupt(void)
+{
+  if ( revision() >= REV_300 )
+  {
+    detachInterrupt(digitalPinToInterrupt(FACE_SENSOR));
+  }
+
+  return;
+}
 /*-----------------------------------------------------
  * 
  * function: read_DIP
@@ -448,15 +475,15 @@ void read_timers(void)
  *-----------------------------------------------------*/
  void face_ISR(void)
  {
-  strike_count++;
+  face_strike = true;      // Got a face strike
 
-/*
- *  Disable interrupts
- */
-  if ( revision() >= REV_300 )
+  if ( is_trace )
   {
-    detachInterrupt(digitalPinToInterrupt(FACE_SENSOR));
+    Serial.print("\r\nface_ISR()");
   }
-   return;
+
+  disable_interrupt();
+
+  return;
  }
  

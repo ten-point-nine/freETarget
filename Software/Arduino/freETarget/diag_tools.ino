@@ -28,9 +28,9 @@ void set_trip_point(int v);
 
 /*----------------------------------------------------------------
  *
- * void self_test
+ * function: void self_test
  *
- * Execute self tests based on the jumper settings
+ * brief: Execute self tests based on the jumper settings
  *
  *----------------------------------------------------------------
  *   
@@ -227,7 +227,7 @@ void self_test(uint16_t test)
       break;
 
     case T_SET_TRIP:
-      set_trip_point(0);
+      set_trip_point(1);
       json_test = T_HELP;
       break;
 
@@ -258,16 +258,16 @@ void self_test(uint16_t test)
       
     case T_FACE:
       Serial.print("\r\nFace strike test");
-      strike_count = 0;
+      face_strike = 0;
       EEPROM.put(NONVOL_TEST_MODE, T_HELP);     // Stop the test on the next boot cycle
       while (1)
       {        
-        if ( strike_count != 0 )
+        if ( face_strike != 0 )
         {
           set_LED(LED_S, true);     // If something comes in, 
           set_LED(LED_X, true);
           set_LED(LED_Y, true);     // turn on all of the LEDs
-          strike_count = 0;
+          face_strike = 0;
         }
         else
         {
@@ -293,9 +293,9 @@ void self_test(uint16_t test)
   
 /*----------------------------------------------------------------
  * 
- * void POST_1()
+ * function: POST_1()
  * 
- * Show the LEDs are working
+ * brief: Show the LEDs are working
  * 
  *----------------------------------------------------------------
  *
@@ -321,9 +321,9 @@ void self_test(uint16_t test)
 
 /*----------------------------------------------------------------
  * 
- * void POST_2()
+ * function: void POST_2()
  * 
- * Verify the counter circuit operation
+ * brief: Verify the counter circuit operation
  * 
  *----------------------------------------------------------------
  *
@@ -331,6 +331,9 @@ void self_test(uint16_t test)
  *  read back the results and look for an expected value.
  *  
  *  Return TRUE if the complete circuit is working
+ *  
+ *  IMPORTANT
+ *  This test will fail if the sensor cable harness is not attached
  *  
  *--------------------------------------------------------------*/
  bool POST_2(void)
@@ -347,19 +350,21 @@ void self_test(uint16_t test)
   {
     return true;                   // Fake a positive response  
   }
-
+  
 /*
  * Do the test 5x looking for stuck bits.
  * 
  */
+  digitalWrite(LED_S, 1);           // Show first test starting
+  digitalWrite(LED_X, 0);
+  digitalWrite(LED_Y, 1);
+  delay(200);
   for (i=0; i!= 5; i++)
   {
 /*
  *  Test 1, Trigger the circuit and make sure all of the running states are triggered
  */
-    digitalWrite(LED_S, 0);           // Show first test starting
-    digitalWrite(LED_X, 1);
-    digitalWrite(LED_Y, 0);
+
 
     random_delay = random(1, 6000);   // Pick a random delay time in us
     stop_counters();                  // Get the circuit ready
@@ -381,11 +386,6 @@ void self_test(uint16_t test)
 /*
  * Test 2. Read back the counters and make sure they match
  */
-    delay(50);
-    digitalWrite(LED_S, 0);           // Show second test starting
-    digitalWrite(LED_X, 0);
-    digitalWrite(LED_Y, 1);
-
     random_delay *= 8;                // Convert to clock ticks
     for (j=N; j != (W+1); j++ )       // Check all of the counters
     {
@@ -398,6 +398,10 @@ void self_test(uint16_t test)
 
       if ( x > 1000 )                 // The time should be 
       {                               // Within 1000 counts.
+        if ( is_trace )
+        {
+          Serial.print("\r\nFailed Clock Test. Counter:"); Serial.print(nesw[i]); Serial.print(" Error:"); Serial.print(x);
+        }
         return false;                 // since there is delay  in
       }                               // Turning off the counters
     }
@@ -407,15 +411,38 @@ void self_test(uint16_t test)
 /*
  * Got here, the test completed successfully
  */
+  digitalWrite(LED_S, 1);           // Show first test Ending
+  digitalWrite(LED_X, 1);
+  digitalWrite(LED_Y, 1);
   return true;
 }
   
+/*----------------------------------------------------------------
+ * 
+ * function: void POST_3()
+ * 
+ * brief: Display the trip point
+ * 
+ *----------------------------------------------------------------
+ *
+ *  Run the set_trip_point function once
+ *  
+ *--------------------------------------------------------------*/
+ void POST_3(void)
+ {
+   set_trip_point(true);             // Show the trip point
+   delay(ONE_SECOND);
+   digitalWrite(LED_S, 1);           // Show test test Ending
+   digitalWrite(LED_X, 1);
+   digitalWrite(LED_Y, 1);
+   return;
+ }
  
 /*----------------------------------------------------------------
  * 
- * void set_trip_point()
+ * function: set_trip_point
  * 
- * Read the pot and display the voltage on the LEDs as a grey code
+ * brief: Read the pot and display the voltage on the LEDs as a grey code
  * 
  *----------------------------------------------------------------
  *
@@ -460,21 +487,27 @@ void self_test(uint16_t test)
 const unsigned int volts_to_LED[] = {     0,       1,     0x81,       2,     0x82,       3,      0x83,     4,    0x84,      5,      0x85,      6,      0x86,       7,      255 };
 const unsigned int mv_to_counts[] = {  CT(350), CT(400), CT(450), CT(500),  CT(550), CT(600), CT(650), CT(700), CT(750), CT(800), CT(900), CT(1000), CT(1100), CT(1200)};
 
-void set_trip_point(int t)
+void set_trip_point
+  (
+  int one_pass                                              // true = execute one pass only
+  )
 {
   unsigned long start_time;                                 // Starting time of average loop 
   unsigned long sample;                                     // Counts read from ADC
   unsigned int  blink;                                      // Blink the LEDs on an over flow
   unsigned int start_DIP;                                   // Starting value of the DIP switch
-  
-  Serial.print("\r\nSetting trip point. Cycle power to exit\r\n");
+
+  if ( one_pass == 0 )
+  {
+    Serial.print("\r\nSetting trip point. Cycle power to exit\r\n");
+  }
   blink = 0;
   start_DIP = read_DIP();
   
 /*
  * Loop forever and display the voltage as a grey code
  */
-  while ( ((start_DIP & CALIBRATE) ==  0) || ((read_DIP() & CALIBRATE) != 0) )
+  while ( one_pass ||  ((start_DIP & CALIBRATE) ==  0) || ((read_DIP() & CALIBRATE) != 0) )
   {
     start_time = millis();
     sample = 0;
@@ -537,8 +570,15 @@ void set_trip_point(int t)
     ch = blink;
    }
    ch = ~ch;
-   Serial.print("\r\nV_Ref: "); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
+
    digitalWrite(LED_S, ch & 4); digitalWrite(LED_X, ch & 2); digitalWrite(LED_Y, ch & 1);
+
+   if ( one_pass )
+   {
+     break;
+   }
+   
+   Serial.print("\r\nV_Ref: "); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
  }
 
  /*
@@ -549,9 +589,9 @@ void set_trip_point(int t)
 
 /*----------------------------------------------------------------
  * 
- * void show_analog()
+ * function: show_analog
  * 
- * Read and display as a 4 channel scope trace
+ * brief: Read and display as a 4 channel scope trace
  * 
  *----------------------------------------------------------------
  *
@@ -641,9 +681,9 @@ void show_analog(int v)
 
 /*----------------------------------------------------------------
  * 
- * void show_analog_on_PC()
+ * function: show_analog_on_PC
  * 
- * Four channel scope shown on the PC
+ * brief: Four channel scope shown on the PC
  * 
  *----------------------------------------------------------------
  *
@@ -700,9 +740,9 @@ static void show_analog_on_PC(int v)
 
 /*----------------------------------------------------------------
  *
- * void  unit_test()
+ * function: unit_test
  *
- * Setup a known target for sample calculations
+ * brief: Setup a known target for sample calculations
  *
  *----------------------------------------------------------------
  * 
@@ -752,9 +792,9 @@ static void unit_test(unsigned int mode)
 
 /*----------------------------------------------------------------
  *
- * void  sample_calculations()
+ * function: sample_calculations
  *
- * Work out the clock values to generate a particular pattern
+ * brief: Work out the clock values to generate a particular pattern
  *
  *----------------------------------------------------------------
  * 
