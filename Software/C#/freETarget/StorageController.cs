@@ -366,7 +366,7 @@ namespace freETarget {
         }
 
         private string convertDatetimeToString(DateTime input) {
-            return input.ToString("yyyy-MM-dd hh:mm:ss");
+            return input.ToString("yyyy-MM-dd HH:mm:ss");
         }
 
         private string convertListOfShotsToString(List<Shot> input) {
