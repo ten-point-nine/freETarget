@@ -418,7 +418,7 @@ namespace freETarget {
             tf.DrawString(s, fMediumBold, brushBlack, new XRect(point, rect));
 
             point.Offset(rect.Width, 0);
-            s = session.startTime.ToString("yyyy-MM-dd hh:mm:ss");
+            s = session.startTime.ToString("yyyy-MM-dd HH:mm:ss");
             rect = gfx.MeasureString(s, fMedium);
             tf.DrawString(s, fMedium, brushBlack, new XRect(point, rect));
 
@@ -429,7 +429,7 @@ namespace freETarget {
             tf.DrawString(s, fMediumBold, brushBlack, new XRect(point, rect));
 
             point.Offset(rect.Width, 0);
-            s = session.endTime.ToString("yyyy-MM-dd hh:mm:ss");
+            s = session.endTime.ToString("yyyy-MM-dd HH:mm:ss");
             rect = gfx.MeasureString(s, fMedium);
             tf.DrawString(s, fMedium, brushBlack, new XRect(point, rect));
 
@@ -764,7 +764,7 @@ namespace freETarget {
             tf.DrawString(s, fMediumBold, brushBlack, new XRect(point, rect));
 
             point.Offset(rect.Width + 1, 0);
-            s = shotList[0].timestamp.ToString("hh:mm:ss");
+            s = shotList[0].timestamp.ToString("HH:mm:ss");
             rect = gfx.MeasureString(s, fMedium);
             tf.DrawString(s, fMedium, brushBlack, new XRect(point, rect));
 
@@ -774,7 +774,7 @@ namespace freETarget {
             tf.DrawString(s, fMediumBold, brushBlack, new XRect(point, rect));
 
             point.Offset(rect.Width + 1, 0);
-            s = shotList[shotList.Count-1].timestamp.ToString("hh:mm:ss");
+            s = shotList[shotList.Count-1].timestamp.ToString("HH:mm:ss");
             rect = gfx.MeasureString(s, fMedium);
             tf.DrawString(s, fMedium, brushBlack, new XRect(point, rect));
 

@@ -120,7 +120,7 @@ namespace freETarget {
             ret += score + ",";
             ret += decimalScore.ToString("F1", CultureInfo.InvariantCulture) + ",";
             ret += innerTen + ",";
-            ret += timestamp.ToString("yyyy-MM-dd hh:mm:ss") + ",";
+            ret += timestamp.ToString("yyyy-MM-dd HH:mm:ss") + ",";
             ret += shotDuration.TotalSeconds.ToString("F2", CultureInfo.InvariantCulture);
 
             return ret;
