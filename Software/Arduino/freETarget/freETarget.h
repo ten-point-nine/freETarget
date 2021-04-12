@@ -65,7 +65,7 @@ typedef struct history history_t;
 
 extern double     s_of_sound;
 
-extern char* names[];
+extern const char* names[];
 extern bool  face_strike;
 extern bool  is_trace;                // True if tracing is enabled 
 extern char* nesw;                    // Cardinal Points

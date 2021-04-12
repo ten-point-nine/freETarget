@@ -17,6 +17,8 @@
  * 
  * brief: Initialize the analog I/O
  * 
+ * return: None
+ * 
  *--------------------------------------------------------------*/
 void init_analog_io(void)
 {
@@ -35,7 +37,9 @@ void init_analog_io(void)
  * function: blink_LED_PWM()
  * function: set_LED_off()
  * 
- * Program the PWM value
+ * brief: Program the PWM value
+ * 
+ * return: None
  * 
  *----------------------------------------------------------------
  *
@@ -65,6 +69,8 @@ void set_LED_PWM(int percent)
  * 
  * brief: return the reference voltage
  * 
+ * return: ADC value of the reference voltage
+ * 
  *--------------------------------------------------------------*/
 unsigned int read_reference(void)
 {
@@ -76,6 +82,8 @@ unsigned int read_reference(void)
  * function: revision(void)
  * 
  * brief: Return the board revision
+ * 
+ * return: Board revision level
  * 
  *--------------------------------------------------------------
  *
@@ -97,6 +105,8 @@ unsigned int revision(void)
  * function: max_analog
  * 
  * brief: Return the value of the largest analog input
+ * 
+ * return: Largest analog voltage from the sensor channels
  * 
  *--------------------------------------------------------------*/
 uint16_t max_analog(void)
@@ -122,6 +132,8 @@ uint16_t max_analog(void)
  * function: cal_analog
  * 
  * brief: Use the Pots to calibrate the analog input threshold
+ * 
+ * return: None
  * 
  *---------------------------------------------------------------
  *

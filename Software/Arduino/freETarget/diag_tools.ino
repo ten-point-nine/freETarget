@@ -31,9 +31,13 @@ void set_trip_point(int v);
  * function: void self_test
  *
  * brief: Execute self tests based on the jumper settings
+ * 
+ * return: None
  *
  *----------------------------------------------------------------
  *   
+ *   This function is a large case statement with each element
+ *   of the case statement 
  *--------------------------------------------------------------*/
 unsigned int tick;
 void self_test(uint16_t test)
@@ -297,6 +301,8 @@ void self_test(uint16_t test)
  * 
  * brief: Show the LEDs are working
  * 
+ * return: None
+ * 
  *----------------------------------------------------------------
  *
  *  Cycle the LEDs to show that the board has woken up and has
@@ -324,6 +330,8 @@ void self_test(uint16_t test)
  * function: void POST_2()
  * 
  * brief: Verify the counter circuit operation
+ * 
+ * return: None
  * 
  *----------------------------------------------------------------
  *
@@ -423,6 +431,7 @@ void self_test(uint16_t test)
  * 
  * brief: Display the trip point
  * 
+ * return: None
  *----------------------------------------------------------------
  *
  *  Run the set_trip_point function once
@@ -444,6 +453,7 @@ void self_test(uint16_t test)
  * 
  * brief: Read the pot and display the voltage on the LEDs as a grey code
  * 
+ * return: Potentiometer set for the desired trip point
  *----------------------------------------------------------------
  *
  *  The reference voltage is divided into 8 bands from 0.5 volt
@@ -593,6 +603,7 @@ void set_trip_point
  * 
  * brief: Read and display as a 4 channel scope trace
  * 
+ * return: None
  *----------------------------------------------------------------
  *
  *  The output appears as a 1 channel O'scope with all four
@@ -685,6 +696,7 @@ void show_analog(int v)
  * 
  * brief: Four channel scope shown on the PC
  * 
+ * return: None
  *----------------------------------------------------------------
  *
  *  Special purpose version of the software for use on the PC test
@@ -743,6 +755,8 @@ static void show_analog_on_PC(int v)
  * function: unit_test
  *
  * brief: Setup a known target for sample calculations
+ * 
+ * return: None
  *
  *----------------------------------------------------------------
  * 
@@ -796,6 +810,8 @@ static void unit_test(unsigned int mode)
  *
  * brief: Work out the clock values to generate a particular pattern
  *
+ * return: TRUE to be compatable with other calcuation functions
+ * 
  *----------------------------------------------------------------
  * 
  * This function is used to generate a test pattern that the

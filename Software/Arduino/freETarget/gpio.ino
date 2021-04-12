@@ -207,7 +207,7 @@ unsigned int read_counter
  * 
  * brief: Determine if the clocks are running
  * 
- * return: TRUE if the counters are running
+ * return: TRUE if any of the counters are running
  * 
  *-----------------------------------------------------
  *

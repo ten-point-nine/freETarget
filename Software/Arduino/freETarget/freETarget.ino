@@ -1,4 +1,4 @@
-        /*----------------------------------------------------------------
+ /*----------------------------------------------------------------
  * 
  * freETarget
  * 
@@ -22,11 +22,11 @@ unsigned int shot = 0;                  // Shot counter
 bool         face_strike = 0;           // Miss indicator
 bool         is_trace = false;          // TRUE if trace is enabled
 
-char* names[] = { "ANON",    "BOSS",   "MINION",
-                  "DOC",     "DOPEY",  "HAPPY",   "GRUMPY", "BASHFUL", "SNEEZEY", "SLEEPY",
-                  "RUDOLF",  "DONNER", "BLITXEM", "DASHER", "PRANCER", "VIXEN",   "COMET", "CUPID", "DUNDER",
-                  "ODIN",    "WODEN",   "THOR",   "BALDAR",
-                  0};
+const char* names[] = { "ANON",    "BOSS",   "MINION",
+                        "DOC",     "DOPEY",  "HAPPY",   "GRUMPY", "BASHFUL", "SNEEZEY", "SLEEPY",
+                        "RUDOLF",  "DONNER", "BLITXEM", "DASHER", "PRANCER", "VIXEN",   "COMET", "CUPID", "DUNDER",
+                        "ODIN",    "WODEN",   "THOR",   "BALDAR",
+                        0};
                   
 char* nesw = "NESW";                    // Cardinal Points
                  
@@ -36,10 +36,11 @@ char* nesw = "NESW";                    // Cardinal Points
  * 
  * brief: Initialize the board and prepare to run
  * 
- *----------------------------------------------------------------
- */
+ * return: None
+ * 
+ *--------------------------------------------------------------*/
 
-void setup() 
+void setup(void) 
 {
   int i;
   
@@ -107,6 +108,8 @@ void setup()
  * function: loop()
  * 
  * brief: Main control loop
+ * 
+ * return: None
  * 
  *----------------------------------------------------------------
  */

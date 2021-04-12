@@ -15,6 +15,7 @@
  * 
  * brief: Initialize the NONVOL back to factory settings
  * 
+ * return: None
  *---------------------------------------------------------------
  *
  * The variable NONVOL_INIT is corrupted and the NONVOL read back
@@ -42,6 +43,8 @@ void init_nonvol(int v)
  * funciton: read_nonvol
  * 
  * brief: Read nonvol and set up variables
+ * 
+ * return: Nonvol values copied to RAM
  * 
  *---------------------------------------------------------------
  *
@@ -144,6 +147,8 @@ void read_nonvol(void)
  * function: gen_postion
  * 
  * brief: Generate new position varibles based on new sensor diameter
+ * 
+ * return: Position values stored in NONVOL
  * 
  *---------------------------------------------------------------
  *

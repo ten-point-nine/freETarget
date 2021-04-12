@@ -44,10 +44,14 @@ unsigned int  pellet_calibre;     // Time offset to compensate for pellet diamet
  *
  *----------------------------------------------------------------
  *
- *
+ * The speed of sound is computed based on the board temperature
+ * 
  *--------------------------------------------------------------*/
 
-double speed_of_sound(double temperature)
+double speed_of_sound
+  (
+  double temperature          // Current temperature in degrees C
+  )
 {
   double speed;
 
@@ -67,6 +71,8 @@ double speed_of_sound(double temperature)
  * function: init_sensors()
  *
  * brief: Setup the constants in the strucure
+ * 
+ * return: Sensor array updated with current geometry
  *
  *----------------------------------------------------------------
  *
@@ -78,6 +84,11 @@ double speed_of_sound(double temperature)
  *
  *               (-,-)         S 
  * 
+ * The layout of the sensors is shown above.  0 is the middle of
+ * the target, and the sensors located at the cardinal points.
+ * 
+ * This function takes the physical location of the sensors (mm)
+ * and generates the sensor array based on time. (ex us / mm)
  *--------------------------------------------------------------*/
 void init_sensors(void)
 {
@@ -117,6 +128,8 @@ void init_sensors(void)
  * funtion: compute_hit
  *
  * brief: Determine the location of the hit
+ * 
+ * return: History array updated with new position
  *
  *----------------------------------------------------------------
  *
@@ -432,6 +445,8 @@ bool find_xy
  * function: send_score
  *
  * brief: Send the score out over the serial port
+ * 
+ * return: None
  *
  *----------------------------------------------------------------
  * 
@@ -534,6 +549,8 @@ void send_score
  * vfunction: send_miss
  *
  * brief: Send out a miss message
+ * 
+ * return: None
  *
  *----------------------------------------------------------------
  * 
@@ -578,6 +595,7 @@ void send_miss
  *
  * brief: Display a timer message to identify errors
  *
+ * return: None
  *----------------------------------------------------------------
  * 
  * The error is sent as:
@@ -624,8 +642,10 @@ void send_timer
  *
  * function: hamming
  *
- * breif: Compute the Hamming weight of the input
+ * brief: Compute the Hamming weight of the input
  *
+ * return: Hamming weight of the input word
+ * 
  *----------------------------------------------------------------
  *    
  * Add up all of the 1's in the sample.
