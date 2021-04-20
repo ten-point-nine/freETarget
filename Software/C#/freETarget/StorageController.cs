@@ -53,48 +53,90 @@ namespace freETarget {
             if (initiated == false) {
                 return "StorageController constructor not initialized. Check the log.";
             }
+
+            bool templateOK = false;
+            bool userOK = false;
+
+            int objCon=-1;
+            int obj=-1;
+
             try {
                 //step1: check if template database exists. if yes, get version
 
                 SQLiteConnection tempCon = new SQLiteConnection(templateConnString);
                 tempCon.Open();
                 SQLiteCommand cmdCon = new SQLiteCommand("select version from Version", tempCon);
-                int objCon = Convert.ToInt32(cmdCon.ExecuteScalar());
+                objCon = Convert.ToInt32(cmdCon.ExecuteScalar());
 
                 tempCon.Close();
+                templateOK = true;
+            } catch (Exception ex) {
+                mainWindow.log("Template database exception: " + ex.Message +
+                    Environment.NewLine + "Template connection string: " + templateConnString +
+                    Environment.NewLine + "User connection string: " + connString +
+                    Environment.NewLine + ex.ToString());
+                //return ex.Message;
+            }
 
-                //step2: check if user database exists. if yes, get version from user database
+            //step2: check if user database exists. if yes, get version from user database
+
+            try {
 
                 SQLiteConnection con = new SQLiteConnection(connString);
                 con.Open();
                 SQLiteCommand cmd = new SQLiteCommand("select version from Version", con);
-                int obj = Convert.ToInt32(cmd.ExecuteScalar());
+                obj = Convert.ToInt32(cmd.ExecuteScalar());
 
                 con.Close();
+                userOK = true;
+            } catch (Exception ex) {
+                mainWindow.log("User database exception: " + ex.Message +
+                    Environment.NewLine + "Template connection string: " + templateConnString +
+                    Environment.NewLine + "User connection string: " + connString +
+                    Environment.NewLine + ex.ToString());
+                //return ex.Message;
+            }
 
-                mainWindow.log("Template database version = " + objCon + "   -   User database version = " + obj);
 
-                //step3: compare versions. if different, copy template over user database
 
-                string dbPath = getDBPath();
+            mainWindow.log("Template database version = " + objCon + "   -   User database version = " + obj);
+
+            //step3: compare versions. if different, copy template over user database
+
+            string dbPath = getDBPath();
+            if (userOK) {
+                
                 if (objCon != obj) {
-                    MessageBox.Show("User database at '"+ dbPath +"\\Storage.db' is a different version than this installation requires."+ Environment.NewLine 
+                    MessageBox.Show("User database at '" + dbPath + "\\Storage.db' is a different version than this installation requires." + Environment.NewLine
                         + "Overwriting user database with the template from this version", "Database problem", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                   
-                    File.Copy(".\\Storage.db", dbPath + "\\Storage.db",true);
-                    mainWindow.log("Database version mismatch.  '"+ dbPath + "\\Storage.db' overwritten with local template" );
+
+                    File.Copy(".\\Storage.db", dbPath + "\\Storage.db", true);
+                    mainWindow.log("Database version mismatch.  '" + dbPath + "\\Storage.db' overwritten with local template");
                 }
 
-                mainWindow.displayMessage("User database at: " + dbPath,false);
+                mainWindow.displayMessage("User database at: " + dbPath, false);
                 mainWindow.log("User database at: " + dbPath);
+            } else {
+                //user database not available
+                if (templateOK) {
+                    //template database is available. use that
+                    connString = templateConnString;
+                    MessageBox.Show("User database at '" + dbPath + "\\Storage.db' is not accesible, maybe due to write access privileges needed by SQLite. " + Environment.NewLine
+                        + "The template database in the installation folder will be used: " + Environment.NewLine + connString + Environment.NewLine + Environment.NewLine
+                        + "This database will be overwritten when a new version of the program will be installed and all session will be lost. Be carefull.",
+                         "Database problem", MessageBoxButtons.OK, MessageBoxIcon.Warning
+                        );
 
-            } catch (Exception ex) {
-                mainWindow.log("Database exception: " + ex.Message + 
-                    Environment.NewLine + "Template connection string: " + templateConnString +
-                    Environment.NewLine + "User connection string: " + connString + 
-                    Environment.NewLine + ex.ToString());
-                return ex.Message;
+                    mainWindow.displayMessage("Using template database in the current/installation directory", false);
+                    mainWindow.log("Using template database in the current/installation directory " + connString);
+                } else {
+                    // neither databases are available
+                    mainWindow.displayMessage("Exception accessing both user and template databases. Check log for exact error", false);
+                    mainWindow.log("Exception accessing both user and template databases. Check log for exact error");
+                    return "Exception accessing both user and template databases. Check log for exact error";
+                }
             }
+
             return null;
         }
 
