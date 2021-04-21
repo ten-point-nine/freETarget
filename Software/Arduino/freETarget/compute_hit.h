@@ -33,6 +33,8 @@ struct sensor
 
 typedef struct sensor sensor_t;
 
+extern unsigned long timer_value[4];     // Array of timer values
+
 /*
  *  Public Funcitons
  */

@@ -11,7 +11,7 @@
 #ifndef _FREETARGET_H
 #define _FREETARGET_H
 
-#define SOFTWARE_VERSION "\"3.00.2 April 7, 2021\""
+#define SOFTWARE_VERSION "\"3.00.3 April 20, 2021\""
 #define REV_210    21
 #define REV_220    22
 #define REV_290    29
@@ -44,7 +44,6 @@
 #define CAL_LOW         ((1 << 1) + (0 << (4 + 1)))     // 2 When CALIBRATE is asserted, use lower trip point
 #define CAL_HIGH        ((1 << 2) + (0 << (4 + 2)))     // 4 When CALIBRATE is asserted, use higher trip point
 #define VERBOSE_TRACE   ((1 << 3) + (0 << (4 + 3)))     // 8 Show the verbose software trace
-
 
 #define HI(x) (((x) >> 8 ) & 0x00ff)
 #define LO(x) ((x) & 0x00ff)

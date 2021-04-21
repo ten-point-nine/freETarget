@@ -231,7 +231,7 @@ void self_test(uint16_t test)
       break;
 
     case T_SET_TRIP:
-      set_trip_point(1);
+      set_trip_point(0);              // Stay in the trip point loop
       json_test = T_HELP;
       break;
 
@@ -369,11 +369,10 @@ void self_test(uint16_t test)
   delay(200);
   for (i=0; i!= 5; i++)
   {
+    
 /*
  *  Test 1, Trigger the circuit and make sure all of the running states are triggered
  */
-
-
     random_delay = random(1, 6000);   // Pick a random delay time in us
     stop_counters();                  // Get the circuit ready
     arm_counters();
@@ -439,7 +438,7 @@ void self_test(uint16_t test)
  *--------------------------------------------------------------*/
  void POST_3(void)
  {
-   set_trip_point(true);             // Show the trip point
+   set_trip_point(10);               // Show the trip point once (10 cycles)
    delay(ONE_SECOND);
    digitalWrite(LED_S, 1);           // Show test test Ending
    digitalWrite(LED_X, 1);
@@ -465,6 +464,7 @@ void self_test(uint16_t test)
  *  
  *  The function will remain here 
  *     If started by a CAL jumper until the jumper is removed
+ *     If the voltage is out of spec on power up
  *     If started by a {TEST} forever
  *     
  *  Calibration Display
@@ -490,45 +490,68 @@ void self_test(uint16_t test)
  *  No Jumpers          Regular Range
  *  CAL_LOW             Reduced Detection
  *  CAL_HI              Increased Detetion
- *  CAL_LOW + CAL_HIGH  Set LED brightness
  *  
  *--------------------------------------------------------------*/
 #define CT(x) (1023l * (long)(x+25) / 5000l )   // 1/16 volt = 12.8 counts
-const unsigned int volts_to_LED[] = {     0,       1,     0x81,       2,     0x82,       3,      0x83,     4,    0x84,      5,      0x85,      6,      0x86,       7,      255 };
-const unsigned int mv_to_counts[] = {  CT(350), CT(400), CT(450), CT(500),  CT(550), CT(600), CT(650), CT(700), CT(750), CT(800), CT(900), CT(1000), CT(1100), CT(1200)};
+#define SPEC_RANGE   50            // Out of spec if within 50 couts of the rail
+#define BLINK        0x80
+#define NOT_IN_SPEC  0x40
+const unsigned int volts_to_LED[] = { NOT_IN_SPEC,     1,    BLINK+1,    2,     BLINK+2,    3,    BLINK+3,    4,    BLINK+4,    5,    BLINK+5,    6,     BLINK+6,       7,      NOT_IN_SPEC };
+const unsigned int mv_to_counts[] = {   CT(350),    CT(400), CT(450), CT(500),  CT(550), CT(600), CT(650), CT(700), CT(750), CT(800), CT(900), CT(1000), CT(1100), CT(1200)};
 
 void set_trip_point
   (
-  int one_pass                                              // true = execute one pass only
+  int pass_count                                            // Number of passes to allow before exiting (0==infinite)
   )
 {
   unsigned long start_time;                                 // Starting time of average loop 
   unsigned long sample;                                     // Counts read from ADC
   unsigned int  blink;                                      // Blink the LEDs on an over flow
-  unsigned int start_DIP;                                   // Starting value of the DIP switch
-
-  if ( one_pass == 0 )
+  unsigned int  start_DIP;                                  // Starting value of the DIP switch
+  bool          not_in_spec;                                // Set to true if the input is close to the limits
+   
+  if ( pass_count == 0 )                                    // Infinite number of passes?
   {
     Serial.print("\r\nSetting trip point. Cycle power to exit\r\n");
   }
   blink = 0;
-  start_DIP = read_DIP();
-  
+  not_in_spec = true;                                      // Start off by assuming out of spec
+
 /*
  * Loop forever and display the voltage as a grey code
  */
-  while ( one_pass ||  ((start_DIP & CALIBRATE) ==  0) || ((read_DIP() & CALIBRATE) != 0) )
+  start_DIP = read_DIP();
+  while ( not_in_spec                                       // Out of tolerance
+          ||   (((start_DIP | read_DIP()) & CALIBRATE) != 0) ) // Started by DIP switch
   {
     start_time = millis();
     sample = 0;
     i=0;
-    while ( millis() - start_time < (ONE_SECOND/10) )      // Read voltage for 1/10 second
+    while ( millis() - start_time < (ONE_SECOND/10) )       // Read voltage for 1/10 second
     {
       sample += analogRead(V_REFERENCE);                    // Read the ADC. 0-1023V
       i++;                                                  // and keep a running total
     }
     sample /= i;                                            // Get the average
 
+
+/*
+ *  See if we are on one of the limits and out of spec.
+ */
+    if ( (sample < SPEC_RANGE)                              // Close to 0
+       || ( sample > (MAX_ANALOG - SPEC_RANGE)) )           // Near VCC 
+    {                                                       // Blink the LEDs * - x - *
+      digitalWrite(LED_S, 1); digitalWrite(LED_X, 0); digitalWrite(LED_Y, 1);
+      delay(ONE_SECOND/10);
+      digitalWrite(LED_S, 0); digitalWrite(LED_X, 1); digitalWrite(LED_Y, 0);
+      delay(ONE_SECOND/10);
+      pass_count = 0;                                       // Stay in this function forever
+      continue;
+    }
+
+ /*
+  * In spec, display the trip level on the LEDs
+  */
     switch (read_DIP() & ( CAL_LOW + CAL_HIGH ) )
     {   
       case (CAL_LOW):                                       // Low Calibration 
@@ -544,16 +567,6 @@ void set_trip_point
       default:
         break;
     }
-
-    if ( (read_DIP() & ( CAL_LOW + CAL_HIGH )) == (CAL_LOW + CAL_HIGH) )
-    {
-        json_LED_PWM = sample / 4;                         // Scale to 0-256
-        json_LED_PWM *= 100;
-        json_LED_PWM /= 256;                               // Scale 0-100%
-        EEPROM.put(NONVOL_LED_PWM, json_LED_PWM);
-        set_LED_PWM(json_LED_PWM);
-        continue;
-    }
     
  /*
   * Determine what band it belongs to 
@@ -567,15 +580,18 @@ void set_trip_point
      }
      i++;
    }
-   
-   blink ^= 7;
+
+ /*
+  * Use the band to find the LEDs and if they should blink
+  */
+   blink = ~blink;                        // Toggle the blink
    ch = volts_to_LED[i];
-   if ( ch & 0x80 )
+   if ( ch & BLINK )                      // Blink bit on?
    {
      ch ^= blink;
-     ch &= volts_to_LED[i]; 
+     ch &= ~BLINK; 
    }
-   if ( volts_to_LED[i] == 255 )
+   if ( volts_to_LED[i] == NOT_IN_SPEC )
    {
     ch = blink;
    }
@@ -583,12 +599,22 @@ void set_trip_point
 
    digitalWrite(LED_S, ch & 4); digitalWrite(LED_X, ch & 2); digitalWrite(LED_Y, ch & 1);
 
-   if ( one_pass )
+/*
+ * Got to the end.  See if we are going to do this for a fixed time or forever
+ */
+   if ( pass_count != 0 )             // Set for a finite loop?
    {
-     break;
+      pass_count--;                   // Decriment count remaining
+      if ( pass_count == 0 )
+      {
+        break;                        // Bail out when the count is done
+      }
    }
-   
-   Serial.print("\r\nV_Ref: "); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
+   else
+   {
+     Serial.print("\r\nV_Ref: "); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
+   }
+   delay(ONE_SECOND/10);
  }
 
  /*

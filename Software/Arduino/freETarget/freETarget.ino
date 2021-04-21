@@ -290,8 +290,10 @@ void loop()
     set_LED(LED_Y, true);               //
     location = compute_hit(sensor_status, &history, false);
 
-    if ( is_running() != 0xf )
+    if ( (timer_value[N] == 0) || (timer_value[E] == 0) || (timer_value[S] == 0) || (timer_value[W] == 0) ) // If any one of the timers is 0, that's a miss
     {
+      Serial.print("is_running"); Serial.print(is_running()); Serial.print(" ");
+      
       state = SEND_MISS;
       delay(ONE_SECOND);
       break;
@@ -324,7 +326,7 @@ void loop()
   case SEND_MISS:   
     state = SET_MODE;                         // Next time go to waste time 
     
-    if ( is_trace && face_strike )
+    if ( is_trace )
     {
       Serial.print("\r\nFace Strike...\r\n");
     } 

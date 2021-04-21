@@ -474,7 +474,13 @@ void send_score
   double coeff;                 // From Alex Bird
   int    z;
   double score;
-  
+
+
+  if ( is_trace )
+  {
+    Serial.print("\r\nSending the score");
+  }
+   
  /* 
   *  Work out the hole in perfect coordinates
   */

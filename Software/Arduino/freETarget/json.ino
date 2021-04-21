@@ -34,6 +34,8 @@ int     json_LED_PWM;               // LED control value
 int     json_power_save;            // Power down time
 int     json_send_miss;             // Send a miss message
 
+int     temp;                       // Temporary variable
+
 #define IS_VOID    0
 #define IS_INT16   1
 #define IS_FLOAT   2
@@ -45,6 +47,7 @@ static void show_test(int v);               // Execute the self test once
 static void show_test0(int v);              // Help Menu
 static void show_names(int v);
 static void nop(void);
+static void set_trace(int v);               // Set the trace on and off
 
 typedef struct  {
   char*           token;    // JSON token string, ex "RADIUS": 
@@ -58,20 +61,21 @@ typedef struct  {
   
 static json_message JSON[] = {
 //    token                 value stored in RAM     double stored in RAM         type     service fcn()     NONVOL location
-  {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT16,  0,                NONVOL_SENSOR_ANGLE},    //
-  {"\"CAL\":",            0,                                 0,                IS_VOID,   &set_trip_point,                  0  },    //
-  {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT16,  0,                NONVOL_CALIBRE_X10 },    //
-  {"\"DIP\":",            &json_dip_switch,                  0,                IS_INT16,  0,                NONVOL_DIP_SWITCH  },    //
-  {"\"ECHO\":",           &json_echo,                        0,                IS_INT16,  &show_echo,                       0  },    //
-  {"\"INIT\"",            0,                                 0,                IS_VOID,   &init_nonvol,                     0  },    //
-  {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT16,  &set_LED_PWM,     NONVOL_LED_PWM     },    //
-  {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT16,  &show_names,      NONVOL_NAME_ID     },    //
-  {"\"PAPER\":",          &json_paper_time,                  0,                IS_INT16,  0,                NONVOL_PAPER_TIME  },    //
-  {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT16,  0,                NONVOL_POWER_SAVE  },    //
-  {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT16,  0,                NONVOL_SEND_MISS   },    //
-  {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  &gen_position,    NONVOL_SENSOR_DIA  },    //
-  {"\"TEST\":",           &json_test,                        0,                IS_INT16,  &show_test,       NONVOL_TEST_MODE   },    //
-  {"\"TRGT_1_RINGx10\":", &json_1_ring_x10,                  0,                IS_INT16,  0,                NONVOL_1_RINGx10   },    //
+  {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT16,  0,                NONVOL_SENSOR_ANGLE},    // Locate the sensor angles
+  {"\"CAL\":",            0,                                 0,                IS_VOID,   &set_trip_point,                  0  },    // Enter calibration mode
+  {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT16,  0,                NONVOL_CALIBRE_X10 },    // Enter the projectile calibre
+  {"\"DIP\":",            &json_dip_switch,                  0,                IS_INT16,  0,                NONVOL_DIP_SWITCH  },    // Remotely set the DIP switch
+  {"\"ECHO\":",           &json_echo,                        0,                IS_INT16,  &show_echo,                       0  },    // Echo test
+  {"\"INIT\"",            0,                                 0,                IS_VOID,   &init_nonvol,                     0  },    // Initialize the NONVOL memory
+  {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT16,  &set_LED_PWM,     NONVOL_LED_PWM     },    // Set the LED brightness
+  {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT16,  &show_names,      NONVOL_NAME_ID     },    // Give the board a name
+  {"\"PAPER\":",          &json_paper_time,                  0,                IS_INT16,  0,                NONVOL_PAPER_TIME  },    // Set the paper advance time
+  {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT16,  0,                NONVOL_POWER_SAVE  },    // Set the power saver time
+  {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT16,  0,                NONVOL_SEND_MISS   },    // Enable / Disable sending miss messages
+  {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  &gen_position,    NONVOL_SENSOR_DIA  },    // Generate the sensor postion array
+  {"\"TEST\":",           &json_test,                        0,                IS_INT16,  &show_test,       NONVOL_TEST_MODE   },    // Execute a self test
+  {"\"TRACE\":",          &temp,                             0,                IS_INT16,  &set_trace,                       0  },    // Enter / exit diagnostic trace
+  {"\"TRGT_1_RINGx10\":", &json_1_ring_x10,                  0,                IS_INT16,  0,                NONVOL_1_RINGx10   },    // Enter the 1 ring diamater
   {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT16,  0,                NONVOL_NORTH_X     },    //
   {"\"NORTH_Y\":",        &json_north_y,                     0,                IS_INT16,  0,                NONVOL_NORTH_Y     },    //
   {"\"EAST_X\":",         &json_east_x,                      0,                IS_INT16,  0,                NONVOL_EAST_X      },    //
@@ -387,3 +391,43 @@ static void show_test(int test_number)
   self_test(test_number);
   return;
  }
+
+ /*-----------------------------------------------------
+ * 
+ * function: set_trace
+ * 
+ * brief:    Turn the software trace on and off
+ * 
+ * return: None
+ * 
+ *-----------------------------------------------------
+ *
+ * Uset the trace to set the DIP switch
+ * 
+ *-----------------------------------------------------*/
+ static void set_trace
+   (
+   int trace                // Trace on or off
+   )
+ {
+   Serial.print("\n\rTrace: ");
+   
+   if ( trace == 0 )
+   {
+      json_dip_switch &= ~VERBOSE_TRACE;
+      Serial.print("OFF");
+   }
+   else
+   {
+      json_dip_switch |= VERBOSE_TRACE;
+      Serial.print("ON");
+   }
+
+   Serial.print("\n\r");
+   
+  /*
+   * The DIP switch has been remotely set
+   */
+    return;   
+ }
+
