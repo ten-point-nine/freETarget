@@ -12,7 +12,7 @@
 #define S_POLAR     true        // Include polar coordinates
 #define S_COUNTERS  true        // Include counter values
 #define S_MISC      true        // Include miscelaneous diagnotics
-#define S_SCORE     true        // Include estimated score
+#define S_SCORE     false       // Include estimated score
 
 /*
  *  Local Structures

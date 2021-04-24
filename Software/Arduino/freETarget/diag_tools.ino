@@ -313,7 +313,11 @@ void self_test(uint16_t test)
  void POST_1(void)
  {
    unsigned int i;
-   
+
+  if ( is_trace )
+  {
+    Serial.print("\r\nPOST 1");
+  }
   for (i=0; i !=4; i++)
   {
     digitalWrite(LED_S, ~(1 << i) & 1);
@@ -351,6 +355,11 @@ void self_test(uint16_t test)
    unsigned int sensor_status;   // Sensor status
    int          x;               // Time difference (signed)
 
+  if ( is_trace )
+  {
+    Serial.print("\r\nPOST 2");
+  }
+  
 /*
  * The test only works on V2.2 and higher
  */
@@ -438,6 +447,11 @@ void self_test(uint16_t test)
  *--------------------------------------------------------------*/
  void POST_3(void)
  {
+   if ( is_trace )
+   {
+    Serial.print("\r\nPOST 3");
+   }
+   
    set_trip_point(10);               // Show the trip point once (10 cycles)
    delay(ONE_SECOND);
    digitalWrite(LED_S, 1);           // Show test test Ending
@@ -509,10 +523,10 @@ void set_trip_point
   unsigned int  blink;                                      // Blink the LEDs on an over flow
   unsigned int  start_DIP;                                  // Starting value of the DIP switch
   bool          not_in_spec;                                // Set to true if the input is close to the limits
-   
+  
   if ( pass_count == 0 )                                    // Infinite number of passes?
   {
-    Serial.print("\r\nSetting trip point. Cycle power to exit\r\n");
+    Serial.print("\r\nSetting trip point. Type ! of cycle power to exit\r\n");
   }
   blink = 0;
   not_in_spec = true;                                      // Start off by assuming out of spec
@@ -541,6 +555,10 @@ void set_trip_point
     if ( (sample < SPEC_RANGE)                              // Close to 0
        || ( sample > (MAX_ANALOG - SPEC_RANGE)) )           // Near VCC 
     {                                                       // Blink the LEDs * - x - *
+      if ( is_trace )
+      {
+        Serial.print("\n\rOut Of Spec: "); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
+      }
       digitalWrite(LED_S, 1); digitalWrite(LED_X, 0); digitalWrite(LED_Y, 1);
       delay(ONE_SECOND/10);
       digitalWrite(LED_S, 0); digitalWrite(LED_X, 1); digitalWrite(LED_Y, 0);
@@ -602,12 +620,21 @@ void set_trip_point
 /*
  * Got to the end.  See if we are going to do this for a fixed time or forever
  */
+   while ( Serial.available() )       // If there is a 
+   {
+    if ( Serial.read() == '!' )        // ! waiting in the serial port
+    {
+      Serial.print("\r\nExiting calibration\r\n");
+      return;
+    }
+   }
+   
    if ( pass_count != 0 )             // Set for a finite loop?
    {
       pass_count--;                   // Decriment count remaining
       if ( pass_count == 0 )
       {
-        break;                        // Bail out when the count is done
+        return;                       // Bail out when the count is done
       }
    }
    else

@@ -62,7 +62,7 @@ void setup(void)
   init_analog_io();
 
 /*
- * Run the powe on self test
+ * Run the power on self test
  */
   POST_1();                           // Cycle the LEDs
   while( POST_2() == false )          // If the timers fail, 
@@ -174,8 +174,10 @@ void loop()
  */
   case ARM:
     arm_counters();
-    face_strike = false;              // Reset the face strike count
+
     enable_interrupt();               // Turn on the face strike interrupt
+    face_strike = false;              // Reset the face strike count
+    
     set_LED_PWM(json_LED_PWM);        // Turn the LEDs on
 
     sensor_status = is_running();

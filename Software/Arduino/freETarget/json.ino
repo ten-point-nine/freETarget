@@ -192,36 +192,37 @@ bool    return_value;
     {
       k = instr(&input_JSON[i], JSON[j].token );              // Compare the input against the list of JSON tags
 
-      if ( k > 0 )
+      if ( k > 0 )                                            // Non zero, found something
       {
-        not_found = false;
-        k++;
+        not_found = false;                                    // Read and convert the JSON value
         switch ( JSON[j].convert )
         {
           default:
-          case IS_VOID:
+          case IS_VOID:                                       // Void, default to zero
+            x = 0;
+            y = 0;
           break;
             
-          case IS_INT16:
+          case IS_INT16:                                      // Convert an integer
             x = atoi(&input_JSON[i+k-1]);
-            *JSON[j].value = x;                              // Save the value
+            *JSON[j].value = x;                               // Save the value
             if ( JSON[j].non_vol != 0 )
             {
-              EEPROM.put(JSON[j].non_vol, x);               // Store into NON-VOL
+              EEPROM.put(JSON[j].non_vol, x);                 // Store into NON-VOL
             }
             break;
   
-          case IS_FLOAT:
+          case IS_FLOAT:                                      // Convert a floating point number
           case IS_DOUBLE:
             y = atoi(&input_JSON[i+k-1]);
-            *JSON[j].d_value = y;                           // Save the value
+            *JSON[j].d_value = y;                             // Save the value
             if ( JSON[j].non_vol != 0 )
             {
-              EEPROM.put(JSON[j].non_vol, y);               // Store into NON-VOL
+              EEPROM.put(JSON[j].non_vol, y);                 // Store into NON-VOL
             }
             break;
         }
-        if ( JSON[j].f != 0 )                              // Call the handler if it is available
+        if ( JSON[j].f != 0 )                                 // Call the handler if it is available
         {
           JSON[j].f(x);
         }
@@ -253,11 +254,10 @@ bool    return_value;
   return return_value;
 }
 
-// Compare two strings.  Return -1 if not equal, end of string if equal
+// Compare two strings.  Return -1 if not equal, length of string if equal
 // S1 Long String, S2 Short String . if ( instr("CAT Sam", "CAT") == 3)
 int instr(char* s1, char* s2)
 {
-  int return_value = -1;
   int i;
 
   i=0;
@@ -273,7 +273,7 @@ int instr(char* s1, char* s2)
   }
 
 /*
- * Reached the end of the comparison string
+ * Reached the end of the comparison string. Check that we arrived at a NULL
  */
   if ( *s2 == 0 )
   {
