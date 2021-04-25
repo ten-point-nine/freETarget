@@ -20,6 +20,7 @@ namespace freETarget {
         public bool innerTen;
         public DateTime timestamp;
         public TimeSpan shotDuration;
+        public Boolean miss;
 
         public decimal calibrationX;
         public decimal calibrationY;
@@ -33,6 +34,7 @@ namespace freETarget {
             this.calibrationX = calibrateX;
             this.calibrationY = calibrateY;
             this.calibrationAngle = calibrateAngle;
+            miss = false;
         }
 
 
@@ -75,6 +77,16 @@ namespace freETarget {
         }
 
         public void computeScore(targets.aTarget target) {
+
+            if(this.miss == true) {
+                //target reported a miss. set score to 0
+                this.decimalScore = 0;
+                this.score = 0;
+                this.innerTen = false;
+
+                return;
+            }
+
             //using liner interpolation with the "official" values found here: http://targettalk.org/viewtopic.php?p=100591#p100591
 
 

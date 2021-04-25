@@ -187,6 +187,11 @@ namespace freETarget.targets {
 
 
         protected void drawShot(Shot shot, Graphics it, int targetSize, decimal zoomFactor, int l, List<Shot> shotList) {
+
+            if(shot.miss == true) {
+                return;
+            }
+
             //transform shot coordinates to imagebox coordinates
 
             PointF x = transform((float)shot.getX(), (float)shot.getY(), targetSize, zoomFactor);
