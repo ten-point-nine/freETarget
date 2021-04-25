@@ -88,20 +88,16 @@ namespace freETarget {
             Series series = chartScore.Series[0];
             decimal sum = 0;
             decimal min = 1000000;
-            int k = 0;
-            int avgCount = 0;
-
-            for (int i = list.Count-1; i >= 0; i--) {
-                series.Points.AddXY(k++, list[i]);
+            for (int i = 0; i < list.Count; i++) {
+                series.Points.AddXY(i, list[i]);
                 if (i >= list.Count - 10) {
                     sum += list[i];
-                    avgCount++;
                 }
                 if (min > list[i]) {
                     min = list[i];
                 }
             }
-            decimal avg = sum / avgCount;
+            decimal avg = sum / 10;
             chartScore.Series[0].Name = "Last 10 sessions average score: " + avg.ToString("F2",CultureInfo.InvariantCulture);
             chartScore.ChartAreas[0].AxisY.Minimum = (double)min - 1;
             chartScore.ChartAreas[0].AxisY.Maximum = 10;
@@ -118,11 +114,8 @@ namespace freETarget {
             decimal sum = 0;
             decimal min = 1000000;
             decimal max = -1000000;
-            int k = 0;
-            int avgCount = 0;
-
-            for (int i = list.Count - 1; i >= 0; i--) {
-                series.Points.AddXY(k, Math.Round(list[i],2));
+            for (int i = 0; i < list.Count; i++) {
+                series.Points.AddXY(i, Math.Round(list[i],2));
                 if (min > list[i]) {
                     min = list[i];
                 }
@@ -131,10 +124,9 @@ namespace freETarget {
                 }
                 if (i >= list.Count - 10) {
                     sum += list[i];
-                    avgCount++;
                 }
             }
-            decimal avg = sum / avgCount;
+            decimal avg = sum / 10;
             chartMeanRadius.Series[0].Name = "Last 10 sessions average mean radius: " + avg.ToString("F2", CultureInfo.InvariantCulture);
             chartMeanRadius.ChartAreas[0].AxisY.Minimum = (double)min - 1;
             chartMeanRadius.ChartAreas[0].AxisY.Maximum = (double)max + 1;
@@ -151,14 +143,10 @@ namespace freETarget {
             decimal sum = 0;
             decimal min = 1000000;
             decimal max = -1000000;
-            int k = 0;
-            int avgCount = 0;
-
-            for (int i = list.Count - 1; i >= 0; i--) {
-                series.Points.AddXY(k, Math.Round( list[i],2));
+            for (int i = 0; i < list.Count; i++) {
+                series.Points.AddXY(i, Math.Round( list[i],2));
                 if (i >= list.Count - 10) {
                     sum += list[i];
-                    avgCount++;
                 }
                 if (min > list[i]) {
                     min = list[i];
@@ -167,7 +155,7 @@ namespace freETarget {
                     max = list[i];
                 }
             }
-            decimal avg = sum / avgCount;
+            decimal avg = sum / 10;
             chartWindage.Series[0].Name = "Last 10 sessions average windage: " + avg.ToString("F2", CultureInfo.InvariantCulture);
             chartWindage.ChartAreas[0].AxisY.Minimum = (double)min - 1;
             chartWindage.ChartAreas[0].AxisY.Maximum = (double)max + 1;
@@ -184,14 +172,10 @@ namespace freETarget {
             decimal sum = 0;
             decimal min = 1000000;
             decimal max = -1000000;
-            int k = 0;
-            int avgCount = 0;
-
-            for (int i = list.Count - 1; i >= 0; i--) {
-                series.Points.AddXY(k, Math.Round(list[i],2));
+            for (int i = 0; i < list.Count; i++) {
+                series.Points.AddXY(i, Math.Round(list[i],2));
                 if (i >= list.Count - 10) {
                     sum += list[i];
-                    avgCount++;
                 }
                 if (min > list[i]) {
                     min = list[i];
@@ -200,7 +184,7 @@ namespace freETarget {
                     max = list[i];
                 }
             }
-            decimal avg = sum / avgCount;
+            decimal avg = sum / 10;
             chartElevation.Series[0].Name = "Last 10 sessions average elevation: " + avg.ToString("F2", CultureInfo.InvariantCulture);
             chartElevation.ChartAreas[0].AxisY.Minimum = (double)min - 1;
             chartElevation.ChartAreas[0].AxisY.Maximum = (double)max + 1;

@@ -253,34 +253,21 @@ namespace freETarget {
                     Shot shot = parseJson(message);
 
                     if (shot!=null && shot.count >= 0) {
-                        if (shot.miss == true) {
-                            if (Settings.Default.ignoreMiss == true) {
-                                //do nothing. ignore shot
-                            } else {
-                                currentSession.addShot(shot);
+                        currentSession.addShot(shot);
 
-                                displayMessage(message, false);
-                                displayShotData(shot);
-                                VirtualRO vro = new VirtualRO();
-                                vro.speakShot(shot);
-                            }
-                        } else {
-                            currentSession.addShot(shot);
 
-                            displayMessage(message, false);
-                            displayShotData(shot);
-                            VirtualRO vro = new VirtualRO();
-                            vro.speakShot(shot);
+                        displayMessage(message, false);
+                        displayShotData(shot);
+                        VirtualRO vro = new VirtualRO();
+                        vro.speakShot(shot);
 
-                            var d = new SafeCallDelegate3(targetRefresh); //draw shot
-                            this.Invoke(d);
-                        }
+                        var d = new SafeCallDelegate3(targetRefresh); //draw shot
+                        this.Invoke(d);
 
                         if (incomingJSON.IndexOf("}") != -1) {
 
                             serialPort_DataReceived(sender, e); //call the event again to parse the remains. maybe there is another full message in there
                         }
-                        
                     } else {
                         //some other non-shot message from target. ignore ..for now (it will be displayed in the arduino window
                     }
@@ -378,10 +365,6 @@ namespace freETarget {
             Thread.Sleep(100);
             serialPort.Write("{\"WEST_Y\":" + Properties.Settings.Default.SensorWestY.ToString() + "}");
             Console.WriteLine("{\"WEST_Y\":" + Properties.Settings.Default.SensorWestY.ToString() + "}");
-
-            Thread.Sleep(100);
-            serialPort.Write("{\"LED_BRIGHT\":" + Properties.Settings.Default.LEDbright.ToString() + "}");
-            Console.WriteLine("{\"LED_BRIGHT\":" + Properties.Settings.Default.LEDbright.ToString() + "}");
 
             Thread.Sleep(100);
             serialPort.Write("{\"ECHO\":0}");
@@ -545,8 +528,8 @@ namespace freETarget {
             }
         }
 
-        //draw direction arrow
         private void drawArrow(Shot shot) {
+            //draw direction arrow
             Bitmap bmp = new Bitmap(imgArrow.Width, imgArrow.Height);
             Graphics g = Graphics.FromImage(bmp);
             g.SmoothingMode = SmoothingMode.AntiAlias;
@@ -554,38 +537,29 @@ namespace freETarget {
 
             int margin = 3;
 
-            if (shot.miss == true) {
+            if (shot.decimalScore < 10.9m) {
+                RectangleF range = new RectangleF(margin, margin, imgArrow.Width-margin*3, imgArrow.Height-margin*3);
+                double xp = 18.0, yp = 18.0;
+                double θ = (double)shot.angle * (Math.PI / 180);
+
+                double[] t = new double[4];
+                t[0] = (range.Left - xp) / Math.Cos(θ);
+                t[1] = (range.Right - xp) / Math.Cos(θ);
+                t[2] = (range.Top - yp) / Math.Sin(θ);
+                t[3] = (range.Bottom - yp) / Math.Sin(θ);
+                Array.Sort(t);
+                // pick middle two points
+                var X1 = xp + t[1] * Math.Cos(θ);
+                var Y1 = yp + t[1] * Math.Sin(θ);
+                var X2 = xp + t[2] * Math.Cos(θ);
+                var Y2 = yp + t[2] * Math.Sin(θ);
+
+                Pen arr = new Pen(Color.Black,2);
+                arr.CustomEndCap = new AdjustableArrowCap(6, 6, true);
+                g.DrawLine(arr, (float)X1, (float)Y2, (float)X2, (float)Y1);
+            } else { //if 10.9 draw a dot
                 Brush br = new SolidBrush(Color.Black);
-                Font f = new Font("Arial", 20);
-                StringFormat format = new StringFormat();
-                format.LineAlignment = StringAlignment.Center;
-                format.Alignment = StringAlignment.Center;
-                g.DrawString("M", f, br, imgArrow.Width /2 , imgArrow.Height /2 , format);
-            } else {
-                if (shot.decimalScore < 10.9m) {
-                    RectangleF range = new RectangleF(margin, margin, imgArrow.Width - margin * 3, imgArrow.Height - margin * 3);
-                    double xp = 18.0, yp = 18.0;
-                    double θ = (double)shot.angle * (Math.PI / 180);
-
-                    double[] t = new double[4];
-                    t[0] = (range.Left - xp) / Math.Cos(θ);
-                    t[1] = (range.Right - xp) / Math.Cos(θ);
-                    t[2] = (range.Top - yp) / Math.Sin(θ);
-                    t[3] = (range.Bottom - yp) / Math.Sin(θ);
-                    Array.Sort(t);
-                    // pick middle two points
-                    var X1 = xp + t[1] * Math.Cos(θ);
-                    var Y1 = yp + t[1] * Math.Sin(θ);
-                    var X2 = xp + t[2] * Math.Cos(θ);
-                    var Y2 = yp + t[2] * Math.Sin(θ);
-
-                    Pen arr = new Pen(Color.Black, 2);
-                    arr.CustomEndCap = new AdjustableArrowCap(6, 6, true);
-                    g.DrawLine(arr, (float)X1, (float)Y2, (float)X2, (float)Y1);
-                } else { //if 10.9 draw a dot
-                    Brush br = new SolidBrush(Color.Black);
-                    g.FillEllipse(br, new Rectangle(new Point((imgArrow.Width / 2) - 4, (imgArrow.Height / 2) - 4), new Size(6, 6)));
-                }
+                g.FillEllipse(br, new Rectangle(new Point((imgArrow.Width/2)-4, (imgArrow.Height/2)-4), new Size(6, 6)));
             }
 
             imgArrow.Image = bmp;
@@ -632,13 +606,6 @@ namespace freETarget {
                             ret.radius = getScaledDimension(decimal.Parse(t4[1], CultureInfo.InvariantCulture));
                         } else if (t4[0].Trim() == "\"a\"") {
                             ret.angle = decimal.Parse(t4[1], CultureInfo.InvariantCulture);
-                        } else if (t4[0].Trim() == "\"miss\"") {
-                            int mix = int.Parse(t4[1].Trim(), CultureInfo.InvariantCulture);
-                            if(mix == 1) {
-                                //miss reported by the target
-                                ret.miss = true;
-                            }
-                            
                         }
                     }
                 } catch (FormatException ex) {
@@ -648,9 +615,7 @@ namespace freETarget {
                     return err;
                 }
 
-                Console.WriteLine("Shot X:" + ret.getX() + " Y:" + ret.getY() + " R:" + ret.radius + " A:" + ret.angle + " Miss:" + ret.miss);
-
-
+                Console.WriteLine("Shot X:" + ret.getX() + " Y:" + ret.getY() + " R:" + ret.radius + " A:" + ret.angle);
 
                 ret.computeScore(currentSession.getTarget());
 
@@ -693,8 +658,6 @@ namespace freETarget {
                 Properties.Settings.Default.targetDistance = int.Parse(settingsFrom.txtDistance.Text);
                 Properties.Settings.Default.scoreVoice = settingsFrom.chkScoreVoice.Checked;
                 Properties.Settings.Default.fileLogging = settingsFrom.chkLog.Checked;
-                Properties.Settings.Default.ignoreMiss = settingsFrom.chkMiss.Checked;
-                Properties.Settings.Default.LEDbright = settingsFrom.trkLEDbright.Value;
 
                 if (Properties.Settings.Default.targetDistance != 100) {
                     btnConfig.BackColor = Properties.Settings.Default.targetColor;
@@ -903,29 +866,18 @@ namespace freETarget {
 
             decimal xsum = 0;
             decimal ysum = 0;
-            int shotCount = 0;
 
             foreach(Shot shot in shots) {
-                if (shot.miss == true) {
-                    continue;
-                }
                 xsum += shot.getX();
                 ysum += shot.getY();
-                shotCount++;
             }
 
+            xbar = xsum / (decimal)shots.Count;
+            ybar = ysum / (decimal)shots.Count;
 
-            xbar = xsum / shotCount;
-            ybar = ysum / shotCount;
-
-            decimal[] r = new decimal[shotCount];
-            int k = 0;
+            decimal[] r = new decimal[shots.Count];
             for(int i=0; i< shots.Count; i++) {
-                if (shots[i].miss == true) {
-                    continue;
-                }
-                r[k] = (decimal)Math.Sqrt((double)(((shots[i].getX() - xbar) * (shots[i].getX() - xbar)) + ((shots[i].getY() - ybar) * (shots[i].getY() - ybar))));
-                k++;
+                r[i] = (decimal)Math.Sqrt((double)(((shots[i].getX() - xbar) * (shots[i].getX() - xbar)) + ((shots[i].getY() - ybar) * (shots[i].getY() - ybar))));
             }
 
             decimal rsum = 0;
@@ -933,7 +885,7 @@ namespace freETarget {
                 rsum += ri;
             }
 
-            rbar = rsum / shotCount;
+            rbar = rsum / shots.Count;
 
         }
 
@@ -973,9 +925,10 @@ namespace freETarget {
             shotsList.Refresh();
             gridTargets.Rows.Clear();
             clearBreakdownChart();
-            foreach (Shot shot in getShots()) { //refresh all shots, not just currest series
+            foreach (Shot shot in getShotList()) {
                 displayShotData(shot);
             }
+            //computeShotStatistics(getShotList());
             targetRefresh();
 
             if(calibrationX == 0 && calibrationY == 0 && calibrationAngle ==0) {
@@ -998,9 +951,11 @@ namespace freETarget {
             shotsList.Refresh();
             gridTargets.Rows.Clear();
             clearBreakdownChart();
-            foreach (Shot shot in getShots()) { //refresh all shots, not just currest series
+            foreach (Shot shot in getShotList()) {
                 displayShotData(shot);
             }
+
+            //computeShotStatistics(getShotList());
             targetRefresh();
 
             if (calibrationX == 0 && calibrationY == 0 && calibrationAngle == 0) {
@@ -1021,9 +976,10 @@ namespace freETarget {
             shotsList.Refresh();
             gridTargets.Rows.Clear();
             clearBreakdownChart();
-            foreach (Shot shot in getShots()) { //refresh all shots, not just currest series
+            foreach (Shot shot in getShotList()) {
                 displayShotData(shot);
             }
+                //computeShotStatistics(getShotList());
             targetRefresh();
 
             if (calibrationX == 0 && calibrationY == 0 && calibrationAngle == 0) {
@@ -1050,10 +1006,11 @@ namespace freETarget {
             shotsList.Refresh();
             gridTargets.Rows.Clear();
             clearBreakdownChart();
-            foreach (Shot shot in getShots()) { //refresh all shots, not just currest series
+            foreach (Shot shot in getShotList()) {
                 displayShotData(shot);
             }
 
+            //computeShotStatistics(getShotList());
             targetRefresh();
 
             btnCalibration.BackColor = this.BackColor;

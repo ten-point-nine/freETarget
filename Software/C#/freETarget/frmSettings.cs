@@ -102,9 +102,6 @@ namespace freETarget
             txtDistance.Text = Properties.Settings.Default.targetDistance.ToString();
             chkScoreVoice.Checked = Properties.Settings.Default.scoreVoice;
             chkLog.Checked = Properties.Settings.Default.fileLogging;
-            chkMiss.Checked = Properties.Settings.Default.ignoreMiss;
-            trkLEDbright.Value = Properties.Settings.Default.LEDbright;
-
             if (Properties.Settings.Default.MatchShots == 60) {
                 rdb60.Checked = true;
                 rdb40.Checked = false;
