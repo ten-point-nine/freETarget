@@ -510,8 +510,9 @@ void self_test(uint16_t test)
 #define SPEC_RANGE   50            // Out of spec if within 50 couts of the rail
 #define BLINK        0x80
 #define NOT_IN_SPEC  0x40
-const unsigned int volts_to_LED[] = { NOT_IN_SPEC,     1,    BLINK+1,    2,     BLINK+2,    3,    BLINK+3,    4,    BLINK+4,    5,    BLINK+5,    6,     BLINK+6,       7,      NOT_IN_SPEC };
-const unsigned int mv_to_counts[] = {   CT(350),    CT(400), CT(450), CT(500),  CT(550), CT(600), CT(650), CT(700), CT(750), CT(800), CT(900), CT(1000), CT(1100), CT(1200)};
+//                                         0           1         2       3         4        5        6        7        8        9        10      11        12          13      14          15
+const unsigned int volts_to_LED[] = { NOT_IN_SPEC,     1,    BLINK+1,    2,     BLINK+2,    3,    BLINK+3,    4,    BLINK+4,    5,    BLINK+5,    6,     BLINK+6,       7,   BLINK+7,  NOT_IN_SPEC, 0 };
+const unsigned int mv_to_counts[] = {   CT(350),    CT(400), CT(450), CT(500),  CT(550), CT(600), CT(650), CT(700), CT(750), CT(800), CT(900), CT(1000), CT(1100), CT(1200), CT(1300),   CT(5000),  0 };
 
 void set_trip_point
   (
@@ -520,7 +521,7 @@ void set_trip_point
 {
   unsigned long start_time;                                 // Starting time of average loop 
   unsigned long sample;                                     // Counts read from ADC
-  unsigned int  blink;                                      // Blink the LEDs on an over flow
+           bool blinky;                                     // Blink the LEDs on an over flow
   unsigned int  start_DIP;                                  // Starting value of the DIP switch
   bool          not_in_spec;                                // Set to true if the input is close to the limits
   
@@ -528,7 +529,7 @@ void set_trip_point
   {
     Serial.print("\r\nSetting trip point. Type ! of cycle power to exit\r\n");
   }
-  blink = 0;
+  blinky = 0;
   not_in_spec = true;                                      // Start off by assuming out of spec
 
 /*
@@ -590,7 +591,7 @@ void set_trip_point
   * Determine what band it belongs to 
   */
    i = 0;
-   while (volts_to_LED[i] != 255)
+   while (volts_to_LED[i] != 0)
    {
      if ( sample <= mv_to_counts[i] )
      {
@@ -602,16 +603,23 @@ void set_trip_point
  /*
   * Use the band to find the LEDs and if they should blink
   */
-   blink = ~blink;                        // Toggle the blink
+   blinky = !blinky;                      // Toggle the blink
    ch = volts_to_LED[i];
    if ( ch & BLINK )                      // Blink bit on?
    {
-     ch ^= blink;
-     ch &= ~BLINK; 
+     if ( blinky )                        // Time to blink?
+     {
+       ch = 0;                            // No, then off
+     }
+     ch &= ~BLINK;
    }
-   if ( volts_to_LED[i] == NOT_IN_SPEC )
+   if ( ch & NOT_IN_SPEC )                // Out of spec?
    {
-    ch = blink;
+     ch = 2;                              // Flash x - * - x
+     if ( blinky )                        // or    * - x - *
+     {
+       ch = 5; 
+     }
    }
    ch = ~ch;
 
@@ -639,7 +647,7 @@ void set_trip_point
    }
    else
    {
-     Serial.print("\r\nV_Ref: "); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
+     Serial.print("\r\nV_Ref: "); Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print("  Index: "); Serial.print(i);
    }
    delay(ONE_SECOND/10);
  }
