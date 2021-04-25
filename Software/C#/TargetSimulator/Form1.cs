@@ -74,6 +74,7 @@ namespace TargetSimulator
                 btnShoot.Enabled = true;
                 btnImport.Enabled = true;
                 btnImportLog.Enabled = true;
+                btnMiss.Enabled = true;
 
                 statusText.Text = "Connected";
                 count = 1;
@@ -99,6 +100,7 @@ namespace TargetSimulator
                 btnShoot.Enabled = false;
                 btnImport.Enabled = false;
                 btnImportLog.Enabled = false;
+                btnMiss.Enabled = false;
 
                 timer1.Enabled = false;
                 btnTimer.Text = "Start Timer";
@@ -142,6 +144,24 @@ namespace TargetSimulator
             }
 
             count++;
+        }
+
+        void generateMissAndSend() {
+            string command = "{\"shot\":0, \"miss\": 1,\"name\":\"BOSS\", \"x\": 0, \"y\": 0}" + Environment.NewLine;
+
+
+            txtOutput.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:ffff") + " | ");
+            txtOutput.AppendText(command);
+
+            try {
+                serialPort1.WriteLine(command);
+            } catch (TimeoutException ex) {
+                statusText.Text = "Error writing to port: (" + count + ") " + ex.Message;
+                Console.WriteLine("ERROR: (" + count + ") " + ex.Message);
+                timer1.Enabled = false;
+                btnTimer.Text = "Start Timer";
+            }
+
         }
 
         public float findDegree(float x, float y)
@@ -301,6 +321,10 @@ namespace TargetSimulator
                     }
                 }
             }
+        }
+
+        private void btnMiss_Click(object sender, EventArgs e) {
+            generateMissAndSend();
         }
     }
 }

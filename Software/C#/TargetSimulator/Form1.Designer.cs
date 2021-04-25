@@ -56,6 +56,7 @@
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.chkChamp = new System.Windows.Forms.CheckBox();
             this.btnImportLog = new System.Windows.Forms.Button();
+            this.btnMiss = new System.Windows.Forms.Button();
             this.status.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -293,11 +294,23 @@
             this.btnImportLog.UseVisualStyleBackColor = true;
             this.btnImportLog.Click += new System.EventHandler(this.btnImportLog_Click);
             // 
+            // btnMiss
+            // 
+            this.btnMiss.Enabled = false;
+            this.btnMiss.Location = new System.Drawing.Point(353, 67);
+            this.btnMiss.Name = "btnMiss";
+            this.btnMiss.Size = new System.Drawing.Size(61, 23);
+            this.btnMiss.TabIndex = 21;
+            this.btnMiss.Text = "Miss";
+            this.btnMiss.UseVisualStyleBackColor = true;
+            this.btnMiss.Click += new System.EventHandler(this.btnMiss_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(589, 541);
+            this.Controls.Add(this.btnMiss);
             this.Controls.Add(this.btnImportLog);
             this.Controls.Add(this.chkChamp);
             this.Controls.Add(this.btnImport);
@@ -357,6 +370,7 @@
         private System.Windows.Forms.ToolTip toolTip;
         private System.Windows.Forms.CheckBox chkChamp;
         private System.Windows.Forms.Button btnImportLog;
+        private System.Windows.Forms.Button btnMiss;
     }
 }
 
