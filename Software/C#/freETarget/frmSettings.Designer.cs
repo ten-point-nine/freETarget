@@ -60,6 +60,7 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPageGeneral = new System.Windows.Forms.TabPage();
+            this.chkMiss = new System.Windows.Forms.CheckBox();
             this.chkLog = new System.Windows.Forms.CheckBox();
             this.tabPageTarget = new System.Windows.Forms.TabPage();
             this.grpBoxShotColors = new System.Windows.Forms.GroupBox();
@@ -100,6 +101,8 @@
             this.cmbPorts = new System.Windows.Forms.ComboBox();
             this.txtBaud = new System.Windows.Forms.TextBox();
             this.helpProvider = new System.Windows.Forms.HelpProvider();
+            this.trkLEDbright = new System.Windows.Forms.TrackBar();
+            this.label20 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPageGeneral.SuspendLayout();
@@ -108,6 +111,7 @@
             this.tabPageSensors.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picTarget)).BeginInit();
             this.tabPageHardware.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.trkLEDbright)).BeginInit();
             this.SuspendLayout();
             // 
             // btnOK
@@ -426,6 +430,7 @@
             // 
             // tabPageGeneral
             // 
+            this.tabPageGeneral.Controls.Add(this.chkMiss);
             this.tabPageGeneral.Controls.Add(this.chkLog);
             this.tabPageGeneral.Controls.Add(this.chkDrawMeanG);
             this.tabPageGeneral.Controls.Add(this.chkVoice);
@@ -449,6 +454,19 @@
             this.tabPageGeneral.TabIndex = 0;
             this.tabPageGeneral.Text = "General";
             this.tabPageGeneral.UseVisualStyleBackColor = true;
+            // 
+            // chkMiss
+            // 
+            this.chkMiss.AutoSize = true;
+            this.helpProvider.SetHelpString(this.chkMiss, "If checked, when the target reports a miss, shot will be ignored. Otherwise it wi" +
+        "ll be scored as a zero");
+            this.chkMiss.Location = new System.Drawing.Point(16, 250);
+            this.chkMiss.Name = "chkMiss";
+            this.helpProvider.SetShowHelp(this.chkMiss, true);
+            this.chkMiss.Size = new System.Drawing.Size(90, 17);
+            this.chkMiss.TabIndex = 33;
+            this.chkMiss.Text = "Ignore misses";
+            this.chkMiss.UseVisualStyleBackColor = true;
             // 
             // chkLog
             // 
@@ -811,6 +829,8 @@
             // 
             // tabPageHardware
             // 
+            this.tabPageHardware.Controls.Add(this.label20);
+            this.tabPageHardware.Controls.Add(this.trkLEDbright);
             this.tabPageHardware.Controls.Add(this.lblWarning);
             this.tabPageHardware.Controls.Add(this.label21);
             this.tabPageHardware.Controls.Add(this.txtPaper);
@@ -900,6 +920,29 @@
             this.txtBaud.TabIndex = 6;
             this.txtBaud.Text = "115200";
             // 
+            // trkLEDbright
+            // 
+            this.trkLEDbright.BackColor = System.Drawing.SystemColors.Window;
+            this.helpProvider.SetHelpString(this.trkLEDbright, "External LED brigtness control (percent)");
+            this.trkLEDbright.LargeChange = 10;
+            this.trkLEDbright.Location = new System.Drawing.Point(109, 116);
+            this.trkLEDbright.Maximum = 100;
+            this.trkLEDbright.Name = "trkLEDbright";
+            this.helpProvider.SetShowHelp(this.trkLEDbright, true);
+            this.trkLEDbright.Size = new System.Drawing.Size(190, 45);
+            this.trkLEDbright.SmallChange = 5;
+            this.trkLEDbright.TabIndex = 19;
+            this.trkLEDbright.TickFrequency = 5;
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(13, 120);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(74, 13);
+            this.label20.TabIndex = 20;
+            this.label20.Text = "LED Brigtness";
+            // 
             // frmSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -932,6 +975,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.picTarget)).EndInit();
             this.tabPageHardware.ResumeLayout(false);
             this.tabPageHardware.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.trkLEDbright)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -1009,5 +1053,8 @@
         public System.Windows.Forms.TextBox txtCalibre;
         private System.Windows.Forms.Label lblWarning;
         private System.Windows.Forms.HelpProvider helpProvider;
+        public System.Windows.Forms.CheckBox chkMiss;
+        private System.Windows.Forms.Label label20;
+        public System.Windows.Forms.TrackBar trkLEDbright;
     }
 }
