@@ -146,24 +146,28 @@ namespace freETarget {
 
         public void speakShot(Shot shot) {
             if (Settings.Default.scoreVoice) {
-                decimal x = 360 - shot.angle + 90;
-                string oclock = Math.Round(x % 360 / 30, 0, MidpointRounding.AwayFromZero).ToString();
-                if (oclock == "0") {
-                    oclock = "12";
-                }
-
-                string decimals = "";
-                if(shot.score - shot.decimalScore == 0) {
-                    decimals = "0";
-                } else if (shot.score - shot.decimalScore > 0) {
-                    decimals = (shot.score - shot.decimalScore).ToString();
-                    decimals = decimals.Substring(2);
+                if (shot.miss) {
+                    synth.SpeakAsync("Miss");
                 } else {
-                    decimals = (shot.score - shot.decimalScore).ToString();
-                    decimals = decimals.Substring(3);
+                    decimal x = 360 - shot.angle + 90;
+                    string oclock = Math.Round(x % 360 / 30, 0, MidpointRounding.AwayFromZero).ToString();
+                    if (oclock == "0") {
+                        oclock = "12";
+                    }
+
+                    string decimals = "";
+                    if (shot.score - shot.decimalScore == 0) {
+                        decimals = "0";
+                    } else if (shot.score - shot.decimalScore > 0) {
+                        decimals = (shot.score - shot.decimalScore).ToString();
+                        decimals = decimals.Substring(2);
+                    } else {
+                        decimals = (shot.score - shot.decimalScore).ToString();
+                        decimals = decimals.Substring(3);
+                    }
+                    string speach = shot.score + " point " + decimals + " , at " + oclock + " o'clock.";
+                    synth.SpeakAsync(speach);
                 }
-                string speach = shot.score + " point "+ decimals + " , at " + oclock + " o'clock.";
-                synth.SpeakAsync(speach);
             }
         }
     }

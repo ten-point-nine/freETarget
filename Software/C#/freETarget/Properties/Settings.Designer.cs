@@ -454,5 +454,29 @@ namespace freETarget.Properties {
                 this["Paper"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ignoreMiss {
+            get {
+                return ((bool)(this["ignoreMiss"]));
+            }
+            set {
+                this["ignoreMiss"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("50")]
+        public int LEDbright {
+            get {
+                return ((int)(this["LEDbright"]));
+            }
+            set {
+                this["LEDbright"] = value;
+            }
+        }
     }
 }
