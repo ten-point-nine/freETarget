@@ -65,6 +65,7 @@ void self_test(uint16_t test)
     default:                                    // Undefined test
       json_test = 0;                            // Force to 0 
       EEPROM.put(NONVOL_TEST_MODE, json_test);  // and fall through
+      break;
       
     case T_HELP:
       Serial.print("\r\n 1 - Digital inputs");
@@ -103,13 +104,7 @@ void self_test(uint16_t test)
       Serial.print(speed_of_sound(temperature_C()));  Serial.print("mm/us");
       Serial.print("\r\nV_REF: ");                    Serial.print(volts); 
       Serial.print("\r\n");
-      for (tick=0; tick != 8; tick++)
-      {
-        digitalWrite(LED_S, (~tick) & 1);
-        digitalWrite(LED_X, (~tick) & 2);
-        digitalWrite(LED_Y, (~tick) & 4);
-        delay(250);
-      }
+      POST_1();
       json_test = T_HELP;               // and stop the test
       break;
 
@@ -119,9 +114,7 @@ void self_test(uint16_t test)
       stop_counters();
       arm_counters();
 
-      digitalWrite(LED_S, 0);
-      digitalWrite(LED_X, 1);
-      digitalWrite(LED_Y, 1);
+      set_LED(L('*', '-', '-'));
       
       if ( json_test == T_CLOCK )
       {
@@ -129,9 +122,7 @@ void self_test(uint16_t test)
         {
           random_delay = random(1, 6000);   // Pick a random delay time in us
           Serial.print("\r\nRandom clock test: "); Serial.print(random_delay); Serial.print("us. All outputs must be the same. ");
-          digitalWrite(CLOCK_START, 0);
-          digitalWrite(CLOCK_START, 1);     // Trigger the clocks from the D input of the FF
-          digitalWrite(CLOCK_START, 0);
+          trip_counters();
           delayMicroseconds(random_delay);  // Delay a random time
         }
         else
@@ -176,10 +167,8 @@ void self_test(uint16_t test)
       }
       send_timer(sensor_status);
       
-      digitalWrite(LED_S, 1);
-      digitalWrite(LED_X, 1);
-      digitalWrite(LED_Y, 0);
-      delay(1000);
+      set_LED(L('-', '-', '-'));
+      delay(ONE_SECOND);
       break;
 
     case T_OSCOPE:                       // Show the analog input
@@ -247,12 +236,12 @@ void self_test(uint16_t test)
       for (i=0; i != 256; i++)
       {
         analogWrite(LED_PWM, i);
-        delay(20);
+        delay(ONE_SECOND/50);
       }
       for (i=255; i != -1; i--)
       {
         analogWrite(LED_PWM, i);
-        delay(20);
+        delay(ONE_SECOND/50);
       }
       analogWrite(LED_PWM, 0);
       Serial.print(" Done\r\n");
@@ -268,18 +257,14 @@ void self_test(uint16_t test)
       {        
         if ( face_strike != 0 )
         {
-          set_LED(LED_S, true);     // If something comes in, 
-          set_LED(LED_X, true);
-          set_LED(LED_Y, true);     // turn on all of the LEDs
+          set_LED(L('*', '*', '*'));                     // If something comes in, turn on all of the LEDs 
           face_strike = 0;
         }
         else
         {
-          set_LED(LED_S, false);
-          set_LED(LED_X, false);
-          set_LED(LED_Y, false);
+          set_LED(L('-', '-', '-'));
         }
-        delay(500);
+        delay(ONE_SECOND/2);
       }
 
       break;
@@ -312,20 +297,18 @@ void self_test(uint16_t test)
 
  void POST_1(void)
  {
-   unsigned int i;
-
   if ( is_trace )
   {
     Serial.print("\r\nPOST 1");
   }
-  for (i=0; i !=4; i++)
-  {
-    digitalWrite(LED_S, ~(1 << i) & 1);
-    digitalWrite(LED_X, ~(1 << i) & 2);
-    digitalWrite(LED_Y, ~(1 << i) & 4);
-    delay(250);
-  }
 
+  set_LED(L('*', '-', '-'));
+  delay(ONE_SECOND/4);
+  set_LED(L('-', '*', '-'));
+  delay(ONE_SECOND/4);
+  set_LED(L('-', '-', '*'));
+  delay(ONE_SECOND/4);
+  
   return;
  }
 
@@ -372,10 +355,8 @@ void self_test(uint16_t test)
  * Do the test 5x looking for stuck bits.
  * 
  */
-  digitalWrite(LED_S, 1);           // Show first test starting
-  digitalWrite(LED_X, 0);
-  digitalWrite(LED_Y, 1);
-  delay(200);
+  set_LED(L('-', '*', '-'));              // Show first test starting
+  delay(ONE_SECOND/4);
   for (i=0; i!= 5; i++)
   {
     
@@ -385,10 +366,7 @@ void self_test(uint16_t test)
     random_delay = random(1, 6000);   // Pick a random delay time in us
     stop_counters();                  // Get the circuit ready
     arm_counters();
-
-    digitalWrite(CLOCK_START, 0);
-    digitalWrite(CLOCK_START, 1);     // Trigger the clocks from the D input of the FF
-    digitalWrite(CLOCK_START, 0);
+    trip_counters();
     delayMicroseconds(random_delay);  // Delay a random time
   
     sensor_status = is_running();     // Remember all of the running timers
@@ -421,15 +399,14 @@ void self_test(uint16_t test)
         return false;                 // since there is delay  in
       }                               // Turning off the counters
     }
-    delay(50);
+    delay(ONE_SECOND/20);             // Wait a tiny bit
   }
   
 /*
  * Got here, the test completed successfully
  */
-  digitalWrite(LED_S, 1);           // Show first test Ending
-  digitalWrite(LED_X, 1);
-  digitalWrite(LED_Y, 1);
+  set_LED(L('-', '-', '-'));
+  delay(ONE_SECOND/2);                   // Show first test Ending
   return true;
 }
   
@@ -454,9 +431,7 @@ void self_test(uint16_t test)
    
    set_trip_point(10);               // Show the trip point once (10 cycles)
    delay(ONE_SECOND);
-   digitalWrite(LED_S, 1);           // Show test test Ending
-   digitalWrite(LED_X, 1);
-   digitalWrite(LED_Y, 1);
+   set_LED(L('-', '-', '-'));         // Show test test Ending
    return;
  }
  
@@ -522,10 +497,9 @@ void set_trip_point
   unsigned long start_time;                                 // Starting time of average loop 
   unsigned long sample;                                     // Counts read from ADC
            bool blinky;                                     // Blink the LEDs on an over flow
-  unsigned int  start_DIP;                                  // Starting value of the DIP switch
   bool          not_in_spec;                                // Set to true if the input is close to the limits
   
-  if ( pass_count == 0 )                                    // Infinite number of passes?
+  if ( is_trace )                                           // Infinite number of passes?
   {
     Serial.print("\r\nSetting trip point. Type ! of cycle power to exit\r\n");
   }
@@ -533,11 +507,11 @@ void set_trip_point
   not_in_spec = true;                                      // Start off by assuming out of spec
 
 /*
- * Loop forever and display the voltage as a grey code
+ * Loop if not in spec, passes to display, or the CAL jumper is in
  */
-  start_DIP = read_DIP();
   while ( not_in_spec                                       // Out of tolerance
-          ||   (((start_DIP | read_DIP()) & CALIBRATE) != 0) ) // Started by DIP switch
+          ||   (pass_count != 0)                            // Passes to go
+          ||   ((read_DIP() & CALIBRATE) != 0) )            // Held in place by DIP switch
   {
     start_time = millis();
     sample = 0;
@@ -560,11 +534,9 @@ void set_trip_point
       {
         Serial.print("\n\rOut Of Spec: "); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
       }
-      digitalWrite(LED_S, 1); digitalWrite(LED_X, 0); digitalWrite(LED_Y, 1);
-      delay(ONE_SECOND/10);
-      digitalWrite(LED_S, 0); digitalWrite(LED_X, 1); digitalWrite(LED_Y, 0);
-      delay(ONE_SECOND/10);
+      blink_fault();
       pass_count = 0;                                       // Stay in this function forever
+      not_in_spec = true;                                   // Show we are out of spec
       continue;
     }
 
@@ -611,19 +583,21 @@ void set_trip_point
      {
        ch = 0;                            // No, then off
      }
-     ch &= ~BLINK;
+     ch &= ~BLINK;                        // Keep only the LED state
    }
-   if ( ch & NOT_IN_SPEC )                // Out of spec?
+   
+   not_in_spec = ch & NOT_IN_SPEC;
+   
+   if ( not_in_spec )                     // Out of spec?
    {
-     ch = 2;                              // Flash x - * - x
+     ch = 0b010;                          // Flash x - * - x
      if ( blinky )                        // or    * - x - *
      {
-       ch = 5; 
+       ch = 0b101; 
      }
    }
-   ch = ~ch;
 
-   digitalWrite(LED_S, ch & 4); digitalWrite(LED_X, ch & 2); digitalWrite(LED_Y, ch & 1);
+   set_LED(ch & 4, ch & 2, ch & 1);
 
 /*
  * Got to the end.  See if we are going to do this for a fixed time or forever
@@ -640,10 +614,6 @@ void set_trip_point
    if ( pass_count != 0 )             // Set for a finite loop?
    {
       pass_count--;                   // Decriment count remaining
-      if ( pass_count == 0 )
-      {
-        return;                       // Bail out when the count is done
-      }
    }
    else
    {
@@ -691,9 +661,7 @@ void show_analog(int v)
   char o_scope[FULL_SCALE];
   unsigned long now;
   
-  digitalWrite(LED_S, ~(1 << cycle) & 1);
-  digitalWrite(LED_X, ~(1 << cycle) & 2);
-  digitalWrite(LED_Y, ~(1 << cycle) & 4);
+  set_LED((1 << cycle) & 1, (1 << cycle) & 2, (1 << cycle) & 4);
   cycle = (cycle+1) % 4;
 
  /*
@@ -847,10 +815,10 @@ static void unit_test(unsigned int mode)
     if ( sample_calculations(mode, i) )
     {
     location = compute_hit(0x0F, &history, true);
-    sensor_status = 0xF;
+    sensor_status = 0xF;        // Fake all sensors good
     send_score(&history, shot_number, sensor_status);
     shot_number++;
-    delay(200);
+    delay(ONE_SECOND/5);        // Give the PC program some time to catch up
     }
     if ( mode == T_ONCE )
     {

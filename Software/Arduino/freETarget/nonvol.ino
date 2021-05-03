@@ -31,7 +31,8 @@ void init_nonvol(int v)
   Serial.print("\r\nReset to factory defaults\r\n");
   read_nonvol();                          // Force in new values
   show_echo(0);                           // Display these settings
-  set_trip_point(false);
+  set_trip_point(0);                      // And stay forever in the trip mode
+  
 /*
  * All done, return
  */

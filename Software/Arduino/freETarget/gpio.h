@@ -1,18 +1,20 @@
 /*
  * Global functions
  */
-void init_gpio(void);                         // Initialize the GPIO ports
-void arm_counters(void);                      // Make the board ready
-unsigned int is_running(void);                // Return a bit mask of running sensors 
-void set_LED(unsigned int led, bool state);   // Manage the LEDs
-unsigned int read_DIP(void);                  // Read the DIP switch register
+void init_gpio(void);                                     // Initialize the GPIO ports
+void arm_counters(void);                                  // Make the board ready
+unsigned int is_running(void);                            // Return a bit mask of running sensors 
+void set_LED(int state_RDY, int state_X, int state_y);    // Manage the LEDs
+unsigned int read_DIP(void);                              // Read the DIP switch register
 unsigned int read_counter(unsigned int direction);
-void stop_counters(void);                     // Turn off the counter registers
-bool read_in(unsigned int port);              // Read the selected port
-void read_timers(void);                       // Read and return the counter registers
-void drive_paper(void);                       // Turn on the paper motor
-void enable_interrupt(void);                  // Turn on the face strike interrupt
-void disable_interrupt(void);                 // Turn off the face strike interrupt
+void stop_counters(void);                                 // Turn off the counter registers
+void trip_counters(void);
+bool read_in(unsigned int port);                          // Read the selected port
+void read_timers(void);                                   // Read and return the counter registers
+void drive_paper(void);                                   // Turn on the paper motor
+void enable_interrupt(void);                              // Turn on the face strike interrupt
+void disable_interrupt(void);                             // Turn off the face strike interrupt
+void blink_fault(void);                                   // Blink a fault
 
 /*
  *  Port Definitions
@@ -54,9 +56,13 @@ void disable_interrupt(void);                 // Turn off the face strike interr
 #define CTS_U        7
 #define RTS_U        6
 #define LED_PWM      5          // PWM Port
-#define LED_S        4
+#define LED_RDY      4
 #define LED_X        3
 #define LED_Y        2
+#define LON          1          // Turn the LED on
+#define LOF          0          // Turn the LED off
+#define LXX         -1          // Leave the LED alone
+#define L(A, B, C) ((A) == '*'), ((B) == '*'), ((C) == '*')
 
 #define NORTH        0
 #define EAST         1

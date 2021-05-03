@@ -11,11 +11,12 @@
 #ifndef _FREETARGET_H
 #define _FREETARGET_H
 
-#define SOFTWARE_VERSION "\"3.00.4 April 25, 2021\""
-#define REV_210    21
-#define REV_220    22
-#define REV_290    29
-#define REV_300   300
+#define SOFTWARE_VERSION "\"3.00.4 May 3, 2021\""
+#define REV_100    100
+#define REV_210    210
+#define REV_220    220
+#define REV_290    290
+#define REV_300    300
 
 #define INIT_DONE       0xabcd        // Initialization complete signature
 
@@ -31,7 +32,7 @@
 /*
  * Oscillator Features
  */
-#define OSCILLATOR_MHZ   8.0    // 8000 cycles in 1 ms
+#define OSCILLATOR_MHZ   8.0                          // 8000 cycles in 1 ms
 #define CLOCK_PERIOD  (1.0/OSCILLATOR_MHZ)            // Seconds per bit
 #define ONE_SECOND      1000                          // 1000 ms delay
 #define SHOT_TIME     ((int)(json_sensor_dia / 0.33)) // Worst case delay Sensor diameter / speed of sound)

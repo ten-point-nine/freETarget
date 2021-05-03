@@ -1,6 +1,6 @@
- /*----------------------------------------------------------------
+/*----------------------------------------------------------------
  * 
- * freETarget
+ * freETarget        
  * 
  * Software to run the Air-Rifle / Small Bore Electronic Target
  * 
@@ -43,7 +43,7 @@ char* nesw = "NESW";                    // Cardinal Points
 void setup(void) 
 {
   int i;
-  
+    
 /*
  *  Setup the serial port
  */
@@ -75,7 +75,6 @@ void setup(void)
  * Initialize variables
  */
   read_nonvol();
-  set_LED_PWM(json_LED_PWM);
   
 /*
  * Turn off the self test
@@ -99,7 +98,8 @@ void setup(void)
  * Ready to go
  */
   show_echo(0);
-
+  set_LED_PWM(json_LED_PWM);
+  
   return;
 }
 
@@ -157,16 +157,15 @@ void loop()
     
     if ( read_DIP() & CALIBRATE )
     {
-      json_test = T_SET_TRIP;
+      set_trip_point(0);              // Are we calibrating?
     }
-    if ( json_test == 0 )       // No self test started
+    
+    if ( json_test != 0 )
     {
-      state = ARM;              // Carry on to the target
+      self_test(json_test);           // Run the self test
     }
-    else
-    {
-      self_test(json_test);     // Run the self test
-    }
+    
+    state = ARM;                      // Carry on to the target
     
     break;
 /*
@@ -189,40 +188,33 @@ void loop()
       {
         Serial.print("\r\n\nWaiting...");
       }
-      set_LED(LED_S, true);     // Show we are waiting
-      set_LED(LED_X, false);    // No longer processing
-      set_LED(LED_Y, false);   
+      set_LED(L('*', '-', '-'));   
       state = WAIT;             // Fall through to WAIT
     }
     else
     {
-      set_LED(LED_X, true);    // show a fault  
       if ( sensor_status & TRIP_NORTH  )
       {
         Serial.print("\r\n{ \"Fault\": \"NORTH\" }");
-        set_LED(LED_S, false);   // Fault code North
-        set_LED(LED_Y, false);  
+        set_LED(L('-', '*', '-'));        // Fault code North
         delay(ONE_SECOND);
       }
       if ( sensor_status & TRIP_EAST  )
       {
         Serial.print("\r\n{ \"Fault\": \"EAST\" }");
-        set_LED(LED_S, false);   // Fault code East
-        set_LED(LED_Y, true);  
+        set_LED(L('-', '*', '*'));       // Fault code East
         delay(ONE_SECOND);
       }
       if ( sensor_status & TRIP_SOUTH )
       {
         Serial.print("\r\n{ \"Fault\": \"SOUTH\" }");
-        set_LED(LED_S, true);  // Fault code South
-        set_LED(LED_Y, true);  
-         delay(ONE_SECOND);
+        set_LED(L('*', '*', '*'));        // Fault code South
+        delay(ONE_SECOND);
       }
       if ( sensor_status & TRIP_WEST )
       {
         Serial.print("\r\n{ \"Fault\": \"WEST\" }");
-        set_LED(LED_S, true);   // Fault code West
-        set_LED(LED_Y, false);  
+        set_LED(L('*', '*', '-'));   // Fault code West
         delay(ONE_SECOND);
       }      
     }
@@ -249,9 +241,7 @@ void loop()
     if ( sensor_status != 0 )             // Shot detected
     {
       now = micros();                     // Remember the starting time
-      set_LED(LED_S, false);              // No longer waiting
-      set_LED(LED_X, true);               // Aquiring
-      set_LED(LED_Y, false);              // Aquiring
+      set_LED(L('-', '*', '-'));                   // No longer waiting
       state = AQUIRE;
     }
     break;
@@ -287,9 +277,7 @@ void loop()
 
       Serial.print("\r\nReducing...");
     }
-    set_LED(LED_S, true);               // Light All
-    set_LED(LED_X, true);               // 
-    set_LED(LED_Y, true);               //
+    set_LED(L('*', '*', '*'));                   // Light All
     location = compute_hit(sensor_status, &history, false);
 
     if ( (timer_value[N] == 0) || (timer_value[E] == 0) || (timer_value[S] == 0) || (timer_value[W] == 0) ) // If any one of the timers is 0, that's a miss
@@ -310,7 +298,7 @@ void loop()
  *  Wait here to make sure the RUN lines are no longer set
  */
   case WASTE:
-    delay(1000);                              // Hang out for a second
+    delay(ONE_SECOND/2);                      // Hang out for a second
     if ( (json_paper_time * PAPER_STEP) > (PAPER_LIMIT) )
     {
       json_paper_time = 0;                    // Check for an infinit loop
@@ -335,24 +323,12 @@ void loop()
 
     face_strike = false;
 
-    for (i=0; i != 6; i++)
-    {
-      set_LED(LED_S, i & 1);                  // Blink the LEDs to show an error
-      set_LED(LED_X, i & 1);                  // 
-      set_LED(LED_Y, i & 1);                  //
-      delay(ONE_SECOND/4);
-    }
+    blink_fault();
     
-    if ( json_send_miss == 0)
+    if ( json_send_miss != 0)
     {
-      break;
+      send_miss(shot);
     }
-    
-    set_LED_PWM(0);                           // Flash the LED
-    delay(ONE_SECOND/4);
-    set_LED_PWM(json_LED_PWM);
-    send_miss(shot);
- 
     break;
     }
 
@@ -361,3 +337,6 @@ void loop()
  */
   return;
 }
+
+
+
