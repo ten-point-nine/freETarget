@@ -105,6 +105,18 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_3AFD6F7D5D8B1D87A8F74D1C4C751A36"
+        "OwnerKey" = "8:_BA7960F238524C748E31EB10092C0579"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_3AFD6F7D5D8B1D87A8F74D1C4C751A36"
+        "OwnerKey" = "8:_CB76F78EB1A5462D9C46F23D2E920573"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_3EDD7E67501244A3A83FE91B46F69918"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -322,6 +334,18 @@
         "Entry"
         {
         "MsmKey" = "8:_AC48D9380AAEAFD6E7E340AC94314588"
+        "OwnerKey" = "8:_BA7960F238524C748E31EB10092C0579"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_AC48D9380AAEAFD6E7E340AC94314588"
+        "OwnerKey" = "8:_CB76F78EB1A5462D9C46F23D2E920573"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_AC48D9380AAEAFD6E7E340AC94314588"
         "OwnerKey" = "8:_B18C4057E682438CB1FBAFA19B5EAB78"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -363,6 +387,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_BA7960F238524C748E31EB10092C0579"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_C2B4E4C65B454BA0BF049A4071B46629"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -381,7 +411,25 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_C618FDE04B164C458B35D9CB4B15B0BF"
+        "OwnerKey" = "8:_BA7960F238524C748E31EB10092C0579"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C618FDE04B164C458B35D9CB4B15B0BF"
+        "OwnerKey" = "8:_CB76F78EB1A5462D9C46F23D2E920573"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_CA65122298574B269842108FC4B7F9AC"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_CB76F78EB1A5462D9C46F23D2E920573"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -477,6 +525,18 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_F33854EC883148EC7BF101689BD50619"
+        "OwnerKey" = "8:_BA7960F238524C748E31EB10092C0579"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_F33854EC883148EC7BF101689BD50619"
+        "OwnerKey" = "8:_CB76F78EB1A5462D9C46F23D2E920573"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_F71D6D735C9E490BAFF387AB820EC25E"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -485,6 +545,18 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_B18C4057E682438CB1FBAFA19B5EAB78"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_BA7960F238524C748E31EB10092C0579"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_CB76F78EB1A5462D9C46F23D2E920573"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -2492,7 +2564,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:freETarget"
         "ProductCode" = "8:{02E0E8FE-CB73-4032-8AE3-4766920A31ED}"
-        "PackageCode" = "8:{DB1E6903-66C5-4516-993C-E80DEB36E8F9}"
+        "PackageCode" = "8:{FC74E1AF-5F2C-4875-AC59-072BC23A9BC9}"
         "UpgradeCode" = "8:{E11572A0-0587-4903-AE84-9016332FEE88}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -2617,10 +2689,10 @@
             "Name" = "8:freETarget"
             "Arguments" = "8:"
             "Description" = "8:"
-            "ShowCmd" = "3:1"
+            "ShowCmd" = "3:3"
             "IconIndex" = "3:0"
             "Transitive" = "11:FALSE"
-            "Target" = "8:_B18C4057E682438CB1FBAFA19B5EAB78"
+            "Target" = "8:_BA7960F238524C748E31EB10092C0579"
             "Folder" = "8:_5CF885E57C644B87B4A1B7398B8CAA3E"
             "WorkingFolder" = "8:_9981CD01648E4C95AF344740FDDEA8C9"
             "Icon" = "8:_AB775BEA19644613BBF7B3BED9E723B7"
@@ -3121,7 +3193,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_B18C4057E682438CB1FBAFA19B5EAB78"
             {
-            "SourcePath" = "8:..\\freETarget\\obj\\Release\\freETarget.exe"
+            "SourcePath" = "8:..\\freETarget\\obj\\Debug\\freETarget.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_9981CD01648E4C95AF344740FDDEA8C9"
@@ -3169,6 +3241,62 @@
             "ProjectOutputGroupRegister" = "3:1"
             "OutputConfiguration" = "8:"
             "OutputGroupCanonicalName" = "8:ContentFiles"
+            "OutputProjectGuid" = "8:{F86A4BE5-5D39-4891-BD8B-D36BCF9F7305}"
+            "ShowKeyOutput" = "11:TRUE"
+                "ExcludeFilters"
+                {
+                }
+            }
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_BA7960F238524C748E31EB10092C0579"
+            {
+            "SourcePath" = "8:..\\freETarget\\obj\\Debug\\freETarget.exe"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_9981CD01648E4C95AF344740FDDEA8C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            "ProjectOutputGroupRegister" = "3:1"
+            "OutputConfiguration" = "8:"
+            "OutputGroupCanonicalName" = "8:Built"
+            "OutputProjectGuid" = "8:{F86A4BE5-5D39-4891-BD8B-D36BCF9F7305}"
+            "ShowKeyOutput" = "11:TRUE"
+                "ExcludeFilters"
+                {
+                }
+            }
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_CB76F78EB1A5462D9C46F23D2E920573"
+            {
+            "SourcePath" = "8:..\\freETarget\\obj\\Debug\\freETarget.exe"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_C6C9835BFD7E419398C0BC136CF842D8"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            "ProjectOutputGroupRegister" = "3:1"
+            "OutputConfiguration" = "8:"
+            "OutputGroupCanonicalName" = "8:Built"
             "OutputProjectGuid" = "8:{F86A4BE5-5D39-4891-BD8B-D36BCF9F7305}"
             "ShowKeyOutput" = "11:TRUE"
                 "ExcludeFilters"
