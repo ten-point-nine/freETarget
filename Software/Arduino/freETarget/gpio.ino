@@ -14,7 +14,7 @@ struct GPIO {
   byte value;
 };
 
-GPIO init_table[] = {
+const GPIO init_table[] = {
   {D0,          INPUT_PULLUP, 0 },
   {D1,          INPUT_PULLUP, 0 },
   {D2,          INPUT_PULLUP, 0 },

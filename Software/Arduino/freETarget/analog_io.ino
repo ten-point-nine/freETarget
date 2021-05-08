@@ -74,6 +74,10 @@ void set_LED_PWM
 /*
  * All done, begin the program
  */
+  if ( new_LED_percent == 0 )
+  {
+    digitalWrite(LED_PWM, 0);
+  }
   return;
 }
 

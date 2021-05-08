@@ -227,7 +227,7 @@ void loop()
     if ( (json_power_save != 0 ) 
         && (((micros()-power_save) / 1000000 / 60) >= json_power_save) )
     {
-      set_LED_PWM(0);
+      set_LED_PWM(0);                     // Dim the lights?
     }
 
     sensor_status = is_running();

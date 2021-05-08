@@ -510,7 +510,7 @@ void set_trip_point
  * Loop if not in spec, passes to display, or the CAL jumper is in
  */
   while ( not_in_spec                                       // Out of tolerance
-          ||   (pass_count != 0)                            // Passes to go
+          ||   (pass_count == 0)                            // Passes to go
           ||   ((read_DIP() & CALIBRATE) != 0) )            // Held in place by DIP switch
   {
     start_time = millis();
@@ -614,10 +614,14 @@ void set_trip_point
    if ( pass_count != 0 )             // Set for a finite loop?
    {
       pass_count--;                   // Decriment count remaining
+      if ( pass_count == 0 )          // And bail out when zero
+      {
+        break;
+      }
    }
    else
    {
-     Serial.print("\r\nV_Ref: "); Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print("  Index: "); Serial.print(i);
+     Serial.print("\r\nV_Ref: "); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
    }
    delay(ONE_SECOND/10);
  }

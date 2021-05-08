@@ -59,7 +59,7 @@ typedef struct  {
 } json_message;
 
   
-static json_message JSON[] = {
+const json_message JSON[] = {
 //    token                 value stored in RAM     double stored in RAM         type     service fcn()     NONVOL location
   {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT16,  0,                NONVOL_SENSOR_ANGLE},    // Locate the sensor angles
   {"\"CAL\":",            0,                                 0,                IS_VOID,   &set_trip_point,                  0  },    // Enter calibration mode
@@ -84,7 +84,6 @@ static json_message JSON[] = {
   {"\"SOUTH_Y\":",        &json_south_y,                     0,                IS_INT16,  0,                NONVOL_SOUTH_Y     },    //
   {"\"WEST_X\":",         &json_west_x,                      0,                IS_INT16,  0,                NONVOL_WEST_X      },    //
   {"\"WEST_Y\":",         &json_west_y,                      0,                IS_INT16,  0,                NONVOL_WEST_Y      },    //
-
   { 0, 0, 0, 0, 0, 0}
 };
 
@@ -204,12 +203,13 @@ bool    return_value;
           break;
             
           case IS_INT16:                                      // Convert an integer
-            x = atoi(&input_JSON[i+k-1]);
+            x = atoi(&input_JSON[i+k]);
             *JSON[j].value = x;                               // Save the value
             if ( JSON[j].non_vol != 0 )
             {
               EEPROM.put(JSON[j].non_vol, x);                 // Store into NON-VOL
             }
+            
             break;
   
           case IS_FLOAT:                                      // Convert a floating point number
@@ -275,12 +275,14 @@ int instr(char* s1, char* s2)
 /*
  * Reached the end of the comparison string. Check that we arrived at a NULL
  */
-  if ( *s2 == 0 )
+  if ( *s2 == 0 )       // Both strings are the same
   {
     return i;
   }
-  return -1;
+  
+  return -1;                            // The strings are different
 }
+
 /*-----------------------------------------------------
  * 
  * function: show_echo
