@@ -11,7 +11,7 @@
 #ifndef _FREETARGET_H
 #define _FREETARGET_H
 
-#define SOFTWARE_VERSION "\"3.00.5 May 8, 2021\""
+#define SOFTWARE_VERSION "\"3.01.0 May 9, 2021\""
 #define REV_100    100
 #define REV_210    210
 #define REV_220    220
@@ -27,7 +27,18 @@
 #define AUX_SERIAL         Serial3    // Auxilary Connector
 #define DISPLAY_SERIAL     Serial2    // Serial port for slave display
 
-#define PRINT(x) {Serial.print(x); AUX_SERIAL.print(x); DISPLAY_SERIAL.print(x);}
+#define PRINT(x)  {Serial.print(x); AUX_SERIAL.print(x); DISPLAY_SERIAL.print(x);}
+#define GET(ch)   {if ( Serial.available() )              ch = Serial.read();         \
+                   else if ( AUX_SERIAL.available() )     ch = AUX_SERIAL.read();     \
+                   else if ( DISPLAY_SERIAL.available() ) ch = DISPLAY_SERIAL.read(); \
+                   else                                   ch = 0;}
+                   
+#define AVAILABLE ( Serial.available() + AUX_SERIAL.available() + DISPLAY_SERIAL.available() )
+
+#define PORT_SERIAL   1
+#define PORT_AUX      2
+#define PORT_DISPLAY  4
+#define PORT_ALL      (PORT_SERIAL + PORT_AUX + PORT_DISPLAY)
 
 /*
  * Oscillator Features

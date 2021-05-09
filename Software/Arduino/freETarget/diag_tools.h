@@ -23,7 +23,14 @@
 #define T_LED         14       // Test the PWM
 #define T_FACE        15       // Test the face detector
 
+#define POST2_FAILED       0b001    // LED fault code
+#define VREF_OVER_UNDER    0b010
+#define SHOT_MISS          0b000
+
 void self_test(uint16_t test);
+void show_sensor_status(unsigned int sensor_status);  // Display the sensor status as text
+void blink_fault(unsigned int fault_code);            // Blink a fault
+void POST_0(int16_t port);      // Show the version string
 void POST_1(void);              // Verify the LED operation
 bool POST_2(void);              // Verify the counter operation
 void POST_3(void);              // Display the set point

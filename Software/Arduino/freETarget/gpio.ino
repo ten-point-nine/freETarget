@@ -94,6 +94,7 @@ void init_gpio(void)
     i++;
   }
 
+  disable_interrupt();
   set_LED_PWM(0);             // Turn off the illumination for now
   
 /*
@@ -529,11 +530,15 @@ void read_timers(void)
  /*
  * Common function to indicate a fault
  */
-void blink_fault(void)
+void blink_fault
+  (                                        
+  unsigned int fault_code                 // Fault code to blink
+  )
 {
-  set_LED('*', '-', '*');                  // Blink the LEDs to show an error
+  set_LED(fault_code & 4, fault_code & 2, fault_code & 1);  // Blink the LEDs to show an error
   delay(ONE_SECOND/4);
-  set_LED('-', '*', '-');                  // Blink the LEDs to show an error
+  fault_code = ~fault_code;
+  set_LED(fault_code & 4, fault_code & 2, fault_code & 1);                    // Blink the LEDs to show an error
   delay(ONE_SECOND/4);
   return;
 }

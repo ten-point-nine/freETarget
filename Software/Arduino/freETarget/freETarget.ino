@@ -50,9 +50,7 @@ void setup(void)
   Serial.begin(115200);
   AUX_SERIAL.begin(115200); 
   DISPLAY_SERIAL.begin(115200); 
-  
-  PRINT("\r\nfreETarget "); PRINT(SOFTWARE_VERSION); PRINT("\r\n");
-  
+
 /*
  *  Set up the port pins
  */
@@ -60,14 +58,20 @@ void setup(void)
   is_trace = read_DIP() & (VERBOSE_TRACE);   
   init_sensors();
   init_analog_io();
-
+  randomSeed( analogRead(V_REFERENCE));   // Seed the random number generator
+  
 /*
  * Run the power on self test
  */
+  POST_0(PORT_ALL);                   // Show the version string on all ports
   POST_1();                           // Cycle the LEDs
-  while( POST_2() == false )          // If the timers fail, 
+  if ( POST_2() == false )            // If the timers fail, 
   {
-    continue;                         // Don't continue to the application
+    Serial.print("\n\rPOST_2 Failed\n\r");
+    while(1)
+    {
+      blink_fault(POST2_FAILED);
+    }
   }
   POST_3();                           // Show the trip point
   
@@ -173,7 +177,6 @@ void loop()
  */
   case ARM:
     arm_counters();
-
     enable_interrupt();               // Turn on the face strike interrupt
     face_strike = false;              // Reset the face strike count
     
@@ -265,16 +268,7 @@ void loop()
     if ( is_trace )
     {
       Serial.print("\r\nTrigger: "); 
-      
-      if ( sensor_status & TRIP_NORTH ) Serial.print("N");
-      else                              Serial.print("-");
-      if ( sensor_status & TRIP_EAST )  Serial.print("E");
-      else                              Serial.print("-");
-      if ( sensor_status & TRIP_SOUTH ) Serial.print("S");
-      else                              Serial.print("-");
-      if ( sensor_status & TRIP_WEST )  Serial.print("W");
-      else                              Serial.print("-");
-
+      show_sensor_status(sensor_status);
       Serial.print("\r\nReducing...");
     }
     set_LED(L('*', '*', '*'));                   // Light All
@@ -282,8 +276,6 @@ void loop()
 
     if ( (timer_value[N] == 0) || (timer_value[E] == 0) || (timer_value[S] == 0) || (timer_value[W] == 0) ) // If any one of the timers is 0, that's a miss
     {
-      Serial.print("is_running"); Serial.print(is_running()); Serial.print(" ");
-      
       state = SEND_MISS;
       delay(ONE_SECOND);
       break;
@@ -323,7 +315,7 @@ void loop()
 
     face_strike = false;
 
-    blink_fault();
+    blink_fault(SHOT_MISS);
     
     if ( json_send_miss != 0)
     {

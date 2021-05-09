@@ -76,6 +76,7 @@ const json_message JSON[] = {
   {"\"TEST\":",           &json_test,                        0,                IS_INT16,  &show_test,       NONVOL_TEST_MODE   },    // Execute a self test
   {"\"TRACE\":",          &temp,                             0,                IS_INT16,  &set_trace,                       0  },    // Enter / exit diagnostic trace
   {"\"TRGT_1_RINGx10\":", &json_1_ring_x10,                  0,                IS_INT16,  0,                NONVOL_1_RINGx10   },    // Enter the 1 ring diamater
+  {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_0,                          0  },    // Return the version string
   {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT16,  0,                NONVOL_NORTH_X     },    //
   {"\"NORTH_Y\":",        &json_north_y,                     0,                IS_INT16,  0,                NONVOL_NORTH_Y     },    //
   {"\"EAST_X\":",         &json_east_x,                      0,                IS_INT16,  0,                NONVOL_EAST_X      },    //
@@ -129,13 +130,13 @@ bool    return_value;
 /*
  * See if anything is waiting and if so, add it in
  */
-  while (Serial.available() != 0)
+  while ( AVAILABLE != 0)
   {
     return_value = true;
     
-    ch = Serial.read();
+    GET(ch);
 #if ( JSON_DEBUG == true )
-    Serial.print(ch);
+    PRINT(ch);
 #endif
 
 /*
@@ -222,6 +223,7 @@ bool    return_value;
             }
             break;
         }
+
         if ( JSON[j].f != 0 )                                 // Call the handler if it is available
         {
           JSON[j].f(x);

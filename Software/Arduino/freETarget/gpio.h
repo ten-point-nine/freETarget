@@ -14,7 +14,6 @@ void read_timers(void);                                   // Read and return the
 void drive_paper(void);                                   // Turn on the paper motor
 void enable_interrupt(void);                              // Turn on the face strike interrupt
 void disable_interrupt(void);                             // Turn off the face strike interrupt
-void blink_fault(void);                                   // Blink a fault
 
 /*
  *  Port Definitions
