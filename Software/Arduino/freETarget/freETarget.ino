@@ -219,7 +219,7 @@ void loop()
         Serial.print("\r\n{ \"Fault\": \"WEST\" }");
         set_LED(L('*', '*', '-'));   // Fault code West
         delay(ONE_SECOND);
-      }      
+      }     
     }
     break;
     
