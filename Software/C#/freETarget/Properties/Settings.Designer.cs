@@ -478,5 +478,17 @@ namespace freETarget.Properties {
                 this["LEDbright"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int targetName {
+            get {
+                return ((int)(this["targetName"]));
+            }
+            set {
+                this["targetName"] = value;
+            }
+        }
     }
 }

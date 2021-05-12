@@ -339,52 +339,59 @@ namespace freETarget {
             serialPort.Write("{\"SENSOR\":" + Properties.Settings.Default.SensorDiameter.ToString() + "}");
             Console.WriteLine("{\"SENSOR\":" + Properties.Settings.Default.SensorDiameter.ToString() + "}");
 
-            Thread.Sleep(100);
+            Thread.Sleep(500);
             serialPort.Write("{\"PAPER\":" + Properties.Settings.Default.Paper.ToString() + "}");
             Console.WriteLine("{\"PAPER\":" + Properties.Settings.Default.Paper.ToString() + "}");
 
-            Thread.Sleep(100);
+            Thread.Sleep(500);
             serialPort.Write("{\"CALIBREx10\":" + Properties.Settings.Default.Calibre.ToString() + "}");
             Console.WriteLine("{\"CALIBREx10\":" + Properties.Settings.Default.Calibre.ToString() + "}");
 
-            Thread.Sleep(100);
+            Thread.Sleep(500);
             serialPort.Write("{\"NORTH_X\":" + Properties.Settings.Default.SensorNorthX.ToString() + "}");
             Console.WriteLine("{\"NORTH_X\":" + Properties.Settings.Default.SensorNorthX.ToString() + "}");
 
-            Thread.Sleep(100);
+            Thread.Sleep(500);
             serialPort.Write("{\"NORTH_Y\":" + Properties.Settings.Default.SensorNorthY.ToString() + "}");
             Console.WriteLine("{\"NORTH_Y\":" + Properties.Settings.Default.SensorNorthY.ToString() + "}");
 
-            Thread.Sleep(100);
+            Thread.Sleep(500);
             serialPort.Write("{\"EAST_X\":" + Properties.Settings.Default.SensorEastX.ToString() + "}");
             Console.WriteLine("{\"EAST_X\":" + Properties.Settings.Default.SensorEastX.ToString() + "}");
 
-            Thread.Sleep(100);
+            Thread.Sleep(500);
             serialPort.Write("{\"EAST_Y\":" + Properties.Settings.Default.SensorEastY.ToString() + "}");
             Console.WriteLine("{\"EAST_Y\":" + Properties.Settings.Default.SensorEastY.ToString() + "}");
 
-            Thread.Sleep(100);
+            Thread.Sleep(500);
             serialPort.Write("{\"SOUTH_X\":" + Properties.Settings.Default.SensorSouthX.ToString() + "}");
             Console.WriteLine("{\"SOUTH_X\":" + Properties.Settings.Default.SensorSouthX.ToString() + "}");
 
-            Thread.Sleep(100);
+            Thread.Sleep(500);
             serialPort.Write("{\"SOUTH_Y\":" + Properties.Settings.Default.SensorSouthY.ToString() + "}");
             Console.WriteLine("{\"SOUTH_Y\":" + Properties.Settings.Default.SensorSouthY.ToString() + "}");
 
-            Thread.Sleep(100);
+            Thread.Sleep(500);
             serialPort.Write("{\"WEST_X\":" + Properties.Settings.Default.SensorWestX.ToString() + "}");
             Console.WriteLine("{\"WEST_X\":" + Properties.Settings.Default.SensorWestX.ToString() + "}");
 
-            Thread.Sleep(100);
+            Thread.Sleep(500);
             serialPort.Write("{\"WEST_Y\":" + Properties.Settings.Default.SensorWestY.ToString() + "}");
             Console.WriteLine("{\"WEST_Y\":" + Properties.Settings.Default.SensorWestY.ToString() + "}");
 
-            Thread.Sleep(100);
+            Thread.Sleep(500);
             serialPort.Write("{\"LED_BRIGHT\":" + Properties.Settings.Default.LEDbright.ToString() + "}");
             Console.WriteLine("{\"LED_BRIGHT\":" + Properties.Settings.Default.LEDbright.ToString() + "}");
 
-            Thread.Sleep(100);
+            Thread.Sleep(500);
+            serialPort.Write("{\"NAME_ID\":" + Properties.Settings.Default.targetName.ToString() + "}");
+            Console.WriteLine("{\"NAME_ID\":" + Properties.Settings.Default.targetName.ToString() + "}");
+
+            Thread.Sleep(500);
             serialPort.Write("{\"ECHO\":0}");
+
+            Thread.Sleep(500);
+            serialPort.Write("{\"VERSION\":7}");
             Thread.Sleep(100);
 
 
@@ -695,6 +702,7 @@ namespace freETarget {
                 Properties.Settings.Default.fileLogging = settingsFrom.chkLog.Checked;
                 Properties.Settings.Default.ignoreMiss = settingsFrom.chkMiss.Checked;
                 Properties.Settings.Default.LEDbright = settingsFrom.trkLEDbright.Value;
+                Properties.Settings.Default.targetName = settingsFrom.cmbName.SelectedIndex;
 
                 if (Properties.Settings.Default.targetDistance != 100) {
                     btnConfig.BackColor = Properties.Settings.Default.targetColor;

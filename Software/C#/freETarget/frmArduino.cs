@@ -91,8 +91,49 @@ namespace freETarget {
             mainWindow.serialPort.Write("{\"CALIBREx10\":" + txtOffset.Text + "}");
         }
 
-        private void btnTripPoint_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"TRIP_POINT\":" + txtTripPoint.Text + "}");
+        private void btnCalibration_Click(object sender, EventArgs e) {
+            if (btnCalibration.Text == "CAL") {
+                mainWindow.serialPort.Write("{\"CAL\":0}");
+                btnCalibration.Text = "STOP CAL";
+            } else {
+                //STOP CAL
+                mainWindow.serialPort.Write("!");
+                btnCalibration.Text = "CAL";
+            }
+
+
+        }
+
+        private void btnVersion_Click(object sender, EventArgs e) {
+            mainWindow.serialPort.Write("{\"VERSION\":7}");
+        }
+
+        private void btnLed_Click(object sender, EventArgs e) {
+            mainWindow.serialPort.Write("{\"LED_BRIGHT\":" + txtLed.Text + "}");
+        }
+
+        private void btnInit_Click(object sender, EventArgs e) {
+            mainWindow.serialPort.Write("{\"INIT\":0}");
+        }
+
+        private void btnNameID_Click(object sender, EventArgs e) {
+            mainWindow.serialPort.Write("{\"NAME_ID\":" + txtNameID.Text + "}");
+        }
+
+        private void btnTrace_Click(object sender, EventArgs e) {
+            mainWindow.serialPort.Write("{\"TRACE\":" + txtTrace.Text + "}");
+        }
+
+        private void btnPower_Click(object sender, EventArgs e) {
+            mainWindow.serialPort.Write("{\"POWER_SAVE\":" + txtPower.Text + "}");
+        }
+
+        private void btnSendMiss_Click(object sender, EventArgs e) {
+            mainWindow.serialPort.Write("{\"SEND_MISS\":" + txtSendMiss.Text + "}");
+        }
+
+        private void btnTargetRing_Click(object sender, EventArgs e) {
+            mainWindow.serialPort.Write("{\"TRGT_1_RINGx10\":" + txtTargetRing.Text + "}");
         }
     }
 }

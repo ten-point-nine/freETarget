@@ -139,6 +139,8 @@ namespace freETarget
             txtCalibre.Text = Properties.Settings.Default.Calibre.ToString();
             txtPaper.Text = Properties.Settings.Default.Paper.ToString();
 
+            cmbName.SelectedIndex = Properties.Settings.Default.targetName;
+
         }
 
         private void cmbColor_DrawItem(object sender, DrawItemEventArgs e)

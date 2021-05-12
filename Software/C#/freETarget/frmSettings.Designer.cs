@@ -93,6 +93,8 @@
             this.txtNorthX = new System.Windows.Forms.TextBox();
             this.picTarget = new System.Windows.Forms.PictureBox();
             this.tabPageHardware = new System.Windows.Forms.TabPage();
+            this.label20 = new System.Windows.Forms.Label();
+            this.trkLEDbright = new System.Windows.Forms.TrackBar();
             this.lblWarning = new System.Windows.Forms.Label();
             this.label21 = new System.Windows.Forms.Label();
             this.txtPaper = new System.Windows.Forms.TextBox();
@@ -101,8 +103,8 @@
             this.cmbPorts = new System.Windows.Forms.ComboBox();
             this.txtBaud = new System.Windows.Forms.TextBox();
             this.helpProvider = new System.Windows.Forms.HelpProvider();
-            this.trkLEDbright = new System.Windows.Forms.TrackBar();
-            this.label20 = new System.Windows.Forms.Label();
+            this.cmbName = new System.Windows.Forms.ComboBox();
+            this.label22 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPageGeneral.SuspendLayout();
@@ -166,7 +168,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(13, 41);
+            this.label3.Location = new System.Drawing.Point(13, 68);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(58, 13);
             this.label3.TabIndex = 9;
@@ -829,6 +831,8 @@
             // 
             // tabPageHardware
             // 
+            this.tabPageHardware.Controls.Add(this.cmbName);
+            this.tabPageHardware.Controls.Add(this.label22);
             this.tabPageHardware.Controls.Add(this.label20);
             this.tabPageHardware.Controls.Add(this.trkLEDbright);
             this.tabPageHardware.Controls.Add(this.lblWarning);
@@ -847,6 +851,29 @@
             this.tabPageHardware.Text = "Hardware";
             this.tabPageHardware.UseVisualStyleBackColor = true;
             // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(13, 147);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(74, 13);
+            this.label20.TabIndex = 20;
+            this.label20.Text = "LED Brigtness";
+            // 
+            // trkLEDbright
+            // 
+            this.trkLEDbright.BackColor = System.Drawing.SystemColors.Window;
+            this.helpProvider.SetHelpString(this.trkLEDbright, "External LED brigtness control (percent)");
+            this.trkLEDbright.LargeChange = 10;
+            this.trkLEDbright.Location = new System.Drawing.Point(109, 143);
+            this.trkLEDbright.Maximum = 100;
+            this.trkLEDbright.Name = "trkLEDbright";
+            this.helpProvider.SetShowHelp(this.trkLEDbright, true);
+            this.trkLEDbright.Size = new System.Drawing.Size(190, 45);
+            this.trkLEDbright.SmallChange = 5;
+            this.trkLEDbright.TabIndex = 19;
+            this.trkLEDbright.TickFrequency = 5;
+            // 
             // lblWarning
             // 
             this.lblWarning.AutoSize = true;
@@ -862,7 +889,7 @@
             // label21
             // 
             this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(13, 92);
+            this.label21.Location = new System.Drawing.Point(13, 119);
             this.label21.Name = "label21";
             this.label21.Size = new System.Drawing.Size(84, 13);
             this.label21.TabIndex = 17;
@@ -872,7 +899,7 @@
             // 
             this.helpProvider.SetHelpString(this.txtPaper, "Time in miliseconds to run motor that scrolls the paper. A larger time means more" +
         " paper is used for each shot");
-            this.txtPaper.Location = new System.Drawing.Point(109, 89);
+            this.txtPaper.Location = new System.Drawing.Point(109, 116);
             this.txtPaper.Name = "txtPaper";
             this.helpProvider.SetShowHelp(this.txtPaper, true);
             this.txtPaper.Size = new System.Drawing.Size(190, 20);
@@ -882,7 +909,7 @@
             // label19
             // 
             this.label19.AutoSize = true;
-            this.label19.Location = new System.Drawing.Point(13, 67);
+            this.label19.Location = new System.Drawing.Point(13, 94);
             this.label19.Name = "label19";
             this.label19.Size = new System.Drawing.Size(62, 13);
             this.label19.TabIndex = 13;
@@ -892,7 +919,7 @@
             // 
             this.helpProvider.SetHelpString(this.txtCalibre, "Caliber of the projectile in tenths of milimiters. For example, the 4.5mm (.177) " +
         "pellet has the caliber of 45");
-            this.txtCalibre.Location = new System.Drawing.Point(109, 63);
+            this.txtCalibre.Location = new System.Drawing.Point(109, 90);
             this.txtCalibre.Name = "txtCalibre";
             this.helpProvider.SetShowHelp(this.txtCalibre, true);
             this.txtCalibre.Size = new System.Drawing.Size(190, 20);
@@ -913,35 +940,56 @@
             // txtBaud
             // 
             this.helpProvider.SetHelpString(this.txtBaud, "Baud rate of the COM port. The arduino default is: 115200");
-            this.txtBaud.Location = new System.Drawing.Point(109, 37);
+            this.txtBaud.Location = new System.Drawing.Point(109, 64);
             this.txtBaud.Name = "txtBaud";
             this.helpProvider.SetShowHelp(this.txtBaud, true);
             this.txtBaud.Size = new System.Drawing.Size(190, 20);
             this.txtBaud.TabIndex = 6;
             this.txtBaud.Text = "115200";
             // 
-            // trkLEDbright
+            // cmbName
             // 
-            this.trkLEDbright.BackColor = System.Drawing.SystemColors.Window;
-            this.helpProvider.SetHelpString(this.trkLEDbright, "External LED brigtness control (percent)");
-            this.trkLEDbright.LargeChange = 10;
-            this.trkLEDbright.Location = new System.Drawing.Point(109, 116);
-            this.trkLEDbright.Maximum = 100;
-            this.trkLEDbright.Name = "trkLEDbright";
-            this.helpProvider.SetShowHelp(this.trkLEDbright, true);
-            this.trkLEDbright.Size = new System.Drawing.Size(190, 45);
-            this.trkLEDbright.SmallChange = 5;
-            this.trkLEDbright.TabIndex = 19;
-            this.trkLEDbright.TickFrequency = 5;
+            this.cmbName.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbName.FormattingEnabled = true;
+            this.helpProvider.SetHelpString(this.cmbName, "Target name; to be easily identified in the logs from different targets");
+            this.cmbName.Items.AddRange(new object[] {
+            "ANON",
+            "BOSS",
+            "MINION",
+            "DOC",
+            "DOPEY",
+            "HAPPY",
+            "GRUMPY",
+            "BASHFUL",
+            "SNEEZEY",
+            "SLEEPY",
+            "RUDOLF",
+            "DONNER",
+            "BLITXEM",
+            "DASHER",
+            "PRANCER",
+            "VIXEN",
+            "COMET",
+            "CUPID",
+            "DUNDER",
+            "ODIN",
+            "WODEN",
+            "THOR",
+            "BALDAR"});
+            this.cmbName.Location = new System.Drawing.Point(109, 36);
+            this.cmbName.Name = "cmbName";
+            this.helpProvider.SetShowHelp(this.cmbName, true);
+            this.cmbName.Size = new System.Drawing.Size(190, 21);
+            this.cmbName.TabIndex = 22;
             // 
-            // label20
+            // label22
             // 
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(13, 120);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(74, 13);
-            this.label20.TabIndex = 20;
-            this.label20.Text = "LED Brigtness";
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(13, 40);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(35, 13);
+            this.label22.TabIndex = 21;
+            this.label22.Text = "Name";
             // 
             // frmSettings
             // 
@@ -1056,5 +1104,7 @@
         public System.Windows.Forms.CheckBox chkMiss;
         private System.Windows.Forms.Label label20;
         public System.Windows.Forms.TrackBar trkLEDbright;
+        public System.Windows.Forms.ComboBox cmbName;
+        private System.Windows.Forms.Label label22;
     }
 }
