@@ -55,30 +55,29 @@ void setup(void)
  *  Set up the port pins
  */
   init_gpio();  
-  is_trace = read_DIP() & (VERBOSE_TRACE);   
   init_sensors();
   init_analog_io();
   randomSeed( analogRead(V_REFERENCE));   // Seed the random number generator
-  
-/*
- * Run the power on self test
- */
-  POST_0(PORT_ALL);                   // Show the version string on all ports
-  POST_1();                           // Cycle the LEDs
-  if ( POST_2() == false )            // If the timers fail, 
-  {
-    Serial.print("\n\rPOST_2 Failed\n\r");
-    while(1)
-    {
-      blink_fault(POST2_FAILED);
-    }
-  }
-  POST_3();                           // Show the trip point
-  
+  is_trace = read_DIP() & (VERBOSE_TRACE);
+     
 /*
  * Initialize variables
  */
   read_nonvol();
+  
+/*
+ * Run the power on self test
+ */
+  POST_version(PORT_ALL);             // Show the version string on all ports
+  show_echo(0);
+  POST_LEDs();                        // Cycle the LEDs
+  while ( (POST_counters() == false)  // If the timers fail
+              && !is_trace)           // and not in trace mode 
+  {
+    Serial.print("\n\rPOST_2 Failed\n\r");  // Blink the LEDs
+    blink_fault(POST2_FAILED);        // and try again
+  }
+  POST_trip_point();                  // Show the trip point
   
 /*
  * Turn off the self test
@@ -101,7 +100,6 @@ void setup(void)
 /*
  * Ready to go
  */
-  show_echo(0);
   set_LED_PWM(json_LED_PWM);
   
   return;
@@ -180,7 +178,7 @@ void loop()
     enable_interrupt();               // Turn on the face strike interrupt
     face_strike = false;              // Reset the face strike count
     
-    set_LED_PWM(json_LED_PWM);        // Turn the LEDs on
+    set_LED_PWM(json_LED_PWM);        // Keep the LEDs ON
 
     sensor_status = is_running();
     power_save = micros();            // Start the power saver time

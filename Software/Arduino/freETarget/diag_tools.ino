@@ -20,6 +20,7 @@ const char* which_one[4] = {"North: ", "East: ", "South: ", "West: "};
 #define GRID_SIDE 25                              // Should be an odd number
 #define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
 #define OVER_TRIP (0.025)                         // Trip point +/- 25mV
+#define CLOCK_TEST_LIMIT 500                      // Clock should be within 500 ticks
 
 static void show_analog_on_PC(int v);
 static void unit_test(unsigned int mode);
@@ -110,7 +111,7 @@ void self_test(uint16_t test)
       Serial.print(speed_of_sound(temperature_C()));  Serial.print("mm/us");
       Serial.print("\r\nV_REF: ");                    Serial.print(volts); 
       Serial.print("\r\n");
-      POST_1();
+      POST_LEDs();
       json_test = T_HELP;               // and stop the test
       break;
 
@@ -314,7 +315,7 @@ void self_test(uint16_t test)
 
 /*----------------------------------------------------------------
  * 
- * function: POST_0()
+ * function: POST_version()
  * 
  * brief: Show the Version String
  * 
@@ -326,7 +327,7 @@ void self_test(uint16_t test)
  *  port(s)
  *  
  *--------------------------------------------------------------*/
- void POST_0
+ void POST_version
     (
     int port        // Port to display output on
     )
@@ -357,7 +358,7 @@ void self_test(uint16_t test)
  
 /*----------------------------------------------------------------
  * 
- * function: POST_1()
+ * function: POST_LEDs()
  * 
  * brief: Show the LEDs are working
  * 
@@ -370,11 +371,11 @@ void self_test(uint16_t test)
  *  
  *--------------------------------------------------------------*/
 
- void POST_1(void)
+ void POST_LEDs(void)
  {
   if ( is_trace )
   {
-    Serial.print("\r\nPOST 1");
+    Serial.print("\r\nPOST LEDs");
   }
 
   set_LED(L('*', '-', '-'));
@@ -389,7 +390,7 @@ void self_test(uint16_t test)
 
 /*----------------------------------------------------------------
  * 
- * function: void POST_2()
+ * function: void POST_counters()
  * 
  * brief: Verify the counter circuit operation
  * 
@@ -406,7 +407,7 @@ void self_test(uint16_t test)
  *  This test will fail if the sensor cable harness is not attached
  *  
  *--------------------------------------------------------------*/
- bool POST_2(void)
+ bool POST_counters(void)
  {
    unsigned int i, j;            // Iteration counter
    unsigned int random_delay;    // Delay duration
@@ -418,13 +419,13 @@ void self_test(uint16_t test)
    
   if ( is_trace )
   {
-    Serial.print("\r\nPOST 2");
+    Serial.print("\r\nPOST counters");
   }
   
 /*
  * The test only works on V2.2 and higher
  */
-  if ( revision() < REV_220 )
+  if ( revision() < REV_300 )
   {
     return true;                   // Fake a positive response  
   }
@@ -450,21 +451,38 @@ void self_test(uint16_t test)
   }
   
 /*
- * Test 2, Look for stuck bits in the clock
+ * Test 2, Verify the opertion of the clock circuit
  */
   for (i=0; i!= 10; i++)
   {
-    if ( test_passed == false )
+    if ( is_trace )
     {
-      Serial.print("\r\n");
+      Serial.print("\r\nCycle:"); Serial.print(i);
     }
     
 /*
- *  Test 1, Trigger the circuit and make sure all of the running states are triggered
+ *  Test 3, Arm the circuit amd make sure it is off
  */
-    random_delay = random(1, 6000);   // Pick a random delay time in us
     stop_counters();                  // Get the circuit ready
     arm_counters();
+    delay(1);                         // Wait for a bit
+    
+    for (j=N; j <= W; j++ )           // Check all of the counters
+    {
+      if ( read_counter(j) != 0 )     // Make sure they stay at zero
+      {
+        Serial.print("\r\nFailed Clock Test. Counter free running:"); Serial.print(nesw[j]);
+        test_passed = false;          // since there is delay  in
+      }   
+    }
+    
+ /*
+  * Test 4: Trigger the counter and make sure the counts are correct
+  */
+    stop_counters();                  // Get the circuit ready
+    arm_counters();
+    delay(1);  
+    random_delay = random(1, 6000);   // Pick a random delay time in us
     now = micros();                   // Grab the current time
     trip_counters();
     sensor_status = is_running();     // Remember all of the running timers
@@ -473,17 +491,14 @@ void self_test(uint16_t test)
     {
       continue;
     }
+    
     stop_counters();
-
     if ( sensor_status != 0x0F )      // The circuit was triggered but not all
     {                                 // FFs latched
       Serial.print("\r\nFailed Clock Test. sensor_status:"); show_sensor_status(sensor_status);
       return false;
     }
 
-/*
- * Test 2. Read back the counters and make sure they match
- */
     random_delay *= 8;                // Convert to clock ticks
     for (j=N; j <= W; j++ )           // Check all of the counters
     {
@@ -502,11 +517,18 @@ void self_test(uint16_t test)
         x = -x;                       // Get the absolute value
       }
 
-      if ( x > 1000 )                 // The time should be 
-      {                               // Within 1000 counts.
+      if ( x > CLOCK_TEST_LIMIT )     // The time should be 
+      { 
         Serial.print("\r\nFailed Clock Test. Counter:"); Serial.print(nesw[j]); Serial.print(" Is:"); Serial.print(read_counter(j)); Serial.print(" Should be:"); Serial.print(random_delay); Serial.print(" Time:"); Serial.print(x);
         test_passed = false;          // since there is delay  in
       }                               // Turning off the counters
+      else
+      {
+        if ( is_trace )
+        {
+          Serial.print("\r\nClock Pass. Counter:"); Serial.print(nesw[j]); Serial.print(" Is:"); Serial.print(read_counter(j)); Serial.print(" Should be:"); Serial.print(random_delay); Serial.print(" Time:"); Serial.print(x);
+        }
+      }
     }
   }
   
@@ -520,7 +542,7 @@ void self_test(uint16_t test)
   
 /*----------------------------------------------------------------
  * 
- * function: void POST_3()
+ * function: void POST_trip_point()
  * 
  * brief: Display the trip point
  * 
@@ -530,11 +552,11 @@ void self_test(uint16_t test)
  *  Run the set_trip_point function once
  *  
  *--------------------------------------------------------------*/
- void POST_3(void)
+ void POST_trip_point(void)
  {
    if ( is_trace )
    {
-    Serial.print("\r\nPOST 3");
+    Serial.print("\r\nPOST trip point");
    }
    
    set_trip_point(10);               // Show the trip point once (10 cycles)

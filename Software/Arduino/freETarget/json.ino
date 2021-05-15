@@ -67,7 +67,7 @@ const json_message JSON[] = {
   {"\"DIP\":",            &json_dip_switch,                  0,                IS_INT16,  0,                NONVOL_DIP_SWITCH  },    // Remotely set the DIP switch
   {"\"ECHO\":",           &json_echo,                        0,                IS_INT16,  &show_echo,                       0  },    // Echo test
   {"\"INIT\"",            0,                                 0,                IS_VOID,   &init_nonvol,                     0  },    // Initialize the NONVOL memory
-  {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT16,  &set_LED_PWM,     NONVOL_LED_PWM     },    // Set the LED brightness
+  {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT16,  &set_LED_PWM_now, NONVOL_LED_PWM     },    // Set the LED brightness
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT16,  &show_names,      NONVOL_NAME_ID     },    // Give the board a name
   {"\"PAPER\":",          &json_paper_time,                  0,                IS_INT16,  0,                NONVOL_PAPER_TIME  },    // Set the paper advance time
   {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT16,  0,                NONVOL_POWER_SAVE  },    // Set the power saver time
@@ -76,7 +76,7 @@ const json_message JSON[] = {
   {"\"TEST\":",           &json_test,                        0,                IS_INT16,  &show_test,       NONVOL_TEST_MODE   },    // Execute a self test
   {"\"TRACE\":",          &temp,                             0,                IS_INT16,  &set_trace,                       0  },    // Enter / exit diagnostic trace
   {"\"TRGT_1_RINGx10\":", &json_1_ring_x10,                  0,                IS_INT16,  0,                NONVOL_1_RINGx10   },    // Enter the 1 ring diamater
-  {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_0,                          0  },    // Return the version string
+  {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_version,                    0  },    // Return the version string
   {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT16,  0,                NONVOL_NORTH_X     },    //
   {"\"NORTH_Y\":",        &json_north_y,                     0,                IS_INT16,  0,                NONVOL_NORTH_Y     },    //
   {"\"EAST_X\":",         &json_east_x,                      0,                IS_INT16,  0,                NONVOL_EAST_X      },    //
