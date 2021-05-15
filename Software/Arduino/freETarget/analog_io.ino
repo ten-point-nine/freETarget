@@ -34,6 +34,7 @@ void init_analog_io(void)
 /*----------------------------------------------------------------
  * 
  * function: set_LED_PWM()
+ * function: set_LED_PWM_now()
  * function: blink_LED_PWM()
  * function: set_LED_off()
  * 
@@ -50,11 +51,43 @@ void init_analog_io(void)
  *--------------------------------------------------------------*/
 static unsigned int old_LED_percent = 0;
 
+void set_LED_PWM_now
+  (
+  int new_LED_percent                            // Desired LED level (0-100%)
+  )
+{
+  if ( new_LED_percent == old_LED_percent )
+  {
+    return;
+  }
+  
+  if ( is_trace )
+  {
+    Serial.print("\r\nnew_LED_percent:"); Serial.print(new_LED_percent); Serial.print("  old_LED_percent:"); Serial.print(old_LED_percent);
+  }
+
+  old_LED_percent = new_LED_percent;
+  analogWrite(LED_PWM, old_LED_percent * 256 / 100);  // Write the value out
+  
+  return;
+}
+  
+
 void set_LED_PWM
   (
   int new_LED_percent                            // Desired LED level (0-100%)
   )
 {
+  if ( new_LED_percent == old_LED_percent )
+  {
+    return;
+  }
+  
+  if ( is_trace )
+  {
+    Serial.print("\r\nnew_LED_percent:"); Serial.print(new_LED_percent); Serial.print("  old_LED_percent:"); Serial.print(old_LED_percent);
+  }
+  
   while ( new_LED_percent != old_LED_percent )  // Change in the brightness level?
   {
     analogWrite(LED_PWM, old_LED_percent * 256 / 100);  // Write the value out
