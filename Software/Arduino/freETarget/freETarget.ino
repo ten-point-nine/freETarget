@@ -75,7 +75,7 @@ void setup(void)
               && !is_trace)           // and not in trace mode 
   {
     Serial.print("\n\rPOST_2 Failed\n\r");  // Blink the LEDs
-    blink_fault(POST2_FAILED);        // and try again
+    blink_fault(POST_COUNT_FAILED);         // and try again
   }
   POST_trip_point();                  // Show the trip point
   
@@ -189,7 +189,7 @@ void loop()
       {
         Serial.print("\r\n\nWaiting...");
       }
-      set_LED(L('*', '-', '-'));   
+      set_LED(SHOT_READY);   
       state = WAIT;             // Fall through to WAIT
     }
     else
@@ -197,25 +197,25 @@ void loop()
       if ( sensor_status & TRIP_NORTH  )
       {
         Serial.print("\r\n{ \"Fault\": \"NORTH\" }");
-        set_LED(L('-', '*', '-'));        // Fault code North
+        set_LED(NORTH_FAILED);           // Fault code North
         delay(ONE_SECOND);
       }
       if ( sensor_status & TRIP_EAST  )
       {
         Serial.print("\r\n{ \"Fault\": \"EAST\" }");
-        set_LED(L('-', '*', '*'));       // Fault code East
+        set_LED(EAST_FAILED);           // Fault code East
         delay(ONE_SECOND);
       }
       if ( sensor_status & TRIP_SOUTH )
       {
         Serial.print("\r\n{ \"Fault\": \"SOUTH\" }");
-        set_LED(L('*', '*', '*'));        // Fault code South
+        set_LED(SOUTH_FAILED);         // Fault code South
         delay(ONE_SECOND);
       }
       if ( sensor_status & TRIP_WEST )
       {
         Serial.print("\r\n{ \"Fault\": \"WEST\" }");
-        set_LED(L('*', '*', '-'));   // Fault code West
+        set_LED(WEST_FAILED);         // Fault code West
         delay(ONE_SECOND);
       }     
     }

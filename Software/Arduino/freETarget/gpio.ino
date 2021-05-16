@@ -528,17 +528,27 @@ void read_timers(void)
  }
 
  /*
- * Common function to indicate a fault
+ * Common function to indicate a fault // Cycle LEDs 5x
  */
 void blink_fault
   (                                        
   unsigned int fault_code                 // Fault code to blink
   )
 {
-  set_LED(fault_code & 4, fault_code & 2, fault_code & 1);  // Blink the LEDs to show an error
-  delay(ONE_SECOND/4);
-  fault_code = ~fault_code;
-  set_LED(fault_code & 4, fault_code & 2, fault_code & 1);                    // Blink the LEDs to show an error
-  delay(ONE_SECOND/4);
+  unsigned int i;
+
+  for (i=0; i != 5; i++)
+  {
+    set_LED(fault_code & 4, fault_code & 2, fault_code & 1);  // Blink the LEDs to show an error
+    delay(ONE_SECOND/2);
+    fault_code = ~fault_code;
+    set_LED(fault_code & 4, fault_code & 2, fault_code & 1);                    // Blink the LEDs to show an error
+    delay(ONE_SECOND/2);
+    fault_code = ~fault_code;
+  }
+
+ /*
+  * Finished
+  */
   return;
 }

@@ -23,9 +23,29 @@
 #define T_LED         14       // Test the PWM
 #define T_FACE        15       // Test the face detector
 
-#define POST2_FAILED       0b001    // LED fault code
-#define VREF_OVER_UNDER    0b010
-#define SHOT_MISS          0b000
+/*
+ * LED status messages
+ */
+// Normal operation        RDY Light On
+#define SHOT_READY         L('*', '.', '.') // The shot is ready to go
+#define SHOT_DONE          L('*', '*', '*') // A shot has been detected
+
+
+// Sensor failed while waiting for a shot X Light On
+#define NORTH_FAILED       L('.', '*', '.') // North sensor failed
+#define EAST_FAILED        L('.', '*', '*') // East sensor failed
+#define SOUTH_FAILED       L('*', '*', '*') // South sensor failed
+#define WEST_FAILED        L('*', '*', '.') // West sensor failed
+
+// Spare                   Y light On
+#define UNUSED_1           L('.', '.', '*')
+#define UNUSED_2           L('*', '-', '*')
+
+// Blinking fault message
+#define POST_COUNT_FAILED  0b001            // LED fault code
+#define VREF_OVER_UNDER    0b010            // Trip point over or under spec
+#define UNUSED_2           0b100
+#define SHOT_MISS          0b000            // Shot missed
 
 void self_test(uint16_t test);
 void show_sensor_status(unsigned int sensor_status);  // Display the sensor status as text
