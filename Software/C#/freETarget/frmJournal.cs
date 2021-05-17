@@ -20,6 +20,7 @@ namespace freETarget {
         private Session currentSession = null;
         frmMainWindow mainWindow;
         private bool isLoading = false;
+        private int listSessionLastIndex = -1;
 
 
         public frmJournal(frmMainWindow mainWin) {
@@ -246,11 +247,13 @@ namespace freETarget {
             if (item != null) {
                 Session session = storage.findSession(item.id);
                 if (session == null) {
+                    lstbSessions.SelectedIndex = listSessionLastIndex;
                     return;
                 }
                 pGridSession.SelectedObject = session;
                 currentSession = session;
                 enableDisableButtons(true, true);
+                listSessionLastIndex = lstbSessions.SelectedIndex;
             }
         }
 

@@ -134,6 +134,11 @@ namespace freETarget {
             ret += innerTen + ",";
             ret += timestamp.ToString("yyyy-MM-dd HH:mm:ss") + ",";
             ret += shotDuration.TotalSeconds.ToString("F2", CultureInfo.InvariantCulture);
+            if (calibrationX != 0 || calibrationY != 0 || calibrationAngle != 0) {
+                ret += "," + calibrationX.ToString("F2", CultureInfo.InvariantCulture) + ",";
+                ret += calibrationY.ToString("F2", CultureInfo.InvariantCulture) + ",";
+                ret += calibrationAngle.ToString("F2", CultureInfo.InvariantCulture);
+            }
 
             return ret;
         }
@@ -152,6 +157,17 @@ namespace freETarget {
             shot.innerTen = bool.Parse(s[8]);
             shot.timestamp = DateTime.Parse(s[9]);
             double d = double.Parse(s[10], CultureInfo.InvariantCulture);
+            if (s.Length == 11) {
+                //shots saved without calibration data
+                shot.calibrationX = 0;
+                shot.calibrationY = 0;
+                shot.calibrationAngle = 0;
+            } else {
+                shot.calibrationX = decimal.Parse(s[11], CultureInfo.InvariantCulture);
+                shot.calibrationY = decimal.Parse(s[12], CultureInfo.InvariantCulture);
+                shot.calibrationAngle = decimal.Parse(s[13], CultureInfo.InvariantCulture);
+            }
+
             shot.shotDuration = TimeSpan.FromSeconds(d);
 
             return shot;
