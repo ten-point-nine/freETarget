@@ -537,13 +537,13 @@ void blink_fault
 {
   unsigned int i;
 
-  for (i=0; i != 5; i++)
+  for (i=0; i != 3; i++)
   {
     set_LED(fault_code & 4, fault_code & 2, fault_code & 1);  // Blink the LEDs to show an error
-    delay(ONE_SECOND/2);
+    delay(ONE_SECOND/4);
     fault_code = ~fault_code;
     set_LED(fault_code & 4, fault_code & 2, fault_code & 1);                    // Blink the LEDs to show an error
-    delay(ONE_SECOND/2);
+    delay(ONE_SECOND/4);
     fault_code = ~fault_code;
   }
 

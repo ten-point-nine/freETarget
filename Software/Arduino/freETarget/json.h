@@ -28,5 +28,6 @@ extern int    json_1_ring_x10;    // Size of 1 ring in mmx10
 extern int    json_LED_PWM;       // PWM Setting (%)
 extern int    json_power_save;    // How long to run target before turning off LEDs
 extern int    json_send_miss;     // Sent the miss message when TRUE
+extern int    json_serial_number; // EIN 
 
 #endif _JSON_H_
