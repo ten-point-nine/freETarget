@@ -24,18 +24,99 @@
  *------------------------------------------------------------*/
 void init_nonvol(int v)
 {
-  unsigned int nonvol_init;
-
+  unsigned int nonvol_init;               // Initialization token
+  unsigned int serial_number;             // Board serial number
+  char ch;
+  
   nonvol_init = 0;                        // Corrupt the init location
+  serial_number = 0;
   EEPROM.put(NONVOL_INIT, nonvol_init);
+  
   Serial.print("\r\nReset to factory defaults\r\n");
+  
+  gen_position(0); 
+  EEPROM.put(NONVOL_DIP_SWITCH,  0);   // No, set up the defaults
+  EEPROM.put(NONVOL_SENSOR_DIA,  230.0); 
+  EEPROM.put(NONVOL_PAPER_TIME,  0);
+  EEPROM.put(NONVOL_TEST_MODE,   0);
+  EEPROM.put(NONVOL_CALIBRE_X10, 45);
+  EEPROM.put(NONVOL_LED_PWM,     50);
+  EEPROM.put(NONVOL_POWER_SAVE,  30);
+  EEPROM.put(NONVOL_NAME_ID,      1);
+  EEPROM.put(NONVOL_1_RINGx10, 1555);
+  EEPROM.put(NONVOL_SEND_MISS,    0);
+  EEPROM.put(NONVOL_SERIAL_NO,    0);
+  EEPROM.put(NONVOL_DIP_SWITCH,   0);     // Read the nonvol settings
+  EEPROM.put(NONVOL_SENSOR_DIA, 230.0);
+  EEPROM.put(NONVOL_TEST_MODE,    0);
+  
+  EEPROM.get(NONVOL_PAPER_TIME, json_paper_time);
+  EEPROM.put(NONVOL_PAPER_TIME,   0);   // and limit motor on time
+  EEPROM.put(NONVOL_CALIBRE_X10, 45);   // Default to a 4.5mm pellet
+  EEPROM.put(NONVOL_SENSOR_ANGLE,45);   // Default to a 45 degree offset
+  EEPROM.put(NONVOL_NAME_ID,      0);   // Default to no name
+  
+  EEPROM.put(NONVOL_NORTH_X, 0);  
+  EEPROM.put(NONVOL_NORTH_Y, 0);  
+  EEPROM.put(NONVOL_EAST_X,  0);  
+  EEPROM.put(NONVOL_EAST_Y,  0);  
+  EEPROM.put(NONVOL_SOUTH_X, 0);  
+  EEPROM.put(NONVOL_SOUTH_Y, 0);  
+  EEPROM.put(NONVOL_WEST_X,  0);  
+  EEPROM.put(NONVOL_WEST_Y,  0);  
+
+  EEPROM.put(NONVOL_1_RINGx10,  json_1_ring_x10);
+
+  EEPROM.put(NONVOL_POWER_SAVE, 0);
+  EEPROM.put(NONVOL_LED_PWM,    0);
+  EEPROM.put(NONVOL_SEND_MISS,  0);
+
+/*
+ * Ask for the serial number.  Exit when you get !
+ */
+  ch = 0;
+  serial_number = 0;
+  while ( Serial.available() )    // Eat any pending junk
+  {
+    Serial.read();
+  }
+  
+  Serial.print("\r\nSerial Number? (number! or x)");
+  while (i)
+  {
+    if ( Serial.available() != 0 )
+    {
+      ch = Serial.read();
+      if ( ch == '!' )
+      {
+        Serial.print(" Confirm: "); Serial.print(serial_number);
+        break;
+      }
+      if ( ch == 'x' )
+      {
+        return;
+      }
+      Serial.print(serial_number);
+      serial_number *= 10;
+      serial_number += ch - '0';
+      Serial.print(serial_number);
+    }
+  }
+  EEPROM.put(NONVOL_SERIAL_NO, serial_number);
+  
+  nonvol_init = INIT_DONE;
+  EEPROM.put(NONVOL_INIT, INIT_DONE);
+/*
+ * Read the NONVOL and print the results
+ */
   read_nonvol();                          // Force in new values
   show_echo(0);                           // Display these settings
   set_trip_point(0);                      // And stay forever in the trip mode
   
 /*
  * All done, return
- */
+ */    
+
   return;
 }
 
@@ -58,28 +139,20 @@ void init_nonvol(int v)
 void read_nonvol(void)
 {
   unsigned int nonvol_init;
+
+  if ( is_trace )
+  {
+    Serial.print("\r\nReading NONVOL");
+  }
+  
 /*
  * Read the nonvol marker and if uninitialized then set up values
  */
   EEPROM.get(NONVOL_INIT, nonvol_init);
+  
   if ( nonvol_init != INIT_DONE)                       // EEPROM never programmed
   {
-    Serial.print("\r\nInitializing NON-VOL");
-    gen_position(0); 
-    EEPROM.put(NONVOL_DIP_SWITCH,  0);   // No, set up the defaults
-    EEPROM.put(NONVOL_SENSOR_DIA,  230.0); 
-    EEPROM.put(NONVOL_PAPER_TIME,  0);
-    EEPROM.put(NONVOL_TEST_MODE,   0);
-    EEPROM.put(NONVOL_CALIBRE_X10, 45);
-    EEPROM.put(NONVOL_LED_PWM,     50);
-    EEPROM.put(NONVOL_POWER_SAVE, 30);
-    EEPROM.put(NONVOL_NAME_ID,    1);
-    EEPROM.put(NONVOL_1_RINGx10, 1555);
-    EEPROM.put(NONVOL_SEND_MISS,  0);
-    EEPROM.put(NONVOL_SERIAL_NO,  0);
-    
-    nonvol_init = INIT_DONE;
-    EEPROM.put(NONVOL_INIT, INIT_DONE);
+
   }
 
 /*
@@ -138,7 +211,7 @@ void read_nonvol(void)
   EEPROM.get(NONVOL_LED_PWM,    json_LED_PWM);
   EEPROM.get(NONVOL_SEND_MISS,  json_send_miss);
   EEPROM.get(NONVOL_SERIAL_NO,  json_serial_number);
-  
+
 /*
  * All done, begin the program
  */
