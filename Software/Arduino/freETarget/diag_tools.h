@@ -19,7 +19,7 @@
 #define T_PASS_THRU   10       // Serial port pass through
 #define T_SET_TRIP    11       // Set the microphone trip point
 #define T_XFR_LOOP    12       // Transfer loopback
-#define T_SERIAL_PORT 13       // Hello World
+#define T_SERIAL_PORT 13       // Hello World n
 #define T_LED         14       // Test the PWM
 #define T_FACE        15       // Test the face detector
 

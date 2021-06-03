@@ -313,7 +313,7 @@ void show_echo(int v)
   i=0;
   while (JSON[i].token != 0 )                 // Still more to go?  
   {
-    if ( JSON[i].value != NULL )              // It has a value
+    if ( JSON[i].value != NULL )              // It has a value ?
     {
       switch ( JSON[i].convert )              // Display based on it's type
       {
@@ -334,6 +334,10 @@ void show_echo(int v)
       }
     }
     i++;
+    if ( (i % 4) == 0 )                     // Space out 4 at a time
+    {
+      Serial.print("\r\n");
+    }
   }
 
 /*

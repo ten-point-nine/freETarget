@@ -11,7 +11,7 @@
 #ifndef _FREETARGET_H
 #define _FREETARGET_H
 
-#define SOFTWARE_VERSION "\"3.01.6 May 23, 2021\""
+#define SOFTWARE_VERSION "\"3.01.8 May 28, 2021\""
 #define REV_100    100
 #define REV_210    210
 #define REV_220    220
@@ -88,5 +88,6 @@ extern char* nesw;                    // Cardinal Points
 #define FACTORY        {"NAME_ID":1, "TRGT_1_RINGx10":1550, "ECHO":2}
 #define FACTORY_BOSS   {"NAME_ID":1, "TRGT_1_RINGx10":1550, "ECHO":2}
 #define FACTORY_MINION {"NAME_ID":2, "TRGT_1_RINGx10":1550, "ECHO":2}
+#define SERIAL_NUMBER  {"NAME_ID":1, "TRGT_1_RINGx10":1550, "SN":1234, "ECHO":2}
 */
 #endif

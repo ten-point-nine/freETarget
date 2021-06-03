@@ -290,7 +290,7 @@ void self_test(uint16_t test)
       {        
         if ( face_strike != 0 )
         {
-          set_LED(L('*', '*', '*'));                     // If something comes in, turn on all of the LEDs 
+          set_LED(L('*', '*', '*'));           // If something comes in, turn on all of the LEDs 
           face_strike = 0;
         }
         else
@@ -332,10 +332,11 @@ void self_test(uint16_t test)
     int port        // Port to display output on
     )
 {
+
 /*
  * Display the version on the selected port
  */
-  if ( port & PORT_SERIAL )
+  if ( (port == 0) || (port & PORT_SERIAL) ) // No port or Serial port selected
   {
     Serial.print("\r\nfreETarget "); Serial.print(SOFTWARE_VERSION); Serial.print("\r\n");
   }
