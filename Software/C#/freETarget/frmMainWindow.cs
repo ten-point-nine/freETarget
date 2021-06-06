@@ -401,6 +401,7 @@ namespace freETarget {
             if (t.IndexOf(Environment.NewLine) > -1) {
                 t = t.Substring(0, t.IndexOf(Environment.NewLine));
             }
+            t = t.Trim();
             statusText.Text = "Connected to " + t + " on " + serialPort.PortName;
             log("****************\nConnected to " + t + " on " + serialPort.PortName);
             displayMessage("Connected to " + t, false);
