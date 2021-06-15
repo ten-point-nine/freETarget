@@ -216,7 +216,7 @@ bool    return_value;
   
           case IS_FLOAT:                                      // Convert a floating point number
           case IS_DOUBLE:
-            y = atoi(&input_JSON[i+k-1]);
+            y = atof(&input_JSON[i+k]);
             *JSON[j].d_value = y;                             // Save the value
             if ( JSON[j].non_vol != 0 )
             {
@@ -313,7 +313,7 @@ void show_echo(int v)
   i=0;
   while (JSON[i].token != 0 )                 // Still more to go?  
   {
-    if ( JSON[i].value != NULL )              // It has a value ?
+    if ( (JSON[i].value != NULL) || (JSON[i].d_value != NULL) ) // It has a value ?
     {
       switch ( JSON[i].convert )              // Display based on it's type
       {
@@ -449,4 +449,3 @@ static void show_test(int test_number)
    */
     return;   
  }
-

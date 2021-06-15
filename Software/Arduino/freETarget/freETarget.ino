@@ -327,6 +327,3 @@ void loop()
  */
   return;
 }
-
-
-
