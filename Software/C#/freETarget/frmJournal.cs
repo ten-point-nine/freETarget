@@ -292,7 +292,7 @@ namespace freETarget {
             isLoading = true;
             enableDisableButtons(false, false);
             Application.DoEvents();
-            mainWindow.loadSession(currentSession);
+            mainWindow.loadSessionFromJournal(currentSession);
             enableDisableButtons(true, false);
             isLoading = false;
         }
@@ -302,7 +302,7 @@ namespace freETarget {
                 e.Cancel = true;
                 return;
             }
-            mainWindow.clearSession();
+            mainWindow.unloadJournalSession();
             mainWindow.btnConnect.Enabled = true;
         }
 

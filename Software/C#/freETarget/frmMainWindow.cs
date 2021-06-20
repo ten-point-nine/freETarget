@@ -247,7 +247,7 @@ namespace freETarget {
                     String message = incomingJSON.Substring(indexOpenBracket + 1, indexClosedBracket - indexOpenBracket - 1);
                     incomingJSON = incomingJSON.Substring(indexClosedBracket);
 
-                    Console.WriteLine("Complete json message: " + message);
+                    //Console.WriteLine("Complete json message: " + message);
 
                     //parse json message. might be a shot data or a test message
                     Shot shot = parseJson(message);
@@ -387,8 +387,8 @@ namespace freETarget {
             serialPort.Write("{\"NAME_ID\":" + Properties.Settings.Default.targetName.ToString() + "}");
             Console.WriteLine("{\"NAME_ID\":" + Properties.Settings.Default.targetName.ToString() + "}");
 
-            Thread.Sleep(500);
-            serialPort.Write("{\"ECHO\":0}");
+            //Thread.Sleep(500);
+            //serialPort.Write("{\"ECHO\":0}");
 
             Thread.Sleep(500);
             serialPort.Write("{\"VERSION\":7}");
@@ -468,7 +468,7 @@ namespace freETarget {
                 ListViewItem item = new ListViewItem(new string[] { "" }, (shot.index+1).ToString());
                 item.UseItemStyleForSubItems = false;
                 ListViewItem.ListViewSubItem countItem = item.SubItems.Add((shot.index+1).ToString());
-                countItem.Font = new Font("MS Sans Serif", 9.75f, FontStyle.Italic|FontStyle.Bold);
+                countItem.Font = new Font("MS Sans Serif", 7f, FontStyle.Italic|FontStyle.Bold);
                 ListViewItem.ListViewSubItem scoreItem = item.SubItems.Add(shot.score.ToString());
                 scoreItem.Font = new Font("MS Sans Serif", 9.75f,  FontStyle.Bold);
                 ListViewItem.ListViewSubItem decimalItem = item.SubItems.Add(shot.decimalScore.ToString(CultureInfo.InvariantCulture) + inner);
@@ -867,6 +867,7 @@ namespace freETarget {
             txtLastShot.Text = "";
             imgArrow.Image = new Bitmap(imgArrow.Width, imgArrow.Height);
             imgArrow.Refresh();
+            imgListDirections.Images.Clear();
             Application.DoEvents();
             txtTotal.Text = "";
             txtTime.Text = "";
@@ -1317,7 +1318,7 @@ namespace freETarget {
             }
         }
 
-        public void loadSession(Session session) {
+        public void loadSessionFromJournal(Session session) {
             if(this.currentSession.id == session.id) {
                 displayMessage("Session "+ session.id + " already loaded", true);
                 return;
@@ -1333,8 +1334,10 @@ namespace freETarget {
 
             shotsList.Items.Clear();
             shotsList.Refresh();
+            imgListDirections.Images.Clear();
             gridTargets.Rows.Clear();
             clearBreakdownChart();
+           
 
             frmJournal journalForm = (frmJournal)Application.OpenForms["frmJournal"];
 
@@ -1353,11 +1356,12 @@ namespace freETarget {
             displayMessage("Session " + session.id + " loaded", false);
         }
 
-        public void clearSession() {
+        public void unloadJournalSession() {
             initDefaultSession();
             this.currentStatus = Status.NOT_CONNECTED;
             shotsList.Items.Clear();
             shotsList.Refresh();
+            imgListDirections.Images.Clear();
             gridTargets.Rows.Clear();
             clearBreakdownChart();
             targetRefresh();
@@ -1368,7 +1372,7 @@ namespace freETarget {
         }
 
         private void imgLogo_Click(object sender, EventArgs e) {
-            MessageBox.Show("Copyright (c) 2020 Azmodan -> youtube.com/ArmeVechi");
+            MessageBox.Show("Copyright (c) 2020-2021 Azmodan -> youtube.com/ArmeVechi");
         }
 
         private void btnArduino_Click(object sender, EventArgs e) {

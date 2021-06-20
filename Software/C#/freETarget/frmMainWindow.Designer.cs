@@ -240,9 +240,9 @@ namespace freETarget
             // 
             // col1
             // 
-            this.col1.Text = "Shot";
+            this.col1.Text = "Nr";
             this.col1.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.col1.Width = 40;
+            this.col1.Width = 35;
             // 
             // col2
             // 
@@ -254,7 +254,7 @@ namespace freETarget
             // 
             this.col3.Text = "Deci";
             this.col3.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.col3.Width = 50;
+            this.col3.Width = 55;
             // 
             // imgListDirections
             // 
