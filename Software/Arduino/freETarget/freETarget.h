@@ -10,8 +10,9 @@
  */
 #ifndef _FREETARGET_H
 #define _FREETARGET_H
+#include "esp-01.h"
 
-#define SOFTWARE_VERSION "\"3.01.9 June 15, 2021\""
+#define SOFTWARE_VERSION "\"3.02.0 July 3, 2021\""
 #define REV_100    100
 #define REV_210    210
 #define REV_220    220
@@ -21,19 +22,32 @@
 #define INIT_DONE       0xabcd        // Initialization complete signature
 
 /*
- * Compilation Flags
+ * Three way Serial Port
  */
 #define SAMPLE_CALCULATIONS false     // Trace the COUNTER values
 #define AUX_SERIAL         Serial3    // Auxilary Connector
 #define DISPLAY_SERIAL     Serial2    // Serial port for slave display
 
 #define PRINT(x)  {Serial.print(x); AUX_SERIAL.print(x); DISPLAY_SERIAL.print(x);}
-#define GET(ch)   {if ( Serial.available() )              ch = Serial.read();         \
-                   else if ( AUX_SERIAL.available() )     ch = AUX_SERIAL.read();     \
-                   else if ( DISPLAY_SERIAL.available() ) ch = DISPLAY_SERIAL.read(); \
-                   else                                   ch = 0;}
+
+char GET (void) 
+{
+  if ( Serial.available() )
+  {
+    return Serial.read(); 
+  }
+  if ( esp01_available() )
+  {
+    return esp01_read();
+  }
+  if ( DISPLAY_SERIAL.available() )
+  {
+    return DISPLAY_SERIAL.read();
+  }
+  return 0;
+}
                    
-#define AVAILABLE ( Serial.available() + AUX_SERIAL.available() + DISPLAY_SERIAL.available() )
+#define AVAILABLE ( Serial.available() | esp01_available() | DISPLAY_SERIAL.available() )
 
 #define PORT_SERIAL   1
 #define PORT_AUX      2
@@ -74,7 +88,7 @@ struct history
 
 typedef struct history history_t;
 
-extern double     s_of_sound;
+extern double  s_of_sound;
 
 extern const char* names[];
 extern bool  face_strike;

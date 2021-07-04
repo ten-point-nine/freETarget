@@ -4,6 +4,22 @@
 #ifndef _JSON_H_
 #define _JSON_H_
 
+typedef struct  {
+  char*             token;    // JSON token string, ex "RADIUS": 
+  int*              value;    // Where value is stored 
+  double*         d_value;    // Where value is stored 
+  unsigned int    convert;    // Conversion type
+  void         (*f)(int x);   // Function to execute with message
+  unsigned int    non_vol;    // Storage in NON-VOL
+  unsigned int init_value;    // Initial Value
+} json_message;
+
+#define IS_VOID    0        // Value is a void
+#define IS_INT16   1        // Value is a 16 bit int
+#define IS_FLOAT   2        // Value is a floating point number
+#define IS_DOUBLE  3        // Value is a double
+
+
 bool read_JSON(void);             // Scan the serial port looking for JSON input
 void show_echo(int v);            // Display the settings
 
@@ -29,5 +45,7 @@ extern int    json_LED_PWM;       // PWM Setting (%)
 extern int    json_power_save;    // How long to run target before turning off LEDs
 extern int    json_send_miss;     // Sent the miss message when TRUE
 extern int    json_serial_number; // EIN 
+extern int    json_paper_step;    // Number of times paper motor is stepped
+extern int    json_multifunction; // Multifunction switch operation
 
 #endif _JSON_H_

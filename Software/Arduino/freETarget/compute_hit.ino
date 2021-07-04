@@ -5,10 +5,8 @@
  * Determine the score
  *
  *---------------------------------------------------------------*/
-
-#include "mechanical.h"
-#include "compute_hit.h"
 #include "freETarget.h"
+#include "mechanical.h"
 #include "compute_hit.h"
 #include "analog_io.h"
 #include "json.h"
@@ -475,12 +473,11 @@ void send_score
   int    z;
   double score;
 
-
   if ( is_trace )
   {
     Serial.print("\r\nSending the score");
   }
-   
+
  /* 
   *  Work out the hole in perfect coordinates
   */
@@ -499,6 +496,7 @@ void send_score
 /* 
  *  Display the results
  */
+  esp01_send(true, 0);       // Turn on the IP channel (if needed)
   PRINT("\r\n{");
   
 #if ( S_SHOT )
@@ -546,7 +544,11 @@ void send_score
 #endif
 
   PRINT("}\r\n");
-  
+  esp01_send(false, 0);
+
+/*
+ * All done, return
+ */
   return;
 }
  
@@ -573,6 +575,7 @@ void send_miss
 /* 
  *  Display the results
  */
+  esp01_send(true, 0);           // Prime the IP channel if needed
   PRINT("\r\n{");
   
 #if ( S_SHOT )
@@ -590,7 +593,11 @@ void send_miss
 #endif
 
   PRINT("}\r\n");
-  
+  esp01_send(false, 0);            // Flush the IP channel
+
+/*
+ * All done, go home
+ */
   return;
 }
 

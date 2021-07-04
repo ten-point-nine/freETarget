@@ -62,8 +62,11 @@ const GPIO init_table[] = {
   {SPARE_2,     INPUT_PULLUP, 0},
   
   {EOF, EOF, EOF} };
+  
+static   int last_MFS_state;              // Last state read from MFS
 
 void face_ISR(void);
+static void paper_on_off(bool on);        // Turn the motor on or off
 
 /*-----------------------------------------------------
  * 
@@ -101,14 +104,8 @@ void init_gpio(void)
  * Special case of the witness paper
  */
   pinMode(PAPER, OUTPUT);
-  if ( revision() < REV_300 )
-  { 
-    digitalWrite(PAPER, PAPER_OFF);
-  }
-  else 
-  {
-    digitalWrite(PAPER, PAPER_OFF_300);
-  }
+  paper_on_off(false);        // Turn it off
+  multifunction_init();       // Program the multifunction switch
   
 /*
  * All done, return
@@ -448,52 +445,122 @@ void read_timers(void)
  *-----------------------------------------------------
  *
  * The function turns on the motor for the specified
- * time.
+ * time.  The motor is cycled json_paper_step times
+ * to drive a stepper motor using the same circuit.
+ * 
+ * Use an A4988 to drive te stepper in place of a DC
+ * motor
  * 
  * There is a hardare change between Version 2.2 which
  * used a transistor and 3.0 that uses a FET.
  * The driving circuit is reversed in the two boards.
  * 
  *-----------------------------------------------------*/
+ 
  void drive_paper(void)
  {
+  unsigned int i, j, k;                           // Iteration Counters
+  
+  if ( is_trace )
+  {
+    Serial.print("\r\nAdvancing paper ");
+  }
+
+/*
+ * Drive the motor on and off for the number of cycles
+ * at duration
+ */
+
+  for (i=0; i != json_paper_step; i++)            // Number of steps
+  {
+   paper_on_off(true);                            // Turn the motor on
+   
    if ( is_trace )
    {
-     Serial.print("\r\nAdvancing paper...");
-   }
-    
-   if ( revision() < REV_300 )
-   {
-     digitalWrite(PAPER, PAPER_ON);               // Advance the motor drive time
-   }
-   else
-   {
-     digitalWrite(PAPER, PAPER_ON_300);          // Advance the motor drive time
+     Serial.print("On ");
    }
    
-   for (i=0; i != json_paper_time; i++ )
+   for (j=0; j != json_paper_time; j++ )          // Delay in 10 ms increments
    {
-     j = 7 * (1.0 - ((float)i / float(json_paper_time)));
-     set_LED(j & 4, j & 2, j & 1);                // Show the count going downb
-     delay(PAPER_STEP);                           // in 100ms increments
-    }
-    
-   if ( revision() < REV_300 )
-   {
-     digitalWrite(PAPER, PAPER_OFF);              // Advance the motor drive time
+     k = 7 * (1.0 - ((float)i / float(json_paper_time)));
+     set_LED(k & 4, k & 2, k & 1);                // Show the count going downb
+     delay(PAPER_STEP);                           // in 10ms increments
    }
-   else
+
+   paper_on_off(false);                           // Turn the motor off
+   
+   if ( is_trace )
    {
-     digitalWrite(PAPER, PAPER_OFF_300);          // Advance the motor drive time
-     digitalWrite(PAPER, PAPER_OFF_300);          // Advance the motor drive time
+     Serial.print("Off ");
    }
+
+   if ( json_paper_step == 1)                    // DC motors only have 
+   {                                              // one step, so exit
+     break;   
+   }
+
+   delay(PAPER_STEP);                             // Let the A4988 catch ujp
+  }
 
  /*
   * All done, return
   */
   return;
  }
+
+/*-----------------------------------------------------
+ * 
+ * function: paper_on_off
+ * 
+ * brief:    Turn the withness paper motor on or off
+ * 
+ * return:  None
+ * 
+ *-----------------------------------------------------
+ *
+ * The witness paper motor changed polarity between 2.2
+ * and Version 3.0.
+ * 
+ * This function reads the board revision and controls 
+ * the FET accordingly
+ * 
+ *-----------------------------------------------------*/
  
+static void paper_on_off                        // Function to turn the motor on and off
+  (
+  bool on                                       // on == true, turn on motor drive
+  )
+{
+  if ( on == true )
+  {
+    if ( revision() < REV_300 )                 // Rev 3.0 changed the motor sense
+    {
+      digitalWrite(PAPER, PAPER_ON);            // Turn it on
+    }
+    else
+    {
+      digitalWrite(PAPER, PAPER_ON_300);        //
+    }
+  }
+  else
+  {
+    if ( revision() < REV_300 )                 // Rev 3.0 changed the motor sense
+    {
+      digitalWrite(PAPER, PAPER_OFF);            // Turn it off
+    }
+    else
+    {
+      digitalWrite(PAPER, PAPER_OFF_300);        //
+    }
+  }
+
+/*
+ * No more, return
+ */
+  return;
+}
+
+
 /*-----------------------------------------------------
  * 
  * function: face_ISR
@@ -551,4 +618,96 @@ void blink_fault
   * Finished
   */
   return;
+}
+
+/*-----------------------------------------------------
+ * 
+ * function: multifunction_init
+ * 
+ * brief:    Initialize the direction of the MFS on SPARE_1
+ * 
+ * return:   None
+ * 
+ *-----------------------------------------------------
+ *
+ * SPARE_1 is an unassigned GPIO that will change
+ * function based on the software configuration.
+ * 
+ * This function uses a switch statement to determine
+ * the settings of the GPIO
+ * 
+ *-----------------------------------------------------*/
+ void multifunction_init(void)
+ {
+  switch (json_multifunction)
+  {
+    case PAPER_FEED:
+      pinMode(SPARE_1,INPUT_PULLUP);
+      last_MFS_state = digitalRead(SPARE_1);    // Remember the starting state
+      break;
+
+  }
+
+/*
+ * The GPIO has been programmed per the multifunction mode
+ */
+ return;
+ }
+
+ 
+/*-----------------------------------------------------
+ * 
+ * function: multifunction_switch
+ * 
+ * brief:    Carry out the functions of the multifunction switch
+ * 
+ * return:   Switch state
+ * 
+ *-----------------------------------------------------
+ *
+ * The actions of SPARE_1 will change depending on the 
+ * mode that is programmed into it.
+ * 
+ *-----------------------------------------------------*/
+unsigned int multifunction_switch
+  (
+    unsigned int new_state               // If output, drive to a new state
+  )
+ {
+    unsigned int return_value;          // Value returned to caller
+
+/*
+ * Manage the GPIO based on the configuration
+ */
+ 
+  switch (json_multifunction)
+  {
+    case PAPER_FEED:                      // The switch acts as paper feed control
+      return_value = digitalRead(SPARE_2);
+      Serial.print(return_value);
+      if ( (return_value ^ last_MFS_state)// Got a change?
+         & ( return_value == 0 ) )        // And its a contact to ground
+      {      
+        drive_paper();                    // Drive the paper once
+      }
+      last_MFS_state = return_value;      // and remember for next time
+      break;
+
+    case GPIO_IN:                         // The switch is a general purpose input
+      return_value = digitalRead(SPARE_1);
+      break;
+
+    case GPIO_OUT:                        // The switch is a general purpose outptu 
+      return_value = new_state;
+      digitalWrite(SPARE_1, new_state);
+      break;
+
+    default:
+      break;
+  }
+
+/*
+ * All done, return the GPIO state
+ */
+  return return_value;
 }

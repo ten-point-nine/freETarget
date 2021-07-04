@@ -8,6 +8,7 @@
 
 #include <EEPROM.h>
 #include "json.h"
+#include "esp-01.h"
 #include "nonvol.h"
 
 static char input_JSON[128];
@@ -34,12 +35,11 @@ int     json_LED_PWM;               // LED control value
 int     json_power_save;            // Power down time
 int     json_send_miss;             // Send a miss message
 int     json_serial_number;         // Electonic serial number
+int     json_paper_step;            // Number of steps ouput to motor
+int     json_multifunction;         // Multifunction switch operation
+
 int     temp;                       // Temporary variable
 
-#define IS_VOID    0
-#define IS_INT16   1
-#define IS_FLOAT   2
-#define IS_DOUBLE  3
 #define JSON_DEBUG false                    // TRUE to echo DEBUG messages
 
        void show_echo(int v);               // Display the current settings
@@ -49,43 +49,37 @@ static void show_names(int v);
 static void nop(void);
 static void set_trace(int v);               // Set the trace on and off
 
-typedef struct  {
-  char*           token;    // JSON token string, ex "RADIUS": 
-  int*            value;    // Where value is stored 
-  double*       d_value;    // Where value is stored 
-  unsigned int  convert;    // Conversion type
-  void       (*f)(int x);   // Function to execute with message
-  unsigned int  non_vol;    // Storage in NON-VOL
-} json_message;
 
   
 const json_message JSON[] = {
-//    token                 value stored in RAM     double stored in RAM         type     service fcn()     NONVOL location
-  {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT16,  0,                NONVOL_SENSOR_ANGLE},    // Locate the sensor angles
-  {"\"CAL\":",            0,                                 0,                IS_VOID,   &set_trip_point,                  0  },    // Enter calibration mode
-  {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT16,  0,                NONVOL_CALIBRE_X10 },    // Enter the projectile calibre
-  {"\"DIP\":",            &json_dip_switch,                  0,                IS_INT16,  0,                NONVOL_DIP_SWITCH  },    // Remotely set the DIP switch
-  {"\"ECHO\":",           &json_echo,                        0,                IS_INT16,  &show_echo,                       0  },    // Echo test
-  {"\"INIT\"",            0,                                 0,                IS_VOID,   &init_nonvol,                     0  },    // Initialize the NONVOL memory
-  {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT16,  &set_LED_PWM_now, NONVOL_LED_PWM     },    // Set the LED brightness
-  {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT16,  &show_names,      NONVOL_NAME_ID     },    // Give the board a name
-  {"\"PAPER\":",          &json_paper_time,                  0,                IS_INT16,  0,                NONVOL_PAPER_TIME  },    // Set the paper advance time
-  {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT16,  0,                NONVOL_POWER_SAVE  },    // Set the power saver time
-  {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT16,  0,                NONVOL_SEND_MISS   },    // Enable / Disable sending miss messages
-  {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  &gen_position,    NONVOL_SENSOR_DIA  },    // Generate the sensor postion array
-  {"\"SN\":",             &json_serial_number,               0,                IS_INT16,  0,                NONVOL_SERIAL_NO   },    // Board serial number
-  {"\"TEST\":",           &json_test,                        0,                IS_INT16,  &show_test,       NONVOL_TEST_MODE   },    // Execute a self test
-  {"\"TRACE\":",          &temp,                             0,                IS_INT16,  &set_trace,                       0  },    // Enter / exit diagnostic trace
-  {"\"TRGT_1_RINGx10\":", &json_1_ring_x10,                  0,                IS_INT16,  0,                NONVOL_1_RINGx10   },    // Enter the 1 ring diamater
-  {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_version,                    0  },    // Return the version string
-  {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT16,  0,                NONVOL_NORTH_X     },    //
-  {"\"NORTH_Y\":",        &json_north_y,                     0,                IS_INT16,  0,                NONVOL_NORTH_Y     },    //
-  {"\"EAST_X\":",         &json_east_x,                      0,                IS_INT16,  0,                NONVOL_EAST_X      },    //
-  {"\"EAST_Y\":",         &json_east_y,                      0,                IS_INT16,  0,                NONVOL_EAST_Y      },    //
-  {"\"SOUTH_X\":",        &json_south_x,                     0,                IS_INT16,  0,                NONVOL_SOUTH_X     },    //
-  {"\"SOUTH_Y\":",        &json_south_y,                     0,                IS_INT16,  0,                NONVOL_SOUTH_Y     },    //
-  {"\"WEST_X\":",         &json_west_x,                      0,                IS_INT16,  0,                NONVOL_WEST_X      },    //
-  {"\"WEST_Y\":",         &json_west_y,                      0,                IS_INT16,  0,                NONVOL_WEST_Y      },    //
+//    token                 value stored in RAM     double stored in RAM         type     service fcn()     NONVOL location      Initial Value
+  {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT16,  0,                NONVOL_SENSOR_ANGLE,    45 },    // Locate the sensor angles
+  {"\"CAL\":",            0,                                 0,                IS_VOID,   &set_trip_point,                  0,       0 },    // Enter calibration mode
+  {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT16,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
+  {"\"DIP\":",            &json_dip_switch,                  0,                IS_INT16,  0,                NONVOL_DIP_SWITCH,       0 },    // Remotely set the DIP switch
+  {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,                       0,       0 },    // Echo test
+  {"\"INIT\"",            0,                                 0,                IS_VOID,   &init_nonvol,                     0,       0 },    // Initialize the NONVOL memory
+  {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT16,  &set_LED_PWM_now, NONVOL_LED_PWM,         50 },    // Set the LED brightness
+  {"\"MFS\":",            &json_multifunction,               0,                IS_INT16,  0,                NONVOL_MFS,         0xffff },    // Multifunction switch action
+  {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT16,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
+  {"\"PAPER_STEP\":",     &json_paper_step,                  0,                IS_INT16,  0,                NONVOL_PAPER_STEP,       1 },    // Set the number of times paper motor is stepped
+  {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT16,  0,                NONVOL_PAPER_TIME,       0 },    // Set the paper advance time
+  {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT16,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
+  {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT16,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
+  {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  &gen_position,    NONVOL_SENSOR_DIA,     230 },    // Generate the sensor postion array
+  {"\"SN\":",             &json_serial_number,               0,                IS_INT16,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
+  {"\"TEST\":",           &json_test,                        0,                IS_INT16,  &show_test,       NONVOL_TEST_MODE,        0 },    // Execute a self test
+  {"\"TRACE\":",          0,                                 0,                IS_INT16,  &set_trace,                      0,        0 },    // Enter / exit diagnostic trace
+  {"\"TRGT_1_RINGx10\":", &json_1_ring_x10,                  0,                IS_INT16,  0,                NONVOL_1_RINGx10,     1555 },    // Enter the 1 ring diamater (mm x 10)
+  {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_version,                   0,        0 },    // Return the version string
+  {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT16,  0,                NONVOL_NORTH_X,          0 },    //
+  {"\"NORTH_Y\":",        &json_north_y,                     0,                IS_INT16,  0,                NONVOL_NORTH_Y,          0 },    //
+  {"\"EAST_X\":",         &json_east_x,                      0,                IS_INT16,  0,                NONVOL_EAST_X,           0 },    //
+  {"\"EAST_Y\":",         &json_east_y,                      0,                IS_INT16,  0,                NONVOL_EAST_Y,           0 },    //
+  {"\"SOUTH_X\":",        &json_south_x,                     0,                IS_INT16,  0,                NONVOL_SOUTH_X,          0 },    //
+  {"\"SOUTH_Y\":",        &json_south_y,                     0,                IS_INT16,  0,                NONVOL_SOUTH_Y,          0 },    //
+  {"\"WEST_X\":",         &json_west_x,                      0,                IS_INT16,  0,                NONVOL_WEST_X,           0 },    //
+  {"\"WEST_Y\":",         &json_west_y,                      0,                IS_INT16,  0,                NONVOL_WEST_Y,           0 },    //
   { 0, 0, 0, 0, 0, 0}
 };
 
@@ -135,7 +129,8 @@ bool    return_value;
   {
     return_value = true;
     
-    GET(ch);
+    ch = GET();
+
 #if ( JSON_DEBUG == true )
     PRINT(ch);
 #endif
@@ -149,9 +144,13 @@ bool    return_value;
         break;
 
       case '%':
-        self_test(T_XFR_LOOP);          // Transfer self test
+        self_test(T_XFR_LOOP);             // Transfer self test
         break;
         
+      case '^':
+        drive_paper();                     // Page Feed
+        break;
+
       case '{':
         in_JSON = 0;
         input_JSON[0] = 0;
@@ -206,7 +205,10 @@ bool    return_value;
             
           case IS_INT16:                                      // Convert an integer
             x = atoi(&input_JSON[i+k]);
-            *JSON[j].value = x;                               // Save the value
+            if ( JSON[j].value != 0 )
+            {
+              *JSON[j].value = x;                               // Save the value
+            }
             if ( JSON[j].non_vol != 0 )
             {
               EEPROM.put(JSON[j].non_vol, x);                 // Store into NON-VOL
@@ -217,7 +219,10 @@ bool    return_value;
           case IS_FLOAT:                                      // Convert a floating point number
           case IS_DOUBLE:
             y = atof(&input_JSON[i+k]);
-            *JSON[j].d_value = y;                             // Save the value
+            if ( JSON[j].d_value != 0 )
+            {
+              *JSON[j].d_value = y;                           // Save the value
+            }
             if ( JSON[j].non_vol != 0 )
             {
               EEPROM.put(JSON[j].non_vol, y);                 // Store into NON-VOL
@@ -238,14 +243,17 @@ bool    return_value;
  */
   if ( not_found == true )
   {
-    Serial.print("\r\n{\"JSON\":0, "); 
+    Serial.print("\r\n\r\nUnknown JSON token. Use"); 
     j = 0;    
     while ( JSON[j].token != 0 ) 
     {
-      Serial.print(JSON[j].token); Serial.print("0, ");
+      Serial.print("\r\n"); Serial.print(JSON[j].token);
       j++;
+      if ( (j%4) == 0 ) 
+      {
+        Serial.print("\r\n");
+      }
     }
-    Serial.print(" \"VERSION\": "); Serial.print(SOFTWARE_VERSION); Serial.print("}\r\n"); 
   }
   
 /*
@@ -302,7 +310,7 @@ int instr(char* s1, char* s2)
 
 void show_echo(int v)
 {
-  unsigned int i;
+  unsigned int i, j;
   
   Serial.print("\r\n{\r\n");
   Serial.print("\"NAME\":\""), Serial.print(names[json_name_id]); Serial.print("\", \r\n");
@@ -311,9 +319,10 @@ void show_echo(int v)
  * Loop through all of the JSON tokens
  */
   i=0;
-  while (JSON[i].token != 0 )                 // Still more to go?  
+  j=1;
+  while ( JSON[i].token != 0 )                 // Still more to go?  
   {
-    if ( (JSON[i].value != NULL) || (JSON[i].d_value != NULL) ) // It has a value ?
+    if ( (JSON[i].value != NULL) || (JSON[i].d_value != NULL) )              // It has a value ?
     {
       switch ( JSON[i].convert )              // Display based on it's type
       {
@@ -324,20 +333,27 @@ void show_echo(int v)
         case IS_INT16:
           Serial.print(JSON[i].token);
           Serial.print(*JSON[i].value); Serial.print(", \r\n");
+          j++;
+          if ( (j % 4) == 0 )                     // Space out 4 at a time
+          {
+            Serial.print("\r\n");
+          }
           break;
 
         case IS_FLOAT:
         case IS_DOUBLE:
           Serial.print(JSON[i].token);
           Serial.print(*JSON[i].d_value); Serial.print(", \r\n");
+          j++;
+          if ( (j % 4) == 0 )                     // Space out 4 at a time
+          {
+            Serial.print("\r\n");
+          }
           break;
       }
     }
     i++;
-    if ( (i % 4) == 0 )                     // Space out 4 at a time
-    {
-      Serial.print("\r\n");
-    }
+
   }
 
 /*
@@ -350,8 +366,9 @@ void show_echo(int v)
   Serial.print("\"TEMPERATURE\":"); Serial.print(temperature_C());        Serial.print(", \r\n");
   Serial.print("\"V_REF\":");       Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print(", \r\n");
   Serial.print("\"DIP\": 0x");      Serial.print(0x0F & read_DIP(), HEX); Serial.print("\r\n");
+  Serial.print("\"WiFi\":");        Serial.print(esp01_is_present());     Serial.print("\r\n");    
   Serial.print("\"VERSION\":");     Serial.print(SOFTWARE_VERSION);       Serial.print(", \r\n");
-  Serial.print("\"BRD_REV\":");     Serial.print(revision()); 
+  Serial.print("\"BRD_REV\":");     Serial.print(revision());
   Serial.print("\r\n}\r\n");
   
 /*
@@ -429,7 +446,7 @@ static void show_test(int test_number)
    int trace                // Trace on or off
    )
  {
-   Serial.print("\n\rTrace: ");
+   Serial.print("\r\nTrace: ");
    
    if ( trace == 0 )
    {
@@ -442,7 +459,7 @@ static void show_test(int test_number)
       Serial.print("ON");
    }
 
-   Serial.print("\n\r");
+   Serial.print("\r\n");
    
   /*
    * The DIP switch has been remotely set

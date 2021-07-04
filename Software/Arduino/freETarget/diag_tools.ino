@@ -63,7 +63,6 @@ void self_test(uint16_t test)
  */
   switch (test)
   {
-    default:                                    // Undefined test
       json_test = 0;                            // Force to 0 
       EEPROM.put(NONVOL_TEST_MODE, json_test);  // and fall through
       break;
@@ -71,6 +70,7 @@ void self_test(uint16_t test)
 /*
  * Test 0, Display the help
  */
+    default:                // Undefined, show the tests
     case T_HELP:                
       Serial.print("\r\n 1 - Digital inputs");
       Serial.print("\r\n 2 - Counter values (external trigger)");
@@ -196,7 +196,7 @@ void self_test(uint16_t test)
  * Test 6, Advance the paper
  */
     case T_PAPER: 
-      Serial.print("\r\nAdvanciing backer paper "); Serial.print(json_paper_time * 10); Serial.print(" ms");
+      Serial.print("\r\nAdvanciing backer paper "); Serial.print(json_paper_time * 10); Serial.print(" ms  ");Serial.print(json_paper_step); Serial.print(" steps");
       drive_paper();
       Serial.print("\r\nDone");
       json_test = T_HELP;
@@ -332,20 +332,39 @@ void self_test(uint16_t test)
     int port        // Port to display output on
     )
 {
-
+  int i;
+  
 /*
- * Display the version on the selected port
+ * Display the version on the default serial port
  */
   if ( (port == 0) || (port & PORT_SERIAL) ) // No port or Serial port selected
   {
     Serial.print("\r\nfreETarget "); Serial.print(SOFTWARE_VERSION); Serial.print("\r\n");
   }
-    
+
+/*
+ * Display the version on the AUX port, taking care of the WiFi if present
+ */
   if ( port & PORT_AUX )
   {
+    if (esp01_is_present() == false )       // ESP is not attached,just send the message
+    {
     AUX_SERIAL.print("\r\nfreETarget "); AUX_SERIAL.print(SOFTWARE_VERSION); AUX_SERIAL.print("\r\n");
+    }
+    else                                    // ESP is attached.  Send out to all of the active connections
+    {
+      for (i=0; i != MAX_CONNECTIONS; i++)
+      {
+        esp01_send(true, i);
+        AUX_SERIAL.print("\r\nfreETarget "); AUX_SERIAL.print(SOFTWARE_VERSION); AUX_SERIAL.print("\r\n");
+        esp01_send(false, i);
+      }
+    }
   }
-    
+
+ /*
+  * Output to the spare USB serial port
+  */
   if ( port & PORT_DISPLAY )
   {
     DISPLAY_SERIAL.print("\r\nfreETarget "); DISPLAY_SERIAL.print(SOFTWARE_VERSION); DISPLAY_SERIAL.print("\r\n");
@@ -668,7 +687,7 @@ void set_trip_point
     {                                                       // Blink the LEDs * - x - *
       if ( is_trace )
       {
-        Serial.print("\n\rOut Of Spec: "); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
+        Serial.print("\r\nOut Of Spec: "); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
       }
       blink_fault(VREF_OVER_UNDER);
       pass_count = 0;                                       // Stay in this function forever

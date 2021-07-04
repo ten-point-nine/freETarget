@@ -14,6 +14,8 @@ void read_timers(void);                                   // Read and return the
 void drive_paper(void);                                   // Turn on the paper motor
 void enable_interrupt(void);                              // Turn on the face strike interrupt
 void disable_interrupt(void);                             // Turn off the face strike interrupt
+unsigned int multifunction_switch(unsigned int new_state);// Handle the actions of the SPARE_1 signal
+void multifunciton_init(void);                            // Initialize the multifunction switch
 
 /*
  *  Port Definitions
@@ -81,6 +83,10 @@ void disable_interrupt(void);                             // Turn off the face s
 #define FACE_SENSOR  19
 
 #define SPARE_1      22
+#define PAPER_FEED    0                   // SPARE_1 used as a paper feed
+#define GPIO_IN       1                   // SPARE_1 used as a GPIO in
+#define GPIO_OUT      2                   // SPARE_1 used as a GPIO out
+
 #define SPARE_2      23
 
 #define J10_1      VCC

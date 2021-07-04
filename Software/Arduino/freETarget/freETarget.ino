@@ -14,6 +14,7 @@
 #include "nonvol.h"
 #include "mechanical.h"
 #include "diag_tools.h"
+#include "esp-01.h"
 
 history_t history;  
 
@@ -22,10 +23,11 @@ unsigned int shot = 0;                  // Shot counter
 bool         face_strike = 0;           // Miss indicator
 bool         is_trace = false;          // TRUE if trace is enabled
 
-const char* names[] = { "ANON",    "BOSS",   "MINION",
-                        "DOC",     "DOPEY",  "HAPPY",   "GRUMPY", "BASHFUL", "SNEEZEY", "SLEEPY",
-                        "RUDOLF",  "DONNER", "BLITXEM", "DASHER", "PRANCER", "VIXEN",   "COMET", "CUPID", "DUNDER",
-                        "ODIN",    "WODEN",   "THOR",   "BALDAR",
+const char* names[] = { "TARGET",                                                                                           //  0
+                        "1",      "2",        "3",     "4",      "5",       "6",       "7",     "8",     "9",      "10",    //  1
+                        "DOC",    "DOPEY",  "HAPPY",   "GRUMPY", "BASHFUL", "SNEEZEY", "SLEEPY",                            // 11
+                        "RUDOLF", "DONNER", "BLITXEM", "DASHER", "PRANCER", "VIXEN",   "COMET", "CUPID", "DUNDER",          // 18  
+                        "ODIN",   "WODEN",   "THOR",   "BALDAR",                                                            // 26
                         0};
                   
 char* nesw = "NESW";                    // Cardinal Points
@@ -59,7 +61,12 @@ void setup(void)
   init_analog_io();
   randomSeed( analogRead(V_REFERENCE));   // Seed the random number generator
   is_trace = read_DIP() & (VERBOSE_TRACE);
-     
+
+/*
+ * Initialize the WiFi if available
+ */
+   esp01_init();                           // Prepare the WiFi channel if installed
+
 /*
  * Initialize variables
  */
@@ -72,9 +79,9 @@ void setup(void)
   show_echo(0);
   POST_LEDs();                        // Cycle the LEDs
   while ( (POST_counters() == false)  // If the timers fail
-              && !is_trace)           // and not in trace mode 
+              && !is_trace)           // and not in trace mode (DIAG jumper installed)
   {
-    Serial.print("\n\rPOST_2 Failed\n\r");  // Blink the LEDs
+    Serial.print("\r\nPOST_2 Failed\r\n");  // Blink the LEDs
     blink_fault(POST_COUNT_FAILED);         // and try again
   }
   POST_trip_point();                  // Show the trip point
@@ -136,6 +143,11 @@ void loop()
 {
 
 /*
+ * First thing, handle polled devices
+ */
+  esp01_receive();                // Accumulate input from the IP port.
+  
+/*
  * Take care of any commands coming through
  */
   if ( read_JSON() )
@@ -182,7 +194,7 @@ void loop()
 
     sensor_status = is_running();
     power_save = micros();            // Start the power saver time
-    
+
     if ( sensor_status == 0 )
     { 
       if ( is_trace )
@@ -194,30 +206,33 @@ void loop()
     }
     else
     {
-      if ( sensor_status & TRIP_NORTH  )
+      if ( is_trace == false )
       {
-        Serial.print("\r\n{ \"Fault\": \"NORTH\" }");
-        set_LED(NORTH_FAILED);           // Fault code North
-        delay(ONE_SECOND);
-      }
-      if ( sensor_status & TRIP_EAST  )
-      {
-        Serial.print("\r\n{ \"Fault\": \"EAST\" }");
-        set_LED(EAST_FAILED);           // Fault code East
-        delay(ONE_SECOND);
-      }
-      if ( sensor_status & TRIP_SOUTH )
-      {
-        Serial.print("\r\n{ \"Fault\": \"SOUTH\" }");
-        set_LED(SOUTH_FAILED);         // Fault code South
-        delay(ONE_SECOND);
-      }
-      if ( sensor_status & TRIP_WEST )
-      {
-        Serial.print("\r\n{ \"Fault\": \"WEST\" }");
-        set_LED(WEST_FAILED);         // Fault code West
-        delay(ONE_SECOND);
-      }     
+        if ( sensor_status & TRIP_NORTH  )
+        {
+          Serial.print("\r\n{ \"Fault\": \"NORTH\" }");
+          set_LED(NORTH_FAILED);           // Fault code North
+          delay(ONE_SECOND);
+        }
+        if ( sensor_status & TRIP_EAST  )
+        {
+          Serial.print("\r\n{ \"Fault\": \"EAST\" }");
+          set_LED(EAST_FAILED);           // Fault code East
+          delay(ONE_SECOND);
+        }
+        if ( sensor_status & TRIP_SOUTH )
+        {
+          Serial.print("\r\n{ \"Fault\": \"SOUTH\" }");
+          set_LED(SOUTH_FAILED);         // Fault code South
+          delay(ONE_SECOND);
+        }
+        if ( sensor_status & TRIP_WEST )
+        {
+          Serial.print("\r\n{ \"Fault\": \"WEST\" }");
+          set_LED(WEST_FAILED);         // Fault code West
+          delay(ONE_SECOND);
+        }
+      }   
     }
     break;
     
@@ -275,7 +290,6 @@ void loop()
     if ( (timer_value[N] == 0) || (timer_value[E] == 0) || (timer_value[S] == 0) || (timer_value[W] == 0) ) // If any one of the timers is 0, that's a miss
     {
       state = SEND_MISS;
-      delay(ONE_SECOND);
       break;
     }
     send_score(&history, shot_number, sensor_status);
