@@ -93,18 +93,23 @@
             this.txtNorthX = new System.Windows.Forms.TextBox();
             this.picTarget = new System.Windows.Forms.PictureBox();
             this.tabPageHardware = new System.Windows.Forms.TabPage();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.txtPaperStep = new System.Windows.Forms.TextBox();
+            this.rbDC = new System.Windows.Forms.RadioButton();
+            this.rbStepper = new System.Windows.Forms.RadioButton();
+            this.txtPaper = new System.Windows.Forms.TextBox();
+            this.cmbName = new System.Windows.Forms.ComboBox();
+            this.label22 = new System.Windows.Forms.Label();
             this.label20 = new System.Windows.Forms.Label();
             this.trkLEDbright = new System.Windows.Forms.TrackBar();
             this.lblWarning = new System.Windows.Forms.Label();
-            this.label21 = new System.Windows.Forms.Label();
-            this.txtPaper = new System.Windows.Forms.TextBox();
             this.label19 = new System.Windows.Forms.Label();
             this.txtCalibre = new System.Windows.Forms.TextBox();
             this.cmbPorts = new System.Windows.Forms.ComboBox();
             this.txtBaud = new System.Windows.Forms.TextBox();
             this.helpProvider = new System.Windows.Forms.HelpProvider();
-            this.cmbName = new System.Windows.Forms.ComboBox();
-            this.label22 = new System.Windows.Forms.Label();
+            this.lblPaperTime = new System.Windows.Forms.Label();
+            this.lblPaperSteps = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPageGeneral.SuspendLayout();
@@ -113,6 +118,7 @@
             this.tabPageSensors.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picTarget)).BeginInit();
             this.tabPageHardware.SuspendLayout();
+            this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trkLEDbright)).BeginInit();
             this.SuspendLayout();
             // 
@@ -831,13 +837,12 @@
             // 
             // tabPageHardware
             // 
+            this.tabPageHardware.Controls.Add(this.groupBox2);
             this.tabPageHardware.Controls.Add(this.cmbName);
             this.tabPageHardware.Controls.Add(this.label22);
             this.tabPageHardware.Controls.Add(this.label20);
             this.tabPageHardware.Controls.Add(this.trkLEDbright);
             this.tabPageHardware.Controls.Add(this.lblWarning);
-            this.tabPageHardware.Controls.Add(this.label21);
-            this.tabPageHardware.Controls.Add(this.txtPaper);
             this.tabPageHardware.Controls.Add(this.label19);
             this.tabPageHardware.Controls.Add(this.txtCalibre);
             this.tabPageHardware.Controls.Add(this.cmbPorts);
@@ -851,101 +856,65 @@
             this.tabPageHardware.Text = "Hardware";
             this.tabPageHardware.UseVisualStyleBackColor = true;
             // 
-            // label20
+            // groupBox2
             // 
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(13, 147);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(74, 13);
-            this.label20.TabIndex = 20;
-            this.label20.Text = "LED Brigtness";
+            this.groupBox2.Controls.Add(this.lblPaperSteps);
+            this.groupBox2.Controls.Add(this.lblPaperTime);
+            this.groupBox2.Controls.Add(this.txtPaperStep);
+            this.groupBox2.Controls.Add(this.rbDC);
+            this.groupBox2.Controls.Add(this.rbStepper);
+            this.groupBox2.Controls.Add(this.txtPaper);
+            this.groupBox2.Location = new System.Drawing.Point(16, 116);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(283, 73);
+            this.groupBox2.TabIndex = 23;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Motor";
             // 
-            // trkLEDbright
+            // txtPaperStep
             // 
-            this.trkLEDbright.BackColor = System.Drawing.SystemColors.Window;
-            this.helpProvider.SetHelpString(this.trkLEDbright, "External LED brigtness control (percent)");
-            this.trkLEDbright.LargeChange = 10;
-            this.trkLEDbright.Location = new System.Drawing.Point(109, 143);
-            this.trkLEDbright.Maximum = 100;
-            this.trkLEDbright.Name = "trkLEDbright";
-            this.helpProvider.SetShowHelp(this.trkLEDbright, true);
-            this.trkLEDbright.Size = new System.Drawing.Size(190, 45);
-            this.trkLEDbright.SmallChange = 5;
-            this.trkLEDbright.TabIndex = 19;
-            this.trkLEDbright.TickFrequency = 5;
+            this.helpProvider.SetHelpString(this.txtPaperStep, "Number of step to run the stepper motor that scrolls the paper. ");
+            this.txtPaperStep.Location = new System.Drawing.Point(209, 18);
+            this.txtPaperStep.Name = "txtPaperStep";
+            this.helpProvider.SetShowHelp(this.txtPaperStep, true);
+            this.txtPaperStep.Size = new System.Drawing.Size(68, 20);
+            this.txtPaperStep.TabIndex = 17;
+            this.txtPaperStep.Text = "0";
             // 
-            // lblWarning
+            // rbDC
             // 
-            this.lblWarning.AutoSize = true;
-            this.lblWarning.Location = new System.Drawing.Point(13, 293);
-            this.lblWarning.MaximumSize = new System.Drawing.Size(300, 0);
-            this.lblWarning.Name = "lblWarning";
-            this.lblWarning.Size = new System.Drawing.Size(299, 52);
-            this.lblWarning.TabIndex = 18;
-            this.lblWarning.Text = "WARNING! Modifying the parameters on the “Sensor” or “Hardware” page will not tak" +
-    "e effect immediately. These values will be applied to the target firmware only a" +
-    "fter the next Connect.";
+            this.rbDC.AutoSize = true;
+            this.rbDC.Location = new System.Drawing.Point(6, 45);
+            this.rbDC.Name = "rbDC";
+            this.rbDC.Size = new System.Drawing.Size(90, 17);
+            this.rbDC.TabIndex = 1;
+            this.rbDC.TabStop = true;
+            this.rbDC.Text = "Direct Current";
+            this.rbDC.UseVisualStyleBackColor = true;
+            this.rbDC.CheckedChanged += new System.EventHandler(this.rbDC_CheckedChanged);
             // 
-            // label21
+            // rbStepper
             // 
-            this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(13, 119);
-            this.label21.Name = "label21";
-            this.label21.Size = new System.Drawing.Size(84, 13);
-            this.label21.TabIndex = 17;
-            this.label21.Text = "Paper scroll time";
+            this.rbStepper.AutoSize = true;
+            this.rbStepper.Location = new System.Drawing.Point(6, 19);
+            this.rbStepper.Name = "rbStepper";
+            this.rbStepper.Size = new System.Drawing.Size(62, 17);
+            this.rbStepper.TabIndex = 0;
+            this.rbStepper.TabStop = true;
+            this.rbStepper.Text = "Stepper";
+            this.rbStepper.UseVisualStyleBackColor = true;
+            this.rbStepper.CheckedChanged += new System.EventHandler(this.rbStepper_CheckedChanged);
             // 
             // txtPaper
             // 
             this.helpProvider.SetHelpString(this.txtPaper, "Time in miliseconds to run motor that scrolls the paper. A larger time means more" +
         " paper is used for each shot");
-            this.txtPaper.Location = new System.Drawing.Point(109, 116);
+            this.txtPaper.Location = new System.Drawing.Point(209, 44);
             this.txtPaper.Name = "txtPaper";
             this.helpProvider.SetShowHelp(this.txtPaper, true);
-            this.txtPaper.Size = new System.Drawing.Size(190, 20);
+            this.txtPaper.Size = new System.Drawing.Size(68, 20);
             this.txtPaper.TabIndex = 16;
             this.txtPaper.Text = "0";
-            // 
-            // label19
-            // 
-            this.label19.AutoSize = true;
-            this.label19.Location = new System.Drawing.Point(13, 94);
-            this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(62, 13);
-            this.label19.TabIndex = 13;
-            this.label19.Text = "Calibre x 10";
-            // 
-            // txtCalibre
-            // 
-            this.helpProvider.SetHelpString(this.txtCalibre, "Caliber of the projectile in tenths of milimiters. For example, the 4.5mm (.177) " +
-        "pellet has the caliber of 45");
-            this.txtCalibre.Location = new System.Drawing.Point(109, 90);
-            this.txtCalibre.Name = "txtCalibre";
-            this.helpProvider.SetShowHelp(this.txtCalibre, true);
-            this.txtCalibre.Size = new System.Drawing.Size(190, 20);
-            this.txtCalibre.TabIndex = 12;
-            this.txtCalibre.Text = "45";
-            // 
-            // cmbPorts
-            // 
-            this.cmbPorts.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbPorts.FormattingEnabled = true;
-            this.helpProvider.SetHelpString(this.cmbPorts, "COM serial port om which the target is connected");
-            this.cmbPorts.Location = new System.Drawing.Point(109, 9);
-            this.cmbPorts.Name = "cmbPorts";
-            this.helpProvider.SetShowHelp(this.cmbPorts, true);
-            this.cmbPorts.Size = new System.Drawing.Size(190, 21);
-            this.cmbPorts.TabIndex = 11;
-            // 
-            // txtBaud
-            // 
-            this.helpProvider.SetHelpString(this.txtBaud, "Baud rate of the COM port. The arduino default is: 115200");
-            this.txtBaud.Location = new System.Drawing.Point(109, 64);
-            this.txtBaud.Name = "txtBaud";
-            this.helpProvider.SetShowHelp(this.txtBaud, true);
-            this.txtBaud.Size = new System.Drawing.Size(190, 20);
-            this.txtBaud.TabIndex = 6;
-            this.txtBaud.Text = "115200";
             // 
             // cmbName
             // 
@@ -991,6 +960,100 @@
             this.label22.TabIndex = 21;
             this.label22.Text = "Name";
             // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(13, 201);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(74, 13);
+            this.label20.TabIndex = 20;
+            this.label20.Text = "LED Brigtness";
+            // 
+            // trkLEDbright
+            // 
+            this.trkLEDbright.BackColor = System.Drawing.SystemColors.Window;
+            this.helpProvider.SetHelpString(this.trkLEDbright, "External LED brigtness control (percent)");
+            this.trkLEDbright.LargeChange = 10;
+            this.trkLEDbright.Location = new System.Drawing.Point(109, 195);
+            this.trkLEDbright.Maximum = 100;
+            this.trkLEDbright.Name = "trkLEDbright";
+            this.helpProvider.SetShowHelp(this.trkLEDbright, true);
+            this.trkLEDbright.Size = new System.Drawing.Size(190, 45);
+            this.trkLEDbright.SmallChange = 5;
+            this.trkLEDbright.TabIndex = 19;
+            this.trkLEDbright.TickFrequency = 5;
+            // 
+            // lblWarning
+            // 
+            this.lblWarning.AutoSize = true;
+            this.lblWarning.Location = new System.Drawing.Point(13, 293);
+            this.lblWarning.MaximumSize = new System.Drawing.Size(300, 0);
+            this.lblWarning.Name = "lblWarning";
+            this.lblWarning.Size = new System.Drawing.Size(299, 52);
+            this.lblWarning.TabIndex = 18;
+            this.lblWarning.Text = "WARNING! Modifying the parameters on the “Sensor” or “Hardware” page will not tak" +
+    "e effect immediately. These values will be applied to the target firmware only a" +
+    "fter the next Connect.";
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Location = new System.Drawing.Point(13, 94);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(62, 13);
+            this.label19.TabIndex = 13;
+            this.label19.Text = "Calibre x 10";
+            // 
+            // txtCalibre
+            // 
+            this.helpProvider.SetHelpString(this.txtCalibre, "Caliber of the projectile in tenths of milimiters. For example, the 4.5mm (.177) " +
+        "pellet has the caliber of 45");
+            this.txtCalibre.Location = new System.Drawing.Point(109, 90);
+            this.txtCalibre.Name = "txtCalibre";
+            this.helpProvider.SetShowHelp(this.txtCalibre, true);
+            this.txtCalibre.Size = new System.Drawing.Size(190, 20);
+            this.txtCalibre.TabIndex = 12;
+            this.txtCalibre.Text = "45";
+            // 
+            // cmbPorts
+            // 
+            this.cmbPorts.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbPorts.FormattingEnabled = true;
+            this.helpProvider.SetHelpString(this.cmbPorts, "COM serial port om which the target is connected");
+            this.cmbPorts.Location = new System.Drawing.Point(109, 9);
+            this.cmbPorts.Name = "cmbPorts";
+            this.helpProvider.SetShowHelp(this.cmbPorts, true);
+            this.cmbPorts.Size = new System.Drawing.Size(190, 21);
+            this.cmbPorts.TabIndex = 11;
+            // 
+            // txtBaud
+            // 
+            this.helpProvider.SetHelpString(this.txtBaud, "Baud rate of the COM port. The arduino default is: 115200");
+            this.txtBaud.Location = new System.Drawing.Point(109, 64);
+            this.txtBaud.Name = "txtBaud";
+            this.helpProvider.SetShowHelp(this.txtBaud, true);
+            this.txtBaud.Size = new System.Drawing.Size(190, 20);
+            this.txtBaud.TabIndex = 6;
+            this.txtBaud.Text = "115200";
+            // 
+            // lblPaperTime
+            // 
+            this.lblPaperTime.AutoSize = true;
+            this.lblPaperTime.Location = new System.Drawing.Point(138, 47);
+            this.lblPaperTime.Name = "lblPaperTime";
+            this.lblPaperTime.Size = new System.Drawing.Size(61, 13);
+            this.lblPaperTime.TabIndex = 18;
+            this.lblPaperTime.Text = "Paper Time";
+            // 
+            // lblPaperSteps
+            // 
+            this.lblPaperSteps.AutoSize = true;
+            this.lblPaperSteps.Location = new System.Drawing.Point(138, 21);
+            this.lblPaperSteps.Name = "lblPaperSteps";
+            this.lblPaperSteps.Size = new System.Drawing.Size(65, 13);
+            this.lblPaperSteps.TabIndex = 19;
+            this.lblPaperSteps.Text = "Paper Steps";
+            // 
             // frmSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1023,6 +1086,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.picTarget)).EndInit();
             this.tabPageHardware.ResumeLayout(false);
             this.tabPageHardware.PerformLayout();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trkLEDbright)).EndInit();
             this.ResumeLayout(false);
 
@@ -1095,7 +1160,6 @@
         public System.Windows.Forms.TextBox txtSensorDiameter;
         private System.Windows.Forms.Label label18;
         private System.Windows.Forms.TabPage tabPageHardware;
-        private System.Windows.Forms.Label label21;
         public System.Windows.Forms.TextBox txtPaper;
         private System.Windows.Forms.Label label19;
         public System.Windows.Forms.TextBox txtCalibre;
@@ -1106,5 +1170,11 @@
         public System.Windows.Forms.TrackBar trkLEDbright;
         public System.Windows.Forms.ComboBox cmbName;
         private System.Windows.Forms.Label label22;
+        private System.Windows.Forms.GroupBox groupBox2;
+        public System.Windows.Forms.TextBox txtPaperStep;
+        private System.Windows.Forms.RadioButton rbDC;
+        private System.Windows.Forms.RadioButton rbStepper;
+        private System.Windows.Forms.Label lblPaperTime;
+        private System.Windows.Forms.Label lblPaperSteps;
     }
 }

@@ -138,6 +138,15 @@ namespace freETarget
 
             txtCalibre.Text = Properties.Settings.Default.Calibre.ToString();
             txtPaper.Text = Properties.Settings.Default.Paper.ToString();
+            txtPaperStep.Text = Properties.Settings.Default.PaperStep.ToString();
+
+            if (Properties.Settings.Default.PaperStep == 0) {
+                rbStepper.Checked = false;
+                rbDC.Checked = true;
+            } else {
+                rbStepper.Checked = true;
+                rbDC.Checked = false;
+            }
 
             cmbName.SelectedIndex = Properties.Settings.Default.targetName;
 
@@ -188,6 +197,11 @@ namespace freETarget
             //baud rate
             if (!validNumber(txtBaud.Text)) {
                 MessageBox.Show("Baud rate is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+            if (!positiveNumber(txtBaud.Text)) {
+                MessageBox.Show("Baud rate must be a positive number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return false;
             }
 
@@ -282,6 +296,26 @@ namespace freETarget
                 return false;
             }
 
+            if (!positiveNumber(txtPaper.Text)) {
+                MessageBox.Show("Paper scroll time must be a positive number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+            //paper step
+            if (!validNumber(txtPaperStep.Text)) {
+                MessageBox.Show("Paper steps is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+            if (!positiveNumber(txtPaperStep.Text)) {
+                MessageBox.Show("Paper steps must be a positive number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+            if (rbStepper.Checked && txtPaperStep.Text=="0")  {
+                MessageBox.Show("If the stepper motor is selected, the 'Paper Steps' value must be greater than 0", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
 
             return true;
         }
@@ -302,6 +336,40 @@ namespace freETarget
 
             } catch (Exception) {
                 return false;
+            }
+        }
+
+        private bool positiveNumber(String text) {
+            try {
+                int x = int.Parse(text);
+                if (x >= 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+
+            } catch (Exception) {
+                return false;
+            }
+        }
+
+        private void rbDC_CheckedChanged(object sender, EventArgs e) {
+            radios();
+        }
+
+        private void rbStepper_CheckedChanged(object sender, EventArgs e) {
+            radios();
+        }
+
+        private void radios() {
+            if (rbDC.Checked) {
+                txtPaperStep.Enabled = false;
+                lblPaperSteps.Enabled = false;
+                txtPaperStep.Text = "0";
+            } else { //stepper
+                txtPaperStep.Enabled = true;
+                lblPaperSteps.Enabled = true;
+                txtPaperStep.Text = Properties.Settings.Default.PaperStep.ToString();
             }
         }
     }

@@ -13,6 +13,33 @@ namespace freETarget {
     public partial class frmArduino : Form {
 
 
+        private Command[] firmwareCommands = new Command[] {
+            new Command("CALIBREx10","45"),
+            new Command("DIP","0"),
+            new Command("LED_BRIGHT","50"),
+            new Command("MFS","0"),
+            new Command("NAME_ID","1"),
+            new Command("PAPER_STEP","0"),
+            new Command("PAPER_TIME","50"),
+            new Command("POWER_SAVE","30"),
+            new Command("SEND_MISS","0"),
+            new Command("SENSOR","230.00"),
+            new Command("SN","0"),
+            new Command("TEST","0"),
+            new Command("TRACE","0"),
+            new Command("TRGT_1_RINGx10","1555"),
+            new Command("NORTH_X","0"),
+            new Command("NORTH_Y","0"),
+            new Command("EAST_X","0"),
+            new Command("EAST_Y","0"),
+            new Command("SOUTH_X","0"),
+            new Command("SOUTH_Y","0"),
+            new Command("WEST_X","0"),
+            new Command("WEST_Y","0"),
+            new Command("ANGLE","45")
+        };
+
+
         private static frmArduino instance;
         frmMainWindow mainWindow;
 
@@ -21,6 +48,9 @@ namespace freETarget {
         private frmArduino(frmMainWindow mainWin) {
             InitializeComponent();
             this.mainWindow = mainWin;
+
+            cmbCommands.Items.AddRange(firmwareCommands);
+            cmbCommands.SelectedIndex = 0;
 
             //custom stringbuilder event. bound to the textbox
             mainWindow.output.TextChanged += new EventHandler(frmArduino_Activated);
@@ -36,15 +66,11 @@ namespace freETarget {
         }
 
         private void frmArduino_Load(object sender, EventArgs e) {
-
+            
         }
 
         private void btnClose_Click(object sender, EventArgs e) {
             this.Close();
-        }
-
-        private void btnEcho_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"ECHO\":0}");
         }
 
         private void frmArduino_FormClosing(object sender, FormClosingEventArgs e) {
@@ -52,43 +78,31 @@ namespace freETarget {
             this.Hide();
         }
 
-        private void frmArduino_Activated(object sender, EventArgs e) {
-            displayMessage(mainWindow.output.Text);
-        }
-
-
         public void displayMessage(string text) {
             if (txtOutput.InvokeRequired) {
                 var d = new SafeCallDelegate2(displayMessage);
-                txtOutput.Invoke(d, new object[] { text});
+                txtOutput.Invoke(d, new object[] { text });
                 return;
             } else {
                 txtOutput.Text = text;
-                if (ckbAutoscroll.Checked) { 
+                if (ckbAutoscroll.Checked) {
                     txtOutput.SelectionStart = txtOutput.Text.Length;
                     txtOutput.ScrollToCaret();
                 }
             }
         }
 
-        private void btnDip_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"DIP\":"+txtDip.Text+"}");
+        private void frmArduino_Activated(object sender, EventArgs e) {
+            displayMessage(mainWindow.output.Text);
         }
 
-        private void btnPaper_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"PAPER\":" + txtPaper.Text + "}");
+
+        private void btnEcho_Click(object sender, EventArgs e) {
+            mainWindow.serialPort.Write("{\"ECHO\":0}");
         }
 
-        private void btnSensor_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"SENSOR\":" + txtSensor.Text + "}");
-        }
-
-        private void btnTest_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"TEST\":" + txtTest.Text + "}");
-        }
-
-        private void btnOffset_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"CALIBREx10\":" + txtOffset.Text + "}");
+        private void btnInit_Click(object sender, EventArgs e) {
+            mainWindow.serialPort.Write("{\"INIT\":0}");
         }
 
         private void btnCalibration_Click(object sender, EventArgs e) {
@@ -108,32 +122,31 @@ namespace freETarget {
             mainWindow.serialPort.Write("{\"VERSION\":7}");
         }
 
-        private void btnLed_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"LED_BRIGHT\":" + txtLed.Text + "}");
+
+
+
+        private void cmbCommands_SelectedIndexChanged(object sender, EventArgs e) {
+            Command c = (Command)cmbCommands.SelectedItem;
+            txtParameter.Text = c.defaultValue;
         }
 
-        private void btnInit_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"INIT\":0}");
+        private void btnSend_Click(object sender, EventArgs e) {
+            mainWindow.serialPort.Write("{\"" + cmbCommands.SelectedItem.ToString() +  "\":" + txtParameter.Text + "}");
         }
 
-        private void btnNameID_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"NAME_ID\":" + txtNameID.Text + "}");
+    }
+
+    class Command {
+        public String command;
+        public String defaultValue;
+
+        public Command(String com, String value) {
+            this.command = com;
+            this.defaultValue = value;
         }
 
-        private void btnTrace_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"TRACE\":" + txtTrace.Text + "}");
-        }
-
-        private void btnPower_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"POWER_SAVE\":" + txtPower.Text + "}");
-        }
-
-        private void btnSendMiss_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"SEND_MISS\":" + txtSendMiss.Text + "}");
-        }
-
-        private void btnTargetRing_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"TRGT_1_RINGx10\":" + txtTargetRing.Text + "}");
+        public override string ToString() {
+            return command;
         }
     }
 }

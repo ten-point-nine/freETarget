@@ -108,7 +108,7 @@
       <Value Profile="(Default)">45</Value>
     </Setting>
     <Setting Name="Paper" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
+      <Value Profile="(Default)">10</Value>
     </Setting>
     <Setting Name="ignoreMiss" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
@@ -117,6 +117,9 @@
       <Value Profile="(Default)">50</Value>
     </Setting>
     <Setting Name="targetName" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="PaperStep" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
   </Settings>

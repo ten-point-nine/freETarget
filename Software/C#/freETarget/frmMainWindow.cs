@@ -704,6 +704,7 @@ namespace freETarget {
                 Properties.Settings.Default.ignoreMiss = settingsFrom.chkMiss.Checked;
                 Properties.Settings.Default.LEDbright = settingsFrom.trkLEDbright.Value;
                 Properties.Settings.Default.targetName = settingsFrom.cmbName.SelectedIndex;
+                
 
                 if (Properties.Settings.Default.targetDistance != 100) {
                     btnConfig.BackColor = Properties.Settings.Default.targetColor;
@@ -746,6 +747,7 @@ namespace freETarget {
 
                 Properties.Settings.Default.Calibre = int.Parse(settingsFrom.txtCalibre.Text);
                 Properties.Settings.Default.Paper = int.Parse(settingsFrom.txtPaper.Text);
+                Properties.Settings.Default.PaperStep = int.Parse(settingsFrom.txtPaperStep.Text);
             }
 
             settingsFrom.Dispose();
