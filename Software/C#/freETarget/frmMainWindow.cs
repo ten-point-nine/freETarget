@@ -340,8 +340,12 @@ namespace freETarget {
             Console.WriteLine("{\"SENSOR\":" + Properties.Settings.Default.SensorDiameter.ToString() + "}");
 
             Thread.Sleep(500);
-            serialPort.Write("{\"PAPER\":" + Properties.Settings.Default.Paper.ToString() + "}");
-            Console.WriteLine("{\"PAPER\":" + Properties.Settings.Default.Paper.ToString() + "}");
+            serialPort.Write("{\"PAPER_TIME\":" + Properties.Settings.Default.Paper.ToString() + "}");
+            Console.WriteLine("{\"PAPER_TIME\":" + Properties.Settings.Default.Paper.ToString() + "}");
+
+            Thread.Sleep(500);
+            serialPort.Write("{\"PAPER_STEP\":" + Properties.Settings.Default.PaperStep.ToString() + "}");
+            Console.WriteLine("{\"PAPER_STEP\":" + Properties.Settings.Default.PaperStep.ToString() + "}");
 
             Thread.Sleep(500);
             serialPort.Write("{\"CALIBREx10\":" + Properties.Settings.Default.Calibre.ToString() + "}");
