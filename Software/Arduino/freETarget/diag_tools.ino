@@ -196,7 +196,7 @@ void self_test(uint16_t test)
  * Test 6, Advance the paper
  */
     case T_PAPER: 
-      Serial.print("\r\nAdvanciing backer paper "); Serial.print(json_paper_time * 10); Serial.print(" ms  ");Serial.print(json_paper_step); Serial.print(" steps");
+      Serial.print("\r\nAdvanciing backer paper "); Serial.print(((json_paper_time) + (json_step_time)) * 10); Serial.print(" ms  ");Serial.print(json_step_count); Serial.print(" steps");
       drive_paper();
       Serial.print("\r\nDone");
       json_test = T_HELP;
