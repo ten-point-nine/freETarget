@@ -60,7 +60,7 @@ void setup(void)
   init_sensors();
   init_analog_io();
   randomSeed( analogRead(V_REFERENCE));   // Seed the random number generator
-  is_trace = read_DIP() & (VERBOSE_TRACE);
+  is_trace = VERBOSE_TRACE;               // Set the trace based on the DIP switch
 
 /*
  * Initialize the WiFi if available
@@ -167,11 +167,11 @@ void loop()
  */
   default:
   case SET_MODE:
-    is_trace = read_DIP() & (VERBOSE_TRACE);     // Turn on tracing if the DIP switch is in place
+    is_trace |= VERBOSE_TRACE;        // Turn on tracing if the DIP switch is in place
     
-    if ( read_DIP() & CALIBRATE )
+    if ( CALIBRATE )
     {
-      set_trip_point(0);              // Are we calibrating?
+      set_trip_point(0);             // Are we calibrating?
     }
     
     if ( json_test != 0 )

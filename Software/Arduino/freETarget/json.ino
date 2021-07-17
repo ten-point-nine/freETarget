@@ -35,7 +35,8 @@ int     json_LED_PWM;               // LED control value
 int     json_power_save;            // Power down time
 int     json_send_miss;             // Send a miss message
 int     json_serial_number;         // Electonic serial number
-int     json_paper_step;            // Number of steps ouput to motor
+int     json_step_count;            // Number of steps ouput to motor
+int     json_step_time;             // Duration of each step
 int     json_multifunction;         // Multifunction switch operation
 
 int     temp;                       // Temporary variable
@@ -62,12 +63,13 @@ const json_message JSON[] = {
   {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT16,  &set_LED_PWM_now, NONVOL_LED_PWM,         50 },    // Set the LED brightness
   {"\"MFS\":",            &json_multifunction,               0,                IS_INT16,  0,                NONVOL_MFS,         0xffff },    // Multifunction switch action
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT16,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
-  {"\"PAPER_STEP\":",     &json_paper_step,                  0,                IS_INT16,  0,                NONVOL_PAPER_STEP,       1 },    // Set the number of times paper motor is stepped
   {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT16,  0,                NONVOL_PAPER_TIME,       0 },    // Set the paper advance time
   {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT16,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
   {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT16,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
   {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  &gen_position,    NONVOL_SENSOR_DIA,     230 },    // Generate the sensor postion array
   {"\"SN\":",             &json_serial_number,               0,                IS_INT16,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
+  {"\"STEP_COUNT\":",     &json_step_count,                  0,                IS_INT16,  0,                NONVOL_STEP_COUNT,       0 },    // Set the duration of the stepper motor ON time
+  {"\"STEP_TIME\":",      &json_step_time,                   0,                IS_INT16,  0,                NONVOL_STEP_TIME,        0 },    // Set the number of times stepper motor is stepped
   {"\"TEST\":",           &json_test,                        0,                IS_INT16,  &show_test,       NONVOL_TEST_MODE,        0 },    // Execute a self test
   {"\"TRACE\":",          0,                                 0,                IS_INT16,  &set_trace,                      0,        0 },    // Enter / exit diagnostic trace
   {"\"TRGT_1_RINGx10\":", &json_1_ring_x10,                  0,                IS_INT16,  0,                NONVOL_1_RINGx10,     1555 },    // Enter the 1 ring diamater (mm x 10)
@@ -450,12 +452,12 @@ static void show_test(int test_number)
    
    if ( trace == 0 )
    {
-      json_dip_switch &= ~VERBOSE_TRACE;
+      is_trace = 0;
       Serial.print("OFF");
    }
    else
    {
-      json_dip_switch |= VERBOSE_TRACE;
+      is_trace = 1;
       Serial.print("ON");
    }
 

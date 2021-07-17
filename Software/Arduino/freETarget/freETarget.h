@@ -11,8 +11,9 @@
 #ifndef _FREETARGET_H
 #define _FREETARGET_H
 #include "esp-01.h"
+#include "json.h"
 
-#define SOFTWARE_VERSION "\"3.02.1 July 5, 2021\""
+#define SOFTWARE_VERSION "\"3.02.3 July 18, 2021\""
 #define REV_100    100
 #define REV_210    210
 #define REV_220    220
@@ -29,6 +30,9 @@
 #define DISPLAY_SERIAL     Serial2    // Serial port for slave display
 
 #define PRINT(x)  {Serial.print(x); AUX_SERIAL.print(x); DISPLAY_SERIAL.print(x);}
+
+
+
 
 char GET (void) 
 {
@@ -62,14 +66,7 @@ char GET (void)
 #define ONE_SECOND      1000                          // 1000 ms delay
 #define SHOT_TIME     ((int)(json_sensor_dia / 0.33)) // Worst case delay Sensor diameter / speed of sound)
  
-/*
- * DIP Switch enabled tests.  Set (0<<x) to (1<<x) to enable always
- */
-//                      From DIP    From Software
-#define CALIBRATE       ((1 << 0) + (0 << (4 + 0)))     // 1 Go to Calibration Mode
-#define CAL_LOW         ((1 << 1) + (0 << (4 + 1)))     // 2 When CALIBRATE is asserted, use lower trip point
-#define CAL_HIGH        ((1 << 2) + (0 << (4 + 2)))     // 4 When CALIBRATE is asserted, use higher trip point
-#define VERBOSE_TRACE   ((1 << 3) + (0 << (4 + 3)))     // 8 Show the verbose software trace
+
 
 #define HI(x) (((x) >> 8 ) & 0x00ff)
 #define LO(x) ((x) & 0x00ff)

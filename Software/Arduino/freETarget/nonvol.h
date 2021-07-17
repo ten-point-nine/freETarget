@@ -11,7 +11,7 @@ void gen_position(int  v);      // Reset the position values
  */
 
 #define NONVOL_INIT           0x0
-#define NONVOL_SENSOR_DIA     (NONVOL_INIT +  sizeof(int) + 2)             // Sensor diameter
+#define NONVOL_SENSOR_DIA     (NONVOL_INIT        +  sizeof(int) + 2)      // Sensor diameter
 #define NONVOL_DIP_SWITCH     (NONVOL_SENSOR_DIA  + sizeof(double) + 2)    // DIP switch setting
 #define NONVOL_PAPER_TIME     (NONVOL_DIP_SWITCH  + sizeof(int) + 2)       // Paper advance time
 #define NONVOL_TEST_MODE      (NONVOL_PAPER_TIME  + sizeof(int) + 2)       // Self stest
@@ -31,11 +31,12 @@ void gen_position(int  v);      // Reset the position values
 #define NONVOL_LED_PWM        (NONVOL_1_RINGx10   + sizeof(int) + 2)       // LED PWM value
 #define NONVOL_SEND_MISS      (NONVOL_LED_PWM     + sizeof(int) + 2)       // Send the MISS message when true
 #define NONVOL_SERIAL_NO      (NONVOL_SEND_MISS   + sizeof(int) + 2)       // EIN
-#define NONVOL_PAPER_STEP     (NONVOL_SERIAL_NO   + sizeof(int) + 2)       // Number of paper pulse steps
-#define NONVOL_MFS            (NONVOL_PAPER_STEP  + sizeof(int) + 2)       // Multifunction switch operation 
+#define NONVOL_STEP_COUNT     (NONVOL_SERIAL_NO   + sizeof(int) + 2)       // Number of paper pulse steps
+#define NONVOL_MFS            (NONVOL_STEP_COUNT  + sizeof(int) + 2)       // Multifunction switch operation 
+#define NONVOL_STEP_TIME      (NONVOL_MFS         + sizeof(int) + 2)       // Stepper motor pulse duration
 
-#define NEXT_NONVOL           (NONVOL_MFS         + sizeof(int) + 2) - NONVOL_INIT)
-#if ( ((35-13) * 4) > 4096 )
+#define NEXT_NONVOL           (NONVOL_STEP_TIME   + sizeof(int) + 2) - NONVOL_INIT)
+#if ( ((36-13) * 4) > 4096 )
 #error NEXT_NONVOL OUT OF NONVOL
 #endif
 

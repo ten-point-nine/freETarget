@@ -45,7 +45,8 @@ extern int    json_LED_PWM;       // PWM Setting (%)
 extern int    json_power_save;    // How long to run target before turning off LEDs
 extern int    json_send_miss;     // Sent the miss message when TRUE
 extern int    json_serial_number; // EIN 
-extern int    json_paper_step;    // Number of times paper motor is stepped
+extern int    json_step_count;    // Number of times paper motor is stepped
+extern int    json_step_time;     // Duration of step pulse
 extern int    json_multifunction; // Multifunction switch operation
 
 #endif _JSON_H_

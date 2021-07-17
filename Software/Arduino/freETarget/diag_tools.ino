@@ -12,6 +12,7 @@
 #include "analog_io.h"
 #include "gpio.h"
 #include "diag_tools.h"
+#include "json.h"
 
 const char* which_one[4] = {"North: ", "East: ", "South: ", "West: "};
 
@@ -245,7 +246,7 @@ void self_test(uint16_t test)
  * Test 11
  */
     case T_SET_TRIP:
-      set_trip_point(0);              // Stay in the trip point loop
+      set_trip_point(0);          // Stay in the trip point loop
       json_test = T_HELP;
       break;
 
@@ -653,20 +654,30 @@ void set_trip_point
   unsigned long sample;                                     // Counts read from ADC
            bool blinky;                                     // Blink the LEDs on an over flow
   bool          not_in_spec;                                // Set to true if the input is close to the limits
+  bool          stay_forever;                               // Stay forever if called with pass_count == 0;
+  unsigned int  sensor_status;                              // OR of the sensor bits that have tripped
   
   if ( is_trace )                                           // Infinite number of passes?
   {
     Serial.print("\r\nSetting trip point. Type ! of cycle power to exit\r\n");
   }
   blinky = 0;
-  not_in_spec = true;                                      // Start off by assuming out of spec
-
+  not_in_spec = true;                                       // Start off by assuming out of spec
+  sensor_status = 0;                                        // No sensors have tripped
+  stay_forever = false;
+  if (pass_count == 0 )                                     // A pass count of 0 means stay
+  {
+    stay_forever = true;                                    // For a long time
+  }
+  arm_counters();                                           // Arm the flip flops for later
+  
 /*
  * Loop if not in spec, passes to display, or the CAL jumper is in
  */
+
   while ( not_in_spec                                       // Out of tolerance
-          ||   (pass_count != 0)                            // Passes to go
-          ||   ((read_DIP() & CALIBRATE) != 0) )            // Held in place by DIP switch
+          ||   ( stay_forever )                             // Passes to go
+          ||   ( CALIBRATE ) )                              // Held in place by DIP switch
   {
     start_time = millis();
     sample = 0;
@@ -698,20 +709,16 @@ void set_trip_point
  /*
   * In spec, display the trip level on the LEDs
   */
-    switch (read_DIP() & ( CAL_LOW + CAL_HIGH ) )
-    {   
-      case (CAL_LOW):                                       // Low Calibration 
+    if ( CAL_LOW )                                          // Low Calibration 
+    {
         sample *= 3;
         sample /= 2;
-        break;
+    }
         
-      case (CAL_HIGH):                                      // Set scale if the high range
-        sample *= 2;
-        sample /= 3;
-        break;
-     
-      default:
-        break;
+    if ( CAL_HIGH )                                      // Set scale if the high range
+    {
+       sample *= 2;
+       sample /= 3;
     }
     
  /*
@@ -757,26 +764,38 @@ void set_trip_point
 /*
  * Got to the end.  See if we are going to do this for a fixed time or forever
  */
-   while ( Serial.available() )       // If there is a 
-   {
-    if ( Serial.read() == '!' )        // ! waiting in the serial port
+    switch (Serial.read())
     {
-      Serial.print("\r\nExiting calibration\r\n");
-      return;
-    }
-   }
-   
-   if ( pass_count != 0 )             // Set for a finite loop?
-   {
-      pass_count--;                   // Decriment count remaining
-      if ( pass_count == 0 )          // And bail out when zero
-      {
+      case '!':                       // ! waiting in the serial port
+        Serial.print("\r\nExiting calibration\r\n");
         return;
-      }
+
+      case 'X':
+      case 'x':                       // X Cancel
+        sensor_status = 0;
+        arm_counters();               // Reset the latch state
+        break;
+
+      default:
+        break;
+    }
+
+   if ( stay_forever )
+   {
+      Serial.print("\r\nV_Ref: "); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
+      sensor_status |= is_running();
+      show_sensor_status(sensor_status);
    }
    else
    {
-     Serial.print("\r\nV_Ref: "); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
+     if ( pass_count != 0 )             // Set for a finite loop?
+     {
+        pass_count--;                   // Decriment count remaining
+        if ( pass_count == 0 )          // And bail out when zero
+        {
+          return;
+        }
+      }
    }
    delay(ONE_SECOND/10);
  }

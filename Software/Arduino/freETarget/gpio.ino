@@ -43,10 +43,10 @@ const GPIO init_table[] = {
   {STOP_N,      OUTPUT, 1},
   {CLOCK_START, OUTPUT, 0},
   
-  {DIP_A,       INPUT_PULLUP, 0},
-  {DIP_B,       INPUT_PULLUP, 0},
-  {DIP_C,       INPUT_PULLUP, 0},
-  {DIP_D,       INPUT_PULLUP, 0},  
+  {DIP_0,       INPUT_PULLUP, 0},
+  {DIP_1,       INPUT_PULLUP, 0},
+  {DIP_2,       INPUT_PULLUP, 0},
+  {DIP_3,       INPUT_PULLUP, 0},  
 
   {LED_RDY,     OUTPUT, 1},
   {LED_X,       OUTPUT, 1},
@@ -349,11 +349,11 @@ unsigned int read_DIP(void)
   
   if ( revision() < REV_300 )          // The silkscreen was reversed in Version 3.0  oops
   {
-    return_value =  (~((digitalRead(DIP_A) << 0) + (digitalRead(DIP_B) << 1) + (digitalRead(DIP_C) << 2) + (digitalRead(DIP_D) << 3))) & 0x0F;  // DIP Switch
+    return_value =  (~((digitalRead(DIP_0) << 0) + (digitalRead(DIP_1) << 1) + (digitalRead(DIP_2) << 2) + (digitalRead(DIP_3) << 3))) & 0x0F;  // DIP Switch
   }
   else
   {
-    return_value =  (~((digitalRead(DIP_D) << 0) + (digitalRead(DIP_C) << 1) + (digitalRead(DIP_B) << 2) + (digitalRead(DIP_A) << 3))) & 0x0F;  // DIP Switch
+    return_value =  (~((digitalRead(DIP_3) << 0) + (digitalRead(DIP_2) << 1) + (digitalRead(DIP_1) << 2) + (digitalRead(DIP_0) << 3))) & 0x0F;  // DIP Switch
   }
   return_value |= json_dip_switch;  // JSON message
   return_value |= 0xF0;             // COMPILE TIME
@@ -460,18 +460,33 @@ void read_timers(void)
  void drive_paper(void)
  {
   unsigned int i, j, k;                           // Iteration Counters
-  
+  unsigned int s_count, s_time;
+   
   if ( is_trace )
   {
     Serial.print("\r\nAdvancing paper ");
   }
 
 /*
+ * Set up the count or times based on whether a DC or stepper motor is used
+ */
+  s_count = 1;
+  if( json_step_count != 0 )                      // Force a zero count to be
+  {
+    s_count = json_step_count;                    // one
+  }
+
+  s_time = json_paper_time;
+  if ( json_step_time != 0 )
+  {
+    s_time = json_step_time;
+  }
+
+/*
  * Drive the motor on and off for the number of cycles
  * at duration
  */
-
-  for (i=0; i != json_paper_step; i++)            // Number of steps
+  for (i=0; i != s_count; i++)                    // Number of steps
   {
    paper_on_off(true);                            // Turn the motor on
    
@@ -480,7 +495,7 @@ void read_timers(void)
      Serial.print("On ");
    }
    
-   for (j=0; j != json_paper_time; j++ )          // Delay in 10 ms increments
+   for (j=0; j != s_time; j++ )                   // Delay in 10 ms increments
    {
      k = 7 * (1.0 - ((float)i / float(json_paper_time)));
      set_LED(k & 4, k & 2, k & 1);                // Show the count going downb
@@ -492,11 +507,6 @@ void read_timers(void)
    if ( is_trace )
    {
      Serial.print("Off ");
-   }
-
-   if ( json_paper_step == 1)                    // DC motors only have 
-   {                                              // one step, so exit
-     break;   
    }
 
    delay(PAPER_STEP);                             // Let the A4988 catch ujp
@@ -642,10 +652,14 @@ void blink_fault
   switch (json_multifunction)
   {
     case PAPER_FEED:
-      pinMode(SPARE_1,INPUT_PULLUP);
-      last_MFS_state = digitalRead(SPARE_1);    // Remember the starting state
+    case GPIO_IN:
+      pinMode(DIP_1,INPUT_PULLUP);
+      last_MFS_state = DIP_SW_A;           // Remember the starting state
       break;
 
+    case GPIO_OUT:                        // The switch is a general purpose output
+      pinMode(DIP_1,OUTPUT);
+      break;
   }
 
 /*
@@ -665,8 +679,12 @@ void blink_fault
  * 
  *-----------------------------------------------------
  *
- * The actions of SPARE_1 will change depending on the 
+ * The actions of the DIP switch will change depending on the 
  * mode that is programmed into it.
+ * 
+ * DIP Switch
+ * 
+ * 
  * 
  *-----------------------------------------------------*/
 unsigned int multifunction_switch
@@ -683,7 +701,12 @@ unsigned int multifunction_switch
   switch (json_multifunction)
   {
     case PAPER_FEED:                      // The switch acts as paper feed control
-      return_value = digitalRead(SPARE_2);
+      if ( CALIBRATE )
+      {
+        return;                           // Not used if in calibration mode
+        
+      }
+      return_value = DIP_SW_A;            // Use DIP_SW_A as a paper feed
       Serial.print(return_value);
       if ( (return_value ^ last_MFS_state)// Got a change?
          & ( return_value == 0 ) )        // And its a contact to ground
@@ -694,12 +717,12 @@ unsigned int multifunction_switch
       break;
 
     case GPIO_IN:                         // The switch is a general purpose input
-      return_value = digitalRead(SPARE_1);
+      return_value = digitalRead(DIP_1);
       break;
 
-    case GPIO_OUT:                        // The switch is a general purpose outptu 
+    case GPIO_OUT:                        // The switch is a general purpose output
       return_value = new_state;
-      digitalWrite(SPARE_1, new_state);
+      digitalWrite(DIP_1, new_state);
       break;
 
     default:

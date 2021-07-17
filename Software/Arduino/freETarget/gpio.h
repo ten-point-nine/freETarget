@@ -14,8 +14,8 @@ void read_timers(void);                                   // Read and return the
 void drive_paper(void);                                   // Turn on the paper motor
 void enable_interrupt(void);                              // Turn on the face strike interrupt
 void disable_interrupt(void);                             // Turn off the face strike interrupt
-unsigned int multifunction_switch(unsigned int new_state);// Handle the actions of the SPARE_1 signal
-void multifunciton_init(void);                            // Initialize the multifunction switch
+unsigned int multifunction_switch(unsigned int new_state);// Handle the actions of the DIP Switch signal
+
 
 /*
  *  Port Definitions
@@ -49,10 +49,21 @@ void multifunciton_init(void);                            // Initialize the mult
 #define STOP_N      52       
 #define CLOCK_START 53
 
-#define DIP_A        9                    // 
-#define DIP_B       10
-#define DIP_C       11
-#define DIP_D       12
+#define DIP_0        9                    // 
+#define DIP_1       10
+#define DIP_2       11
+#define DIP_3       12
+
+/*
+ * DIP Switch Use. 
+ */
+//                      From DIP                   From Software
+#define CALIBRATE       ((digitalRead(DIP_3) == 0)    + 0)   // 1 Go to Calibration Mode
+#define DIP_SW_A        ((digitalRead(DIP_2) == 0)    + 0)   // 2 When CALIBRATE is asserted, use lower trip point
+#define CAL_LOW         (DIP_SW_A)
+#define DIP_SW_B        ((digitalRead(DIP_1) == 0)    + 0)   // 4 When CALIBRATE is asserted, use higher trip point
+#define CAL_HIGH        (DIP_SW_B)
+#define VERBOSE_TRACE   ((digitalRead(DIP_0) == 0)    + 0)   // 8 Show the verbose software trace
 
 #define CTS_U        7
 #define RTS_U        6
