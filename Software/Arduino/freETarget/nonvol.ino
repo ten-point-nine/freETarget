@@ -106,7 +106,7 @@ void init_nonvol(int v)
  */
   read_nonvol();                          // Read back the new values
   show_echo(0);                           // Display these settings
-  set_trip_point(0);                      // And stay forever in the trip mode
+  set_trip_point(0);                      // And stay forever in the set trip mode
   
 /*
  * All done, return
@@ -190,10 +190,10 @@ void read_nonvol(void)
     EEPROM.put(NONVOL_PAPER_TIME, json_paper_time);   // and limit motor on time
   }
   
-  if ( (json_paper_step == 0xffff) || (json_paper_step == 0) )
+  if ( (json_paper_time == 0xffff)  )
   {
-    json_paper_step = 1;                              // Check for undefined time
-    EEPROM.put(NONVOL_PAPER_STEP, json_paper_step);   // Set to 1
+    json_paper_time = 0;                              // Check for undefined time
+    EEPROM.put(NONVOL_PAPER_TIME, json_paper_time);   // Set to 0
   }
   
   if ( json_calibre_x10 > 100 )
