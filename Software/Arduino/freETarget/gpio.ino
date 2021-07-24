@@ -63,7 +63,8 @@ const GPIO init_table[] = {
   
   {EOF, EOF, EOF} };
   
-static   int last_MFS_state;              // Last state read from MFS
+static   int LO_last_MFS_state;              // Last state read from MFS
+static   int HI_last_MFS_state;
 
 void face_ISR(void);
 static void paper_on_off(bool on);        // Turn the motor on or off
@@ -490,23 +491,18 @@ void read_timers(void)
   {
    paper_on_off(true);                            // Turn the motor on
    
-   if ( is_trace )
+  if ( is_trace )
    {
-     Serial.print("On ");
+     Serial.print("On "); Serial.print(s_time);
    }
    
-   for (j=0; j != s_time; j++ )                   // Delay in 10 ms increments
-   {
-     k = 7 * (1.0 - ((float)i / float(json_paper_time)));
-     set_LED(k & 4, k & 2, k & 1);                // Show the count going downb
-     delay(PAPER_STEP);                           // in 10ms increments
-   }
+   delay(PAPER_STEP * s_time);                    // in 10ms increments
 
    paper_on_off(false);                           // Turn the motor off
    
    if ( is_trace )
    {
-     Serial.print("Off ");
+     Serial.print(" Off ");
    }
 
    delay(PAPER_STEP);                             // Let the A4988 catch ujp
@@ -634,7 +630,7 @@ void blink_fault
  * 
  * function: multifunction_init
  * 
- * brief:    Initialize the direction of the MFS on SPARE_1
+ * brief:    Initialize the direction of the MFS on the DIP switch
  * 
  * return:   None
  * 
@@ -649,19 +645,37 @@ void blink_fault
  *-----------------------------------------------------*/
  void multifunction_init(void)
  {
-  switch (json_multifunction)
+  switch (LO(json_multifunction))
   {
     case PAPER_FEED:
     case GPIO_IN:
       pinMode(DIP_1,INPUT_PULLUP);
-      last_MFS_state = DIP_SW_A;           // Remember the starting state
+      LO_last_MFS_state = DIP_SW_A;       // Remember the starting state
       break;
 
     case GPIO_OUT:                        // The switch is a general purpose output
       pinMode(DIP_1,OUTPUT);
       break;
-  }
 
+    default:
+      break;
+  }
+  
+  switch (HI(json_multifunction))
+  {
+    case PAPER_FEED:
+    case GPIO_IN:
+      pinMode(DIP_2,INPUT_PULLUP);
+      HI_last_MFS_state = DIP_SW_B;       // Remember the starting state
+      break;
+
+    case GPIO_OUT:                        // The switch is a general purpose output
+      pinMode(DIP_1,OUTPUT);
+      break;
+
+    default:
+      break;
+  }
 /*
  * The GPIO has been programmed per the multifunction mode
  */
@@ -698,26 +712,24 @@ unsigned int multifunction_switch
  * Manage the GPIO based on the configuration
  */
  
-  switch (json_multifunction)
+  switch (LO(json_multifunction))
   {
     case PAPER_FEED:                      // The switch acts as paper feed control
       if ( CALIBRATE )
       {
         return;                           // Not used if in calibration mode
-        
       }
       return_value = DIP_SW_A;            // Use DIP_SW_A as a paper feed
-      Serial.print(return_value);
-      if ( (return_value ^ last_MFS_state)// Got a change?
-         & ( return_value == 0 ) )        // And its a contact to ground
+      if ( (return_value ^ LO_last_MFS_state)// Got a change?
+         & ( return_value == 1 ) )        // And its a contact to ground
       {      
         drive_paper();                    // Drive the paper once
       }
-      last_MFS_state = return_value;      // and remember for next time
+      LO_last_MFS_state = return_value;   // and remember for next time
       break;
 
     case GPIO_IN:                         // The switch is a general purpose input
-      return_value = digitalRead(DIP_1);
+      return_value = digitalRead(DIP_SW_A);
       break;
 
     case GPIO_OUT:                        // The switch is a general purpose output
@@ -728,7 +740,37 @@ unsigned int multifunction_switch
     default:
       break;
   }
+  
+  switch (HI(json_multifunction))
+  {
+    case PAPER_FEED:                      // The switch acts as paper feed control
+      if ( CALIBRATE )
+      {
+        return;                           // Not used if in calibration mode
+      }
+      return_value = DIP_SW_B;            // Use DIP_SW_B as a paper feed
+      Serial.print(return_value);
+      if ( (return_value ^ HI_last_MFS_state)// Got a change?
+         & ( return_value == 1 ) )        // And its a contact to ground
+      {      
+        drive_paper();                    // Drive the paper once
+      }
+      HI_last_MFS_state = return_value;   // and remember for next time
+      break;
 
+    case GPIO_IN:                         // The switch is a general purpose input
+      return_value = digitalRead(DIP_SW_B);
+      break;
+
+    case GPIO_OUT:                        // The switch is a general purpose output
+      return_value = new_state;
+      digitalWrite(DIP_1, new_state);
+      break;
+
+    default:
+      break;
+  }
+  
 /*
  * All done, return the GPIO state
  */

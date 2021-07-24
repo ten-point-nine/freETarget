@@ -94,9 +94,9 @@ unsigned int multifunction_switch(unsigned int new_state);// Handle the actions 
 #define FACE_SENSOR  19
 
 #define SPARE_1      22
-#define PAPER_FEED    0                   // SPARE_1 used as a paper feed
-#define GPIO_IN       1                   // SPARE_1 used as a GPIO in
-#define GPIO_OUT      2                   // SPARE_1 used as a GPIO out
+#define PAPER_FEED    1                   // SPARE_1 used as a paper feed
+#define GPIO_IN       2                   // SPARE_1 used as a GPIO in
+#define GPIO_OUT      3                   // SPARE_1 used as a GPIO out
 
 #define SPARE_2      23
 

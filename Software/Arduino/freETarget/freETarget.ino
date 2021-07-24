@@ -159,6 +159,8 @@ void loop()
 /*
  * Cycle through the state machine
  */
+  multifunction_switch(0);        // Read the switches
+  
   switch (state)
   {
 
