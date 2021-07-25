@@ -121,6 +121,7 @@ void init_sensors(void)
   */
   return;
 }
+
 /*----------------------------------------------------------------
  *
  * funtion: compute_hit
@@ -143,16 +144,13 @@ unsigned int compute_hit
 {
   double        reference;         // Time of reference counter
   int           location;          // Sensor chosen for reference location
-  int           discard;           // Discard the smallest timer value
   int           i, j, count;
   double        estimate;          // Estimated position
   double        last_estimate, error; // Location error
   double        r1, r2;            // Distance between points
-  double        x, y;              // Computed location
   double        x_avg, y_avg;      // Running average location
   double        smallest;          // Smallest non-zero value measured
-  double        constillation;     // How many constillations did we compute
-  int           v_ref;             // reference voltage for this board
+  double        z_offset_clock;    // Time offset between paper and sensor plane
   
   if ( is_trace )
   {
@@ -163,6 +161,11 @@ unsigned int compute_hit
  *  Compute the current geometry based on the speed of sound
  */
   init_sensors();
+  z_offset_clock = (double)json_z_offset  * OSCILLATOR_MHZ / s_of_sound; // Clock adjustement for paper to sensor difference
+  if ( is_trace )
+  {
+    Serial.print("\r\nz_offset_clock:"); Serial.print(z_offset_clock); Serial.print("  ");
+  }
   
  /* 
   *  Read the counter registers
@@ -180,7 +183,6 @@ unsigned int compute_hit
     }
   }
   
-
 /*
  * Determine the location of the reference counter (longest time)
  */
@@ -245,16 +247,13 @@ unsigned int compute_hit
  * Find the smallest non-zero value, this is the sensor furthest away from the sensor
  */
   smallest = s[N].count;
-  discard = N;
   for (i=N+1; i <= W; i++)
   {
     if ( s[i].count < smallest )
     {
       smallest = s[i].count;
-      discard = i;
     }
   }
-//  s[discard].is_valid = false;    // Throw away the shortest time. (test pathc removed)
   
 /*  
  *  Loop and calculate the unknown radius (estimate)
@@ -277,20 +276,18 @@ unsigned int compute_hit
     y_avg = 0;
     last_estimate = estimate;
 
-    constillation = 0.0;
     for (i=N; i <= W; i++)        // Calculate X/Y for each sensor
     {
-      if ( find_xy(&s[i], estimate) )
+      if ( find_xy_3D(&s[i], estimate, z_offset_clock) )
       {
         x_avg += s[i].xs;        // Keep the running average
         y_avg += s[i].ys;
-        constillation += 1.0;
       }
     }
 
-    x_avg /= constillation;      // Work out the average intercept
-    y_avg /= constillation;
-
+    x_avg /= 4.0d;
+    y_avg /= 4.0d;
+    
     estimate = sqrt(sq(s[location].x - x_avg) + sq(s[location].y - y_avg));
     error = abs(last_estimate - estimate);
 
@@ -315,9 +312,11 @@ unsigned int compute_hit
   return location;
 }
 
+
+  
 /*----------------------------------------------------------------
  *
- * function: find_xy
+ * function: find_xy_3D
  *
  * brief: Calaculate where the shot seems to lie
  * 
@@ -344,12 +343,39 @@ unsigned int compute_hit
  *                 b is the measured time + estimate of the shot location
  *                 c is the fixed distance between the sensors
  *                 
+ * See freETarget documentaton for algorithm
+ * 
+ * If there is a large distance between the target plane and the 
+ * sensor plane, then the distance between the computed position
+ * and the actual postion includes a large error the further
+ * the pellet hits from the centre.
+ * 
+ * This is because the sound path from the target to the 
+ * sensor includes a slant distance from the paper to the sensor
+ * ex.
+ * 
+ *                                            // ()  Sensor  ---
+ *                          Slant Range  ////     |           |
+ *                                 ////           |      z_offset
+ * ==============================@================|= -----------
+ *                               | Paper Distance |
+ *                               
+ * This algorithm is the same as the regular compute_hit()
+ * but corrects for the sound distance based on the z_offset 
+ * between the paper and sensor
+ * 
+ * Sound Distance = sqrt(Paper Distance ^2 + z_offset ^2)
+ * 
+ * Paper Distance = sqrt(Sound Distance ^2 - z_offset ^2)
+ *               
+ *                 
  *--------------------------------------------------------------*/
 
-bool find_xy
+bool find_xy_3D
     (
      sensor_t* s,           // Sensor to be operatated on
-     double estimate        // Estimated position   
+     double estimate,       // Estimated position
+     double z_offset_clock  // Time difference between paper and sensor plane
      )
 {
   double ae, be;            // Locations with error added
@@ -370,8 +396,8 @@ bool find_xy
 /*
  * It looks like we have valid data.  Carry on
  */
-  ae = s->a + estimate;     // Dimenstion with error included
-  be = s->b + estimate;
+  ae = sqrt(sq(s->a + estimate) - sq(z_offset_clock));     // Dimenstion with error included
+  be = sqrt(sq(s->b + estimate) - sq(z_offset_clock));
 
   if ( (ae + be) < s->c )   // Check for an accumulated round off error
     {
@@ -464,15 +490,17 @@ void send_score
   int sensor_status               // Status at the time of the shot
   )
 {
-  double x, y;                   // Shot location in mm X, Y
+  int    i;                       // Iteration Counter
+  double x, y;                    // Shot location in mm X, Y
   double radius;
   double angle;
   unsigned int volts;
   double clock_face;
-  double coeff;                 // From Alex Bird
+  double coeff;                   // From Alex Bird
   int    z;
   double score;
-
+  char   str_a[256], str_b[256], str_c[10];  // String holding buffers
+  
   if ( is_trace )
   {
     Serial.print("\r\nSending the score");
@@ -496,56 +524,83 @@ void send_score
 /* 
  *  Display the results
  */
-  esp01_send(true, 0);       // Turn on the IP channel (if needed)
-  PRINT("\r\n{");
+  sprintf(str_a, "\r\n{");
   
 #if ( S_SHOT )
-  PRINT("\"shot\":");      PRINT(shot); PRINT(", ");
-  PRINT("\"miss\": 0, ");
-  
-  if ( json_name_id != 0 )
-  {
-    PRINT("\"name\":\"");      PRINT(names[json_name_id]);     PRINT("\", ");
-  }
+  sprintf(str_b, "%s \"shot\":%d, \"miss\":0, \"name\":\"%s\"", str_a, shot, names[json_name_id]);
+  sprintf(str_a, "%s", str_b);
 #endif
 
 #if ( S_SCORE )
   coeff = 9.9 / (((double)json_1_ring_x10 + (double)json_calibre_x10) / 20.0d);
   score = 10.9 - (coeff * radius);
-  PRINT("\"score\":");      PRINT(score); PRINT(", ");
   z = 360 - (((int)angle - 90) % 360);
   clock_face = (double)z / 30.0;
-  PRINT("\"clock\":\"");    PRINT((int)clock_face);     PRINT(":");     PRINT((int)(60*(clock_face-((int)clock_face))));     PRINT("\", ");
+  sprintf(str_b, "%s, \"score\": %d, "\"clock\":\"%d:%d\"  ", str_a, score,(int)clock_face, (int)(60*(clock_face-((int)clock_face))) ;
+  sprintf(str_a, "%s", str_b);
 #endif
 
 #if ( S_XY )
-  PRINT("\"x\":");     PRINT(x);    PRINT(", ");
-  PRINT("\"y\":");     PRINT(y);    PRINT(", ");
+  dtostrf(x, 4, 2, str_c );
+  sprintf(str_b, "%s, \"x\":%s,", str_a, str_c);
+  sprintf(str_a, "%s", str_b);
+  dtostrf(y, 4, 2, str_c );
+  sprintf(str_b, "%s, \"y\":%s ", str_a, str_c);
+  sprintf(str_a, "%s", str_b);
 #endif
 
 #if ( S_POLAR )
-  PRINT("\"r\":");     PRINT(radius);    PRINT(", ");
-  PRINT("\"a\":");     PRINT(angle);     PRINT(", ");
+  dtostrf(radius, 4, 2, str_c );
+  sprintf(str_b, "%s, \"r\":%s,", str_a, str_c);
+  sprintf(str_a, "%s", str_b);
+  dtostrf(angle, 4, 2, str_c );
+  sprintf(str_b, "%s, \"a\":%s ", str_a, str_c);
+  sprintf(str_a, "%s", str_b);
 #endif
 
 #if ( S_COUNTERS )
-  PRINT("\", ");
-  PRINT("\"N\":");     PRINT((int)s[N].count);      PRINT(", ");
-  PRINT("\"E\":");     PRINT((int)s[E].count);      PRINT(", ");
-  PRINT("\"S\":");     PRINT((int)s[S].count);      PRINT(", ");
-  PRINT("\"W\":");     PRINT((int)s[W].count);      PRINT(", ");
+  sprintf(str_b, "%s, \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d", str_a, (int)s[N].count, (int)s[E].count, (int)s[S].count, (int)s[W].count);
+  sprintf(str_a, "%s", str_b);
 #endif
 
 #if ( S_MISC ) 
   volts = analogRead(V_REFERENCE);
-  PRINT("\"V_REF\":");       PRINT(TO_VOLTS(volts));      PRINT(", ");
-  PRINT("\"T\":");           PRINT(temperature_C());      PRINT(", ");
-  PRINT("\"VERSION\":");     PRINT(SOFTWARE_VERSION);
+  dtostrf(TO_VOLTS(volts), 2, 2, str_c );
+  sprintf(str_b, "%s, \"V_REF\":%s", str_a, str_c);
+  sprintf(str_a, "%s", str_b);
+  dtostrf(temperature_C(), 2, 2, str_c );
+  sprintf(str_b, "%s, \"T\":%s, \"VERSION\":", str_a, str_c);
+  strcat(str_b, SOFTWARE_VERSION);
+  sprintf(str_a, "%s", str_b);
 #endif
 
-  PRINT("}\r\n");
-  esp01_send(false, 0);
+  sprintf(str_b, "%s}", str_a);
+  sprintf(str_a, "%s", str_b);
 
+
+/* 
+ *  Send the score to anybody who is listening
+ */
+  Serial.print(str_a);            // Main USB port
+
+  if ( esp01_is_present() )
+  {
+    for (i=0; i != MAX_CONNECTIONS; i++ )
+    {
+      if ( esp01_send(true, i) )
+      {
+        AUX_SERIAL.print(str_a);    // WiFi Port
+        esp01_send(false, i);
+      }
+    }
+  }
+  else 
+  {
+    AUX_SERIAL.print(str_a);        // No ESP-01, then use just the AUX port
+  }
+
+  DISPLAY_SERIAL.print(str_a);    // Aux Serial Port
+  
 /*
  * All done, return
  */
@@ -554,7 +609,7 @@ void send_score
  
 /*----------------------------------------------------------------
  *
- * vfunction: send_miss
+ * function: send_miss
  *
  * brief: Send out a miss message
  * 
@@ -571,29 +626,49 @@ void send_miss
   int shot                        // Current shot
   )
 {
+  char str_a[256], str_b[256];    // String holding buffer
   
 /* 
  *  Display the results
  */
-  esp01_send(true, 0);           // Prime the IP channel if needed
-  PRINT("\r\n{");
+  sprintf(str_a, "\r\n{");
   
-#if ( S_SHOT )
-  PRINT("\"shot\":");      PRINT(shot); PRINT(", ");
-  PRINT("\"miss\": 1,"); 
-  
-  if ( json_name_id != 0 )
-  {
-    PRINT("\"name\":\"");      PRINT(names[json_name_id]);     PRINT("\", ");
-  }
+ #if ( S_SHOT )
+  sprintf(str_b, "%s \"shot\":%d, \"miss\":1, \"name\":\"%s\"", str_a, shot, names[json_name_id]);
+  sprintf(str_a, "%s", str_b);
 #endif
 
 #if ( S_XY )
-  PRINT("\"x\": 0, \"y\": 0")
+  sprintf(str_b, "%s \"x\":0, \"y\":0", str_a);
+  sprintf(str_a, "%s", str_b);
 #endif
 
-  PRINT("}\r\n");
-  esp01_send(false, 0);            // Flush the IP channel
+  sprintf(str_b, "%s}", str_a);
+  sprintf(str_a, "%s", str_b);
+  
+
+/* 
+ *  Send the score to anybody who is listening
+ */
+  Serial.print(str_a);            // Main USB port
+
+  if ( esp01_is_present() )
+  {
+    for (i=0; i != MAX_CONNECTIONS; i++ )
+    {
+      if ( esp01_send(true, i) )
+      {
+        AUX_SERIAL.print(str_a);    // WiFi Port
+        esp01_send(false, i);
+      }
+    }
+  }
+  else 
+  {
+    AUX_SERIAL.print(str_a);        // No ESP-01, then use just the AUX port
+  }
+
+  DISPLAY_SERIAL.print(str_a);    // Aux Serial Port
 
 /*
  * All done, go home

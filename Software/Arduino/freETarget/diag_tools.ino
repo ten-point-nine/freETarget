@@ -14,7 +14,7 @@
 #include "diag_tools.h"
 #include "json.h"
 
-const char* which_one[4] = {"North: ", "East: ", "South: ", "West: "};
+const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 
 #define TICK(x) (((x) / 0.33) * OSCILLATOR_MHZ)   // Distance in clock ticks
 #define RX(Z,X,Y) (16000 - (sqrt(sq(TICK(x)-s[(Z)].x) + sq(TICK(y)-s[(Z)].y))))
@@ -334,13 +334,18 @@ void self_test(uint16_t test)
     )
 {
   int i;
+  char str_a[256];
+
+  sprintf(str_a, "\r\nfreETarget");
+  strcat(str_a, SOFTWARE_VERSION);
+  strcat(str_a, "\r\n");
   
 /*
  * Display the version on the default serial port
  */
   if ( (port == 0) || (port & PORT_SERIAL) ) // No port or Serial port selected
   {
-    Serial.print("\r\nfreETarget "); Serial.print(SOFTWARE_VERSION); Serial.print("\r\n");
+    Serial.print(str_a);
   }
 
 /*
@@ -348,18 +353,20 @@ void self_test(uint16_t test)
  */
   if ( port & PORT_AUX )
   {
-    if (esp01_is_present() == false )       // ESP is not attached,just send the message
+    if ( esp01_is_present() )
     {
-    AUX_SERIAL.print("\r\nfreETarget "); AUX_SERIAL.print(SOFTWARE_VERSION); AUX_SERIAL.print("\r\n");
-    }
-    else                                    // ESP is attached.  Send out to all of the active connections
-    {
-      for (i=0; i != MAX_CONNECTIONS; i++)
+      for (i=0; i != MAX_CONNECTIONS; i++ )
       {
-        esp01_send(true, i);
-        AUX_SERIAL.print("\r\nfreETarget "); AUX_SERIAL.print(SOFTWARE_VERSION); AUX_SERIAL.print("\r\n");
-        esp01_send(false, i);
+        if ( esp01_send(true, i) )
+        {
+          AUX_SERIAL.print(str_a);    // WiFi Port
+          esp01_send(false, i);
+        }
       }
+    }
+    else 
+    {
+      AUX_SERIAL.print(str_a);        // No ESP-01, then use just the AUX port
     }
   }
 
@@ -368,7 +375,7 @@ void self_test(uint16_t test)
   */
   if ( port & PORT_DISPLAY )
   {
-    DISPLAY_SERIAL.print("\r\nfreETarget "); DISPLAY_SERIAL.print(SOFTWARE_VERSION); DISPLAY_SERIAL.print("\r\n");
+    DISPLAY_SERIAL.print(str_a);
   }
 
 /*

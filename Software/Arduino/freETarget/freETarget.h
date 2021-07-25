@@ -13,7 +13,7 @@
 #include "esp-01.h"
 #include "json.h"
 
-#define SOFTWARE_VERSION "\"3.02.3 July 22, 2021\""
+#define SOFTWARE_VERSION "\"3.03.0 July 24, 2021\""
 #define REV_100    100
 #define REV_210    210
 #define REV_220    220
@@ -28,11 +28,6 @@
 #define SAMPLE_CALCULATIONS false     // Trace the COUNTER values
 #define AUX_SERIAL         Serial3    // Auxilary Connector
 #define DISPLAY_SERIAL     Serial2    // Serial port for slave display
-
-#define PRINT(x)  {Serial.print(x); AUX_SERIAL.print(x); DISPLAY_SERIAL.print(x);}
-
-
-
 
 char GET (void) 
 {

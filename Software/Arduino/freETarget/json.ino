@@ -38,6 +38,7 @@ int     json_serial_number;         // Electonic serial number
 int     json_step_count;            // Number of steps ouput to motor
 int     json_step_time;             // Duration of each step
 int     json_multifunction;         // Multifunction switch operation
+int     json_z_offset;              // Distance between paper and sensor plane in 0.1mm
 
 int     temp;                       // Temporary variable
 
@@ -74,6 +75,7 @@ const json_message JSON[] = {
   {"\"TRACE\":",          0,                                 0,                IS_INT16,  &set_trace,                      0,        0 },    // Enter / exit diagnostic trace
   {"\"TRGT_1_RINGx10\":", &json_1_ring_x10,                  0,                IS_INT16,  0,                NONVOL_1_RINGx10,     1555 },    // Enter the 1 ring diamater (mm x 10)
   {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_version,                   0,        0 },    // Return the version string
+  {"\"Z_OFFSET\":",       &json_z_offset    ,                0,                IS_INT16,  0,                NONVOL_Z_OFFSET,        10 },    // Distance from paper to sensor plane (mm)
   {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT16,  0,                NONVOL_NORTH_X,          0 },    //
   {"\"NORTH_Y\":",        &json_north_y,                     0,                IS_INT16,  0,                NONVOL_NORTH_Y,          0 },    //
   {"\"EAST_X\":",         &json_east_x,                      0,                IS_INT16,  0,                NONVOL_EAST_X,           0 },    //

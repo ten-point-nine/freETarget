@@ -187,36 +187,42 @@ void read_nonvol(void)
   if ( (json_paper_time * PAPER_STEP) > (PAPER_LIMIT) )
   {
     json_paper_time = 0;                              // Check for an infinit loop
-    EEPROM.put(NONVOL_PAPER_TIME, json_paper_time);   // and limit motor on time
   }
   
   if ( (json_paper_time == 0xffff)  )
   {
     json_paper_time = 0;                              // Check for undefined time
-    EEPROM.put(NONVOL_PAPER_TIME, json_paper_time);   // Set to 0
+  }
+
+  if ( (json_step_time == 0xffff)  )
+  {
+    json_step_time = 0;                              // Check for undefined time
+  }
+
+  if ( (json_step_count == 0xffff)  )
+  {
+    json_step_count = 0;                              // Check for undefined time
+  }
+  
+  if ( (json_z_offset == 0xffff)  )
+  {
+    json_z_offset  = 0;                               // Check for undefined time
   }
   
   if ( json_calibre_x10 > 100 )
   {
     json_calibre_x10 = 45;                            // Check for an undefined pellet
-    EEPROM.put(NONVOL_CALIBRE_X10, json_calibre_x10); // Default to a 4.5mm pellet
   }
-  json_calibre_x10 = 0;                               // AMB
   
   if ( json_sensor_angle == 0xffff )
   {
     json_sensor_angle = 45;                             // Check for an undefined Angle
-    EEPROM.put(NONVOL_SENSOR_ANGLE, json_sensor_angle);// Default to a 4.5mm pellet
   }
 
   if ( json_name_id == 0xffff )
   {
     json_name_id = 0;                                 // Check for an undefined Name
-    EEPROM.put(NONVOL_NAME_ID, json_name_id);         // Set to zero
   }
-  
-  json_sensor_angle = 45;                            // AMB Kluge
-  EEPROM.put(NONVOL_SENSOR_ANGLE, json_sensor_angle);
 
 /*
  * All done, begin the program

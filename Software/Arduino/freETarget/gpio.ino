@@ -305,14 +305,23 @@ void trip_counters(void)
  * 
  *-----------------------------------------------------
  *
- * Enable interrupts works by attaching an interrupt
+ * If send_miss is turned on, then enable the
+ * interrutps.  Enable interrupts works by attaching an 
+ * interrupt
  * 
  *-----------------------------------------------------*/
 void enable_interrupt(void)
 {
-  if ( revision() >= REV_300 )
+  if ( json_send_miss )           // Only enable if send_miss is turned on
   {
-    attachInterrupt(digitalPinToInterrupt(FACE_SENSOR),  face_ISR, CHANGE);
+    if ( revision() >= REV_300 )
+    {
+      attachInterrupt(digitalPinToInterrupt(FACE_SENSOR),  face_ISR, CHANGE);
+    }
+  }
+  else                            // Otherwise turn it off
+  {
+    disable_interrupt();
   }
   
   return;

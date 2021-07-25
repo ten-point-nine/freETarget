@@ -189,7 +189,10 @@ void loop()
  */
   case ARM:
     arm_counters();
-    enable_interrupt();               // Turn on the face strike interrupt
+    if ( json_send_miss )
+    {
+      enable_interrupt();             // Turn on the face strike interrupt
+    }
     face_strike = false;              // Reset the face strike count
     
     set_LED_PWM(json_LED_PWM);        // Keep the LEDs ON

@@ -482,7 +482,7 @@ unsigned int esp01_available(void)
  *
  * brief:    Send a string over the IP port
  * 
- * return:   Nothing
+ * return:   TRUE if the channel is active
  *
  *----------------------------------------------------------------
  *   
@@ -510,7 +510,7 @@ unsigned int esp01_available(void)
  *   
  *--------------------------------------------------------------*/
 
-void esp01_send
+bool esp01_send
   (
     bool start,                         // TRUE if starting a transmission
     int  index                          // Which index (connection) to send on
@@ -522,9 +522,10 @@ void esp01_send
 /*
  * Determine if we actually have to do anything
  */
-  if ( esp01_is_present() == false )
+  if ( (esp01_is_present() == false)    // No ESP at all
+      || ( esp01_connect[index] == false )) // No connection on this channel
   {
-    return;                             // Nope
+    return false;
   }
 
 /*  
@@ -541,7 +542,7 @@ void esp01_send
       {
         if ( AUX_SERIAL.read() == '>' )             // Is it the prompt?
         {
-          return;                                   // Yes, Ready to send out 
+          return true;                              // Yes, Ready to send out 
         }
       }
     }
@@ -554,7 +555,7 @@ void esp01_send
 /*
  * All done, return
  */
-  return;
+  return false;
 }
 
 /*----------------------------------------------------------------
