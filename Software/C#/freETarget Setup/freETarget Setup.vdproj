@@ -3193,7 +3193,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_B18C4057E682438CB1FBAFA19B5EAB78"
             {
-            "SourcePath" = "8:..\\freETarget\\obj\\Release\\freETarget.exe"
+            "SourcePath" = "8:..\\freETarget\\obj\\Debug\\freETarget.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_9981CD01648E4C95AF344740FDDEA8C9"
