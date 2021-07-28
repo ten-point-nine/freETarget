@@ -1,37 +1,47 @@
-﻿using System;
+﻿/*
+ * Fifty Meter Rifle Target
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+/*
+ * 50 meter 22 rifle target.  ISSF Sectoin 6.3.4.2
+ */
 namespace freETarget.targets {
-    class AirRifle : aTarget {
+    class rifle50M : aTarget {
 
-        private const decimal pelletCaliber = 4.5m;
-        private const decimal targetSize = 170; //mm
+        private const decimal pelletCaliber = 5.6m; //.22LR
+        private const decimal targetSize = 250; //mm
         private const int rifleBlackRings = 4;
-        private const bool solidInnerTenRing = true;
+        private const bool solidInnerTenRing = false;         // The inner ring is a circle
 
         private const int trkZoomMin = 0;
         private const int trkZoomMax = 5;
         private const int trkZoomVal = 0;
         private const decimal pdfZoomFactor = 0.29m;
 
-        private const decimal outterRing = 45.5m; //mm
-        private const decimal ring2 = 40.5m; //mm
-        private const decimal ring3 = 35.5m; //mm
-        private const decimal ring4 = 30.5m; //mm
-        private const decimal ring5 = 25.5m; //mm
-        private const decimal ring6 = 20.5m; //mm
-        private const decimal ring7 = 15.5m; //mm
-        private const decimal ring8 = 10.5m; //mm
-        private const decimal ring9 = 5.5m; //mm
-        private const decimal ring10 = 0.5m; //mm
+        private const decimal outterRing = 154.4m; //mm
+        private const decimal ring2 = 138.4m; //mm
+        private const decimal ring3 = 122.4m; //mm
+        private const decimal ring4 = 106.4m; //mm
+        private const decimal ring5 = 90.4m; //mm
+        private const decimal ring6 = 74.4m; //mm
+        private const decimal ring7 = 58.4m; //mm
+        private const decimal ring8 = 42.4m; //mm
+        private const decimal ring9 = 26.4m; //mm
+        private const decimal ring10 = 10.4m; //mm
+        private const decimal innerRing = 5m; //mm
 
-        private const decimal innerTenRadiusRifle = pelletCaliber / 2m - ring10 / 2m; //2.0m; ISSF rules states: Inner Ten = When the 10 ring (dot) has been shot out completely
+        private const decimal blackCircle = 112.4m; //mm
 
-        private static readonly decimal[] ringsRifle = new decimal[] { outterRing, ring2, ring3, ring4, ring5, ring6, ring7, ring8, ring9, ring10 };
+        private const decimal innerTenRadiusRifle = innerRing / 2m + pelletCaliber / 2m; 
+
+        private static readonly decimal[] ringsRifle = new decimal[] { outterRing, ring2, ring3, ring4, ring5, ring6, ring7, ring8, ring9, ring10, innerRing };
 
 
         public override int getBlackRings() {
@@ -83,11 +93,11 @@ namespace freETarget.targets {
         }
 
         public override float getFontSize(float diff) {
-            return diff / 8f; //8 is empirically determinted for best look
+            return diff / 6f; 
         }
 
         public override decimal getBlackDiameter() {
-            return ring4;
+            return blackCircle;
         }
 
         public override int getRingTextCutoff() {
@@ -95,7 +105,11 @@ namespace freETarget.targets {
         }
 
         public override float getTextOffset(float diff, int ring) {
-            return diff / 4;
+            if (ring != 3) {
+                return diff / 4;
+            } else {
+                return diff / 6;
+            }
         }
 
         public override decimal getPDFZoomFactor(List<Shot> shotList) {
@@ -103,25 +117,16 @@ namespace freETarget.targets {
                 return pdfZoomFactor;
             } else {
                 bool zoomed = true;
-                bool zoomed2 = true;
                 foreach (Shot s in shotList) {
                     if (s.score < 6) {
                         zoomed = false;
                     }
-                    if (s.score < 1) {
-                        zoomed2 = false;
-                    }
-
                 }
-                if (zoomed) {
-                    return 0.12m;
-                } else {
-                    if (zoomed2) {
-                        return 0.29m;
-                    } else {
-                        return 1m;
-                    }
 
+                if (zoomed) {
+                    return 0.5m;
+                } else {
+                    return 1;
                 }
             }
         }

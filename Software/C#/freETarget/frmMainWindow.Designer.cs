@@ -100,9 +100,11 @@ namespace freETarget
             this.tabRiflePractice = new System.Windows.Forms.TabPage();
             this.tabRifleMatch = new System.Windows.Forms.TabPage();
             this.tabRifleFinal = new System.Windows.Forms.TabPage();
+            this.tabRifle50MMatch = new System.Windows.Forms.TabPage();
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnJournal = new System.Windows.Forms.Button();
             this.imgLogo = new System.Windows.Forms.PictureBox();
+            this.tabRifle50MPractice = new System.Windows.Forms.TabPage();
             this.digitalClock = new freETarget.SevenSegmentArray();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.imgTarget)).BeginInit();
@@ -740,6 +742,8 @@ namespace freETarget
             this.tcSessionType.Controls.Add(this.tabRiflePractice);
             this.tcSessionType.Controls.Add(this.tabRifleMatch);
             this.tcSessionType.Controls.Add(this.tabRifleFinal);
+            this.tcSessionType.Controls.Add(this.tabRifle50MPractice);
+            this.tcSessionType.Controls.Add(this.tabRifle50MMatch);
             this.tcSessionType.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
             this.tcSessionType.Enabled = false;
             this.tcSessionType.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
@@ -765,28 +769,28 @@ namespace freETarget
             // tabPistolMatch
             // 
             this.tabPistolMatch.BackColor = System.Drawing.Color.Orange;
-            this.tabPistolMatch.Location = new System.Drawing.Point(52, 4);
+            this.tabPistolMatch.Location = new System.Drawing.Point(28, 4);
             this.tabPistolMatch.Name = "tabPistolMatch";
             this.tabPistolMatch.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPistolMatch.Size = new System.Drawing.Size(144, 522);
+            this.tabPistolMatch.Size = new System.Drawing.Size(168, 522);
             this.tabPistolMatch.TabIndex = 1;
             this.tabPistolMatch.Text = "Pistol Match ";
             // 
             // tabPistolFinal
             // 
             this.tabPistolFinal.BackColor = System.Drawing.Color.Red;
-            this.tabPistolFinal.Location = new System.Drawing.Point(52, 4);
+            this.tabPistolFinal.Location = new System.Drawing.Point(28, 4);
             this.tabPistolFinal.Name = "tabPistolFinal";
-            this.tabPistolFinal.Size = new System.Drawing.Size(144, 522);
+            this.tabPistolFinal.Size = new System.Drawing.Size(168, 522);
             this.tabPistolFinal.TabIndex = 2;
             this.tabPistolFinal.Text = "Pistol Final";
             // 
             // tabRiflePractice
             // 
             this.tabRiflePractice.BackColor = System.Drawing.Color.LimeGreen;
-            this.tabRiflePractice.Location = new System.Drawing.Point(52, 4);
+            this.tabRiflePractice.Location = new System.Drawing.Point(28, 4);
             this.tabRiflePractice.Name = "tabRiflePractice";
-            this.tabRiflePractice.Size = new System.Drawing.Size(144, 522);
+            this.tabRiflePractice.Size = new System.Drawing.Size(168, 522);
             this.tabRiflePractice.TabIndex = 3;
             this.tabRiflePractice.Text = "Rifle Practice";
             // 
@@ -807,6 +811,15 @@ namespace freETarget
             this.tabRifleFinal.Size = new System.Drawing.Size(144, 522);
             this.tabRifleFinal.TabIndex = 5;
             this.tabRifleFinal.Text = "Rifle Final ";
+            // 
+            // tabRifle50MMatch
+            // 
+            this.tabRifle50MMatch.BackColor = System.Drawing.Color.Orange;
+            this.tabRifle50MMatch.Location = new System.Drawing.Point(52, 4);
+            this.tabRifle50MMatch.Name = "tabRifle50MMatch";
+            this.tabRifle50MMatch.Size = new System.Drawing.Size(144, 522);
+            this.tabRifle50MMatch.TabIndex = 6;
+            this.tabRifle50MMatch.Text = "Rifle 50m Match";
             // 
             // panel1
             // 
@@ -843,6 +856,15 @@ namespace freETarget
             this.imgLogo.TabIndex = 37;
             this.imgLogo.TabStop = false;
             this.imgLogo.Click += new System.EventHandler(this.imgLogo_Click);
+            // 
+            // tabRifle50MPractice
+            // 
+            this.tabRifle50MPractice.BackColor = System.Drawing.Color.Olive;
+            this.tabRifle50MPractice.Location = new System.Drawing.Point(52, 4);
+            this.tabRifle50MPractice.Name = "tabRifle50MPractice";
+            this.tabRifle50MPractice.Size = new System.Drawing.Size(144, 522);
+            this.tabRifle50MPractice.TabIndex = 8;
+            this.tabRifle50MPractice.Text = "Rifle 50m Practice";
             // 
             // digitalClock
             // 
@@ -998,6 +1020,8 @@ namespace freETarget
         private System.Windows.Forms.ToolStripStatusLabel statusVersion;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.Button btnUpload;
+    private System.Windows.Forms.TabPage tabRifle50MMatch;
+        private System.Windows.Forms.TabPage tabRifle50MPractice;
     }
 }
 

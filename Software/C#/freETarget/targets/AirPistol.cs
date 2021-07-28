@@ -20,21 +20,21 @@ namespace freETarget.targets {
         private const int trkZoomVal = 1;
         private const decimal pdfZoomFactor = 1;
 
-        private const decimal outterRingPistol = 155.5m; //mm
-        private const decimal ring2Pistol = 139.5m; //mm
-        private const decimal ring3Pistol = 123.5m; //mm
-        private const decimal ring4Pistol = 107.5m; //mm
-        private const decimal ring5Pistol = 91.5m; //mm
-        private const decimal ring6Pistol = 75.5m; //mm
-        private const decimal ring7Pistol = 59.5m; //mm
-        private const decimal ring8Pistol = 43.5m; //mm
-        private const decimal ring9Pistol = 27.5m; //mm
-        private const decimal ring10Pistol = 11.5m; //mm
-        private const decimal innerRingPistol = 5m; //mm
+        private const decimal outterRing = 155.5m; //mm
+        private const decimal ring2 = 139.5m; //mm
+        private const decimal ring3 = 123.5m; //mm
+        private const decimal ring4 = 107.5m; //mm
+        private const decimal ring5 = 91.5m; //mm
+        private const decimal ring6 = 75.5m; //mm
+        private const decimal ring7 = 59.5m; //mm
+        private const decimal ring8 = 43.5m; //mm
+        private const decimal ring9 = 27.5m; //mm
+        private const decimal ring10 = 11.5m; //mm
+        private const decimal innerRing = 5m; //mm
 
-        private const decimal innerTenRadiusPistol = innerRingPistol / 2m + pelletCaliber / 2m; //4.75m;
+        private const decimal innerTenRadiusPistol = innerRing / 2m + pelletCaliber / 2m; //4.75m;
 
-        private static readonly decimal[] ringsPistol = new decimal[] { outterRingPistol, ring2Pistol, ring3Pistol, ring4Pistol, ring5Pistol, ring6Pistol, ring7Pistol, ring8Pistol, ring9Pistol, ring10Pistol, innerRingPistol };
+        private static readonly decimal[] ringsPistol = new decimal[] { outterRing, ring2, ring3, ring4, ring5, ring6, ring7, ring8, ring9, ring10, innerRing };
 
         public override int getBlackRings() {
             return pistolBlackRings;
@@ -49,7 +49,11 @@ namespace freETarget.targets {
         }
 
         public override decimal getOutterRing() {
-            return outterRingPistol;
+            return outterRing;
+        }
+
+        public override float getFontSize(float diff) {
+            return diff / 8f; //8 is empirically determinted for best look
         }
 
         public override decimal getPDFZoomFactor(List<Shot> shotList) {
@@ -102,6 +106,17 @@ namespace freETarget.targets {
 
         public override bool isSolidInner() {
             return solidInnerTenRing;
+        }
+
+        public override decimal getBlackDiameter() {
+            return ring7;
+        }
+
+        public override int getRingTextCutoff() {
+            return 8;
+        }
+        public override float getTextOffset(float diff, int ring) {
+            return diff / 4;
         }
     }
 }

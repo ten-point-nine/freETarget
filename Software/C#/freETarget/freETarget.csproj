@@ -115,6 +115,7 @@
     <Compile Include="targets\AirPistol.cs" />
     <Compile Include="targets\AirRifle.cs" />
     <Compile Include="targets\aTarget.cs" />
+    <Compile Include="targets\Rifle50M.cs" />
     <Compile Include="TransparentRTB.cs">
       <SubType>Component</SubType>
     </Compile>
