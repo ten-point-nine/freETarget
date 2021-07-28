@@ -320,42 +320,26 @@ namespace freETarget {
         newSession.currentFinal = new VirtualRO();
       }
 
-/*
- * Create a 50 M Rifle Session
- */
+      /*
+       * Create a 50 M Rifle Session
+       */
+      else if (sessionType.Equals(EventType.Rifle50MPractice)) {
+        newSession.decimalScoring = true;
+        newSession.sessionType = SessionType.Practice;
+        newSession.eventType = EventType.Rifle50MPractice;
+        newSession.setTarget(new targets.rifle50M());
+        newSession.targetType = newSession.getTarget().getName();
+        newSession.minutes = -1;
+      } 
       else if (sessionType.Equals(EventType.Rifle50MMatch))
       {
         newSession.decimalScoring = true;
         newSession.sessionType = SessionType.Match;
         newSession.eventType = EventType.Rifle50MMatch;
-        newSession.numberOfShots = ISSF.finalNoOfShots;
         newSession.setTarget(new targets.rifle50M());
         newSession.targetType = newSession.getTarget().getName();
-        newSession.minutes = -1;
-        newSession.currentFinal = new VirtualRO();
+        newSession.minutes = 120;
       }
-      else if (sessionType.Equals(EventType.Rifle50MFinal))
-      {
-        newSession.decimalScoring = true;
-        newSession.sessionType = SessionType.Final;
-        newSession.eventType = EventType.Rifle50MFinal;
-        newSession.numberOfShots = ISSF.finalNoOfShots;
-        newSession.setTarget(new targets.rifle50M());
-        newSession.targetType = newSession.getTarget().getName();
-        newSession.minutes = -1;
-        newSession.currentFinal = new VirtualRO();
-      } 
-      else if (sessionType.Equals(EventType.Rifle50MPractice))
-      {
-        newSession.decimalScoring = true;
-        newSession.sessionType = SessionType.Practice;
-        newSession.eventType = EventType.Rifle50MFinal;
-        newSession.numberOfShots = ISSF.finalNoOfShots;
-        newSession.setTarget(new targets.rifle50M());
-        newSession.targetType = newSession.getTarget().getName();
-        newSession.minutes = -1;
-        newSession.currentFinal = new VirtualRO();
-    }
       else
       {
 

@@ -2306,7 +2306,7 @@
             }
             "{3C67513D-01DD-4637-8A68-80971EB9504F}:_9981CD01648E4C95AF344740FDDEA8C9"
             {
-            "DefaultLocation" = "8:[ProgramFilesFolder][Manufacturer]\\[ProductName]"
+            "DefaultLocation" = "8:[ProgramFilesFolder]\\[ProductName]"
             "Name" = "8:#1925"
             "AlwaysCreate" = "11:FALSE"
             "Condition" = "8:"
@@ -3193,7 +3193,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_B18C4057E682438CB1FBAFA19B5EAB78"
             {
-            "SourcePath" = "8:..\\freETarget\\obj\\Debug\\freETarget.exe"
+            "SourcePath" = "8:..\\freETarget\\obj\\Release\\freETarget.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_9981CD01648E4C95AF344740FDDEA8C9"

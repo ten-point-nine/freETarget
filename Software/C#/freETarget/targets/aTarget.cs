@@ -28,6 +28,8 @@ namespace freETarget.targets {
 
         public abstract int getBlackRings();
 
+        public abstract decimal getBlackDiameter();
+
         public abstract decimal getZoomFactor(int zoomValue);
 
         public abstract bool isSolidInner();
@@ -37,6 +39,12 @@ namespace freETarget.targets {
         public abstract int getTrkZoomMaximum();
 
         public abstract int getTrkZoomValue();
+
+        public abstract float getFontSize(float diff);
+
+        public abstract int getRingTextCutoff();
+
+        public abstract float getTextOffset(float diff, int ring);
 
         public abstract decimal getPDFZoomFactor(List<Shot> shotList);
 
@@ -49,6 +57,8 @@ namespace freETarget.targets {
             decimal zoomFactor = getZoomFactor(zoomValue);
             int blackRingCutoff = getBlackRings();
             decimal[] rings = getRings();
+
+            float center = (float)(dimension / 2);
 
             if (dimension == 0) { //window is minimized. nothing to paint
                 return null;
@@ -64,52 +74,52 @@ namespace freETarget.targets {
 
             it.FillRectangle(brushWhite, 0, 0, dimension - 1, dimension - 1);
 
+            float circle = getDimension(dimension, getBlackDiameter(), zoomFactor);
+
+            float x = center - (circle / 2);
+            it.FillEllipse(brushBlack, x, x, circle, circle);
 
 
             int r = 1;
             for (int i = 0; i < rings.Length; i++) {
 
                 Pen p;
-                Brush b;
                 Brush bText;
                 if (r < blackRingCutoff) {
                     p = penBlack;
-                    b = brushWhite;
                     bText = brushBlack;
                 } else {
                     p = penWhite;
-                    b = brushBlack;
                     bText = brushWhite;
                 }
 
-                float circle = getDimension(dimension, rings[i], zoomFactor);
-                float center = (float)(dimension / 2);
-                float x = center - (circle / 2);
+                circle = getDimension(dimension, rings[i], zoomFactor);
+                
+                x = center - (circle / 2);
                 float y = center + (circle / 2);
 
                 if (solidInner && i == rings.Length - 1) //rifle target - last ring (10) is a solid dot
                 {
                     it.FillEllipse(brushWhite, x, x, circle, circle);
                 } else {
-                    it.FillEllipse(b, x, x, circle, circle);
                     it.DrawEllipse(p, x, x, circle, circle);
                 }
 
-                if (r < 9) //for ring 9 and after no text is displayed
+                if (r <= getRingTextCutoff()) 
                 {
                     float nextCircle = getDimension(dimension, rings[i + 1], zoomFactor);
                     float diff = circle - nextCircle;
-                    float fontSize = diff / 8f; //8 is empirically determinted for best look
+                    float fontSize = getFontSize(diff); 
                     Font f = new Font("Arial", fontSize);
 
                     StringFormat format = new StringFormat();
                     format.LineAlignment = StringAlignment.Center;
                     format.Alignment = StringAlignment.Center;
 
-                    it.DrawString(r.ToString(), f, bText, center, x + (diff / 4), format);
-                    it.DrawString(r.ToString(), f, bText, center, y - (diff / 4), format);
-                    it.DrawString(r.ToString(), f, bText, x + (diff / 4), center, format);
-                    it.DrawString(r.ToString(), f, bText, y - (diff / 4), center, format);
+                    it.DrawString(r.ToString(), f, bText, center, x + getTextOffset(diff,r), format);
+                    it.DrawString(r.ToString(), f, bText, center, y - getTextOffset(diff, r), format);
+                    it.DrawString(r.ToString(), f, bText, x + getTextOffset(diff, r), center, format);
+                    it.DrawString(r.ToString(), f, bText, y - getTextOffset(diff, r), center, format);
                 }
                 r++;
             }

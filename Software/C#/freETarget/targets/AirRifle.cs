@@ -18,20 +18,20 @@ namespace freETarget.targets {
         private const int trkZoomVal = 0;
         private const decimal pdfZoomFactor = 0.29m;
 
-        private const decimal outterRingRifle = 45.5m; //mm
-        private const decimal ring2Rifle = 40.5m; //mm
-        private const decimal ring3Rifle = 35.5m; //mm
-        private const decimal ring4Rifle = 30.5m; //mm
-        private const decimal ring5Rifle = 25.5m; //mm
-        private const decimal ring6Rifle = 20.5m; //mm
-        private const decimal ring7Rifle = 15.5m; //mm
-        private const decimal ring8Rifle = 10.5m; //mm
-        private const decimal ring9Rifle = 5.5m; //mm
-        private const decimal ring10Rifle = 0.5m; //mm
+        private const decimal outterRing = 45.5m; //mm
+        private const decimal ring2 = 40.5m; //mm
+        private const decimal ring3 = 35.5m; //mm
+        private const decimal ring4 = 30.5m; //mm
+        private const decimal ring5 = 25.5m; //mm
+        private const decimal ring6 = 20.5m; //mm
+        private const decimal ring7 = 15.5m; //mm
+        private const decimal ring8 = 10.5m; //mm
+        private const decimal ring9 = 5.5m; //mm
+        private const decimal ring10 = 0.5m; //mm
 
-        private const decimal innerTenRadiusRifle = pelletCaliber / 2m - ring10Rifle / 2m; //2.0m; ISSF rules states: Inner Ten = When the 10 ring (dot) has been shot out completely
+        private const decimal innerTenRadiusRifle = pelletCaliber / 2m - ring10 / 2m; //2.0m; ISSF rules states: Inner Ten = When the 10 ring (dot) has been shot out completely
 
-        private static readonly decimal[] ringsRifle = new decimal[] { outterRingRifle, ring2Rifle, ring3Rifle, ring4Rifle, ring5Rifle, ring6Rifle, ring7Rifle, ring8Rifle, ring9Rifle, ring10Rifle };
+        private static readonly decimal[] ringsRifle = new decimal[] { outterRing, ring2, ring3, ring4, ring5, ring6, ring7, ring8, ring9, ring10 };
 
 
         public override int getBlackRings() {
@@ -47,7 +47,7 @@ namespace freETarget.targets {
         }
 
         public override decimal getOutterRing() {
-            return outterRingRifle;
+            return outterRing;
         }
 
         public override decimal getProjectileCaliber() {
@@ -80,6 +80,22 @@ namespace freETarget.targets {
 
         public override int getTrkZoomValue() {
             return trkZoomVal;
+        }
+
+        public override float getFontSize(float diff) {
+            return diff / 8f; //8 is empirically determinted for best look
+        }
+
+        public override decimal getBlackDiameter() {
+            return ring4;
+        }
+
+        public override int getRingTextCutoff() {
+            return 8;
+        }
+
+        public override float getTextOffset(float diff, int ring) {
+            return diff / 4;
         }
 
         public override decimal getPDFZoomFactor(List<Shot> shotList) {
