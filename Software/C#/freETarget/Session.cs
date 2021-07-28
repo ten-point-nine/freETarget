@@ -232,76 +232,134 @@ namespace freETarget {
             Session newSession = new Session();
             newSession.user = user;
 
-            if (sessionType.Equals(EventType.AirPistolPractice)) {
-                newSession.decimalScoring = false;
-                newSession.sessionType = SessionType.Practice;
-                newSession.eventType = EventType.AirPistolPractice;
-                newSession.numberOfShots = -1;
-                newSession.setTarget(new targets.AirPistol());
-                newSession.targetType = newSession.getTarget().getName();
-                newSession.minutes = -1;
-            } else if (sessionType.Equals(EventType.AirPistolMatch)) {
-                newSession.decimalScoring = false;
-                newSession.sessionType = SessionType.Match;
-                newSession.eventType = EventType.AirPistolMatch;
-                newSession.numberOfShots = noOfShots;
-                if(noOfShots == 60) {
-                    newSession.numberOfShots = ISSF.match60NoOfShots;
-                    newSession.minutes = ISSF.match60Time;
-                } else if (noOfShots == 40)  {
-                    newSession.numberOfShots = ISSF.match40NoOfShots;
-                    newSession.minutes = ISSF.match40Time;
-                } else {
-                    newSession.numberOfShots = -1;
-                    newSession.minutes = -1;
-                }
-                newSession.setTarget(new targets.AirPistol());
-                newSession.targetType = newSession.getTarget().getName();
-            } else if (sessionType.Equals(EventType.AirPistolFinal)) {
-                newSession.decimalScoring = true;
-                newSession.sessionType = SessionType.Final;
-                newSession.eventType = EventType.AirPistolFinal;
-                newSession.numberOfShots = ISSF.finalNoOfShots;
-                newSession.setTarget(new targets.AirPistol());
-                newSession.targetType = newSession.getTarget().getName();
-                newSession.minutes = -1;
-                newSession.currentFinal = new VirtualRO();
-            } else if (sessionType.Equals(EventType.AirRiflePractice)) {
-                newSession.decimalScoring = true;
-                newSession.sessionType = SessionType.Practice;
-                newSession.eventType = EventType.AirRiflePractice;
-                newSession.numberOfShots = -1;
-                newSession.setTarget(new targets.AirRifle());
-                newSession.targetType = newSession.getTarget().getName();
-                newSession.minutes = -1;
-            } else if (sessionType.Equals(EventType.AirRifleMatch)) {
-                newSession.decimalScoring = true;
-                newSession.sessionType = SessionType.Match;
-                newSession.eventType = EventType.AirRifleMatch;
-                newSession.numberOfShots = noOfShots;
-                newSession.setTarget(new targets.AirRifle());
-                newSession.targetType = newSession.getTarget().getName();
-                if (noOfShots == 60) {
-                    newSession.numberOfShots = ISSF.match60NoOfShots;
-                    newSession.minutes = ISSF.match60Time;
-                } else if (noOfShots == 40) {
-                    newSession.numberOfShots = ISSF.match40NoOfShots;
-                    newSession.minutes = ISSF.match40Time;
-                } else {
-                    newSession.numberOfShots = -1;
-                    newSession.minutes = -1;
-                }
-            } else if (sessionType.Equals(EventType.AirRifleFinal)) {
-                newSession.decimalScoring = true;
-                newSession.sessionType = SessionType.Final;
-                newSession.eventType = EventType.AirRifleFinal;
-                newSession.numberOfShots = ISSF.finalNoOfShots;
-                newSession.setTarget(new targets.AirRifle());
-                newSession.targetType = newSession.getTarget().getName();
-                newSession.minutes = -1;
-                newSession.currentFinal = new VirtualRO();
-            } else {
-                Console.WriteLine("Could not identify event type " + sessionType);
+/*
+ * Create an Air Pistol Session
+ */
+      if (sessionType.Equals(EventType.AirPistolPractice))
+      {
+        newSession.decimalScoring = false;
+        newSession.sessionType = SessionType.Practice;
+        newSession.eventType = EventType.AirPistolPractice;
+        newSession.numberOfShots = -1;
+        newSession.setTarget(new targets.AirPistol());
+        newSession.targetType = newSession.getTarget().getName();
+        newSession.minutes = -1;
+      }
+      else if (sessionType.Equals(EventType.AirPistolMatch))
+      {
+        newSession.decimalScoring = false;
+        newSession.sessionType = SessionType.Match;
+        newSession.eventType = EventType.AirPistolMatch;
+        newSession.numberOfShots = noOfShots;
+        if (noOfShots == 60) {
+          newSession.numberOfShots = ISSF.match60NoOfShots;
+          newSession.minutes = ISSF.match60Time;
+        } else if (noOfShots == 40) {
+          newSession.numberOfShots = ISSF.match40NoOfShots;
+          newSession.minutes = ISSF.match40Time;
+        } else {
+          newSession.numberOfShots = -1;
+          newSession.minutes = -1;
+        }
+        newSession.setTarget(new targets.AirPistol());
+        newSession.targetType = newSession.getTarget().getName();
+      }
+      else if (sessionType.Equals(EventType.AirPistolFinal)) {
+        newSession.decimalScoring = true;
+        newSession.sessionType = SessionType.Final;
+        newSession.eventType = EventType.AirPistolFinal;
+        newSession.numberOfShots = ISSF.finalNoOfShots;
+        newSession.setTarget(new targets.AirPistol());
+        newSession.targetType = newSession.getTarget().getName();
+        newSession.minutes = -1;
+        newSession.currentFinal = new VirtualRO();
+      }
+
+/*
+ *  Create an Air Rifle Session
+ */
+      else if (sessionType.Equals(EventType.AirRiflePractice))
+      {
+        newSession.decimalScoring = true;
+        newSession.sessionType = SessionType.Practice;
+        newSession.eventType = EventType.AirRiflePractice;
+        newSession.numberOfShots = -1;
+        newSession.setTarget(new targets.AirRifle());
+        newSession.targetType = newSession.getTarget().getName();
+        newSession.minutes = -1;
+      }
+
+      else if (sessionType.Equals(EventType.AirRifleMatch))
+      {
+        newSession.decimalScoring = true;
+        newSession.sessionType = SessionType.Match;
+        newSession.eventType = EventType.AirRifleMatch;
+        newSession.numberOfShots = noOfShots;
+        newSession.setTarget(new targets.AirRifle());
+        newSession.targetType = newSession.getTarget().getName();
+        if (noOfShots == 60) {
+          newSession.numberOfShots = ISSF.match60NoOfShots;
+          newSession.minutes = ISSF.match60Time;
+        } else if (noOfShots == 40) {
+          newSession.numberOfShots = ISSF.match40NoOfShots;
+          newSession.minutes = ISSF.match40Time;
+        } else {
+          newSession.numberOfShots = -1;
+          newSession.minutes = -1;
+        }
+      }
+      else if (sessionType.Equals(EventType.AirRifleFinal))
+      {
+        newSession.decimalScoring = true;
+        newSession.sessionType = SessionType.Final;
+        newSession.eventType = EventType.AirRifleFinal;
+        newSession.numberOfShots = ISSF.finalNoOfShots;
+        newSession.setTarget(new targets.AirRifle());
+        newSession.targetType = newSession.getTarget().getName();
+        newSession.minutes = -1;
+        newSession.currentFinal = new VirtualRO();
+      }
+
+/*
+ * Create a 50 M Rifle Session
+ */
+      else if (sessionType.Equals(EventType.Rifle50MMatch))
+      {
+        newSession.decimalScoring = true;
+        newSession.sessionType = SessionType.Match;
+        newSession.eventType = EventType.Rifle50MMatch;
+        newSession.numberOfShots = ISSF.finalNoOfShots;
+        newSession.setTarget(new targets.rifle50M());
+        newSession.targetType = newSession.getTarget().getName();
+        newSession.minutes = -1;
+        newSession.currentFinal = new VirtualRO();
+      }
+      else if (sessionType.Equals(EventType.Rifle50MFinal))
+      {
+        newSession.decimalScoring = true;
+        newSession.sessionType = SessionType.Final;
+        newSession.eventType = EventType.Rifle50MFinal;
+        newSession.numberOfShots = ISSF.finalNoOfShots;
+        newSession.setTarget(new targets.rifle50M());
+        newSession.targetType = newSession.getTarget().getName();
+        newSession.minutes = -1;
+        newSession.currentFinal = new VirtualRO();
+      } 
+      else if (sessionType.Equals(EventType.Rifle50MPractice))
+      {
+        newSession.decimalScoring = true;
+        newSession.sessionType = SessionType.Practice;
+        newSession.eventType = EventType.Rifle50MFinal;
+        newSession.numberOfShots = ISSF.finalNoOfShots;
+        newSession.setTarget(new targets.rifle50M());
+        newSession.targetType = newSession.getTarget().getName();
+        newSession.minutes = -1;
+        newSession.currentFinal = new VirtualRO();
+    }
+      else
+      {
+
+        Console.WriteLine("Could not identify event type " + sessionType);
                 return null;
             }
 

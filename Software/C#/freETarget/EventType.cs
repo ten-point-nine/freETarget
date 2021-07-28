@@ -16,6 +16,7 @@ namespace freETarget {
         public static EventType AirRiflePractice { get { return new EventType("Air Rifle Practice"); } }
         public static EventType AirRifleMatch { get { return new EventType("Air Rifle Match"); } }
         public static EventType AirRifleFinal { get { return new EventType("Air Rifle Final"); } }
+        public static EventType Rifle50MPractice { get { return new EventType("Rifle 50M Practice"); } }
         public static EventType Rifle50MMatch { get { return new EventType("Rifle 50M Match"); } }
         public static EventType Rifle50MFinal { get { return new EventType("Rifle 50M Final"); } }
 
@@ -44,6 +45,10 @@ namespace freETarget {
       {
         return AirRifleFinal;
       }
+      else if (EventType.Rifle50MPractice.Name.Contains(name))
+      {
+        return Rifle50MPractice;
+      }
       else if (EventType.Rifle50MFinal.Name.Contains(name))
       {
         return Rifle50MFinal;
@@ -52,6 +57,7 @@ namespace freETarget {
       {
         return Rifle50MMatch;
       }
+
       else
       {
         Console.WriteLine("Unknown event: " + name);
