@@ -247,7 +247,7 @@ bool    return_value;
  */
   if ( not_found == true )
   {
-    Serial.print("\r\n\r\nUnknown JSON token. Use"); 
+    Serial.print("\r\n\r\nCannot decode: {"); Serial.print(input_JSON); Serial.print("}. Use"); 
     j = 0;    
     while ( JSON[j].token != 0 ) 
     {
@@ -401,7 +401,7 @@ static void show_names(int v)
   
   Serial.print("\r\n{\r\n");
   
-  i=1;
+  i=0;
   while (names[i] != 0 )
   {
     Serial.print("\"NAME_"); Serial.print(i); Serial.print("\": \"");  Serial.print(names[i]); Serial.print("\", \r\n");

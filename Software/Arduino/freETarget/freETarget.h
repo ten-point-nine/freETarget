@@ -13,7 +13,7 @@
 #include "esp-01.h"
 #include "json.h"
 
-#define SOFTWARE_VERSION "\"3.03.0 July 24, 2021\""
+#define SOFTWARE_VERSION "\"3.03.1 July 26, 2021\""
 #define REV_100    100
 #define REV_210    210
 #define REV_220    220
