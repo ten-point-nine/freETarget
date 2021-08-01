@@ -27,6 +27,8 @@ namespace freETarget {
             InitializeComponent();
             storage = new StorageController(mainWin);
             this.mainWindow = mainWin;
+
+            loadEventsOnTabs();
         }
 
         private void frmJournal_Load(object sender, EventArgs e) {
@@ -61,7 +63,7 @@ namespace freETarget {
 
         private void loadSessionsInList() {
             lstbSessions.Items.Clear();
-            EventType currentCOF = EventType.GetEvent(tabEvents.SelectedTab.Text.Trim());
+            Event currentCOF = mainWindow.eventManager.findEventByName(tabEvents.SelectedTab.Text.Trim());
             if (cmbUsers.SelectedItem != null) {
                 List<ListBoxSessionItem> list = storage.findSessionsForUser(cmbUsers.SelectedItem.ToString(), currentCOF);
                 foreach (ListBoxSessionItem item in list) {
@@ -72,7 +74,7 @@ namespace freETarget {
 
         private void loadStatistics() {
             clearCharts();
-            EventType currentEvent = EventType.GetEvent(tabEvents.SelectedTab.Text.Trim());
+            Event currentEvent = mainWindow.eventManager.findEventByName(tabEvents.SelectedTab.Text.Trim());
             if (cmbUsers.SelectedItem != null) {
                 loadScoreStatistics(cmbUsers.SelectedItem.ToString(), currentEvent);
                 loadMeanRadiusStatistics(cmbUsers.SelectedItem.ToString(), currentEvent);
@@ -81,7 +83,7 @@ namespace freETarget {
             }
         }
 
-        private void loadScoreStatistics(string user, EventType eventType) {
+        private void loadScoreStatistics(string user, Event eventType) {
             List<decimal> list = storage.findScoresForUser(user, eventType);
             if (list.Count < 1) {
                 return;
@@ -110,7 +112,7 @@ namespace freETarget {
             chartScore.Update();
         }
 
-        private void loadMeanRadiusStatistics(string user, EventType eventType) {
+        private void loadMeanRadiusStatistics(string user, Event eventType) {
             List<decimal> list = storage.findRBarForUser(user, eventType);
             if (list.Count < 1) {
                 return;
@@ -143,7 +145,7 @@ namespace freETarget {
             chartMeanRadius.Update();
         }
 
-        private void loadWindageStatistics(string user, EventType eventType) {
+        private void loadWindageStatistics(string user, Event eventType) {
             List<decimal> list = storage.findXBarForUser(user, eventType);
             if (list.Count < 1) {
                 return;
@@ -176,7 +178,7 @@ namespace freETarget {
             chartWindage.Update();
         }
 
-        private void loadElevationStatistics(string user, EventType eventType) {
+        private void loadElevationStatistics(string user, Event eventType) {
             List<decimal> list = storage.findYBarForUser(user, eventType);
             if (list.Count < 1) {
                 return;
@@ -334,6 +336,27 @@ namespace freETarget {
         private void btnGraph_Click(object sender, EventArgs e) {
             frmGraph graph = new frmGraph(currentSession);
             graph.ShowDialog();
+        }
+
+
+        private void loadEventsOnTabs() {
+
+            this.tabEvents.Controls.Clear();
+            int index = 0;
+            foreach (Event ev in mainWindow.eventManager.getActiveEventsList()) {
+
+                TabPage tab = new System.Windows.Forms.TabPage();
+
+                tab.BackColor = ev.TabColor;
+                //tab.Location = new System.Drawing.Point(52, 4);
+                tab.Name = ev.ID.ToString();
+                //tab.Padding = new System.Windows.Forms.Padding(5);
+                //tab.Size = new System.Drawing.Size(250, 522);
+                tab.TabIndex = index++;
+                tab.Text = ev.Name;
+
+                this.tabEvents.Controls.Add(tab);
+            }
         }
     }
 }

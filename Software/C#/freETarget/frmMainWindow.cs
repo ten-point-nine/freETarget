@@ -23,6 +23,10 @@ using System.Windows.Forms.DataVisualization.Charting;
 namespace freETarget {
     public partial class frmMainWindow : Form {
 
+        /*
+         * non-UI related variables
+        */
+
         public const uint ES_CONTINUOUS = 0x80000000;
         public const uint ES_SYSTEM_REQUIRED = 0x00000001;
         public const uint ES_DISPLAY_REQUIRED = 0x00000002;
@@ -37,12 +41,9 @@ namespace freETarget {
             LOADED
         }
         private Status currentStatus = Status.NOT_CONNECTED;
-        private bool gridSeriesSelected = false;
+
         private string incomingJSON = "";               // Cumulative serial message
-        private delegate void SafeCallDelegate(Shot shot);
-        private delegate void SafeCallDelegate2(string text);
-        private delegate void SafeCallDelegate3();
-        private delegate void SafeCallDelegate4(string text, bool flag);
+
 
         public decimal calibrationX = 0;
         public decimal calibrationY = 0;
@@ -53,9 +54,24 @@ namespace freETarget {
 
         private Session currentSession;
 
-        private StorageController storage;
+        public StorageController storage;
+        public EventManager eventManager;
+
 
         private String logFile = "";
+
+        /*
+         *  UI related variables
+         */
+
+        private delegate void SafeCallDelegate(Shot shot);
+        private delegate void SafeCallDelegate2(string text);
+        private delegate void SafeCallDelegate3();
+        private delegate void SafeCallDelegate4(string text, bool flag);
+
+        private bool gridSeriesSelected = false;
+
+
 
 
         public frmMainWindow() {
@@ -69,6 +85,27 @@ namespace freETarget {
             statusVersion.Text = v;
 
             storage = new StorageController(this);
+            eventManager = new EventManager(storage);
+
+            //check DB
+            String testDB = storage.checkDB(assembly.GetName().Version.Major);
+            if (testDB != null) {
+                MessageBox.Show("Database check failed. Please check your installation. " + Environment.NewLine + Environment.NewLine + testDB + Environment.NewLine + Environment.NewLine + "The application will now exit!", "Database problem", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Environment.Exit(0);
+            }
+
+            //load events
+            long count = storage.checkEvents();
+            if (count == 0) {
+                log("Empty events table. Creating default events...");
+                eventManager.initializeEvents();
+                Thread.Sleep(1000);
+            }
+            eventManager.setEventsList(storage.loadEvents());
+            eventManager.setActiveEventsList(storage.loadActiveEventsIDs());
+
+
+
 
             this.calibrationX = Settings.Default.calibrationX;
             this.calibrationY = Settings.Default.calibrationY;
@@ -97,6 +134,8 @@ namespace freETarget {
             digitalClock.segments[1].ColonOn = true;
             digitalClock.segments[3].ColonOn = true;
             digitalClock.ResizeSegments();
+
+            loadEventsOnTabs();
 
         }
 
@@ -170,17 +209,21 @@ namespace freETarget {
         }
 
         private void initDefaultSession() {
-            currentSession = Session.createNewSession(Settings.Default.defaultTarget.Trim(), Settings.Default.name);
+            Event ev = eventManager.findEventByName(freETarget.Properties.Settings.Default.defaultTarget.Trim());
+
+            if (ev == null) {
+                MessageBox.Show("Default event is not available: " + Settings.Default.defaultTarget.Trim(),"Configuration error",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                //Application.Exit();
+                return;
+            }
 
             foreach (TabPage tab in tcSessionType.TabPages) {
-                if (currentSession.eventType.Name.Contains(tab.Text.Trim())) {
+                if (ev.Name.Contains(tab.Text.Trim())) {
                     tcSessionType.SelectedTab = tab;
                 }
             }
 
-            initNewSession();
-            targetRefresh();
-            imgTarget.BackColor = Settings.Default.targetColor;
+            initNewSession();  
         }
 
         private void initBreakdownChart() {
@@ -261,7 +304,7 @@ namespace freETarget {
 
                                 displayMessage(message, false);
                                 displayShotData(shot);
-                                VirtualRO vro = new VirtualRO();
+                                VirtualRO vro = new VirtualRO(currentSession.eventType);
                                 vro.speakShot(shot);
                             }
                         } else {
@@ -269,7 +312,7 @@ namespace freETarget {
 
                             displayMessage(message, false);
                             displayShotData(shot);
-                            VirtualRO vro = new VirtualRO();
+                            VirtualRO vro = new VirtualRO(currentSession.eventType);
                             vro.speakShot(shot);
 
                             var d = new SafeCallDelegate3(targetRefresh); //draw shot
@@ -615,7 +658,7 @@ namespace freETarget {
   
         private decimal getScaledDimension(decimal input) {
             decimal ret = 100 * input / Settings.Default.targetDistance;
-            ret = decimal.Round(ret, 2, MidpointRounding.AwayFromZero);
+            ret = decimal.Round(ret, 9, MidpointRounding.AwayFromZero);
             return ret;
         }
 
@@ -696,7 +739,9 @@ namespace freETarget {
                 Properties.Settings.Default.baudRate = int.Parse(settingsFrom.txtBaud.Text);
                 Properties.Settings.Default.displayDebugConsole = settingsFrom.chkDisplayConsole.Checked;
                 Properties.Settings.Default.portName = settingsFrom.cmbPorts.GetItemText(settingsFrom.cmbPorts.SelectedItem);
-                Properties.Settings.Default.defaultTarget = settingsFrom.cmbWeapons.GetItemText(settingsFrom.cmbWeapons.SelectedItem);
+
+                Event ev = (Event)settingsFrom.cmbWeapons.SelectedItem;
+                Properties.Settings.Default.defaultTarget = ev.Name;
                 Properties.Settings.Default.targetColor = Color.FromName(settingsFrom.cmbColor.GetItemText(settingsFrom.cmbColor.SelectedItem));
                 Properties.Settings.Default.drawMeanGroup = settingsFrom.chkDrawMeanG.Checked;
                 Properties.Settings.Default.OnlySeries = settingsFrom.chkSeries.Checked;
@@ -717,17 +762,10 @@ namespace freETarget {
                 }
                 toolTip.SetToolTip(btnConfig, "Settings - Target distance percent: " + Properties.Settings.Default.targetDistance);
 
-                if (settingsFrom.rdb60.Checked) {
-                    Properties.Settings.Default.MatchShots = 60;
-                } else if (settingsFrom.rdb40.Checked) {
-                    Properties.Settings.Default.MatchShots = 40;
-                } else {
-                    Properties.Settings.Default.MatchShots = -1;
+                if (currentSession != null) {
+                    computeShotStatistics(getShotList());
+                    displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
                 }
-                Properties.Settings.Default.Save();
-
-                computeShotStatistics(getShotList());
-                displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
 
                 Properties.Settings.Default.score10BackgroundColor = Color.FromName(settingsFrom.cmb10Back.GetItemText(settingsFrom.cmb10Back.SelectedItem));
                 Properties.Settings.Default.score10PenColor = Color.FromName(settingsFrom.cmb10Pen.GetItemText(settingsFrom.cmb10Pen.SelectedItem));
@@ -752,6 +790,18 @@ namespace freETarget {
                 Properties.Settings.Default.Calibre = int.Parse(settingsFrom.txtCalibre.Text);
                 Properties.Settings.Default.Paper = int.Parse(settingsFrom.txtPaper.Text);
                 Properties.Settings.Default.PaperStep = int.Parse(settingsFrom.txtPaperStep.Text);
+
+                Properties.Settings.Default.Save();
+
+                List<Event> activeEvents = new List<Event>();
+                foreach (object oev in settingsFrom.lstbActiveEvents.Items) {
+                    activeEvents.Add((Event)oev);
+                }
+
+                //save only to DB. the new active events list with become live after app restart.
+                storage.updateActiveEvents(activeEvents);
+                eventManager.setActiveEventsList(storage.loadActiveEventsIDs());
+
             }
 
             settingsFrom.Dispose();
@@ -779,22 +829,20 @@ namespace freETarget {
         private void frmMainWindow_Shown(object sender, EventArgs e) {
             displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
 
-            String testDB = storage.checkDB();
-            if (testDB != null) {
-                MessageBox.Show("Database check failed. Please check your installation. " + Environment.NewLine + Environment.NewLine + testDB + Environment.NewLine + Environment.NewLine + "The application will now exit!" , "Database problem", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Environment.Exit(0);
-            }
+
 
             trkZoom.Focus();
         }
 
         private void initNewSession() {
-            if (currentSession.Shots.Count > 0) {
+            if (currentSession!=null && currentSession.Shots.Count > 0) {
                 storage.storeSession(currentSession);
                 displayMessage("Session saved", true);
                 
             }
-            currentSession = Session.createNewSession(tcSessionType.SelectedTab.Text.Trim(), Settings.Default.name);
+
+            Event ev = eventManager.findEventByName(tcSessionType.SelectedTab.Text.Trim());
+            currentSession = Session.createNewSession(ev, Settings.Default.name);
             currentSession.start();
             this.log("### New Session '" + currentSession.ToString() + "' started ###");
 
@@ -802,6 +850,7 @@ namespace freETarget {
 
             clearShots();
             targetRefresh();
+            imgTarget.BackColor = Settings.Default.targetColor;
             drawSessionName();
         }
 
@@ -1152,23 +1201,24 @@ namespace freETarget {
         private void writeToGrid(Shot shot) {
             int rowShot;
             int cellShot;
-            if (currentSession.sessionType != Session.SessionType.Final) {
+            Event ev = currentSession.eventType;
+            if (currentSession.sessionType != Event.EventType.Final) {
                 rowShot = shot.index / 10;
                 cellShot = shot.index % 10;
             } else {
                 //final - 2 rows of 5 shots and than rows of 2 shots
-                if (shot.index < 5) {
+                if (shot.index < ev.Final_NumberOfShotPerSeries) {
                     //first row
                     rowShot = 0;
-                    cellShot = shot.index % 5;
-                } else if (shot.index >= 5 && shot.index < 10) {
+                    cellShot = shot.index % ev.Final_NumberOfShotPerSeries;
+                } else if (shot.index >= ev.Final_NumberOfShotPerSeries && shot.index < ev.Final_NumberOfShotsBeforeSingleShotSeries) {
                     //second row
                     rowShot = 1;
-                    cellShot = shot.index % 5;
+                    cellShot = shot.index % ev.Final_NumberOfShotPerSeries;
                 } else {
                     //row of 2
-                    rowShot = (shot.index - 6) / 2;
-                    cellShot = shot.index % 2;
+                    rowShot = (shot.index - (ev.Final_NumberOfShotPerSeries + 1)) / ev.Final_NumberOfShotsInSingleShotSeries;
+                    cellShot = shot.index % ev.Final_NumberOfShotsInSingleShotSeries;
                 }
             }
 
@@ -1406,6 +1456,26 @@ namespace freETarget {
         private void btnUpload_Click(object sender, EventArgs e) {
             frmUpload upload = new frmUpload(this);
             upload.ShowDialog();
+        }
+
+        private void loadEventsOnTabs() {
+
+            this.tcSessionType.Controls.Clear();
+            int index = 0;
+            foreach (Event ev in eventManager.getActiveEventsList()) {
+
+                TabPage tab = new System.Windows.Forms.TabPage();
+
+                tab.BackColor = ev.TabColor;
+                //tab.Location = new System.Drawing.Point(52, 4);
+                tab.Name = ev.ID.ToString();
+                //tab.Padding = new System.Windows.Forms.Padding(5);
+                //tab.Size = new System.Drawing.Size(250, 522);
+                tab.TabIndex = index++;
+                tab.Text = ev.Name;
+
+                this.tcSessionType.Controls.Add(tab);
+            }
         }
     }
 

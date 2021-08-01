@@ -13,58 +13,58 @@ using System.Windows.Forms;
 namespace freETarget {
     public class Session {
 
-        public enum SessionType {
+/*        public enum SessionType {
             Practice,
             Match,
             Final
-        }
+        }*/
 
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session data")]
+        [Category("Session")]
         [DisplayName("Session ID")]
         [Description("Unique ID given to the session when it was saved")]
         public long id { get; set; }
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session configuration")]
-        [DisplayName("Event")]
+        [Category("Event")]
+        [DisplayName("Event Name")]
         [Description("Competition event type")]
-        public EventType eventType { get; set; }
+        public Event eventType { get; set; }
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session configuration")]
+        [Category("Event")]
         [DisplayName("Target Type")]
         [Description("Type of target used by this event")]
         public string targetType { get; set; }
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session configuration")]
+        [Category("Event")]
         [DisplayName("Events shot count")]
         [Description("Maximum number of shots in this event")]
         public int numberOfShots { get; set; }
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session configuration")]
+        [Category("Event")]
         [DisplayName("Decimal scoring")]
         [Description("Flag if this event uses decimal scoring")]
         public bool decimalScoring { get; set; }
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session configuration")]
+        [Category("Event")]
         [DisplayName("Session Type")]
         [Description("Type of this session")]
-        public SessionType sessionType { get; set; }
+        public Event.EventType sessionType { get; set; }
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session configuration")]
+        [Category("Event")]
         [DisplayName("Event duration")]
         [Description("Duration in minutes for this event. -1 if the duration is unlimited")]
         public int minutes { get; set; }
@@ -72,55 +72,55 @@ namespace freETarget {
         [Browsable(true)]
         [ReadOnly(true)]
         [Description("Number of shots in this session")]
-        [Category("Session data")]
+        [Category("Session")]
         [DisplayName("Session Shots")]
         public int actualNumberOfShots { get; set; }
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session data")]
+        [Category("Session")]
         [DisplayName("Score")]
         [Description("The integer score for this session")]
         public int score { get; set; }
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session data")]
+        [Category("Session")]
         [DisplayName("Decimal score")]
         [Description("The decimal score for this session")]
         public decimal decimalScore { get; set; }
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session data")]
+        [Category("Session")]
         [DisplayName("Average score")]
         [Description("Average shot score for this session")]
         public decimal averageScore { get; set; }
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session data")]
+        [Category("Session")]
         [DisplayName("Inner tens")]
         [Description("Number of inner tens (Xs) in this session")]
         public int innerX { get; set; }
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session data")]
+        [Category("Session")]
         [DisplayName("Windage")]
         [Description("Median point of impact horizontal deviation. Negative to the left, positive to the right")]
         public decimal xbar { get; set; }
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session data")]
+        [Category("Session")]
         [DisplayName("Elevation")]
         [Description("Median point of impact vertical deviation. Negative down, positive up")]
         public decimal ybar { get; set; }
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session data")]
+        [Category("Session")]
         [DisplayName("Mean radius")]
         [Description("Radius of the mean group")]
         public decimal rbar { get; set; }
@@ -128,42 +128,42 @@ namespace freETarget {
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session data")]
+        [Category("Session")]
         [DisplayName("Group size")]
         [Description("Dimension of the group - the maximum distance between 2 shots, calculated from the center of the holes")]
         public decimal groupSize { get; set; }
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session data")]
+        [Category("Session")]
         [DisplayName("Start time")]
         [Description("Time when the session started")]
         public DateTime startTime { get; set; }
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session data")]
+        [Category("Session")]
         [DisplayName("End time")]
         [Description("Time when the session ended (was saved)")]
         public DateTime endTime { get; set; }
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session data")]
+        [Category("Session")]
         [DisplayName("Average time")]
         [Description("Average time between 2 shots")]
         public TimeSpan averageTimePerShot { get; set; }
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session data")]
+        [Category("Session")]
         [DisplayName("Shortest shot")]
         [Description("Shortest time interval between 2 shots")]
         public TimeSpan shortestShot { get; set; }
 
         [Browsable(true)]
         [ReadOnly(true)]
-        [Category("Session data")]
+        [Category("Session")]
         [DisplayName("Longest shot")]
         [Description("Longest time interval between 2 shots")]
         public TimeSpan longestShot { get; set; }
@@ -180,7 +180,7 @@ namespace freETarget {
 
 
 
-        private VirtualRO currentFinal = null;
+        private VirtualRO vRO = null;
 
         internal List<Shot> Shots { get => shots; set => shots = value; }
         internal List<Shot> CurrentSeries { get => currentSeries; set => currentSeries = value; }
@@ -219,131 +219,28 @@ namespace freETarget {
             this.CurrentSeries.Clear();
             this.AllSeries.Clear();
         }
-
-        public static Session createNewSession(string name, string user) {
-            EventType et = EventType.GetEvent(name);
-            if (et == null) {
-                MessageBox.Show("Could not identify event: " + name + Environment.NewLine + Environment.NewLine + "Please check the application configuration file." + Environment.NewLine + "The application will now exit!", "Error creating session",MessageBoxButtons.OK,MessageBoxIcon.Error);
-                Environment.Exit(0);
-            }
-            return createNewSession(et, Settings.Default.name, Settings.Default.MatchShots);
-        }
-        public static Session createNewSession(EventType sessionType, string user, int noOfShots) {
+        public static Session createNewSession(Event eventType, string user) {
             Session newSession = new Session();
             newSession.user = user;
 
-/*
- * Create an Air Pistol Session
- */
-      if (sessionType.Equals(EventType.AirPistolPractice))
-      {
-        newSession.decimalScoring = false;
-        newSession.sessionType = SessionType.Practice;
-        newSession.eventType = EventType.AirPistolPractice;
-        newSession.numberOfShots = -1;
-        newSession.setTarget(new targets.AirPistol());
-        newSession.targetType = newSession.getTarget().getName();
-        newSession.minutes = -1;
-      }
-      else if (sessionType.Equals(EventType.AirPistolMatch))
-      {
-        newSession.decimalScoring = false;
-        newSession.sessionType = SessionType.Match;
-        newSession.eventType = EventType.AirPistolMatch;
-        newSession.numberOfShots = noOfShots;
-        if (noOfShots == 60) {
-          newSession.numberOfShots = ISSF.match60NoOfShots;
-          newSession.minutes = ISSF.match60Time;
-        } else if (noOfShots == 40) {
-          newSession.numberOfShots = ISSF.match40NoOfShots;
-          newSession.minutes = ISSF.match40Time;
-        } else {
-          newSession.numberOfShots = -1;
-          newSession.minutes = -1;
-        }
-        newSession.setTarget(new targets.AirPistol());
-        newSession.targetType = newSession.getTarget().getName();
-      }
-      else if (sessionType.Equals(EventType.AirPistolFinal)) {
-        newSession.decimalScoring = true;
-        newSession.sessionType = SessionType.Final;
-        newSession.eventType = EventType.AirPistolFinal;
-        newSession.numberOfShots = ISSF.finalNoOfShots;
-        newSession.setTarget(new targets.AirPistol());
-        newSession.targetType = newSession.getTarget().getName();
-        newSession.minutes = -1;
-        newSession.currentFinal = new VirtualRO();
-      }
+            newSession.eventType = eventType;
+            newSession.decimalScoring = eventType.DecimalScoring;
+            newSession.sessionType = eventType.Type;
+            newSession.setTarget(eventType.Target);
+            newSession.targetType = eventType.Target.getName();
 
-/*
- *  Create an Air Rifle Session
- */
-      else if (sessionType.Equals(EventType.AirRiflePractice))
-      {
-        newSession.decimalScoring = true;
-        newSession.sessionType = SessionType.Practice;
-        newSession.eventType = EventType.AirRiflePractice;
-        newSession.numberOfShots = -1;
-        newSession.setTarget(new targets.AirRifle());
-        newSession.targetType = newSession.getTarget().getName();
-        newSession.minutes = -1;
-      }
-
-      else if (sessionType.Equals(EventType.AirRifleMatch))
-      {
-        newSession.decimalScoring = true;
-        newSession.sessionType = SessionType.Match;
-        newSession.eventType = EventType.AirRifleMatch;
-        newSession.numberOfShots = noOfShots;
-        newSession.setTarget(new targets.AirRifle());
-        newSession.targetType = newSession.getTarget().getName();
-        if (noOfShots == 60) {
-          newSession.numberOfShots = ISSF.match60NoOfShots;
-          newSession.minutes = ISSF.match60Time;
-        } else if (noOfShots == 40) {
-          newSession.numberOfShots = ISSF.match40NoOfShots;
-          newSession.minutes = ISSF.match40Time;
-        } else {
-          newSession.numberOfShots = -1;
-          newSession.minutes = -1;
-        }
-      }
-      else if (sessionType.Equals(EventType.AirRifleFinal))
-      {
-        newSession.decimalScoring = true;
-        newSession.sessionType = SessionType.Final;
-        newSession.eventType = EventType.AirRifleFinal;
-        newSession.numberOfShots = ISSF.finalNoOfShots;
-        newSession.setTarget(new targets.AirRifle());
-        newSession.targetType = newSession.getTarget().getName();
-        newSession.minutes = -1;
-        newSession.currentFinal = new VirtualRO();
-      }
-
-      /*
-       * Create a 50 M Rifle Session
-       */
-      else if (sessionType.Equals(EventType.Rifle50MPractice)) {
-        newSession.decimalScoring = true;
-        newSession.sessionType = SessionType.Practice;
-        newSession.eventType = EventType.Rifle50MPractice;
-        newSession.setTarget(new targets.rifle50M());
-        newSession.targetType = newSession.getTarget().getName();
-        newSession.minutes = -1;
-      } 
-      else if (sessionType.Equals(EventType.Rifle50MMatch))
-      {
-        newSession.decimalScoring = true;
-        newSession.sessionType = SessionType.Match;
-        newSession.eventType = EventType.Rifle50MMatch;
-        newSession.setTarget(new targets.rifle50M());
-        newSession.targetType = newSession.getTarget().getName();
-        newSession.minutes = 120;
-      }
-      else
-      {
-
-        Console.WriteLine("Could not identify event type " + sessionType);
+            if (newSession.sessionType.Equals(Event.EventType.Practice)) {
+                newSession.numberOfShots = -1;
+                newSession.minutes = -1;
+            } else if (newSession.sessionType.Equals(Event.EventType.Match)) {
+                newSession.numberOfShots = eventType.NumberOfShots;
+                newSession.minutes = eventType.Minutes;
+            } else if (newSession.sessionType.Equals(Event.EventType.Final)) {
+                newSession.numberOfShots = eventType.NumberOfShots;
+                newSession.minutes = -1;
+                newSession.vRO = new VirtualRO(eventType);
+            } else {
+                Console.WriteLine("Could not identify event type " + eventType + " and session type " + newSession.sessionType);
                 return null;
             }
 
@@ -377,13 +274,13 @@ namespace freETarget {
 
         public void addToSeries(Shot s) {
             bool newSeries;
-            if (sessionType != SessionType.Final) {
+            if (sessionType != Event.EventType.Final) {
                 newSeries = (s.index % 10 == 0);
             } else {
-                if (s.index < 10) {
-                    newSeries = (s.index % 5 == 0);
+                if (s.index < eventType.Final_NumberOfShotsBeforeSingleShotSeries) {
+                    newSeries = (s.index % eventType.Final_NumberOfShotPerSeries == 0);
                 } else {
-                    newSeries = (s.index % 2 == 0);
+                    newSeries = (s.index % eventType.Final_NumberOfShotsInSingleShotSeries == 0);
                 }
             }
 
@@ -409,7 +306,7 @@ namespace freETarget {
             DateTime now = DateTime.Now;
             TimeSpan ts;
             string command = "";
-            if (sessionType != SessionType.Final) {
+            if (sessionType != Event.EventType.Final) {
                 if (endTime == DateTime.MinValue) {
                     ts = now - startTime;
                 } else {
@@ -420,17 +317,17 @@ namespace freETarget {
             
                 }
             } else { //final - do per series timers
-                if (currentFinal != null) {
-                    ts = currentFinal.getTime(out command);
+                if (vRO != null) {
+                    ts = vRO.getTime(out command);
                 } else {
                     ts = TimeSpan.FromSeconds(-1);
                     Console.WriteLine("VirtualRO not initialized");
                 }
             }
 
-            if (sessionType == SessionType.Practice) {
+            if (sessionType == Event.EventType.Practice) {
                 c = Color.White;
-            }else if (sessionType == SessionType.Match) {
+            }else if (sessionType == Event.EventType.Match) {
                 if (TimeSpan.Compare(ts, TimeSpan.FromSeconds(60)) <= 0) { //last 60 seconds displayed in red
                     c = Color.Red;
                 } else if (TimeSpan.Compare(ts, TimeSpan.FromMinutes(10)) <= 0) { //last 10 minutes displayed in orange

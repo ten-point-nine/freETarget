@@ -12,7 +12,7 @@ using System.Windows.Forms;
 using System.IO;
 
 namespace freETarget {
-    class StorageController {
+    public class StorageController {
 
         private string connString = null;
         private string templateConnString = "Data Source=.\\Storage.db;";
@@ -49,7 +49,7 @@ namespace freETarget {
             }
         }
 
-        public String checkDB() {
+        public String checkDB(int required_version) {
             if (initiated == false) {
                 return "StorageController constructor not initialized. Check the log.";
             }
@@ -118,7 +118,7 @@ namespace freETarget {
                 mainWindow.log("User database at: " + dbPath);
             } else {
                 //user database not available
-                if (templateOK) {
+                if (templateOK && objCon==required_version) {
                     //template database is available. use that
                     connString = templateConnString;
                     MessageBox.Show("User database at '" + dbPath + "\\Storage.db' is not accesible, maybe due to write access privileges needed by SQLite. " + Environment.NewLine
@@ -132,7 +132,7 @@ namespace freETarget {
                 } else {
                     // neither databases are available
                     mainWindow.displayMessage("Exception accessing both user and template databases. Check log for exact error", false);
-                    mainWindow.log("Exception accessing both user and template databases. Check log for exact error");
+                    mainWindow.log("Exception accessing both user and template databases. Check log for exact error" + Environment.NewLine + "Required version: " + required_version + " - template version: " + objCon);
                     return "Exception accessing both user and template databases. Check log for exact error";
                 }
             }
@@ -155,13 +155,77 @@ namespace freETarget {
             return ret;
         }
 
-        public List<ListBoxSessionItem> findSessionsForUser(string user, EventType cof) {
+        public long checkEvents() {
+            SQLiteConnection con = new SQLiteConnection(connString);
+            con.Open();
+            SQLiteCommand cmd = new SQLiteCommand("select count(*) " +
+                "  from Events" +
+                "  order by id asc", con);
+            SQLiteDataReader rdr = cmd.ExecuteReader();
+            rdr.Read();
+            long count = rdr.GetInt64(0);
+            rdr.Close();
+            con.Close();
+
+            return count;
+        }
+
+        public List<Event> loadEvents() {
+            List<Event> ret = new List<Event>();
+            SQLiteConnection con = new SQLiteConnection(connString);
+            con.Open();
+            SQLiteCommand cmd = new SQLiteCommand("select * from Events", con);
+            SQLiteDataReader rdr = cmd.ExecuteReader();
+            while (rdr.Read()) {
+                long id = rdr.GetInt64(0);
+                int type = rdr.GetInt32(1);
+                string name = rdr.GetString(2);
+                int decimalScoring = rdr.GetInt32(3);
+                string target = rdr.GetString(4);
+                int numberOfShots = rdr.GetInt32(5);
+                int minutes = rdr.GetInt32(6);
+                decimal caliber = rdr.GetDecimal(7);
+                int final_seriesShots = rdr.GetInt32(8);
+                int seriesSeconds = rdr.GetInt32(9);
+                int shotsInSeries = rdr.GetInt32(10);
+                int shotsInSingle = rdr.GetInt32(11);
+                int singleSeconds = rdr.GetInt32(12);
+                string colorText = rdr.GetString(13);
+
+                Type target_type= Type.GetType(target);
+                targets.aTarget target_class = (targets.aTarget)Activator.CreateInstance(target_type,new object[] { caliber });
+
+                System.Drawing.Color color = System.Drawing.Color.FromName(colorText);
+                Event e = new Event(id, name, convertIntToBool(decimalScoring), (Event.EventType)type, numberOfShots, target_class, minutes, caliber, final_seriesShots, seriesSeconds, shotsInSeries, shotsInSingle, singleSeconds, color);
+                ret.Add(e);
+            }
+            rdr.Close();
+            con.Close();
+            return ret;
+        }
+
+        public List<long> loadActiveEventsIDs() {
+            List<long> ret = new List<long>();
+            SQLiteConnection con = new SQLiteConnection(connString);
+            con.Open();
+            SQLiteCommand cmd = new SQLiteCommand("select EventID from EventTabs", con);
+            SQLiteDataReader rdr = cmd.ExecuteReader();
+            while (rdr.Read()) {
+                long id = rdr.GetInt64(0);
+                ret.Add(id);
+            }
+            rdr.Close();
+            con.Close();
+            return ret;
+        }
+
+        public List<ListBoxSessionItem> findSessionsForUser(string user, Event cof) {
             SQLiteConnection con = new SQLiteConnection(connString);
             con.Open();
             SQLiteCommand cmd = new SQLiteCommand("select id, decimalScoring, score, decimalScore,innerX, startTime " +
                 "  from Sessions where user = @user and courseOfFire = @cof " +
                 "  order by id desc", con);
-            cmd.Parameters.AddWithValue("@cof", cof.Name);
+            cmd.Parameters.AddWithValue("@cof", cof.ID);
             cmd.Parameters.AddWithValue("@user", user);
             SQLiteDataReader rdr = cmd.ExecuteReader();
             List<ListBoxSessionItem> ret = new List<ListBoxSessionItem>();
@@ -187,12 +251,12 @@ namespace freETarget {
             return ret;
         }
 
-        public List<decimal> findScoresForUser(string user, EventType eventType) {
+        public List<decimal> findScoresForUser(string user, Event eventType) {
             SQLiteConnection con = new SQLiteConnection(connString);
             con.Open();
             SQLiteCommand cmd = new SQLiteCommand("select averageScore " +
                 "  from Sessions where user = @user and courseOfFire = @cof  order by id desc", con);
-            cmd.Parameters.AddWithValue("@cof", eventType.Name);
+            cmd.Parameters.AddWithValue("@cof", eventType.ID);
             cmd.Parameters.AddWithValue("@user", user);
             SQLiteDataReader rdr = cmd.ExecuteReader();
 
@@ -206,12 +270,12 @@ namespace freETarget {
             return ret;
         }
 
-        public List<decimal> findRBarForUser(string user, EventType eventType) {
+        public List<decimal> findRBarForUser(string user, Event eventType) {
             SQLiteConnection con = new SQLiteConnection(connString);
             con.Open();
             SQLiteCommand cmd = new SQLiteCommand("select rbar " +
                 "  from Sessions where user = @user and courseOfFire = @cof  order by id desc", con);
-            cmd.Parameters.AddWithValue("@cof", eventType.Name);
+            cmd.Parameters.AddWithValue("@cof", eventType.ID);
             cmd.Parameters.AddWithValue("@user", user);
             SQLiteDataReader rdr = cmd.ExecuteReader();
 
@@ -225,12 +289,12 @@ namespace freETarget {
             return ret;
         }
 
-        public List<decimal> findXBarForUser(string user, EventType eventType) {
+        public List<decimal> findXBarForUser(string user, Event eventType) {
             SQLiteConnection con = new SQLiteConnection(connString);
             con.Open();
             SQLiteCommand cmd = new SQLiteCommand("select xbar " +
                 "  from Sessions where user = @user and courseOfFire = @cof  order by id desc", con);
-            cmd.Parameters.AddWithValue("@cof", eventType.Name);
+            cmd.Parameters.AddWithValue("@cof", eventType.ID);
             cmd.Parameters.AddWithValue("@user", user);
             SQLiteDataReader rdr = cmd.ExecuteReader();
 
@@ -244,12 +308,12 @@ namespace freETarget {
             return ret;
         }
 
-        public List<decimal> findYBarForUser(string user, EventType eventType) {
+        public List<decimal> findYBarForUser(string user, Event eventType) {
             SQLiteConnection con = new SQLiteConnection(connString);
             con.Open();
             SQLiteCommand cmd = new SQLiteCommand("select ybar " +
                 "  from Sessions where user = @user and courseOfFire = @cof  order by id desc", con);
-            cmd.Parameters.AddWithValue("@cof", eventType.Name);
+            cmd.Parameters.AddWithValue("@cof", eventType.ID);
             cmd.Parameters.AddWithValue("@user", user);
             SQLiteDataReader rdr = cmd.ExecuteReader();
 
@@ -273,11 +337,11 @@ namespace freETarget {
             SQLiteDataReader rdr = cmd.ExecuteReader();
             rdr.Read();
 
-            EventType cof = EventType.GetEvent(rdr.GetString(0));
+            Event cof = mainWindow.eventManager.findEventByID(rdr.GetInt64(0));//Event.GetEvent(rdr.GetString(0));
             int numberOfShots = rdr.GetInt32(1);
             string user = rdr.GetString(2);
 
-            Session session = Session.createNewSession(cof, user, numberOfShots);
+            Session session = Session.createNewSession(cof, user);
             session.score = rdr.GetInt32(3);
             session.decimalScore = rdr.GetDecimal(4);
             session.innerX = rdr.GetInt32(5);
@@ -322,6 +386,24 @@ namespace freETarget {
             con.Close();
         }
 
+        public void updateActiveEvents(List<Event> events) {
+            SQLiteConnection con = new SQLiteConnection(connString);
+            con.Open();
+            SQLiteCommand cmd = new SQLiteCommand(con);
+            cmd.CommandText = "DELETE FROM EventTabs";
+            cmd.Prepare();
+            cmd.ExecuteNonQuery();
+
+            foreach (Event ev in events) {
+                cmd.CommandText = "INSERT INTO EventTabs( EventID) VALUES (@ID)";
+                cmd.Parameters.AddWithValue("@ID", ev.ID);
+                cmd.Prepare();
+                cmd.ExecuteNonQuery();
+
+                Console.WriteLine("Event (" + ev.ID + ") " + ev.Name + " added in the EventTabs table");
+            }
+        }
+
         public void storeSession(Session session) {
             SQLiteConnection con = new SQLiteConnection(connString);
             con.Open();
@@ -335,7 +417,7 @@ namespace freETarget {
                 " @averageShotDuration, @longestShot, @shortestShot, @groupSize, @hash)";
 
             session.prepareForSaving();
-            cmd.Parameters.AddWithValue("@courseOfFire", session.eventType.Name);
+            cmd.Parameters.AddWithValue("@courseOfFire", session.eventType.ID);
             cmd.Parameters.AddWithValue("@targetType", session.targetType);
             cmd.Parameters.AddWithValue("@numberOfShots", session.numberOfShots);
             cmd.Parameters.AddWithValue("@decimalScoring", convertBoolToInt(session.decimalScoring));
@@ -368,7 +450,90 @@ namespace freETarget {
 
                 Console.WriteLine("Session saved");
             } catch(Exception ex){
-                MessageBox.Show("Error saving session to the database. Make sure you have write access to the folder." + Environment.NewLine + ex.Message, "Error writing to DB", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                string s = "Error saving session to the database. Make sure you have write access to the folder." + Environment.NewLine + ex.Message;
+                mainWindow.log(s);
+                MessageBox.Show(s, "Error writing to DB", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            } finally {
+                con.Close();
+            }
+        }
+
+        public void storeEvent(Event ev){
+            SQLiteConnection con = new SQLiteConnection(connString);
+            con.Open();
+            SQLiteCommand cmd = new SQLiteCommand(con);
+            cmd.CommandText = "INSERT INTO Events(" +
+                "Type, Name, DecimalScoring, Target, NumberOfShots, Minutes, Caliber, Final_NumberOfShotPerSeries, " +
+                "Final_SeriesSeconds, Final_NumberOfShotsBeforeSingleShotSeries, Final_NumberOfShotsInSingleShotSeries, Final_SingleShotSeconds, Color " +
+                ") VALUES(@Type, @Name, @DecimalScoring, @Target, @NumberOfShots, @Minutes, @Caliber, @Final_NumberOfShotPerSeries," +
+                "@Final_SeriesSeconds, @Final_NumberOfShotsBeforeSingleShotSeries, @Final_NumberOfShotsInSingleShotSeries, @Final_SingleShotSeconds, @Color)";
+
+            cmd.Parameters.AddWithValue("@Type", ev.Type);
+            cmd.Parameters.AddWithValue("@Name", ev.Name);
+            cmd.Parameters.AddWithValue("@DecimalScoring", convertBoolToInt(ev.DecimalScoring));
+            cmd.Parameters.AddWithValue("@Target", ev.Target.getName());
+            cmd.Parameters.AddWithValue("@NumberOfShots", ev.NumberOfShots);
+            cmd.Parameters.AddWithValue("@Minutes", ev.Minutes);
+            cmd.Parameters.AddWithValue("@Caliber", ev.ProjectileCaliber);
+            cmd.Parameters.AddWithValue("@Final_NumberOfShotPerSeries", ev.Final_NumberOfShotPerSeries);
+            cmd.Parameters.AddWithValue("@Final_SeriesSeconds", ev.Final_SeriesSeconds);
+            cmd.Parameters.AddWithValue("@Final_NumberOfShotsBeforeSingleShotSeries", ev.Final_NumberOfShotsBeforeSingleShotSeries);
+            cmd.Parameters.AddWithValue("@Final_NumberOfShotsInSingleShotSeries", ev.Final_NumberOfShotsInSingleShotSeries);
+            cmd.Parameters.AddWithValue("@Final_SingleShotSeconds", ev.Final_SingleShotSeconds);
+            cmd.Parameters.AddWithValue("@Color", ev.TabColor.Name);
+
+
+            try {
+                cmd.Prepare();
+
+                cmd.ExecuteNonQuery();
+
+                Console.WriteLine("Event saved");
+            } catch (Exception ex) {
+                mainWindow.log("Error storing event: " + ex.Message);
+            } finally {
+                con.Close();
+            }
+
+        }
+
+        public void updateEvent(Event ev) {
+            SQLiteConnection con = new SQLiteConnection(connString);
+            con.Open();
+            SQLiteCommand cmd = new SQLiteCommand(con);
+
+            cmd.CommandText = "UPDATE Events SET " +
+                "Type = @Type, Name = @Name, DecimalScoring = @DecimalScoring, Target = @Target, NumberOfShots = @NumberOfShots, Minutes = @Minutes, Caliber = @Caliber, " +
+                "Final_NumberOfShotPerSeries = @Final_NumberOfShotPerSeries, Final_SeriesSeconds = @Final_SeriesSeconds, " +
+                "Final_NumberOfShotsBeforeSingleShotSeries = @Final_NumberOfShotsBeforeSingleShotSeries, " +
+                "Final_NumberOfShotsInSingleShotSeries = @Final_NumberOfShotsInSingleShotSeries, Final_SingleShotSeconds = @Final_SingleShotSeconds, Color = @Color " +
+                "WHERE id = @id ";
+
+            cmd.Parameters.AddWithValue("@Type", ev.Type);
+            cmd.Parameters.AddWithValue("@Name", ev.Name);
+            cmd.Parameters.AddWithValue("@DecimalScoring", convertBoolToInt(ev.DecimalScoring));
+            cmd.Parameters.AddWithValue("@Target", ev.Target.getName());
+            cmd.Parameters.AddWithValue("@NumberOfShots", ev.NumberOfShots);
+            cmd.Parameters.AddWithValue("@Minutes", ev.Minutes);
+            cmd.Parameters.AddWithValue("@Caliber", ev.ProjectileCaliber);
+            cmd.Parameters.AddWithValue("@Final_NumberOfShotPerSeries", ev.Final_NumberOfShotPerSeries);
+            cmd.Parameters.AddWithValue("@Final_SeriesSeconds", ev.Final_SeriesSeconds);
+            cmd.Parameters.AddWithValue("@Final_NumberOfShotsBeforeSingleShotSeries", ev.Final_NumberOfShotsBeforeSingleShotSeries);
+            cmd.Parameters.AddWithValue("@Final_NumberOfShotsInSingleShotSeries", ev.Final_NumberOfShotsInSingleShotSeries);
+            cmd.Parameters.AddWithValue("@Final_SingleShotSeconds", ev.Final_SingleShotSeconds);
+            cmd.Parameters.AddWithValue("@Color", ev.TabColor.Name);
+
+            cmd.Parameters.AddWithValue("@id", ev.ID);
+
+
+            try {
+                cmd.Prepare();
+
+                cmd.ExecuteNonQuery();
+
+                Console.WriteLine("Event saved");
+            } catch (Exception ex) {
+                mainWindow.log("Error storing event: " + ex.Message);
             } finally {
                 con.Close();
             }
@@ -396,6 +561,14 @@ namespace freETarget {
                 return 1;
             } else {
                 return 0;
+            }
+        }
+
+        private bool convertIntToBool(int input) {
+            if (input == 0) {
+                return false;
+            } else {
+                return true;
             }
         }
 
