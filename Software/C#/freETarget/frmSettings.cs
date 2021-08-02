@@ -179,6 +179,7 @@ namespace freETarget
             cmbOldBack.SelectedItem = Properties.Settings.Default.scoreOldBackgroundColor.Name;
 
             txtSensorDiameter.Text = Properties.Settings.Default.SensorDiameter.ToString();
+            txtZOffset.Text = Properties.Settings.Default.ZOffset.ToString();
 
             txtNorthX.Text = Properties.Settings.Default.SensorNorthX.ToString();
             txtNorthY.Text = Properties.Settings.Default.SensorNorthY.ToString();
@@ -190,10 +191,12 @@ namespace freETarget
             txtEastY.Text = Properties.Settings.Default.SensorEastY.ToString();
 
             txtCalibre.Text = Properties.Settings.Default.Calibre.ToString();
-            txtPaper.Text = Properties.Settings.Default.Paper.ToString();
-            txtPaperStep.Text = Properties.Settings.Default.PaperStep.ToString();
 
-            if (Properties.Settings.Default.PaperStep == 0) {
+            txtSteps.Text = Properties.Settings.Default.StepCount.ToString();
+            txtStepTime.Text = Properties.Settings.Default.StepTime.ToString();
+            txtPaperTime.Text = Properties.Settings.Default.PaperTime.ToString();
+
+            if (Properties.Settings.Default.PaperTime > 0) {
                 rbStepper.Checked = false;
                 rbDC.Checked = true;
             } else {
@@ -305,6 +308,12 @@ namespace freETarget
                 }
             }
 
+            //zoffset
+            if (!validNumber(txtZOffset.Text)) {
+                MessageBox.Show("Z offset is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
             //northX
             if (!validNumber(txtNorthX.Text)) {
                 MessageBox.Show("Offset for North X sensor is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
@@ -364,30 +373,35 @@ namespace freETarget
                 }
             }
 
-            //paper
-            if (!validNumber(txtPaper.Text)) {
-                MessageBox.Show("Paper scroll time is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            //stepper
+            if (!validNumber(txtSteps.Text)) {
+                MessageBox.Show("Stepper steps is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return false;
             }
 
-            if (!positiveNumber(txtPaper.Text)) {
-                MessageBox.Show("Paper scroll time must be a positive number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            if (!positiveNumber(txtSteps.Text)) {
+                MessageBox.Show("Stepper steps is not a number must be a positive number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return false;
             }
 
-            //paper step
-            if (!validNumber(txtPaperStep.Text)) {
-                MessageBox.Show("Paper steps is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            if (!validNumber(txtStepTime.Text)) {
+                MessageBox.Show("Stepper duration is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return false;
             }
 
-            if (!positiveNumber(txtPaperStep.Text)) {
-                MessageBox.Show("Paper steps must be a positive number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            if (!positiveNumber(txtStepTime.Text)) {
+                MessageBox.Show("Stepper duration must be a positive number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return false;
             }
 
-            if (rbStepper.Checked && txtPaperStep.Text=="0")  {
-                MessageBox.Show("If the stepper motor is selected, the 'Paper Steps' value must be greater than 0", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            //dc
+            if (!validNumber(txtPaperTime.Text)) {
+                MessageBox.Show("Direct Current time is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+            if (!positiveNumber(txtPaperTime.Text)) {
+                MessageBox.Show("Direct Current time must be a positive number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return false;
             }
 
@@ -446,13 +460,18 @@ namespace freETarget
 
         private void radios() {
             if (rbDC.Checked) {
-                txtPaperStep.Enabled = false;
-                lblPaperSteps.Enabled = false;
-                txtPaperStep.Text = "0";
+                txtPaperTime.Enabled = true;
+
+                txtSteps.Enabled = false;
+                txtStepTime.Enabled = false;
+                txtSteps.Text = "0";
+                txtStepTime.Text = "0";
             } else { //stepper
-                txtPaperStep.Enabled = true;
-                lblPaperSteps.Enabled = true;
-                txtPaperStep.Text = Properties.Settings.Default.PaperStep.ToString();
+                txtPaperTime.Enabled = false;
+                txtPaperTime.Text = "0";
+
+                txtSteps.Enabled = true;
+                txtStepTime.Enabled = true;
             }
         }
 

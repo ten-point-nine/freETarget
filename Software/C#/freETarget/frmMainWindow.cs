@@ -383,12 +383,22 @@ namespace freETarget {
             Console.WriteLine("{\"SENSOR\":" + Properties.Settings.Default.SensorDiameter.ToString() + "}");
 
             Thread.Sleep(500);
-            serialPort.Write("{\"PAPER_TIME\":" + Properties.Settings.Default.Paper.ToString() + "}");
-            Console.WriteLine("{\"PAPER_TIME\":" + Properties.Settings.Default.Paper.ToString() + "}");
+            serialPort.Write("{\"Z_OFFSET\":" + Properties.Settings.Default.ZOffset.ToString() + "}");
+            Console.WriteLine("{\"Z_OFFSET\":" + Properties.Settings.Default.ZOffset.ToString() + "}");
 
-            Thread.Sleep(500);
-            serialPort.Write("{\"PAPER_STEP\":" + Properties.Settings.Default.PaperStep.ToString() + "}");
-            Console.WriteLine("{\"PAPER_STEP\":" + Properties.Settings.Default.PaperStep.ToString() + "}");
+            if (Properties.Settings.Default.PaperTime > 0) {
+                Thread.Sleep(500);
+                serialPort.Write("{\"PAPER_TIME\":" + Properties.Settings.Default.PaperTime.ToString() + "}");
+                Console.WriteLine("{\"PAPER_TIME\":" + Properties.Settings.Default.PaperTime.ToString() + "}");
+            } else {
+                Thread.Sleep(500);
+                serialPort.Write("{\"STEP_TIME\":" + Properties.Settings.Default.StepTime.ToString() + "}");
+                Console.WriteLine("{\"STEP_TIME\":" + Properties.Settings.Default.StepTime.ToString() + "}");
+
+                Thread.Sleep(500);
+                serialPort.Write("{\"STEP_COUNT\":" + Properties.Settings.Default.StepCount.ToString() + "}");
+                Console.WriteLine("{\"STEP_COUNT\":" + Properties.Settings.Default.StepCount.ToString() + "}");
+            }
 
             Thread.Sleep(500);
             serialPort.Write("{\"CALIBREx10\":" + Properties.Settings.Default.Calibre.ToString() + "}");
@@ -777,6 +787,7 @@ namespace freETarget {
                 Properties.Settings.Default.scoreOldPenColor = Color.FromName(settingsFrom.cmbOldPen.GetItemText(settingsFrom.cmbOldPen.SelectedItem));
 
                 Properties.Settings.Default.SensorDiameter = decimal.Parse(settingsFrom.txtSensorDiameter.Text);
+                Properties.Settings.Default.ZOffset = int.Parse(settingsFrom.txtZOffset.Text);
 
                 Properties.Settings.Default.SensorNorthX = int.Parse(settingsFrom.txtNorthX.Text);
                 Properties.Settings.Default.SensorNorthY = int.Parse(settingsFrom.txtNorthY.Text);
@@ -788,8 +799,9 @@ namespace freETarget {
                 Properties.Settings.Default.SensorEastY = int.Parse(settingsFrom.txtEastY.Text);
 
                 Properties.Settings.Default.Calibre = int.Parse(settingsFrom.txtCalibre.Text);
-                Properties.Settings.Default.Paper = int.Parse(settingsFrom.txtPaper.Text);
-                Properties.Settings.Default.PaperStep = int.Parse(settingsFrom.txtPaperStep.Text);
+                Properties.Settings.Default.PaperTime = int.Parse(settingsFrom.txtPaperTime.Text);
+                Properties.Settings.Default.StepCount = int.Parse(settingsFrom.txtSteps.Text);
+                Properties.Settings.Default.StepTime = int.Parse(settingsFrom.txtStepTime.Text);
 
                 Properties.Settings.Default.Save();
 

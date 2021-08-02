@@ -61,12 +61,12 @@
             this.chkLog = new System.Windows.Forms.CheckBox();
             this.tabPageHardware = new System.Windows.Forms.TabPage();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.lblPaperSteps = new System.Windows.Forms.Label();
-            this.lblPaperTime = new System.Windows.Forms.Label();
-            this.txtPaperStep = new System.Windows.Forms.TextBox();
+            this.lblDCTime = new System.Windows.Forms.Label();
+            this.lblSteps = new System.Windows.Forms.Label();
+            this.txtPaperTime = new System.Windows.Forms.TextBox();
             this.rbDC = new System.Windows.Forms.RadioButton();
             this.rbStepper = new System.Windows.Forms.RadioButton();
-            this.txtPaper = new System.Windows.Forms.TextBox();
+            this.txtSteps = new System.Windows.Forms.TextBox();
             this.cmbName = new System.Windows.Forms.ComboBox();
             this.label22 = new System.Windows.Forms.Label();
             this.label20 = new System.Windows.Forms.Label();
@@ -77,6 +77,8 @@
             this.cmbPorts = new System.Windows.Forms.ComboBox();
             this.txtBaud = new System.Windows.Forms.TextBox();
             this.tabActiveEvents = new System.Windows.Forms.TabPage();
+            this.label35 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
             this.label21 = new System.Windows.Forms.Label();
             this.btnDown = new System.Windows.Forms.Button();
             this.btnUp = new System.Windows.Forms.Button();
@@ -85,6 +87,7 @@
             this.lstbActiveEvents = new System.Windows.Forms.ListBox();
             this.lstbAllEvents = new System.Windows.Forms.ListBox();
             this.tabEvents = new System.Windows.Forms.TabPage();
+            this.label36 = new System.Windows.Forms.Label();
             this.grpEvent = new System.Windows.Forms.GroupBox();
             this.btnCancelEventSave = new System.Windows.Forms.Button();
             this.label34 = new System.Windows.Forms.Label();
@@ -147,9 +150,10 @@
             this.txtNorthX = new System.Windows.Forms.TextBox();
             this.picTarget = new System.Windows.Forms.PictureBox();
             this.helpProvider = new System.Windows.Forms.HelpProvider();
-            this.label6 = new System.Windows.Forms.Label();
-            this.label35 = new System.Windows.Forms.Label();
-            this.label36 = new System.Windows.Forms.Label();
+            this.lblStepTime = new System.Windows.Forms.Label();
+            this.txtStepTime = new System.Windows.Forms.TextBox();
+            this.label37 = new System.Windows.Forms.Label();
+            this.txtZOffset = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPageGeneral.SuspendLayout();
@@ -518,51 +522,54 @@
             // 
             // groupBox2
             // 
-            this.groupBox2.Controls.Add(this.lblPaperSteps);
-            this.groupBox2.Controls.Add(this.lblPaperTime);
-            this.groupBox2.Controls.Add(this.txtPaperStep);
+            this.groupBox2.Controls.Add(this.lblStepTime);
+            this.groupBox2.Controls.Add(this.txtStepTime);
+            this.groupBox2.Controls.Add(this.lblDCTime);
+            this.groupBox2.Controls.Add(this.lblSteps);
+            this.groupBox2.Controls.Add(this.txtPaperTime);
             this.groupBox2.Controls.Add(this.rbDC);
             this.groupBox2.Controls.Add(this.rbStepper);
-            this.groupBox2.Controls.Add(this.txtPaper);
+            this.groupBox2.Controls.Add(this.txtSteps);
             this.groupBox2.Location = new System.Drawing.Point(16, 116);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(283, 73);
+            this.groupBox2.Size = new System.Drawing.Size(283, 98);
             this.groupBox2.TabIndex = 23;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Motor";
             // 
-            // lblPaperSteps
+            // lblDCTime
             // 
-            this.lblPaperSteps.AutoSize = true;
-            this.lblPaperSteps.Location = new System.Drawing.Point(138, 21);
-            this.lblPaperSteps.Name = "lblPaperSteps";
-            this.lblPaperSteps.Size = new System.Drawing.Size(65, 13);
-            this.lblPaperSteps.TabIndex = 19;
-            this.lblPaperSteps.Text = "Paper Steps";
+            this.lblDCTime.AutoSize = true;
+            this.lblDCTime.Location = new System.Drawing.Point(109, 21);
+            this.lblDCTime.Name = "lblDCTime";
+            this.lblDCTime.Size = new System.Drawing.Size(52, 13);
+            this.lblDCTime.TabIndex = 19;
+            this.lblDCTime.Text = "Time (ms)";
             // 
-            // lblPaperTime
+            // lblSteps
             // 
-            this.lblPaperTime.AutoSize = true;
-            this.lblPaperTime.Location = new System.Drawing.Point(138, 47);
-            this.lblPaperTime.Name = "lblPaperTime";
-            this.lblPaperTime.Size = new System.Drawing.Size(61, 13);
-            this.lblPaperTime.TabIndex = 18;
-            this.lblPaperTime.Text = "Paper Time";
+            this.lblSteps.AutoSize = true;
+            this.lblSteps.Location = new System.Drawing.Point(109, 47);
+            this.lblSteps.Name = "lblSteps";
+            this.lblSteps.Size = new System.Drawing.Size(34, 13);
+            this.lblSteps.TabIndex = 18;
+            this.lblSteps.Text = "Steps";
             // 
-            // txtPaperStep
+            // txtPaperTime
             // 
-            this.helpProvider.SetHelpString(this.txtPaperStep, "Number of step to run the stepper motor that scrolls the paper. ");
-            this.txtPaperStep.Location = new System.Drawing.Point(209, 18);
-            this.txtPaperStep.Name = "txtPaperStep";
-            this.helpProvider.SetShowHelp(this.txtPaperStep, true);
-            this.txtPaperStep.Size = new System.Drawing.Size(68, 20);
-            this.txtPaperStep.TabIndex = 17;
-            this.txtPaperStep.Text = "0";
+            this.helpProvider.SetHelpString(this.txtPaperTime, "Number of milliseconds to run the DC motor that scrolls the paper.   A larger tim" +
+        "e means more paper is used for each shot");
+            this.txtPaperTime.Location = new System.Drawing.Point(209, 18);
+            this.txtPaperTime.Name = "txtPaperTime";
+            this.helpProvider.SetShowHelp(this.txtPaperTime, true);
+            this.txtPaperTime.Size = new System.Drawing.Size(68, 20);
+            this.txtPaperTime.TabIndex = 17;
+            this.txtPaperTime.Text = "0";
             // 
             // rbDC
             // 
             this.rbDC.AutoSize = true;
-            this.rbDC.Location = new System.Drawing.Point(6, 45);
+            this.rbDC.Location = new System.Drawing.Point(6, 19);
             this.rbDC.Name = "rbDC";
             this.rbDC.Size = new System.Drawing.Size(90, 17);
             this.rbDC.TabIndex = 1;
@@ -574,7 +581,7 @@
             // rbStepper
             // 
             this.rbStepper.AutoSize = true;
-            this.rbStepper.Location = new System.Drawing.Point(6, 19);
+            this.rbStepper.Location = new System.Drawing.Point(6, 45);
             this.rbStepper.Name = "rbStepper";
             this.rbStepper.Size = new System.Drawing.Size(62, 17);
             this.rbStepper.TabIndex = 0;
@@ -583,16 +590,15 @@
             this.rbStepper.UseVisualStyleBackColor = true;
             this.rbStepper.CheckedChanged += new System.EventHandler(this.rbStepper_CheckedChanged);
             // 
-            // txtPaper
+            // txtSteps
             // 
-            this.helpProvider.SetHelpString(this.txtPaper, "Time in miliseconds to run motor that scrolls the paper. A larger time means more" +
-        " paper is used for each shot");
-            this.txtPaper.Location = new System.Drawing.Point(209, 44);
-            this.txtPaper.Name = "txtPaper";
-            this.helpProvider.SetShowHelp(this.txtPaper, true);
-            this.txtPaper.Size = new System.Drawing.Size(68, 20);
-            this.txtPaper.TabIndex = 16;
-            this.txtPaper.Text = "0";
+            this.helpProvider.SetHelpString(this.txtSteps, "Duration in milliseconds of the stepper motor pulse.");
+            this.txtSteps.Location = new System.Drawing.Point(209, 44);
+            this.txtSteps.Name = "txtSteps";
+            this.helpProvider.SetShowHelp(this.txtSteps, true);
+            this.txtSteps.Size = new System.Drawing.Size(68, 20);
+            this.txtSteps.TabIndex = 16;
+            this.txtSteps.Text = "0";
             // 
             // cmbName
             // 
@@ -641,7 +647,7 @@
             // label20
             // 
             this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(13, 201);
+            this.label20.Location = new System.Drawing.Point(13, 224);
             this.label20.Name = "label20";
             this.label20.Size = new System.Drawing.Size(74, 13);
             this.label20.TabIndex = 20;
@@ -652,7 +658,7 @@
             this.trkLEDbright.BackColor = System.Drawing.SystemColors.Window;
             this.helpProvider.SetHelpString(this.trkLEDbright, "External LED brigtness control (percent)");
             this.trkLEDbright.LargeChange = 10;
-            this.trkLEDbright.Location = new System.Drawing.Point(109, 195);
+            this.trkLEDbright.Location = new System.Drawing.Point(109, 218);
             this.trkLEDbright.Maximum = 100;
             this.trkLEDbright.Name = "trkLEDbright";
             this.helpProvider.SetShowHelp(this.trkLEDbright, true);
@@ -669,9 +675,9 @@
             this.lblWarning.Name = "lblWarning";
             this.lblWarning.Size = new System.Drawing.Size(299, 52);
             this.lblWarning.TabIndex = 18;
-            this.lblWarning.Text = "WARNING! Modifying the parameters on the “Sensor” or “Hardware” page will not tak" +
-    "e effect immediately. These values will be applied to the target firmware only a" +
-    "fter the next Connect.";
+            this.lblWarning.Text = "WARNING! Modifying the parameters on the “Sensors” or “Hardware” page will not ta" +
+    "ke effect immediately. These values will be applied to the target firmware only " +
+    "after the next Connect.";
             // 
             // label19
             // 
@@ -731,6 +737,24 @@
             this.tabActiveEvents.TabIndex = 4;
             this.tabActiveEvents.Text = "Active Events";
             this.tabActiveEvents.UseVisualStyleBackColor = true;
+            // 
+            // label35
+            // 
+            this.label35.AutoSize = true;
+            this.label35.Location = new System.Drawing.Point(179, 2);
+            this.label35.Name = "label35";
+            this.label35.Size = new System.Drawing.Size(73, 13);
+            this.label35.TabIndex = 8;
+            this.label35.Text = "Active Events";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(4, 2);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(54, 13);
+            this.label6.TabIndex = 7;
+            this.label6.Text = "All Events";
             // 
             // label21
             // 
@@ -821,6 +845,15 @@
             this.tabEvents.TabIndex = 5;
             this.tabEvents.Text = "Events";
             this.tabEvents.UseVisualStyleBackColor = true;
+            // 
+            // label36
+            // 
+            this.label36.AutoSize = true;
+            this.label36.Location = new System.Drawing.Point(3, 2);
+            this.label36.Name = "label36";
+            this.label36.Size = new System.Drawing.Size(40, 13);
+            this.label36.TabIndex = 4;
+            this.label36.Text = "Events";
             // 
             // grpEvent
             // 
@@ -1385,6 +1418,8 @@
             // 
             // tabPageSensors
             // 
+            this.tabPageSensors.Controls.Add(this.txtZOffset);
+            this.tabPageSensors.Controls.Add(this.label37);
             this.tabPageSensors.Controls.Add(this.txtSensorDiameter);
             this.tabPageSensors.Controls.Add(this.label18);
             this.tabPageSensors.Controls.Add(this.txtSouthX);
@@ -1407,26 +1442,26 @@
             // 
             this.helpProvider.SetHelpString(this.txtSensorDiameter, "Distance between 2 oposing sensors. This parameter is dependant of target type (1" +
         "0m, 25m, 50m, etc).");
-            this.txtSensorDiameter.Location = new System.Drawing.Point(107, 9);
+            this.txtSensorDiameter.Location = new System.Drawing.Point(137, 9);
             this.txtSensorDiameter.Name = "txtSensorDiameter";
             this.helpProvider.SetShowHelp(this.txtSensorDiameter, true);
-            this.txtSensorDiameter.Size = new System.Drawing.Size(190, 20);
+            this.txtSensorDiameter.Size = new System.Drawing.Size(160, 20);
             this.txtSensorDiameter.TabIndex = 35;
             this.txtSensorDiameter.Text = "230";
             // 
             // label18
             // 
             this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(13, 13);
+            this.label18.Location = new System.Drawing.Point(13, 12);
             this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(83, 13);
+            this.label18.Size = new System.Drawing.Size(108, 13);
             this.label18.TabIndex = 36;
-            this.label18.Text = "Sensor diameter";
+            this.label18.Text = "Sensor diameter (mm)";
             // 
             // txtSouthX
             // 
             this.helpProvider.SetHelpString(this.txtSouthX, "Deviation from the ideal position on the X axis of the South sensor");
-            this.txtSouthX.Location = new System.Drawing.Point(297, 326);
+            this.txtSouthX.Location = new System.Drawing.Point(297, 351);
             this.txtSouthX.Name = "txtSouthX";
             this.helpProvider.SetShowHelp(this.txtSouthX, true);
             this.txtSouthX.Size = new System.Drawing.Size(29, 20);
@@ -1436,7 +1471,7 @@
             // txtSouthY
             // 
             this.helpProvider.SetHelpString(this.txtSouthY, "Deviation from the ideal position on the Y axis of the South sensor");
-            this.txtSouthY.Location = new System.Drawing.Point(225, 253);
+            this.txtSouthY.Location = new System.Drawing.Point(225, 278);
             this.txtSouthY.Name = "txtSouthY";
             this.helpProvider.SetShowHelp(this.txtSouthY, true);
             this.txtSouthY.Size = new System.Drawing.Size(29, 20);
@@ -1446,7 +1481,7 @@
             // txtWestX
             // 
             this.helpProvider.SetHelpString(this.txtWestX, "Deviation from the ideal position on the X axis of the West sensor");
-            this.txtWestX.Location = new System.Drawing.Point(82, 326);
+            this.txtWestX.Location = new System.Drawing.Point(82, 351);
             this.txtWestX.Name = "txtWestX";
             this.helpProvider.SetShowHelp(this.txtWestX, true);
             this.txtWestX.Size = new System.Drawing.Size(29, 20);
@@ -1456,7 +1491,7 @@
             // txtWestY
             // 
             this.helpProvider.SetHelpString(this.txtWestY, "Deviation from the ideal position on the Y axis of the West sensor");
-            this.txtWestY.Location = new System.Drawing.Point(14, 253);
+            this.txtWestY.Location = new System.Drawing.Point(14, 278);
             this.txtWestY.Name = "txtWestY";
             this.helpProvider.SetShowHelp(this.txtWestY, true);
             this.txtWestY.Size = new System.Drawing.Size(29, 20);
@@ -1466,7 +1501,7 @@
             // txtEastX
             // 
             this.helpProvider.SetHelpString(this.txtEastX, "Deviation from the ideal position on the X axis of the East sensor");
-            this.txtEastX.Location = new System.Drawing.Point(297, 108);
+            this.txtEastX.Location = new System.Drawing.Point(297, 133);
             this.txtEastX.Name = "txtEastX";
             this.helpProvider.SetShowHelp(this.txtEastX, true);
             this.txtEastX.Size = new System.Drawing.Size(29, 20);
@@ -1476,7 +1511,7 @@
             // txtEastY
             // 
             this.helpProvider.SetHelpString(this.txtEastY, "Deviation from the ideal position on the Y axis of the East sensor");
-            this.txtEastY.Location = new System.Drawing.Point(225, 42);
+            this.txtEastY.Location = new System.Drawing.Point(225, 67);
             this.txtEastY.Name = "txtEastY";
             this.helpProvider.SetShowHelp(this.txtEastY, true);
             this.txtEastY.Size = new System.Drawing.Size(29, 20);
@@ -1486,7 +1521,7 @@
             // txtNorthY
             // 
             this.helpProvider.SetHelpString(this.txtNorthY, "Deviation from the ideal position on the Y axis of the North sensor");
-            this.txtNorthY.Location = new System.Drawing.Point(14, 42);
+            this.txtNorthY.Location = new System.Drawing.Point(14, 67);
             this.txtNorthY.Name = "txtNorthY";
             this.helpProvider.SetShowHelp(this.txtNorthY, true);
             this.txtNorthY.Size = new System.Drawing.Size(29, 20);
@@ -1496,7 +1531,7 @@
             // txtNorthX
             // 
             this.helpProvider.SetHelpString(this.txtNorthX, "Deviation from the ideal position on the X axis of the North sensor");
-            this.txtNorthX.Location = new System.Drawing.Point(82, 108);
+            this.txtNorthX.Location = new System.Drawing.Point(82, 133);
             this.txtNorthX.Name = "txtNorthX";
             this.helpProvider.SetShowHelp(this.txtNorthX, true);
             this.txtNorthX.Size = new System.Drawing.Size(29, 20);
@@ -1507,39 +1542,51 @@
             // 
             this.picTarget.Image = ((System.Drawing.Image)(resources.GetObject("picTarget.Image")));
             this.picTarget.InitialImage = null;
-            this.picTarget.Location = new System.Drawing.Point(14, 63);
+            this.picTarget.Location = new System.Drawing.Point(14, 88);
             this.picTarget.Name = "picTarget";
             this.picTarget.Size = new System.Drawing.Size(283, 283);
             this.picTarget.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.picTarget.TabIndex = 12;
             this.picTarget.TabStop = false;
             // 
-            // label6
+            // lblStepTime
             // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(4, 2);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(54, 13);
-            this.label6.TabIndex = 7;
-            this.label6.Text = "All Events";
+            this.lblStepTime.AutoSize = true;
+            this.lblStepTime.Location = new System.Drawing.Point(109, 73);
+            this.lblStepTime.Name = "lblStepTime";
+            this.lblStepTime.Size = new System.Drawing.Size(94, 13);
+            this.lblStepTime.TabIndex = 21;
+            this.lblStepTime.Text = "Step Duration (ms)";
             // 
-            // label35
+            // txtStepTime
             // 
-            this.label35.AutoSize = true;
-            this.label35.Location = new System.Drawing.Point(179, 2);
-            this.label35.Name = "label35";
-            this.label35.Size = new System.Drawing.Size(73, 13);
-            this.label35.TabIndex = 8;
-            this.label35.Text = "Active Events";
+            this.helpProvider.SetHelpString(this.txtStepTime, "Number of steps the stepper motor advances the paper.   A larger time means more " +
+        "paper is used for each shot");
+            this.txtStepTime.Location = new System.Drawing.Point(209, 70);
+            this.txtStepTime.Name = "txtStepTime";
+            this.helpProvider.SetShowHelp(this.txtStepTime, true);
+            this.txtStepTime.Size = new System.Drawing.Size(68, 20);
+            this.txtStepTime.TabIndex = 20;
+            this.txtStepTime.Text = "0";
             // 
-            // label36
+            // label37
             // 
-            this.label36.AutoSize = true;
-            this.label36.Location = new System.Drawing.Point(3, 2);
-            this.label36.Name = "label36";
-            this.label36.Size = new System.Drawing.Size(40, 13);
-            this.label36.TabIndex = 4;
-            this.label36.Text = "Events";
+            this.label37.AutoSize = true;
+            this.label37.Location = new System.Drawing.Point(13, 38);
+            this.label37.Name = "label37";
+            this.label37.Size = new System.Drawing.Size(106, 13);
+            this.label37.TabIndex = 37;
+            this.label37.Text = "Sensor Z Offset (mm)";
+            // 
+            // txtZOffset
+            // 
+            this.helpProvider.SetHelpString(this.txtZOffset, "Distance in millimeters from paper to sensor plane");
+            this.txtZOffset.Location = new System.Drawing.Point(137, 35);
+            this.txtZOffset.Name = "txtZOffset";
+            this.helpProvider.SetShowHelp(this.txtZOffset, true);
+            this.txtZOffset.Size = new System.Drawing.Size(160, 20);
+            this.txtZOffset.TabIndex = 38;
+            this.txtZOffset.Text = "0";
             // 
             // frmSettings
             // 
@@ -1650,7 +1697,7 @@
         public System.Windows.Forms.TextBox txtSensorDiameter;
         private System.Windows.Forms.Label label18;
         private System.Windows.Forms.TabPage tabPageHardware;
-        public System.Windows.Forms.TextBox txtPaper;
+        public System.Windows.Forms.TextBox txtSteps;
         private System.Windows.Forms.Label label19;
         public System.Windows.Forms.TextBox txtCalibre;
         private System.Windows.Forms.Label lblWarning;
@@ -1661,11 +1708,11 @@
         public System.Windows.Forms.ComboBox cmbName;
         private System.Windows.Forms.Label label22;
         private System.Windows.Forms.GroupBox groupBox2;
-        public System.Windows.Forms.TextBox txtPaperStep;
+        public System.Windows.Forms.TextBox txtPaperTime;
         private System.Windows.Forms.RadioButton rbDC;
         private System.Windows.Forms.RadioButton rbStepper;
-        private System.Windows.Forms.Label lblPaperTime;
-        private System.Windows.Forms.Label lblPaperSteps;
+        private System.Windows.Forms.Label lblSteps;
+        private System.Windows.Forms.Label lblDCTime;
         private System.Windows.Forms.TabPage tabActiveEvents;
         private System.Windows.Forms.TabPage tabEvents;
         private System.Windows.Forms.Button btnRightToLeft;
@@ -1709,5 +1756,9 @@
         private System.Windows.Forms.Label label35;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label36;
+        private System.Windows.Forms.Label lblStepTime;
+        public System.Windows.Forms.TextBox txtStepTime;
+        public System.Windows.Forms.TextBox txtZOffset;
+        private System.Windows.Forms.Label label37;
     }
 }

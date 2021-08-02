@@ -141,7 +141,6 @@
     <Compile Include="frmCalibration.Designer.cs">
       <DependentUpon>frmCalibration.cs</DependentUpon>
     </Compile>
-    <Compile Include="ISSF.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Session.cs" />
