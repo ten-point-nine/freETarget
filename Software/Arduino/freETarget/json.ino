@@ -39,7 +39,7 @@ int     json_step_count;            // Number of steps ouput to motor
 int     json_step_time;             // Duration of each step
 int     json_multifunction;         // Multifunction switch operation
 int     json_z_offset;              // Distance between paper and sensor plane in 0.1mm
-
+int     json_paper_eco;             // Do not advance paper if outside of the black
 int     temp;                       // Temporary variable
 
 #define JSON_DEBUG false                    // TRUE to echo DEBUG messages
@@ -64,6 +64,7 @@ const json_message JSON[] = {
   {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT16,  &set_LED_PWM_now, NONVOL_LED_PWM,         50 },    // Set the LED brightness
   {"\"MFS\":",            &json_multifunction,               0,                IS_INT16,  0,                NONVOL_MFS,              0 },    // Multifunction switch action
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT16,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
+  {"\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT16,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
   {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT16,  0,                NONVOL_PAPER_TIME,       0 },    // Set the paper advance time
   {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT16,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
   {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT16,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
@@ -75,7 +76,7 @@ const json_message JSON[] = {
   {"\"TRACE\":",          0,                                 0,                IS_INT16,  &set_trace,                      0,        0 },    // Enter / exit diagnostic trace
   {"\"TRGT_1_RINGx10\":", &json_1_ring_x10,                  0,                IS_INT16,  0,                NONVOL_1_RINGx10,     1555 },    // Enter the 1 ring diamater (mm x 10)
   {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_version,                   0,        0 },    // Return the version string
-  {"\"Z_OFFSET\":",       &json_z_offset    ,                0,                IS_INT16,  0,                NONVOL_Z_OFFSET,        10 },    // Distance from paper to sensor plane (mm)
+  {"\"Z_OFFSET\":",       &json_z_offset    ,                0,                IS_INT16,  0,                NONVOL_Z_OFFSET,         0 },    // Distance from paper to sensor plane (mm)
   {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT16,  0,                NONVOL_NORTH_X,          0 },    //
   {"\"NORTH_Y\":",        &json_north_y,                     0,                IS_INT16,  0,                NONVOL_NORTH_Y,          0 },    //
   {"\"EAST_X\":",         &json_east_x,                      0,                IS_INT16,  0,                NONVOL_EAST_X,           0 },    //
@@ -364,15 +365,18 @@ void show_echo(int v)
  * Finish up with the special cases
  */
   EEPROM.get(NONVOL_INIT, i);
+  json_sensor_dia = 1000.0;
   Serial.print("\r\n");
-  Serial.print("\"INIT\":");        Serial.print(i);                      Serial.print(", \r\n");
-  Serial.print("\"IS_TRACE\":");    Serial.print(is_trace);               Serial.print(", \r\n");
-  Serial.print("\"TEMPERATURE\":"); Serial.print(temperature_C());        Serial.print(", \r\n");
-  Serial.print("\"V_REF\":");       Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print(", \r\n");
-  Serial.print("\"DIP\": 0x");      Serial.print(0x0F & read_DIP(), HEX); Serial.print("\r\n");
-  Serial.print("\"WiFi\":");        Serial.print(esp01_is_present());     Serial.print("\r\n");    
-  Serial.print("\"VERSION\":");     Serial.print(SOFTWARE_VERSION);       Serial.print(", \r\n");
-  Serial.print("\"BRD_REV\":");     Serial.print(revision());
+  Serial.print("\"INIT\":");        Serial.print(i);                                      Serial.print(", \r\n");   // 0xABCD (43981) when memory is initialized
+  Serial.print("\"IS_TRACE\":");    Serial.print(is_trace);                               Serial.print(", \r\n");   // TRUE to if trace is enabled
+  Serial.print("\"TEMPERATURE\":"); Serial.print(temperature_C());                        Serial.print(", \r\n");   // Temperature in degrees C
+  Serial.print("\"SPEED_SOUND\":"); Serial.print(speed_of_sound(temperature_C(), RH_50)); Serial.print(",\r\n");    // Speed of sound
+  Serial.print("\"V_REF\":");       Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));      Serial.print(",\r\n");    // Trip point reference
+  Serial.print("\"SHOT_COUNT\":");  Serial.print((int)(SHOT_TIME * OSCILLATOR_MHZ));      Serial.print(",\r\n");    // Maximum number of clock cycles to record shot (target dependent)
+  Serial.print("\"DIP\": 0x");      Serial.print(0x0F & read_DIP(), HEX);                 Serial.print("\r\n");     // DIP switch status
+  Serial.print("\"WiFi\":");        Serial.print(esp01_is_present());                     Serial.print("\r\n");     // TRUE if WiFi is available
+  Serial.print("\"VERSION\":");     Serial.print(SOFTWARE_VERSION);                       Serial.print(", \r\n");   // Current software version
+  Serial.print("\"BRD_REV\":");     Serial.print(revision());                                                       // Current board revision
   Serial.print("\r\n}\r\n");
   
 /*
@@ -420,7 +424,7 @@ static void show_names(int v)
  * 
  * brief: Execute one iteration of the self test
  * 
- * return: None
+ * return: None67!
  * 
  *----------------------------------------------------*/
 

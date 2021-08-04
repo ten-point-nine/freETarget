@@ -13,12 +13,13 @@
 #include "esp-01.h"
 #include "json.h"
 
-#define SOFTWARE_VERSION "\"3.03.1 July 26, 2021\""
+#define SOFTWARE_VERSION "\"3.03.2 August 2, 2021\""
 #define REV_100    100
 #define REV_210    210
 #define REV_220    220
 #define REV_290    290
 #define REV_300    300
+#define REV_310    310
 
 #define INIT_DONE       0xabcd        // Initialization complete signature
 
@@ -60,8 +61,6 @@ char GET (void)
 #define CLOCK_PERIOD  (1.0/OSCILLATOR_MHZ)            // Seconds per bit
 #define ONE_SECOND      1000                          // 1000 ms delay
 #define SHOT_TIME     ((int)(json_sensor_dia / 0.33)) // Worst case delay Sensor diameter / speed of sound)
- 
-
 
 #define HI(x) (((x) >> 8 ) & 0x00ff)
 #define LO(x) ((x) & 0x00ff)

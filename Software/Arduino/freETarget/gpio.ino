@@ -480,17 +480,13 @@ void read_timers(void)
 /*
  * Set up the count or times based on whether a DC or stepper motor is used
  */
-  s_count = 1;
-  if( json_step_count != 0 )                      // Force a zero count to be
+  s_count = 1;                                    // Default to one cycle (DC Motor)
+  if( json_step_count != 0 )                      // Non-zero means it's a stepper motor
   {
-    s_count = json_step_count;                    // one
+    s_count = json_step_count;                    // the one we use
   }
 
-  s_time = json_paper_time;
-  if ( json_step_time != 0 )
-  {
-    s_time = json_step_time;
-  }
+  s_time = json_paper_time;                       // On time.
 
 /*
  * Drive the motor on and off for the number of cycles

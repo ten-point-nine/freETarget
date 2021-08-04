@@ -35,9 +35,10 @@ void gen_position(int  v);      // Reset the position values
 #define NONVOL_MFS            (NONVOL_STEP_COUNT  + sizeof(int) + 2)       // Multifunction switch operation 
 #define NONVOL_STEP_TIME      (NONVOL_MFS         + sizeof(int) + 2)       // Stepper motor pulse duration
 #define NONVOL_Z_OFFSET       (NONVOL_STEP_TIME   + sizeof(int) + 2)       // Distance from sensor plane to paper plane
-
+#define NONVOL_PAPER_ECO      (NONVOL_Z_OFFSET    + sizeof(int) + 2)       // Advance witness paper if the shot is less than paper_eco
 #define NEXT_NONVOL           (NONVOL_STEP_TIME   + sizeof(int) + 2) - NONVOL_INIT)
-#if ( ((38-13) * 4) > 4096 )
+
+#if ( ((39-13) * 4) > 4096 )
 #error NEXT_NONVOL OUT OF NONVOL
 #endif
 

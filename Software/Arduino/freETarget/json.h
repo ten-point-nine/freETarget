@@ -49,5 +49,6 @@ extern int    json_step_count;    // Number of times paper motor is stepped
 extern int    json_step_time;     // Duration of step pulse
 extern int    json_multifunction; // Multifunction switch operation
 extern int    json_z_offset;      // Distance between paper and sensor plane (1mm)
+extern int    json_paper_eco;     // Do not advance witness paper if shot is greater than json_paper_eco
 
 #endif _JSON_H_

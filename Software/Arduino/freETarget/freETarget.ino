@@ -312,7 +312,8 @@ void loop()
     {
       json_paper_time = 0;                    // Check for an infinit loop
     }
-    if ( json_paper_time != 0 )
+    if ( (json_paper_time != 0 )              // The witness paper has been enabled
+       && ( sqrt(sq(history.x) + sq(history.y)) < json_paper_eco ) ) // And inside the black
     {
       drive_paper();
     }

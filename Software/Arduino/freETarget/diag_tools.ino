@@ -101,15 +101,15 @@ void self_test(uint16_t test)
  * Test 1, Display GPIO inputs
  */
     case T_DIGITAL: 
-      Serial.print("\r\nTime:");                      Serial.print(micros());
+      Serial.print("\r\nTime:");                      Serial.print(micros()/1000000); Serial.print("."); Serial.print(micros()%1000000); Serial.print("s");
       Serial.print("\r\nBD Rev:");                    Serial.print(revision());       
       Serial.print("\r\nDIP: 0x");                    Serial.print(read_DIP(), HEX); 
       digitalWrite(STOP_N, 0);
       digitalWrite(STOP_N, 1);                        // Reset the fun flip flop
       Serial.print("\r\nRUN FlipFlop: 0x");           Serial.print(is_running(), HEX);   
       Serial.print("\r\nTemperature: ");              Serial.print(temperature_C());  Serial.print("'C ");
-      Serial.print(speed_of_sound(temperature_C()));  Serial.print("mm/us");
-      Serial.print("\r\nV_REF: ");                    Serial.print(volts); 
+      Serial.print(speed_of_sound(temperature_C(), RH_50));  Serial.print("mm/us");
+      Serial.print("\r\nV_REF: ");                    Serial.print(volts); Serial.print(" Volts");
       Serial.print("\r\n");
       POST_LEDs();
       json_test = T_HELP;               // and stop the test
