@@ -22,6 +22,14 @@ namespace freETarget
         frmMainWindow mainWindow;
 
         private List<Control> eventControls = new List<Control>();
+
+        private List<string> targetNames = new List<string>() { "TARGET",                                                     //  0
+                        "1",      "2",        "3",     "4",      "5",       "6",       "7",     "8",     "9",      "10",    //  1
+                        "DOC",    "DOPEY",  "HAPPY",   "GRUMPY", "BASHFUL", "SNEEZEY", "SLEEPY",                            // 11
+                        "RUDOLF", "DONNER", "BLITXEM", "DASHER", "PRANCER", "VIXEN",   "COMET", "CUPID", "DUNDER",          // 18  
+                        "ODIN",   "WODEN",   "THOR",   "BALDAR"                                                            // 26
+                        };
+
         public frmSettings(frmMainWindow mainWin)
         {
             InitializeComponent();
@@ -118,7 +126,11 @@ namespace freETarget
 
             loadEvents();
 
+            loadTargetNames();
+
             loadSettings();
+
+
 
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             lblVersion.Text = "freETarget Project  -  v"+ assembly.GetName().Version.Major + "." + assembly.GetName().Version.Minor + "." + assembly.GetName().Version.Build + "   (c) 2020-2021";
@@ -206,6 +218,12 @@ namespace freETarget
 
             cmbName.SelectedIndex = Properties.Settings.Default.targetName;
 
+        }
+
+        private void loadTargetNames() {
+            foreach(string s in targetNames) {
+                cmbName.Items.Add(s);
+            }
         }
 
         private void cmbColor_DrawItem(object sender, DrawItemEventArgs e)

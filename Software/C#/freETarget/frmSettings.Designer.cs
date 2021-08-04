@@ -61,6 +61,8 @@
             this.chkLog = new System.Windows.Forms.CheckBox();
             this.tabPageHardware = new System.Windows.Forms.TabPage();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.lblStepTime = new System.Windows.Forms.Label();
+            this.txtStepTime = new System.Windows.Forms.TextBox();
             this.lblDCTime = new System.Windows.Forms.Label();
             this.lblSteps = new System.Windows.Forms.Label();
             this.txtPaperTime = new System.Windows.Forms.TextBox();
@@ -138,6 +140,8 @@
             this.label9 = new System.Windows.Forms.Label();
             this.cmbOldBack = new System.Windows.Forms.ComboBox();
             this.tabPageSensors = new System.Windows.Forms.TabPage();
+            this.txtZOffset = new System.Windows.Forms.TextBox();
+            this.label37 = new System.Windows.Forms.Label();
             this.txtSensorDiameter = new System.Windows.Forms.TextBox();
             this.label18 = new System.Windows.Forms.Label();
             this.txtSouthX = new System.Windows.Forms.TextBox();
@@ -150,10 +154,6 @@
             this.txtNorthX = new System.Windows.Forms.TextBox();
             this.picTarget = new System.Windows.Forms.PictureBox();
             this.helpProvider = new System.Windows.Forms.HelpProvider();
-            this.lblStepTime = new System.Windows.Forms.Label();
-            this.txtStepTime = new System.Windows.Forms.TextBox();
-            this.label37 = new System.Windows.Forms.Label();
-            this.txtZOffset = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPageGeneral.SuspendLayout();
@@ -537,6 +537,26 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Motor";
             // 
+            // lblStepTime
+            // 
+            this.lblStepTime.AutoSize = true;
+            this.lblStepTime.Location = new System.Drawing.Point(109, 73);
+            this.lblStepTime.Name = "lblStepTime";
+            this.lblStepTime.Size = new System.Drawing.Size(94, 13);
+            this.lblStepTime.TabIndex = 21;
+            this.lblStepTime.Text = "Step Duration (ms)";
+            // 
+            // txtStepTime
+            // 
+            this.helpProvider.SetHelpString(this.txtStepTime, "Number of steps the stepper motor advances the paper.   A larger time means more " +
+        "paper is used for each shot");
+            this.txtStepTime.Location = new System.Drawing.Point(209, 70);
+            this.txtStepTime.Name = "txtStepTime";
+            this.helpProvider.SetShowHelp(this.txtStepTime, true);
+            this.txtStepTime.Size = new System.Drawing.Size(68, 20);
+            this.txtStepTime.TabIndex = 20;
+            this.txtStepTime.Text = "0";
+            // 
             // lblDCTime
             // 
             this.lblDCTime.AutoSize = true;
@@ -605,30 +625,6 @@
             this.cmbName.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbName.FormattingEnabled = true;
             this.helpProvider.SetHelpString(this.cmbName, "Target name; to be easily identified in the logs from different targets");
-            this.cmbName.Items.AddRange(new object[] {
-            "ANON",
-            "BOSS",
-            "MINION",
-            "DOC",
-            "DOPEY",
-            "HAPPY",
-            "GRUMPY",
-            "BASHFUL",
-            "SNEEZEY",
-            "SLEEPY",
-            "RUDOLF",
-            "DONNER",
-            "BLITXEM",
-            "DASHER",
-            "PRANCER",
-            "VIXEN",
-            "COMET",
-            "CUPID",
-            "DUNDER",
-            "ODIN",
-            "WODEN",
-            "THOR",
-            "BALDAR"});
             this.cmbName.Location = new System.Drawing.Point(109, 36);
             this.cmbName.Name = "cmbName";
             this.helpProvider.SetShowHelp(this.cmbName, true);
@@ -1438,6 +1434,25 @@
             this.tabPageSensors.Text = "Sensors";
             this.tabPageSensors.UseVisualStyleBackColor = true;
             // 
+            // txtZOffset
+            // 
+            this.helpProvider.SetHelpString(this.txtZOffset, "Distance in millimeters from paper to sensor plane");
+            this.txtZOffset.Location = new System.Drawing.Point(137, 35);
+            this.txtZOffset.Name = "txtZOffset";
+            this.helpProvider.SetShowHelp(this.txtZOffset, true);
+            this.txtZOffset.Size = new System.Drawing.Size(160, 20);
+            this.txtZOffset.TabIndex = 38;
+            this.txtZOffset.Text = "0";
+            // 
+            // label37
+            // 
+            this.label37.AutoSize = true;
+            this.label37.Location = new System.Drawing.Point(13, 38);
+            this.label37.Name = "label37";
+            this.label37.Size = new System.Drawing.Size(106, 13);
+            this.label37.TabIndex = 37;
+            this.label37.Text = "Sensor Z Offset (mm)";
+            // 
             // txtSensorDiameter
             // 
             this.helpProvider.SetHelpString(this.txtSensorDiameter, "Distance between 2 oposing sensors. This parameter is dependant of target type (1" +
@@ -1548,45 +1563,6 @@
             this.picTarget.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.picTarget.TabIndex = 12;
             this.picTarget.TabStop = false;
-            // 
-            // lblStepTime
-            // 
-            this.lblStepTime.AutoSize = true;
-            this.lblStepTime.Location = new System.Drawing.Point(109, 73);
-            this.lblStepTime.Name = "lblStepTime";
-            this.lblStepTime.Size = new System.Drawing.Size(94, 13);
-            this.lblStepTime.TabIndex = 21;
-            this.lblStepTime.Text = "Step Duration (ms)";
-            // 
-            // txtStepTime
-            // 
-            this.helpProvider.SetHelpString(this.txtStepTime, "Number of steps the stepper motor advances the paper.   A larger time means more " +
-        "paper is used for each shot");
-            this.txtStepTime.Location = new System.Drawing.Point(209, 70);
-            this.txtStepTime.Name = "txtStepTime";
-            this.helpProvider.SetShowHelp(this.txtStepTime, true);
-            this.txtStepTime.Size = new System.Drawing.Size(68, 20);
-            this.txtStepTime.TabIndex = 20;
-            this.txtStepTime.Text = "0";
-            // 
-            // label37
-            // 
-            this.label37.AutoSize = true;
-            this.label37.Location = new System.Drawing.Point(13, 38);
-            this.label37.Name = "label37";
-            this.label37.Size = new System.Drawing.Size(106, 13);
-            this.label37.TabIndex = 37;
-            this.label37.Text = "Sensor Z Offset (mm)";
-            // 
-            // txtZOffset
-            // 
-            this.helpProvider.SetHelpString(this.txtZOffset, "Distance in millimeters from paper to sensor plane");
-            this.txtZOffset.Location = new System.Drawing.Point(137, 35);
-            this.txtZOffset.Name = "txtZOffset";
-            this.helpProvider.SetShowHelp(this.txtZOffset, true);
-            this.txtZOffset.Size = new System.Drawing.Size(160, 20);
-            this.txtZOffset.TabIndex = 38;
-            this.txtZOffset.Text = "0";
             // 
             // frmSettings
             // 
