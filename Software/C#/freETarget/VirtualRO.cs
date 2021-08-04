@@ -35,9 +35,13 @@ namespace freETarget {
         private const int betweenSeries = 15;
         private const int betweenShots = 7;
 
-        public VirtualRO() {
+        Event ev;
+
+        public VirtualRO(Event ev) {
             synth = new SpeechSynthesizer();
             synth.SetOutputToDefaultAudioDevice();
+
+            this.ev = ev;
         }
 
         public TimeSpan getTime(out string command) {
@@ -56,7 +60,7 @@ namespace freETarget {
             } else if (ts <= TimeSpan.Zero && firstSeriesLoadCommand == true && firstSeriesStartCommand == false) {
                 string speach = "START!";
                 speakCommand(speach);
-                nextCommand = DateTime.Now + TimeSpan.FromSeconds(ISSF.finalSeriesTime);
+                nextCommand = DateTime.Now + TimeSpan.FromSeconds(ev.Final_SeriesSeconds);
                 command = "Start";
                 firstSeriesStartCommand = true;
             } else if (ts <= TimeSpan.Zero && firstSeriesStartCommand == true && firstSeriesStopCommand == false) {
@@ -79,7 +83,7 @@ namespace freETarget {
             } else if (ts <= TimeSpan.Zero && secondSeriesLoadCommand == true && secondSeriesStartCommand == false) {
                 string speach = "START!";
                 speakCommand(speach);
-                nextCommand = DateTime.Now + TimeSpan.FromSeconds(ISSF.finalSeriesTime);
+                nextCommand = DateTime.Now + TimeSpan.FromSeconds(ev.Final_SeriesSeconds);
                 command = "Start";
                 secondSeriesStartCommand = true;
             } else if (ts <= TimeSpan.Zero && secondSeriesStartCommand == true && secondSeriesStopCommand == false) {
@@ -102,7 +106,7 @@ namespace freETarget {
             } else if (ts <= TimeSpan.Zero && singleShotLoadCommand == true && singleShotStartCommand == false) {
                 string speach = "START!";
                 speakCommand(speach);
-                nextCommand = DateTime.Now + TimeSpan.FromSeconds(ISSF.singleShotTime);
+                nextCommand = DateTime.Now + TimeSpan.FromSeconds(ev.Final_SingleShotSeconds);
                 command = "Start";
                 singleShotStartCommand = true;
             } else if (ts <= TimeSpan.Zero && singleShotStartCommand == true && singleShotStopCommand == false) {
@@ -117,7 +121,7 @@ namespace freETarget {
 
                 command = "Stop";
                 
-                if (shotsCount < ISSF.finalNoOfShots) {
+                if (shotsCount < ev.NumberOfShots) {
                     singleShot = false;
                     singleShotStartCommand = false;
                     singleShotLoadCommand = false;

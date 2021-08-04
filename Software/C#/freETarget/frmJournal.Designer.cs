@@ -579,8 +579,6 @@
         private System.Windows.Forms.TabPage tabRiflePractice;
         private System.Windows.Forms.TabPage tabRifleMatch;
         private System.Windows.Forms.TabPage tabRifleFinal;
-        private System.Windows.Forms.TabPage tabRifle50MMatch;
-        private System.Windows.Forms.TabPage tabRifle50MFinal;
         private System.Windows.Forms.Button btnClose;
         private System.Windows.Forms.TabControl tabDetails;
         private System.Windows.Forms.TabPage tabSessionList;

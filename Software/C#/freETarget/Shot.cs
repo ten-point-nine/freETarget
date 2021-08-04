@@ -87,25 +87,23 @@ namespace freETarget {
                 return;
             }
 
-            //using liner interpolation with the "official" values found here: http://targettalk.org/viewtopic.php?p=100591#p100591
-
-
-            double coef = 0d;
-
-            coef = 9.9d / (((float)target.getOutterRing() / 2d) + ((float)target.getProjectileCaliber() / 2d));
-
             float newRadius = recomputeRadiusFromXY(); //use the calculated radius from x,y instead of the received one. x and y are adjusted with calibration
             this.radius = (decimal)newRadius;
 
-            double score = 10.9999d - (coef * newRadius); //10.9999 is needed to get the incline just right. center should be almost 11
-          
+            //use linear interpolation from radii (ring + caliber)
+            double score2 = linearInterpolation((float)target.get9Radius(), 9f, (float)target.getOutterRadius(), 1f, (float)this.radius);
 
-            this.decimalScore = (decimal)(Math.Truncate(score * 10)) / 10m;
+
+            this.decimalScore = (decimal)(Math.Truncate(score2 * 10)) / 10m;
             this.decimalScore += 0.0m; //add a decimal if the result is an integer
 
 
             if (this.decimalScore < 1) { //shot outside the target
                 this.decimalScore = 0;
+            }
+
+            if (this.decimalScore > 10.9m) {
+                this.decimalScore = 10.9m;
             }
 
             this.score = (int)Math.Floor(this.decimalScore);
@@ -115,6 +113,11 @@ namespace freETarget {
             } else {
                 this.innerTen = false;
             }
+        }
+
+        private double linearInterpolation(float x1, float y1, float x2, float y2, float x) {
+            double y = ((x2 - x) * y1 + (x - x1) * y2) / (x2 - x1);
+            return y;
         }
 
         private float recomputeRadiusFromXY() {

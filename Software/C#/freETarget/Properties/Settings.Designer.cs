@@ -73,7 +73,7 @@ namespace freETarget.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Air Pistol Practice")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Pistol Practice")]
         public string defaultTarget {
             get {
                 return ((string)(this["defaultTarget"]));
@@ -128,18 +128,6 @@ namespace freETarget.Properties {
             }
             set {
                 this["calibrationY"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("60")]
-        public int MatchShots {
-            get {
-                return ((int)(this["MatchShots"]));
-            }
-            set {
-                this["MatchShots"] = value;
             }
         }
         
@@ -445,18 +433,6 @@ namespace freETarget.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("10")]
-        public int Paper {
-            get {
-                return ((int)(this["Paper"]));
-            }
-            set {
-                this["Paper"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool ignoreMiss {
             get {
@@ -494,12 +470,48 @@ namespace freETarget.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int PaperStep {
+        public int PaperTime {
             get {
-                return ((int)(this["PaperStep"]));
+                return ((int)(this["PaperTime"]));
             }
             set {
-                this["PaperStep"] = value;
+                this["PaperTime"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int StepCount {
+            get {
+                return ((int)(this["StepCount"]));
+            }
+            set {
+                this["StepCount"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int StepTime {
+            get {
+                return ((int)(this["StepTime"]));
+            }
+            set {
+                this["StepTime"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int ZOffset {
+            get {
+                return ((int)(this["ZOffset"]));
+            }
+            set {
+                this["ZOffset"] = value;
             }
         }
     }

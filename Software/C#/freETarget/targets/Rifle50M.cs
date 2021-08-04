@@ -13,12 +13,12 @@ using System.Threading.Tasks;
  * 50 meter 22 rifle target.  ISSF Sectoin 6.3.4.2
  */
 namespace freETarget.targets {
-    class rifle50M : aTarget {
+    class Rifle50m : aTarget {
 
-        private const decimal pelletCaliber = 5.6m; //.22LR
+        private decimal pelletCaliber;// = 5.6m; //.22LR
         private const decimal targetSize = 250; //mm
         private const int rifleBlackRings = 4;
-        private const bool solidInnerTenRing = false;         // The inner ring is a circle
+        private const bool solidInnerTenRing = false;     
 
         private const int trkZoomMin = 0;
         private const int trkZoomMax = 5;
@@ -39,10 +39,15 @@ namespace freETarget.targets {
 
         private const decimal blackCircle = 112.4m; //mm
 
-        private const decimal innerTenRadiusRifle = innerRing / 2m + pelletCaliber / 2m; 
+        private decimal innerTenRadiusRifle;// = innerRing / 2m + pelletCaliber / 2m; 
 
         private static readonly decimal[] ringsRifle = new decimal[] { outterRing, ring2, ring3, ring4, ring5, ring6, ring7, ring8, ring9, ring10, innerRing };
 
+
+        public Rifle50m(decimal caliber) : base(caliber) {
+            this.pelletCaliber = caliber;
+            innerTenRadiusRifle = innerRing / 2m + pelletCaliber / 2m; //4.75m;
+        }
 
         public override int getBlackRings() {
             return rifleBlackRings;
@@ -52,8 +57,16 @@ namespace freETarget.targets {
             return innerTenRadiusRifle;
         }
 
+        public override decimal getOutterRadius() {
+            return getOutterRing() / 2m + pelletCaliber / 2m;
+        }
+
+        public override decimal get9Radius() {
+            return ring9 / 2m + pelletCaliber / 2m;
+        }
+
         public override string getName() {
-            return "Air Rifle";
+            return typeof(Rifle50m).FullName;
         }
 
         public override decimal getOutterRing() {

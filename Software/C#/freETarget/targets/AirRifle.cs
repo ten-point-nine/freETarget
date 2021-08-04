@@ -8,15 +8,15 @@ using System.Threading.Tasks;
 namespace freETarget.targets {
     class AirRifle : aTarget {
 
-        private const decimal pelletCaliber = 4.5m;
-        private const decimal targetSize = 170; //mm
+        private decimal pelletCaliber;
+        private const decimal targetSize = 80; //mm
         private const int rifleBlackRings = 4;
         private const bool solidInnerTenRing = true;
 
         private const int trkZoomMin = 0;
-        private const int trkZoomMax = 5;
+        private const int trkZoomMax = 3;
         private const int trkZoomVal = 0;
-        private const decimal pdfZoomFactor = 0.29m;
+        private const decimal pdfZoomFactor = 1m;
 
         private const decimal outterRing = 45.5m; //mm
         private const decimal ring2 = 40.5m; //mm
@@ -29,10 +29,15 @@ namespace freETarget.targets {
         private const decimal ring9 = 5.5m; //mm
         private const decimal ring10 = 0.5m; //mm
 
-        private const decimal innerTenRadiusRifle = pelletCaliber / 2m - ring10 / 2m; //2.0m; ISSF rules states: Inner Ten = When the 10 ring (dot) has been shot out completely
+        private decimal innerTenRadiusRifle;
 
         private static readonly decimal[] ringsRifle = new decimal[] { outterRing, ring2, ring3, ring4, ring5, ring6, ring7, ring8, ring9, ring10 };
 
+
+        public AirRifle(decimal caliber) : base(caliber) {
+            this.pelletCaliber = caliber;
+            innerTenRadiusRifle = pelletCaliber / 2m - ring10 / 2m; //2.0m; ISSF rules states: Inner Ten = When the 10 ring (dot) has been shot out completely
+        }
 
         public override int getBlackRings() {
             return rifleBlackRings;
@@ -42,8 +47,15 @@ namespace freETarget.targets {
             return innerTenRadiusRifle;
         }
 
+        public override decimal getOutterRadius() {
+            return getOutterRing() / 2m + pelletCaliber / 2m;
+        }
+
+        public override decimal get9Radius() {
+            return ring9 / 2m + pelletCaliber / 2m;
+        }
         public override string getName() {
-            return "Air Rifle";
+            return typeof(AirRifle).FullName;
         }
 
         public override decimal getOutterRing() {
@@ -103,23 +115,23 @@ namespace freETarget.targets {
                 return pdfZoomFactor;
             } else {
                 bool zoomed = true;
-                bool zoomed2 = true;
+                bool zoomedLess = true;
                 foreach (Shot s in shotList) {
-                    if (s.score < 6) {
+                    if (s.decimalScore <= 9.4m) {
                         zoomed = false;
                     }
-                    if (s.score < 1) {
-                        zoomed2 = false;
+                    if (s.decimalScore <= 7.2m) {
+                        zoomedLess = false;
                     }
 
                 }
                 if (zoomed) {
-                    return 0.12m;
+                    return 0.15m;
                 } else {
-                    if (zoomed2) {
+                    if (zoomedLess) {
                         return 0.29m;
                     } else {
-                        return 1m;
+                        return pdfZoomFactor;
                     }
 
                 }

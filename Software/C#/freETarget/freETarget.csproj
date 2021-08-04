@@ -80,6 +80,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EventManager.cs" />
     <Compile Include="frmGraph.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -111,11 +112,13 @@
       <DependentUpon>frmUpload.cs</DependentUpon>
     </Compile>
     <Compile Include="PDFGenerator.cs" />
+    <Compile Include="Settings.cs" />
     <Compile Include="StorageController.cs" />
     <Compile Include="targets\AirPistol.cs" />
     <Compile Include="targets\AirRifle.cs" />
     <Compile Include="targets\aTarget.cs" />
-    <Compile Include="targets\Rifle50M.cs" />
+    <Compile Include="targets\Pistol50m.cs" />
+    <Compile Include="targets\Rifle50m.cs" />
     <Compile Include="TransparentRTB.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -138,11 +141,10 @@
     <Compile Include="frmCalibration.Designer.cs">
       <DependentUpon>frmCalibration.cs</DependentUpon>
     </Compile>
-    <Compile Include="ISSF.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Session.cs" />
-    <Compile Include="EventType.cs" />
+    <Compile Include="Event.cs" />
     <Compile Include="SevenSegment.cs">
       <SubType>UserControl</SubType>
     </Compile>

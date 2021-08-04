@@ -24,6 +24,10 @@ namespace freETarget.targets {
 
         public abstract decimal getOutterRing();
 
+        public abstract decimal getOutterRadius();
+
+        public abstract decimal get9Radius();
+
         public abstract decimal getInnerTenRadius();
 
         public abstract int getBlackRings();
@@ -51,6 +55,10 @@ namespace freETarget.targets {
 
         //------------ common implementations ----------------------------
 
+        protected aTarget(decimal caliber) {
+
+        }
+
         public Bitmap paintTarget(int dimension, int zoomValue, bool notConnected, Session currentSession, List<Shot> shotList) {
 
             bool solidInner = isSolidInner();
@@ -77,7 +85,7 @@ namespace freETarget.targets {
             float circle = getDimension(dimension, getBlackDiameter(), zoomFactor);
 
             float x = center - (circle / 2);
-            it.FillEllipse(brushBlack, x, x, circle, circle);
+            it.FillEllipse(brushBlack, x, x, circle, circle); //draw the black circle
 
 
             int r = 1;
@@ -124,7 +132,7 @@ namespace freETarget.targets {
                 r++;
             }
 
-            if (currentSession.sessionType == Session.SessionType.Practice) {
+            if (currentSession.sessionType == Event.EventType.Practice) {
                 //draw triangle in corner
                 float sixth = dimension / 6f;
                 PointF[] points = new PointF[3];
