@@ -365,7 +365,6 @@ void show_echo(int v)
  * Finish up with the special cases
  */
   EEPROM.get(NONVOL_INIT, i);
-  json_sensor_dia = 1000.0;
   Serial.print("\r\n");
   Serial.print("\"INIT\":");        Serial.print(i);                                      Serial.print(", \r\n");   // 0xABCD (43981) when memory is initialized
   Serial.print("\"IS_TRACE\":");    Serial.print(is_trace);                               Serial.print(", \r\n");   // TRUE to if trace is enabled
