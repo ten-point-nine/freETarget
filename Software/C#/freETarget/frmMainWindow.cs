@@ -848,7 +848,7 @@ namespace freETarget {
 
         private void initNewSession() {
             if (currentSession!=null && currentSession.Shots.Count > 0) {
-                storage.storeSession(currentSession);
+                storage.storeSession(currentSession, true);
                 displayMessage("Session saved", true);
                 
             }
@@ -919,7 +919,7 @@ namespace freETarget {
                 DialogResult result = MessageBox.Show("Current session is unsaved. Do you want to save it?", "Save session", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
 
                 if (result == DialogResult.Yes) {
-                    storage.storeSession(currentSession);
+                    storage.storeSession(currentSession, true);
                     displayMessage("Session saved", true);
 
                 } else if(result == DialogResult.Cancel) {

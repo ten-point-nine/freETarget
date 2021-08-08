@@ -289,6 +289,12 @@ namespace freETarget
         }
 
         private bool validateData() {
+
+            if(txtName.Text == null || txtName.Text == "") {
+                MessageBox.Show("Shooter name empty. Please fill in your name.", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
             //baud rate
             if (!validNumber(txtBaud.Text)) {
                 MessageBox.Show("Baud rate is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
