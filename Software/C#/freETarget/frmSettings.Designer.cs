@@ -530,7 +530,7 @@
             this.groupBox2.Controls.Add(this.rbDC);
             this.groupBox2.Controls.Add(this.rbStepper);
             this.groupBox2.Controls.Add(this.txtSteps);
-            this.groupBox2.Location = new System.Drawing.Point(16, 116);
+            this.groupBox2.Location = new System.Drawing.Point(16, 90);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(283, 98);
             this.groupBox2.TabIndex = 23;
@@ -643,7 +643,7 @@
             // label20
             // 
             this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(13, 224);
+            this.label20.Location = new System.Drawing.Point(13, 198);
             this.label20.Name = "label20";
             this.label20.Size = new System.Drawing.Size(74, 13);
             this.label20.TabIndex = 20;
@@ -654,7 +654,7 @@
             this.trkLEDbright.BackColor = System.Drawing.SystemColors.Window;
             this.helpProvider.SetHelpString(this.trkLEDbright, "External LED brigtness control (percent)");
             this.trkLEDbright.LargeChange = 10;
-            this.trkLEDbright.Location = new System.Drawing.Point(109, 218);
+            this.trkLEDbright.Location = new System.Drawing.Point(109, 192);
             this.trkLEDbright.Maximum = 100;
             this.trkLEDbright.Name = "trkLEDbright";
             this.helpProvider.SetShowHelp(this.trkLEDbright, true);
@@ -678,22 +678,24 @@
             // label19
             // 
             this.label19.AutoSize = true;
-            this.label19.Location = new System.Drawing.Point(13, 94);
+            this.label19.Location = new System.Drawing.Point(13, 273);
             this.label19.Name = "label19";
             this.label19.Size = new System.Drawing.Size(62, 13);
             this.label19.TabIndex = 13;
             this.label19.Text = "Calibre x 10";
+            this.label19.Visible = false;
             // 
             // txtCalibre
             // 
             this.helpProvider.SetHelpString(this.txtCalibre, "Caliber of the projectile in tenths of milimiters. For example, the 4.5mm (.177) " +
         "pellet has the caliber of 45");
-            this.txtCalibre.Location = new System.Drawing.Point(109, 90);
+            this.txtCalibre.Location = new System.Drawing.Point(109, 269);
             this.txtCalibre.Name = "txtCalibre";
             this.helpProvider.SetShowHelp(this.txtCalibre, true);
             this.txtCalibre.Size = new System.Drawing.Size(190, 20);
             this.txtCalibre.TabIndex = 12;
             this.txtCalibre.Text = "45";
+            this.txtCalibre.Visible = false;
             // 
             // cmbPorts
             // 
