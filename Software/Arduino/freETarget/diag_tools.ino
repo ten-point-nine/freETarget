@@ -789,8 +789,7 @@ void set_trip_point
    if ( stay_forever )
    {
       Serial.print("\r\nV_Ref: "); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
-      sensor_status |= is_running();
-      show_sensor_status(sensor_status);
+      show_sensor_status(is_running());
    }
    else
    {

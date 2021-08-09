@@ -11,7 +11,7 @@
 #include "esp-01.h"
 #include "nonvol.h"
 
-static char input_JSON[128];
+static char input_JSON[256];
 
 int     json_dip_switch;            // DIP switch overwritten by JSON message
 double  json_sensor_dia = DIAMETER; // Sensor daiamter overwitten by JSON message
@@ -371,7 +371,7 @@ void show_echo(int v)
   Serial.print("\"TEMPERATURE\":"); Serial.print(temperature_C());                        Serial.print(", \r\n");   // Temperature in degrees C
   Serial.print("\"SPEED_SOUND\":"); Serial.print(speed_of_sound(temperature_C(), RH_50)); Serial.print(",\r\n");    // Speed of sound
   Serial.print("\"V_REF\":");       Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));      Serial.print(",\r\n");    // Trip point reference
-  Serial.print("\"SHOT_COUNT\":");  Serial.print((int)(SHOT_TIME * OSCILLATOR_MHZ));      Serial.print(",\r\n");    // Maximum number of clock cycles to record shot (target dependent)
+  Serial.print("\"TIMER_COUNT\":"); Serial.print((int)(SHOT_TIME * OSCILLATOR_MHZ));      Serial.print(",\r\n");    // Maximum number of clock cycles to record shot (target dependent)
   Serial.print("\"DIP\": 0x");      Serial.print(0x0F & read_DIP(), HEX);                 Serial.print("\r\n");     // DIP switch status
   Serial.print("\"WiFi\":");        Serial.print(esp01_is_present());                     Serial.print("\r\n");     // TRUE if WiFi is available
   Serial.print("\"VERSION\":");     Serial.print(SOFTWARE_VERSION);                       Serial.print(", \r\n");   // Current software version
@@ -394,13 +394,18 @@ void show_echo(int v)
  * 
  *-----------------------------------------------------
  *
- * Loop and display the settings
+ * If the name is Loop and display the settings
  * 
  *-----------------------------------------------------*/
 
 static void show_names(int v)
 {
   unsigned int i;
+
+  if ( v != 0 )
+  {
+    return;
+  }
   
   Serial.print("\r\n{\r\n");
   

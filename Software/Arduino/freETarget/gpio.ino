@@ -465,6 +465,16 @@ void read_timers(void)
  * used a transistor and 3.0 that uses a FET.
  * The driving circuit is reversed in the two boards.
  * 
+ * DC Motor
+ * Step Count = 0
+ * Step Time = 0
+ * Paper Time = Motor ON time
+ *
+ * Stepper
+ * Paper Time = 0
+ * Step Count = X
+ * Step Time = Step On time
+ * 
  *-----------------------------------------------------*/
  
  void drive_paper(void)
@@ -487,7 +497,11 @@ void read_timers(void)
   }
 
   s_time = json_paper_time;                       // On time.
-
+  if( json_step_time != 0 )                       // Non-zero means it's a stepper motor
+  {
+    s_count = json_step_time;                     // the one we use
+  }
+  
 /*
  * Drive the motor on and off for the number of cycles
  * at duration
