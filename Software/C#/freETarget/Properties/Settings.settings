@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="name" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Azmodan</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="portName" Type="System.String" Scope="User">
       <Value Profile="(Default)" />

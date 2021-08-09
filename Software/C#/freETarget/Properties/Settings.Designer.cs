@@ -25,7 +25,7 @@ namespace freETarget.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Azmodan")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string name {
             get {
                 return ((string)(this["name"]));

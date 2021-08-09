@@ -75,6 +75,9 @@ namespace freETarget {
             }
 
             Console.WriteLine("AVRDUDE finished");
+            mainWindow.displayMessage("Upload firmware finished.", false);
+            mainWindow.log("Firmware upload of file " + filePath + " completed.");
+
         }
 
         private void sortOutputHandler(object sendingProcess, DataReceivedEventArgs e) {

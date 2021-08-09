@@ -404,7 +404,7 @@ namespace freETarget {
             }
         }
 
-        public void storeSession(Session session) {
+        public void storeSession(Session session, bool prepare) {
             SQLiteConnection con = new SQLiteConnection(connString);
             con.Open();
             SQLiteCommand cmd = new SQLiteCommand(con);
@@ -416,7 +416,9 @@ namespace freETarget {
                 "@innerX, @xBar, @ybar, @rbar, @shots, @startTime, @endTime, @user, @averageScore, @actualNumberOfShots, @diary," +
                 " @averageShotDuration, @longestShot, @shortestShot, @groupSize, @hash)";
 
-            session.prepareForSaving();
+            if (prepare) {
+                session.prepareForSaving();
+            }
             cmd.Parameters.AddWithValue("@courseOfFire", session.eventType.ID);
             cmd.Parameters.AddWithValue("@targetType", session.targetType);
             cmd.Parameters.AddWithValue("@numberOfShots", session.numberOfShots);
@@ -539,7 +541,7 @@ namespace freETarget {
             }
         }
 
-        public string getControlString(Session session) {
+        public static string getControlString(Session session) {
             return session.score + "~" + session.decimalScore + "~" + session.innerX + "~" + convertListOfShotsToString(session.Shots) + "~" + session.user + "~" + session.actualNumberOfShots;
         }
 
@@ -572,19 +574,19 @@ namespace freETarget {
             }
         }
 
-        private decimal convertTimespanToDecimal(TimeSpan input) {
+        public static decimal convertTimespanToDecimal(TimeSpan input) {
             return (decimal)input.TotalSeconds;
         }
 
-        private TimeSpan convertDecimalToTimespan(decimal input) {
+        public static TimeSpan convertDecimalToTimespan(decimal input) {
             return TimeSpan.FromSeconds((double)input);
         }
 
-        private string convertDatetimeToString(DateTime input) {
+        public static string convertDatetimeToString(DateTime input) {
             return input.ToString("yyyy-MM-dd HH:mm:ss");
         }
 
-        private string convertListOfShotsToString(List<Shot> input) {
+        public static string convertListOfShotsToString(List<Shot> input) {
             string ret = "";
             foreach(Shot s in input) {
                 ret += s.ToString() + "|";
@@ -592,11 +594,11 @@ namespace freETarget {
             return ret.Substring(0,ret.Length-1);
         }
 
-        private DateTime convertStringToDate(string input) {
+        public static DateTime convertStringToDate(string input) {
             return DateTime.Parse(input);
         }
 
-        private List<Shot> convertStringToListOfShots(string input) {
+        public static List<Shot> convertStringToListOfShots(string input) {
             List<Shot> list = new List<Shot>();
 
             string[] stringShots = input.Split('|');
@@ -608,7 +610,7 @@ namespace freETarget {
         }
 
 
-        static string GetMd5Hash(string input) {
+        public static string GetMd5Hash(string input) {
             MD5 md5Hash = MD5.Create();
 
             // Convert the input string to a byte array and compute the hash.
@@ -629,7 +631,7 @@ namespace freETarget {
         }
 
         // Verify a hash against a string.
-        static bool VerifyMd5Hash(string input, string hash) {
+        public static bool VerifyMd5Hash(string input, string hash) {
             MD5 md5Hash = MD5.Create();
 
             // Hash the input.

@@ -256,6 +256,10 @@ namespace freETarget {
                 currentSession = session;
                 enableDisableButtons(true, true);
                 listSessionLastIndex = lstbSessions.SelectedIndex;
+
+                btnExport.Enabled = true;
+            } else {
+                btnExport.Enabled = false;
             }
         }
 
@@ -356,6 +360,128 @@ namespace freETarget {
                 tab.Text = ev.Name;
 
                 this.tabEvents.Controls.Add(tab);
+            }
+        }
+
+        private void btnExport_Click(object sender, EventArgs e) {
+            if (currentSession != null) {
+                StringBuilder sb = new StringBuilder();
+                sb.Append(currentSession.eventType.Name + "~");
+                sb.Append(currentSession.user + "~");
+                sb.Append(currentSession.score.ToString(CultureInfo.InvariantCulture) + "~");
+                sb.Append(currentSession.decimalScore.ToString(CultureInfo.InvariantCulture) + "~");
+                sb.Append(currentSession.innerX.ToString(CultureInfo.InvariantCulture) + "~");
+                sb.Append(currentSession.xbar.ToString(CultureInfo.InvariantCulture) + "~");
+                sb.Append(currentSession.ybar.ToString(CultureInfo.InvariantCulture) + "~");
+                sb.Append(currentSession.rbar.ToString(CultureInfo.InvariantCulture) + "~");
+                sb.Append(currentSession.groupSize.ToString(CultureInfo.InvariantCulture) + "~");
+                sb.Append(StorageController.convertListOfShotsToString(currentSession.Shots) + "~");
+                sb.Append(StorageController.convertDatetimeToString(currentSession.startTime) + "~");
+                sb.Append(StorageController.convertDatetimeToString(currentSession.endTime) + "~");
+                sb.Append(currentSession.averageScore.ToString("F2", CultureInfo.InvariantCulture) + "~");
+                sb.Append(currentSession.actualNumberOfShots.ToString(CultureInfo.InvariantCulture) + "~");
+                sb.Append(currentSession.diaryEntry + "~");
+                sb.Append(StorageController.convertTimespanToDecimal(currentSession.averageTimePerShot).ToString("F3", CultureInfo.InvariantCulture) + "~");
+                sb.Append(StorageController.convertTimespanToDecimal(currentSession.longestShot).ToString("F3", CultureInfo.InvariantCulture) + "~");
+                sb.Append(StorageController.convertTimespanToDecimal(currentSession.shortestShot).ToString("F3", CultureInfo.InvariantCulture) + "~");
+                string controlString = StorageController.getControlString(currentSession);
+                sb.Append(StorageController.GetMd5Hash(controlString));
+
+                string exeLocation = System.Reflection.Assembly.GetEntryAssembly().Location;
+                string exportDirectory = exeLocation.Substring(0, exeLocation.LastIndexOf(@"\")) + @"\sessionExport\";
+
+                if (!Directory.Exists(exportDirectory)) {
+                    try {
+                        Directory.CreateDirectory(exportDirectory);
+                    } catch (Exception ex) {
+                        Console.WriteLine(ex.Message);
+
+                        //if there is no write permission at exe location, write log in C:\Users\<user>\AppData\Roaming\freETarget\sessionExport
+                        exportDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\freETarget\sessionExport\";
+                        Directory.CreateDirectory(exportDirectory);
+                    }
+                }
+                string sessionfilename = "freETargetSession_" + currentSession.user + "-" + currentSession.eventType.Name + "_" + currentSession.id + ".exp";
+
+                string sesFile;
+                if (!File.Exists(exportDirectory + sessionfilename)) {
+                    FileStream log = null;
+                    try {
+                        log = File.Create(exportDirectory + sessionfilename);
+                        sesFile = exportDirectory + sessionfilename;
+                    } catch (Exception ex) {
+                        Console.WriteLine(ex.Message);
+                        sesFile = null;
+                    } finally {
+                        log.Close();
+                    }
+
+                } else {
+                    sesFile = exportDirectory + sessionfilename;
+                }
+
+                try {
+                    //Opens a new file stream which allows asynchronous reading and writing
+                    using (StreamWriter sw = new StreamWriter(new FileStream(sesFile, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))) {
+
+                        sw.WriteLine(sb.ToString());
+                        mainWindow.log("Session " + currentSession.id + " exported to " + sesFile);
+                        mainWindow.displayMessage("Session " + currentSession.id + " exported to " + sesFile, false);
+
+                    }
+                } catch (Exception ex) {
+                    //oh well...
+                    mainWindow.log("Error exporting session: " + currentSession.id + Environment.NewLine + ex.Message);
+                }
+            }
+        }
+
+        private void btnImport_Click(object sender, EventArgs e) {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
+                openFileDialog.InitialDirectory = ".";
+                openFileDialog.Filter = "exp files (*.exp)|*.exp|All files (*.*)|*.*";
+                openFileDialog.FilterIndex = 1;
+                openFileDialog.RestoreDirectory = true;
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK) {
+                    string filePath = openFileDialog.FileName;
+                    StreamReader sr = new StreamReader(filePath);
+                    string fileData = sr.ReadToEnd();
+                    string[] items = fileData.Split('~');
+
+                    string eventName = items[0];
+                    string user = items[1];
+                    Event cof = mainWindow.eventManager.findEventByName(eventName);
+                    Session session = Session.createNewSession(cof, user);
+
+                    session.score = int.Parse(items[2], CultureInfo.InvariantCulture);
+                    session.decimalScore = decimal.Parse(items[3], CultureInfo.InvariantCulture);
+                    session.innerX = int.Parse(items[4], CultureInfo.InvariantCulture);
+                    session.xbar = decimal.Parse(items[5], CultureInfo.InvariantCulture);
+                    session.ybar = decimal.Parse(items[6], CultureInfo.InvariantCulture);
+                    session.rbar = decimal.Parse(items[7], CultureInfo.InvariantCulture);
+                    session.groupSize = decimal.Parse(items[8], CultureInfo.InvariantCulture);
+                    session.Shots = StorageController.convertStringToListOfShots(items[9]);
+                    session.startTime = StorageController.convertStringToDate(items[10]);
+                    session.endTime = StorageController.convertStringToDate(items[11]);
+                    session.averageScore = decimal.Parse(items[12], CultureInfo.InvariantCulture);
+                    session.actualNumberOfShots = int.Parse(items[13], CultureInfo.InvariantCulture);
+                    session.diaryEntry = items[14];
+                    session.averageTimePerShot = StorageController.convertDecimalToTimespan(decimal.Parse(items[15], CultureInfo.InvariantCulture));
+                    session.longestShot = StorageController.convertDecimalToTimespan(decimal.Parse(items[16], CultureInfo.InvariantCulture));
+                    session.shortestShot = StorageController.convertDecimalToTimespan(decimal.Parse(items[17], CultureInfo.InvariantCulture));
+                    string hash = items[18].Trim();
+                    string controlString = StorageController.getControlString(session);
+                    if (StorageController.VerifyMd5Hash(controlString, hash) == false) {
+                        MessageBox.Show("MD5 check failed. Session data corrupted/modified.", "Error loading session", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    } else {
+                        //session valid. store it
+                        mainWindow.storage.storeSession(session, false);
+                        loadData();
+                        mainWindow.log("Session from file "+ filePath + " imported succesfully.");
+                        mainWindow.displayMessage("Session from file " + filePath + " imported succesfully.", false);
+                    }
+                }
             }
         }
     }

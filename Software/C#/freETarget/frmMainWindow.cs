@@ -376,76 +376,40 @@ namespace freETarget {
 
             timer.Enabled = true;
 
+            StringBuilder sb = new StringBuilder("{");
 
             //send sensor and hardware parameters to target
-            Thread.Sleep(1500);
-            serialPort.Write("{\"SENSOR\":" + Properties.Settings.Default.SensorDiameter.ToString() + "}");
-            Console.WriteLine("{\"SENSOR\":" + Properties.Settings.Default.SensorDiameter.ToString() + "}");
-
-            Thread.Sleep(500);
-            serialPort.Write("{\"Z_OFFSET\":" + Properties.Settings.Default.ZOffset.ToString() + "}");
-            Console.WriteLine("{\"Z_OFFSET\":" + Properties.Settings.Default.ZOffset.ToString() + "}");
+            Thread.Sleep(3000); //timeout needed for the board to do its thing after connect - determined by trial&error
+            sb.Append("\"SENSOR\":" + Properties.Settings.Default.SensorDiameter.ToString() + ", ");
+            sb.Append("\"Z_OFFSET\":" + Properties.Settings.Default.ZOffset.ToString() + ", ");
 
             if (Properties.Settings.Default.PaperTime > 0) {
-                Thread.Sleep(500);
-                serialPort.Write("{\"PAPER_TIME\":" + Properties.Settings.Default.PaperTime.ToString() + "}");
-                Console.WriteLine("{\"PAPER_TIME\":" + Properties.Settings.Default.PaperTime.ToString() + "}");
+                sb.Append("\"PAPER_TIME\":" + Properties.Settings.Default.PaperTime.ToString() + ", ");
+                sb.Append("\"STEP_TIME\":0, ");
+                sb.Append("\"STEP_COUNT\":0, ");
             } else {
-                Thread.Sleep(500);
-                serialPort.Write("{\"STEP_TIME\":" + Properties.Settings.Default.StepTime.ToString() + "}");
-                Console.WriteLine("{\"STEP_TIME\":" + Properties.Settings.Default.StepTime.ToString() + "}");
 
-                Thread.Sleep(500);
-                serialPort.Write("{\"STEP_COUNT\":" + Properties.Settings.Default.StepCount.ToString() + "}");
-                Console.WriteLine("{\"STEP_COUNT\":" + Properties.Settings.Default.StepCount.ToString() + "}");
+                sb.Append("\"PAPER_TIME\":0, ");
+                sb.Append("\"STEP_TIME\":" + Properties.Settings.Default.StepTime.ToString() + ", ");
+                sb.Append("\"STEP_COUNT\":" + Properties.Settings.Default.StepCount.ToString() + ", ");
             }
+            //sb.Append("\"CALIBREx10\":" + Properties.Settings.Default.Calibre.ToString() + ", ");
+            sb.Append("\"NORTH_X\":" + Properties.Settings.Default.SensorNorthX.ToString() + ", ");
+            sb.Append("\"NORTH_Y\":" + Properties.Settings.Default.SensorNorthY.ToString() + ", ");
+            sb.Append("\"EAST_X\":" + Properties.Settings.Default.SensorEastX.ToString() + ", ");
+            sb.Append("\"EAST_Y\":" + Properties.Settings.Default.SensorEastY.ToString() + ", ");
+            sb.Append("\"SOUTH_X\":" + Properties.Settings.Default.SensorSouthX.ToString() + ", ");
+            sb.Append("\"SOUTH_Y\":" + Properties.Settings.Default.SensorSouthY.ToString() + ", ");
+            sb.Append("\"WEST_X\":" + Properties.Settings.Default.SensorWestX.ToString() + ", ");
+            sb.Append("\"WEST_Y\":" + Properties.Settings.Default.SensorWestY.ToString() + ", ");
+            sb.Append("\"LED_BRIGHT\":" + Properties.Settings.Default.LEDbright.ToString() + ", ");
+            sb.Append("\"NAME_ID\":" + Properties.Settings.Default.targetName.ToString() + ", ");
 
-            Thread.Sleep(500);
-            serialPort.Write("{\"CALIBREx10\":" + Properties.Settings.Default.Calibre.ToString() + "}");
-            Console.WriteLine("{\"CALIBREx10\":" + Properties.Settings.Default.Calibre.ToString() + "}");
+            sb.Append("\"ECHO\":9 }");
 
-            Thread.Sleep(500);
-            serialPort.Write("{\"NORTH_X\":" + Properties.Settings.Default.SensorNorthX.ToString() + "}");
-            Console.WriteLine("{\"NORTH_X\":" + Properties.Settings.Default.SensorNorthX.ToString() + "}");
+            serialPort.Write(sb.ToString());
+            Console.WriteLine(sb.ToString());
 
-            Thread.Sleep(500);
-            serialPort.Write("{\"NORTH_Y\":" + Properties.Settings.Default.SensorNorthY.ToString() + "}");
-            Console.WriteLine("{\"NORTH_Y\":" + Properties.Settings.Default.SensorNorthY.ToString() + "}");
-
-            Thread.Sleep(500);
-            serialPort.Write("{\"EAST_X\":" + Properties.Settings.Default.SensorEastX.ToString() + "}");
-            Console.WriteLine("{\"EAST_X\":" + Properties.Settings.Default.SensorEastX.ToString() + "}");
-
-            Thread.Sleep(500);
-            serialPort.Write("{\"EAST_Y\":" + Properties.Settings.Default.SensorEastY.ToString() + "}");
-            Console.WriteLine("{\"EAST_Y\":" + Properties.Settings.Default.SensorEastY.ToString() + "}");
-
-            Thread.Sleep(500);
-            serialPort.Write("{\"SOUTH_X\":" + Properties.Settings.Default.SensorSouthX.ToString() + "}");
-            Console.WriteLine("{\"SOUTH_X\":" + Properties.Settings.Default.SensorSouthX.ToString() + "}");
-
-            Thread.Sleep(500);
-            serialPort.Write("{\"SOUTH_Y\":" + Properties.Settings.Default.SensorSouthY.ToString() + "}");
-            Console.WriteLine("{\"SOUTH_Y\":" + Properties.Settings.Default.SensorSouthY.ToString() + "}");
-
-            Thread.Sleep(500);
-            serialPort.Write("{\"WEST_X\":" + Properties.Settings.Default.SensorWestX.ToString() + "}");
-            Console.WriteLine("{\"WEST_X\":" + Properties.Settings.Default.SensorWestX.ToString() + "}");
-
-            Thread.Sleep(500);
-            serialPort.Write("{\"WEST_Y\":" + Properties.Settings.Default.SensorWestY.ToString() + "}");
-            Console.WriteLine("{\"WEST_Y\":" + Properties.Settings.Default.SensorWestY.ToString() + "}");
-
-            Thread.Sleep(500);
-            serialPort.Write("{\"LED_BRIGHT\":" + Properties.Settings.Default.LEDbright.ToString() + "}");
-            Console.WriteLine("{\"LED_BRIGHT\":" + Properties.Settings.Default.LEDbright.ToString() + "}");
-
-            Thread.Sleep(500);
-            serialPort.Write("{\"NAME_ID\":" + Properties.Settings.Default.targetName.ToString() + "}");
-            Console.WriteLine("{\"NAME_ID\":" + Properties.Settings.Default.targetName.ToString() + "}");
-
-            //Thread.Sleep(500);
-            //serialPort.Write("{\"ECHO\":0}");
 
             Thread.Sleep(500);
             serialPort.Write("{\"VERSION\":7}");
@@ -848,7 +812,7 @@ namespace freETarget {
 
         private void initNewSession() {
             if (currentSession!=null && currentSession.Shots.Count > 0) {
-                storage.storeSession(currentSession);
+                storage.storeSession(currentSession, true);
                 displayMessage("Session saved", true);
                 
             }
@@ -919,7 +883,7 @@ namespace freETarget {
                 DialogResult result = MessageBox.Show("Current session is unsaved. Do you want to save it?", "Save session", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
 
                 if (result == DialogResult.Yes) {
-                    storage.storeSession(currentSession);
+                    storage.storeSession(currentSession, true);
                     displayMessage("Session saved", true);
 
                 } else if(result == DialogResult.Cancel) {
