@@ -481,16 +481,11 @@ void read_timers(void)
  {
   unsigned int i, j, k;                           // Iteration Counters
   unsigned int s_count, s_time;
-   
-  if ( is_trace )
-  {
-    Serial.print("\r\nAdvancing paper ");
-  }
 
 /*
  * Set up the count or times based on whether a DC or stepper motor is used
  */
-  s_count = 1;                                    // Default to one cycle (DC Motor)
+  s_count = 1;                                    // Default to one cycle (DC or Stepper Motor)
   if( json_step_count != 0 )                      // Non-zero means it's a stepper motor
   {
     s_count = json_step_count;                    // the one we use
@@ -499,7 +494,17 @@ void read_timers(void)
   s_time = json_paper_time;                       // On time.
   if( json_step_time != 0 )                       // Non-zero means it's a stepper motor
   {
-    s_count = json_step_time;                     // the one we use
+    s_time = json_step_time;                      // the one we use
+  }
+
+  if ( s_time == 0 )                              // Nothing to do if the time is zero.
+  {
+    return;
+  }
+  
+  if ( is_trace )
+  {
+    Serial.print("\r\nAdvancing paper ");
   }
   
 /*
@@ -664,9 +669,10 @@ void blink_fault
  *-----------------------------------------------------*/
  void multifunction_init(void)
  {
-  switch (LO(json_multifunction))
+  switch (LO10(json_multifunction))
   {
     case PAPER_FEED:
+    case PC_TEST:
     case GPIO_IN:
       pinMode(DIP_1,INPUT_PULLUP);
       LO_last_MFS_state = DIP_SW_A;       // Remember the starting state
@@ -680,9 +686,10 @@ void blink_fault
       break;
   }
   
-  switch (HI(json_multifunction))
+  switch (HI10(json_multifunction))
   {
     case PAPER_FEED:
+    case PC_TEST:
     case GPIO_IN:
       pinMode(DIP_2,INPUT_PULLUP);
       HI_last_MFS_state = DIP_SW_B;       // Remember the starting state
@@ -720,18 +727,24 @@ void blink_fault
  * 
  * 
  *-----------------------------------------------------*/
+
 unsigned int multifunction_switch
   (
     unsigned int new_state               // If output, drive to a new state
   )
  {
     unsigned int return_value;          // Value returned to caller
+    static    history_t h;
+    static   int shot;
 
+    h.x = random(-json_sensor_dia/2.0, json_sensor_dia/2.0);
+    h.y = 0;
+    
 /*
  * Manage the GPIO based on the configuration
  */
  
-  switch (LO(json_multifunction))
+  switch (LO10(json_multifunction))
   {
     case PAPER_FEED:                      // The switch acts as paper feed control
       if ( CALIBRATE )
@@ -756,11 +769,21 @@ unsigned int multifunction_switch
       digitalWrite(DIP_1, new_state);
       break;
 
+    case PC_TEST:                         // Send a fake score to the PC
+      return_value = DIP_SW_A;            // Use DIP_SW_B as a paper feed
+      if ( (return_value ^ LO_last_MFS_state)// Got a change?
+         & ( return_value == 1 ) )        // And its a contact to ground
+      {      
+        send_score(&h, shot++, 0);
+      }
+      LO_last_MFS_state = return_value;   // and remember for next time
+      break;
+      
     default:
       break;
   }
   
-  switch (HI(json_multifunction))
+  switch (HI10(json_multifunction))
   {
     case PAPER_FEED:                      // The switch acts as paper feed control
       if ( CALIBRATE )
@@ -768,7 +791,6 @@ unsigned int multifunction_switch
         return;                           // Not used if in calibration mode
       }
       return_value = DIP_SW_B;            // Use DIP_SW_B as a paper feed
-      Serial.print(return_value);
       if ( (return_value ^ HI_last_MFS_state)// Got a change?
          & ( return_value == 1 ) )        // And its a contact to ground
       {      
@@ -785,7 +807,18 @@ unsigned int multifunction_switch
       return_value = new_state;
       digitalWrite(DIP_1, new_state);
       break;
-
+      
+    case PC_TEST:                         // Send a fake score to the PC
+      return_value = DIP_SW_B;            // Use DIP_SW_B as a paper feed
+      
+      if ( (return_value ^ HI_last_MFS_state)// Got a change?
+         & ( return_value == 1 ) )        // And its a contact to ground
+      {      
+        send_score(&h, shot++, 0);
+      }
+      HI_last_MFS_state = return_value;   // and remember for next time
+      break;
+      
     default:
       break;
   }

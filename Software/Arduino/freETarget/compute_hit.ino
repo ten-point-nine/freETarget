@@ -555,19 +555,19 @@ void send_score
 
 #if ( S_XY )
   dtostrf(x, 4, 2, str_c );
-  sprintf(str_b, "%s, \"x\":%s,", str_a, str_c);
+  sprintf(str_b, "%s, \"x\":%s", str_a, str_c);
   sprintf(str_a, "%s", str_b);
   dtostrf(y, 4, 2, str_c );
-  sprintf(str_b, "%s, \"y\":%s ", str_a, str_c);
+  sprintf(str_b, "%s, \"y\":%s", str_a, str_c);
   sprintf(str_a, "%s", str_b);
 #endif
 
 #if ( S_POLAR )
   dtostrf(radius, 4, 2, str_c );
-  sprintf(str_b, "%s, \"r\":%s,", str_a, str_c);
+  sprintf(str_b, "%s, \"r\":%s", str_a, str_c);
   sprintf(str_a, "%s", str_b);
   dtostrf(angle, 4, 2, str_c );
-  sprintf(str_b, "%s, \"a\":%s ", str_a, str_c);
+  sprintf(str_b, "%s, \"a\":%s", str_a, str_c);
   sprintf(str_a, "%s", str_b);
 #endif
 
