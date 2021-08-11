@@ -722,10 +722,6 @@ void blink_fault
  * The actions of the DIP switch will change depending on the 
  * mode that is programmed into it.
  * 
- * DIP Switch
- * 
- * 
- * 
  *-----------------------------------------------------*/
 
 unsigned int multifunction_switch
@@ -736,7 +732,12 @@ unsigned int multifunction_switch
     unsigned int return_value;          // Value returned to caller
     static    history_t h;
     static   int shot;
-
+    
+    if ( CALIBRATE )
+    {
+      return;                           // Not used if in calibration mode
+    }
+    
     h.x = random(-json_sensor_dia/2.0, json_sensor_dia/2.0);
     h.y = 0;
     
@@ -747,10 +748,6 @@ unsigned int multifunction_switch
   switch (LO10(json_multifunction))
   {
     case PAPER_FEED:                      // The switch acts as paper feed control
-      if ( CALIBRATE )
-      {
-        return;                           // Not used if in calibration mode
-      }
       return_value = DIP_SW_A;            // Use DIP_SW_A as a paper feed
       if ( (return_value ^ LO_last_MFS_state)// Got a change?
          & ( return_value == 1 ) )        // And its a contact to ground
@@ -786,10 +783,6 @@ unsigned int multifunction_switch
   switch (HI10(json_multifunction))
   {
     case PAPER_FEED:                      // The switch acts as paper feed control
-      if ( CALIBRATE )
-      {
-        return;                           // Not used if in calibration mode
-      }
       return_value = DIP_SW_B;            // Use DIP_SW_B as a paper feed
       if ( (return_value ^ HI_last_MFS_state)// Got a change?
          & ( return_value == 1 ) )        // And its a contact to ground
