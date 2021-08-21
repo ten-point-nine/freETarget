@@ -2,7 +2,7 @@
 
 **What is freETarget?**
 
-freETarget is an 'electronic target' (or E-Target) for small calibre (air) rifles and pistols. It uses microphones arranged around the target card to detect the impact of the bullet on the paper and then calculates the point of impact using triangulation.
+freETarget is an 'electronic target' (or E-Target) for small calibre (air) rifles and pistols. It uses microphones arranged around the target card to detect the impact of the bullet on the paper and then calculates the point of impact using triangulation. The basic principles are detailed in 
 
 It does this using relatively inexpensive electronics, based around the Arduino open-source ecosystem. This means you can have your own E-Target for a lot less than the current commercial offerings. How much exactly depends mostly on you own skill and effort. You can source and build everything yourself including the electronics and have a system running for around $200. If you want to have the electronics ready made, this price will be around $300.
 
