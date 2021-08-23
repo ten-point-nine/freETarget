@@ -49,7 +49,7 @@ void init_nonvol(int v)
           break;
         
         case IS_INT16:
-          x = JSON[i].init_value;
+          x = JSON[i].init_value;                            // Read in the value 
           EEPROM.put(JSON[i].non_vol, x);                    // Read in the value
           break;
 
@@ -67,34 +67,37 @@ void init_nonvol(int v)
 /*
  * Ask for the serial number.  Exit when you get !
  */
-  ch = 0;
-  serial_number = 0;
-  while ( Serial.available() )    // Eat any pending junk
+  EEPROM.get(NONVOL_SERIAL_NO, serial_number );
+  if ( serial_number == -1 )
   {
-    Serial.read();
-  }
-  
-  Serial.print("\r\nSerial Number? (ex 223! or x))");
-  while (i)
-  {
-    if ( Serial.available() != 0 )
+    ch = 0;
+    serial_number = 0;
+    while ( Serial.available() )    // Eat any pending junk
     {
-      ch = Serial.read();
-      if ( ch == '!' )
-      {  
-        EEPROM.put(NONVOL_SERIAL_NO, serial_number);
-        Serial.print(" Setting Serial Number to: "); Serial.print(serial_number);
-        break;
-      }
-      if ( ch == 'x' )
+      Serial.read();
+    }
+  
+    Serial.print("\r\nSerial Number? (ex 223! or x))");
+    while (i)
+    {
+      if ( Serial.available() != 0 )
       {
-        break;
+        ch = Serial.read();
+        if ( ch == '!' )
+        {  
+          EEPROM.put(NONVOL_SERIAL_NO, serial_number);
+          Serial.print(" Setting Serial Number to: "); Serial.print(serial_number);
+          break;
+        }
+        if ( ch == 'x' )
+        {
+          break;
+        }
+        serial_number *= 10;
+        serial_number += ch - '0';
       }
-      serial_number *= 10;
-      serial_number += ch - '0';
     }
   }
-
 /*
  * Initialization complete.  Mark the init done
  */
@@ -168,6 +171,11 @@ void read_nonvol(void)
         
         case IS_INT16:
           EEPROM.get(JSON[i].non_vol, x);                    // Read in the value
+          if ( x == -1 )                                     // If it's uninitialized
+          {
+            x = JSON[i].init_value;                          // Froce the default
+            EEPROM.put(JSON[i].non_vol, x);                  // Read in the value
+          }
           *JSON[i].value = x;
           break;
 

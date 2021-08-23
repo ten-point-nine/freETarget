@@ -23,7 +23,6 @@
 /*
  *  Variables
  */
-
 extern const char* which_one[4];
 
 sensor_t s[4];
@@ -34,6 +33,7 @@ unsigned long minion_value[4];    // Array of timers values from minion
 unsigned long minion_ref;         // Trip voltage from minion
 unsigned int  pellet_calibre;     // Time offset to compensate for pellet diameter
 
+static void remap_target(double* x, double* y);  // Map a club target if used
 
 /*----------------------------------------------------------------
  *
@@ -319,9 +319,10 @@ unsigned int compute_hit
  /*
   * All done return
   */
-  h->shot = shot;
-  h->x = x_avg;
+  h->shot = shot;           // Record the shot
+  h->x = x_avg;             
   h->y = y_avg;
+  
   return location;
 }
 
@@ -476,6 +477,7 @@ bool find_xy_3D
  */
   return true;
 }
+
   
 /*----------------------------------------------------------------
  *
@@ -533,7 +535,8 @@ void send_score
   angle += json_sensor_angle;
   x = radius * cos(PI * angle / 180.0d);
   y = radius * sin(PI * angle / 180.0d);
-
+  remap_target(&x, &y);             // Change the target if needed
+  
 /* 
  *  Display the results
  */
@@ -587,7 +590,7 @@ void send_score
   sprintf(str_a, "%s", str_b);
 #endif
 
-  sprintf(str_b, "%s}", str_a);
+  sprintf(str_b, "%s}\r\n", str_a);
   sprintf(str_a, "%s", str_b);
 
 
@@ -656,7 +659,7 @@ void send_miss
   sprintf(str_a, "%s", str_b);
 #endif
 
-  sprintf(str_b, "%s}", str_a);
+  sprintf(str_b, "%s}\n\r", str_a);
   sprintf(str_a, "%s", str_b);
   
 
@@ -690,6 +693,127 @@ void send_miss
 }
 
 
+/*----------------------------------------------------------------
+ *
+ * function: remap_target
+ *
+ * brief: Remaps shot into a different target
+ * 
+ * return: Pellet location remapped to centre bull
+ *
+ *----------------------------------------------------------------
+ *
+ *  For example a five bull target looks like
+ *  
+ *     **        **
+ *     **        **
+ *          **
+ *          **
+ *     **        **     
+ *     **        **
+ *               
+ * The function send_score locates the pellet onto the paper                
+ * This function finds the closest bull and then maps the pellet
+ * onto the centre one.
+ *--------------------------------------------------------------*/
+struct new_target
+{
+  double       x;       // X location of Bull
+  double       y;       // Y location of Bull
+};
+
+typedef new_target new_target_t;
+
+#define D5 (74/2)                   // Five bull air rifle is 74mm centre-centre
+new_target_t five_bull_air_rifle[] = { {-D5, D5}, {D5, D5}, {-D5, -D5}, {D5, -D5}, {0,0}};
+
+static void remap_target
+  (
+  double* x,                        // Computed X location of shot
+  double* y                         // Computed Y location of shot
+  )
+{
+  double distance, closest;        // Distance to bull in clock ticks
+  double dx, dy;                   // Best fitting bullseye
+  new_target_t* ptr;               // Bull pointer
+  int    which_one;                // Which target was selected
+  
+  if ( is_trace )
+  {
+    Serial.print("\n\rnew_target x:"); Serial.print(*x); Serial.print(" y:"); Serial.print(*y);
+  }
+
+/*
+ * Dind the closes bull
+ */
+  switch ( json_target_type )
+  {
+    case FIVE_BULL_AIR_RIFLE:
+      ptr = &five_bull_air_rifle[0];
+      break;
+    
+    default:                      // Not defined, assume a regular       
+      return;                     // bull and do nothing
+  }
+  
+  closest = 100000.0;             // Distance to closest bull
+  
+/*
+ * Loop and find the closest
+ */
+  which_one = 0;
+  while ( ptr->x != 0 )
+  {
+    distance = sqrt(sq(ptr->x - *x) + sq(ptr->y - *y));
+    if ( is_trace )
+    {
+      Serial.print("\n\rwhich_one:"); Serial.print(which_one); Serial.print(" distance:"); Serial.print(distance); 
+    }
+    if ( distance < closest )   // Found a closer one?
+    {
+      closest = distance;       // Remember it
+      dx = ptr->x;
+      dy = ptr->y;              // Remember the closest bull
+      if ( is_trace)
+      {
+        Serial.print(" dx:"); Serial.print(dx); Serial.print(" dy:"); Serial.print(dy); 
+      }
+    }
+    ptr++;
+    which_one++;
+  }
+
+  distance = sqrt(sq(*x) + sq(*y)); // Last one is the centre bull
+  if ( is_trace )
+  {
+    Serial.print("\n\rwhich_one:"); Serial.print(which_one); Serial.print(" distance:"); Serial.print(distance);
+  }
+  if ( distance < closest )   // Found a closer one?
+  {
+    closest = distance;       // Remember it
+    dx = 0;
+    dy = 0;
+    if ( is_trace)
+    {
+      Serial.print(" dx:"); Serial.print(dx); Serial.print(" dy:"); Serial.print(dy); 
+    }
+  }
+
+/*
+ * Remap the pellet to the centre one
+ */
+  *x = *x - dx;
+  *y = *y - dy;
+  if ( is_trace )
+  {
+    Serial.print("\n\rx:"); Serial.print(*x); Serial.print(" y:"); Serial.print(*y);
+  }
+  
+/*
+ *  All done, return
+ */
+  return;
+}
 /*----------------------------------------------------------------
  *
  * function: show_timer
@@ -739,46 +863,4 @@ void send_timer
   return;
 }
 
-/*----------------------------------------------------------------
- *
- * function: hamming
- *
- * brief: Compute the Hamming weight of the input
- *
- * return: Hamming weight of the input word
- * 
- *----------------------------------------------------------------
- *    
- * Add up all of the 1's in the sample.
- * 
- *--------------------------------------------------------------*/
-
- unsigned int hamming
-   (
-   unsigned int sample
-   )
- {
-  unsigned int i;
-
-  i = 0;
-  while (sample)
-  {
-    if ( sample & 1 )
-    {
-      i++;                  // Add up the number of 1s
-    }
-    sample >>= 1;
-    sample &= 0x7FFF;
-  }
-  
-  if ( is_trace )
-    {
-    Serial.print("\r\nHamming weight: "); Serial.print(i);
-    }
-
- /*
-  * All done, return
-  */
-  return i;
- }
  

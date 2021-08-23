@@ -40,6 +40,8 @@ int     json_step_time;             // Duration of each step
 int     json_multifunction;         // Multifunction switch operation
 int     json_z_offset;              // Distance between paper and sensor plane in 0.1mm
 int     json_paper_eco;             // Do not advance paper if outside of the black
+int     json_target_type;           // Modify target type (0 == single bull)
+
 int     temp;                       // Temporary variable
 
 #define JSON_DEBUG false                    // TRUE to echo DEBUG messages
@@ -72,6 +74,7 @@ const json_message JSON[] = {
   {"\"SN\":",             &json_serial_number,               0,                IS_INT16,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
   {"\"STEP_COUNT\":",     &json_step_count,                  0,                IS_INT16,  0,                NONVOL_STEP_COUNT,       0 },    // Set the duration of the stepper motor ON time
   {"\"STEP_TIME\":",      &json_step_time,                   0,                IS_INT16,  0,                NONVOL_STEP_TIME,        0 },    // Set the number of times stepper motor is stepped
+  {"\"TARGET_TYPE\":",    &json_target_type,                 0,                IS_INT16,  0,                NONVOL_TARGET_TYPE,      0 },    // Marify shot location (0 == Single Bull)
   {"\"TEST\":",           &json_test,                        0,                IS_INT16,  &show_test,       NONVOL_TEST_MODE,        0 },    // Execute a self test
   {"\"TRACE\":",          0,                                 0,                IS_INT16,  &set_trace,                      0,        0 },    // Enter / exit diagnostic trace
   {"\"TRGT_1_RINGx10\":", &json_1_ring_x10,                  0,                IS_INT16,  0,                NONVOL_1_RINGx10,     1555 },    // Enter the 1 ring diamater (mm x 10)
@@ -366,16 +369,18 @@ void show_echo(int v)
  */
   EEPROM.get(NONVOL_INIT, i);
   Serial.print("\r\n");
-  Serial.print("\"INIT\":");        Serial.print(i);                                      Serial.print(", \r\n");   // 0xABCD (43981) when memory is initialized
   Serial.print("\"IS_TRACE\":");    Serial.print(is_trace);                               Serial.print(", \r\n");   // TRUE to if trace is enabled
   Serial.print("\"TEMPERATURE\":"); Serial.print(temperature_C());                        Serial.print(", \r\n");   // Temperature in degrees C
   Serial.print("\"SPEED_SOUND\":"); Serial.print(speed_of_sound(temperature_C(), RH_50)); Serial.print(",\r\n");    // Speed of sound
   Serial.print("\"V_REF\":");       Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));      Serial.print(",\r\n");    // Trip point reference
+  Serial.print("\r\n");
   Serial.print("\"TIMER_COUNT\":"); Serial.print((int)(SHOT_TIME * OSCILLATOR_MHZ));      Serial.print(",\r\n");    // Maximum number of clock cycles to record shot (target dependent)
   Serial.print("\"DIP\": 0x");      Serial.print(0x0F & read_DIP(), HEX);                 Serial.print("\r\n");     // DIP switch status
   Serial.print("\"WiFi\":");        Serial.print(esp01_is_present());                     Serial.print("\r\n");     // TRUE if WiFi is available
   Serial.print("\"VERSION\":");     Serial.print(SOFTWARE_VERSION);                       Serial.print(", \r\n");   // Current software version
-  Serial.print("\"BRD_REV\":");     Serial.print(revision());                                                       // Current board revision
+  Serial.print("\n\r");
+  Serial.print("\"BRD_REV\":");     Serial.print(revision());                             Serial.print(", \r\n");   // Current board revision
+  Serial.print("\"INIT\":");        Serial.print(i);                                                                // 0xABCD (43981) when memory is initialized
   Serial.print("\r\n}\r\n");
   
 /*

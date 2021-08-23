@@ -485,16 +485,17 @@ void read_timers(void)
 /*
  * Set up the count or times based on whether a DC or stepper motor is used
  */
-  s_count = 1;                                    // Default to one cycle (DC or Stepper Motor)
-  if( json_step_count != 0 )                      // Non-zero means it's a stepper motor
-  {
-    s_count = json_step_count;                    // the one we use
-  }
 
   s_time = json_paper_time;                       // On time.
-  if( json_step_time != 0 )                       // Non-zero means it's a stepper motor
+  if ( json_step_time != 0 )                       // Non-zero means it's a stepper motor
   {
     s_time = json_step_time;                      // the one we use
+  }
+
+  s_count = 1;                                    // Default to one cycle (DC or Stepper Motor)
+  if ( json_step_count != 0 )                      // Non-zero means it's a stepper motor
+  {
+    s_count = json_step_count;                    // the one we use
   }
 
   if ( s_time == 0 )                              // Nothing to do if the time is zero.

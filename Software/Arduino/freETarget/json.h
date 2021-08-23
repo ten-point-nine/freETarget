@@ -19,7 +19,6 @@ typedef struct  {
 #define IS_FLOAT   2        // Value is a floating point number
 #define IS_DOUBLE  3        // Value is a double
 
-
 bool read_JSON(void);             // Scan the serial port looking for JSON input
 void show_echo(int v);            // Display the settings
 
@@ -48,7 +47,9 @@ extern int    json_serial_number; // EIN
 extern int    json_step_count;    // Number of times paper motor is stepped
 extern int    json_step_time;     // Duration of step pulse
 extern int    json_multifunction; // Multifunction switch operation
-extern int    json_z_offset;      // Distance between paper and sensor plane (1mm)
+extern int    json_z_offset;      // Distance between paper and sensor plane (1mm / LSB)
 extern int    json_paper_eco;     // Do not advance witness paper if shot is greater than json_paper_eco
+extern int    json_target_type;   // Modify the location based on a target type (0 == regular 1 bull target)
+#define FIVE_BULL_AIR_RIFLE  1    // Target is a five bull air rifle target
 
 #endif _JSON_H_

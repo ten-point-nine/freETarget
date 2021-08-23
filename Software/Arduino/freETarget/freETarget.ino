@@ -308,14 +308,13 @@ void loop()
  */
   case WASTE:
     delay(ONE_SECOND/2);                      // Hang out for a second
-    if ( (json_paper_time * PAPER_STEP) > (PAPER_LIMIT) )
+    if ( (json_paper_time + json_step_time) != 0 )  // Has the witness paper been enabled
     {
-      json_paper_time = 0;                    // Check for an infinit loop
-    }
-    if ( (json_paper_time != 0 )              // The witness paper has been enabled
-       && ( sqrt(sq(history.x) + sq(history.y)) < json_paper_eco ) ) // And inside the black
-    {
-      drive_paper();
+      if ( (json_paper_eco == 0)                   // ECO turned off
+        || ( sqrt(sq(history.x) + sq(history.y)) < json_paper_eco ) ) // And inside the black
+      {
+        drive_paper();
+      }
     }
     state = SET_MODE;
     break;

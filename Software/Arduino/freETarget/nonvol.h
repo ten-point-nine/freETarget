@@ -11,7 +11,7 @@ void gen_position(int  v);      // Reset the position values
  */
 
 #define NONVOL_INIT           0x0
-#define NONVOL_SENSOR_DIA     (NONVOL_INIT        +  sizeof(int) + 2)      // Sensor diameter
+#define NONVOL_SENSOR_DIA     (NONVOL_INIT        + sizeof(int) + 2)       // Sensor diameter
 #define NONVOL_DIP_SWITCH     (NONVOL_SENSOR_DIA  + sizeof(double) + 2)    // DIP switch setting
 #define NONVOL_PAPER_TIME     (NONVOL_DIP_SWITCH  + sizeof(int) + 2)       // Paper advance time
 #define NONVOL_TEST_MODE      (NONVOL_PAPER_TIME  + sizeof(int) + 2)       // Self stest
@@ -36,9 +36,10 @@ void gen_position(int  v);      // Reset the position values
 #define NONVOL_STEP_TIME      (NONVOL_MFS         + sizeof(int) + 2)       // Stepper motor pulse duration
 #define NONVOL_Z_OFFSET       (NONVOL_STEP_TIME   + sizeof(int) + 2)       // Distance from sensor plane to paper plane
 #define NONVOL_PAPER_ECO      (NONVOL_Z_OFFSET    + sizeof(int) + 2)       // Advance witness paper if the shot is less than paper_eco
-#define NEXT_NONVOL           (NONVOL_STEP_TIME   + sizeof(int) + 2) - NONVOL_INIT)
+#define NONVOL_TARGET_TYPE    (NONVOL_PAPER_ECO   + sizeof(int) + 2)       // Modify the target processing (0 == Regular single bull)
+#define NEXT_NONVOL           ((NONVOL_TARGET_TYPE + sizeof(int) + 2) - NONVOL_INIT)
 
-#if ( ((39-13) * 4) > 4096 )
+#if (((40-13) * 4) > 4096 )
 #error NEXT_NONVOL OUT OF NONVOL
 #endif
 
