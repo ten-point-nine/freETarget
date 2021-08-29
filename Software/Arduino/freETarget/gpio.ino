@@ -310,9 +310,9 @@ void trip_counters(void)
  * interrupt
  * 
  *-----------------------------------------------------*/
-void enable_interrupt(void)
+void enable_interrupt(unsigned int active)
 {
-  if ( json_send_miss )           // Only enable if send_miss is turned on
+  if ( active )                   // Only enable if send_miss is turned on
   {
     if ( revision() >= REV_300 )
     {

@@ -12,7 +12,7 @@ void trip_counters(void);
 bool read_in(unsigned int port);                          // Read the selected port
 void read_timers(void);                                   // Read and return the counter registers
 void drive_paper(void);                                   // Turn on the paper motor
-void enable_interrupt(void);                              // Turn on the face strike interrupt
+void enable_interrupt(unsigned int active);               // Turn on the face strike interrupt if active
 void disable_interrupt(void);                             // Turn off the face strike interrupt
 unsigned int multifunction_switch(unsigned int new_state);// Handle the actions of the DIP Switch signal
 

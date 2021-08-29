@@ -20,7 +20,7 @@ history_t history;
 
 double       s_of_sound;                // Speed of sound
 unsigned int shot = 0;                  // Shot counter
-bool         face_strike = 0;           // Miss indicator
+bool         face_strike = false;       // Miss indicator
 bool         is_trace = false;          // TRUE if trace is enabled
 
 const char* names[] = { "TARGET",                                                                                           //  0
@@ -189,10 +189,7 @@ void loop()
  */
   case ARM:
     arm_counters();
-    if ( json_send_miss )
-    {
-      enable_interrupt();             // Turn on the face strike interrupt
-    }
+    enable_interrupt(json_send_miss);             // Turn on the face strike interrupt
     face_strike = false;              // Reset the face strike count
     
     set_LED_PWM(json_LED_PWM);        // Keep the LEDs ON

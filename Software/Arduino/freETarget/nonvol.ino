@@ -25,7 +25,7 @@
 void init_nonvol(int v)
 {
   unsigned int nonvol_init;               // Initialization token
-  unsigned int serial_number;             // Board serial number
+           int serial_number;             // Board serial number
   char ch;
   unsigned int x;                         // Temporary Value
   double       dx;                        // Temporarty Value
@@ -68,7 +68,7 @@ void init_nonvol(int v)
  * Ask for the serial number.  Exit when you get !
  */
   EEPROM.get(NONVOL_SERIAL_NO, serial_number );
-  if ( serial_number == -1 )
+  if ( serial_number == 65535 )
   {
     ch = 0;
     serial_number = 0;
