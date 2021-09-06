@@ -12,7 +12,7 @@
       <Value Profile="(Default)">115200</Value>
     </Setting>
     <Setting Name="displayDebugConsole" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="defaultTarget" Type="System.String" Scope="User">
       <Value Profile="(Default)">Pistol Practice</Value>

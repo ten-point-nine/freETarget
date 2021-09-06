@@ -180,6 +180,7 @@ namespace freETarget
             chkLog.Checked = Properties.Settings.Default.fileLogging;
             chkMiss.Checked = Properties.Settings.Default.ignoreMiss;
             trkLEDbright.Value = Properties.Settings.Default.LEDbright;
+            lblLED.Text = "LED Brigtness (" + trkLEDbright.Value + ")";
 
             cmb10Pen.SelectedItem = Properties.Settings.Default.score10PenColor.Name;
             cmb10Back.SelectedItem = Properties.Settings.Default.score10BackgroundColor.Name;
@@ -844,6 +845,10 @@ namespace freETarget
                         break;
                 }
             }
+        }
+
+        private void trkLEDbright_ValueChanged(object sender, EventArgs e) {
+            lblLED.Text = "LED Brigtness (" + trkLEDbright.Value + ")";
         }
     }
 }

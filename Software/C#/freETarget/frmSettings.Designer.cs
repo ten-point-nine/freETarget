@@ -71,7 +71,7 @@
             this.txtSteps = new System.Windows.Forms.TextBox();
             this.cmbName = new System.Windows.Forms.ComboBox();
             this.label22 = new System.Windows.Forms.Label();
-            this.label20 = new System.Windows.Forms.Label();
+            this.lblLED = new System.Windows.Forms.Label();
             this.trkLEDbright = new System.Windows.Forms.TrackBar();
             this.lblWarning = new System.Windows.Forms.Label();
             this.label19 = new System.Windows.Forms.Label();
@@ -504,7 +504,7 @@
             this.tabPageHardware.Controls.Add(this.groupBox2);
             this.tabPageHardware.Controls.Add(this.cmbName);
             this.tabPageHardware.Controls.Add(this.label22);
-            this.tabPageHardware.Controls.Add(this.label20);
+            this.tabPageHardware.Controls.Add(this.lblLED);
             this.tabPageHardware.Controls.Add(this.trkLEDbright);
             this.tabPageHardware.Controls.Add(this.lblWarning);
             this.tabPageHardware.Controls.Add(this.label19);
@@ -640,14 +640,14 @@
             this.label22.TabIndex = 21;
             this.label22.Text = "Name";
             // 
-            // label20
+            // lblLED
             // 
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(13, 198);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(74, 13);
-            this.label20.TabIndex = 20;
-            this.label20.Text = "LED Brigtness";
+            this.lblLED.AutoSize = true;
+            this.lblLED.Location = new System.Drawing.Point(13, 198);
+            this.lblLED.Name = "lblLED";
+            this.lblLED.Size = new System.Drawing.Size(74, 13);
+            this.lblLED.TabIndex = 20;
+            this.lblLED.Text = "LED Brigtness";
             // 
             // trkLEDbright
             // 
@@ -655,13 +655,14 @@
             this.helpProvider.SetHelpString(this.trkLEDbright, "External LED brigtness control (percent)");
             this.trkLEDbright.LargeChange = 10;
             this.trkLEDbright.Location = new System.Drawing.Point(109, 192);
-            this.trkLEDbright.Maximum = 100;
+            this.trkLEDbright.Maximum = 99;
             this.trkLEDbright.Name = "trkLEDbright";
             this.helpProvider.SetShowHelp(this.trkLEDbright, true);
             this.trkLEDbright.Size = new System.Drawing.Size(190, 45);
             this.trkLEDbright.SmallChange = 5;
             this.trkLEDbright.TabIndex = 19;
             this.trkLEDbright.TickFrequency = 5;
+            this.trkLEDbright.ValueChanged += new System.EventHandler(this.trkLEDbright_ValueChanged);
             // 
             // lblWarning
             // 
@@ -1681,7 +1682,7 @@
         private System.Windows.Forms.Label lblWarning;
         private System.Windows.Forms.HelpProvider helpProvider;
         public System.Windows.Forms.CheckBox chkMiss;
-        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.Label lblLED;
         public System.Windows.Forms.TrackBar trkLEDbright;
         public System.Windows.Forms.ComboBox cmbName;
         private System.Windows.Forms.Label label22;
