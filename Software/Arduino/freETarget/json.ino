@@ -371,12 +371,12 @@ void show_echo(int v)
   Serial.print("\r\n");
   Serial.print("\"IS_TRACE\":");    Serial.print(is_trace);                               Serial.print(", \r\n");   // TRUE to if trace is enabled
   Serial.print("\"TEMPERATURE\":"); Serial.print(temperature_C());                        Serial.print(", \r\n");   // Temperature in degrees C
-  Serial.print("\"SPEED_SOUND\":"); Serial.print(speed_of_sound(temperature_C(), RH_50)); Serial.print(",\r\n");    // Speed of sound
-  Serial.print("\"V_REF\":");       Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));      Serial.print(",\r\n");    // Trip point reference
+  Serial.print("\"SPEED_SOUND\":"); Serial.print(speed_of_sound(temperature_C(), RH_50)); Serial.print(", \r\n");    // Speed of sound
+  Serial.print("\"V_REF\":");       Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));      Serial.print(", \r\n");    // Trip point reference
   Serial.print("\r\n");
-  Serial.print("\"TIMER_COUNT\":"); Serial.print((int)(SHOT_TIME * OSCILLATOR_MHZ));      Serial.print(",\r\n");    // Maximum number of clock cycles to record shot (target dependent)
-  Serial.print("\"DIP\": 0x");      Serial.print(0x0F & read_DIP(), HEX);                 Serial.print("\r\n");     // DIP switch status
-  Serial.print("\"WiFi\":");        Serial.print(esp01_is_present());                     Serial.print("\r\n");     // TRUE if WiFi is available
+  Serial.print("\"TIMER_COUNT\":"); Serial.print((int)(SHOT_TIME * OSCILLATOR_MHZ));      Serial.print(", \r\n");    // Maximum number of clock cycles to record shot (target dependent)
+  Serial.print("\"DIP_HEX\": 0x");  Serial.print(0x0F & read_DIP(), HEX);                 Serial.print(", \r\n");     // DIP switch status
+  Serial.print("\"WiFi\":");        Serial.print(esp01_is_present());                     Serial.print(", \r\n");     // TRUE if WiFi is available
   Serial.print("\"VERSION\":");     Serial.print(SOFTWARE_VERSION);                       Serial.print(", \r\n");   // Current software version
   Serial.print("\n\r");
   Serial.print("\"BRD_REV\":");     Serial.print(revision());                             Serial.print(", \r\n");   // Current board revision
