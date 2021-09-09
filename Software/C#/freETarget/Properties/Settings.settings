@@ -36,7 +36,7 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="pdfPath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">.\pdf</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="targetDistance" Type="System.Decimal" Scope="User">
       <Value Profile="(Default)">100</Value>
@@ -74,55 +74,16 @@
     <Setting Name="fileLogging" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="SensorDiameter" Type="System.Decimal" Scope="User">
-      <Value Profile="(Default)">230</Value>
-    </Setting>
-    <Setting Name="SensorNorthX" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="SensorNorthY" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="SensorWestX" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="SensorWestY" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="SensorSouthX" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="SensorSouthY" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="SensorEastX" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="SensorEastY" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="Calibre" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">45</Value>
-    </Setting>
     <Setting Name="ignoreMiss" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="LEDbright" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">50</Value>
+    <Setting Name="CommProtocol" Type="System.String" Scope="User">
+      <Value Profile="(Default)">USB</Value>
     </Setting>
-    <Setting Name="targetName" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
+    <Setting Name="TcpIP" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="PaperTime" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="StepCount" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="StepTime" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="ZOffset" Type="System.Int32" Scope="User">
+    <Setting Name="TcpPort" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
   </Settings>

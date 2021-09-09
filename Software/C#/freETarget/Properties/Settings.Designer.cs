@@ -157,7 +157,7 @@ namespace freETarget.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(".\\pdf")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string pdfPath {
             get {
                 return ((string)(this["pdfPath"]));
@@ -313,126 +313,6 @@ namespace freETarget.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("230")]
-        public decimal SensorDiameter {
-            get {
-                return ((decimal)(this["SensorDiameter"]));
-            }
-            set {
-                this["SensorDiameter"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int SensorNorthX {
-            get {
-                return ((int)(this["SensorNorthX"]));
-            }
-            set {
-                this["SensorNorthX"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int SensorNorthY {
-            get {
-                return ((int)(this["SensorNorthY"]));
-            }
-            set {
-                this["SensorNorthY"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int SensorWestX {
-            get {
-                return ((int)(this["SensorWestX"]));
-            }
-            set {
-                this["SensorWestX"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int SensorWestY {
-            get {
-                return ((int)(this["SensorWestY"]));
-            }
-            set {
-                this["SensorWestY"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int SensorSouthX {
-            get {
-                return ((int)(this["SensorSouthX"]));
-            }
-            set {
-                this["SensorSouthX"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int SensorSouthY {
-            get {
-                return ((int)(this["SensorSouthY"]));
-            }
-            set {
-                this["SensorSouthY"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int SensorEastX {
-            get {
-                return ((int)(this["SensorEastX"]));
-            }
-            set {
-                this["SensorEastX"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int SensorEastY {
-            get {
-                return ((int)(this["SensorEastY"]));
-            }
-            set {
-                this["SensorEastY"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("45")]
-        public int Calibre {
-            get {
-                return ((int)(this["Calibre"]));
-            }
-            set {
-                this["Calibre"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool ignoreMiss {
             get {
@@ -445,73 +325,37 @@ namespace freETarget.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("50")]
-        public int LEDbright {
+        [global::System.Configuration.DefaultSettingValueAttribute("USB")]
+        public string CommProtocol {
             get {
-                return ((int)(this["LEDbright"]));
+                return ((string)(this["CommProtocol"]));
             }
             set {
-                this["LEDbright"] = value;
+                this["CommProtocol"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string TcpIP {
+            get {
+                return ((string)(this["TcpIP"]));
+            }
+            set {
+                this["TcpIP"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int targetName {
+        public int TcpPort {
             get {
-                return ((int)(this["targetName"]));
+                return ((int)(this["TcpPort"]));
             }
             set {
-                this["targetName"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int PaperTime {
-            get {
-                return ((int)(this["PaperTime"]));
-            }
-            set {
-                this["PaperTime"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int StepCount {
-            get {
-                return ((int)(this["StepCount"]));
-            }
-            set {
-                this["StepCount"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int StepTime {
-            get {
-                return ((int)(this["StepTime"]));
-            }
-            set {
-                this["StepTime"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int ZOffset {
-            get {
-                return ((int)(this["ZOffset"]));
-            }
-            set {
-                this["ZOffset"] = value;
+                this["TcpPort"] = value;
             }
         }
     }

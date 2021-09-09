@@ -100,20 +100,20 @@ namespace freETarget {
 
 
         private void btnEcho_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"ECHO\":0}");
+            mainWindow.commModule.sendData("{\"ECHO\":0}");
         }
 
         private void btnInit_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"INIT\":0}");
+            mainWindow.commModule.sendData("{\"INIT\":0}");
         }
 
         private void btnCalibration_Click(object sender, EventArgs e) {
             if (btnCalibration.Text == "CAL") {
-                mainWindow.serialPort.Write("{\"CAL\":0}");
+                mainWindow.commModule.sendData("{\"CAL\":0}");
                 btnCalibration.Text = "STOP CAL";
             } else {
                 //STOP CAL
-                mainWindow.serialPort.Write("!");
+                mainWindow.commModule.sendData("!");
                 btnCalibration.Text = "CAL";
             }
 
@@ -121,7 +121,7 @@ namespace freETarget {
         }
 
         private void btnVersion_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"VERSION\":7}");
+            mainWindow.commModule.sendData("{\"VERSION\":7}");
         }
 
 
@@ -133,7 +133,7 @@ namespace freETarget {
         }
 
         private void btnSend_Click(object sender, EventArgs e) {
-            mainWindow.serialPort.Write("{\"" + cmbCommands.SelectedItem.ToString() +  "\":" + txtParameter.Text + "}");
+            mainWindow.commModule.sendData("{\"" + cmbCommands.SelectedItem.ToString() +  "\":" + txtParameter.Text + "}");
         }
 
     }

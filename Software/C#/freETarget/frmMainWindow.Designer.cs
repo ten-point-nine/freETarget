@@ -32,13 +32,12 @@ namespace freETarget
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMainWindow));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            this.serialPort = new System.IO.Ports.SerialPort(this.components);
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.btnConnect = new System.Windows.Forms.Button();
             this.imgListIcons = new System.Windows.Forms.ImageList(this.components);
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
@@ -61,7 +60,6 @@ namespace freETarget
             this.btnConfig = new System.Windows.Forms.Button();
             this.trkZoom = new System.Windows.Forms.TrackBar();
             this.label3 = new System.Windows.Forms.Label();
-            this.btnClear = new System.Windows.Forms.Button();
             this.txtTime = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.timer = new System.Windows.Forms.Timer(this.components);
@@ -79,6 +77,7 @@ namespace freETarget
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.btnArduino = new System.Windows.Forms.Button();
             this.btnUpload = new System.Windows.Forms.Button();
+            this.btnTargetSettings = new System.Windows.Forms.Button();
             this.imgSessionName = new System.Windows.Forms.PictureBox();
             this.gridTargets = new System.Windows.Forms.DataGridView();
             this.column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -100,12 +99,14 @@ namespace freETarget
             this.tabRiflePractice = new System.Windows.Forms.TabPage();
             this.tabRifleMatch = new System.Windows.Forms.TabPage();
             this.tabRifleFinal = new System.Windows.Forms.TabPage();
+            this.tabRifle50MPractice = new System.Windows.Forms.TabPage();
             this.tabRifle50MMatch = new System.Windows.Forms.TabPage();
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnJournal = new System.Windows.Forms.Button();
             this.imgLogo = new System.Windows.Forms.PictureBox();
-            this.tabRifle50MPractice = new System.Windows.Forms.TabPage();
+            this.splitContainer = new System.Windows.Forms.SplitContainer();
             this.digitalClock = new freETarget.SevenSegmentArray();
+            this.toolTipTimer = new System.Windows.Forms.Timer(this.components);
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.imgTarget)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.imgArrow)).BeginInit();
@@ -118,12 +119,12 @@ namespace freETarget
             this.tcSessionType.SuspendLayout();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.imgLogo)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
+            this.splitContainer.Panel1.SuspendLayout();
+            this.splitContainer.Panel2.SuspendLayout();
+            this.splitContainer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.digitalClock)).BeginInit();
             this.SuspendLayout();
-            // 
-            // serialPort
-            // 
-            this.serialPort.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(this.serialPort_DataReceived);
             // 
             // btnConnect
             // 
@@ -184,15 +185,14 @@ namespace freETarget
             // 
             // txtOutput
             // 
-            this.txtOutput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.txtOutput.BackColor = System.Drawing.SystemColors.Window;
-            this.txtOutput.Location = new System.Drawing.Point(433, 37);
+            this.txtOutput.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txtOutput.Location = new System.Drawing.Point(0, 0);
             this.txtOutput.Multiline = true;
             this.txtOutput.Name = "txtOutput";
             this.txtOutput.ReadOnly = true;
             this.txtOutput.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtOutput.Size = new System.Drawing.Size(328, 634);
+            this.txtOutput.Size = new System.Drawing.Size(125, 634);
             this.txtOutput.TabIndex = 3;
             this.txtOutput.WordWrap = false;
             // 
@@ -200,9 +200,9 @@ namespace freETarget
             // 
             this.imgTarget.BackColor = System.Drawing.Color.Transparent;
             this.imgTarget.InitialImage = null;
-            this.imgTarget.Location = new System.Drawing.Point(216, 37);
+            this.imgTarget.Location = new System.Drawing.Point(0, 0);
             this.imgTarget.Name = "imgTarget";
-            this.imgTarget.Size = new System.Drawing.Size(501, 500);
+            this.imgTarget.Size = new System.Drawing.Size(300, 286);
             this.imgTarget.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.imgTarget.TabIndex = 4;
             this.imgTarget.TabStop = false;
@@ -352,17 +352,6 @@ namespace freETarget
             this.label3.TabIndex = 16;
             this.label3.Text = "Zoom";
             // 
-            // btnClear
-            // 
-            this.btnClear.Location = new System.Drawing.Point(652, 8);
-            this.btnClear.Name = "btnClear";
-            this.btnClear.Size = new System.Drawing.Size(75, 23);
-            this.btnClear.TabIndex = 17;
-            this.btnClear.Text = "Clear";
-            this.btnClear.UseVisualStyleBackColor = true;
-            this.btnClear.Visible = false;
-            this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
-            // 
             // txtTime
             // 
             this.txtTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
@@ -498,7 +487,7 @@ namespace freETarget
             this.btnCalibration.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCalibration.Enabled = false;
             this.btnCalibration.Image = ((System.Drawing.Image)(resources.GetObject("btnCalibration.Image")));
-            this.btnCalibration.Location = new System.Drawing.Point(1052, 4);
+            this.btnCalibration.Location = new System.Drawing.Point(1019, 4);
             this.btnCalibration.Name = "btnCalibration";
             this.btnCalibration.Size = new System.Drawing.Size(27, 27);
             this.btnCalibration.TabIndex = 30;
@@ -511,7 +500,7 @@ namespace freETarget
             this.btnArduino.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnArduino.Enabled = false;
             this.btnArduino.Image = ((System.Drawing.Image)(resources.GetObject("btnArduino.Image")));
-            this.btnArduino.Location = new System.Drawing.Point(1118, 4);
+            this.btnArduino.Location = new System.Drawing.Point(1085, 4);
             this.btnArduino.Name = "btnArduino";
             this.btnArduino.Size = new System.Drawing.Size(27, 27);
             this.btnArduino.TabIndex = 38;
@@ -523,13 +512,26 @@ namespace freETarget
             // 
             this.btnUpload.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnUpload.Image = ((System.Drawing.Image)(resources.GetObject("btnUpload.Image")));
-            this.btnUpload.Location = new System.Drawing.Point(1085, 4);
+            this.btnUpload.Location = new System.Drawing.Point(1052, 4);
             this.btnUpload.Name = "btnUpload";
             this.btnUpload.Size = new System.Drawing.Size(27, 27);
             this.btnUpload.TabIndex = 39;
             this.toolTip.SetToolTip(this.btnUpload, "Firmware upload");
             this.btnUpload.UseVisualStyleBackColor = true;
             this.btnUpload.Click += new System.EventHandler(this.btnUpload_Click);
+            // 
+            // btnTargetSettings
+            // 
+            this.btnTargetSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnTargetSettings.Enabled = false;
+            this.btnTargetSettings.Image = ((System.Drawing.Image)(resources.GetObject("btnTargetSettings.Image")));
+            this.btnTargetSettings.Location = new System.Drawing.Point(1118, 4);
+            this.btnTargetSettings.Name = "btnTargetSettings";
+            this.btnTargetSettings.Size = new System.Drawing.Size(27, 27);
+            this.btnTargetSettings.TabIndex = 41;
+            this.toolTip.SetToolTip(this.btnTargetSettings, "Target Settings");
+            this.btnTargetSettings.UseVisualStyleBackColor = true;
+            this.btnTargetSettings.Click += new System.EventHandler(this.btnTargetSettings_Click);
             // 
             // imgSessionName
             // 
@@ -550,14 +552,14 @@ namespace freETarget
             this.gridTargets.AllowUserToResizeRows = false;
             this.gridTargets.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridTargets.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridTargets.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
             this.gridTargets.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             this.gridTargets.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.column1,
@@ -575,13 +577,13 @@ namespace freETarget
             this.gridTargets.MultiSelect = false;
             this.gridTargets.Name = "gridTargets";
             this.gridTargets.ReadOnly = true;
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            this.gridTargets.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            this.gridTargets.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
             this.gridTargets.RowHeadersWidth = 52;
             this.gridTargets.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
             this.gridTargets.RowTemplate.DefaultCellStyle.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
@@ -684,8 +686,8 @@ namespace freETarget
             // 
             // ColumnTotal
             // 
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.ColumnTotal.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.ColumnTotal.DefaultCellStyle = dataGridViewCellStyle5;
             this.ColumnTotal.HeaderText = "Total";
             this.ColumnTotal.Name = "ColumnTotal";
             this.ColumnTotal.ReadOnly = true;
@@ -695,39 +697,37 @@ namespace freETarget
             // 
             // chartBreakdown
             // 
-            this.chartBreakdown.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.chartBreakdown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.chartBreakdown.BackColor = System.Drawing.SystemColors.ControlDark;
             this.chartBreakdown.BorderlineColor = System.Drawing.Color.Black;
-            chartArea1.AxisX.Interval = 1D;
-            chartArea1.AxisX.LineWidth = 0;
-            chartArea1.AxisX.MajorGrid.LineWidth = 0;
-            chartArea1.AxisX.MajorTickMark.Enabled = false;
-            chartArea1.AxisY.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
-            chartArea1.AxisY.MajorGrid.LineWidth = 0;
-            chartArea1.BackColor = System.Drawing.SystemColors.ControlDark;
-            chartArea1.Name = "ChartArea1";
-            chartArea1.Position.Auto = false;
-            chartArea1.Position.Height = 100F;
-            chartArea1.Position.Width = 100F;
-            this.chartBreakdown.ChartAreas.Add(chartArea1);
-            legend1.Name = "Legend1";
-            this.chartBreakdown.Legends.Add(legend1);
+            chartArea2.AxisX.Interval = 1D;
+            chartArea2.AxisX.LineWidth = 0;
+            chartArea2.AxisX.MajorGrid.LineWidth = 0;
+            chartArea2.AxisX.MajorTickMark.Enabled = false;
+            chartArea2.AxisY.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
+            chartArea2.AxisY.MajorGrid.LineWidth = 0;
+            chartArea2.BackColor = System.Drawing.SystemColors.ControlDark;
+            chartArea2.Name = "ChartArea1";
+            chartArea2.Position.Auto = false;
+            chartArea2.Position.Height = 100F;
+            chartArea2.Position.Width = 100F;
+            this.chartBreakdown.ChartAreas.Add(chartArea2);
+            legend2.Name = "Legend1";
+            this.chartBreakdown.Legends.Add(legend2);
             this.chartBreakdown.Location = new System.Drawing.Point(-1, -2);
             this.chartBreakdown.Name = "chartBreakdown";
             this.chartBreakdown.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.None;
             this.chartBreakdown.PaletteCustomColors = new System.Drawing.Color[] {
         System.Drawing.Color.Blue};
-            series1.ChartArea = "ChartArea1";
-            series1.CustomProperties = "LabelStyle=Bottom";
-            series1.IsValueShownAsLabel = true;
-            series1.IsVisibleInLegend = false;
-            series1.LabelForeColor = System.Drawing.Color.White;
-            series1.Legend = "Legend1";
-            series1.Name = "Series1";
-            series1.SmartLabelStyle.AllowOutsidePlotArea = System.Windows.Forms.DataVisualization.Charting.LabelOutsidePlotAreaStyle.No;
-            this.chartBreakdown.Series.Add(series1);
+            series2.ChartArea = "ChartArea1";
+            series2.CustomProperties = "LabelStyle=Bottom";
+            series2.IsValueShownAsLabel = true;
+            series2.IsVisibleInLegend = false;
+            series2.LabelForeColor = System.Drawing.Color.White;
+            series2.Legend = "Legend1";
+            series2.Name = "Series1";
+            series2.SmartLabelStyle.AllowOutsidePlotArea = System.Windows.Forms.DataVisualization.Charting.LabelOutsidePlotAreaStyle.No;
+            this.chartBreakdown.Series.Add(series2);
             this.chartBreakdown.Size = new System.Drawing.Size(395, 148);
             this.chartBreakdown.TabIndex = 4;
             this.chartBreakdown.Text = "chart1";
@@ -769,28 +769,28 @@ namespace freETarget
             // tabPistolMatch
             // 
             this.tabPistolMatch.BackColor = System.Drawing.Color.Orange;
-            this.tabPistolMatch.Location = new System.Drawing.Point(28, 4);
+            this.tabPistolMatch.Location = new System.Drawing.Point(52, 4);
             this.tabPistolMatch.Name = "tabPistolMatch";
             this.tabPistolMatch.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPistolMatch.Size = new System.Drawing.Size(168, 522);
+            this.tabPistolMatch.Size = new System.Drawing.Size(144, 522);
             this.tabPistolMatch.TabIndex = 1;
             this.tabPistolMatch.Text = "Pistol Match ";
             // 
             // tabPistolFinal
             // 
             this.tabPistolFinal.BackColor = System.Drawing.Color.Red;
-            this.tabPistolFinal.Location = new System.Drawing.Point(28, 4);
+            this.tabPistolFinal.Location = new System.Drawing.Point(52, 4);
             this.tabPistolFinal.Name = "tabPistolFinal";
-            this.tabPistolFinal.Size = new System.Drawing.Size(168, 522);
+            this.tabPistolFinal.Size = new System.Drawing.Size(144, 522);
             this.tabPistolFinal.TabIndex = 2;
             this.tabPistolFinal.Text = "Pistol Final";
             // 
             // tabRiflePractice
             // 
             this.tabRiflePractice.BackColor = System.Drawing.Color.LimeGreen;
-            this.tabRiflePractice.Location = new System.Drawing.Point(28, 4);
+            this.tabRiflePractice.Location = new System.Drawing.Point(52, 4);
             this.tabRiflePractice.Name = "tabRiflePractice";
-            this.tabRiflePractice.Size = new System.Drawing.Size(168, 522);
+            this.tabRiflePractice.Size = new System.Drawing.Size(144, 522);
             this.tabRiflePractice.TabIndex = 3;
             this.tabRiflePractice.Text = "Rifle Practice";
             // 
@@ -811,6 +811,15 @@ namespace freETarget
             this.tabRifleFinal.Size = new System.Drawing.Size(144, 522);
             this.tabRifleFinal.TabIndex = 5;
             this.tabRifleFinal.Text = "Rifle Final ";
+            // 
+            // tabRifle50MPractice
+            // 
+            this.tabRifle50MPractice.BackColor = System.Drawing.Color.Olive;
+            this.tabRifle50MPractice.Location = new System.Drawing.Point(52, 4);
+            this.tabRifle50MPractice.Name = "tabRifle50MPractice";
+            this.tabRifle50MPractice.Size = new System.Drawing.Size(144, 522);
+            this.tabRifle50MPractice.TabIndex = 8;
+            this.tabRifle50MPractice.Text = "Rifle 50m Practice";
             // 
             // tabRifle50MMatch
             // 
@@ -850,21 +859,32 @@ namespace freETarget
             this.imgLogo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.imgLogo.BackColor = System.Drawing.Color.Transparent;
             this.imgLogo.Image = ((System.Drawing.Image)(resources.GetObject("imgLogo.Image")));
-            this.imgLogo.Location = new System.Drawing.Point(917, 6);
+            this.imgLogo.Location = new System.Drawing.Point(884, 6);
             this.imgLogo.Name = "imgLogo";
             this.imgLogo.Size = new System.Drawing.Size(129, 24);
             this.imgLogo.TabIndex = 37;
             this.imgLogo.TabStop = false;
             this.imgLogo.Click += new System.EventHandler(this.imgLogo_Click);
             // 
-            // tabRifle50MPractice
+            // splitContainer
             // 
-            this.tabRifle50MPractice.BackColor = System.Drawing.Color.Olive;
-            this.tabRifle50MPractice.Location = new System.Drawing.Point(52, 4);
-            this.tabRifle50MPractice.Name = "tabRifle50MPractice";
-            this.tabRifle50MPractice.Size = new System.Drawing.Size(144, 522);
-            this.tabRifle50MPractice.TabIndex = 8;
-            this.tabRifle50MPractice.Text = "Rifle 50m Practice";
+            this.splitContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.splitContainer.Location = new System.Drawing.Point(213, 37);
+            this.splitContainer.Name = "splitContainer";
+            // 
+            // splitContainer.Panel1
+            // 
+            this.splitContainer.Panel1.Controls.Add(this.imgTarget);
+            // 
+            // splitContainer.Panel2
+            // 
+            this.splitContainer.Panel2.Controls.Add(this.txtOutput);
+            this.splitContainer.Size = new System.Drawing.Size(545, 634);
+            this.splitContainer.SplitterDistance = 416;
+            this.splitContainer.TabIndex = 40;
+            this.splitContainer.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer_SplitterMoved);
             // 
             // digitalClock
             // 
@@ -884,11 +904,19 @@ namespace freETarget
             this.digitalClock.TabStop = false;
             this.digitalClock.Value = null;
             // 
+            // toolTipTimer
+            // 
+            this.toolTipTimer.Enabled = true;
+            this.toolTipTimer.Interval = 1000;
+            this.toolTipTimer.Tick += new System.EventHandler(this.toolTipTimer_Tick);
+            // 
             // frmMainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1185, 700);
+            this.Controls.Add(this.btnTargetSettings);
+            this.Controls.Add(this.splitContainer);
             this.Controls.Add(this.btnUpload);
             this.Controls.Add(this.btnArduino);
             this.Controls.Add(this.imgLogo);
@@ -910,7 +938,6 @@ namespace freETarget
             this.Controls.Add(this.txtMaxSpread);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.txtMeanRadius);
-            this.Controls.Add(this.btnClear);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.btnConfig);
             this.Controls.Add(this.imgArrow);
@@ -919,12 +946,10 @@ namespace freETarget
             this.Controls.Add(this.label1);
             this.Controls.Add(this.txtTotal);
             this.Controls.Add(this.shotsList);
-            this.Controls.Add(this.imgTarget);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.btnConnect);
             this.Controls.Add(this.trkZoom);
             this.Controls.Add(this.label4);
-            this.Controls.Add(this.txtOutput);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(1000, 738);
             this.Name = "frmMainWindow";
@@ -946,6 +971,11 @@ namespace freETarget
             this.tcSessionType.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.imgLogo)).EndInit();
+            this.splitContainer.Panel1.ResumeLayout(false);
+            this.splitContainer.Panel2.ResumeLayout(false);
+            this.splitContainer.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).EndInit();
+            this.splitContainer.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.digitalClock)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -953,8 +983,6 @@ namespace freETarget
         }
 
         #endregion
-
-        public System.IO.Ports.SerialPort serialPort;
         public System.Windows.Forms.Button btnConnect;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel statusText;
@@ -974,7 +1002,6 @@ namespace freETarget
         private System.Windows.Forms.Button btnConfig;
         private System.Windows.Forms.TrackBar trkZoom;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Button btnClear;
         private System.Windows.Forms.TextBox txtTime;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Timer timer;
@@ -1022,6 +1049,9 @@ namespace freETarget
         private System.Windows.Forms.Button btnUpload;
     private System.Windows.Forms.TabPage tabRifle50MMatch;
         private System.Windows.Forms.TabPage tabRifle50MPractice;
+        private System.Windows.Forms.SplitContainer splitContainer;
+        private System.Windows.Forms.Button btnTargetSettings;
+        private System.Windows.Forms.Timer toolTipTimer;
     }
 }
 

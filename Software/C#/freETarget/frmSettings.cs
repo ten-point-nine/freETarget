@@ -23,13 +23,6 @@ namespace freETarget
 
         private List<Control> eventControls = new List<Control>();
 
-        private List<string> targetNames = new List<string>() { "TARGET",                                                     //  0
-                        "1",      "2",        "3",     "4",      "5",       "6",       "7",     "8",     "9",      "10",    //  1
-                        "DOC",    "DOPEY",  "HAPPY",   "GRUMPY", "BASHFUL", "SNEEZEY", "SLEEPY",                            // 11
-                        "RUDOLF", "DONNER", "BLITXEM", "DASHER", "PRANCER", "VIXEN",   "COMET", "CUPID", "DUNDER",          // 18  
-                        "ODIN",   "WODEN",   "THOR",   "BALDAR"                                                            // 26
-                        };
-
         public frmSettings(frmMainWindow mainWin)
         {
             InitializeComponent();
@@ -116,7 +109,6 @@ namespace freETarget
             }
 
             //load targets 
-            //List<targets.aTarget> objects = new List<targets.aTarget>();
             foreach (Type type in Assembly.GetAssembly(typeof(targets.aTarget)).GetTypes()
                 .Where(myType => myType.IsClass && !myType.IsAbstract && myType.IsSubclassOf(typeof(targets.aTarget)))) {
                 //objects.Add((targets.aTarget)Activator.CreateInstance(type));
@@ -124,13 +116,13 @@ namespace freETarget
                 cmbTargets.Items.Add(type.ToString());
             }
 
+            //load comms
+            cmbCommProtocol.Items.Add("USB");
+            cmbCommProtocol.Items.Add("TCP");
+
             loadEvents();
 
-            loadTargetNames();
-
             loadSettings();
-
-
 
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             lblVersion.Text = "freETarget Project  -  v"+ assembly.GetName().Version.Major + "." + assembly.GetName().Version.Minor + "." + assembly.GetName().Version.Build + "   (c) 2020-2021";
@@ -159,8 +151,7 @@ namespace freETarget
 
         private void loadSettings()
         {
-            txtName.Text = Properties.Settings.Default.name;
-            txtBaud.Text = Properties.Settings.Default.baudRate.ToString();
+
             chkDisplayConsole.Checked = Properties.Settings.Default.displayDebugConsole;
             cmbPorts.SelectedItem = Properties.Settings.Default.portName;
             foreach(Event ev in mainWindow.eventManager.getActiveEventsList()) {
@@ -174,13 +165,15 @@ namespace freETarget
             chkDrawMeanG.Checked = Properties.Settings.Default.drawMeanGroup;
             chkSeries.Checked = Properties.Settings.Default.OnlySeries;
             chkVoice.Checked = Properties.Settings.Default.voiceCommands;
-            txtPDFlocation.Text = Properties.Settings.Default.pdfPath;
+            if (Properties.Settings.Default.pdfPath == null || Properties.Settings.Default.pdfPath == "") {
+                txtPDFlocation.Text = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\freETarget\\pdf";
+            } else {
+                txtPDFlocation.Text = Properties.Settings.Default.pdfPath;
+            }
             txtDistance.Text = Properties.Settings.Default.targetDistance.ToString();
             chkScoreVoice.Checked = Properties.Settings.Default.scoreVoice;
             chkLog.Checked = Properties.Settings.Default.fileLogging;
             chkMiss.Checked = Properties.Settings.Default.ignoreMiss;
-            trkLEDbright.Value = Properties.Settings.Default.LEDbright;
-            lblLED.Text = "LED Brigtness (" + trkLEDbright.Value + ")";
 
             cmb10Pen.SelectedItem = Properties.Settings.Default.score10PenColor.Name;
             cmb10Back.SelectedItem = Properties.Settings.Default.score10BackgroundColor.Name;
@@ -191,41 +184,20 @@ namespace freETarget
             cmbOldPen.SelectedItem = Properties.Settings.Default.scoreOldPenColor.Name;
             cmbOldBack.SelectedItem = Properties.Settings.Default.scoreOldBackgroundColor.Name;
 
-            txtSensorDiameter.Text = Properties.Settings.Default.SensorDiameter.ToString();
-            txtZOffset.Text = Properties.Settings.Default.ZOffset.ToString();
-
-            txtNorthX.Text = Properties.Settings.Default.SensorNorthX.ToString();
-            txtNorthY.Text = Properties.Settings.Default.SensorNorthY.ToString();
-            txtWestX.Text = Properties.Settings.Default.SensorWestX.ToString();
-            txtWestY.Text = Properties.Settings.Default.SensorWestY.ToString();
-            txtSouthX.Text = Properties.Settings.Default.SensorSouthX.ToString();
-            txtSouthY.Text = Properties.Settings.Default.SensorSouthY.ToString();
-            txtEastX.Text = Properties.Settings.Default.SensorEastX.ToString();
-            txtEastY.Text = Properties.Settings.Default.SensorEastY.ToString();
-
-            txtCalibre.Text = Properties.Settings.Default.Calibre.ToString();
-
-            txtSteps.Text = Properties.Settings.Default.StepCount.ToString();
-            txtStepTime.Text = Properties.Settings.Default.StepTime.ToString();
-            txtPaperTime.Text = Properties.Settings.Default.PaperTime.ToString();
-
-            if (Properties.Settings.Default.PaperTime > 0) {
-                rbStepper.Checked = false;
-                rbDC.Checked = true;
+            if (Properties.Settings.Default.CommProtocol == "USB") {
+                cmbCommProtocol.SelectedItem = "USB";
             } else {
-                rbStepper.Checked = true;
-                rbDC.Checked = false;
+                //TCP
+                cmbCommProtocol.SelectedItem = "TCP";
             }
+            txtName.Text = Properties.Settings.Default.name;
+            txtBaud.Text = Properties.Settings.Default.baudRate.ToString();
+            txtIP.Text = Properties.Settings.Default.TcpIP;
+            txtPort.Text = Properties.Settings.Default.TcpPort.ToString();
 
-            cmbName.SelectedIndex = Properties.Settings.Default.targetName;
 
         }
 
-        private void loadTargetNames() {
-            foreach(string s in targetNames) {
-                cmbName.Items.Add(s);
-            }
-        }
 
         private void cmbColor_DrawItem(object sender, DrawItemEventArgs e)
         {
@@ -260,6 +232,15 @@ namespace freETarget
                 return;
             }
 
+            if (Directory.Exists(txtPDFlocation.Text) == false) {
+                try {
+                    Directory.CreateDirectory(txtPDFlocation.Text);
+                } catch (Exception ex) {
+                    mainWindow.log(ex.Message);
+                    MessageBox.Show("PDF path " + txtPDFlocation.Text + " not valid.", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
 
             if (validateData()) {
                 Event defaultEvent = (Event)cmbWeapons.SelectedItem;
@@ -296,17 +277,35 @@ namespace freETarget
                 return false;
             }
 
-            //baud rate
-            if (!validNumber(txtBaud.Text)) {
-                MessageBox.Show("Baud rate is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            if (cmbCommProtocol.SelectedItem == null) {
+                MessageBox.Show("A communication protocol must be selected", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return false;
-            }
+            } else {
+                if (cmbCommProtocol.SelectedItem.ToString() == "USB") {
+                    //baud rate
+                    if (!validNumber(txtBaud.Text)) {
+                        MessageBox.Show("Baud rate is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        return false;
+                    }
 
-            if (!positiveNumber(txtBaud.Text)) {
-                MessageBox.Show("Baud rate must be a positive number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return false;
-            }
+                    if (!positiveNumber(txtBaud.Text)) {
+                        MessageBox.Show("Baud rate must be a positive number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        return false;
+                    }
+                } else {
+                    //TCP
+                    if (txtIP.Text == "") {
+                        MessageBox.Show("Please enter an IP address", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        return false;
+                    }
 
+                    if (!positiveNumber(txtPort.Text)) {
+                        MessageBox.Show("Port must be a positive number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        return false;
+
+                    }
+                }
+            }
 
             //target distance
             if (!validNumber(txtDistance.Text)) {
@@ -321,112 +320,6 @@ namespace freETarget
             //pdf location
             if (!Directory.Exists(txtPDFlocation.Text)) {
                 MessageBox.Show("PDF save location must exist", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return false;
-            }
-
-            //sensor diameter
-            if (!validDecimal(txtSensorDiameter.Text)) {
-                MessageBox.Show("Sensor diameter is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-            } else {
-                if (decimal.Parse(txtSensorDiameter.Text) < 230) {
-                    MessageBox.Show("Sensor diameter is smaller than 230, the default value.", "Small diameter", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
-            }
-
-            //zoffset
-            if (!validNumber(txtZOffset.Text)) {
-                MessageBox.Show("Z offset is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return false;
-            }
-
-            //northX
-            if (!validNumber(txtNorthX.Text)) {
-                MessageBox.Show("Offset for North X sensor is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return false;
-            }
-
-            //northY
-            if (!validNumber(txtNorthY.Text)) {
-                MessageBox.Show("Offset for North Y sensor is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return false;
-            }
-
-            //westX
-            if (!validNumber(txtWestX.Text)) {
-                MessageBox.Show("Offset for West X sensor is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return false;
-            }
-
-            //westY
-            if (!validNumber(txtWestY.Text)) {
-                MessageBox.Show("Offset for West Y sensor is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return false;
-            }
-
-            //southX
-            if (!validNumber(txtSouthX.Text)) {
-                MessageBox.Show("Offset for South X sensor is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return false;
-            }
-
-            //southY
-            if (!validNumber(txtSouthY.Text)) {
-                MessageBox.Show("Offset for South Y sensor is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return false;
-            }
-
-            //eastX
-            if (!validNumber(txtEastX.Text)) {
-                MessageBox.Show("Offset for East X sensor is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return false;
-            }
-
-            //easyY
-            if (!validNumber(txtEastY.Text)) {
-                MessageBox.Show("Offset for East Y sensor is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return false;
-            }
-
-            //calibre
-            if (!validNumber(txtCalibre.Text)) {
-                MessageBox.Show("Calibre is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return false;
-            } else {
-                if (int.Parse(txtCalibre.Text) < 45) {
-                    MessageBox.Show("Calibre is cannot be smaller than 45 (4.5 mm x 10)", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    return false;
-                }
-            }
-
-            //stepper
-            if (!validNumber(txtSteps.Text)) {
-                MessageBox.Show("Stepper steps is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return false;
-            }
-
-            if (!positiveNumber(txtSteps.Text)) {
-                MessageBox.Show("Stepper steps is not a number must be a positive number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return false;
-            }
-
-            if (!validNumber(txtStepTime.Text)) {
-                MessageBox.Show("Stepper duration is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return false;
-            }
-
-            if (!positiveNumber(txtStepTime.Text)) {
-                MessageBox.Show("Stepper duration must be a positive number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return false;
-            }
-
-            //dc
-            if (!validNumber(txtPaperTime.Text)) {
-                MessageBox.Show("Direct Current time is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return false;
-            }
-
-            if (!positiveNumber(txtPaperTime.Text)) {
-                MessageBox.Show("Direct Current time must be a positive number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return false;
             }
 
@@ -475,31 +368,24 @@ namespace freETarget
             }
         }
 
-        private void rbDC_CheckedChanged(object sender, EventArgs e) {
-            radios();
-        }
+        private void cmbCommProtocol_SelectedIndexChanged(object sender, EventArgs e) {
+            if (cmbCommProtocol.SelectedItem == null) {
+                return;
+            }
 
-        private void rbStepper_CheckedChanged(object sender, EventArgs e) {
-            radios();
-        }
 
-        private void radios() {
-            if (rbDC.Checked) {
-                txtPaperTime.Enabled = true;
-
-                txtSteps.Enabled = false;
-                txtStepTime.Enabled = false;
-                txtSteps.Text = "0";
-                txtStepTime.Text = "0";
-            } else { //stepper
-                txtPaperTime.Enabled = false;
-                txtPaperTime.Text = "0";
-
-                txtSteps.Enabled = true;
-                txtStepTime.Enabled = true;
+            if (cmbCommProtocol.SelectedItem.ToString() == "USB") {
+                grpUSB.Visible = true;
+                grpTCP.Visible = false;
+            } else {
+                //TCP
+                grpUSB.Visible = false;
+                grpTCP.Visible = true;
             }
         }
 
+
+        //---- EVENTS -----
         private void btnLeftToRight_Click(object sender, EventArgs e) {
             Event ev = (Event)lstbAllEvents.SelectedItem;
             lstbActiveEvents.Items.Add(ev);
@@ -847,8 +733,6 @@ namespace freETarget
             }
         }
 
-        private void trkLEDbright_ValueChanged(object sender, EventArgs e) {
-            lblLED.Text = "LED Brigtness (" + trkLEDbright.Value + ")";
-        }
+
     }
 }

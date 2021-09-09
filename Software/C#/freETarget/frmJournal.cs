@@ -327,6 +327,17 @@ namespace freETarget {
         }
 
         private void btnPrint_Click(object sender, EventArgs e) {
+
+            if (Directory.Exists(Settings.Default.pdfPath) == false) {
+                try {
+                    Directory.CreateDirectory(Settings.Default.pdfPath);
+                }catch(Exception ex) {
+                    mainWindow.log(ex.Message);
+                    MessageBox.Show("Path " + Settings.Default.pdfPath + " not valid. Cannot save PDF","Error saving PDF", MessageBoxButtons.OK,MessageBoxIcon.Error);
+                    return;
+                }
+            }
+
             var stream = new System.IO.MemoryStream();
             imgLogo.Image.Save(stream, ImageFormat.Png);
             stream.Position = 0;
@@ -387,8 +398,7 @@ namespace freETarget {
                 string controlString = StorageController.getControlString(currentSession);
                 sb.Append(StorageController.GetMd5Hash(controlString));
 
-                string exeLocation = System.Reflection.Assembly.GetEntryAssembly().Location;
-                string exportDirectory = exeLocation.Substring(0, exeLocation.LastIndexOf(@"\")) + @"\sessionExport\";
+                string exportDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"\freETarget\sessionExport\";
 
                 if (!Directory.Exists(exportDirectory)) {
                     try {
@@ -438,7 +448,7 @@ namespace freETarget {
 
         private void btnImport_Click(object sender, EventArgs e) {
             using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
-                openFileDialog.InitialDirectory = ".";
+                openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"\freETarget\sessionExport\"; ;
                 openFileDialog.Filter = "exp files (*.exp)|*.exp|All files (*.*)|*.*";
                 openFileDialog.FilterIndex = 1;
                 openFileDialog.RestoreDirectory = true;

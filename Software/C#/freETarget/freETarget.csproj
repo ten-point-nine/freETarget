@@ -80,6 +80,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="comms\aCommModule.cs" />
+    <Compile Include="comms\TCP.cs" />
+    <Compile Include="comms\USB.cs" />
+    <Compile Include="Echo.cs" />
     <Compile Include="EventManager.cs" />
     <Compile Include="frmGraph.cs">
       <SubType>Form</SubType>
@@ -104,6 +108,12 @@
     </Compile>
     <Compile Include="frmArduino.Designer.cs">
       <DependentUpon>frmArduino.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmTargetSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmTargetSettings.Designer.cs">
+      <DependentUpon>frmTargetSettings.cs</DependentUpon>
     </Compile>
     <Compile Include="frmUpload.cs">
       <SubType>Form</SubType>
@@ -172,6 +182,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmArduino.resx">
       <DependentUpon>frmArduino.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmTargetSettings.resx">
+      <DependentUpon>frmTargetSettings.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmUpload.resx">
       <DependentUpon>frmUpload.cs</DependentUpon>

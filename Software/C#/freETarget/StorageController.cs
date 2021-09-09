@@ -541,6 +541,103 @@ namespace freETarget {
             }
         }
 
+        public object getSetting(string name) {
+            SQLiteConnection con = new SQLiteConnection(connString);
+            con.Open();
+            SQLiteCommand cmd = new SQLiteCommand("select type, value " +
+                "  from Settings where Name = @name ", con);
+            cmd.Parameters.AddWithValue("@name", name);
+            SQLiteDataReader rdr = cmd.ExecuteReader();
+
+            object ret = null;
+            string sType=null;
+            string sValue = null;
+            while (rdr.Read()) {
+                sType = rdr.GetString(0);
+                sValue = rdr.GetString(1);
+            }
+
+            if (sType != null) {
+                //a setting with this name was found
+                switch (sType) {
+                    case "System.String":
+                        ret = sValue;
+                        break;
+                    case "System.Int32":
+                        ret = Int32.Parse(sValue, CultureInfo.InvariantCulture);
+                        break;
+                    case "System.Boolean":
+                        if(sValue == "0") {
+                            ret = false;
+                        } else {
+                            ret = true;
+                        }           
+                        break;
+                    case "System.Drawing.Color":
+                        string knownName = sValue.Substring(sValue.IndexOf("[") + 1, sValue.IndexOf("]") - sValue.IndexOf("[") - 1);
+                        ret = System.Drawing.Color.FromName(knownName);
+                        break;
+                    case "System.Decimal":
+                        ret = Decimal.Parse(sValue, CultureInfo.InvariantCulture);
+                        break;
+                }
+            }
+
+
+            rdr.Close();
+            con.Close();
+            return ret;
+
+        }
+
+        public void storeSetting(string name, Type typ, object value) {
+            SQLiteConnection con = new SQLiteConnection(connString);
+            con.Open();
+            SQLiteCommand cmd = new SQLiteCommand(con);
+            cmd.CommandText = "INSERT INTO Settings(" +
+                "Name, Type, Value) VALUES(@Name, @Type, @Value)";
+
+            cmd.Parameters.AddWithValue("@Type", typ);
+            cmd.Parameters.AddWithValue("@Name", name);
+            cmd.Parameters.AddWithValue("@Value", value);
+
+            try {
+                cmd.Prepare();
+
+                cmd.ExecuteNonQuery();
+
+                Console.WriteLine("Setting " + name +" saved");
+            } catch (Exception ex) {
+                mainWindow.log("Error storing setting '" + name + "':" + ex.Message);
+            } finally {
+                con.Close();
+            }
+
+        }
+
+        public void updateSetting(string name, object value) {
+            SQLiteConnection con = new SQLiteConnection(connString);
+            con.Open();
+            SQLiteCommand cmd = new SQLiteCommand(con);
+            cmd.CommandText = "UPDATE Settings SET Value=@Value WHERE Name=@Name";
+
+            cmd.Parameters.AddWithValue("@Name", name);
+            cmd.Parameters.AddWithValue("@Value", value);
+
+            try {
+                cmd.Prepare();
+
+                cmd.ExecuteNonQuery();
+
+                //Console.WriteLine("Setting " + name + " updated");
+            } catch (Exception ex) {
+                mainWindow.log("Error updating setting '" + name + "':" + ex.Message);
+            } finally {
+                con.Close();
+            }
+
+        }
+
         public static string getControlString(Session session) {
             return session.score + "~" + session.decimalScore + "~" + session.innerX + "~" + convertListOfShotsToString(session.Shots) + "~" + session.user + "~" + session.actualNumberOfShots;
         }

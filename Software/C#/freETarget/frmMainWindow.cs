@@ -19,6 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
+using System.Reflection;
 
 namespace freETarget {
     public partial class frmMainWindow : Form {
@@ -71,13 +72,16 @@ namespace freETarget {
 
         private bool gridSeriesSelected = false;
 
+        public comms.aCommModule commModule;
 
+        public Echo lastEcho = null;
+
+        private DateTime tooltipDisplayTime = DateTime.Now;
 
 
         public frmMainWindow() {
             InitializeComponent();
 
-            initLog();
 
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             string v = "v" + assembly.GetName().Version.Major + "." + assembly.GetName().Version.Minor + "." + assembly.GetName().Version.Build;
@@ -85,14 +89,34 @@ namespace freETarget {
             statusVersion.Text = v;
 
             storage = new StorageController(this);
-            eventManager = new EventManager(storage);
-
             //check DB
             String testDB = storage.checkDB(assembly.GetName().Version.Major);
             if (testDB != null) {
                 MessageBox.Show("Database check failed. Please check your installation. " + Environment.NewLine + Environment.NewLine + testDB + Environment.NewLine + Environment.NewLine + "The application will now exit!", "Database problem", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Environment.Exit(0);
             }
+
+            initSettingsDB();
+            loadSettingsFromDB();
+
+            //read settings to determine the appropriate comm module
+            if (Settings.Default.CommProtocol == "USB") {
+                this.commModule = new comms.USB();
+            } else {
+                //TCP
+                this.commModule = new comms.TCP();
+            }
+            this.commModule.CommDataReceivedEvent += new comms.aCommModule.CommEventHandler(this.DataReceived);
+
+
+            initLog();
+
+
+
+
+            eventManager = new EventManager(storage);
+
+
 
             //load events
             long count = storage.checkEvents();
@@ -141,8 +165,7 @@ namespace freETarget {
 
         private void initLog() {
             //init log location
-            string exeLocation = System.Reflection.Assembly.GetEntryAssembly().Location;
-            string logDirectory = exeLocation.Substring(0, exeLocation.LastIndexOf(@"\")) + @"\log\";
+            string logDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"\freETarget\log\";
             if (!Directory.Exists(logDirectory)) {
                 try {
                     Directory.CreateDirectory(logDirectory);
@@ -220,6 +243,7 @@ namespace freETarget {
             foreach (TabPage tab in tcSessionType.TabPages) {
                 if (ev.Name.Contains(tab.Text.Trim())) {
                     tcSessionType.SelectedTab = tab;
+                    break;
                 }
             }
 
@@ -263,11 +287,11 @@ namespace freETarget {
          * newline arrives indicating a complete message ready to be parsed
          * 
          *--------------------------------------------------------------------*/
-        private void serialPort_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e) {
+        private void DataReceived(object sender, comms.CommEventArgs e) {
             Application.DoEvents();
             //received data from serial port
-            SerialPort sp = (SerialPort)sender;
-            string indata = sp.ReadExisting().Replace("\n\r", Environment.NewLine); ;
+            //SerialPort sp = (SerialPort)sender;
+            string indata = e.Text.Trim();
 
             //first incoming text from target after port open is "freETarget VX.x" - use this to confirm connection
             if (indata.Contains("freETarget") && currentStatus == Status.CONECTING) {
@@ -278,7 +302,7 @@ namespace freETarget {
             output.add(indata);
             log(indata, logFile);
 
-            Console.WriteLine(Environment.NewLine + "Received: " + indata.Trim());
+            //Console.WriteLine(Environment.NewLine + "Received: " + indata.Trim());
             incomingJSON += indata;                         // Accumulate the input
 
             int indexOpenBracket = incomingJSON.IndexOf('{');
@@ -288,7 +312,7 @@ namespace freETarget {
                 if (indexClosedBracket > -1) {
 
                     String message = incomingJSON.Substring(indexOpenBracket + 1, indexClosedBracket - indexOpenBracket - 1);
-                    incomingJSON = incomingJSON.Substring(indexClosedBracket);
+                    incomingJSON = incomingJSON.Substring(indexClosedBracket+1);
 
                     //Console.WriteLine("Complete json message: " + message);
 
@@ -321,11 +345,19 @@ namespace freETarget {
 
                         if (incomingJSON.IndexOf("}") != -1) {
 
-                            serialPort_DataReceived(sender, e); //call the event again to parse the remains. maybe there is another full message in there
+                            comms.CommEventArgs e2 = new comms.CommEventArgs("");
+                            DataReceived(sender, e2); //call the event again to parse the remains. maybe there is another full message in there
                         }
                         
                     } else {
-                        //some other non-shot message from target. ignore ..for now (it will be displayed in the arduino window
+                        lastEcho = Echo.parseJson(message);
+
+                        
+                        if (incomingJSON.IndexOf("}") != -1) {
+
+                            comms.CommEventArgs e2 = new comms.CommEventArgs("");
+                            DataReceived(sender, e2); //call the event again to parse the remains. maybe there is another full message in there
+                        }
                     }
                 }
             }
@@ -335,29 +367,58 @@ namespace freETarget {
         private void btnConnect_Click(object sender, EventArgs e) {
             if (currentStatus == Status.NOT_CONNECTED) {
 
-                if (Properties.Settings.Default.portName == null || Properties.Settings.Default.portName.Trim() == "") {
-                    MessageBox.Show("No COM port selected. Please go to the Settings dialog and select a port.", "Cannot connect", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                if (Properties.Settings.Default.CommProtocol == "USB") {
+                    if (Properties.Settings.Default.portName == null || Properties.Settings.Default.portName.Trim() == "") {
+                        MessageBox.Show("No COM port selected. Please go to the Settings dialog and select a port.", "Cannot connect", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        return;
+                    }
+                } else {
+                    //TCP
+                    if (Properties.Settings.Default.TcpIP == null || Properties.Settings.Default.TcpIP.Trim() == "") {
+                        MessageBox.Show("No TCP IP address entered. Please go to the Settings dialog and enter an IP address.", "Cannot connect", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        return;
+                    }
+
+                    if (Properties.Settings.Default.TcpPort <= 0 ) {
+                        MessageBox.Show("No TCP port entered. Please go to the Settings dialog and enter an TCP port.", "Cannot connect", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        return;
+                    }
+                }
+
+                if (Properties.Settings.Default.name == null || Properties.Settings.Default.name.Trim() == "") {
+                    MessageBox.Show("No shooter name entered. Please go to the Settings dialog and enter a name.", "Cannot connect", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     return;
                 }
 
-                serialPort.PortName = Properties.Settings.Default.portName;
-                serialPort.BaudRate = Properties.Settings.Default.baudRate;
-                serialPort.DataBits = 8;
-                serialPort.DtrEnable = true;
+                //use parameters for the selected comm
+                comms.OpenParams para;
+                if (Settings.Default.CommProtocol == "USB") {
+                    para = new comms.UsbOpenParams();
+                    ((comms.UsbOpenParams)para).portName = Properties.Settings.Default.portName;
+                    ((comms.UsbOpenParams)para).baudRate = Properties.Settings.Default.baudRate;
+                    ((comms.UsbOpenParams)para).dataBits = 8;
+                    ((comms.UsbOpenParams)para).dtrEnable = true;
+                } else {
+                    para = new comms.TcpOpenParams();
+                    ((comms.TcpOpenParams)para).IP = Settings.Default.TcpIP;
+                    ((comms.TcpOpenParams)para).port = Settings.Default.TcpPort;
+                }
 
+                
+                
 
 
                 try {
 
                     //open port. the target (arduino) will send a text "freETarget VX.X" on connect. 
                     //software will wait for this text to confirm succesfull connection
-                    serialPort.Open();
+                    commModule.open(para);
                     currentStatus = Status.CONECTING;
                     statusText.Text = "Connecting...";
                     btnConnect.Text = "Cancel";
 
                 } catch (Exception ex) {
-                    statusText.Text = "Error opening serial port: " + ex.Message;
+                    statusText.Text = "Error opening comms: " + ex.Message;
                 }
 
             } else {
@@ -376,43 +437,8 @@ namespace freETarget {
 
             timer.Enabled = true;
 
-            StringBuilder sb = new StringBuilder("{");
-
-            //send sensor and hardware parameters to target
-            Thread.Sleep(3000); //timeout needed for the board to do its thing after connect - determined by trial&error
-            sb.Append("\"SENSOR\":" + Properties.Settings.Default.SensorDiameter.ToString() + ", ");
-            sb.Append("\"Z_OFFSET\":" + Properties.Settings.Default.ZOffset.ToString() + ", ");
-
-            if (Properties.Settings.Default.PaperTime > 0) {
-                sb.Append("\"PAPER_TIME\":" + Properties.Settings.Default.PaperTime.ToString() + ", ");
-                sb.Append("\"STEP_TIME\":0, ");
-                sb.Append("\"STEP_COUNT\":0, ");
-            } else {
-
-                sb.Append("\"PAPER_TIME\":0, ");
-                sb.Append("\"STEP_TIME\":" + Properties.Settings.Default.StepTime.ToString() + ", ");
-                sb.Append("\"STEP_COUNT\":" + Properties.Settings.Default.StepCount.ToString() + ", ");
-            }
-            //sb.Append("\"CALIBREx10\":" + Properties.Settings.Default.Calibre.ToString() + ", ");
-            sb.Append("\"NORTH_X\":" + Properties.Settings.Default.SensorNorthX.ToString() + ", ");
-            sb.Append("\"NORTH_Y\":" + Properties.Settings.Default.SensorNorthY.ToString() + ", ");
-            sb.Append("\"EAST_X\":" + Properties.Settings.Default.SensorEastX.ToString() + ", ");
-            sb.Append("\"EAST_Y\":" + Properties.Settings.Default.SensorEastY.ToString() + ", ");
-            sb.Append("\"SOUTH_X\":" + Properties.Settings.Default.SensorSouthX.ToString() + ", ");
-            sb.Append("\"SOUTH_Y\":" + Properties.Settings.Default.SensorSouthY.ToString() + ", ");
-            sb.Append("\"WEST_X\":" + Properties.Settings.Default.SensorWestX.ToString() + ", ");
-            sb.Append("\"WEST_Y\":" + Properties.Settings.Default.SensorWestY.ToString() + ", ");
-            sb.Append("\"LED_BRIGHT\":" + Properties.Settings.Default.LEDbright.ToString() + ", ");
-            sb.Append("\"NAME_ID\":" + Properties.Settings.Default.targetName.ToString() + ", ");
-
-            sb.Append("\"ECHO\":9 }");
-
-            serialPort.Write(sb.ToString());
-            Console.WriteLine(sb.ToString());
-
-
             Thread.Sleep(500);
-            serialPort.Write("{\"VERSION\":7}");
+            commModule.sendData("{\"VERSION\":7}");
             Thread.Sleep(100);
 
 
@@ -423,8 +449,8 @@ namespace freETarget {
                 t = t.Substring(0, t.IndexOf(Environment.NewLine));
             }
             t = t.Trim();
-            statusText.Text = "Connected to " + t + " on " + serialPort.PortName;
-            log("****************\nConnected to " + t + " on " + serialPort.PortName);
+            statusText.Text = "Connected to " + t + " on " + commModule.getCommInfo();
+            log("****************\nConnected to " + t + " on " + commModule.getCommInfo());
             displayMessage("Connected to " + t, false);
 
             Application.DoEvents();
@@ -433,6 +459,7 @@ namespace freETarget {
             shotsList.Enabled = true;
             btnCalibration.Enabled = true;
             btnArduino.Enabled = true;
+            btnTargetSettings.Enabled = true;
             btnUpload.Enabled = false;
             trkZoom.Enabled = true;
             tcSessionType.Enabled = true;
@@ -458,6 +485,7 @@ namespace freETarget {
                 if (showToolTip) {
                     this.Focus();
                     toolTip.Show(text, imgTarget, 2000);
+                    tooltipDisplayTime = DateTime.Now;
                 }
             }
         }
@@ -691,7 +719,7 @@ namespace freETarget {
                 // bad shot. do anything?
                 displayMessage("Bad shot reported by the target: " + json, false);
                 return null;
-            } else {
+            } else { 
                 return null; 
             }
 
@@ -725,9 +753,6 @@ namespace freETarget {
                 Properties.Settings.Default.scoreVoice = settingsFrom.chkScoreVoice.Checked;
                 Properties.Settings.Default.fileLogging = settingsFrom.chkLog.Checked;
                 Properties.Settings.Default.ignoreMiss = settingsFrom.chkMiss.Checked;
-                Properties.Settings.Default.LEDbright = settingsFrom.trkLEDbright.Value;
-                Properties.Settings.Default.targetName = settingsFrom.cmbName.SelectedIndex;
-                
 
                 if (Properties.Settings.Default.targetDistance != 100) {
                     btnConfig.BackColor = Properties.Settings.Default.targetColor;
@@ -750,24 +775,12 @@ namespace freETarget {
                 Properties.Settings.Default.scoreOldBackgroundColor = Color.FromName(settingsFrom.cmbOldBack.GetItemText(settingsFrom.cmbOldBack.SelectedItem));
                 Properties.Settings.Default.scoreOldPenColor = Color.FromName(settingsFrom.cmbOldPen.GetItemText(settingsFrom.cmbOldPen.SelectedItem));
 
-                Properties.Settings.Default.SensorDiameter = decimal.Parse(settingsFrom.txtSensorDiameter.Text);
-                Properties.Settings.Default.ZOffset = int.Parse(settingsFrom.txtZOffset.Text);
-
-                Properties.Settings.Default.SensorNorthX = int.Parse(settingsFrom.txtNorthX.Text);
-                Properties.Settings.Default.SensorNorthY = int.Parse(settingsFrom.txtNorthY.Text);
-                Properties.Settings.Default.SensorWestX = int.Parse(settingsFrom.txtWestX.Text);
-                Properties.Settings.Default.SensorWestY = int.Parse(settingsFrom.txtWestY.Text);
-                Properties.Settings.Default.SensorSouthX = int.Parse(settingsFrom.txtSouthX.Text);
-                Properties.Settings.Default.SensorSouthY = int.Parse(settingsFrom.txtSouthY.Text);
-                Properties.Settings.Default.SensorEastX = int.Parse(settingsFrom.txtEastX.Text);
-                Properties.Settings.Default.SensorEastY = int.Parse(settingsFrom.txtEastY.Text);
-
-                Properties.Settings.Default.Calibre = int.Parse(settingsFrom.txtCalibre.Text);
-                Properties.Settings.Default.PaperTime = int.Parse(settingsFrom.txtPaperTime.Text);
-                Properties.Settings.Default.StepCount = int.Parse(settingsFrom.txtSteps.Text);
-                Properties.Settings.Default.StepTime = int.Parse(settingsFrom.txtStepTime.Text);
+                Properties.Settings.Default.CommProtocol = settingsFrom.cmbCommProtocol.SelectedItem.ToString();
+                Properties.Settings.Default.TcpIP = settingsFrom.txtIP.Text;
+                Properties.Settings.Default.TcpPort = int.Parse(settingsFrom.txtPort.Text);
 
                 Properties.Settings.Default.Save();
+                saveSettings(); //save settings to DB as well
 
                 List<Event> activeEvents = new List<Event>();
                 foreach (object oev in settingsFrom.lstbActiveEvents.Items) {
@@ -811,7 +824,7 @@ namespace freETarget {
         }
 
         private void initNewSession() {
-            if (currentSession!=null && currentSession.Shots.Count > 0) {
+            if (currentSession!=null && currentSession.Shots.Count > 0 && currentStatus != Status.LOADED) {
                 storage.storeSession(currentSession, true);
                 displayMessage("Session saved", true);
                 
@@ -846,10 +859,9 @@ namespace freETarget {
         }
 
         private void targetRefresh() {
-            int rightBorder = gridTargets.Width + 35;
 
-            int height = this.ClientSize.Height - 10 - statusStrip1.Height - imgTarget.Top;
-            int width = this.ClientSize.Width - rightBorder - imgTarget.Left;
+            int height = splitContainer.Panel1.Height;
+            int width = splitContainer.Panel1.Width;
 
             if (height < width) {
                 imgTarget.Height = height;
@@ -859,8 +871,6 @@ namespace freETarget {
                 imgTarget.Width = width;
 
             }
-            txtOutput.Left = imgTarget.Left + imgTarget.Width + 5;
-            txtOutput.Width = gridTargets.Left - (imgTarget.Left + imgTarget.Width) - 8;
 
             drawTarget();
         }
@@ -872,10 +882,6 @@ namespace freETarget {
             } else {
                 Console.WriteLine("Current session is null");
             }
-        }
-
-        private void btnClear_Click(object sender, EventArgs e) {
-            clearShots();
         }
 
         private bool clearShots() {
@@ -1106,6 +1112,7 @@ namespace freETarget {
             Settings.Default.calibrationY = calibrationY;
             Settings.Default.calibrationAngle = calibrationAngle;
             Settings.Default.Save();
+            saveSettings(); //save settings to DB as well
         }
 
         private void tabControl1_DrawItem(object sender, DrawItemEventArgs e) {
@@ -1308,7 +1315,7 @@ namespace freETarget {
 
         private void disconnect() {
             try {
-                serialPort.Close();
+                commModule.close();
             }catch(IOException) {
                 MessageBox.Show("Error closing the serial port. Please try again.","Error disconnecting",MessageBoxButtons.OK,MessageBoxIcon.Error);
                 return;
@@ -1326,6 +1333,7 @@ namespace freETarget {
             shotsList.Enabled = false;
             btnCalibration.Enabled = false;
             btnArduino.Enabled = false;
+            btnTargetSettings.Enabled = false;
             btnUpload.Enabled = true;
             trkZoom.Enabled = false;
             tcSessionType.Enabled = false;
@@ -1451,6 +1459,76 @@ namespace freETarget {
                 tab.Text = ev.Name;
 
                 this.tcSessionType.Controls.Add(tab);
+            }
+        }
+
+        private void splitContainer_SplitterMoved(object sender, SplitterEventArgs e) {
+            targetRefresh();
+        }
+
+        private void btnTargetSettings_Click(object sender, EventArgs e) {
+            frmTargetSettings settingsFrom = new frmTargetSettings(this);
+            if (settingsFrom.ShowDialog(this) == DialogResult.OK) {
+            }
+        }
+
+        private void initSettingsDB() {
+
+            List<string> exclusionList = new List<string> { "SettingsKey", "Item" };
+            Type sett = Settings.Default.GetType();
+            PropertyInfo[] members = sett.GetProperties();
+            Console.WriteLine("--------------");
+            foreach (PropertyInfo m in members) {
+                if (m.CanWrite && !exclusionList.Contains(m.Name)) {
+                    Console.WriteLine("Name: " + m.Name + " - Type: " + m.PropertyType + " - Value: " + m.GetValue(Settings.Default));
+                    object obj = storage.getSetting(m.Name);
+                    if(obj == null) {
+                        //setting not in the DB. create it
+                        storage.storeSetting(m.Name, m.PropertyType, m.GetValue(Settings.Default));
+                    }
+                }
+
+            }
+            Console.WriteLine("--------------");
+
+        }
+
+        private void loadSettingsFromDB() {
+            List<string> exclusionList = new List<string> { "SettingsKey" ,"Item"};
+            Type sett = Settings.Default.GetType();
+            PropertyInfo[] members = sett.GetProperties();
+
+            foreach(PropertyInfo m in members) {
+                if (m.CanWrite && !exclusionList.Contains(m.Name)) {
+                    //Console.WriteLine("Name: " + m.Name + " - Type: " + m.PropertyType + " - Value: " + m.GetValue(Settings.Default));
+                    object obj = storage.getSetting(m.Name);
+                    m.SetValue(Settings.Default, obj);
+                }              
+            }
+        }
+
+        private void saveSettings() {
+            List<string> exclusionList = new List<string> { "SettingsKey", "Item" };
+            Type sett = Settings.Default.GetType();
+            PropertyInfo[] members = sett.GetProperties();
+            foreach (PropertyInfo m in members) {
+                if (m.CanWrite && !exclusionList.Contains(m.Name)) {
+                    object obj = storage.getSetting(m.Name);
+
+                    //update the setting value
+                    storage.updateSetting(m.Name, m.GetValue(Settings.Default));
+                    
+                }
+
+            }
+        }
+
+        private void toolTipTimer_Tick(object sender, EventArgs e) {
+            DateTime now = DateTime.Now;
+            double diff = (now - tooltipDisplayTime).TotalSeconds;
+
+            if (diff > 3) {
+                toolTip.RemoveAll();
             }
         }
     }
