@@ -42,6 +42,7 @@ namespace freETarget.comms {
             stm.Close();
             stm = null;
             tcpclnt.Close();
+            getShotTimer.Enabled = false;
         }
 
         public override void open(OpenParams value) {
@@ -52,6 +53,7 @@ namespace freETarget.comms {
 
                 tcpclnt.Connect(this.IP, this.port);
                 stm = tcpclnt.GetStream();
+                getShotTimer.Enabled = true;
 
             } else {
                 Console.WriteLine("Open params are not for TCP");
@@ -70,11 +72,12 @@ namespace freETarget.comms {
         }
 
         public override string getCommInfo() {
-            return this.IP + ":" + this.port;
+            return "TCP = " + this.IP + ":" + this.port;
         }
 
 
         private void getShotTimer_Tick(object sender, EventArgs e) {
+            
             if ((tcpclnt.Connected) && (!getShotsBackgroundWorker.IsBusy)) {
                 getShotsBackgroundWorker.RunWorkerAsync();
             }
@@ -98,7 +101,8 @@ namespace freETarget.comms {
                 do {
                     numberOfBytesRead = stm.Read(myReadBuffer, 0, myReadBuffer.Length);
                     myCompleteMessage.AppendFormat("{0}", Encoding.ASCII.GetString(myReadBuffer, 0, numberOfBytesRead));
-                    if (myCompleteMessage.ToString().Contains('}')) {
+                    //Console.WriteLine("Read " + myCompleteMessage.ToString());
+                    if (myCompleteMessage.ToString().Contains('}') || myCompleteMessage.ToString().Contains("freETarget")) {
                         msgCompleteIncomplete = false;
                     }
                 }
@@ -106,6 +110,7 @@ namespace freETarget.comms {
             }
 
             string buf = myCompleteMessage.ToString();
+            //Console.WriteLine("Received: " + buf);
             string indata = buf.Replace("\n\r", Environment.NewLine.ToString()); ;
 
             RaiseDataReceivedEvent(indata);

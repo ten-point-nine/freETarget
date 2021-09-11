@@ -51,7 +51,7 @@ namespace freETarget.comms {
         }
 
         public override string getCommInfo() {
-            return serialPort.PortName;
+            return "USB = " + serialPort.PortName;
         }
     }
 

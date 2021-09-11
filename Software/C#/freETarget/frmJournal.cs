@@ -462,6 +462,11 @@ namespace freETarget {
                     string eventName = items[0];
                     string user = items[1];
                     Event cof = mainWindow.eventManager.findEventByName(eventName);
+                    if (cof == null) {
+                        MessageBox.Show("Could not find event '"+eventName+"'. Please create it before importing.", "Error loading session", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                        return;
+                    }
+
                     Session session = Session.createNewSession(cof, user);
 
                     session.score = int.Parse(items[2], CultureInfo.InvariantCulture);

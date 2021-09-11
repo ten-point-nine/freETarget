@@ -25,6 +25,7 @@ namespace freETarget {
 
             //prepare session (load shots into series)
             session.AllSeries.Clear();
+            session.LoadedShots.Clear();
             foreach (Shot s in session.Shots) {
                 session.addLoadedShot(s);
             }

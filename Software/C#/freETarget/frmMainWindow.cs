@@ -99,15 +99,6 @@ namespace freETarget {
             initSettingsDB();
             loadSettingsFromDB();
 
-            //read settings to determine the appropriate comm module
-            if (Settings.Default.CommProtocol == "USB") {
-                this.commModule = new comms.USB();
-            } else {
-                //TCP
-                this.commModule = new comms.TCP();
-            }
-            this.commModule.CommDataReceivedEvent += new comms.aCommModule.CommEventHandler(this.DataReceived);
-
 
             initLog();
 
@@ -389,6 +380,15 @@ namespace freETarget {
                     MessageBox.Show("No shooter name entered. Please go to the Settings dialog and enter a name.", "Cannot connect", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     return;
                 }
+
+                //read settings to determine the appropriate comm module
+                if (Settings.Default.CommProtocol == "USB") {
+                    this.commModule = new comms.USB();
+                } else {
+                    //TCP
+                    this.commModule = new comms.TCP();
+                }
+                this.commModule.CommDataReceivedEvent += new comms.aCommModule.CommEventHandler(this.DataReceived);
 
                 //use parameters for the selected comm
                 comms.OpenParams para;
@@ -1366,7 +1366,8 @@ namespace freETarget {
             this.currentSession = session;
             this.currentStatus = Status.LOADED;
             this.currentSession.AllSeries.Clear();
-           
+            this.currentSession.LoadedShots.Clear();
+
             trkZoom.Enabled = true;
             shotsList.Enabled = true;
             setTrkZoom(currentSession.getTarget());
