@@ -81,7 +81,7 @@ namespace freETarget {
 
         public frmMainWindow() {
             InitializeComponent();
-
+            initLog();
 
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             string v = "v" + assembly.GetName().Version.Major + "." + assembly.GetName().Version.Minor + "." + assembly.GetName().Version.Build;
@@ -100,7 +100,7 @@ namespace freETarget {
             loadSettingsFromDB();
 
 
-            initLog();
+            
 
 
 
@@ -211,7 +211,7 @@ namespace freETarget {
                     }
                 } catch (Exception ex) {
                     //oh well...
-                    Console.WriteLine("Error logging: " + ex.Message);
+                    Console.WriteLine("Error logging ("+logFile+"): " + ex.Message);
                 }
             }
         }
