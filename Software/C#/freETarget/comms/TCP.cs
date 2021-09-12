@@ -9,6 +9,8 @@ using System.ComponentModel;
 namespace freETarget.comms {
     class TCP : aCommModule {
 
+        frmMainWindow mainWindow;
+
         public override event CommEventHandler CommDataReceivedEvent;
 
         private TcpClient tcpclnt;
@@ -20,7 +22,10 @@ namespace freETarget.comms {
         private string IP;
         private int port;
 
-        public TCP() {
+        public TCP(frmMainWindow mainW) {
+
+            this.mainWindow = mainW;
+
             this.tcpclnt = new TcpClient();
 
             this.getShotTimer = new System.Windows.Forms.Timer();
@@ -51,19 +56,25 @@ namespace freETarget.comms {
                 this.IP = tcpP.IP;
                 this.port = tcpP.port;
 
+                tcpclnt.ReceiveTimeout = 1000;
+                tcpclnt.SendTimeout = 1000;
                 tcpclnt.Connect(this.IP, this.port);
                 stm = tcpclnt.GetStream();
                 getShotTimer.Enabled = true;
-
+                mainWindow.log("TCP channel open...");
             } else {
                 Console.WriteLine("Open params are not for TCP");
             }
         }
 
         public override void sendData(string text) {
-            byte[] outBuffer = new byte[text.Length];
-            stm.Write(Encoding.UTF8.GetBytes(text), 0, text.Length);
-            stm.Flush();
+            try {
+                byte[] outBuffer = new byte[text.Length];
+                stm.Write(Encoding.UTF8.GetBytes(text), 0, text.Length);
+                stm.Flush();
+            }catch(Exception ex) {
+                mainWindow.log("Error sending data over TCP: " + ex.Message);
+            }
         }
 
         protected override void RaiseDataReceivedEvent(string text) {
@@ -95,23 +106,19 @@ namespace freETarget.comms {
             byte[] myReadBuffer = new byte[1024];
             StringBuilder myCompleteMessage = new StringBuilder();
             int numberOfBytesRead = 0;
-            bool msgCompleteIncomplete = true;
 
-            while (msgCompleteIncomplete) {
-                do {
-                    numberOfBytesRead = stm.Read(myReadBuffer, 0, myReadBuffer.Length);
-                    myCompleteMessage.AppendFormat("{0}", Encoding.ASCII.GetString(myReadBuffer, 0, numberOfBytesRead));
-                    //Console.WriteLine("Read " + myCompleteMessage.ToString());
-                    if (myCompleteMessage.ToString().Contains('}') || myCompleteMessage.ToString().Contains("freETarget")) {
-                        msgCompleteIncomplete = false;
-                    }
-                }
-                while (stm.DataAvailable);
+            do {
+                numberOfBytesRead = stm.Read(myReadBuffer, 0, myReadBuffer.Length);
+                myCompleteMessage.AppendFormat("{0}", Encoding.ASCII.GetString(myReadBuffer, 0, numberOfBytesRead));
+                // Console.WriteLine("Read: " + myCompleteMessage.ToString());
+
             }
+            while (stm.DataAvailable);
+
 
             string buf = myCompleteMessage.ToString();
             //Console.WriteLine("Received: " + buf);
-            string indata = buf.Replace("\n\r", Environment.NewLine.ToString()); ;
+            string indata = buf.Replace("\n\r", Environment.NewLine); ;
 
             RaiseDataReceivedEvent(indata);
 

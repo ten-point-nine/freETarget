@@ -99,15 +99,7 @@ namespace freETarget {
             initSettingsDB();
             loadSettingsFromDB();
 
-
-            
-
-
-
-
             eventManager = new EventManager(storage);
-
-
 
             //load events
             long count = storage.checkEvents();
@@ -383,10 +375,10 @@ namespace freETarget {
 
                 //read settings to determine the appropriate comm module
                 if (Settings.Default.CommProtocol == "USB") {
-                    this.commModule = new comms.USB();
+                    this.commModule = new comms.USB(this);
                 } else {
                     //TCP
-                    this.commModule = new comms.TCP();
+                    this.commModule = new comms.TCP(this);
                 }
                 this.commModule.CommDataReceivedEvent += new comms.aCommModule.CommEventHandler(this.DataReceived);
 
@@ -412,13 +404,18 @@ namespace freETarget {
 
                     //open port. the target (arduino) will send a text "freETarget VX.X" on connect. 
                     //software will wait for this text to confirm succesfull connection
-                    commModule.open(para);
-                    currentStatus = Status.CONECTING;
                     statusText.Text = "Connecting...";
                     btnConnect.Text = "Cancel";
+                    currentStatus = Status.CONECTING;
+                    Application.DoEvents();
+                    commModule.open(para);
 
                 } catch (Exception ex) {
+                    log("Error connecting: " + ex.Message);
                     statusText.Text = "Error opening comms: " + ex.Message;
+                    btnConnect.Text = "Connect";
+                    currentStatus = Status.NOT_CONNECTED;
+                    MessageBox.Show("Failed to connect to the target", "Connecting error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
 
             } else {

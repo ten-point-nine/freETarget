@@ -8,14 +8,18 @@ using System.IO.Ports;
 namespace freETarget.comms {
     class USB : aCommModule {
 
+        frmMainWindow mainWindow;
+
         SerialPort serialPort;
 
         public override event CommEventHandler CommDataReceivedEvent;
 
-        public USB() {
+        public USB(frmMainWindow mainW) {
+            this.mainWindow = mainW;
+            
             this.serialPort = new SerialPort();
 
-             this.serialPort.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(this.serialPort_DataReceived);
+            this.serialPort.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(this.serialPort_DataReceived);
         }
 
         public override void close() {
@@ -31,13 +35,18 @@ namespace freETarget.comms {
                 serialPort.DtrEnable = usbP.dtrEnable;
 
                 serialPort.Open();
+                mainWindow.log("USB channel open...");
             } else {
                 Console.WriteLine("Open params are not for USB");
             }
         }
 
         public override void sendData(string text) {
-            this.serialPort.Write(text);
+            try {
+                this.serialPort.Write(text);
+            }catch(Exception ex) {
+                mainWindow.log("Error sending data over USB: " + ex.Message);
+            }
         }
 
         private void serialPort_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e) {
