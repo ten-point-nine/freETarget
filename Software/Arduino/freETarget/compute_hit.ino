@@ -597,25 +597,7 @@ void send_score
 /* 
  *  Send the score to anybody who is listening
  */
-  Serial.print(str_a);            // Main USB port
-
-  if ( esp01_is_present() )
-  {
-    for (i=0; i != MAX_CONNECTIONS; i++ )
-    {
-      if ( esp01_send(true, i) )
-      {
-        AUX_SERIAL.print(str_a);    // WiFi Port
-        esp01_send(false, i);
-      }
-    }
-  }
-  else 
-  {
-    AUX_SERIAL.print(str_a);        // No ESP-01, then use just the AUX port
-  }
-
-  DISPLAY_SERIAL.print(str_a);    // Aux Serial Port
+  output_to_all(str_a);
   
 /*
  * All done, return

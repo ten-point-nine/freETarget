@@ -13,7 +13,7 @@
 #include "esp-01.h"
 #include "json.h"
 
-#define SOFTWARE_VERSION "\"3.04.1 August 28, 2021\""
+#define SOFTWARE_VERSION "\"3.04.3 September 20, 2021\""
 #define REV_100    100
 #define REV_210    210
 #define REV_220    2201001
@@ -84,9 +84,10 @@ typedef struct history history_t;
 extern double  s_of_sound;
 
 extern const char* names[];
+extern const char to_hex[];
 extern bool  face_strike;
 extern bool  is_trace;                // True if tracing is enabled 
-extern char* nesw;                    // Cardinal Points
+extern const char* nesw;              // Cardinal Points
 
 /*
  *  Factory settings via Arduino monitor

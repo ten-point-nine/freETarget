@@ -14,10 +14,12 @@ typedef struct  {
   unsigned int init_value;    // Initial Value
 } json_message;
 
-#define IS_VOID    0        // Value is a void
-#define IS_INT16   1        // Value is a 16 bit int
-#define IS_FLOAT   2        // Value is a floating point number
-#define IS_DOUBLE  3        // Value is a double
+#define IS_VOID       0       // Value is a void
+#define IS_INT16      1       // Value is a 16 bit int
+#define IS_FLOAT      2       // Value is a floating point number
+#define IS_DOUBLE     3       // Value is a double
+#define IS_FIXED      4       // The value cannot be changed
+    
 
 bool read_JSON(void);             // Scan the serial port looking for JSON input
 void show_echo(int v);            // Display the settings

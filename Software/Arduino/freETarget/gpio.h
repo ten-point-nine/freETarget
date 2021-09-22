@@ -15,6 +15,7 @@ void drive_paper(void);                                   // Turn on the paper m
 void enable_interrupt(unsigned int active);               // Turn on the face strike interrupt if active
 void disable_interrupt(void);                             // Turn off the face strike interrupt
 unsigned int multifunction_switch(unsigned int new_state);// Handle the actions of the DIP Switch signal
+void output_to_all(char* s);                              // Multipurpose driver
 
 
 /*

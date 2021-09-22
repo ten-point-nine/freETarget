@@ -284,6 +284,7 @@ void self_test(uint16_t test)
   */
     case T_FACE:
       Serial.print("\r\nFace strike test");
+      enable_interrupt(1);
       face_strike = 0;
       EEPROM.put(NONVOL_TEST_MODE, T_HELP);     // Stop the test on the next boot cycle
       while (1)
@@ -291,7 +292,10 @@ void self_test(uint16_t test)
         if ( face_strike != 0 )
         {
           set_LED(L('*', '*', '*'));           // If something comes in, turn on all of the LEDs 
+          Serial.print("\n\rStrike");
+          delay(ONE_SECOND/4);
           face_strike = 0;
+          enable_interrupt(1);
         }
         else
         {
@@ -335,7 +339,7 @@ void self_test(uint16_t test)
   int i;
   char str_a[256];
 
-  sprintf(str_a, "\r\nfreETarget");
+  sprintf(str_a, "\r\nfreETarget ");
   strcat(str_a, SOFTWARE_VERSION);
   strcat(str_a, "\r\n");
   
@@ -676,6 +680,8 @@ void set_trip_point
     stay_forever = true;                                    // For a long time
   }
   arm_counters();                                           // Arm the flip flops for later
+  enable_interrupt(true);                                   // Arm the face sensor
+  face_strike = false;
   
 /*
  * Loop if not in spec, passes to display, or the CAL jumper is in
@@ -780,6 +786,8 @@ void set_trip_point
       case 'x':                       // X Cancel
         sensor_status = 0;
         arm_counters();               // Reset the latch state
+        enable_interrupt(true);       // Turn on the face strike interrupt
+        face_strike = false;          // Reset the face strike count
         break;
 
       default:
@@ -1152,6 +1160,9 @@ void show_sensor_status(unsigned int sensor_status)
     if ( timer_value[i] != 0 )      Serial.print(nesw[i]);
     else                            Serial.print(".");
   }
+
+  Serial.print(" Face Strike:");
+  Serial.print(face_strike);
   
   return;
 }

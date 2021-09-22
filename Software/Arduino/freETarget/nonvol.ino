@@ -18,8 +18,16 @@
  * return: None
  *---------------------------------------------------------------
  *
- * The variable NONVOL_INIT is corrupted and the NONVOL read back
- * in and initialized.
+ * init_nonvol requires an arguement == 1234 before the 
+ * initialization command will be executed.
+ * 
+ * The variable NONVOL_INIT is corrupted. and the values
+ * copied out of the JSON[] table.  If the serial number has
+ * not been initialized before, the user is prompted to enter
+ * a serial number.
+ * 
+ * The function then continues to display the current trip
+ * point value.
  * 
  *------------------------------------------------------------*/
 void init_nonvol(int v)
@@ -29,6 +37,15 @@ void init_nonvol(int v)
   char ch;
   unsigned int x;                         // Temporary Value
   double       dx;                        // Temporarty Value
+
+/*
+ * Ensure that the user wants to init the unit
+ */
+  if ( v != 1234 )
+  {
+    Serial.print("\r\nUse {\"INIT\":1234} to enable the init_nonvol() function\r\n");
+    return;
+  }
   
   Serial.print("\r\nReset to factory defaults\r\n");
   nonvol_init = 0;                        // Corrupt the init location
@@ -45,7 +62,8 @@ void init_nonvol(int v)
    {
      switch ( JSON[i].convert )
      {
-        case IS_VOID:
+        case IS_VOID:                                        // Variable does not contain anything 
+        case IS_FIXED:                                       // Variable cannot be overwritten
           break;
         
         case IS_INT16:
@@ -68,7 +86,7 @@ void init_nonvol(int v)
  * Ask for the serial number.  Exit when you get !
  */
   EEPROM.get(NONVOL_SERIAL_NO, serial_number );
-  if ( serial_number == 65535 )
+  if ( serial_number == -1 )
   {
     ch = 0;
     serial_number = 0;
@@ -98,6 +116,7 @@ void init_nonvol(int v)
       }
     }
   }
+  
 /*
  * Initialization complete.  Mark the init done
  */
@@ -153,7 +172,7 @@ void read_nonvol(void)
   
   if ( nonvol_init != INIT_DONE)                       // EEPROM never programmed
   {
-    init_nonvol(0);                                    // Force in good values
+    init_nonvol(1234);                                 // Force in good values
   }
 
 /*

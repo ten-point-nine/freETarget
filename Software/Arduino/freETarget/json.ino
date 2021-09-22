@@ -62,7 +62,7 @@ const json_message JSON[] = {
   {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT16,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
   {"\"DIP\":",            &json_dip_switch,                  0,                IS_INT16,  0,                NONVOL_DIP_SWITCH,       0 },    // Remotely set the DIP switch
   {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,                       0,       0 },    // Echo test
-  {"\"INIT\"",            0,                                 0,                IS_VOID,   &init_nonvol,                     0,       0 },    // Initialize the NONVOL memory
+  {"\"INIT\":",           0,                                 0,                IS_INT16,  &init_nonvol,                     0,       0 },    // Initialize the NONVOL memory
   {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT16,  &set_LED_PWM_now, NONVOL_LED_PWM,         50 },    // Set the LED brightness
   {"\"MFS\":",            &json_multifunction,               0,                IS_INT16,  0,                NONVOL_MFS,              0 },    // Multifunction switch action
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT16,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
@@ -71,7 +71,7 @@ const json_message JSON[] = {
   {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT16,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
   {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT16,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
   {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  &gen_position,    NONVOL_SENSOR_DIA,     230 },    // Generate the sensor postion array
-  {"\"SN\":",             &json_serial_number,               0,                IS_INT16,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
+  {"\"SN\":",             &json_serial_number,               0,                IS_FIXED,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
   {"\"STEP_COUNT\":",     &json_step_count,                  0,                IS_INT16,  0,                NONVOL_STEP_COUNT,       0 },    // Set the duration of the stepper motor ON time
   {"\"STEP_TIME\":",      &json_step_time,                   0,                IS_INT16,  0,                NONVOL_STEP_TIME,        0 },    // Set the number of times stepper motor is stepped
   {"\"TARGET_TYPE\":",    &json_target_type,                 0,                IS_INT16,  0,                NONVOL_TARGET_TYPE,      0 },    // Marify shot location (0 == Single Bull)
@@ -207,6 +207,7 @@ bool    return_value;
         {
           default:
           case IS_VOID:                                       // Void, default to zero
+          case IS_FIXED:                                      // Fixed cannot be changed
             x = 0;
             y = 0;
           break;
@@ -319,9 +320,10 @@ int instr(char* s1, char* s2)
 void show_echo(int v)
 {
   unsigned int i, j;
-  
-  Serial.print("\r\n{\r\n");
-  Serial.print("\"NAME\":\""), Serial.print(names[json_name_id]); Serial.print("\", \r\n");
+  char   str_a[512], str_b[512], str_c[10];  // String holding buffers
+
+  sprintf(str_b, "\r\n{\r\n\"NAME\":\"%s\", \r\n", names[json_name_id]);
+  sprintf(str_a, "%s", str_b);
 
 /*
  * Loop through all of the JSON tokens
@@ -339,53 +341,66 @@ void show_echo(int v)
           break;
           
         case IS_INT16:
-          Serial.print(JSON[i].token);
-          Serial.print(*JSON[i].value); Serial.print(", \r\n");
-          j++;
-          if ( (j % 4) == 0 )                     // Space out 4 at a time
-          {
-            Serial.print("\r\n");
-          }
+        case IS_FIXED:
+          sprintf(str_b, "%s%s %d, \r\n", str_a, JSON[i].token, *JSON[i].value);
+          sprintf(str_a, "%s", str_b);
           break;
 
         case IS_FLOAT:
         case IS_DOUBLE:
-          Serial.print(JSON[i].token);
-          Serial.print(*JSON[i].d_value); Serial.print(", \r\n");
-          j++;
-          if ( (j % 4) == 0 )                     // Space out 4 at a time
-          {
-            Serial.print("\r\n");
-          }
+          dtostrf(*JSON[i].d_value, 4, 2, str_c );
+          sprintf(str_b, "%s%s %s, \r\n", str_a, JSON[i].token, str_c);
+          sprintf(str_a, "%s", str_b);
           break;
       }
     }
     i++;
-
   }
-
+  output_to_all(str_a);
+  str_b[0] = 0;
+  str_a[0] = 0;
+  
 /*
  * Finish up with the special cases
  */
-  EEPROM.get(NONVOL_INIT, i);
-  Serial.print("\r\n");
-  Serial.print("\"IS_TRACE\":");    Serial.print(is_trace);                               Serial.print(", \r\n");   // TRUE to if trace is enabled
-  Serial.print("\"TEMPERATURE\":"); Serial.print(temperature_C());                        Serial.print(", \r\n");   // Temperature in degrees C
-  Serial.print("\"SPEED_SOUND\":"); Serial.print(speed_of_sound(temperature_C(), RH_50)); Serial.print(", \r\n");    // Speed of sound
-  Serial.print("\"V_REF\":");       Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));      Serial.print(", \r\n");    // Trip point reference
-  Serial.print("\r\n");
-  Serial.print("\"TIMER_COUNT\":"); Serial.print((int)(SHOT_TIME * OSCILLATOR_MHZ));      Serial.print(", \r\n");    // Maximum number of clock cycles to record shot (target dependent)
-  Serial.print("\"DIP_HEX\": 0x");  Serial.print(0x0F & read_DIP(), HEX);                 Serial.print(", \r\n");     // DIP switch status
-  Serial.print("\"WiFi\":");        Serial.print(esp01_is_present());                     Serial.print(", \r\n");     // TRUE if WiFi is available
-  Serial.print("\"VERSION\":");     Serial.print(SOFTWARE_VERSION);                       Serial.print(", \r\n");   // Current software version
-  Serial.print("\n\r");
-  Serial.print("\"BRD_REV\":");     Serial.print(revision());                             Serial.print(", \r\n");   // Current board revision
-  Serial.print("\"INIT\":");        Serial.print(i);                                                                // 0xABCD (43981) when memory is initialized
-  Serial.print("\r\n}\r\n");
+  sprintf(str_b, "%s\"IS_TRACE\": %d, \n\r", str_a, is_trace);                                   // TRUE to if trace is enabled
+  sprintf(str_a, "%s", str_b);
+
+  dtostrf(temperature_C(), 4, 2, str_c );
+  sprintf(str_b, "%s\"TEMPERATURE\": %s, \n\r", str_a, str_c);                                   // Temperature in degrees C
+  sprintf(str_a, "%s", str_b);
+
+  dtostrf(speed_of_sound(temperature_C(), RH_50), 4, 2, str_c );
+  sprintf(str_b, "%s\"SPEED_SOUND\": %s, \n\r", str_a, str_c);                                  // Speed of Sound
+  sprintf(str_a, "%s", str_b);
+
+  dtostrf(TO_VOLTS(analogRead(V_REFERENCE)), 4, 2, str_c );
+  sprintf(str_b, "%s\"V_REF\": %s, \n\r", str_a, str_c);             // Trip point reference
+  sprintf(str_a, "%s", str_b);
+
+  sprintf(str_b, "%s\"TIMER_COUNT\":%d, \n\r", str_a, (int)(SHOT_TIME * OSCILLATOR_MHZ));       // Maximum number of clock cycles to record shot (target dependent)
+  sprintf(str_a, "%s", str_b);
+
+  sprintf(str_b, "%s\"DIP_HEX\": 0x%c, \n\r", str_a, to_hex[0x0F & read_DIP()]);                // DIP switch status
+  sprintf(str_a, "%s", str_b); 
+
+  sprintf(str_b, "%s\"WiFi\": %d, \n\r", str_a, esp01_is_present());                            // TRUE if WiFi is available
+  sprintf(str_a, "%s", str_b); 
+
+  sprintf(str_b, "%s\"VERSION\": %s, \n\r", str_a, SOFTWARE_VERSION);                           // Current software version
+  sprintf(str_a, "%s", str_b); 
+
+  dtostrf(revision()/100.0, 4, 2, str_c );              
+  sprintf(str_b, "%s\"BD_REV\": %s \n\r", str_a, str_c);                                        // Current board versoin
+  sprintf(str_a, "%s", str_b); 
   
+  sprintf(str_b, "%s}\r\n", str_a); 
+  sprintf(str_a, "%s", str_b); 
+
 /*
  *  All done, return
  */
+  output_to_all(str_a);
   return;
 }
 

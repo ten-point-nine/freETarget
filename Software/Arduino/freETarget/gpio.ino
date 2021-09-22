@@ -822,3 +822,47 @@ unsigned int multifunction_switch
  */
   return return_value;
 }
+
+/*-----------------------------------------------------
+ * 
+ * function: output_to_all
+ * 
+ * brief:    Send a string to the available serial ports
+ * 
+ * return:   None
+ * 
+ *-----------------------------------------------------
+ *
+ * The actions of the DIP switch will change depending on the 
+ * mode that is programmed into it.
+ * 
+ *-----------------------------------------------------*/
+ 
+ void output_to_all(char *str_a)
+ {
+  Serial.print(str_a);            // Main USB port
+
+  if ( esp01_is_present() )
+  {
+    for (i=0; i != MAX_CONNECTIONS; i++ )
+    {
+      if ( esp01_send(true, i) )
+      {
+        AUX_SERIAL.print(str_a);    // WiFi Port
+        esp01_send(false, i);
+      }
+    }
+  }
+  else 
+  {
+    AUX_SERIAL.print(str_a);        // No ESP-01, then use just the AUX port
+  }
+
+  DISPLAY_SERIAL.print(str_a);    // Aux Serial Port
+
+ /*
+  * All done, return
+  */
+  return;
+ }
+ 

@@ -30,8 +30,9 @@ const char* names[] = { "TARGET",                                               
                         "ODIN",   "WODEN",   "THOR",   "BALDAR",                                                            // 26
                         0};
                   
-char* nesw = "NESW";                    // Cardinal Points
-                 
+const char* nesw = "NESW";                    // Cardinal Points
+const char to_hex[] = "0123456789ABCDEF";      // Quick Hex to ASCII
+
 /*----------------------------------------------------------------
  * 
  * function: setup()
