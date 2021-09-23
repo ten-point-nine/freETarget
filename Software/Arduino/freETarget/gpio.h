@@ -16,7 +16,7 @@ void enable_interrupt(unsigned int active);               // Turn on the face st
 void disable_interrupt(void);                             // Turn off the face strike interrupt
 unsigned int multifunction_switch(unsigned int new_state);// Handle the actions of the DIP Switch signal
 void output_to_all(char* s);                              // Multipurpose driver
-
+void char_to_all(char ch);                                // Output a single character
 
 /*
  *  Port Definitions

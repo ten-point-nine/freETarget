@@ -364,6 +364,7 @@ void self_test(uint16_t test)
         {
           AUX_SERIAL.print(str_a);    // WiFi Port
           esp01_send(false, i);
+          delay(100);
         }
       }
     }

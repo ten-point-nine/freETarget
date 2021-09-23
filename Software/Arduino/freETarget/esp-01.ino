@@ -666,6 +666,7 @@ void esp01_receive(void)
         { 
           esp01_connect[channel] = true;// Record the channel                
           POST_version(PORT_AUX);       // Send out the software version to keep the PC happy
+          show_echo(0);                 // Send out the settings
           state = WAIT_IDLE;            // and go back to waiting
         }
         if ( (message_type & IS_CLOSED) && (s_closed[i] == 0) )         // Reached the end of CLOSED?

@@ -77,9 +77,12 @@ const json_message JSON[] = {
   {"\"TARGET_TYPE\":",    &json_target_type,                 0,                IS_INT16,  0,                NONVOL_TARGET_TYPE,      0 },    // Marify shot location (0 == Single Bull)
   {"\"TEST\":",           &json_test,                        0,                IS_INT16,  &show_test,       NONVOL_TEST_MODE,        0 },    // Execute a self test
   {"\"TRACE\":",          0,                                 0,                IS_INT16,  &set_trace,                      0,        0 },    // Enter / exit diagnostic trace
+/*  
   {"\"TRGT_1_RINGx10\":", &json_1_ring_x10,                  0,                IS_INT16,  0,                NONVOL_1_RINGx10,     1555 },    // Enter the 1 ring diamater (mm x 10)
+*/
   {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_version,                   0,        0 },    // Return the version string
   {"\"Z_OFFSET\":",       &json_z_offset    ,                0,                IS_INT16,  0,                NONVOL_Z_OFFSET,         0 },    // Distance from paper to sensor plane (mm)
+ /*
   {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT16,  0,                NONVOL_NORTH_X,          0 },    //
   {"\"NORTH_Y\":",        &json_north_y,                     0,                IS_INT16,  0,                NONVOL_NORTH_Y,          0 },    //
   {"\"EAST_X\":",         &json_east_x,                      0,                IS_INT16,  0,                NONVOL_EAST_X,           0 },    //
@@ -88,7 +91,8 @@ const json_message JSON[] = {
   {"\"SOUTH_Y\":",        &json_south_y,                     0,                IS_INT16,  0,                NONVOL_SOUTH_Y,          0 },    //
   {"\"WEST_X\":",         &json_west_x,                      0,                IS_INT16,  0,                NONVOL_WEST_X,           0 },    //
   {"\"WEST_Y\":",         &json_west_y,                      0,                IS_INT16,  0,                NONVOL_WEST_Y,           0 },    //
-  { 0, 0, 0, 0, 0, 0}
+*/
+{ 0, 0, 0, 0, 0, 0}
 };
 
 int instr(char* s1, char* s2);
@@ -140,7 +144,7 @@ bool    return_value;
     ch = GET();
 
 #if ( JSON_DEBUG == true )
-    PRINT(ch);
+    char_to_all(ch);
 #endif
 
 /*
@@ -320,11 +324,12 @@ int instr(char* s1, char* s2)
 void show_echo(int v)
 {
   unsigned int i, j;
-  char   str_a[512], str_b[512], str_c[10];  // String holding buffers
+  char   s[512], str_c[10];  // String holding buffers
 
-  sprintf(str_b, "\r\n{\r\n\"NAME\":\"%s\", \r\n", names[json_name_id]);
-  sprintf(str_a, "%s", str_b);
-
+  sprintf(s, "\r\n{\r\n\"NAME\":\"%s\", \r\n", names[json_name_id]);
+  
+  output_to_all(s);
+    
 /*
  * Loop through all of the JSON tokens
  */
@@ -342,65 +347,60 @@ void show_echo(int v)
           
         case IS_INT16:
         case IS_FIXED:
-          sprintf(str_b, "%s%s %d, \r\n", str_a, JSON[i].token, *JSON[i].value);
-          sprintf(str_a, "%s", str_b);
+          sprintf(s, "%s %d, \r\n", JSON[i].token, *JSON[i].value);
           break;
 
         case IS_FLOAT:
         case IS_DOUBLE:
           dtostrf(*JSON[i].d_value, 4, 2, str_c );
-          sprintf(str_b, "%s%s %s, \r\n", str_a, JSON[i].token, str_c);
-          sprintf(str_a, "%s", str_b);
+          sprintf(s, "%s %s, \r\n", JSON[i].token, str_c);
           break;
       }
+      output_to_all(s);
     }
     i++;
   }
-  output_to_all(str_a);
-  str_b[0] = 0;
-  str_a[0] = 0;
   
 /*
  * Finish up with the special cases
  */
-  sprintf(str_b, "%s\"IS_TRACE\": %d, \n\r", str_a, is_trace);                                   // TRUE to if trace is enabled
-  sprintf(str_a, "%s", str_b);
-
+  sprintf(s, "\"IS_TRACE\": %d, \n\r", is_trace);                                         // TRUE to if trace is enabled
+  output_to_all(s);
+  
   dtostrf(temperature_C(), 4, 2, str_c );
-  sprintf(str_b, "%s\"TEMPERATURE\": %s, \n\r", str_a, str_c);                                   // Temperature in degrees C
-  sprintf(str_a, "%s", str_b);
-
+  sprintf(s, "\"TEMPERATURE\": %s, \n\r", str_c);                                         // Temperature in degrees C
+  output_to_all(s);
+  
   dtostrf(speed_of_sound(temperature_C(), RH_50), 4, 2, str_c );
-  sprintf(str_b, "%s\"SPEED_SOUND\": %s, \n\r", str_a, str_c);                                  // Speed of Sound
-  sprintf(str_a, "%s", str_b);
+  sprintf(s, "\"SPEED_SOUND\": %s, \n\r", str_c);                                         // Speed of Sound
+  output_to_all(s);
 
   dtostrf(TO_VOLTS(analogRead(V_REFERENCE)), 4, 2, str_c );
-  sprintf(str_b, "%s\"V_REF\": %s, \n\r", str_a, str_c);             // Trip point reference
-  sprintf(str_a, "%s", str_b);
+  sprintf(s, "\"V_REF\": %s, \n\r", str_c);                                               // Trip point reference
+  output_to_all(s);
 
-  sprintf(str_b, "%s\"TIMER_COUNT\":%d, \n\r", str_a, (int)(SHOT_TIME * OSCILLATOR_MHZ));       // Maximum number of clock cycles to record shot (target dependent)
-  sprintf(str_a, "%s", str_b);
+  sprintf(s, "\"TIMER_COUNT\":%d, \n\r", (int)(SHOT_TIME * OSCILLATOR_MHZ));              // Maximum number of clock cycles to record shot (target dependent)
+  output_to_all(s);
 
-  sprintf(str_b, "%s\"DIP_HEX\": 0x%c, \n\r", str_a, to_hex[0x0F & read_DIP()]);                // DIP switch status
-  sprintf(str_a, "%s", str_b); 
+  sprintf(s, "\"DIP_HEX\": 0x%c, \n\r", to_hex[0x0F & read_DIP()]);                       // DIP switch status
+  output_to_all(s);
 
-  sprintf(str_b, "%s\"WiFi\": %d, \n\r", str_a, esp01_is_present());                            // TRUE if WiFi is available
-  sprintf(str_a, "%s", str_b); 
+  sprintf(s, "\"WiFi\": %d, \n\r", esp01_is_present());                                 // TRUE if WiFi is available
+  output_to_all(s);
 
-  sprintf(str_b, "%s\"VERSION\": %s, \n\r", str_a, SOFTWARE_VERSION);                           // Current software version
-  sprintf(str_a, "%s", str_b); 
+  sprintf(s, "\"VERSION\": %s, \n\r", SOFTWARE_VERSION);                                  // Current software version
+  output_to_all(s); 
 
   dtostrf(revision()/100.0, 4, 2, str_c );              
-  sprintf(str_b, "%s\"BD_REV\": %s \n\r", str_a, str_c);                                        // Current board versoin
-  sprintf(str_a, "%s", str_b); 
+  sprintf(s, "\"BD_REV\": %s \n\r", str_c);                                               // Current board versoin
+  output_to_all(s);
   
-  sprintf(str_b, "%s}\r\n", str_a); 
-  sprintf(str_a, "%s", str_b); 
+  sprintf(s, "}\r\n"); 
+  output_to_all(s);
 
 /*
  *  All done, return
  */
-  output_to_all(str_a);
   return;
 }
 

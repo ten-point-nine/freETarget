@@ -837,6 +837,13 @@ unsigned int multifunction_switch
  * mode that is programmed into it.
  * 
  *-----------------------------------------------------*/
+ void char_to_all(char ch)
+ {
+  char str_a[2];
+  str_a[0] = ch;
+  str_a[1] = 0;
+  output_to_all(str_a);
+ }
  
  void output_to_all(char *str_a)
  {
@@ -850,6 +857,7 @@ unsigned int multifunction_switch
       {
         AUX_SERIAL.print(str_a);    // WiFi Port
         esp01_send(false, i);
+        delay(50);
       }
     }
   }
