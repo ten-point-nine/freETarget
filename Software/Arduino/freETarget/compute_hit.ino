@@ -514,7 +514,7 @@ void send_score
   double coeff;                   // From Alex Bird
   int    z;
   double score;
-  char   str_a[256], str_b[256], str_c[10];  // String holding buffers
+  char   str[256], str_c[10];  // String holding buffers
   
   if ( is_trace )
   {
@@ -540,11 +540,12 @@ void send_score
 /* 
  *  Display the results
  */
-  sprintf(str_a, "\r\n{");
+  sprintf(str, "\r\n{");
+  output_to_all(str);
   
 #if ( S_SHOT )
-  sprintf(str_b, "%s \"shot\":%d, \"miss\":0, \"name\":\"%s\"", str_a, shot, names[json_name_id]);
-  sprintf(str_a, "%s", str_b);
+  sprintf(str, "\"shot\":%d, \"miss\":0, \"name\":\"%s\", ", shot, names[json_name_id]);
+  output_to_all(str);
 #endif
 
 #if ( S_SCORE )
@@ -552,52 +553,47 @@ void send_score
   score = 10.9 - (coeff * radius);
   z = 360 - (((int)angle - 90) % 360);
   clock_face = (double)z / 30.0;
-  sprintf(str_b, "%s, \"score\": %d, "\"clock\":\"%d:%d\"  ", str_a, score,(int)clock_face, (int)(60*(clock_face-((int)clock_face))) ;
-  sprintf(str_a, "%s", str_b);
+  sprintf(str, "\"score\": %d, "\"clock\":\"%d:%d, \"  ", score,(int)clock_face, (int)(60*(clock_face-((int)clock_face))) ;
+  output_to_all(str);
 #endif
 
 #if ( S_XY )
   dtostrf(x, 4, 2, str_c );
-  sprintf(str_b, "%s, \"x\":%s", str_a, str_c);
-  sprintf(str_a, "%s", str_b);
+  sprintf(str, "\"x\":%s, ", str_c);
+  output_to_all(str);
   dtostrf(y, 4, 2, str_c );
-  sprintf(str_b, "%s, \"y\":%s", str_a, str_c);
-  sprintf(str_a, "%s", str_b);
+  sprintf(str, "\"y\":%s, ", str_c);
+  output_to_all(str);
 #endif
 
 #if ( S_POLAR )
   dtostrf(radius, 4, 2, str_c );
-  sprintf(str_b, "%s, \"r\":%s", str_a, str_c);
-  sprintf(str_a, "%s", str_b);
+  sprintf(str, " \"r\":%s, ", str_c);
+  output_to_all(str);
   dtostrf(angle, 4, 2, str_c );
-  sprintf(str_b, "%s, \"a\":%s", str_a, str_c);
-  sprintf(str_a, "%s", str_b);
+  sprintf(str, "\"a\":%s, ", str_c);
+  output_to_all(str);
 #endif
 
 #if ( S_COUNTERS )
-  sprintf(str_b, "%s, \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d", str_a, (int)s[N].count, (int)s[E].count, (int)s[S].count, (int)s[W].count);
-  sprintf(str_a, "%s", str_b);
+  sprintf(str, "\"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d, ", (int)s[N].count, (int)s[E].count, (int)s[S].count, (int)s[W].count);
+  output_to_all(str);
 #endif
 
 #if ( S_MISC ) 
   volts = analogRead(V_REFERENCE);
   dtostrf(TO_VOLTS(volts), 2, 2, str_c );
-  sprintf(str_b, "%s, \"V_REF\":%s", str_a, str_c);
-  sprintf(str_a, "%s", str_b);
+  sprintf(str, "\"V_REF\":%s, ", str_c);
+  output_to_all(str);
   dtostrf(temperature_C(), 2, 2, str_c );
-  sprintf(str_b, "%s, \"T\":%s, \"VERSION\":", str_a, str_c);
-  strcat(str_b, SOFTWARE_VERSION);
-  sprintf(str_a, "%s", str_b);
+  sprintf(str, "\"T\":%s, ", str_c);
+  output_to_all(str);
+  sprintf(str, "\"VERSION\":%s ", SOFTWARE_VERSION);
+  output_to_all(str);
 #endif
 
-  sprintf(str_b, "%s}\r\n", str_a);
-  sprintf(str_a, "%s", str_b);
-
-
-/* 
- *  Send the score to anybody who is listening
- */
-  output_to_all(str_a);
+  sprintf(str, "}\r\n");
+  output_to_all(str);
   
 /*
  * All done, return

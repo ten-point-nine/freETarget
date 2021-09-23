@@ -109,7 +109,6 @@ void setup(void)
  * Ready to go
  */
   set_LED_PWM(json_LED_PWM);
-  
   return;
 }
 
