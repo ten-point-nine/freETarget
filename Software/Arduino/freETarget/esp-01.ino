@@ -509,6 +509,8 @@ unsigned int esp01_available(void)
  *   loop will us a timer to exit if nothing comes back
  *   
  *--------------------------------------------------------------*/
+#define MAX_RETRY  10                   // Allow for 10 attempts to start
+unsigned int miss_count = 0;
 
 bool esp01_send
   (
@@ -518,6 +520,7 @@ bool esp01_send
 {
   unsigned int x;                       // Working character
   long         timer;                   // Timer start
+  unsigned int retry_count;             // Number of times to try again
   
 /*
  * Determine if we actually have to do anything
@@ -533,23 +536,30 @@ bool esp01_send
  */
   if ( start )
   {
-    AUX_SERIAL.print("AT+CIPSENDEX="); AUX_SERIAL.print(index); AUX_SERIAL.print(",2047\r\n");   // Start and lie that we will send 2K of data
-
-    timer = micros();                               // Remember the starting time
-    while ( (micros() - timer) < MAX_esp01_waitOK ) // Wait for the > to come back within a second
+    for (retry_count = 0; retry_count != MAX_RETRY; retry_count++)
     {
-      if ( AUX_SERIAL.available() != 0 )            // Something available
+      AUX_SERIAL.print("AT+CIPSENDEX="); AUX_SERIAL.print(index); AUX_SERIAL.print(",2048\r\n");   // Start and lie that we will send 2K of data
+
+      timer = micros();                               // Remember the starting time
+      while ( (micros() - timer) < MAX_esp01_waitOK ) // Wait for the > to come back within a second
       {
-        if ( AUX_SERIAL.read() == '>' )             // Is it the prompt?
+        if ( AUX_SERIAL.available() != 0 )            // Something available
         {
-          return true;                              // Yes, Ready to send out 
+          if ( AUX_SERIAL.read() == '>' )             // Is it the prompt?
+          {
+            return true;                              // Yes, Ready to send out 
+          }
         }
       }
+      AUX_SERIAL.print("+++");
+      delay(ONE_SECOND + (ONE_SECOND/10));
     }
   }
   else
   {
-    AUX_SERIAL.print("\\0");                       // End by sending a null out the port
+    AUX_SERIAL.print("\\0");                        // End by sending a null out the port
+    delay(100);                                     // And wait for the ESP to send it
+    return true;
   }
 
 /*
@@ -664,7 +674,7 @@ void esp01_receive(void)
         i++;                            // Yes, wait for the next character
         if ( (message_type & IS_CONNECT) && (s_connect[i] == 0) )        // Reached the end of CONNECT?
         { 
-          esp01_connect[channel] = true;// Record the channel                
+          esp01_connect[channel] = true;// Record the channel               
           POST_version(PORT_AUX);       // Send out the software version to keep the PC happy
           show_echo(0);                 // Send out the settings
           state = WAIT_IDLE;            // and go back to waiting

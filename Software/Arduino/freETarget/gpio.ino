@@ -857,7 +857,6 @@ unsigned int multifunction_switch
       {
         AUX_SERIAL.print(str_a);    // WiFi Port
         esp01_send(false, i);
-        delay(50);
       }
     }
   }
