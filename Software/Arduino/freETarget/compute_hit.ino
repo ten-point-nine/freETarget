@@ -628,6 +628,7 @@ void send_miss
  *  Display the results
  */
   sprintf(str, "\r\n{");
+  output_to_all(str);
   
  #if ( S_SHOT )
   sprintf(str, "\"shot\":%d, \"miss\":1, \"name\":\"%s\"", shot, names[json_name_id]);

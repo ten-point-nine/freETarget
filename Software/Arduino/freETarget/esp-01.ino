@@ -721,7 +721,7 @@ void esp01_receive(void)
         i++;                            // Yes, wait for the next character
         if ( (message_type & IS_CONNECT) && (s_connect[i] == 0) )        // Reached the end of CONNECT?
         { 
-          esp01_connect[channel] = true;// Record the channel               
+          esp01_connect[channel] = true;// Record the channel       
           POST_version(PORT_AUX);       // Send out the software version to keep the PC happy
           show_echo(0);                 // Send out the settings
           state = WAIT_IDLE;            // and go back to waiting
