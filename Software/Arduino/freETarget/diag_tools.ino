@@ -339,9 +339,7 @@ void self_test(uint16_t test)
   int i;
   char str_a[256];
 
-  sprintf(str_a, "\r\nfreETarget ");
-  strcat(str_a, SOFTWARE_VERSION);
-  strcat(str_a, "\r\n");
+  sprintf(str_a, "\r\nfreETarget %s\r\n", SOFTWARE_VERSION);
   
 /*
  * Display the version on the default serial port
@@ -360,12 +358,8 @@ void self_test(uint16_t test)
     {
       for (i=0; i != MAX_CONNECTIONS; i++ )
       {
-        if ( esp01_send(true, i) )
-        {
-          AUX_SERIAL.print(str_a);    // WiFi Port
-          esp01_send(false, i);
-          delay(100);
-        }
+        esp01_send(str_a, i);
+        esp01_send(0, i);
       }
     }
     else 

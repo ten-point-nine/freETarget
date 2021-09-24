@@ -833,8 +833,8 @@ unsigned int multifunction_switch
  * 
  *-----------------------------------------------------
  *
- * The actions of the DIP switch will change depending on the 
- * mode that is programmed into it.
+ * Send a string to all of the serial devices that are 
+ * in use. 
  * 
  *-----------------------------------------------------*/
  void char_to_all(char ch)
@@ -845,27 +845,23 @@ unsigned int multifunction_switch
   output_to_all(str_a);
  }
  
- void output_to_all(char *str_a)
+ void output_to_all(char *str)
  {
-  Serial.print(str_a);            // Main USB port
+  Serial.print(str);            // Main USB port
 
   if ( esp01_is_present() )
   {
     for (i=0; i != MAX_CONNECTIONS; i++ )
     {
-      if ( esp01_send(true, i) )
-      {
-        AUX_SERIAL.print(str_a);    // WiFi Port
-        esp01_send(false, i);
-      }
+      esp01_send(str, i);
     }
   }
   else 
   {
-    AUX_SERIAL.print(str_a);        // No ESP-01, then use just the AUX port
+    AUX_SERIAL.print(str);        // No ESP-01, then use just the AUX port
   }
 
-  DISPLAY_SERIAL.print(str_a);    // Aux Serial Port
+  DISPLAY_SERIAL.print(str);    // Aux Serial Port
 
  /*
   * All done, return

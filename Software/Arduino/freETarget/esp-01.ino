@@ -497,75 +497,122 @@ unsigned int esp01_available(void)
  *   over the IP channel. The ESP-01 will also stop collecting 
  *   bytes and send the data if a NULL is received.
  *   
- *   So the freETarget implements the send function by triggering
- *   the IP channel with the AT+CIPSENDEX command and then lets 
- *   the application send out bytes over the AUX port as usual 
- *   then the application sends out a NULL to kick off the 
- *   sending process.
+ *   The function uses a state machine
  *   
- *   It is possible for the ESP-01 to be attached, but nothing 
- *   connected via the server.  This function will not get the >
- *   prompt and hang indefinitly.  For this reason the waiting
- *   loop will us a timer to exit if nothing comes back
+ *   Not ready to send out characters
+ *   Filling the transmit buffer
+ *   Kicking out the transmit buffer.
+ *   
+ *   This lets the application fill the tranmsit buffer as 
+ *   quickly as possible until the buffer is full.
  *   
  *--------------------------------------------------------------*/
 #define MAX_RETRY  10                   // Allow for 10 attempts to start
-unsigned int miss_count = 0;
+#define ESP_BUFFER  2048                // The ESP buffer size
+
+#define SEND_OFF    1                   // The send function is off
+#define SEND_READY  2                   // The send is ready to send
+#define SEND_NOW    3                   // Send the buffer now
+#define SEND_ERROR  4                   // The send is in error, do nothing
+
+static unsigned int send_used[3] = {0, 0, 0};  // How much of the send buffer is used
+static unsigned int send_state[3] = {SEND_OFF, SEND_OFF, SEND_OFF}; // State of each channel
+
+static unsigned int miss_count = 0;
 
 bool esp01_send
   (
-    bool start,                         // TRUE if starting a transmission
+    char* str,                          // String to send
     int  index                          // Which index (connection) to send on
   )
 {
-  unsigned int x;                       // Working character
   long         timer;                   // Timer start
   unsigned int retry_count;             // Number of times to try again
-  
+  char AT_command[64];                  // Place to store a string
+  bool not_sent;                        // TRUE if still busy sending
 /*
  * Determine if we actually have to do anything
  */
   if ( (esp01_is_present() == false)    // No ESP at all
       || ( esp01_connect[index] == false )) // No connection on this channel
   {
+    send_used[index] = 0;
     return false;
   }
-
+  
 /*  
- *   We have an ESP-01 attached,  Figure out the bytes in the queueu
+ *   Loop here until the string has been output
  */
-  if ( start )
-  {
-    for (retry_count = 0; retry_count != MAX_RETRY; retry_count++)
-    {
-      AUX_SERIAL.print("AT+CIPSENDEX="); AUX_SERIAL.print(index); AUX_SERIAL.print(",2048\r\n");   // Start and lie that we will send 2K of data
+  not_sent = true;
 
-      timer = micros();                               // Remember the starting time
-      while ( (micros() - timer) < MAX_esp01_waitOK ) // Wait for the > to come back within a second
-      {
-        if ( AUX_SERIAL.available() != 0 )            // Something available
-        {
-          if ( AUX_SERIAL.read() == '>' )             // Is it the prompt?
-          {
-            return true;                              // Yes, Ready to send out 
-          }
-        }
-      }
-      AUX_SERIAL.print("+++");
-      delay(ONE_SECOND + (ONE_SECOND/10));
-    }
-  }
-  else
+  while ( not_sent )
   {
-    AUX_SERIAL.print("\\0");                        // End by sending a null out the port
-    delay(100);                                     // And wait for the ESP to send it
-    return true;
+    switch ( send_state[index] )
+    {
+      case SEND_OFF:                                      // The ESP is not ready to send, 
+        for (retry_count = 0; retry_count != MAX_RETRY; retry_count++)
+        {
+          sprintf(AT_command, "AT+CIPSENDEX=%d,%d\r\n", index, ESP_BUFFER); // Start and lie that we will send 2K of data
+          AUX_SERIAL.print(AT_command);
+          send_used[index] = 0;                           // The buffer is completely empty
+          timer = micros();                               // Remember the starting time
+          while ( (micros() - timer) < MAX_esp01_waitOK ) // Wait for the > to come back within a second
+          {
+            if ( AUX_SERIAL.available() != 0 )            // Something available
+            {
+              if ( AUX_SERIAL.read() == '>' )             // Is it the prompt?
+              {
+                send_state[index] = SEND_READY;           // Ready to send
+                break;
+              }
+            }
+          }
+          if ( send_state[index] == SEND_READY )
+          {
+            break;
+          }
+          AUX_SERIAL.print("+++");                        // Command not acted on
+          delay(ONE_SECOND + (ONE_SECOND/10));            // Go into AT command mode
+        }
+        if ( send_state[index] == SEND_READY )
+        {
+          break;
+        }
+        send_state[index] = SEND_ERROR;
+        break;
+        
+    case SEND_READY:
+      if ( str == 0 )                                     // A null string starts transmission
+      {
+        send_state[index] = SEND_NOW;                     // And reset the AT command
+        break;
+      }
+      if ( (send_used[index] + strlen(str)) >= ESP_BUFFER)// Is there space to send it?
+      {
+        send_state[index] = SEND_NOW;                     // And reset the AT command
+        break;
+      }
+      AUX_SERIAL.print(str);                              // Space left to send
+      send_used[index] += strlen(str);                    // Keep track of how much is waiting to go
+      not_sent = false;                                   // Send and done
+      break;
+
+    case SEND_NOW:  
+      AUX_SERIAL.print("\\0");                            // No more space left in the ESP.  Kick it out 
+      send_state[index] = SEND_OFF;                       // Reset the AT command next time through
+      return true;                                        // and exit
+  
+    case SEND_ERROR:                                      // An error occured.
+      send_state[index] = SEND_OFF;                       // Go back to the off state
+      not_sent = false;
+      return false;                                       // And bail out                    
+    }
   }
 
 /*
  * All done, return
  */
-  return false;
+  return true;
 }
 
 /*----------------------------------------------------------------

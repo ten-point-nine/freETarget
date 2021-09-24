@@ -397,7 +397,8 @@ void show_echo(int v)
   
   sprintf(s, "}\r\n"); 
   output_to_all(s);
-
+  output_to_all(0);
+  
 /*
  *  All done, return
  */

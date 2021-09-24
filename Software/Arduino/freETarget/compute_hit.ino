@@ -594,10 +594,12 @@ void send_score
 
   sprintf(str, "}\r\n");
   output_to_all(str);
+  output_to_all(0);
   
 /*
  * All done, return
  */
+  
   return;
 }
  
@@ -620,49 +622,27 @@ void send_miss
   int shot                        // Current shot
   )
 {
-  char str_a[256], str_b[256];    // String holding buffer
+  char str[256];    // String holding buffer
   
 /* 
  *  Display the results
  */
-  sprintf(str_a, "\r\n{");
+  sprintf(str, "\r\n{");
   
  #if ( S_SHOT )
-  sprintf(str_b, "%s \"shot\":%d, \"miss\":1, \"name\":\"%s\"", str_a, shot, names[json_name_id]);
-  sprintf(str_a, "%s", str_b);
+  sprintf(str, "\"shot\":%d, \"miss\":1, \"name\":\"%s\"", shot, names[json_name_id]);
+  output_to_all(str);
 #endif
 
 #if ( S_XY )
-  sprintf(str_b, "%s \"x\":0, \"y\":0", str_a);
-  sprintf(str_a, "%s", str_b);
+  sprintf(str, "\"x\":0, \"y\":0");
+  output_to_all(str);
 #endif
 
-  sprintf(str_b, "%s}\n\r", str_a);
-  sprintf(str_a, "%s", str_b);
-  
+  sprintf(str, "%s}\n\r");
+  output_to_all(str);
+  output_to_all(0);
 
-/* 
- *  Send the score to anybody who is listening
- */
-  Serial.print(str_a);            // Main USB port
-
-  if ( esp01_is_present() )
-  {
-    for (i=0; i != MAX_CONNECTIONS; i++ )
-    {
-      if ( esp01_send(true, i) )
-      {
-        AUX_SERIAL.print(str_a);    // WiFi Port
-        esp01_send(false, i);
-      }
-    }
-  }
-  else 
-  {
-    AUX_SERIAL.print(str_a);        // No ESP-01, then use just the AUX port
-  }
-
-  DISPLAY_SERIAL.print(str_a);    // Aux Serial Port
 
 /*
  * All done, go home
