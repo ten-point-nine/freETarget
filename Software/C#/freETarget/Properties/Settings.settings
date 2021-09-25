@@ -81,10 +81,10 @@
       <Value Profile="(Default)">USB</Value>
     </Setting>
     <Setting Name="TcpIP" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">192.168.10.9</Value>
     </Setting>
     <Setting Name="TcpPort" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
+      <Value Profile="(Default)">1090</Value>
     </Setting>
   </Settings>
 </SettingsFile>

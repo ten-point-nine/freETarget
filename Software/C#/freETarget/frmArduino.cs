@@ -27,7 +27,6 @@ namespace freETarget {
             new Command("STEP_TIME","0"),
             new Command("TEST","0"),
             new Command("TRACE","0"),
-            new Command("TRGT_1_RINGx10","1555"),
             new Command("Z_OFFSET","0"),
             new Command("PAPER_ECO","0"),
             new Command("NORTH_X","0"),

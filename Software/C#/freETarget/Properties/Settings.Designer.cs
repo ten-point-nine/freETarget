@@ -337,7 +337,7 @@ namespace freETarget.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("192.168.10.9")]
         public string TcpIP {
             get {
                 return ((string)(this["TcpIP"]));
@@ -349,7 +349,7 @@ namespace freETarget.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1090")]
         public int TcpPort {
             get {
                 return ((int)(this["TcpPort"]));
