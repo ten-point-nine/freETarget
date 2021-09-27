@@ -177,7 +177,7 @@ unsigned int compute_hit
   z_offset_clock = (double)json_z_offset  * OSCILLATOR_MHZ / s_of_sound; // Clock adjustement for paper to sensor difference
   if ( is_trace )
   {
-    Serial.print("\r\nz_offset_clock:"); Serial.print(z_offset_clock); Serial.print("  ");
+    Serial.print("\r\nz_offset_clock:"); Serial.print(z_offset_clock); Serial.print("\r\n");
   }
   
  /* 

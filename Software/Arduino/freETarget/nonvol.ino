@@ -58,26 +58,23 @@ void init_nonvol(int v)
  i=0;
  while ( JSON[i].token != 0 )
  {
-   if ( (JSON[i].value != 0) || (JSON[i].d_value != 0)  )    // There is a value stored in memory
+   switch ( JSON[i].convert )
    {
-     switch ( JSON[i].convert )
-     {
-        case IS_VOID:                                        // Variable does not contain anything 
-        case IS_FIXED:                                       // Variable cannot be overwritten
-          break;
+      case IS_VOID:                                        // Variable does not contain anything 
+      case IS_FIXED:                                       // Variable cannot be overwritten
+        break;
         
-        case IS_INT16:
-          x = JSON[i].init_value;                            // Read in the value 
-          EEPROM.put(JSON[i].non_vol, x);                    // Read in the value
-          break;
+      case IS_INT16:
+        x = JSON[i].init_value;                            // Read in the value 
+        EEPROM.put(JSON[i].non_vol, x);                    // Read in the value
+        break;
 
-        case IS_FLOAT:
-        case IS_DOUBLE:
-          dx = (double)JSON[i].init_value;
-          EEPROM.put(JSON[i].non_vol, dx);                    // Read in the value
-          break;
-      }
-   }
+      case IS_FLOAT:
+      case IS_DOUBLE:
+        dx = (double)JSON[i].init_value;
+        EEPROM.put(JSON[i].non_vol, dx);                    // Read in the value
+        break;
+    }
    i++;
  }
 
@@ -186,15 +183,11 @@ void read_nonvol(void)
      switch ( JSON[i].convert )
      {
         case IS_VOID:
+        case IS_FIXED:
           break;
         
         case IS_INT16:
           EEPROM.get(JSON[i].non_vol, x);                    // Read in the value
-          if ( x == -1 )                                     // If it's uninitialized
-          {
-            x = JSON[i].init_value;                          // Froce the default
-            EEPROM.put(JSON[i].non_vol, x);                  // Read in the value
-          }
           *JSON[i].value = x;
           break;
 
