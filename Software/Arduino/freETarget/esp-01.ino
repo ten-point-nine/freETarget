@@ -113,61 +113,61 @@ void esp01_init(void)
 /*
  * There is an ESP-01 on the freETarget.  We need to program it
  */
-  AUX_SERIAL.print("ATE0\r\n");                   // Turn off echo (don't use it)
+  WIFI_SERIAL.print("ATE0\r\n");                   // Turn off echo (don't use it)
   if ( (esp01_waitOK() == false) && is_trace )
   {
     Serial.print("\r\nESP-01: Failed ATE0");
   }
   
-  AUX_SERIAL.print("AT+RFPOWER=80\r\n");          // Set almost max power
+  WIFI_SERIAL.print("AT+RFPOWER=80\r\n");          // Set almost max power
   if ( (esp01_waitOK() == false) && ( is_trace ) )
   {
     Serial.print("\r\nESP-01: Failed AT+RFPOWER=80");  
   } 
 
-  AUX_SERIAL.print("AT+CWMODE_DEF=2\r\n");        // We want to be an access point
+  WIFI_SERIAL.print("AT+CWMODE_DEF=2\r\n");        // We want to be an access point
   if ( (esp01_waitOK() == false) && (is_trace) )
   {
     Serial.print("\r\nESP-01: Failed AT+CWMODE_DEF=2");
   }
  
-  AUX_SERIAL.print("AT+CWSAP_DEF="); AUX_SERIAL.print("\"FET-"); AUX_SERIAL.print(names[json_name_id]); AUX_SERIAL.print("\",\"NA\",5,0\r\n");
+  WIFI_SERIAL.print("AT+CWSAP_DEF="); WIFI_SERIAL.print("\"FET-"); WIFI_SERIAL.print(names[json_name_id]); WIFI_SERIAL.print("\",\"NA\",5,0\r\n");
   if ( (esp01_waitOK() == false) && (is_trace) )
   {
     Serial.print("\r\nESP-01: AT+CWSAP_DEF=FET-"); Serial.print(names[json_name_id]);
   }  
  
-  AUX_SERIAL.print("AT+CWDHCP_DEF=0,1\r\n");      // DHCP turned on
+  WIFI_SERIAL.print("AT+CWDHCP_DEF=0,1\r\n");      // DHCP turned on
   if ( (esp01_waitOK() == false) && (is_trace) )
   {
     Serial.print("\r\nESP-01: Failed AT+CWDHCP_DEF=0,1");
   }
   
-  AUX_SERIAL.print("AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\"\r\n"); // Set the freETarget IP to 192.168.10.9
+  WIFI_SERIAL.print("AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\"\r\n"); // Set the freETarget IP to 192.168.10.9
   if ( (esp01_waitOK() == false) && (is_trace) )
   {
     Serial.print("\r\nESP-01: Failed AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\"");
   }
 
-  AUX_SERIAL.print("AT+CWDHCPS_DEF=1,2800,\"192.168.10.0\",\"192.168.10.8\"\r\n");          // Set the PC IP to 192.168.10.0.  Lease Time 2800 minutes
+  WIFI_SERIAL.print("AT+CWDHCPS_DEF=1,2800,\"192.168.10.0\",\"192.168.10.8\"\r\n");          // Set the PC IP to 192.168.10.0.  Lease Time 2800 minutes
   if ( (esp01_waitOK() == false) && (is_trace) )
   {
     Serial.print("\r\nESP-01: Failed AT+CWDHCPS_DEF=1,2800,\"192.168.10.0\",\"192.168.10.8\"");
   }
     
-  AUX_SERIAL.print("AT+CIPMUX=1\r\n");           // Allow a single connection
+  WIFI_SERIAL.print("AT+CIPMUX=1\r\n");           // Allow a single connection
   if ( (esp01_waitOK() == false) && (is_trace) )
   {
     Serial.print("\r\nESP-01: Failed AT+CIPMUX=1");
   }
   
-  AUX_SERIAL.print("AT+CIPSERVER=1,1090\r\n");   // Turn on the server and listen on port 1090
+  WIFI_SERIAL.print("AT+CIPSERVER=1,1090\r\n");   // Turn on the server and listen on port 1090
   if ( (esp01_waitOK() == false) && (is_trace) )
   {
     Serial.print("\r\nESP-01: Failed AT+CIPSERVER=1,1090");
   }
   
-  AUX_SERIAL.print("AT+CIPSTO=7000\r\n");        // Set the server time out
+  WIFI_SERIAL.print("AT+CIPSTO=7000\r\n");        // Set the server time out
   if ( (esp01_waitOK() == false) && (is_trace) )
   {
     Serial.print("\r\nESP-01: Failed AT+CIPSTO=7000");
@@ -214,9 +214,9 @@ bool esp01_restart(void)
 /*
  * Send out the break then restart the module
  */
-  AUX_SERIAL.print("+++");
+  WIFI_SERIAL.print("+++");
   delay(ONE_SECOND);
-  AUX_SERIAL.print("AT+RST\r\n");
+  WIFI_SERIAL.print("AT+RST\r\n");
 
 /*
  * All done, 
@@ -266,7 +266,7 @@ bool esp01_is_present(void)
   
   esp01_flush();                          // Eat any garbage that might be on the port
 
-  AUX_SERIAL.print("AT\r\n");             // Send out an AT command to the port
+  WIFI_SERIAL.print("AT\r\n");            // Send out an AT command to the port
   esp01_present = esp01_waitOK();         // and wait for the OK to come back
 
 /*
@@ -293,9 +293,9 @@ bool esp01_is_present(void)
 
  static void esp01_flush(void)
  {
-   while ( AUX_SERIAL.available() != 0 ) 
+   while ( WIFI_SERIAL.available() != 0 ) 
    {
-    AUX_SERIAL.read();
+    WIFI_SERIAL.read();
    }
 
  /*
@@ -339,9 +339,9 @@ static bool esp01_waitOK(void)
  */
   while ( (micros() - start) < MAX_esp01_waitOK )
   {
-    if ( AUX_SERIAL.available() != 0 ) 
+    if ( WIFI_SERIAL.available() != 0 ) 
     {
-      ch = AUX_SERIAL.read();
+      ch = WIFI_SERIAL.read();
 
       switch (state)
       {
@@ -387,7 +387,7 @@ static bool esp01_waitOK(void)
  *   The function checks to see if an ESP-01 is attached to the
  *   board.  
  *   
- *   Not attached - Perform regular AUX_SERIAL.read()
+ *   Not attached - Perform regular WIFI_SERIAL.read()
  *   Attached     - Take a character from the IP queue
  *   
  *--------------------------------------------------------------*/
@@ -401,7 +401,7 @@ char esp01_read(void)
  */
   if ( esp01_is_present() == false )
   {
-    return AUX_SERIAL.read();           // Just do a regular read from the aux port
+    return WIFI_SERIAL.read();           // Just do a regular read from the aux port
   }
 
 /*  
@@ -437,7 +437,7 @@ char esp01_read(void)
  *   The function checks to see if an ESP-01 is attached to the
  *   board.  
  *   
- *   Not attached - Perform regular AUX_SERIAL.gavailable()
+ *   Not attached - Perform regular WIFI_SERIAL.gavailable()
  *   Attached     - Return the queue size
  *   
  *--------------------------------------------------------------*/
@@ -451,7 +451,7 @@ unsigned int esp01_available(void)
  */
   if ( esp01_is_present() == false )
   {
-    return AUX_SERIAL.available();      // Just do a regular read fromthe aux port
+    return WIFI_SERIAL.available();      // Just do a regular read fromthe aux port
   }
 
 /*  
@@ -513,12 +513,26 @@ unsigned int esp01_available(void)
 #define SEND_OFF    1                   // The send function is off
 #define SEND_READY  2                   // The send is ready to send
 #define SEND_NOW    3                   // Send the buffer now
-#define SEND_ERROR  4                   // The send is in error, do nothing
+#define SEND_BUSY   4                   // The buffer is being sent.
+#define SEND_ERROR  5                   // The send is in error, do nothing
 
 static unsigned int send_used[3] = {0, 0, 0};  // How much of the send buffer is used
 static unsigned int send_state[3] = {SEND_OFF, SEND_OFF, SEND_OFF}; // State of each channel
 
 static unsigned int miss_count = 0;
+
+bool esp01_send_ch                      // Send a character
+  (
+    char ch,                            // Character to send
+    int  index                          // Which index (connection) to send on
+  )
+{
+  char str[2];
+
+  str[0] = ch;
+  str[1] = 0;
+  esp01_send(str, index);
+}
 
 bool esp01_send
   (
@@ -530,6 +544,8 @@ bool esp01_send
   unsigned int retry_count;             // Number of times to try again
   char AT_command[64];                  // Place to store a string
   bool not_sent;                        // TRUE if still busy sending
+  char ch;                              // Character read back
+  
 /*
  * Determine if we actually have to do anything
  */
@@ -553,14 +569,16 @@ bool esp01_send
         for (retry_count = 0; retry_count != MAX_RETRY; retry_count++)
         {
           sprintf(AT_command, "AT+CIPSENDEX=%d,%d\r\n", index, ESP_BUFFER); // Start and lie that we will send 2K of data
-          AUX_SERIAL.print(AT_command);
+          WIFI_SERIAL.print(AT_command);
           send_used[index] = 0;                           // The buffer is completely empty
           timer = micros();                               // Remember the starting time
           while ( (micros() - timer) < MAX_esp01_waitOK ) // Wait for the > to come back within a second
           {
-            if ( AUX_SERIAL.available() != 0 )            // Something available
+            if ( WIFI_SERIAL.available() != 0 )           // Something available?
             {
-              if ( AUX_SERIAL.read() == '>' )             // Is it the prompt?
+              ch = WIFI_SERIAL.read();
+              Serial.print(ch);
+              if ( ch == '>' )                            // Is it the prompt?
               {
                 send_state[index] = SEND_READY;           // Ready to send
                 break;
@@ -571,7 +589,8 @@ bool esp01_send
           {
             break;
           }
-          AUX_SERIAL.print("+++");                        // Command not acted on
+          WIFI_SERIAL.print("+++");                        // Command not acted on
+          Serial.print("  missed:"); Serial.print(str); Serial.print(":");Serial.print(index);
           delay(ONE_SECOND + (ONE_SECOND/10));            // Go into AT command mode
         }
         if ( send_state[index] == SEND_READY )
@@ -592,16 +611,33 @@ bool esp01_send
         send_state[index] = SEND_NOW;                     // And reset the AT command
         break;
       }
-      AUX_SERIAL.print(str);                              // Space left to send
+      WIFI_SERIAL.print(str);                             // Space left to send
       send_used[index] += strlen(str);                    // Keep track of how much is waiting to go
       not_sent = false;                                   // Send and done
       break;
 
     case SEND_NOW:  
-      AUX_SERIAL.print("\\0");                            // No more space left in the ESP.  Kick it out 
-      send_state[index] = SEND_OFF;                       // Reset the AT command next time through
-      return true;                                        // and exit
-  
+      WIFI_SERIAL.print("\\0");                           // The buffer is ready to send out.  Kick it off
+      send_state[index] = SEND_BUSY;                      // Wait for the buffer to be sent
+      break;                                              // 
+
+    case SEND_BUSY:                                       // Wait for the buffer to be sent
+       timer = micros();                                  // Remember the starting time
+       while ( (micros() - timer) < MAX_esp01_waitOK )    // Wait for the OK to come back within a second
+       {
+         if ( WIFI_SERIAL.available() != 0 )              // Something available
+         {
+           ch = WIFI_SERIAL.read();                       // (Make sure we only read on char at a time)
+           if ( ch == 'K' )                               // Is it OK?
+           {
+             send_state[index] = SEND_OFF;                // Ready to next time
+             return;
+           }
+         }
+       }
+       send_state[index] = SEND_OFF;                      // Ran out of time, nothing we can do to
+       return;                                            // Fix it.
+          
     case SEND_ERROR:                                      // An error occured.
       send_state[index] = SEND_OFF;                       // Go back to the off state
       not_sent = false;
@@ -680,11 +716,11 @@ void esp01_receive(void)
 /*
  * Loop here while we have characters waiting for us
  */
-  while ( AUX_SERIAL.available() != 0 ) // Nothing is waiting for us
+  while ( WIFI_SERIAL.available() != 0 ) // Nothing is waiting for us
   {
-    ch = AUX_SERIAL.read();             // Pull in the next byte
+    ch = WIFI_SERIAL.read();             // Pull in the next byte
 
-    switch (state)                      // What do we do with it?
+    switch (state)                       // What do we do with it?
     {
       case WAIT_IDLE:                   // Stay here until we see a + or ,
         if ( (ch == '+') || (ch == ',' ) )// Synchronized and ready for the next state

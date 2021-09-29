@@ -13,7 +13,7 @@
 #include "esp-01.h"
 #include "json.h"
 
-#define SOFTWARE_VERSION "\"3.04.9 September 24, 2021\""
+#define SOFTWARE_VERSION "\"3.04.10 September 28, 2021\""
 #define REV_100    100
 #define REV_210    210
 #define REV_220    2201001
@@ -28,6 +28,7 @@
  */
 #define SAMPLE_CALCULATIONS false     // Trace the COUNTER values
 #define AUX_SERIAL         Serial3    // Auxilary Connector
+#define WIFI_SERIAL        Serial3    // WiFi Port
 #define DISPLAY_SERIAL     Serial2    // Serial port for slave display
 
 char GET (void) 

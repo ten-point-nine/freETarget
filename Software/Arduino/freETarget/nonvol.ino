@@ -34,7 +34,7 @@ void init_nonvol(int v)
 {
   unsigned int nonvol_init;               // Initialization token
            int serial_number;             // Board serial number
-  char ch;
+  char         ch;
   unsigned int x;                         // Temporary Value
   double       dx;                        // Temporarty Value
 
@@ -47,7 +47,13 @@ void init_nonvol(int v)
     return;
   }
   
-  Serial.print("\r\nReset to factory defaults\r\n");
+  Serial.print("\r\nReset to factory defaults. This may take a while\r\n");
+  ch = 0xAB;
+  for ( i=0; i != NONVOL_SIZE; i++)
+  {
+    EEPROM.put(i, ch);                    // Fill up with a bogus value
+  }
+  
   nonvol_init = 0;                        // Corrupt the init location
   EEPROM.put(NONVOL_INIT, nonvol_init);
   gen_position(0); 
@@ -188,6 +194,12 @@ void read_nonvol(void)
         
         case IS_INT16:
           EEPROM.get(JSON[i].non_vol, x);                    // Read in the value
+          Serial.print(x, HEX);
+          if ( x == 0xABAB )                                 // Is it uninitialized?
+          {
+            x = JSON[i].init_value;                          // Yes, overwrite with the default
+            EEPROM.put(JSON[i].non_vol, x);
+          }
           *JSON[i].value = x;
           break;
 

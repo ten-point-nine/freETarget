@@ -439,7 +439,7 @@ void self_test(uint16_t test)
  *  
  *--------------------------------------------------------------*/
  #define POST_counters_cycles 10 // Repeat the test 10x
- #define CLOCK_TEST_LIMIT 500                      // Clock should be within 500 ticks
+ #define CLOCK_TEST_LIMIT 500    // Clock should be within 500 ticks
  
  bool POST_counters(void)
  {
@@ -591,7 +591,7 @@ void self_test(uint16_t test)
     Serial.print("\r\nPOST trip point");
    }
    
-   set_trip_point(20);               // Show the trip point once (20 cycles used for blinking values)
+   set_trip_point(20);              // Show the trip point once (20 cycles used for blinking values)
    set_LED(L('.', '.', '.'));        // Show test test Ending
    return;
  }
@@ -681,10 +681,10 @@ void set_trip_point
 /*
  * Loop if not in spec, passes to display, or the CAL jumper is in
  */
-
   while ( not_in_spec                                       // Out of tolerance
           ||   ( stay_forever )                             // Passes to go
-          ||   ( CALIBRATE ) )                              // Held in place by DIP switch
+          ||   ( CALIBRATE )                                // Held in place by DIP switch
+          ||   (pass_count != 0))                           // Wait here for N cycles
   {
     start_time = millis();
     sample = 0;
@@ -805,7 +805,7 @@ void set_trip_point
         }
       }
    }
-   delay(ONE_SECOND/10);
+   delay(ONE_SECOND/5);
  }
 
  /*
