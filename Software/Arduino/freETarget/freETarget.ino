@@ -259,7 +259,7 @@ void loop()
     if ( sensor_status != 0 )             // Shot detected
     {
       now = micros();                     // Remember the starting time
-      set_LED(L('-', '*', '-'));                   // No longer waiting
+      set_LED(L('-', '*', '-'));          // No longer waiting
       state = AQUIRE;
     }
     break;
@@ -268,7 +268,7 @@ void loop()
  *  Aquire the shot              
  */  
   case AQUIRE:
-    if ( (micros() - now) > SHOT_TIME )   // Enough time already
+    if ( (micros() - now) > (SHOT_TIME) )   // Enough time already
     { 
       stop_counters(); 
       state = REDUCE;                     // 3, 4 Have enough data to performe the calculations
