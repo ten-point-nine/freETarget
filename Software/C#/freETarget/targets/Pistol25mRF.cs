@@ -1,18 +1,15 @@
-﻿using freETarget.Properties;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace freETarget.targets {
-    class AirPistol : aTarget {
+    class Pistol25mRF : aTarget {
 
         private decimal pelletCaliber;
-        private const decimal targetSize = 170; //mm
-        private const int pistolBlackRings = 7;
+        private const decimal targetSize = 550; //mm
+        private const int pistolBlackRings = 5;
         private const bool solidInnerTenRing = false;
 
         private const int trkZoomMin = 1;
@@ -20,27 +17,23 @@ namespace freETarget.targets {
         private const int trkZoomVal = 1;
         private const decimal pdfZoomFactor = 1;
 
-        private const decimal outterRing = 155.5m; //mm
-        private const decimal ring2 = 139.5m; //mm
-        private const decimal ring3 = 123.5m; //mm
-        private const decimal ring4 = 107.5m; //mm
-        private const decimal ring5 = 91.5m; //mm
-        private const decimal ring6 = 75.5m; //mm
-        private const decimal ring7 = 59.5m; //mm
-        private const decimal ring8 = 43.5m; //mm
-        private const decimal ring9 = 27.5m; //mm
-        private const decimal ring10 = 11.5m; //mm
-        private const decimal innerRing = 5m; //mm
+        private const decimal outterRing = 500m; //mm
+        private const decimal ring6 = 420m; //mm
+        private const decimal ring7 = 340m; //mm
+        private const decimal ring8 = 260m; //mm
+        private const decimal ring9 = 180m; //mm
+        private const decimal ring10 = 100m; //mm
+        private const decimal innerRing = 50m; //mm
 
         private decimal innerTenRadiusPistol;
 
-        private static readonly decimal[] ringsPistol = new decimal[] { outterRing, ring2, ring3, ring4, ring5, ring6, ring7, ring8, ring9, ring10, innerRing };
+        private static readonly decimal[] ringsPistol = new decimal[] { outterRing, ring6, ring7, ring8, ring9, ring10, innerRing };
 
-        public AirPistol(decimal caliber) : base(caliber) { 
+
+        public Pistol25mRF(decimal caliber) : base(caliber) {
             this.pelletCaliber = caliber;
-            innerTenRadiusPistol = innerRing / 2m + pelletCaliber / 2m; //4.75m;
+            innerTenRadiusPistol = innerRing / 2m + pelletCaliber / 2m;
         }
-
         public override int getBlackRings() {
             return pistolBlackRings;
         }
@@ -49,16 +42,15 @@ namespace freETarget.targets {
             return innerTenRadiusPistol;
         }
 
-        public override decimal get9Radius() {
-            return ring9 / 2m + pelletCaliber / 2m;
-        }
-
         public override decimal getOutterRadius() {
             return getOutterRing() / 2m + pelletCaliber / 2m;
         }
 
+        public override decimal get9Radius() {
+            return ring9 / 2m + pelletCaliber / 2m;
+        }
         public override string getName() {
-            return typeof(AirPistol).FullName;
+            return typeof(Pistol25mRF).FullName;
         }
 
         public override decimal getOutterRing() {
@@ -66,14 +58,13 @@ namespace freETarget.targets {
         }
 
         public override float getFontSize(float diff) {
-            return diff / 8f; //8 is empirically determinted for best look
+            return diff / 18f; 
         }
 
         public override decimal getPDFZoomFactor(List<Shot> shotList) {
             if (shotList == null) {
                 return pdfZoomFactor;
-            }
-            else{
+            } else {
                 bool zoomed = true;
                 foreach (Shot s in shotList) {
                     if (s.score < 6) {
@@ -122,27 +113,28 @@ namespace freETarget.targets {
         }
 
         public override decimal getBlackDiameter() {
-            return ring7;
+            return outterRing;
         }
 
         public override int getRingTextCutoff() {
-            return 8;
+            return 9;
         }
         public override float getTextOffset(float diff, int ring) {
-            //return diff / 3;
+            //return diff / 4;
             return 0;
         }
+
 
         public override int getTextRotation() {
             return 0;
         }
 
         public override int getFirstRing() {
-            return 1;
+            return 5;
         }
 
         public override bool isRapidFire() {
-            return false;
+            return true;
         }
     }
 }

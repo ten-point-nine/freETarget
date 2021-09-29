@@ -107,7 +107,8 @@ namespace freETarget.targets {
         }
 
         public override float getTextOffset(float diff, int ring) {
-            return diff / 4;
+            //return diff / 4;
+            return 0;
         }
 
         public override decimal getPDFZoomFactor(List<Shot> shotList) {
@@ -136,6 +137,18 @@ namespace freETarget.targets {
 
                 }
             }
+        }
+
+        public override int getTextRotation() {
+            return 0;
+        }
+
+        public override int getFirstRing() {
+            return 1;
+        }
+
+        public override bool isRapidFire() {
+            return false;
         }
     }
 }

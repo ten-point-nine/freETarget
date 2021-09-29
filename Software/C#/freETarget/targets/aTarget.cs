@@ -52,6 +52,12 @@ namespace freETarget.targets {
 
         public abstract decimal getPDFZoomFactor(List<Shot> shotList);
 
+        public abstract int getTextRotation();
+
+        public abstract int getFirstRing();
+
+        public abstract bool isRapidFire();
+
 
         //------------ common implementations ----------------------------
 
@@ -87,8 +93,7 @@ namespace freETarget.targets {
             float x = center - (circle / 2);
             it.FillEllipse(brushBlack, x, x, circle, circle); //draw the black circle
 
-
-            int r = 1;
+            int r = getFirstRing();
             for (int i = 0; i < rings.Length; i++) {
 
                 Pen p;
@@ -123,11 +128,18 @@ namespace freETarget.targets {
                     StringFormat format = new StringFormat();
                     format.LineAlignment = StringAlignment.Center;
                     format.Alignment = StringAlignment.Center;
+                   
+                    it.TranslateTransform(dimension / 2, dimension / 2); //set coordinated in the middle of the target
+                    it.RotateTransform(getTextRotation());
 
-                    it.DrawString(r.ToString(), f, bText, center, x + getTextOffset(diff,r), format);
-                    it.DrawString(r.ToString(), f, bText, center, y - getTextOffset(diff, r), format);
-                    it.DrawString(r.ToString(), f, bText, x + getTextOffset(diff, r), center, format);
-                    it.DrawString(r.ToString(), f, bText, y - getTextOffset(diff, r), center, format);
+                    it.DrawString(r.ToString(), f, bText, 0, -(dimension / 2) + x + (diff / 4) - getTextOffset(diff, r), format);
+                    it.DrawString(r.ToString(), f, bText, 0, (dimension / 2) - x  - (diff/ 4) + getTextOffset(diff, r), format);
+                    if (!isRapidFire()) {
+                        it.DrawString(r.ToString(), f, bText, -(dimension / 2) + y - (diff / 4) + getTextOffset(diff, r), 0, format);
+                        it.DrawString(r.ToString(), f, bText, (dimension / 2) - y + (diff / 4) - getTextOffset(diff, r), 0, format);
+                    }
+
+                    it.ResetTransform(); //reset coordinates (to upper left)
                 }
                 r++;
             }
@@ -148,6 +160,21 @@ namespace freETarget.targets {
                 it.FillPolygon(brushBlue, points);
             }
 
+            if (isRapidFire()) {
+                //for the RF target, draw 2 lines on left and right 125mm x 5mm
+
+                float bar_height = getDimension(dimension, 5, zoomFactor);
+                float bar_width = getDimension(dimension, 125, zoomFactor);
+
+                float bar_y = dimension / 2 - bar_height / 2;
+
+                float leftBar_x = center - getDimension(dimension, getOutterRing() / 2, zoomFactor);
+                float rightBar_x = center + getDimension(dimension, getOutterRing() / 2, zoomFactor) - bar_width;
+
+                it.FillRectangle(brushWhite, leftBar_x, bar_y, bar_width, bar_height);
+                it.FillRectangle(brushWhite, rightBar_x, bar_y, bar_width, bar_height);
+            }
+
             it.DrawRectangle(penBlack, 0, 0, dimension - 1, dimension - 1);
 
             int index = 0;
@@ -166,6 +193,7 @@ namespace freETarget.targets {
             }
             return bmpTarget;
         }
+
         protected float getDimension(decimal currentTargetSize, decimal milimiters, decimal zoomFactor) {
             return (float)((currentTargetSize * milimiters) / (getSize() * zoomFactor));
         }

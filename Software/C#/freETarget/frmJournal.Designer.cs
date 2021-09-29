@@ -24,18 +24,18 @@
         /// </summary>
         private void InitializeComponent() {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmJournal));
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend3 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend4 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea9 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend9 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series9 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea10 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend10 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series10 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea11 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend11 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series11 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea12 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend12 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series12 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.cmbUsers = new System.Windows.Forms.ComboBox();
             this.tabEvents = new System.Windows.Forms.TabControl();
             this.tabPistolPractice = new System.Windows.Forms.TabPage();
@@ -96,7 +96,8 @@
             // tabEvents
             // 
             this.tabEvents.Alignment = System.Windows.Forms.TabAlignment.Left;
-            this.tabEvents.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.tabEvents.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tabEvents.Controls.Add(this.tabPistolPractice);
             this.tabEvents.Controls.Add(this.tabPistolMatch);
             this.tabEvents.Controls.Add(this.tabPistolFinal);
@@ -108,7 +109,7 @@
             this.tabEvents.Multiline = true;
             this.tabEvents.Name = "tabEvents";
             this.tabEvents.SelectedIndex = 0;
-            this.tabEvents.Size = new System.Drawing.Size(56, 446);
+            this.tabEvents.Size = new System.Drawing.Size(56, 384);
             this.tabEvents.TabIndex = 1;
             this.tabEvents.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.tabSessions_DrawItem);
             this.tabEvents.SelectedIndexChanged += new System.EventHandler(this.tabEvents_SelectedIndexChanged);
@@ -116,10 +117,10 @@
             // tabPistolPractice
             // 
             this.tabPistolPractice.BackColor = System.Drawing.Color.Gold;
-            this.tabPistolPractice.Location = new System.Drawing.Point(23, 4);
+            this.tabPistolPractice.Location = new System.Drawing.Point(42, 4);
             this.tabPistolPractice.Name = "tabPistolPractice";
             this.tabPistolPractice.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPistolPractice.Size = new System.Drawing.Size(29, 438);
+            this.tabPistolPractice.Size = new System.Drawing.Size(10, 376);
             this.tabPistolPractice.TabIndex = 0;
             this.tabPistolPractice.Text = "Pistol Practice";
             // 
@@ -190,7 +191,7 @@
             this.tabDetails.Location = new System.Drawing.Point(12, 43);
             this.tabDetails.Name = "tabDetails";
             this.tabDetails.SelectedIndex = 0;
-            this.tabDetails.Size = new System.Drawing.Size(527, 502);
+            this.tabDetails.Size = new System.Drawing.Size(527, 471);
             this.tabDetails.TabIndex = 3;
             // 
             // tabSessionList
@@ -207,14 +208,15 @@
             this.tabSessionList.Location = new System.Drawing.Point(4, 22);
             this.tabSessionList.Name = "tabSessionList";
             this.tabSessionList.Padding = new System.Windows.Forms.Padding(3);
-            this.tabSessionList.Size = new System.Drawing.Size(519, 476);
+            this.tabSessionList.Size = new System.Drawing.Size(519, 445);
             this.tabSessionList.TabIndex = 0;
             this.tabSessionList.Text = "Sessions";
             this.tabSessionList.UseVisualStyleBackColor = true;
             // 
             // btnImport
             // 
-            this.btnImport.Location = new System.Drawing.Point(83, 445);
+            this.btnImport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnImport.Location = new System.Drawing.Point(83, 413);
             this.btnImport.Name = "btnImport";
             this.btnImport.Size = new System.Drawing.Size(70, 24);
             this.btnImport.TabIndex = 8;
@@ -224,8 +226,9 @@
             // 
             // btnExport
             // 
+            this.btnExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btnExport.Enabled = false;
-            this.btnExport.Location = new System.Drawing.Point(6, 445);
+            this.btnExport.Location = new System.Drawing.Point(6, 413);
             this.btnExport.Name = "btnExport";
             this.btnExport.Size = new System.Drawing.Size(70, 24);
             this.btnExport.TabIndex = 7;
@@ -270,7 +273,7 @@
             this.pGridSession.Location = new System.Drawing.Point(160, 36);
             this.pGridSession.Name = "pGridSession";
             this.pGridSession.PropertySort = System.Windows.Forms.PropertySort.Categorized;
-            this.pGridSession.Size = new System.Drawing.Size(349, 434);
+            this.pGridSession.Size = new System.Drawing.Size(349, 403);
             this.pGridSession.TabIndex = 4;
             this.pGridSession.ToolbarVisible = false;
             // 
@@ -323,7 +326,7 @@
             this.lstbSessions.FormattingEnabled = true;
             this.lstbSessions.Location = new System.Drawing.Point(6, 6);
             this.lstbSessions.Name = "lstbSessions";
-            this.lstbSessions.Size = new System.Drawing.Size(147, 433);
+            this.lstbSessions.Size = new System.Drawing.Size(147, 394);
             this.lstbSessions.TabIndex = 0;
             this.lstbSessions.SelectedIndexChanged += new System.EventHandler(this.lstbSessions_SelectedIndexChanged);
             // 
@@ -373,37 +376,37 @@
             // 
             // chartScore
             // 
-            chartArea1.AxisX.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
-            chartArea1.AxisX.MajorGrid.Enabled = false;
-            chartArea1.AxisX.MajorTickMark.Enabled = false;
-            chartArea1.AxisY.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
-            chartArea1.Name = "ChartArea1";
-            chartArea1.Position.Auto = false;
-            chartArea1.Position.Height = 85F;
-            chartArea1.Position.Width = 100F;
-            this.chartScore.ChartAreas.Add(chartArea1);
+            chartArea9.AxisX.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
+            chartArea9.AxisX.MajorGrid.Enabled = false;
+            chartArea9.AxisX.MajorTickMark.Enabled = false;
+            chartArea9.AxisY.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
+            chartArea9.Name = "ChartArea1";
+            chartArea9.Position.Auto = false;
+            chartArea9.Position.Height = 85F;
+            chartArea9.Position.Width = 100F;
+            this.chartScore.ChartAreas.Add(chartArea9);
             this.chartScore.Dock = System.Windows.Forms.DockStyle.Fill;
-            legend1.Alignment = System.Drawing.StringAlignment.Center;
-            legend1.DockedToChartArea = "ChartArea1";
-            legend1.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
-            legend1.IsDockedInsideChartArea = false;
-            legend1.Name = "Legend1";
-            legend1.TextWrapThreshold = 100;
-            this.chartScore.Legends.Add(legend1);
+            legend9.Alignment = System.Drawing.StringAlignment.Center;
+            legend9.DockedToChartArea = "ChartArea1";
+            legend9.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
+            legend9.IsDockedInsideChartArea = false;
+            legend9.Name = "Legend1";
+            legend9.TextWrapThreshold = 100;
+            this.chartScore.Legends.Add(legend9);
             this.chartScore.Location = new System.Drawing.Point(3, 16);
             this.chartScore.Name = "chartScore";
-            series1.ChartArea = "ChartArea1";
-            series1.CustomProperties = "LabelStyle=Bottom";
-            series1.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            series1.IsValueShownAsLabel = true;
-            series1.Legend = "Legend1";
-            series1.LegendToolTip = "Average ToolTip";
-            series1.Name = "Average";
-            series1.SmartLabelStyle.AllowOutsidePlotArea = System.Windows.Forms.DataVisualization.Charting.LabelOutsidePlotAreaStyle.Yes;
-            series1.SmartLabelStyle.CalloutLineColor = System.Drawing.Color.White;
-            series1.SmartLabelStyle.CalloutLineWidth = 0;
-            series1.SmartLabelStyle.Enabled = false;
-            this.chartScore.Series.Add(series1);
+            series9.ChartArea = "ChartArea1";
+            series9.CustomProperties = "LabelStyle=Bottom";
+            series9.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            series9.IsValueShownAsLabel = true;
+            series9.Legend = "Legend1";
+            series9.LegendToolTip = "Average ToolTip";
+            series9.Name = "Average";
+            series9.SmartLabelStyle.AllowOutsidePlotArea = System.Windows.Forms.DataVisualization.Charting.LabelOutsidePlotAreaStyle.Yes;
+            series9.SmartLabelStyle.CalloutLineColor = System.Drawing.Color.White;
+            series9.SmartLabelStyle.CalloutLineWidth = 0;
+            series9.SmartLabelStyle.Enabled = false;
+            this.chartScore.Series.Add(series9);
             this.chartScore.Size = new System.Drawing.Size(464, 175);
             this.chartScore.TabIndex = 0;
             this.chartScore.Text = "chart1";
@@ -421,36 +424,36 @@
             // 
             // chartMeanRadius
             // 
-            chartArea2.AxisX.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
-            chartArea2.AxisX.MajorGrid.Enabled = false;
-            chartArea2.AxisX.MajorTickMark.Enabled = false;
-            chartArea2.AxisY.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
-            chartArea2.Name = "ChartArea1";
-            chartArea2.Position.Auto = false;
-            chartArea2.Position.Height = 85F;
-            chartArea2.Position.Width = 100F;
-            this.chartMeanRadius.ChartAreas.Add(chartArea2);
+            chartArea10.AxisX.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
+            chartArea10.AxisX.MajorGrid.Enabled = false;
+            chartArea10.AxisX.MajorTickMark.Enabled = false;
+            chartArea10.AxisY.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
+            chartArea10.Name = "ChartArea1";
+            chartArea10.Position.Auto = false;
+            chartArea10.Position.Height = 85F;
+            chartArea10.Position.Width = 100F;
+            this.chartMeanRadius.ChartAreas.Add(chartArea10);
             this.chartMeanRadius.Dock = System.Windows.Forms.DockStyle.Fill;
-            legend2.Alignment = System.Drawing.StringAlignment.Center;
-            legend2.DockedToChartArea = "ChartArea1";
-            legend2.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
-            legend2.IsDockedInsideChartArea = false;
-            legend2.Name = "Legend1";
-            legend2.TextWrapThreshold = 100;
-            this.chartMeanRadius.Legends.Add(legend2);
+            legend10.Alignment = System.Drawing.StringAlignment.Center;
+            legend10.DockedToChartArea = "ChartArea1";
+            legend10.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
+            legend10.IsDockedInsideChartArea = false;
+            legend10.Name = "Legend1";
+            legend10.TextWrapThreshold = 100;
+            this.chartMeanRadius.Legends.Add(legend10);
             this.chartMeanRadius.Location = new System.Drawing.Point(3, 16);
             this.chartMeanRadius.Name = "chartMeanRadius";
-            series2.ChartArea = "ChartArea1";
-            series2.CustomProperties = "LabelStyle=Bottom";
-            series2.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            series2.IsValueShownAsLabel = true;
-            series2.Legend = "Legend1";
-            series2.Name = "Series1";
-            series2.SmartLabelStyle.AllowOutsidePlotArea = System.Windows.Forms.DataVisualization.Charting.LabelOutsidePlotAreaStyle.Yes;
-            series2.SmartLabelStyle.CalloutLineColor = System.Drawing.Color.White;
-            series2.SmartLabelStyle.CalloutLineWidth = 0;
-            series2.SmartLabelStyle.Enabled = false;
-            this.chartMeanRadius.Series.Add(series2);
+            series10.ChartArea = "ChartArea1";
+            series10.CustomProperties = "LabelStyle=Bottom";
+            series10.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            series10.IsValueShownAsLabel = true;
+            series10.Legend = "Legend1";
+            series10.Name = "Series1";
+            series10.SmartLabelStyle.AllowOutsidePlotArea = System.Windows.Forms.DataVisualization.Charting.LabelOutsidePlotAreaStyle.Yes;
+            series10.SmartLabelStyle.CalloutLineColor = System.Drawing.Color.White;
+            series10.SmartLabelStyle.CalloutLineWidth = 0;
+            series10.SmartLabelStyle.Enabled = false;
+            this.chartMeanRadius.Series.Add(series10);
             this.chartMeanRadius.Size = new System.Drawing.Size(464, 175);
             this.chartMeanRadius.TabIndex = 1;
             this.chartMeanRadius.Text = "chart2";
@@ -468,36 +471,36 @@
             // 
             // chartWindage
             // 
-            chartArea3.AxisX.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
-            chartArea3.AxisX.MajorGrid.Enabled = false;
-            chartArea3.AxisX.MajorTickMark.Enabled = false;
-            chartArea3.AxisY.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
-            chartArea3.Name = "ChartArea1";
-            chartArea3.Position.Auto = false;
-            chartArea3.Position.Height = 85F;
-            chartArea3.Position.Width = 100F;
-            this.chartWindage.ChartAreas.Add(chartArea3);
+            chartArea11.AxisX.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
+            chartArea11.AxisX.MajorGrid.Enabled = false;
+            chartArea11.AxisX.MajorTickMark.Enabled = false;
+            chartArea11.AxisY.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
+            chartArea11.Name = "ChartArea1";
+            chartArea11.Position.Auto = false;
+            chartArea11.Position.Height = 85F;
+            chartArea11.Position.Width = 100F;
+            this.chartWindage.ChartAreas.Add(chartArea11);
             this.chartWindage.Dock = System.Windows.Forms.DockStyle.Fill;
-            legend3.Alignment = System.Drawing.StringAlignment.Center;
-            legend3.DockedToChartArea = "ChartArea1";
-            legend3.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
-            legend3.IsDockedInsideChartArea = false;
-            legend3.Name = "Legend1";
-            legend3.TextWrapThreshold = 100;
-            this.chartWindage.Legends.Add(legend3);
+            legend11.Alignment = System.Drawing.StringAlignment.Center;
+            legend11.DockedToChartArea = "ChartArea1";
+            legend11.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
+            legend11.IsDockedInsideChartArea = false;
+            legend11.Name = "Legend1";
+            legend11.TextWrapThreshold = 100;
+            this.chartWindage.Legends.Add(legend11);
             this.chartWindage.Location = new System.Drawing.Point(3, 16);
             this.chartWindage.Name = "chartWindage";
-            series3.ChartArea = "ChartArea1";
-            series3.CustomProperties = "LabelStyle=Bottom";
-            series3.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            series3.IsValueShownAsLabel = true;
-            series3.Legend = "Legend1";
-            series3.Name = "Series1";
-            series3.SmartLabelStyle.AllowOutsidePlotArea = System.Windows.Forms.DataVisualization.Charting.LabelOutsidePlotAreaStyle.Yes;
-            series3.SmartLabelStyle.CalloutLineColor = System.Drawing.Color.White;
-            series3.SmartLabelStyle.CalloutLineWidth = 0;
-            series3.SmartLabelStyle.Enabled = false;
-            this.chartWindage.Series.Add(series3);
+            series11.ChartArea = "ChartArea1";
+            series11.CustomProperties = "LabelStyle=Bottom";
+            series11.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            series11.IsValueShownAsLabel = true;
+            series11.Legend = "Legend1";
+            series11.Name = "Series1";
+            series11.SmartLabelStyle.AllowOutsidePlotArea = System.Windows.Forms.DataVisualization.Charting.LabelOutsidePlotAreaStyle.Yes;
+            series11.SmartLabelStyle.CalloutLineColor = System.Drawing.Color.White;
+            series11.SmartLabelStyle.CalloutLineWidth = 0;
+            series11.SmartLabelStyle.Enabled = false;
+            this.chartWindage.Series.Add(series11);
             this.chartWindage.Size = new System.Drawing.Size(464, 175);
             this.chartWindage.TabIndex = 2;
             this.chartWindage.Text = "chart3";
@@ -515,36 +518,36 @@
             // 
             // chartElevation
             // 
-            chartArea4.AxisX.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
-            chartArea4.AxisX.MajorGrid.Enabled = false;
-            chartArea4.AxisX.MajorTickMark.Enabled = false;
-            chartArea4.AxisY.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
-            chartArea4.Name = "ChartArea1";
-            chartArea4.Position.Auto = false;
-            chartArea4.Position.Height = 85F;
-            chartArea4.Position.Width = 100F;
-            this.chartElevation.ChartAreas.Add(chartArea4);
+            chartArea12.AxisX.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
+            chartArea12.AxisX.MajorGrid.Enabled = false;
+            chartArea12.AxisX.MajorTickMark.Enabled = false;
+            chartArea12.AxisY.Enabled = System.Windows.Forms.DataVisualization.Charting.AxisEnabled.False;
+            chartArea12.Name = "ChartArea1";
+            chartArea12.Position.Auto = false;
+            chartArea12.Position.Height = 85F;
+            chartArea12.Position.Width = 100F;
+            this.chartElevation.ChartAreas.Add(chartArea12);
             this.chartElevation.Dock = System.Windows.Forms.DockStyle.Fill;
-            legend4.Alignment = System.Drawing.StringAlignment.Center;
-            legend4.DockedToChartArea = "ChartArea1";
-            legend4.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
-            legend4.IsDockedInsideChartArea = false;
-            legend4.Name = "Legend1";
-            legend4.TextWrapThreshold = 100;
-            this.chartElevation.Legends.Add(legend4);
+            legend12.Alignment = System.Drawing.StringAlignment.Center;
+            legend12.DockedToChartArea = "ChartArea1";
+            legend12.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
+            legend12.IsDockedInsideChartArea = false;
+            legend12.Name = "Legend1";
+            legend12.TextWrapThreshold = 100;
+            this.chartElevation.Legends.Add(legend12);
             this.chartElevation.Location = new System.Drawing.Point(3, 16);
             this.chartElevation.Name = "chartElevation";
-            series4.ChartArea = "ChartArea1";
-            series4.CustomProperties = "LabelStyle=Bottom";
-            series4.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            series4.IsValueShownAsLabel = true;
-            series4.Legend = "Legend1";
-            series4.Name = "Series1";
-            series4.SmartLabelStyle.AllowOutsidePlotArea = System.Windows.Forms.DataVisualization.Charting.LabelOutsidePlotAreaStyle.Yes;
-            series4.SmartLabelStyle.CalloutLineColor = System.Drawing.Color.White;
-            series4.SmartLabelStyle.CalloutLineWidth = 0;
-            series4.SmartLabelStyle.Enabled = false;
-            this.chartElevation.Series.Add(series4);
+            series12.ChartArea = "ChartArea1";
+            series12.CustomProperties = "LabelStyle=Bottom";
+            series12.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            series12.IsValueShownAsLabel = true;
+            series12.Legend = "Legend1";
+            series12.Name = "Series1";
+            series12.SmartLabelStyle.AllowOutsidePlotArea = System.Windows.Forms.DataVisualization.Charting.LabelOutsidePlotAreaStyle.Yes;
+            series12.SmartLabelStyle.CalloutLineColor = System.Drawing.Color.White;
+            series12.SmartLabelStyle.CalloutLineWidth = 0;
+            series12.SmartLabelStyle.Enabled = false;
+            this.chartElevation.Series.Add(series12);
             this.chartElevation.Size = new System.Drawing.Size(464, 175);
             this.chartElevation.TabIndex = 3;
             this.chartElevation.Text = "chart4";
@@ -563,7 +566,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(566, 557);
+            this.ClientSize = new System.Drawing.Size(566, 526);
             this.Controls.Add(this.imgLogo);
             this.Controls.Add(this.tabDetails);
             this.Controls.Add(this.btnClose);

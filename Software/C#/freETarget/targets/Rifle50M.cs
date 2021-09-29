@@ -119,9 +119,11 @@ namespace freETarget.targets {
 
         public override float getTextOffset(float diff, int ring) {
             if (ring != 3) {
-                return diff / 4;
+                //return diff / 4;
+                return 0;
             } else {
-                return diff / 6;
+                //return diff / 6;
+                return 5;
             }
         }
 
@@ -142,6 +144,19 @@ namespace freETarget.targets {
                     return 1;
                 }
             }
+        }
+
+
+        public override int getTextRotation() {
+            return 0;
+        }
+
+        public override int getFirstRing() {
+            return 1;
+        }
+
+        public override bool isRapidFire() {
+            return false;
         }
     }
 }

@@ -29,6 +29,7 @@ namespace freETarget {
             new Command("TRACE","0"),
             new Command("Z_OFFSET","0"),
             new Command("PAPER_ECO","0"),
+            new Command("TARGET_TYPE","0"),
             new Command("NORTH_X","0"),
             new Command("NORTH_Y","0"),
             new Command("EAST_X","0"),
