@@ -600,10 +600,10 @@ bool esp01_send
         send_state[index] = SEND_ERROR;
         break;
         
-    case SEND_READY:
-      if ( str == 0 )                                     // A null string starts transmission
+    case SEND_READY:                                      // Ready to send a string
+      if ( str == 0 )                                    
       {
-        send_state[index] = SEND_NOW;                     // And reset the AT command
+        send_state[index] = SEND_NOW;                     // A null string starts transmission
         break;
       }
       if ( (send_used[index] + strlen(str)) >= ESP_BUFFER)// Is there space to send it?
@@ -641,7 +641,7 @@ bool esp01_send
     case SEND_ERROR:                                      // An error occured.
       send_state[index] = SEND_OFF;                       // Go back to the off state
       not_sent = false;
-      return false;                                       // And bail out                    
+      break;                                              // And bail out                    
     }
   }
 
