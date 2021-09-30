@@ -760,7 +760,7 @@ namespace freETarget {
 
                 if (currentSession != null) {
                     computeShotStatistics(getShotList());
-                    displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
+                    displayDebugConsole(Properties.Settings.Default.displayDebugConsole);             
                 }
 
                 Properties.Settings.Default.score10BackgroundColor = Color.FromName(settingsFrom.cmb10Back.GetItemText(settingsFrom.cmb10Back.SelectedItem));
@@ -794,8 +794,15 @@ namespace freETarget {
         }
 
         private void displayDebugConsole(bool display) {
-            txtOutput.Visible = display;
+            if (display) {
+                txtOutput.Visible = true;
+                splitContainer.Panel2Collapsed = false;
+            } else {
+                txtOutput.Visible = false;
+                splitContainer.Panel2Collapsed = true;
+            }
             targetRefresh();
+            Application.DoEvents();
         }
 
 
