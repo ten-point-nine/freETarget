@@ -85,6 +85,7 @@ namespace freETarget.targets {
             Bitmap bmpTarget = new Bitmap(dimension, dimension);
             Graphics it = Graphics.FromImage(bmpTarget);
             it.SmoothingMode = SmoothingMode.AntiAlias;
+            it.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
 
             it.FillRectangle(brushWhite, 0, 0, dimension - 1, dimension - 1);
 
@@ -129,17 +130,40 @@ namespace freETarget.targets {
                     format.LineAlignment = StringAlignment.Center;
                     format.Alignment = StringAlignment.Center;
                    
-                    it.TranslateTransform(dimension / 2, dimension / 2); //set coordinated in the middle of the target
+                    it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
                     it.RotateTransform(getTextRotation());
+                    it.TranslateTransform(0, -(dimension / 2) + x + (diff / 4) - getTextOffset(diff, r)); //move coordinates at the exact center point of the text
+                    it.DrawString(r.ToString(), f, bText, 0, 0, format);
+                    it.ResetTransform();
 
-                    it.DrawString(r.ToString(), f, bText, 0, -(dimension / 2) + x + (diff / 4) - getTextOffset(diff, r), format);
-                    it.DrawString(r.ToString(), f, bText, 0, (dimension / 2) - x  - (diff/ 4) + getTextOffset(diff, r), format);
-                    if (!isRapidFire()) {
-                        it.DrawString(r.ToString(), f, bText, -(dimension / 2) + y - (diff / 4) + getTextOffset(diff, r), 0, format);
-                        it.DrawString(r.ToString(), f, bText, (dimension / 2) - y + (diff / 4) - getTextOffset(diff, r), 0, format);
+                    it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
+                    it.RotateTransform(getTextRotation());
+                    it.TranslateTransform(0, (dimension / 2) - x - (diff / 4) + getTextOffset(diff, r));
+                    if (getTextRotation() > 0) {
+                        it.RotateTransform(180);
                     }
+                    it.DrawString(r.ToString(), f, bText, 0, 0, format);
+                    it.ResetTransform();
 
-                    it.ResetTransform(); //reset coordinates (to upper left)
+                    if (!isRapidFire()) {
+                        it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
+                        it.RotateTransform(getTextRotation());
+                        it.TranslateTransform(-(dimension / 2) + y - (diff / 4) + getTextOffset(diff, r), 0);
+                        if (getTextRotation() > 0) {
+                            it.RotateTransform(90);
+                        }
+                        it.DrawString(r.ToString(), f, bText, 0, 0, format);
+                        it.ResetTransform();
+
+                        it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
+                        it.RotateTransform(getTextRotation());
+                        it.TranslateTransform((dimension / 2) - y + (diff / 4) - getTextOffset(diff, r), 0);
+                        if (getTextRotation() > 0) {
+                            it.RotateTransform(270);
+                        }
+                        it.DrawString(r.ToString(), f, bText, 0, 0, format);
+                        it.ResetTransform();
+                    }
                 }
                 r++;
             }

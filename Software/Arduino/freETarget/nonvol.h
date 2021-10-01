@@ -38,8 +38,9 @@ void gen_position(int  v);      // Reset the position values
 #define NONVOL_PAPER_ECO      (NONVOL_Z_OFFSET    + sizeof(int) + 2)       // Advance witness paper if the shot is less than paper_eco
 #define NONVOL_TARGET_TYPE    (NONVOL_PAPER_ECO   + sizeof(int) + 2)       // Modify the target processing (0 == Regular single bull)
 #define NEXT_NONVOL           ((NONVOL_TARGET_TYPE + sizeof(int) + 2) - NONVOL_INIT)
+#define NONVOL_SIZE           4096                                         // 4K available
 
-#if (((40-13) * 4) > 4096 )
+#if (((40-13) * 4) > NONVOL_SIZE )
 #error NEXT_NONVOL OUT OF NONVOL
 #endif
 

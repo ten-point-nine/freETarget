@@ -122,8 +122,8 @@ namespace freETarget.targets {
                 //return diff / 4;
                 return 0;
             } else {
-                //return diff / 6;
-                return 5;
+                return diff / 12;
+               
             }
         }
 
