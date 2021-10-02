@@ -8,6 +8,117 @@
 #include "nonvol.h"
 #include "freeTarget.h"
 #include "json.h"
+
+/*----------------------------------------------------------------
+ * 
+ * function: factory_nonvol
+ * 
+ * brief: Initialize the NONVOL back to factory settings
+ * 
+ * return: None
+ *---------------------------------------------------------------
+ *
+ * If the init_nonvol location is not set to INIT_DONE then
+ * initilze the memory
+ * 
+ *------------------------------------------------------------*/
+void factory_nonvol(void)
+{
+  unsigned int nonvol_init;               // Initialization token
+           int serial_number;             // Board serial number
+  char         ch;
+  unsigned int x;                         // Temporary Value
+  double       dx;                        // Temporarty Value
+
+  /*
+   * Fill up all of memory with a known (bogus) value
+   */
+  Serial.print("\r\nReset to factory defaults. This may take a while\r\n");
+  ch = 0xAB;
+  for ( i=0; i != NONVOL_SIZE; i++)
+  {
+    EEPROM.put(i, ch);                    // Fill up with a bogus value
+  }
+  
+  gen_position(0); 
+
+/*
+ * Use the JSON table to initialize the local variables
+ */
+ i=0;
+ while ( JSON[i].token != 0 )
+ {
+   switch ( JSON[i].convert )
+   {
+      case IS_VOID:                                        // Variable does not contain anything 
+      case IS_FIXED:                                       // Variable cannot be overwritten
+        break;
+        
+      case IS_INT16:
+        x = JSON[i].init_value;                            // Read in the value 
+        EEPROM.put(JSON[i].non_vol, x);                    // Read in the value
+        break;
+
+      case IS_FLOAT:
+      case IS_DOUBLE:
+        dx = (double)JSON[i].init_value;
+        EEPROM.put(JSON[i].non_vol, dx);                    // Read in the value
+        break;
+    }
+   i++;
+ }
+
+/*
+ * Ask for the serial number.  Exit when you get !
+ */
+  ch = 0;
+  serial_number = 0;
+  while ( Serial.available() )    // Eat any pending junk
+  {
+    Serial.read();
+  }
+  
+  Serial.print("\r\nSerial Number? (ex 223! or x))");
+  while (i)
+  {
+    if ( Serial.available() != 0 )
+    {
+      ch = Serial.read();
+      if ( ch == '!' )
+      {  
+        EEPROM.put(NONVOL_SERIAL_NO, serial_number);
+        Serial.print(" Setting Serial Number to: "); Serial.print(serial_number);
+        break;
+      }
+      if ( ch == 'x' )
+      {
+        break;
+      }
+      serial_number *= 10;
+      serial_number += ch - '0';
+    }
+  }
+  
+/*
+ * Initialization complete.  Mark the init done
+ */
+  nonvol_init = INIT_DONE;
+  EEPROM.put(NONVOL_INIT, nonvol_init);
+  
+/*
+ * Read the NONVOL and print the results
+ */
+  read_nonvol();                          // Read back the new values
+  show_echo(0);                           // Display these settings
+  set_trip_point(0);                      // And stay forever in the set trip mode
+  
+/*
+ * All done, return
+ */    
+
+  return;
+}
+
  
 /*----------------------------------------------------------------
  * 
@@ -48,12 +159,6 @@ void init_nonvol(int v)
   }
   
   Serial.print("\r\nReset to factory defaults. This may take a while\r\n");
-  ch = 0xAB;
-  for ( i=0; i != NONVOL_SIZE; i++)
-  {
-    EEPROM.put(i, ch);                    // Fill up with a bogus value
-  }
-  
   nonvol_init = 0;                        // Corrupt the init location
   EEPROM.put(NONVOL_INIT, nonvol_init);
   gen_position(0); 
@@ -84,42 +189,6 @@ void init_nonvol(int v)
    i++;
  }
 
-  
-/*
- * Ask for the serial number.  Exit when you get !
- */
-  EEPROM.get(NONVOL_SERIAL_NO, serial_number );
-  if ( serial_number == -1 )
-  {
-    ch = 0;
-    serial_number = 0;
-    while ( Serial.available() )    // Eat any pending junk
-    {
-      Serial.read();
-    }
-  
-    Serial.print("\r\nSerial Number? (ex 223! or x))");
-    while (i)
-    {
-      if ( Serial.available() != 0 )
-      {
-        ch = Serial.read();
-        if ( ch == '!' )
-        {  
-          EEPROM.put(NONVOL_SERIAL_NO, serial_number);
-          Serial.print(" Setting Serial Number to: "); Serial.print(serial_number);
-          break;
-        }
-        if ( ch == 'x' )
-        {
-          break;
-        }
-        serial_number *= 10;
-        serial_number += ch - '0';
-      }
-    }
-  }
-  
 /*
  * Initialization complete.  Mark the init done
  */
@@ -131,7 +200,6 @@ void init_nonvol(int v)
  */
   read_nonvol();                          // Read back the new values
   show_echo(0);                           // Display these settings
-  set_trip_point(0);                      // And stay forever in the set trip mode
   
 /*
  * All done, return
@@ -175,9 +243,16 @@ void read_nonvol(void)
   
   if ( nonvol_init != INIT_DONE)                       // EEPROM never programmed
   {
-    init_nonvol(1234);                                 // Force in good values
+    factory_nonvol();                                  // Force in good values
   }
-
+  
+  EEPROM.get(NONVOL_SERIAL_NO, nonvol_init);
+  
+  if ( nonvol_init == (-1) )                          // Serial Number never programmed
+  {
+    factory_nonvol();                                 // Force in good values
+  }
+  
 /*
  * Use the JSON table to initialize the local variables
  */
@@ -189,12 +264,11 @@ void read_nonvol(void)
      switch ( JSON[i].convert )
      {
         case IS_VOID:
-        case IS_FIXED:
           break;
         
         case IS_INT16:
+        case IS_FIXED:
           EEPROM.get(JSON[i].non_vol, x);                    // Read in the value
-          Serial.print(x, HEX);
           if ( x == 0xABAB )                                 // Is it uninitialized?
           {
             x = JSON[i].init_value;                          // Yes, overwrite with the default

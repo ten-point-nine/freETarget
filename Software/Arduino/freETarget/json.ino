@@ -62,7 +62,7 @@ const json_message JSON[] = {
   {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT16,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
   {"\"DIP\":",            &json_dip_switch,                  0,                IS_INT16,  0,                NONVOL_DIP_SWITCH,       0 },    // Remotely set the DIP switch
   {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,                       0,       0 },    // Echo test
-  {"\"INIT\":",           0,                                 0,                IS_INT16,  &init_nonvol,                     0,       0 },    // Initialize the NONVOL memory
+  {"\"INIT\":",           0,                                 0,                IS_FIXED,  &init_nonvol,                     0,       0 },    // Initialize the NONVOL memory
   {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT16,  &set_LED_PWM_now, NONVOL_LED_PWM,         50 },    // Set the LED brightness
   {"\"MFS\":",            &json_multifunction,               0,                IS_INT16,  0,                NONVOL_MFS,              0 },    // Multifunction switch action
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT16,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
@@ -220,7 +220,7 @@ bool    return_value;
             x = atoi(&input_JSON[i+k]);
             if ( JSON[j].value != 0 )
             {
-              *JSON[j].value = x;                               // Save the value
+              *JSON[j].value = x;                             // Save the value
             }
             if ( JSON[j].non_vol != 0 )
             {

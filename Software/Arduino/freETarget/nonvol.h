@@ -2,7 +2,8 @@
 #ifndef _NONVOL_H
 #define _NONVOL_H
 
-void init_nonvol(int v);       // Initialize the nonvol memory
+void factory_nonvol(void);      // Factory reset nonvol
+void init_nonvol(int v);        // Reset to defaults
 void read_nonvol(void);         // Read in the locations
 void gen_position(int  v);      // Reset the position values
 
