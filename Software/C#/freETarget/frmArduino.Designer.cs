@@ -38,14 +38,19 @@
             this.label2 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.btnSend2 = new System.Windows.Forms.Button();
+            this.label3 = new System.Windows.Forms.Label();
+            this.txtGenericCommand = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
+            this.groupBox3.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnClose
             // 
             this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnClose.Location = new System.Drawing.Point(422, 9);
+            this.btnClose.Location = new System.Drawing.Point(627, 9);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(75, 23);
             this.btnClose.TabIndex = 0;
@@ -64,7 +69,7 @@
             this.txtOutput.Name = "txtOutput";
             this.txtOutput.ReadOnly = true;
             this.txtOutput.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtOutput.Size = new System.Drawing.Size(488, 276);
+            this.txtOutput.Size = new System.Drawing.Size(693, 276);
             this.txtOutput.TabIndex = 2;
             // 
             // btnEcho
@@ -83,7 +88,7 @@
             this.ckbAutoscroll.AutoSize = true;
             this.ckbAutoscroll.Checked = true;
             this.ckbAutoscroll.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ckbAutoscroll.Location = new System.Drawing.Point(420, 102);
+            this.ckbAutoscroll.Location = new System.Drawing.Point(625, 102);
             this.ckbAutoscroll.Name = "ckbAutoscroll";
             this.ckbAutoscroll.Size = new System.Drawing.Size(72, 17);
             this.ckbAutoscroll.TabIndex = 11;
@@ -126,7 +131,7 @@
             this.cmbCommands.FormattingEnabled = true;
             this.cmbCommands.Location = new System.Drawing.Point(66, 19);
             this.cmbCommands.Name = "cmbCommands";
-            this.cmbCommands.Size = new System.Drawing.Size(121, 21);
+            this.cmbCommands.Size = new System.Drawing.Size(130, 21);
             this.cmbCommands.TabIndex = 31;
             this.cmbCommands.SelectedIndexChanged += new System.EventHandler(this.cmbCommands_SelectedIndexChanged);
             // 
@@ -134,12 +139,12 @@
             // 
             this.txtParameter.Location = new System.Drawing.Point(67, 48);
             this.txtParameter.Name = "txtParameter";
-            this.txtParameter.Size = new System.Drawing.Size(120, 20);
+            this.txtParameter.Size = new System.Drawing.Size(129, 20);
             this.txtParameter.TabIndex = 32;
             // 
             // btnSend
             // 
-            this.btnSend.Location = new System.Drawing.Point(67, 75);
+            this.btnSend.Location = new System.Drawing.Point(76, 78);
             this.btnSend.Name = "btnSend";
             this.btnSend.Size = new System.Drawing.Size(120, 23);
             this.btnSend.TabIndex = 33;
@@ -192,18 +197,63 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Commands";
             // 
+            // groupBox3
+            // 
+            this.groupBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox3.Controls.Add(this.btnSend2);
+            this.groupBox3.Controls.Add(this.label3);
+            this.groupBox3.Controls.Add(this.txtGenericCommand);
+            this.groupBox3.Location = new System.Drawing.Point(414, 12);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(200, 107);
+            this.groupBox3.TabIndex = 36;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Generic command";
+            // 
+            // btnSend2
+            // 
+            this.btnSend2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSend2.Location = new System.Drawing.Point(74, 78);
+            this.btnSend2.Name = "btnSend2";
+            this.btnSend2.Size = new System.Drawing.Size(120, 23);
+            this.btnSend2.TabIndex = 38;
+            this.btnSend2.Text = "Send";
+            this.btnSend2.UseVisualStyleBackColor = true;
+            this.btnSend2.Click += new System.EventHandler(this.btnSend2_Click);
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(6, 22);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(54, 13);
+            this.label3.TabIndex = 37;
+            this.label3.Text = "Command";
+            // 
+            // txtGenericCommand
+            // 
+            this.txtGenericCommand.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtGenericCommand.Location = new System.Drawing.Point(66, 15);
+            this.txtGenericCommand.Multiline = true;
+            this.txtGenericCommand.Name = "txtGenericCommand";
+            this.txtGenericCommand.Size = new System.Drawing.Size(128, 54);
+            this.txtGenericCommand.TabIndex = 36;
+            // 
             // frmArduino
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(504, 412);
+            this.ClientSize = new System.Drawing.Size(709, 412);
+            this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.ckbAutoscroll);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.txtOutput);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MinimumSize = new System.Drawing.Size(520, 450);
+            this.MinimumSize = new System.Drawing.Size(725, 450);
             this.Name = "frmArduino";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Arduino";
@@ -212,6 +262,8 @@
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
+            this.groupBox3.ResumeLayout(false);
+            this.groupBox3.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -232,5 +284,9 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.GroupBox groupBox3;
+        private System.Windows.Forms.Button btnSend2;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox txtGenericCommand;
     }
 }

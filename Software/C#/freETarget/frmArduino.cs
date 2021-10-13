@@ -104,7 +104,55 @@ namespace freETarget {
         }
 
         private void btnInit_Click(object sender, EventArgs e) {
-            mainWindow.commModule.sendData("{\"INIT\":0}");
+            string input = "INIT KEY";
+            if (ShowInputDialog(ref input) == DialogResult.OK) {
+                mainWindow.commModule.sendData("{\"INIT\":" + input + "}");
+                mainWindow.log("Sending INIT to the target: " + "{\"INIT\":" + input + "}");
+            }
+        }
+
+
+
+        private static DialogResult ShowInputDialog(ref string input) {
+            System.Drawing.Size size = new System.Drawing.Size(200, 70);
+            Form inputBox = new Form();
+
+            inputBox.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            inputBox.StartPosition = FormStartPosition.CenterScreen;
+            inputBox.FormBorderStyle = FormBorderStyle.FixedDialog;
+            inputBox.MinimizeBox = false;
+            inputBox.MaximizeBox = false;
+            inputBox.ClientSize = size;
+            inputBox.Text = "INIT key";
+
+            System.Windows.Forms.TextBox textBox = new TextBox();
+            textBox.Size = new System.Drawing.Size(size.Width - 10, 23);
+            textBox.Location = new System.Drawing.Point(5, 5);
+            textBox.Text = input;
+            inputBox.Controls.Add(textBox);
+
+            Button okButton = new Button();
+            okButton.DialogResult = System.Windows.Forms.DialogResult.OK;
+            okButton.Name = "okButton";
+            okButton.Size = new System.Drawing.Size(75, 23);
+            okButton.Text = "&OK";
+            okButton.Location = new System.Drawing.Point(size.Width - 80 - 80, 39);
+            inputBox.Controls.Add(okButton);
+
+            Button cancelButton = new Button();
+            cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            cancelButton.Name = "cancelButton";
+            cancelButton.Size = new System.Drawing.Size(75, 23);
+            cancelButton.Text = "&Cancel";
+            cancelButton.Location = new System.Drawing.Point(size.Width - 80, 39);
+            inputBox.Controls.Add(cancelButton);
+
+            inputBox.AcceptButton = okButton;
+            inputBox.CancelButton = cancelButton;
+
+            DialogResult result = inputBox.ShowDialog();
+            input = textBox.Text;
+            return result;
         }
 
         private void btnCalibration_Click(object sender, EventArgs e) {
@@ -136,6 +184,9 @@ namespace freETarget {
             mainWindow.commModule.sendData("{\"" + cmbCommands.SelectedItem.ToString() +  "\":" + txtParameter.Text + "}");
         }
 
+        private void btnSend2_Click(object sender, EventArgs e) {
+            mainWindow.commModule.sendData(txtGenericCommand.Text);
+        }
     }
 
     class Command {
