@@ -277,7 +277,7 @@ namespace freETarget {
             string indata = e.Text.Trim();
 
             //first incoming text from target after port open is "freETarget VX.x" - use this to confirm connection
-            if (indata.Contains("freETarget") && currentStatus == Status.CONECTING) {
+            if (/*indata.Contains("freETarget") &&*/ currentStatus == Status.CONECTING) {
                 var d = new SafeCallDelegate2(connectDone); //confirm connect
                 this.Invoke(d, new object[] { indata.Trim() });
             }
@@ -1545,7 +1545,7 @@ namespace freETarget {
         private StringBuilder _builder = new StringBuilder();
         public EventHandler TextChanged;
         public void add(string text) {
-            _builder.Append(text);
+            _builder.Append(text + Environment.NewLine);
             if (TextChanged != null)
                 TextChanged(this, null);
         }
