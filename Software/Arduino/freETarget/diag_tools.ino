@@ -695,8 +695,7 @@ void set_trip_point
       i++;                                                  // and keep a running total
     }
     sample /= i;                                            // Get the average
-
-
+    
 /*
  *  See if we are on one of the limits and out of spec.
  */
@@ -781,8 +780,9 @@ void set_trip_point
       case 'x':                       // X Cancel
         sensor_status = 0;
         arm_counters();               // Reset the latch state
-        enable_interrupt(true);       // Turn on the face strike interrupt
+        enable_interrupt(1);          // Turn on the face strike interrupt
         face_strike = false;          // Reset the face strike count
+        enable_interrupt(1);          // Turning it on above creates a fake interrupt with a disable
         break;
 
       default:
@@ -1004,7 +1004,7 @@ static void unit_test(unsigned int mode)
     sensor_status = 0xF;        // Fake all sensors good
     send_score(&history, shot_number, sensor_status);
     shot_number++;
-    delay(ONE_SECOND/5);        // Give the PC program some time to catch up
+    delay(ONE_SECOND/2);        // Give the PC program some time to catch up
     }
     if ( mode == T_ONCE )
     {
@@ -1158,6 +1158,16 @@ void show_sensor_status(unsigned int sensor_status)
 
   Serial.print(" Face Strike:");
   Serial.print(face_strike);
-  
+
+  if ( ((sensor_status & 0x0f) == 0x0f)
+    && (face_strike) )
+  {
+    Serial.print(" PASS");
+  }    
+
+/*
+ * All done, return
+ */
+
   return;
 }

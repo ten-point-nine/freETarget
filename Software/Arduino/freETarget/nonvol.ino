@@ -38,6 +38,10 @@ void factory_nonvol(void)
   for ( i=0; i != NONVOL_SIZE; i++)
   {
     EEPROM.put(i, ch);                    // Fill up with a bogus value
+    if ( (i % 64) == 0 )
+    {
+      Serial.print(".");
+    }
   }
   
   gen_position(0); 

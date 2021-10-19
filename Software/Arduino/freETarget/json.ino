@@ -247,7 +247,7 @@ bool    return_value;
         {
           JSON[j].f(x);
         }
-      } 
+      }
      j++;
    }
   }
@@ -479,20 +479,22 @@ static void show_test(int test_number)
    int trace                // Trace on or off
    )
  {
-   Serial.print("\r\nTrace: ");
+   char s[32]; 
+   
+   sprintf(s, "\r\nTrace:");
    
    if ( trace == 0 )
    {
       is_trace = 0;
-      Serial.print("OFF");
+      strcat(s, "OFF\r\n");
    }
    else
    {
       is_trace = 1;
-      Serial.print("ON");
+      strcat(s,"ON\r\n");
    }
-
-   Serial.print("\r\n");
+  
+   output_to_all(s);
    
   /*
    * The DIP switch has been remotely set

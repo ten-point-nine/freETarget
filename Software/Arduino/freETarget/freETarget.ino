@@ -60,6 +60,21 @@ void setup(void)
   init_gpio();  
   init_sensors();
   init_analog_io();
+
+  switch ( read_DIP() & 0x0f )              // Execute a power up routine if we have to
+  {
+    case 1:
+      set_trip_point(0);                    // Calibrate
+      break;
+
+    case 0x0f:
+      factory_nonvol();                     // Force a factory nonvol reset
+      break;
+
+    default:
+      break;
+  }
+
   randomSeed( analogRead(V_REFERENCE));   // Seed the random number generator
   is_trace = VERBOSE_TRACE;               // Set the trace based on the DIP switch
 
@@ -76,34 +91,17 @@ void setup(void)
 /*
  * Run the power on self test
  */
-  POST_version(PORT_ALL);             // Show the version string on all ports
+  POST_version(PORT_ALL);                 // Show the version string on all ports
   show_echo(0);
-  POST_LEDs();                        // Cycle the LEDs
-  while ( (POST_counters() == false)  // If the timers fail
-              && !is_trace)           // and not in trace mode (DIAG jumper installed)
+  POST_LEDs();                            // Cycle the LEDs
+  while ( (POST_counters() == false)      // If the timers fail
+              && !is_trace)               // and not in trace mode (DIAG jumper installed)
   {
-    Serial.print("\r\nPOST_2 Failed\r\n");  // Blink the LEDs
-    blink_fault(POST_COUNT_FAILED);         // and try again
+    Serial.print("\r\nPOST_2 Failed\r\n");// Blink the LEDs
+    blink_fault(POST_COUNT_FAILED);       // and try again
   }
-  POST_trip_point();                  // Show the trip point
+  POST_trip_point();                      // Show the trip point
   
-/*
- * Turn off the self test
- */ 
-  switch (json_test)
-  {
-    case T_HELP:
-    case T_PAPER:
-    case T_PASS_THRU:
-    case T_SET_TRIP:
-    case T_XFR_LOOP:
-      json_test = T_HELP;
-      break;
-
-    default:
-      Serial.print("\r\nStarting Test: "); Serial.print(json_test);
-      break;
-  }
 
 /*
  * Ready to go
@@ -146,7 +144,8 @@ void loop()
  * First thing, handle polled devices
  */
   esp01_receive();                // Accumulate input from the IP port.
-  
+  multifunction_switch(0);        // Read the switches
+   
 /*
  * Take care of any commands coming through
  */
@@ -159,8 +158,7 @@ void loop()
 /*
  * Cycle through the state machine
  */
-  multifunction_switch(0);        // Read the switches
-  
+ 
   switch (state)
   {
 
@@ -189,7 +187,7 @@ void loop()
  */
   case ARM:
     arm_counters();
-    enable_interrupt(json_send_miss);             // Turn on the face strike interrupt
+    enable_interrupt(json_send_miss); // Turn on the face strike interrupt
     face_strike = false;              // Reset the face strike count
     
     set_LED_PWM(json_LED_PWM);        // Keep the LEDs ON
@@ -262,13 +260,14 @@ void loop()
       set_LED(L('-', '*', '-'));          // No longer waiting
       state = AQUIRE;
     }
+
     break;
 
 /*
  *  Aquire the shot              
  */  
   case AQUIRE:
-    if ( (micros() - now) > (SHOT_TIME) )   // Enough time already
+    if ( (micros() - now) > (SHOT_TIME) ) // Enough time already
     { 
       stop_counters(); 
       state = REDUCE;                     // 3, 4 Have enough data to performe the calculations

@@ -271,8 +271,6 @@ void arm_counters(void)
   return;
   }
 
-
-
 /*
  *  Stop the oscillator
  */
