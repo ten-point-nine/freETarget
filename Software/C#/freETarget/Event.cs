@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Drawing;
 
 namespace freETarget {
+    [Serializable]
     public class Event {
 
         public enum EventType {

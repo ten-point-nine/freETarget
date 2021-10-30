@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace freETarget.targets {
+    [Serializable]
     class Rifle300m : aTarget {
 
         private decimal pelletCaliber; //8mm BR

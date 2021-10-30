@@ -13,6 +13,7 @@ using System.Threading.Tasks;
  * 50 meter 22 rifle target.  ISSF Sectoin 6.3.4.2
  */
 namespace freETarget.targets {
+    [Serializable]
     class Rifle50m : aTarget {
 
         private decimal pelletCaliber;// = 5.6m; //.22LR

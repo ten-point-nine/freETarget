@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace freETarget {
+    [Serializable]
     public class Session {
 
 /*        public enum SessionType {
@@ -386,11 +387,77 @@ namespace freETarget {
 
             }
 
+            calculateMeanValuesAndGroupSize(this.shots);
+
             this.averageTimePerShot = TimeSpan.FromTicks( (shots[shots.Count - 1].timestamp - shots[0].timestamp).Ticks /  shots.Count);
             this.longestShot = longest;
             this.shortestShot = shortest;
             this.averageScore = sum / actualNumberOfShots;
         }
+
+
+        //computes the average radius of all the shots
+        //computes group size (maxium distance between 2 shots), but measuring from the center of the shot, not outside
+        public void calculateMeanValuesAndGroupSize(List<Shot> shots) {
+
+            decimal xsum = 0;
+            decimal ysum = 0;
+            int shotCount = 0;
+
+            foreach (Shot shot in shots) {
+                if (shot.miss == true) {
+                    continue;
+                }
+                xsum += shot.getX();
+                ysum += shot.getY();
+                shotCount++;
+            }
+
+
+            xbar = xsum / shotCount;
+            ybar = ysum / shotCount;
+
+            List<double> spreads = new List<double>();
+
+            decimal[] r = new decimal[shotCount];
+            int k = 0;
+            for (int i = 0; i < shots.Count; i++) {
+                if (shots[i].miss == true) {
+                    continue;
+                }
+                r[k] = (decimal)Math.Sqrt((double)(((shots[i].getX() - xbar) * (shots[i].getX() - xbar)) + ((shots[i].getY() - ybar) * (shots[i].getY() - ybar))));
+                k++;
+
+                //compute max spread here too
+                for (int j = 0; j < shots.Count; j++) {
+                    double powX = Math.Pow((double)shots[i].getX() - (double)shots[j].getX(), 2);
+                    double powY = Math.Pow((double)shots[i].getY() - (double)shots[j].getY(), 2);
+                    double sqrt;
+                    if (powX > powY) {
+                        sqrt = Math.Sqrt(powX - powY);
+                    } else {
+                        sqrt = Math.Sqrt(powY - powX);
+                    }
+                    spreads.Add(sqrt);
+                }
+            }
+
+            decimal maxSpread = (decimal)spreads.Max();
+            this.groupSize = Math.Round(maxSpread, 1);
+
+            decimal rsum = 0;
+            foreach (decimal ri in r) {
+                rsum += ri;
+            }
+
+            rbar = rsum / shotCount;
+
+            this.rbar = rbar;
+            this.xbar = xbar;
+            this.ybar = ybar;
+
+        }
+
 
         public override string ToString() {
             return this.eventType.ToString();

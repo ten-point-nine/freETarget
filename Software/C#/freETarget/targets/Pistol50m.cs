@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace freETarget.targets {
+    [Serializable]
     class Pistol50m : aTarget {
         private decimal pelletCaliber;
         private const decimal targetSize = 550; //mm

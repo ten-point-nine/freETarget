@@ -12,6 +12,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace freETarget {
     public partial class frmJournal : Form {
@@ -252,7 +254,9 @@ namespace freETarget {
                     lstbSessions.SelectedIndex = listSessionLastIndex;
                     return;
                 }
-                pGridSession.SelectedObject = session;
+
+                Session clonedSession = Clone(session);
+                pGridSession.SelectedObject = clonedSession;
                 currentSession = session;
                 enableDisableButtons(true, true);
                 listSessionLastIndex = lstbSessions.SelectedIndex;
@@ -261,6 +265,21 @@ namespace freETarget {
             } else {
                 btnExport.Enabled = false;
             }
+        }
+
+        private T Clone<T>(T source) {
+            if (!typeof(T).IsSerializable) {
+                throw new ArgumentException("The type must be serializable.", nameof(source));
+            }
+
+            // Don't serialize a null object, simply return the default for that object
+            if (ReferenceEquals(source, null)) return default;
+
+            Stream stream = new MemoryStream();
+            IFormatter formatter = new BinaryFormatter();
+            formatter.Serialize(stream, source);
+            stream.Seek(0, SeekOrigin.Begin);
+            return (T)formatter.Deserialize(stream);
         }
 
         private void btnDiary_Click(object sender, EventArgs e) {
@@ -341,7 +360,10 @@ namespace freETarget {
             var stream = new System.IO.MemoryStream();
             imgLogo.Image.Save(stream, ImageFormat.Png);
             stream.Position = 0;
-            PDFGenerator.generateAndSavePDF(currentSession, Settings.Default.pdfPath, stream);
+
+            //print session from DB, not the one currently loaded
+            Session dbSession = storage.findSession(currentSession.id);
+            PDFGenerator.generateAndSavePDF(dbSession, Settings.Default.pdfPath, stream);
         }
 
         public bool isSessionLoading() {
