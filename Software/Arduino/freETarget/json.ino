@@ -41,6 +41,9 @@ int     json_multifunction;         // Multifunction switch operation
 int     json_z_offset;              // Distance between paper and sensor plane in 0.1mm
 int     json_paper_eco;             // Do not advance paper if outside of the black
 int     json_target_type;           // Modify target type (0 == single bull)
+int     json_tabata_on;             // Tabata ON timer
+int     json_tabata_rest;           // Tabata resting timer
+int     json_tabata_cycles;         // Number of Tabata cycles
 
 int     temp;                       // Temporary variable
 
@@ -74,6 +77,9 @@ const json_message JSON[] = {
   {"\"SN\":",             &json_serial_number,               0,                IS_FIXED,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
   {"\"STEP_COUNT\":",     &json_step_count,                  0,                IS_INT16,  0,                NONVOL_STEP_COUNT,       0 },    // Set the duration of the stepper motor ON time
   {"\"STEP_TIME\":",      &json_step_time,                   0,                IS_INT16,  0,                NONVOL_STEP_TIME,        0 },    // Set the number of times stepper motor is stepped
+  {"\"TABATA_CYCLES\":",  &json_tabata_cycles,               0,                IS_INT16,  0,                NONVOL_TABATA_CYCLES,    0 },    // Number of cycles to use for the Tabata timer
+  {"\"TABATA_REST\":",    &json_tabata_rest,                 0,                IS_INT16,  0,                NONVOL_TABATA_REST,      0 },    // Time that the LEDs are OFF for a Tabata timer
+  {"\"TABATA_ON\":",      &json_tabata_on,                   0,                IS_INT16,  0,                NONVOL_TABATA_ON,        0 },    // Time that the LEDs are ON for a Tabata timer
   {"\"TARGET_TYPE\":",    &json_target_type,                 0,                IS_INT16,  0,                NONVOL_TARGET_TYPE,      0 },    // Marify shot location (0 == Single Bull)
   {"\"TEST\":",           &json_test,                        0,                IS_INT16,  &show_test,       NONVOL_TEST_MODE,        0 },    // Execute a self test
   {"\"TRACE\":",          0,                                 0,                IS_INT16,  &set_trace,                      0,        0 },    // Enter / exit diagnostic trace

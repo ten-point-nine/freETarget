@@ -73,7 +73,7 @@ void set_LED_PWM_now
 }
   
 
-void set_LED_PWM
+void set_LED_PWM                                  // Theatre lighting
   (
   int new_LED_percent                            // Desired LED level (0-100%)
   )

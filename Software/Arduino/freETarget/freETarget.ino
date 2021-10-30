@@ -16,7 +16,7 @@
 #include "diag_tools.h"
 #include "esp-01.h"
 
-history_t history;  
+this_shot record;  
 
 double       s_of_sound;                // Speed of sound
 unsigned int shot = 0;                  // Shot counter
@@ -32,6 +32,8 @@ const char* names[] = { "TARGET",                                               
                   
 const char* nesw = "NESW";                    // Cardinal Points
 const char to_hex[] = "0123456789ABCDEF";      // Quick Hex to ASCII
+
+static long tabata(bool reset_time, bool reset_cycles); // Tabata state machine
 
 /*----------------------------------------------------------------
  * 
@@ -87,7 +89,8 @@ void setup(void)
  * Initialize variables
  */
   read_nonvol();
-  
+  tabata(true, true);                     // Reset the Tabata timers
+
 /*
  * Run the power on self test
  */
@@ -136,6 +139,7 @@ unsigned int location;          // Sensor location
 unsigned int i, j;              // Iteration Counter
 int ch;
 unsigned int shot_number;
+unsigned int shot_time;         // Shot time captured from Tabata timer
 
 void loop() 
 {
@@ -145,7 +149,8 @@ void loop()
  */
   esp01_receive();                // Accumulate input from the IP port.
   multifunction_switch(0);        // Read the switches
-   
+  tabata(false, false);
+  
 /*
  * Take care of any commands coming through
  */
@@ -245,7 +250,7 @@ void loop()
     {
       set_LED_PWM(0);                     // Dim the lights?
     }
-
+    
     sensor_status = is_running();
 
     if ( face_strike )                    // Something hit the front
@@ -257,6 +262,7 @@ void loop()
     if ( sensor_status != 0 )             // Shot detected
     {
       now = micros();                     // Remember the starting time
+      record.shot_time = tabata(false, false);   // Capture the time into the shot
       set_LED(L('-', '*', '-'));          // No longer waiting
       state = AQUIRE;
     }
@@ -286,14 +292,15 @@ void loop()
       Serial.print("\r\nReducing...");
     }
     set_LED(L('*', '*', '*'));                   // Light All
-    location = compute_hit(sensor_status, &history, false);
+    location = compute_hit(sensor_status, &record, false);
 
-    if ( (timer_value[N] == 0) || (timer_value[E] == 0) || (timer_value[S] == 0) || (timer_value[W] == 0) ) // If any one of the timers is 0, that's a miss
+    if ( ((json_tabata_cycles != 0) && ( record.shot_time == 0 ))         // Are we out of the tabata cycle time?
+       || (timer_value[N] == 0) || (timer_value[E] == 0) || (timer_value[S] == 0) || (timer_value[W] == 0) ) // If any one of the timers is 0, that's a miss
     {
       state = SEND_MISS;
       break;
     }
-    send_score(&history, shot_number, sensor_status);
+    send_score(&record, shot_number, sensor_status);
     state = WASTE;
     shot_number++;                   
     break;
@@ -303,13 +310,17 @@ void loop()
  *  Wait here to make sure the RUN lines are no longer set
  */
   case WASTE:
-    delay(ONE_SECOND/2);                      // Hang out for a second
-    if ( (json_paper_time + json_step_time) != 0 )  // Has the witness paper been enabled
-    {
-      if ( (json_paper_eco == 0)                   // ECO turned off
-        || ( sqrt(sq(history.x) + sq(history.y)) < json_paper_eco ) ) // And inside the black
+    if ( (json_tabata_on == 0)                  // No tabata time enabled
+      || (tabata(false, false) == 0) )          // Or outside of the tabata time
+    {                                           // Advance the paper and wait.
+      delay(ONE_SECOND/2);                      // Hang out for a second
+      if ( (json_paper_time + json_step_time) != 0 )  // Has the witness paper been enabled
       {
-        drive_paper();
+        if ( (json_paper_eco == 0)                   // ECO turned off
+          || ( sqrt(sq(record.x) + sq(record.y)) < json_paper_eco ) ) // And inside the black
+        {
+          drive_paper();
+        }
       }
     }
     state = SET_MODE;
@@ -342,3 +353,153 @@ void loop()
  */
   return;
 }
+
+/*----------------------------------------------------------------
+ * 
+ * function: tabata
+ * 
+ * brief:   Implement a Tabata timer for training
+ * 
+ * return:  Time that the current TABATA state == TABATA_ON
+ * 
+ *----------------------------------------------------------------
+ *
+ * A Tabata timer is used to train for specific durations or time
+ * of events.  For example in shooting the target should be aquired
+ * and shot within a TBD seconds.
+ * 
+ * This function turns on the LEDs for a configured time and
+ * then turns them off for another configured time and repeated
+ * for a configured number of cycles
+ * 
+ * OFF - 2 Second Warning - 2 Second Off - ON 
+ * 
+ * Test JSON {"TABATA_ON":7, "TABATA_REST":45, "TABATA_CYCLES":60}
+ * 
+ *--------------------------------------------------------------*/
+static long     tabata_time;  // Internal timern in milliseconds
+static uint16_t tabata_cycles;
+
+#define TABATA_IDLE         0
+#define TABATA_WARNING      1
+#define TABATA_DARK         2
+#define TABATA_ON           3
+#define TABATA_DONE_OFF     4
+#define TABATA_DONE_ON      5
+
+#define TABATA_BLINK        1         // Warning blink
+
+static uint16_t tabata_state = TABATA_IDLE;
+
+static long tabata
+  (
+  bool reset_time,                    // TRUE if starting timer
+  bool reset_cycles                   // TRUE if cycles the cycles
+  )
+{
+  unsigned long now;                  // Current time in seconds
+  
+  if ( json_tabata_on == 0 )          // Exit if no cycles are enabled
+  {
+    return 0;                         // Invalid time
+  }
+
+  now = millis()/1000;
+  
+/*
+ * Reset the variables based on the arguements
+ */
+   if ( reset_time )                  // Reset the timer
+   {
+    tabata_time = now;
+    tabata_state = TABATA_IDLE;
+    set_LED_PWM_now(0);
+   }
+   if ( reset_cycles )                // Reset the number of cycles
+   {
+    tabata_cycles = 0;
+    tabata_state  = TABATA_IDLE;
+   }
+
+/*
+ * Execute the state machine
+ */
+  switch (tabata_state)
+  {
+    case (TABATA_IDLE):                 // OFF, wait for the time to expire
+      if ( (now - tabata_time) > json_tabata_rest )
+      {
+        tabata_state = TABATA_WARNING;
+        tabata_time = now;;
+        tabata_cycles++;
+        set_LED_PWM_now(json_LED_PWM);  //     Turn on the lights
+      }
+      break;
+        
+   case (TABATA_WARNING):               // 1 second warning
+      if ( (now - tabata_time) > TABATA_BLINK )
+      {
+        tabata_state = TABATA_DARK;
+        tabata_time = now;
+        set_LED_PWM_now(0);             // Turn off the lights
+      }
+      break;
+      
+    case (TABATA_DARK):                 // 2 second dark
+      if ( (now - tabata_time) > TABATA_BLINK )
+      {
+        tabata_state = TABATA_ON;
+        tabata_time = now;
+        set_LED_PWM_now(json_LED_PWM);           // Turn on the lights
+        
+      }
+      break;
+      
+    case (TABATA_ON):                 // Keep the LEDs on for the tabata time
+      if ( (now - tabata_time) > json_tabata_on )
+      {
+        if ( (json_tabata_cycles != 0) && (tabata_cycles >= json_tabata_cycles) )
+        {
+          tabata_state = TABATA_DONE_OFF;
+        }
+        else
+        {
+          tabata_state = TABATA_IDLE;
+        }
+        tabata_time = now;
+        set_LED_PWM_now(0);           // Turn off the LEDs
+      }
+      break;
+
+  /*
+   * We have run out of cycles.  Sit there and blink the LEDs
+   */
+  case (TABATA_DONE_OFF):                 //Finished.  Stop the game
+      if ( (now - tabata_time) > TABATA_BLINK )
+      {
+        tabata_state = TABATA_DONE_ON;
+        tabata_time = now;
+        set_LED_PWM(json_LED_PWM);       // Turn off the LEDs
+      }
+      break;
+
+  case (TABATA_DONE_ON):                 //Finished.  Stop the game
+      if ( (now - tabata_time) > TABATA_BLINK )
+      {        
+        tabata_state = TABATA_DONE_OFF;
+        tabata_time = now;
+        set_LED_PWM(0);                   // Turn off the LEDs
+      }
+      break;
+  }
+
+ /* 
+  * All done.  Return the current time if in the TABATA_ON state
+  */
+    if ( tabata_state == TABATA_ON )
+    {
+      return tabata_time;
+    }
+    else
+      return 0;
+ }

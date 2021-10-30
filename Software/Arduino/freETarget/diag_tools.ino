@@ -1000,9 +1000,9 @@ static void unit_test(unsigned int mode)
   {
     if ( sample_calculations(mode, i) )
     {
-    location = compute_hit(0x0F, &history, true);
+    location = compute_hit(0x0F, &record, true);
     sensor_status = 0xF;        // Fake all sensors good
-    send_score(&history, shot_number, sensor_status);
+    send_score(&record, shot_number, sensor_status);
     shot_number++;
     delay(ONE_SECOND/2);        // Give the PC program some time to catch up
     }

@@ -141,7 +141,7 @@ void init_sensors(void)
  *
  * brief: Determine the location of the hit
  * 
- * return: History array updated with new position
+ * return: record array updated with new position
  *
  *----------------------------------------------------------------
  *
@@ -151,7 +151,7 @@ void init_sensors(void)
 unsigned int compute_hit
   (
   unsigned int sensor_status,      // Bits read from status register
-  history_t*   h,                  // Storing the results
+  this_shot*   h,                  // Storing the results
   bool         test_mode           // Fake counters in test mode
   )
 {
@@ -500,7 +500,7 @@ bool find_xy_3D
 
 void send_score
   (
-  history_t* h,                   // History record
+  this_shot* h,                   // record record
   int shot,                       // Current shot
   int sensor_status               // Status at the time of the shot
   )
@@ -544,7 +544,7 @@ void send_score
   output_to_all(str);
   
 #if ( S_SHOT )
-  sprintf(str, "\"shot\":%d, \"miss\":0, \"name\":\"%s\", ", shot, names[json_name_id]);
+  sprintf(str, "\"shot\":%d, \"time\":%d, \"miss\":0, \"name\":\"%s\", ", shot, h->shot_time, names[json_name_id]);
   output_to_all(str);
 #endif
 
@@ -631,7 +631,7 @@ void send_miss
   output_to_all(str);
   
  #if ( S_SHOT )
-  sprintf(str, "\"shot\":%d, \"miss\":1, \"name\":\"%s\"", shot, names[json_name_id]);
+  sprintf(str, "\"shot\":%d, \"time\":0, \"miss\":1, \"name\":\"%s\"", shot, names[json_name_id]);
   output_to_all(str);
 #endif
 
