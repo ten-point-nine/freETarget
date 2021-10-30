@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace freETarget.targets {
+    [Serializable]
     public abstract class aTarget {
 
 

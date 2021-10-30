@@ -130,9 +130,9 @@ namespace freETarget {
                 btnConfig.BackColor = this.BackColor;
             }
 
-            toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
+            toolTipButtons.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
 
-            toolTip.SetToolTip(btnConfig, "Setting - Target distance percent: " + Properties.Settings.Default.targetDistance);
+            toolTipButtons.SetToolTip(btnConfig, "Setting - Target distance percent: " + Properties.Settings.Default.targetDistance);
 
             initBreakdownChart();
 
@@ -532,20 +532,13 @@ namespace freETarget {
 
         private void computeShotStatistics(List<Shot> shotList) {
             if (shotList.Count > 1) {
-                decimal localRbar;
-                decimal localXbar;
-                decimal localYbar;
-                calculateMeanRadius(out localRbar, out localXbar, out localYbar, shotList);
-                currentSession.rbar = localRbar;
-                currentSession.xbar = localXbar;
-                currentSession.ybar = localYbar;
+                currentSession.calculateMeanValuesAndGroupSize(shotList);
 
-                txtMeanRadius.Text = Math.Round(localRbar, 1).ToString();
-                txtWindage.Text = Math.Round(Math.Abs(localXbar), 1).ToString();
-                txtElevation.Text = Math.Round(Math.Abs(localYbar), 1).ToString();
-                drawWindageAndElevationArrows(localXbar, localYbar);
+                txtMeanRadius.Text = Math.Round(currentSession.rbar, 1).ToString();
+                txtWindage.Text = Math.Round(Math.Abs(currentSession.xbar), 1).ToString();
+                txtElevation.Text = Math.Round(Math.Abs(currentSession.ybar), 1).ToString();
+                drawWindageAndElevationArrows(currentSession.xbar, currentSession.ybar);
 
-                currentSession.groupSize = Math.Round(calculateMaxSpread(shotList), 1);
                 txtMaxSpread.Text = currentSession.groupSize.ToString();
             } else {
                 txtMeanRadius.Text = "";
@@ -756,7 +749,7 @@ namespace freETarget {
                 } else {
                     btnConfig.BackColor = SystemColors.Control;
                 }
-                toolTip.SetToolTip(btnConfig, "Settings - Target distance percent: " + Properties.Settings.Default.targetDistance);
+                toolTipButtons.SetToolTip(btnConfig, "Settings - Target distance percent: " + Properties.Settings.Default.targetDistance);
 
                 if (currentSession != null) {
                     computeShotStatistics(getShotList());
@@ -949,64 +942,10 @@ namespace freETarget {
 
         }
 
-        //computes the average radius of all the shots
-        private void calculateMeanRadius( out decimal rbar, out decimal xbar, out decimal ybar, List<Shot> shots) {
-
-            decimal xsum = 0;
-            decimal ysum = 0;
-            int shotCount = 0;
-
-            foreach(Shot shot in shots) {
-                if (shot.miss == true) {
-                    continue;
-                }
-                xsum += shot.getX();
-                ysum += shot.getY();
-                shotCount++;
-            }
 
 
-            xbar = xsum / shotCount;
-            ybar = ysum / shotCount;
 
-            decimal[] r = new decimal[shotCount];
-            int k = 0;
-            for(int i=0; i< shots.Count; i++) {
-                if (shots[i].miss == true) {
-                    continue;
-                }
-                r[k] = (decimal)Math.Sqrt((double)(((shots[i].getX() - xbar) * (shots[i].getX() - xbar)) + ((shots[i].getY() - ybar) * (shots[i].getY() - ybar))));
-                k++;
-            }
 
-            decimal rsum = 0;
-            foreach(decimal ri in r) {
-                rsum += ri;
-            }
-
-            rbar = rsum / shotCount;
-
-        }
-
-        //computes group size (maxium distance between 2 shots), but measuring from the center of the shot, not outside
-        private decimal calculateMaxSpread(List<Shot> shots) { 
-            List<double> spreads = new List<double>();
-            for(int i = 0; i < shots.Count; i++) {
-                for(int j = 0; j < shots.Count; j++) {
-                    double powX = Math.Pow((double)shots[i].getX() - (double)shots[j].getX(), 2);
-                    double powY = Math.Pow((double)shots[i].getY() - (double)shots[j].getY(), 2);
-                    double sqrt;
-                    if (powX > powY) {
-                        sqrt = Math.Sqrt(powX - powY);
-                    } else {
-                        sqrt = Math.Sqrt(powY - powX);
-                    }
-                    spreads.Add(sqrt);
-                }
-            }
-
-            return (decimal)spreads.Max();
-        }
 
 
         private void btnCalibration_Click(object sender, EventArgs e) {
@@ -1035,7 +974,7 @@ namespace freETarget {
                 btnCalibration.BackColor = Settings.Default.targetColor;
             }
 
-            toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
+            toolTipButtons.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
         }
 
         public void calibrateY(decimal increment) {
@@ -1059,7 +998,7 @@ namespace freETarget {
             } else {
                 btnCalibration.BackColor = Settings.Default.targetColor;
             }
-            toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
+            toolTipButtons.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
         }
 
         public void calibrateAngle(decimal angle) {
@@ -1082,7 +1021,7 @@ namespace freETarget {
             } else {
                 btnCalibration.BackColor = Settings.Default.targetColor;
             }
-            toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
+            toolTipButtons.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
         }
 
         public void resetCalibration() {
@@ -1108,7 +1047,7 @@ namespace freETarget {
             targetRefresh();
 
             btnCalibration.BackColor = this.BackColor;
-            toolTip.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
+            toolTipButtons.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
         }
 
         public void saveCalibration() {

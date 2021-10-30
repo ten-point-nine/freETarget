@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace freETarget {
+    [Serializable]
     class VirtualRO {
         public bool firstSeries = false;
         public bool firstSeriesLoadCommand = false;

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace freETarget.targets {
+    [Serializable]
     class AirPistol : aTarget {
 
         private decimal pelletCaliber;

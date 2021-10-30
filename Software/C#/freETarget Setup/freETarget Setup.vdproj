@@ -2563,15 +2563,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:freETarget"
-        "ProductCode" = "8:{02214A94-B435-4484-9BD5-9905A19E5073}"
-        "PackageCode" = "8:{A879748E-027E-42C1-BD27-08C11769014E}"
+        "ProductCode" = "8:{ECF1CAE8-477A-444D-816D-0D299CE772D8}"
+        "PackageCode" = "8:{D09DB062-45DF-4622-A4DC-DAF066E6C149}"
         "UpgradeCode" = "8:{E11572A0-0587-4903-AE84-9016332FEE88}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:3.0.3"
+        "ProductVersion" = "8:3.2.0"
         "Manufacturer" = "8:Azmodan"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:https://free-e-target.com/"
@@ -3193,7 +3193,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_B18C4057E682438CB1FBAFA19B5EAB78"
             {
-            "SourcePath" = "8:..\\freETarget\\obj\\Debug\\freETarget.exe"
+            "SourcePath" = "8:..\\freETarget\\obj\\Release\\freETarget.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_9981CD01648E4C95AF344740FDDEA8C9"

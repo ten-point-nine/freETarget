@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms.DataVisualization.Charting;
 
 namespace freETarget {
+    [Serializable]
     public class Shot {
         public int index;
         public int count;
