@@ -62,6 +62,9 @@ const GPIO init_table[] = {
   {SPARE_2,     INPUT_PULLUP, 0},
   
   {EOF, EOF, EOF} };
+  
+static   int LO_last_MFS_state;              // Last state read from MFS
+static   int HI_last_MFS_state;
 
 void face_ISR(void);
 static void paper_on_off(bool on);        // Turn the motor on or off
@@ -615,7 +618,7 @@ static void paper_on_off                        // Function to turn the motor on
     Serial.print("\r\nface_ISR()");
   }
 
-  noInterrupts();
+  disable_interrupt();
 
   return;
  }
@@ -671,6 +674,7 @@ void blink_fault
     case PC_TEST:
     case GPIO_IN:
       pinMode(DIP_1,INPUT_PULLUP);
+      LO_last_MFS_state = DIP_SW_A;       // Remember the starting state
       break;
 
     case GPIO_OUT:                        // The switch is a general purpose output
@@ -687,6 +691,7 @@ void blink_fault
     case PC_TEST:
     case GPIO_IN:
       pinMode(DIP_2,INPUT_PULLUP);
+      HI_last_MFS_state = DIP_SW_B;       // Remember the starting state
       break;
 
     case GPIO_OUT:                        // The switch is a general purpose output
@@ -716,47 +721,7 @@ void blink_fault
  * The actions of the DIP switch will change depending on the 
  * mode that is programmed into it.
  * 
- * For some of the DIP switches, tapping the switch
- * turns the LEDs on, and holding it will carry out 
- * the alternate activity.
- * 
  *-----------------------------------------------------*/
-static unsigned long hold_time_LO;
-static unsigned long hold_time_HI;
-
-static void sw_state 
-    (
-    unsigned int    state,              // Input signal state
-    unsigned long*  which_timer,        // What timer are we using?
-    void* (fcn)(void)                   // Action to take
-    )
-{
-  if ( state == 0 )                     // Switch is open, do nothing
-  {
-    *which_timer = millis();
-    return;
-  }
-
-  set_LED_PWM(json_LED_PWM);            // Switch is pressed, turn on the LEDs
-
-  if ( (millis() - *which_timer) > 1000 )// Held for a second
-  {
-    (fcn)();                            // execute the timer
-    *which_timer += 100000;             // and push the time far away
-  }
-
-  return;
-}
-
-static void send_fake_score(void) 
-{ 
-  static    this_shot h;
-  static   int shot;
-    
-  h.x = random(-json_sensor_dia/2.0, json_sensor_dia/2.0);
-  h.y = 0;
-  send_score(&h, shot++, 0); return;
-}
 
 unsigned int multifunction_switch
   (
@@ -764,7 +729,7 @@ unsigned int multifunction_switch
   )
  {
     unsigned int return_value;          // Value returned to caller
-    static    this_shot h;
+    static    history_t h;
     static   int shot;
     
     if ( CALIBRATE )
@@ -783,7 +748,12 @@ unsigned int multifunction_switch
   {
     case PAPER_FEED:                      // The switch acts as paper feed control
       return_value = DIP_SW_A;            // Use DIP_SW_A as a paper feed
-      sw_state(return_value, &hold_time_LO, &drive_paper);
+      if ( (return_value ^ LO_last_MFS_state)// Got a change?
+         & ( return_value == 1 ) )        // And its a contact to ground
+      {      
+        drive_paper();                    // Drive the paper once
+      }
+      LO_last_MFS_state = return_value;   // and remember for next time
       break;
 
     case GPIO_IN:                         // The switch is a general purpose input
@@ -797,7 +767,12 @@ unsigned int multifunction_switch
 
     case PC_TEST:                         // Send a fake score to the PC
       return_value = DIP_SW_A;            // Use DIP_SW_B as a paper feed
-      sw_state(return_value, &hold_time_LO, &send_fake_score);
+      if ( (return_value ^ LO_last_MFS_state)// Got a change?
+         & ( return_value == 1 ) )        // And its a contact to ground
+      {      
+        send_score(&h, shot++, 0);
+      }
+      LO_last_MFS_state = return_value;   // and remember for next time
       break;
       
     default:
@@ -808,7 +783,12 @@ unsigned int multifunction_switch
   {
     case PAPER_FEED:                      // The switch acts as paper feed control
       return_value = DIP_SW_B;            // Use DIP_SW_B as a paper feed
-      sw_state(return_value, &hold_time_HI, &drive_paper);
+      if ( (return_value ^ HI_last_MFS_state)// Got a change?
+         & ( return_value == 1 ) )        // And its a contact to ground
+      {      
+        drive_paper();                    // Drive the paper once
+      }
+      HI_last_MFS_state = return_value;   // and remember for next time
       break;
 
     case GPIO_IN:                         // The switch is a general purpose input
@@ -822,7 +802,13 @@ unsigned int multifunction_switch
       
     case PC_TEST:                         // Send a fake score to the PC
       return_value = DIP_SW_B;            // Use DIP_SW_B as a paper feed
-      sw_state(return_value, &hold_time_HI, &send_fake_score);
+      
+      if ( (return_value ^ HI_last_MFS_state)// Got a change?
+         & ( return_value == 1 ) )        // And its a contact to ground
+      {      
+        send_score(&h, shot++, 0);
+      }
+      HI_last_MFS_state = return_value;   // and remember for next time
       break;
       
     default:
