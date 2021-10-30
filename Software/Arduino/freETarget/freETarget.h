@@ -13,7 +13,7 @@
 #include "esp-01.h"
 #include "json.h"
 
-#define SOFTWARE_VERSION "\"3.04.15 October 23, 2021\""
+#define SOFTWARE_VERSION "\"3.05.0 October 28, 2021\""
 #define REV_100    100
 #define REV_210    210
 #define REV_220    2201001
@@ -73,14 +73,15 @@ char GET (void)
 #define S 2
 #define W 3
 
-struct history
+struct record
 {
-  unsigned int shot;    // Current shot number
-  double       x;       // X location of shot
-  double       y;       // Y location of shot
+  unsigned int shot;          // Current shot number
+  double       x;             // X location of shot
+  double       y;             // Y location of shot
+  long         shot_time;     // Shot time after tabata start
 };
 
-typedef struct history history_t;
+typedef struct record this_shot;
 
 extern double  s_of_sound;
 

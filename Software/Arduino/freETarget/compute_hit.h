@@ -39,9 +39,9 @@ extern unsigned long timer_value[4];     // Array of timer values
  *  Public Funcitons
  */
 void init_sensors(void);                                    // Initialize sensor structure
-unsigned int compute_hit(unsigned int sensor_status, history_t* h, bool test_mode);  // Find the location of the shot
-void send_score(history_t* h, int shot, int sensor_status); // Send the shot
-void rotate_hit(unsigned int location, history_t* h);       // Rotate the shot back into the correct quadrant 
+unsigned int compute_hit(unsigned int sensor_status, this_shot* h, bool test_mode);  // Find the location of the shot
+void send_score(this_shot* h, int shot, int sensor_status); // Send the shot
+void rotate_hit(unsigned int location, this_shot* h);       // Rotate the shot back into the correct quadrant 
 bool find_xy_3D(sensor_t* s, double estimate, double z_offset_clock);  // Estimated position including slant range
 void send_timer(int sensor_status);                         // Show debugging information 
 unsigned int hamming(unsigned int s);                       // Compute the Hamming weight of the number
