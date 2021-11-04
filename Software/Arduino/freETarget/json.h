@@ -8,7 +8,7 @@ typedef struct  {
   char*             token;    // JSON token string, ex "RADIUS": 
   int*              value;    // Where value is stored 
   double*         d_value;    // Where value is stored 
-  unsigned int    convert;    // Conversion type
+  byte            convert;    // Conversion type
   void         (*f)(int x);   // Function to execute with message
   unsigned int    non_vol;    // Storage in NON-VOL
   unsigned int init_value;    // Initial Value
@@ -29,7 +29,6 @@ extern double json_sensor_dia;    // Sensor radius overwitten by JSON message
 extern int    json_sensor_angle;  // Angle sensors are rotated through
 extern int    json_paper_time;    // Time to turn on paper backer motor
 extern int    json_echo;          // Value to ech
-extern int    json_test;          // Self test to be performed
 extern int    json_calibre_x10;   // Pellet Calibre
 extern int    json_north_x;       // North Adjustment
 extern int    json_north_y;

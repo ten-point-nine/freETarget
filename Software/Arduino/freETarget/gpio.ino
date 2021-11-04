@@ -507,7 +507,7 @@ void read_timers(void)
   
   if ( is_trace )
   {
-    Serial.print("\r\nAdvancing paper ");
+    Serial.print(T("\r\nAdvancing paper "));
   }
   
 /*
@@ -520,7 +520,7 @@ void read_timers(void)
    
   if ( is_trace )
    {
-     Serial.print("On "); Serial.print(s_time);
+     Serial.print(T("On ")); Serial.print(s_time);
    }
    
    delay(PAPER_STEP * s_time);                    // in 10ms increments
@@ -529,7 +529,7 @@ void read_timers(void)
    
    if ( is_trace )
    {
-     Serial.print(" Off ");
+     Serial.print(T(" Off "));
    }
 
    delay(PAPER_STEP);                             // Let the A4988 catch ujp
@@ -619,7 +619,7 @@ static void paper_on_off                        // Function to turn the motor on
 
   if ( is_trace )
   {
-    Serial.print("\r\nface_ISR()");
+    Serial.print(T("\r\nface_ISR()"));
   }
 
   noInterrupts();

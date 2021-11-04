@@ -13,15 +13,16 @@
 #include "esp-01.h"
 #include "json.h"
 
-#define SOFTWARE_VERSION "\"3.05.0 October 28, 2021\""
+#define SOFTWARE_VERSION "\"3.05.1 November 4, 2021\""
 #define REV_100    100
 #define REV_210    210
-#define REV_220    2201001
+#define REV_220    220
 #define REV_290    290
 #define REV_300    300
 #define REV_310    310
 
 #define INIT_DONE       0xabcd        // Initialization complete signature
+#define T(s)            F(s)          // Move text string to the flash segment
 
 /*
  * Three way Serial Port
@@ -89,7 +90,7 @@ extern const char* names[];
 extern const char to_hex[];
 extern bool  face_strike;
 extern bool  is_trace;                // True if tracing is enabled 
-extern const char* nesw;              // Cardinal Points
+extern const char nesw[];             // Cardinal Points
 
 /*
  *  Factory settings via Arduino monitor
@@ -101,4 +102,5 @@ extern const char* nesw;              // Cardinal Points
 #define SERIAL_NUMBER  {"NAME_ID":1, "TRGT_1_RINGx10":1550, "SN":1234, "ECHO":2}
 #define LONG_TEST      {"SENSOR":231, "Z_OFFSET":5, "STEP_TIME":50, "STEP_COUNT":0, "NORTH_X":0, "NORTH_Y":0, "EAST_X":0, "EAST_Y":0, "SOUTH_X":0, "SOUTH_Y":0, "WEST_X":0, "WEST_Y":0, "LED_BRIGHT":50, "NAME_ID":0, "ECHO":9}
 */
+
 #endif

@@ -1,3 +1,4 @@
+
 /*----------------------------------------------------------------
  * 
  * freETarget        
@@ -30,7 +31,7 @@ const char* names[] = { "TARGET",                                               
                         "ODIN",   "WODEN",   "THOR",   "BALDAR",                                                            // 26
                         0};
                   
-const char* nesw = "NESW";                    // Cardinal Points
+const char nesw[]   = "NESW";                  // Cardinal Points
 const char to_hex[] = "0123456789ABCDEF";      // Quick Hex to ASCII
 
 static long tabata(bool reset_time, bool reset_cycles); // Tabata state machine
@@ -70,7 +71,7 @@ void setup(void)
       break;
 
     case 0x0f:
-      factory_nonvol();                     // Force a factory nonvol reset
+      factory_nonvol(false);                // Force a factory nonvol reset
       break;
 
     default:
@@ -100,7 +101,7 @@ void setup(void)
   while ( (POST_counters() == false)      // If the timers fail
               && !is_trace)               // and not in trace mode (DIAG jumper installed)
   {
-    Serial.print("\r\nPOST_2 Failed\r\n");// Blink the LEDs
+    Serial.print(T("\r\nPOST_2 Failed\r\n"));// Blink the LEDs
     blink_fault(POST_COUNT_FAILED);       // and try again
   }
   POST_trip_point();                      // Show the trip point
@@ -178,12 +179,7 @@ void loop()
     {
       set_trip_point(0);             // Are we calibrating?
     }
-    
-    if ( json_test != 0 )
-    {
-      self_test(json_test);           // Run the self test
-    }
-    
+
     state = ARM;                      // Carry on to the target
     
     break;
@@ -204,7 +200,7 @@ void loop()
     { 
       if ( is_trace )
       {
-        Serial.print("\r\n\nWaiting...");
+        Serial.print(T("\r\n\nWaiting..."));
       }
       set_LED(SHOT_READY);   
       state = WAIT;             // Fall through to WAIT
@@ -215,25 +211,25 @@ void loop()
       {
         if ( sensor_status & TRIP_NORTH  )
         {
-          Serial.print("\r\n{ \"Fault\": \"NORTH\" }");
+          Serial.print(T("\r\n{ \"Fault\": \"NORTH\" }"));
           set_LED(NORTH_FAILED);           // Fault code North
           delay(ONE_SECOND);
         }
         if ( sensor_status & TRIP_EAST  )
         {
-          Serial.print("\r\n{ \"Fault\": \"EAST\" }");
+          Serial.print(T("\r\n{ \"Fault\": \"EAST\" }"));
           set_LED(EAST_FAILED);           // Fault code East
           delay(ONE_SECOND);
         }
         if ( sensor_status & TRIP_SOUTH )
         {
-          Serial.print("\r\n{ \"Fault\": \"SOUTH\" }");
+          Serial.print(T("\r\n{ \"Fault\": \"SOUTH\" }"));
           set_LED(SOUTH_FAILED);         // Fault code South
           delay(ONE_SECOND);
         }
         if ( sensor_status & TRIP_WEST )
         {
-          Serial.print("\r\n{ \"Fault\": \"WEST\" }");
+          Serial.print(T("\r\n{ \"Fault\": \"WEST\" }"));
           set_LED(WEST_FAILED);         // Fault code West
           delay(ONE_SECOND);
         }
@@ -287,9 +283,9 @@ void loop()
   case REDUCE:   
     if ( is_trace )
     {
-      Serial.print("\r\nTrigger: "); 
+      Serial.print(T("\r\nTrigger: ")); 
       show_sensor_status(sensor_status);
-      Serial.print("\r\nReducing...");
+      Serial.print(T("\r\nReducing..."));
     }
     set_LED(L('*', '*', '*'));                   // Light All
     location = compute_hit(sensor_status, &record, false);
@@ -334,7 +330,7 @@ void loop()
     
     if ( is_trace )
     {
-      Serial.print("\r\nFace Strike...\r\n");
+      Serial.print(T("\r\nFace Strike...\r\n"));
     } 
 
     face_strike = false;
@@ -387,7 +383,7 @@ static uint16_t tabata_cycles;
 #define TABATA_DONE_OFF     4
 #define TABATA_DONE_ON      5
 
-#define TABATA_BLINK        1         // Warning blink
+#define TABATA_BLINK        10         // Warning blink 10 x 10ms = 1 second
 
 static uint16_t tabata_state = TABATA_IDLE;
 
@@ -404,7 +400,7 @@ static long tabata
     return 0;                         // Invalid time
   }
 
-  now = millis()/1000;
+  now = millis()/100;
   
 /*
  * Reset the variables based on the arguements
@@ -427,7 +423,7 @@ static long tabata
   switch (tabata_state)
   {
     case (TABATA_IDLE):                 // OFF, wait for the time to expire
-      if ( (now - tabata_time) > json_tabata_rest )
+      if ( (now - tabata_time)/10 > json_tabata_rest )
       {
         tabata_state = TABATA_WARNING;
         tabata_time = now;;

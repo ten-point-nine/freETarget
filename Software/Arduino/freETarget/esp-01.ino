@@ -1,4 +1,3 @@
-
 /*----------------------------------------------------------------
  *
  * esp-01.ino
@@ -87,7 +86,7 @@ void esp01_init(void)
 {
   if ( is_trace )
   {
-    Serial.print("\r\nInitializing ESP-01");
+    Serial.print(T("\r\nInitializing ESP-01"));
   }
   
 /*
@@ -97,13 +96,13 @@ void esp01_init(void)
   {
     if ( is_trace ) 
     {
-      Serial.print("\r\nESP-01 Not Found");
+      Serial.print(T("\r\nESP-01 Not Found"));
     }
     return;                                     // No hardware installed, nothing to do
   }
   if ( is_trace )
   {
-    Serial.print("\r\nESP-01 Present");
+    Serial.print(T("\r\nESP-01 Present"));
   }
 
   esp01_restart();
@@ -113,64 +112,64 @@ void esp01_init(void)
 /*
  * There is an ESP-01 on the freETarget.  We need to program it
  */
-  WIFI_SERIAL.print("ATE0\r\n");                   // Turn off echo (don't use it)
+  WIFI_SERIAL.print(T("ATE0\r\n"));                   // Turn off echo (don't use it)
   if ( (esp01_waitOK() == false) && is_trace )
   {
-    Serial.print("\r\nESP-01: Failed ATE0");
+    Serial.print(T("\r\nESP-01: Failed ATE0"));
   }
   
-  WIFI_SERIAL.print("AT+RFPOWER=80\r\n");          // Set almost max power
+  WIFI_SERIAL.print(T("AT+RFPOWER=80\r\n"));          // Set almost max power
   if ( (esp01_waitOK() == false) && ( is_trace ) )
   {
-    Serial.print("\r\nESP-01: Failed AT+RFPOWER=80");  
+    Serial.print(T("\r\nESP-01: Failed AT+RFPOWER=80"));  
   } 
 
-  WIFI_SERIAL.print("AT+CWMODE_DEF=2\r\n");        // We want to be an access point
+  WIFI_SERIAL.print(T("AT+CWMODE_DEF=2\r\n"));        // We want to be an access point
   if ( (esp01_waitOK() == false) && (is_trace) )
   {
-    Serial.print("\r\nESP-01: Failed AT+CWMODE_DEF=2");
+    Serial.print(T("\r\nESP-01: Failed AT+CWMODE_DEF=2"));
   }
  
-  WIFI_SERIAL.print("AT+CWSAP_DEF="); WIFI_SERIAL.print("\"FET-"); WIFI_SERIAL.print(names[json_name_id]); WIFI_SERIAL.print("\",\"NA\",5,0\r\n");
+  WIFI_SERIAL.print(T("AT+CWSAP_DEF=\"FET-")); WIFI_SERIAL.print(names[json_name_id]); WIFI_SERIAL.print(T("\",\"NA\",5,0\r\n"));
   if ( (esp01_waitOK() == false) && (is_trace) )
   {
-    Serial.print("\r\nESP-01: AT+CWSAP_DEF=FET-"); Serial.print(names[json_name_id]);
+    Serial.print(T("\r\nESP-01: AT+CWSAP_DEF=\"FET-")); Serial.print(names[json_name_id]); Serial.print(T("\",\"NA\",5,0\r\n"));
   }  
  
-  WIFI_SERIAL.print("AT+CWDHCP_DEF=0,1\r\n");      // DHCP turned on
+  WIFI_SERIAL.print(T("AT+CWDHCP_DEF=0,1\r\n"));      // DHCP turned on
   if ( (esp01_waitOK() == false) && (is_trace) )
   {
-    Serial.print("\r\nESP-01: Failed AT+CWDHCP_DEF=0,1");
+    Serial.print(T("\r\nESP-01: Failed AT+CWDHCP_DEF=0,1"));
   }
   
-  WIFI_SERIAL.print("AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\"\r\n"); // Set the freETarget IP to 192.168.10.9
+  WIFI_SERIAL.print(T("AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\"\r\n")); // Set the freETarget IP to 192.168.10.9
   if ( (esp01_waitOK() == false) && (is_trace) )
   {
-    Serial.print("\r\nESP-01: Failed AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\"");
+    Serial.print(T("\r\nESP-01: Failed AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\""));
   }
 
-  WIFI_SERIAL.print("AT+CWDHCPS_DEF=1,2800,\"192.168.10.0\",\"192.168.10.8\"\r\n");          // Set the PC IP to 192.168.10.0.  Lease Time 2800 minutes
+  WIFI_SERIAL.print(T("AT+CWDHCPS_DEF=1,2800,\"192.168.10.0\",\"192.168.10.8\"\r\n"));          // Set the PC IP to 192.168.10.0.  Lease Time 2800 minutes
   if ( (esp01_waitOK() == false) && (is_trace) )
   {
-    Serial.print("\r\nESP-01: Failed AT+CWDHCPS_DEF=1,2800,\"192.168.10.0\",\"192.168.10.8\"");
+    Serial.print(T("\r\nESP-01: Failed AT+CWDHCPS_DEF=1,2800,\"192.168.10.0\",\"192.168.10.8\""));
   }
     
-  WIFI_SERIAL.print("AT+CIPMUX=1\r\n");           // Allow a single connection
+  WIFI_SERIAL.print(T("AT+CIPMUX=1\r\n"));           // Allow a single connection
   if ( (esp01_waitOK() == false) && (is_trace) )
   {
-    Serial.print("\r\nESP-01: Failed AT+CIPMUX=1");
+    Serial.print(T("\r\nESP-01: Failed AT+CIPMUX=1"));
   }
   
-  WIFI_SERIAL.print("AT+CIPSERVER=1,1090\r\n");   // Turn on the server and listen on port 1090
+  WIFI_SERIAL.print(T("AT+CIPSERVER=1,1090\r\n"));   // Turn on the server and listen on port 1090
   if ( (esp01_waitOK() == false) && (is_trace) )
   {
-    Serial.print("\r\nESP-01: Failed AT+CIPSERVER=1,1090");
+    Serial.print(T("\r\nESP-01: Failed AT+CIPSERVER=1,1090"));
   }
   
-  WIFI_SERIAL.print("AT+CIPSTO=7000\r\n");        // Set the server time out
+  WIFI_SERIAL.print(T("AT+CIPSTO=7000\r\n"));        // Set the server time out
   if ( (esp01_waitOK() == false) && (is_trace) )
   {
-    Serial.print("\r\nESP-01: Failed AT+CIPSTO=7000");
+    Serial.print(T("\r\nESP-01: Failed AT+CIPSTO=7000"));
   }
   
 /*
@@ -178,7 +177,7 @@ void esp01_init(void)
  */
   if ( is_trace )
   {
-    Serial.print("\r\nESP-01 Initialization complete");
+    Serial.print(T("\r\nESP-01 Initialization complete"));
   }
   return;
 }
@@ -214,9 +213,9 @@ bool esp01_restart(void)
 /*
  * Send out the break then restart the module
  */
-  WIFI_SERIAL.print("+++");
+  WIFI_SERIAL.print(T("+++"));
   delay(ONE_SECOND);
-  WIFI_SERIAL.print("AT+RST\r\n");
+  WIFI_SERIAL.print(T("AT+RST\r\n"));
 
 /*
  * All done, 
@@ -266,7 +265,7 @@ bool esp01_is_present(void)
   
   esp01_flush();                          // Eat any garbage that might be on the port
 
-  WIFI_SERIAL.print("AT\r\n");            // Send out an AT command to the port
+  WIFI_SERIAL.print(T("AT\r\n"));            // Send out an AT command to the port
   esp01_present = esp01_waitOK();         // and wait for the OK to come back
 
 /*
@@ -589,8 +588,8 @@ bool esp01_send
           {
             break;
           }
-          WIFI_SERIAL.print("+++");                        // Command not acted on
-          Serial.print("  missed:"); Serial.print(str); Serial.print(":");Serial.print(index);
+          WIFI_SERIAL.print(T("+++"));                        // Command not acted on
+          Serial.print(T("  missed:")); Serial.print(str); Serial.print(T(":"));Serial.print(index);
           delay(ONE_SECOND + (ONE_SECOND/10));            // Go into AT command mode
         }
         if ( send_state[index] == SEND_READY )

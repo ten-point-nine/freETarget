@@ -63,7 +63,7 @@ void set_LED_PWM_now
   
   if ( is_trace )
   {
-    Serial.print("\r\nnew_LED_percent:"); Serial.print(new_LED_percent); Serial.print("  old_LED_percent:"); Serial.print(old_LED_percent);
+    Serial.print(T("\r\nnew_LED_percent:")); Serial.print(new_LED_percent); Serial.print(T("  old_LED_percent:")); Serial.print(old_LED_percent);
   }
 
   old_LED_percent = new_LED_percent;
@@ -85,7 +85,7 @@ void set_LED_PWM                                  // Theatre lighting
   
   if ( is_trace )
   {
-    Serial.print("\r\nnew_LED_percent:"); Serial.print(new_LED_percent); Serial.print("  old_LED_percent:"); Serial.print(old_LED_percent);
+    Serial.print(T("\r\nnew_LED_percent:")); Serial.print(new_LED_percent); Serial.print(T("  old_LED_percent:")); Serial.print(old_LED_percent);
   }
   
   while ( new_LED_percent != old_LED_percent )  // Change in the brightness level?
@@ -150,7 +150,7 @@ unsigned int read_reference(void)
  *  
  *--------------------------------------------------------------*/
 //                                 0      1  2  3     4     5  6      7    8  9   A     B      C   D   E   F
-static unsigned int version[] = {REV_210, 1, 2, 3, REV_300, 5, 6, REV_220, 8, 9, 10, REV_310, 12, 13, 14, 15};
+const static unsigned int version[] = {REV_210, 1, 2, 3, REV_300, 5, 6, REV_220, 8, 9, 10, REV_310, 12, 13, 14, 15};
   
 unsigned int revision(void)
 {
@@ -201,46 +201,6 @@ uint16_t max_analog(void)
 
   return return_value;
   
-}
-/*----------------------------------------------------------------
- * 
- * function: cal_analog
- * 
- * brief: Use the Pots to calibrate the analog input threshold
- * 
- * return: None
- * 
- *---------------------------------------------------------------
- *
- * The analog inputs are sampled, and the LED display is used to
- * show trip voltage in 250 mv increments.
- * 
- *--------------------------------------------------------------*/
-#define THRESHOLD 10            // Accept an input +/- 20 steps
-
-void cal_analog(void)
-{
-  uint16_t reference;
-  uint16_t steps;
-  
-  show_analog(0);
-  reference = analogRead(V_REFERENCE);
-
-  steps = 1000.0 * TO_VOLTS(reference - max_analog()) / 250.0;
-  
-  Serial.println(); Serial.print(steps); Serial.print("  ");
-
-  if ( steps > 7 )
-    {
-     steps = 0;
-    }
-  set_LED(steps & 4, steps & 2, steps & 1);
-
-/*
- * All done, return
- */
-  return;
-
 }
 
 /*----------------------------------------------------------------

@@ -19,7 +19,6 @@ int     json_sensor_angle;          // Angle sensors are rotated through
 int     json_paper_time = 0;        // Time paper motor is applied
 int     json_echo;                  // Test String 
 double  json_d_echo;                // Test String
-int     json_test;                  // Self test to be performed
 int     json_calibre_x10;           // Pellet Calibre
 int     json_north_x;               // North Adjustment
 int     json_north_y;
@@ -45,8 +44,6 @@ int     json_tabata_on;             // Tabata ON timer
 int     json_tabata_rest;           // Tabata resting timer
 int     json_tabata_cycles;         // Number of Tabata cycles
 
-int     temp;                       // Temporary variable
-
 #define JSON_DEBUG false                    // TRUE to echo DEBUG messages
 
        void show_echo(int v);               // Display the current settings
@@ -59,7 +56,7 @@ static void set_trace(int v);               // Set the trace on and off
 
   
 const json_message JSON[] = {
-//    token                 value stored in RAM     double stored in RAM         type     service fcn()     NONVOL location      Initial Value
+//    token                 value stored in RAM     double stored in RAM        convert    service fcn()     NONVOL location      Initial Value
   {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT16,  0,                NONVOL_SENSOR_ANGLE,    45 },    // Locate the sensor angles
   {"\"CAL\":",            0,                                 0,                IS_VOID,   &set_trip_point,                  0,       0 },    // Enter calibration mode
   {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT16,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
@@ -81,7 +78,7 @@ const json_message JSON[] = {
   {"\"TABATA_REST\":",    &json_tabata_rest,                 0,                IS_INT16,  0,                NONVOL_TABATA_REST,      0 },    // Time that the LEDs are OFF for a Tabata timer
   {"\"TABATA_ON\":",      &json_tabata_on,                   0,                IS_INT16,  0,                NONVOL_TABATA_ON,        0 },    // Time that the LEDs are ON for a Tabata timer
   {"\"TARGET_TYPE\":",    &json_target_type,                 0,                IS_INT16,  0,                NONVOL_TARGET_TYPE,      0 },    // Marify shot location (0 == Single Bull)
-  {"\"TEST\":",           &json_test,                        0,                IS_INT16,  &show_test,       NONVOL_TEST_MODE,        0 },    // Execute a self test
+  {"\"TEST\":",           0,                                 0,                IS_INT16,  &show_test,       NONVOL_TEST_MODE,        0 },    // Execute a self test
   {"\"TRACE\":",          0,                                 0,                IS_INT16,  &set_trace,                      0,        0 },    // Enter / exit diagnostic trace
 /*  
   {"\"TRGT_1_RINGx10\":", &json_1_ring_x10,                  0,                IS_INT16,  0,                NONVOL_1_RINGx10,     1555 },    // Enter the 1 ring diamater (mm x 10)
@@ -262,15 +259,15 @@ bool    return_value;
  */
   if ( not_found == true )
   {
-    Serial.print("\r\n\r\nCannot decode: {"); Serial.print(input_JSON); Serial.print("}. Use"); 
+    Serial.print(T("\r\n\r\nCannot decode: {")); Serial.print(input_JSON); Serial.print(T("}. Use")); 
     j = 0;    
     while ( JSON[j].token != 0 ) 
     {
-      Serial.print("\r\n"); Serial.print(JSON[j].token);
+      Serial.print(T("\r\n")); Serial.print(JSON[j].token);
       j++;
       if ( (j%4) == 0 ) 
       {
-        Serial.print("\r\n");
+        Serial.print(T("\r\n"));
       }
     }
   }
@@ -434,15 +431,15 @@ static void show_names(int v)
     return;
   }
   
-  Serial.print("\r\n{\r\n");
+  Serial.print(T("\r\nNames\r\n"));
   
   i=0;
   while (names[i] != 0 )
   {
-    Serial.print("\"NAME_"); Serial.print(i); Serial.print("\": \"");  Serial.print(names[i]); Serial.print("\", \r\n");
+    Serial.print(i); Serial.print(T(": \""));  Serial.print(names[i]); Serial.print(T("\", \r\n"));
     i++;
   }
-  Serial.print("}\r\n");
+
 /*
  *  All done, return
  */
@@ -461,7 +458,7 @@ static void show_names(int v)
 
 static void show_test(int test_number)
  {
-  Serial.print("\r\nSelf Test:"); Serial.print(test_number); Serial.print("\r\n");
+  Serial.print(T("\r\nSelf Test:")); Serial.print(test_number); Serial.print(T("\r\n"));
   
   self_test(test_number);
   return;

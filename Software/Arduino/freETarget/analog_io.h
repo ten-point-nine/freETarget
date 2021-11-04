@@ -8,7 +8,6 @@
 void init_analog_io(void);          // Setup the analog hardware
 unsigned int read_reference(void);  // Read the feedback channel
 void show_analog(int v);            // Display the analog values
-void cal_analog(void);              // Calibrate the analog threshold
 double temperature_C(void);         // Temperature in degrees C
 unsigned int revision(void);        // Return the board revision
 void set_LED_PWM(int percent);      // Ramp the PWM duty cycle
@@ -34,4 +33,3 @@ void set_LED_PWM_now(int percent);  // Set the PWM duty cycle
 #define TEMP_IC   (0x9E >> 1)
 
 #endif
-

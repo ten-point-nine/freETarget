@@ -63,82 +63,76 @@ void self_test(uint16_t test)
  */
   switch (test)
   {
-      json_test = 0;                            // Force to 0 
-      EEPROM.put(NONVOL_TEST_MODE, json_test);  // and fall through
-      break;
-
 /*
  * Test 0, Display the help
  */
     default:                // Undefined, show the tests
     case T_HELP:                
-      Serial.print("\r\n 1 - Digital inputs");
-      Serial.print("\r\n 2 - Counter values (external trigger)");
+      Serial.print(T("\r\n 1 - Digital inputs"));
+      Serial.print(T("\r\n 2 - Counter values (external trigger)"));
       if ( revision() >= REV_220 )
       {
-        Serial.print("\r\n 3 - Counter values (internal trigger)");
+        Serial.print(T("\r\n 3 - Counter values (internal trigger)"));
       }
-      Serial.print("\r\n 4 - Oscilloscope");
-      Serial.print("\r\n 5 - Oscilloscope (PC)");
-      Serial.print("\r\n 6 - Advance paper backer");
-      Serial.print("\r\n 7 - Spiral Unit Test");
-      Serial.print("\r\n 8 - Grid calibration pattern");
-      Serial.print("\r\n 9 - One time calibration pattern");
-      Serial.print("\r\n 8 - Grid calibration pattern");
+      Serial.print(T("\r\n 4 - Oscilloscope"));
+      Serial.print(T("\r\n 5 - Oscilloscope (PC)"));
+      Serial.print(T("\r\n 6 - Advance paper backer"));
+      Serial.print(T("\r\n 7 - Spiral Unit Test"));
+      Serial.print(T("\r\n 8 - Grid calibration pattern"));
+      Serial.print(T("\r\n 9 - One time calibration pattern"));
+      Serial.print(T("\r\n 8 - Grid calibration pattern"));
       if ( revision() >= REV_220 )
       {
-        Serial.print("\r\n 10 - Aux port passthrough");
+        Serial.print(T("\r\n 10 - Aux port passthrough"));
       }
-      Serial.print("\r\n11 - Set detection trip point"); 
-      Serial.print("\r\n12 - Transfer loopback");
-      Serial.print("\r\n13 - Serial port test");
-      Serial.print("\r\n14 - LED brightness test");
-      Serial.print("\r\n15 - Face strike test");
-      Serial.print("\r\n");
+      Serial.print(T("\r\n11 - Calibrate")); 
+      Serial.print(T("\r\n12 - Transfer loopback"));
+      Serial.print(T("\r\n13 - Serial port test"));
+      Serial.print(T("\r\n14 - LED brightness test"));
+      Serial.print(T("\r\n15 - Face strike test"));
+      Serial.print(T("\r\n"));
       break;
 
 /*
  * Test 1, Display GPIO inputs
  */
     case T_DIGITAL: 
-      Serial.print("\r\nTime:");                      Serial.print(micros()/1000000); Serial.print("."); Serial.print(micros()%1000000); Serial.print("s");
-      Serial.print("\r\nBD Rev:");                    Serial.print(revision());       
-      Serial.print("\r\nDIP: 0x");                    Serial.print(read_DIP(), HEX); 
+      Serial.print(T("\r\nTime:"));                      Serial.print(micros()/1000000); Serial.print("."); Serial.print(micros()%1000000); Serial.print(T("s"));
+      Serial.print(T("\r\nBD Rev:"));                    Serial.print(revision());       
+      Serial.print(T("\r\nDIP: 0x"));                    Serial.print(read_DIP(), HEX); 
       digitalWrite(STOP_N, 0);
       digitalWrite(STOP_N, 1);                        // Reset the fun flip flop
-      Serial.print("\r\nRUN FlipFlop: 0x");           Serial.print(is_running(), HEX);   
-      Serial.print("\r\nTemperature: ");              Serial.print(temperature_C());  Serial.print("'C ");
-      Serial.print(speed_of_sound(temperature_C(), RH_50));  Serial.print("mm/us");
-      Serial.print("\r\nV_REF: ");                    Serial.print(volts); Serial.print(" Volts");
-      Serial.print("\r\n");
+      Serial.print(T("\r\nRUN FlipFlop: 0x"));           Serial.print(is_running(), HEX);   
+      Serial.print(T("\r\nTemperature: "));              Serial.print(temperature_C());  Serial.print(T("'C "));
+      Serial.print(speed_of_sound(temperature_C(), RH_50));  Serial.print(T("mm/us"));
+      Serial.print(T("\r\nV_REF: "));                    Serial.print(volts); Serial.print(T(" Volts"));
+      Serial.print(T("\r\n"));
       POST_LEDs();
-      json_test = T_HELP;               // and stop the test
       break;
 
 /*
  * Test 2, 3, Test the timing circuit
  */
     case T_TRIGGER:                       // Show the timer values (Wait for analog input)
-      Serial.print("\r\nWaiting for Trigger\r\n");
+      Serial.print(T("\r\nWaiting for Trigger\r\n"));
     case T_CLOCK:                        // Show the timer values (Trigger input)
       stop_counters();
       arm_counters();
 
       set_LED(L('*', '-', '-'));
       
-      if ( json_test == T_CLOCK )
+      if ( test == T_CLOCK )
       {
         if ( revision() >= REV_220 )  
         {
           random_delay = random(1, 6000);   // Pick a random delay time in us
-          Serial.print("\r\nRandom clock test: "); Serial.print(random_delay); Serial.print("us. All outputs must be the same. ");
+          Serial.print(T("\r\nRandom clock test: ")); Serial.print(random_delay); Serial.print(T("us. All outputs must be the same. "));
           trip_counters();
           delayMicroseconds(random_delay);  // Delay a random time
         }
         else
         {
-          Serial.print("\r\nThis test not supported on this hardware revision");
-          json_test = 0;
+          Serial.print(T("\r\nThis test not supported on this hardware revision"));
           break;
         }
       }
@@ -153,7 +147,7 @@ void self_test(uint16_t test)
       timer_value[E] = read_counter(E);
       timer_value[S] = read_counter(S);
       timer_value[W] = read_counter(W); // Read the counters
-      if ( json_test == T_CLOCK )       // Test the results
+      if ( test == T_CLOCK )       // Test the results
       {
         sample = timer_value[N];
         pass = true;
@@ -168,11 +162,11 @@ void self_test(uint16_t test)
 
         if ( pass == true )
         {
-          Serial.print(" PASS\r\n");
+          Serial.print(T(" PASS\r\n"));
         }
         else
         {
-          Serial.print(" FAIL\r\n");
+          Serial.print(T(" FAIL\r\n"));
         }
       }
       send_timer(sensor_status);
@@ -196,38 +190,34 @@ void self_test(uint16_t test)
  * Test 6, Advance the paper
  */
     case T_PAPER: 
-      Serial.print("\r\nAdvanciing backer paper "); Serial.print(((json_paper_time) + (json_step_time)) * 10); Serial.print(" ms  ");Serial.print(json_step_count); Serial.print(" steps");
+      Serial.print(T("\r\nAdvancing backer paper ")); Serial.print(((json_paper_time) + (json_step_time)) * 10); Serial.print(T(" ms  ")); Serial.print(json_step_count); Serial.print(T(" steps"));
       drive_paper();
-      Serial.print("\r\nDone");
-      json_test = T_HELP;
+      Serial.print(T("\r\nDone"));
       break;
 
 /*
  * Test 7, 8, 9, Generate test pattern for diagnosing software problems
  */
     case T_SPIRAL: 
-      Serial.print("\r\nSpiral Calculation\r\n");
+      Serial.print(T("\r\nSpiral Calculation\r\n"));
       unit_test( T_SPIRAL );            // Generate a spiral
-      json_test = T_HELP;               // and stop the test
       break;
 
     case T_GRID:
-      Serial.print("\r\nGrid Calculation\r\n");
+      Serial.print(T("\r\nGrid Calculation\r\n"));
       unit_test( T_GRID);               // Generate a grid
-      json_test = T_HELP;               // and stop the test
       break;  
       
     case T_ONCE:
-      Serial.print("\r\nSingle Calculation\r\n");
+      Serial.print(T("\r\nSingle Calculation\r\n"));
       unit_test( T_ONCE);               // Generate a SINGLE calculation
-      json_test = T_HELP;               // and stop the test
       break;
 
 /*
  * Test 10, Test the pass through connector
  */
     case T_PASS_THRU:
-      Serial.print("\r\nPass through active.  Cycle power to exit\r\n");
+      Serial.print(T("\r\nPass through active.  Cycle power to exit\r\n"));
       while (1)
       {
         if ( Serial.available() )
@@ -246,24 +236,22 @@ void self_test(uint16_t test)
  */
     case T_SET_TRIP:
       set_trip_point(0);          // Stay in the trip point loop
-      json_test = T_HELP;
       break;
 
 /*
  * Test 13
  */
     case T_SERIAL_PORT:
-      Serial.print("\r\nArduino Serial Port: Hello World\r\n");
-      AUX_SERIAL.print("\r\nAux Serial Port: Hello World\r\n");
-      DISPLAY_SERIAL.print("\r\nDisplay Serial Port: Hello World\r\n");
-      json_test = T_HELP;
+      Serial.print(T("\r\nArduino Serial Port: Hello World\r\n"));
+      AUX_SERIAL.print(T("\r\nAux Serial Port: Hello World\r\n"));
+      DISPLAY_SERIAL.print(T("\r\nDisplay Serial Port: Hello World\r\n"));
       break;
 
 /* 
  *  Test 14
  */
     case T_LED:
-      Serial.print("\r\nRamping the LED");
+      Serial.print(T("\r\nRamping the LED"));
       for (i=0; i != 256; i++)
       {
         analogWrite(LED_PWM, i);
@@ -275,15 +263,14 @@ void self_test(uint16_t test)
         delay(ONE_SECOND/50);
       }
       analogWrite(LED_PWM, 0);
-      Serial.print(" Done\r\n");
-      json_test = T_HELP;
+      Serial.print(T(" Done\r\n"));
       break;
 
  /*
   * Test 15
   */
     case T_FACE:
-      Serial.print("\r\nFace strike test");
+      Serial.print(T("\r\nFace strike test"));
       enable_interrupt(1);
       face_strike = 0;
       EEPROM.put(NONVOL_TEST_MODE, T_HELP);     // Stop the test on the next boot cycle
@@ -292,7 +279,7 @@ void self_test(uint16_t test)
         if ( face_strike != 0 )
         {
           set_LED(L('*', '*', '*'));           // If something comes in, turn on all of the LEDs 
-          Serial.print("\n\rStrike");
+          Serial.print(T("\n\rStrike"));
           delay(ONE_SECOND/4);
           face_strike = 0;
           enable_interrupt(1);
@@ -310,10 +297,6 @@ void self_test(uint16_t test)
  /* 
   *  All done, return;
   */
-    if ( json_test == T_HELP )
-    {
-      EEPROM.put(NONVOL_TEST_MODE, T_HELP);     // Stop the test on the next boot cycle
-    }
     return;
 }
 
@@ -401,7 +384,7 @@ void self_test(uint16_t test)
  {
   if ( is_trace )
   {
-    Serial.print("\r\nPOST LEDs");
+    Serial.print(T("\r\nPOST LEDs"));
   }
 
   set_LED(L('*', '.', '.'));
@@ -461,7 +444,7 @@ void self_test(uint16_t test)
   
   if ( is_trace )
   {
-    Serial.print("\r\nPOST counters");
+    Serial.print(T("\r\nPOST counters"));
   }
 
   test_passed = true;                 // And assume that it will pass
@@ -475,7 +458,7 @@ void self_test(uint16_t test)
   sensor_status = is_running();       // Remember all of the running timers
   if ( sensor_status != 0 )
   {
-    Serial.print("\r\nFailed Clock Test. Spurious trigger:"); show_sensor_status(sensor_status);
+    Serial.print(T("\r\nFailed Clock Test. Spurious trigger:")); show_sensor_status(sensor_status);
     return false;                     // No point in any more tests
   }
   
@@ -486,7 +469,7 @@ void self_test(uint16_t test)
   {
     if ( is_trace )
     {
-      Serial.print("\r\nCycle:"); Serial.print(i);
+      Serial.print(T("\r\nCycle:")); Serial.print(i);
     }
     
 /*
@@ -500,7 +483,7 @@ void self_test(uint16_t test)
     {
       if ( read_counter(j) != 0 )     // Make sure they stay at zero
       {
-        Serial.print("\r\nFailed Clock Test. Counter free running:"); Serial.print(nesw[j]);
+        Serial.print(T("\r\nFailed Clock Test. Counter free running:")); Serial.print(nesw[j]);
         test_passed =  false;         // return a failed test
       }   
     }
@@ -524,7 +507,7 @@ void self_test(uint16_t test)
     stop_counters();
     if ( sensor_status != 0x0F )      // The circuit was triggered but not all
     {                                 // FFs latched
-      Serial.print("\r\nFailed Clock Test. sensor_status:"); show_sensor_status(sensor_status);
+      Serial.print(T("\r\nFailed Clock Test. sensor_status:")); show_sensor_status(sensor_status);
       test_passed = false;
     }
 
@@ -537,7 +520,7 @@ void self_test(uint16_t test)
       x  = read_counter(j);
       if ( read_counter(j) != x )
       {
-        Serial.print("\r\nFailed Clock Test. Counter did not stop:"); Serial.print(nesw[j]); show_sensor_status(sensor_status);
+        Serial.print(T("\r\nFailed Clock Test. Counter did not stop:")); Serial.print(nesw[j]); show_sensor_status(sensor_status);
         test_passed = false;          // since there is delay  in
       }                               // Turning off the counters
  
@@ -552,14 +535,14 @@ void self_test(uint16_t test)
       
       if ( x > CLOCK_TEST_LIMIT )     // The time should be positive and within limits
       { 
-        Serial.print("\r\nFailed Clock Test. Counter:"); Serial.print(nesw[j]); Serial.print(" Is:"); Serial.print(read_counter(j)); Serial.print(" Should be:"); Serial.print(random_delay); Serial.print(" Delta:"); Serial.print(x);
+        Serial.print(T("\r\nFailed Clock Test. Counter:")); Serial.print(nesw[j]); Serial.print(T(" Is:")); Serial.print(read_counter(j)); Serial.print(T(" Should be:")); Serial.print(random_delay); Serial.print(T(" Delta:")); Serial.print(x);
         test_passed = false;          // since there is delay  in
       }                               // Turning off the counters
       else
       {
         if ( is_trace )
         {
-          Serial.print("\r\nClock Pass. Counter:"); Serial.print(nesw[j]); Serial.print(" Is:"); Serial.print(read_counter(j)); Serial.print(" Should be:"); Serial.print(random_delay); Serial.print(" Delta:"); Serial.print(x);
+          Serial.print(T("\r\nClock Pass. Counter:")); Serial.print(nesw[j]); Serial.print(T(" Is:")); Serial.print(read_counter(j)); Serial.print(T(" Should be:")); Serial.print(random_delay); Serial.print(T(" Delta:")); Serial.print(x);
         }
       }
     }
@@ -588,7 +571,7 @@ void self_test(uint16_t test)
  {
    if ( is_trace )
    {
-    Serial.print("\r\nPOST trip point");
+    Serial.print(T("\r\nPOST trip point"));
    }
    
    set_trip_point(20);              // Show the trip point once (20 cycles used for blinking values)
@@ -664,7 +647,7 @@ void set_trip_point
   
   if ( is_trace )                                           // Infinite number of passes?
   {
-    Serial.print("\r\nSetting trip point. Type ! of cycle power to exit\r\n");
+    Serial.print(T("\r\nSetting trip point. Type ! of cycle power to exit\r\n"));
   }
   blinky = 0;
   not_in_spec = true;                                       // Start off by assuming out of spec
@@ -704,7 +687,7 @@ void set_trip_point
     {                                                       // Blink the LEDs * - x - *
       if ( is_trace )
       {
-        Serial.print("\r\nOut Of Spec: "); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
+        Serial.print(T("\r\nOut Of Spec: ")); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
       }
       blink_fault(VREF_OVER_UNDER);
       pass_count = 0;                                       // Stay in this function forever
@@ -773,7 +756,7 @@ void set_trip_point
     switch (Serial.read())
     {
       case '!':                       // ! waiting in the serial port
-        Serial.print("\r\nExiting calibration\r\n");
+        Serial.print(T("\r\nExiting calibration\r\n"));
         return;
 
       case 'X':
@@ -791,8 +774,8 @@ void set_trip_point
 
    if ( stay_forever )
    {
-      Serial.print("\r\nV_Ref: "); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
       show_sensor_status(is_running());
+      Serial.print(T("\n\r"));
    }
    else
    {
@@ -896,7 +879,7 @@ void show_analog(int v)
     o_scope[max_input[i]] = nesw[i];
    }
   
-  Serial.print("{\"OSCOPE\": "); Serial.print(o_scope);  Serial.print("\"}\r\n");     // Display the trace as JSON
+  Serial.print(T("{\"OSCOPE\": ")); Serial.print(o_scope);  Serial.print(T("\"}\r\n"));     // Display the trace as JSON
 
  /*
   * All done.
@@ -925,7 +908,7 @@ static void show_analog_on_PC(int v)
 /*
  * Output as a scope trace
  */
-  Serial.print("\n{Ref:"); Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print("  ");
+  Serial.print(T("\n{Ref:")); Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print(T("  "));
   
    for (i=N; i != W + 1; i++)
   {
@@ -956,7 +939,7 @@ static void show_analog_on_PC(int v)
     
     Serial.print(o_scope);                        // Display this channel
   }
-  Serial.print("}");
+  Serial.print(T("}"));
 
  /*
   * All done.
@@ -1015,7 +998,6 @@ static void unit_test(unsigned int mode)
 /*
  * All done, return
  */
-  json_test = 0;          // Stop the test
   return;
 }
 
@@ -1067,7 +1049,7 @@ static bool sample_calculations
     timer_value[W] = RX(W, x, y);
     timer_value[W] -= 200;              // Inject an error into the West sensor
 
-    Serial.print("\r\nResult should be: ");   Serial.print("x:"); Serial.print(x); Serial.print(" y:"); Serial.print(y); Serial.print(" radius:"); Serial.print(radius); Serial.print(" angle:"); Serial.print(angle * 180.0d / PI);
+    Serial.print(T("\r\nResult should be: "));   Serial.print(T("x:")); Serial.print(x); Serial.print(T(" y:")); Serial.print(y); Serial.print(T(" radius:")); Serial.print(radius); Serial.print(T(" angle:")); Serial.print(angle * 180.0d / PI);
     break;
 
  /*
@@ -1140,12 +1122,12 @@ void show_sensor_status(unsigned int sensor_status)
 {
   unsigned int i;
   
-  Serial.print(" Latch:");
+  Serial.print(T(" Latch:"));
 
   for (i=N; i<=W; i++)
   {
     if ( sensor_status & (1<<i) )   Serial.print(nesw[i]);
-    else                            Serial.print(".");
+    else                            Serial.print(T("."));
   }
 
   Serial.print(" Timers:");
@@ -1153,16 +1135,17 @@ void show_sensor_status(unsigned int sensor_status)
   for (i=N; i<=W; i++)
   {
     if ( timer_value[i] != 0 )      Serial.print(nesw[i]);
-    else                            Serial.print(".");
+    else                            Serial.print(T("."));
   }
 
-  Serial.print(" Face Strike:");
-  Serial.print(face_strike);
-
+  Serial.print(T("  Face Strike:")); Serial.print(face_strike);
+  
+  Serial.print(T("  V_Ref:")); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
+  
   if ( ((sensor_status & 0x0f) == 0x0f)
     && (face_strike) )
   {
-    Serial.print(" PASS");
+    Serial.print(T(" PASS"));
   }    
 
 /*

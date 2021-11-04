@@ -12,8 +12,8 @@
 /*
  * Function Prototypes
  */
-void esp01_init(void);                            // Initialize the device
-bool esp01_restart(void);                         // Take control and reset the device
+void         esp01_init(void);                    // Initialize the device
+bool         esp01_restart(void);                 // Take control and reset the device
 
 char         esp01_read(void);                    // Read a character from the queuue
 unsigned int esp01_available(void);               // Return the number of available characters
