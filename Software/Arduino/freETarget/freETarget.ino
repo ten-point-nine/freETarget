@@ -47,9 +47,7 @@ static long tabata(bool reset_time, bool reset_cycles); // Tabata state machine
  *--------------------------------------------------------------*/
 
 void setup(void) 
-{
-  int i;
-    
+{    
 /*
  *  Setup the serial port
  */
@@ -383,7 +381,8 @@ static uint16_t tabata_cycles;
 #define TABATA_DONE_OFF     4
 #define TABATA_DONE_ON      5
 
-#define TABATA_BLINK        10         // Warning blink 10 x 10ms = 1 second
+#define TABATA_BLINK_ON    20         // Warning blink 20 x 100ms = 2 second
+#define TABATA_BLINK_OFF   20         // Warning blink 20 x 100ms = 1 second
 
 static uint16_t tabata_state = TABATA_IDLE;
 
@@ -423,7 +422,7 @@ static long tabata
   switch (tabata_state)
   {
     case (TABATA_IDLE):                 // OFF, wait for the time to expire
-      if ( (now - tabata_time)/10 > json_tabata_rest )
+      if ( (now - tabata_time)/10 > (json_tabata_rest - ((TABATA_BLINK_ON + TABATA_BLINK_OFF)/10)) )
       {
         tabata_state = TABATA_WARNING;
         tabata_time = now;;
@@ -433,7 +432,7 @@ static long tabata
       break;
         
    case (TABATA_WARNING):               // 1 second warning
-      if ( (now - tabata_time) > TABATA_BLINK )
+      if ( (now - tabata_time) > TABATA_BLINK_ON )
       {
         tabata_state = TABATA_DARK;
         tabata_time = now;
@@ -442,7 +441,7 @@ static long tabata
       break;
       
     case (TABATA_DARK):                 // 2 second dark
-      if ( (now - tabata_time) > TABATA_BLINK )
+      if ( (now - tabata_time) > TABATA_BLINK_OFF )
       {
         tabata_state = TABATA_ON;
         tabata_time = now;
@@ -471,7 +470,7 @@ static long tabata
    * We have run out of cycles.  Sit there and blink the LEDs
    */
   case (TABATA_DONE_OFF):                 //Finished.  Stop the game
-      if ( (now - tabata_time) > TABATA_BLINK )
+      if ( (now - tabata_time) > TABATA_BLINK_OFF )
       {
         tabata_state = TABATA_DONE_ON;
         tabata_time = now;
@@ -480,7 +479,7 @@ static long tabata
       break;
 
   case (TABATA_DONE_ON):                 //Finished.  Stop the game
-      if ( (now - tabata_time) > TABATA_BLINK )
+      if ( (now - tabata_time) > TABATA_BLINK_ON )
       {        
         tabata_state = TABATA_DONE_OFF;
         tabata_time = now;

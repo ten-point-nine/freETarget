@@ -509,13 +509,14 @@ void read_timers(void)
   {
     Serial.print(T("\r\nAdvancing paper "));
   }
-  
+
 /*
  * Drive the motor on and off for the number of cycles
  * at duration
  */
   for (i=0; i != s_count; i++)                    // Number of steps
   {
+    
    paper_on_off(true);                            // Turn the motor on
    
   if ( is_trace )
@@ -743,10 +744,43 @@ unsigned int multifunction_switch
       return;                           // Not used if in calibration mode
     }
         
+
+/*
+ * Look for the special case of both switches pressed
+ */
+  if ( DIP_SW_A && DIP_SW_B )             // Both pressed?
+  {
+    if ( json_tabata_on != 0 )            // Tabata ON?
+    {
+      json_tabata_on = 0;                 // Turn it Off
+    }
+    else                                  // Turn it ON
+    {
+      EEPROM.get(NONVOL_TABATA_ON, json_tabata_on);
+    }
+    while ( DIP_SW_A || DIP_SW_B )        // Wait for both switches released
+    {
+      if ( json_tabata_on != 0 )          // Flash three LEDs if enabled
+      {
+        set_LED(L('*', '.', '*'));
+        delay(ONE_SECOND/4);
+        set_LED(L('.', '*', '.'));
+        delay(ONE_SECOND/4);
+      }
+      else
+      {
+        set_LED(L('.', '.', '.'));        // Flash one LED if disabled
+        delay(ONE_SECOND/4);
+        set_LED(L('.', '*', '.'));
+        delay(ONE_SECOND/4);
+      }
+    }
+    return;                               // Bail out now
+  }
+  
 /*
  * Manage the GPIO based on the configuration
  */
- 
   switch (LO10(json_multifunction))
   {
     case PAPER_FEED:                      // The switch acts as paper feed control
@@ -833,24 +867,24 @@ static void sw_state
     )
 {
   unsigned long now;                      // Current time in seconds
-  now = millis() / 1000;
+  now = millis() / 100;
   
   if ( (fcn_state)() == 0 )              // Switch is open, do nothing
   {
-    *which_timer = now;                 // But remember the current time
+    *which_timer = now;                  // But remember the current time
     return;
   }
 
 /*
- * The switch is pressed for more than one second, carry out the action
+ * The switch is pressed for more than 1/2 second, carry out the action
  */
   set_LED_PWM(json_LED_PWM);            // Switch is pressed, turn on the LEDs
   tabata(true, true);                   // Reset the tabata counts
   
-  if ( (now - *which_timer) > 1 )       // Held for a second
+  if ( (now - *which_timer) > 5 )       // Held for 1/2 second
   {
-    while( (fcn_state)() != 0 )
-    (fcn_action)();                    // execute the function
+    (fcn_action)();                     // execute the function
+    delay(200);
   }
   return;
 }

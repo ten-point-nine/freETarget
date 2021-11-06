@@ -76,13 +76,10 @@ const json_message JSON[] = {
   {"\"STEP_TIME\":",      &json_step_time,                   0,                IS_INT16,  0,                NONVOL_STEP_TIME,        0 },    // Set the number of times stepper motor is stepped
   {"\"TABATA_CYCLES\":",  &json_tabata_cycles,               0,                IS_INT16,  0,                NONVOL_TABATA_CYCLES,    0 },    // Number of cycles to use for the Tabata timer
   {"\"TABATA_REST\":",    &json_tabata_rest,                 0,                IS_INT16,  0,                NONVOL_TABATA_REST,      0 },    // Time that the LEDs are OFF for a Tabata timer
-  {"\"TABATA_ON\":",      &json_tabata_on,                   0,                IS_INT16,  0,                NONVOL_TABATA_ON,        0 },    // Time that the LEDs are ON for a Tabata timer
+  {"\"TABATA_ON\":",      &json_tabata_on,                   0,                IS_INT16,  0,                NONVOL_TABATA_ON,        0 },    // Time that the LEDs are ON for a Tabata timer (1/10 seconds)
   {"\"TARGET_TYPE\":",    &json_target_type,                 0,                IS_INT16,  0,                NONVOL_TARGET_TYPE,      0 },    // Marify shot location (0 == Single Bull)
   {"\"TEST\":",           0,                                 0,                IS_INT16,  &show_test,       NONVOL_TEST_MODE,        0 },    // Execute a self test
   {"\"TRACE\":",          0,                                 0,                IS_INT16,  &set_trace,                      0,        0 },    // Enter / exit diagnostic trace
-/*  
-  {"\"TRGT_1_RINGx10\":", &json_1_ring_x10,                  0,                IS_INT16,  0,                NONVOL_1_RINGx10,     1555 },    // Enter the 1 ring diamater (mm x 10)
-*/
   {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_version,                   0,        0 },    // Return the version string
   {"\"Z_OFFSET\":",       &json_z_offset    ,                0,                IS_INT16,  0,                NONVOL_Z_OFFSET,         0 },    // Distance from paper to sensor plane (mm)
 
@@ -385,7 +382,7 @@ void show_echo(int v)
   sprintf(s, "\"TIMER_COUNT\":%d, \n\r", (int)(SHOT_TIME * OSCILLATOR_MHZ));              // Maximum number of clock cycles to record shot (target dependent)
   output_to_all(s);
 
-  sprintf(s, "\"DIP_HEX\": 0x%c, \n\r", to_hex[0x0F & read_DIP()]);                       // DIP switch status
+  sprintf(s, "\"DIP_HEX\": 0x0%c, \n\r", to_hex[0x0F & read_DIP()]);                      // DIP switch status
   output_to_all(s);
 
   sprintf(s, "\"WiFi\": %d, \n\r", esp01_is_present());                                 // TRUE if WiFi is available
