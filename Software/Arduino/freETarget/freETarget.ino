@@ -304,17 +304,12 @@ void loop()
  *  Wait here to make sure the RUN lines are no longer set
  */
   case WASTE:
-    if ( (json_tabata_on == 0)                  // No tabata time enabled
-      || (tabata(false, false) == 0) )          // Or outside of the tabata time
-    {                                           // Advance the paper and wait.
-      delay(ONE_SECOND/2);                      // Hang out for a second
-      if ( (json_paper_time + json_step_time) != 0 )  // Has the witness paper been enabled
+    if ( (json_paper_time + json_step_time) != 0 )  // Has the witness paper been enabled
+    {
+      if ( (json_paper_eco == 0)                   // ECO turned off
+        || ( sqrt(sq(record.x) + sq(record.y)) < json_paper_eco ) ) // And inside the black
       {
-        if ( (json_paper_eco == 0)                   // ECO turned off
-          || ( sqrt(sq(record.x) + sq(record.y)) < json_paper_eco ) ) // And inside the black
-        {
-          drive_paper();
-        }
+        drive_paper();
       }
     }
     state = SET_MODE;
@@ -393,13 +388,12 @@ static long tabata
   )
 {
   unsigned long now;                  // Current time in seconds
-  
-  if ( json_tabata_on == 0 )          // Exit if no cycles are enabled
-  {
-    return 0;                         // Invalid time
-  }
 
   now = millis()/100;
+  if ( json_tabata_on == 0 )          // Exit if no cycles are enabled
+  {
+    return now;                       // Just return the current time
+  }
   
 /*
  * Reset the variables based on the arguements
@@ -446,7 +440,10 @@ static long tabata
         tabata_state = TABATA_ON;
         tabata_time = now;
         set_LED_PWM_now(json_LED_PWM);           // Turn on the lights
-        
+        if ( is_trace )
+        {
+          Serial.print(T("\r\nTabata ON"));
+        }
       }
       break;
       
@@ -460,6 +457,10 @@ static long tabata
         else
         {
           tabata_state = TABATA_IDLE;
+          if ( is_trace )
+          {
+            Serial.print(T("\r\nTabata OFF"));
+          }
         }
         tabata_time = now;
         set_LED_PWM_now(0);           // Turn off the LEDs
