@@ -7,63 +7,55 @@
  * General purpose GPIO driver
  * 
  * ----------------------------------------------------*/
-#include "json.h"
-#include "analog_io.h"
-
-struct GPIO {
-  byte port;
-  byte in_or_out;
-  byte value;
-};
 
 const GPIO init_table[] = {
-  {D0,          INPUT_PULLUP, 0 },
-  {D1,          INPUT_PULLUP, 0 },
-  {D2,          INPUT_PULLUP, 0 },
-  {D3,          INPUT_PULLUP, 0 },
-  {D4,          INPUT_PULLUP, 0 },     
-  {D5,          INPUT_PULLUP, 0 },
-  {D6,          INPUT_PULLUP, 0 },
+  {D0,          "\"D0\":",       INPUT_PULLUP, 0 },
+  {D1,          "\"D1\":",       INPUT_PULLUP, 0 },
+  {D2,          "\"D2\":",       INPUT_PULLUP, 0 },
+  {D3,          "\"D3\":",       INPUT_PULLUP, 0 },
+  {D4,          "\"D4\":",       INPUT_PULLUP, 0 },     
+  {D5,          "\"D5\":",       INPUT_PULLUP, 0 },
+  {D6,          "\"D6\":",       INPUT_PULLUP, 0 },
 
-  {NORTH_HI,    OUTPUT, 1},
-  {NORTH_LO,    OUTPUT, 1},
-  {EAST_HI,     OUTPUT, 1},
-  {EAST_LO,     OUTPUT, 1},
-  {SOUTH_HI,    OUTPUT, 1},
-  {SOUTH_LO,    OUTPUT, 1},
-  {WEST_HI,     OUTPUT, 1},
-  {WEST_LO,     OUTPUT, 1},      
+  {NORTH_HI,    "\"N_HI\":",     OUTPUT, 1},
+  {NORTH_LO,    "\"N_LO\":",     OUTPUT, 1},
+  {EAST_HI,     "\"E_HI\":",     OUTPUT, 1},
+  {EAST_LO,     "\"E_LO\":",     OUTPUT, 1},
+  {SOUTH_HI,    "\"S_HI\":",     OUTPUT, 1},
+  {SOUTH_LO,    "\"S_LO\":",     OUTPUT, 1},
+  {WEST_HI,     "\"W_HI\":",     OUTPUT, 1},
+  {WEST_LO,     "\"W_LO\":",     OUTPUT, 1},      
         
-  {RUN_NORTH,   INPUT_PULLUP, 0},
-  {RUN_EAST,    INPUT_PULLUP, 0},
-  {RUN_SOUTH,   INPUT_PULLUP, 0},
-  {RUN_WEST,    INPUT_PULLUP, 0},     
+  {RUN_NORTH,   "\"RUN_N\":",    INPUT_PULLUP, 0},
+  {RUN_EAST,    "\"RUN_E\":",    INPUT_PULLUP, 0},
+  {RUN_SOUTH,   "\"RUN_S\":",    INPUT_PULLUP, 0},
+  {RUN_WEST,    "\"RUN_W\":",    INPUT_PULLUP, 0},     
 
-  {QUIET,       OUTPUT, 1},
-  {RCLK,        OUTPUT, 1},
-  {CLR_N,       OUTPUT, 1},
-  {STOP_N,      OUTPUT, 1},
-  {CLOCK_START, OUTPUT, 0},
+  {QUIET,       "\"QUIET\":",    OUTPUT, 1},
+  {RCLK,        "\"RCLK\":",     OUTPUT, 1},
+  {CLR_N,       "\"CLR_N\":",    OUTPUT, 1},
+  {STOP_N,      "\"STOP_N\":",   OUTPUT, 1},
+  {CLOCK_START, "\"CLK_ST\":",   OUTPUT, 0},
   
-  {DIP_0,       INPUT_PULLUP, 0},
-  {DIP_1,       INPUT_PULLUP, 0},
-  {DIP_2,       INPUT_PULLUP, 0},
-  {DIP_3,       INPUT_PULLUP, 0},  
+  {DIP_0,       "\"DIP_0\":",    INPUT_PULLUP, 0},
+  {DIP_1,       "\"DIP_1\":",    INPUT_PULLUP, 0},
+  {DIP_2,       "\"DIP_2\":",    INPUT_PULLUP, 0},
+  {DIP_3,       "\"DIP_3\":",    INPUT_PULLUP, 0},  
 
-  {LED_RDY,     OUTPUT, 1},
-  {LED_X,       OUTPUT, 1},
-  {LED_Y,       OUTPUT, 1},
+  {LED_RDY,     "\"RDY\":",      OUTPUT, 1},
+  {LED_X,       "\"X\":",        OUTPUT, 1},
+  {LED_Y,       "\"Y\":",        OUTPUT, 1},
 
-  {LED_PWM,     OUTPUT, 0},
-  {RTS_U,       OUTPUT, 1},
-  {CTS_U,       INPUT_PULLUP, 0},
+  {LED_PWM,     "\"LED_PWM\":",  OUTPUT, 0},
+  {RTS_U,       "\"RTS_U\":",    OUTPUT, 1},
+  {CTS_U,       "\"CTS_U\":",    INPUT_PULLUP, 0},
 
-  {FACE_SENSOR, INPUT_PULLUP, 0},
+  {FACE_SENSOR, "\"FACE\":",     INPUT_PULLUP, 0},
   
-  {SPARE_1,     OUTPUT, 1},               // 18-Paper drive active low
-  {SPARE_2,     INPUT_PULLUP, 0},
+  {PAPER,      "\"PAPER\":",     OUTPUT, 1},               // 18-Paper drive active low
   
-  {EOF, EOF, EOF} };
+  {EOF, EOF, EOF, EOF} };
+
 
 void face_ISR(void);
 static void paper_on_off(bool on);        // Turn the motor on or off

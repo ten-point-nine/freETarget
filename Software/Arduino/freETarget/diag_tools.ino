@@ -25,7 +25,7 @@ const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 static void show_analog_on_PC(int v);
 static void unit_test(unsigned int mode);
 static bool sample_calculations(unsigned int mode, unsigned int sample);
-void set_trip_point(int v);
+
 
 /*----------------------------------------------------------------
  *
@@ -107,6 +107,12 @@ void self_test(uint16_t test)
       Serial.print(speed_of_sound(temperature_C(), RH_50));  Serial.print(T("mm/us"));
       Serial.print(T("\r\nV_REF: "));                    Serial.print(volts); Serial.print(T(" Volts"));
       Serial.print(T("\r\n"));
+      i=0;
+      while (init_table[i].port != 0xff)
+      {
+        Serial.print(T("\r\n")); Serial.print(init_table[i].gpio_name); Serial.print(digitalRead(init_table[i].port));
+        i++;
+      }
       POST_LEDs();
       break;
 

@@ -18,6 +18,8 @@ unsigned int multifunction_switch(unsigned int new_state);// Handle the actions 
 void output_to_all(char* s);                              // Multipurpose driver
 void char_to_all(char ch);                                // Output a single character
 
+
+
 /*
  *  Port Definitions
  */
@@ -99,8 +101,6 @@ void char_to_all(char ch);                                // Output a single cha
 #define GPIO_IN       2                   // DIP A/B used as a GPIO in
 #define GPIO_OUT      3                   // DIP A/B used as a GPIO out
 #define PC_TEST       4                   // DIP A/B used to trigger fake shot
-
-#define SPARE_2      23
 
 #define J10_1      VCC
 #define J10_2       14                    // TX3

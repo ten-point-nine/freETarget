@@ -13,7 +13,7 @@
 #include "esp-01.h"
 #include "json.h"
 
-#define SOFTWARE_VERSION "\"3.05.2 November 5, 2021\""
+#define SOFTWARE_VERSION "\"3.05.3 November 8, 2021\""
 #define REV_100    100
 #define REV_210    210
 #define REV_220    220
@@ -83,6 +83,16 @@ struct record
 };
 
 typedef struct record this_shot;
+
+struct GPIO {
+  byte port;
+  char* gpio_name;
+  byte in_or_out;
+  byte value;
+};
+
+typedef struct GPIO GPIO_t;
+extern const GPIO init_table[];
 
 extern double  s_of_sound;
 

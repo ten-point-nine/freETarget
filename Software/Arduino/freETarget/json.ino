@@ -7,9 +7,6 @@
  * ----------------------------------------------------*/
 
 #include <EEPROM.h>
-#include "json.h"
-#include "esp-01.h"
-#include "nonvol.h"
 
 static char input_JSON[256];
 
@@ -251,6 +248,36 @@ bool    return_value;
      j++;
    }
   }
+
+/*
+ * Check for an alternate GPIO test
+ */
+  for ( i=0; i != got_right; i++)                             // Go across the JSON input 
+  {
+    j = 0;
+    while ( init_table[j].port != 0xff )                      // Cycle through the tokens
+    {
+      k = instr(&input_JSON[i], init_table[j].gpio_name );    // Compare the input against the list of JSON tags
+      if ( k > 0 )                                            // Non zero, found something
+      {
+        not_found = false;                                    // Read and convert the JSON value
+        Serial.print(T("\r\n")); Serial.print(init_table[j].gpio_name);
+        if ( init_table[j].in_or_out == INPUT_PULLUP )
+        {
+           Serial.print(T(" is input only"));
+        }
+        else
+        {
+          x = atoi(&input_JSON[i+k]);
+          digitalWrite(init_table[j].port, x);
+          Serial.print(x); 
+          Serial.print(T(" Verify:")); Serial.print(digitalRead(init_table[j].port));
+        }
+      }
+    j++;
+    }
+  }
+  
 /*
  * Report an error if input not found
  */
@@ -266,6 +293,20 @@ bool    return_value;
       {
         Serial.print(T("\r\n"));
       }
+    }
+    Serial.print(T("\r\n\r\n  *** GPIO ***"));
+    j=0;
+    while ( init_table[j].port != 0xff ) 
+    {
+      if ( init_table[j].in_or_out == OUTPUT )
+      {
+        Serial.print(T("\r\n")); Serial.print(init_table[j].gpio_name);
+        if ( (j%4) == 0 ) 
+        {
+          Serial.print(T("\r\n"));
+        }
+      }
+      j++;
     }
   }
   

@@ -54,4 +54,4 @@ void POST_version(int16_t port);// Show the version string
 void POST_LEDs(void);           // Verify the LED operation
 bool POST_counters(void);       // Verify the counter operation
 void POST_trip_point(void);     // Display the set point
-
+void set_trip_point(int v);     // Calibrate the trip point

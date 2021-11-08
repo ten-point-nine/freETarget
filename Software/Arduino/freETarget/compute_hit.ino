@@ -6,11 +6,6 @@
  *
  *---------------------------------------------------------------*/
 #include "freETarget.h"
-#include "mechanical.h"
-#include "compute_hit.h"
-#include "analog_io.h"
-#include "json.h"
-#include "arduino.h"
 
 #define THRESHOLD (0.001)
 
@@ -540,7 +535,9 @@ void send_score
   output_to_all(str);
   
 #if ( S_SHOT )
-  sprintf(str, "\"shot\":%d, \"time\":%d, \"miss\":0, \"name\":\"%s\", ", shot, h->shot_time, names[json_name_id]);
+  sprintf(str, "\"shot\":%d, \"miss\":0, \"name\":\"%s\", ", shot,  names[json_name_id]);
+  output_to_all(str);
+  sprintf(str, "\"time\":%ld, ", h->shot_time);
   output_to_all(str);
 #endif
 
