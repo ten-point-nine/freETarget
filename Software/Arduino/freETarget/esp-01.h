@@ -19,8 +19,9 @@ char         esp01_read(void);                    // Read a character from the q
 unsigned int esp01_available(void);               // Return the number of available characters
 bool         esp01_send(char* str, int index);    // Send out a string
 void         esp01_receive(void);                 // Take care of receiving characters from the IP channel
-bool         esp01_connected(int channel);        // TRUE if the channel is connected.
+bool         esp01_connected(void);               // TRUE if the channel is connected.
 bool         esp01_is_present(void);              // TRUE if an ESP-01 was found
+void         esp01_test(void);                    // Diagnostic self test
 
 /*
  * Definitions

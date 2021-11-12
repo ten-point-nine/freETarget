@@ -752,8 +752,9 @@ unsigned int multifunction_switch
     }
     while ( DIP_SW_A || DIP_SW_B )        // Wait for both switches released
     {
-      if ( json_tabata_on != 0 )          // Flash three LEDs if enabled
-      {
+      if ( json_tabata_on != 0 )          // Flash three LEDs if Tabata
+      {                                   // is enabled
+        set_LED_PWM(0);                   // Turn off the illumination
         set_LED(L('*', '.', '*'));
         delay(ONE_SECOND/4);
         set_LED(L('.', '*', '.'));
@@ -761,12 +762,16 @@ unsigned int multifunction_switch
       }
       else
       {
+        set_LED_PWM(json_LED_PWM);        // Turn on the LED illumination
         set_LED(L('.', '.', '.'));        // Flash one LED if disabled
         delay(ONE_SECOND/4);
         set_LED(L('.', '*', '.'));
         delay(ONE_SECOND/4);
+        EEPROM.put(NONVOL_TABATA_ENBL, (int)0);
       }
+      set_LED(SHOT_READY);
     }
+    
     return;                               // Bail out now
   }
   

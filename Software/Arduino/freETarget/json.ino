@@ -59,7 +59,7 @@ const json_message JSON[] = {
   {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT16,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
   {"\"DIP\":",            &json_dip_switch,                  0,                IS_INT16,  0,                NONVOL_DIP_SWITCH,       0 },    // Remotely set the DIP switch
   {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,                       0,       0 },    // Echo test
-  {"\"INIT\":",           0,                                 0,                IS_INT16,  &init_nonvol,                     0,       0 },    // Initialize the NONVOL memory
+  {"\"INIT\":",           0,                                 0,                IS_INT16,  &init_nonvol,     NONVOL_INIT,             0 },    // Initialize the NONVOL memory
   {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT16,  &set_LED_PWM_now, NONVOL_LED_PWM,         50 },    // Set the LED brightness
   {"\"MFS\":",            &json_multifunction,               0,                IS_INT16,  0,                NONVOL_MFS,              0 },    // Multifunction switch action
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT16,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
@@ -265,6 +265,14 @@ bool    return_value;
         if ( init_table[j].in_or_out == INPUT_PULLUP )
         {
            Serial.print(T(" is input only"));
+           break;
+        }
+        
+        if ( instr("LED_PWM", init_table[j].gpio_name ) != 0 )  // Special case analog output
+        {
+          x = atoi(&input_JSON[i+k]);
+          analogWrite(LED_PWM, x); 
+          Serial.print(x);
         }
         else
         {

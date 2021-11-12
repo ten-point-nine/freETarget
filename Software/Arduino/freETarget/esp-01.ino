@@ -273,7 +273,55 @@ bool esp01_is_present(void)
   return esp01_present;
 }
 
+/*----------------------------------------------------------------
+ *
+ * function: bool esp01_test
+ *
+ * brief:    Tests to see if the WiFi responds to ATs
+ * 
+ * return:   Displayed on screen
+ *
+ *----------------------------------------------------------------
+ *   
+ * The function outputs an AT<entere> to the auxilarry port and
+ * waits to see if an OK is returned within one second.
+ * 
+ * This function can only be executed once after a reset.  After 
+ * that time, the device may be in pass through mode and will not
+ * do anything with the AT command
+ *   
+ *--------------------------------------------------------------*/
+#define LONG_TIME (1000000 * 30)
 
+void esp01_test(void)
+{
+  char ch;                                // Character read from ESP-01
+  long unsigned int start;                // Start time
+  esp01_flush();                          // Eat any garbage that might be on the port
+  
+  WIFI_SERIAL.print("+++");
+  delay(ONE_SECOND);
+  WIFI_SERIAL.print("AT+RST\r\n");
+  
+  Serial.print(T("\r\nSending AT\r\n"));
+  WIFI_SERIAL.print("AT\r\n");          // Send out an AT command to the port
+  
+  start = micros();
+  while ( (micros() - start) < LONG_TIME )
+  {
+    if ( WIFI_SERIAL.available() != 0 ) 
+    {
+      ch = WIFI_SERIAL.read();
+      Serial.print(ch);
+    }
+  }
+
+/*
+ * All done, return the esp-01 present state
+ */
+  Serial.print(T("\r\nTest Over"));
+  return;
+}
 /*----------------------------------------------------------------
  *
  * function: void esp01_flush
@@ -807,4 +855,20 @@ void esp01_receive(void)
   * That's it for this call
   */
   return;
+}
+/*----------------------------------------------------------------
+ *
+ * function: bool esp01_connected()
+ *
+ * brief:    Return the connection status
+ * 
+ * return:   TRUE if any channel is connected
+ *
+ *----------------------------------------------------------------
+ *   
+ *   
+ *--------------------------------------------------------------*/
+bool esp01_connected(void)
+{ 
+  return esp01_connect[0] || esp01_connect[1] || esp01_connect[2];
 }

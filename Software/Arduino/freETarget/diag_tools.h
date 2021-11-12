@@ -22,6 +22,8 @@
 #define T_SERIAL_PORT 13       // Hello World n
 #define T_LED         14       // Test the PWM
 #define T_FACE        15       // Test the face detector
+#define T_WIFI        16       // WiFi Test
+#define T_NONVOL      17       // Dump Nonvol
 
 /*
  * LED status messages
@@ -29,7 +31,6 @@
 // Normal operation        RDY Light On
 #define SHOT_READY         L('*', '.', '.') // The shot is ready to go
 #define SHOT_DONE          L('*', '*', '*') // A shot has been detected
-
 
 // Sensor failed while waiting for a shot X Light On
 #define NORTH_FAILED       L('.', '*', '.') // North sensor failed

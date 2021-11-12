@@ -6,6 +6,7 @@ void factory_nonvol(bool new_serial_number); // Factory reset nonvol
 void init_nonvol(int v);                     // Reset to defaults
 void read_nonvol(void);                      // Read in the locations
 void gen_position(int  v);                   // Reset the position values
+void dump_nonvol(int v);
 
 /*
  * NON Vol Storage
@@ -38,9 +39,10 @@ void gen_position(int  v);                   // Reset the position values
 #define NONVOL_Z_OFFSET       (NONVOL_STEP_TIME   + sizeof(int) + 2)       // Distance from sensor plane to paper plane
 #define NONVOL_PAPER_ECO      (NONVOL_Z_OFFSET    + sizeof(int) + 2)       // Advance witness paper if the shot is less than paper_eco
 #define NONVOL_TARGET_TYPE    (NONVOL_PAPER_ECO   + sizeof(int) + 2)       // Modify the target processing (0 == Regular single bull)
-#define NONVOL_TABATA_ON      (NONVOL_TARGET_TYPE + sizeof(int))           // Time that the Tabata timer is on
-#define NONVOL_TABATA_REST    (NONVOL_TABATA_ON   + sizeof(int))           // Time that the Tabata timer is OFF
-#define NONVOL_TABATA_CYCLES  (NONVOL_TABATA_REST  + sizeof(int))          // Number of cycles in an event
+#define NONVOL_TABATA_ENBL    (NONVOL_TARGET_TYPE + sizeof(int) + 2)       // Disable Tabata from the switches
+#define NONVOL_TABATA_ON      (NONVOL_TABATA_ENBL + sizeof(int) + 2)       // Time that the Tabata timer is on
+#define NONVOL_TABATA_REST    (NONVOL_TABATA_ON   + sizeof(int) + 2)       // Time that the Tabata timer is OFF
+#define NONVOL_TABATA_CYCLES  (NONVOL_TABATA_REST  + sizeof(int) +2)       // Number of cycles in an event
 #define NEXT_NONVOL           ((NONVOL_TABATA_CYCLES + sizeof(int) + 2) - NONVOL_INIT)
 #define NONVOL_SIZE           4096                                         // 4K available
 

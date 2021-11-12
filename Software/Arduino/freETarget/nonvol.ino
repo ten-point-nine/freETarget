@@ -37,10 +37,13 @@ void factory_nonvol
   ch = 0xAB;
   for ( i=0; i != NONVOL_SIZE; i++)
   {
-    EEPROM.put(i, ch);                    // Fill up with a bogus value
-    if ( (i % 64) == 0 )
+    if ( (i < NONVOL_SERIAL_NO) || (i >= NONVOL_SERIAL_NO + sizeof(int) + 2) ) // Bypass the serial number
     {
-      Serial.print(T("."));
+      EEPROM.put(i, ch);                    // Fill up with a bogus value
+      if ( (i % 64) == 0 )
+      {
+        Serial.print(T("."));
+      }
     }
   }
   
@@ -265,46 +268,12 @@ void read_nonvol(void)
 /*
  * Go through and verify that the special cases are taken care of
  */
-  if ( (json_paper_time * PAPER_STEP) > (PAPER_LIMIT) )
+  EEPROM.get(NONVOL_TABATA_ENBL, x);                          // Override the Tabata
+  if ( x == 0 )
   {
-    json_paper_time = 0;                              // Check for an infinit loop
+    json_tabata_on = 0;                                       // and turn it off
   }
   
-  if ( (json_paper_time == 0xffff)  )
-  {
-    json_paper_time = 0;                              // Check for undefined time
-  }
-
-  if ( (json_step_time == 0xffff)  )
-  {
-    json_step_time = 0;                              // Check for undefined time
-  }
-
-  if ( (json_step_count == 0xffff)  )
-  {
-    json_step_count = 0;                              // Check for undefined time
-  }
-  
-  if ( (json_z_offset == 0xffff)  )
-  {
-    json_z_offset  = 0;                               // Check for undefined time
-  }
-  
-  if ( json_calibre_x10 > 100 )
-  {
-    json_calibre_x10 = 45;                            // Check for an undefined pellet
-  }
-  
-  if ( json_sensor_angle == 0xffff )
-  {
-    json_sensor_angle = 45;                             // Check for an undefined Angle
-  }
-
-  if ( json_name_id == 0xffff )
-  {
-    json_name_id = 0;                                 // Check for an undefined Name
-  }
-
 /*
  * All done, begin the program
  */
@@ -353,6 +322,62 @@ void gen_position(int v)
   EEPROM.put(NONVOL_SOUTH_Y, json_south_y);  
   EEPROM.put(NONVOL_WEST_X,  json_west_x);  
   EEPROM.put(NONVOL_WEST_Y,  json_west_y);  
+   
+ /* 
+  *  All done, return
+  */
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * function: dump_nonvol
+ * 
+ * brief: Core dumo the nonvol memory
+ * 
+ * return: Nothing
+ * 
+ *---------------------------------------------------------------
+ *
+ *  This function resets the offsets to 0 whenever a new 
+ *  sensor diameter is entered.
+ *  
+ *------------------------------------------------------------*/
+void print_hex(unsigned int x)
+{
+  int i;
+
+  i = (x >> 4) & 0x0f;
+  Serial.print(to_hex[i]);
+  i = x & 0x0f;
+  Serial.print(to_hex[i]);
+  return;
+}
+void dump_nonvol(void)
+{
+  int i;
+  char x;
+  char line[128];
+  
+/*
+ * Loop and print out the nonvol
+ */
+  for (i=0; i != NONVOL_SIZE; i++)
+  {
+    if ( (i % 16) == 0 )
+    {
+      sprintf(line, "\r\n%04X: ", i);
+      Serial.print(line);
+    }
+    EEPROM.get(i, x);
+    print_hex(x);
+    if ( ((i+1) % 2) == 0 )
+    {
+      Serial.print(" ");
+    }
+  }
+
+ Serial.print("\n\r");
    
  /* 
   *  All done, return

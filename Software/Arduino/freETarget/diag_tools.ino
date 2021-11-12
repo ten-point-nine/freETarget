@@ -8,11 +8,7 @@
  *---------------------------------------------------------------*/
 
 #include "freETarget.h"
-#include "mechanical.h"
-#include "analog_io.h"
 #include "gpio.h"
-#include "diag_tools.h"
-#include "json.h"
 
 const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 
@@ -21,11 +17,9 @@ const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 #define GRID_SIDE 25                              // Should be an odd number
 #define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
 
-
 static void show_analog_on_PC(int v);
 static void unit_test(unsigned int mode);
 static bool sample_calculations(unsigned int mode, unsigned int sample);
-
 
 /*----------------------------------------------------------------
  *
@@ -90,6 +84,8 @@ void self_test(uint16_t test)
       Serial.print(T("\r\n13 - Serial port test"));
       Serial.print(T("\r\n14 - LED brightness test"));
       Serial.print(T("\r\n15 - Face strike test"));
+      Serial.print(T("\r\n16 - WiFi test"));
+      Serial.print(T("\r\n17 - Dump NonVol"));
       Serial.print(T("\r\n"));
       break;
 
@@ -110,7 +106,15 @@ void self_test(uint16_t test)
       i=0;
       while (init_table[i].port != 0xff)
       {
-        Serial.print(T("\r\n")); Serial.print(init_table[i].gpio_name); Serial.print(digitalRead(init_table[i].port));
+        if ( init_table[i].in_or_out == OUTPUT )
+        {
+          Serial.print(T("\r\n OUT >> "));
+        }
+        else
+        {
+          Serial.print(T("\r\n IN  << "));
+        }
+        Serial.print(init_table[i].gpio_name); Serial.print(digitalRead(init_table[i].port));
         i++;
       }
       POST_LEDs();
@@ -298,6 +302,20 @@ void self_test(uint16_t test)
       }
 
       break;
+
+ /*
+  * TEST 16 WiFI
+  */
+   case T_WIFI:
+    esp01_test();
+   break;
+
+/*
+ * TEST 17 Dump NonVol
+ */
+   case T_NONVOL:
+    dump_nonvol();
+   break;
   }
 
  /* 

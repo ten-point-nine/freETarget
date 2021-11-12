@@ -190,7 +190,10 @@ void loop()
     face_strike = false;              // Reset the face strike count
     
     set_LED_PWM(json_LED_PWM);        // Keep the LEDs ON
-
+    if ( json_tabata_on != 0 )        // Show that Tabata is ON
+    {
+      set_LED(-1,1,-1);               // Just turn on X
+    }
     sensor_status = is_running();
     power_save = micros();            // Start the power saver time
 
@@ -200,7 +203,6 @@ void loop()
       {
         Serial.print(T("\r\n\nWaiting..."));
       }
-      set_LED(SHOT_READY);   
       state = WAIT;             // Fall through to WAIT
     }
     else
@@ -239,6 +241,22 @@ void loop()
  * Wait for the shot
  */
   case WAIT:
+    if ( (esp01_is_present() == false) || esp01_connected() )       // If the ESP01 is not present, or connected
+    {
+      set_LED(1, -1, -1);                                           // to a client, then the RDY light is steady on
+    }
+    else
+    {
+      if ( (micros() / 1000000) & 1 )                                    // Otherwise blink the RDY light
+      {
+        set_LED(1, -1, -1);
+      }
+      else
+      {
+        set_LED(0, -1, -1);
+      }
+    }
+
     if ( (json_power_save != 0 ) 
         && (((micros()-power_save) / 1000000 / 60) >= json_power_save) )
     {
@@ -377,7 +395,7 @@ static uint16_t tabata_cycles;
 #define TABATA_DONE_ON      5
 
 #define TABATA_BLINK_ON    20         // Warning blink 20 x 100ms = 2 second
-#define TABATA_BLINK_OFF   20         // Warning blink 20 x 100ms = 1 second
+#define TABATA_BLINK_OFF   20         // Warning blink 20 x 100ms = 2 second
 
 static uint16_t tabata_state = TABATA_IDLE;
 
@@ -389,7 +407,7 @@ static long tabata
 {
   unsigned long now;                  // Current time in seconds
 
-  now = millis()/100;
+  now = millis()/100;                 // Now in 10ms increments
   if ( json_tabata_on == 0 )          // Exit if no cycles are enabled
   {
     return now;                       // Just return the current time
@@ -494,7 +512,7 @@ static long tabata
   */
     if ( tabata_state == TABATA_ON )
     {
-      return tabata_time;
+      return now-tabata_time;
     }
     else
       return 0;

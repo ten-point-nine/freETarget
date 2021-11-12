@@ -33,8 +33,6 @@ void init_analog_io(void)
  * 
  * function: set_LED_PWM()
  * function: set_LED_PWM_now()
- * function: blink_LED_PWM()
- * function: set_LED_off()
  * 
  * brief: Program the PWM value
  * 
