@@ -24,6 +24,7 @@
 #define T_FACE        15       // Test the face detector
 #define T_WIFI        16       // WiFi Test
 #define T_NONVOL      17       // Dump Nonvol
+#define T_SHOT        18       // Send shot record
 
 /*
  * LED status messages

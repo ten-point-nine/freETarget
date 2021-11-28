@@ -37,14 +37,15 @@ static bool sample_calculations(unsigned int mode, unsigned int sample);
 unsigned int tick;
 void self_test(uint16_t test)
 {
-  double       volts;         // Reference Voltage
+  double       volts;               // Reference Voltage
   unsigned int i;
   char         ch;
-  unsigned int sensor_status; // Sensor running inputs
-  unsigned long sample;       // Sample used for comparison
-  unsigned int random_delay;  // Random sampe time
+  unsigned int sensor_status;       // Sensor running inputs
+  unsigned long sample;             // Sample used for comparison
+  unsigned int random_delay;        // Random sampe time
   bool         pass;
-  unsigned long start_time;   // Running time
+  unsigned long start_time;         // Running time
+  this_shot    shot_test;           // Shot history
   
 /*
  *  Update the timer
@@ -86,6 +87,7 @@ void self_test(uint16_t test)
       Serial.print(T("\r\n15 - Face strike test"));
       Serial.print(T("\r\n16 - WiFi test"));
       Serial.print(T("\r\n17 - Dump NonVol"));
+      Serial.print(T("\r\n18 - Send sample shot record"));
       Serial.print(T("\r\n"));
       break;
 
@@ -93,31 +95,7 @@ void self_test(uint16_t test)
  * Test 1, Display GPIO inputs
  */
     case T_DIGITAL: 
-      Serial.print(T("\r\nTime:"));                      Serial.print(micros()/1000000); Serial.print("."); Serial.print(micros()%1000000); Serial.print(T("s"));
-      Serial.print(T("\r\nBD Rev:"));                    Serial.print(revision());       
-      Serial.print(T("\r\nDIP: 0x"));                    Serial.print(read_DIP(), HEX); 
-      digitalWrite(STOP_N, 0);
-      digitalWrite(STOP_N, 1);                        // Reset the fun flip flop
-      Serial.print(T("\r\nRUN FlipFlop: 0x"));           Serial.print(is_running(), HEX);   
-      Serial.print(T("\r\nTemperature: "));              Serial.print(temperature_C());  Serial.print(T("'C "));
-      Serial.print(speed_of_sound(temperature_C(), RH_50));  Serial.print(T("mm/us"));
-      Serial.print(T("\r\nV_REF: "));                    Serial.print(volts); Serial.print(T(" Volts"));
-      Serial.print(T("\r\n"));
-      i=0;
-      while (init_table[i].port != 0xff)
-      {
-        if ( init_table[i].in_or_out == OUTPUT )
-        {
-          Serial.print(T("\r\n OUT >> "));
-        }
-        else
-        {
-          Serial.print(T("\r\n IN  << "));
-        }
-        Serial.print(init_table[i].gpio_name); Serial.print(digitalRead(init_table[i].port));
-        i++;
-      }
-      POST_LEDs();
+      digital_test();
       break;
 
 /*
@@ -316,8 +294,20 @@ void self_test(uint16_t test)
    case T_NONVOL:
     dump_nonvol();
    break;
-  }
 
+  
+/*
+ * Test 18 Sample shot value 
+ */
+  case T_SHOT:
+    shot_test.shot = 1;
+    shot_test.x = 10;
+    shot_test.y = 20;
+    shot_test.shot_time = millis()/100;
+    send_score(&shot_test, 1, is_running());
+    send_miss(2);
+    break;
+  }
  /* 
   *  All done, return;
   */
@@ -783,6 +773,20 @@ void set_trip_point
         Serial.print(T("\r\nExiting calibration\r\n"));
         return;
 
+      case 'B':
+      case 'b':                       // Blink the Motor Drive
+        Serial.print(T("\r\nBlink Motor Drive\r\n"));
+        paper_on_off(1);
+        delay(ONE_SECOND);
+        paper_on_off(0);
+        break;
+      
+      case 'W':
+      case 'w':                      // Test the WiFI
+        Serial.print(T("\r\nTest WiFi]r]n104"));
+        esp01_test();
+        break;
+        
       case 'X':
       case 'x':                       // X Cancel
         sensor_status = 0;
@@ -790,8 +794,8 @@ void set_trip_point
         enable_interrupt(1);          // Turn on the face strike interrupt
         face_strike = false;          // Reset the face strike count
         enable_interrupt(1);          // Turning it on above creates a fake interrupt with a disable
+        Serial.print(T("\r\nResetting Sensors\r\n"));
         break;
-
       default:
         break;
     }

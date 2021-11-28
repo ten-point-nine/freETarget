@@ -55,6 +55,7 @@ static void set_trace(int v);               // Set the trace on and off
 const json_message JSON[] = {
 //    token                 value stored in RAM     double stored in RAM        convert    service fcn()     NONVOL location      Initial Value
   {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT16,  0,                NONVOL_SENSOR_ANGLE,    45 },    // Locate the sensor angles
+  {"\"BYE\":",            0,                                 0,                IS_VOID,   &bye,                             0,       0 },    // Shut down the target
   {"\"CAL\":",            0,                                 0,                IS_VOID,   &set_trip_point,                  0,       0 },    // Enter calibration mode
   {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT16,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
   {"\"DIP\":",            &json_dip_switch,                  0,                IS_INT16,  0,                NONVOL_DIP_SWITCH,       0 },    // Remotely set the DIP switch
@@ -252,40 +253,43 @@ bool    return_value;
 /*
  * Check for an alternate GPIO test
  */
-  for ( i=0; i != got_right; i++)                             // Go across the JSON input 
+  if ( not_found )
   {
-    j = 0;
-    while ( init_table[j].port != 0xff )                      // Cycle through the tokens
+    Serial.print("Looking for GPIO");
+    for ( i=0; i != got_right; i++)                             // Go across the JSON input 
     {
-      k = instr(&input_JSON[i], init_table[j].gpio_name );    // Compare the input against the list of JSON tags
-      if ( k > 0 )                                            // Non zero, found something
+      j = 0;
+      while ( init_table[j].port != 0xff )                      // Cycle through the tokens
       {
-        not_found = false;                                    // Read and convert the JSON value
-        Serial.print(T("\r\n")); Serial.print(init_table[j].gpio_name);
-        if ( init_table[j].in_or_out == INPUT_PULLUP )
+        k = instr(&input_JSON[i], init_table[j].gpio_name );    // Compare the input against the list of JSON tags
+        if ( k > 0 )                                            // Non zero, found something
         {
-           Serial.print(T(" is input only"));
-           break;
+          not_found = false;                                    // Read and convert the JSON value
+          Serial.print(T("\r\n")); Serial.print(init_table[j].gpio_name);
+          if ( init_table[j].in_or_out == INPUT_PULLUP )
+          {
+             Serial.print(T(" is input only"));
+             break;
+          }
+          
+          if ( instr("LED_PWM", init_table[j].gpio_name ) > 0 )  // Special case analog output
+          {
+            x = atoi(&input_JSON[i+k]);
+            analogWrite(LED_PWM, x); 
+            Serial.print(x);
+          }
+          else
+          {
+            x = atoi(&input_JSON[i+k]);
+            digitalWrite(init_table[j].port, x);
+            Serial.print(x); 
+            Serial.print(T(" Verify:")); Serial.print(digitalRead(init_table[j].port));
+          }
         }
-        
-        if ( instr("LED_PWM", init_table[j].gpio_name ) != 0 )  // Special case analog output
-        {
-          x = atoi(&input_JSON[i+k]);
-          analogWrite(LED_PWM, x); 
-          Serial.print(x);
-        }
-        else
-        {
-          x = atoi(&input_JSON[i+k]);
-          digitalWrite(init_table[j].port, x);
-          Serial.print(x); 
-          Serial.print(T(" Verify:")); Serial.print(digitalRead(init_table[j].port));
-        }
+      j++;
       }
-    j++;
     }
   }
-  
 /*
  * Report an error if input not found
  */
@@ -414,6 +418,9 @@ void show_echo(int v)
  * Finish up with the special cases
  */
   sprintf(s, "\"IS_TRACE\": %d, \n\r", is_trace);                                         // TRUE to if trace is enabled
+  output_to_all(s);
+
+  sprintf(s, "\"RUNNING_MINUTES\": %ld, \n\r", micros()/1000000/60);                      // On Time
   output_to_all(s);
   
   dtostrf(temperature_C(), 4, 2, str_c );

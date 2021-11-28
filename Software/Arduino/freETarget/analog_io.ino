@@ -74,16 +74,26 @@ void set_LED_PWM                                  // Theatre lighting
   int new_LED_percent                            // Desired LED level (0-100%)
   )
 {
-  if ( new_LED_percent == old_LED_percent )
-  {
-    return;
-  }
-  
   if ( is_trace )
   {
     Serial.print(T("\r\nnew_LED_percent:")); Serial.print(new_LED_percent); Serial.print(T("  old_LED_percent:")); Serial.print(old_LED_percent);
   }
+
+/*
+ * Special case, toggle the LED state
+ */
+  if (new_LED_percent == LED_PWM_TOGGLE)
+  {
+    new_LED_percent = 0;
+    if ( old_LED_percent == 0 )
+    {
+      new_LED_percent = json_LED_PWM;
+    }
+  }
   
+/*
+ * Loop and ramp the LED  PWM up or down slowly
+ */
   while ( new_LED_percent != old_LED_percent )  // Change in the brightness level?
   {
     analogWrite(LED_PWM, old_LED_percent * 256 / 100);  // Write the value out

@@ -799,6 +799,10 @@ unsigned int multifunction_switch
       sw_state(&fcn_DIP_SW_A, &hold_time_LO, &send_fake_score);
       break;
       
+    case ON_OFF:                          // Turn the target off
+      bye();
+      break;
+      
     default:
       break;
   }
@@ -808,6 +812,7 @@ unsigned int multifunction_switch
     case PAPER_FEED:                      // The switch acts as paper feed control
       return_value = DIP_SW_B;            // Use DIP_SW_B as a paper feed
       sw_state(&fcn_DIP_SW_B, &hold_time_HI, &drive_paper);
+      set_LED_PWM(0);
       break;
 
     case GPIO_IN:                         // The switch is a general purpose input
@@ -824,6 +829,10 @@ unsigned int multifunction_switch
       sw_state(&fcn_DIP_SW_B, &hold_time_HI, &send_fake_score);
       break;
       
+    case ON_OFF:                          // Turn the target off
+      bye();
+      break;
+
     default:
       break;
   }
@@ -863,25 +872,34 @@ static void sw_state
     void* (fcn_action)(void)              // Action to take
     )
 {
+  static bool first_time = true;          // Is this the first time through?
   unsigned long now;                      // Current time in seconds
-  now = millis() / 100;
+  now = millis() / 1000;
   
-  if ( (fcn_state)() == 0 )              // Switch is open, do nothing
+  if ( (fcn_state)() == 0 )               // Switch is open, do nothing
   {
-    *which_timer = now;                  // But remember the current time
+    *which_timer = now;                   // But remember the current time
+    first_time = true;                    // Go back to the first time
     return;
   }
 
 /*
  * The switch is pressed for more than 1/2 second, carry out the action
  */
-  set_LED_PWM(json_LED_PWM);            // Switch is pressed, turn on the LEDs
-  tabata(true, true);                   // Reset the tabata counts
-  
-  if ( (now - *which_timer) > 5 )       // Held for 1/2 second
+  if ( first_time )
   {
-    (fcn_action)();                     // execute the function
-    delay(200);
+    set_LED_PWM(LED_PWM_TOGGLE);          // Switch is pressed, Toggle the LEDs
+    tabata(true, true);                   // Reset the tabata counts
+    first_time = false;
+  }
+  
+  if ( (now - *which_timer) > 1 )       // Held for 1 second
+  {
+    while ( (fcn_state)() != 0 )
+    {
+      (fcn_action)();                     // execute the function
+      delay(100);
+    }
   }
   return;
 }
@@ -944,4 +962,64 @@ static void send_fake_score(void)
   */
   return;
  }
- 
+
+
+/*-----------------------------------------------------
+ * 
+ * function: digital_test()
+ * 
+ * brief:    Exercise the GPIO digital ports
+ * 
+ * return:   None
+ * 
+ *-----------------------------------------------------
+ *
+ * Read in all of the digial ports and report the 
+ * results
+ * 
+ *-----------------------------------------------------*/
+void digital_test(void)
+{
+
+  int i;
+  double       volts;         // Reference Voltage
+  
+/*
+ * Read in the fixed digital inputs
+ */
+
+  Serial.print(T("\r\nTime:"));                      Serial.print(micros()/1000000); Serial.print("."); Serial.print(micros()%1000000); Serial.print(T("s"));
+  Serial.print(T("\r\nBD Rev:"));                    Serial.print(revision());       
+  Serial.print(T("\r\nDIP: 0x"));                    Serial.print(read_DIP(), HEX); 
+  digitalWrite(STOP_N, 0);
+  digitalWrite(STOP_N, 1);                        // Reset the fun flip flop
+  Serial.print(T("\r\nRUN FlipFlop: 0x"));           Serial.print(is_running(), HEX);   
+  Serial.print(T("\r\nTemperature: "));              Serial.print(temperature_C());  Serial.print(T("'C "));
+  Serial.print(speed_of_sound(temperature_C(), RH_50));  Serial.print(T("mm/us"));
+  Serial.print(T("\r\nV_REF: "));                    Serial.print(volts); Serial.print(T(" Volts"));
+  Serial.print(T("\r\n"));
+
+/*
+ * Read the port pins and report
+ */
+  i=0;
+  while (init_table[i].port != 0xff)
+  {
+    if ( init_table[i].in_or_out == OUTPUT )
+    {
+      Serial.print(T("\r\n OUT >> "));
+    }
+    else
+    {
+      Serial.print(T("\r\n IN  << "));
+    }
+    Serial.print(init_table[i].gpio_name); Serial.print(digitalRead(init_table[i].port));
+    i++;
+  }
+
+ /*
+  * Blink the LEDs and exit
+  */
+   POST_LEDs();
+   return;
+}

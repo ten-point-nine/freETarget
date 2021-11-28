@@ -32,4 +32,6 @@ void set_LED_PWM_now(int percent);  // Set the PWM duty cycle
 
 #define TEMP_IC   (0x9E >> 1)
 
+#define LED_PWM_OFF     0x00
+#define LED_PWM_TOGGLE  0xAB
 #endif

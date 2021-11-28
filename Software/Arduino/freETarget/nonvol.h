@@ -6,7 +6,7 @@ void factory_nonvol(bool new_serial_number); // Factory reset nonvol
 void init_nonvol(int v);                     // Reset to defaults
 void read_nonvol(void);                      // Read in the locations
 void gen_position(int  v);                   // Reset the position values
-void dump_nonvol(int v);
+void dump_nonvol(void);
 
 /*
  * NON Vol Storage

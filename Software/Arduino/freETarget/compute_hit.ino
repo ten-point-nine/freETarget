@@ -624,7 +624,7 @@ void send_miss
   output_to_all(str);
   
  #if ( S_SHOT )
-  sprintf(str, "\"shot\":%d, \"time\":0, \"miss\":1, \"name\":\"%s\"", shot, names[json_name_id]);
+  sprintf(str, "\"shot\":%d, \"miss\":1, \"name\":\"%s\", \"time\":%d, ", shot, names[json_name_id], now/100) ;
   output_to_all(str);
 #endif
 
@@ -633,7 +633,7 @@ void send_miss
   output_to_all(str);
 #endif
 
-  sprintf(str, "%s}\n\r");
+  sprintf(str, "}\n\r");
   output_to_all(str);
   output_to_all(0);
 

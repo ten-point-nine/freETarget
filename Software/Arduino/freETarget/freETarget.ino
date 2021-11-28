@@ -155,7 +155,7 @@ void loop()
  */
   if ( read_JSON() )
   {
-    now = micros();               // Reset the power down timer if something comes in
+    now = millis();               // Reset the power down timer if something comes in
     set_LED_PWM(json_LED_PWM);    // Put the LED back on if it was off
   }
 
@@ -195,7 +195,7 @@ void loop()
       set_LED(-1,1,-1);               // Just turn on X
     }
     sensor_status = is_running();
-    power_save = micros();            // Start the power saver time
+    power_save = millis();            // Start the power saver time
 
     if ( sensor_status == 0 )
     { 
@@ -247,7 +247,7 @@ void loop()
     }
     else
     {
-      if ( (micros() / 1000000) & 1 )                                    // Otherwise blink the RDY light
+      if ( (millis() / 1000) & 1 )                                 // Otherwise blink the RDY light
       {
         set_LED(1, -1, -1);
       }
@@ -258,9 +258,9 @@ void loop()
     }
 
     if ( (json_power_save != 0 ) 
-        && (((micros()-power_save) / 1000000 / 60) >= json_power_save) )
+        && (((millis()-power_save) / 1000 / 60) >= json_power_save) )
     {
-      set_LED_PWM(0);                     // Dim the lights?
+      bye();                               // Dim the lights?
     }
     
     sensor_status = is_running();
@@ -517,3 +517,57 @@ static long tabata
     else
       return 0;
  }
+
+ /*----------------------------------------------------------------
+ * 
+ * function: bye
+ * 
+ * brief:    Go into power saver
+ * 
+ * return:   Nothing
+ * 
+ *----------------------------------------------------------------
+ *
+ * This function allows the user to remotly shut down the unit
+ * when not in use
+ * 
+ *--------------------------------------------------------------*/
+void bye(void)
+{
+  char str[128];
+  char strB[128];
+  
+/*
+ * Say Good Night Gracie!
+ */
+  sprintf(str, "{\"GOOD_BYE\":0}");
+  output_to_all(str);
+  set_LED_PWM(LED_PWM_OFF);           // Goint to sleep 
+
+  while ( AVAILABLE )               // Purge the com port
+  {
+    GET();
+  }
+  
+/*
+ * Loop waiting for something to happen
+ */
+  while( (DIP_SW_A == 0)            // Wait for the switch to be pressed
+        && (DIP_SW_B == 0)          // Or the switch to be pressed
+        && ( AVAILABLE == 0)        // Or a character to arrive
+        && ( is_running() == 0) )     // Or a shot arrives
+  {
+    continue;
+  }
+  sprintf(str, "{\"Hello_World\":0}");
+  output_to_all(str);
+  
+/*
+ * Woken up again
+ */  
+
+  set_LED_PWM(json_LED_PWM);
+  power_save = millis();
+  
+  return;
+}
