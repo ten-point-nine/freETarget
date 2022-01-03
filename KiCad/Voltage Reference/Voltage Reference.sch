@@ -1,0 +1,115 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L Device:CP1 C1
+U 1 1 61A96395
+P 4000 3700
+F 0 "C1" H 4115 3746 50  0000 L CNN
+F 1 "CP1" H 4115 3655 50  0000 L CNN
+F 2 "Capacitor_SMD:C_1206_3216Metric" H 4000 3700 50  0001 C CNN
+F 3 "~" H 4000 3700 50  0001 C CNN
+	1    4000 3700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3450 3100 4000 3100
+Wire Wire Line
+	4000 3550 4000 3100
+Connection ~ 4000 3100
+Wire Wire Line
+	4000 3100 4700 3100
+$Comp
+L Device:CP1 C2
+U 1 1 61A98486
+P 5800 3700
+F 0 "C2" H 5915 3746 50  0000 L CNN
+F 1 "CP1" H 5915 3655 50  0000 L CNN
+F 2 "Capacitor_SMD:C_1206_3216Metric" H 5800 3700 50  0001 C CNN
+F 3 "~" H 5800 3700 50  0001 C CNN
+	1    5800 3700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4000 3850 5800 3850
+Wire Wire Line
+	4900 3450 4900 3400
+$Comp
+L Device:R R1
+U 1 1 61A99F55
+P 5450 3100
+F 0 "R1" V 5243 3100 50  0000 C CNN
+F 1 "100" V 5334 3100 50  0000 C CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" V 5380 3100 50  0001 C CNN
+F 3 "~" H 5450 3100 50  0001 C CNN
+	1    5450 3100
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	5100 3100 5300 3100
+Wire Wire Line
+	5600 3100 5800 3100
+$Comp
+L Device:Q_PMOS_GSD Q1
+U 1 1 61A9ED9B
+P 4900 3200
+F 0 "Q1" V 5242 3200 50  0000 C CNN
+F 1 "NDS332P" V 5151 3200 50  0000 C CNN
+F 2 "digikey-footprints:SOT-23-3" H 5100 3300 50  0001 C CNN
+F 3 "~" H 4900 3200 50  0001 C CNN
+	1    4900 3200
+	0    1    -1   0   
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x03 J1
+U 1 1 61C606B3
+P 3250 3200
+F 0 "J1" H 3168 2875 50  0000 C CNN
+F 1 "Conn_01x03" H 3168 2966 50  0000 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical" H 3250 3200 50  0001 C CNN
+F 3 "~" H 3250 3200 50  0001 C CNN
+	1    3250 3200
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	3700 3200 3700 3850
+Wire Wire Line
+	3700 3850 4000 3850
+Connection ~ 4000 3850
+Wire Wire Line
+	3450 3200 3700 3200
+Wire Wire Line
+	5800 3100 5800 3300
+$Comp
+L Connector_Generic:Conn_01x01 J2
+U 1 1 61C62CCC
+P 6300 3100
+F 0 "J2" H 6380 3142 50  0000 L CNN
+F 1 "Conn_01x01" H 6380 3051 50  0000 L CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 6300 3100 50  0001 C CNN
+F 3 "~" H 6300 3100 50  0001 C CNN
+	1    6300 3100
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6100 3100 6100 3450
+Wire Wire Line
+	6100 3450 4900 3450
+Wire Wire Line
+	3450 3300 5800 3300
+Connection ~ 5800 3300
+Wire Wire Line
+	5800 3300 5800 3550
+$EndSCHEMATC
