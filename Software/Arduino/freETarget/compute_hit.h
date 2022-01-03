@@ -44,7 +44,6 @@ void send_score(this_shot* h, int shot, int sensor_status); // Send the shot
 void rotate_hit(unsigned int location, this_shot* h);       // Rotate the shot back into the correct quadrant 
 bool find_xy_3D(sensor_t* s, double estimate, double z_offset_clock);  // Estimated position including slant range
 void send_timer(int sensor_status);                         // Show debugging information 
-unsigned int hamming(unsigned int s);                       // Compute the Hamming weight of the number
 void send_miss(int shot);                                   // Send a miss message
 
 #endif

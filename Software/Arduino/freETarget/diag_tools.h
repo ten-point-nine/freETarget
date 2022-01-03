@@ -25,6 +25,9 @@
 #define T_WIFI        16       // WiFi Test
 #define T_NONVOL      17       // Dump Nonvol
 #define T_SHOT        18       // Send shot record
+#define T_SPARE1      19
+#define T_SPARE2      20
+#define T_LOG         21       // Log the shot levels
 
 /*
  * LED status messages

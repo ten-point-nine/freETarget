@@ -64,7 +64,10 @@ void factory_nonvol
       case IS_INT16:
         x = JSON[i].init_value;                            // Read in the value 
         Serial.print(T("\r\n")); Serial.print(JSON[i].token); Serial.print(T(" ")); Serial.print(x);
-        EEPROM.put(JSON[i].non_vol, x);                    // Read in the value
+        if ( JSON[i].non_vol != 0 )
+        {
+          EEPROM.put(JSON[i].non_vol, x);                    // Read in the value
+        }
         break;
 
       case IS_FLOAT:
@@ -123,6 +126,16 @@ void factory_nonvol
  */
   read_nonvol();                          // Read back the new values
   show_echo(0);                           // Display these settings
+  
+  Serial.print(T("\n\rTesting motor drive"));
+  for (x=0; x != 20; x++)
+  {
+    paper_on_off(true);
+    delay(ONE_SECOND/4);
+    paper_on_off(false);
+    delay(ONE_SECOND/4);
+  }
+  
   set_trip_point(0);                      // And stay forever in the set trip mode
   
 /*
@@ -165,13 +178,13 @@ void init_nonvol(int v)
 /*
  * Ensure that the user wants to init the unit
  */
-  if ( v != 1234 )
+  if ( (v != 1234) && (v != 1235) )
   {
     Serial.print(T("\r\nUse {\"INIT\":1234}\r\n"));
     return;
   }
 
-  factory_nonvol(false);
+  factory_nonvol(v & 1);
   
 /*
  * Read the NONVOL and print the results
@@ -246,13 +259,20 @@ void read_nonvol(void)
         
         case IS_INT16:
         case IS_FIXED:
-          EEPROM.get(JSON[i].non_vol, x);                    // Read in the value
-          if ( x == 0xABAB )                                 // Is it uninitialized?
+          if ( JSON[i].non_vol != 0 )                          // Is persistent storage enabled?
           {
-            x = JSON[i].init_value;                          // Yes, overwrite with the default
-            EEPROM.put(JSON[i].non_vol, x);
+            EEPROM.get(JSON[i].non_vol, x);                    // Read in the value
+            if ( x == 0xABAB )                                 // Is it uninitialized?
+            {
+              x = JSON[i].init_value;                          // Yes, overwrite with the default
+              EEPROM.put(JSON[i].non_vol, x);
+            }
+            *JSON[i].value = x;
           }
-          *JSON[i].value = x;
+          else
+          {
+            *JSON[i].value = JSON[i].init_value;              // Persistent storage is not enabled, force a known value
+          }
           break;
 
         case IS_FLOAT:
@@ -273,7 +293,8 @@ void read_nonvol(void)
   {
     json_tabata_on = 0;                                       // and turn it off
   }
-  
+
+  EEPROM.get(NONVOL_V_SET_PWM, json_vset_PWM);
 /*
  * All done, begin the program
  */

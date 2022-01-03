@@ -55,6 +55,11 @@ void setup(void)
   AUX_SERIAL.begin(115200); 
   DISPLAY_SERIAL.begin(115200); 
 
+/* 
+ *  Read the persistent storage
+ */
+  read_nonvol();
+
 /*
  *  Set up the port pins
  */
@@ -69,7 +74,7 @@ void setup(void)
       break;
 
     case 0x0f:
-      factory_nonvol(false);                // Force a factory nonvol reset
+      init_nonvol(false);                // Force a factory nonvol reset
       break;
 
     default:
@@ -87,12 +92,12 @@ void setup(void)
 /*
  * Initialize variables
  */
-  read_nonvol();
-  tabata(true, true);                     // Reset the Tabata timers
-
+   tabata(true, true);                     // Reset the Tabata timers
+  
 /*
  * Run the power on self test
  */
+
   POST_version(PORT_ALL);                 // Show the version string on all ports
   show_echo(0);
   POST_LEDs();                            // Cycle the LEDs
@@ -103,7 +108,7 @@ void setup(void)
     blink_fault(POST_COUNT_FAILED);       // and try again
   }
   POST_trip_point();                      // Show the trip point
-  
+
 
 /*
  * Ready to go
@@ -148,8 +153,7 @@ void loop()
  */
   esp01_receive();                // Accumulate input from the IP port.
   multifunction_switch(0);        // Read the switches
-  tabata(false, false);
-  
+  tabata(false, false); 
 /*
  * Take care of any commands coming through
  */
@@ -306,7 +310,7 @@ void loop()
     set_LED(L('*', '*', '*'));                   // Light All
     location = compute_hit(sensor_status, &record, false);
 
-    if ( ((json_tabata_cycles != 0) && ( record.shot_time == 0 ))         // Are we out of the tabata cycle time?
+    if ( ((json_tabata_cycles != 0) && ( record.shot_time == 0 ) &&(json_rapid_cycles !=0))         // Are we out of the Tabata-Rapid cycle time?
        || (timer_value[N] == 0) || (timer_value[E] == 0) || (timer_value[S] == 0) || (timer_value[W] == 0) ) // If any one of the timers is 0, that's a miss
     {
       state = SEND_MISS;
@@ -324,8 +328,9 @@ void loop()
   case WASTE:
     if ( (json_paper_time + json_step_time) != 0 )  // Has the witness paper been enabled
     {
-      if ( (json_paper_eco == 0)                   // ECO turned off
-        || ( sqrt(sq(record.x) + sq(record.y)) < json_paper_eco ) ) // And inside the black
+      if ( ((json_paper_eco == 0)                   // ECO turned off
+        || ( sqrt(sq(record.x) + sq(record.y)) < json_paper_eco )) // Outside the black
+          && (json_rapid_on == 0))                  // and not rapid fire
       {
         drive_paper();
       }
@@ -383,16 +388,23 @@ void loop()
  * 
  * Test JSON {"TABATA_ON":7, "TABATA_REST":45, "TABATA_CYCLES":60}
  * 
+ * The Rapid Fire mode is the same except that the solenoid is 
+ * engaged for the duration of the cycle
  *--------------------------------------------------------------*/
-static long     tabata_time;  // Internal timern in milliseconds
-static uint16_t tabata_cycles;
-
+static long          tabata_time;      // Internal timern in milliseconds
+static unsigned int  tabata_on;        // Generic ON time
+static unsigned int  tabata_rest;      // Generic OFF time
+static unsigned int  tabata_cycles;    // Generic Number of cycles
+  
 #define TABATA_IDLE         0
 #define TABATA_WARNING      1
 #define TABATA_DARK         2
 #define TABATA_ON           3
 #define TABATA_DONE_OFF     4
 #define TABATA_DONE_ON      5
+#define RAPID_IDLE          6         // Rapid Fire Idle cycle
+#define RAPID_ON            7         // Rapid Fire ON cycle
+#define RAPID_DONE_OFF      8         // Rapid Fire complete
 
 #define TABATA_BLINK_ON    20         // Warning blink 20 x 100ms = 2 second
 #define TABATA_BLINK_OFF   20         // Warning blink 20 x 100ms = 2 second
@@ -406,9 +418,11 @@ static long tabata
   )
 {
   unsigned long now;                  // Current time in seconds
+  
 
-  now = millis()/100;                 // Now in 10ms increments
-  if ( json_tabata_on == 0 )          // Exit if no cycles are enabled
+  now = millis()/100;                 // Now in 100ms increments
+  if ( (json_rapid_enable == 0) 
+      && ( json_tabata_enable == 0) ) // Exit if no cycles are enabled
   {
     return now;                       // Just return the current time
   }
@@ -419,13 +433,33 @@ static long tabata
    if ( reset_time )                  // Reset the timer
    {
     tabata_time = now;
-    tabata_state = TABATA_IDLE;
-    set_LED_PWM_now(0);
+    if ( json_tabata_on != 0 )
+    {
+      tabata_state = TABATA_IDLE;
+      set_LED_PWM_now(0);
+    }
+    else
+    {
+      if ( json_rapid_on != 0 )
+      {
+        tabata_state = RAPID_IDLE;
+      }
+    }
    }
    if ( reset_cycles )                // Reset the number of cycles
    {
     tabata_cycles = 0;
-    tabata_state  = TABATA_IDLE;
+    if ( json_tabata_on != 0 )
+    {
+      tabata_state = TABATA_IDLE;
+    }
+    else
+    {
+      if ( json_tabata_on != 0 )
+      {
+        tabata_state = RAPID_IDLE;
+      }
+    }
    }
 
 /*
@@ -433,12 +467,17 @@ static long tabata
  */
   switch (tabata_state)
   {
-    case (TABATA_IDLE):                 // OFF, wait for the time to expire
+      case (TABATA_IDLE):                 // OFF, wait for the time to expire
+      if ( json_tabata_on == 0 )
+      {
+        tabata_state = RAPID_IDLE;
+        break;
+      }
       if ( (now - tabata_time)/10 > (json_tabata_rest - ((TABATA_BLINK_ON + TABATA_BLINK_OFF)/10)) )
       {
-        tabata_state = TABATA_WARNING;
         tabata_time = now;;
         tabata_cycles++;
+        tabata_state = TABATA_WARNING;
         set_LED_PWM_now(json_LED_PWM);  //     Turn on the lights
       }
       break;
@@ -505,12 +544,52 @@ static long tabata
         set_LED_PWM(0);                   // Turn off the LEDs
       }
       break;
+
+ /*
+  * Rapid fire state machine
+  */
+    case (RAPID_IDLE):                 // OFF, wait for the time to expire
+      if ( (now - tabata_time)/10 > (json_rapid_rest - ((TABATA_BLINK_ON + TABATA_BLINK_OFF)/10)) )
+      {
+        tabata_time = now;;
+        reset_cycles++;
+        tabata_state = RAPID_ON;
+        paper_on_off(true);                            // Turn the solenoid on
+        set_LED_PWM(json_LED_PWM);                      // Turn off the LEDs
+      }
+      break;
+      
+    case (RAPID_ON):                 // Keep the LEDs on for the tabata time
+      if ( (now - tabata_time) > json_rapid_on )
+      {
+        if ( (json_rapid_cycles != 0) && (tabata_cycles >= json_rapid_cycles) )
+        {
+          tabata_state = RAPID_DONE_OFF;
+        }
+        else
+        {
+          tabata_state = RAPID_IDLE;
+          if ( is_trace )
+          {
+            Serial.print(T("\r\nTabata OFF"));
+          }
+        }
+        tabata_time = now;
+        paper_on_off(false);             // Turn off the LEDs
+        set_LED_PWM(0);                  // Turn off the LEDs
+      }
+      break;
+      
+  case (RAPID_DONE_OFF):                 //Finished.  Stop the game
+      break;
+      
   }
 
  /* 
   * All done.  Return the current time if in the TABATA_ON state
   */
-    if ( tabata_state == TABATA_ON )
+    if ( (tabata_state == TABATA_ON)
+        || (tabata_state == RAPID_ON) )
     {
       return now-tabata_time;
     }
@@ -542,8 +621,9 @@ void bye(void)
  */
   sprintf(str, "{\"GOOD_BYE\":0}");
   output_to_all(str);
-  set_LED_PWM(LED_PWM_OFF);           // Goint to sleep 
-
+  set_LED_PWM(LED_PWM_OFF);         // Goint to sleep 
+  esp01_close();                    // Disconnect
+   
   while ( AVAILABLE )               // Purge the com port
   {
     GET();
@@ -557,7 +637,10 @@ void bye(void)
         && ( AVAILABLE == 0)        // Or a character to arrive
         && ( is_running() == 0) )     // Or a shot arrives
   {
-    continue;
+    if ( esp01_is_present() )
+    {
+      esp01_receive();                // Accumulate input from the IP port.;
+    }
   }
   sprintf(str, "{\"Hello_World\":0}");
   output_to_all(str);

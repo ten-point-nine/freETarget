@@ -20,6 +20,7 @@ const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 static void show_analog_on_PC(int v);
 static void unit_test(unsigned int mode);
 static bool sample_calculations(unsigned int mode, unsigned int sample);
+static void log_sensor(int sensor);
 
 /*----------------------------------------------------------------
  *
@@ -88,6 +89,10 @@ void self_test(uint16_t test)
       Serial.print(T("\r\n16 - WiFi test"));
       Serial.print(T("\r\n17 - Dump NonVol"));
       Serial.print(T("\r\n18 - Send sample shot record"));
+      Serial.print(T("\r\n20 - Log North Sensor"));
+      Serial.print(T("\r\n21 - Log East Sensor"));
+      Serial.print(T("\r\n22 - Log South Sensor"));
+      Serial.print(T("\r\n23 - Log West Sensor"));
       Serial.print(T("\r\n"));
       break;
 
@@ -306,6 +311,16 @@ void self_test(uint16_t test)
     shot_test.shot_time = millis()/100;
     send_score(&shot_test, 1, is_running());
     send_miss(2);
+    break;
+
+/*
+ * Test 19 Log the input voltage levels on North
+ */
+  case T_LOG + 0:
+  case T_LOG + 1:
+  case T_LOG + 2:
+  case T_LOG + 3:
+    log_sensor(test - T_LOG);
     break;
   }
  /* 
@@ -1182,3 +1197,107 @@ void show_sensor_status(unsigned int sensor_status)
 
   return;
 }
+
+/*----------------------------------------------------------------
+ *
+ * function: log_sensor()
+ *
+ * brief:    Sample and display the North sensor value
+ *
+ * return:   Nothing
+ * 
+ *----------------------------------------------------------------
+ * 
+ * The North sensor is sampled for one second and the maximum
+ * for that sample is displayed.
+ * 
+ * The process repeats until the user types in a !
+ *   
+ *--------------------------------------------------------------*/
+#define LOG_TIME  1000            // 1 second loop time
+
+void log_sensor
+  (
+  int sensor                      // Sensor to be monitored
+  )
+{
+  unsigned int i;
+  unsigned long start;
+  unsigned int max_cycle;         // Largest value this cycle
+  unsigned int max_all;           // Largest value ever
+  unsigned int sample;            // Sample read from ADC
+  unsigned int sensor_status;     // Sensor running latch
+  char         s[128];            // String Holder
+  char         ch;                // Input character
+  bool         is_new;            // TRUE if a change was found
+
+  sprintf(s, "\r\nLogging %s Use X to reset,  ! to exit\r\n", which_one[sensor]);
+  output_to_all(s);
+  max_all =  0;
+  arm_counters();
+  
+  while (1)
+  {
+/*
+ * Loop for the sample time, picking up the analog voltage as quick as we can
+ */
+    start = LOG_TIME;                         // Pick up the starting time
+    max_cycle = analogRead(channel[sensor]);
+    is_new = false;
+    while ( (--start) )                       // For Log Time, 
+    {
+      sample = analogRead(channel[sensor]);   // Read the ADC
+      if ( sample > max_cycle )
+      {
+        max_cycle = sample;
+        is_new = true;
+      }
+      if ( sample > max_all )
+      {
+        max_all = sample;
+        is_new = true;
+      }
+    }
+
+/*
+ * If there is a change output the result
+ */
+    sensor_status = is_running();
+    if ( is_new  || (sensor_status != 0) )
+    {
+      sprintf(s, "\r\n%s cycle:%d  max:%d is_running:", which_one[sensor], max_cycle, max_all);
+      output_to_all(s);
+      s[1] = 0;
+      for (i=N; i<=W; i++)
+      {
+        if ( sensor_status & (1<<i) )   s[0] = nesw[i];
+        else                            s[0] = '.';
+        output_to_all(s);
+      }
+      arm_counters();
+    }
+
+    while ( AVAILABLE )
+    {
+      ch = GET();
+      switch ( ch )
+      {
+        case '!':
+          sprintf(s, "\r\nDone");
+          output_to_all(s);
+          return;
+
+        case 'x':
+        case 'X':
+          max_all = 0;
+          max_cycle = 0;
+          break;
+      }
+    }
+  }
+
+/*  
+ *   We never get here
+ */
+  return;
+} 

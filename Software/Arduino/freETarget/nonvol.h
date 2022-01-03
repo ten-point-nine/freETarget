@@ -42,8 +42,15 @@ void dump_nonvol(void);
 #define NONVOL_TABATA_ENBL    (NONVOL_TARGET_TYPE + sizeof(int) + 2)       // Disable Tabata from the switches
 #define NONVOL_TABATA_ON      (NONVOL_TABATA_ENBL + sizeof(int) + 2)       // Time that the Tabata timer is on
 #define NONVOL_TABATA_REST    (NONVOL_TABATA_ON   + sizeof(int) + 2)       // Time that the Tabata timer is OFF
-#define NONVOL_TABATA_CYCLES  (NONVOL_TABATA_REST  + sizeof(int) +2)       // Number of cycles in an event
-#define NEXT_NONVOL           ((NONVOL_TABATA_CYCLES + sizeof(int) + 2) - NONVOL_INIT)
+#define NONVOL_TABATA_CYCLES  (NONVOL_TABATA_REST + sizeof(int) + 2)       // Number of cycles in an event
+#define NONVOL_RAPID_ON       (NONVOL_TABATA_CYCLES+sizeof(int))           // Time that the Tabata timer is on
+#define NONVOL_RAPID_REST     (NONVOL_RAPID_ON    + sizeof(int))           // Time that the Tabata timer is OFF
+#define NONVOL_RAPID_CYCLES   (NONVOL_RAPID_REST  + sizeof(int))           // Number of cycles in an event
+#define NONVOL_V_SET_PWM      (NONVOL_RAPID_CYCLES + sizeof(int))          // Starting PWM setting
+#define NONVOL_VSET           (NONVOL_V_SET_PWM   + sizeof(int))           // Desired Voltage value (floating point)
+#define NONVOL_RAPID_TYPE     (NONVOL_VSET        + sizeof(double))        // Type of rapid fire event
+
+#define NEXT_NONVOL           ((NONVOL_RAPID_CYCLES + sizeof(int) + 2) - NONVOL_INIT)
 #define NONVOL_SIZE           4096                                         // 4K available
 
 #if (((45-13) * 4) > NONVOL_SIZE )

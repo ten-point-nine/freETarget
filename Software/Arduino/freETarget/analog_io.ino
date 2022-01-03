@@ -9,6 +9,8 @@
 #include "freETarget.h"
 #include "Wire.h"
 
+void set_v_set_PWM(unsigned int pwm);
+
 /*----------------------------------------------------------------
  * 
  * function: init_analog()
@@ -21,7 +23,10 @@
 void init_analog_io(void)
 {
   pinMode(LED_PWM, OUTPUT);
+  pinMode(V_SET_PWM, OUTPUT);
   Wire.begin();
+
+  set_v_set_PWM(json_vset_PWM);
   
 /*
  * All done, begin the program
@@ -263,3 +268,90 @@ double temperature_C(void)
   return return_value;
 
 }
+
+
+/*----------------------------------------------------------------
+ * 
+ * funciton: set_V_SET_PWM()
+ * 
+ * brief: Set the PWM value to the hardware
+ * 
+ *----------------------------------------------------------------
+ *
+ * The value is previously set when the VREF value is set by the
+ * JSON driver.
+ *
+ *--------------------------------------------------------------*/
+ void set_v_set_PWM
+  (
+  unsigned int value           // Value to write to PWM
+  )
+{
+  value &= MAX_PWM;
+  analogWrite(V_SET_PWM, value);
+  return;
+}
+
+/*----------------------------------------------------------------
+ * 
+ * funciton: compute_V_SET_PWM()
+ * 
+ * brief: Use a control loop to figure out the PWM setting
+ * 
+ *----------------------------------------------------------------
+ *
+ * The value is previously set when the VREF value is set by the
+ * JSON driver.
+ *
+ *--------------------------------------------------------------*/
+ void compute_V_SET_PWM
+  (
+  int v                             // Desired control voltage
+  )
+{
+  int vref_raw;                     // Raw VREF value read from ADC
+  int vref_desired;                 //
+  int vref_error;                   // Difference between desired and raw
+  unsigned int pwm;                 // Value written to the PWM
+
+/*
+ * Compute the initial values
+ */
+  vref_desired = json_vset * 1023.0 / 5.0;// Scaled desired VREF
+  pwm = json_vset_PWM;              // Starting value
+
+/*
+ * Loop until the error converges
+ */
+  while ( 1 )
+  {
+    vref_raw = analogRead(V_REFERENCE);
+    vref_error = vref_desired - vref_raw;
+
+    if ( abs(vref_error) <= 2 )
+    {
+      break;
+    }
+    Serial.print(T("\r\nDesired: ")); Serial.print(json_vset); Serial.print(T("  VREF: ")); Serial.print(analogRead(V_REFERENCE) * 5.0 / 1023); Serial.print(T(" Error: ")); Serial.print(vref_error);
+    pwm -= vref_error/2;
+    if ( pwm > 255 )
+    {
+      Serial.print(T(" V_SET_PWM exceeded.  Set value using CAL function and try again"));
+      set_v_set_PWM(json_vset_PWM);
+      return;
+    }
+    Serial.print(T(" V_SET_PWM: ")); Serial.print(pwm);
+    set_v_set_PWM(pwm);
+    delay(ONE_SECOND/4);
+  }
+
+ /*
+  * Got the right control value, asve it and exit
+  */
+    Serial.print(T("\r\nDesired: ")); Serial.print(json_vset); Serial.print(T("  VREF: ")); Serial.print(analogRead(V_REFERENCE) * 5.0 / 1023); Serial.print(T(" Error: ")); Serial.print(vref_error);
+    Serial.print(T(" New V_SET_PWM: ")); Serial.print(pwm);
+    EEPROM.put(NONVOL_V_SET_PWM, pwm);
+    json_vset_PWM = pwm;
+    return;
+} 
+ 

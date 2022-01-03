@@ -52,8 +52,16 @@ extern int    json_z_offset;      // Distance between paper and sensor plane (1m
 extern int    json_paper_eco;     // Do not advance witness paper if shot is greater than json_paper_eco
 extern int    json_target_type;   // Modify the location based on a target type (0 == regular 1 bull target)
 #define FIVE_BULL_AIR_RIFLE  1    // Target is a five bull air rifle target
+extern int    json_tabata_enable; // Tabata Enabled
 extern int    json_tabata_on;     // Tabata ON timer
 extern int    json_tabata_rest;   // Tabata OFF timer
 extern int    json_tabata_cycles; // Number of Tabata cycles
+extern int    json_rapid_enable;  // Rapid Fire enabled
+extern int    json_rapid_on;      // Rapid Fire ON timer
+extern int    json_rapid_rest;    // Rapid Fire OFF timer
+extern int    json_rapid_cycles;  // Number of Rapid Fire cycles
+extern int    json_rapid_type;    // Type of RApid vire event
+extern int    json_vset_PWM;      // Voltage PWM count
+extern double json_vset;          // Desired voltage setpont
 
 #endif _JSON_H_

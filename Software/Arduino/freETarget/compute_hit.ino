@@ -696,7 +696,7 @@ static void remap_target
   }
 
 /*
- * Dind the closes bull
+ * Find the closest bull
  */
   switch ( json_target_type )
   {
@@ -804,6 +804,7 @@ void send_timer
   }
 
   Serial.print(T("\", "));
+  
   for (i=N; i <= W; i++)
   {
     Serial.print(T("\"")); Serial.print(nesw[i]); Serial.print(T("\":"));  Serial.print(timer_value[i]);  Serial.print(T(", "));
@@ -812,6 +813,8 @@ void send_timer
   Serial.print(T("\"V_REF\":"));   Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));  Serial.print(T(", "));
   Serial.print(T("\"Version\":")); Serial.print(SOFTWARE_VERSION);
   Serial.print(T("}\r\n"));      
+
+
 
   return;
 }

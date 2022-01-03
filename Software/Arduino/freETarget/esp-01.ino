@@ -291,7 +291,7 @@ bool esp01_is_present(void)
  * do anything with the AT command
  *   
  *--------------------------------------------------------------*/
-#define LONG_TIME (1000000 * 30)
+#define LONG_TIME (1000000 * 5)
 
 void esp01_test(void)
 {
@@ -712,7 +712,10 @@ bool esp01_send
  *   
  *   ex
  *   
- *   +IPD,0,1:b         // Data comes in from the target
+ *   +IPD,l,p:d         // IP-Data comes in from the target
+ *                      // l - length
+ *                      // p - port
+ *                      // d - data
  *   0,CONNECT          // The target connects to the PC
  *   
  *   As with any IP type communications, there is a disconnect
@@ -722,6 +725,10 @@ bool esp01_send
  *   This function is a state machine that parses the incoming
  *   message and then buffers only the 'real' data so that it 
  *   can be extracted later on.
+ *   
+ *   While this ESP software keeps track of what channel is
+ *   connected, esp01_receive() merges all of the channels into
+ *   a single input stream.
  *   
  *--------------------------------------------------------------*/
 
@@ -737,7 +744,7 @@ bool esp01_send
 #define IS_CLOSED    2          // The message appears to be CLOSED
 #define IS_IPD       4          // The message appears to be IPD
 
-static char s_ipd[]     = "IPD,";       // IPC message
+static char s_ipd[]     = "IPD,";       // IPD message
 static char s_connect[] = "CONNECT\r\n";    // Connect message
 static char s_closed[]  = "CLOSED\r\n";     // Disconnect message
 
@@ -773,6 +780,7 @@ void esp01_receive(void)
           i = 0;
           message_type = IS_CONNECT + IS_CLOSED + IS_IPD;  // Message could be anything
           state = WAIT_CONNECT;
+          channel = 0;
         }
         else
         {
@@ -871,4 +879,55 @@ void esp01_receive(void)
 bool esp01_connected(void)
 { 
   return esp01_connect[0] || esp01_connect[1] || esp01_connect[2];
+}
+
+/*----------------------------------------------------------------
+ *
+ * function: bool esp01_close()
+ *
+ * brief:    Close the open connections
+ * 
+ * return:   Nothing
+ *
+ *----------------------------------------------------------------
+ *   
+ *   
+ *--------------------------------------------------------------*/
+void esp01_close(void)
+{ 
+  unsigned int i;
+
+/*
+ * Send out the AT break if needed
+ */
+  if ( esp01_is_present() );
+  {
+    WIFI_SERIAL.print("+++");
+    delay(ONE_SECOND);
+
+/*
+ * Kill the connections
+ */
+    WIFI_SERIAL.print("AT+CIPCLOSE=0\r");
+    delay(ONE_SECOND/10);                   // Wait to catch up
+
+    WIFI_SERIAL.print("AT+CIPCLOSE=1\r");
+    delay(ONE_SECOND/10);
+
+    WIFI_SERIAL.print("AT+CIPCLOSE=2\r");
+
+/*
+ * Wait and eat any junk that might be coming back
+ */
+    delay(ONE_SECOND);
+    while ( WIFI_SERIAL.available() )
+    {
+      WIFI_SERIAL.read();
+    }
+  }
+  
+/*
+ * All done, return
+ */
+  return;
 }

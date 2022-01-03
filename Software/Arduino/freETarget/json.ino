@@ -37,9 +37,17 @@ int     json_multifunction;         // Multifunction switch operation
 int     json_z_offset;              // Distance between paper and sensor plane in 0.1mm
 int     json_paper_eco;             // Do not advance paper if outside of the black
 int     json_target_type;           // Modify target type (0 == single bull)
+int     json_tabata_enable;         // Tabata ON enabled
 int     json_tabata_on;             // Tabata ON timer
 int     json_tabata_rest;           // Tabata resting timer
 int     json_tabata_cycles;         // Number of Tabata cycles
+int     json_rapid_enable;          // Rapid Fire enabled
+int     json_rapid_on;              // Rapid Fire ON timer
+int     json_rapid_rest;            // Rapid Fire resting timer
+int     json_rapid_cycles;          // Number of Rapid Fire cycles
+int     json_rapid_type;            // Type of rapid fire event
+int     json_vset_PWM;              // Starting PWM value
+double  json_vset;                  // Desired VREF setting
 
 #define JSON_DEBUG false                    // TRUE to echo DEBUG messages
 
@@ -58,6 +66,7 @@ const json_message JSON[] = {
   {"\"BYE\":",            0,                                 0,                IS_VOID,   &bye,                             0,       0 },    // Shut down the target
   {"\"CAL\":",            0,                                 0,                IS_VOID,   &set_trip_point,                  0,       0 },    // Enter calibration mode
   {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT16,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
+  {"\"DELAY\":",          0               ,                  0,                IS_INT16,  &diag_delay,                      0,       0 },    // Delay TBD seconds
   {"\"DIP\":",            &json_dip_switch,                  0,                IS_INT16,  0,                NONVOL_DIP_SWITCH,       0 },    // Remotely set the DIP switch
   {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,                       0,       0 },    // Echo test
   {"\"INIT\":",           0,                                 0,                IS_INT16,  &init_nonvol,     NONVOL_INIT,             0 },    // Initialize the NONVOL memory
@@ -67,19 +76,26 @@ const json_message JSON[] = {
   {"\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT16,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
   {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT16,  0,                NONVOL_PAPER_TIME,       0 },    // Set the paper advance time
   {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT16,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
+  {"\"RAPID_CYCLES\":",   &json_rapid_cycles,                0,                IS_INT16,  0,                NONVOL_RAPID_CYCLES,     0 },    // Number of cycles to use for the Rapid Fire timer
+  {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT16,  0,                                  0,     0 },    // Rapid Fire Enabled
+  {"\"RAPID_ON\":",       &json_rapid_on,                    0,                IS_INT16,  0,                NONVOL_RAPID_ON,         0 },    // Time that the solenoif is on for a Rapid Fire timer (1/10 seconds)
+  {"\"RAPID_REST\":",     &json_rapid_rest,                  0,                IS_INT16,  0,                NONVOL_RAPID_REST,       0 },    // Time that the solenoid is off for a Rapid Fire timer
+  {"\"RAPID_TYPE\":",     &json_rapid_type,                  0,                IS_INT16,  0,                NONVOL_RAPID_TYPE,       0 },    // Rapid fire event type
   {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT16,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
   {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  &gen_position,    NONVOL_SENSOR_DIA,     230 },    // Generate the sensor postion array
-  {"\"SN\":",             &json_serial_number,               0,                IS_FIXED,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
+  {"\"SN\":",             &json_serial_number,               0,                IS_INT16,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
   {"\"STEP_COUNT\":",     &json_step_count,                  0,                IS_INT16,  0,                NONVOL_STEP_COUNT,       0 },    // Set the duration of the stepper motor ON time
   {"\"STEP_TIME\":",      &json_step_time,                   0,                IS_INT16,  0,                NONVOL_STEP_TIME,        0 },    // Set the number of times stepper motor is stepped
   {"\"TABATA_CYCLES\":",  &json_tabata_cycles,               0,                IS_INT16,  0,                NONVOL_TABATA_CYCLES,    0 },    // Number of cycles to use for the Tabata timer
-  {"\"TABATA_REST\":",    &json_tabata_rest,                 0,                IS_INT16,  0,                NONVOL_TABATA_REST,      0 },    // Time that the LEDs are OFF for a Tabata timer
+  {"\"TABATA_ENABLE\":",  &json_tabata_enable,               0,                IS_INT16,  0,                                   0,    0 },    // Tabata Cycle Enabled
   {"\"TABATA_ON\":",      &json_tabata_on,                   0,                IS_INT16,  0,                NONVOL_TABATA_ON,        0 },    // Time that the LEDs are ON for a Tabata timer (1/10 seconds)
+  {"\"TABATA_REST\":",    &json_tabata_rest,                 0,                IS_INT16,  0,                NONVOL_TABATA_REST,      0 },    // Time that the LEDs are OFF for a Tabata timer
   {"\"TARGET_TYPE\":",    &json_target_type,                 0,                IS_INT16,  0,                NONVOL_TARGET_TYPE,      0 },    // Marify shot location (0 == Single Bull)
   {"\"TEST\":",           0,                                 0,                IS_INT16,  &show_test,       NONVOL_TEST_MODE,        0 },    // Execute a self test
   {"\"TRACE\":",          0,                                 0,                IS_INT16,  &set_trace,                      0,        0 },    // Enter / exit diagnostic trace
   {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_version,                   0,        0 },    // Return the version string
-  {"\"Z_OFFSET\":",       &json_z_offset    ,                0,                IS_INT16,  0,                NONVOL_Z_OFFSET,         0 },    // Distance from paper to sensor plane (mm)
+  {"\"V_SET\":",          0,                                 &json_vset,       IS_FLOAT,  &compute_V_SET_PWM,NONVOL_VSET,            0 },    // Set the voltage reference
+  {"\"Z_OFFSET\":",       &json_z_offset,                    0,                IS_INT16,  0,                NONVOL_Z_OFFSET,         0 },    // Distance from paper to sensor plane (mm)
 
   {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT16,  0,                NONVOL_NORTH_X,          0 },    //
   {"\"NORTH_Y\":",        &json_north_y,                     0,                IS_INT16,  0,                NONVOL_NORTH_Y,          0 },    //
@@ -94,6 +110,7 @@ const json_message JSON[] = {
 };
 
 int instr(char* s1, char* s2);
+static void diag_delay(int x) { Serial.print(T("\r\n\"DELAY\":")); Serial.print(x); delay(x*1000);  return;}
 
 /*-----------------------------------------------------
  * 
@@ -113,6 +130,7 @@ int instr(char* s1, char* s2);
  * {"ECHO":12, "DIP":8}
  * {"DIP":9, "SENSOR":230.0, "ECHO":32}
  * {"TEST":7, "ECHO":5}
+ * {"PAPER":1, "DELAY":5, "PAPER":0, "TEST":16}
  * 
  * Find the lable, ex "DIP": and save in the
  * corresponding memory location
@@ -123,12 +141,12 @@ static bool not_found;
 
 bool read_JSON(void)
 {
-static int16_t got_right;
-unsigned int  i, j, x;
-int     k;
-char    ch;
-double  y;
-bool    return_value;
+  static int16_t got_right;
+  unsigned int  i, j,  x;
+  int     k, l;
+  char    ch;
+  double  y;
+  bool    return_value;
 
   return_value = false;
   
@@ -197,99 +215,105 @@ bool    return_value;
   for ( i=0; i != got_right; i++)                             // Go across the JSON input 
   {
     j = 0;
-
-    while ( JSON[j].token != 0 )                              // Cycle through the tokens
+    l = 0;
+    
+    while ( (JSON[j].token != 0) && (init_table[j].port != 0xff) ) // Cycle through the tokens
     {
-      k = instr(&input_JSON[i], JSON[j].token );              // Compare the input against the list of JSON tags
-
-      if ( k > 0 )                                            // Non zero, found something
+      if ( JSON[j].token != 0 )
       {
-        not_found = false;                                    // Read and convert the JSON value
-        switch ( JSON[j].convert )
-        {
-          default:
-          case IS_VOID:                                       // Void, default to zero
-          case IS_FIXED:                                      // Fixed cannot be changed
-            x = 0;
-            y = 0;
-          break;
-            
-          case IS_INT16:                                      // Convert an integer
-            x = atoi(&input_JSON[i+k]);
-            if ( JSON[j].value != 0 )
-            {
-              *JSON[j].value = x;                             // Save the value
-            }
-            if ( JSON[j].non_vol != 0 )
-            {
-              EEPROM.put(JSON[j].non_vol, x);                 // Store into NON-VOL
-            }
-            
-            break;
+        k = instr(&input_JSON[i], JSON[j].token );              // Compare the input against the list of JSON tags
   
-          case IS_FLOAT:                                      // Convert a floating point number
-          case IS_DOUBLE:
-            y = atof(&input_JSON[i+k]);
-            if ( JSON[j].d_value != 0 )
-            {
-              *JSON[j].d_value = y;                           // Save the value
-            }
-            if ( JSON[j].non_vol != 0 )
-            {
-              EEPROM.put(JSON[j].non_vol, y);                 // Store into NON-VOL
-            }
-            break;
-        }
-
-        if ( JSON[j].f != 0 )                                 // Call the handler if it is available
-        {
-          JSON[j].f(x);
-        }
-      }
-     j++;
-   }
-  }
-
-/*
- * Check for an alternate GPIO test
- */
-  if ( not_found )
-  {
-    Serial.print("Looking for GPIO");
-    for ( i=0; i != got_right; i++)                             // Go across the JSON input 
-    {
-      j = 0;
-      while ( init_table[j].port != 0xff )                      // Cycle through the tokens
-      {
-        k = instr(&input_JSON[i], init_table[j].gpio_name );    // Compare the input against the list of JSON tags
         if ( k > 0 )                                            // Non zero, found something
         {
           not_found = false;                                    // Read and convert the JSON value
-          Serial.print(T("\r\n")); Serial.print(init_table[j].gpio_name);
-          if ( init_table[j].in_or_out == INPUT_PULLUP )
+          switch ( JSON[j].convert )
           {
-             Serial.print(T(" is input only"));
-             break;
-          }
-          
-          if ( instr("LED_PWM", init_table[j].gpio_name ) > 0 )  // Special case analog output
-          {
-            x = atoi(&input_JSON[i+k]);
-            analogWrite(LED_PWM, x); 
-            Serial.print(x);
-          }
-          else
-          {
-            x = atoi(&input_JSON[i+k]);
-            digitalWrite(init_table[j].port, x);
-            Serial.print(x); 
-            Serial.print(T(" Verify:")); Serial.print(digitalRead(init_table[j].port));
+            default:
+            case IS_VOID:                                       // Void, default to zero
+            case IS_FIXED:                                      // Fixed cannot be changed
+              x = 0;
+              y = 0;
+            break;
+            
+            case IS_INT16:                                      // Convert an integer
+              x = atoi(&input_JSON[i+k]);
+              if ( JSON[j].value != 0 )
+              {
+                *JSON[j].value = x;                             // Save the value
+              }
+              if ( JSON[j].non_vol != 0 )
+              {
+                EEPROM.put(JSON[j].non_vol, x);                 // Store into NON-VOL
+              }
+            
+              break;
+  
+            case IS_FLOAT:                                      // Convert a floating point number
+            case IS_DOUBLE:
+              y = atof(&input_JSON[i+k]);
+              if ( JSON[j].d_value != 0 )
+              {
+                *JSON[j].d_value = y;                           // Save the value
+              }
+              if ( JSON[j].non_vol != 0 )
+              {
+                EEPROM.put(JSON[j].non_vol, y);                 // Store into NON-VOL
+              }
+              break;
+            }
+        
+            if ( JSON[j].f != 0 )                               // Call the handler if it is available
+            {
+              JSON[j].f(x);
+            }
           }
         }
-      j++;
-      }
-    }
+        if ( init_table[l].port != 0xff )                  // Cycle through the tokens
+        {
+          k = instr(&input_JSON[i], init_table[l].gpio_name );    // Compare the input against the list of JSON tags
+          if ( k > 0 )                                            // Non zero, found something
+          {
+            not_found = false;                                    // Read and convert the JSON value
+            Serial.print(T("\r\n")); Serial.print(init_table[j].gpio_name);
+            if ( init_table[j].in_or_out == INPUT_PULLUP )
+              {
+                Serial.print(T(" is input only"));
+              break;
+            }
+          
+            if ( instr("LED_PWM", init_table[j].gpio_name ) > 0 )  // Special case analog output
+            {
+              x = atoi(&input_JSON[i+k]);
+              analogWrite(LED_PWM, x); 
+              Serial.print(x);
+            }
+            else if ( instr("V_SET_PWM", init_table[j].gpio_name ) > 0 )  // Special case analog output
+            {
+              x = atoi(&input_JSON[i+k]);
+              analogWrite(V_SET_PWM, x); 
+              Serial.print(x);
+            }
+            else
+            {
+              x = atoi(&input_JSON[i+k]);
+              digitalWrite(init_table[j].port, x);
+              Serial.print(x); 
+              Serial.print(T(" Verify:")); Serial.print(digitalRead(init_table[j].port));
+            }
+          }
+        }
+
+     if ( JSON[i].token != 0 )
+     {
+       j++;
+     }
+     if ( init_table[l].gpio_name != 0xff )
+     {
+       l++;
+     }
+   }
   }
+
 /*
  * Report an error if input not found
  */
@@ -434,7 +458,9 @@ void show_echo(int v)
   dtostrf(TO_VOLTS(analogRead(V_REFERENCE)), 4, 2, str_c );
   sprintf(s, "\"V_REF\": %s, \n\r", str_c);                                               // Trip point reference
   output_to_all(s);
-
+  
+  sprintf(s, "\"V_SET_PWM\": %d, \n\r", json_vset_PWM);                                   // Setpoint adjust PWM
+  output_to_all(s);
   sprintf(s, "\"TIMER_COUNT\":%d, \n\r", (int)(SHOT_TIME * OSCILLATOR_MHZ));              // Maximum number of clock cycles to record shot (target dependent)
   output_to_all(s);
 
