@@ -66,6 +66,11 @@ namespace freETarget {
         private void loadSessionsInList() {
             lstbSessions.Items.Clear();
             Event currentCOF = mainWindow.eventManager.findEventByName(tabEvents.SelectedTab.Text.Trim());
+            if (currentCOF == null) {
+                mainWindow.displayMessage("Could not find event with name " + tabEvents.SelectedTab.Text.Trim(), false);
+                mainWindow.log("Could not find event with name " + tabEvents.SelectedTab.Text.Trim());
+                return;
+            }
             if (cmbUsers.SelectedItem != null) {
                 List<ListBoxSessionItem> list = storage.findSessionsForUser(cmbUsers.SelectedItem.ToString(), currentCOF);
                 foreach (ListBoxSessionItem item in list) {
@@ -77,6 +82,12 @@ namespace freETarget {
         private void loadStatistics() {
             clearCharts();
             Event currentEvent = mainWindow.eventManager.findEventByName(tabEvents.SelectedTab.Text.Trim());
+            if (currentEvent == null) {
+                mainWindow.displayMessage("Could not find event with name " + tabEvents.SelectedTab.Text.Trim(), false);
+                mainWindow.log("Could not find event with name " + tabEvents.SelectedTab.Text.Trim());
+                return;
+
+            }
             if (cmbUsers.SelectedItem != null) {
                 loadScoreStatistics(cmbUsers.SelectedItem.ToString(), currentEvent);
                 loadMeanRadiusStatistics(cmbUsers.SelectedItem.ToString(), currentEvent);
@@ -363,7 +374,9 @@ namespace freETarget {
 
             //print session from DB, not the one currently loaded
             Session dbSession = storage.findSession(currentSession.id);
-            PDFGenerator.generateAndSavePDF(dbSession, Settings.Default.pdfPath, stream);
+            if (dbSession != null) {
+                PDFGenerator.generateAndSavePDF(dbSession, Settings.Default.pdfPath, stream);
+            }
         }
 
         public bool isSessionLoading() {
