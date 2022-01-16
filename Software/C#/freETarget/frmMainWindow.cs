@@ -111,6 +111,12 @@ namespace freETarget {
             eventManager.setEventsList(storage.loadEvents());
             eventManager.setActiveEventsList(storage.loadActiveEventsIDs());
 
+            String events = "";
+            foreach (Event e in eventManager.getEventsList()) {
+                events += e.ToString() + " | ";
+            }
+            log("Events loaded: " + events.Substring(0,events.Length-2));
+
 
 
 
@@ -132,7 +138,7 @@ namespace freETarget {
 
             toolTipButtons.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
 
-            toolTipButtons.SetToolTip(btnConfig, "Setting - Target distance percent: " + Properties.Settings.Default.targetDistance);
+            toolTipButtons.SetToolTip(btnConfig, "Settings - Target distance percent: " + Properties.Settings.Default.targetDistance);
 
             initBreakdownChart();
 
@@ -523,14 +529,14 @@ namespace freETarget {
                 shotsList.Items.Add(item);
                 shotsList.EnsureVisible(shotsList.Items.Count - 1);
 
-                computeShotStatistics(getShotList());
+                displayShotStatistics(getShotList());
                 writeToGrid(shot);
                 fillBreakdownChart(getShots());
 
             }
         }
 
-        private void computeShotStatistics(List<Shot> shotList) {
+        private void displayShotStatistics(List<Shot> shotList) {
             if (shotList.Count > 1) {
                 currentSession.calculateMeanValuesAndGroupSize(shotList);
 
@@ -752,7 +758,7 @@ namespace freETarget {
                 toolTipButtons.SetToolTip(btnConfig, "Settings - Target distance percent: " + Properties.Settings.Default.targetDistance);
 
                 if (currentSession != null) {
-                    computeShotStatistics(getShotList());
+                    displayShotStatistics(getShotList());
                     displayDebugConsole(Properties.Settings.Default.displayDebugConsole);             
                 }
 
@@ -827,7 +833,17 @@ namespace freETarget {
                 
             }
 
+            this.log("       Starting new session with name: " + tcSessionType.SelectedTab.Text.Trim());
+
             Event ev = eventManager.findEventByName(tcSessionType.SelectedTab.Text.Trim());
+            if (ev == null) {
+                this.displayMessage("Could not find event with name " + tcSessionType.SelectedTab.Text.Trim(), false);
+                this.log("Could not find event with name " + tcSessionType.SelectedTab.Text.Trim());
+                MessageBox.Show("Could not find event with name " + tcSessionType.SelectedTab.Text.Trim(), "Configuration error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                return;
+            } 
+                 
             currentSession = Session.createNewSession(ev, Settings.Default.name);
             currentSession.start();
             this.log("### New Session '" + currentSession.ToString() + "' started ###");
@@ -1214,7 +1230,7 @@ namespace freETarget {
         private void imgSessionName_Click(object sender, EventArgs e) {
             gridTargets.ClearSelection();
             gridSeriesSelected = false;
-            computeShotStatistics(getShotList());
+            displayShotStatistics(getShotList());
             targetRefresh();
         }
 
@@ -1223,7 +1239,7 @@ namespace freETarget {
                 gridSeriesSelected = true;
                 int rowIndex = gridTargets.CurrentCell.RowIndex;
                 currentSession.CurrentSeries = currentSession.AllSeries[rowIndex];
-                computeShotStatistics(getShotList());
+                displayShotStatistics(getShotList());
                 targetRefresh();
             }
         }

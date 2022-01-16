@@ -583,7 +583,7 @@
             // chkLog
             // 
             this.chkLog.AutoSize = true;
-            this.helpProvider.SetHelpString(this.chkLog, "Save all incoming test from the target to a log file");
+            this.helpProvider.SetHelpString(this.chkLog, "Save all incoming text from the target to a log file");
             this.chkLog.Location = new System.Drawing.Point(16, 202);
             this.chkLog.Name = "chkLog";
             this.helpProvider.SetShowHelp(this.chkLog, true);

@@ -337,7 +337,13 @@ namespace freETarget {
             SQLiteDataReader rdr = cmd.ExecuteReader();
             rdr.Read();
 
-            Event cof = mainWindow.eventManager.findEventByID(rdr.GetInt64(0));//Event.GetEvent(rdr.GetString(0));
+            Event cof = mainWindow.eventManager.findEventByID(rdr.GetInt64(0));
+            if (cof == null) {
+                System.Diagnostics.StackTrace t = new System.Diagnostics.StackTrace();
+                mainWindow.log("Could not find event with id " + rdr.GetInt64(0) + Environment.NewLine + t.ToString());
+                return null;
+            }
+
             int numberOfShots = rdr.GetInt32(1);
             string user = rdr.GetString(2);
 
