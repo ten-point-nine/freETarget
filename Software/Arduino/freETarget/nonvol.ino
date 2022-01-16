@@ -48,7 +48,9 @@ void factory_nonvol
   }
   
   gen_position(0); 
-
+  x = 0;
+  EEPROM.put(V_SET_PWM, x);
+  
 /*
  * Use the JSON table to initialize the local variables
  */
@@ -80,7 +82,21 @@ void factory_nonvol
    i++;
  }
   Serial.print(T("\r\nDone\r\n"));
+    
+/*    
+ *     Test the board
+ */
+  Serial.print(T("\n\rTesting motor drive"));
+  for (x=0; x != 10; x++)
+  {
+    paper_on_off(true);
+    delay(ONE_SECOND/4);
+    paper_on_off(false);
+    delay(ONE_SECOND/4);
+  }
   
+  set_trip_point(0);                      // And stay forever in the set trip mode
+
 /*
  * Ask for the serial number.  Exit when you get !
  */
@@ -120,23 +136,12 @@ void factory_nonvol
  */
   nonvol_init = INIT_DONE;
   EEPROM.put(NONVOL_INIT, nonvol_init);
-  
+
 /*
  * Read the NONVOL and print the results
  */
   read_nonvol();                          // Read back the new values
   show_echo(0);                           // Display these settings
-  
-  Serial.print(T("\n\rTesting motor drive"));
-  for (x=0; x != 20; x++)
-  {
-    paper_on_off(true);
-    delay(ONE_SECOND/4);
-    paper_on_off(false);
-    delay(ONE_SECOND/4);
-  }
-  
-  set_trip_point(0);                      // And stay forever in the set trip mode
   
 /*
  * All done, return

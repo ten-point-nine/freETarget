@@ -28,6 +28,7 @@
 #define T_SPARE1      19
 #define T_SPARE2      20
 #define T_LOG         21       // Log the shot levels
+#define T_SWITCH      25       // Test the switches
 
 /*
  * LED status messages

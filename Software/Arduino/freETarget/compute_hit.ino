@@ -676,8 +676,10 @@ struct new_target
 
 typedef new_target new_target_t;
 
-#define D5 (74/2)                   // Five bull air rifle is 74mm centre-centre
-new_target_t five_bull_air_rifle[] = { {-D5, D5}, {D5, D5}, {-D5, -D5}, {D5, -D5}, {0,0}};
+#define D5_74 (74/2)                   // Five bull air rifle is 74mm centre-centre
+new_target_t five_bull_air_rifle_74mm[] = { {-D5_74, D5_74}, {D5_74, D5_74}, {-D5_74, -D5_74}, {D5_74, -D5_74}, {0,0}};
+#define D5_79 (79/2)                   // Five bull air rifle is 74mm centre-centre
+new_target_t five_bull_air_rifle_79mm[] = { {-D5_79, D5_79}, {D5_79, D5_79}, {-D5_79, -D5_79}, {D5_79, -D5_79}, {0,0}};
 
 static void remap_target
   (
@@ -700,8 +702,12 @@ static void remap_target
  */
   switch ( json_target_type )
   {
-    case FIVE_BULL_AIR_RIFLE:
-      ptr = &five_bull_air_rifle[0];
+    case FIVE_BULL_AIR_RIFLE_74:
+      ptr = &five_bull_air_rifle_74mm[0];
+      break;
+      
+    case FIVE_BULL_AIR_RIFLE_79:
+      ptr = &five_bull_air_rifle_79mm[0];
       break;
     
     default:                      // Not defined, assume a regular       

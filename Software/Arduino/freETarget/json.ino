@@ -464,9 +464,6 @@ void show_echo(int v)
   sprintf(s, "\"TIMER_COUNT\":%d, \n\r", (int)(SHOT_TIME * OSCILLATOR_MHZ));              // Maximum number of clock cycles to record shot (target dependent)
   output_to_all(s);
 
-  sprintf(s, "\"DIP_HEX\": 0x0%c, \n\r", to_hex[0x0F & read_DIP()]);                      // DIP switch status
-  output_to_all(s);
-
   sprintf(s, "\"WiFi\": %d, \n\r", esp01_is_present());                                 // TRUE if WiFi is available
   output_to_all(s);
 

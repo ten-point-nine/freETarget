@@ -89,10 +89,11 @@ void self_test(uint16_t test)
       Serial.print(T("\r\n16 - WiFi test"));
       Serial.print(T("\r\n17 - Dump NonVol"));
       Serial.print(T("\r\n18 - Send sample shot record"));
-      Serial.print(T("\r\n20 - Log North Sensor"));
-      Serial.print(T("\r\n21 - Log East Sensor"));
-      Serial.print(T("\r\n22 - Log South Sensor"));
-      Serial.print(T("\r\n23 - Log West Sensor"));
+      Serial.print(T("\r\n21 - Log North Sensor"));
+      Serial.print(T("\r\n22 - Log East Sensor"));
+      Serial.print(T("\r\n23 - Log South Sensor"));
+      Serial.print(T("\r\n24 - Log West Sensor"));
+      Serial.print(T("\r\n25 - Test Push BUttons"));
       Serial.print(T("\r\n"));
       break;
 
@@ -314,14 +315,30 @@ void self_test(uint16_t test)
     break;
 
 /*
- * Test 19 Log the input voltage levels on North
+ * Test 21 Log the input voltage levels on North
  */
-  case T_LOG + 0:
-  case T_LOG + 1:
-  case T_LOG + 2:
-  case T_LOG + 3:
+  case T_LOG + 0:     // 20
+  case T_LOG + 1:     // 21
+  case T_LOG + 2:     // 22
+  case T_LOG + 3:     // 23
     log_sensor(test - T_LOG);
     break;
+
+/*
+ * Test 25 Log the input voltage levels on North
+ */
+  case T_SWITCH:
+    while (Serial.available())
+    {
+      Serial.read();
+    }
+    while (Serial.available() == 0 )
+    {
+      set_LED( 1, DIP_SW_A, DIP_SW_B );   // Copy the switches
+    }
+    Serial.print(T("\n\rDone"));
+    break;
+
   }
  /* 
   *  All done, return;
@@ -801,16 +818,21 @@ void set_trip_point
         Serial.print(T("\r\nTest WiFi]r]n104"));
         esp01_test();
         break;
-        
+
+      case 'R':
+      case 'r':                       // Reset Cancel
       case 'X':
       case 'x':                       // X Cancel
         sensor_status = 0;
+        stop_counters();
+        read_timers();
         arm_counters();               // Reset the latch state
         enable_interrupt(1);          // Turn on the face strike interrupt
         face_strike = false;          // Reset the face strike count
         enable_interrupt(1);          // Turning it on above creates a fake interrupt with a disable
         Serial.print(T("\r\nResetting Sensors\r\n"));
         break;
+        
       default:
         break;
     }
