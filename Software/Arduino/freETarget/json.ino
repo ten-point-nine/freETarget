@@ -71,10 +71,10 @@ const json_message JSON[] = {
   {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,                       0,       0 },    // Echo test
   {"\"INIT\":",           0,                                 0,                IS_INT16,  &init_nonvol,     NONVOL_INIT,             0 },    // Initialize the NONVOL memory
   {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT16,  &set_LED_PWM_now, NONVOL_LED_PWM,         50 },    // Set the LED brightness
-  {"\"MFS\":",            &json_multifunction,               0,                IS_INT16,  0,                NONVOL_MFS,              0 },    // Multifunction switch action
+  {"\"MFS\":",            &json_multifunction,               0,                IS_INT16,  0,                NONVOL_MFS,   (TABATA_ON_OFF * 100) + (ON_OFF * 10) + (PAPER_FEED) },    // Multifunction switch action
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT16,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
   {"\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT16,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
-  {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT16,  0,                NONVOL_PAPER_TIME,       0 },    // Set the paper advance time
+  {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT16,  0,                NONVOL_PAPER_TIME,      50 },    // Set the paper advance time
   {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT16,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
   {"\"RAPID_CYCLES\":",   &json_rapid_cycles,                0,                IS_INT16,  0,                NONVOL_RAPID_CYCLES,     0 },    // Number of cycles to use for the Rapid Fire timer
   {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT16,  0,                                  0,     0 },    // Rapid Fire Enabled
@@ -83,7 +83,7 @@ const json_message JSON[] = {
   {"\"RAPID_TYPE\":",     &json_rapid_type,                  0,                IS_INT16,  0,                NONVOL_RAPID_TYPE,       0 },    // Rapid fire event type
   {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT16,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
   {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  &gen_position,    NONVOL_SENSOR_DIA,     230 },    // Generate the sensor postion array
-  {"\"SN\":",             &json_serial_number,               0,                IS_INT16,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
+  {"\"SN\":",             &json_serial_number,               0,                IS_FIXED,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
   {"\"STEP_COUNT\":",     &json_step_count,                  0,                IS_INT16,  0,                NONVOL_STEP_COUNT,       0 },    // Set the duration of the stepper motor ON time
   {"\"STEP_TIME\":",      &json_step_time,                   0,                IS_INT16,  0,                NONVOL_STEP_TIME,        0 },    // Set the number of times stepper motor is stepped
   {"\"TABATA_CYCLES\":",  &json_tabata_cycles,               0,                IS_INT16,  0,                NONVOL_TABATA_CYCLES,    0 },    // Number of cycles to use for the Tabata timer
@@ -441,6 +441,8 @@ void show_echo(int v)
 /*
  * Finish up with the special cases
  */
+  multifunction_display();
+  
   sprintf(s, "\"IS_TRACE\": %d, \n\r", is_trace);                                         // TRUE to if trace is enabled
   output_to_all(s);
 
@@ -464,12 +466,12 @@ void show_echo(int v)
   sprintf(s, "\"TIMER_COUNT\":%d, \n\r", (int)(SHOT_TIME * OSCILLATOR_MHZ));              // Maximum number of clock cycles to record shot (target dependent)
   output_to_all(s);
 
-  sprintf(s, "\"WiFi\": %d, \n\r", esp01_is_present());                                 // TRUE if WiFi is available
+  sprintf(s, "\"WiFi\": %d, \n\r", esp01_is_present());                                   // TRUE if WiFi is available
   output_to_all(s);
 
   sprintf(s, "\"VERSION\": %s, \n\r", SOFTWARE_VERSION);                                  // Current software version
-  output_to_all(s); 
-
+  output_to_all(s);  
+  
   dtostrf(revision()/100.0, 4, 2, str_c );              
   sprintf(s, "\"BD_REV\": %s \n\r", str_c);                                               // Current board versoin
   output_to_all(s);

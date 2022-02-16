@@ -8,6 +8,51 @@
 
 /*----------------------------------------------------------------
  * 
+ * funciton: check_nonvol
+ * 
+ * brief:    Read nonvol and set up variables
+ * 
+ * return:   Nonvol values copied to RAM
+ * 
+ *---------------------------------------------------------------
+ *
+ * Check to see if the NONVOL has been initialized correctly
+ *
+ *------------------------------------------------------------*/
+void check_nonvol(void)
+{
+  unsigned int nonvol_init;
+  
+  if ( is_trace )
+  {
+    Serial.print(T("\r\nChecking NONVOL"));
+  }
+  
+/*
+ * Read the nonvol marker and if uninitialized then set up values
+ */
+  EEPROM.get(NONVOL_INIT, nonvol_init);
+  
+  if ( nonvol_init != INIT_DONE)                       // EEPROM never programmed
+  {
+    factory_nonvol(true);                              // Force in good values
+  }
+  
+  EEPROM.get(NONVOL_SERIAL_NO, nonvol_init);
+  
+  if ( nonvol_init == (-1) )                          // Serial Number never programmed
+  {
+    factory_nonvol(true);                             // Force in good values
+  }
+
+/*
+ * All OK now
+ */
+  return;
+}
+
+/*----------------------------------------------------------------
+ * 
  * function: factory_nonvol
  * 
  * brief: Initialize the NONVOL back to factory settings
@@ -25,14 +70,18 @@ void factory_nonvol
   )
 {
   unsigned int nonvol_init;               // Initialization token
-           int serial_number;             // Board serial number
+  unsigned int serial_number;             // Board serial number
   char         ch;
   unsigned int x;                         // Temporary Value
   double       dx;                        // Temporarty Value
 
-  /*
-   * Fill up all of memory with a known (bogus) value
-   */
+  EEPROM.get(NONVOL_SERIAL_NO, serial_number); // record the staring serial number
+  Serial.print(serial_number);
+  Serial.print(new_serial_number);
+  delay(5);
+/*
+ * Fill up all of memory with a known (bogus) value
+ */
   Serial.print(T("\r\nReset to factory defaults. This may take a while\r\n"));
   ch = 0xAB;
   for ( i=0; i != NONVOL_SIZE; i++)
@@ -50,13 +99,18 @@ void factory_nonvol
   gen_position(0); 
   x = 0;
   EEPROM.put(V_SET_PWM, x);
-  
+  if ( new_serial_number == false )
+  {
+    EEPROM.put(NONVOL_SERIAL_NO, serial_number);  // Put the serial number back
+  }
+ 
 /*
  * Use the JSON table to initialize the local variables
  */
   i=0;
   while ( JSON[i].token != 0 )
   {
+    
     switch ( JSON[i].convert )
     {
        case IS_VOID:                                        // Variable does not contain anything 
@@ -84,17 +138,25 @@ void factory_nonvol
   Serial.print(T("\r\nDone\r\n"));
     
 /*    
- *     Test the board
+ *     Test the board only if it is a factor init
  */
-  Serial.print(T("\n\rTesting motor drive"));
-  for (x=0; x != 10; x++)
+  if ( new_serial_number )
   {
-    paper_on_off(true);
-    delay(ONE_SECOND/4);
-    paper_on_off(false);
-    delay(ONE_SECOND/4);
+    Serial.print(T("\r\n Testing motor drive "));
+    for (x=10; x != 0; x--)
+    {
+      Serial.print(x); Serial.print(T("+ "));
+      paper_on_off(true);
+      delay(ONE_SECOND/4);
+      Serial.print(T("- "));
+      paper_on_off(false);
+      delay(ONE_SECOND/4);
+    }
+    Serial.print(T("\r\n"));
   }
-  
+/*
+ * Set the trip point
+ */
   set_trip_point(0);                      // And stay forever in the set trip mode
 
 /*
@@ -172,7 +234,13 @@ void factory_nonvol
  * point value.
  * 
  *------------------------------------------------------------*/
-void init_nonvol(int v)
+ #define INIT_ALLOWED         1234        // Number user must enter to allow initialization
+ #define INIT_SERIAL_NUMBER   1235        // Number used to re-enter the serial number
+ 
+void init_nonvol
+  (
+    int verify                            // Verification code entered by user
+  )
 {
   unsigned int nonvol_init;               // Initialization token
            int serial_number;             // Board serial number
@@ -183,19 +251,13 @@ void init_nonvol(int v)
 /*
  * Ensure that the user wants to init the unit
  */
-  if ( (v != 1234) && (v != 1235) )
+  if ( (verify != INIT_ALLOWED) && (verify != INIT_SERIAL_NUMBER) )
   {
     Serial.print(T("\r\nUse {\"INIT\":1234}\r\n"));
     return;
   }
 
-  factory_nonvol(v & 1);
-  
-/*
- * Read the NONVOL and print the results
- */
-  read_nonvol();                          // Read back the new values
-  show_echo(0);                           // Display these settings
+  factory_nonvol(verify == INIT_SERIAL_NUMBER);
   
 /*
  * All done, return

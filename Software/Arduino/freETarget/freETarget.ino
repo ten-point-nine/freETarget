@@ -35,6 +35,7 @@ const char nesw[]   = "NESW";                  // Cardinal Points
 const char to_hex[] = "0123456789ABCDEF";      // Quick Hex to ASCII
 
 static long tabata(bool reset_time, bool reset_cycles); // Tabata state machine
+bool        target_hot;                        // TRUE if the target is active
 
 /*----------------------------------------------------------------
  * 
@@ -54,11 +55,6 @@ void setup(void)
   Serial.begin(115200);
   AUX_SERIAL.begin(115200); 
   DISPLAY_SERIAL.begin(115200); 
-
-/* 
- *  Read the persistent storage
- */
-  read_nonvol();
 
 /*
  *  Set up the port pins
@@ -84,6 +80,12 @@ void setup(void)
   randomSeed( analogRead(V_REFERENCE));   // Seed the random number generator
   is_trace = VERBOSE_TRACE;               // Set the trace based on the DIP switch
 
+/* 
+ *  Read the persistent storage
+ */
+  read_nonvol();
+  multifunction_init();
+  
 /*
  * Initialize the WiFi if available
  */
@@ -108,12 +110,14 @@ void setup(void)
     blink_fault(POST_COUNT_FAILED);       // and try again
   }
   POST_trip_point();                      // Show the trip point
-
+  
 
 /*
  * Ready to go
  */
   set_LED_PWM(json_LED_PWM);
+  set_LED(1, 0, 0);                      // to a client, then the RDY light is steady on
+  target_hot = true;
   return;
 }
 
@@ -153,7 +157,8 @@ void loop()
  */
   esp01_receive();                // Accumulate input from the IP port.
   multifunction_switch(0);        // Read the switches
-  tabata(false, false); 
+  tabata(false, false);           // Update the Tabata state
+  
 /*
  * Take care of any commands coming through
  */
@@ -597,6 +602,63 @@ static long tabata
       return 0;
  }
 
+
+/*----------------------------------------------------------------
+ * 
+ * function: tabata_control
+ * 
+ * brief:   IControl the tabata operation when two switches are presseed
+ * 
+ * return:  Tabata time updated
+ * 
+ *----------------------------------------------------------------
+ *
+ *  If the tabata is ON, then turn it off
+ *  If the tabate is OFF, then turn it back on and start over
+ *  
+ *--------------------------------------------------------------*/
+
+void tabata_control(void)
+{
+/*
+ * See if it ON, and turn it off
+ */
+  if ( json_tabata_on != 0 )            // Tabata ON?
+  {
+    json_tabata_on = 0;                 // Turn it Off
+    return;
+  }
+
+  EEPROM.get(NONVOL_TABATA_ON, json_tabata_on); // Initialize the value
+
+/*
+ * The buttons have been released, 
+ */
+  if ( json_tabata_on != 0 )              // Flash three LEDs if Tabata
+  {                                       // is enabled
+    set_LED_PWM(0);                   // Turn off the illumination
+    set_LED(L('*', '.', '*'));
+    delay(ONE_SECOND/4);
+    set_LED(L('.', '*', '.'));
+    delay(ONE_SECOND/4);
+  }
+  else
+  {
+    set_LED_PWM(json_LED_PWM);        // Turn on the LED illumination
+    set_LED(L('.', '.', '.'));        // Flash one LED if disabled
+    delay(ONE_SECOND/4);
+    set_LED(L('.', '*', '.'));
+    delay(ONE_SECOND/4);
+    EEPROM.put(NONVOL_TABATA_ENBL, (int)0);
+  }
+  set_LED(SHOT_READY);
+
+/*
+ * All donem return
+ */
+  return;                               // Bail out now
+}
+
  /*----------------------------------------------------------------
  * 
  * function: bye
@@ -614,7 +676,7 @@ static long tabata
 void bye(void)
 {
   char str[128];
-  char strB[128];
+  long now;
   
 /*
  * Say Good Night Gracie!
@@ -623,34 +685,89 @@ void bye(void)
   output_to_all(str);
   set_LED_PWM(LED_PWM_OFF);         // Goint to sleep 
   esp01_close();                    // Disconnect
-   
+  target_hot = false;
+  
+/*
+ * Loop waiting for something to happen
+ */ 
   while ( AVAILABLE )               // Purge the com port
   {
     GET();
   }
   
-/*
- * Loop waiting for something to happen
- */
   while( (DIP_SW_A == 0)            // Wait for the switch to be pressed
         && (DIP_SW_B == 0)          // Or the switch to be pressed
         && ( AVAILABLE == 0)        // Or a character to arrive
-        && ( is_running() == 0) )     // Or a shot arrives
+        && ( is_running() == 0) )   // Or a shot arrives
   {
     if ( esp01_is_present() )
     {
-      esp01_receive();                // Accumulate input from the IP port.;
+      esp01_receive();              // Accumulate input from the IP port.;
     }
   }
+  
+  hello();                          // Back in action
+  
+  while ( (DIP_SW_A == 1)           // Wait here for both switches to be released
+            || ( DIP_SW_B == 1 ) )
+  {
+    continue;
+  }  
+   
+/*
+ * Wait here for a bit to see if the user presses the button again to extend the light on time
+ */
+  now = millis();
+  while ( (millis() - now) < (ONE_SECOND * 2) )
+  {
+    if ( (DIP_SW_A == 1)            // If either switch is pressed
+            || ( DIP_SW_B == 1 ) )
+    {
+      set_LED_PWM_now(0);           // BLink the light off to show the switch pressed
+      json_power_save += 30;        //  Add 30 minutes to the timer
+      Serial.print(json_power_save);
+      while ( (DIP_SW_A == 1)       // Wait here for both switches to be released
+            || ( DIP_SW_B == 1 ) )
+      {
+        continue;
+      }
+      set_LED_PWM_now(json_LED_PWM);// Put the light on
+      now = millis();               // Reset the waiting timer
+    } 
+  }
+  
+/*
+ * Come out of sleep
+ */
+  return;
+}
+
+/*----------------------------------------------------------------
+ * 
+ * function: hello
+ * 
+ * brief:    Come out of power saver
+ * 
+ * return:   Nothing
+ * 
+ *----------------------------------------------------------------
+ *
+ * This function Puts the system back in service
+ * 
+ *--------------------------------------------------------------*/
+void hello(void)
+{
+  char str[128];
+
   sprintf(str, "{\"Hello_World\":0}");
   output_to_all(str);
   
 /*
  * Woken up again
  */  
-
-  set_LED_PWM(json_LED_PWM);
+  set_LED_PWM_now(json_LED_PWM);
   power_save = millis();
+  target_hot = true;
   
   return;
 }

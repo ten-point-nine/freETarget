@@ -103,7 +103,6 @@ void init_gpio(void)
  */
   pinMode(PAPER, OUTPUT);
   paper_on_off(false);        // Turn it off
-  multifunction_init();       // Program the multifunction switch
   
 /*
  * All done, return
@@ -721,9 +720,14 @@ void blink_fault
  * turns the LEDs on, and holding it will carry out 
  * the alternate activity.
  * 
+ * Special Cases
+ * 
+ * Both switches pressed, Toggle the Tabata State
+ * 
  *-----------------------------------------------------*/
 static unsigned long hold_time_LO;
 static unsigned long hold_time_HI;
+static bool first_time = true;
 
 unsigned int multifunction_switch
   (
@@ -731,53 +735,73 @@ unsigned int multifunction_switch
   )
  {
     unsigned int return_value;          // Value returned to caller
-    
+    unsigned int  x;                    // Working Value
+    unsigned int  i;                    // Iteration Counter
+    static bool   first_time = true;    // TRUE the first time through
     if ( CALIBRATE )
     {
       return;                           // Not used if in calibration mode
     }
-        
 
+/*
+ * Don't do anyting if the switches are'nt pressed
+ */
+  if ( DIP_SW_A == 0 )
+  {
+    hold_time_LO = now;
+  }
+  
+  if ( DIP_SW_B == 0 )
+  {
+    hold_time_HI = now;
+  }
+
+  if ( (DIP_SW_A == 0 )
+        && (DIP_SW_B == 0 ) )             // Both switches are open?  
+   {
+     first_time = true;                   // Reset the first flag
+     return;                              // Nothing is happening, return
+   }
+  
+/*
+ * Check to see if the switch has been pressed for the first time
+ */
+  if ( first_time )
+  {
+    set_LED_PWM(LED_PWM_TOGGLE);          // Switch is pressed, Toggle the LEDs
+    tabata(true, true);                   // Reset the tabata counts
+    first_time = false;
+    return;                               // Do nothing on this pass
+  }
+  
+/*
+ * One or two switches have been pressed.  Debounce for a bit
+ */
+  delay(ONE_SECOND/2);
+  
 /*
  * Look for the special case of both switches pressed
  */
   if ( DIP_SW_A && DIP_SW_B )             // Both pressed?
   {
-    if ( json_tabata_on != 0 )            // Tabata ON?
+    switch (HLO10(json_multifunction))
     {
-      json_tabata_on = 0;                 // Turn it Off
+      case TABATA_ON_OFF:
+        tabata_control();
+        break;
+        
+    case ON_OFF:                          // Turn the target off
+      bye();                              // Stay in the Bye state until a wake up event comes along
+      break;
+
+    default:
+      break;
     }
-    else                                  // Turn it ON
-    {
-      EEPROM.get(NONVOL_TABATA_ON, json_tabata_on);
-    }
-    while ( DIP_SW_A || DIP_SW_B )        // Wait for both switches released
-    {
-      if ( json_tabata_on != 0 )          // Flash three LEDs if Tabata
-      {                                   // is enabled
-        set_LED_PWM(0);                   // Turn off the illumination
-        set_LED(L('*', '.', '*'));
-        delay(ONE_SECOND/4);
-        set_LED(L('.', '*', '.'));
-        delay(ONE_SECOND/4);
-      }
-      else
-      {
-        set_LED_PWM(json_LED_PWM);        // Turn on the LED illumination
-        set_LED(L('.', '.', '.'));        // Flash one LED if disabled
-        delay(ONE_SECOND/4);
-        set_LED(L('.', '*', '.'));
-        delay(ONE_SECOND/4);
-        EEPROM.put(NONVOL_TABATA_ENBL, (int)0);
-      }
-      set_LED(SHOT_READY);
-    }
-    
-    return;                               // Bail out now
+    return;
   }
-  
+      
 /*
- * Manage the GPIO based on the configuration
+ * Single button pressed Manage the GPIO based on the configuration
  */
   switch (LO10(json_multifunction))
   {
@@ -801,19 +825,18 @@ unsigned int multifunction_switch
       break;
       
     case ON_OFF:                          // Turn the target off
-      bye();
+      bye();                              // Stay in the Bye state until a wake up event comes along
       break;
       
     default:
       break;
   }
-  
+
   switch (HI10(json_multifunction))
   {
     case PAPER_FEED:                      // The switch acts as paper feed control
-      return_value = DIP_SW_B;            // Use DIP_SW_B as a paper feed
+      return_value = DIP_SW_B;            // Use DIP_SW_A as a paper feed
       sw_state(&fcn_DIP_SW_B, &hold_time_HI, &drive_paper);
-      set_LED_PWM(0);
       break;
 
     case GPIO_IN:                         // The switch is a general purpose input
@@ -822,18 +845,18 @@ unsigned int multifunction_switch
 
     case GPIO_OUT:                        // The switch is a general purpose output
       return_value = new_state;
-      digitalWrite(DIP_1, new_state);
+      digitalWrite(DIP_2, new_state);
       break;
-      
+
     case PC_TEST:                         // Send a fake score to the PC
       return_value = DIP_SW_B;            // Use DIP_SW_B as a paper feed
       sw_state(&fcn_DIP_SW_B, &hold_time_HI, &send_fake_score);
       break;
       
     case ON_OFF:                          // Turn the target off
-      bye();
+      bye();                              // Stay in the Bye state until a wake up event comes along
       break;
-
+      
     default:
       break;
   }
@@ -859,6 +882,12 @@ unsigned int multifunction_switch
  * functions to simplify the construction and provide
  * consistency in the operation.
  * 
+ * The switches have a different operation depending on
+ * how long they are held down for.
+ * 
+ * Tap: Wake up the unit if it was sleeping
+ * Held for a second: Execute the MFS function
+ * 
  *-----------------------------------------------------*/
 static bool fcn_DIP_SW_A(void){return DIP_SW_A;}
 static bool fcn_DIP_SW_B(void){return DIP_SW_B;}
@@ -873,28 +902,13 @@ static void sw_state
     void* (fcn_action)(void)              // Action to take
     )
 {
-  static bool first_time = true;          // Is this the first time through?
   unsigned long now;                      // Current time in seconds
-  now = millis() / 1000;
-  
-  if ( (fcn_state)() == 0 )               // Switch is open, do nothing
-  {
-    *which_timer = now;                   // But remember the current time
-    first_time = true;                    // Go back to the first time
-    return;
-  }
-
+  now = millis();
+    
 /*
- * The switch is pressed for more than 1/2 second, carry out the action
+ * The switch is being held down for more than one cycle.  Wait a second and execute the function
  */
-  if ( first_time )
-  {
-    set_LED_PWM(LED_PWM_TOGGLE);          // Switch is pressed, Toggle the LEDs
-    tabata(true, true);                   // Reset the tabata counts
-    first_time = false;
-  }
-  
-  if ( (now - *which_timer) > 1 )       // Held for 1 second
+  if ( (now - *which_timer) > 1000 )      // Held for 1 second
   {
     while ( (fcn_state)() != 0 )
     {
@@ -902,6 +916,10 @@ static void sw_state
       delay(100);
     }
   }
+
+/*
+ * All done, return
+ */
   return;
 }
 
@@ -916,6 +934,40 @@ static void send_fake_score(void)
   h.x = random(-json_sensor_dia/2.0, json_sensor_dia/2.0);
   h.y = 0;
   send_score(&h, shot++, 0); return;
+}
+
+/*-----------------------------------------------------
+ * 
+ * function: multifunction_display
+ * 
+ * brief:    Display the MFS settings as text
+ * 
+ * return:   None
+ * 
+ *-----------------------------------------------------
+ *
+ * The MFS is encoded as a 3 digit packed BCD number
+ * 
+ * This function unpacks the numbers and displayes it as
+ * text in a JSON message.
+ * 
+ *-----------------------------------------------------*/
+static char* mfs_text[] = { "N/A", "PAPER_FEED",  "GPIO_IN", "GPIO_OUT", "PC_TEST", "POWER_ON_OFF", "TABATA_ON_OFF"};
+
+void multifunction_display(void)
+{
+  char s[128];                          // Holding string
+
+  sprintf(s, "\"MFS_TEXT\": \"1-%s, 2-%s, 1&2-%s\"\n\r", mfs_text[LO10(json_multifunction)],
+                                                     mfs_text[HI10(json_multifunction)],
+                                                     mfs_text[HLO10(json_multifunction)]);
+
+  output_to_all(s);  
+
+/*
+ * All done, return
+ */
+  return;
 }
 
 /*-----------------------------------------------------
@@ -988,7 +1040,6 @@ void digital_test(void)
 /*
  * Read in the fixed digital inputs
  */
-
   Serial.print(T("\r\nTime:"));                      Serial.print(micros()/1000000); Serial.print("."); Serial.print(micros()%1000000); Serial.print(T("s"));
   Serial.print(T("\r\nBD Rev:"));                    Serial.print(revision());       
   Serial.print(T("\r\nDIP: 0x"));                    Serial.print(read_DIP(), HEX); 

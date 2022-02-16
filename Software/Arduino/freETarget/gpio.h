@@ -15,6 +15,7 @@ void drive_paper(void);                                   // Turn on the paper m
 void enable_interrupt(unsigned int active);               // Turn on the face strike interrupt if active
 void disable_interrupt(void);                             // Turn off the face strike interrupt
 unsigned int multifunction_switch(unsigned int new_state);// Handle the actions of the DIP Switch signal
+void multifuction_display(void);                          // Display the MFS settings
 void output_to_all(char* s);                              // Multipurpose driver
 void char_to_all(char ch);                                // Output a single character
 void digital_test(void);                                  // Execute the digital test
@@ -102,7 +103,9 @@ void digital_test(void);                                  // Execute the digital
 #define GPIO_IN       2                   // DIP A/B used as a GPIO in
 #define GPIO_OUT      3                   // DIP A/B used as a GPIO out
 #define PC_TEST       4                   // DIP A/B used to trigger fake shot
-#define ON_OFF        5                   // DIP A/B used to turn off the target
+#define ON_OFF        5                   // DIP A/B used to turn the target ON or OFF
+#define TABATA_ON_OFF 6                   // Both Dip Switches pressed, manage Tabata
+
 
 #define J10_1      VCC
 #define J10_2       14                    // TX3

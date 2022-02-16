@@ -14,7 +14,7 @@
 #include "esp-01.h"
 #include "json.h"
 
-#define SOFTWARE_VERSION "\"3.06.2 January 11, 2022\""
+#define SOFTWARE_VERSION "\"3.06.9 February 15, 2022\""
 #define REV_100    100
 #define REV_210    210
 #define REV_220    220
@@ -67,8 +67,10 @@ char GET (void)
 
 #define HI(x) (((x) >> 8 ) & 0x00ff)                  // High nibble
 #define LO(x) ((x) & 0x00ff)                          // Low nibble
-#define HI10(x) (((x) / 10 ) % 10)                    // High digit
-#define LO10(x) ((x) % 10)                            // Low digit
+#define HHI10(x) (((x) / 1000 ) % 10)                 // High High digit
+#define HLO10(x) (((x) / 100 ) % 10)                  // High Low digit
+#define HI10(x)  (((x) / 10 ) % 10)                   // High digit
+#define LO10(x)  ((x) % 10)                           // Low digit
 
 #define N 0
 #define E 1
@@ -102,6 +104,7 @@ extern const char to_hex[];
 extern bool  face_strike;
 extern bool  is_trace;                // True if tracing is enabled 
 extern const char nesw[];             // Cardinal Points
+extern bool  target_hot;              // True if the target is active
 
 /*
  *  Factory settings via Arduino monitor

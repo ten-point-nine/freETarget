@@ -679,6 +679,17 @@ void self_test(uint16_t test)
 const unsigned int volts_to_LED[] = { NOT_IN_SPEC,     1,    BLINK+1,    2,     BLINK+2,    3,    BLINK+3,    4,    BLINK+4,    5,    BLINK+5,    6,     BLINK+6,       7,   BLINK+7,  NOT_IN_SPEC, 0 };
 const unsigned int mv_to_counts[] = {   CT(350),    CT(400), CT(450), CT(500),  CT(550), CT(600), CT(650), CT(700), CT(750), CT(800), CT(900), CT(1000), CT(1100), CT(1200), CT(1300),   CT(5000),  0 };
 
+static void start_over(void)    // Start the test over again
+{
+  stop_counters();
+  arm_counters();               // Reset the latch state
+  enable_interrupt(1);          // Turn on the face strike interrupt
+  face_strike = false;          // Reset the face strike count
+  enable_interrupt(1);          // Turning it on above creates a fake interrupt with a disable
+  Serial.print(T("\r\nResetting Sensors\r\n"));
+  return;
+}
+
 void set_trip_point
   (
   int pass_count                                            // Number of passes to allow before exiting (0==infinite)
@@ -690,6 +701,7 @@ void set_trip_point
   bool          not_in_spec;                                // Set to true if the input is close to the limits
   bool          stay_forever;                               // Stay forever if called with pass_count == 0;
   unsigned int  sensor_status;                              // OR of the sensor bits that have tripped
+  bool          pause;                                      // Stop the test
   
   if ( is_trace )                                           // Infinite number of passes?
   {
@@ -815,22 +827,15 @@ void set_trip_point
       
       case 'W':
       case 'w':                      // Test the WiFI
-        Serial.print(T("\r\nTest WiFi]r]n104"));
+        Serial.print(T("\r\nTest WiFi"));
         esp01_test();
         break;
-
+        
       case 'R':
       case 'r':                       // Reset Cancel
       case 'X':
       case 'x':                       // X Cancel
-        sensor_status = 0;
-        stop_counters();
-        read_timers();
-        arm_counters();               // Reset the latch state
-        enable_interrupt(1);          // Turn on the face strike interrupt
-        face_strike = false;          // Reset the face strike count
-        enable_interrupt(1);          // Turning it on above creates a fake interrupt with a disable
-        Serial.print(T("\r\nResetting Sensors\r\n"));
+        start_over();
         break;
         
       default:
@@ -841,6 +846,10 @@ void set_trip_point
    {
       show_sensor_status(is_running());
       Serial.print(T("\n\r"));
+      if ( (is_running() == 0x0f) && (face_strike != 0) )
+      {
+        start_over();
+      }
    }
    else
    {
@@ -1206,7 +1215,27 @@ void show_sensor_status(unsigned int sensor_status)
   Serial.print(T("  Face Strike:")); Serial.print(face_strike);
   
   Serial.print(T("  V_Ref:")); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
+
+  Serial.print(T("  Switch:"));
   
+  if ( DIP_SW_A == 0 )
+  {
+    Serial.print(T("--"));
+  }
+  else
+  {
+    Serial.print(T("A1"));
+  }
+  Serial.print(T(" "));
+  if ( DIP_SW_B == 0 )
+  {
+    Serial.print(T("--"));
+  }
+  else
+  {
+    Serial.print(T("B2"));
+  }
+
   if ( ((sensor_status & 0x0f) == 0x0f)
     && (face_strike) )
   {
