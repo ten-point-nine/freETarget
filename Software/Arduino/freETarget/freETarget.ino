@@ -393,8 +393,18 @@ void loop()
  * 
  * Test JSON {"TABATA_ON":7, "TABATA_REST":45, "TABATA_CYCLES":60}
  * 
+ * The Tabata is enabled in two parts:
+ * 
+ * TABATA_ENABLE - A global flag to turn the feature on or off
+ * TABATA_ON     - How long each cycle will be turned on for
+ * 
+ * While both of these are stored in persistent storage, the
+ * TABATA_ENABLE can be overuled by pressin the MFS.  TABATA_ON
+ * is only changed by a JSON command.
+ * 
  * The Rapid Fire mode is the same except that the solenoid is 
  * engaged for the duration of the cycle
+ * 
  *--------------------------------------------------------------*/
 static long          tabata_time;      // Internal timern in milliseconds
 static unsigned int  tabata_on;        // Generic ON time
@@ -424,7 +434,6 @@ static long tabata
 {
   unsigned long now;                  // Current time in seconds
   
-
   now = millis()/100;                 // Now in 100ms increments
   if ( (json_rapid_enable == 0) 
       && ( json_tabata_enable == 0) ) // Exit if no cycles are enabled
@@ -621,35 +630,27 @@ static long tabata
 void tabata_control(void)
 {
 /*
- * See if it ON, and turn it off
+ * Toggle the Tabata enable
  */
-  if ( json_tabata_on != 0 )            // Tabata ON?
-  {
-    json_tabata_on = 0;                 // Turn it Off
-    return;
-  }
-
-  EEPROM.get(NONVOL_TABATA_ON, json_tabata_on); // Initialize the value
+  json_tabata_enable = ! json_tabata_enable;  // Toggle the enable
 
 /*
  * The buttons have been released, 
  */
-  if ( json_tabata_on != 0 )              // Flash three LEDs if Tabata
+  if ( json_tabata_enable )               // Flash three LEDs if Tabata
   {                                       // is enabled
-    set_LED_PWM(0);                   // Turn off the illumination
     set_LED(L('*', '.', '*'));
     delay(ONE_SECOND/4);
     set_LED(L('.', '*', '.'));
     delay(ONE_SECOND/4);
+    tabata(true,true);                    // Reset the tabata time
   }
   else
   {
-    set_LED_PWM(json_LED_PWM);        // Turn on the LED illumination
-    set_LED(L('.', '.', '.'));        // Flash one LED if disabled
+    set_LED(L('.', '.', '.'));            // Flash one LED if disabled
     delay(ONE_SECOND/4);
     set_LED(L('.', '*', '.'));
     delay(ONE_SECOND/4);
-    EEPROM.put(NONVOL_TABATA_ENBL, (int)0);
   }
   set_LED(SHOT_READY);
 
