@@ -362,6 +362,14 @@ void read_nonvol(void)
   }
 
   EEPROM.get(NONVOL_V_SET_PWM, json_vset_PWM);
+
+  EEPROM.get(NONVOL_MFS, json_multifunction);                // Override the Multifunction switch if not initialized
+  if ( json_multifunction > 999 )
+  {
+    json_multifunction = (TABATA_ON_OFF * 100) + (ON_OFF * 10) + (PAPER_FEED);   // Put it to the default
+    EEPROM.put(NONVOL_MFS, json_multifunction);
+  }
+  
 /*
  * All done, begin the program
  */

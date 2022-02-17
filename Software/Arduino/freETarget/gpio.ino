@@ -667,33 +667,23 @@ void blink_fault
  {
   switch (LO10(json_multifunction))
   {
-    case PAPER_FEED:
-    case PC_TEST:
-    case GPIO_IN:
+    default:
       pinMode(DIP_1,INPUT_PULLUP);
       break;
 
     case GPIO_OUT:                        // The switch is a general purpose output
       pinMode(DIP_1,OUTPUT);
       break;
-
-    default:
-      break;
   }
   
   switch (HI10(json_multifunction))
   {
-    case PAPER_FEED:
-    case PC_TEST:
-    case GPIO_IN:
+    default:
       pinMode(DIP_2,INPUT_PULLUP);
       break;
 
     case GPIO_OUT:                        // The switch is a general purpose output
       pinMode(DIP_1,OUTPUT);
-      break;
-
-    default:
       break;
   }
 /*
@@ -725,9 +715,6 @@ void blink_fault
  * Both switches pressed, Toggle the Tabata State
  * 
  *-----------------------------------------------------*/
-static unsigned long hold_time_LO;
-static unsigned long hold_time_HI;
-static bool first_time = true;
 
 unsigned int multifunction_switch
   (
@@ -746,124 +733,50 @@ unsigned int multifunction_switch
 /*
  * Don't do anyting if the switches are'nt pressed
  */
-  if ( DIP_SW_A == 0 )
-  {
-    hold_time_LO = now;
-  }
-  
-  if ( DIP_SW_B == 0 )
-  {
-    hold_time_HI = now;
-  }
-
   if ( (DIP_SW_A == 0 )
         && (DIP_SW_B == 0 ) )             // Both switches are open?  
    {
-     first_time = true;                   // Reset the first flag
      return;                              // Nothing is happening, return
    }
   
 /*
  * Check to see if the switch has been pressed for the first time
  */
-  if ( first_time )
-  {
-    set_LED_PWM(LED_PWM_TOGGLE);          // Switch is pressed, Toggle the LEDs
-    tabata(true, true);                   // Reset the tabata counts
-    first_time = false;
-    return;                               // Do nothing on this pass
-  }
-  
-/*
- * One or two switches have been pressed.  Debounce for a bit
- */
-  delay(ONE_SECOND/2);
-  
+  set_LED_PWM(LED_PWM_TOGGLE);          // Switch is pressed, Toggle the LEDs
+  first_time = false;
+  delay(ONE_SECOND/2);                  // Let the switches debounce
+
 /*
  * Look for the special case of both switches pressed
  */
   if ( DIP_SW_A && DIP_SW_B )             // Both pressed?
   {
-    switch (HLO10(json_multifunction))
-    {
-      case TABATA_ON_OFF:
-        tabata_control();
-        break;
-        
-    case ON_OFF:                          // Turn the target off
-      bye();                              // Stay in the Bye state until a wake up event comes along
-      break;
-
-    default:
-      break;
-    }
-    return;
+    sw_state(HLO10(json_multifunction));
   }
       
 /*
  * Single button pressed Manage the GPIO based on the configuration
  */
-  switch (LO10(json_multifunction))
+  else
   {
-    case PAPER_FEED:                      // The switch acts as paper feed control
-      return_value = DIP_SW_A;            // Use DIP_SW_A as a paper feed
-      sw_state(&fcn_DIP_SW_A, &hold_time_LO, &drive_paper);
-      break;
-
-    case GPIO_IN:                         // The switch is a general purpose input
-      return_value = digitalRead(DIP_SW_A);
-      break;
-
-    case GPIO_OUT:                        // The switch is a general purpose output
-      return_value = new_state;
-      digitalWrite(DIP_1, new_state);
-      break;
-
-    case PC_TEST:                         // Send a fake score to the PC
-      return_value = DIP_SW_A;            // Use DIP_SW_B as a paper feed
-      sw_state(&fcn_DIP_SW_A, &hold_time_LO, &send_fake_score);
-      break;
-      
-    case ON_OFF:                          // Turn the target off
-      bye();                              // Stay in the Bye state until a wake up event comes along
-      break;
-      
-    default:
-      break;
-  }
-
-  switch (HI10(json_multifunction))
-  {
-    case PAPER_FEED:                      // The switch acts as paper feed control
-      return_value = DIP_SW_B;            // Use DIP_SW_A as a paper feed
-      sw_state(&fcn_DIP_SW_B, &hold_time_HI, &drive_paper);
-      break;
-
-    case GPIO_IN:                         // The switch is a general purpose input
-      return_value = digitalRead(DIP_SW_B);
-      break;
-
-    case GPIO_OUT:                        // The switch is a general purpose output
-      return_value = new_state;
-      digitalWrite(DIP_2, new_state);
-      break;
-
-    case PC_TEST:                         // Send a fake score to the PC
-      return_value = DIP_SW_B;            // Use DIP_SW_B as a paper feed
-      sw_state(&fcn_DIP_SW_B, &hold_time_HI, &send_fake_score);
-      break;
-      
-    case ON_OFF:                          // Turn the target off
-      bye();                              // Stay in the Bye state until a wake up event comes along
-      break;
-      
-    default:
-      break;
+    if ( DIP_SW_A )
+    {
+      sw_state(LO10(json_multifunction));
+    }
+    if ( DIP_SW_B )
+    {
+      sw_state(HI10(json_multifunction));
+    }
   }
   
 /*
  * All done, return the GPIO state
  */
+  while ( (DIP_SW_A != 0 )
+        || (DIP_SW_B != 0) ) 
+  {
+    continue;                     // Wait here for the switches to be released
+  }
   return return_value;
 }
 
@@ -882,40 +795,45 @@ unsigned int multifunction_switch
  * functions to simplify the construction and provide
  * consistency in the operation.
  * 
- * The switches have a different operation depending on
- * how long they are held down for.
- * 
- * Tap: Wake up the unit if it was sleeping
- * Held for a second: Execute the MFS function
- * 
  *-----------------------------------------------------*/
-static bool fcn_DIP_SW_A(void){return DIP_SW_A;}
-static bool fcn_DIP_SW_B(void){return DIP_SW_B;}
 
 /*
  * Carry out an action based on the switch state
  */
 static void sw_state 
     (
-    bool* (fcn_state)(void),              // Input signal state
-    unsigned long*  which_timer,          // What timer are we using?
-    void* (fcn_action)(void)              // Action to take
+    unsigned int action
     )
-{
-  unsigned long now;                      // Current time in seconds
-  now = millis();
-    
-/*
- * The switch is being held down for more than one cycle.  Wait a second and execute the function
- */
-  if ( (now - *which_timer) > 1000 )      // Held for 1 second
-  {
-    while ( (fcn_state)() != 0 )
+{    
+    switch (action)
     {
-      (fcn_action)();                     // execute the function
-      delay(100);
+      case PAPER_FEED:                      // The switch acts as paper feed control
+        paper_on_off(true);                 // Turn on the paper drive
+        while ( (DIP_SW_A != 0 )
+         && (DIP_SW_B != 0 ) )              // Keep it on while the switches are pressed 
+        {
+          continue; 
+        }
+        paper_on_off(false);                // Then turn it off
+        break;
+
+      case PC_TEST:                         // Send a fake score to the PC
+        send_fake_score();
+        break;
+      
+      case ON_OFF:                          // Turn the target off
+        bye();                              // Stay in the Bye state until a wake up event comes along
+        break;
+
+      case TABATA_ON_OFF:
+        tabata_control();
+        break;
+        
+      default:
+        break;
     }
-  }
+
+
 
 /*
  * All done, return
@@ -952,15 +870,16 @@ static void send_fake_score(void)
  * text in a JSON message.
  * 
  *-----------------------------------------------------*/
-static char* mfs_text[] = { "N/A", "PAPER_FEED",  "GPIO_IN", "GPIO_OUT", "PC_TEST", "POWER_ON_OFF", "TABATA_ON_OFF"};
+ //                           0           1            2          3           4             5             6
+static char* mfs_text[] = { "N/A", "PAPER_FEED",  "GPIO_IN", "GPIO_OUT", "PC_TEST", "POWER_ON_OFF", "TABATA_ON_OFF", "7", "8", "9"};
 
 void multifunction_display(void)
 {
   char s[128];                          // Holding string
 
-  sprintf(s, "\"MFS_TEXT\": \"1-%s, 2-%s, 1&2-%s\"\n\r", mfs_text[LO10(json_multifunction)],
-                                                     mfs_text[HI10(json_multifunction)],
-                                                     mfs_text[HLO10(json_multifunction)]);
+  sprintf(s, "\"MFS_TEXT\": \"1-%s, 2-%s, 1&2-%s,\"\n\r", mfs_text[LO10(json_multifunction)],
+                                                          mfs_text[HI10(json_multifunction)],
+                                                          mfs_text[HLO10(json_multifunction)]);
 
   output_to_all(s);  
 
