@@ -197,7 +197,7 @@ namespace freETarget {
         private List<List<Shot>> allSeries = new List<List<Shot>>();
 
         protected Session() {
-
+            clear();
         }
 
         public targets.aTarget getTarget() {

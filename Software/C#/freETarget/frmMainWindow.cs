@@ -971,10 +971,26 @@ namespace freETarget {
 
         public void calibrateX(decimal increment) {
             calibrationX += increment;
+
+            int sessionScore = 0;
+            decimal sessionDecimalScore = 0;
+            int sessionInnerTens = 0;
+
             foreach (Shot shot in getShotList()) {
                 shot.calibrationX = calibrationX;
                 shot.computeScore(this.currentSession.getTarget());
+
+                sessionScore += shot.score;
+                sessionDecimalScore += shot.decimalScore;
+                if (shot.innerTen) {
+                    sessionInnerTens++;
+                }
             }
+
+            this.currentSession.score = sessionScore;
+            this.currentSession.decimalScore = sessionDecimalScore;
+            this.currentSession.innerX = sessionInnerTens;
+
             shotsList.Items.Clear();
             shotsList.Refresh();
             gridTargets.Rows.Clear();
@@ -995,10 +1011,25 @@ namespace freETarget {
 
         public void calibrateY(decimal increment) {
             calibrationY += increment;
+
+            int sessionScore = 0;
+            decimal sessionDecimalScore = 0;
+            int sessionInnerTens = 0;
+
             foreach (Shot shot in getShotList()) {
                 shot.calibrationY = calibrationY;
                 shot.computeScore(this.currentSession.getTarget());
+
+                sessionScore += shot.score;
+                sessionDecimalScore += shot.decimalScore;
+                if (shot.innerTen) {
+                    sessionInnerTens++;
+                }
             }
+
+            this.currentSession.score = sessionScore;
+            this.currentSession.decimalScore = sessionDecimalScore;
+            this.currentSession.innerX = sessionInnerTens;
 
             shotsList.Items.Clear();
             shotsList.Refresh();
