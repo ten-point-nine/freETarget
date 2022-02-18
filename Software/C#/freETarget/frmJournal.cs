@@ -184,7 +184,7 @@ namespace freETarget {
                 }
             }
             decimal avg = sum / avgCount;
-            chartWindage.Series[0].Name = "Last 10 sessions average windage: " + avg.ToString("F2", CultureInfo.InvariantCulture);
+            chartWindage.Series[0].Name = "Last 10 sessions average windage: " + avg.ToString("F2", CultureInfo.InvariantCulture); 
             chartWindage.ChartAreas[0].AxisY.Minimum = (double)min - 1;
             chartWindage.ChartAreas[0].AxisY.Maximum = (double)max + 1;
             chartWindage.ResetAutoValues();
