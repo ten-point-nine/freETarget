@@ -34,8 +34,12 @@
  * LED status messages
  */
 // Normal operation        RDY Light On
-#define SHOT_READY         L('*', '.', '.') // The shot is ready to go
-#define SHOT_DONE          L('*', '*', '*') // A shot has been detected
+#define LED_RESET         L('.', '.', '.') // Force them all off
+#define LED_READY         L('*', '.', '.') // The shot is ready to go
+#define LED_OFF           L('.', '-', '-') // Turn off the READY light
+#define LED_TABATA_ON     L('-', '*', '-') // Tabata is ready to go, leave the others alone
+#define LED_TABATA_OFF    L('-', '.', '-') // Tabata is ready to go, leave the others alone
+#define LED_DONE          L('*', '*', '*') // A shot has been detected
 
 // Sensor failed while waiting for a shot X Light On
 #define NORTH_FAILED       L('.', '*', '.') // North sensor failed

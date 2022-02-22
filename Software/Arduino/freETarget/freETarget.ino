@@ -116,7 +116,7 @@ void setup(void)
  * Ready to go
  */
   set_LED_PWM(json_LED_PWM);
-  set_LED(1, 0, 0);                      // to a client, then the RDY light is steady on
+  set_LED(LED_READY);                   // to a client, then the RDY light is steady on
   target_hot = true;
   return;
 }
@@ -199,9 +199,9 @@ void loop()
     face_strike = false;              // Reset the face strike count
     
     set_LED_PWM(json_LED_PWM);        // Keep the LEDs ON
-    if ( json_tabata_on != 0 )        // Show that Tabata is ON
+    if ( json_tabata_enable != 0 )    // Show that Tabata is ON
     {
-      set_LED(-1,1,-1);               // Just turn on X
+      set_LED(LED_TABATA_ON);        // Just turn on X
     }
     sensor_status = is_running();
     power_save = millis();            // Start the power saver time
@@ -216,33 +216,30 @@ void loop()
     }
     else
     {
-      if ( is_trace == false )
+      if ( sensor_status & TRIP_NORTH  )
       {
-        if ( sensor_status & TRIP_NORTH  )
-        {
-          Serial.print(T("\r\n{ \"Fault\": \"NORTH\" }"));
-          set_LED(NORTH_FAILED);           // Fault code North
-          delay(ONE_SECOND);
-        }
-        if ( sensor_status & TRIP_EAST  )
-        {
-          Serial.print(T("\r\n{ \"Fault\": \"EAST\" }"));
-          set_LED(EAST_FAILED);           // Fault code East
-          delay(ONE_SECOND);
-        }
-        if ( sensor_status & TRIP_SOUTH )
-        {
-          Serial.print(T("\r\n{ \"Fault\": \"SOUTH\" }"));
-          set_LED(SOUTH_FAILED);         // Fault code South
-          delay(ONE_SECOND);
-        }
-        if ( sensor_status & TRIP_WEST )
-        {
-          Serial.print(T("\r\n{ \"Fault\": \"WEST\" }"));
-          set_LED(WEST_FAILED);         // Fault code West
-          delay(ONE_SECOND);
-        }
-      }   
+        Serial.print(T("\r\n{ \"Fault\": \"NORTH\" }"));
+        set_LED(NORTH_FAILED);           // Fault code North
+        delay(ONE_SECOND);
+      }
+      if ( sensor_status & TRIP_EAST  )
+      {
+        Serial.print(T("\r\n{ \"Fault\": \"EAST\" }"));
+        set_LED(EAST_FAILED);           // Fault code East
+        delay(ONE_SECOND);
+      }
+      if ( sensor_status & TRIP_SOUTH )
+      {
+        Serial.print(T("\r\n{ \"Fault\": \"SOUTH\" }"));
+        set_LED(SOUTH_FAILED);         // Fault code South
+        delay(ONE_SECOND);
+      }
+      if ( sensor_status & TRIP_WEST )
+      {
+        Serial.print(T("\r\n{ \"Fault\": \"WEST\" }"));
+        set_LED(WEST_FAILED);         // Fault code West
+        delay(ONE_SECOND);
+      }
     }
     break;
     
@@ -252,17 +249,17 @@ void loop()
   case WAIT:
     if ( (esp01_is_present() == false) || esp01_connected() )       // If the ESP01 is not present, or connected
     {
-      set_LED(1, -1, -1);                                           // to a client, then the RDY light is steady on
+      set_LED(LED_READY);                                          // to a client, then the RDY light is steady on
     }
     else
     {
       if ( (millis() / 1000) & 1 )                                 // Otherwise blink the RDY light
       {
-        set_LED(1, -1, -1);
+        set_LED(LED_READY);
       }
       else
       {
-        set_LED(0, -1, -1);
+        set_LED(LED_OFF);
       }
     }
 
@@ -312,7 +309,7 @@ void loop()
       show_sensor_status(sensor_status);
       Serial.print(T("\r\nReducing..."));
     }
-    set_LED(L('*', '*', '*'));                   // Light All
+    set_LED(LED_DONE);                   // Light All
     location = compute_hit(sensor_status, &record, false);
 
     if ( ((json_tabata_cycles != 0) && ( record.shot_time == 0 ) &&(json_rapid_cycles !=0))         // Are we out of the Tabata-Rapid cycle time?
@@ -629,34 +626,29 @@ static long tabata
 
 void tabata_control(void)
 {
+  unsigned int i;
+  
 /*
  * Toggle the Tabata enable
  */
   json_tabata_enable = ! json_tabata_enable;  // Toggle the enable
 
 /*
- * The buttons have been released, 
+ * Set the Tabata LED for the next cycle
  */
-  if ( json_tabata_enable )               // Flash three LEDs if Tabata
-  {                                       // is enabled
-    set_LED(L('*', '.', '*'));
-    delay(ONE_SECOND/4);
-    set_LED(L('.', '*', '.'));
-    delay(ONE_SECOND/4);
-    tabata(true,true);                    // Reset the tabata time
+  if ( json_tabata_enable )               
+  {
+    set_LED(LED_TABATA_ON);
   }
   else
   {
-    set_LED(L('.', '.', '.'));            // Flash one LED if disabled
-    delay(ONE_SECOND/4);
-    set_LED(L('.', '*', '.'));
-    delay(ONE_SECOND/4);
+    set_LED(LED_TABATA_OFF);
   }
-  set_LED(SHOT_READY);
 
 /*
  * All donem return
- */
+ */    
+  tabata(true,true);                    // Reset the tabata time
   return;                               // Bail out now
 }
 
@@ -714,28 +706,6 @@ void bye(void)
   {
     continue;
   }  
-   
-/*
- * Wait here for a bit to see if the user presses the button again to extend the light on time
- */
-  now = millis();
-  while ( (millis() - now) < (ONE_SECOND * 2) )
-  {
-    if ( (DIP_SW_A == 1)            // If either switch is pressed
-            || ( DIP_SW_B == 1 ) )
-    {
-      set_LED_PWM_now(0);           // BLink the light off to show the switch pressed
-      json_power_save += 30;        //  Add 30 minutes to the timer
-      Serial.print(json_power_save);
-      while ( (DIP_SW_A == 1)       // Wait here for both switches to be released
-            || ( DIP_SW_B == 1 ) )
-      {
-        continue;
-      }
-      set_LED_PWM_now(json_LED_PWM);// Put the light on
-      now = millis();               // Reset the waiting timer
-    } 
-  }
   
 /*
  * Come out of sleep

@@ -621,7 +621,7 @@ void self_test(uint16_t test)
    }
    
    set_trip_point(20);              // Show the trip point once (20 cycles used for blinking values)
-   set_LED(L('.', '.', '.'));        // Show test test Ending
+   set_LED(LED_RESET);               // Show test test Ending
    return;
  }
  
