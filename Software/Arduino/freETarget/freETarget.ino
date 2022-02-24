@@ -1,4 +1,3 @@
-
 /*----------------------------------------------------------------
  * 
  * freETarget        
@@ -328,13 +327,14 @@ void loop()
  *  Wait here to make sure the RUN lines are no longer set
  */
   case WASTE:
-    if ( (json_paper_time + json_step_time) != 0 )  // Has the witness paper been enabled
+    if ( (json_paper_time + json_step_time) != 0 )  // Has the witness paper been enabled?
     {
       if ( ((json_paper_eco == 0)                   // ECO turned off
         || ( sqrt(sq(record.x) + sq(record.y)) < json_paper_eco )) // Outside the black
           && (json_rapid_on == 0))                  // and not rapid fire
       {
-        drive_paper();
+        delay(5*ONE_SECOND);                        // Wait five seconds for the shooter
+        drive_paper();                              // to follow through.
       }
     }
     state = SET_MODE;
@@ -737,7 +737,8 @@ void hello(void)
  * Woken up again
  */  
   set_LED_PWM_now(json_LED_PWM);
-  power_save = millis();
+  power_save = millis();                            // Reset the on time
+  EEPROM.get(NONVOL_POWER_SAVE, json_power_save);   // and reset the power save time
   target_hot = true;
   
   return;
