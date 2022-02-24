@@ -2,10 +2,17 @@
 #ifndef _NONVOL_H
 #define _NONVOL_H
 
-void factory_nonvol(bool new_serial_number); // Factory reset nonvol
-void init_nonvol(int v);                     // Reset to defaults
-void read_nonvol(void);                      // Read in the locations
-void gen_position(int  v);                   // Reset the position values
+#define PS_VERSION        1                       // Persistent storage version
+#define PS_UNINIT(x)     ( ((x) == 0xABAB) || ((x) == 0xFFFF))  // Uninitilized value
+ 
+/*
+ * Function prototypes
+ */
+void factory_nonvol(bool new_serial_number);      // Factory reset nonvol
+void init_nonvol(int v);                          // Reset to defaults
+void read_nonvol(void);                           // Read in the locations
+void update_nonvol(unsigned int current_version); // Update the database if needed
+void gen_position(int  v);                        // Reset the position values
 void dump_nonvol(void);
 
 /*
@@ -49,6 +56,7 @@ void dump_nonvol(void);
 #define NONVOL_V_SET_PWM      (NONVOL_RAPID_CYCLES + sizeof(int))          // Starting PWM setting
 #define NONVOL_VSET           (NONVOL_V_SET_PWM   + sizeof(int))           // Desired Voltage value (floating point)
 #define NONVOL_RAPID_TYPE     (NONVOL_VSET        + sizeof(double))        // Type of rapid fire event
+#define NONVOL_PS_VERSION     (NONVOL_RAPID_TYPE  + sizeof(int))           // Persistent storage version
 
 #define NEXT_NONVOL           ((NONVOL_RAPID_CYCLES + sizeof(int) + 2) - NONVOL_INIT)
 #define NONVOL_SIZE           4096                                         // 4K available

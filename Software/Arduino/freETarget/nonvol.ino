@@ -37,14 +37,16 @@ void check_nonvol(void)
   {
     factory_nonvol(true);                              // Force in good values
   }
-  
-  EEPROM.get(NONVOL_SERIAL_NO, nonvol_init);
-  
-  if ( nonvol_init == (-1) )                          // Serial Number never programmed
-  {
-    factory_nonvol(true);                             // Force in good values
-  }
 
+/*
+ * Check to see if there has been a change to the persistent storage version
+ */
+  EEPROM.get(NONVOL_PS_VERSION, nonvol_init);
+  if ( nonvol_init != PS_VERSION )                    // Is what is in memory not the same as now
+  {
+    update_nonvol(nonvol_init);                       // Then update the version
+  }
+  
 /*
  * All OK now
  */
@@ -196,6 +198,9 @@ void factory_nonvol
 /*
  * Initialization complete.  Mark the init done
  */
+  nonvol_init = PS_VERSION;
+  EEPROM.put(NONVOL_PS_VERSION, nonvol_init); // Write in the version number
+
   nonvol_init = INIT_DONE;
   EEPROM.put(NONVOL_INIT, nonvol_init);
 
@@ -310,6 +315,12 @@ void read_nonvol(void)
   {
     factory_nonvol(true);                             // Force in good values
   }
+
+  EEPROM.get(NONVOL_PS_VERSION, nonvol_init);         // See if ther has been a change to the
+  if ( nonvol_init != PS_VERSION )                    // persistent storage version
+  {
+    update_nonvol(nonvol_init);
+  }
   
 /*
  * Use the JSON table to initialize the local variables
@@ -372,6 +383,72 @@ void read_nonvol(void)
   
 /*
  * All done, begin the program
+ */
+  return;
+}
+
+
+/*----------------------------------------------------------------
+ * 
+ * function: update_nonvol
+ * 
+ * brief:  Update the nonvol values if there has been a change
+ * 
+ * return: None
+ *---------------------------------------------------------------
+ *
+ * If the init_nonvol location is not set to INIT_DONE then
+ * initilze the memory
+ * 
+ *------------------------------------------------------------*/
+
+void update_nonvol
+  (
+    unsigned int current_version          // Version present in persistent storage
+  )
+{
+  unsigned int i;                         // Iteration counter
+  unsigned int ps_value;                  // Value read from persistent storage           
+  unsigned int x;                         // Value read from table
+  
+/*
+ * Check to see if this persistent storage has never had a version number
+ */
+  if ( PS_UNINIT(current_version) )
+  {
+    Serial.print(T("\n\rUpdating legacy persistent storage"));
+    i=0;
+    while ( JSON[i].token != 0 )
+    { 
+      switch ( JSON[i].convert )
+      {        
+      case IS_INT16:
+        EEPROM.get(JSON[i].non_vol, ps_value);              // Pull up the value from memory
+        if ( PS_UNINIT(ps_value) )                          // Uninitilazed?
+        {
+          EEPROM.put(JSON[i].non_vol, JSON[i].init_value);  // Initalize it from the table
+        }
+        break;
+
+      default:
+        break;
+      }
+      i++;
+   }
+   current_version = PS_VERSION;                            // Initialized, force in the current version
+   EEPROM.put(NONVOL_PS_VERSION, current_version);
+   Serial.print(T("\r\nDone\r\n"));
+  }
+
+/*
+ * Previously initialized memory.  Add in the new fields and values
+ */
+  if ( current_version == 1 )                     
+  {
+  }
+  
+/*
+ * Up to date, return
  */
   return;
 }

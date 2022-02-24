@@ -79,7 +79,7 @@ void digital_test(void);                                  // Execute the digital
 #define LON          1          // Turn the LED on
 #define LOF          0          // Turn the LED off
 #define LXX         -1          // Leave the LED alone
-#define L(A, B, C) ((A) == '*'), ((B) == '*'), ((C) == '*')
+#define L(A, B, C)  (A), (B), (C)
 
 #define NORTH        0
 #define EAST         1

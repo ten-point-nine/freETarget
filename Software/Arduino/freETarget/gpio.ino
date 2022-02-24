@@ -377,9 +377,11 @@ unsigned int read_DIP(void)
  *
  * The state of the LEDs can be turned on or off 
  * 
- * -1 Leave alone
- *  0 Turn LED off
- *  1 Turn LED on
+ * -1 '-' Leave alone
+ *  0 '.' Turn LED off
+ *  1 '*' Turn LED on
+ *  
+ *  The macro L(RDY, X, Y) defines 
  * 
  *-----------------------------------------------------*/
 void set_LED
@@ -388,22 +390,45 @@ void set_LED
     int state_X,          // State of the X LED
     int state_Y           // State of the Y LED
     )
-{
-  if ( state_RDY >= 0 )
+{ 
+  switch (state_RDY)
   {
-    digitalWrite(LED_RDY, state_RDY == 0 );
+    case 0:
+    case '.':
+        digitalWrite(LED_RDY, 1 );
+        break;
+    
+    case 1:
+    case '*':
+        digitalWrite(LED_RDY, 0 );
+        break;
   }
   
-  if ( state_X >= 0 )
+  switch (state_X)
   {
-    digitalWrite(LED_X, state_X == 0);
+    case 0:
+    case '.':
+        digitalWrite(LED_X, 1 );
+        break;
+    
+    case 1:
+    case '*':
+        digitalWrite(LED_X, 0 );
+        break;
   }
 
-  if ( state_Y >= 0 )
+  switch (state_Y)
   {
-    digitalWrite(LED_Y, state_Y == 0);
-  }
+    case 0:
+    case '.':
+        digitalWrite(LED_Y, 1 );
+        break;
     
+    case 1:
+    case '*':
+        digitalWrite(LED_Y, 0 );
+        break;
+  }
   return;  
   }
 
@@ -683,7 +708,7 @@ void blink_fault
       break;
 
     case GPIO_OUT:                        // The switch is a general purpose output
-      pinMode(DIP_1,OUTPUT);
+      pinMode(DIP_2,OUTPUT);
       break;
   }
 /*
@@ -724,7 +749,7 @@ unsigned int multifunction_switch
     unsigned int return_value;          // Value returned to caller
     unsigned int  x;                    // Working Value
     unsigned int  i;                    // Iteration Counter
-    static bool   first_time = true;    // TRUE the first time through
+
     if ( CALIBRATE )
     {
       return;                           // Not used if in calibration mode
@@ -742,10 +767,21 @@ unsigned int multifunction_switch
 /*
  * Check to see if the switch has been pressed for the first time
  */
-  set_LED_PWM(LED_PWM_TOGGLE);          // Switch is pressed, Toggle the LEDs
-  first_time = false;
-  delay(ONE_SECOND/2);                  // Let the switches debounce
 
+  delay(ONE_SECOND/2);                    // Let the switches debounce
+  if ( (DIP_SW_A == 0 )
+        && (DIP_SW_B == 0 ) )             // Both switches are open?  
+   {
+      set_LED_PWM_now(json_LED_PWM);      // Yes, a quick press to turn the LED on
+      delay(ONE_SECOND/2),
+      set_LED_PWM_now(0);                 // Blink
+      delay(ONE_SECOND/2);
+      set_LED_PWM_now(json_LED_PWM);      // and leave it on
+      power_save = millis();              // and resets the power save time
+      json_power_save += 30;              // and add 30 minutes to the power on time
+      return;
+   }
+   
 /*
  * Look for the special case of both switches pressed
  */
@@ -877,7 +913,7 @@ void multifunction_display(void)
 {
   char s[128];                          // Holding string
 
-  sprintf(s, "\"MFS_TEXT\": \"1-%s, 2-%s, 1&2-%s,\"\n\r", mfs_text[LO10(json_multifunction)],
+  sprintf(s, "\"MFS_1\": \"%s\",\n\r\"MFS_2\": \"%s\",\n\r\"MFS_1&2\": \"%s\",\n\r", mfs_text[LO10(json_multifunction)],
                                                           mfs_text[HI10(json_multifunction)],
                                                           mfs_text[HLO10(json_multifunction)]);
 

@@ -471,6 +471,10 @@ void show_echo(int v)
 
   sprintf(s, "\"VERSION\": %s, \n\r", SOFTWARE_VERSION);                                  // Current software version
   output_to_all(s);  
+
+  EEPROM.get(NONVOL_PS_VERSION, j);
+  sprintf(s, "\"PS_VERSION\": %d, \n\r", j);                                             // Current persistent storage version
+  output_to_all(s); 
   
   dtostrf(revision()/100.0, 4, 2, str_c );              
   sprintf(s, "\"BD_REV\": %s \n\r", str_c);                                               // Current board versoin
