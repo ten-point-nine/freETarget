@@ -341,3 +341,14 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+
+
+#files removed in firmware / hardware folders
+*.gbr
+*.drl
+*.net
+*.bak
+
+#files removed in CNC files
+*.tap
+
