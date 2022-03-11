@@ -441,6 +441,9 @@ void show_echo(int v)
 /*
  * Finish up with the special cases
  */
+  sprintf(s, "\n\r");                                                                    // Blank Line
+  output_to_all(s);
+  
   multifunction_display();
   
   sprintf(s, "\"IS_TRACE\": %d, \n\r", is_trace);                                         // TRUE to if trace is enabled

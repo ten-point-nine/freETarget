@@ -913,7 +913,7 @@ void multifunction_display(void)
 {
   char s[128];                          // Holding string
 
-  sprintf(s, "\"MFS_1\": \"%s\",\n\r\"MFS_2\": \"%s\",\n\r\"MFS_1&2\": \"%s\",\n\r", mfs_text[LO10(json_multifunction)],
+  sprintf(s, "\"MFS_1\": \"%s\",\n\r\"MFS_2\": \"%s\",\n\r\"MFS_12\": \"%s\",\n\r", mfs_text[LO10(json_multifunction)],
                                                           mfs_text[HI10(json_multifunction)],
                                                           mfs_text[HLO10(json_multifunction)]);
 
