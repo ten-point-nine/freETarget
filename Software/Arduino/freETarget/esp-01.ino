@@ -298,6 +298,13 @@ void esp01_test(void)
   char ch;                                // Character read from ESP-01
   long unsigned int start;                // Start time
   esp01_flush();                          // Eat any garbage that might be on the port
+
+  if ( esp01_is_present() == false )
+  {
+    Serial.print(T("\n\rESP-01 not present. Continue test anyway")); 
+  }
+  Serial.print(T("\n\rSSID: FET-")); Serial.print(names[json_name_id]);
+  Serial.print(T("\n\rResetting ESP-01"));
   
   WIFI_SERIAL.print("+++");
   delay(ONE_SECOND);
