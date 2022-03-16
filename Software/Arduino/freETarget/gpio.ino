@@ -741,12 +741,8 @@ void blink_fault
  * 
  *-----------------------------------------------------*/
 
-unsigned int multifunction_switch
-  (
-    unsigned int new_state               // If output, drive to a new state
-  )
+void multifunction_switch(void)
  {
-    unsigned int return_value;          // Value returned to caller
     unsigned int  x;                    // Working Value
     unsigned int  i;                    // Iteration Counter
 
@@ -785,7 +781,7 @@ unsigned int multifunction_switch
 /*
  * Look for the special case of both switches pressed
  */
-  if ( DIP_SW_A && DIP_SW_B )             // Both pressed?
+  if ( (DIP_SW_A) && (DIP_SW_B) )         // Both pressed?
   {
     sw_state(HLO10(json_multifunction));
   }
@@ -813,7 +809,8 @@ unsigned int multifunction_switch
   {
     continue;                     // Wait here for the switches to be released
   }
-  return return_value;
+  delay(ONE_SECOND/2);            // Wait here to debounce the switches
+  return;
 }
 
 
@@ -964,6 +961,7 @@ void multifunction_display(void)
   }
 
   DISPLAY_SERIAL.print(str);    // Aux Serial Port
+
 
  /*
   * All done, return

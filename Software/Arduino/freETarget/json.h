@@ -20,7 +20,7 @@ typedef struct  {
 #define IS_DOUBLE     3       // Value is a double
 #define IS_FIXED      4       // The value cannot be changed
     
-
+void reset_JSON(void);            // Clear the JSON input buffer
 bool read_JSON(void);             // Scan the serial port looking for JSON input
 void show_echo(int v);            // Display the settings
 

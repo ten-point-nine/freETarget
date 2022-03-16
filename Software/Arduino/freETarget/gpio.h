@@ -14,7 +14,8 @@ void read_timers(void);                                   // Read and return the
 void drive_paper(void);                                   // Turn on the paper motor
 void enable_interrupt(unsigned int active);               // Turn on the face strike interrupt if active
 void disable_interrupt(void);                             // Turn off the face strike interrupt
-unsigned int multifunction_switch(unsigned int new_state);// Handle the actions of the DIP Switch signal
+void multifunction_init(void);                            // Initialize the multifunction switches
+void multifunction_switch(void);                          // Handle the actions of the DIP Switch signal
 void multifuction_display(void);                          // Display the MFS settings
 void output_to_all(char* s);                              // Multipurpose driver
 void char_to_all(char ch);                                // Output a single character

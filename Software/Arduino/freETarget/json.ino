@@ -137,11 +137,11 @@ static void diag_delay(int x) { Serial.print(T("\r\n\"DELAY\":")); Serial.print(
  * 
  *-----------------------------------------------------*/
 static uint16_t in_JSON = 0;
+static int16_t got_right = false;
 static bool not_found;
 
 bool read_JSON(void)
 {
-  static int16_t got_right;
   unsigned int  i, j,  x;
   int     k, l;
   char    ch;
@@ -149,7 +149,6 @@ bool read_JSON(void)
   bool    return_value;
 
   return_value = false;
-  
 /*
  * See if anything is waiting and if so, add it in
  */
@@ -158,11 +157,11 @@ bool read_JSON(void)
     return_value = true;
     
     ch = GET();
-
-#if ( JSON_DEBUG == true )
-    char_to_all(ch);
-#endif
-
+    if ( is_trace )
+    {
+      char_to_all(ch);
+    }
+    
 /*
  * Parse the stream
  */

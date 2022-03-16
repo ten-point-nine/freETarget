@@ -34,6 +34,7 @@ const char nesw[]   = "NESW";                  // Cardinal Points
 const char to_hex[] = "0123456789ABCDEF";      // Quick Hex to ASCII
 
 static long tabata(bool reset_time, bool reset_cycles); // Tabata state machine
+static void bye(void);                         // Say good night Gracie
 bool        target_hot;                        // TRUE if the target is active
 
 /*----------------------------------------------------------------
@@ -150,12 +151,11 @@ unsigned int shot_time;         // Shot time captured from Tabata timer
 
 void loop() 
 {
-
 /*
  * First thing, handle polled devices
  */
   esp01_receive();                // Accumulate input from the IP port.
-  multifunction_switch(0);        // Read the switches
+  multifunction_switch();         // Read the switches
   tabata(false, false);           // Update the Tabata state
   
 /*
@@ -422,6 +422,7 @@ static unsigned int  tabata_cycles;    // Generic Number of cycles
 #define TABATA_BLINK_OFF   20         // Warning blink 20 x 100ms = 2 second
 
 static uint16_t tabata_state = TABATA_IDLE;
+static uint16_t old_tabata_state = ~TABATA_IDLE;
 
 static long tabata
   (
@@ -430,14 +431,17 @@ static long tabata
   )
 {
   unsigned long now;                  // Current time in seconds
+  char s[32];
   
   now = millis()/100;                 // Now in 100ms increments
   if ( (json_rapid_enable == 0) 
       && ( json_tabata_enable == 0) ) // Exit if no cycles are enabled
   {
+    tabata_state = TABATA_IDLE;
+    old_tabata_state = ~TABATA_IDLE;
     return now;                       // Just return the current time
   }
-  
+
 /*
  * Reset the variables based on the arguements
  */
@@ -476,12 +480,21 @@ static long tabata
 /*
  * Execute the state machine
  */
+  if ( is_trace )
+  {
+    if (old_tabata_state != tabata_state )
+    {
+      Serial.print(T("\r\nTabata State: ")); Serial.print(tabata_state);
+      old_tabata_state = tabata_state;
+    }
+  }
   switch (tabata_state)
   {
       case (TABATA_IDLE):                 // OFF, wait for the time to expire
       if ( json_tabata_on == 0 )
       {
         tabata_state = RAPID_IDLE;
+        json_tabata_enable = false;
         break;
       }
       if ( (now - tabata_time)/10 > (json_tabata_rest - ((TABATA_BLINK_ON + TABATA_BLINK_OFF)/10)) )
@@ -508,10 +521,8 @@ static long tabata
         tabata_state = TABATA_ON;
         tabata_time = now;
         set_LED_PWM_now(json_LED_PWM);           // Turn on the lights
-        if ( is_trace )
-        {
-          Serial.print(T("\r\nTabata ON"));
-        }
+        sprintf(s, "{\"TABATA\":1}\r\n");
+        output_to_all(s);
       }
       break;
       
@@ -525,10 +536,8 @@ static long tabata
         else
         {
           tabata_state = TABATA_IDLE;
-          if ( is_trace )
-          {
-            Serial.print(T("\r\nTabata OFF"));
-          }
+         sprintf(s, "{\"TABATA\":0}\r\n");
+          output_to_all(s);
         }
         tabata_time = now;
         set_LED_PWM_now(0);           // Turn off the LEDs
@@ -560,11 +569,18 @@ static long tabata
   * Rapid fire state machine
   */
     case (RAPID_IDLE):                 // OFF, wait for the time to expire
+      if ( json_rapid_on == 0 )
+      {
+        json_rapid_enable = false;
+        break;
+      }
       if ( (now - tabata_time)/10 > (json_rapid_rest - ((TABATA_BLINK_ON + TABATA_BLINK_OFF)/10)) )
       {
         tabata_time = now;;
         reset_cycles++;
         tabata_state = RAPID_ON;
+        sprintf(s, "{\"RAPID\":1}\r\n");
+        output_to_all(s);
         paper_on_off(true);                            // Turn the solenoid on
         set_LED_PWM(json_LED_PWM);                      // Turn off the LEDs
       }
@@ -580,10 +596,8 @@ static long tabata
         else
         {
           tabata_state = RAPID_IDLE;
-          if ( is_trace )
-          {
-            Serial.print(T("\r\nTabata OFF"));
-          }
+          sprintf(s, "{\"RAPID\":0}\r\n");
+          output_to_all(s);
         }
         tabata_time = now;
         paper_on_off(false);             // Turn off the LEDs
@@ -627,16 +641,30 @@ static long tabata
 void tabata_control(void)
 {
   unsigned int i;
+  char s[64];
   
 /*
  * Toggle the Tabata enable
  */
   json_tabata_enable = ! json_tabata_enable;  // Toggle the enable
+  json_rapid_enable = json_tabata_enable;
 
+/*
+ * Make sure that the Tabata is set up correctly
+ */
+  if ( (json_tabata_cycles == 0) || (json_tabata_on == 0) || (json_tabata_rest == 0) )
+  {
+   json_tabata_enable = false;
+  }
+  if ( (json_rapid_cycles == 0) || (json_rapid_on == 0) || (json_rapid_rest == 0) )
+  {
+   json_rapid_enable = false;
+  }
+   
 /*
  * Set the Tabata LED for the next cycle
  */
-  if ( json_tabata_enable )               
+  if ( (json_tabata_enable) || (json_rapid_enable) )               
   {
     set_LED(LED_TABATA_ON);
   }
@@ -644,6 +672,9 @@ void tabata_control(void)
   {
     set_LED(LED_TABATA_OFF);
   }
+
+  sprintf(s, "\n\r{\"TABATA_ENABLE\":%d, \"RAPID_ENABLE\":%d }\n\r", json_tabata_enable, json_rapid_enable);
+  output_to_all(s);
 
 /*
  * All donem return
