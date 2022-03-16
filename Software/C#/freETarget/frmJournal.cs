@@ -58,6 +58,7 @@ namespace freETarget {
 
         private void tabEvents_SelectedIndexChanged(object sender, EventArgs e) {
             tabDetails.SelectedIndex = 0;
+            listSessionLastIndex = 0;
             loadSessionsInList();
             loadStatistics();
             enableDisableButtons(false, true);
@@ -262,8 +263,12 @@ namespace freETarget {
             if (item != null) {
                 Session session = storage.findSession(item.id);
                 if (session == null) {
-                    lstbSessions.SelectedIndex = listSessionLastIndex;
-                    return;
+                    if (listSessionLastIndex != 0) {
+                        lstbSessions.SelectedIndex = listSessionLastIndex;
+                    } else {
+                        lstbSessions.SelectedIndex = -1;
+                    }
+                    return;  
                 }
 
                 Session clonedSession = Clone(session);
