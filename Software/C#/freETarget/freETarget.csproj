@@ -131,6 +131,7 @@
     <Compile Include="targets\Pistol50m.cs" />
     <Compile Include="targets\Rifle300m.cs" />
     <Compile Include="targets\Rifle50m.cs" />
+    <Compile Include="targets\Ufolep10m.cs" />
     <Compile Include="TransparentRTB.cs">
       <SubType>Component</SubType>
     </Compile>

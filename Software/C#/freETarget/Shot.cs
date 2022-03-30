@@ -91,9 +91,7 @@ namespace freETarget {
             float newRadius = recomputeRadiusFromXY(); //use the calculated radius from x,y instead of the received one. x and y are adjusted with calibration
             this.radius = (decimal)newRadius;
 
-            //use linear interpolation from radii (ring + caliber)
-            double score2 = linearInterpolation((float)target.get9Radius(), 9f, (float)target.getOutterRadius(), 1f, (float)this.radius);
-
+            decimal score2 = target.getScore(this.radius);
 
             this.decimalScore = (decimal)(Math.Truncate(score2 * 10)) / 10m;
             this.decimalScore += 0.0m; //add a decimal if the result is an integer
@@ -114,11 +112,6 @@ namespace freETarget {
             } else {
                 this.innerTen = false;
             }
-        }
-
-        private double linearInterpolation(float x1, float y1, float x2, float y2, float x) {
-            double y = ((x2 - x) * y1 + (x - x1) * y2) / (x2 - x1);
-            return y;
         }
 
         private float recomputeRadiusFromXY() {

@@ -50,8 +50,8 @@ namespace freETarget.targets {
             return innerTenRadiusPistol;
         }
 
-        public override decimal get9Radius() {
-            return ring9 / 2m + pelletCaliber / 2m;
+        public override decimal get10Radius() {
+            return ring10 / 2m + pelletCaliber / 2m;
         }
 
         public override decimal getOutterRadius() {

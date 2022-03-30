@@ -41,8 +41,8 @@ namespace freETarget.targets {
             innerTenRadiusRifle = innerRing / 2m + pelletCaliber / 2m;;
         }
 
-        public override decimal get9Radius() {
-            return ring9 / 2m + pelletCaliber / 2m;
+        public override decimal get10Radius() {
+            return ring10 / 2m + pelletCaliber / 2m;
         }
 
         public override decimal getBlackDiameter() {

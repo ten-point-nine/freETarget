@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace freETarget.targets {
-    [Serializable]
-    class AirRifle : aTarget {
+    class Ufolep10m : aTarget {
 
         private decimal pelletCaliber;
-        private const decimal targetSize = 80; //mm
-        private const int rifleBlackRings = 4;
+        private const decimal targetSize = 100; //mm
+        private const int rifleBlackRings = 7;
         private const bool solidInnerTenRing = true;
 
         private const int trkZoomMin = 0;
@@ -19,33 +17,28 @@ namespace freETarget.targets {
         private const int trkZoomVal = 0;
         private const decimal pdfZoomFactor = 1m;
 
-        private const decimal outterRing = 45.5m; //mm
-        private const decimal ring2 = 40.5m; //mm
-        private const decimal ring3 = 35.5m; //mm
-        private const decimal ring4 = 30.5m; //mm
-        private const decimal ring5 = 25.5m; //mm
-        private const decimal ring6 = 20.5m; //mm
-        private const decimal ring7 = 15.5m; //mm
-        private const decimal ring8 = 10.5m; //mm
-        private const decimal ring9 = 5.5m; //mm
-        private const decimal ring10 = 0.5m; //mm
+        private const decimal outterRing = 56m; //mm
+        private const decimal ring5 = 47m; //mm
+        private const decimal ring6 = 38m; //mm
+        private const decimal ring7 = 29m; //mm
+        private const decimal ring8 = 20m; //mm
+        private const decimal ring9 = 11m; //mm
+        private const decimal ring10 = 2m; //mm
+        private const decimal innerRing = 2m; //mm
 
-        private decimal innerTenRadiusRifle;
-
-        private static readonly decimal[] ringsRifle = new decimal[] { outterRing, ring2, ring3, ring4, ring5, ring6, ring7, ring8, ring9, ring10 };
+        private static readonly decimal[] ringsRifle = new decimal[] { outterRing, ring5, ring6, ring7, ring8, ring9, ring10, innerRing };
 
 
-        public AirRifle(decimal caliber) : base(caliber) {
+        public Ufolep10m(decimal caliber) : base(caliber) {
             this.pelletCaliber = caliber;
-            innerTenRadiusRifle = pelletCaliber / 2m - ring10 / 2m; //2.0m; ISSF rules states: Inner Ten = When the 10 ring (dot) has been shot out completely
-        }
+         }
 
         public override int getBlackRings() {
             return rifleBlackRings;
         }
 
         public override decimal getInnerTenRadius() {
-            return innerTenRadiusRifle;
+            return -1;
         }
 
         public override decimal getOutterRadius() {
@@ -56,7 +49,7 @@ namespace freETarget.targets {
             return ring10 / 2m + pelletCaliber / 2m;
         }
         public override string getName() {
-            return typeof(AirRifle).FullName;
+            return typeof(Ufolep10m).FullName;
         }
 
         public override decimal getOutterRing() {
@@ -96,15 +89,15 @@ namespace freETarget.targets {
         }
 
         public override float getFontSize(float diff) {
-            return diff / 8f; //8 is empirically determinted for best look
+            return diff / 6f; //8 is empirically determinted for best look
         }
 
         public override decimal getBlackDiameter() {
-            return ring4;
+            return ring7;
         }
 
         public override int getRingTextCutoff() {
-            return 8;
+            return 9;
         }
 
         public override float getTextOffset(float diff, int ring) {
@@ -145,11 +138,31 @@ namespace freETarget.targets {
         }
 
         public override int getFirstRing() {
-            return 1;
+            return 4;
         }
 
         public override bool isRapidFire() {
             return false;
+        }
+
+        public override decimal getScore(decimal radius) {
+            if (radius >= 0 && radius <= 1 + pelletCaliber / 2m) {
+                return 10;
+            } else if (radius > 1 + pelletCaliber / 2m && radius <= 5.5m + pelletCaliber / 2m) {
+                return 9;
+            } else if (radius > 5.5m + pelletCaliber / 2m && radius <= 10 + pelletCaliber / 2m) {
+                return 8;
+            } else if (radius > 10 + pelletCaliber / 2m && radius <= 14.5m + pelletCaliber / 2m) {
+                return 7;
+            } else if (radius > 14.5m + pelletCaliber / 2m && radius <= 19 + pelletCaliber / 2m) {
+                return 6;
+            } else if (radius > 19 + pelletCaliber / 2m && radius <= 23.5m + pelletCaliber / 2m) {
+                return 5;
+            } else if (radius > 23.5m + pelletCaliber / 2m && radius <= 28 + pelletCaliber / 2m) {
+                return 4;
+            } else {
+                return 0;
+            }
         }
     }
 }

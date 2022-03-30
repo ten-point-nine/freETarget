@@ -27,7 +27,7 @@ namespace freETarget.targets {
 
         public abstract decimal getOutterRadius();
 
-        public abstract decimal get9Radius();
+        public abstract decimal get10Radius();
 
         public abstract decimal getInnerTenRadius();
 
@@ -58,6 +58,8 @@ namespace freETarget.targets {
         public abstract int getFirstRing();
 
         public abstract bool isRapidFire();
+
+
 
 
         //------------ common implementations ----------------------------
@@ -364,6 +366,11 @@ namespace freETarget.targets {
                 it.DrawLine(p, x.X - cross, x.Y, x.X + cross, x.Y);
                 it.DrawLine(p, x.X, x.Y - cross, x.X, x.Y + cross);
             }
+        }
+
+        //default score calculation. can be overriden at target level if the formula is not linear
+        public virtual decimal getScore(decimal radius) {
+            return 11 - (radius / get10Radius());
         }
     }
 }

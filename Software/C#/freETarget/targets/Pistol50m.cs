@@ -50,8 +50,8 @@ namespace freETarget.targets {
             return getOutterRing() / 2m + pelletCaliber / 2m;
         }
 
-        public override decimal get9Radius() {
-            return ring9 / 2m + pelletCaliber / 2m;
+        public override decimal get10Radius() {
+            return ring10 / 2m + pelletCaliber / 2m;
         }
         public override string getName() {
             return typeof(Pistol50m).FullName;
@@ -140,5 +140,13 @@ namespace freETarget.targets {
         public override bool isRapidFire() {
             return false;
         }
+
+        public override decimal getScore(decimal radius) {
+            //if (radius > get10Radius()) {
+                return 10 - (radius - get10Radius()) / 25;
+            //} else {
+            //    return 11 - (radius / get10Radius());
+           // }
+        } 
     }
 }
