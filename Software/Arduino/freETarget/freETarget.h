@@ -14,7 +14,7 @@
 #include "esp-01.h"
 #include "json.h"
 
-#define SOFTWARE_VERSION "\"3.07.6 April 7, 2022\""
+#define SOFTWARE_VERSION "\"3.07.8 April 9, 2022\""
 #define REV_100    100
 #define REV_210    210
 #define REV_220    220
@@ -67,10 +67,11 @@ char GET (void)
 
 #define HI(x) (((x) >> 8 ) & 0x00ff)                  // High nibble
 #define LO(x) ((x) & 0x00ff)                          // Low nibble
-#define HHI10(x) (((x) / 1000 ) % 10)                 // High High digit
-#define HLO10(x) (((x) / 100 ) % 10)                  // High Low digit
-#define HI10(x)  (((x) / 10 ) % 10)                   // High digit
-#define LO10(x)  ((x) % 10)                           // Low digit
+#define HHH10(x) (((x) / 10000 ) % 10)                // Highest digit    2xxxx
+#define HHI10(x) (((x) / 1000 ) % 10)                 // High High digit  x2xxx
+#define HLO10(x) (((x) / 100 ) % 10)                  // High Low digit   xx2xx
+#define HI10(x)  (((x) / 10 ) % 10)                   // High digit       xxx2x
+#define LO10(x)  ((x) % 10)                           // Low digit        xxxx2
 
 #define N 0
 #define E 1

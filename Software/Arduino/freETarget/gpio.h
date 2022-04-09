@@ -100,9 +100,10 @@ void digital_test(void);                                  // Execute the digital
 #define FACE_SENSOR  19
 
 #define SPARE_1      22
+#define POWER_TAP     0                   // DIP a/B used to wake up
 #define PAPER_FEED    1                   // DIP A/B used as a paper feed
-#define GPIO_IN       2                   // DIP A/B used as a GPIO in
-#define GPIO_OUT      3                   // DIP A/B used as a GPIO out
+#define MFS_SPARE_2   2                   // DIP A/B 
+#define MFS_SPARE_3   3                   // DIP A/B 
 #define PC_TEST       4                   // DIP A/B used to trigger fake shot
 #define ON_OFF        5                   // DIP A/B used to turn the target ON or OFF
 #define TABATA_ON_OFF 6                   // Both Dip Switches pressed, manage Tabata

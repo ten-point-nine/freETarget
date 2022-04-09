@@ -375,7 +375,7 @@ void read_nonvol(void)
   EEPROM.get(NONVOL_V_SET_PWM, json_vset_PWM);
 
   EEPROM.get(NONVOL_MFS, json_multifunction);                // Override the Multifunction switch if not initialized
-  if ( json_multifunction > 999 )
+  if ( json_multifunction > 29999 )
   {
     json_multifunction = (TABATA_ON_OFF * 100) + (ON_OFF * 10) + (PAPER_FEED);   // Put it to the default
     EEPROM.put(NONVOL_MFS, json_multifunction);
@@ -410,7 +410,8 @@ void update_nonvol
   unsigned int i;                         // Iteration counter
   unsigned int ps_value;                  // Value read from persistent storage           
   unsigned int x;                         // Value read from table
-  
+
+  Serial.print("here");
 /*
  * Check to see if this persistent storage has never had a version number
  */

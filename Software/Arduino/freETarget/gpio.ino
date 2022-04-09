@@ -680,12 +680,13 @@ void blink_fault
  * return:   None
  * 
  *-----------------------------------------------------
- *
- * SPARE_1 is an unassigned GPIO that will change
- * function based on the software configuration.
  * 
  * This function uses a switch statement to determine
  * the settings of the GPIO
+ * 
+ * This function is left here for possible future
+ * expansion when the DIP connector may be used as 
+ * an output
  * 
  *-----------------------------------------------------*/
  void multifunction_init(void)
@@ -695,20 +696,12 @@ void blink_fault
     default:
       pinMode(DIP_1,INPUT_PULLUP);
       break;
-
-    case GPIO_OUT:                        // The switch is a general purpose output
-      pinMode(DIP_1,OUTPUT);
-      break;
   }
   
   switch (HI10(json_multifunction))
   {
     default:
       pinMode(DIP_2,INPUT_PULLUP);
-      break;
-
-    case GPIO_OUT:                        // The switch is a general purpose output
-      pinMode(DIP_2,OUTPUT);
       break;
   }
 /*
@@ -759,7 +752,16 @@ void multifunction_switch(void)
    {
      return;                              // Nothing is happening, return
    }
-  
+   
+   x = 0;                                 // Some switch is pressed
+   if ( DIP_SW_A != 0 )
+   {
+     x += 1;                              // Remember how we got here
+   }
+   if ( DIP_SW_B != 0 )
+   {
+     x += 2;
+   }
 /*
  * Check to see if the switch has been pressed for the first time
  */
@@ -768,13 +770,14 @@ void multifunction_switch(void)
   if ( (DIP_SW_A == 0 )
         && (DIP_SW_B == 0 ) )             // Both switches are open?  
    {
-      set_LED_PWM_now(json_LED_PWM);      // Yes, a quick press to turn the LED on
-      delay(ONE_SECOND/2),
-      set_LED_PWM_now(0);                 // Blink
-      delay(ONE_SECOND/2);
-      set_LED_PWM_now(json_LED_PWM);      // and leave it on
-      power_save = millis();              // and resets the power save time
-      json_power_save += 30;              // and add 30 minutes to the power on time
+      if ( x & 1 )
+      {
+        sw_state(HHI10(json_multifunction));
+      }
+      if ( x & 2 )
+      {
+        sw_state(HHH10(json_multifunction));
+      }
       return;
    }
    
@@ -840,6 +843,16 @@ static void sw_state
 {    
     switch (action)
     {
+      case POWER_TAP:
+        set_LED_PWM_now(json_LED_PWM);      // Yes, a quick press to turn the LED on
+        delay(ONE_SECOND/2),
+        set_LED_PWM_now(0);                 // Blink
+        delay(ONE_SECOND/2);
+        set_LED_PWM_now(json_LED_PWM);      // and leave it on
+        power_save = millis();              // and resets the power save time
+        json_power_save += 30;      
+        break;
+        
       case PAPER_FEED:                      // The switch acts as paper feed control
         paper_on_off(true);                 // Turn on the paper drive
         while ( (DIP_SW_A || DIP_SW_B) )    // Keep it on while the switches are pressed 
@@ -913,16 +926,15 @@ static void send_fake_score(void)
  * text in a JSON message.
  * 
  *-----------------------------------------------------*/
- //                           0           1            2          3           4             5             6
-static char* mfs_text[] = { "N/A", "PAPER_FEED",  "GPIO_IN", "GPIO_OUT", "PC_TEST", "POWER_ON_OFF", "TABATA_ON_OFF", "7", "8", "9"};
+ //                             0            1            2          3           4             5             6
+static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED",     "2",       "3", "PC_TEST", "POWER_ON_OFF", "TABATA_ON_OFF", "7", "8", "9"};
 
 void multifunction_display(void)
 {
   char s[128];                          // Holding string
 
-  sprintf(s, "\"MFS_1\": \"%s\",\n\r\"MFS_2\": \"%s\",\n\r\"MFS_12\": \"%s\",\n\r", mfs_text[LO10(json_multifunction)],
-                                                          mfs_text[HI10(json_multifunction)],
-                                                          mfs_text[HLO10(json_multifunction)]);
+  sprintf(s, "\"MFS_T2\": \"%s\",\n\r\"MFS_T1\": \"%s\",\n\r\"MFS_12\": \"%s\",\n\r\"MFS_H2\": \"%s\",\n\r\"MFS_H1\": \"%s\",\n\r", 
+  mfs_text[HHH10(json_multifunction)], mfs_text[HHI10(json_multifunction)], mfs_text[HLO10(json_multifunction)], mfs_text[HI10(json_multifunction)], mfs_text[LO10(json_multifunction)]);
 
   output_to_all(s);  
 
