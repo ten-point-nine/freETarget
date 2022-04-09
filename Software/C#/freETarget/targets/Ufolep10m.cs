@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace freETarget.targets {
+    [Serializable]
     class Ufolep10m : aTarget {
 
         private decimal pelletCaliber;
