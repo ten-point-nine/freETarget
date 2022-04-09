@@ -686,7 +686,6 @@ static void start_over(void)    // Start the test over again
   enable_interrupt(1);          // Turn on the face strike interrupt
   face_strike = false;          // Reset the face strike count
   enable_interrupt(1);          // Turning it on above creates a fake interrupt with a disable
-  Serial.print(T("\r\nResetting Sensors\r\n"));
   return;
 }
 

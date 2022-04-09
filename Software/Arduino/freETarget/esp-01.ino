@@ -146,7 +146,7 @@ void esp01_init(void)
     Serial.print(T("\r\nESP-01: Failed AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\""));
   }
 
-  WIFI_SERIAL.print(T("AT+CWDHCPS_DEF=1,2800,\"192.168.10.0\",\"192.168.10.8\"\r\n"));          // Set the PC IP to 192.168.10.0.  Lease Time 2800 minutes
+  WIFI_SERIAL.print(T("AT+CWDHCPS_DEF=1,2800,\"192.168.10.0\",\"192.168.10.8\"\r\n"));          // (DHCP) Set the PC IP to 192.168.10.0.  Lease Time 2800 minutes
   if ( (esp01_waitOK() == false) && (is_trace) )
   {
     Serial.print(T("\r\nESP-01: Failed AT+CWDHCPS_DEF=1,2800,\"192.168.10.0\",\"192.168.10.8\""));
@@ -301,7 +301,7 @@ void esp01_test(void)
 
   if ( esp01_is_present() == false )
   {
-    Serial.print(T("\n\rESP-01 not present. Continue test anyway")); 
+    Serial.print(T("\n\rESP-01 not present. Continuing test anyway")); 
   }
   Serial.print(T("\n\rSSID: FET-")); Serial.print(names[json_name_id]);
   Serial.print(T("\n\rResetting ESP-01"));
@@ -324,7 +324,7 @@ void esp01_test(void)
   }
 
 /*
- * All done, return the esp-01 present state
+ * All done, return the esp-01 present stateUser Feedback for Shot Timer - Connect IQ Notification
  */
   Serial.print(T("\r\nTest Over"));
   return;
@@ -629,7 +629,6 @@ bool esp01_send
             if ( WIFI_SERIAL.available() != 0 )           // Something available?
             {
               ch = WIFI_SERIAL.read();
-              Serial.print(ch);
               if ( ch == '>' )                            // Is it the prompt?
               {
                 send_state[index] = SEND_READY;           // Ready to send
@@ -642,7 +641,6 @@ bool esp01_send
             break;
           }
           WIFI_SERIAL.print(T("+++"));                        // Command not acted on
-          Serial.print(T("  missed:")); Serial.print(str); Serial.print(T(":"));Serial.print(index);
           delay(ONE_SECOND + (ONE_SECOND/10));            // Go into AT command mode
         }
         if ( send_state[index] == SEND_READY )
@@ -778,7 +776,6 @@ void esp01_receive(void)
   while ( WIFI_SERIAL.available() != 0 ) // Nothing is waiting for us
   {
     ch = WIFI_SERIAL.read();             // Pull in the next byte
-
     switch (state)                       // What do we do with it?
     {
       case WAIT_IDLE:                   // Stay here until we see a + or ,

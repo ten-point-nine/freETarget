@@ -64,5 +64,9 @@ extern int    json_rapid_cycles;  // Number of Rapid Fire cycles
 extern int    json_rapid_type;    // Type of RApid vire event
 extern int    json_vset_PWM;      // Voltage PWM count
 extern double json_vset;          // Desired voltage setpont
+extern int    json_follow_through;// Follow through timer
+extern int    json_keep_alive;    // Keepalive period
+extern int    json_tabata_warn_on;  // Time to turn on the warning
+extern int    json_tabata_warn_off; // Time to go dark until we start
 
 #endif _JSON_H_

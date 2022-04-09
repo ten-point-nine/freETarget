@@ -842,8 +842,7 @@ static void sw_state
     {
       case PAPER_FEED:                      // The switch acts as paper feed control
         paper_on_off(true);                 // Turn on the paper drive
-        while ( (DIP_SW_A != 0 )
-         && (DIP_SW_B != 0 ) )              // Keep it on while the switches are pressed 
+        while ( (DIP_SW_A || DIP_SW_B) )    // Keep it on while the switches are pressed 
         {
           continue; 
         }
@@ -884,7 +883,18 @@ static void send_fake_score(void)
     
   h.x = random(-json_sensor_dia/2.0, json_sensor_dia/2.0);
   h.y = 0;
-  send_score(&h, shot++, 0); return;
+  send_score(&h, shot++, 0);
+  if ( (json_paper_time + json_step_time) != 0 )  // Has the witness paper been enabled?
+  {
+    if ( ((json_paper_eco == 0)                   // ECO turned off
+        || ( sqrt(sq(record.x) + sq(record.y)) < json_paper_eco )) // Outside the black
+        && (json_rapid_on == 0))                  // and not rapid fire
+    {
+      delay(5*ONE_SECOND);                        // Wait five seconds for the shooter
+      drive_paper();                              // to follow through.
+    }
+  }
+  return;
 }
 
 /*-----------------------------------------------------
@@ -960,7 +970,7 @@ void multifunction_display(void)
     AUX_SERIAL.print(str);        // No ESP-01, then use just the AUX port
   }
 
-  DISPLAY_SERIAL.print(str);    // Aux Serial Port
+  DISPLAY_SERIAL.print(str);      // Display Serial Port
 
 
  /*

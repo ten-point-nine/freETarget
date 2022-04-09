@@ -2,7 +2,7 @@
 #ifndef _NONVOL_H
 #define _NONVOL_H
 
-#define PS_VERSION        1                       // Persistent storage version
+#define PS_VERSION        3                       // Persistent storage version
 #define PS_UNINIT(x)     ( ((x) == 0xABAB) || ((x) == 0xFFFF))  // Uninitilized value
  
 /*
@@ -57,12 +57,12 @@ void dump_nonvol(void);
 #define NONVOL_VSET           (NONVOL_V_SET_PWM   + sizeof(int))           // Desired Voltage value (floating point)
 #define NONVOL_RAPID_TYPE     (NONVOL_VSET        + sizeof(double))        // Type of rapid fire event
 #define NONVOL_PS_VERSION     (NONVOL_RAPID_TYPE  + sizeof(int))           // Persistent storage version
+#define NONVOL_FOLLOW_THROUGH (NONVOL_PS_VERSION  + sizeof(int))           // Follow through timer
+#define NONVOL_KEEP_ALIVE     (NONVOL_FOLLOW_THROUGH + sizeof(int))        // Send out a keep alive at a rate
+#define NONVOL_TABATA_WARN_ON (NONVOL_KEEP_ALIVE + sizeof(int))            // Time to turn the warning on
+#define NONVOL_TABATA_WARN_OFF (NONVOL_TABATA_WARN_ON + sizeof(int))       // Time to turn the warning off
 
-#define NEXT_NONVOL           ((NONVOL_RAPID_CYCLES + sizeof(int) + 2) - NONVOL_INIT)
+#define NEXT_NONVOL           (NONVOL_TABATA_WARN_OFF + sizeof(int) )
 #define NONVOL_SIZE           4096                                         // 4K available
-
-#if (((45-13) * 4) > NONVOL_SIZE )
-#error NEXT_NONVOL OUT OF NONVOL
-#endif
 
 #endif

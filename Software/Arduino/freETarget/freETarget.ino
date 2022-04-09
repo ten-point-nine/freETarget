@@ -36,6 +36,7 @@ const char to_hex[] = "0123456789ABCDEF";      // Quick Hex to ASCII
 static long tabata(bool reset_time, bool reset_cycles); // Tabata state machine
 static void bye(void);                         // Say good night Gracie
 bool        target_hot;                        // TRUE if the target is active
+static  long keep_alive;                       // Keep alive timer
 
 /*----------------------------------------------------------------
  * 
@@ -55,7 +56,7 @@ void setup(void)
   Serial.begin(115200);
   AUX_SERIAL.begin(115200); 
   DISPLAY_SERIAL.begin(115200); 
-
+  
 /*
  *  Set up the port pins
  */
@@ -85,6 +86,7 @@ void setup(void)
  */
   read_nonvol();
   multifunction_init();
+  keep_alive = millis();
   
 /*
  * Initialize the WiFi if available
@@ -131,16 +133,17 @@ void setup(void)
  * 
  *----------------------------------------------------------------
  */
-#define SET_MODE      0         // Set the operating mode
-#define ARM       (SET_MODE+1)  // State is ready to ARM
-#define WAIT      (ARM+1)       // ARM the circuit
-#define AQUIRE    (WAIT+1)      // Aquire the shot
-#define REDUCE    (AQUIRE+1)    // Reduce the data
-#define WASTE     (REDUCE+1)    // Wait for the shot to end
-#define SEND_MISS (WASTE+1)     // Got a trigger, but was defective
+#define SET_MODE      0           // Set the operating mode
+#define ARM        (SET_MODE+1)   // State is ready to ARM
+#define WAIT       (ARM+1)        // ARM the circuit
+#define AQUIRE     (WAIT+1)       // Aquire the shot
+#define REDUCE     (AQUIRE+1)     // Reduce the data
+#define SEND_SCORE (REDUCE+1)     // Wait for the shot to end
+#define SEND_MISS  (SEND_SCORE+1) // Got a trigger, but was defective
 
 unsigned int state = SET_MODE;
 unsigned long now;              // Interval timer 
+unsigned long follow_through;   // Follow through timer
 unsigned long power_save;       // Power save timer
 unsigned int sensor_status;     // Record which sensors contain valid data
 unsigned int location;          // Sensor location 
@@ -168,9 +171,16 @@ void loop()
   }
 
 /*
+ * Take care of the TCPIP keep alive
+ */
+ if ( (json_keep_alive != 0)
+    && ((millis()- keep_alive)/ 1000) > json_keep_alive )
+ {
+    send_keep_alive();
+ }
+/*
  * Cycle through the state machine
  */
- 
   switch (state)
   {
 
@@ -315,25 +325,32 @@ void loop()
        || (timer_value[N] == 0) || (timer_value[E] == 0) || (timer_value[S] == 0) || (timer_value[W] == 0) ) // If any one of the timers is 0, that's a miss
     {
       state = SEND_MISS;
-      break;
     }
-    send_score(&record, shot_number, sensor_status);
-    state = WASTE;
-    shot_number++;                   
+    else
+    {
+      state = SEND_SCORE;
+      follow_through = millis();              
+    }
     break;
     
 
 /*
- *  Wait here to make sure the RUN lines are no longer set
+ *  Wait here to make sure the follow through time is over
  */
-  case WASTE:
+  case SEND_SCORE:
+    if ( ((millis() - follow_through) / 1000) < json_follow_through )
+    {
+      break;
+    }
+    
+    send_score(&record, shot_number, sensor_status);
+    shot_number++; 
     if ( (json_paper_time + json_step_time) != 0 )  // Has the witness paper been enabled?
     {
       if ( ((json_paper_eco == 0)                   // ECO turned off
         || ( sqrt(sq(record.x) + sq(record.y)) < json_paper_eco )) // Outside the black
           && (json_rapid_on == 0))                  // and not rapid fire
       {
-        delay(5*ONE_SECOND);                        // Wait five seconds for the shooter
         drive_paper();                              // to follow through.
       }
     }
@@ -418,9 +435,6 @@ static unsigned int  tabata_cycles;    // Generic Number of cycles
 #define RAPID_ON            7         // Rapid Fire ON cycle
 #define RAPID_DONE_OFF      8         // Rapid Fire complete
 
-#define TABATA_BLINK_ON    20         // Warning blink 20 x 100ms = 2 second
-#define TABATA_BLINK_OFF   20         // Warning blink 20 x 100ms = 2 second
-
 static uint16_t tabata_state = TABATA_IDLE;
 static uint16_t old_tabata_state = ~TABATA_IDLE;
 
@@ -497,7 +511,7 @@ static long tabata
         json_tabata_enable = false;
         break;
       }
-      if ( (now - tabata_time)/10 > (json_tabata_rest - ((TABATA_BLINK_ON + TABATA_BLINK_OFF)/10)) )
+      if ( (now - tabata_time)/10 > (json_tabata_rest - ((json_tabata_warn_on + json_tabata_warn_off)/10)) )
       {
         tabata_time = now;;
         tabata_cycles++;
@@ -506,8 +520,8 @@ static long tabata
       }
       break;
         
-   case (TABATA_WARNING):               // 1 second warning
-      if ( (now - tabata_time) > TABATA_BLINK_ON )
+   case (TABATA_WARNING):               // X x 100ms second warning
+      if ( (now - tabata_time) > json_tabata_warn_on )
       {
         tabata_state = TABATA_DARK;
         tabata_time = now;
@@ -515,8 +529,8 @@ static long tabata
       }
       break;
       
-    case (TABATA_DARK):                 // 2 second dark
-      if ( (now - tabata_time) > TABATA_BLINK_OFF )
+    case (TABATA_DARK):                 // X x 100ms second dark
+      if ( (now - tabata_time) > json_tabata_warn_off )
       {
         tabata_state = TABATA_ON;
         tabata_time = now;
@@ -548,7 +562,7 @@ static long tabata
    * We have run out of cycles.  Sit there and blink the LEDs
    */
   case (TABATA_DONE_OFF):                 //Finished.  Stop the game
-      if ( (now - tabata_time) > TABATA_BLINK_OFF )
+      if ( (now - tabata_time) > json_tabata_warn_off )
       {
         tabata_state = TABATA_DONE_ON;
         tabata_time = now;
@@ -557,7 +571,7 @@ static long tabata
       break;
 
   case (TABATA_DONE_ON):                 //Finished.  Stop the game
-      if ( (now - tabata_time) > TABATA_BLINK_ON )
+      if ( (now - tabata_time) > json_tabata_warn_on )
       {        
         tabata_state = TABATA_DONE_OFF;
         tabata_time = now;
@@ -574,7 +588,7 @@ static long tabata
         json_rapid_enable = false;
         break;
       }
-      if ( (now - tabata_time)/10 > (json_rapid_rest - ((TABATA_BLINK_ON + TABATA_BLINK_OFF)/10)) )
+      if ( (now - tabata_time)/10 > (json_rapid_rest - ((json_tabata_warn_on + json_tabata_warn_off)/10)) )
       {
         tabata_time = now;;
         reset_cycles++;
@@ -646,7 +660,7 @@ void tabata_control(void)
 /*
  * Toggle the Tabata enable
  */
-  json_tabata_enable = ! json_tabata_enable;  // Toggle the enable
+  json_tabata_enable = !json_tabata_enable;  // Toggle the enable
   json_rapid_enable = json_tabata_enable;
 
 /*
@@ -700,16 +714,13 @@ void tabata_control(void)
 void bye(void)
 {
   char str[128];
-  long now;
-  
 /*
  * Say Good Night Gracie!
  */
   sprintf(str, "{\"GOOD_BYE\":0}");
   output_to_all(str);
-  set_LED_PWM(LED_PWM_OFF);         // Goint to sleep 
-  esp01_close();                    // Disconnect
-  target_hot = false;
+  set_LED_PWM(LED_PWM_OFF);         // Going to sleep 
+  delay(ONE_SECOND);
   
 /*
  * Loop waiting for something to happen
@@ -772,5 +783,30 @@ void hello(void)
   EEPROM.get(NONVOL_POWER_SAVE, json_power_save);   // and reset the power save time
   target_hot = true;
   
+  return;
+}
+
+/*----------------------------------------------------------------
+ * 
+ * function: send_keep_alive
+ * 
+ * brief:    Send a keep alive over the TCPIP
+ * 
+ * return:   Nothing
+ * 
+ *----------------------------------------------------------------
+ *
+ * When the keep alive expires, send a new one out and reset
+ * 
+ *--------------------------------------------------------------*/
+void send_keep_alive(void)
+{
+  char str[128];
+  static int keep_alive_count = 0;
+  
+  sprintf(str, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);
+  output_to_all(str);
+
+  keep_alive = millis();
   return;
 }

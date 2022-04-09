@@ -445,6 +445,26 @@ void update_nonvol
  */
   if ( current_version == 1 )                     
   {
+    x = 3;                                                  // Use an int to make sure that
+    EEPROM.put(NONVOL_FOLLOW_THROUGH, x);                   // EEPROM.put uses the right size
+    current_version = 2;
+    EEPROM.put(NONVOL_PS_VERSION, current_version);
+  }
+  if ( current_version == 2 )                     
+  {
+    x = 120;                                                // Set to 120.  No harm if it's sent
+    EEPROM.put(NONVOL_KEEP_ALIVE, x);
+    current_version = 3;
+    EEPROM.put(NONVOL_PS_VERSION, current_version);
+  }
+  if ( current_version == 3 )                     
+  {
+    x = 20;                                                // 20 x 100 ms increments
+    EEPROM.put(NONVOL_TABATA_WARN_ON, x);
+    x = 20;                                                // 20 x 100 ms increments
+    EEPROM.put(NONVOL_TABATA_WARN_OFF, x);
+    current_version = 4;
+    EEPROM.put(NONVOL_PS_VERSION, current_version);
   }
   
 /*
