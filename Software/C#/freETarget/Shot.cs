@@ -90,6 +90,8 @@ namespace freETarget {
 
             float newRadius = recomputeRadiusFromXY(); //use the calculated radius from x,y instead of the received one. x and y are adjusted with calibration
             this.radius = (decimal)newRadius;
+            double newAngle = recomputeAngleFromXY();
+            this.angle = (decimal)newAngle;
 
             decimal score2 = target.getScore(this.radius);
 
@@ -116,6 +118,16 @@ namespace freETarget {
 
         private float recomputeRadiusFromXY() {
             return (float)Math.Sqrt(Math.Pow((double)(this.x + this.calibrationX) , 2) + Math.Pow((double)(this.y+this.calibrationY), 2));
+        }
+
+        private double recomputeAngleFromXY() {
+            double radians = Math.Asin((double)(this.y+this.calibrationY) / (double)this.radius);
+            double degrees = (radians * 180 / Math.PI);
+            if (this.x + this.calibrationX < 0) {
+                degrees = 90 + (90-degrees);
+            }
+
+            return degrees;
         }
 
         public override string ToString() {
