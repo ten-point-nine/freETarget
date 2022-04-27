@@ -768,7 +768,7 @@ void multifunction_switch(void)
 
   delay(ONE_SECOND/2);                    // Let the switches debounce
   if ( (DIP_SW_A == 0 )
-        && (DIP_SW_B == 0 ) )             // Both switches are open?  
+        && (DIP_SW_B == 0 ) )             // Both switches are open? (tap)
    {
       if ( x & 1 )
       {
@@ -778,7 +778,6 @@ void multifunction_switch(void)
       {
         sw_state(HHH10(json_multifunction));
       }
-      return;
    }
    
 /*
@@ -840,43 +839,49 @@ static void sw_state
     (
     unsigned int action
     )
-{    
-    switch (action)
-    {
-      case POWER_TAP:
-        set_LED_PWM_now(json_LED_PWM);      // Yes, a quick press to turn the LED on
-        delay(ONE_SECOND/2),
-        set_LED_PWM_now(0);                 // Blink
-        delay(ONE_SECOND/2);
-        set_LED_PWM_now(json_LED_PWM);      // and leave it on
-        power_save = millis();              // and resets the power save time
-        json_power_save += 30;      
+{     
+  
+  char s[128];                          // Holding string 
+  
+  switch (action)
+  {
+    case POWER_TAP:
+      set_LED_PWM_now(json_LED_PWM);      // Yes, a quick press to turn the LED on
+      delay(ONE_SECOND/2),
+      set_LED_PWM_now(0);                 // Blink
+      delay(ONE_SECOND/2);
+      set_LED_PWM_now(json_LED_PWM);      // and leave it on
+      power_save = millis();              // and resets the power save time
+      json_power_save += 30;      
+      sprintf(s, "\r\n{\json_power_save\": %d}\n\r", json_power_save);
+      output_to_all(s);  
+      output_to_all(0);
         break;
         
-      case PAPER_FEED:                      // The switch acts as paper feed control
-        paper_on_off(true);                 // Turn on the paper drive
-        while ( (DIP_SW_A || DIP_SW_B) )    // Keep it on while the switches are pressed 
-        {
-          continue; 
-        }
-        paper_on_off(false);                // Then turn it off
-        break;
+    case PAPER_FEED:                      // The switch acts as paper feed control
+      paper_on_off(true);                 // Turn on the paper drive
+      while ( (DIP_SW_A || DIP_SW_B) )    // Keep it on while the switches are pressed 
+      {
+        continue; 
+      }
+      paper_on_off(false);                // Then turn it off
+      break;
 
-      case PC_TEST:                         // Send a fake score to the PC
-        send_fake_score();
-        break;
+    case PC_TEST:                         // Send a fake score to the PC
+      send_fake_score();
+      break;
       
-      case ON_OFF:                          // Turn the target off
-        bye();                              // Stay in the Bye state until a wake up event comes along
-        break;
+    case ON_OFF:                          // Turn the target off
+      bye();                              // Stay in the Bye state until a wake up event comes along
+      break;
 
-      case TABATA_ON_OFF:
-        tabata_control();
-        break;
+    case TABATA_ON_OFF:
+      tabata_control();
+      break;
         
-      default:
-        break;
-    }
+    default:
+      break;
+  }
 
 
 
@@ -926,18 +931,19 @@ static void send_fake_score(void)
  * text in a JSON message.
  * 
  *-----------------------------------------------------*/
- //                             0            1            2          3           4             5             6
+ //                             0            1            2          3        4             5             6
 static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED",     "2",       "3", "PC_TEST", "POWER_ON_OFF", "TABATA_ON_OFF", "7", "8", "9"};
 
 void multifunction_display(void)
 {
   char s[128];                          // Holding string
 
-  sprintf(s, "\"MFS_T2\": \"%s\",\n\r\"MFS_T1\": \"%s\",\n\r\"MFS_12\": \"%s\",\n\r\"MFS_H2\": \"%s\",\n\r\"MFS_H1\": \"%s\",\n\r", 
+  sprintf(s, "\"MFS_TAP2\": \"%s\",\n\r\"MFS_TAP1\": \"%s\",\n\r\"MFS_HOLD12\": \"%s\",\n\r\"MFS_HOLD2\": \"%s\",\n\r\"MFS_HOLD1\": \"%s\",\n\r", 
   mfs_text[HHH10(json_multifunction)], mfs_text[HHI10(json_multifunction)], mfs_text[HLO10(json_multifunction)], mfs_text[HI10(json_multifunction)], mfs_text[LO10(json_multifunction)]);
 
   output_to_all(s);  
-
+  output_to_all(0);
+  
 /*
  * All done, return
  */

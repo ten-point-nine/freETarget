@@ -112,7 +112,6 @@ void factory_nonvol
   i=0;
   while ( JSON[i].token != 0 )
   {
-    
     switch ( JSON[i].convert )
     {
        case IS_VOID:                                        // Variable does not contain anything 
@@ -154,7 +153,7 @@ void factory_nonvol
       paper_on_off(false);
       delay(ONE_SECOND/4);
     }
-    Serial.print(T("\r\n"));
+    Serial.print(T(" Test Complete\r\n"));
   }
 /*
  * Set the trip point
@@ -467,7 +466,11 @@ void update_nonvol
     current_version = 4;
     EEPROM.put(NONVOL_PS_VERSION, current_version);
   }
-  
+
+  if ( current_version != PS_VERSION )
+  {
+    Serial.print(T("\n\rVerify firmware"));
+  }
 /*
  * Up to date, return
  */

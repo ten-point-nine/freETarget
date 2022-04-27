@@ -79,7 +79,7 @@ void self_test(uint16_t test)
       Serial.print(T("\r\n 8 - Grid calibration pattern"));
       if ( revision() >= REV_220 )
       {
-        Serial.print(T("\r\n 10 - Aux port passthrough"));
+        Serial.print(T("\r\n10 - Aux port passthrough"));
       }
       Serial.print(T("\r\n11 - Calibrate")); 
       Serial.print(T("\r\n12 - Transfer loopback"));
@@ -1283,6 +1283,7 @@ void log_sensor
 
   sprintf(s, "\r\nLogging %s Use X to reset,  ! to exit\r\n", which_one[sensor]);
   output_to_all(s);
+  output_to_all(0);
   max_all =  0;
   arm_counters();
   
@@ -1317,6 +1318,8 @@ void log_sensor
     {
       sprintf(s, "\r\n%s cycle:%d  max:%d is_running:", which_one[sensor], max_cycle, max_all);
       output_to_all(s);
+      output_to_all(0);      
+
       s[1] = 0;
       for (i=N; i<=W; i++)
       {
@@ -1335,6 +1338,7 @@ void log_sensor
         case '!':
           sprintf(s, "\r\nDone");
           output_to_all(s);
+          output_to_all(0);
           return;
 
         case 'x':

@@ -558,6 +558,8 @@ unsigned int esp01_available(void)
  *   This lets the application fill the tranmsit buffer as 
  *   quickly as possible until the buffer is full.
  *   
+ *   The appplication must send a null to trigger the sending
+ *   operation.
  *--------------------------------------------------------------*/
 #define MAX_RETRY  10                   // Allow for 10 attempts to start
 #define ESP_BUFFER  2048                // The ESP buffer size

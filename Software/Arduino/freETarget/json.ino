@@ -75,7 +75,7 @@ const json_message JSON[] = {
   {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,                       0,       0 },    // Echo test
   {"\"FOLLOW_THROUGH\":", &json_follow_through,              0,                IS_INT16,  0,                NONVOL_FOLLOW_THROUGH,   0 },    // Three second follow through
   {"\"INIT\":",           0,                                 0,                IS_INT16,  &init_nonvol,     NONVOL_INIT,             0 },    // Initialize the NONVOL memory
-  {"\"KEEP_ALIVE\":",     &json_keep_alive,                  0,                IS_INT16,  0,                NONVOL_KEEP_ALIVE,       0 },    // TCPIP Keep alive period (in seconds)
+  {"\"KEEP_ALIVE\":",     &json_keep_alive,                  0,                IS_INT16,  0,                NONVOL_KEEP_ALIVE,     120 },    // TCPIP Keep alive period (in seconds)
   {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT16,  &set_LED_PWM_now, NONVOL_LED_PWM,         50 },    // Set the LED brightness
   {"\"MFS\":",            &json_multifunction,               0,                IS_INT16,  0,                NONVOL_MFS,   (TABATA_ON_OFF * 100) + (ON_OFF * 10) + (PAPER_FEED) },    // Multifunction switch action
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT16,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
@@ -87,6 +87,7 @@ const json_message JSON[] = {
   {"\"RAPID_ON\":",       &json_rapid_on,                    0,                IS_INT16,  0,                NONVOL_RAPID_ON,         0 },    // Time that the solenoif is on for a Rapid Fire timer (1/10 seconds)
   {"\"RAPID_REST\":",     &json_rapid_rest,                  0,                IS_INT16,  0,                NONVOL_RAPID_REST,       0 },    // Time that the solenoid is off for a Rapid Fire timer
   {"\"RAPID_TYPE\":",     &json_rapid_type,                  0,                IS_INT16,  0,                NONVOL_RAPID_TYPE,       0 },    // Rapid fire event type
+  {"\"RESET\":",          0,                                 0,                IS_INT16,  &setup,           0,                       0 },    // Reinit the board
   {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT16,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
   {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  &gen_position,    NONVOL_SENSOR_DIA,     230 },    // Generate the sensor postion array
   {"\"SN\":",             &json_serial_number,               0,                IS_FIXED,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
@@ -150,7 +151,7 @@ static bool not_found;
 
 bool read_JSON(void)
 {
-  unsigned int  i, j,  x;
+  unsigned int  i, j, m, x;
   int     k, l;
   char    ch;
   double  y;
@@ -223,15 +224,14 @@ bool read_JSON(void)
   {
     j = 0;
     l = 0;
-    
-    while ( (JSON[j].token != 0) && (init_table[j].port != 0xff) ) // Cycle through the tokens
+    while ( (JSON[j].token != 0) || (init_table[l].port != 0xff) ) // Cycle through the tokens
     {
       if ( JSON[j].token != 0 )
       {
         k = instr(&input_JSON[i], JSON[j].token );              // Compare the input against the list of JSON tags
-  
         if ( k > 0 )                                            // Non zero, found something
         {
+          Serial.print(T("\r\nFound ")); Serial.print(JSON[j].token); delay(2);
           not_found = false;                                    // Read and convert the JSON value
           switch ( JSON[j].convert )
           {
@@ -252,7 +252,7 @@ bool read_JSON(void)
               {
                 EEPROM.put(JSON[j].non_vol, x);                 // Store into NON-VOL
               }
-            
+              Serial.print(x);
               break;
   
             case IS_FLOAT:                                      // Convert a floating point number
@@ -266,13 +266,16 @@ bool read_JSON(void)
               {
                 EEPROM.put(JSON[j].non_vol, y);                 // Store into NON-VOL
               }
+              Serial.print(y);
               break;
             }
-        
+            Serial.print(T("\n\r"));
             if ( JSON[j].f != 0 )                               // Call the handler if it is available
             {
               JSON[j].f(x);
             }
+
+            
           }
         }
         if ( init_table[l].port != 0xff )                  // Cycle through the tokens
@@ -310,7 +313,7 @@ bool read_JSON(void)
           }
         }
 
-     if ( JSON[i].token != 0 )
+     if ( JSON[j].token != 0 )
      {
        j++;
      }
@@ -590,6 +593,7 @@ static void show_test(int test_number)
    }
   
    output_to_all(s);
+   output_to_all(0);
    
   /*
    * The DIP switch has been remotely set

@@ -142,7 +142,7 @@ void setup(void)
 #define SEND_MISS  (SEND_SCORE+1) // Got a trigger, but was defective
 
 unsigned int state = SET_MODE;
-unsigned long now;              // Interval timer 
+unsigned long now;              // Interval timer used for Tabata
 unsigned long follow_through;   // Follow through timer
 unsigned long power_save;       // Power save timer
 unsigned int sensor_status;     // Record which sensors contain valid data
@@ -166,7 +166,7 @@ void loop()
  */
   if ( read_JSON() )
   {
-    now = millis();               // Reset the power down timer if something comes in
+    power_save = millis();        // Reset the power down timer if something comes in
     set_LED_PWM(json_LED_PWM);    // Put the LED back on if it was off
   }
 
@@ -174,10 +174,23 @@ void loop()
  * Take care of the TCPIP keep alive
  */
  if ( (json_keep_alive != 0)
-    && ((millis()- keep_alive)/ 1000) > json_keep_alive )
+    && ((millis()- keep_alive)/ 1000) > json_keep_alive )           // Time in seconds
  {
     send_keep_alive();
+    keep_alive = millis();
  }
+
+/*
+ * Take care of the low power mode
+ */
+  if ( (json_power_save != 0 ) 
+       && (((millis()-power_save) / 1000 / 60) >= json_power_save) )  // Time in minutes
+  {
+    bye();                              // Dim the lights
+    power_save = millis();              // Came back. 
+    state = SET_MODE;                   // Reset everything just in case
+  }
+   
 /*
  * Cycle through the state machine
  */
@@ -270,12 +283,6 @@ void loop()
       {
         set_LED(LED_OFF);
       }
-    }
-
-    if ( (json_power_save != 0 ) 
-        && (((millis()-power_save) / 1000 / 60) >= json_power_save) )
-    {
-      bye();                               // Dim the lights?
     }
     
     sensor_status = is_running();
@@ -537,6 +544,7 @@ static long tabata
         set_LED_PWM_now(json_LED_PWM);           // Turn on the lights
         sprintf(s, "{\"TABATA\":1}\r\n");
         output_to_all(s);
+        output_to_all(0);
       }
       break;
       
@@ -552,6 +560,7 @@ static long tabata
           tabata_state = TABATA_IDLE;
          sprintf(s, "{\"TABATA\":0}\r\n");
           output_to_all(s);
+          output_to_all(0);
         }
         tabata_time = now;
         set_LED_PWM_now(0);           // Turn off the LEDs
@@ -595,6 +604,7 @@ static long tabata
         tabata_state = RAPID_ON;
         sprintf(s, "{\"RAPID\":1}\r\n");
         output_to_all(s);
+        output_to_all(0);
         paper_on_off(true);                            // Turn the solenoid on
         set_LED_PWM(json_LED_PWM);                      // Turn off the LEDs
       }
@@ -612,6 +622,7 @@ static long tabata
           tabata_state = RAPID_IDLE;
           sprintf(s, "{\"RAPID\":0}\r\n");
           output_to_all(s);
+          output_to_all(0);
         }
         tabata_time = now;
         paper_on_off(false);             // Turn off the LEDs
@@ -689,6 +700,7 @@ void tabata_control(void)
 
   sprintf(s, "\n\r{\"TABATA_ENABLE\":%d, \"RAPID_ENABLE\":%d }\n\r", json_tabata_enable, json_rapid_enable);
   output_to_all(s);
+  output_to_all(0);
 
 /*
  * All donem return
@@ -719,6 +731,7 @@ void bye(void)
  */
   sprintf(str, "{\"GOOD_BYE\":0}");
   output_to_all(str);
+  output_to_all(0);
   set_LED_PWM(LED_PWM_OFF);         // Going to sleep 
   delay(ONE_SECOND);
   
@@ -774,6 +787,7 @@ void hello(void)
 
   sprintf(str, "{\"Hello_World\":0}");
   output_to_all(str);
+  output_to_all(0);
   
 /*
  * Woken up again
@@ -806,7 +820,7 @@ void send_keep_alive(void)
   
   sprintf(str, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);
   output_to_all(str);
+  output_to_all(0);
 
-  keep_alive = millis();
   return;
 }
