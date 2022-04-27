@@ -25,8 +25,6 @@ F 3 "~" H 4000 3700 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	3450 3100 4000 3100
-Wire Wire Line
 	4000 3550 4000 3100
 Connection ~ 4000 3100
 Wire Wire Line
@@ -72,17 +70,6 @@ F 3 "~" H 4900 3200 50  0001 C CNN
 	1    4900 3200
 	0    1    -1   0   
 $EndComp
-$Comp
-L Connector_Generic:Conn_01x03 J1
-U 1 1 61C606B3
-P 3250 3200
-F 0 "J1" H 3168 2875 50  0000 C CNN
-F 1 "Conn_01x03" H 3168 2966 50  0000 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical" H 3250 3200 50  0001 C CNN
-F 3 "~" H 3250 3200 50  0001 C CNN
-	1    3250 3200
-	-1   0    0    1   
-$EndComp
 Wire Wire Line
 	3700 3200 3700 3850
 Wire Wire Line
@@ -92,19 +79,6 @@ Wire Wire Line
 	3450 3200 3700 3200
 Wire Wire Line
 	5800 3100 5800 3300
-$Comp
-L Connector_Generic:Conn_01x01 J2
-U 1 1 61C62CCC
-P 6300 3100
-F 0 "J2" H 6380 3142 50  0000 L CNN
-F 1 "Conn_01x01" H 6380 3051 50  0000 L CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 6300 3100 50  0001 C CNN
-F 3 "~" H 6300 3100 50  0001 C CNN
-	1    6300 3100
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	6100 3100 6100 3450
 Wire Wire Line
 	6100 3450 4900 3450
 Wire Wire Line
@@ -112,4 +86,94 @@ Wire Wire Line
 Connection ~ 5800 3300
 Wire Wire Line
 	5800 3300 5800 3550
+$Comp
+L Device:R R2
+U 1 1 625B38DC
+P 4000 4500
+F 0 "R2" H 4070 4546 50  0000 L CNN
+F 1 "10k0" H 4070 4455 50  0000 L CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" V 3930 4500 50  0001 C CNN
+F 3 "~" H 4000 4500 50  0001 C CNN
+	1    4000 4500
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R3
+U 1 1 625B4232
+P 4000 5000
+F 0 "R3" H 3930 4954 50  0000 R CNN
+F 1 "4K7" H 3930 5045 50  0000 R CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" V 3930 5000 50  0001 C CNN
+F 3 "~" H 4000 5000 50  0001 C CNN
+	1    4000 5000
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	4000 4650 4000 4750
+Wire Wire Line
+	3700 3850 3700 5150
+Wire Wire Line
+	3700 5150 4000 5150
+Connection ~ 3700 3850
+Wire Wire Line
+	3450 3100 4000 3100
+$Comp
+L Connector_Generic:Conn_01x04 J1
+U 1 1 625B788D
+P 3250 3300
+F 0 "J1" H 3168 2875 50  0000 C CNN
+F 1 "Conn_01x04" H 3168 2966 50  0000 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical" H 3250 3300 50  0001 C CNN
+F 3 "~" H 3250 3300 50  0001 C CNN
+	1    3250 3300
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	3450 3400 3450 4350
+Wire Wire Line
+	3450 4350 4000 4350
+$Comp
+L Connector_Generic:Conn_01x02 J2
+U 1 1 625BAB36
+P 6300 3450
+F 0 "J2" H 6380 3442 50  0000 L CNN
+F 1 "Conn_01x02" H 6380 3351 50  0000 L CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" H 6300 3450 50  0001 C CNN
+F 3 "~" H 6300 3450 50  0001 C CNN
+	1    6300 3450
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6100 4750 4000 4750
+Wire Wire Line
+	6100 3550 6100 4750
+Connection ~ 4000 4750
+Wire Wire Line
+	4000 4750 4000 4850
+$Comp
+L power:GND #PWR?
+U 1 1 625D009C
+P 4000 3900
+F 0 "#PWR?" H 4000 3650 50  0001 C CNN
+F 1 "GND" H 4005 3727 50  0000 C CNN
+F 2 "" H 4000 3900 50  0001 C CNN
+F 3 "" H 4000 3900 50  0001 C CNN
+	1    4000 3900
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4000 3850 4000 3900
+$Comp
+L power:+5V #PWR?
+U 1 1 625D0AD6
+P 4000 2950
+F 0 "#PWR?" H 4000 2800 50  0001 C CNN
+F 1 "+5V" H 4015 3123 50  0000 C CNN
+F 2 "" H 4000 2950 50  0001 C CNN
+F 3 "" H 4000 2950 50  0001 C CNN
+	1    4000 2950
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4000 2950 4000 3100
 $EndSCHEMATC
