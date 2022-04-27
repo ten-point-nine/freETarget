@@ -993,6 +993,8 @@ namespace freETarget {
 
             shotsList.Items.Clear();
             shotsList.Refresh();
+            imgListDirections.Images.Clear();
+
             gridTargets.Rows.Clear();
             clearBreakdownChart();
             foreach (Shot shot in getShots()) { //refresh all shots, not just currest series
@@ -1033,6 +1035,8 @@ namespace freETarget {
 
             shotsList.Items.Clear();
             shotsList.Refresh();
+            imgListDirections.Images.Clear();
+
             gridTargets.Rows.Clear();
             clearBreakdownChart();
             foreach (Shot shot in getShots()) { //refresh all shots, not just currest series
@@ -1085,6 +1089,8 @@ namespace freETarget {
 
             shotsList.Items.Clear();
             shotsList.Refresh();
+            imgListDirections.Images.Clear();
+
             gridTargets.Rows.Clear();
             clearBreakdownChart();
             foreach (Shot shot in getShots()) { //refresh all shots, not just currest series
