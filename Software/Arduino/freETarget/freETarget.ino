@@ -111,8 +111,6 @@ void setup(void)
     Serial.print(T("\r\nPOST_2 Failed\r\n"));// Blink the LEDs
     blink_fault(POST_COUNT_FAILED);       // and try again
   }
-  POST_trip_point();                      // Show the trip point
-  
 
 /*
  * Ready to go

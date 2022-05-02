@@ -77,7 +77,7 @@ const json_message JSON[] = {
   {"\"INIT\":",           0,                                 0,                IS_INT16,  &init_nonvol,     NONVOL_INIT,             0 },    // Initialize the NONVOL memory
   {"\"KEEP_ALIVE\":",     &json_keep_alive,                  0,                IS_INT16,  0,                NONVOL_KEEP_ALIVE,     120 },    // TCPIP Keep alive period (in seconds)
   {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT16,  &set_LED_PWM_now, NONVOL_LED_PWM,         50 },    // Set the LED brightness
-  {"\"MFS\":",            &json_multifunction,               0,                IS_INT16,  0,                NONVOL_MFS,   (TABATA_ON_OFF * 100) + (ON_OFF * 10) + (PAPER_FEED) },    // Multifunction switch action
+  {"\"MFS\":",            &json_multifunction,               0,                IS_INT16,  0,                NONVOL_MFS,  (LED_ADJUST*10000) +  (0 * 1000) +  (TABATA_ON_OFF * 100) + (ON_OFF * 10) + (PAPER_FEED) },    // Multifunction switch action
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT16,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
   {"\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT16,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
   {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT16,  0,                NONVOL_PAPER_TIME,      50 },    // Set the paper advance time
@@ -231,7 +231,6 @@ bool read_JSON(void)
         k = instr(&input_JSON[i], JSON[j].token );              // Compare the input against the list of JSON tags
         if ( k > 0 )                                            // Non zero, found something
         {
-          Serial.print(T("\r\nFound ")); Serial.print(JSON[j].token); delay(2);
           not_found = false;                                    // Read and convert the JSON value
           switch ( JSON[j].convert )
           {
@@ -252,7 +251,6 @@ bool read_JSON(void)
               {
                 EEPROM.put(JSON[j].non_vol, x);                 // Store into NON-VOL
               }
-              Serial.print(x);
               break;
   
             case IS_FLOAT:                                      // Convert a floating point number
@@ -266,10 +264,9 @@ bool read_JSON(void)
               {
                 EEPROM.put(JSON[j].non_vol, y);                 // Store into NON-VOL
               }
-              Serial.print(y);
               break;
             }
-            Serial.print(T("\n\r"));
+            
             if ( JSON[j].f != 0 )                               // Call the handler if it is available
             {
               JSON[j].f(x);

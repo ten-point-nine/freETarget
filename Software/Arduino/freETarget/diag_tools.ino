@@ -753,21 +753,6 @@ void set_trip_point
     }
 
  /*
-  * In spec, display the trip level on the LEDs
-  */
-    if ( CAL_LOW )                                          // Low Calibration 
-    {
-        sample *= 3;
-        sample /= 2;
-    }
-        
-    if ( CAL_HIGH )                                      // Set scale if the high range
-    {
-       sample *= 2;
-       sample /= 3;
-    }
-    
- /*
   * Determine what band it belongs to 
   */
    i = 0;
@@ -1239,6 +1224,7 @@ void show_sensor_status(unsigned int sensor_status)
     && (face_strike) )
   {
     Serial.print(T(" PASS"));
+    delay(ONE_SECOND);                // Wait for click to go away
   }    
 
 /*

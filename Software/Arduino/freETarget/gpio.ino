@@ -738,7 +738,8 @@ void multifunction_switch(void)
  {
     unsigned int  x;                    // Working Value
     unsigned int  i;                    // Iteration Counter
-
+    unsigned long now;
+    
     if ( CALIBRATE )
     {
       return;                           // Not used if in calibration mode
@@ -752,7 +753,7 @@ void multifunction_switch(void)
    {
      return;                              // Nothing is happening, return
    }
-   
+
    x = 0;                                 // Some switch is pressed
    if ( DIP_SW_A != 0 )
    {
@@ -762,11 +763,31 @@ void multifunction_switch(void)
    {
      x += 2;
    }
+
 /*
  * Check to see if the switch has been pressed for the first time
  */
-
-  delay(ONE_SECOND/2);                    // Let the switches debounce
+  now = millis();
+  while ( (millis() - now) <= ONE_SECOND )
+  {
+    if ( DIP_SW_A )
+    {
+      set_LED(L('-', '*', '-'));
+    }
+    else
+    {
+      set_LED(L('-', '.', '-'));
+    }
+    if ( DIP_SW_B )
+    {
+      set_LED(L('-', '-', '*'));
+    }
+    else
+    {
+      set_LED(L('-', '-', '.'));
+    }
+  }
+  
   if ( (DIP_SW_A == 0 )
         && (DIP_SW_B == 0 ) )             // Both switches are open? (tap)
    {
@@ -812,6 +833,7 @@ void multifunction_switch(void)
     continue;                     // Wait here for the switches to be released
   }
   delay(ONE_SECOND/2);            // Wait here to debounce the switches
+  set_LED(LED_READY);
   return;
 }
 
@@ -853,7 +875,7 @@ static void sw_state
       set_LED_PWM_now(json_LED_PWM);      // and leave it on
       power_save = millis();              // and resets the power save time
       json_power_save += 30;      
-      sprintf(s, "\r\n{\json_power_save\": %d}\n\r", json_power_save);
+      sprintf(s, "\r\n{\LED_PWM\": %d}\n\r", json_power_save);
       output_to_all(s);  
       output_to_all(0);
         break;
@@ -878,7 +900,20 @@ static void sw_state
     case TABATA_ON_OFF:
       tabata_control();
       break;
-        
+      
+    case LED_ADJUST:
+      json_LED_PWM += 10;                 // Bump up the LED by 10%
+      if ( json_LED_PWM > 100 )
+      {
+        json_LED_PWM = 0;                 // Force to zero on wrap around
+      }
+      set_LED_PWM_now(json_LED_PWM);      // Set the brightness
+      EEPROM.put(NONVOL_LED_PWM, json_LED_PWM);   
+      sprintf(s, "\r\n{\LED_BRIGHT\": %d}\n\r", json_LED_PWM);
+      output_to_all(s);  
+      output_to_all(0);
+      break;
+      
     default:
       break;
   }
@@ -931,15 +966,15 @@ static void send_fake_score(void)
  * text in a JSON message.
  * 
  *-----------------------------------------------------*/
- //                             0            1            2          3        4             5             6
-static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED",     "2",       "3", "PC_TEST", "POWER_ON_OFF", "TABATA_ON_OFF", "7", "8", "9"};
+ //                             0            1            2            3        4             5             6
+static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED", "ADJUST_LED",    "3", "PC_TEST", "POWER_ON_OFF", "TABATA_ON_OFF", "7", "8", "9"};
 
 void multifunction_display(void)
 {
   char s[128];                          // Holding string
 
-  sprintf(s, "\"MFS_TAP2\": \"%s\",\n\r\"MFS_TAP1\": \"%s\",\n\r\"MFS_HOLD12\": \"%s\",\n\r\"MFS_HOLD2\": \"%s\",\n\r\"MFS_HOLD1\": \"%s\",\n\r", 
-  mfs_text[HHH10(json_multifunction)], mfs_text[HHI10(json_multifunction)], mfs_text[HLO10(json_multifunction)], mfs_text[HI10(json_multifunction)], mfs_text[LO10(json_multifunction)]);
+  sprintf(s, "\"MFS_TAP1\": \"%s\",\n\r\"MFS_TAP2\": \"%s\",\n\r\"MFS_HOLD1\": \"%s\",\n\r\"MFS_HOLD2\": \"%s\",\n\r\"MFS_HOLD12\": \"%s\",\n\r", 
+  mfs_text[HHI10(json_multifunction)], mfs_text[HHH10(json_multifunction)], mfs_text[LO10(json_multifunction)], mfs_text[HI10(json_multifunction)], mfs_text[HLO10(json_multifunction)]);
 
   output_to_all(s);  
   output_to_all(0);

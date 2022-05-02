@@ -102,7 +102,7 @@ void digital_test(void);                                  // Execute the digital
 #define SPARE_1      22
 #define POWER_TAP     0                   // DIP a/B used to wake up
 #define PAPER_FEED    1                   // DIP A/B used as a paper feed
-#define MFS_SPARE_2   2                   // DIP A/B 
+#define LED_ADJUST    2                   // DIP A/B used to set LED brightness
 #define MFS_SPARE_3   3                   // DIP A/B 
 #define PC_TEST       4                   // DIP A/B used to trigger fake shot
 #define ON_OFF        5                   // DIP A/B used to turn the target ON or OFF
