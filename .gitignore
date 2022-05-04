@@ -352,3 +352,7 @@ healthchecksdb
 #files removed in CNC files
 *.tap
 
+#Other
+.hex
+.png
+.bak
