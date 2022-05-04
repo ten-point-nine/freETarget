@@ -53,8 +53,8 @@ void dump_nonvol(void);
 #define NONVOL_RAPID_ON       (NONVOL_TABATA_CYCLES+sizeof(int))           // Time that the Tabata timer is on
 #define NONVOL_RAPID_REST     (NONVOL_RAPID_ON    + sizeof(int))           // Time that the Tabata timer is OFF
 #define NONVOL_RAPID_CYCLES   (NONVOL_RAPID_REST  + sizeof(int))           // Number of cycles in an event
-#define NONVOL_V_SET_PWM      (NONVOL_RAPID_CYCLES + sizeof(int))          // Starting PWM setting
-#define NONVOL_VSET           (NONVOL_V_SET_PWM   + sizeof(int))           // Desired Voltage value (floating point)
+#define NONVOL_vset_PWM      (NONVOL_RAPID_CYCLES + sizeof(int))          // Starting PWM setting
+#define NONVOL_VSET           (NONVOL_vset_PWM   + sizeof(int))           // Desired Voltage value (floating point)
 #define NONVOL_RAPID_TYPE     (NONVOL_VSET        + sizeof(double))        // Type of rapid fire event
 #define NONVOL_PS_VERSION     (NONVOL_RAPID_TYPE  + sizeof(int))           // Persistent storage version
 #define NONVOL_FOLLOW_THROUGH (NONVOL_PS_VERSION  + sizeof(int))           // Follow through timer

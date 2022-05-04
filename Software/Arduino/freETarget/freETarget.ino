@@ -101,7 +101,6 @@ void setup(void)
 /*
  * Run the power on self test
  */
-
   POST_version(PORT_ALL);                 // Show the version string on all ports
   show_echo(0);
   POST_LEDs();                            // Cycle the LEDs
@@ -214,27 +213,27 @@ void loop()
  * Arm the circuit
  */
   case ARM:
-    arm_counters();
-    enable_interrupt(json_send_miss); // Turn on the face strike interrupt
-    face_strike = false;              // Reset the face strike count
-    
     set_LED_PWM(json_LED_PWM);        // Keep the LEDs ON
     if ( json_tabata_enable != 0 )    // Show that Tabata is ON
     {
       set_LED(LED_TABATA_ON);        // Just turn on X
     }
-    sensor_status = is_running();
+    face_strike = false;              // Reset the face strike count
     power_save = millis();            // Start the power saver time
 
-    if ( sensor_status == 0 )
+    enable_interrupt(json_send_miss); // Turn on the face strike interrupt
+
+    arm_counters();
+    sensor_status = is_running();
+    if ( sensor_status == 0 )         // After arming, the sensor status should be zero
     { 
       if ( is_trace )
       {
         Serial.print(T("\r\n\nWaiting..."));
       }
-      state = WAIT;             // Fall through to WAIT
+      state = WAIT;                   // Fall through to WAIT
     }
-    else
+    else                              // Non-zero, false trip
     {
       if ( sensor_status & TRIP_NORTH  )
       {
@@ -283,14 +282,13 @@ void loop()
       }
     }
     
-    sensor_status = is_running();
-
     if ( face_strike )                    // Something hit the front
     {
       state = SEND_MISS;                  // Show it's a miss
       break;
     }
-
+    
+    sensor_status = is_running();
     if ( sensor_status != 0 )             // Shot detected
     {
       now = micros();                     // Remember the starting time

@@ -717,7 +717,14 @@ void set_trip_point
   arm_counters();                                           // Arm the flip flops for later
   enable_interrupt(true);                                   // Arm the face sensor
   face_strike = false;
-  
+
+/*
+ * Set the PWM at 50%
+ */
+  json_vset_PWM = 128;
+  set_vset_PWM(json_vset_PWM);
+  EEPROM.put(NONVOL_vset_PWM, json_vset_PWM);
+
 /*
  * Loop if not in spec, passes to display, or the CAL jumper is in
  */

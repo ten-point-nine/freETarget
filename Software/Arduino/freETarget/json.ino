@@ -103,7 +103,7 @@ const json_message JSON[] = {
   {"\"TEST\":",           0,                                 0,                IS_INT16,  &show_test,       NONVOL_TEST_MODE,        0 },    // Execute a self test
   {"\"TRACE\":",          0,                                 0,                IS_INT16,  &set_trace,                      0,        0 },    // Enter / exit diagnostic trace
   {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_version,                   0,        0 },    // Return the version string
-  {"\"V_SET\":",          0,                                 &json_vset,       IS_FLOAT,  &compute_V_SET_PWM,NONVOL_VSET,            0 },    // Set the voltage reference
+  {"\"V_SET\":",          0,                                 &json_vset,       IS_FLOAT,  &compute_vset_PWM,NONVOL_VSET,             0 },    // Set the voltage reference
   {"\"Z_OFFSET\":",       &json_z_offset,                    0,                IS_INT16,  0,                NONVOL_Z_OFFSET,        13 },    // Distance from paper to sensor plane (mm)
 
   {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT16,  0,                NONVOL_NORTH_X,          0 },    //
@@ -294,10 +294,10 @@ bool read_JSON(void)
               analogWrite(LED_PWM, x); 
               Serial.print(x);
             }
-            else if ( instr("V_SET_PWM", init_table[j].gpio_name ) > 0 )  // Special case analog output
+            else if ( instr("vset_PWM", init_table[j].gpio_name ) > 0 )  // Special case analog output
             {
               x = atoi(&input_JSON[i+k]);
-              analogWrite(V_SET_PWM, x); 
+              analogWrite(vset_PWM, x); 
               Serial.print(x);
             }
             else
@@ -471,8 +471,13 @@ void show_echo(int v)
   sprintf(s, "\"V_REF\": %s, \n\r", str_c);                                               // Trip point reference
   output_to_all(s);
   
-  sprintf(s, "\"V_SET_PWM\": %d, \n\r", json_vset_PWM);                                   // Setpoint adjust PWM
+  dtostrf(5.0d * (float)analogRead(V_12_LED) * K_12 / 1023.0d , 4, 2, str_c );            // Analog Reference * input * resistor divider / max MSB
+  sprintf(s, "\"V_12_LED\": %s, \n\r", str_c);                                            // 12 Volt LED supply
   output_to_all(s);
+  
+  sprintf(s, "\"VSET_PWM\": %d, \n\r", json_vset_PWM);                                    // Setpoint adjust PWM
+  output_to_all(s);
+  
   sprintf(s, "\"TIMER_COUNT\":%d, \n\r", (int)(SHOT_TIME * OSCILLATOR_MHZ));              // Maximum number of clock cycles to record shot (target dependent)
   output_to_all(s);
 

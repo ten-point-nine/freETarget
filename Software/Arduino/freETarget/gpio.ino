@@ -47,7 +47,7 @@ const GPIO init_table[] = {
   {LED_Y,       "\"Y\":",        OUTPUT, 1},
 
   {LED_PWM,     "\"LED_PWM\":",  OUTPUT, 0},
-  {V_SET_PWM,    "\"V_SET_PWM\":", OUTPUT, 0},
+  {vset_PWM,    "\"vset_PWM\":", OUTPUT, 0},
   {RTS_U,       "\"RTS_U\":",    OUTPUT, 1},
   {CTS_U,       "\"CTS_U\":",    INPUT_PULLUP, 0},
 

@@ -100,7 +100,7 @@ void factory_nonvol
   
   gen_position(0); 
   x = 0;
-  EEPROM.put(V_SET_PWM, x);
+  EEPROM.put(vset_PWM, x);
   if ( new_serial_number == false )
   {
     EEPROM.put(NONVOL_SERIAL_NO, serial_number);  // Put the serial number back
@@ -371,7 +371,7 @@ void read_nonvol(void)
     json_tabata_on = 0;                                       // and turn it off
   }
 
-  EEPROM.get(NONVOL_V_SET_PWM, json_vset_PWM);
+  EEPROM.get(NONVOL_vset_PWM, json_vset_PWM);
 
   EEPROM.get(NONVOL_MFS, json_multifunction);                // Override the Multifunction switch if not initialized
   if ( json_multifunction > 29999 )

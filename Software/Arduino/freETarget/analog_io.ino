@@ -9,7 +9,7 @@
 #include "freETarget.h"
 #include "Wire.h"
 
-void set_v_set_PWM(unsigned int pwm);
+void set_vset_PWM(unsigned int pwm);
 
 /*----------------------------------------------------------------
  * 
@@ -23,10 +23,11 @@ void set_v_set_PWM(unsigned int pwm);
 void init_analog_io(void)
 {
   pinMode(LED_PWM, OUTPUT);
-  pinMode(V_SET_PWM, OUTPUT);
+  pinMode(vset_PWM, OUTPUT);
   Wire.begin();
 
-  set_v_set_PWM(json_vset_PWM);
+  EEPROM.get(NONVOL_VSET, json_vset_PWM);
+  set_vset_PWM(json_vset_PWM);
   
 /*
  * All done, begin the program
@@ -272,7 +273,7 @@ double temperature_C(void)
 
 /*----------------------------------------------------------------
  * 
- * funciton: set_V_SET_PWM()
+ * funciton: set_vset_PWM()
  * 
  * brief: Set the PWM value to the hardware
  * 
@@ -282,19 +283,19 @@ double temperature_C(void)
  * JSON driver.
  *
  *--------------------------------------------------------------*/
- void set_v_set_PWM
+ void set_vset_PWM
   (
   unsigned int value           // Value to write to PWM
   )
 {
   value &= MAX_PWM;
-  analogWrite(V_SET_PWM, value);
+  analogWrite(vset_PWM, value);
   return;
 }
 
 /*----------------------------------------------------------------
  * 
- * funciton: compute_V_SET_PWM()
+ * funciton: compute_vset_PWM()
  * 
  * brief: Use a control loop to figure out the PWM setting
  * 
@@ -304,54 +305,69 @@ double temperature_C(void)
  * JSON driver.
  *
  *--------------------------------------------------------------*/
- void compute_V_SET_PWM
+ void compute_vset_PWM
   (
-  int v                             // Desired control voltage
+  double vset                      // Desired control voltage
   )
 {
   int vref_raw;                     // Raw VREF value read from ADC
   int vref_desired;                 //
   int vref_error;                   // Difference between desired and raw
   unsigned int pwm;                 // Value written to the PWM
-
+  int cycle_count;
+  char s[128];
+  char svref[15], svset[15];
 /*
  * Compute the initial values
  */
-  vref_desired = json_vset * 1023.0 / 5.0;// Scaled desired VREF
+  vref_desired = (int)(json_vset * 1023.0 / 5.0);// Scaled desired VREF
   pwm = json_vset_PWM;              // Starting value
-
+  set_vset_PWM(json_vset_PWM);
+  
 /*
  * Loop until the error converges
  */
+  cycle_count = 0;
   while ( 1 )
   {
     vref_raw = analogRead(V_REFERENCE);
     vref_error = vref_desired - vref_raw;
-
+    pwm -= vref_error/4;
+    if ( pwm > 255 )
+    {
+      pwm = 255;
+    }
+    dtostrf(json_vset, 4, 2, svset );
+    dtostrf((double)vref_raw * 5.0 / 1023.0, 4, 2, svref);
+    sprintf(s, "\r\nDesired: %s VREF: %s as read %d wanted %d error %d PWM %d", svset, svref, vref_raw, vref_desired, vref_error, pwm);
+    output_to_all(s);
+    output_to_all(0);
+    
     if ( abs(vref_error) <= 2 )
     {
       break;
     }
-    Serial.print(T("\r\nDesired: ")); Serial.print(json_vset); Serial.print(T("  VREF: ")); Serial.print(analogRead(V_REFERENCE) * 5.0 / 1023); Serial.print(T(" Error: ")); Serial.print(vref_error);
-    pwm -= vref_error/2;
-    if ( pwm > 255 )
+
+    set_vset_PWM(pwm);
+    delay(2*ONE_SECOND);
+    cycle_count++;
+    if ( cycle_count > 100 )
     {
-      Serial.print(T(" V_SET_PWM exceeded.  Set value using CAL function and try again"));
-      set_v_set_PWM(json_vset_PWM);
+      sprintf(s, "\r\nvset_PWM exceeded.  Set value using CAL function and try again");
+      output_to_all(s);
+      output_to_all(0);
       return;
     }
-    Serial.print(T(" V_SET_PWM: ")); Serial.print(pwm);
-    set_v_set_PWM(pwm);
-    delay(ONE_SECOND/4);
   }
 
  /*
-  * Got the right control value, asve it and exit
+  * Got the right control value, sa it and exit
   */
-    Serial.print(T("\r\nDesired: ")); Serial.print(json_vset); Serial.print(T("  VREF: ")); Serial.print(analogRead(V_REFERENCE) * 5.0 / 1023); Serial.print(T(" Error: ")); Serial.print(vref_error);
-    Serial.print(T(" New V_SET_PWM: ")); Serial.print(pwm);
-    EEPROM.put(NONVOL_V_SET_PWM, pwm);
+    sprintf(s, "\r\nDone\r\n");
+    output_to_all(s);
+    output_to_all(0);
     json_vset_PWM = pwm;
+    EEPROM.put(NONVOL_VSET, json_vset_PWM);
     return;
 } 
  

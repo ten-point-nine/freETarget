@@ -11,8 +11,8 @@ double temperature_C(void);             // Temperature in degrees C
 unsigned int revision(void);            // Return the board revision
 void set_LED_PWM(int percent);          // Ramp the PWM duty cycle
 void set_LED_PWM_now(int percent);      // Set the PWM duty cycle
-void set_V_SET_PWM(unsigned int value);  // Value to write to PWM
-void compute_V_SET_PWM(int value);       // Reference voltage control loop
+void set_vset_PWM(unsigned int value); // Value to write to PWM
+void compute_vset_PWM(double value);   // Reference voltage control loop
 
 /*
  *  Port Definitions
@@ -23,12 +23,12 @@ void compute_V_SET_PWM(int value);       // Reference voltage control loop
 #define SOUTH_ANA    3          // South Analog Input
 #define WEST_ANA     4          // West Analog Input
 
-#define SPARE_2A     7          // Not Used
 #define V_REFERENCE  0          // Reference Input
-#define V_TEST       8          // Read the test voltage
+#define V_12_LED     8          // 12 Volt LED input
+#define K_12     ((10000.0d + 2200.0d)/ 2200.0d) // Resistor divider
 #define ANALOG_VERSION 5        // Analog Version Input
 #define LED_PWM      5          // PWM Port
-#define V_SET_PWM     8          // Reference Voltage Control
+#define vset_PWM    8          // Reference Voltage Control
 #define MAX_ANALOG  0x3ff       // Largest analog input
 #define MAX_PWM      0xff       // PWM is an 8 bit port
 
