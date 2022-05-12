@@ -27,7 +27,7 @@ If you want to build from source, just open the freETarget.ino file located in t
 
 **I want to work on the PC source code**
 
-Great! The PC software is wrttenin C# using Visual Studio.  You can download a free version from the Microsoft web site.  
+Great! The PC software is wrtten in C# using Visual Studio.  You can download a free version from the Microsoft web site.  
 
 
 **How do I work with the hardware?**
@@ -36,10 +36,13 @@ The hardware is maintained in the electronics subfolder of the GIT repository an
 
 
 **Tell me more**
+
 The documentation folder contains all of the documents that have been created for this project.
 
    **Theory of Operation** details the algorithm and hardware used to detect the shot location
+
    **Building freETarget** is the instructions for assembling a target
+
    **Mechanical Folder** contains all of the mechanical drawings to complete your system
    
 
