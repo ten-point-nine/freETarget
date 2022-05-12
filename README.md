@@ -21,7 +21,7 @@ The software starts with freETarget.ino.  This is the startup and main control l
 
 **I just want to build and upload the latest firmware**
 
-You can always download the latest firmware from https://www.freetarget.com/downloads and upload the HEX file through the freETarget PC software. 
+You can always download the latest firmware from https://www.free-e-target.com/downloads and upload the HEX file through the freETarget PC software. 
 
 If you want to build from source, just open the freETarget.ino file located in the freETarget subfolder in the Arduino IDE. You won't see any code, but hitting Verify and upload will work just the same.
 
@@ -33,3 +33,13 @@ Great! The PC software is wrttenin C# using Visual Studio.  You can download a f
 **How do I work with the hardware?**
 
 The hardware is maintained in the electronics subfolder of the GIT repository and is developed in KiCad. Download and install KiCad EDA to work on the schematics and PCB's.
+
+
+**Tell me more**
+The documentation folder contains all of the documents that have been created for this project.
+
+   **Theory of Operation** details the algorithm and hardware used to detect the shot location
+   **Building freETarget** is the instructions for assembling a target
+   **Mechanical Folder** contains all of the mechanical drawings to complete your system
+   
+
