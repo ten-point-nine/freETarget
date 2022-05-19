@@ -43,6 +43,8 @@ namespace freETarget {
         }
         private Status currentStatus = Status.NOT_CONNECTED;
 
+        public const String FET_SSID = "FET-TARGET";
+
         private string incomingJSON = "";               // Cumulative serial message
 
 
@@ -78,10 +80,15 @@ namespace freETarget {
 
         private DateTime tooltipDisplayTime = DateTime.Now;
 
+        private System.Windows.Forms.Timer reconnectTimer;
 
         public frmMainWindow() {
             InitializeComponent();
             initLog();
+
+            this.reconnectTimer = new System.Windows.Forms.Timer();
+            this.reconnectTimer.Interval = 2000; //reconnect time interval set to 2 seconds
+            this.reconnectTimer.Tick += new System.EventHandler(this.reconnectTimer_Tick);
 
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             string v = "v" + assembly.GetName().Version.Major + "." + assembly.GetName().Version.Minor + "." + assembly.GetName().Version.Build;
@@ -115,7 +122,7 @@ namespace freETarget {
             foreach (Event e in eventManager.getEventsList()) {
                 events += e.ToString() + " | ";
             }
-            log("Events loaded: " + events.Substring(0,events.Length-2));
+            log("Events loaded: " + events.Substring(0, events.Length - 2));
 
 
 
@@ -158,7 +165,7 @@ namespace freETarget {
             if (!Directory.Exists(logDirectory)) {
                 try {
                     Directory.CreateDirectory(logDirectory);
-                }catch(Exception ex) {
+                } catch (Exception ex) {
                     Console.WriteLine(ex.Message);
 
                     //if there is no write permission at exe location, write log in C:\Users\<user>\AppData\Roaming\freETarget\log
@@ -173,7 +180,7 @@ namespace freETarget {
                 try {
                     log = File.Create(logDirectory + logfilename);
                     logFile = logDirectory + logfilename;
-                } catch(Exception ex) {
+                } catch (Exception ex) {
                     Console.WriteLine(ex.Message);
                     logFile = null;
                 } finally {
@@ -209,7 +216,7 @@ namespace freETarget {
                     }
                 } catch (Exception ex) {
                     //oh well...
-                    Console.WriteLine("Error logging ("+logFile+"): " + ex.Message);
+                    Console.WriteLine("Error logging (" + logFile + "): " + ex.Message);
                 }
             }
         }
@@ -224,7 +231,7 @@ namespace freETarget {
             Event ev = eventManager.findEventByName(freETarget.Properties.Settings.Default.defaultTarget.Trim());
 
             if (ev == null) {
-                MessageBox.Show("Default event is not available: " + Settings.Default.defaultTarget.Trim(),"Configuration error",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                MessageBox.Show("Default event is not available: " + Settings.Default.defaultTarget.Trim(), "Configuration error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 //Application.Exit();
                 return;
             }
@@ -236,7 +243,7 @@ namespace freETarget {
                 }
             }
 
-            initNewSession();  
+            initNewSession();
         }
 
         private void initBreakdownChart() {
@@ -301,14 +308,14 @@ namespace freETarget {
                 if (indexClosedBracket > -1) {
 
                     String message = incomingJSON.Substring(indexOpenBracket + 1, indexClosedBracket - indexOpenBracket - 1);
-                    incomingJSON = incomingJSON.Substring(indexClosedBracket+1);
+                    incomingJSON = incomingJSON.Substring(indexClosedBracket + 1);
 
                     //Console.WriteLine("Complete json message: " + message);
 
                     //parse json message. might be a shot data or a test message
                     Shot shot = parseJson(message);
 
-                    if (shot!=null && shot.count >= 0) {
+                    if (shot != null && shot.count >= 0) {
                         if (shot.miss == true) {
                             if (Settings.Default.ignoreMiss == true) {
                                 //do nothing. ignore shot
@@ -337,11 +344,11 @@ namespace freETarget {
                             comms.CommEventArgs e2 = new comms.CommEventArgs("");
                             DataReceived(sender, e2); //call the event again to parse the remains. maybe there is another full message in there
                         }
-                        
+
                     } else {
                         lastEcho = Echo.parseJson(message);
 
-                        
+
                         if (incomingJSON.IndexOf("}") != -1) {
 
                             comms.CommEventArgs e2 = new comms.CommEventArgs("");
@@ -368,7 +375,7 @@ namespace freETarget {
                         return;
                     }
 
-                    if (Properties.Settings.Default.TcpPort <= 0 ) {
+                    if (Properties.Settings.Default.TcpPort <= 0) {
                         MessageBox.Show("No TCP port entered. Please go to the Settings dialog and enter an TCP port.", "Cannot connect", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                         return;
                     }
@@ -387,6 +394,7 @@ namespace freETarget {
                     this.commModule = new comms.TCP(this);
                 }
                 this.commModule.CommDataReceivedEvent += new comms.aCommModule.CommEventHandler(this.DataReceived);
+                this.commModule.CommDisconnectedEvent += new comms.aCommModule.CommEventHandler(this.Disconnected);
 
                 //use parameters for the selected comm
                 comms.OpenParams para;
@@ -400,10 +408,15 @@ namespace freETarget {
                     para = new comms.TcpOpenParams();
                     ((comms.TcpOpenParams)para).IP = Settings.Default.TcpIP;
                     ((comms.TcpOpenParams)para).port = Settings.Default.TcpPort;
+                    String ssid = getWifiSSID();
+                    if (ssid != FET_SSID) {
+                        MessageBox.Show("Current Wi-Fi network is not the freETarget SSID: FET-TARGET","Wrong WiFi",MessageBoxButtons.OK,MessageBoxIcon.Warning);
+                    }
+
                 }
 
-                
-                
+
+
 
 
                 try {
@@ -447,6 +460,10 @@ namespace freETarget {
 
             btnConnect.Text = "Disconnect";
             currentStatus = Status.CONNECTED;
+            if (Settings.Default.CommProtocol == "TCP") {
+                connectionStatus.BackColor = Color.Green;
+            }
+
             String t = target;
             if (t.IndexOf(Environment.NewLine) > -1) {
                 t = t.Substring(0, t.IndexOf(Environment.NewLine));
@@ -472,7 +489,7 @@ namespace freETarget {
 
             initNewSession();
             targetRefresh();
-            
+
         }
 
         //output messages
@@ -517,12 +534,12 @@ namespace freETarget {
                 drawArrow(shot);
 
                 //write score to listview
-                ListViewItem item = new ListViewItem(new string[] { "" }, (shot.index+1).ToString());
+                ListViewItem item = new ListViewItem(new string[] { "" }, (shot.index + 1).ToString());
                 item.UseItemStyleForSubItems = false;
-                ListViewItem.ListViewSubItem countItem = item.SubItems.Add((shot.index+1).ToString());
-                countItem.Font = new Font("MS Sans Serif", 7f, FontStyle.Italic|FontStyle.Bold);
+                ListViewItem.ListViewSubItem countItem = item.SubItems.Add((shot.index + 1).ToString());
+                countItem.Font = new Font("MS Sans Serif", 7f, FontStyle.Italic | FontStyle.Bold);
                 ListViewItem.ListViewSubItem scoreItem = item.SubItems.Add(shot.score.ToString());
-                scoreItem.Font = new Font("MS Sans Serif", 9.75f,  FontStyle.Bold);
+                scoreItem.Font = new Font("MS Sans Serif", 9.75f, FontStyle.Bold);
                 ListViewItem.ListViewSubItem decimalItem = item.SubItems.Add(shot.decimalScore.ToString(CultureInfo.InvariantCulture) + inner);
                 decimalItem.Font = new Font("MS Sans Serif", 9.75f, FontStyle.Bold);
 
@@ -613,7 +630,7 @@ namespace freETarget {
                 StringFormat format = new StringFormat();
                 format.LineAlignment = StringAlignment.Center;
                 format.Alignment = StringAlignment.Center;
-                g.DrawString("M", f, br, imgArrow.Width /2 , imgArrow.Height /2 , format);
+                g.DrawString("M", f, br, imgArrow.Width / 2, imgArrow.Height / 2, format);
             } else {
                 if (shot.decimalScore < 10.9m) {
                     RectangleF range = new RectangleF(margin, margin, imgArrow.Width - margin * 3, imgArrow.Height - margin * 3);
@@ -645,7 +662,7 @@ namespace freETarget {
 
             //save drawn image (arrow) to imagelist for listview column
             try {
-                imgListDirections.Images.Add((shot.index+1).ToString(), imgArrow.Image);
+                imgListDirections.Images.Add((shot.index + 1).ToString(), imgArrow.Image);
             } catch (Exception ex) {
                 Console.WriteLine("Error adding image to list " + ex.Message);
             }
@@ -653,7 +670,7 @@ namespace freETarget {
             Thread.Sleep(100);
         }
 
-  
+
         private decimal getScaledDimension(decimal input) {
             decimal ret = 100 * input / Settings.Default.targetDistance;
             ret = decimal.Round(ret, 9, MidpointRounding.AwayFromZero);
@@ -671,7 +688,7 @@ namespace freETarget {
             string[] t2 = json.Split(',');
 
             if (t2[0].Contains("shot")) {
-                Shot ret = new Shot(calibrationX,calibrationY, calibrationAngle);
+                Shot ret = new Shot(calibrationX, calibrationY, calibrationAngle);
                 try {
                     foreach (string t3 in t2) {
                         string[] t4 = t3.Split(':');
@@ -687,11 +704,11 @@ namespace freETarget {
                             ret.angle = decimal.Parse(t4[1], CultureInfo.InvariantCulture);
                         } else if (t4[0].Trim() == "\"miss\"") {
                             int mix = int.Parse(t4[1].Trim(), CultureInfo.InvariantCulture);
-                            if(mix == 1) {
+                            if (mix == 1) {
                                 //miss reported by the target
                                 ret.miss = true;
                             }
-                            
+
                         }
                     }
                 } catch (FormatException ex) {
@@ -715,8 +732,8 @@ namespace freETarget {
                 // bad shot. do anything?
                 displayMessage("Bad shot reported by the target: " + json, false);
                 return null;
-            } else { 
-                return null; 
+            } else {
+                return null;
             }
 
 
@@ -759,7 +776,7 @@ namespace freETarget {
 
                 if (currentSession != null) {
                     displayShotStatistics(getShotList());
-                    displayDebugConsole(Properties.Settings.Default.displayDebugConsole);             
+                    displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
                 }
 
                 Properties.Settings.Default.score10BackgroundColor = Color.FromName(settingsFrom.cmb10Back.GetItemText(settingsFrom.cmb10Back.SelectedItem));
@@ -827,10 +844,10 @@ namespace freETarget {
         }
 
         private void initNewSession() {
-            if (currentSession!=null && currentSession.Shots.Count > 0 && currentStatus != Status.LOADED) {
+            if (currentSession != null && currentSession.Shots.Count > 0 && currentStatus != Status.LOADED) {
                 storage.storeSession(currentSession, true);
                 displayMessage("Session saved", true);
-                
+
             }
 
             this.log("       Starting new session with name: " + tcSessionType.SelectedTab.Text.Trim());
@@ -842,8 +859,8 @@ namespace freETarget {
                 MessageBox.Show("Could not find event with name " + tcSessionType.SelectedTab.Text.Trim(), "Configuration error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                 return;
-            } 
-                 
+            }
+
             currentSession = Session.createNewSession(ev, Settings.Default.name);
             currentSession.start();
             this.log("### New Session '" + currentSession.ToString() + "' started ###");
@@ -905,7 +922,7 @@ namespace freETarget {
                     storage.storeSession(currentSession, true);
                     displayMessage("Session saved", true);
 
-                } else if(result == DialogResult.Cancel) {
+                } else if (result == DialogResult.Cancel) {
                     return true;
                 }
             }
@@ -1002,7 +1019,7 @@ namespace freETarget {
             }
             targetRefresh();
 
-            if(calibrationX == 0 && calibrationY == 0 && calibrationAngle ==0) {
+            if (calibrationX == 0 && calibrationY == 0 && calibrationAngle == 0) {
                 btnCalibration.BackColor = this.BackColor;
             } else {
                 btnCalibration.BackColor = Settings.Default.targetColor;
@@ -1114,10 +1131,10 @@ namespace freETarget {
         private void tabControl1_DrawItem(object sender, DrawItemEventArgs e) {
             Color backC = tcSessionType.TabPages[e.Index].BackColor;
             Color foreC = tcSessionType.TabPages[e.Index].ForeColor;
-            if (tcSessionType.Enabled==false) {
+            if (tcSessionType.Enabled == false) {
                 int grayScale = (int)((backC.R * 0.3) + (backC.G * 0.59) + (backC.B * 0.11));
                 backC = Color.FromArgb(backC.A, grayScale, grayScale, grayScale);
-            } 
+            }
 
             e.Graphics.FillRectangle(new SolidBrush(backC), e.Bounds);
             Rectangle paddedBounds = e.Bounds;
@@ -1126,13 +1143,13 @@ namespace freETarget {
             if (tcSessionType.SelectedIndex == e.Index) {
                 sel = true;
             }
-           
+
             paddedBounds.Inflate(-3, -3);
 
             StringFormat format1h = new StringFormat(StringFormatFlags.DirectionVertical | StringFormatFlags.DirectionRightToLeft);
             Font f;
             if (sel) {
-                f = new Font(e.Font,FontStyle.Bold| FontStyle.Italic);
+                f = new Font(e.Font, FontStyle.Bold | FontStyle.Italic);
                 paddedBounds.X = 0;
             } else {
                 f = new Font(e.Font, FontStyle.Bold);
@@ -1233,7 +1250,7 @@ namespace freETarget {
 
         private void fillBreakdownChart(List<Shot> shotList) {
             int[] breakdown = new int[12];
-            foreach(Shot s in shotList) {
+            foreach (Shot s in shotList) {
                 if (s.score == 10) {
                     if (s.innerTen) {
                         breakdown[0]++;
@@ -1245,7 +1262,7 @@ namespace freETarget {
                 }
             }
 
-            for(int i = 0; i < chartBreakdown.Series[0].Points.Count; i++) {
+            for (int i = 0; i < chartBreakdown.Series[0].Points.Count; i++) {
                 DataPoint p = chartBreakdown.Series[0].Points[i];
                 p.SetValueY(breakdown[i]);
             }
@@ -1290,7 +1307,7 @@ namespace freETarget {
         }
 
         private List<Shot> getShots() {
-            if(currentStatus == Status.LOADED) {
+            if (currentStatus == Status.LOADED) {
                 return currentSession.LoadedShots;
             } else {
                 return currentSession.Shots;
@@ -1312,15 +1329,16 @@ namespace freETarget {
         private void disconnect() {
             try {
                 commModule.close();
-            }catch(IOException) {
-                MessageBox.Show("Error closing the serial port. Please try again.","Error disconnecting",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                this.reconnectTimer.Enabled = false;
+            } catch (IOException) {
+                MessageBox.Show("Error closing the serial port. Please try again.", "Error disconnecting", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             btnConnect.Text = "Connect";
-            displayMessage("Disconnected",false);
+            displayMessage("Disconnected", false);
             log("*********\nDisconnected.");
             currentStatus = Status.NOT_CONNECTED;
-
+            connectionStatus.BackColor = SystemColors.Control;
 
             statusText.Text = "Disconnected";
             timer.Enabled = false;
@@ -1355,8 +1373,8 @@ namespace freETarget {
         }
 
         public void loadSessionFromJournal(Session session) {
-            if(this.currentSession.id == session.id) {
-                displayMessage("Session "+ session.id + " already loaded", true);
+            if (this.currentSession.id == session.id) {
+                displayMessage("Session " + session.id + " already loaded", true);
                 return;
             }
             this.currentSession = session;
@@ -1374,7 +1392,7 @@ namespace freETarget {
             imgListDirections.Images.Clear();
             gridTargets.Rows.Clear();
             clearBreakdownChart();
-           
+
 
             frmJournal journalForm = (frmJournal)Application.OpenForms["frmJournal"];
 
@@ -1479,7 +1497,7 @@ namespace freETarget {
                 if (m.CanWrite && !exclusionList.Contains(m.Name)) {
                     Console.WriteLine("Name: " + m.Name + " - Type: " + m.PropertyType + " - Value: " + m.GetValue(Settings.Default));
                     object obj = storage.getSetting(m.Name);
-                    if(obj == null) {
+                    if (obj == null) {
                         //setting not in the DB. create it
                         storage.storeSetting(m.Name, m.PropertyType, m.GetValue(Settings.Default));
                     }
@@ -1491,16 +1509,16 @@ namespace freETarget {
         }
 
         private void loadSettingsFromDB() {
-            List<string> exclusionList = new List<string> { "SettingsKey" ,"Item"};
+            List<string> exclusionList = new List<string> { "SettingsKey", "Item" };
             Type sett = Settings.Default.GetType();
             PropertyInfo[] members = sett.GetProperties();
 
-            foreach(PropertyInfo m in members) {
+            foreach (PropertyInfo m in members) {
                 if (m.CanWrite && !exclusionList.Contains(m.Name)) {
                     //Console.WriteLine("Name: " + m.Name + " - Type: " + m.PropertyType + " - Value: " + m.GetValue(Settings.Default));
                     object obj = storage.getSetting(m.Name);
                     m.SetValue(Settings.Default, obj);
-                }              
+                }
             }
         }
 
@@ -1514,7 +1532,7 @@ namespace freETarget {
 
                     //update the setting value
                     storage.updateSetting(m.Name, m.GetValue(Settings.Default));
-                    
+
                 }
 
             }
@@ -1527,6 +1545,63 @@ namespace freETarget {
             if (diff > 3) {
                 toolTip.RemoveAll();
             }
+        }
+
+        private void Disconnected(object sender, comms.CommEventArgs e) {
+
+            connectionStatus.BackColor = Color.Red;
+            this.reconnectTimer.Enabled = true;
+        }
+
+        private void reconnectTimer_Tick(object sender, EventArgs e) {
+            comms.OpenParams para = new comms.TcpOpenParams();
+            ((comms.TcpOpenParams)para).IP = Settings.Default.TcpIP;
+            ((comms.TcpOpenParams)para).port = Settings.Default.TcpPort;
+
+            try {
+                Console.WriteLine("Attempting reconnect...");
+                log("Attempting reconnect...");
+                commModule.open(para);
+                Console.WriteLine("Reconnect succesfull.");
+                log("Reconnect succesfull.");
+                this.reconnectTimer.Enabled = false;
+                connectionStatus.BackColor = Color.Green;
+                String ssid = getWifiSSID();
+                if (ssid != FET_SSID) {
+                    MessageBox.Show("Current Wi-Fi network is not the freETarget SSID: FET-TARGET", "Wrong WiFi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            } catch (Exception) {
+                Console.WriteLine("Reconnect failed.");
+                log("Reconnect failed.");
+            }
+        }
+
+        private String getWifiSSID() {
+            string s1 = "N/A";
+            try {
+                System.Diagnostics.Process p = new System.Diagnostics.Process();
+                p.StartInfo.FileName = "netsh.exe";
+                p.StartInfo.Arguments = "wlan show interfaces";
+                p.StartInfo.UseShellExecute = false;
+                p.StartInfo.RedirectStandardOutput = true;
+                p.Start();
+
+                string s = p.StandardOutput.ReadToEnd();
+                s1 = s.Substring(s.IndexOf("SSID"));
+                s1 = s1.Substring(s1.IndexOf(":"));
+                s1 = s1.Substring(2, s1.IndexOf("\n")).Trim();
+
+                string s2 = s.Substring(s.IndexOf("Signal"));
+                s2 = s2.Substring(s2.IndexOf(":"));
+                s2 = s2.Substring(2, s2.IndexOf("\n")).Trim();
+
+                Console.WriteLine("WIFI connected to " + s1 + "  " + s2);
+                log("WIFI connected to " + s1 + "  " + s2);
+                p.WaitForExit();
+            } catch (Exception) {
+                //do nothing
+            }
+            return s1;
         }
     }
 

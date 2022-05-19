@@ -15,6 +15,9 @@ namespace freETarget.comms {
         // Declare the event.
         public virtual event CommEventHandler CommDataReceivedEvent;
 
+        // Declare the event.
+        public virtual event CommEventHandler CommDisconnectedEvent;
+
         public abstract void sendData(string text);
 
         public abstract void open(OpenParams value);
@@ -28,6 +31,11 @@ namespace freETarget.comms {
         protected virtual void RaiseDataReceivedEvent(string text) {
             // Raise the event in a thread-safe manner using the ?. operator.
             CommDataReceivedEvent?.Invoke(this, new CommEventArgs(text));
+        }
+
+        protected virtual void RaiseDisconnectedEvent(string text) {
+            // Raise the event in a thread-safe manner using the ?. operator.
+            CommDisconnectedEvent?.Invoke(this, new CommEventArgs(text));
         }
     }
 

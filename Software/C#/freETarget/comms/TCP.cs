@@ -13,6 +13,8 @@ namespace freETarget.comms {
 
         public override event CommEventHandler CommDataReceivedEvent;
 
+        public override event CommEventHandler CommDisconnectedEvent;
+
         private TcpClient tcpclnt;
         private NetworkStream stm;
 
@@ -44,9 +46,12 @@ namespace freETarget.comms {
 
 
         public override void close() {
-            stm.Close();
-            stm = null;
-            tcpclnt.Close();
+            try {
+                stm.Close();
+                stm = null;
+                tcpclnt.Close();
+            } catch (Exception ex) {
+            }
             getShotTimer.Enabled = false;
         }
 
@@ -56,9 +61,17 @@ namespace freETarget.comms {
                 this.IP = tcpP.IP;
                 this.port = tcpP.port;
 
+                this.tcpclnt = new TcpClient();
                 tcpclnt.ReceiveTimeout = 1000;
                 tcpclnt.SendTimeout = 1000;
-                tcpclnt.Connect(this.IP, this.port);
+                //tcpclnt.Connect(this.IP, this.port);
+                var result = tcpclnt.BeginConnect(this.IP, this.port, null, null);
+                var success = result.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(1)); //connect timeout set to 1 second
+
+                if (!success) {
+                    throw new SocketException();
+                }
+                
                 stm = tcpclnt.GetStream();
                 getShotTimer.Enabled = true;
                 mainWindow.log("TCP channel open...");
@@ -82,13 +95,34 @@ namespace freETarget.comms {
             CommDataReceivedEvent?.Invoke(this, new CommEventArgs(text));
         }
 
+        protected override void RaiseDisconnectedEvent(string text) {
+            this.close();
+
+            // Raise the event in a thread-safe manner using the ?. operator.
+            CommDisconnectedEvent?.Invoke(this, new CommEventArgs(text));
+        }
+
         public override string getCommInfo() {
             return "TCP = " + this.IP + ":" + this.port;
         }
 
 
         private void getShotTimer_Tick(object sender, EventArgs e) {
-            
+
+            if (tcpclnt.Client.Poll(0, SelectMode.SelectRead)) {
+                byte[] buff = new byte[1];
+                try {
+                    if (tcpclnt.Client.Receive(buff, SocketFlags.Peek) == 0) {
+                        // Client disconnected
+                        mainWindow.log("TCP Disconnected!");
+                        RaiseDisconnectedEvent("Disconnected!");
+                    }
+                } catch (SocketException ex) {
+                    mainWindow.log("TCP Disconnected with exception! " + ex.Message);
+                    RaiseDisconnectedEvent("Disconnected with exception!");
+                }
+            }
+
             if ((tcpclnt.Connected) && (!getShotsBackgroundWorker.IsBusy)) {
                 getShotsBackgroundWorker.RunWorkerAsync();
             }

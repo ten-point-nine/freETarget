@@ -105,9 +105,10 @@ namespace freETarget
             this.btnJournal = new System.Windows.Forms.Button();
             this.imgLogo = new System.Windows.Forms.PictureBox();
             this.splitContainer = new System.Windows.Forms.SplitContainer();
-            this.digitalClock = new freETarget.SevenSegmentArray();
             this.toolTipTimer = new System.Windows.Forms.Timer(this.components);
             this.toolTipButtons = new System.Windows.Forms.ToolTip(this.components);
+            this.connectionStatus = new System.Windows.Forms.ToolStripStatusLabel();
+            this.digitalClock = new freETarget.SevenSegmentArray();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.imgTarget)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.imgArrow)).BeginInit();
@@ -153,6 +154,7 @@ namespace freETarget
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.statusText,
+            this.connectionStatus,
             this.toolStripStatusLabel1,
             this.statusVersion});
             this.statusStrip1.Location = new System.Drawing.Point(0, 676);
@@ -171,7 +173,7 @@ namespace freETarget
             // toolStripStatusLabel1
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(1090, 19);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(1034, 19);
             this.toolStripStatusLabel1.Spring = true;
             // 
             // statusVersion
@@ -887,6 +889,19 @@ namespace freETarget
             this.splitContainer.TabIndex = 40;
             this.splitContainer.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer_SplitterMoved);
             // 
+            // toolTipTimer
+            // 
+            this.toolTipTimer.Enabled = true;
+            this.toolTipTimer.Interval = 1000;
+            this.toolTipTimer.Tick += new System.EventHandler(this.toolTipTimer_Tick);
+            // 
+            // connectionStatus
+            // 
+            this.connectionStatus.BackColor = System.Drawing.SystemColors.Control;
+            this.connectionStatus.Name = "connectionStatus";
+            this.connectionStatus.Size = new System.Drawing.Size(25, 19);
+            this.connectionStatus.Text = "      ";
+            // 
             // digitalClock
             // 
             this.digitalClock.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -904,12 +919,6 @@ namespace freETarget
             this.digitalClock.TabIndex = 35;
             this.digitalClock.TabStop = false;
             this.digitalClock.Value = null;
-            // 
-            // toolTipTimer
-            // 
-            this.toolTipTimer.Enabled = true;
-            this.toolTipTimer.Interval = 1000;
-            this.toolTipTimer.Tick += new System.EventHandler(this.toolTipTimer_Tick);
             // 
             // frmMainWindow
             // 
@@ -1054,6 +1063,7 @@ namespace freETarget
         private System.Windows.Forms.Button btnTargetSettings;
         private System.Windows.Forms.Timer toolTipTimer;
         private System.Windows.Forms.ToolTip toolTipButtons;
+        private System.Windows.Forms.ToolStripStatusLabel connectionStatus;
     }
 }
 
