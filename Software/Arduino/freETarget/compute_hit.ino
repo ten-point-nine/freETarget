@@ -587,7 +587,6 @@ void send_score
 
   sprintf(str, "}\r\n");
   output_to_all(str);
-  output_to_all(0);
   
 /*
  * All done, return
@@ -635,8 +634,6 @@ void send_miss
 
   sprintf(str, "}\n\r");
   output_to_all(str);
-  output_to_all(0);
-
 
 /*
  * All done, go home

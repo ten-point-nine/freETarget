@@ -360,50 +360,13 @@ void self_test(uint16_t test)
  *  port(s)
  *  
  *--------------------------------------------------------------*/
- void POST_version
-    (
-    int port        // Port to display output on
-    )
-{
+ void POST_version(void)
+ {
   int i;
-  char str_a[256];
+  char str[64];
 
-  sprintf(str_a, "\r\nfreETarget %s\r\n", SOFTWARE_VERSION);
-  
-/*
- * Display the version on the default serial port
- */
-  if ( (port == 0) || (port & PORT_SERIAL) ) // No port or Serial port selected
-  {
-    Serial.print(str_a);
-  }
-
-/*
- * Display the version on the AUX port, taking care of the WiFi if present
- */
-  if ( port & PORT_AUX )
-  {
-    if ( esp01_is_present() )
-    {
-      for (i=0; i != MAX_CONNECTIONS; i++ )
-      {
-        esp01_send(str_a, i);
-        esp01_send(0, i);
-      }
-    }
-    else 
-    {
-      AUX_SERIAL.print(str_a);        // No ESP-01, then use just the AUX port
-    }
-  }
-
- /*
-  * Output to the spare USB serial port
-  */
-  if ( port & PORT_DISPLAY )
-  {
-    DISPLAY_SERIAL.print(str_a);
-  }
+  sprintf(str, "\r\nfreETarget %s\r\n", SOFTWARE_VERSION);
+  output_to_all(str);
 
 /*
  * All done, return

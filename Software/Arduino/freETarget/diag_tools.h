@@ -60,7 +60,7 @@
 void self_test(uint16_t test);
 void show_sensor_status(unsigned int sensor_status);  // Display the sensor status as text
 void blink_fault(unsigned int fault_code);            // Blink a fault
-void POST_version(int16_t port);// Show the version string
+void POST_version(void);        // Show the version string
 void POST_LEDs(void);           // Verify the LED operation
 bool POST_counters(void);       // Verify the counter operation
 void POST_trip_point(void);     // Display the set point

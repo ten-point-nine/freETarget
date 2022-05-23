@@ -341,7 +341,6 @@ double temperature_C(void)
     dtostrf((double)vref_raw * 5.0 / 1023.0, 4, 2, svref);
     sprintf(s, "\r\nDesired: %s VREF: %s as read %d wanted %d error %d PWM %d", svset, svref, vref_raw, vref_desired, vref_error, pwm);
     output_to_all(s);
-    output_to_all(0);
     
     if ( abs(vref_error) <= 2 )
     {
@@ -354,8 +353,7 @@ double temperature_C(void)
     if ( cycle_count > 100 )
     {
       sprintf(s, "\r\nvset_PWM exceeded.  Set value using CAL function and try again");
-      output_to_all(s);
-      output_to_all(0);
+      output_to_all(s);;
       return;
     }
   }
@@ -365,7 +363,6 @@ double temperature_C(void)
   */
     sprintf(s, "\r\nDone\r\n");
     output_to_all(s);
-    output_to_all(0);
     json_vset_PWM = pwm;
     EEPROM.put(NONVOL_VSET, json_vset_PWM);
     return;

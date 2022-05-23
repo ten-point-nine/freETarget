@@ -877,7 +877,6 @@ static void sw_state
       json_power_save += 30;      
       sprintf(s, "\r\n{\LED_PWM\": %d}\n\r", json_power_save);
       output_to_all(s);  
-      output_to_all(0);
         break;
         
     case PAPER_FEED:                      // The switch acts as paper feed control
@@ -911,7 +910,6 @@ static void sw_state
       EEPROM.put(NONVOL_LED_PWM, json_LED_PWM);   
       sprintf(s, "\r\n{\LED_BRIGHT\": %d}\n\r", json_LED_PWM);
       output_to_all(s);  
-      output_to_all(0);
       break;
       
     default:
@@ -977,7 +975,6 @@ void multifunction_display(void)
   mfs_text[HHI10(json_multifunction)], mfs_text[HHH10(json_multifunction)], mfs_text[LO10(json_multifunction)], mfs_text[HI10(json_multifunction)], mfs_text[HLO10(json_multifunction)]);
 
   output_to_all(s);  
-  output_to_all(0);
   
 /*
  * All done, return

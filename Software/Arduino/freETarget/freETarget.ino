@@ -101,7 +101,7 @@ void setup(void)
 /*
  * Run the power on self test
  */
-  POST_version(PORT_ALL);                 // Show the version string on all ports
+  POST_version();                         // Show the version string on all ports
   show_echo(0);
   POST_LEDs();                            // Cycle the LEDs
   while ( (POST_counters() == false)      // If the timers fail
@@ -540,7 +540,6 @@ static long tabata
         set_LED_PWM_now(json_LED_PWM);           // Turn on the lights
         sprintf(s, "{\"TABATA\":1}\r\n");
         output_to_all(s);
-        output_to_all(0);
       }
       break;
       
@@ -556,7 +555,6 @@ static long tabata
           tabata_state = TABATA_IDLE;
          sprintf(s, "{\"TABATA\":0}\r\n");
           output_to_all(s);
-          output_to_all(0);
         }
         tabata_time = now;
         set_LED_PWM_now(0);           // Turn off the LEDs
@@ -600,7 +598,6 @@ static long tabata
         tabata_state = RAPID_ON;
         sprintf(s, "{\"RAPID\":1}\r\n");
         output_to_all(s);
-        output_to_all(0);
         paper_on_off(true);                            // Turn the solenoid on
         set_LED_PWM(json_LED_PWM);                      // Turn off the LEDs
       }
@@ -618,7 +615,6 @@ static long tabata
           tabata_state = RAPID_IDLE;
           sprintf(s, "{\"RAPID\":0}\r\n");
           output_to_all(s);
-          output_to_all(0);
         }
         tabata_time = now;
         paper_on_off(false);             // Turn off the LEDs
@@ -696,7 +692,6 @@ void tabata_control(void)
 
   sprintf(s, "\n\r{\"TABATA_ENABLE\":%d, \"RAPID_ENABLE\":%d }\n\r", json_tabata_enable, json_rapid_enable);
   output_to_all(s);
-  output_to_all(0);
 
 /*
  * All donem return
@@ -727,7 +722,6 @@ void bye(void)
  */
   sprintf(str, "{\"GOOD_BYE\":0}");
   output_to_all(str);
-  output_to_all(0);
   set_LED_PWM(LED_PWM_OFF);         // Going to sleep 
   delay(ONE_SECOND);
   
@@ -783,7 +777,6 @@ void hello(void)
 
   sprintf(str, "{\"Hello_World\":0}");
   output_to_all(str);
-  output_to_all(0);
   
 /*
  * Woken up again
@@ -811,12 +804,11 @@ void hello(void)
  *--------------------------------------------------------------*/
 void send_keep_alive(void)
 {
-  char str[128];
+  char str[32];
   static int keep_alive_count = 0;
   
   sprintf(str, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);
   output_to_all(str);
-  output_to_all(0);
 
   return;
 }

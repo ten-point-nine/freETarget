@@ -481,9 +481,16 @@ void show_echo(int v)
   sprintf(s, "\"TIMER_COUNT\":%d, \n\r", (int)(SHOT_TIME * OSCILLATOR_MHZ));              // Maximum number of clock cycles to record shot (target dependent)
   output_to_all(s);
 
-  sprintf(s, "\"WiFi\": %d, \n\r", esp01_is_present());                                   // TRUE if WiFi is available
+  sprintf(s, "\"WiFi Present\": %d, \n\r", esp01_is_present());                           // TRUE if WiFi is available
   output_to_all(s);
-
+  
+  sprintf(s, "\"WiFi Client 0\": %d, \n\r", esp01_connect[0]);                            // TRUE if Client 0 connected
+  output_to_all(s);
+  sprintf(s, "\"WiFi Client 1\": %d, \n\r", esp01_connect[1]);                            // TRUE if Client 1 connected
+  output_to_all(s);
+  sprintf(s, "\"WiFi Client 2\": %d, \n\r", esp01_connect[2]);                            // TRUE if Client 2 connected
+  output_to_all(s);
+  
   sprintf(s, "\"VERSION\": %s, \n\r", SOFTWARE_VERSION);                                  // Current software version
   output_to_all(s);  
 
@@ -497,7 +504,6 @@ void show_echo(int v)
   
   sprintf(s, "}\r\n"); 
   output_to_all(s);
-  output_to_all(0);
   
 /*
  *  All done, return
@@ -595,7 +601,6 @@ static void show_test(int test_number)
    }
   
    output_to_all(s);
-   output_to_all(0);
    
   /*
    * The DIP switch has been remotely set

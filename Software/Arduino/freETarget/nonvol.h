@@ -65,4 +65,8 @@ void dump_nonvol(void);
 #define NEXT_NONVOL           (NONVOL_TABATA_WARN_OFF + sizeof(int) )
 #define NONVOL_SIZE           4096                                         // 4K available
 
+#if (((45-13) * 4) > NONVOL_SIZE )
+#error NEXT_NONVOL OUT OF NONVOL
+#endif
+
 #endif
