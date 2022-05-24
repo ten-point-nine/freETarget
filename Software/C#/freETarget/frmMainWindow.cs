@@ -43,7 +43,7 @@ namespace freETarget {
         }
         private Status currentStatus = Status.NOT_CONNECTED;
 
-        public const String FET_SSID = "FET-TARGET";
+        public const String FET_SSID_PREFIX = "FET-";
 
         private string incomingJSON = "";               // Cumulative serial message
 
@@ -409,8 +409,8 @@ namespace freETarget {
                     ((comms.TcpOpenParams)para).IP = Settings.Default.TcpIP;
                     ((comms.TcpOpenParams)para).port = Settings.Default.TcpPort;
                     String ssid = getWifiSSID();
-                    if (ssid != FET_SSID) {
-                        MessageBox.Show("Current Wi-Fi network is not the freETarget SSID: FET-TARGET","Wrong WiFi",MessageBoxButtons.OK,MessageBoxIcon.Warning);
+                    if (!ssid.StartsWith(FET_SSID_PREFIX)) {
+                        MessageBox.Show("Current Wi-Fi network(" + ssid + ") is not a freETarget SSID. It should start with 'FET-'", "Wrong WiFi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
 
                 }
@@ -1567,8 +1567,8 @@ namespace freETarget {
                 this.reconnectTimer.Enabled = false;
                 connectionStatus.BackColor = Color.Green;
                 String ssid = getWifiSSID();
-                if (ssid != FET_SSID) {
-                    MessageBox.Show("Current Wi-Fi network is not the freETarget SSID: FET-TARGET", "Wrong WiFi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                if (!ssid.StartsWith(FET_SSID_PREFIX)) {
+                    MessageBox.Show("Current Wi-Fi network(" + ssid + ") is not a freETarget SSID. It should start with 'FET-'", "Wrong WiFi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             } catch (Exception) {
                 Console.WriteLine("Reconnect failed.");
