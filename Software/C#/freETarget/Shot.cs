@@ -121,6 +121,9 @@ namespace freETarget {
         }
 
         private double recomputeAngleFromXY() {
+            if(this.y + this.calibrationY == 0 && this.radius == 0) {
+                return 0;
+            }
             double radians = Math.Asin((double)(this.y+this.calibrationY) / (double)this.radius);
             double degrees = (radians * 180 / Math.PI);
             if (this.x + this.calibrationX < 0) {

@@ -147,23 +147,39 @@ namespace freETarget.targets {
         }
 
         public override decimal getScore(decimal radius) {
-            if (radius >= 0 && radius <= 1 + pelletCaliber / 2m) {
+            if (radius >= 0 && radius <= ring10/2  + pelletCaliber / 2m) {
                 return 10;
-            } else if (radius > 1 + pelletCaliber / 2m && radius <= 5.5m + pelletCaliber / 2m) {
+            } else if (radius > ring10/2m  + pelletCaliber / 2m && radius <= ring9/2m + pelletCaliber / 2m) {
                 return 9;
-            } else if (radius > 5.5m + pelletCaliber / 2m && radius <= 10 + pelletCaliber / 2m) {
+            } else if (radius > ring9/2m + pelletCaliber / 2m && radius <= ring8/2m + pelletCaliber / 2m) {
                 return 8;
-            } else if (radius > 10 + pelletCaliber / 2m && radius <= 14.5m + pelletCaliber / 2m) {
+            } else if (radius > ring8/2m + pelletCaliber / 2m && radius <= ring7/2m + pelletCaliber / 2m) {
                 return 7;
-            } else if (radius > 14.5m + pelletCaliber / 2m && radius <= 19 + pelletCaliber / 2m) {
+            } else if (radius > ring7/2m + pelletCaliber / 2m && radius <= ring6/2m + pelletCaliber / 2m) {
                 return 6;
-            } else if (radius > 19 + pelletCaliber / 2m && radius <= 23.5m + pelletCaliber / 2m) {
+            } else if (radius > ring6/2m + pelletCaliber / 2m && radius <= ring5/2m + pelletCaliber / 2m) {
                 return 5;
-            } else if (radius > 23.5m + pelletCaliber / 2m && radius <= 28 + pelletCaliber / 2m) {
+            } else if (radius > ring5/2m + pelletCaliber / 2m && radius <= outterRing/2m + pelletCaliber / 2m) {
                 return 4;
             } else {
                 return 0;
             }
+        }
+
+        public override bool drawNorthText() {
+            return true;
+        }
+
+        public override bool drawSouthText() {
+            return true;
+        }
+
+        public override bool drawWestText() {
+            return true;
+        }
+
+        public override bool drawEastText() {
+            return true;
         }
     }
 }
