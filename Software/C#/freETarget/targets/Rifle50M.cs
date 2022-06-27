@@ -159,5 +159,21 @@ namespace freETarget.targets {
         public override bool isRapidFire() {
             return false;
         }
+
+        public override bool drawNorthText() {
+            return true;
+        }
+
+        public override bool drawSouthText() {
+            return true;
+        }
+
+        public override bool drawWestText() {
+            return true;
+        }
+
+        public override bool drawEastText() {
+            return true;
+        }
     }
 }

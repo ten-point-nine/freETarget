@@ -141,6 +141,21 @@ namespace freETarget.targets {
             return false;
         }
 
+        public override bool drawNorthText() {
+            return true;
+        }
+
+        public override bool drawSouthText() {
+            return true;
+        }
+
+        public override bool drawWestText() {
+            return true;
+        }
+
+        public override bool drawEastText() {
+            return true;
+        }
         public override decimal getScore(decimal radius) {
             //if (radius > get10Radius()) {
                 return 10 - (radius - get10Radius()) / 25;

@@ -1,51 +1,60 @@
-﻿using System;
+﻿using freETarget.Properties;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+//
+// Data file for NRA B3 Rapid Fire and Timed Target
+//
 namespace freETarget.targets {
     [Serializable]
-    class AirRifle : aTarget {
+    class NRA_B3 : aTarget {
 
+        //
+        // Define the target geometry.  
+        // Distance from edge to edge (diameter) of each ring
+        //
+        private const decimal targetSize = 220; //mm
+        private const decimal outterRing = 211.328m; //mm
+        private const decimal ring7 = 155.956m; //mm
+        private const decimal ring8 = 113.284m; //mm
+        private const decimal ring9 = 77.724m; //mm
+        private const decimal ring10 = 45.72m; //mm
+        private const decimal innerRing = 22.86m; //mm
+
+        // Define how the target is going to be painted on the display
+        private const int pistolBlackRings = 9;               // Largest Black Ring
+        private const int pistolFirstRing = 6;                // Largest ring present on target
+        private const bool solidInnerTenRing = false;          // TRUE if the inner ring painted solid white
+        private const bool pistolRapidFire = false;           // TRUE if this is a rapid fire target
+
+        // Rings as they appear on the display screen.  List the rings that are used in outer to inner order
+        private static readonly decimal[] ringspistol = new decimal[] { outterRing, ring7, ring8, ring9, ring10, innerRing };
+
+        // Working variables
         private decimal pelletCaliber;
-        private const decimal targetSize = 80; //mm
-        private const int rifleBlackRings = 4;
-        private const bool solidInnerTenRing = true;
-
         private const int trkZoomMin = 0;
         private const int trkZoomMax = 3;
         private const int trkZoomVal = 0;
         private const decimal pdfZoomFactor = 1m;
 
-        private const decimal outterRing = 45.5m; //mm
-        private const decimal ring2 = 40.5m; //mm
-        private const decimal ring3 = 35.5m; //mm
-        private const decimal ring4 = 30.5m; //mm
-        private const decimal ring5 = 25.5m; //mm
-        private const decimal ring6 = 20.5m; //mm
-        private const decimal ring7 = 15.5m; //mm
-        private const decimal ring8 = 10.5m; //mm
-        private const decimal ring9 = 5.5m; //mm
-        private const decimal ring10 = 0.5m; //mm
-
-        private decimal innerTenRadiusRifle;
-
-        private static readonly decimal[] ringsRifle = new decimal[] { outterRing, ring2, ring3, ring4, ring5, ring6, ring7, ring8, ring9, ring10 };
-
-
-        public AirRifle(decimal caliber) : base(caliber) {
+        //
+        // Methods provided by the target function
+        // Do not modify this section
+        //
+        public NRA_B3(decimal caliber) : base(caliber) {
             this.pelletCaliber = caliber;
-            innerTenRadiusRifle = pelletCaliber / 2m - ring10 / 2m; //2.0m; ISSF rules states: Inner Ten = When the 10 ring (dot) has been shot out completely
         }
 
         public override int getBlackRings() {
-            return rifleBlackRings;
+            return pistolBlackRings;
         }
 
         public override decimal getInnerTenRadius() {
-            return innerTenRadiusRifle;
+            return innerRing;
         }
 
         public override decimal getOutterRadius() {
@@ -56,7 +65,7 @@ namespace freETarget.targets {
             return ring10 / 2m + pelletCaliber / 2m;
         }
         public override string getName() {
-            return typeof(AirRifle).FullName;
+            return typeof(NRA_B3).FullName;
         }
 
         public override decimal getOutterRing() {
@@ -68,7 +77,7 @@ namespace freETarget.targets {
         }
 
         public override decimal[] getRings() {
-            return ringsRifle;
+            return ringspistol;
         }
 
         public override decimal getSize() {
@@ -96,19 +105,23 @@ namespace freETarget.targets {
         }
 
         public override float getFontSize(float diff) {
-            return diff / 8f; //8 is empirically determinted for best look
+            if (diff == 0) {
+                return 15; //hardcoded since for X there is no diff
+            } else {
+                return 15; //hardcoded because the distance between rings (diff) increases but the text should be the same
+            }
+           
         }
 
         public override decimal getBlackDiameter() {
-            return ring4;
+            return ring9;
         }
 
         public override int getRingTextCutoff() {
-            return 8;
+            return 11;
         }
 
         public override float getTextOffset(float diff, int ring) {
-            //return diff / 4;
             return 0;
         }
 
@@ -145,19 +158,19 @@ namespace freETarget.targets {
         }
 
         public override int getFirstRing() {
-            return 1;
+            return pistolFirstRing;
         }
 
         public override bool isRapidFire() {
-            return false;
+            return pistolRapidFire;
         }
 
         public override bool drawNorthText() {
-            return true;
+            return false;
         }
 
         public override bool drawSouthText() {
-            return true;
+            return false;
         }
 
         public override bool drawWestText() {
@@ -165,7 +178,29 @@ namespace freETarget.targets {
         }
 
         public override bool drawEastText() {
-            return true;
+            return false;
+        }
+
+        //
+        // Function to compute the score based on the where the bullet lands
+        // Corrects for bullet diameter
+        // 
+        // Note this only computes integral (non-decimal) scoring
+        //
+        public override decimal getScore(decimal radius) {
+            if (radius >= 0 && radius <= ring10 / 2 + pelletCaliber / 2m) {
+                return 10;
+            } else if (radius > ring10 / 2m + pelletCaliber / 2m && radius <= ring9 / 2m + pelletCaliber / 2m) {
+                return 9;
+            } else if (radius > ring9 / 2m + pelletCaliber / 2m && radius <= ring8 / 2m + pelletCaliber / 2m) {
+                return 8;
+            } else if (radius > ring8 / 2m + pelletCaliber / 2m && radius <= ring7 / 2m + pelletCaliber / 2m) {
+                return 7;
+            } else if (radius > ring7 / 2m + pelletCaliber / 2m && radius <= outterRing / 2m + pelletCaliber / 2m) {
+                return 6;
+            } else {
+                return 0;
+            }
         }
     }
 }
