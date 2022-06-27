@@ -1,6 +1,10 @@
-/*
- * Global functions
- */
+/*----------------------------------------------------------------
+ *
+ * json.h
+ *
+ * Header file for JSON functions and called routines
+ *
+ *---------------------------------------------------------------*/
 #ifndef _JSON_H_
 #define _JSON_H_
 
@@ -68,5 +72,6 @@ extern int    json_follow_through;// Follow through timer
 extern int    json_keep_alive;    // Keepalive period
 extern int    json_tabata_warn_on;  // Time to turn on the warning
 extern int    json_tabata_warn_off; // Time to go dark until we start
+extern int    json_face_strike;   // Number of cycles to accept a face strike
 
 #endif _JSON_H_

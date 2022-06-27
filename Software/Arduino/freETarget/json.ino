@@ -52,6 +52,7 @@ int     json_follow_through;        // Follow through delay
 int     json_keep_alive;            // Keep alive period
 int     json_tabata_warn_on;        // Tabata warning time light on
 int     json_tabata_warn_off;       // Tabata warning time to shot
+int     json_face_strike;           // Number of cycles to accept a strike
 
 #define JSON_DEBUG false                    // TRUE to echo DEBUG messages
 
@@ -73,6 +74,7 @@ const json_message JSON[] = {
   {"\"DELAY\":",          0               ,                  0,                IS_INT16,  &diag_delay,                      0,       0 },    // Delay TBD seconds
   {"\"DIP\":",            &json_dip_switch,                  0,                IS_INT16,  0,                NONVOL_DIP_SWITCH,       0 },    // Remotely set the DIP switch
   {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,                       0,       0 },    // Echo test
+  {"\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT16,  0,                NONVOL_FACE_STRIKE,      5 },    // Face Strike Count 
   {"\"FOLLOW_THROUGH\":", &json_follow_through,              0,                IS_INT16,  0,                NONVOL_FOLLOW_THROUGH,   0 },    // Three second follow through
   {"\"INIT\":",           0,                                 0,                IS_INT16,  &init_nonvol,     NONVOL_INIT,             0 },    // Initialize the NONVOL memory
   {"\"KEEP_ALIVE\":",     &json_keep_alive,                  0,                IS_INT16,  0,                NONVOL_KEEP_ALIVE,     120 },    // TCPIP Keep alive period (in seconds)
@@ -166,10 +168,6 @@ bool read_JSON(void)
     return_value = true;
     
     ch = GET();
-    if ( is_trace )
-    {
-      char_to_all(ch);
-    }
     
 /*
  * Parse the stream
@@ -200,6 +198,14 @@ bool read_JSON(void)
         }
         break;
 
+      case 0x08:                            // Backspace
+        if ( in_JSON != 0 )
+        {
+          in_JSON--;
+        }
+        input_JSON[in_JSON] = 0;            // Null terminate
+        break;
+        
       default:
         input_JSON[in_JSON] = ch;            // Add in the latest
         if ( in_JSON < (sizeof(input_JSON)-1) )
@@ -481,15 +487,14 @@ void show_echo(int v)
   sprintf(s, "\"TIMER_COUNT\":%d, \n\r", (int)(SHOT_TIME * OSCILLATOR_MHZ));              // Maximum number of clock cycles to record shot (target dependent)
   output_to_all(s);
 
-  sprintf(s, "\"WiFi Present\": %d, \n\r", esp01_is_present());                           // TRUE if WiFi is available
+  sprintf(s, "\"WiFi_PRESENT\": %d, \n\r", esp01_is_present());                           // TRUE if WiFi is available
   output_to_all(s);
-  
-  sprintf(s, "\"WiFi Client 0\": %d, \n\r", esp01_connect[0]);                            // TRUE if Client 0 connected
-  output_to_all(s);
-  sprintf(s, "\"WiFi Client 1\": %d, \n\r", esp01_connect[1]);                            // TRUE if Client 1 connected
-  output_to_all(s);
-  sprintf(s, "\"WiFi Client 2\": %d, \n\r", esp01_connect[2]);                            // TRUE if Client 2 connected
-  output_to_all(s);
+
+  for ( i=0; i != ESP01_N_CONNECT; i++)
+  {
+    sprintf(s, "\"WiFi_CONNECT %d\": %d, \n\r", i+1, esp01_connect[i]);                   // TRUE if Client[i] connected
+    output_to_all(s);
+  }
   
   sprintf(s, "\"VERSION\": %s, \n\r", SOFTWARE_VERSION);                                  // Current software version
   output_to_all(s);  

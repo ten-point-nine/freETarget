@@ -47,7 +47,7 @@ const GPIO init_table[] = {
   {LED_Y,       "\"Y\":",        OUTPUT, 1},
 
   {LED_PWM,     "\"LED_PWM\":",  OUTPUT, 0},
-  {vset_PWM,    "\"vset_PWM\":", OUTPUT, 0},
+  {VSET_PWM,    "\"VSET_PWM\":", OUTPUT, 0},
   {RTS_U,       "\"RTS_U\":",    OUTPUT, 1},
   {CTS_U,       "\"CTS_U\":",    INPUT_PULLUP, 0},
 
@@ -633,14 +633,12 @@ static void paper_on_off                        // Function to turn the motor on
  *-----------------------------------------------------*/
  void face_ISR(void)
  {
-  face_strike = true;      // Got a face strike
+  face_strike++;      // Got a face strike
 
   if ( is_trace )
   {
-    Serial.print(T("\r\nface_ISR()"));
+    Serial.print(T("\r\nface_ISR():")); Serial.print(face_strike);
   }
-
-  noInterrupts();
 
   return;
  }
@@ -1002,6 +1000,7 @@ void multifunction_display(void)
   str_a[0] = ch;
   str_a[1] = 0;
   output_to_all(str_a);
+  return;
  }
  
  void output_to_all(char *str)
@@ -1010,7 +1009,7 @@ void multifunction_display(void)
 
   if ( esp01_is_present() )
   {
-    for (i=0; i != MAX_CONNECTIONS; i++ )
+    for (i=0; i != ESP01_N_CONNECT; i++ )
     {
       esp01_send(str, i);
     }
@@ -1028,7 +1027,6 @@ void multifunction_display(void)
   */
   return;
  }
-
 
 /*-----------------------------------------------------
  * 

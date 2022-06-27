@@ -14,13 +14,14 @@
 #include "esp-01.h"
 #include "json.h"
 
-#define SOFTWARE_VERSION "\"3.08.2 May 22, 2022\""
+#define SOFTWARE_VERSION "\"3.08.4 June 27, 2022\""
 #define REV_100    100
 #define REV_210    210
 #define REV_220    220
 #define REV_290    290
-#define REV_300    300
-#define REV_310    310
+#define REV_300    300   // Third Generation
+#define REV_310    310   // Onboard Hi Pass Filter
+#define REV_320    320   // No USB adapter
 
 #define INIT_DONE       0xabcd        // Initialization complete signature
 #define T(s)            F(s)          // Move text string to the flash segment
@@ -52,17 +53,14 @@ char GET (void)
                    
 #define AVAILABLE ( Serial.available() | esp01_available() | DISPLAY_SERIAL.available() )
 
-#define PORT_SERIAL   1
-#define PORT_AUX      2
-#define PORT_DISPLAY  4
-#define PORT_ALL      (PORT_SERIAL + PORT_AUX + PORT_DISPLAY)
-
 /*
  * Oscillator Features
  */
 #define OSCILLATOR_MHZ   8.0                          // 8000 cycles in 1 ms
 #define CLOCK_PERIOD  (1.0/OSCILLATOR_MHZ)            // Seconds per bit
-#define ONE_SECOND      1000                          // 1000 ms delay
+#define ONE_SECOND      1000                          // 1000 ms delay 
+#define ONE_SECOND_US   1000000u                      // One second in us
+
 #define SHOT_TIME     ((int)(json_sensor_dia / 0.33)) // Worst case delay Sensor diameter / speed of sound)
 
 #define HI(x) (((x) >> 8 ) & 0x00ff)                  // High nibble
@@ -102,7 +100,7 @@ extern double  s_of_sound;
 
 extern const char* names[];
 extern const char to_hex[];
-extern bool  face_strike;
+extern unsigned int face_strike;
 extern bool  is_trace;                // True if tracing is enabled 
 extern const char nesw[];             // Cardinal Points
 extern bool  target_hot;              // True if the target is active

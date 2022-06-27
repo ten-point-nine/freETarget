@@ -611,7 +611,9 @@ void send_score
 
 void send_miss
   (
-  int shot                        // Current shot
+  this_shot* h,                   // record record
+  int shot,                       // Current shot
+  int sensor_status               // Status at the time of the shot
   )
 {
   char str[256];    // String holding buffer
@@ -623,7 +625,7 @@ void send_miss
   output_to_all(str);
   
  #if ( S_SHOT )
-  sprintf(str, "\"shot\":%d, \"miss\":1, \"name\":\"%s\", \"time\":%d, ", shot, names[json_name_id], now/100) ;
+  sprintf(str, "\"shot\":%d, \"miss\":1, \"name\":\"%s\", \"time\":%d, ", shot, names[json_name_id], h->shot_time) ;
   output_to_all(str);
 #endif
 

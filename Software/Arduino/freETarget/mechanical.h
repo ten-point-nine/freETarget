@@ -1,6 +1,12 @@
-/*
- * Mechanical Layout
- */
+/*----------------------------------------------------------------
+ *
+ * mechanical.h
+ *
+ * Header file for physical constant
+ *
+ *---------------------------------------------------------------*/
+#ifndef _MECHANICAL_H_
+#define _MECHANICAL_H_
  
 /*
  *  Sensor Geometry.  Note, values can be scaled on output
@@ -11,3 +17,6 @@
 
 #define PAPER_STEP           10       // Motor runs in increments of 10 ms (1/100 second)
 #define PAPER_LIMIT   (2 * 1000)      // Limit motor duration to 2 seconds
+
+#define FACE_STRIKE_TRIP  50          // Recognize a trip after 50 interrupts
+#endif

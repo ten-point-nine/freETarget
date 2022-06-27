@@ -5,6 +5,8 @@
  * Debug and test tools 
  *
  *---------------------------------------------------------------*/
+#ifndef _DIAG_TOOLS_H_
+#define _DIAG_TOOLS_H_
 
 #define T_HELP         0       // Help test
 #define T_DIGITAL      1       // Digital test
@@ -25,7 +27,7 @@
 #define T_WIFI        16       // WiFi Test
 #define T_NONVOL      17       // Dump Nonvol
 #define T_SHOT        18       // Send shot record
-#define T_SPARE1      19
+#define T_WIFI_STATUS 19       // Obtain the WiFi Status
 #define T_SPARE2      20
 #define T_LOG         21       // Log the shot levels
 #define T_SWITCH      25       // Test the switches
@@ -38,8 +40,9 @@
 #define LED_READY         L('*', '.', '.') // The shot is ready to go
 #define LED_OFF           L('.', '-', '-') // Turn off the READY light
 #define LED_TABATA_ON     L('-', '*', '-') // Tabata is ready to go, leave the others alone
-#define LED_TABATA_OFF    L('-', '.', '-') // Tabata is ready to go, leave the others alone
+#define LED_TABATA_OFF    L('-', '.', '-') // Tabata is turned off, leave the others alone
 #define LED_DONE          L('*', '*', '*') // A shot has been detected
+#define LED_WIFI_SEND     L('.', '.', '*') // There is something going over the WiFi
 
 // Sensor failed while waiting for a shot X Light On
 #define NORTH_FAILED       L('.', '*', '.') // North sensor failed
@@ -48,7 +51,7 @@
 #define WEST_FAILED        L('*', '*', '.') // West sensor failed
 
 // Spare                   Y light On
-#define UNUSED_1           L('.', '.', '*')
+
 #define UNUSED_2           L('*', '-', '*')
 
 // Blinking fault message
@@ -65,3 +68,5 @@ void POST_LEDs(void);           // Verify the LED operation
 bool POST_counters(void);       // Verify the counter operation
 void POST_trip_point(void);     // Display the set point
 void set_trip_point(int v);     // Calibrate the trip point
+
+#endif

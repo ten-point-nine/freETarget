@@ -264,36 +264,48 @@ void self_test(uint16_t test)
   * Test 15
   */
     case T_FACE:
-      Serial.print(T("\r\nFace strike test"));
+      Serial.print(T("\r\nFace strike test\n\r"));
+      face_strike = 0;                        // Reset the interrupt count
+      sample = 0;
       enable_interrupt(1);
-      face_strike = 0;
-      EEPROM.put(NONVOL_TEST_MODE, T_HELP);     // Stop the test on the next boot cycle
-      while (1)
+      Serial.read();
+      
+      while (Serial.available() == 0)
       {        
         if ( face_strike != 0 )
         {
+          face_strike--;
           set_LED(L('*', '*', '*'));           // If something comes in, turn on all of the LEDs 
-          Serial.print(T("\n\rStrike"));
-          delay(ONE_SECOND/4);
-          face_strike = 0;
-          enable_interrupt(1);
         }
         else
         {
-          set_LED(L('-', '-', '-'));
+          set_LED(L('.', '.', '.'));          // face_strike complete
         }
-        delay(ONE_SECOND/2);
-      }
-
-      break;
+        if ( sample != face_strike )          // If there is a change, display it
+        {
+          if ( (face_strike % 20) == 0 )
+          {
+            Serial.print(T("\r\n"));
+          }
+          Serial.print(T(" S:")); Serial.print(face_strike);
+          sample = face_strike;        
+        }
+    }
+    Serial.print(T("\r\nDone\n\r"));
+    break;
 
  /*
   * TEST 16 WiFI
+  * TEST 19 WiFi Status
   */
    case T_WIFI:
     esp01_test();
    break;
-
+   
+   case T_WIFI_STATUS:
+    esp01_status();
+   break;
+   
 /*
  * TEST 17 Dump NonVol
  */
@@ -311,7 +323,9 @@ void self_test(uint16_t test)
     shot_test.y = 20;
     shot_test.shot_time = millis()/100;
     send_score(&shot_test, 1, is_running());
-    send_miss(2);
+    shot_test.shot = 2;
+    shot_test.shot_time = millis()/100;
+    send_miss(&shot_test, 1, is_running());
     break;
 
 /*
@@ -647,7 +661,7 @@ static void start_over(void)    // Start the test over again
   stop_counters();
   arm_counters();               // Reset the latch state
   enable_interrupt(1);          // Turn on the face strike interrupt
-  face_strike = false;          // Reset the face strike count
+  face_strike = 0;              // Reset the face strike count
   enable_interrupt(1);          // Turning it on above creates a fake interrupt with a disable
   return;
 }
@@ -679,7 +693,7 @@ void set_trip_point
   }
   arm_counters();                                           // Arm the flip flops for later
   enable_interrupt(true);                                   // Arm the face sensor
-  face_strike = false;
+  face_strike = 0;
 
 /*
  * Set the PWM at 50%
@@ -1169,6 +1183,10 @@ void show_sensor_status(unsigned int sensor_status)
   Serial.print(T("  Face Strike:")); Serial.print(face_strike);
   
   Serial.print(T("  V_Ref:")); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
+  
+  Serial.print(T("  Temperature:")); Serial.print(temperature_C());
+  
+  Serial.print(T("  WiFi:")); Serial.print(esp01_is_present());                           // TRUE if WiFi is available
 
   Serial.print(T("  Switch:"));
   
@@ -1191,7 +1209,7 @@ void show_sensor_status(unsigned int sensor_status)
   }
 
   if ( ((sensor_status & 0x0f) == 0x0f)
-    && (face_strike) )
+    && (face_strike != 0) )
   {
     Serial.print(T(" PASS"));
     delay(ONE_SECOND);                // Wait for click to go away

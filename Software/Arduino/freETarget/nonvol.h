@@ -1,8 +1,14 @@
-
+/*----------------------------------------------------------------
+ *
+ * nonvol.h
+ *
+ * Header file for persistent storage functions
+ *
+ *---------------------------------------------------------------*/
 #ifndef _NONVOL_H
 #define _NONVOL_H
 
-#define PS_VERSION        4                       // Persistent storage version
+#define PS_VERSION        5                       // Persistent storage version
 #define PS_UNINIT(x)     ( ((x) == 0xABAB) || ((x) == 0xFFFF))  // Uninitilized value
  
 /*
@@ -61,11 +67,12 @@ void dump_nonvol(void);
 #define NONVOL_KEEP_ALIVE     (NONVOL_FOLLOW_THROUGH + sizeof(int))        // Send out a keep alive at a rate
 #define NONVOL_TABATA_WARN_ON (NONVOL_KEEP_ALIVE + sizeof(int))            // Time to turn the warning on
 #define NONVOL_TABATA_WARN_OFF (NONVOL_TABATA_WARN_ON + sizeof(int))       // Time to turn the warning off
+#define NONVOL_FACE_STRIKE    (NONVOL_TABATA_WARN_OFF + sizeof(int))       // Number of cycles to accept a face strike
 
-#define NEXT_NONVOL           (NONVOL_TABATA_WARN_OFF + sizeof(int) )
+#define NEXT_NONVOL           (NONVOL_FACE_STRIKE + sizeof(int) )
 #define NONVOL_SIZE           4096                                         // 4K available
 
-#if (((45-13) * 4) > NONVOL_SIZE )
+#if (((70-13) * 4) > NONVOL_SIZE )
 #error NEXT_NONVOL OUT OF NONVOL
 #endif
 

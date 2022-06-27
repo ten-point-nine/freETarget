@@ -1,3 +1,13 @@
+/*----------------------------------------------------------------
+ *
+ * gpio.h
+ *
+ * Header file for GPIO functions
+ *
+ *---------------------------------------------------------------*/
+#ifndef _GPIO_H_
+#define _GPIO_H_
+
 /*
  * Global functions
  */
@@ -70,7 +80,7 @@ void digital_test(void);                                  // Execute the digital
 #define CAL_HIGH        (DIP_SW_B)
 #define VERBOSE_TRACE   ((digitalRead(DIP_0) == 0)    + 0)   // 8 Show the verbose software trace
 
-#define vset_PWM    8          // VREF setting
+#define VSET_PWM     8          // VREF setting
 #define CTS_U        7
 #define RTS_U        6
 #define LED_PWM      5          // PWM Port
@@ -119,3 +129,5 @@ void digital_test(void);                                  // Execute the digital
 
 
 #define EOF 0xFF
+
+#endif

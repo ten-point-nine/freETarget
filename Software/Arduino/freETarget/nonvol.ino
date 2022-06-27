@@ -450,6 +450,7 @@ void update_nonvol
     current_version = 2;
     EEPROM.put(NONVOL_PS_VERSION, current_version);
   }
+  
   if ( current_version == 2 )                     
   {
     x = 120;                                                // Set to 120.  No harm if it's sent
@@ -457,6 +458,7 @@ void update_nonvol
     current_version = 3;
     EEPROM.put(NONVOL_PS_VERSION, current_version);
   }
+  
   if ( current_version == 3 )                     
   {
     x = 20;                                                // 20 x 100 ms increments
@@ -466,7 +468,15 @@ void update_nonvol
     current_version = 4;
     EEPROM.put(NONVOL_PS_VERSION, current_version);
   }
-
+  
+  if ( current_version == 4 )                     
+  {
+    x = 5;                                                 // Five rings to accept a face strike
+    EEPROM.put(NONVOL_FACE_STRIKE, x);
+    current_version = 5;
+    EEPROM.put(NONVOL_PS_VERSION, current_version);
+  }
+  
   if ( current_version != PS_VERSION )
   {
     Serial.print(T("\n\rVerify firmware"));

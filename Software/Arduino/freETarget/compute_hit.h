@@ -9,8 +9,8 @@
  */
 #define S_SHOT      true        // Include the shot number
 #define S_XY        true        // Include X-Y coordinates
-#define S_POLAR     true        // Include polar coordinates
-#define S_COUNTERS  true        // Include counter values
+#define S_POLAR     false       // Include polar coordinates
+#define S_COUNTERS  false       // Include counter values
 #define S_MISC      true        // Include miscelaneous diagnotics
 #define S_SCORE     false       // Include estimated score
 
@@ -44,6 +44,6 @@ void send_score(this_shot* h, int shot, int sensor_status); // Send the shot
 void rotate_hit(unsigned int location, this_shot* h);       // Rotate the shot back into the correct quadrant 
 bool find_xy_3D(sensor_t* s, double estimate, double z_offset_clock);  // Estimated position including slant range
 void send_timer(int sensor_status);                         // Show debugging information 
-void send_miss(int shot);                                   // Send a miss message
+void send_miss(this_shot* h, int shot, int sensor_status);  // Send a miss message
 
 #endif

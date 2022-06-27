@@ -20,7 +20,7 @@ this_shot record;
 
 double       s_of_sound;                // Speed of sound
 unsigned int shot = 0;                  // Shot counter
-bool         face_strike = false;       // Miss indicator
+unsigned int face_strike = 0;           // Miss Face Strike interrupt count
 bool         is_trace = false;          // TRUE if trace is enabled
 
 const char* names[] = { "TARGET",                                                                                           //  0
@@ -56,7 +56,7 @@ void setup(void)
   Serial.begin(115200);
   AUX_SERIAL.begin(115200); 
   DISPLAY_SERIAL.begin(115200); 
-  
+
 /*
  *  Set up the port pins
  */
@@ -218,13 +218,13 @@ void loop()
     {
       set_LED(LED_TABATA_ON);        // Just turn on X
     }
-    face_strike = false;              // Reset the face strike count
+    face_strike = 0;                  // Reset the face strike count
     power_save = millis();            // Start the power saver time
 
     enable_interrupt(json_send_miss); // Turn on the face strike interrupt
 
-    arm_counters();
-    sensor_status = is_running();
+    arm_counters();                   // Arm the counters
+    sensor_status = is_running();     // and immediatly read the status
     if ( sensor_status == 0 )         // After arming, the sensor status should be zero
     { 
       if ( is_trace )
@@ -266,13 +266,14 @@ void loop()
  * Wait for the shot
  */
   case WAIT:
-    if ( (esp01_is_present() == false) || esp01_connected() )       // If the ESP01 is not present, or connected
+    if ( (esp01_is_present() == false) 
+          || esp01_connected() )          // If the ESP01 is not present, or connected
     {
-      set_LED(LED_READY);                                          // to a client, then the RDY light is steady on
+      set_LED(LED_READY);                 // to a client, then the RDY light is steady on
     }
     else
     {
-      if ( (millis() / 1000) & 1 )                                 // Otherwise blink the RDY light
+      if ( (millis() / 1000) & 1 )       // Otherwise blink the RDY light
       {
         set_LED(LED_READY);
       }
@@ -282,9 +283,9 @@ void loop()
       }
     }
     
-    if ( face_strike )                    // Something hit the front
+    if ( face_strike >= json_face_strike) // Something hit the front
     {
-      state = SEND_MISS;                  // Show it's a miss
+      state = REDUCE;                     // Fake a shot and display it
       break;
     }
     
@@ -324,8 +325,9 @@ void loop()
     set_LED(LED_DONE);                   // Light All
     location = compute_hit(sensor_status, &record, false);
 
-    if ( ((json_tabata_cycles != 0) && ( record.shot_time == 0 ) &&(json_rapid_cycles !=0))         // Are we out of the Tabata-Rapid cycle time?
-       || (timer_value[N] == 0) || (timer_value[E] == 0) || (timer_value[S] == 0) || (timer_value[W] == 0) ) // If any one of the timers is 0, that's a miss
+    if ( ((json_tabata_cycles != 0) && ( record.shot_time == 0 ) && (json_rapid_cycles !=0))         // Are we out of the Tabata-Rapid cycle time?
+       || (timer_value[N] == 0) || (timer_value[E] == 0) || (timer_value[S] == 0) || (timer_value[W] == 0) // If any one of the timers is 0, that's a miss
+       || (face_strike >= json_face_strike) )
     {
       state = SEND_MISS;
     }
@@ -345,7 +347,7 @@ void loop()
     {
       break;
     }
-    
+    Serial.print(face_strike);
     send_score(&record, shot_number, sensor_status);
     shot_number++; 
     if ( (json_paper_time + json_step_time) != 0 )  // Has the witness paper been enabled?
@@ -371,13 +373,11 @@ void loop()
       Serial.print(T("\r\nFace Strike...\r\n"));
     } 
 
-    face_strike = false;
-
     blink_fault(SHOT_MISS);
     
     if ( json_send_miss != 0)
     {
-      send_miss(shot);
+      send_miss(&record, shot_number, sensor_status);
     }
     break;
     }
@@ -716,7 +716,7 @@ void tabata_control(void)
  *--------------------------------------------------------------*/
 void bye(void)
 {
-  char str[128];
+  char str[32];
 /*
  * Say Good Night Gracie!
  */
@@ -738,11 +738,8 @@ void bye(void)
         && ( AVAILABLE == 0)        // Or a character to arrive
         && ( is_running() == 0) )   // Or a shot arrives
   {
-    if ( esp01_is_present() )
-    {
-      esp01_receive();              // Accumulate input from the IP port.;
-    }
-  }
+    esp01_receive();                // Keep polling the WiFi to see if anything 
+  }                                 // turns up
   
   hello();                          // Back in action
   
@@ -799,16 +796,20 @@ void hello(void)
  * 
  *----------------------------------------------------------------
  *
- * When the keep alive expires, send a new one out and reset
+ * When the keep alive expires, send a new one out and reset.
+ * 
+ * It is sent out to the USB port as a diagnostic check 
  * 
  *--------------------------------------------------------------*/
 void send_keep_alive(void)
 {
   char str[32];
   static int keep_alive_count = 0;
-  
-  sprintf(str, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);
-  output_to_all(str);
 
+  if ( esp01_connected() )
+  {
+    sprintf(str, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);
+    output_to_all(str);
+  }
   return;
 }
