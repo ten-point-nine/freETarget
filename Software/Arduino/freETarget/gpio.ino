@@ -270,7 +270,7 @@ void arm_counters(void)
 /*
  *  Stop the oscillator
  */
-void stop_counters(void)
+void stop_timers(void)
   {
   digitalWrite(STOP_N,0);   // Stop the counters
   digitalWrite(QUIET, 0);   // Kill the oscillator 
@@ -453,7 +453,10 @@ bool read_in(unsigned int port)
  * Force read each of the timers
  * 
  *-----------------------------------------------------*/
-void read_timers(void)
+void read_timers
+  (
+    unsigned long* timer_value
+  )
 {
   timer_value[N] = read_counter(N);  
   timer_value[E] = read_counter(E);
@@ -673,40 +676,57 @@ void blink_fault
  * 
  * function: multifunction_init
  * 
- * brief:    Initialize the direction of the MFS on the DIP switch
+ * brief:    Use the multifunction switches during starup
  * 
  * return:   None
  * 
  *-----------------------------------------------------
  * 
- * This function uses a switch statement to determine
- * the settings of the GPIO
- * 
- * This function is left here for possible future
- * expansion when the DIP connector may be used as 
- * an output
+ * Read the jumper header and modify the initialization
  * 
  *-----------------------------------------------------*/
  void multifunction_init(void)
  {
-  switch (LO10(json_multifunction))
+  unsigned int dip;
+
+  dip = read_DIP() & 0x0f;              // Read the jumper header
+
+  if ( dip == 0 )                       // No jumpers in place
+  { 
+    return;                             // Carry On
+  }
+
+  if ( CALIBRATE )                      // Calibration jumper in?
   {
-    default:
-      pinMode(DIP_1,INPUT_PULLUP);
-      break;
+    set_trip_point(0);
+  }
+
+  is_trace = VERBOSE_TRACE;             // Diagnostics jumper in?
+
+  if ( DIP_SW_A && DIP_SW_B )           // Both switches closed?
+  {
+    factory_nonvol(false);              // Initalize the nonvol but do not calibrate
+  }
+
+  else
+  {
+    if ( DIP_SW_A )                     // Switch A pressed
+    {
+      is_trace = true;                  // Turn on tracing
+    }
+  
+    if ( DIP_SW_B )                     // Switch B pressed
+    {
+
+    }
   }
   
-  switch (HI10(json_multifunction))
-  {
-    default:
-      pinMode(DIP_2,INPUT_PULLUP);
-      break;
-  }
 /*
- * The GPIO has been programmed per the multifunction mode
+ * The initialization override has been finished
  */
- return;
- }
+  multifunction_wait_open();
+  return;
+}
 
  
 /*-----------------------------------------------------
@@ -825,12 +845,8 @@ void multifunction_switch(void)
 /*
  * All done, return the GPIO state
  */
-  while ( (DIP_SW_A != 0 )
-        || (DIP_SW_B != 0) ) 
-  {
-    continue;                     // Wait here for the switches to be released
-  }
-  delay(ONE_SECOND/2);            // Wait here to debounce the switches
+  multifunction_wait_open();      // Wait here for the switches to be open
+
   set_LED(LED_READY);
   return;
 }
@@ -895,7 +911,6 @@ static void sw_state
       break;
 
     case TABATA_ON_OFF:
-      tabata_control();
       break;
       
     case LED_ADJUST:
@@ -923,26 +938,38 @@ static void sw_state
 }
 
 /*
+ * Wait here for the switches to be opened
+ */
+void multifunction_wait_open(void)
+{
+  while ( (DIP_SW_A != 0 )
+        || (DIP_SW_B != 0) ) 
+  {
+    set_LED(L('*', '.', '.'));       // Scroll the LEDs
+    delay(ONE_SECOND/10);
+    
+    set_LED(L('.', '*', '.'));
+    delay(ONE_SECOND/10);
+        
+    set_LED(L('.', '.', '*'));
+    delay(ONE_SECOND/10);
+  }
+
+  return;
+}
+
+/*
  * Send a fake score to the PC for testing
  */
 static void send_fake_score(void) 
 { 
-  static    this_shot h;
+  static    shot_record h;
   static   int shot;
     
   h.x = random(-json_sensor_dia/2.0, json_sensor_dia/2.0);
   h.y = 0;
-  send_score(&h, shot++, 0);
-  if ( (json_paper_time + json_step_time) != 0 )  // Has the witness paper been enabled?
-  {
-    if ( ((json_paper_eco == 0)                   // ECO turned off
-        || ( sqrt(sq(record.x) + sq(record.y)) < json_paper_eco )) // Outside the black
-        && (json_rapid_on == 0))                  // and not rapid fire
-    {
-      delay(5*ONE_SECOND);                        // Wait five seconds for the shooter
-      drive_paper();                              // to follow through.
-    }
-  }
+  send_score(&h, shot++);
+
   return;
 }
 

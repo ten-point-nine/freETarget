@@ -476,7 +476,16 @@ void update_nonvol
     current_version = 5;
     EEPROM.put(NONVOL_PS_VERSION, current_version);
   }
-  
+
+  if ( current_version == 5 )                     
+  {
+    x = 0;                                                 // 0 shots in a rapid cycle
+    EEPROM.put(NONVOL_RAPID_COUNT, x);
+    x = 1;
+    EEPROM.put(NONVOL_WIFI_CHANNEL, x);                     // Default to channel 1
+    current_version = 6;
+    EEPROM.put(NONVOL_PS_VERSION, current_version);
+  }
   if ( current_version != PS_VERSION )
   {
     Serial.print(T("\n\rVerify firmware"));

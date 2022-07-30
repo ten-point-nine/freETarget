@@ -46,7 +46,8 @@ void self_test(uint16_t test)
   unsigned int random_delay;        // Random sampe time
   bool         pass;
   unsigned long start_time;         // Running time
-  this_shot    shot_test;           // Shot history
+  shot_record    shot_test;         // Shot history
+  unsigned char s[128];             // Text buffer
   
 /*
  *  Update the timer
@@ -89,6 +90,8 @@ void self_test(uint16_t test)
       Serial.print(T("\r\n16 - WiFi test"));
       Serial.print(T("\r\n17 - Dump NonVol"));
       Serial.print(T("\r\n18 - Send sample shot record"));
+      Serial.print(T("\r\n19 - Show WiFi status"));
+      Serial.print(T("\r\n20 - Send clock out of all serial ports"));
       Serial.print(T("\r\n21 - Log North Sensor"));
       Serial.print(T("\r\n22 - Log East Sensor"));
       Serial.print(T("\r\n23 - Log South Sensor"));
@@ -110,7 +113,7 @@ void self_test(uint16_t test)
     case T_TRIGGER:                       // Show the timer values (Wait for analog input)
       Serial.print(T("\r\nWaiting for Trigger\r\n"));
     case T_CLOCK:                        // Show the timer values (Trigger input)
-      stop_counters();
+      stop_timers();
       arm_counters();
 
       set_LED(L('*', '-', '-'));
@@ -136,7 +139,7 @@ void self_test(uint16_t test)
         continue;
       }
       sensor_status = is_running();       // Remember all of the running timers
-      stop_counters();
+      stop_timers();
       timer_value[N] = read_counter(N);
       timer_value[E] = read_counter(E);
       timer_value[S] = read_counter(S);
@@ -268,9 +271,9 @@ void self_test(uint16_t test)
       face_strike = 0;                        // Reset the interrupt count
       sample = 0;
       enable_interrupt(1);
-      Serial.read();
+      ch = 0;
       
-      while (Serial.available() == 0)
+      while ( ch != '!' )
       {        
         if ( face_strike != 0 )
         {
@@ -290,22 +293,19 @@ void self_test(uint16_t test)
           Serial.print(T(" S:")); Serial.print(face_strike);
           sample = face_strike;        
         }
+        esp01_receive();                // Accumulate input from the IP port.
+        ch = GET();
     }
     Serial.print(T("\r\nDone\n\r"));
     break;
 
  /*
   * TEST 16 WiFI
-  * TEST 19 WiFi Status
   */
    case T_WIFI:
     esp01_test();
    break;
-   
-   case T_WIFI_STATUS:
-    esp01_status();
-   break;
-   
+
 /*
  * TEST 17 Dump NonVol
  */
@@ -318,16 +318,48 @@ void self_test(uint16_t test)
  * Test 18 Sample shot value 
  */
   case T_SHOT:
-    shot_test.shot = 1;
     shot_test.x = 10;
     shot_test.y = 20;
     shot_test.shot_time = millis()/100;
-    send_score(&shot_test, 1, is_running());
-    shot_test.shot = 2;
+    send_score(&shot_test, 1);
     shot_test.shot_time = millis()/100;
-    send_miss(&shot_test, 1, is_running());
+    send_miss(&shot_test, 1);
     break;
-
+    
+ /*
+  * TEST 19 WiFi Status
+  */
+   case T_WIFI_STATUS:
+    esp01_status();
+   break;
+   
+ /*
+  * TEST 20 WiFi Broadcast
+  */
+   case T_WIFI_BROADCAST:
+    sprintf(s, "Type ! to exit ");
+    output_to_all(s); 
+    ch = 0;
+    while( ch != '!' )
+    {
+      i = millis() / 1000;
+      if ( (i % 60) == 0 )
+      {
+        sprintf(s, "\r\n%d:%d ", i/60, i % 60);
+        output_to_all(s);
+      }
+      else
+      {
+      sprintf(s, " %d:%d ", i/60, i % 60);
+      output_to_all(s);
+      }
+      esp01_receive();                // Accumulate input from the IP port.
+      ch = GET();
+      delay(1000);
+    }
+    sprintf(s, "\r\nDone");
+   break;
+   
 /*
  * Test 21 Log the input voltage levels on North
  */
@@ -342,13 +374,12 @@ void self_test(uint16_t test)
  * Test 25 Log the input voltage levels on North
  */
   case T_SWITCH:
-    while (Serial.available())
-    {
-      Serial.read();
-    }
-    while (Serial.available() == 0 )
+    ch = 0;
+    while ( ch != '!' )
     {
       set_LED( 1, DIP_SW_A, DIP_SW_B );   // Copy the switches
+      esp01_receive();                    // Accumulate input from the IP port.
+      ch = GET();
     }
     Serial.print(T("\n\rDone"));
     break;
@@ -475,7 +506,7 @@ void self_test(uint16_t test)
 /*
  * Test 1, Arm the circuit and see if there are any random trips
  */
-  stop_counters();                    // Get the circuit ready
+  stop_timers();                    // Get the circuit ready
   arm_counters();                     // Arm it. 
   delay(1);                           // Wait a millisecond  
   sensor_status = is_running();       // Remember all of the running timers
@@ -498,7 +529,7 @@ void self_test(uint16_t test)
 /*
  *  Test 2, Arm the circuit amd make sure it is off
  */
-    stop_counters();                  // Get the circuit ready
+    stop_timers();                  // Get the circuit ready
     arm_counters();
     delay(1);                         // Wait for a bit
     
@@ -514,7 +545,7 @@ void self_test(uint16_t test)
  /*
   * Test 3: Trigger the counter and make sure that all sensors are triggered
   */
-    stop_counters();                  // Get the circuit ready
+    stop_timers();                  // Get the circuit ready
     arm_counters();
     delay(1);  
     random_delay = random(1, 6000);   // Pick a random delay time in us
@@ -527,7 +558,7 @@ void self_test(uint16_t test)
       continue;
     }
     
-    stop_counters();
+    stop_timers();
     if ( sensor_status != 0x0F )      // The circuit was triggered but not all
     {                                 // FFs latched
       Serial.print(T("\r\nFailed Clock Test. sensor_status:")); show_sensor_status(sensor_status);
@@ -658,7 +689,7 @@ const unsigned int mv_to_counts[] = {   CT(350),    CT(400), CT(450), CT(500),  
 
 static void start_over(void)    // Start the test over again
 {
-  stop_counters();
+  stop_timers();
   arm_counters();               // Reset the latch state
   enable_interrupt(1);          // Turn on the face strike interrupt
   face_strike = 0;              // Reset the face strike count
@@ -1025,9 +1056,9 @@ static void unit_test(unsigned int mode)
   {
     if ( sample_calculations(mode, i) )
     {
-    location = compute_hit(0x0F, &record, true);
+    location = compute_hit(&record[0], true);
     sensor_status = 0xF;        // Fake all sensors good
-    send_score(&record, shot_number, sensor_status);
+    send_score(&record[0], shot_number);
     shot_number++;
     delay(ONE_SECOND/2);        // Give the PC program some time to catch up
     }

@@ -14,7 +14,7 @@
 #include "esp-01.h"
 #include "json.h"
 
-#define SOFTWARE_VERSION "\"3.08.4 June 27, 2022\""
+#define SOFTWARE_VERSION "\"3.09.0 RC2 July 28, 2022\""
 #define REV_100    100
 #define REV_210    210
 #define REV_220    220
@@ -60,6 +60,7 @@ char GET (void)
 #define CLOCK_PERIOD  (1.0/OSCILLATOR_MHZ)            // Seconds per bit
 #define ONE_SECOND      1000                          // 1000 ms delay 
 #define ONE_SECOND_US   1000000u                      // One second in us
+#define SECONDS       (millis()/1000)                 // Elapsed time in seconds
 
 #define SHOT_TIME     ((int)(json_sensor_dia / 0.33)) // Worst case delay Sensor diameter / speed of sound)
 
@@ -71,20 +72,24 @@ char GET (void)
 #define HI10(x)  (((x) / 10 ) % 10)                   // High digit       xxx2x
 #define LO10(x)  ((x) % 10)                           // Low digit        xxxx2
 
-#define N 0
-#define E 1
-#define S 2
-#define W 3
+#define N       0                                     // Index to North Timer
+#define E       1                                     // Index to East Timer
+#define S       2                                     // Index to South Timer
+#define W       3                                     // Index to West Timer
+#define MISS    4                                     // Timer was a miss
 
-struct record
+struct sr
 {
-  unsigned int shot;          // Current shot number
-  double       x;             // X location of shot
-  double       y;             // Y location of shot
-  long         shot_time;     // Shot time after tabata start
+  unsigned int shot_count;      // Current shot number
+  double       x;               // X location of shot
+  double       y;               // Y location of shot
+  unsigned long timer_value[4]; // Array of timer values
+  unsigned int face_strike;     // Recording of face strike
+  unsigned int sensor_status;   // Triggering register
+  long         shot_time;       // Shot time since start of after tabata start
 };
 
-typedef struct record this_shot;
+typedef struct sr shot_record;
 
 struct GPIO {
   byte port;

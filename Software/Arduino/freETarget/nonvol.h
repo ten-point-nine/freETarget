@@ -8,7 +8,7 @@
 #ifndef _NONVOL_H
 #define _NONVOL_H
 
-#define PS_VERSION        5                       // Persistent storage version
+#define PS_VERSION        6                       // Persistent storage version
 #define PS_UNINIT(x)     ( ((x) == 0xABAB) || ((x) == 0xFFFF))  // Uninitilized value
  
 /*
@@ -56,11 +56,11 @@ void dump_nonvol(void);
 #define NONVOL_TABATA_ON      (NONVOL_TABATA_ENBL + sizeof(int) + 2)       // Time that the Tabata timer is on
 #define NONVOL_TABATA_REST    (NONVOL_TABATA_ON   + sizeof(int) + 2)       // Time that the Tabata timer is OFF
 #define NONVOL_TABATA_CYCLES  (NONVOL_TABATA_REST + sizeof(int) + 2)       // Number of cycles in an event
-#define NONVOL_RAPID_ON       (NONVOL_TABATA_CYCLES+sizeof(int))           // Time that the Tabata timer is on
-#define NONVOL_RAPID_REST     (NONVOL_RAPID_ON    + sizeof(int))           // Time that the Tabata timer is OFF
+#define NONVOL_RAPID_ON       (NONVOL_TABATA_CYCLES+sizeof(int))           // Time that the Rapid timer is on
+#define NONVOL_RAPID_REST     (NONVOL_RAPID_ON    + sizeof(int))           // Time that the Rapid timer is OFF
 #define NONVOL_RAPID_CYCLES   (NONVOL_RAPID_REST  + sizeof(int))           // Number of cycles in an event
-#define NONVOL_vset_PWM      (NONVOL_RAPID_CYCLES + sizeof(int))          // Starting PWM setting
-#define NONVOL_VSET           (NONVOL_vset_PWM   + sizeof(int))           // Desired Voltage value (floating point)
+#define NONVOL_vset_PWM       (NONVOL_RAPID_CYCLES + sizeof(int))          // Starting PWM setting
+#define NONVOL_VSET           (NONVOL_vset_PWM    + sizeof(int))           // Desired Voltage value (floating point)
 #define NONVOL_RAPID_TYPE     (NONVOL_VSET        + sizeof(double))        // Type of rapid fire event
 #define NONVOL_PS_VERSION     (NONVOL_RAPID_TYPE  + sizeof(int))           // Persistent storage version
 #define NONVOL_FOLLOW_THROUGH (NONVOL_PS_VERSION  + sizeof(int))           // Follow through timer
@@ -68,11 +68,13 @@ void dump_nonvol(void);
 #define NONVOL_TABATA_WARN_ON (NONVOL_KEEP_ALIVE + sizeof(int))            // Time to turn the warning on
 #define NONVOL_TABATA_WARN_OFF (NONVOL_TABATA_WARN_ON + sizeof(int))       // Time to turn the warning off
 #define NONVOL_FACE_STRIKE    (NONVOL_TABATA_WARN_OFF + sizeof(int))       // Number of cycles to accept a face strike
+#define NONVOL_RAPID_COUNT    (NONVOL_FACE_STRIKE + sizeof(int))           // Count of shots in a Rapid cycle
+#define NONVOL_WIFI_CHANNEL   (NONVOL_RAPID_COUNT + sizeof(int))           // Channel to use for WiFI
 
-#define NEXT_NONVOL           (NONVOL_FACE_STRIKE + sizeof(int) )
+#define NEXT_NONVOL           (NONVOL_WIFI_CHANNEL + sizeof(int) )
 #define NONVOL_SIZE           4096                                         // 4K available
 
-#if (((70-13) * 4) > NONVOL_SIZE )
+#if (((72-13) * 4) > NONVOL_SIZE )
 #error NEXT_NONVOL OUT OF NONVOL
 #endif
 
