@@ -330,7 +330,7 @@ namespace freETarget {
                         } else {
                             currentSession.addShot(shot);
 
-                            displayMessage(message, false);
+                            displayMessage(message + " ---- " + "Computed shot X:" + shot.getX() + " Y:" + shot.getY() + " R:" + shot.radius + " A:" + shot.angle, false);
                             displayShotData(shot);
                             VirtualRO vro = new VirtualRO(currentSession.eventType);
                             vro.speakShot(shot);
@@ -1495,7 +1495,7 @@ namespace freETarget {
             Console.WriteLine("--------------");
             foreach (PropertyInfo m in members) {
                 if (m.CanWrite && !exclusionList.Contains(m.Name)) {
-                    Console.WriteLine("Name: " + m.Name + " - Type: " + m.PropertyType + " - Value: " + m.GetValue(Settings.Default));
+                    //Console.WriteLine("Name: " + m.Name + " - Type: " + m.PropertyType + " - Value: " + m.GetValue(Settings.Default));
                     object obj = storage.getSetting(m.Name);
                     if (obj == null) {
                         //setting not in the DB. create it
@@ -1513,9 +1513,10 @@ namespace freETarget {
             Type sett = Settings.Default.GetType();
             PropertyInfo[] members = sett.GetProperties();
 
+            log("Loading settings from DB:");
             foreach (PropertyInfo m in members) {
                 if (m.CanWrite && !exclusionList.Contains(m.Name)) {
-                    //Console.WriteLine("Name: " + m.Name + " - Type: " + m.PropertyType + " - Value: " + m.GetValue(Settings.Default));
+                    log("Name: " + m.Name + " - Type: " + m.PropertyType + " - Value: " + m.GetValue(Settings.Default));
                     object obj = storage.getSetting(m.Name);
                     m.SetValue(Settings.Default, obj);
                 }
