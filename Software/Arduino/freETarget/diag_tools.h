@@ -28,7 +28,7 @@
 #define T_NONVOL      17       // Dump Nonvol
 #define T_SHOT        18       // Send shot record
 #define T_WIFI_STATUS 19       // Obtain the WiFi Status
-#define T_WIFI_BROADCAST 20    // Just keep sendin stuff out of the WiFi port
+#define T_SPARE2      20
 #define T_LOG         21       // Log the shot levels
 #define T_SWITCH      25       // Test the switches
 

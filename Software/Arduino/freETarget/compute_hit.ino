@@ -133,7 +133,7 @@ void init_sensors(void)
  *
  * brief: Determine the location of the hit
  * 
- * return: Sensor location used to recognize shot
+ * return: record array updated with new position
  *
  *----------------------------------------------------------------
  *
@@ -142,7 +142,8 @@ void init_sensors(void)
 
 unsigned int compute_hit
   (
-  shot_record* shot,               // Storing the results
+  unsigned int sensor_status,      // Bits read from status register
+  this_shot*   h,                  // Storing the results
   bool         test_mode           // Fake counters in test mode
   )
 {
@@ -160,15 +161,7 @@ unsigned int compute_hit
   {
     Serial.print(T("\r\ncompute_hit()"));
   }
-
-/* 
- *  Check for a miss
- */
-  if ( (shot->face_strike != 0) || (shot->timer_value[N] == 0) || (shot->timer_value[E] == 0) || (shot->timer_value[S] == 0) || (shot->timer_value[W] == 0 ) )
-  {
-    return MISS;
-  }
-
+  
 /*
  *  Compute the current geometry based on the speed of sound
  */
@@ -180,8 +173,13 @@ unsigned int compute_hit
   }
   
  /* 
-  *  Display the timer registers if in trace mode
-  */  
+  *  Read the counter registers
+  */
+  if ( test_mode == false )                              // Skip if using test values
+  {
+    read_timers();
+  }
+  
   if ( is_trace )
   { 
     for (i=N; i <= W; i++)
@@ -268,9 +266,9 @@ unsigned int compute_hit
   estimate = s[N].c - smallest + 1.0d;
  
   if ( is_trace )
-  {
+   {
    Serial.print(T("\r\nestimate: ")); Serial.print(estimate);
-  }
+   }
   error = 999999;                  // Start with a big error
   count = 0;
 
@@ -313,8 +311,9 @@ unsigned int compute_hit
  /*
   * All done return
   */
-  shot->x = x_avg;             
-  shot->y = y_avg;
+  h->shot = shot;           // Record the shot
+  h->x = x_avg;             
+  h->y = y_avg;
   
   return location;
 }
@@ -492,8 +491,9 @@ bool find_xy_3D
 
 void send_score
   (
-  shot_record* h,                 //  record
-  int shot                        // Current shot
+  this_shot* h,                   // record record
+  int shot,                       // Current shot
+  int sensor_status               // Status at the time of the shot
   )
 {
   int    i;                       // Iteration Counter
@@ -611,16 +611,13 @@ void send_score
 
 void send_miss
   (
-  shot_record* h,                   // record record
-  int shot                          // Current shot
+  this_shot* h,                   // record record
+  int shot,                       // Current shot
+  int sensor_status               // Status at the time of the shot
   )
 {
   char str[256];    // String holding buffer
-
-  if ( json_send_miss != 0)
-  {
-    return;
-  }
+  
 /* 
  *  Display the results
  */
@@ -795,9 +792,8 @@ void send_timer
   )
 {
   int i;
-  unsigned long timer_value[4];
-  
-  read_timers(&timer_value[0]);
+
+  read_timers();
   
   Serial.print(T("{\"timer\": \""));
   for (i=0; i != 4; i++ )

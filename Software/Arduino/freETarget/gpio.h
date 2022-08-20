@@ -17,17 +17,16 @@ unsigned int is_running(void);                            // Return a bit mask o
 void set_LED(int state_RDY, int state_X, int state_y);    // Manage the LEDs
 unsigned int read_DIP(void);                              // Read the DIP switch register
 unsigned int read_counter(unsigned int direction);
-void stop_timers(void);                                 // Turn off the counter registers
+void stop_counters(void);                                 // Turn off the counter registers
 void trip_counters(void);
 bool read_in(unsigned int port);                          // Read the selected port
-void read_timers(unsigned long* timer_values);            // Read and return the counter registers
+void read_timers(void);                                   // Read and return the counter registers
 void drive_paper(void);                                   // Turn on the paper motor
 void enable_interrupt(unsigned int active);               // Turn on the face strike interrupt if active
 void disable_interrupt(void);                             // Turn off the face strike interrupt
 void multifunction_init(void);                            // Initialize the multifunction switches
 void multifunction_switch(void);                          // Handle the actions of the DIP Switch signal
 void multifuction_display(void);                          // Display the MFS settings
-void multifunction_wait_open(void);                      // Wait for both multifunction switches to be open
 void output_to_all(char* s);                              // Multipurpose driver
 void char_to_all(char ch);                                // Output a single character
 void digital_test(void);                                  // Execute the digital test

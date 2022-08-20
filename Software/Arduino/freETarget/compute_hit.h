@@ -33,17 +33,17 @@ struct sensor
 
 typedef struct sensor sensor_t;
 
-
+extern unsigned long timer_value[4];     // Array of timer values
 
 /*
  *  Public Funcitons
  */
 void init_sensors(void);                                    // Initialize sensor structure
-unsigned int compute_hit(shot_record* shot, bool test_mode);  // Find the location of the shot
-void send_score(shot_record* h, int shot);                    // Send the shot
-void rotate_hit(unsigned int location, shot_record* h);       // Rotate the shot back into the correct quadrant 
+unsigned int compute_hit(unsigned int sensor_status, this_shot* h, bool test_mode);  // Find the location of the shot
+void send_score(this_shot* h, int shot, int sensor_status); // Send the shot
+void rotate_hit(unsigned int location, this_shot* h);       // Rotate the shot back into the correct quadrant 
 bool find_xy_3D(sensor_t* s, double estimate, double z_offset_clock);  // Estimated position including slant range
 void send_timer(int sensor_status);                         // Show debugging information 
-void send_miss(shot_record* h, int shot);                   // Send a miss message
+void send_miss(this_shot* h, int shot, int sensor_status);  // Send a miss message
 
 #endif

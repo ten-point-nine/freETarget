@@ -24,8 +24,7 @@ bool         esp01_is_present(void);              // TRUE if an ESP-01 was found
 void         esp01_test(void);                    // Diagnostic self test
 void         esp01_status(void);                  // Read the device status
 void         esp01_close(unsigned int channel);   // Close this connection
-void         esp01_status(void);                  // Get the status of the ESP01
-void         esp01_broadcast(void);               // Just blab out a count
+void         exp01_status(void);                  // Get the status of the ESP01
 
 /*
  * Definitions

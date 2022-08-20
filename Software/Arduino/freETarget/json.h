@@ -57,20 +57,21 @@ extern int    json_paper_eco;     // Do not advance witness paper if shot is gre
 extern int    json_target_type;   // Modify the location based on a target type (0 == regular 1 bull target)
 #define FIVE_BULL_AIR_RIFLE_74 1  // Target is a five bull air rifle target 74mm centres
 #define FIVE_BULL_AIR_RIFLE_79 2  // Target is a five bull air rifle target 79mm centres
-extern int    json_tabata_enable; // Enable the Tabata timer
+extern int    json_tabata_enable; // Tabata Enabled
 extern int    json_tabata_on;     // Tabata ON timer
 extern int    json_tabata_rest;   // Tabata OFF timer
-extern int    json_tabata_warn_on;  // Time to turn on the warning
-extern int    json_tabata_warn_off; // Time to go dark until we start
+extern int    json_tabata_cycles; // Number of Tabata cycles
 extern int    json_rapid_enable;  // Rapid Fire enabled
-extern unsigned long   json_rapid_on; // Rapid Fire ON timer
+extern int    json_rapid_on;      // Rapid Fire ON timer
+extern int    json_rapid_rest;    // Rapid Fire OFF timer
 extern int    json_rapid_cycles;  // Number of Rapid Fire cycles
+extern int    json_rapid_type;    // Type of RApid vire event
 extern int    json_vset_PWM;      // Voltage PWM count
 extern double json_vset;          // Desired voltage setpont
 extern int    json_follow_through;// Follow through timer
 extern int    json_keep_alive;    // Keepalive period
+extern int    json_tabata_warn_on;  // Time to turn on the warning
+extern int    json_tabata_warn_off; // Time to go dark until we start
 extern int    json_face_strike;   // Number of cycles to accept a face strike
-extern int    json_rapid_count;   // Number of shots in a rapid fire event (ex 5 or 10)
-extern int    json_wifi_channel;  // Channel assigned to this SSID
 
 #endif _JSON_H_
