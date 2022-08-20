@@ -74,4 +74,6 @@ extern int    json_tabata_warn_on;  // Time to turn on the warning
 extern int    json_tabata_warn_off; // Time to go dark until we start
 extern int    json_face_strike;   // Number of cycles to accept a face strike
 
+extern int    json_wifi_channel;  // Channel assigned to this SSID
+
 #endif _JSON_H_

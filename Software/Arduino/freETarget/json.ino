@@ -53,6 +53,7 @@ int     json_keep_alive;            // Keep alive period
 int     json_tabata_warn_on;        // Tabata warning time light on
 int     json_tabata_warn_off;       // Tabata warning time to shot
 int     json_face_strike;           // Number of cycles to accept a strike
+int     json_wifi_channel;          // Wifi channel
 
 #define JSON_DEBUG false                    // TRUE to echo DEBUG messages
 
@@ -106,6 +107,7 @@ const json_message JSON[] = {
   {"\"TRACE\":",          0,                                 0,                IS_INT16,  &set_trace,                      0,        0 },    // Enter / exit diagnostic trace
   {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_version,                   0,        0 },    // Return the version string
   {"\"V_SET\":",          0,                                 &json_vset,       IS_FLOAT,  &compute_vset_PWM,NONVOL_VSET,             0 },    // Set the voltage reference
+  {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT16,  0,                NONVOL_WIFI_CHANNEL,     1 },    // Set the wifi channel
   {"\"Z_OFFSET\":",       &json_z_offset,                    0,                IS_INT16,  0,                NONVOL_Z_OFFSET,        13 },    // Distance from paper to sensor plane (mm)
 
   {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT16,  0,                NONVOL_NORTH_X,          0 },    //

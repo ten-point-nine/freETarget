@@ -76,7 +76,8 @@ void factory_nonvol
   char         ch;
   unsigned int x;                         // Temporary Value
   double       dx;                        // Temporarty Value
-
+  unsigned int i, j;                      // Iteration Counter
+  
   EEPROM.get(NONVOL_SERIAL_NO, serial_number); // record the staring serial number
   Serial.print(serial_number);
   Serial.print(new_serial_number);
@@ -476,7 +477,14 @@ void update_nonvol
     current_version = 5;
     EEPROM.put(NONVOL_PS_VERSION, current_version);
   }
-  
+
+  if ( current_version == 5 )                     
+  {
+    x = 1;
+    EEPROM.put(NONVOL_WIFI_CHANNEL, x);                     // Default to channel 1
+    current_version = 6;
+    EEPROM.put(NONVOL_PS_VERSION, current_version);
+  }
   if ( current_version != PS_VERSION )
   {
     Serial.print(T("\n\rVerify firmware"));
