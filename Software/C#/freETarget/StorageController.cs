@@ -107,12 +107,12 @@ namespace freETarget {
             if (userOK) {
                 
                 if (objCon != obj) {
-                    DialogResult re =  MessageBox.Show("User database at '" + dbPath + "\\Storage.db' is a different version than this installation requires." + Environment.NewLine
-                        + "Press 'OK' to overwrite user database with the template from this version (empty database)" + Environment.NewLine +
-                        "Press 'Cancel' to exit the application", "Database problem", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+                    DialogResult re =  MessageBox.Show("User database at '" + dbPath + "\\Storage.db' is a different version than this installation requires." + Environment.NewLine + Environment.NewLine
+                        + Environment.NewLine + "Press 'OK' to overwrite user database with the template from this version (empty database)" + Environment.NewLine + Environment.NewLine +
+                        "Press 'Cancel' to exit the application without overwritting", "Database version problem", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
                     if (re != DialogResult.OK) {
                         mainWindow.log("User selected to cancel the database overwrite. Exiting app...");
-                        Application.Exit();
+                        Environment.Exit(0);
                     }
 
                     File.Copy(".\\Storage.db", dbPath + "\\Storage.db", true);
