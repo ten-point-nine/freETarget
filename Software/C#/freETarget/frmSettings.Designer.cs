@@ -81,8 +81,20 @@
             this.lstbActiveEvents = new System.Windows.Forms.ListBox();
             this.lstbAllEvents = new System.Windows.Forms.ListBox();
             this.tabEvents = new System.Windows.Forms.TabPage();
+            this.grpRapidFire = new System.Windows.Forms.GroupBox();
+            this.label40 = new System.Windows.Forms.Label();
+            this.label37 = new System.Windows.Forms.Label();
+            this.label22 = new System.Windows.Forms.Label();
+            this.label19 = new System.Windows.Forms.Label();
+            this.label18 = new System.Windows.Forms.Label();
+            this.txtRFloadTime = new System.Windows.Forms.TextBox();
+            this.txtRFpauseTime = new System.Windows.Forms.TextBox();
+            this.txtRFtimePerShot = new System.Windows.Forms.TextBox();
+            this.txtRFtimePerSerie = new System.Windows.Forms.TextBox();
+            this.txtRFNrShots = new System.Windows.Forms.TextBox();
             this.label36 = new System.Windows.Forms.Label();
             this.grpEvent = new System.Windows.Forms.GroupBox();
+            this.chkRapidFire = new System.Windows.Forms.CheckBox();
             this.btnCancelEventSave = new System.Windows.Forms.Button();
             this.label34 = new System.Windows.Forms.Label();
             this.txtShotsSingles = new System.Windows.Forms.TextBox();
@@ -132,7 +144,6 @@
             this.label9 = new System.Windows.Forms.Label();
             this.cmbOldBack = new System.Windows.Forms.ComboBox();
             this.helpProvider = new System.Windows.Forms.HelpProvider();
-            this.sqLiteCommand1 = new System.Data.SQLite.SQLiteCommand();
             this.groupBox1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPageGeneral.SuspendLayout();
@@ -140,6 +151,7 @@
             this.grpUSB.SuspendLayout();
             this.tabActiveEvents.SuspendLayout();
             this.tabEvents.SuspendLayout();
+            this.grpRapidFire.SuspendLayout();
             this.grpEvent.SuspendLayout();
             this.tabPageTarget.SuspendLayout();
             this.grpBoxShotColors.SuspendLayout();
@@ -706,6 +718,7 @@
             // 
             // tabEvents
             // 
+            this.tabEvents.Controls.Add(this.grpRapidFire);
             this.tabEvents.Controls.Add(this.label36);
             this.tabEvents.Controls.Add(this.grpEvent);
             this.tabEvents.Controls.Add(this.btnAddEvent);
@@ -718,6 +731,127 @@
             this.tabEvents.Text = "Events";
             this.tabEvents.UseVisualStyleBackColor = true;
             // 
+            // grpRapidFire
+            // 
+            this.grpRapidFire.Controls.Add(this.label40);
+            this.grpRapidFire.Controls.Add(this.label37);
+            this.grpRapidFire.Controls.Add(this.label22);
+            this.grpRapidFire.Controls.Add(this.label19);
+            this.grpRapidFire.Controls.Add(this.label18);
+            this.grpRapidFire.Controls.Add(this.txtRFloadTime);
+            this.grpRapidFire.Controls.Add(this.txtRFpauseTime);
+            this.grpRapidFire.Controls.Add(this.txtRFtimePerShot);
+            this.grpRapidFire.Controls.Add(this.txtRFtimePerSerie);
+            this.grpRapidFire.Controls.Add(this.txtRFNrShots);
+            this.grpRapidFire.Location = new System.Drawing.Point(6, 228);
+            this.grpRapidFire.Name = "grpRapidFire";
+            this.grpRapidFire.Size = new System.Drawing.Size(115, 153);
+            this.grpRapidFire.TabIndex = 5;
+            this.grpRapidFire.TabStop = false;
+            this.grpRapidFire.Text = "Rapid Fire";
+            // 
+            // label40
+            // 
+            this.label40.AutoSize = true;
+            this.label40.Location = new System.Drawing.Point(6, 126);
+            this.label40.Name = "label40";
+            this.label40.Size = new System.Drawing.Size(53, 13);
+            this.label40.TabIndex = 9;
+            this.label40.Text = "Load time";
+            // 
+            // label37
+            // 
+            this.label37.AutoSize = true;
+            this.label37.Location = new System.Drawing.Point(6, 100);
+            this.label37.Name = "label37";
+            this.label37.Size = new System.Drawing.Size(59, 13);
+            this.label37.TabIndex = 8;
+            this.label37.Text = "Pause time";
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(6, 74);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(71, 13);
+            this.label22.TabIndex = 7;
+            this.label22.Text = "Time per shot";
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Location = new System.Drawing.Point(6, 48);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(73, 13);
+            this.label19.TabIndex = 6;
+            this.label19.Text = "Time per serie";
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Location = new System.Drawing.Point(6, 22);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(46, 13);
+            this.label18.TabIndex = 5;
+            this.label18.Text = "Nr shots";
+            // 
+            // txtRFloadTime
+            // 
+            this.txtRFloadTime.Enabled = false;
+            this.helpProvider.SetHelpString(this.txtRFloadTime, "LOAD. Time before a serie starts");
+            this.txtRFloadTime.Location = new System.Drawing.Point(79, 123);
+            this.txtRFloadTime.Name = "txtRFloadTime";
+            this.helpProvider.SetShowHelp(this.txtRFloadTime, true);
+            this.txtRFloadTime.Size = new System.Drawing.Size(30, 20);
+            this.txtRFloadTime.TabIndex = 4;
+            this.txtRFloadTime.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
+            // txtRFpauseTime
+            // 
+            this.txtRFpauseTime.Enabled = false;
+            this.helpProvider.SetHelpString(this.txtRFpauseTime, "ATTENTION. Time between shots and before first shot");
+            this.txtRFpauseTime.Location = new System.Drawing.Point(79, 97);
+            this.txtRFpauseTime.Name = "txtRFpauseTime";
+            this.helpProvider.SetShowHelp(this.txtRFpauseTime, true);
+            this.txtRFpauseTime.Size = new System.Drawing.Size(30, 20);
+            this.txtRFpauseTime.TabIndex = 3;
+            this.txtRFpauseTime.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
+            // txtRFtimePerShot
+            // 
+            this.txtRFtimePerShot.Enabled = false;
+            this.helpProvider.SetHelpString(this.txtRFtimePerShot, "Time for an individual shot");
+            this.txtRFtimePerShot.Location = new System.Drawing.Point(79, 71);
+            this.txtRFtimePerShot.Name = "txtRFtimePerShot";
+            this.helpProvider.SetShowHelp(this.txtRFtimePerShot, true);
+            this.txtRFtimePerShot.Size = new System.Drawing.Size(30, 20);
+            this.txtRFtimePerShot.TabIndex = 2;
+            this.txtRFtimePerShot.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtRFtimePerShot.TextChanged += new System.EventHandler(this.txtRFtimePerShot_TextChanged);
+            // 
+            // txtRFtimePerSerie
+            // 
+            this.txtRFtimePerSerie.Enabled = false;
+            this.helpProvider.SetHelpString(this.txtRFtimePerSerie, "Time for the entire serie");
+            this.txtRFtimePerSerie.Location = new System.Drawing.Point(79, 45);
+            this.txtRFtimePerSerie.Name = "txtRFtimePerSerie";
+            this.helpProvider.SetShowHelp(this.txtRFtimePerSerie, true);
+            this.txtRFtimePerSerie.Size = new System.Drawing.Size(30, 20);
+            this.txtRFtimePerSerie.TabIndex = 1;
+            this.txtRFtimePerSerie.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtRFtimePerSerie.TextChanged += new System.EventHandler(this.txtRFtimePerSerie_TextChanged);
+            // 
+            // txtRFNrShots
+            // 
+            this.txtRFNrShots.Enabled = false;
+            this.helpProvider.SetHelpString(this.txtRFNrShots, "Number of shots in a serie (default:5)");
+            this.txtRFNrShots.Location = new System.Drawing.Point(79, 19);
+            this.txtRFNrShots.Name = "txtRFNrShots";
+            this.helpProvider.SetShowHelp(this.txtRFNrShots, true);
+            this.txtRFNrShots.Size = new System.Drawing.Size(30, 20);
+            this.txtRFNrShots.TabIndex = 0;
+            this.txtRFNrShots.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
             // label36
             // 
             this.label36.AutoSize = true;
@@ -729,6 +863,7 @@
             // 
             // grpEvent
             // 
+            this.grpEvent.Controls.Add(this.chkRapidFire);
             this.grpEvent.Controls.Add(this.btnCancelEventSave);
             this.grpEvent.Controls.Add(this.label34);
             this.grpEvent.Controls.Add(this.txtShotsSingles);
@@ -763,6 +898,18 @@
             this.grpEvent.TabStop = false;
             this.grpEvent.Text = "Event";
             // 
+            // chkRapidFire
+            // 
+            this.chkRapidFire.AutoSize = true;
+            this.chkRapidFire.Enabled = false;
+            this.chkRapidFire.Location = new System.Drawing.Point(118, 67);
+            this.chkRapidFire.Name = "chkRapidFire";
+            this.chkRapidFire.Size = new System.Drawing.Size(74, 17);
+            this.chkRapidFire.TabIndex = 6;
+            this.chkRapidFire.Text = "Rapid Fire";
+            this.chkRapidFire.UseVisualStyleBackColor = true;
+            this.chkRapidFire.CheckedChanged += new System.EventHandler(this.chkRapidFire_CheckedChanged);
+            // 
             // btnCancelEventSave
             // 
             this.btnCancelEventSave.Enabled = false;
@@ -793,6 +940,7 @@
             this.helpProvider.SetShowHelp(this.txtShotsSingles, true);
             this.txtShotsSingles.Size = new System.Drawing.Size(52, 20);
             this.txtShotsSingles.TabIndex = 27;
+            this.txtShotsSingles.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // label33
             // 
@@ -813,6 +961,7 @@
             this.helpProvider.SetShowHelp(this.txtSingleShotDuration, true);
             this.txtSingleShotDuration.Size = new System.Drawing.Size(52, 20);
             this.txtSingleShotDuration.TabIndex = 25;
+            this.txtSingleShotDuration.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // label32
             // 
@@ -833,6 +982,7 @@
             this.helpProvider.SetShowHelp(this.txtShotsInSeries, true);
             this.txtShotsInSeries.Size = new System.Drawing.Size(52, 20);
             this.txtShotsInSeries.TabIndex = 23;
+            this.txtShotsInSeries.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // label31
             // 
@@ -853,6 +1003,7 @@
             this.helpProvider.SetShowHelp(this.txtSeriesDuration, true);
             this.txtSeriesDuration.Size = new System.Drawing.Size(52, 20);
             this.txtSeriesDuration.TabIndex = 21;
+            this.txtSeriesDuration.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // label30
             // 
@@ -873,6 +1024,7 @@
             this.helpProvider.SetShowHelp(this.txtShotPerSeries, true);
             this.txtShotPerSeries.Size = new System.Drawing.Size(52, 20);
             this.txtShotPerSeries.TabIndex = 19;
+            this.txtShotPerSeries.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // label29
             // 
@@ -974,7 +1126,7 @@
             this.txtNoOfShots.Name = "txtNoOfShots";
             this.helpProvider.SetShowHelp(this.txtNoOfShots, true);
             this.txtNoOfShots.Size = new System.Drawing.Size(88, 20);
-            this.txtNoOfShots.TabIndex = 6;
+            this.txtNoOfShots.TabIndex = 8;
             // 
             // chkDecimalScoring
             // 
@@ -1044,7 +1196,7 @@
             // 
             // btnAddEvent
             // 
-            this.btnAddEvent.Location = new System.Drawing.Point(4, 352);
+            this.btnAddEvent.Location = new System.Drawing.Point(6, 198);
             this.btnAddEvent.Name = "btnAddEvent";
             this.btnAddEvent.Size = new System.Drawing.Size(111, 23);
             this.btnAddEvent.TabIndex = 2;
@@ -1055,7 +1207,7 @@
             // btnModifyEvent
             // 
             this.btnModifyEvent.Enabled = false;
-            this.btnModifyEvent.Location = new System.Drawing.Point(3, 323);
+            this.btnModifyEvent.Location = new System.Drawing.Point(6, 169);
             this.btnModifyEvent.Name = "btnModifyEvent";
             this.btnModifyEvent.Size = new System.Drawing.Size(111, 23);
             this.btnModifyEvent.TabIndex = 1;
@@ -1068,7 +1220,7 @@
             this.lstbEvents.FormattingEnabled = true;
             this.lstbEvents.Location = new System.Drawing.Point(3, 16);
             this.lstbEvents.Name = "lstbEvents";
-            this.lstbEvents.Size = new System.Drawing.Size(112, 303);
+            this.lstbEvents.Size = new System.Drawing.Size(112, 147);
             this.lstbEvents.TabIndex = 0;
             this.lstbEvents.SelectedIndexChanged += new System.EventHandler(this.lstbEvents_SelectedIndexChanged);
             // 
@@ -1288,10 +1440,6 @@
             this.cmbOldBack.TabIndex = 17;
             this.cmbOldBack.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.cmbColor_DrawItem);
             // 
-            // sqLiteCommand1
-            // 
-            this.sqLiteCommand1.CommandText = null;
-            // 
             // frmSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1323,6 +1471,8 @@
             this.tabActiveEvents.PerformLayout();
             this.tabEvents.ResumeLayout(false);
             this.tabEvents.PerformLayout();
+            this.grpRapidFire.ResumeLayout(false);
+            this.grpRapidFire.PerformLayout();
             this.grpEvent.ResumeLayout(false);
             this.grpEvent.PerformLayout();
             this.tabPageTarget.ResumeLayout(false);
@@ -1438,6 +1588,17 @@
         public System.Windows.Forms.ComboBox cmbCommProtocol;
         private System.Windows.Forms.Label label20;
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Data.SQLite.SQLiteCommand sqLiteCommand1;
+        private System.Windows.Forms.GroupBox grpRapidFire;
+        private System.Windows.Forms.Label label40;
+        private System.Windows.Forms.Label label37;
+        private System.Windows.Forms.Label label22;
+        private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.TextBox txtRFloadTime;
+        private System.Windows.Forms.TextBox txtRFpauseTime;
+        private System.Windows.Forms.TextBox txtRFtimePerShot;
+        private System.Windows.Forms.TextBox txtRFtimePerSerie;
+        private System.Windows.Forms.TextBox txtRFNrShots;
+        private System.Windows.Forms.CheckBox chkRapidFire;
     }
 }

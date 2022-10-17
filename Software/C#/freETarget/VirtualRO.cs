@@ -9,25 +9,32 @@ using System.Threading.Tasks;
 namespace freETarget {
     [Serializable]
     class VirtualRO {
-        public bool firstSeries = false;
-        public bool firstSeriesLoadCommand = false;
-        public bool firstSeriesStartCommand = false;
-        public bool firstSeriesStopCommand = false;
+        private bool firstSeries = false;
+        private bool firstSeriesLoadCommand = false;
+        private bool firstSeriesStartCommand = false;
+        private bool firstSeriesStopCommand = false;
 
-        public bool secondSeries = false;
-        public bool secondSeriesLoadCommand = false;
-        public bool secondSeriesStartCommand = false;
-        public bool secondSeriesStopCommand = false;
+        private bool secondSeries = false;
+        private bool secondSeriesLoadCommand = false;
+        private bool secondSeriesStartCommand = false;
+        private bool secondSeriesStopCommand = false;
 
-        public bool singleShot = false;
-        public bool singleShotLoadCommand = false;
-        public bool singleShotStartCommand = false;
-        public bool singleShotStopCommand = false;
-        public bool finished = false;
+        private bool singleShot = false;
+        private bool singleShotLoadCommand = false;
+        private bool singleShotStartCommand = false;
+        private bool singleShotStopCommand = false;
+        
+        private bool finished = false;
 
-        public int shotsCount = 0;
 
-        public DateTime nextCommand = DateTime.MinValue;
+        private bool RFseriesLoadCommand = false;
+        private bool RFseriesStartCommand = false;
+        private bool RFseriesStopCommand = false;
+
+
+        private int shotsCount = 0;
+
+        private DateTime nextCommand = DateTime.MinValue;
 
         private readonly SpeechSynthesizer synth;
 
@@ -36,19 +43,57 @@ namespace freETarget {
         private const int betweenSeries = 15;
         private const int betweenShots = 7;
 
-        Event ev;
+        private const int RFcooldown = 1; //seconds
 
-        public VirtualRO(Event ev) {
+        private Event ev;
+        private Session session;
+
+        public VirtualRO(Session session) {
             synth = new SpeechSynthesizer();
             synth.SetOutputToDefaultAudioDevice();
 
-            this.ev = ev;
+            this.session = session;
+            this.ev = session.eventType;
+        }
+
+        public void reset() {
+            //put all flags to false
+
+            nextCommand = DateTime.MinValue;
+
+            firstSeries = false;
+            firstSeriesLoadCommand = false;
+            firstSeriesStartCommand = false;
+            firstSeriesStopCommand = false;
+
+            secondSeries = false;
+            secondSeriesLoadCommand = false;
+            secondSeriesStartCommand = false;
+            secondSeriesStopCommand = false;
+
+            singleShot = false;
+            singleShotLoadCommand = false;
+            singleShotStartCommand = false;
+            singleShotStopCommand = false;
+
+            finished = false;
+
+
+            RFseriesLoadCommand = false;
+            RFseriesStartCommand = false;
+            RFseriesStopCommand = false;
+
+
+            shotsCount = 0;
         }
 
         public TimeSpan getTime(out string command) {
             command = "";
             TimeSpan ts = nextCommand - DateTime.Now;
-            if (ts <= TimeSpan.Zero && firstSeries == false) { //first call
+
+            //first series
+
+            if (ts <= TimeSpan.Zero && firstSeries == false) { 
                 nextCommand = DateTime.Now + TimeSpan.FromSeconds(readyDelay);
                 firstSeries = true;
                 command = "Ready";
@@ -69,8 +114,11 @@ namespace freETarget {
                 speakCommand(speach);
                 nextCommand = DateTime.Now + TimeSpan.FromSeconds(betweenSeries);
                 firstSeriesStopCommand = true;
-                shotsCount += 5;
+                shotsCount += ev.Final_NumberOfShotPerSeries;
                 command = "Stop";
+
+            //second series onward
+
             } else if (ts <= TimeSpan.Zero && firstSeriesStopCommand == true && secondSeries == false) {
                 nextCommand = DateTime.Now + TimeSpan.FromSeconds(readyDelay);
                 secondSeries = true;
@@ -91,9 +139,19 @@ namespace freETarget {
                 string speach = "STOP!";
                 speakCommand(speach);
                 nextCommand = DateTime.Now + TimeSpan.FromSeconds(betweenSeries);
-                secondSeriesStopCommand = true;
                 command = "Stop";
-                shotsCount += 5;
+                shotsCount += ev.Final_NumberOfShotPerSeries;
+                if (shotsCount < ev.Final_NumberOfShotsBeforeSingleShotSeries) {
+                    secondSeries = false;
+                    secondSeriesLoadCommand = false;
+                    secondSeriesStartCommand = false;
+                    secondSeriesStopCommand = false;
+                } else {
+                    secondSeriesStopCommand = true;
+                }
+
+             //single shots
+
             } else if (ts <= TimeSpan.Zero && secondSeriesStopCommand == true && singleShot == false) {
                 nextCommand = DateTime.Now + TimeSpan.FromSeconds(readyDelay);
                 singleShot = true;
@@ -138,6 +196,48 @@ namespace freETarget {
                 speakCommand(speach);
             } else if (finished == true) {
                 command = "End";
+            }
+
+            return ts;
+        }
+
+        public TimeSpan getRFTime(out string command) {
+            command = "";
+            TimeSpan ts = nextCommand - DateTime.Now;
+
+            if (session.RFseriesActive) {
+                if (ts <= TimeSpan.Zero && RFseriesLoadCommand == false) {
+                    string speach = "LOAD!";
+                    speakCommand(speach);
+                    nextCommand = DateTime.Now + TimeSpan.FromSeconds(ev.RF_LoadTime);
+                    RFseriesLoadCommand = true;
+                    command = "Load";
+                } else if (ts <= TimeSpan.Zero && RFseriesLoadCommand == true && RFseriesStartCommand == false) {
+                    string speach = "ATTENTION!";
+                    speakCommand(speach);
+                    if (this.session.eventType.RF_TimePerShot > 0) {
+                        //duel
+                        nextCommand = DateTime.Now + TimeSpan.FromSeconds((ev.RF_TimeBetweenShots + ev.RF_TimePerShot) * ev.RF_NumberOfShots);
+                    } else {
+                        //rapid fire
+                        nextCommand = DateTime.Now + TimeSpan.FromSeconds(ev.RF_TimeBetweenShots + ev.RF_TimePerSerie);
+                    }
+                    RFseriesStartCommand = true;
+                    command = "Attent";
+                } else if (ts <= TimeSpan.Zero && RFseriesStartCommand == true && RFseriesStopCommand == false) {
+                    nextCommand = DateTime.Now + TimeSpan.FromSeconds(RFcooldown);
+                    RFseriesStopCommand = true;
+                    command = "";
+                } else if (ts <= TimeSpan.Zero && RFseriesStopCommand == true && finished == false) {
+                    string speach = "UNLOAD!";
+                    speakCommand(speach);
+                    finished = true;
+                    command = "Unload";
+                } else if (finished == true) {
+                    command = "End";
+                }          
+            } else {
+                return TimeSpan.Zero;
             }
 
             return ts;

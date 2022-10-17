@@ -107,8 +107,13 @@ namespace freETarget {
             if (userOK) {
                 
                 if (objCon != obj) {
-                    MessageBox.Show("User database at '" + dbPath + "\\Storage.db' is a different version than this installation requires." + Environment.NewLine
-                        + "Overwriting user database with the template from this version", "Database problem", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    DialogResult re =  MessageBox.Show("User database at '" + dbPath + "\\Storage.db' is a different version than this installation requires." + Environment.NewLine
+                        + "Press 'OK' to overwrite user database with the template from this version (empty database)" + Environment.NewLine +
+                        "Press 'Cancel' to exit the application", "Database problem", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+                    if (re != DialogResult.OK) {
+                        mainWindow.log("User selected to cancel the database overwrite. Exiting app...");
+                        Application.Exit();
+                    }
 
                     File.Copy(".\\Storage.db", dbPath + "\\Storage.db", true);
                     mainWindow.log("Database version mismatch.  '" + dbPath + "\\Storage.db' overwritten with local template");
@@ -191,12 +196,19 @@ namespace freETarget {
                 int shotsInSingle = rdr.GetInt32(11);
                 int singleSeconds = rdr.GetInt32(12);
                 string colorText = rdr.GetString(13);
+                int rapidFire = rdr.GetInt32(14);
+                int rf_numberOfShots = rdr.GetInt32(15);
+                int rf_timePerSerie = rdr.GetInt32(16);
+                int rf_timePerShot = rdr.GetInt32(17);
+                int rf_pauseTime = rdr.GetInt32(18);
+                int rf_loadTime = rdr.GetInt32(19);
 
                 Type target_type= Type.GetType(target);
                 targets.aTarget target_class = (targets.aTarget)Activator.CreateInstance(target_type,new object[] { caliber });
 
                 System.Drawing.Color color = System.Drawing.Color.FromName(colorText);
-                Event e = new Event(id, name, convertIntToBool(decimalScoring), (Event.EventType)type, numberOfShots, target_class, minutes, caliber, final_seriesShots, seriesSeconds, shotsInSeries, shotsInSingle, singleSeconds, color);
+                Event e = new Event(id, name, convertIntToBool(decimalScoring), (Event.EventType)type, numberOfShots, target_class, minutes, caliber, final_seriesShots, seriesSeconds, shotsInSeries, shotsInSingle, singleSeconds, color,
+                    convertIntToBool(rapidFire), rf_numberOfShots, rf_timePerSerie, rf_timePerShot, rf_pauseTime, rf_loadTime);
                 ret.Add(e);
             }
             rdr.Close();
@@ -472,9 +484,11 @@ namespace freETarget {
             SQLiteCommand cmd = new SQLiteCommand(con);
             cmd.CommandText = "INSERT INTO Events(" +
                 "Type, Name, DecimalScoring, Target, NumberOfShots, Minutes, Caliber, Final_NumberOfShotPerSeries, " +
-                "Final_SeriesSeconds, Final_NumberOfShotsBeforeSingleShotSeries, Final_NumberOfShotsInSingleShotSeries, Final_SingleShotSeconds, Color " +
+                "Final_SeriesSeconds, Final_NumberOfShotsBeforeSingleShotSeries, Final_NumberOfShotsInSingleShotSeries, Final_SingleShotSeconds, Color, " +
+                "RapidFire, RF_NumberOfShots, RF_TimePerSerie, RF_TimePerShot, RF_PauseTime, RF_LoadTime " +
                 ") VALUES(@Type, @Name, @DecimalScoring, @Target, @NumberOfShots, @Minutes, @Caliber, @Final_NumberOfShotPerSeries," +
-                "@Final_SeriesSeconds, @Final_NumberOfShotsBeforeSingleShotSeries, @Final_NumberOfShotsInSingleShotSeries, @Final_SingleShotSeconds, @Color)";
+                "@Final_SeriesSeconds, @Final_NumberOfShotsBeforeSingleShotSeries, @Final_NumberOfShotsInSingleShotSeries, @Final_SingleShotSeconds, @Color, " +
+                "@rapidFire, @rf_numberOfShots, @rf_timePerSerie, @rf_timePerShot, @rf_pauseTime, @rf_loadTime)";
 
             cmd.Parameters.AddWithValue("@Type", ev.Type);
             cmd.Parameters.AddWithValue("@Name", ev.Name);
@@ -489,6 +503,13 @@ namespace freETarget {
             cmd.Parameters.AddWithValue("@Final_NumberOfShotsInSingleShotSeries", ev.Final_NumberOfShotsInSingleShotSeries);
             cmd.Parameters.AddWithValue("@Final_SingleShotSeconds", ev.Final_SingleShotSeconds);
             cmd.Parameters.AddWithValue("@Color", ev.TabColor.Name);
+            cmd.Parameters.AddWithValue("@rapidFire", convertBoolToInt(ev.RapidFire));
+            cmd.Parameters.AddWithValue("@rf_numberOfShots", ev.RF_NumberOfShots);
+            cmd.Parameters.AddWithValue("@rf_timePerSerie", ev.RF_TimePerSerie);
+            cmd.Parameters.AddWithValue("@rf_timePerShot", ev.RF_TimePerShot);
+            cmd.Parameters.AddWithValue("@rf_pauseTime", ev.RF_TimeBetweenShots);
+            cmd.Parameters.AddWithValue("@rf_loadTime", ev.RF_LoadTime);
+
 
 
             try {
@@ -514,7 +535,8 @@ namespace freETarget {
                 "Type = @Type, Name = @Name, DecimalScoring = @DecimalScoring, Target = @Target, NumberOfShots = @NumberOfShots, Minutes = @Minutes, Caliber = @Caliber, " +
                 "Final_NumberOfShotPerSeries = @Final_NumberOfShotPerSeries, Final_SeriesSeconds = @Final_SeriesSeconds, " +
                 "Final_NumberOfShotsBeforeSingleShotSeries = @Final_NumberOfShotsBeforeSingleShotSeries, " +
-                "Final_NumberOfShotsInSingleShotSeries = @Final_NumberOfShotsInSingleShotSeries, Final_SingleShotSeconds = @Final_SingleShotSeconds, Color = @Color " +
+                "Final_NumberOfShotsInSingleShotSeries = @Final_NumberOfShotsInSingleShotSeries, Final_SingleShotSeconds = @Final_SingleShotSeconds, Color = @Color, " +
+                "RapidFire = @rapidFire, RF_NumberOfShots = @rf_numberOfShots, RF_TimePerSerie = @rf_timePerSerie, RF_TimePerShot = @rf_timePerShot, RF_PauseTime = @rf_pauseTime, RF_LoadTime = @rf_loadTime " +
                 "WHERE id = @id ";
 
             cmd.Parameters.AddWithValue("@Type", ev.Type);
@@ -530,6 +552,12 @@ namespace freETarget {
             cmd.Parameters.AddWithValue("@Final_NumberOfShotsInSingleShotSeries", ev.Final_NumberOfShotsInSingleShotSeries);
             cmd.Parameters.AddWithValue("@Final_SingleShotSeconds", ev.Final_SingleShotSeconds);
             cmd.Parameters.AddWithValue("@Color", ev.TabColor.Name);
+            cmd.Parameters.AddWithValue("@rapidFire", convertBoolToInt(ev.RapidFire));
+            cmd.Parameters.AddWithValue("@rf_numberOfShots", ev.RF_NumberOfShots);
+            cmd.Parameters.AddWithValue("@rf_timePerSerie", ev.RF_TimePerSerie);
+            cmd.Parameters.AddWithValue("@rf_timePerShot", ev.RF_TimePerShot);
+            cmd.Parameters.AddWithValue("@rf_pauseTime", ev.RF_TimeBetweenShots);
+            cmd.Parameters.AddWithValue("@rf_loadTime", ev.RF_LoadTime);
 
             cmd.Parameters.AddWithValue("@id", ev.ID);
 

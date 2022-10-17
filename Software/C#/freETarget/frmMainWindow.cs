@@ -82,6 +82,10 @@ namespace freETarget {
 
         private System.Windows.Forms.Timer reconnectTimer;
 
+        private int RFduelCounter = 0;
+
+        private const int RFcooldown = 3; //seconds
+
         public frmMainWindow() {
             InitializeComponent();
             initLog();
@@ -324,7 +328,7 @@ namespace freETarget {
 
                                 displayMessage(message, false);
                                 displayShotData(shot);
-                                VirtualRO vro = new VirtualRO(currentSession.eventType);
+                                VirtualRO vro = new VirtualRO(currentSession);
                                 vro.speakShot(shot);
                             }
                         } else {
@@ -332,7 +336,7 @@ namespace freETarget {
 
                             displayMessage(message + " ---- " + "Computed shot X:" + shot.getX() + " Y:" + shot.getY() + " R:" + shot.radius + " A:" + shot.angle, false);
                             displayShotData(shot);
-                            VirtualRO vro = new VirtualRO(currentSession.eventType);
+                            VirtualRO vro = new VirtualRO(currentSession);
                             vro.speakShot(shot);
 
                             var d = new SafeCallDelegate3(targetRefresh); //draw shot
@@ -838,7 +842,10 @@ namespace freETarget {
         private void frmMainWindow_Shown(object sender, EventArgs e) {
             displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
 
-
+            if (splitContainer.Panel1.Height > splitContainer.Panel1.Width) {
+                splitContainer.Panel1.Width = splitContainer.Panel1.Height;
+            }
+            splitContainer.SplitterDistance = splitContainer.Panel1.Width - 35;
 
             trkZoom.Focus();
         }
@@ -871,6 +878,14 @@ namespace freETarget {
             targetRefresh();
             imgTarget.BackColor = Settings.Default.targetColor;
             drawSessionName();
+
+            if (ev.RapidFire) {
+                btnStart.Visible = true;
+                btnStart.Enabled = true;
+            } else {
+                btnStart.Visible = false;
+                btnStart.Enabled = false;
+            }
         }
 
         private void setTrkZoom(targets.aTarget target) {
@@ -896,10 +911,16 @@ namespace freETarget {
             if (height < width) {
                 imgTarget.Height = height;
                 imgTarget.Width = height;
+
+                btnStart.Width = height - 4;
+                btnStart.Top = splitContainer.Panel1.Height - btnStart.Height - 2;
+
             } else {
                 imgTarget.Height = width;
                 imgTarget.Width = width;
 
+                btnStart.Width = width - 4;
+                btnStart.Top = splitContainer.Panel1.Height - btnStart.Height - 2;
             }
 
             drawTarget();
@@ -916,7 +937,10 @@ namespace freETarget {
 
         private bool clearShots() {
             if (currentSession.Shots.Count > 0) {
-                DialogResult result = MessageBox.Show("Current session is unsaved. Do you want to save it?", "Save session", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+                DialogResult result = MessageBox.Show("Current session is unsaved. Do you want to save it?"
+                    + Environment.NewLine + Environment.NewLine
+                    + "'Yes' and 'No' will close the session."
+                    + Environment.NewLine + "'Cancel' will keep the current session alive.", "Save session", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
 
                 if (result == DialogResult.Yes) {
                     storage.storeSession(currentSession, true);
@@ -953,7 +977,6 @@ namespace freETarget {
         }
 
         private void timer_Tick(object sender, EventArgs e) {
-            DateTime now = DateTime.Now;
             Color c = Color.White;
 
             txtTime.Text = DateTime.Now.ToString("yyyy-MM-dd  HH:mm:ss");
@@ -1203,19 +1226,25 @@ namespace freETarget {
                 cellShot = shot.index % 10;
             } else {
                 //final - 2 rows of 5 shots and than rows of 2 shots
-                if (shot.index < ev.Final_NumberOfShotPerSeries) {
-                    //first row
-                    rowShot = 0;
-                    cellShot = shot.index % ev.Final_NumberOfShotPerSeries;
-                } else if (shot.index >= ev.Final_NumberOfShotPerSeries && shot.index < ev.Final_NumberOfShotsBeforeSingleShotSeries) {
-                    //second row
-                    rowShot = 1;
+                if (shot.index < ev.Final_NumberOfShotsBeforeSingleShotSeries) {
+                    //series rows
+                    rowShot = shot.index / ev.Final_NumberOfShotPerSeries;
                     cellShot = shot.index % ev.Final_NumberOfShotPerSeries;
                 } else {
-                    //row of 2
+                    //individual shot(s) series
                     rowShot = (shot.index - (ev.Final_NumberOfShotPerSeries + 1)) / ev.Final_NumberOfShotsInSingleShotSeries;
                     cellShot = shot.index % ev.Final_NumberOfShotsInSingleShotSeries;
                 }
+            }
+
+            if (rowShot < 0) {
+                displayMessage("Error computing grid row " + rowShot,true);
+                return;
+            }
+
+            if(cellShot<0 || cellShot > 9) {
+                displayMessage("Error computing grid cell " + cellShot, true);
+                return;
             }
 
             DataGridViewRow row;
@@ -1330,6 +1359,7 @@ namespace freETarget {
             try {
                 commModule.close();
                 this.reconnectTimer.Enabled = false;
+                this.rapidFireTimer.Stop();
             } catch (IOException) {
                 MessageBox.Show("Error closing the serial port. Please try again.", "Error disconnecting", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -1427,7 +1457,7 @@ namespace freETarget {
         }
 
         private void imgLogo_Click(object sender, EventArgs e) {
-            MessageBox.Show("Copyright (c) 2020-2021 Azmodan -> youtube.com/ArmeVechi");
+            MessageBox.Show("Copyright (c) 2020-2022 Azmodan -> youtube.com/ArmeVechi");
         }
 
         private void btnArduino_Click(object sender, EventArgs e) {
@@ -1603,6 +1633,109 @@ namespace freETarget {
                 //do nothing
             }
             return s1;
+        }
+
+        private void btnStart_Click(object sender, EventArgs e) {
+            //disble button
+            btnStart.Enabled = false;
+            this.currentSession.resetVRO();
+
+            //load command
+            rapidFireTimer.Interval = this.currentSession.eventType.RF_LoadTime * 1000;
+            this.RFduelCounter = -1;
+            rapidFireTimer.Start();
+            Console.WriteLine("LOAD");
+            currentSession.RFseriesActive = true;
+        }
+
+        private void rapidFireTimer_Tick(object sender, EventArgs e) {
+
+            if(RFduelCounter == -1) {
+                //first tick - load time over
+                this.RFduelCounter=0;
+
+                //send first commands to target
+                if (this.currentSession.eventType.RF_TimePerShot > 0) {
+                    //duel
+                    Console.WriteLine("LOAD");
+                    StringBuilder sb = new StringBuilder("{");
+                    sb.Append("\"RAPID_COUNT\": 1 , ");
+                    sb.Append("\"RAPID_WAIT\":" + this.currentSession.eventType.RF_TimeBetweenShots + ", ");
+                    sb.Append("\"RAPID_TIME\":" + this.currentSession.eventType.RF_TimePerShot + ", ");
+                    sb.Append("\"RAPID_ENABLE\": 1");
+                    sb.Append(" }");
+                    Console.WriteLine(sb.ToString());
+                    commModule.sendData(sb.ToString());
+                    log(sb.ToString());
+                    this.RFduelCounter++;
+                    rapidFireTimer.Interval = (this.currentSession.eventType.RF_TimeBetweenShots + this.currentSession.eventType.RF_TimePerShot) * 1000;
+                } else if (this.currentSession.eventType.RF_TimePerSerie > 0) {
+                    //normal rapid fire
+                    Console.WriteLine("ATTENTION");
+                    StringBuilder sb = new StringBuilder("{");
+                    sb.Append("\"RAPID_COUNT\":" + this.currentSession.eventType.RF_NumberOfShots + ", ");
+                    sb.Append("\"RAPID_WAIT\":" + this.currentSession.eventType.RF_TimeBetweenShots + ", ");
+                    sb.Append("\"RAPID_TIME\":" + this.currentSession.eventType.RF_TimePerSerie + ", ");
+                    sb.Append("\"RAPID_ENABLE\": 1");
+                    sb.Append(" }");
+                    Console.WriteLine(sb.ToString());
+                    commModule.sendData(sb.ToString());
+                    log(sb.ToString());
+                    rapidFireTimer.Interval = (this.currentSession.eventType.RF_TimeBetweenShots + this.currentSession.eventType.RF_TimePerSerie) * 1000;
+                } else {
+                    Console.WriteLine("rapid fire misconfiguration");
+                    log("rapid fire misconfiguration");
+                    btnStart.Enabled = true;
+                    rapidFireTimer.Stop();
+                    currentSession.RFseriesActive = false;
+                }
+            } else if (RFduelCounter >=0 && RFduelCounter<1000) {
+               //second tick onward
+                if (this.currentSession.eventType.RF_TimePerShot > 0) {
+                    //duel
+                    if (RFduelCounter < this.currentSession.eventType.RF_NumberOfShots) {
+                        StringBuilder sb = new StringBuilder("{");
+                        sb.Append("\"RAPID_COUNT\": 1 , ");
+                        sb.Append("\"RAPID_WAIT\":" + this.currentSession.eventType.RF_TimeBetweenShots + ", ");
+                        sb.Append("\"RAPID_TIME\":" + this.currentSession.eventType.RF_TimePerShot + ", ");
+                        sb.Append("\"RAPID_ENABLE\": 1");
+                        sb.Append(" }");
+                        Console.WriteLine(sb.ToString());
+                        commModule.sendData(sb.ToString());
+                        log(sb.ToString());
+                        this.RFduelCounter++;
+                    } else {
+                        rapidFireTimer.Interval = RFcooldown * 1000;
+                        this.RFduelCounter = 1000;
+                        Console.WriteLine("END");
+                    }
+
+                } else if (this.currentSession.eventType.RF_TimePerSerie > 0) {
+                    //normal rapid fire
+                    rapidFireTimer.Interval = RFcooldown * 1000;
+                    this.RFduelCounter = 1000;
+                    Console.WriteLine("END");
+                } else {
+                    Console.WriteLine("rapid fire misconfiguration");
+                    log("rapid fire misconfiguration");
+                    btnStart.Enabled = true;
+                    rapidFireTimer.Stop();
+                    currentSession.RFseriesActive = false;
+                }
+            } else {
+                //last tick
+                btnStart.Enabled = true;
+                rapidFireTimer.Stop();
+                StringBuilder sb = new StringBuilder("{");
+                sb.Append("\"RAPID_ENABLE\": 0 }");
+                Console.WriteLine(sb.ToString());
+                commModule.sendData(sb.ToString());
+                log(sb.ToString());
+                Console.WriteLine("UNLOAD");
+                currentSession.RFseriesActive = false;
+            }
+
+
         }
     }
 

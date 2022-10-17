@@ -22,6 +22,7 @@ namespace freETarget
         frmMainWindow mainWindow;
 
         private List<Control> eventControls = new List<Control>();
+        private List<Control> eventRFControls = new List<Control>();
 
         public frmSettings(frmMainWindow mainWin)
         {
@@ -43,6 +44,14 @@ namespace freETarget
             eventControls.Add(txtShotsSingles);
             eventControls.Add(btnSaveEvent);
             eventControls.Add(btnCancelEventSave);
+            eventControls.Add(chkRapidFire);
+
+            eventRFControls.Add(txtRFNrShots);
+            eventRFControls.Add(txtRFtimePerSerie);
+            eventRFControls.Add(txtRFtimePerShot);
+            eventRFControls.Add(txtRFpauseTime);
+            eventRFControls.Add(txtRFloadTime);
+
         }
 
         private void frmSettings_Load(object sender, EventArgs e)
@@ -481,6 +490,12 @@ namespace freETarget
                 txtShotsInSeries.Text = ev.Final_NumberOfShotsBeforeSingleShotSeries.ToString(CultureInfo.InvariantCulture);
                 txtSingleShotDuration.Text = ev.Final_SingleShotSeconds.ToString(CultureInfo.InvariantCulture);
                 txtShotsSingles.Text = ev.Final_NumberOfShotsInSingleShotSeries.ToString(CultureInfo.InvariantCulture);
+                chkRapidFire.Checked = ev.RapidFire;
+                txtRFNrShots.Text = ev.RF_NumberOfShots.ToString(CultureInfo.InvariantCulture);
+                txtRFtimePerSerie.Text = ev.RF_TimePerSerie.ToString(CultureInfo.InvariantCulture);
+                txtRFtimePerShot.Text = ev.RF_TimePerShot.ToString(CultureInfo.InvariantCulture);
+                txtRFpauseTime.Text = ev.RF_TimeBetweenShots.ToString(CultureInfo.InvariantCulture);
+                txtRFloadTime.Text = ev.RF_LoadTime.ToString(CultureInfo.InvariantCulture);
             } else {
                 btnModifyEvent.Enabled = false;
             }
@@ -493,6 +508,7 @@ namespace freETarget
             txtEventName.Clear();
             cmbEventTypes.SelectedItem = null;
             chkDecimalScoring.Checked = false;
+            chkRapidFire.Checked = false;
             txtNoOfShots.Clear();
             cmbTargets.SelectedItem = null;
             txtCaliber.Clear();
@@ -503,6 +519,11 @@ namespace freETarget
             txtShotsInSeries.Clear();
             txtSingleShotDuration.Clear();
             txtShotsSingles.Clear();
+            txtRFNrShots.Clear(); ;
+            txtRFtimePerSerie.Clear();
+            txtRFtimePerShot.Clear();
+            txtRFpauseTime.Clear(); ;
+            txtRFloadTime.Clear();
 
             foreach (Control c in eventControls) {
                 c.Enabled = true;
@@ -516,6 +537,13 @@ namespace freETarget
             foreach(Control  c in eventControls) {
                 c.Enabled = true;
             }
+
+            if (chkRapidFire.Checked) {
+                foreach (Control c in eventRFControls) {
+                    c.Enabled = true;
+                }
+            }
+
             btnAddEvent.Enabled = false;
             btnModifyEvent.Enabled = false;
             lstbEvents.Enabled = false;
@@ -552,6 +580,11 @@ namespace freETarget
                 }
             }
 
+            if(chkRapidFire.Checked == false) {
+                foreach (Control c in eventRFControls) {
+                    c.Text = "-1";
+                }
+            }
 
             string err = "";
 
@@ -618,6 +651,36 @@ namespace freETarget
                 err += " * 'Shots in Single Series' field is not a number." + Environment.NewLine;
             }
 
+            if (txtRFNrShots.Text.Length == 0) {
+                err += " * 'Rapid Fire: Nr Shots' is required." + Environment.NewLine;
+            } else if (!validNumber(txtRFNrShots.Text)) {
+                err += " * 'Rapid Fire: Nr Shots' field is not a number." + Environment.NewLine;
+            }
+
+            if (txtRFtimePerSerie.Text.Length == 0) {
+                err += " * 'Rapid Fire: Time per serie' is required." + Environment.NewLine;
+            } else if (!validNumber(txtRFtimePerSerie.Text)) {
+                err += " * 'Rapid Fire: Time per serie' field is not a number." + Environment.NewLine;
+            }
+
+            if (txtRFtimePerShot.Text.Length == 0) {
+                err += " * 'Rapid Fire: Time per shot' is required." + Environment.NewLine;
+            } else if (!validNumber(txtRFtimePerShot.Text)) {
+                err += " * 'Rapid Fire: Time per shot' field is not a number." + Environment.NewLine;
+            }
+
+            if (txtRFpauseTime.Text.Length == 0) {
+                err += " * 'Rapid Fire: Pause time' is required." + Environment.NewLine;
+            } else if (!validNumber(txtRFpauseTime.Text)) {
+                err += " * 'Rapid Fire: Pause time' field is not a number." + Environment.NewLine;
+            }
+
+            if (txtRFloadTime.Text.Length == 0) {
+                err += " * 'Rapid Fire: Load time' is required." + Environment.NewLine;
+            } else if (!validNumber(txtRFloadTime.Text)) {
+                err += " * 'Rapid Fire: Load time' field is not a number." + Environment.NewLine;
+            }
+
             return err;
         }
 
@@ -646,7 +709,12 @@ namespace freETarget
             int ev_Final_SingleShotSeconds = Int32.Parse(txtSingleShotDuration.Text, CultureInfo.InvariantCulture);
             int ev_Final_NumberOfShotsInSingleShotSeries = Int32.Parse(txtShotsSingles.Text, CultureInfo.InvariantCulture);
 
-
+            bool ev_rapidFire = chkRapidFire.Checked;
+            int ev_RF_numberOfShots = Int32.Parse(txtRFNrShots.Text, CultureInfo.InvariantCulture);
+            int ev_RF_timePerSerie = Int32.Parse(txtRFtimePerSerie.Text, CultureInfo.InvariantCulture);
+            int ev_RF_timePerShot = Int32.Parse(txtRFtimePerShot.Text, CultureInfo.InvariantCulture);
+            int ev_RF_pauseTime = Int32.Parse(txtRFpauseTime.Text, CultureInfo.InvariantCulture);
+            int ev_RF_loadTime = Int32.Parse(txtRFloadTime.Text, CultureInfo.InvariantCulture);
 
             if (lstbEvents.SelectedItem != null) {
                 //modify
@@ -664,6 +732,12 @@ namespace freETarget
                 ev.Final_NumberOfShotsBeforeSingleShotSeries = ev_Final_NumberOfShotsBeforeSingleShotSeries;
                 ev.Final_SingleShotSeconds = ev_Final_SingleShotSeconds;
                 ev.Final_NumberOfShotsInSingleShotSeries = ev_Final_NumberOfShotsInSingleShotSeries;
+                ev.RapidFire = ev_rapidFire;
+                ev.RF_NumberOfShots = ev_RF_numberOfShots;
+                ev.RF_TimePerSerie = ev_RF_timePerSerie;
+                ev.RF_TimePerShot = ev_RF_timePerShot;
+                ev.RF_TimeBetweenShots = ev_RF_pauseTime;
+                ev.RF_LoadTime = ev_RF_loadTime;
 
                 mainWindow.storage.updateEvent(ev);
             } else {
@@ -671,7 +745,8 @@ namespace freETarget
                 Event ev = new Event(-1, ev_Name, ev_DecimalScoring, ev_Type, ev_NumberOfShots, ev_Target, ev_Minutes,
                     ev_ProjectileCaliber, ev_Final_NumberOfShotPerSeries, ev_Final_SeriesSeconds,
                     ev_Final_NumberOfShotsBeforeSingleShotSeries, ev_Final_SingleShotSeconds,
-                    ev_Final_NumberOfShotsInSingleShotSeries, ev_TabColor);
+                    ev_Final_NumberOfShotsInSingleShotSeries, ev_TabColor, ev_rapidFire, ev_RF_numberOfShots, ev_RF_timePerSerie, ev_RF_timePerShot,
+                    ev_RF_pauseTime, ev_RF_loadTime);
 
                 mainWindow.storage.storeEvent(ev);
                 mainWindow.eventManager.setEventsList(mainWindow.storage.loadEvents());
@@ -681,6 +756,10 @@ namespace freETarget
             foreach (Control c in eventControls) {
                 c.Enabled = false;
             }
+            foreach (Control c in eventRFControls) {
+                c.Enabled = false;
+            }
+
             btnAddEvent.Enabled = true;
             btnModifyEvent.Enabled = true;
             lstbEvents.Enabled = true;
@@ -690,6 +769,10 @@ namespace freETarget
             foreach (Control c in eventControls) {
                 c.Enabled = false;
             }
+            foreach (Control c in eventRFControls) {
+                c.Enabled = false;
+            }
+
             btnAddEvent.Enabled = true;
             btnModifyEvent.Enabled = true;
             lstbEvents.Enabled = true;
@@ -733,6 +816,32 @@ namespace freETarget
             }
         }
 
+        private void chkRapidFire_CheckedChanged(object sender, EventArgs e) {
+            if (btnSaveEvent.Enabled == false) {
+                return;
+            }
 
+            if (chkRapidFire.Checked) {
+                foreach (Control c in eventRFControls) {
+                    c.Enabled = true;
+                }
+            } else {
+                foreach (Control c in eventRFControls) {
+                    c.Enabled = false;
+                }
+            }
+        }
+
+        private void txtRFtimePerSerie_TextChanged(object sender, EventArgs e) {
+            if (txtRFtimePerShot.Enabled && txtRFtimePerSerie.Text != "-1") {
+                txtRFtimePerShot.Text = "-1";
+            }
+        }
+
+        private void txtRFtimePerShot_TextChanged(object sender, EventArgs e) {
+            if (txtRFtimePerShot.Enabled && txtRFtimePerShot.Text != "-1") { 
+                txtRFtimePerSerie.Text = "-1";
+            }
+        }
     }
 }

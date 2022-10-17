@@ -175,6 +175,9 @@ namespace freETarget {
         [Browsable(false)]
         public string user { get; set; }
 
+        [Browsable(false)]
+        public bool RFseriesActive { get; set; }
+
 
         [Browsable(false)]
         private targets.aTarget target;
@@ -198,6 +201,7 @@ namespace freETarget {
 
         protected Session() {
             clear();
+            RFseriesActive = false;
         }
 
         public targets.aTarget getTarget() {
@@ -233,13 +237,19 @@ namespace freETarget {
             if (newSession.sessionType.Equals(Event.EventType.Practice)) {
                 newSession.numberOfShots = -1;
                 newSession.minutes = -1;
+                if (newSession.eventType.RapidFire) {
+                    newSession.vRO = new VirtualRO(newSession);
+                }
             } else if (newSession.sessionType.Equals(Event.EventType.Match)) {
                 newSession.numberOfShots = eventType.NumberOfShots;
                 newSession.minutes = eventType.Minutes;
+                if (newSession.eventType.RapidFire) {
+                    newSession.vRO = new VirtualRO(newSession);
+                }
             } else if (newSession.sessionType.Equals(Event.EventType.Final)) {
                 newSession.numberOfShots = eventType.NumberOfShots;
                 newSession.minutes = -1;
-                newSession.vRO = new VirtualRO(eventType);
+                newSession.vRO = new VirtualRO(newSession);
             } else {
                 Console.WriteLine("Could not identify event type " + eventType + " and session type " + newSession.sessionType);
                 return null;
@@ -307,22 +317,32 @@ namespace freETarget {
             DateTime now = DateTime.Now;
             TimeSpan ts;
             string command = "";
-            if (sessionType != Event.EventType.Final) {
-                if (endTime == DateTime.MinValue) {
-                    ts = now - startTime;
-                } else {
-                    ts = endTime - now;
-                    if(ts < TimeSpan.Zero) {
-                        command = "End";
-                    }
-            
-                }
-            } else { //final - do per series timers
+
+            if (eventType.RapidFire) {
                 if (vRO != null) {
-                    ts = vRO.getTime(out command);
+                    ts = vRO.getRFTime(out command);
                 } else {
                     ts = TimeSpan.FromSeconds(-1);
                     Console.WriteLine("VirtualRO not initialized");
+                }
+            } else {
+                if (sessionType != Event.EventType.Final) {
+                    if (endTime == DateTime.MinValue) {
+                        ts = now - startTime;
+                    } else {
+                        ts = endTime - now;
+                        if (ts < TimeSpan.Zero) {
+                            command = "End";
+                        }
+
+                    }
+                } else { //final - do per series timers
+                    if (vRO != null) {
+                        ts = vRO.getTime(out command);
+                    } else {
+                        ts = TimeSpan.FromSeconds(-1);
+                        Console.WriteLine("VirtualRO not initialized");
+                    }
                 }
             }
 
@@ -458,7 +478,11 @@ namespace freETarget {
 
         }
 
-
+        public void resetVRO() {
+            if (this.vRO != null) {
+                vRO.reset();
+            }
+        }
         public override string ToString() {
             return this.eventType.ToString();
         }

@@ -17,6 +17,9 @@ namespace freETarget {
         public frmUpload(frmMainWindow mainWin) {
             InitializeComponent();
             this.mainWindow = mainWin;
+            string com = Properties.Settings.Default.portName;
+            string baud = Properties.Settings.Default.baudRate.ToString();
+            lblPort.Text = "Port: " + com + " @ " + baud;
         }
 
         private void btnClose_Click(object sender, EventArgs e) {

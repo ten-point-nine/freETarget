@@ -30,6 +30,7 @@ namespace freETarget {
             this.btnSelectFile = new System.Windows.Forms.Button();
             this.btnUpload = new System.Windows.Forms.Button();
             this.btnClose = new System.Windows.Forms.Button();
+            this.lblPort = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // txtUploadConsole
@@ -90,11 +91,22 @@ namespace freETarget {
             this.btnClose.UseVisualStyleBackColor = true;
             this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
             // 
+            // lblPort
+            // 
+            this.lblPort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblPort.Location = new System.Drawing.Point(460, 12);
+            this.lblPort.Name = "lblPort";
+            this.lblPort.Size = new System.Drawing.Size(196, 16);
+            this.lblPort.TabIndex = 5;
+            this.lblPort.Text = "Port";
+            this.lblPort.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
             // frmUpload
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(752, 366);
+            this.Controls.Add(this.lblPort);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.btnUpload);
             this.Controls.Add(this.btnSelectFile);
@@ -118,5 +130,6 @@ namespace freETarget {
         private System.Windows.Forms.Button btnSelectFile;
         private System.Windows.Forms.Button btnUpload;
         private System.Windows.Forms.Button btnClose;
+        private System.Windows.Forms.Label lblPort;
     }
 }
