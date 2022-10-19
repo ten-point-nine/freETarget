@@ -37,15 +37,11 @@ int     json_multifunction;         // Multifunction switch operation
 int     json_z_offset;              // Distance between paper and sensor plane in 0.1mm
 int     json_paper_eco;             // Do not advance paper if outside of the black
 int     json_target_type;           // Modify target type (0 == single bull)
-int     json_tabata_enable;         // Tabata ON enabled
+int     json_tabata_auto;           // Enable tabita on first shot
+int     json_tabata_enable;         // Tabata feature enabled
 int     json_tabata_on;             // Tabata ON timer
 int     json_tabata_rest;           // Tabata resting timer
-int     json_tabata_cycles;         // Number of Tabata cycles
-int     json_rapid_enable;          // Rapid Fire enabled
-int     json_rapid_on;              // Rapid Fire ON timer
-int     json_rapid_rest;            // Rapid Fire resting timer
-int     json_rapid_cycles;          // Number of Rapid Fire cycles
-int     json_rapid_type;            // Type of rapid fire event
+unsigned long json_rapid_on;        // Rapid Fire ON timer
 int     json_vset_PWM;              // Starting PWM value
 double  json_vset;                  // Desired VREF setting
 int     json_follow_through;        // Follow through delay
@@ -54,16 +50,20 @@ int     json_tabata_warn_on;        // Tabata warning time light on
 int     json_tabata_warn_off;       // Tabata warning time to shot
 int     json_face_strike;           // Number of cycles to accept a strike
 int     json_wifi_channel;          // Wifi channel
+int     json_rapid_auto;            // Enable rapid fire on first shot
+int     json_rapid_count;           // Number of shots expected in string
+int     json_rapid_enable;          // Set to TRUE if the rapid fire event is enabled
+int     json_rapid_time;            // When will the rapid fire event end?
+int     json_rapid_wait;            // Delay applied to rapid start
 
-#define JSON_DEBUG false                    // TRUE to echo DEBUG messages
+#define JSON_DEBUG false            // TRUE to echo DEBUG messages
 
-       void show_echo(int v);               // Display the current settings
-static void show_test(int v);               // Execute the self test once
-static void show_test0(int v);              // Help Menu
+       void show_echo(int v);       // Display the current settings
+static void show_test(int v);       // Execute the self test once
+static void show_test0(int v);      // Help Menu
 static void show_names(int v);
 static void nop(void);
-static void set_trace(int v);               // Set the trace on and off
-
+static void set_trace(int v);       // Set the trace on and off
 
   
 const json_message JSON[] = {
@@ -85,23 +85,23 @@ const json_message JSON[] = {
   {"\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT16,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
   {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT16,  0,                NONVOL_PAPER_TIME,      50 },    // Set the paper advance time
   {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT16,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
-  {"\"RAPID_CYCLES\":",   &json_rapid_cycles,                0,                IS_INT16,  0,                NONVOL_RAPID_CYCLES,     0 },    // Number of cycles to use for the Rapid Fire timer
-  {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT16,  0,                                  0,     0 },    // Rapid Fire Enabled
-  {"\"RAPID_ON\":",       &json_rapid_on,                    0,                IS_INT16,  0,                NONVOL_RAPID_ON,         0 },    // Time that the solenoif is on for a Rapid Fire timer (1/10 seconds)
-  {"\"RAPID_REST\":",     &json_rapid_rest,                  0,                IS_INT16,  0,                NONVOL_RAPID_REST,       0 },    // Time that the solenoid is off for a Rapid Fire timer
-  {"\"RAPID_TYPE\":",     &json_rapid_type,                  0,                IS_INT16,  0,                NONVOL_RAPID_TYPE,       0 },    // Rapid fire event type
+  {"\"RAPID_AUTO\":",     &json_rapid_auto,                  0,                IS_INT16,  &rapid_auto,      0,                       0 },    // Automatically start Rapid Cycle on first shot
+  {"\"RAPID_COUNT\":",    &json_rapid_count,                 0,                IS_INT16,  0,                0,                       0 },    // Number of shots expected in series
+  {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT16,  &rapid_enable,    0,                       0 },    // Enable the rapid fire fieature
+  {"\"RAPID_TIME\":",     &json_rapid_time,                  0,                IS_INT16,  0,                0,                       0 },    // Set the duration of the rapid fire event and start
+  {"\"RAPID_DELAY\":",    &json_rapid_wait,                  0,                IS_INT16,  0,                0,                       0 },    // Delay applied between enable and ready
   {"\"RESET\":",          0,                                 0,                IS_INT16,  &setup,           0,                       0 },    // Reinit the board
   {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT16,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
   {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  &gen_position,    NONVOL_SENSOR_DIA,     230 },    // Generate the sensor postion array
   {"\"SN\":",             &json_serial_number,               0,                IS_FIXED,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
   {"\"STEP_COUNT\":",     &json_step_count,                  0,                IS_INT16,  0,                NONVOL_STEP_COUNT,       0 },    // Set the duration of the stepper motor ON time
   {"\"STEP_TIME\":",      &json_step_time,                   0,                IS_INT16,  0,                NONVOL_STEP_TIME,        0 },    // Set the number of times stepper motor is stepped
-  {"\"TABATA_CYCLES\":",  &json_tabata_cycles,               0,                IS_INT16,  0,                NONVOL_TABATA_CYCLES,    0 },    // Number of cycles to use for the Tabata timer
-  {"\"TABATA_ENABLE\":",  &json_tabata_enable,               0,                IS_INT16,  0,                                   0,    0 },    // Tabata Cycle Enabled
-  {"\"TABATA_ON\":",      &json_tabata_on,                   0,                IS_INT16,  0,                NONVOL_TABATA_ON,        0 },    // Time that the LEDs are ON for a Tabata timer (1/10 seconds)
-  {"\"TABATA_REST\":",    &json_tabata_rest,                 0,                IS_INT16,  0,                NONVOL_TABATA_REST,      0 },    // Time that the LEDs are OFF for a Tabata timer
-  {"\"TABATA_WARN_OFF\":",&json_tabata_warn_off,             0,                IS_INT16,  0,                NONVOL_TABATA_WARN_OFF,200 },    // Time that the LEDs are ON during a warning cycle
-  {"\"TABATA_WARN_ON\":", &json_tabata_warn_on,              0,                IS_INT16,  0,                NONVOL_TABATA_WARN_ON, 200 },    // Time that the LEDs are OFF during a warning cycle
+  {"\"TABATA_AUTO\":",    &json_tabata_auto,                 0,                IS_INT16,  0,                0,                       0 },    // Start tabata when first shot arrives
+  {"\"TABATA_ENABLE\":",  &json_tabata_enable,               0,                IS_INT16,  0,                0,                       0 },    // Enable the tabata feature
+  {"\"TABATA_ON\":",      &json_tabata_on,                   0,                IS_INT16,  0,                0,                       0 },    // Time that the LEDs are ON for a Tabata timer (1/10 seconds)
+  {"\"TABATA_REST\":",    &json_tabata_rest,                 0,                IS_INT16,  0,                0,                       0 },    // Time that the LEDs are OFF for a Tabata timer
+  {"\"TABATA_WARN_OFF\":",&json_tabata_warn_off,             0,                IS_INT16,  0,                0,                       0 },    // Time that the LEDs are ON during a warning cycle
+  {"\"TABATA_WARN_ON\":", &json_tabata_warn_on,              0,                IS_INT16,  0,                0,                     200 },    // Time that the LEDs are OFF during a warning cycle
   {"\"TARGET_TYPE\":",    &json_target_type,                 0,                IS_INT16,  0,                NONVOL_TARGET_TYPE,      0 },    // Marify shot location (0 == Single Bull)
   {"\"TEST\":",           0,                                 0,                IS_INT16,  &show_test,       NONVOL_TEST_MODE,        0 },    // Execute a self test
   {"\"TRACE\":",          0,                                 0,                IS_INT16,  &set_trace,                      0,        0 },    // Enter / exit diagnostic trace
@@ -461,7 +461,7 @@ void show_echo(int v)
   
   multifunction_display();
   
-  sprintf(s, "\"IS_TRACE\": %d, \n\r", is_trace);                                         // TRUE to if trace is enabled
+  sprintf(s, "\"TRACE\": %d, \n\r", is_trace);                                             // TRUE to if trace is enabled
   output_to_all(s);
 
   sprintf(s, "\"RUNNING_MINUTES\": %ld, \n\r", micros()/1000000/60);                      // On Time
@@ -593,24 +593,23 @@ static void show_test(int test_number)
    )
  {
    char s[32]; 
-   
-   sprintf(s, "\r\nTrace:");
-   
-   if ( trace == 0 )
+
+   switch (trace)
    {
-      is_trace = 0;
-      strcat(s, "OFF\r\n");
+    default: 
+      trace = DLT_NONE;
+    case DLT_NONE:        sprintf(s, "\r\nDLT NONE\r\n");       break;
+    case DLT_CRITICAL:    sprintf(s, "\r\nDLT CRITICAL\r\n");   break;
+    case DLT_APPLICATION: sprintf(s, "\r\nDLT APPLICATON\r\n"); break;
+    case DLT_DIAG:        sprintf(s, "\r\nDLT DIAG\r\n");       break;
+    case DLT_INFO:        sprintf(s, "\r\nDLT INFO\r\n");       break;
    }
-   else
-   {
-      is_trace = 1;
-      strcat(s,"ON\r\n");
-   }
-  
+   
    output_to_all(s);
    
-  /*
-   * The DIP switch has been remotely set
-   */
-    return;   
+/*
+ * The DIP switch has been remotely set
+ */
+   is_trace = trace;
+   return;   
  }

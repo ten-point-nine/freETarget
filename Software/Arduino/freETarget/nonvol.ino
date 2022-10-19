@@ -23,7 +23,7 @@ void check_nonvol(void)
 {
   unsigned int nonvol_init;
   
-  if ( is_trace )
+  if ( DLT(DLT_DIAG) )
   {
     Serial.print(T("\r\nChecking NONVOL"));
   }
@@ -294,7 +294,7 @@ void read_nonvol(void)
   unsigned int  x;              // 16 bit number
   double       dx;              // Floating point number
   
-  if ( is_trace )
+  if ( DLT(DLT_DIAG) )
   {
     Serial.print(T("\r\nReading NONVOL"));
   }
@@ -480,6 +480,8 @@ void update_nonvol
 
   if ( current_version == 5 )                     
   {
+    x = 0;                                                 // 0 shots in a rapid cycle
+    EEPROM.put(NONVOL_RAPID_COUNT, x);
     x = 1;
     EEPROM.put(NONVOL_WIFI_CHANNEL, x);                     // Default to channel 1
     current_version = 6;

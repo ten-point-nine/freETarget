@@ -58,7 +58,8 @@ const GPIO init_table[] = {
   {EOF, EOF, EOF, EOF} };
 
 
-void face_ISR(void);
+void face_ISR(void);                      // Acknowledge a face strike
+void sensor_ISR(void);                    // Begin recording times for a target shot
 static void paper_on_off(bool on);        // Turn the motor on or off
 
 static bool fcn_DIP_SW_A(void);           // Function to read DIP_SW_A
@@ -95,7 +96,7 @@ void init_gpio(void)
     i++;
   }
 
-  disable_interrupt();
+  disable_face_interrupt();
   set_LED_PWM(0);             // Turn off the illumination for now
   
 /*
@@ -215,19 +216,8 @@ unsigned int read_counter
 unsigned int is_running (void)
 {
   unsigned int i;
-  i = 0;
   
-  if ( digitalRead(RUN_NORTH) == 1 )
-    i += 1;
-    
-  if ( digitalRead(RUN_EAST) == 1 )
-    i += 2;
-
-  if ( digitalRead(RUN_SOUTH) == 1 )
-    i += 4;
-    
-  if ( digitalRead(RUN_WEST) == 1 )
-    i += 8;  
+  i = (RUN_PORT & RUN_A_MASK)  >> RUN_LSB;
 
  /*
   *  Return the running mask
@@ -237,7 +227,7 @@ unsigned int is_running (void)
 
 /*-----------------------------------------------------
  * 
- * function: arm_counters
+ * function: arm_timers
  * 
  * brief: Strobe the control lines to start a new cycle
  * 
@@ -254,10 +244,10 @@ unsigned int is_running (void)
  *   Enabling the counters to run again
  * 
  *-----------------------------------------------------*/
-void arm_counters(void)
-  {
+void arm_timers(void)
+{
   digitalWrite(CLOCK_START, 0);   // Make sure Clock start is OFF
-  digitalWrite(STOP_N, 0);        // Cycle the stop just to make sure
+  digitalWrite(STOP_N, 0);        // Reset the flip flop to stop the timers
   digitalWrite(RCLK,   0);        // Set READ CLOCK to LOW
   digitalWrite(QUIET,  1);        // Arm the counter
   digitalWrite(CLR_N,  0);        // Reset the counters 
@@ -265,22 +255,30 @@ void arm_counters(void)
   digitalWrite(STOP_N, 1);        // Let the counters run
   
   return;
-  }
+}
+
+void clear_running(void)          // Reset the RUN flip Flop
+{
+  digitalWrite(STOP_N, 0);        // Reset RUN outputs on the Flip Flop
+  digitalWrite(STOP_N, 1);        // Set the RUN outputs to active
+
+  return;
+}
 
 /*
  *  Stop the oscillator
  */
-void stop_counters(void)
-  {
+void stop_timers(void)
+{
   digitalWrite(STOP_N,0);   // Stop the counters
   digitalWrite(QUIET, 0);   // Kill the oscillator 
   return;
-  }
+}
 
 /*
  *  Trip the counters for a self test
  */
-void trip_counters(void)
+void trip_timers(void)
 {
   digitalWrite(CLOCK_START, 0);
   digitalWrite(CLOCK_START, 1);     // Trigger the clocks from the D input of the FF
@@ -288,40 +286,33 @@ void trip_counters(void)
 
   return;
 }
+
 /*-----------------------------------------------------
  * 
- * function: enable_interrupt
- * function: disable_interrupt
+ * function: enable_face_interrupt
+ * function: disable_face_interrupt
  * 
- * brief: Turn on the face interrupt
+ * brief: Turn on the face detection interrupt
  * 
  * return: NONE
  * 
  *-----------------------------------------------------
  *
- * If send_miss is turned on, then enable the
- * interrutps.  Enable interrupts works by attaching an 
- * interrupt
+ * This enables the face interrupts so that shot detection
+ * an be perfomed as a thread and not inline with the code
  * 
  *-----------------------------------------------------*/
-void enable_interrupt(unsigned int active)
+void enable_face_interrupt(void)
 {
-  if ( active )                   // Only enable if send_miss is turned on
+  if ( revision() >= REV_300 )
   {
-    if ( revision() >= REV_300 )
-    {
-      attachInterrupt(digitalPinToInterrupt(FACE_SENSOR),  face_ISR, CHANGE);
-    }
+    attachInterrupt(digitalPinToInterrupt(FACE_SENSOR),  face_ISR, CHANGE);
   }
-  else                            // Otherwise turn it off
-  {
-    disable_interrupt();
-  }
-  
+
   return;
 }
 
-void disable_interrupt(void)
+void disable_face_interrupt(void)
 {
   if ( revision() >= REV_300 )
   {
@@ -330,6 +321,7 @@ void disable_interrupt(void)
 
   return;
 }
+
 /*-----------------------------------------------------
  * 
  * function: read_DIP
@@ -453,12 +445,17 @@ bool read_in(unsigned int port)
  * Force read each of the timers
  * 
  *-----------------------------------------------------*/
-void read_timers(void)
+void read_timers
+  (
+    unsigned int* timer_ptr
+  )
 {
-  timer_value[N] = read_counter(N);  
-  timer_value[E] = read_counter(E);
-  timer_value[S] = read_counter(S);
-  timer_value[W] = read_counter(W);
+  unsigned int i;
+
+  for (i=N; i<=W; i++)
+  {
+    *(timer_ptr + i) = read_counter(i);
+  }
 
   return;
 }
@@ -522,7 +519,7 @@ void read_timers(void)
     return;
   }
   
-  if ( is_trace )
+  if ( DLT(DLT_INFO) )
   {
     Serial.print(T("\r\nAdvancing paper "));
   }
@@ -536,7 +533,7 @@ void read_timers(void)
     
    paper_on_off(true);                            // Turn the motor on
    
-  if ( is_trace )
+  if ( DLT(DLT_INFO) )
    {
      Serial.print(T("On ")); Serial.print(s_time);
    }
@@ -545,7 +542,7 @@ void read_timers(void)
 
    paper_on_off(false);                           // Turn the motor off
    
-   if ( is_trace )
+   if ( DLT(DLT_INFO) )
    {
      Serial.print(T(" Off "));
    }
@@ -635,7 +632,7 @@ static void paper_on_off                        // Function to turn the motor on
  {
   face_strike++;      // Got a face strike
 
-  if ( is_trace )
+  if ( DLT(DLT_INFO) )
   {
     Serial.print(T("\r\nface_ISR():")); Serial.print(face_strike);
   }
@@ -673,40 +670,55 @@ void blink_fault
  * 
  * function: multifunction_init
  * 
- * brief:    Initialize the direction of the MFS on the DIP switch
+ * brief:    Use the multifunction switches during starup
  * 
  * return:   None
  * 
  *-----------------------------------------------------
  * 
- * This function uses a switch statement to determine
- * the settings of the GPIO
- * 
- * This function is left here for possible future
- * expansion when the DIP connector may be used as 
- * an output
+ * Read the jumper header and modify the initialization
  * 
  *-----------------------------------------------------*/
  void multifunction_init(void)
  {
-  switch (LO10(json_multifunction))
+  unsigned int dip;
+
+  dip = read_DIP() & 0x0f;              // Read the jumper header
+
+  if ( dip == 0 )                       // No jumpers in place
+  { 
+    return;                             // Carry On
+  }
+
+  if ( CALIBRATE )                      // Calibration jumper in?
   {
-    default:
-      pinMode(DIP_1,INPUT_PULLUP);
-      break;
+    set_trip_point(0);
+  }
+
+  if ( DIP_SW_A && DIP_SW_B )           // Both switches closed?
+  {
+    factory_nonvol(false);              // Initalize the nonvol but do not calibrate
+  }
+
+  else
+  {
+    if ( DIP_SW_A )                     // Switch A pressed
+    {
+      is_trace = 10;                    // Turn on tracing
+    }
+  
+    if ( DIP_SW_B )                     // Switch B pressed
+    {
+
+    }
   }
   
-  switch (HI10(json_multifunction))
-  {
-    default:
-      pinMode(DIP_2,INPUT_PULLUP);
-      break;
-  }
 /*
- * The GPIO has been programmed per the multifunction mode
+ * The initialization override has been finished
  */
- return;
- }
+  multifunction_wait_open();
+  return;
+}
 
  
 /*-----------------------------------------------------
@@ -825,12 +837,8 @@ void multifunction_switch(void)
 /*
  * All done, return the GPIO state
  */
-  while ( (DIP_SW_A != 0 )
-        || (DIP_SW_B != 0) ) 
-  {
-    continue;                     // Wait here for the switches to be released
-  }
-  delay(ONE_SECOND/2);            // Wait here to debounce the switches
+  multifunction_wait_open();      // Wait here for the switches to be open
+
   set_LED(LED_READY);
   return;
 }
@@ -895,7 +903,6 @@ static void sw_state
       break;
 
     case TABATA_ON_OFF:
-      tabata_control();
       break;
       
     case LED_ADJUST:
@@ -923,26 +930,38 @@ static void sw_state
 }
 
 /*
+ * Wait here for the switches to be opened
+ */
+void multifunction_wait_open(void)
+{
+  while ( (DIP_SW_A != 0 )
+        || (DIP_SW_B != 0) ) 
+  {
+    set_LED(L('*', '.', '.'));       // Scroll the LEDs
+    delay(ONE_SECOND/10);
+    
+    set_LED(L('.', '*', '.'));
+    delay(ONE_SECOND/10);
+        
+    set_LED(L('.', '.', '*'));
+    delay(ONE_SECOND/10);
+  }
+
+  return;
+}
+
+/*
  * Send a fake score to the PC for testing
  */
 static void send_fake_score(void) 
 { 
-  static    this_shot h;
-  static   int shot;
+  static   shot_record_t shot;
     
-  h.x = random(-json_sensor_dia/2.0, json_sensor_dia/2.0);
-  h.y = 0;
-  send_score(&h, shot++, 0);
-  if ( (json_paper_time + json_step_time) != 0 )  // Has the witness paper been enabled?
-  {
-    if ( ((json_paper_eco == 0)                   // ECO turned off
-        || ( sqrt(sq(record.x) + sq(record.y)) < json_paper_eco )) // Outside the black
-        && (json_rapid_on == 0))                  // and not rapid fire
-    {
-      delay(5*ONE_SECOND);                        // Wait five seconds for the shooter
-      drive_paper();                              // to follow through.
-    }
-  }
+  shot.x = random(-json_sensor_dia/2.0, json_sensor_dia/2.0);
+  shot.y = 0;
+  shot.shot_number++;
+  send_score(&shot);
+
   return;
 }
 
@@ -1005,7 +1024,9 @@ void multifunction_display(void)
  
  void output_to_all(char *str)
  {
-  Serial.print(str);            // Main USB port
+  unsigned int i, j;              // Iteration Counter
+  
+  Serial.print(str);              // Main USB port
 
   if ( esp01_is_present() )
   {
@@ -1085,4 +1106,43 @@ void digital_test(void)
   */
    POST_LEDs();
    return;
+}
+
+
+/*----------------------------------------------------------------
+ * 
+ * function: aquire()
+ * 
+ * brief: Aquire the data from the counter registers
+ * 
+ * return: Nothing
+ * 
+ *----------------------------------------------------------------
+ *
+ *  This function reads the values from the counters and saves
+ *  saves them into the record structure to be reduced later 
+ *  on.
+ *
+ *--------------------------------------------------------------*/
+void aquire(void)
+ {
+/*
+ * Pull in the data amd save it in the record array
+ */
+  if ( DLT(DLT_CRITICAL) )
+  {
+    Serial.print(T("\r\nAquiring shot:")); Serial.print(this_shot);
+  }
+  stop_timers();                                    // Stop the counters
+  read_timers(&record[this_shot].timer_count[0]);   // Record this count
+  record[this_shot].shot_time = tabata_time();      // Capture the time into the shot
+  record[this_shot].face_strike = face_strike;      // Record if it's a face strike
+  record[this_shot].sensor_status = is_running();   // Record the sensor status
+  record[this_shot].shot_number = shot_number++;    // Record the shot number and increment
+  this_shot = (this_shot+1) % SHOT_STRING;          // Prepare for the next shot
+
+/*
+ * MAll done for now
+ */
+  return;
 }

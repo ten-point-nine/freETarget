@@ -20,9 +20,8 @@
  */
 extern const char* which_one[4];
 
-sensor_t s[4];
+static sensor_t s[4];
 
-unsigned long timer_value[4];     // Array of timer values
 unsigned int  pellet_calibre;     // Time offset to compensate for pellet diameter
 
 static void remap_target(double* x, double* y);  // Map a club target if used
@@ -60,7 +59,7 @@ double speed_of_sound
 
   speed_mmPuS  = speed_MPS * TO_MM / TO_US;      // Convert down to mm/us
   
-  if ( is_trace )
+  if ( DLT(DLT_DIAG) )
     {
     Serial.print(T("\r\nSpeed of sound: ")); Serial.print(speed_mmPuS); Serial.print(T("mm/us"));
     Serial.print(T("  Worst case delay: ")); Serial.print(json_sensor_dia / speed_mmPuS * OSCILLATOR_MHZ); Serial.print(T(" counts"));
@@ -133,17 +132,17 @@ void init_sensors(void)
  *
  * brief: Determine the location of the hit
  * 
- * return: record array updated with new position
+ * return: Sensor location used to recognize shot
  *
  *----------------------------------------------------------------
  *
  * See freETarget documentaton for algorithm
+ * 
  *--------------------------------------------------------------*/
 
 unsigned int compute_hit
   (
-  unsigned int sensor_status,      // Bits read from status register
-  this_shot*   h,                  // Storing the results
+  shot_record_t* shot,             // Storing the results
   bool         test_mode           // Fake counters in test mode
   )
 {
@@ -156,53 +155,64 @@ unsigned int compute_hit
   double        x_avg, y_avg;      // Running average location
   double        smallest;          // Smallest non-zero value measured
   double        z_offset_clock;    // Time offset between paper and sensor plane
-  
-  if ( is_trace )
+  unsigned long now;               // Estimate time
+
+  now = millis();
+      
+  if ( DLT(DLT_DIAG) )
   {
-    Serial.print(T("\r\ncompute_hit()"));
+
+    Serial.print(T("\r\ncompute_hit()")); 
   }
-  
+
+/* 
+ *  Check for a miss
+ */
+  if ( (shot->face_strike != 0) || (shot->timer_count[N] == 0) || (shot->timer_count[E] == 0) || (shot->timer_count[S] == 0) || (shot->timer_count[W] == 0 ) )
+  {
+    if ( DLT(DLT_DIAG) )
+    {
+      Serial.print(T("\r\nMiss detected"));
+    }
+    return MISS;
+  }
+
 /*
  *  Compute the current geometry based on the speed of sound
  */
   init_sensors();
   z_offset_clock = (double)json_z_offset  * OSCILLATOR_MHZ / s_of_sound; // Clock adjustement for paper to sensor difference
-  if ( is_trace )
+  if ( DLT(DLT_DIAG) )
   {
     Serial.print(T("\r\nz_offset_clock:")); Serial.print(z_offset_clock); Serial.print(T("\r\n"));
   }
   
  /* 
-  *  Read the counter registers
-  */
-  if ( test_mode == false )                              // Skip if using test values
-  {
-    read_timers();
-  }
-  
-  if ( is_trace )
+  *  Display the timer registers if in trace mode
+  */  
+  if ( DLT(DLT_DIAG) )
   { 
     for (i=N; i <= W; i++)
     {
-      Serial.print(which_one[i]); Serial.print(timer_value[i]); Serial.print(T(" ")); 
+      Serial.print(which_one[i]); Serial.print(shot->timer_count[i]); Serial.print(T(" ")); 
     }
   }
   
 /*
  * Determine the location of the reference counter (longest time)
  */
-  reference = timer_value[N];
+  reference = shot->timer_count[N];
   location = N;
   for (i=E; i <= W; i++)
   {
-    if ( timer_value[i] > reference )
+    if ( shot->timer_count[i] > reference )
     {
-      reference = timer_value[i];
+      reference = shot->timer_count[i];
       location = i;
     }
   }
   
- if ( is_trace )
+ if ( DLT(DLT_DIAG) )
  {
    Serial.print(T("\r\nReference: ")); Serial.print(reference); Serial.print(T("  location:")); Serial.print(nesw[location]);
  }
@@ -212,15 +222,15 @@ unsigned int compute_hit
  */
   for (i=N; i <= W; i++)
   {
-    s[i].count = reference - timer_value[i];
+    s[i].count = reference - shot->timer_count[i];
     s[i].is_valid = true;
-    if ( timer_value[i] == 0 )
+    if ( shot->timer_count[i] == 0 )
     {
       s[i].is_valid = false;
     }
   }
 
-  if ( is_trace )
+  if ( DLT(DLT_DIAG) )
   {
     Serial.print(T("\r\nCounts       "));
     for (i=N; i <= W; i++)
@@ -265,10 +275,10 @@ unsigned int compute_hit
  */
   estimate = s[N].c - smallest + 1.0d;
  
-  if ( is_trace )
-   {
+  if ( DLT(DLT_DIAG) )
+  {
    Serial.print(T("\r\nestimate: ")); Serial.print(estimate);
-   }
+  }
   error = 999999;                  // Start with a big error
   count = 0;
 
@@ -296,7 +306,7 @@ unsigned int compute_hit
     estimate = sqrt(sq(s[location].x - x_avg) + sq(s[location].y - y_avg));
     error = abs(last_estimate - estimate);
 
-    if ( is_trace )
+    if ( DLT(DLT_DIAG) )
     {
       Serial.print(T("\r\nx_avg:"));  Serial.print(x_avg);   Serial.print(T("  y_avg:")); Serial.print(y_avg); Serial.print(T(" estimate:")),  Serial.print(estimate);  Serial.print(T(" error:")); Serial.print(error);
       Serial.println();
@@ -311,10 +321,14 @@ unsigned int compute_hit
  /*
   * All done return
   */
-  h->shot = shot;           // Record the shot
-  h->x = x_avg;             
-  h->y = y_avg;
+  shot->x = x_avg;             
+  shot->y = y_avg;
   
+  if ( DLT(DLT_CRITICAL) )
+  {
+    Serial.print(T("\r\ncompute_hit() duration: ")); Serial.print(millis() - now); Serial.print(T("ms"));
+  }
+
   return location;
 }
 
@@ -391,7 +405,7 @@ bool find_xy_3D
  */
   if ( s->is_valid == false )
   {
-    if ( is_trace )
+    if ( DLT(DLT_DIAG) )
     {
       Serial.print(T("\r\nSensor: ")); Serial.print(s->index); Serial.print(T(" no data"));
     }
@@ -443,7 +457,7 @@ bool find_xy_3D
       break;
 
     default:
-      if ( is_trace )
+      if ( DLT(DLT_DIAG) )
       {
         Serial.print(T("\n\nUnknown Rotation:")); Serial.print(s->index);
       }
@@ -453,7 +467,7 @@ bool find_xy_3D
 /*
  * Debugging
  */
-  if ( is_trace )
+  if ( DLT(DLT_DIAG) )
     {
     Serial.print(T("\r\nindex:")); Serial.print(s->index) ; 
     Serial.print(T(" a:"));        Serial.print(s->a);       Serial.print(T("  b:"));  Serial.print(s->b);
@@ -491,9 +505,7 @@ bool find_xy_3D
 
 void send_score
   (
-  this_shot* h,                   // record record
-  int shot,                       // Current shot
-  int sensor_status               // Status at the time of the shot
+  shot_record_t* shot             //  record
   )
 {
   int    i;                       // Iteration Counter
@@ -507,7 +519,7 @@ void send_score
   double score;
   char   str[256], str_c[10];  // String holding buffers
   
-  if ( is_trace )
+  if ( DLT(DLT_DIAG) )
   {
     Serial.print(T("\r\nSending the score"));
   }
@@ -515,10 +527,10 @@ void send_score
  /* 
   *  Work out the hole in perfect coordinates
   */
-  x = h->x * s_of_sound * CLOCK_PERIOD;
-  y = h->y * s_of_sound * CLOCK_PERIOD;
+  x = shot->x * s_of_sound * CLOCK_PERIOD;
+  y = shot->y * s_of_sound * CLOCK_PERIOD;
   radius = sqrt(sq(x) + sq(y));
-  angle = atan2(h->y, h->x) / PI * 180.0d;
+  angle = atan2(shot->y, shot->x) / PI * 180.0d;
 
 /*
  * Rotate the result based on the construction, and recompute the hit
@@ -535,9 +547,10 @@ void send_score
   output_to_all(str);
   
 #if ( S_SHOT )
-  sprintf(str, "\"shot\":%d, \"miss\":0, \"name\":\"%s\", ", shot,  names[json_name_id]);
+  sprintf(str, "\"shot\":%d, \"miss\":0, \"name\":\"%s\", ", shot->shot_number,  names[json_name_id]);
   output_to_all(str);
-  sprintf(str, "\"time\":%ld, ", h->shot_time);
+  dtostrf((float)shot->shot_time/(float)(ONE_SECOND), 2, 2, str_c );
+  sprintf(str, "\"time\":%s, ", str_c);
   output_to_all(str);
 #endif
 
@@ -551,10 +564,10 @@ void send_score
 #endif
 
 #if ( S_XY )
-  dtostrf(x, 4, 2, str_c );
+  dtostrf(x, 2, 2, str_c );
   sprintf(str, "\"x\":%s, ", str_c);
   output_to_all(str);
-  dtostrf(y, 4, 2, str_c );
+  dtostrf(y, 2, 2, str_c );
   sprintf(str, "\"y\":%s, ", str_c);
   output_to_all(str);
 #endif
@@ -568,8 +581,8 @@ void send_score
   output_to_all(str);
 #endif
 
-#if ( S_COUNTERS )
-  sprintf(str, "\"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d, ", (int)s[N].count, (int)s[E].count, (int)s[S].count, (int)s[W].count);
+#if ( S_TIMERS )
+  sprintf(str, "\"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d, ", (int)shot->timer_count[N], (int)shot->timer_count[E], (int)shot->timer_count[S], (int)shot->timer_count[W]);
   output_to_all(str);
 #endif
 
@@ -611,13 +624,15 @@ void send_score
 
 void send_miss
   (
-  this_shot* h,                   // record record
-  int shot,                       // Current shot
-  int sensor_status               // Status at the time of the shot
+  shot_record_t* shot                    // record record
   )
 {
   char str[256];    // String holding buffer
-  
+
+  if ( json_send_miss != 0)
+  {
+    return;
+  }
 /* 
  *  Display the results
  */
@@ -625,12 +640,21 @@ void send_miss
   output_to_all(str);
   
  #if ( S_SHOT )
-  sprintf(str, "\"shot\":%d, \"miss\":1, \"name\":\"%s\", \"time\":%d, ", shot, names[json_name_id], h->shot_time) ;
+  sprintf(str, "\"shot\":%d, \"miss\":1, \"name\":\"%s\" ", shot->shot_number, names[json_name_id], shot->shot_time) ;
   output_to_all(str);
+  dtostrf((float)shot->shot_time/(float)(ONE_SECOND), 2, 2, str );
+  sprintf(str, ",\"time\":%s ", str);
 #endif
 
 #if ( S_XY )
-  sprintf(str, "\"x\":0, \"y\":0");
+  sprintf(str, ", \"x\":0, \"y\":0 ");
+  output_to_all(str);
+#endif
+
+#if ( S_TIMERS )
+  sprintf(str, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)shot->timer_count[N], (int)shot->timer_count[E], (int)shot->timer_count[S], (int)shot->timer_count[W]);
+  output_to_all(str);
+  sprintf(str, ", \"face\":%d ", shot->face_strike);
   output_to_all(str);
 #endif
 
@@ -691,9 +715,9 @@ static void remap_target
   new_target_t* ptr;               // Bull pointer
   int    which_one;                // Which target was selected
   
-  if ( is_trace )
+  if ( DLT(DLT_DIAG) )
   {
-    Serial.print(T("\n\rnew_target x:")); Serial.print(*x); Serial.print(" y:"); Serial.print(*y);
+    Serial.print(T("\n\rremap_target x:")); Serial.print(*x); Serial.print(" y:"); Serial.print(*y);
   }
 
 /*
@@ -722,7 +746,7 @@ static void remap_target
   while ( ptr->x != 0 )
   {
     distance = sqrt(sq(ptr->x - *x) + sq(ptr->y - *y));
-    if ( is_trace )
+    if ( DLT(DLT_DIAG) )
     {
       Serial.print(T("\n\rwhich_one:")); Serial.print(which_one); Serial.print(T(" distance:")); Serial.print(distance); 
     }
@@ -731,7 +755,7 @@ static void remap_target
       closest = distance;       // Remember it
       dx = ptr->x;
       dy = ptr->y;              // Remember the closest bull
-      if ( is_trace)
+      if ( DLT(DLT_DIAG) )
       {
         Serial.print(T(" dx:")); Serial.print(dx); Serial.print(T(" dy:")); Serial.print(dy); 
       }
@@ -741,7 +765,7 @@ static void remap_target
   }
 
   distance = sqrt(sq(*x) + sq(*y)); // Last one is the centre bull
-  if ( is_trace )
+  if ( DLT(DLT_DIAG) )
   {
     Serial.print(T("\n\rwhich_one:")); Serial.print(which_one); Serial.print(T(" distance:")); Serial.print(distance);
   }
@@ -750,7 +774,7 @@ static void remap_target
     closest = distance;       // Remember it
     dx = 0;
     dy = 0;
-    if ( is_trace)
+    if ( DLT(DLT_DIAG) )
     {
       Serial.print(T(" dx:")); Serial.print(dx); Serial.print(T(" dy:")); Serial.print(dy); 
     }
@@ -761,7 +785,7 @@ static void remap_target
  */
   *x = *x - dx;
   *y = *y - dy;
-  if ( is_trace )
+  if ( DLT(DLT_DIAG) )
   {
     Serial.print(T("\n\rx:")); Serial.print(*x); Serial.print(T(" y:")); Serial.print(*y);
   }
@@ -792,8 +816,9 @@ void send_timer
   )
 {
   int i;
-
-  read_timers();
+  unsigned int timer_count[4];
+  
+  read_timers(&timer_count[0]);
   
   Serial.print(T("{\"timer\": \""));
   for (i=0; i != 4; i++ )
@@ -812,7 +837,7 @@ void send_timer
   
   for (i=N; i <= W; i++)
   {
-    Serial.print(T("\"")); Serial.print(nesw[i]); Serial.print(T("\":"));  Serial.print(timer_value[i]);  Serial.print(T(", "));
+    Serial.print(T("\"")); Serial.print(nesw[i]); Serial.print(T("\":"));  Serial.print(timer_count[i]);  Serial.print(T(", "));
   }
 
   Serial.print(T("\"V_REF\":"));   Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));  Serial.print(T(", "));

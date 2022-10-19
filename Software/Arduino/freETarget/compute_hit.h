@@ -10,7 +10,7 @@
 #define S_SHOT      true        // Include the shot number
 #define S_XY        true        // Include X-Y coordinates
 #define S_POLAR     false       // Include polar coordinates
-#define S_COUNTERS  false       // Include counter values
+#define S_TIMERS  true        // Include counter values
 #define S_MISC      true        // Include miscelaneous diagnotics
 #define S_SCORE     false       // Include estimated score
 
@@ -33,17 +33,17 @@ struct sensor
 
 typedef struct sensor sensor_t;
 
-extern unsigned long timer_value[4];     // Array of timer values
+
 
 /*
  *  Public Funcitons
  */
-void init_sensors(void);                                    // Initialize sensor structure
-unsigned int compute_hit(unsigned int sensor_status, this_shot* h, bool test_mode);  // Find the location of the shot
-void send_score(this_shot* h, int shot, int sensor_status); // Send the shot
-void rotate_hit(unsigned int location, this_shot* h);       // Rotate the shot back into the correct quadrant 
+void init_sensors(void);                                      // Initialize sensor structure
+unsigned int compute_hit(shot_record_t* shot, bool test_mode);// Find the location of the shot
+void send_score(shot_record_t* shot);                         // Send the shot
+void rotate_hit(unsigned int location, shot_record_t* shot);  // Rotate the shot back into the correct quadrant 
 bool find_xy_3D(sensor_t* s, double estimate, double z_offset_clock);  // Estimated position including slant range
-void send_timer(int sensor_status);                         // Show debugging information 
-void send_miss(this_shot* h, int shot, int sensor_status);  // Send a miss message
+void send_timer(int sensor_status);                           // Show debugging information 
+void send_miss(shot_record_t* shot);                          // Send a miss message
 
 #endif

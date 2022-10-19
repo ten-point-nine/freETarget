@@ -63,7 +63,7 @@ void set_LED_PWM_now
     return;
   }
   
-  if ( is_trace )
+  if ( DLT(DLT_INFO) )
   {
     Serial.print(T("\r\nnew_LED_percent:")); Serial.print(new_LED_percent); Serial.print(T("  old_LED_percent:")); Serial.print(old_LED_percent);
   }
@@ -80,7 +80,7 @@ void set_LED_PWM                                  // Theatre lighting
   int new_LED_percent                            // Desired LED level (0-100%)
   )
 {
-  if ( is_trace )
+  if ( DLT(DLT_INFO) )
   {
     Serial.print(T("\r\nnew_LED_percent:")); Serial.print(new_LED_percent); Serial.print(T("  old_LED_percent:")); Serial.print(old_LED_percent);
   }
@@ -162,7 +162,7 @@ unsigned int read_reference(void)
  *  
  *--------------------------------------------------------------*/
 //                                       0      1  2  3     4     5  6      7    8  9   A     B      C   D   E   F
-const static unsigned int version[] = {REV_210, 1, 2, 3, REV_300, 5, 6, REV_220, 8, 9, 10, REV_310, 12, 13, 14, 15};
+const static unsigned int version[] = {REV_210, 1, 2, 3, REV_320, 5, 6, REV_220, 8, 9, 10, REV_310, 12, 13, 14, 15};
   
 unsigned int revision(void)
 {
@@ -181,16 +181,6 @@ unsigned int revision(void)
     revision = REV_300;
   }
 
-/*
- * Fix Version 3.2 board 
- */
-  if ( revision == REV_310 )
-  {
-    if ( json_serial_number > 160 )
-    {
-      revision = REV_320;
-    }
-  }
 /*
  * Nothing more to do, return the board revision
  */

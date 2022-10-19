@@ -12,21 +12,25 @@
  * Global functions
  */
 void init_gpio(void);                                     // Initialize the GPIO ports
-void arm_counters(void);                                  // Make the board ready
+void arm_timers(void);                                    // Make the board ready
+void clear_running(void);                                 // Clear the run flip flop 
 unsigned int is_running(void);                            // Return a bit mask of running sensors 
 void set_LED(int state_RDY, int state_X, int state_y);    // Manage the LEDs
 unsigned int read_DIP(void);                              // Read the DIP switch register
 unsigned int read_counter(unsigned int direction);
-void stop_counters(void);                                 // Turn off the counter registers
-void trip_counters(void);
+void stop_timers(void);                                   // Turn off the counter registers
+void trip_timers(void);
 bool read_in(unsigned int port);                          // Read the selected port
-void read_timers(void);                                   // Read and return the counter registers
+void read_timers(unsigned int* timer_counts);             // Read and return the counter registers
 void drive_paper(void);                                   // Turn on the paper motor
-void enable_interrupt(unsigned int active);               // Turn on the face strike interrupt if active
-void disable_interrupt(void);                             // Turn off the face strike interrupt
+void enable_face_interrupt();                             // Turn on the face strike interrupt
+void disable_face_interrupt(void);                        // Turn off the face strike interrupt
+void enable_sensor_interrupt();                           // Turn on the sensor interrupt
+void disable_sensor_interrupt(void);                      // Turn off the sensor strike interrupt
 void multifunction_init(void);                            // Initialize the multifunction switches
 void multifunction_switch(void);                          // Handle the actions of the DIP Switch signal
 void multifuction_display(void);                          // Display the MFS settings
+void multifunction_wait_open(void);                       // Wait for both multifunction switches to be open
 void output_to_all(char* s);                              // Multipurpose driver
 void char_to_all(char ch);                                // Output a single character
 void digital_test(void);                                  // Execute the digital test
@@ -53,10 +57,17 @@ void digital_test(void);                                  // Execute the digital
 #define WEST_HI     41
 #define WEST_LO     42
 
-#define RUN_NORTH   25
-#define RUN_EAST    26
-#define RUN_SOUTH   27
-#define RUN_WEST    28
+#define RUN_LSB      3
+#define RUN_NORTH   25                    // PA3
+#define RUN_N_MASK  (1<<3)
+#define RUN_EAST    26                    // PA4
+#define RUN_E_MASK  (1<<4)
+#define RUN_SOUTH   27                    // PA5
+#define RUN_S_MASK  (1<<5)
+#define RUN_WEST    28                    // PA6
+#define RUN_W_MASK  (1<<6)
+#define RUN_A_MASK  (RUN_N_MASK + RUN_E_MASK + RUN_S_MASK + RUN_W_MASK)
+#define RUN_PORT    PINA
 
 #define QUIET       29
 #define RCLK        40
