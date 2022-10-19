@@ -22,7 +22,6 @@
  *-----------------------------------------------------*/
 #define FREQUENCY 1000ul
 
-
 void init_timer(void)
 {
 /*
@@ -33,7 +32,6 @@ void init_timer(void)
   TCNT1  = 0;                           // initialize counter value to 0
 
   OCR1A = 16000000 / 64 / FREQUENCY;
-Serial.print (OCR1A);
   TCCR1A |= B00000010;                  // Enable CTC Mode
   TCCR1B |= B00000011;                  // Prescale 64
   TIMSK1 &= ~(B0000010);                // Make sure the interrupt is disabled
