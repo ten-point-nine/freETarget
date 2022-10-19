@@ -795,7 +795,7 @@ unsigned long tabata_time(void)
  * time to get the end time in milliseconds
  * 
  * Test Message
- * {"RAPID_TIME":20, "RAPID_COUNT":10, "RAPID_DELAY": 5, "RAPID_ENABLE":1}
+ * {"RAPID_TIME":20, "RAPID_COUNT":10, "RAPID_WAIT": 5, "RAPID_ENABLE":1}
  * {"RAPID_TIME":10, "RAPID_COUNT":10, "RAPID_AUTO":1, "RAPID_ENABLE":1}
  * 
  *--------------------------------------------------------------*/
@@ -808,13 +808,14 @@ unsigned long tabata_time(void)
  {
   char str[32];
   long random_wait;
-  
+
+  Serial.print(enable);
 /*
  * If enabled, set up the timers
  */
   if ( enable != 0 )
   {
-    set_LED_PWM_now(0);                                               // Turn off the LEDs (maybe turn them on later)
+    set_LED_PWM_now(0);                                           // Turn off the LEDs (maybe turn them on later)
     rapid_on = millis() + ((long)json_rapid_time * 1000L);        // Duration of the event in ms
     rapid_count = json_rapid_count;                               // Number of expected shots
     

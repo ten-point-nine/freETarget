@@ -89,7 +89,7 @@ const json_message JSON[] = {
   {"\"RAPID_COUNT\":",    &json_rapid_count,                 0,                IS_INT16,  0,                0,                       0 },    // Number of shots expected in series
   {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT16,  &rapid_enable,    0,                       0 },    // Enable the rapid fire fieature
   {"\"RAPID_TIME\":",     &json_rapid_time,                  0,                IS_INT16,  0,                0,                       0 },    // Set the duration of the rapid fire event and start
-  {"\"RAPID_DELAY\":",    &json_rapid_wait,                  0,                IS_INT16,  0,                0,                       0 },    // Delay applied between enable and ready
+  {"\"RAPID_WAIT\":",     &json_rapid_wait,                  0,                IS_INT16,  0,                0,                       0 },    // Delay applied between enable and ready
   {"\"RESET\":",          0,                                 0,                IS_INT16,  &setup,           0,                       0 },    // Reinit the board
   {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT16,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
   {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  &gen_position,    NONVOL_SENSOR_DIA,     230 },    // Generate the sensor postion array
