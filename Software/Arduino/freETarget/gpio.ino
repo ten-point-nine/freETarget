@@ -1,5 +1,3 @@
-
-
 /*-------------------------------------------------------
  * 
  * gpio.ino
@@ -7,6 +5,8 @@
  * General purpose GPIO driver
  * 
  * ----------------------------------------------------*/
+
+#include "timer.h"
 
 const GPIO init_table[] = {
   {D0,          "\"D0\":",       INPUT_PULLUP, 0 },
@@ -495,21 +495,19 @@ void read_timers
  
  void drive_paper(void)
  {
-  unsigned int i, j, k;                           // Iteration Counters
-  unsigned int s_count, s_time;
-
+  unsigned int s_time, s_count;                   // Step time and count
 /*
  * Set up the count or times based on whether a DC or stepper motor is used
  */
 
   s_time = json_paper_time;                       // On time.
-  if ( json_step_time != 0 )                       // Non-zero means it's a stepper motor
+  if ( json_step_time != 0 )                      // Non-zero means it's a stepper motor
   {
     s_time = json_step_time;                      // the one we use
   }
 
   s_count = 1;                                    // Default to one cycle (DC or Stepper Motor)
-  if ( json_step_count != 0 )                      // Non-zero means it's a stepper motor
+  if ( json_step_count != 0 )                     // Non-zero means it's a stepper motor
   {
     s_count = json_step_count;                    // the one we use
   }
@@ -528,27 +526,8 @@ void read_timers
  * Drive the motor on and off for the number of cycles
  * at duration
  */
-  for (i=0; i != s_count; i++)                    // Number of steps
-  {
-    
-   paper_on_off(true);                            // Turn the motor on
-   
-  if ( DLT(DLT_INFO) )
-   {
-     Serial.print(T("On ")); Serial.print(s_time);
-   }
-   
-   delay(PAPER_STEP * s_time);                    // in 10ms increments
-
-   paper_on_off(false);                           // Turn the motor off
-   
-   if ( DLT(DLT_INFO) )
-   {
-     Serial.print(T(" Off "));
-   }
-
-   delay(PAPER_STEP);                             // Let the A4988 catch ujp
-  }
+  paper_on_off(true);                            // Turn the motor on
+  set_motor_time(s_time, s_count);
 
  /*
   * All done, return

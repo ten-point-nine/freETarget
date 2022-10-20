@@ -20,7 +20,7 @@
  * Timer 1 is used by freETarget to sample the sensor inputs
  * Timer 2 is unassigned
  *-----------------------------------------------------*/
-#define FREQUENCY 1000ul
+#define FREQUENCY 1000ul                // 1000 Hz
 
 void init_timer(void)
 {
@@ -31,7 +31,7 @@ void init_timer(void)
   TCCR1B = 0;                           // same for TCCR0B
   TCNT1  = 0;                           // initialize counter value to 0
 
-  OCR1A = 16000000 / 64 / FREQUENCY;
+  OCR1A = 16000000 / 64 / FREQUENCY;    // 16MHz CPU Clock / 64 Prescale / 1KHz timer interrupt
   TCCR1A |= B00000010;                  // Enable CTC Mode
   TCCR1B |= B00000011;                  // Prescale 64
   TIMSK1 &= ~(B0000010);                // Make sure the interrupt is disabled
@@ -95,7 +95,7 @@ void disable_timer_interrupt(void)
  * sendor inputs are present, the counters are
  * read and made available to the software
  * 
- * There are three states
+ * There are three data aquisition states
  * 
  * IDLE - No inputs are present
  * WAIT - Inputs are present, but we have to wait
@@ -103,17 +103,32 @@ void disable_timer_interrupt(void)
  *        timed out
  * DONE - We have read the counters but need to
  *        wait for the ringing to stop
+ *        
+ * There are three motor control states
+ * 
+ * IDLE    - Do nothing
+ * RUNNING - The motor is turned on for a duration 
+ * CYCLE   - Count the number of stepper motor cycles
  * 
  *-----------------------------------------------------*/
 #define PORT_STATE_IDLE 0                       // There are no sensor inputs
 #define PORT_STATE_WAIT 1                       // Some sensor inputs are present, but not all
 #define PORT_STATE_DONE 2                       // All of the inmputs are present
 
+#define MOTOR_STATE_IDLE     0                  // The motor is not running
+#define MOTOR_STATE_RUNNING  1                  // The motor is running
+#define MOTOR_STATE_CYCLE    2                  // Cycle the stepper motor
+
 #define MAX_WAIT_TIME   10                      // Wait up to 10 ms for the input to arrive
 #define MAX_RING_TIME    5                      // Wait 5 ms for the ringing to stop
 
 static unsigned int isr_state = PORT_STATE_IDLE;// Current aquisition state
 static unsigned int isr_timer;                  // Elapsed time counter
+
+static unsigned int motor_state   = MOTOR_STATE_IDLE; // Current motor state
+static unsigned int motor_time    = 0;          // How long the motor will run for (ms)
+static unsigned int motor_reload  = 0;          // Reload count
+static unsigned int motor_cycles  = 0;          // Number of cycles to execute (stepper motor)
 
 ISR(TIMER1_COMPA_vect)
 {
@@ -127,7 +142,7 @@ ISR(TIMER1_COMPA_vect)
   pin = RUN_PORT & RUN_A_MASK;                 // Read in the RUN bits
 
 /*
- * Execute a state based on the current state and the inputs
+ * Read the timer hardware based on the ISR state
  */
   switch (isr_state)
   {
@@ -173,7 +188,80 @@ ISR(TIMER1_COMPA_vect)
   }
 
 /*
+ * Run the witness paper drive if enabled
+ */
+  switch (motor_state)
+  {
+    case MOTOR_STATE_IDLE:                       // Idle, Wait for something to show up
+      break;
+          
+    case MOTOR_STATE_RUNNING:                   // The motor has been turned on
+      if ( motor_time != 0 )                    // If there is time remaining
+      {
+        motor_time--;                           // run down the timer
+      }
+      else
+      {
+        paper_on_off(false);                    // Turn off the motor
+        motor_cycles--;                         // Decriment cycles remaining
+        if ( motor_cycles == 0 )
+        {
+          motor_state = MOTOR_STATE_IDLE;       // None left, go to idle
+        }
+        else
+        {
+          motor_state = MOTOR_STATE_CYCLE;
+        }
+      }
+      break;
+
+    case MOTOR_STATE_CYCLE:                       // Issue one more motor pulse
+      paper_on_off(true);                         // Turn it back on
+      motor_time = motor_reload;                  // Reload the time
+      motor_state = MOTOR_STATE_RUNNING;
+      break;
+  }
+ 
+/*
  * Undo the mutex and return
  */
+  return;
+}
+
+/*-----------------------------------------------------
+ * 
+ * function: set_motor_time
+ * 
+ * brief:    Setup the duration of the witness paper motor
+ * 
+ * return:   None
+ * 
+ *-----------------------------------------------------
+ *
+ * The duration of the motor time is set into memory
+ * 
+ *-----------------------------------------------------*/
+void set_motor_time
+  (
+  unsigned int duration,              // Duration in milliseconds
+  unsigned int cycles                 // Number of cycles
+  )
+{
+  if ( duration == 0 )                // The duration == 0 
+  {
+    motor_state = MOTOR_STATE_IDLE;   // Force Idle
+    return;
+  }
+
+  motor_time = duration;              // Otherwiose remember for later
+  motor_reload = duration;            // Set the reload count
+  motor_state = MOTOR_STATE_RUNNING;  // And start running
+  motor_cycles = cycles;              // Number of steps to pulse
+
+  if ( motor_cycles == 0 )
+  {
+    motor_cycles = 1;
+  }
+  
   return;
 }

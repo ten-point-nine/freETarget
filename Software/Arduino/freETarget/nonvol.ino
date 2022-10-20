@@ -411,7 +411,6 @@ void update_nonvol
   unsigned int ps_value;                  // Value read from persistent storage           
   unsigned int x;                         // Value read from table
 
-  Serial.print("here");
 /*
  * Check to see if this persistent storage has never had a version number
  */
@@ -485,6 +484,15 @@ void update_nonvol
     x = 1;
     EEPROM.put(NONVOL_WIFI_CHANNEL, x);                     // Default to channel 1
     current_version = 6;
+    EEPROM.put(NONVOL_PS_VERSION, current_version);
+  }
+
+  if ( current_version == 6 )                     
+  {
+    EEPROM.get(NONVOL_PAPER_TIME, json_paper_time);
+    json_paper_time *= 10;
+    EEPROM.put(NONVOL_PAPER_TIME, json_paper_time);        // Motor time in 1ms increments
+    current_version = 7;
     EEPROM.put(NONVOL_PS_VERSION, current_version);
   }
   if ( current_version != PS_VERSION )
