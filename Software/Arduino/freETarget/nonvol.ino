@@ -118,6 +118,14 @@ void factory_nonvol
        case IS_VOID:                                        // Variable does not contain anything 
        case IS_FIXED:                                       // Variable cannot be overwritten
        break;
+       
+       case IS_TEXT:
+        Serial.print(T("\r\n")); Serial.print(JSON[i].token); Serial.print(T(" \"\""));
+        if ( JSON[i].non_vol != 0 )
+        {
+          EEPROM.put(JSON[i].non_vol, 0);                    // Zero out the text
+        }
+        break;
         
       case IS_INT16:
         x = JSON[i].init_value;                            // Read in the value 
@@ -290,9 +298,10 @@ void init_nonvol
 void read_nonvol(void)
 {
   unsigned int nonvol_init;
-  unsigned int  i;              // Iteration Counter
+  unsigned int  i, j;           // Iteration Counter
   unsigned int  x;              // 16 bit number
   double       dx;              // Floating point number
+  unsigned char ch;             // Text value
   
   if ( DLT(DLT_DIAG) )
   {
@@ -334,7 +343,24 @@ void read_nonvol(void)
      {
         case IS_VOID:
           break;
-        
+          
+        case IS_TEXT:
+          if ( JSON[i].non_vol != 0 )                          // Is persistent storage enabled?
+          {
+            j=0;
+            while (1)                                           // Loop and copy the NONVOL 
+            {
+              EEPROM.get((JSON[i].non_vol+j), ch );
+              *((unsigned char*)(JSON[i].value) + j) = ch;       // Over to the working storage
+              if ( ch == 0 )
+              {
+                break;
+              }
+              j++;
+            }
+          }
+          break;
+
         case IS_INT16:
         case IS_FIXED:
           if ( JSON[i].non_vol != 0 )                          // Is persistent storage enabled?
@@ -495,6 +521,16 @@ void update_nonvol
     current_version = 7;
     EEPROM.put(NONVOL_PS_VERSION, current_version);
   }
+
+  if ( current_version == 7 )                     
+  {
+    x = 1;
+    EEPROM.put(NONVOL_WIFI_DHCP, x);                      // Default DHCP to be on
+    x = 0;
+    EEPROM.put(NONVOL_WIFI_SSID, x);                      // No default SSID
+    current_version = 8;
+    EEPROM.put(NONVOL_PS_VERSION, current_version);
+  }
   if ( current_version != PS_VERSION )
   {
     Serial.print(T("\n\rVerify firmware"));
@@ -578,27 +614,46 @@ void print_hex(unsigned int x)
   Serial.print(to_hex[i]);
   return;
 }
+
 void dump_nonvol(void)
 {
-  int i;
+  int i, j;
   char x;
   char line[128];
   
 /*
  * Loop and print out the nonvol
  */
-  for (i=0; i != NONVOL_SIZE; i++)
+  for (i=0; i != NONVOL_SIZE; i+= 16)
   {
-    if ( (i % 16) == 0 )
+    sprintf(line, "\r\n%04X: ", i);
+    Serial.print(line);
+    
+    for ( j=0; j!= 16; j++)
     {
-      sprintf(line, "\r\n%04X: ", i);
-      Serial.print(line);
-    }
-    EEPROM.get(i, x);
-    print_hex(x);
-    if ( ((i+1) % 2) == 0 )
-    {
+      EEPROM.get(i+j, x);
+      print_hex(x);
+      if ( ((j+1) % 4) == 0 )
+      {
       Serial.print(" ");
+      }
+    }
+        
+    for ( j=0; j!= 16; j++)
+    {
+      EEPROM.get(i+j, x);
+      if ( (x>=' ') && ( x <= 127) )
+      {
+        Serial.print(x);
+      }
+      else
+      {
+        Serial.print(T("."));
+      }
+      if ( ((j+1) % 4) == 0 )
+      {
+      Serial.print(" ");
+      }
     }
   }
 

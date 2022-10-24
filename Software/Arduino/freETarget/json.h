@@ -19,11 +19,12 @@ typedef struct  {
 } json_message;
 
 #define IS_VOID       0       // Value is a void
-#define IS_INT16      1       // Value is a 16 bit int
-#define IS_FLOAT      2       // Value is a floating point number
-#define IS_DOUBLE     3       // Value is a double
-#define IS_FIXED      4       // The value cannot be changed
-    
+#define IS_TEXT       1       // Value is a string
+#define IS_INT16      2       // Value is a 16 bit int
+#define IS_FLOAT      3       // Value is a floating point number
+#define IS_DOUBLE     4       // Value is a double
+#define IS_FIXED      5       // The value cannot be changed
+
 void reset_JSON(void);            // Clear the JSON input buffer
 bool read_JSON(void);             // Scan the serial port looking for JSON input
 void show_echo(int v);            // Display the settings
@@ -75,7 +76,8 @@ extern int    json_face_strike;   // Number of cycles to accept a face strike
 extern int    json_rapid_time;    // When will the rapid fire event end
 extern int    json_rapid_count;   // Number of allowable shots
 extern int    json_wifi_channel;  // Channel assigned to this SSID
-extern int    json_rapid_wait;   // Delay applied to rapid fire
-
-
+extern int    json_rapid_wait;    // Delay applied to rapid fire
+extern int    json_wifi_dhcp;     // TRUE if the DHCP server is enabled
+extern char   json_wifi_ssid[];   // Text of WiFI SSID
+extern char   json_wifi_pwd[];    // Text of WiFI password
 #endif _JSON_H_

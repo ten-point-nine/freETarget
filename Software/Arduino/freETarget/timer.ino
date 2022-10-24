@@ -238,7 +238,11 @@ ISR(TIMER1_COMPA_vect)
  * 
  *-----------------------------------------------------
  *
- * The duration of the motor time is set into memory
+ * The duration of the motor time is set into memory.
+ * 
+ * The motor time is cumulative. Ie if the shot is registered
+ * while the paper is moving then it is left moving and
+ * the new shot added to it.
  * 
  *-----------------------------------------------------*/
 void set_motor_time
@@ -253,10 +257,10 @@ void set_motor_time
     return;
   }
 
-  motor_time = duration;              // Otherwiose remember for later
-  motor_reload = duration;            // Set the reload count
-  motor_state = MOTOR_STATE_RUNNING;  // And start running
-  motor_cycles = cycles;              // Number of steps to pulse
+  motor_time += duration;              // Otherwiose remember for later
+  motor_reload += duration;            // Set the reload count
+  motor_state = MOTOR_STATE_RUNNING;   // And start running
+  motor_cycles += cycles;              // Number of steps to pulse
 
   if ( motor_cycles == 0 )
   {

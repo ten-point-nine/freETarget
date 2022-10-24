@@ -128,29 +128,51 @@ void esp01_init(void)
     Serial.print(T("\r\nESP-01: Failed AT+CWMODE_DEF=2"));
   }
 
-
-  WIFI_SERIAL.print(T("AT+CWSAP_DEF=\"FET-")); WIFI_SERIAL.print(names[json_name_id]); WIFI_SERIAL.print(T("\",\"NA\",")); WIFI_SERIAL.print(json_wifi_channel); WIFI_SERIAL.print(T(",0\r\n"));
-  if ( (esp01_waitOK() == false) && (is_trace) )
+  if ( json_wifi_ssid == 0 )
   {
-    Serial.print(T("\r\nESP-01: Failed AT+CWSAP_DEF=\"FET-")); Serial.print(names[json_name_id]); Serial.print(T("\",\"NA\",")); Serial.print(json_wifi_channel); Serial.print(T(",0\r\n"));
-  }  
-
-  WIFI_SERIAL.print(T("AT+CWDHCP_DEF=0,1\r\n"));      // DHCP turned on
-  if ( (esp01_waitOK() == false) && (is_trace) )
-  {
-    Serial.print(T("\r\nESP-01: Failed AT+CWDHCP_DEF=0,1"));
+    WIFI_SERIAL.print(T("AT+CWSAP_DEF=\"FET-")); WIFI_SERIAL.print(names[json_name_id]); WIFI_SERIAL.print(T("\",\"NA\",")); WIFI_SERIAL.print(json_wifi_channel); WIFI_SERIAL.print(T(",0\r\n"));
+    if ( (esp01_waitOK() == false) && (is_trace) )
+    {
+      Serial.print(T("\r\nESP-01: Failed AT+CWSAP_DEF=\"FET-")); Serial.print(names[json_name_id]); Serial.print(T("\",\"NA\",")); Serial.print(json_wifi_channel); Serial.print(T(",0\r\n"));
+    }  
   }
-  
-  WIFI_SERIAL.print(T("AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\"\r\n")); // Set the freETarget IP to 192.168.10.9
-  if ( (esp01_waitOK() == false) && (is_trace) )
+  else
   {
-    Serial.print(T("\r\nESP-01: Failed AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\""));
+    WIFI_SERIAL.print(T("AT+CWJAP_DEF=\"")); WIFI_SERIAL.print(json_wifi_ssid); WIFI_SERIAL.print(T("\",\"")); WIFI_SERIAL.print(json_wifi_pwd); WIFI_SERIAL.print(T("\""));
+    if ( (esp01_waitOK() == false) && (is_trace) )
+    {
+      Serial.print(T("\r\nESP-01: Failed AT+CWJAP_DEF=\"")); Serial.print(json_wifi_ssid); Serial.print(T("\",\"")); Serial.print(json_wifi_pwd); Serial.print(T("\""));
+    }  
   }
 
-  WIFI_SERIAL.print(T("AT+CWDHCPS_DEF=1,2800,\"192.168.10.0\",\"192.168.10.8\"\r\n"));          // (DHCP) Set the PC IP to 192.168.10.0.  Lease Time 2800 minutes
-  if ( (esp01_waitOK() == false) && (is_trace) )
+  if ( json_wifi_dhcp )
   {
-    Serial.print(T("\r\nESP-01: Failed AT+CWDHCPS_DEF=1,2800,\"192.168.10.0\",\"192.168.10.8\""));
+    WIFI_SERIAL.print(T("AT+CWDHCP_DEF=0,1\r\n"));                                                  // DHCP turned on  ESP provides IP addresses
+    if ( (esp01_waitOK() == false) && (is_trace) )
+    {
+      Serial.print(T("\r\nESP-01: Failed AT+CWDHCP_DEF=0,1"));
+    }  
+    
+    WIFI_SERIAL.print(T("AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\"\r\n"));                     // Set the freETarget IP to 192.168.10.9
+    if ( (esp01_waitOK() == false) && (is_trace) )
+    {
+      Serial.print(T("\r\nESP-01: Failed AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\""));
+    }
+    
+    WIFI_SERIAL.print(T("AT+CWDHCPS_DEF=1,2800,\"192.168.10.0\",\"192.168.10.8\"\r\n"));            // (DHCP) Set the PC IP to 192.168.10.0.  Lease Time 2800 minutes
+    if ( (esp01_waitOK() == false) && (is_trace) )
+    {
+      Serial.print(T("\r\nESP-01: Failed AT+CWDHCPS_DEF=1,2800,\"192.168.10.0\",\"192.168.10.8\""));
+    }
+  }
+  else
+  {
+    WIFI_SERIAL.print(T("AT+CWDHCP_DEF=0,0\r\n"));                                                 // DHCP turned off Router provides IP addresses
+    if ( (esp01_waitOK() == false) && (is_trace) )
+    {
+      Serial.print(T("\r\nESP-01: Failed AT+CWDHCP_DEF=0,0"));
+    }
+
   }
   
   WIFI_SERIAL.print(T("AT+CIPMODE=0\r\n"));           // Normal Transmission Mode

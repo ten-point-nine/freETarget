@@ -8,7 +8,9 @@
 #ifndef _NONVOL_H
 #define _NONVOL_H
 
-#define PS_VERSION        7                       // Persistent storage version
+#include "esp-01.h"
+
+#define PS_VERSION        8                       // Persistent storage version
 #define PS_UNINIT(x)     ( ((x) == 0xABAB) || ((x) == 0xFFFF))  // Uninitilized value
  
 /*
@@ -70,8 +72,12 @@ void dump_nonvol(void);
 #define NONVOL_FACE_STRIKE    (NONVOL_TABATA_WARN_OFF + sizeof(int))       // Number of cycles to accept a face strike
 #define NONVOL_RAPID_COUNT    (NONVOL_FACE_STRIKE + sizeof(int))           // Count of shots in a Rapid cycle
 #define NONVOL_WIFI_CHANNEL   (NONVOL_RAPID_COUNT + sizeof(int))           // Channel to use for WiFI
+#define NONVOL_WIFI_DHCP      (NONVOL_WIFI_CHANNEL + sizeof(int))          // TRUE if the ESP-01 is a DHCP server
+#define NONVOL_WIFI_SSID      (NONVOL_WIFI_DHCP  + sizeof(int))            // Storage for SSID
+#define NONVOL_WIFI_PWD       (NONVOL_WIFI_SSID  + ESP01_SSID_SIZE)        // Storage for SSID Password
+#define NONVOL_NEXT           (NONVOL_WIFI_SSID  + ESP01_PWD_SIZE) 
 
-#define NEXT_NONVOL           (NONVOL_WIFI_CHANNEL + sizeof(int) )
+#define NEXT_NONVOL           (NONVOL_WIFI_DHCP + sizeof(int) )
 #define NONVOL_SIZE           4096                                         // 4K available
 
 #if (((72-13) * 4) > NONVOL_SIZE )

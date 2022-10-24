@@ -55,6 +55,9 @@ int     json_rapid_count;           // Number of shots expected in string
 int     json_rapid_enable;          // Set to TRUE if the rapid fire event is enabled
 int     json_rapid_time;            // When will the rapid fire event end?
 int     json_rapid_wait;            // Delay applied to rapid start
+int     json_wifi_dhcp;             // True if freETarget is a dhcp server
+char    json_wifi_ssid[ESP01_SSID_SIZE]; // Stored value of SSID
+char    json_wifi_pwd[ESP01_PWD_SIZE];   // Stored value of password
 
 #define JSON_DEBUG false            // TRUE to echo DEBUG messages
 
@@ -108,6 +111,9 @@ const json_message JSON[] = {
   {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_version,                   0,        0 },    // Return the version string
   {"\"V_SET\":",          0,                                 &json_vset,       IS_FLOAT,  &compute_vset_PWM,NONVOL_VSET,             0 },    // Set the voltage reference
   {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT16,  0,                NONVOL_WIFI_CHANNEL,     1 },    // Set the wifi channel
+  {"\"WIFI_DHCP\":",      &json_wifi_dhcp,                   0,                IS_INT16,  0,                NONVOL_WIFI_DHCP,        1 },    // TRUE if the ESP-01 is the DHCP server
+  {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_TEXT,   0,                NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
+  {"\"WIFI_SSID\":",      (int*)&json_wifi_ssid,             0,                IS_TEXT,   0,                NONVOL_WIFI_SSID,        0 },    // Name of SSID to attach to 
   {"\"Z_OFFSET\":",       &json_z_offset,                    0,                IS_INT16,  0,                NONVOL_Z_OFFSET,        13 },    // Distance from paper to sensor plane (mm)
 
   {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT16,  0,                NONVOL_NORTH_X,          0 },    //
@@ -155,9 +161,13 @@ static bool not_found;
 
 bool read_JSON(void)
 {
-  unsigned int  i, j, m, x;
-  int     k, l;
-  char    ch;
+  unsigned int  i;      // Index across JSON message
+  unsigned int  j;      // Index across JSON token table (JSON[])
+           int  k;      // Result from string compare (-Ve => not found)
+  unsigned int  l;      // Index across the gpio init table (init_table)
+  unsigned int  m;      // Index into NONVOL text storage
+  unsigned int  x;      // Temporary working variable
+  char*    s;           // Pointer to stored text string
   double  y;
   bool    return_value;
 
@@ -230,8 +240,9 @@ bool read_JSON(void)
   not_found = true;
   for ( i=0; i != got_right; i++)                             // Go across the JSON input 
   {
-    j = 0;
-    l = 0;
+    j = 0;                                                      // Index across the JSON token table
+    l = 0;                                                      // Index across gpio init table
+    
     while ( (JSON[j].token != 0) || (init_table[l].port != 0xff) ) // Cycle through the tokens
     {
       if ( JSON[j].token != 0 )
@@ -248,7 +259,37 @@ bool read_JSON(void)
               x = 0;
               y = 0;
             break;
-            
+                        
+            case IS_TEXT:                                       // Convert to text
+              while ( input_JSON[i+k] != '"' )                  // Skip to the opening quote
+              {
+                k++; 
+              }
+              k++;                                              // Advance to the text
+
+              s = (char *)JSON[j].value;                        // Fake a pointer to text
+              *s = 0;                                           // Put in a null
+              m = 0;
+              while ( input_JSON[i+k] != '"' )                  // Skip to the opening quote
+              {
+                if ( s != 0 )
+                {
+                   *s = input_JSON[i+k];                        // Save the value
+                   s++;
+                   *s = 0;                                      // Null terminate 
+                }
+                
+                if ( JSON[j].non_vol != 0 )
+                {
+                  EEPROM.put(JSON[j].non_vol+m, input_JSON[i+k]); // Store into NON-VOL
+                  m++;
+                  EEPROM.put(JSON[j].non_vol+m, 0);             // Null terminate
+                }
+                k++;
+              }
+              Serial.print((char*)JSON[j].value);
+              break;
+              
             case IS_INT16:                                      // Convert an integer
               x = atoi(&input_JSON[i+k]);
               if ( JSON[j].value != 0 )
@@ -416,8 +457,8 @@ int instr(char* s1, char* s2)
 void show_echo(int v)
 {
   unsigned int i, j;
-  char   s[512], str_c[10];  // String holding buffers
-
+  char   s[512], str_c[32];   // String holding buffers
+  
   sprintf(s, "\r\n{\r\n\"NAME\":\"%s\", \r\n", names[json_name_id]);
   
   output_to_all(s);
@@ -426,7 +467,6 @@ void show_echo(int v)
  * Loop through all of the JSON tokens
  */
   i=0;
-  j=1;
   while ( JSON[i].token != 0 )                 // Still more to go?  
   {
     if ( (JSON[i].value != NULL) || (JSON[i].d_value != NULL) )              // It has a value ?
@@ -436,7 +476,18 @@ void show_echo(int v)
         default:
         case IS_VOID:
           break;
-          
+
+        case IS_TEXT:
+            j = 0;
+            while ( *((char*)(JSON[i].value)+j) != 0)
+            {
+              str_c[j] = *((char*)(JSON[i].value)+j);
+              j++;
+            }
+            str_c[j] = 0;
+            sprintf(s, "%s \"%s\", \r\n", JSON[i].token, str_c);
+            break;
+            
         case IS_INT16:
         case IS_FIXED:
           sprintf(s, "%s %d, \r\n", JSON[i].token, *JSON[i].value);

@@ -34,4 +34,7 @@ void         esp01_broadcast(void);               // Just blab out a count
 #define ESP01_MAX_POWER     80                    // Set the max power to 80dBM
 #define ESP01_MAX_WAITOK  2000                    // Wait for 2 seconds for the OK to come back
 #define ESP01_BUFFER_SIZE  2048                   // The ESP buffer size
+
+#define ESP01_SSID_SIZE     17                    // Give 16+1 characters for SSID
+#define ESP01_PWD_SIZE      17                    // Give 16+1 characters for PWD
 #endif

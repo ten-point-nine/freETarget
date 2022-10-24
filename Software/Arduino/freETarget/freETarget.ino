@@ -508,7 +508,10 @@ unsigned int reduce(void)
       rapid_count--;                                            // in rapid fire
     }
     
-    if ( (json_rapid_enable != 0) )                             // In a rapid fire cycle
+/*
+ * Increment and process the next
+ */
+    if ( (rapid_enable != 0) )                                  // In a rapid fire cycle
     {
       if ( rapid_count == 0 )                                   // And the shots used up?
       {
@@ -516,10 +519,7 @@ unsigned int reduce(void)
         break;
       }
     }
-
-/*
- * Increment and process the next
- */
+    
     last_shot = (last_shot+1) % SHOT_STRING;
   }
 
