@@ -34,7 +34,7 @@ void multifunction_wait_open(void);                       // Wait for both multi
 void output_to_all(char* s);                              // Multipurpose driver
 void char_to_all(char ch);                                // Output a single character
 void digital_test(void);                                  // Execute the digital test
-
+void paper_on_off(bool on);                               // Turn the motor on or off
 
 /*
  *  Port Definitions

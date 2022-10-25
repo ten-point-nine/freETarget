@@ -60,7 +60,6 @@ const GPIO init_table[] = {
 
 void face_ISR(void);                      // Acknowledge a face strike
 void sensor_ISR(void);                    // Begin recording times for a target shot
-static void paper_on_off(bool on);        // Turn the motor on or off
 
 static bool fcn_DIP_SW_A(void);           // Function to read DIP_SW_A
 static bool fcn_DIP_SW_B(void);           // Function to read DIP_SW_B

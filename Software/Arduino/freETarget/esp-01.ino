@@ -82,6 +82,7 @@ static bool esp01_connect[ESP01_N_CONNECT]; // Set to true when a client (0-3) c
  *--------------------------------------------------------------*/
 void esp01_init(void)
 {
+  is_trace = 1;
   if ( is_trace )
   {
     Serial.print(T("\r\nInitializing ESP-01"));
@@ -122,44 +123,38 @@ void esp01_init(void)
     Serial.print(T("\r\nESP-01: Failed AT+RFPOWER=80"));  
   } 
 
-  WIFI_SERIAL.print(T("AT+CWMODE_DEF=2\r\n"));        // We want to be an access point
-  if ( (esp01_waitOK() == false) && (is_trace) )
+  if ( *json_wifi_ssid == 0 )                          // If the SSID is empty, then we are an SSID and a DHCP server
   {
-    Serial.print(T("\r\nESP-01: Failed AT+CWMODE_DEF=2"));
-  }
-
-  if ( json_wifi_ssid == 0 )
-  {
+    if ( is_trace )
+    {
+      Serial.print(T("\r\nESP-01: Configuring as an SSID"));
+    }
+    
+    WIFI_SERIAL.print(T("AT+CWMODE_DEF=2\r\n"));        // We want to be an access point
+    if ( (esp01_waitOK() == false) && (is_trace) )
+    {
+      Serial.print(T("\r\nESP-01: Failed AT+CWMODE_DEF=2"));
+    }
+    
     WIFI_SERIAL.print(T("AT+CWSAP_DEF=\"FET-")); WIFI_SERIAL.print(names[json_name_id]); WIFI_SERIAL.print(T("\",\"NA\",")); WIFI_SERIAL.print(json_wifi_channel); WIFI_SERIAL.print(T(",0\r\n"));
     if ( (esp01_waitOK() == false) && (is_trace) )
     {
       Serial.print(T("\r\nESP-01: Failed AT+CWSAP_DEF=\"FET-")); Serial.print(names[json_name_id]); Serial.print(T("\",\"NA\",")); Serial.print(json_wifi_channel); Serial.print(T(",0\r\n"));
     }  
-  }
-  else
-  {
-    WIFI_SERIAL.print(T("AT+CWJAP_DEF=\"")); WIFI_SERIAL.print(json_wifi_ssid); WIFI_SERIAL.print(T("\",\"")); WIFI_SERIAL.print(json_wifi_pwd); WIFI_SERIAL.print(T("\""));
-    if ( (esp01_waitOK() == false) && (is_trace) )
-    {
-      Serial.print(T("\r\nESP-01: Failed AT+CWJAP_DEF=\"")); Serial.print(json_wifi_ssid); Serial.print(T("\",\"")); Serial.print(json_wifi_pwd); Serial.print(T("\""));
-    }  
-  }
 
-  if ( json_wifi_dhcp )
-  {
     WIFI_SERIAL.print(T("AT+CWDHCP_DEF=0,1\r\n"));                                                  // DHCP turned on  ESP provides IP addresses
     if ( (esp01_waitOK() == false) && (is_trace) )
     {
       Serial.print(T("\r\nESP-01: Failed AT+CWDHCP_DEF=0,1"));
-    }  
-    
-    WIFI_SERIAL.print(T("AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\"\r\n"));                     // Set the freETarget IP to 192.168.10.9
+    } 
+       
+    WIFI_SERIAL.print(T("AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\"\r\n")); // Set the freETarget IP to 192.168.10.9
     if ( (esp01_waitOK() == false) && (is_trace) )
     {
       Serial.print(T("\r\nESP-01: Failed AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\""));
     }
-    
-    WIFI_SERIAL.print(T("AT+CWDHCPS_DEF=1,2800,\"192.168.10.0\",\"192.168.10.8\"\r\n"));            // (DHCP) Set the PC IP to 192.168.10.0.  Lease Time 2800 minutes
+
+    WIFI_SERIAL.print(T("AT+CWDHCPS_DEF=1,2800,\"192.168.10.0\",\"192.168.10.8\"\r\n"));          // (DHCP) Set the PC IP to 192.168.10.0.  Lease Time 2800 minutes
     if ( (esp01_waitOK() == false) && (is_trace) )
     {
       Serial.print(T("\r\nESP-01: Failed AT+CWDHCPS_DEF=1,2800,\"192.168.10.0\",\"192.168.10.8\""));
@@ -167,14 +162,30 @@ void esp01_init(void)
   }
   else
   {
+    if ( is_trace )
+    {
+      Serial.print(T("\r\nESP-01: Configuring as an access point: ")); Serial.print(json_wifi_ssid); Serial.print(T(",")); Serial.print(json_wifi_pwd);
+    }
+    
+    WIFI_SERIAL.print(T("AT+CWMODE_DEF=1\r\n"));        // We want to be an in Station Mode
+    if ( (esp01_waitOK() == false) && (is_trace) )
+    {
+      Serial.print(T("\r\nESP-01: Failed AT+CWMODE_DEF=1"));
+    }
+    
+    WIFI_SERIAL.print(T("AT+CWJAP_DEF=\"")); WIFI_SERIAL.print(json_wifi_ssid); WIFI_SERIAL.print(T("\",\"")); WIFI_SERIAL.print(json_wifi_pwd); WIFI_SERIAL.print(T("\"\r\n"));
+    if ( (esp01_waitOK() == false) && (is_trace) )
+    {
+      Serial.print(T("\r\nESP-01: Failed AT+CWJAP_DEF=\"")); Serial.print(json_wifi_ssid); Serial.print(T("\",\"")); Serial.print(json_wifi_pwd); Serial.print(T("\"\r\n"));
+    }  
+
     WIFI_SERIAL.print(T("AT+CWDHCP_DEF=0,0\r\n"));                                                 // DHCP turned off Router provides IP addresses
     if ( (esp01_waitOK() == false) && (is_trace) )
     {
       Serial.print(T("\r\nESP-01: Failed AT+CWDHCP_DEF=0,0"));
     }
-
   }
-  
+
   WIFI_SERIAL.print(T("AT+CIPMODE=0\r\n"));           // Normal Transmission Mode
   if ( (esp01_waitOK() == false) && (is_trace) )
   {
@@ -206,6 +217,8 @@ void esp01_init(void)
   {
     Serial.print(T("\r\nESP-01 Initialization complete"));
   }
+
+is_trace = 0;
   return;
 }
 
@@ -331,7 +344,7 @@ void esp01_test(void)
   {
     Serial.print(T("\n\rESP-01 not present. Continuing test anyway")); 
   }
-  Serial.print(T("\n\rSSID: FET-")); Serial.print(names[json_name_id]);
+
   Serial.print(T("\n\rResetting ESP-01"));
   
   WIFI_SERIAL.print(T("+++"));
@@ -378,9 +391,9 @@ void esp01_test(void)
  * be attached to is.
  *--------------------------------------------------------------*/
 
-static char* status_list[] = {"CWMODE_DEF",  "CWSAP_DEF", 
-                              "CWDHCP_DEF",  "CIPAP_DEF", 
-                              "CWDHCPS_DEF", "CIPMODE", 
+static char* status_list[] = {"CWMODE_DEF",  "CWSAP_DEF", "CWJAP_DEF",
+                              "CWDHCP_DEF",  "CIPAP_DEF", "CIPSTA_CUR",
+                              "CWDHCPS_DEF", "CIPMODE",    "CIPSERVER",
                               "CIPMUX",      "CIPSTO", 0};        // Status List
 
 void esp01_status(void)
@@ -461,6 +474,86 @@ void esp01_status(void)
   Serial.print(T("\r\nDone\r\n"));
   return;
 }
+
+
+/*----------------------------------------------------------------
+ *
+ * function: bool esp01_myIP
+ *
+ * brief:    Obtain the current IP address
+ * 
+ * return:   Returned to a pointer
+ *
+ *----------------------------------------------------------------
+ *   
+ * The function issues a status command and sees what comes back
+ * then it issues a PING on the four IP addressees that should
+ * be attached to is.
+ *--------------------------------------------------------------*/
+#define myIP_IDLE   0
+#define myIP_QUOTE1 1
+#define myIP_QUOTE2 2
+
+char ip[] = "192.168.10.9";
+
+void esp01_myIP
+  (
+  char* return_value          // Place to return the results
+  )
+{
+  unsigned long start;
+  char ch;
+  unsigned int myIP_state;
+
+  if ( *json_wifi_ssid == 0 )
+  {
+    WIFI_SERIAL.print(T("AT+CIPAP_CUR?\r\n"));        // Request the IP address
+  }
+  else
+  {
+    WIFI_SERIAL.print(T("AT+CIPSTA_CUR?\r\n"));       // Request the IP address
+  }
+  
+  myIP_state = myIP_IDLE;
+  
+  start = millis();
+  while ( (millis() - start) < ESP01_MAX_WAITOK )
+  {
+    if ( WIFI_SERIAL.available() != 0 ) 
+    {
+      ch = WIFI_SERIAL.read();                      // Echo what comes back
+      switch (myIP_state)
+      {
+        case myIP_IDLE: 
+          if ( ch == '"' )
+          {
+            myIP_state = myIP_QUOTE1;
+          }
+          start = millis();
+          break;
+          
+      case myIP_QUOTE1:                             // Accumulate the IP addres
+          if ( ch == '"' )
+          {
+            return;
+          }
+          *return_value = ch;
+          return_value++;
+          *return_value = 0;
+          start = millis();
+          break;
+
+     case myIP_QUOTE2: 
+          break;
+      }
+    }
+  }
+/*
+ * All done, return
+ */
+  return;
+}
+
 /*----------------------------------------------------------------
  *
  * function: void esp01_flush
@@ -518,6 +611,19 @@ static bool esp01_waitOK(void)
 
   start = millis();                     // Remember the starting time
   state = GOT_NUTHN;                    // Start off empty
+
+  if ( is_trace )
+  {
+    Serial.print(T("\n\resp01_waitOK():"));
+    while ( millis() - start < (5*ONE_SECOND) )
+    {
+      if ( WIFI_SERIAL.available() != 0 )
+      {
+        Serial.print((char)WIFI_SERIAL.read());
+      }
+    }
+    return true;
+  }
   
 /*
  * Loop for a second and see if OK comes back
@@ -527,6 +633,10 @@ static bool esp01_waitOK(void)
     if ( WIFI_SERIAL.available() != 0 ) 
     {
       ch = WIFI_SERIAL.read();
+      if ( is_trace )
+      {
+        Serial.print(ch);
+      }
       switch (state)
       {
         default:

@@ -15,6 +15,7 @@
 #include "mechanical.h"
 #include "diag_tools.h"
 #include "esp-01.h"
+#include "timer.h"
 
 shot_record_t record[SHOT_STRING];      //Array of shot records
 unsigned int this_shot;                 // Index into the shot array

@@ -55,7 +55,6 @@ int     json_rapid_count;           // Number of shots expected in string
 int     json_rapid_enable;          // Set to TRUE if the rapid fire event is enabled
 int     json_rapid_time;            // When will the rapid fire event end?
 int     json_rapid_wait;            // Delay applied to rapid start
-int     json_wifi_dhcp;             // True if freETarget is a dhcp server
 char    json_wifi_ssid[ESP01_SSID_SIZE]; // Stored value of SSID
 char    json_wifi_pwd[ESP01_PWD_SIZE];   // Stored value of password
 
@@ -111,7 +110,6 @@ const json_message JSON[] = {
   {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_version,                   0,        0 },    // Return the version string
   {"\"V_SET\":",          0,                                 &json_vset,       IS_FLOAT,  &compute_vset_PWM,NONVOL_VSET,             0 },    // Set the voltage reference
   {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT16,  0,                NONVOL_WIFI_CHANNEL,     1 },    // Set the wifi channel
-  {"\"WIFI_DHCP\":",      &json_wifi_dhcp,                   0,                IS_INT16,  0,                NONVOL_WIFI_DHCP,        1 },    // TRUE if the ESP-01 is the DHCP server
   {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_TEXT,   0,                NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
   {"\"WIFI_SSID\":",      (int*)&json_wifi_ssid,             0,                IS_TEXT,   0,                NONVOL_WIFI_SSID,        0 },    // Name of SSID to attach to 
   {"\"Z_OFFSET\":",       &json_z_offset,                    0,                IS_INT16,  0,                NONVOL_Z_OFFSET,        13 },    // Distance from paper to sensor plane (mm)
@@ -270,6 +268,7 @@ bool read_JSON(void)
               s = (char *)JSON[j].value;                        // Fake a pointer to text
               *s = 0;                                           // Put in a null
               m = 0;
+              EEPROM.put(JSON[j].non_vol, 0);                   // Put in a null
               while ( input_JSON[i+k] != '"' )                  // Skip to the opening quote
               {
                 if ( s != 0 )
@@ -287,7 +286,6 @@ bool read_JSON(void)
                 }
                 k++;
               }
-              Serial.print((char*)JSON[j].value);
               break;
               
             case IS_INT16:                                      // Convert an integer
@@ -537,12 +535,16 @@ void show_echo(int v)
   sprintf(s, "\"VSET_PWM\": %d, \n\r", json_vset_PWM);                                    // Setpoint adjust PWM
   output_to_all(s);
   
-  sprintf(s, "\"TIMER_COUNT\":%d, \n\r", (int)(SHOT_TIME * OSCILLATOR_MHZ));              // Maximum number of clock cycles to record shot (target dependent)
+  sprintf(s, "\"TIMER_COUNT\": %d, \n\r", (int)(SHOT_TIME * OSCILLATOR_MHZ));             // Maximum number of clock cycles to record shot (target dependent)
   output_to_all(s);
 
   sprintf(s, "\"WiFi_PRESENT\": %d, \n\r", esp01_is_present());                           // TRUE if WiFi is available
   output_to_all(s);
 
+  esp01_myIP(str_c);
+  sprintf(s, "\"WiFi_IP_ADDRESS\": \"%s\", \n\r", str_c);                                 // Print out the IP address
+  output_to_all(s);
+  
   for ( i=0; i != ESP01_N_CONNECT; i++)
   {
     sprintf(s, "\"WiFi_CONNECT %d\": %d, \n\r", i+1, esp01_connect[i]);                   // TRUE if Client[i] connected

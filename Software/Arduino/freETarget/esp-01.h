@@ -26,6 +26,7 @@ void         esp01_status(void);                  // Read the device status
 void         esp01_close(unsigned int channel);   // Close this connection
 void         esp01_status(void);                  // Get the status of the ESP01
 void         esp01_broadcast(void);               // Just blab out a count
+void         esp01_myIP(char* s);                 // Obtain the working IP address
 
 /*
  * Definitions
