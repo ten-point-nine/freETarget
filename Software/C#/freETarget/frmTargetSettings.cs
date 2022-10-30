@@ -79,6 +79,7 @@ namespace freETarget {
         private void frmTargetSettings_Shown(object sender, EventArgs e) {
             mainWindow.lastEcho = null;
             mainWindow.commModule.sendData("{\"ECHO\":0}");
+            mainWindow.log("Sending: " + "{\"ECHO\":0}");
 
             while (mainWindow.lastEcho == null) {
                 Application.DoEvents();
@@ -305,6 +306,7 @@ namespace freETarget {
                 sb.Append("\"ECHO\":9 }");
 
                 mainWindow.commModule.sendData(sb.ToString());
+                mainWindow.log("Sending: " + sb.ToString());
 
             }
         }
