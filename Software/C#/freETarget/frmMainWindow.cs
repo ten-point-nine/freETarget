@@ -459,6 +459,7 @@ namespace freETarget {
 
             Thread.Sleep(500);
             commModule.sendData("{\"VERSION\":7}");
+            log("Sending: " + "{\"VERSION\":7}");
             Thread.Sleep(100);
 
 
@@ -1663,7 +1664,7 @@ namespace freETarget {
                     sb.Append(" }");
                     Console.WriteLine(sb.ToString());
                     commModule.sendData(sb.ToString());
-                    log(sb.ToString());
+                    log("Sending: "+sb.ToString());
                     this.RFduelCounter++;
                     rapidFireTimer.Interval = (this.currentSession.eventType.RF_TimeBetweenShots + this.currentSession.eventType.RF_TimePerShot) * 1000;
                 } else if (this.currentSession.eventType.RF_TimePerSerie > 0) {
@@ -1677,7 +1678,7 @@ namespace freETarget {
                     sb.Append(" }");
                     Console.WriteLine(sb.ToString());
                     commModule.sendData(sb.ToString());
-                    log(sb.ToString());
+                    log("Sending: " + sb.ToString());
                     rapidFireTimer.Interval = (this.currentSession.eventType.RF_TimeBetweenShots + this.currentSession.eventType.RF_TimePerSerie) * 1000;
                 } else {
                     Console.WriteLine("rapid fire misconfiguration");
@@ -1699,7 +1700,7 @@ namespace freETarget {
                         sb.Append(" }");
                         Console.WriteLine(sb.ToString());
                         commModule.sendData(sb.ToString());
-                        log(sb.ToString());
+                        log("Sending: " + sb.ToString());
                         this.RFduelCounter++;
                     } else {
                         rapidFireTimer.Interval = RFcooldown * 1000;
@@ -1727,7 +1728,7 @@ namespace freETarget {
                 sb.Append("\"RAPID_ENABLE\": 0 }");
                 Console.WriteLine(sb.ToString());
                 commModule.sendData(sb.ToString());
-                log(sb.ToString());
+                log("Sending: " + sb.ToString());
                 Console.WriteLine("UNLOAD");
                 currentSession.RFseriesActive = false;
             }

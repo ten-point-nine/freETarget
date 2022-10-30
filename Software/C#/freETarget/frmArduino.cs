@@ -111,6 +111,7 @@ namespace freETarget {
 
         private void btnEcho_Click(object sender, EventArgs e) {
             mainWindow.commModule.sendData("{\"ECHO\":0}");
+            mainWindow.log("Sending: " + "{\"ECHO\":0}");
         }
 
         private void btnInit_Click(object sender, EventArgs e) {
@@ -168,10 +169,12 @@ namespace freETarget {
         private void btnCalibration_Click(object sender, EventArgs e) {
             if (btnCalibration.Text == "CAL") {
                 mainWindow.commModule.sendData("{\"CAL\":0}");
+                mainWindow.log("Sending: " + "{\"CAL\":0}");
                 btnCalibration.Text = "STOP CAL";
             } else {
                 //STOP CAL
                 mainWindow.commModule.sendData("!");
+                mainWindow.log("Sending: " + "!");
                 btnCalibration.Text = "CAL";
             }
 
@@ -180,6 +183,7 @@ namespace freETarget {
 
         private void btnVersion_Click(object sender, EventArgs e) {
             mainWindow.commModule.sendData("{\"VERSION\":7}");
+            mainWindow.log("Sending: " + "{\"VERSION\":7}");
         }
 
 
@@ -192,10 +196,12 @@ namespace freETarget {
 
         private void btnSend_Click(object sender, EventArgs e) {
             mainWindow.commModule.sendData("{\"" + cmbCommands.SelectedItem.ToString() +  "\":" + txtParameter.Text + "}");
+            mainWindow.log("Sending: " + "{\"" + cmbCommands.SelectedItem.ToString() + "\":" + txtParameter.Text + "}");
         }
 
         private void btnSend2_Click(object sender, EventArgs e) {
             mainWindow.commModule.sendData(txtGenericCommand.Text);
+            mainWindow.log("Sending: " + txtGenericCommand.Text);
         }
     }
 
