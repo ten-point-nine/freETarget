@@ -56,7 +56,9 @@ int     json_rapid_enable;          // Set to TRUE if the rapid fire event is en
 int     json_rapid_time;            // When will the rapid fire event end?
 int     json_rapid_wait;            // Delay applied to rapid start
 char    json_wifi_ssid[ESP01_SSID_SIZE]; // Stored value of SSID
-char    json_wifi_pwd[ESP01_PWD_SIZE];   // Stored value of password
+char    json_wifi_pwd[ESP01_PWD_SIZE];// Stored value of password
+char    json_wifi_ip[ESP01_IP_SIZE];// Stored value of IP address
+int     json_wifi_dhcp;             // The ESP is a DHCP server
 
 #define JSON_DEBUG false            // TRUE to echo DEBUG messages
 
@@ -110,10 +112,10 @@ const json_message JSON[] = {
   {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_version,                   0,        0 },    // Return the version string
   {"\"V_SET\":",          0,                                 &json_vset,       IS_FLOAT,  &compute_vset_PWM,NONVOL_VSET,             0 },    // Set the voltage reference
   {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT16,  0,                NONVOL_WIFI_CHANNEL,     1 },    // Set the wifi channel
+  {"\"WIFI_IP\":",        (int*)&json_wifi_ip,               0,                IS_TEXT,   0,                NONVOL_WIFI_IP,          0 },    // IP address use by target
   {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_TEXT,   0,                NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
   {"\"WIFI_SSID\":",      (int*)&json_wifi_ssid,             0,                IS_TEXT,   0,                NONVOL_WIFI_SSID,        0 },    // Name of SSID to attach to 
   {"\"Z_OFFSET\":",       &json_z_offset,                    0,                IS_INT16,  0,                NONVOL_Z_OFFSET,        13 },    // Distance from paper to sensor plane (mm)
-
   {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT16,  0,                NONVOL_NORTH_X,          0 },    //
   {"\"NORTH_Y\":",        &json_north_y,                     0,                IS_INT16,  0,                NONVOL_NORTH_Y,          0 },    //
   {"\"EAST_X\":",         &json_east_x,                      0,                IS_INT16,  0,                NONVOL_EAST_X,           0 },    //

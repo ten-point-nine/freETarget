@@ -528,13 +528,19 @@ void update_nonvol
     EEPROM.put(NONVOL_WIFI_DHCP, x);                      // Default DHCP to be on
     x = 0;
     EEPROM.put(NONVOL_WIFI_SSID, x);                      // No default SSID
+    EEPROM.put(NONVOL_WIFI_PWD, x);                       // No default password
     current_version = 8;
     EEPROM.put(NONVOL_PS_VERSION, current_version);
   }
-  if ( current_version != PS_VERSION )
+
+  if ( current_version == 8 )                     
   {
-    Serial.print(T("\n\rVerify firmware"));
+    x = 0;
+    EEPROM.put(NONVOL_WIFI_IP, x);                        // No default IP address
+    current_version = 9;
+    EEPROM.put(NONVOL_PS_VERSION, current_version);
   }
+  
 /*
  * Up to date, return
  */

@@ -78,6 +78,18 @@ static bool esp01_connect[ESP01_N_CONNECT]; // Set to true when a client (0-3) c
  * 
  * The init function does not set the pass through mode.  This
  * is done by a separate call to esp01_passthrough();
+ * 
+ * Network Settings
+ * 
+ * json_wifi_ssid given:
+ *    Connect to this SSID
+ *    use it's DHCP server
+ *    Use json_wifi_ip if given
+ *    
+ * json_wifi_ssid empty:
+ *    I am the SSID
+ *    I am the DHCP server
+ *    Use 192.168.10.9 as my IP address
  *   
  *--------------------------------------------------------------*/
 void esp01_init(void)
@@ -123,31 +135,35 @@ void esp01_init(void)
     Serial.print(T("\r\nESP-01: Failed AT+RFPOWER=80"));  
   } 
 
-  if ( *json_wifi_ssid == 0 )                          // If the SSID is empty, then we are an SSID and a DHCP server
+/*
+ * If an SSID is defined, then we are connecting to an existing access point
+ */
+  if ( *json_wifi_ssid == 0 )                          // If the SSID is empty, then we are an SSID and a DHCP server and our IP address is 192.168.10.9
   {
     if ( is_trace )
     {
       Serial.print(T("\r\nESP-01: Configuring as an SSID"));
     }
-    
+
     WIFI_SERIAL.print(T("AT+CWMODE_DEF=2\r\n"));        // We want to be an access point
     if ( (esp01_waitOK() == false) && (is_trace) )
     {
       Serial.print(T("\r\nESP-01: Failed AT+CWMODE_DEF=2"));
     }
-    
+
+
     WIFI_SERIAL.print(T("AT+CWSAP_DEF=\"FET-")); WIFI_SERIAL.print(names[json_name_id]); WIFI_SERIAL.print(T("\",\"NA\",")); WIFI_SERIAL.print(json_wifi_channel); WIFI_SERIAL.print(T(",0\r\n"));
     if ( (esp01_waitOK() == false) && (is_trace) )
     {
       Serial.print(T("\r\nESP-01: Failed AT+CWSAP_DEF=\"FET-")); Serial.print(names[json_name_id]); Serial.print(T("\",\"NA\",")); Serial.print(json_wifi_channel); Serial.print(T(",0\r\n"));
     }  
 
-    WIFI_SERIAL.print(T("AT+CWDHCP_DEF=0,1\r\n"));                                                  // DHCP turned on  ESP provides IP addresses
+    WIFI_SERIAL.print(T("AT+CWDHCP_DEF=0,1\r\n"));      // DHCP turned on
     if ( (esp01_waitOK() == false) && (is_trace) )
     {
       Serial.print(T("\r\nESP-01: Failed AT+CWDHCP_DEF=0,1"));
-    } 
-       
+    }
+  
     WIFI_SERIAL.print(T("AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\"\r\n")); // Set the freETarget IP to 192.168.10.9
     if ( (esp01_waitOK() == false) && (is_trace) )
     {
@@ -160,7 +176,7 @@ void esp01_init(void)
       Serial.print(T("\r\nESP-01: Failed AT+CWDHCPS_DEF=1,2800,\"192.168.10.0\",\"192.168.10.8\""));
     }
   }
-  else
+  else    // Connect to an SSID, let it define the DHCP if needed
   {
     if ( is_trace )
     {
@@ -177,15 +193,28 @@ void esp01_init(void)
     if ( (esp01_waitOK() == false) && (is_trace) )
     {
       Serial.print(T("\r\nESP-01: Failed AT+CWJAP_DEF=\"")); Serial.print(json_wifi_ssid); Serial.print(T("\",\"")); Serial.print(json_wifi_pwd); Serial.print(T("\"\r\n"));
-    }  
-
-    WIFI_SERIAL.print(T("AT+CWDHCP_DEF=0,0\r\n"));                                                 // DHCP turned off Router provides IP addresses
+    }
+    
+    WIFI_SERIAL.print(T("AT+CWDHCP_DEF=0,0\r\n"));                                                  // DHCP turned off Router provides IP address
     if ( (esp01_waitOK() == false) && (is_trace) )
     {
-      Serial.print(T("\r\nESP-01: Failed AT+CWDHCP_DEF=0,0"));
+      Serial.print(T("\r\nESP-01: Failed AT+CWDHCP_DEF=0,1"));
+    } 
+    
+    if ( *json_wifi_ip != 0 )                                                                       // If we have an IP address then use this one
+    {
+      WIFI_SERIAL.print(T("AT+CIPAP_DEF=\"")); WIFI_SERIAL.print(json_wifi_ip); WIFI_SERIAL.print(T("\",\"")); WIFI_SERIAL.print(json_wifi_ip); WIFI_SERIAL.print(T("\"\r\n")); // Set the freETarget IP to 192.168.10.9
+      if ( (esp01_waitOK() == false) && (is_trace) )
+      {
+        Serial.print(T("\r\nESP-01: Failed AT+CIPAP_DEF=\"")); Serial.print(json_wifi_ip); Serial.print(T("\",\"")); Serial.print(json_wifi_ip); Serial.print(T("\"\r\n"));
+      }
     }
   }
 
+
+/*
+ * Other operating settings
+ */
   WIFI_SERIAL.print(T("AT+CIPMODE=0\r\n"));           // Normal Transmission Mode
   if ( (esp01_waitOK() == false) && (is_trace) )
   {

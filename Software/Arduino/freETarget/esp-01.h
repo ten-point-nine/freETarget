@@ -38,4 +38,5 @@ void         esp01_myIP(char* s);                 // Obtain the working IP addre
 
 #define ESP01_SSID_SIZE     17                    // Give 16+1 characters for SSID
 #define ESP01_PWD_SIZE      17                    // Give 16+1 characters for PWD
+#define ESP01_IP_SIZE       17                    // Use 192.168.100.100 for IP
 #endif

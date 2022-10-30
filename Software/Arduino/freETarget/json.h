@@ -80,4 +80,5 @@ extern int    json_rapid_wait;    // Delay applied to rapid fire
 extern int    json_wifi_dhcp;     // TRUE if the DHCP server is enabled
 extern char   json_wifi_ssid[];   // Text of WiFI SSID
 extern char   json_wifi_pwd[];    // Text of WiFI password
+extern char   json_wifi_ip[];     // Text of IP address
 #endif _JSON_H_
