@@ -544,7 +544,7 @@ void show_echo(int v)
   output_to_all(s);
 
   esp01_myIP(str_c);
-  sprintf(s, "\"WiFi_IP_ADDRESS\": \"%s\", \n\r", str_c);                                 // Print out the IP address
+  sprintf(s, "\"WiFi_IP_ADDRESS\": \"%s:1090\", \n\r", str_c);                            // Print out the IP address
   output_to_all(s);
   
   for ( i=0; i != ESP01_N_CONNECT; i++)
