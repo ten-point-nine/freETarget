@@ -525,8 +525,8 @@ void read_timers
  * Drive the motor on and off for the number of cycles
  * at duration
  */
-  paper_on_off(true);                            // Turn the motor on
-  set_motor_time(s_time, s_count);
+  paper_on_off(true);                             // Turn the motor on
+  set_motor_time(s_time, s_count);                // Update the counts in the timer thread
 
  /*
   * All done, return
@@ -1109,7 +1109,7 @@ void aquire(void)
  */
   if ( DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("\r\nAquiring shot:")); Serial.print(this_shot);
+    Serial.print(T("Aquiring shot:")); Serial.print(this_shot);
   }
   stop_timers();                                    // Stop the counters
   read_timers(&record[this_shot].timer_count[0]);   // Record this count

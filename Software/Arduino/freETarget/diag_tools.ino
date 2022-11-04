@@ -436,7 +436,7 @@ void self_test(uint16_t test)
  {
   if ( DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("\r\nPOST LEDs"));
+    Serial.print(T("POST LEDs"));
   }
 
   set_LED(L('*', '.', '.'));
@@ -496,7 +496,7 @@ void self_test(uint16_t test)
   
   if ( DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("\r\nPOST counters"));
+    Serial.print(T("POST counters"));
   }
 
   test_passed = true;                 // And assume that it will pass
@@ -521,7 +521,7 @@ void self_test(uint16_t test)
   {
     if ( DLT(DLT_CRITICAL) )
     {
-      Serial.print(T("\r\nCycle:")); Serial.print(i);
+      Serial.print(T("Cycle:")); Serial.print(i);
     }
     
 /*
@@ -594,7 +594,7 @@ void self_test(uint16_t test)
       {
         if ( DLT(DLT_CRITICAL) )
         {
-          Serial.print(T("\r\nClock Pass. Counter:")); Serial.print(nesw[j]); Serial.print(T(" Is:")); Serial.print(read_counter(j)); Serial.print(T(" Should be:")); Serial.print(random_delay); Serial.print(T(" Delta:")); Serial.print(x);
+          Serial.print(T("Clock Pass. Counter:")); Serial.print(nesw[j]); Serial.print(T(" Is:")); Serial.print(read_counter(j)); Serial.print(T(" Should be:")); Serial.print(random_delay); Serial.print(T(" Delta:")); Serial.print(x);
         }
       }
     }
@@ -605,7 +605,7 @@ void self_test(uint16_t test)
  */
   if ( DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("\r\nClock Test complete"));
+    Serial.print(T("Clock Test complete"));
   }
   set_LED(L('.', '.', '.'));
   return test_passed;
@@ -627,7 +627,7 @@ void self_test(uint16_t test)
  {
    if ( DLT(DLT_CRITICAL) )
    {
-    Serial.print(T("\r\nPOST trip point"));
+    Serial.print(T("POST trip point"));
    }
    
    set_trip_point(20);              // Show the trip point once (20 cycles used for blinking values)
@@ -715,7 +715,7 @@ void set_trip_point
   
   if ( DLT(DLT_CRITICAL) )                                           // Infinite number of passes?
   {
-    Serial.print(T("\r\nSetting trip point. Type ! of cycle power to exit\r\n"));
+    Serial.print(T("Setting trip point. Type ! of cycle power to exit\r\n"));
   }
   blinky = 0;
   not_in_spec = true;                                       // Start off by assuming out of spec
@@ -763,7 +763,7 @@ void set_trip_point
     {                                                       // Blink the LEDs * - x - *
       if ( DLT(DLT_CRITICAL) )
       {
-        Serial.print(T("\r\nOut Of Spec: ")); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
+        Serial.print(T("Out Of Spec: ")); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
       }
       blink_fault(VREF_OVER_UNDER);
       pass_count = 0;                                       // Stay in this function forever
@@ -1372,3 +1372,30 @@ void log_sensor
  */
   return;
 } 
+
+/*----------------------------------------------------------------
+ *
+ * function: do_dlt
+ *
+ * brief:    Check for a DLT log and print the time
+ *
+ * return:   TRUE if the DLT should be printed
+ * 
+ *----------------------------------------------------------------
+ * 
+ * is_trace is compared to the log level and if valid the
+ * current time stamp is printed
+ *   
+ *--------------------------------------------------------------*/
+bool do_dlt
+  (
+  unsigned int level
+  )
+{ 
+  if ((is_trace) < (level))
+  {
+    return false;      // Send out if the trace is higher than the level 
+  }
+  Serial.print(T("\n\r")); Serial.print(micros()/1000000); Serial.print(T(".")); Serial.print(micros()%1000000); Serial.print(T(": "));
+  return true;
+}

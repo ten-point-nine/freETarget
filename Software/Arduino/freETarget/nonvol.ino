@@ -25,7 +25,7 @@ void check_nonvol(void)
   
   if ( DLT(DLT_DIAG) )
   {
-    Serial.print(T("\r\nChecking NONVOL"));
+    Serial.print(T("Checking NONVOL"));
   }
   
 /*
@@ -82,6 +82,7 @@ void factory_nonvol
   Serial.print(serial_number);
   Serial.print(new_serial_number);
   delay(5);
+  
 /*
  * Fill up all of memory with a known (bogus) value
  */
@@ -120,6 +121,7 @@ void factory_nonvol
        break;
        
        case IS_TEXT:
+       case IS_SECRET:
         Serial.print(T("\r\n")); Serial.print(JSON[i].token); Serial.print(T(" \"\""));
         if ( JSON[i].non_vol != 0 )
         {
@@ -305,7 +307,7 @@ void read_nonvol(void)
   
   if ( DLT(DLT_DIAG) )
   {
-    Serial.print(T("\r\nReading NONVOL"));
+    Serial.print(T("Reading NONVOL"));
   }
   
 /*
@@ -345,13 +347,14 @@ void read_nonvol(void)
           break;
           
         case IS_TEXT:
-          if ( JSON[i].non_vol != 0 )                          // Is persistent storage enabled?
+        case IS_SECRET:
+          if ( JSON[i].non_vol != 0 )                           // Is persistent storage enabled?
           {
             j=0;
             while (1)                                           // Loop and copy the NONVOL 
             {
               EEPROM.get((JSON[i].non_vol+j), ch );
-              *((unsigned char*)(JSON[i].value) + j) = ch;       // Over to the working storage
+              *((unsigned char*)(JSON[i].value) + j) = ch;     // Over to the working storage
               if ( ch == 0 )
               {
                 break;
@@ -513,11 +516,8 @@ void update_nonvol
     EEPROM.put(NONVOL_PS_VERSION, current_version);
   }
 
-  if ( current_version == 6 )                     
+  if ( current_version == 6 )                             // Version 6 removed
   {
-    EEPROM.get(NONVOL_PAPER_TIME, json_paper_time);
-    json_paper_time *= 10;
-    EEPROM.put(NONVOL_PAPER_TIME, json_paper_time);        // Motor time in 1ms increments
     current_version = 7;
     EEPROM.put(NONVOL_PS_VERSION, current_version);
   }

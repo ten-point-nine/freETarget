@@ -200,10 +200,13 @@ ISR(TIMER1_COMPA_vect)
       {
         motor_time--;                           // run down the timer
       }
-      else
+      else                                      // Hit zero, Time over
       {
         paper_on_off(false);                    // Turn off the motor
-        motor_cycles--;                         // Decriment cycles remaining
+        if ( motor_cycles != 0 )
+        {
+          motor_cycles--;                         // Decriment cycles remaining
+        }
         if ( motor_cycles == 0 )
         {
           motor_state = MOTOR_STATE_IDLE;       // None left, go to idle
@@ -233,7 +236,7 @@ ISR(TIMER1_COMPA_vect)
  * function: set_motor_time
  * 
  * brief:    Setup the duration of the witness paper motor
- * 
+ *  
  * return:   None
  * 
  *-----------------------------------------------------
@@ -257,10 +260,10 @@ void set_motor_time
     return;
   }
 
-  motor_time += duration;              // Otherwiose remember for later
-  motor_reload += duration;            // Set the reload count
-  motor_state = MOTOR_STATE_RUNNING;   // And start running
-  motor_cycles += cycles;              // Number of steps to pulse
+  motor_time += (10*duration);        // Otherwiose remember for later
+  motor_reload += (10*duration);      // Set the reload count
+  motor_state = MOTOR_STATE_RUNNING;  // And start running
+  motor_cycles += cycles;             // Number of steps to pulse
 
   if ( motor_cycles == 0 )
   {

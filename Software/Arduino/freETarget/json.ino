@@ -113,7 +113,7 @@ const json_message JSON[] = {
   {"\"V_SET\":",          0,                                 &json_vset,       IS_FLOAT,  &compute_vset_PWM,NONVOL_VSET,             0 },    // Set the voltage reference
   {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT16,  0,                NONVOL_WIFI_CHANNEL,     1 },    // Set the wifi channel
   {"\"WIFI_IP\":",        (int*)&json_wifi_ip,               0,                IS_TEXT,   0,                NONVOL_WIFI_IP,          0 },    // IP address use by target
-  {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_TEXT,   0,                NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
+  {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_SECRET, 0,                NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
   {"\"WIFI_SSID\":",      (int*)&json_wifi_ssid,             0,                IS_TEXT,   0,                NONVOL_WIFI_SSID,        0 },    // Name of SSID to attach to 
   {"\"Z_OFFSET\":",       &json_z_offset,                    0,                IS_INT16,  0,                NONVOL_Z_OFFSET,        13 },    // Distance from paper to sensor plane (mm)
   {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT16,  0,                NONVOL_NORTH_X,          0 },    //
@@ -261,6 +261,7 @@ bool read_JSON(void)
             break;
                         
             case IS_TEXT:                                       // Convert to text
+            case IS_SECRET:
               while ( input_JSON[i+k] != '"' )                  // Skip to the opening quote
               {
                 k++; 
@@ -478,10 +479,18 @@ void show_echo(int v)
           break;
 
         case IS_TEXT:
+        case IS_SECRET:
             j = 0;
             while ( *((char*)(JSON[i].value)+j) != 0)
             {
-              str_c[j] = *((char*)(JSON[i].value)+j);
+              if ( JSON[i].convert == IS_SECRET )
+              {
+                str_c[j] = '*';
+              }
+              else
+              {
+                str_c[j] = *((char*)(JSON[i].value)+j);
+              }
               j++;
             }
             str_c[j] = 0;
@@ -500,6 +509,10 @@ void show_echo(int v)
           break;
       }
       output_to_all(s);
+      if ( esp01_connected() )            // If the wifi is attached
+      {
+        delay(100);                        // Slow down to let it catch up
+      }
     }
     i++;
   }
@@ -652,7 +665,6 @@ static void show_test(int test_number)
    switch (trace)
    {
     default: 
-      trace = DLT_NONE;
     case DLT_NONE:        sprintf(s, "\r\nDLT NONE\r\n");       break;
     case DLT_CRITICAL:    sprintf(s, "\r\nDLT CRITICAL\r\n");   break;
     case DLT_APPLICATION: sprintf(s, "\r\nDLT APPLICATON\r\n"); break;

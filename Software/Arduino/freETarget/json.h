@@ -20,10 +20,11 @@ typedef struct  {
 
 #define IS_VOID       0       // Value is a void
 #define IS_TEXT       1       // Value is a string
-#define IS_INT16      2       // Value is a 16 bit int
-#define IS_FLOAT      3       // Value is a floating point number
-#define IS_DOUBLE     4       // Value is a double
-#define IS_FIXED      5       // The value cannot be changed
+#define IS_SECRET     2       // Value is a string but hidden
+#define IS_INT16      3       // Value is a 16 bit int
+#define IS_FLOAT      4       // Value is a floating point number
+#define IS_DOUBLE     5       // Value is a double
+#define IS_FIXED      6       // The value cannot be changed
 
 void reset_JSON(void);            // Clear the JSON input buffer
 bool read_JSON(void);             // Scan the serial port looking for JSON input

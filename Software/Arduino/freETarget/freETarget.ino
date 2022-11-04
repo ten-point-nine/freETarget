@@ -105,7 +105,7 @@ void setup(void)
   while ( (POST_TIMERS() == false)        // If the timers fail
               && !DLT(DLT_CRITICAL))      // and not in trace mode (DIAG jumper installed)
   {
-    Serial.print(T("\r\nPOST_2 Failed\r\n"));// Blink the LEDs
+    Serial.print(T("POST_2 Failed\r\n"));// Blink the LEDs
     blink_fault(POST_COUNT_FAILED);       // and try again
   }
 
@@ -138,7 +138,6 @@ unsigned int state = SET_MODE;
 unsigned int old_state = ~SET_MODE;
 
 unsigned long timer;                  // Interval timer
-unsigned long follow_through_start;   // Follow through timer
 unsigned long power_save;             // Power save timer
 unsigned int sensor_status;           // Record which sensors contain valid data
 unsigned int location;                // Sensor location 
@@ -189,10 +188,10 @@ void loop()
 /*
  * Cycle through the state machine
  */
-  if ( DLT(DLT_CRITICAL) 
-    && (state != old_state) )
+  if ( (state != old_state) 
+      && DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("\r\nLoop State: ")); Serial.print(loop_name[state]);;
+    Serial.print(T("Loop State: ")); Serial.print(loop_name[state]);;
   } 
   old_state = state;
   
@@ -315,7 +314,7 @@ unsigned int arm(void)
   { 
     if ( DLT(DLT_CRITICAL) )
     {
-      Serial.print(T("\r\n\nWaiting..."));
+      Serial.print(T("Waiting..."));
     }  
     enable_timer_interrupt();
     return WAIT;                   // Fall through to WAIT
@@ -404,11 +403,10 @@ unsigned int wait(void)
     if (millis() >= rapid_on)           // Do this until the timer expires
     {
       set_LED_PWM_now(0);
-      follow_through_start = millis();  // No follow through on rapid fire
 
       if ( DLT(DLT_CRITICAL) )
       {
-        Serial.print(T("\n\rRapid fire complete"));
+        Serial.print(T("Rapid fire complete"));
       }
       return FINISH;                   // Finish this rapid fire cycle
     }
@@ -481,21 +479,34 @@ unsigned int reduce(void)
   {   
     if ( DLT(DLT_CRITICAL) )
     {
-      Serial.print(T("\r\nReducing shot: ")); Serial.print(last_shot);
-      Serial.print(T("\r\nTrigger: ")); 
+      Serial.print(T("Reducing shot: ")); Serial.print(last_shot); Serial.print(T("\r\nTrigger: ")); 
       show_sensor_status(record[last_shot].sensor_status, &record[last_shot]);
     }
-      
+
+
     location = compute_hit(&record[last_shot], false);          // Compute the score
     if ( location != MISS )                                     // Was it a miss or face strike?
     {
+      if ( (json_rapid_enable == 0) && (json_tabata_enable = 0))// If in a regular session, hold off for the follow through time
+      {
+        delay(ONE_SECOND * json_follow_through);
+      }
       send_score(&record[last_shot]);
+
+      if ( (json_paper_time + json_step_time) != 0 )            // Has the witness paper been enabled?
+      {
+        if ( ((json_paper_eco == 0)                             // ECO turned off
+            || ( sqrt(sq(record[this_shot].x) + sq(record[this_shot].y)) < json_paper_eco )) ) // Outside the black
+        {
+        drive_paper();                                          // to follow through.
+        }
+      } 
     }
     else
     {
       if ( DLT(DLT_CRITICAL) )
       {
-        Serial.print(T("\r\nShot miss...\r\n"));
+        Serial.print(T("Shot miss...\r\n"));
       }
       blink_fault(SHOT_MISS);
       send_miss(&record[last_shot]);
@@ -543,28 +554,14 @@ unsigned int reduce(void)
  * 
  * brief: Finish up the shot cycle 
  * 
- * return: Stay in the reduce state if a follow through timer is active 
- *         Jump to ARM state if more shots are ecpected
- * 
- *----------------------------------------------------------------
+ * return: Retrn to the SET_MODE state
  *
- * This loop is executed indefinitly until a shot is detected
- * 
- * In this loop check
- *    - State of the WiFi interface
+ *----------------------------------------------------------------
  *
  *--------------------------------------------------------------*/
 unsigned int finish(void)
 {
-  if ( (json_paper_time + json_step_time) != 0 )  // Has the witness paper been enabled?
-  {
-    if ( ((json_paper_eco == 0)                   // ECO turned off
-      || ( sqrt(sq(record[this_shot].x) + sq(record[this_shot].y)) < json_paper_eco )) ) // Outside the black
-    {
-      drive_paper();                              // to follow through.
-    }
-  }  
-
+ 
 /*
  * All done, return
  */
@@ -627,12 +624,9 @@ static long tabata
 /*
  * Execute the state machine
  */
-  if ( DLT(DLT_APPLICATION) )
+  if ( (old_tabata_state != tabata_state ) && DLT(DLT_APPLICATION) )
   {
-    if (old_tabata_state != tabata_state )
-    {
-      Serial.print(T("\r\nTabata State: ")); Serial.print(tabata_state); Serial.print(T("  Duration:")); Serial.print(time_end / ONE_SECOND);
-    }
+    Serial.print(T("Tabata State: ")); Serial.print(tabata_state); Serial.print(T("  Duration:")); Serial.print(time_end / ONE_SECOND);
   }
   
   switch (tabata_state)
@@ -766,11 +760,11 @@ unsigned long tabata_time(void)
   {
     if ( enable )
     {
-      Serial.print(T("\n\rRapid Fire armed")); 
+      Serial.print(T("\Rapid Fire armed")); 
     }
     else
     {
-      Serial.print(T("\n\rRapid Fire dis-armed")); 
+      Serial.print(T("Rapid Fire dis-armed")); 
     }
   }
   
@@ -817,44 +811,45 @@ unsigned long tabata_time(void)
   if ( enable != 0 )
   {
     set_LED_PWM_now(0);                                           // Turn off the LEDs (maybe turn them on later)
-    rapid_on = millis() + ((long)json_rapid_time * 1000L);        // Duration of the event in ms
-    rapid_count = json_rapid_count;                               // Number of expected shots
-    
+     
     if ( json_rapid_wait != 0 )
     {      
       if  ( json_rapid_wait >= RANDOM_INTERVAL )                  // > Random Interval
       {
         random_wait = random(5, json_rapid_wait % 100);           // Use bottom two digits for the time
-        sprintf(str, "{\"RAPID_WAIT\":%d}", random_wait);
+        sprintf(str, "\r\n{\"RAPID_WAIT\":%d}", random_wait);
         output_to_all(str);
         delay(random_wait * ONE_SECOND);
       }
       else
       {
-        sprintf(str, "{\"RAPID_WAIT\":%d}", json_rapid_wait);     // Use this time 
+        sprintf(str, "\r\n{\"RAPID_WAIT\":%d}", json_rapid_wait);     // Use this time 
         output_to_all(str);
         delay(json_rapid_wait * ONE_SECOND);
       }
     }
+    rapid_on = millis() + ((long)json_rapid_time * 1000L);        // Duration of the event in ms
+    rapid_count = json_rapid_count;                               // Number of expected shots
     shot_number = 1;
   }
   else
   {
     rapid_on = 0;
   }
-  set_LED_PWM_now(json_LED_PWM);                                    // Turn on the LED to start the cycle
+   
+  set_LED_PWM_now(json_LED_PWM);                                  // Turn on the LED to start the cycle
   
   json_rapid_enable = enable;
-  
+
   if ( DLT(DLT_APPLICATION) )
   {
     if ( enable )
     {
-      Serial.print(T("\n\rStarting Rapid Fire.  Time: "));Serial.print(json_rapid_time);
+      Serial.print(T("Starting Rapid Fire.  Time: "));Serial.print(json_rapid_time);
     }
     else
     {
-      Serial.print(T("\n\rRapid Fire disabled"));
+      Serial.print(T("Rapid Fire disabled"));
     }
   }
   

@@ -13,7 +13,7 @@
 #include "esp-01.h"
 #include "json.h"
 
-#define SOFTWARE_VERSION "\"4.0.0 RC8 October 31, 2022\""
+#define SOFTWARE_VERSION "\"4.0.0 RC11 November 3, 2022\""
 #define REV_100    100
 #define REV_210    210
 #define REV_220    220
@@ -33,7 +33,7 @@
 /*
  * Tracing 
  */
-#define DLT(level)      ( (is_trace) >= (level) ) // Send out if the trace is higher than the level 
+#define DLT(level)      ( do_dlt(level) )
 #define DLT_NONE          0                       // No DLT messages displayed
 #define DLT_CRITICAL      1                       // Critical operational messages displayed
 #define DLT_APPLICATION   3                       // Application level messages displayed

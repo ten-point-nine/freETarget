@@ -61,7 +61,7 @@ double speed_of_sound
   
   if ( DLT(DLT_DIAG) )
     {
-    Serial.print(T("\r\nSpeed of sound: ")); Serial.print(speed_mmPuS); Serial.print(T("mm/us"));
+    Serial.print(T("Speed of sound: ")); Serial.print(speed_mmPuS); Serial.print(T("mm/us"));
     Serial.print(T("  Worst case delay: ")); Serial.print(json_sensor_dia / speed_mmPuS * OSCILLATOR_MHZ); Serial.print(T(" counts"));
     }
 
@@ -162,7 +162,7 @@ unsigned int compute_hit
   if ( DLT(DLT_DIAG) )
   {
 
-    Serial.print(T("\r\ncompute_hit()")); 
+    Serial.print(T("compute_hit()")); 
   }
 
 /* 
@@ -172,7 +172,7 @@ unsigned int compute_hit
   {
     if ( DLT(DLT_DIAG) )
     {
-      Serial.print(T("\r\nMiss detected"));
+      Serial.print(T("Miss detected"));
     }
     return MISS;
   }
@@ -184,7 +184,7 @@ unsigned int compute_hit
   z_offset_clock = (double)json_z_offset  * OSCILLATOR_MHZ / s_of_sound; // Clock adjustement for paper to sensor difference
   if ( DLT(DLT_DIAG) )
   {
-    Serial.print(T("\r\nz_offset_clock:")); Serial.print(z_offset_clock); Serial.print(T("\r\n"));
+    Serial.print(T("z_offset_clock:")); Serial.print(z_offset_clock); Serial.print(T("\r\n"));
   }
   
  /* 
@@ -214,7 +214,7 @@ unsigned int compute_hit
   
  if ( DLT(DLT_DIAG) )
  {
-   Serial.print(T("\r\nReference: ")); Serial.print(reference); Serial.print(T("  location:")); Serial.print(nesw[location]);
+   Serial.print(T("Reference: ")); Serial.print(reference); Serial.print(T("  location:")); Serial.print(nesw[location]);
  }
 
 /*
@@ -232,7 +232,7 @@ unsigned int compute_hit
 
   if ( DLT(DLT_DIAG) )
   {
-    Serial.print(T("\r\nCounts       "));
+    Serial.print(T("Counts       "));
     for (i=N; i <= W; i++)
     {
      Serial.print(*which_one[i]); Serial.print(":"); Serial.print(s[i].count); Serial.print(T(" "));
@@ -277,7 +277,7 @@ unsigned int compute_hit
  
   if ( DLT(DLT_DIAG) )
   {
-   Serial.print(T("\r\nestimate: ")); Serial.print(estimate);
+   Serial.print(T("estimate: ")); Serial.print(estimate);
   }
   error = 999999;                  // Start with a big error
   count = 0;
@@ -308,7 +308,7 @@ unsigned int compute_hit
 
     if ( DLT(DLT_DIAG) )
     {
-      Serial.print(T("\r\nx_avg:"));  Serial.print(x_avg);   Serial.print(T("  y_avg:")); Serial.print(y_avg); Serial.print(T(" estimate:")),  Serial.print(estimate);  Serial.print(T(" error:")); Serial.print(error);
+      Serial.print(T("x_avg:"));  Serial.print(x_avg);   Serial.print(T("  y_avg:")); Serial.print(y_avg); Serial.print(T(" estimate:")),  Serial.print(estimate);  Serial.print(T(" error:")); Serial.print(error);
       Serial.println();
     }
     count++;
@@ -323,11 +323,6 @@ unsigned int compute_hit
   */
   shot->x = x_avg;             
   shot->y = y_avg;
-  
-  if ( DLT(DLT_CRITICAL) )
-  {
-    Serial.print(T("\r\ncompute_hit() duration: ")); Serial.print(millis() - now); Serial.print(T("ms"));
-  }
 
   return location;
 }
@@ -407,7 +402,7 @@ bool find_xy_3D
   {
     if ( DLT(DLT_DIAG) )
     {
-      Serial.print(T("\r\nSensor: ")); Serial.print(s->index); Serial.print(T(" no data"));
+      Serial.print(T("Sensor: ")); Serial.print(s->index); Serial.print(T(" no data"));
     }
     return false;           // Sensor did not trigger.
   }
@@ -469,7 +464,7 @@ bool find_xy_3D
  */
   if ( DLT(DLT_DIAG) )
     {
-    Serial.print(T("\r\nindex:")); Serial.print(s->index) ; 
+    Serial.print(T("index:")); Serial.print(s->index) ; 
     Serial.print(T(" a:"));        Serial.print(s->a);       Serial.print(T("  b:"));  Serial.print(s->b);
     Serial.print(T(" ae:"));       Serial.print(ae);         Serial.print(T("  be:")); Serial.print(be);    Serial.print(T(" c:")),  Serial.print(s->c);
     Serial.print(T(" cos:"));      Serial.print(cos(rotation)); Serial.print(T(" sin: ")); Serial.print(sin(rotation));
@@ -521,7 +516,7 @@ void send_score
   
   if ( DLT(DLT_DIAG) )
   {
-    Serial.print(T("\r\nSending the score"));
+    Serial.print(T("Sending the score"));
   }
 
  /* 
@@ -717,7 +712,7 @@ static void remap_target
   
   if ( DLT(DLT_DIAG) )
   {
-    Serial.print(T("\n\rremap_target x:")); Serial.print(*x); Serial.print(" y:"); Serial.print(*y);
+    Serial.print(T("remap_target x:")); Serial.print(*x); Serial.print(" y:"); Serial.print(*y);
   }
 
 /*
@@ -748,7 +743,7 @@ static void remap_target
     distance = sqrt(sq(ptr->x - *x) + sq(ptr->y - *y));
     if ( DLT(DLT_DIAG) )
     {
-      Serial.print(T("\n\rwhich_one:")); Serial.print(which_one); Serial.print(T(" distance:")); Serial.print(distance); 
+      Serial.print(T("which_one:")); Serial.print(which_one); Serial.print(T(" distance:")); Serial.print(distance); 
     }
     if ( distance < closest )   // Found a closer one?
     {
@@ -767,7 +762,7 @@ static void remap_target
   distance = sqrt(sq(*x) + sq(*y)); // Last one is the centre bull
   if ( DLT(DLT_DIAG) )
   {
-    Serial.print(T("\n\rwhich_one:")); Serial.print(which_one); Serial.print(T(" distance:")); Serial.print(distance);
+    Serial.print(T("which_one:")); Serial.print(which_one); Serial.print(T(" distance:")); Serial.print(distance);
   }
   if ( distance < closest )   // Found a closer one?
   {
@@ -787,7 +782,7 @@ static void remap_target
   *y = *y - dy;
   if ( DLT(DLT_DIAG) )
   {
-    Serial.print(T("\n\rx:")); Serial.print(*x); Serial.print(T(" y:")); Serial.print(*y);
+    Serial.print(T("rx:")); Serial.print(*x); Serial.print(T(" y:")); Serial.print(*y);
   }
   
 /*
