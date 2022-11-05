@@ -27,7 +27,7 @@ unsigned int  face_strike = 0;          // Miss Face Strike interrupt count
 unsigned int  is_trace = 0;             // Turn off tracing
 unsigned long rapid_on = 0;             // Duration of rapid fire event
 unsigned int  rapid_count = 0;          // Number of shots to be expected in Rapid Fire
-
+unsigned int  tabata_state;             // Tabata state
 unsigned int shot_number;               // Shot Identifier
 
 const char* names[] = { "TARGET",                                                                                           //  0
@@ -44,6 +44,12 @@ bool        target_hot;                        // TRUE if the target is active
 static  long keep_alive;                       // Keep alive timer
 
 static long tabata(bool reset_time);           // Tabata state machine
+
+#define TABATA_OFF          0         // No tabata cycles at all
+#define TABATA_REST         1         // Tabata is doing nothing (typically 60 seconds)
+#define TABATA_WARNING      2         // Time the warning LED is on (typically 2 seconds)
+#define TABATA_DARK         3         // Time the warning LED is off before the shot (typically 2 seconds)
+#define TABATA_ON           4         // Time the TABATA lED is on (typically 5 seconds)
 
 /*----------------------------------------------------------------
  * 
@@ -469,8 +475,16 @@ unsigned int reduce(void)
   if ( (json_rapid_enable != 0)                                 // Rapid Fire
       &&  (rapid_count == 0) )                                  // No shots remaining
   {
-    last_shot = this_shot;                                      // Discard any new shots    
-  }                                                             // The while below will not be executed
+    last_shot = this_shot;
+    return FINISH;                                              // Discard any new shots    
+  }
+
+  if ( (json_tabata_enable != 0)                                // Tabata
+     && ( tabata_state != TABATA_ON) )
+  {
+    last_shot = this_shot;
+    return FINISH;                                              // Throw out any shots while dark
+  }
   
 /*
  * Loop and process the shots
@@ -482,7 +496,6 @@ unsigned int reduce(void)
       Serial.print(T("Reducing shot: ")); Serial.print(last_shot); Serial.print(T("\r\nTrigger: ")); 
       show_sensor_status(record[last_shot].sensor_status, &record[last_shot]);
     }
-
 
     location = compute_hit(&record[last_shot], false);          // Compute the score
     if ( location != MISS )                                     // Was it a miss or face strike?
@@ -592,15 +605,10 @@ unsigned int finish(void)
  * {"TABATA_WARN_ON": 2, "TABATA_WARN_OFF":2, "TABATA_ON":7, "TABATA_REST":45, "TABATA_ENABLE":1}
  * 
  *-------------------------------------------------------------*/
-#define TABATA_OFF          0         // No tabata cycles at all
-#define TABATA_REST         1         // Tabata is doing nothing (typically 60 seconds)
-#define TABATA_WARNING      2         // Time the warning LED is on (typically 2 seconds)
-#define TABATA_DARK         3         // Time the warning LED is off before the shot (typically 2 seconds)
-#define TABATA_ON           4         // Time the TABATA lED is on (typically 5 seconds)
 
 static unsigned long tabata_start;             // Time from start of the tabata timer
 static unsigned long time_end;                 // Time when timer expires
-static uint16_t tabata_state = TABATA_OFF;
+
 static uint16_t old_tabata_state = ~TABATA_OFF;
 
 static long tabata
