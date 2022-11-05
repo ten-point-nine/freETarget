@@ -13,7 +13,7 @@
 #include "esp-01.h"
 #include "json.h"
 
-#define SOFTWARE_VERSION "\"4.0.0 RC12 November 4, 2022\""
+#define SOFTWARE_VERSION "\"4.0.0 RC14 November 5, 2022\""
 #define REV_100    100
 #define REV_210    210
 #define REV_220    220
@@ -121,7 +121,6 @@ extern const char* names[];
 extern const char to_hex[];
 extern unsigned int face_strike;
 extern const char nesw[];             // Cardinal Points
-extern bool  target_hot;              // True if the target is active
 
 /*
  *  Factory settings via Arduino monitor

@@ -59,13 +59,11 @@ extern int    json_paper_eco;     // Do not advance witness paper if shot is gre
 extern int    json_target_type;   // Modify the location based on a target type (0 == regular 1 bull target)
 #define FIVE_BULL_AIR_RIFLE_74 1  // Target is a five bull air rifle target 74mm centres
 #define FIVE_BULL_AIR_RIFLE_79 2  // Target is a five bull air rifle target 79mm centres
-extern int    json_tabata_auto;   // Automatically start a tabata cycle
 extern int    json_tabata_enable; // Enable the Tabata timer
 extern int    json_tabata_on;     // Tabata ON timer
 extern int    json_tabata_rest;   // Tabata OFF timer
 extern int    json_tabata_warn_on;  // Time to turn on the warning
 extern int    json_tabata_warn_off; // Time to go dark until we start
-extern int    json_rapid_auto;     // Automatically start a rapid fire cycle
 extern int    json_rapid_enable;  // Rapid Fire enabled
 extern unsigned long   json_rapid_on; // Rapid Fire ON timer
 extern int    json_rapid_count;   // Number of expected shots

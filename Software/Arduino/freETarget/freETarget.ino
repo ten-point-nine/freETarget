@@ -28,7 +28,9 @@ unsigned int  is_trace = 0;             // Turn off tracing
 unsigned long rapid_on = 0;             // Duration of rapid fire event
 unsigned int  rapid_count = 0;          // Number of shots to be expected in Rapid Fire
 unsigned int  tabata_state;             // Tabata state
-unsigned int shot_number;               // Shot Identifier
+unsigned int  shot_number;              // Shot Identifier
+static  long  keep_alive;               // Keep alive timer
+
 
 const char* names[] = { "TARGET",                                                                                           //  0
                         "1",      "2",        "3",     "4",      "5",       "6",       "7",     "8",     "9",      "10",    //  1
@@ -40,10 +42,8 @@ const char* names[] = { "TARGET",                                               
 const char nesw[]   = "NESW";                  // Cardinal Points
 const char to_hex[] = "0123456789ABCDEF";      // Quick Hex to ASCII
 static void bye(void);                         // Say good night Gracie
-bool        target_hot;                        // TRUE if the target is active
-static  long keep_alive;                       // Keep alive timer
-
 static long tabata(bool reset_time);           // Tabata state machine
+static bool discard_tabata(void);              // TRUE if the shot should be discarded 
 
 #define TABATA_OFF          0         // No tabata cycles at all
 #define TABATA_REST         1         // Tabata is doing nothing (typically 60 seconds)
@@ -120,7 +120,6 @@ void setup(void)
  */
   set_LED_PWM(json_LED_PWM);
   set_LED(LED_READY);                   // to a client, then the RDY light is steady on
-  target_hot = true;
   return;
 }
 
@@ -423,25 +422,6 @@ unsigned int wait(void)
   }
 
 /*
- * Check to see if a shot has arrived
- */
-  if ( last_shot != this_shot )
-  {
-    if ( json_tabata_auto == 1 )        // Since we have a shot, 
-    {                                   // enable tabata if auto has been set
-      json_tabata_enable = true;
-    }
-    if ( (json_rapid_auto == 1) && (json_rapid_enable == false)) // Since we have a shot
-    {                                   // enable rapid fire if auto has been set
-      json_rapid_enable = true;
-      rapid_enable(true);
-    }
-
-    set_LED(L('-', '*', '-'));          // No longer waiting
-    return REDUCE;                      // Fake a shot and display it
-  }
-
-/*
  * All done, keep waiting
  */
   return WAIT;
@@ -472,18 +452,12 @@ unsigned int reduce(void)
 /*
  * See if any shots are allowed to be processed
  */
-  if ( (json_rapid_enable != 0)                                 // Rapid Fire
-      &&  (rapid_count == 0) )                                  // No shots remaining
+  if ( discard_shot() )                                       // Tabata is on but the shot is invalid
   {
     last_shot = this_shot;
-    return FINISH;                                              // Discard any new shots    
-  }
-
-  if ( (json_tabata_enable != 0)                                // Tabata
-     && ( tabata_state != TABATA_ON) )
-  {
-    last_shot = this_shot;
+    send_miss(&record[last_shot]);
     return FINISH;                                              // Throw out any shots while dark
+
   }
   
 /*
@@ -583,6 +557,62 @@ unsigned int finish(void)
 
 /*----------------------------------------------------------------
  * 
+ * function: tabata_enable
+ * 
+ * brief:    Start or stop a tabata session
+ * 
+ * return:   Nothing
+ * 
+ *----------------------------------------------------------------
+ *
+ * {"TABATA_WARN_ON": 1, "TABATA_WARN_OFF":5, "TABATA_ON":7, "TABATA_REST":30, "TABATA_ENABLE":1}
+ * {"TABATA_WARN_ON": 2, "TABATA_WARN_OFF":2, "TABATA_ON":7, "TABATA_REST":45, "TABATA_ENABLE":1}
+ * {"TABATA_ENABLE":0}
+ *--------------------------------------------------------------*/
+ 
+ void tabata_enable
+  (
+    unsigned int enable     // Rapid fire enable state
+  )
+ {
+  char str[32];
+  long random_wait;
+
+/*
+ * If enabled, set up the timers
+ */
+  if ( enable != 0 )
+  {
+    set_LED_PWM_now(0);                                           // Turn off the LEDs (maybe turn them on later)
+  }
+  else
+  {
+    set_LED_PWM_now(json_LED_PWM);                                // Turn on the LED to start the cycle
+  }
+  
+  tabata_state = TABATA_OFF;                                      // Reset back to the beginning
+  json_tabata_enable = enable;                                    // And enable
+
+  if ( DLT(DLT_APPLICATION) )
+  {
+    if ( enable )
+    {
+      Serial.print(T("Starting Tabata.  Time: "));Serial.print(json_tabata_on);
+    }
+    else
+    {
+      Serial.print(T("Tabata disabled"));
+    }
+  }
+  
+/*
+ * All done, return
+ */
+  return;
+ }
+
+/*----------------------------------------------------------------
+ * 
  * function: tabata
  * 
  * brief:   Implement a Tabata timer for training
@@ -602,6 +632,7 @@ unsigned int finish(void)
  * OFF - 2 Second Warning - 2 Second Off - ON 
  * 
  * Test JSON 
+ * {"TABATA_WARN_ON": 1, "TABATA_WARN_OFF":5, "TABATA_ON":7, "TABATA_REST":30, "TABATA_ENABLE":1}
  * {"TABATA_WARN_ON": 2, "TABATA_WARN_OFF":2, "TABATA_ON":7, "TABATA_REST":45, "TABATA_ENABLE":1}
  * 
  *-------------------------------------------------------------*/
@@ -741,6 +772,38 @@ unsigned long tabata_time(void)
   return millis();
 }
 
+
+/*----------------------------------------------------------------
+ * 
+ * function: discard_shot
+ * 
+ * brief:    Determine if the shot is outside of the valid time
+ * 
+ * return:   TRUE if the shot is not allowed
+ * 
+ *----------------------------------------------------------------
+ *  
+ *--------------------------------------------------------------*/
+
+bool discard_shot(void)
+{
+  if ( (json_rapid_enable != 0)                 // Rapid Fire
+      &&  (rapid_count == 0) )                  // No shots remaining
+  {
+    last_shot = this_shot;
+    return true;                                // Discard any new shots    
+  }
+
+  if ( (json_tabata_enable != 0)                // Tabata cycle
+    && ( tabata_state != TABATA_ON ) )          // Lights not on
+  {
+    last_shot = this_shot;                      // Discard new shots
+    return true;
+  }
+  
+  return false;
+}
+
 /*----------------------------------------------------------------
  * 
  * function: rapid_auto
@@ -812,7 +875,6 @@ unsigned long tabata_time(void)
   char str[32];
   long random_wait;
 
-  Serial.print(enable);
 /*
  * If enabled, set up the timers
  */
@@ -891,6 +953,8 @@ void bye(void)
   output_to_all(str);
   set_LED_PWM(LED_PWM_OFF);         // Going to sleep 
   delay(ONE_SECOND);
+  tabata_enable(false);             // Turn off any automatic cycles 
+  rapid_enable(false);
   
 /*
  * Loop waiting for something to happen
@@ -948,7 +1012,6 @@ void hello(void)
   set_LED_PWM_now(json_LED_PWM);
   power_save = millis();                            // Reset the on time
   EEPROM.get(NONVOL_POWER_SAVE, json_power_save);   // and reset the power save time
-  target_hot = true;
   
   return;
 }

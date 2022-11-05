@@ -624,9 +624,9 @@ void send_miss
 {
   char str[256];    // String holding buffer
 
-  if ( json_send_miss != 0)
+  if ( json_send_miss != 0)               // If send_miss not enabled
   {
-    return;
+    return;                               // Do nothing
   }
 /* 
  *  Display the results

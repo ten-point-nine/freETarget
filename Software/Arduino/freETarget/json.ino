@@ -37,7 +37,6 @@ int     json_multifunction;         // Multifunction switch operation
 int     json_z_offset;              // Distance between paper and sensor plane in 0.1mm
 int     json_paper_eco;             // Do not advance paper if outside of the black
 int     json_target_type;           // Modify target type (0 == single bull)
-int     json_tabata_auto;           // Enable tabita on first shot
 int     json_tabata_enable;         // Tabata feature enabled
 int     json_tabata_on;             // Tabata ON timer
 int     json_tabata_rest;           // Tabata resting timer
@@ -50,7 +49,6 @@ int     json_tabata_warn_on;        // Tabata warning time light on
 int     json_tabata_warn_off;       // Tabata warning time to shot
 int     json_face_strike;           // Number of cycles to accept a strike
 int     json_wifi_channel;          // Wifi channel
-int     json_rapid_auto;            // Enable rapid fire on first shot
 int     json_rapid_count;           // Number of shots expected in string
 int     json_rapid_enable;          // Set to TRUE if the rapid fire event is enabled
 int     json_rapid_time;            // When will the rapid fire event end?
@@ -89,7 +87,6 @@ const json_message JSON[] = {
   {"\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT16,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
   {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT16,  0,                NONVOL_PAPER_TIME,      50 },    // Set the paper advance time
   {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT16,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
-  {"\"RAPID_AUTO\":",     &json_rapid_auto,                  0,                IS_INT16,  &rapid_auto,      0,                       0 },    // Automatically start Rapid Cycle on first shot
   {"\"RAPID_COUNT\":",    &json_rapid_count,                 0,                IS_INT16,  0,                0,                       0 },    // Number of shots expected in series
   {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT16,  &rapid_enable,    0,                       0 },    // Enable the rapid fire fieature
   {"\"RAPID_TIME\":",     &json_rapid_time,                  0,                IS_INT16,  0,                0,                       0 },    // Set the duration of the rapid fire event and start
@@ -100,8 +97,7 @@ const json_message JSON[] = {
   {"\"SN\":",             &json_serial_number,               0,                IS_FIXED,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
   {"\"STEP_COUNT\":",     &json_step_count,                  0,                IS_INT16,  0,                NONVOL_STEP_COUNT,       0 },    // Set the duration of the stepper motor ON time
   {"\"STEP_TIME\":",      &json_step_time,                   0,                IS_INT16,  0,                NONVOL_STEP_TIME,        0 },    // Set the number of times stepper motor is stepped
-  {"\"TABATA_AUTO\":",    &json_tabata_auto,                 0,                IS_INT16,  0,                0,                       0 },    // Start tabata when first shot arrives
-  {"\"TABATA_ENABLE\":",  &json_tabata_enable,               0,                IS_INT16,  0,                0,                       0 },    // Enable the tabata feature
+  {"\"TABATA_ENABLE\":",  &json_tabata_enable,               0,                IS_INT16,  &tabata_enable,   0,                       0 },    // Enable the tabata feature
   {"\"TABATA_ON\":",      &json_tabata_on,                   0,                IS_INT16,  0,                0,                       0 },    // Time that the LEDs are ON for a Tabata timer (1/10 seconds)
   {"\"TABATA_REST\":",    &json_tabata_rest,                 0,                IS_INT16,  0,                0,                       0 },    // Time that the LEDs are OFF for a Tabata timer
   {"\"TABATA_WARN_OFF\":",&json_tabata_warn_off,             0,                IS_INT16,  0,                0,                       0 },    // Time that the LEDs are ON during a warning cycle
