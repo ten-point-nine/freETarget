@@ -951,10 +951,10 @@ void bye(void)
  */
   sprintf(str, "{\"GOOD_BYE\":0}");
   output_to_all(str);
-  set_LED_PWM(LED_PWM_OFF);         // Going to sleep 
   delay(ONE_SECOND);
   tabata_enable(false);             // Turn off any automatic cycles 
   rapid_enable(false);
+  set_LED_PWM(LED_PWM_OFF);         // Going to sleep 
   
 /*
  * Loop waiting for something to happen
