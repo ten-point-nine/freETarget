@@ -422,6 +422,14 @@ unsigned int wait(void)
   }
 
 /*
+ * See if any shots have arrived
+ */
+  if ( this_shot != last_shot )
+  {
+    return REDUCE;
+  }
+  
+/*
  * All done, keep waiting
  */
   return WAIT;
@@ -457,7 +465,6 @@ unsigned int reduce(void)
     last_shot = this_shot;
     send_miss(&record[last_shot]);
     return FINISH;                                              // Throw out any shots while dark
-
   }
   
 /*
