@@ -55,6 +55,7 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPageGeneral = new System.Windows.Forms.TabPage();
+            this.chkShowScoring = new System.Windows.Forms.CheckBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.grpTCP = new System.Windows.Forms.GroupBox();
             this.txtPort = new System.Windows.Forms.TextBox();
@@ -420,6 +421,7 @@
             // 
             // tabPageGeneral
             // 
+            this.tabPageGeneral.Controls.Add(this.chkShowScoring);
             this.tabPageGeneral.Controls.Add(this.groupBox2);
             this.tabPageGeneral.Controls.Add(this.grpTCP);
             this.tabPageGeneral.Controls.Add(this.grpUSB);
@@ -446,6 +448,18 @@
             this.tabPageGeneral.TabIndex = 0;
             this.tabPageGeneral.Text = "General";
             this.tabPageGeneral.UseVisualStyleBackColor = true;
+            // 
+            // chkShowScoring
+            // 
+            this.chkShowScoring.AutoSize = true;
+            this.helpProvider.SetHelpString(this.chkShowScoring, "If unchecked, hides the shot scores and scoring rings on the target");
+            this.chkShowScoring.Location = new System.Drawing.Point(229, 225);
+            this.chkShowScoring.Name = "chkShowScoring";
+            this.helpProvider.SetShowHelp(this.chkShowScoring, true);
+            this.chkShowScoring.Size = new System.Drawing.Size(90, 17);
+            this.chkShowScoring.TabIndex = 38;
+            this.chkShowScoring.Text = "Show scoring";
+            this.chkShowScoring.UseVisualStyleBackColor = true;
             // 
             // groupBox2
             // 
@@ -1600,5 +1614,6 @@
         private System.Windows.Forms.TextBox txtRFtimePerSerie;
         private System.Windows.Forms.TextBox txtRFNrShots;
         private System.Windows.Forms.CheckBox chkRapidFire;
+        public System.Windows.Forms.CheckBox chkShowScoring;
     }
 }

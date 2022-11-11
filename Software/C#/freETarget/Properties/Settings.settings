@@ -86,5 +86,8 @@
     <Setting Name="TcpPort" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">1090</Value>
     </Setting>
+    <Setting Name="showScoring" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

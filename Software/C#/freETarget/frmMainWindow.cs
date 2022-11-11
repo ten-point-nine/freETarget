@@ -530,11 +530,19 @@ namespace freETarget {
                 }
 
                 //write to total textbox
-                txtTotal.Text = getShots().Count + ": " + currentSession.score.ToString() + " (" + currentSession.decimalScore.ToString(CultureInfo.InvariantCulture) + ") -" + currentSession.innerX.ToString() + "x";
+                if (Properties.Settings.Default.showScoring) { 
+                    txtTotal.Text = getShots().Count + ": " + currentSession.score.ToString() + " (" + currentSession.decimalScore.ToString(CultureInfo.InvariantCulture) + ") -" + currentSession.innerX.ToString() + "x";
+                } else {
+                    txtTotal.Text = "XXX";
+                }
 
                 //write to last shot textbox
                 string lastShot = shot.decimalScore.ToString(CultureInfo.InvariantCulture);
-                txtLastShot.Text = lastShot + inner;
+                if (Properties.Settings.Default.showScoring) {
+                    txtLastShot.Text = lastShot + inner;
+                } else {
+                    txtLastShot.Text = "XX";
+                }
 
                 drawArrow(shot);
 
@@ -543,17 +551,27 @@ namespace freETarget {
                 item.UseItemStyleForSubItems = false;
                 ListViewItem.ListViewSubItem countItem = item.SubItems.Add((shot.index + 1).ToString());
                 countItem.Font = new Font("MS Sans Serif", 7f, FontStyle.Italic | FontStyle.Bold);
-                ListViewItem.ListViewSubItem scoreItem = item.SubItems.Add(shot.score.ToString());
-                scoreItem.Font = new Font("MS Sans Serif", 9.75f, FontStyle.Bold);
-                ListViewItem.ListViewSubItem decimalItem = item.SubItems.Add(shot.decimalScore.ToString(CultureInfo.InvariantCulture) + inner);
-                decimalItem.Font = new Font("MS Sans Serif", 9.75f, FontStyle.Bold);
+                if (Properties.Settings.Default.showScoring) {
+                    ListViewItem.ListViewSubItem scoreItem = item.SubItems.Add(shot.score.ToString());
+                    scoreItem.Font = new Font("MS Sans Serif", 9.75f, FontStyle.Bold);
+                    ListViewItem.ListViewSubItem decimalItem = item.SubItems.Add(shot.decimalScore.ToString(CultureInfo.InvariantCulture) + inner);
+                    decimalItem.Font = new Font("MS Sans Serif", 9.75f, FontStyle.Bold);
+                } else {
+                    ListViewItem.ListViewSubItem scoreItem = item.SubItems.Add("XX");
+                    scoreItem.Font = new Font("MS Sans Serif", 9.75f, FontStyle.Bold);
+                    ListViewItem.ListViewSubItem decimalItem = item.SubItems.Add("XX.X");
+                    decimalItem.Font = new Font("MS Sans Serif", 9.75f, FontStyle.Bold);
+                }
+
 
                 shotsList.Items.Add(item);
                 shotsList.EnsureVisible(shotsList.Items.Count - 1);
 
                 displayShotStatistics(getShotList());
                 writeToGrid(shot);
-                fillBreakdownChart(getShots());
+                if (Properties.Settings.Default.showScoring) {
+                    fillBreakdownChart(getShots());
+                }
 
             }
         }
@@ -771,6 +789,7 @@ namespace freETarget {
                 Properties.Settings.Default.scoreVoice = settingsFrom.chkScoreVoice.Checked;
                 Properties.Settings.Default.fileLogging = settingsFrom.chkLog.Checked;
                 Properties.Settings.Default.ignoreMiss = settingsFrom.chkMiss.Checked;
+                Properties.Settings.Default.showScoring = settingsFrom.chkShowScoring.Checked;
 
                 if (Properties.Settings.Default.targetDistance != 100) {
                     btnConfig.BackColor = Properties.Settings.Default.targetColor;
@@ -1256,20 +1275,32 @@ namespace freETarget {
             }
 
             DataGridViewCell cell = row.Cells[cellShot];
-            if (currentSession.decimalScoring) {
-                cell.Value = shot.decimalScore.ToString(CultureInfo.InvariantCulture);
+            if (Properties.Settings.Default.showScoring) {
+                if (currentSession.decimalScoring) {
+                    cell.Value = shot.decimalScore.ToString(CultureInfo.InvariantCulture);
+                } else {
+                    cell.Value = shot.score;
+                }
             } else {
-                cell.Value = shot.score;
+                if (currentSession.decimalScoring) {
+                    cell.Value = "XX.X";
+                } else {
+                    cell.Value = "XX";
+                }
             }
 
             DataGridViewCell totalCell = row.Cells[10];
-            decimal total = 0;
-            for (int i = 0; i < row.Cells.Count - 1; i++) {
-                if (row.Cells[i].Value != null) {
-                    total += Decimal.Parse(row.Cells[i].Value.ToString(), CultureInfo.InvariantCulture);
+            if (Properties.Settings.Default.showScoring) {
+                decimal total = 0;
+                for (int i = 0; i < row.Cells.Count - 1; i++) {
+                    if (row.Cells[i].Value != null) {
+                        total += Decimal.Parse(row.Cells[i].Value.ToString(), CultureInfo.InvariantCulture);
+                    }
                 }
+                 totalCell.Value = total;
+            } else {
+                totalCell.Value = "XX";
             }
-            totalCell.Value = total;
 
             gridTargets.ClearSelection();
             gridSeriesSelected = false;

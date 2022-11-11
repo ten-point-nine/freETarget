@@ -106,97 +106,98 @@ namespace freETarget.targets {
             it.FillEllipse(brushBlack, x, x, circle, circle); //draw the black circle
 
             int r = getFirstRing();
-            for (int i = 0; i < rings.Length; i++) {
+            if (Properties.Settings.Default.showScoring) {
+                for (int i = 0; i < rings.Length; i++) {
 
-                Pen p;
-                Brush bText;
-                if (r < blackRingCutoff) {
-                    p = penBlack;
-                    bText = brushBlack;
-                } else {
-                    p = penWhite;
-                    bText = brushWhite;
-                }
-
-                circle = getDimension(dimension, rings[i], zoomFactor);
-                
-                x = center - (circle / 2);
-                float y = center + (circle / 2);
-
-                if (solidInner && i == rings.Length - 1) //rifle target - last ring (10) is a solid dot
-                {
-                    it.FillEllipse(brushWhite, x, x, circle, circle);
-                } else {
-                    it.DrawEllipse(p, x, x, circle, circle);
-                }
-
-                if (r <= getRingTextCutoff()) 
-                {
-                    String txt = r.ToString();
-
-                    StringFormat format = new StringFormat();
-                    format.LineAlignment = StringAlignment.Center;
-                    format.Alignment = StringAlignment.Center;
-
-                    if (r <= 10) {
-                        float nextCircle = getDimension(dimension, rings[i + 1], zoomFactor);
-                        float diff = circle - nextCircle;
-                        float fontSize = getFontSize(diff);
-                        Font f = new Font("Arial", fontSize);
-
-
-
-                        if (drawNorthText()) {
-                            it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
-                            it.RotateTransform(getTextRotation());
-                            it.TranslateTransform(0, -(dimension / 2) + x + (diff / 4) - getTextOffset(diff, r)); //move coordinates at the exact center point of the text
-                            it.DrawString(txt, f, bText, 0, 0, format);
-                            it.ResetTransform();
-                        }
-
-                        if (drawSouthText()) {
-                            it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
-                            it.RotateTransform(getTextRotation());
-                            it.TranslateTransform(0, (dimension / 2) - x - (diff / 4) + getTextOffset(diff, r));
-                            if (getTextRotation() > 0) {
-                                it.RotateTransform(180);
-                            }
-                            it.DrawString(txt, f, bText, 0, 0, format);
-                            it.ResetTransform();
-                        }
-
-                        if (drawEastText()) {
-                            it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
-                            it.RotateTransform(getTextRotation());
-                            it.TranslateTransform(-(dimension / 2) + y - (diff / 4) + getTextOffset(diff, r), 0);
-                            if (getTextRotation() > 0) {
-                                it.RotateTransform(90);
-                            }
-                            it.DrawString(txt, f, bText, 0, 0, format);
-                            it.ResetTransform();
-                        }
-                        if (drawWestText()) {
-                            it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
-                            it.RotateTransform(getTextRotation());
-                            it.TranslateTransform((dimension / 2) - y + (diff / 4) - getTextOffset(diff, r), 0);
-                            if (getTextRotation() > 0) {
-                                it.RotateTransform(270);
-                            }
-                            it.DrawString(txt, f, bText, 0, 0, format);
-                            it.ResetTransform();
-                        }
+                    Pen p;
+                    Brush bText;
+                    if (r < blackRingCutoff) {
+                        p = penBlack;
+                        bText = brushBlack;
                     } else {
-                        //r = 11
-                        txt = "X";
-                        float fontSize = getFontSize(0);
-                        Font f = new Font("Arial", fontSize);
-                        it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
-                        it.RotateTransform(getTextRotation());
-                        it.DrawString(txt, f, bText, 0, 0, format);
-                        it.ResetTransform();
+                        p = penWhite;
+                        bText = brushWhite;
                     }
+
+                    circle = getDimension(dimension, rings[i], zoomFactor);
+
+                    x = center - (circle / 2);
+                    float y = center + (circle / 2);
+
+                    if (solidInner && i == rings.Length - 1) //rifle target - last ring (10) is a solid dot
+                    {
+                        it.FillEllipse(brushWhite, x, x, circle, circle);
+                    } else {
+                        it.DrawEllipse(p, x, x, circle, circle);
+                    }
+
+                    if (r <= getRingTextCutoff()) {
+                        String txt = r.ToString();
+
+                        StringFormat format = new StringFormat();
+                        format.LineAlignment = StringAlignment.Center;
+                        format.Alignment = StringAlignment.Center;
+
+                        if (r <= 10) {
+                            float nextCircle = getDimension(dimension, rings[i + 1], zoomFactor);
+                            float diff = circle - nextCircle;
+                            float fontSize = getFontSize(diff);
+                            Font f = new Font("Arial", fontSize);
+
+
+
+                            if (drawNorthText()) {
+                                it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
+                                it.RotateTransform(getTextRotation());
+                                it.TranslateTransform(0, -(dimension / 2) + x + (diff / 4) - getTextOffset(diff, r)); //move coordinates at the exact center point of the text
+                                it.DrawString(txt, f, bText, 0, 0, format);
+                                it.ResetTransform();
+                            }
+
+                            if (drawSouthText()) {
+                                it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
+                                it.RotateTransform(getTextRotation());
+                                it.TranslateTransform(0, (dimension / 2) - x - (diff / 4) + getTextOffset(diff, r));
+                                if (getTextRotation() > 0) {
+                                    it.RotateTransform(180);
+                                }
+                                it.DrawString(txt, f, bText, 0, 0, format);
+                                it.ResetTransform();
+                            }
+
+                            if (drawEastText()) {
+                                it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
+                                it.RotateTransform(getTextRotation());
+                                it.TranslateTransform(-(dimension / 2) + y - (diff / 4) + getTextOffset(diff, r), 0);
+                                if (getTextRotation() > 0) {
+                                    it.RotateTransform(90);
+                                }
+                                it.DrawString(txt, f, bText, 0, 0, format);
+                                it.ResetTransform();
+                            }
+                            if (drawWestText()) {
+                                it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
+                                it.RotateTransform(getTextRotation());
+                                it.TranslateTransform((dimension / 2) - y + (diff / 4) - getTextOffset(diff, r), 0);
+                                if (getTextRotation() > 0) {
+                                    it.RotateTransform(270);
+                                }
+                                it.DrawString(txt, f, bText, 0, 0, format);
+                                it.ResetTransform();
+                            }
+                        } else {
+                            //r = 11
+                            txt = "X";
+                            float fontSize = getFontSize(0);
+                            Font f = new Font("Arial", fontSize);
+                            it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
+                            it.RotateTransform(getTextRotation());
+                            it.DrawString(txt, f, bText, 0, 0, format);
+                            it.ResetTransform();
+                        }
+                    }
+                    r++;
                 }
-                r++;
             }
 
             if (currentSession.sessionType == Event.EventType.Practice) {

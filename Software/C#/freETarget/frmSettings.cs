@@ -183,6 +183,7 @@ namespace freETarget
             chkScoreVoice.Checked = Properties.Settings.Default.scoreVoice;
             chkLog.Checked = Properties.Settings.Default.fileLogging;
             chkMiss.Checked = Properties.Settings.Default.ignoreMiss;
+            chkShowScoring.Checked = Properties.Settings.Default.showScoring;
 
             cmb10Pen.SelectedItem = Properties.Settings.Default.score10PenColor.Name;
             cmb10Back.SelectedItem = Properties.Settings.Default.score10BackgroundColor.Name;
