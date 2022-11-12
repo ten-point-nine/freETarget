@@ -179,7 +179,7 @@ namespace freETarget
             } else {
                 txtPDFlocation.Text = Properties.Settings.Default.pdfPath;
             }
-            txtDistance.Text = Properties.Settings.Default.targetDistance.ToString();
+            txtDistance.Text = Properties.Settings.Default.targetDistance.ToString(CultureInfo.InvariantCulture);
             chkScoreVoice.Checked = Properties.Settings.Default.scoreVoice;
             chkLog.Checked = Properties.Settings.Default.fileLogging;
             chkMiss.Checked = Properties.Settings.Default.ignoreMiss;
@@ -201,9 +201,9 @@ namespace freETarget
                 cmbCommProtocol.SelectedItem = "TCP";
             }
             txtName.Text = Properties.Settings.Default.name;
-            txtBaud.Text = Properties.Settings.Default.baudRate.ToString();
+            txtBaud.Text = Properties.Settings.Default.baudRate.ToString(CultureInfo.InvariantCulture);
             txtIP.Text = Properties.Settings.Default.TcpIP;
-            txtPort.Text = Properties.Settings.Default.TcpPort.ToString();
+            txtPort.Text = Properties.Settings.Default.TcpPort.ToString(CultureInfo.InvariantCulture);
 
 
         }
@@ -318,14 +318,10 @@ namespace freETarget
             }
 
             //target distance
-            if (!validNumber(txtDistance.Text)) {
+            if (!validDecimal(txtDistance.Text)) {
                 MessageBox.Show("Distance is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-            } else {
-                if (int.Parse(txtDistance.Text) < 30) {
-                    MessageBox.Show("Minimum safe target distance is 3 meters, so a value of at least 30 must be entered", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    return false;
-                }
-            }
+                return false;
+            } 
 
             //pdf location
             if (!Directory.Exists(txtPDFlocation.Text)) {

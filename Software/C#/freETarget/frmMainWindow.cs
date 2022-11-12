@@ -149,7 +149,7 @@ namespace freETarget {
 
             toolTipButtons.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
 
-            toolTipButtons.SetToolTip(btnConfig, "Settings - Target distance percent: " + Properties.Settings.Default.targetDistance);
+            toolTipButtons.SetToolTip(btnConfig, "Settings - Target distance percent: " + Properties.Settings.Default.targetDistance.ToString(CultureInfo.InvariantCulture));
 
             initBreakdownChart();
 
@@ -774,7 +774,7 @@ namespace freETarget {
             frmSettings settingsFrom = new frmSettings(this);
             if (settingsFrom.ShowDialog(this) == DialogResult.OK) {
                 Properties.Settings.Default.name = settingsFrom.txtName.Text;
-                Properties.Settings.Default.baudRate = int.Parse(settingsFrom.txtBaud.Text);
+                Properties.Settings.Default.baudRate = int.Parse(settingsFrom.txtBaud.Text, CultureInfo.InvariantCulture);
                 Properties.Settings.Default.displayDebugConsole = settingsFrom.chkDisplayConsole.Checked;
                 Properties.Settings.Default.portName = settingsFrom.cmbPorts.GetItemText(settingsFrom.cmbPorts.SelectedItem);
 
@@ -785,7 +785,7 @@ namespace freETarget {
                 Properties.Settings.Default.OnlySeries = settingsFrom.chkSeries.Checked;
                 Properties.Settings.Default.voiceCommands = settingsFrom.chkVoice.Checked;
                 Properties.Settings.Default.pdfPath = settingsFrom.txtPDFlocation.Text;
-                Properties.Settings.Default.targetDistance = int.Parse(settingsFrom.txtDistance.Text);
+                Properties.Settings.Default.targetDistance = decimal.Parse(settingsFrom.txtDistance.Text, CultureInfo.InvariantCulture);
                 Properties.Settings.Default.scoreVoice = settingsFrom.chkScoreVoice.Checked;
                 Properties.Settings.Default.fileLogging = settingsFrom.chkLog.Checked;
                 Properties.Settings.Default.ignoreMiss = settingsFrom.chkMiss.Checked;
@@ -814,7 +814,7 @@ namespace freETarget {
 
                 Properties.Settings.Default.CommProtocol = settingsFrom.cmbCommProtocol.SelectedItem.ToString();
                 Properties.Settings.Default.TcpIP = settingsFrom.txtIP.Text;
-                Properties.Settings.Default.TcpPort = int.Parse(settingsFrom.txtPort.Text);
+                Properties.Settings.Default.TcpPort = int.Parse(settingsFrom.txtPort.Text, CultureInfo.InvariantCulture);
 
                 Properties.Settings.Default.Save();
                 saveSettings(); //save settings to DB as well
