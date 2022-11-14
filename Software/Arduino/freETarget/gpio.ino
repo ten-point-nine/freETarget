@@ -872,15 +872,16 @@ static void sw_state
       paper_on_off(false);                // Then turn it off
       break;
 
-    case PC_TEST:                         // Send a fake score to the PC
-      send_fake_score();
+   case PAPER_SHOT:                       // The switch acts as paper feed control
+      drive_paper();                      // Turn on the paper drive
+      while ( (DIP_SW_A || DIP_SW_B) )    // Keep it on while the switches are pressed 
+      {
+        continue; 
+      }
       break;
       
-    case ON_OFF:                          // Turn the target off
+   case ON_OFF:                          // Turn the target off
       bye();                              // Stay in the Bye state until a wake up event comes along
-      break;
-
-    case TABATA_ON_OFF:
       break;
       
     case LED_ADJUST:
@@ -928,21 +929,6 @@ void multifunction_wait_open(void)
   return;
 }
 
-/*
- * Send a fake score to the PC for testing
- */
-static void send_fake_score(void) 
-{ 
-  static   shot_record_t shot;
-    
-  shot.x = random(-json_sensor_dia/2.0, json_sensor_dia/2.0);
-  shot.y = 0;
-  shot.shot_number++;
-  send_score(&shot);
-
-  return;
-}
-
 /*-----------------------------------------------------
  * 
  * function: multifunction_display
@@ -959,8 +945,8 @@ static void send_fake_score(void)
  * text in a JSON message.
  * 
  *-----------------------------------------------------*/
- //                             0            1            2            3        4             5             6
-static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED", "ADJUST_LED",    "3", "PC_TEST", "POWER_ON_OFF", "TABATA_ON_OFF", "7", "8", "9"};
+ //                             0            1            2             3         4           5           6    7    8    9
+static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED", "ADJUST_LED", "PAPER_SHOT", "4",  "POWER_ON_OFF",   "6", "7", "8", "9"};
 
 void multifunction_display(void)
 {

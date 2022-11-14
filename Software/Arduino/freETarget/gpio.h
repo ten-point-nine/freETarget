@@ -124,11 +124,13 @@ void paper_on_off(bool on);                               // Turn the motor on o
 #define POWER_TAP     0                   // DIP a/B used to wake up
 #define PAPER_FEED    1                   // DIP A/B used as a paper feed
 #define LED_ADJUST    2                   // DIP A/B used to set LED brightness
-#define MFS_SPARE_3   3                   // DIP A/B 
-#define PC_TEST       4                   // DIP A/B used to trigger fake shot
+#define PAPER_SHOT    3                   // DIP A/B Advance paper one cycle
+#define MFS_SPARE_4   4                   // DIP A/B used to trigger fake shot
 #define ON_OFF        5                   // DIP A/B used to turn the target ON or OFF
-#define TABATA_ON_OFF 6                   // Both Dip Switches pressed, manage Tabata
-
+#define MFS_SPARE_6   6
+#define MFS_SPARE_7   7
+#define MFS_SPARE_8   8
+#define MFS_SPARE_9   9
 
 #define J10_1      VCC
 #define J10_2       14                    // TX3

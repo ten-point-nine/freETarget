@@ -395,20 +395,7 @@ void read_nonvol(void)
 /*
  * Go through and verify that the special cases are taken care of
  */
-  EEPROM.get(NONVOL_TABATA_ENBL, x);                          // Override the Tabata
-  if ( x == 0 )
-  {
-    json_tabata_on = 0;                                       // and turn it off
-  }
 
-  EEPROM.get(NONVOL_vset_PWM, json_vset_PWM);
-
-  EEPROM.get(NONVOL_MFS, json_multifunction);                // Override the Multifunction switch if not initialized
-  if ( json_multifunction > 29999 )
-  {
-    json_multifunction = (TABATA_ON_OFF * 100) + (ON_OFF * 10) + (PAPER_FEED);   // Put it to the default
-    EEPROM.put(NONVOL_MFS, json_multifunction);
-  }
   
 /*
  * All done, begin the program
