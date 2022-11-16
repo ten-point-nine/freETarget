@@ -880,6 +880,10 @@ static void sw_state
       }
       break;
       
+   case PC_TEST:                         // Send a fake score to the PC
+      send_fake_score();
+      break;
+      
    case ON_OFF:                          // Turn the target off
       bye();                              // Stay in the Bye state until a wake up event comes along
       break;
@@ -945,8 +949,8 @@ void multifunction_wait_open(void)
  * text in a JSON message.
  * 
  *-----------------------------------------------------*/
- //                             0            1            2             3         4           5           6    7    8    9
-static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED", "ADJUST_LED", "PAPER_SHOT", "4",  "POWER_ON_OFF",   "6", "7", "8", "9"};
+ //                             0            1            2             3            4             5            6    7    8    9
+static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED", "ADJUST_LED", "PAPER_SHOT", "PC_TEST",  "POWER_ON_OFF",   "6", "7", "8", "9"};
 
 void multifunction_display(void)
 {
@@ -1110,3 +1114,30 @@ void aquire(void)
  */
   return;
 }
+
+/*----------------------------------------------------------------
+ * 
+ * function: send_fake_score
+ * 
+ * brief: Send a fake score to the PC for testing
+ * 
+ * return: Nothing
+ * 
+ *----------------------------------------------------------------
+ *
+ *  This function reads the values from the counters and saves
+ *  saves them into the record structure to be reduced later 
+ *  on.
+ *
+ *--------------------------------------------------------------*/
+static void send_fake_score(void) 
+{ 
+  static   shot_record_t shot;
+    
+  shot.x = random(-json_sensor_dia/2.0, json_sensor_dia/2.0);
+  shot.y = 0;
+  shot.shot_number++;
+  send_score(&shot);
+
+  return;
+} 

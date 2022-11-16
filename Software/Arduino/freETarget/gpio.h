@@ -125,7 +125,7 @@ void paper_on_off(bool on);                               // Turn the motor on o
 #define PAPER_FEED    1                   // DIP A/B used as a paper feed
 #define LED_ADJUST    2                   // DIP A/B used to set LED brightness
 #define PAPER_SHOT    3                   // DIP A/B Advance paper one cycle
-#define MFS_SPARE_4   4                   // DIP A/B used to trigger fake shot
+#define PC_TEST       4                   // DIP A/B used to trigger fake shot
 #define ON_OFF        5                   // DIP A/B used to turn the target ON or OFF
 #define MFS_SPARE_6   6
 #define MFS_SPARE_7   7

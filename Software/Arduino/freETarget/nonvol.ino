@@ -44,6 +44,7 @@ void check_nonvol(void)
   EEPROM.get(NONVOL_PS_VERSION, nonvol_init);
   if ( nonvol_init != PS_VERSION )                    // Is what is in memory not the same as now
   {
+    backup_nonvol();                                  // Copy what we have 
     update_nonvol(nonvol_init);                       // Then update the version
   }
   
@@ -516,6 +517,7 @@ void update_nonvol
     x = 0;
     EEPROM.put(NONVOL_WIFI_SSID, x);                      // No default SSID
     EEPROM.put(NONVOL_WIFI_PWD, x);                       // No default password
+    EEPROM.put(NONVOL_WIFI_IP, x);                        // No default IP Address
     current_version = 8;
     EEPROM.put(NONVOL_PS_VERSION, current_version);
   }
@@ -651,6 +653,83 @@ void dump_nonvol(void)
   }
 
  Serial.print("\n\r");
+   
+ /* 
+  *  All done, return
+  */
+  return;
+}
+
+
+/*----------------------------------------------------------------
+ *
+ * function: backup_nonvol
+ * 
+ * brief:  Copy the nonvol to a safe place
+ * 
+ * return: Nothing
+ * 
+ *---------------------------------------------------------------
+ *
+ *  This function copies the contents of 0x000 - 0x7ff to
+ *  0x800 - 0xfff
+ *  
+ *------------------------------------------------------------*/
+
+void backup_nonvol(void)
+{
+  int i;
+  char x;
+
+  Serial.print(T("\r\nStarting backup"));
+/*
+ * Loop and print out the nonvol
+ */
+  for (i=0; i != NONVOL_SIZE/2-1; i++)
+  {
+      EEPROM.get(i, x);
+      EEPROM.put(i + NONVOL_SIZE/2, x);
+  }
+  
+ Serial.print(T(" - done"));
+   
+ /* 
+  *  All done, return
+  */
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * function: restore_nonvol
+ * 
+ * brief:  Copy the safe nonvol to memory
+ * 
+ * return: Nothing
+ * 
+ *---------------------------------------------------------------
+ *
+ *  This function copies the contents of 0x800 - 0xfff to
+ *  0x000 - 0x7ff
+ *  
+ *------------------------------------------------------------*/
+
+void restore_nonvol(void)
+{
+  int i;
+  char x;
+
+  Serial.print(T("\r\nStarting restore"));
+/*
+ * Loop and print out the nonvol
+ */
+  for (i=0; i != NONVOL_SIZE/2-1; i++)
+  {
+      EEPROM.get(i + NONVOL_SIZE/2, x);
+      EEPROM.put(i, x);
+  }
+  
+ Serial.print(T(" - done"));
    
  /* 
   *  All done, return
