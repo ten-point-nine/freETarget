@@ -707,18 +707,13 @@ void set_trip_point
   unsigned long start_time;                                 // Starting time of average loop 
   unsigned long sample;                                     // Counts read from ADC
            bool blinky;                                     // Blink the LEDs on an over flow
-  bool          not_in_spec;                                // Set to true if the input is close to the limits
   bool          stay_forever;                               // Stay forever if called with pass_count == 0;
   unsigned int  sensor_status;                              // OR of the sensor bits that have tripped
   bool          pause;                                      // Stop the test
   unsigned int  i, j;                                       // Iteration Counter
   
-  if ( DLT(DLT_CRITICAL) )                                           // Infinite number of passes?
-  {
-    Serial.print(T("Setting trip point. Type ! of cycle power to exit\r\n"));
-  }
+  Serial.print(T("Setting trip point. Type ! of cycle power to exit\r\n"));
   blinky = 0;
-  not_in_spec = true;                                       // Start off by assuming out of spec
   sensor_status = 0;                                        // No sensors have tripped
   stay_forever = false;
   if (pass_count == 0 )                                     // A pass count of 0 means stay
@@ -740,77 +735,10 @@ void set_trip_point
 /*
  * Loop if not in spec, passes to display, or the CAL jumper is in
  */
-  while ( not_in_spec                                       // Out of tolerance
-          ||   ( stay_forever )                             // Passes to go
+  while ( ( stay_forever )                                  // Passes to go
           ||   ( CALIBRATE )                                // Held in place by DIP switch
           ||   (pass_count != 0))                           // Wait here for N cycles
   {
-    start_time = millis();
-    sample = 0;
-    i=0;
-    while ( millis() - start_time < (ONE_SECOND/10) )       // Read voltage for 1/10 second
-    {
-      sample += analogRead(V_REFERENCE);                    // Read the ADC. 0-1023V
-      i++;                                                  // and keep a running total
-    }
-    sample /= i;                                            // Get the average
-    
-/*
- *  See if we are on one of the limits and out of spec.
- */
-    if ( (sample < SPEC_RANGE)                              // Close to 0
-       || ( sample > (MAX_ANALOG - SPEC_RANGE)) )           // Near VCC 
-    {                                                       // Blink the LEDs * - x - *
-      if ( DLT(DLT_CRITICAL) )
-      {
-        Serial.print(T("Out Of Spec: ")); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
-      }
-      blink_fault(VREF_OVER_UNDER);
-      pass_count = 0;                                       // Stay in this function forever
-      not_in_spec = true;                                   // Show we are out of spec
-      continue;
-    }
-
- /*
-  * Determine what band it belongs to 
-  */
-   i = 0;
-   while (volts_to_LED[i] != 0)
-   {
-     if ( sample <= mv_to_counts[i] )
-     {
-      break;
-     }
-     i++;
-   }
-
- /*
-  * Use the band to find the LEDs and if they should blink
-  */
-   blinky = !blinky;                      // Toggle the blink
-   ch = volts_to_LED[i];
-   if ( ch & BLINK )                      // Blink bit on?
-   {
-     if ( blinky )                        // Time to blink?
-     {
-       ch = 0;                            // No, then off
-     }
-     ch &= ~BLINK;                        // Keep only the LED state
-   }
-   
-   not_in_spec = ch & NOT_IN_SPEC;
-   
-   if ( not_in_spec )                     // Out of spec?
-   {
-     ch = 0b010;                          // Flash x - * - x
-     if ( blinky )                        // or    * - x - *
-     {
-       ch = 0b101; 
-     }
-   }
-
-   set_LED(ch & 4, ch & 2, ch & 1);
-
 /*
  * Got to the end.  See if we are going to do this for a fixed time or forever
  */
@@ -844,11 +772,12 @@ void set_trip_point
       default:
         break;
     }
-
+    
+      
+   show_sensor_status(is_running(), 0);
+   Serial.print(T("\n\r"));
    if ( stay_forever )
    {
-      show_sensor_status(is_running(), 0);
-      Serial.print(T("\n\r"));
       if ( (is_running() == 0x0f) && (face_strike != 0) )
       {
         start_over();

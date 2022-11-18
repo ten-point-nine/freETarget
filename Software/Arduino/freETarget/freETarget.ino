@@ -74,6 +74,10 @@ void setup(void)
  *  Set up the port pins
  */
   init_gpio();  
+  if ( VERBOSE_TRACE )
+  {
+    is_trace = 10;
+  }
   init_sensors();
   init_analog_io();
   init_timer();

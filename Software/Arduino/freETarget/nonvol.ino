@@ -149,7 +149,11 @@ void factory_nonvol
    i++;
  }
   Serial.print(T("\r\nDone\r\n"));
-    
+  
+/*    
+ *      Make a backup of the settings
+ */  backup_nonvol();
+
 /*    
  *     Test the board only if it is a factor init
  */

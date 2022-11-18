@@ -555,17 +555,21 @@ void show_echo(int v)
   sprintf(s, "\"TIMER_COUNT\": %d, \n\r", (int)(SHOT_TIME * OSCILLATOR_MHZ));             // Maximum number of clock cycles to record shot (target dependent)
   output_to_all(s);
 
+
   sprintf(s, "\"WiFi_PRESENT\": %d, \n\r", esp01_is_present());                           // TRUE if WiFi is available
   output_to_all(s);
-
-  esp01_myIP(str_c);
-  sprintf(s, "\"WiFi_IP_ADDRESS\": \"%s:1090\", \n\r", str_c);                            // Print out the IP address
-  output_to_all(s);
   
-  for ( i=0; i != ESP01_N_CONNECT; i++)
+  if ( esp01_is_present() )
   {
-    sprintf(s, "\"WiFi_CONNECT %d\": %d, \n\r", i+1, esp01_connect[i]);                   // TRUE if Client[i] connected
+    esp01_myIP(str_c);
+    sprintf(s, "\"WiFi_IP_ADDRESS\": \"%s:1090\", \n\r", str_c);                            // Print out the IP address
     output_to_all(s);
+  
+    for ( i=0; i != ESP01_N_CONNECT; i++)
+    {
+      sprintf(s, "\"WiFi_CONNECT %d\": %d, \n\r", i+1, esp01_connect[i]);                   // TRUE if Client[i] connected
+      output_to_all(s);
+    }
   }
   
   sprintf(s, "\"VERSION\": %s, \n\r", SOFTWARE_VERSION);                                  // Current software version
