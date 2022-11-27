@@ -124,6 +124,10 @@ void setup(void)
  */
   set_LED_PWM(json_LED_PWM);
   set_LED(LED_READY);                   // to a client, then the RDY light is steady on
+  while ( AVAILABLE )
+  {
+    GET();                              // Flush any garbage before we start up
+  }
   return;
 }
 
@@ -496,7 +500,7 @@ unsigned int reduce(void)
         if ( ((json_paper_eco == 0)                             // ECO turned off
             || ( sqrt(sq(record[this_shot].x) + sq(record[this_shot].y)) < json_paper_eco )) ) // Outside the black
         {
-        drive_paper();                                          // to follow through.
+          drive_paper();                                        // to follow through.
         }
       } 
     }

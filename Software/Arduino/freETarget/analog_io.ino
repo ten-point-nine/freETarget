@@ -181,6 +181,11 @@ unsigned int revision(void)
     revision = REV_300;
   }
 
+  if ( (revision == REV_320) && (json_serial_number < 100) )
+  {
+    revision = REV_310;
+  }
+  
 /*
  * Nothing more to do, return the board revision
  */

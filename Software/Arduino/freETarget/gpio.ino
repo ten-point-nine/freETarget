@@ -518,7 +518,7 @@ void read_timers
   
   if ( DLT(DLT_INFO) )
   {
-    Serial.print(T("\r\nAdvancing paper "));
+    Serial.print(T("Advancing paper:")); Serial.print(s_time);
   }
 
 /*
@@ -848,7 +848,12 @@ static void sw_state
 {     
   
   char s[128];                          // Holding string 
-  
+
+  if ( DLT(DLT_CRITICAL) )
+  {
+    Serial.print(T("Switch action: ")); Serial.print(action);
+  }
+
   switch (action)
   {
     case POWER_TAP:

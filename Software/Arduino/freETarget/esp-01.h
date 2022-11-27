@@ -36,7 +36,8 @@ void         esp01_myIP(char* s);                 // Obtain the working IP addre
 #define ESP01_MAX_WAITOK  2000                    // Wait for 2 seconds for the OK to come back
 #define ESP01_BUFFER_SIZE  2048                   // The ESP buffer size
 
-#define ESP01_SSID_SIZE     17                    // Give 16+1 characters for SSID
+#define ESP01_SSID_SIZE     (16+1)                // Give 16+1 characters for SSID *** DO NOT UDE **
+#define ESP01_SSID_SIZE_32  (32+1)                // Give 32+1 characters for SSID
 #define ESP01_PWD_SIZE      17                    // Give 16+1 characters for PWD
 #define ESP01_IP_SIZE       17                    // Use 192.168.100.100 for IP
 #endif

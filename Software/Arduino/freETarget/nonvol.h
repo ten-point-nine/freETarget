@@ -10,7 +10,7 @@
 
 #include "esp-01.h"
 
-#define PS_VERSION        9                       // Persistent storage version
+#define PS_VERSION        10                      // Persistent storage version
 #define PS_UNINIT(x)     ( ((x) == 0xABAB) || ((x) == 0xFFFF))  // Uninitilized value
  
 /*
@@ -78,7 +78,8 @@ void restore_nonvol(void);                        // Copyt the nonvol back
 #define NONVOL_WIFI_SSID      (NONVOL_WIFI_DHCP  + sizeof(int))            // Storage for SSID
 #define NONVOL_WIFI_PWD       (NONVOL_WIFI_SSID  + ESP01_SSID_SIZE)        // Storage for SSID Password
 #define NONVOL_WIFI_IP        (NONVOL_WIFI_PWD   + ESP01_PWD_SIZE)         // Storage forIP Address
-#define NONVOL_NEXT           (NONVOL_WIFI_IP    + ESP01_IP_SIZE) 
+#define NONVOL_WIFI_SSID_32   (NONVOL_WIFI_DHCP  + ESP01_IP_SIZE)          // Storage for SSID
+#define NONVOL_NEXT           (NONVOL_WIFI_IP    + ESP01_SSID_SIZE_32)     //
 
 #define NEXT_NONVOL           (NONVOL_WIFI_DHCP + sizeof(int) )
 #define NONVOL_SIZE           4096                                         // 4K available
