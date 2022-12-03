@@ -113,7 +113,7 @@ const json_message JSON[] = {
   {"\"TRACE\":",          0,                                 0,                IS_INT16,  &set_trace,                      0,        0 },    // Enter / exit diagnostic trace
   {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_version,                   0,        0 },    // Return the version string
   {"\"V_SET\":",          0,                                 &json_vset,       IS_FLOAT,  &compute_vset_PWM,NONVOL_VSET,             0 },    // Set the voltage reference
-  {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT16,  0,                NONVOL_WIFI_CHANNEL,     1 },    // Set the wifi channel
+  {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT16,  0,                NONVOL_WIFI_CHANNEL,     6 },    // Set the wifi channel
   {"\"WIFI_IP\":",        (int*)&json_wifi_ip,               0,                IS_TEXT,   0,                NONVOL_WIFI_IP,          0 },    // IP address use by target
   {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_SECRET, 0,                NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
   {"\"WIFI_SSID\":",      (int*)&json_wifi_ssid,             0,                IS_TEXT,   0,                NONVOL_WIFI_SSID_32,     0 },    // Name of SSID to attach to 

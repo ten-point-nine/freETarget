@@ -773,7 +773,7 @@ void set_trip_point
         break;
     }
     
-      
+
    show_sensor_status(is_running(), 0);
    Serial.print(T("\n\r"));
    if ( stay_forever )

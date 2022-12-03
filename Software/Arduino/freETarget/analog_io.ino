@@ -181,9 +181,9 @@ unsigned int revision(void)
     revision = REV_300;
   }
 
-  if ( (revision == REV_320) && (json_serial_number < 100) )
+  if ( (revision == REV_310) && (json_serial_number > 160) )
   {
-    revision = REV_310;
+    revision = REV_320;
   }
   
 /*

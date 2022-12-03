@@ -522,7 +522,7 @@ void esp01_status(void)
 #define myIP_QUOTE1 1
 #define myIP_QUOTE2 2
 
-char ip[] = "192.168.10.9";
+char ip[] = "AAA.BBB.CCC.DDD";
 
 void esp01_myIP
   (
@@ -533,6 +533,8 @@ void esp01_myIP
   char ch;
   unsigned int myIP_state;
 
+  *return_value = 0;
+  
   if ( *json_wifi_ssid == 0 )
   {
     WIFI_SERIAL.print(T("AT+CIPAP_CUR?\r\n"));        // Request the IP address
@@ -541,7 +543,7 @@ void esp01_myIP
   {
     WIFI_SERIAL.print(T("AT+CIPSTA_CUR?\r\n"));       // Request the IP address
   }
-  
+
   myIP_state = myIP_IDLE;
   
   start = millis();
@@ -550,6 +552,7 @@ void esp01_myIP
     if ( WIFI_SERIAL.available() != 0 ) 
     {
       ch = WIFI_SERIAL.read();                      // Echo what comes back
+
       switch (myIP_state)
       {
         case myIP_IDLE: 
