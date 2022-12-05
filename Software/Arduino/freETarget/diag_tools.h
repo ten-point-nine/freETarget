@@ -36,19 +36,20 @@
  * LED status messages
  */
 // Normal operation        RDY Light On
-#define LED_RESET         L('.', '.', '.') // Force them all off
-#define LED_READY         L('*', '.', '.') // The shot is ready to go
-#define LED_OFF           L('.', '-', '-') // Turn off the READY light
-#define LED_TABATA_ON     L('-', '*', '-') // Tabata is ready to go, leave the others alone
-#define LED_TABATA_OFF    L('-', '.', '-') // Tabata is turned off, leave the others alone
-#define LED_DONE          L('*', '*', '*') // A shot has been detected
-#define LED_WIFI_SEND     L('.', '.', '*') // There is something going over the WiFi
+#define LED_RESET         L('.', '.', '.') // 0 Force them all off
+#define LED_READY         L('*', '.', '.') //   The shot is ready to go
+#define LED_OFF           L('.', '-', '-') // 1  Turn off the READY light
+#define LED_TABATA_ON     L('-', '*', '-') // 2  Tabata is ready to go, leave the others alone
+#define LED_TABATA_OFF    L('-', '.', '-') //    Tabata is turned off, leave the others alone
+#define LED_DONE          L('*', '*', '*') // 7  A shot has been detected
+#define LED_WIFI_SEND     L('.', '.', '*') // 4  There is something going over the WiFi
+#define LED_HELLO         L('*', '.', '*') // 5  Hello World
 
 // Sensor failed while waiting for a shot X Light On
-#define NORTH_FAILED       L('.', '*', '.') // North sensor failed
-#define EAST_FAILED        L('.', '*', '*') // East sensor failed
-#define SOUTH_FAILED       L('*', '*', '*') // South sensor failed
-#define WEST_FAILED        L('*', '*', '.') // West sensor failed
+#define NORTH_FAILED       L('.', '*', '.') // 2 North sensor failed
+#define EAST_FAILED        L('.', '*', '*') // 6 East sensor failed
+#define SOUTH_FAILED       L('*', '*', '*') // 7 South sensor failed
+#define WEST_FAILED        L('*', '*', '.') // 3 West sensor failed
 
 // Spare                   Y light On
 

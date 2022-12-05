@@ -74,6 +74,7 @@ void setup(void)
  *  Set up the port pins
  */
   init_gpio();  
+  set_LED(LED_HELLO);                      // Hello World
   if ( VERBOSE_TRACE )
   {
     is_trace = 10;
