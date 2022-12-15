@@ -120,7 +120,7 @@ void disable_timer_interrupt(void)
 #define MOTOR_STATE_CYCLE    2                  // Cycle the stepper motor
 
 #define MAX_WAIT_TIME   10                      // Wait up to 10 ms for the input to arrive
-#define MAX_RING_TIME    5                      // Wait 5 ms for the ringing to stop
+#define MAX_RING_TIME   50                      // Wait 50 ms for the ringing to stop
 
 static unsigned int isr_state = PORT_STATE_IDLE;// Current aquisition state
 static unsigned int isr_timer;                  // Elapsed time counter
@@ -147,27 +147,27 @@ ISR(TIMER1_COMPA_vect)
   switch (isr_state)
   {
     case PORT_STATE_IDLE:                       // Idle, Wait for something to show up
-      if ( pin == 0 )                           // Nothing yet
+      if ( pin != 0 )                           // Something has triggered
       { 
         isr_timer = 0;                          // Reset the timer to 0
-        break;                                  // and try again next time
+        isr_state = PORT_STATE_WAIT;            // Got something wait for all of the sensors tro trigger
       }
-      isr_state = PORT_STATE_WAIT;              // Got something wait for all of the sensors tro trigger
+      break;
           
     case PORT_STATE_WAIT:                       // Something is present, wait for all of the inputs
-      if ( (pin == RUN_A_MASK)                  // We have some but not all of the inputs
-          || (isr_timer >= MAX_WAIT_TIME) )     // All of the inputs are here, continue on
+      if ( (pin == RUN_A_MASK)                  // We have all of the inputs
+          || (isr_timer >= MAX_WAIT_TIME) )     // or ran out of time.  Read the timers and rwestart
       {
         aquire();                               // Read the counters
-        isr_timer = 0;                          // Reset the timer
         clear_running();                        // Reset the RUN flip Flop
+        isr_timer = 0;                          // Reset the timer
         isr_state = PORT_STATE_DONE;            // and wait for the all clear
       }
       else
       {
         isr_timer++;                            // Wait TBD milliseconds for them to arrive
-        break;
       }
+      break;
       
     case PORT_STATE_DONE:                       // Waiting for the ringing to stop
       if ( pin != 0 )                           // Something got latched
