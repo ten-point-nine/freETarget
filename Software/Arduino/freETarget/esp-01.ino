@@ -53,7 +53,7 @@ static int  esp01_in_ptr;               // Queue in pointer
 static int  esp01_out_ptr;              // Queue out pointer
 
 static bool esp01_connect[ESP01_N_CONNECT]; // Set to true when a client (0-3) connects
-#define ESP01_MAX_WAITOK  ONE_SECOND        // 1000 milliseconds
+#define ESP01_MAX_WAITOK  (ONE_SECOND * 2)  // 2000 milliseconds
 /*----------------------------------------------------------------
  *
  * function: void esp01_init
@@ -123,15 +123,15 @@ void esp01_init(void)
  * There is an ESP-01 on the freETarget.  We need to program it
  */
   WIFI_SERIAL.print(T("ATE0\r\n"));                   // Turn off echo (don't use it)
-  if ( (esp01_waitOK(ESP01_MAX_WAITOK) == false) && DLT(DLT_DIAG) )
+  if ( esp01_waitOK(ESP01_MAX_WAITOK) == false )
   {
-    Serial.print(T("ESP-01: Failed ATE0"));
+    Serial.print(T("\r\nESP-01: Failed ATE0"));
   }
 
-  WIFI_SERIAL.print(T("AT+RFPOWER=82\r\n"));          // Set max power
-  if ( (esp01_waitOK(ESP01_MAX_WAITOK) == false) && ( DLT(DLT_DIAG) ) )
+  WIFI_SERIAL.print(T("AT+RFPOWER=80\r\n"));          // Set max power
+  if (esp01_waitOK(ESP01_MAX_WAITOK) == false)
   {
-    Serial.print(T("ESP-01: Failed AT+RFPOWER=80"));  
+    Serial.print(T("\r\nESP-01: Failed AT+RFPOWER=80"));  
   } 
 
 /*
@@ -141,73 +141,56 @@ void esp01_init(void)
   {                                                     // ******************************
     if ( DLT(DLT_DIAG) )
     {
-      Serial.print(T("ESP-01: Configuring as an SSID"));
+      Serial.print(T("\r\nESP-01: Configuring as an SSID"));
     }
       
     WIFI_SERIAL.print(T("AT+CWMODE_DEF=2\r\n"));        // We want to be a soft access point
-    if ( (esp01_waitOK(ESP01_MAX_WAITOK) == false) && DLT(DLT_DIAG))
+    if ( esp01_waitOK(ESP01_MAX_WAITOK) == false)
     {
-      Serial.print(T("ESP-01: Failed AT+CWMODE_DEF=2"));
+      Serial.print(T("\r\nESP-01: Failed AT+CWMODE_DEF=2"));
     }
     
     WIFI_SERIAL.print(T("AT+CWSAP_DEF=\"FET-")); WIFI_SERIAL.print(names[json_name_id]); WIFI_SERIAL.print(T("\",\"NA\",")); WIFI_SERIAL.print(json_wifi_channel); WIFI_SERIAL.print(T(",0\r\n"));
-    if ( (esp01_waitOK(ESP01_MAX_WAITOK) == false) && DLT(DLT_DIAG) )
+    if ( esp01_waitOK(ESP01_MAX_WAITOK) == false)
     {
-      Serial.print(T("ESP-01: Failed AT+CWSAP_DEF=\"FET-")); Serial.print(names[json_name_id]); Serial.print(T("\",\"NA\",")); Serial.print(json_wifi_channel); Serial.print(T(",0\r\n"));
+      Serial.print(T("\r\nESP-01: Failed AT+CWSAP_DEF=\"FET-")); Serial.print(names[json_name_id]); Serial.print(T("\",\"NA\",")); Serial.print(json_wifi_channel); Serial.print(T(",0\r\n"));
     }  
 
     WIFI_SERIAL.print(T("AT+CWDHCP_DEF=0,1\r\n"));      // DHCP turned on
-    if ( (esp01_waitOK(ESP01_MAX_WAITOK) == false) && DLT(DLT_DIAG) )
+    if ( esp01_waitOK(ESP01_MAX_WAITOK) == false )
     {
-      Serial.print(T("ESP-01: Failed AT+CWDHCP_DEF=0,1"));
+      Serial.print(T("\r\nESP-01: Failed AT+CWDHCP_DEF=0,1"));
     }
   
     WIFI_SERIAL.print(T("AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\"\r\n")); // Set the freETarget IP to 192.168.10.9
-    if ( (esp01_waitOK(ESP01_MAX_WAITOK) == false) && DLT(DLT_DIAG) )
+    if ( esp01_waitOK(ESP01_MAX_WAITOK) == false)
     {
-      Serial.print(T("ESP-01: Failed AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\""));
+      Serial.print(T("\r\nESP-01: Failed AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\""));
     }
 
-    WIFI_SERIAL.print(T("AT+CWDHCPS_DEF=1,2800\r\n"));                           // (DHCP) Set the IP to automatic  Lease Time 2800 minutes
-    if ( (esp01_waitOK(ESP01_MAX_WAITOK) == false) && DLT(DLT_DIAG) )
+    WIFI_SERIAL.print(T("AT+CWDHCPS_DEF=1,2800, \"192.168.10.1\", \"192.168.10.8\"\r\n"));                           // (DHCP) Set the IP to automatic  Lease Time 2800 minutes
+    if ( esp01_waitOK(ESP01_MAX_WAITOK) == false )
     { 
-      Serial.print(T("ESP-01: Failed AT+CWDHCPS_DEF=1,2800"));
+      Serial.print(T("\r\nESP-01: Failed AT+CWDHCPS_DEF=1,2800"));
     }
   }                                                     // ******************************
   else                                                  // Connect to an SSID, let it define the DHCP if needed
   {
     if ( DLT(DLT_DIAG) )
     {
-      Serial.print(T("ESP-01: Configuring as an access point: ")); Serial.print(json_wifi_ssid); Serial.print(T(",")); Serial.print(json_wifi_pwd);
+      Serial.print(T("\r\nESP-01: Configuring as an access point: ")); Serial.print(json_wifi_ssid); Serial.print(T(",")); Serial.print(json_wifi_pwd);
     }
     
     WIFI_SERIAL.print(T("AT+CWMODE_DEF=1\r\n"));        // We want to be an in Station Mode
-    if ( (esp01_waitOK(ESP01_MAX_WAITOK) == false) && (DLT(DLT_DIAG)) )
+    if ( esp01_waitOK(ESP01_MAX_WAITOK) == false)
     {
-      Serial.print(T("ESP-01: Failed AT+CWMODE_DEF=1"));
+      Serial.print(T("\r\nESP-01: Failed AT+CWMODE_DEF=1"));
     }
     
     WIFI_SERIAL.print(T("AT+CWJAP_DEF=\"")); WIFI_SERIAL.print(json_wifi_ssid); WIFI_SERIAL.print(T("\",\"")); WIFI_SERIAL.print(json_wifi_pwd); WIFI_SERIAL.print(T("\"\r\n"));
     if ( esp01_waitOK(ESP01_MAX_WAITOK*10) == false)                      // Didn't connect to the SSID
     {
-      if ( DLT(DLT_DIAG) )
-      {
-        Serial.print(T("ESP-01: Failed AT+CWJAP_DEF=\""));
-      }
-      else
-      {
-        Serial.print(T("\r\nFailed to connect to "));
-      }
-      Serial.print(json_wifi_ssid); Serial.print(T("\",\"")); Serial.print(json_wifi_pwd); Serial.print(T("\"\r\n"));
-    }
-    
-    if ( *json_wifi_ip != 0 )                                                                       // If we have an IP address then use this one
-    {
-      WIFI_SERIAL.print(T("AT+CIPAP_DEF=\"")); WIFI_SERIAL.print(json_wifi_ip); WIFI_SERIAL.print(T("\",\"")); WIFI_SERIAL.print(json_wifi_ip); WIFI_SERIAL.print(T("\"\r\n")); // Set the freETarget IP to 192.168.10.9
-      if ( (esp01_waitOK(ESP01_MAX_WAITOK) == false) && (DLT(DLT_DIAG)) )
-      {
-        Serial.print(T("ESP-01: Failed AT+CIPAP_DEF=\"")); Serial.print(json_wifi_ip); Serial.print(T("\",\"")); Serial.print(json_wifi_ip); Serial.print(T("\"\r\n"));
-      }
+      Serial.print(T("ESP-01: Failed AT+CWJAP_DEF=\"")); Serial.print(json_wifi_ssid); Serial.print(T("\",\"")); Serial.print(json_wifi_pwd); Serial.print(T("\"\r\n"));
     }
   }
 
@@ -215,25 +198,25 @@ void esp01_init(void)
  * Other operating settings
  */
   WIFI_SERIAL.print(T("AT+CIPMODE=0\r\n"));           // Normal Transmission Mode
-  if ( (esp01_waitOK(ESP01_MAX_WAITOK) == false) && (DLT(DLT_DIAG)) )
+  if ( esp01_waitOK(ESP01_MAX_WAITOK * 10) == false )
   {
     Serial.print(T("ESP-01: Failed AT+CIPMODE=0"));
   }
 
   WIFI_SERIAL.print(T("AT+CIPMUX=1\r\n"));           // Allow multiple connections
-  if ( (esp01_waitOK(ESP01_MAX_WAITOK) == false) && (DLT(DLT_DIAG)) )
+  if ( esp01_waitOK(ESP01_MAX_WAITOK * 10) == false )
   {
     Serial.print(T("ESP-01: Failed AT+CIPMUX=1"));
   }
 
   WIFI_SERIAL.print(T("AT+CIPSERVER=1,1090\r\n"));   // Turn on the server and listen on port 1090
-  if ( (esp01_waitOK(ESP01_MAX_WAITOK) == false) && (DLT(DLT_DIAG)) )
+  if ( esp01_waitOK(ESP01_MAX_WAITOK) == false )
   {
     Serial.print(T("ESP-01: Failed AT+CIPSERVER=1,1090"));
   }
   
   WIFI_SERIAL.print(T("AT+CIPSTO=7000\r\n"));        // Set the server time out
-  if ( (esp01_waitOK(ESP01_MAX_WAITOK) == false) && (DLT(DLT_DIAG)) )
+  if ( esp01_waitOK(ESP01_MAX_WAITOK) == false )
   {
     Serial.print(T("ESP-01: Failed AT+CIPSTO=7000"));
   }

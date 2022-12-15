@@ -55,7 +55,6 @@ int     json_rapid_time;            // When will the rapid fire event end?
 int     json_rapid_wait;            // Delay applied to rapid start
 char    json_wifi_ssid[ESP01_SSID_SIZE_32]; // Stored value of SSID
 char    json_wifi_pwd[ESP01_PWD_SIZE];// Stored value of password
-char    json_wifi_ip[ESP01_IP_SIZE];// Stored value of IP address
 int     json_wifi_dhcp;             // The ESP is a DHCP server
 
 #define JSON_DEBUG false            // TRUE to echo DEBUG messages
@@ -114,7 +113,6 @@ const json_message JSON[] = {
   {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_version,                   0,        0 },    // Return the version string
   {"\"V_SET\":",          0,                                 &json_vset,       IS_FLOAT,  &compute_vset_PWM,NONVOL_VSET,             0 },    // Set the voltage reference
   {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT16,  0,                NONVOL_WIFI_CHANNEL,     6 },    // Set the wifi channel
-  {"\"WIFI_IP\":",        (int*)&json_wifi_ip,               0,                IS_TEXT,   0,                NONVOL_WIFI_IP,          0 },    // IP address use by target
   {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_SECRET, 0,                NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
   {"\"WIFI_SSID\":",      (int*)&json_wifi_ssid,             0,                IS_TEXT,   0,                NONVOL_WIFI_SSID_32,     0 },    // Name of SSID to attach to 
   {"\"Z_OFFSET\":",       &json_z_offset,                    0,                IS_INT16,  0,                NONVOL_Z_OFFSET,        13 },    // Distance from paper to sensor plane (mm)
@@ -294,7 +292,7 @@ bool read_JSON(void)
                    *s = 0;                                      // Null terminate 
                 }
                 
-                if ( JSON[j].non_vol != 0 )
+                if ( JSON[j].non_vol != 0 )                     // Save to persistent storage if present
                 {
                   EEPROM.put(JSON[j].non_vol+m, input_JSON[i+k]); // Store into NON-VOL
                   m++;

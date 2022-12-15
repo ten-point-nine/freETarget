@@ -94,7 +94,6 @@ void setup(void)
  *  Read the persistent storage
  */
   read_nonvol();
-  multifunction_init();
   keep_alive = millis();
   
 /*

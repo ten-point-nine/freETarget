@@ -545,6 +545,17 @@ void update_nonvol
     current_version = 10;
     EEPROM.put(NONVOL_PS_VERSION, current_version);
   }
+
+  if ( current_version == 10 )                             // Fix PS Version 10 bug                
+  {
+    x=0;
+    EEPROM.put(NONVOL_WIFI_SSID, x);                      // Version 10 put the SSID_32 in the
+    EEPROM.put(NONVOL_WIFI_SSID_32, x);                   // wrong place so this patch
+    EEPROM.put(NONVOL_WIFI_IP, x);                        // zero's out the variables.
+    EEPROM.put(NONVOL_WIFI_PWD, x);
+    current_version = 11;
+    EEPROM.put(NONVOL_PS_VERSION, current_version);
+  }
 /*
  * Up to date, return
  */

@@ -94,7 +94,8 @@ void init_gpio(void)
     }
     i++;
   }
-
+  
+  multifunction_init();
   disable_face_interrupt();
   set_LED_PWM(0);             // Turn off the illumination for now
   
