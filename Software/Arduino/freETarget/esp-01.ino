@@ -106,13 +106,13 @@ void esp01_init(void)
   {
     if ( DLT(DLT_DIAG) ) 
     {
-      Serial.print(T("ESP-01 Not Found"));
+      Serial.print(T("\r\nESP-01 Not Found"));
     }
     return;                                     // No hardware installed, nothing to do
   }
   if ( DLT(DLT_DIAG) )
   {
-    Serial.print(T("ESP-01 Present"));
+    Serial.print(T("\r\nESP-01 Present"));
   }
 
   esp01_restart();
@@ -167,12 +167,6 @@ void esp01_init(void)
     {
       Serial.print(T("\r\nESP-01: Failed AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\""));
     }
-
-    WIFI_SERIAL.print(T("AT+CWDHCPS_DEF=1,2800, \"192.168.10.1\", \"192.168.10.8\"\r\n"));                           // (DHCP) Set the IP to automatic  Lease Time 2800 minutes
-    if ( esp01_waitOK(ESP01_MAX_WAITOK) == false )
-    { 
-      Serial.print(T("\r\nESP-01: Failed AT+CWDHCPS_DEF=1,2800"));
-    }
   }                                                     // ******************************
   else                                                  // Connect to an SSID, let it define the DHCP if needed
   {
@@ -190,7 +184,7 @@ void esp01_init(void)
     WIFI_SERIAL.print(T("AT+CWJAP_DEF=\"")); WIFI_SERIAL.print(json_wifi_ssid); WIFI_SERIAL.print(T("\",\"")); WIFI_SERIAL.print(json_wifi_pwd); WIFI_SERIAL.print(T("\"\r\n"));
     if ( esp01_waitOK(ESP01_MAX_WAITOK*10) == false)                      // Didn't connect to the SSID
     {
-      Serial.print(T("ESP-01: Failed AT+CWJAP_DEF=\"")); Serial.print(json_wifi_ssid); Serial.print(T("\",\"")); Serial.print(json_wifi_pwd); Serial.print(T("\"\r\n"));
+      Serial.print(T("\r\nESP-01: Failed AT+CWJAP_DEF=\"")); Serial.print(json_wifi_ssid); Serial.print(T("\",\"")); Serial.print(json_wifi_pwd); Serial.print(T("\"\r\n"));
     }
   }
 
@@ -200,25 +194,25 @@ void esp01_init(void)
   WIFI_SERIAL.print(T("AT+CIPMODE=0\r\n"));           // Normal Transmission Mode
   if ( esp01_waitOK(ESP01_MAX_WAITOK * 10) == false )
   {
-    Serial.print(T("ESP-01: Failed AT+CIPMODE=0"));
+    Serial.print(T("\r\nESP-01: Failed AT+CIPMODE=0"));
   }
 
   WIFI_SERIAL.print(T("AT+CIPMUX=1\r\n"));           // Allow multiple connections
   if ( esp01_waitOK(ESP01_MAX_WAITOK * 10) == false )
   {
-    Serial.print(T("ESP-01: Failed AT+CIPMUX=1"));
+    Serial.print(T("\r\nESP-01: Failed AT+CIPMUX=1"));
   }
 
   WIFI_SERIAL.print(T("AT+CIPSERVER=1,1090\r\n"));   // Turn on the server and listen on port 1090
   if ( esp01_waitOK(ESP01_MAX_WAITOK) == false )
   {
-    Serial.print(T("ESP-01: Failed AT+CIPSERVER=1,1090"));
+    Serial.print(T("\r\nESP-01: Failed AT+CIPSERVER=1,1090"));
   }
   
   WIFI_SERIAL.print(T("AT+CIPSTO=7000\r\n"));        // Set the server time out
   if ( esp01_waitOK(ESP01_MAX_WAITOK) == false )
   {
-    Serial.print(T("ESP-01: Failed AT+CIPSTO=7000"));
+    Serial.print(T("\r\nESP-01: Failed AT+CIPSTO=7000"));
   }
   
 /*
@@ -226,7 +220,7 @@ void esp01_init(void)
  */
   if ( DLT(DLT_DIAG) )
   {
-    Serial.print(T("ESP-01 Initialization complete"));
+    Serial.print(T("\r\nESP-01 Initialization complete"));
   }
 
   return;
