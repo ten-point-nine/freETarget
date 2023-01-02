@@ -56,6 +56,7 @@ int     json_rapid_wait;            // Delay applied to rapid start
 char    json_wifi_ssid[ESP01_SSID_SIZE_32]; // Stored value of SSID
 char    json_wifi_pwd[ESP01_PWD_SIZE];// Stored value of password
 int     json_wifi_dhcp;             // The ESP is a DHCP server
+int     json_rh;                    // Relative Humidity 0-1005
 
 #define JSON_DEBUG false            // TRUE to echo DEBUG messages
 
@@ -97,6 +98,7 @@ const json_message JSON[] = {
   {"\"RAPID_TIME\":",     &json_rapid_time,                  0,                IS_INT16,  0,                0,                       0 },    // Set the duration of the rapid fire event and start
   {"\"RAPID_WAIT\":",     &json_rapid_wait,                  0,                IS_INT16,  0,                0,                       0 },    // Delay applied between enable and ready
   {"\"RESET\":",          0,                                 0,                IS_INT16,  &setup,           0,                       0 },    // Reinit the board
+  {"\"RH\":",             &json_rh,                          0,                IS_INT16,  0,                NONVOL_RH,              50 },    // Relative Humidity
   {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT16,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
   {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  &gen_position,    NONVOL_SENSOR_DIA,     230 },    // Generate the sensor postion array
   {"\"SN\":",             &json_serial_number,               0,                IS_FIXED,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
@@ -546,7 +548,7 @@ void show_echo(int v)
   sprintf(s, "\"TEMPERATURE\": %s, \n\r", str_c);                                         // Temperature in degrees C
   output_to_all(s);
   
-  dtostrf(speed_of_sound(temperature_C(), RH_50), 4, 2, str_c );
+  dtostrf(speed_of_sound(temperature_C(), json_rh), 4, 2, str_c );
   sprintf(s, "\"SPEED_SOUND\": %s, \n\r", str_c);                                         // Speed of Sound
   output_to_all(s);
 

@@ -10,7 +10,7 @@
 #define S_SHOT      true        // Include the shot number
 #define S_XY        true        // Include X-Y coordinates
 #define S_POLAR     false       // Include polar coordinates
-#define S_TIMERS  true        // Include counter values
+#define S_TIMERS    true        // Include counter values
 #define S_MISC      true        // Include miscelaneous diagnotics
 #define S_SCORE     false       // Include estimated score
 
@@ -45,5 +45,6 @@ void rotate_hit(unsigned int location, shot_record_t* shot);  // Rotate the shot
 bool find_xy_3D(sensor_t* s, double estimate, double z_offset_clock);  // Estimated position including slant range
 void send_timer(int sensor_status);                           // Show debugging information 
 void send_miss(shot_record_t* shot);                          // Send a miss message
+double speed_of_sound(double temperature, int relative_humidity); // Speed of sound in mm/us
 
 #endif

@@ -69,12 +69,13 @@ void setup(void)
   Serial.begin(115200);
   AUX_SERIAL.begin(115200); 
   DISPLAY_SERIAL.begin(115200); 
-
+  POST_version();                         // Show the version string on all ports
+  
 /*
  *  Set up the port pins
  */
   init_gpio();  
-  set_LED(LED_HELLO);                      // Hello World
+  set_LED('*', '.', '.');                 // Hello World
   if ( VERBOSE_TRACE )
   {
     is_trace = 10;
@@ -93,25 +94,28 @@ void setup(void)
 /* 
  *  Read the persistent storage
  */
+  set_LED('.', '*', '.');                 // Hello World
   read_nonvol();
   keep_alive = millis();
   
 /*
  * Initialize the WiFi if available
  */
+   set_LED('*', '*', '.');                 // Hello World
    esp01_init();                           // Prepare the WiFi channel if installed
 
 /*
  * Initialize variables
  */
+   set_LED('.', '.', '*');                // Hello World
    tabata(true);                          // Reset the Tabata timers
   
 /*
  * Run the power on self test
  */
-  POST_version();                         // Show the version string on all ports
+  set_LED('*', '.', '*');                 // Hello World
   show_echo(0);
-  POST_LEDs();                            // Cycle the LEDs
+  set_LED('*', '*', '*');                 // Hello World
   while ( (POST_TIMERS() == false)        // If the timers fail
               && !DLT(DLT_CRITICAL))      // and not in trace mode (DIAG jumper installed)
   {
@@ -123,6 +127,7 @@ void setup(void)
  * Ready to go
  */
   set_LED_PWM(json_LED_PWM);
+  POST_LEDs();                            // Cycle the LEDs
   set_LED(LED_READY);                   // to a client, then the RDY light is steady on
   while ( AVAILABLE )
   {

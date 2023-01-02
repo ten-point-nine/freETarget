@@ -1053,7 +1053,7 @@ void digital_test(void)
   digitalWrite(STOP_N, 1);                        // Reset the fun flip flop
   Serial.print(T("\r\nRUN FlipFlop: 0x"));           Serial.print(is_running(), HEX);   
   Serial.print(T("\r\nTemperature: "));              Serial.print(temperature_C());  Serial.print(T("'C "));
-  Serial.print(speed_of_sound(temperature_C(), RH_50));  Serial.print(T("mm/us"));
+  Serial.print(speed_of_sound(temperature_C(), json_rh));  Serial.print(T("mm/us"));
   Serial.print(T("\r\nV_REF: "));                    Serial.print(volts); Serial.print(T(" Volts"));
   Serial.print(T("\r\n"));
 

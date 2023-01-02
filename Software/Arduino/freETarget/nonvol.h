@@ -10,7 +10,7 @@
 
 #include "esp-01.h"
 
-#define PS_VERSION        11                      // Persistent storage version
+#define PS_VERSION        12                       // Persistent storage version
 #define PS_UNINIT(x)     ( ((x) == 0xABAB) || ((x) == 0xFFFF))  // Uninitilized value
  
 /*
@@ -32,7 +32,8 @@ void restore_nonvol(void);                        // Copyt the nonvol back
 #define NONVOL_INIT           0x0
 #define NONVOL_SENSOR_DIA     (NONVOL_INIT        + sizeof(int) + 2)       // Sensor diameter
 #define NONVOL_DIP_SWITCH     (NONVOL_SENSOR_DIA  + sizeof(double) + 2)    // DIP switch setting
-#define NONVOL_PAPER_TIME     (NONVOL_DIP_SWITCH  + sizeof(int) + 2)       // Paper advance time
+#define NONVOL_RH             (NONVOL_DIP_SWITCH  + sizeof(int))           // Relative Humidity
+#define NONVOL_PAPER_TIME     (NONVOL_RH          + sizeof(int))           // Paper advance time
 #define NONVOL_TEST_MODE      (NONVOL_PAPER_TIME  + sizeof(int) + 2)       // Self stest
 #define NONVOL_CALIBRE_X10    (NONVOL_TEST_MODE   + sizeof(int) + 2)       // Pellet Calibre
 #define NONVOL_SENSOR_ANGLE   (NONVOL_CALIBRE_X10 + sizeof(int) + 2)       // Angular displacement of sensors

@@ -13,7 +13,6 @@
 #define PI_ON_2 (PI / 2.0d)
 
 #define R(x)  (((x)+location) % 4)    // Rotate the target by location points
-#define RH_50 50.0d                   // Fixed Relative Humidity (for now)
 
 /*
  *  Variables
@@ -39,6 +38,8 @@ static void remap_target(double* x, double* y);  // Map a club target if used
  * a humidity sensor
  * 
  * Corrected tempeature algorithm from S. Carrington - Thanks
+ * 
+ * See https://www.weather.gov/epz/wxcalc_speedofsound
  *--------------------------------------------------------------*/
 
 #define TO_MM   1000.0d       // Convert Meters to MM
@@ -47,18 +48,18 @@ static void remap_target(double* x, double* y);  // Map a club target if used
 double speed_of_sound
   (
   double temperature,         // Current temperature in degrees C
-  double relative_humidity    // RH, 0-1005
+  int    relative_humidity    // RH, 0-100%
   )
 {
   double speed_MPS;           // Speed Meters Per Second
   double speed_mmPuS;         //  Speed mm per microsecond
-  
 
-  speed_MPS   = 331.3d * sqrt( (temperature + 273.15d) / 273.15d )                                          // Temperature
-                  + relative_humidity/10.0d * (0.0344857d - (0.000187143d*temperature) + (0.000236429d*sq(temperature)));  // Humidity
+  speed_MPS   = 331.23d * sqrt( (temperature + 273.15d) / 273.15d )                                          // Temperature
+                + ((double)relative_humidity) / 10.0d * (0.0506900872d - (0.0014875218d*temperature) + (0.0002513188d * sq(temperature)));   // Humidity
+  
 
   speed_mmPuS  = speed_MPS * TO_MM / TO_US;      // Convert down to mm/us
-  
+
   if ( DLT(DLT_DIAG) )
     {
     Serial.print(T("Speed of sound: ")); Serial.print(speed_mmPuS); Serial.print(T("mm/us"));
@@ -98,7 +99,7 @@ void init_sensors(void)
 /*
  * Determine the speed of sound and ajust
  */
-  s_of_sound = speed_of_sound(temperature_C(), RH_50);
+  s_of_sound = speed_of_sound(temperature_C(), json_rh);
   pellet_calibre = ((double)json_calibre_x10 / s_of_sound / 2.0d / 10.0d) * OSCILLATOR_MHZ; // Clock adjustement
   
  /*

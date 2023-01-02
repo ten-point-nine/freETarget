@@ -556,6 +556,14 @@ void update_nonvol
     current_version = 11;
     EEPROM.put(NONVOL_PS_VERSION, current_version);
   }
+
+  if ( current_version == 11 )                            // Add in Relative Humidity
+  {
+    x=50;
+    EEPROM.put(NONVOL_RH, x);                             // Set RH to 50%
+    current_version = 12;
+    EEPROM.put(NONVOL_PS_VERSION, current_version);
+  }
 /*
  * Up to date, return
  */
