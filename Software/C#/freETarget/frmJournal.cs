@@ -271,6 +271,7 @@ namespace freETarget {
                     return;  
                 }
 
+                session.clearVRO();
                 Session clonedSession = Clone(session);
                 pGridSession.SelectedObject = clonedSession;
                 currentSession = session;

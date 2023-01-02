@@ -483,6 +483,11 @@ namespace freETarget {
                 vRO.reset();
             }
         }
+
+        public void clearVRO() {
+            this.vRO = null;
+        }
+
         public override string ToString() {
             return this.eventType.ToString();
         }
