@@ -309,6 +309,11 @@ void read_nonvol(void)
   unsigned int  x;              // 16 bit number
   double       dx;              // Floating point number
   unsigned char ch;             // Text value
+
+  if ( DLT(DLT_CRITICAL) )
+  {
+    Serial.print(T("read_nonvol()"));
+  }
   
   if ( DLT(DLT_DIAG) )
   {
@@ -432,6 +437,11 @@ void update_nonvol
   unsigned int ps_value;                  // Value read from persistent storage           
   unsigned int x;                         // Value read from table
 
+  if ( DLT(DLT_CRITICAL) )
+  {
+    Serial.print(T("update_nonvol(")); Serial.print(current_version); Serial.print(T(")")); 
+  }
+  
 /*
  * Check to see if this persistent storage has never had a version number
  */
@@ -461,6 +471,11 @@ void update_nonvol
    Serial.print(T("\r\nDone\r\n"));
   }
 
+  if ( (current_version < 1) || (current_version > PS_VERSION) )
+  {
+    current_version = 1;                                    // If the  version is out of range, start over
+  }
+  
 /*
  * Previously initialized memory.  Add in the new fields and values
  */

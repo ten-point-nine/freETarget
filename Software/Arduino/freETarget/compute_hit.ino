@@ -95,7 +95,11 @@ double speed_of_sound
  *--------------------------------------------------------------*/
 void init_sensors(void)
 {
-
+  if ( DLT(DLT_CRITICAL) ) 
+  {
+    Serial.print(T("init_sensors()"));
+  }
+  
 /*
  * Determine the speed of sound and ajust
  */

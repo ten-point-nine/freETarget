@@ -13,7 +13,7 @@
 #include "esp-01.h"
 #include "json.h"
 
-#define SOFTWARE_VERSION "\"4.0.11 January 2, 2023\""
+#define SOFTWARE_VERSION "\"4.0.12 January 2, 2023\""
 #define REV_100    100
 #define REV_210    210
 #define REV_220    220
@@ -33,6 +33,7 @@
 /*
  * Tracing 
  */
+#define INIT_TRACE        DLT_NONE                // Trace level during initiailization
 #define DLT(level)      ( do_dlt(level) )
 #define DLT_NONE          0                       // No DLT messages displayed
 #define DLT_CRITICAL      1                       // Critical operational messages displayed

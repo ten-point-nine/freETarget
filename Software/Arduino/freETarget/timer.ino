@@ -24,6 +24,11 @@
 
 void init_timer(void)
 {
+  if ( DLT(DLT_CRITICAL) )
+  {
+    Serial.print(T("init_timer()"));
+  }
+  
 /*
  * Timer 1
  */

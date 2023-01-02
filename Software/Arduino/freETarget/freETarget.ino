@@ -70,16 +70,14 @@ void setup(void)
   AUX_SERIAL.begin(115200); 
   DISPLAY_SERIAL.begin(115200); 
   POST_version();                         // Show the version string on all ports
+  is_trace = INIT_TRACE;
   
 /*
  *  Set up the port pins
  */
   init_gpio();  
   set_LED('*', '.', '.');                 // Hello World
-  if ( VERBOSE_TRACE )
-  {
-    is_trace = 10;
-  }
+  
   init_sensors();
   init_analog_io();
   init_timer();
@@ -114,8 +112,6 @@ void setup(void)
  * Run the power on self test
  */
   set_LED('*', '.', '*');                 // Hello World
-  show_echo(0);
-  set_LED('*', '*', '*');                 // Hello World
   while ( (POST_TIMERS() == false)        // If the timers fail
               && !DLT(DLT_CRITICAL))      // and not in trace mode (DIAG jumper installed)
   {
@@ -125,7 +121,14 @@ void setup(void)
 
 /*
  * Ready to go
- */
+ */ 
+  show_echo(0);
+  set_LED('*', '*', '*');                 // Hello World
+  if ( VERBOSE_TRACE )                    
+  {
+    is_trace = DLT_INFO;
+  }
+  
   set_LED_PWM(json_LED_PWM);
   POST_LEDs();                            // Cycle the LEDs
   set_LED(LED_READY);                   // to a client, then the RDY light is steady on
@@ -270,7 +273,7 @@ void loop()
 
   if ( VERBOSE_TRACE )
   {
-    is_trace = 10;
+    is_trace = DLT_DIAG;
   }
   rapid_on  = 0;                    // Turn off the timer
   power_save = millis();            // Start the power saver time
@@ -669,7 +672,7 @@ static long tabata
 {
   char s[32];
   unsigned int ms50;                 //50 ms timer
-
+  
   ms50 = millis() / 50;
   
 /*

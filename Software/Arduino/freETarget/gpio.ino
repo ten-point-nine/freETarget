@@ -84,6 +84,11 @@ void init_gpio(void)
 {
   int i;
 
+  if ( DLT(DLT_CRITICAL) ) 
+  {
+    Serial.print(T("init_gpio()"));  
+  }
+  
   i = 0;
   while (init_table[i].port != 0xff )
   {

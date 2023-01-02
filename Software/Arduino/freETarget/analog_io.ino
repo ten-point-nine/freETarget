@@ -22,6 +22,11 @@ void set_vset_PWM(unsigned int pwm);
  *--------------------------------------------------------------*/
 void init_analog_io(void)
 {
+  if ( DLT(DLT_CRITICAL) )                  // and not in trace mode (DIAG jumper installed)
+  {
+    Serial.print(T("init_analog_io()"));// Blink the LEDs
+  }
+  
   pinMode(LED_PWM, OUTPUT);
   pinMode(vset_PWM, OUTPUT);
   Wire.begin();

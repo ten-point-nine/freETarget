@@ -94,6 +94,11 @@ static bool esp01_connect[ESP01_N_CONNECT]; // Set to true when a client (0-3) c
  *--------------------------------------------------------------*/
 void esp01_init(void)
 {  
+  if ( DLT(DLT_CRITICAL))
+  {
+    Serial.print(T("esp01_initl()"));
+  }
+  
   if ( DLT(DLT_DIAG) )
   {
     Serial.print(T("Initializing ESP-01"));
