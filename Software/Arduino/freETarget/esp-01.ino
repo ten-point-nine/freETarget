@@ -191,11 +191,6 @@ void esp01_init(void)
     { 
       if ( DLT(INIT_TRACE))
       {
-        Serial.print(T("Second attempt"));
-      }
-      WIFI_SERIAL.print(T("AT+CWJAP_DEF=\"")); WIFI_SERIAL.print(json_wifi_ssid); WIFI_SERIAL.print(T("\",\"")); WIFI_SERIAL.print(json_wifi_pwd); WIFI_SERIAL.print(T("\""));
-      if ( (esp01_waitOK(1, esp01_MAX_WAITOK*10) == false) && DLT(INIT_TRACE) )               // Didn't connect to the SSID
-      {
         Serial.print(T("ESP-01: Failed AT+CWJAP_DEF=\"")); Serial.print(json_wifi_ssid); Serial.print(T("\",\"")); Serial.print(json_wifi_pwd); Serial.print(T("\""));
       }
     }
@@ -212,13 +207,13 @@ void esp01_init(void)
   }
 */  
   WIFI_SERIAL.print(T("AT+CIPMUX=1\r\n"));           // Allow multiple connections
-  if ( (esp01_waitOK(1,esp01_MAX_WAITOK * 10) == false ) && DLT(INIT_TRACE) )
+  if ( (esp01_waitOK(0,esp01_MAX_WAITOK * 10) == false ) && DLT(INIT_TRACE) )
   {
     Serial.print(T("ESP-01: Failed AT+CIPMUX=1"));
   }
 
   WIFI_SERIAL.print(T("AT+CIPSERVER=1,1090\r\n"));   // Turn on the server and listen on port 1090
-  if ( (esp01_waitOK(1,esp01_MAX_WAITOK) == false ) && DLT(INIT_TRACE) )
+  if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false ) && DLT(INIT_TRACE) )
   {
     Serial.print(T("ESP-01: Failed AT+CIPSERVER=1,1090"));
   }
@@ -280,7 +275,8 @@ static bool esp01_restart(void)
 /*
  * Flush the stuff from the self test
  */
-  esp01_waitOK(0,esp01_MAX_WAITOK);
+  delay(ONE_SECOND);
+  esp01_flush();
   
 /*
  * All done, 
@@ -657,7 +653,7 @@ static bool esp01_waitOK
   long         start;                   // Timer start
   
   start = millis();                     // Remember the starting time
-trace_on = true;
+  
   i = 0;                                // Clear the indexes
   while (wait_message[i].ptr != 0 )
   {
