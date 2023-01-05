@@ -112,7 +112,7 @@ void setup(void)
  * Run the power on self test
  */
   set_LED('*', '.', '*');                 // Hello World
-  while ( (POST_TIMERS() == false)        // If the timers fail
+  while ( (POST_counters() == false)      // If the timers fail
               && !DLT(DLT_CRITICAL))      // and not in trace mode (DIAG jumper installed)
   {
     Serial.print(T("POST_2 Failed\r\n"));// Blink the LEDs
@@ -124,17 +124,22 @@ void setup(void)
  */ 
   show_echo(0);
   set_LED('*', '*', '*');                 // Hello World
+  
   if ( VERBOSE_TRACE )                    
   {
     is_trace = DLT_INFO;
   }
+  else
+  {
+    is_trace = DLT_NONE;
+  }
   
   set_LED_PWM(json_LED_PWM);
   POST_LEDs();                            // Cycle the LEDs
-  set_LED(LED_READY);                   // to a client, then the RDY light is steady on
+  set_LED(LED_READY);                     // to a client, then the RDY light is steady on
   while ( AVAILABLE )
   {
-    GET();                              // Flush any garbage before we start up
+    GET();                                // Flush any garbage before we start up
   }
   return;
 }
@@ -399,7 +404,7 @@ unsigned int wait(void)
  * Set RDY to solid red if there is a connection to the PC client
  */
   if ( (esp01_is_present() == false) 
-          || esp01_connected() )        // If the ESP01 is not present, or connected
+          || esp01_connected() )        // If the esp01 is not present, or connected
   {
     set_LED(LED_READY);                 // to a client, then the RDY light is steady on
   }

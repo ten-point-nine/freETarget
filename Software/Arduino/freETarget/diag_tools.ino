@@ -452,7 +452,7 @@ void self_test(uint16_t test)
 
 /*----------------------------------------------------------------
  * 
- * function: void POST_TIMERS()
+ * function: void POST_counteres()
  * 
  * brief: Verify the counter circuit operation
  * 
@@ -473,10 +473,10 @@ void self_test(uint16_t test)
  *  Test 5: Verify that the counts are correctia
  *  
  *--------------------------------------------------------------*/
- #define POST_TIMERS_cycles 10 // Repeat the test 10x
+ #define POST_counteres_cycles 10 // Repeat the test 10x
  #define CLOCK_TEST_LIMIT 500    // Clock should be within 500 ticks
  
- bool POST_TIMERS(void)
+ bool POST_counters(void)
  {
    unsigned int i, j;            // Iteration counter
    unsigned int random_delay;    // Delay duration
@@ -494,9 +494,9 @@ void self_test(uint16_t test)
     return true;                      // Fake a positive response  
   }
   
-  if ( DLT(DLT_CRITICAL) )
+  if ( DLT(INIT_TRACE) )
   {
-    Serial.print(T("POST counters"));
+    Serial.print(T("POST_counters()"));
   }
 
   test_passed = true;                 // And assume that it will pass
@@ -508,7 +508,7 @@ void self_test(uint16_t test)
   arm_timers();                     // Arm it. 
   delay(1);                           // Wait a millisecond  
   sensor_status = is_running();       // Remember all of the running timers
-  if ( sensor_status != 0 )
+  if ( (sensor_status != 0) && DLT(INIT_TRACE) )
   {
     Serial.print(T("\r\nFailed Clock Test. Spurious trigger:")); show_sensor_status(sensor_status, 0);
     return false;                     // No point in any more tests
@@ -517,12 +517,8 @@ void self_test(uint16_t test)
 /*
  * Loop and verify the opertion of the clock circuit using random times
  */
-  for (i=0; i!= POST_TIMERS_cycles; i++)
+  for (i=0; i!= POST_counteres_cycles; i++)
   {
-    if ( DLT(DLT_CRITICAL) )
-    {
-      Serial.print(T("Cycle:")); Serial.print(i);
-    }
     
 /*
  *  Test 2, Arm the circuit amd make sure it is off
@@ -533,9 +529,9 @@ void self_test(uint16_t test)
     
     for (j=N; j <= W; j++ )           // Check all of the counters
     {
-      if ( read_counter(j) != 0 )     // Make sure they stay at zero
+      if ( (read_counter(j) != 0) && DLT(INIT_TRACE) )     // Make sure they stay at zero
       {
-        Serial.print(T("\r\nFailed Clock Test. Counter free running:")); Serial.print(nesw[j]);
+        Serial.print(T("Failed Clock Test. Counter free running:")); Serial.print(nesw[j]);
         test_passed =  false;         // return a failed test
       }   
     }
@@ -557,9 +553,9 @@ void self_test(uint16_t test)
     }
     
     stop_timers();
-    if ( sensor_status != 0x0F )      // The circuit was triggered but not all
+    if ( (sensor_status != 0x0F) && DLT(INIT_TRACE) )      // The circuit was triggered but not all
     {                                 // FFs latched
-      Serial.print(T("\r\nFailed Clock Test. sensor_status:")); show_sensor_status(sensor_status, 0);
+      Serial.print(T("Failed Clock Test. sensor_status:")); show_sensor_status(sensor_status, 0);
       test_passed = false;
     }
 
@@ -570,9 +566,9 @@ void self_test(uint16_t test)
     for (j=N; j <= W; j++ )           // Check all of the counters
     {
       x  = read_counter(j);
-      if ( read_counter(j) != x )
+      if ( (read_counter(j) != x) && DLT(INIT_TRACE) )
       {
-        Serial.print(T("\r\nFailed Clock Test. Counter did not stop:")); Serial.print(nesw[j]); show_sensor_status(sensor_status, 0);
+        Serial.print(T("Failed Clock Test. Counter did not stop:")); Serial.print(nesw[j]); show_sensor_status(sensor_status, 0);
         test_passed = false;          // since there is delay  in
       }                               // Turning off the counters
  
@@ -585,28 +581,17 @@ void self_test(uint16_t test)
         x = -x;
       }
       
-      if ( x > CLOCK_TEST_LIMIT )     // The time should be positive and within limits
+      if ( (x > CLOCK_TEST_LIMIT) && DLT(INIT_TRACE) )     // The time should be positive and within limits
       { 
-        Serial.print(T("\r\nFailed Clock Test. Counter:")); Serial.print(nesw[j]); Serial.print(T(" Is:")); Serial.print(read_counter(j)); Serial.print(T(" Should be:")); Serial.print(random_delay); Serial.print(T(" Delta:")); Serial.print(x);
+        Serial.print(T("Failed Clock Test. Counter:")); Serial.print(nesw[j]); Serial.print(T(" Is:")); Serial.print(read_counter(j)); Serial.print(T(" Should be:")); Serial.print(random_delay); Serial.print(T(" Delta:")); Serial.print(x);
         test_passed = false;          // since there is delay  in
       }                               // Turning off the counters
-      else
-      {
-        if ( DLT(DLT_CRITICAL) )
-        {
-          Serial.print(T("Clock Pass. Counter:")); Serial.print(nesw[j]); Serial.print(T(" Is:")); Serial.print(read_counter(j)); Serial.print(T(" Should be:")); Serial.print(random_delay); Serial.print(T(" Delta:")); Serial.print(x);
-        }
-      }
     }
   }
   
 /*
  * Got here, the test completed successfully
  */
-  if ( DLT(DLT_CRITICAL) )
-  {
-    Serial.print(T("Clock Test complete"));
-  }
   set_LED(L('.', '.', '.'));
   return test_passed;
 }

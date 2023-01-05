@@ -77,10 +77,10 @@ void restore_nonvol(void);                        // Copyt the nonvol back
 #define NONVOL_WIFI_CHANNEL   (NONVOL_RAPID_COUNT + sizeof(int))           // Channel to use for WiFI
 #define NONVOL_WIFI_DHCP      (NONVOL_WIFI_CHANNEL + sizeof(int))          // 
 #define NONVOL_WIFI_SSID      (NONVOL_WIFI_DHCP  + sizeof(int))            // Storage for SSID (No longer used)
-#define NONVOL_WIFI_PWD       (NONVOL_WIFI_SSID  + ESP01_SSID_SIZE)        // Storage for SSID Password
-#define NONVOL_WIFI_IP        (NONVOL_WIFI_PWD   + ESP01_PWD_SIZE)         // Storage forIP Address
-#define NONVOL_WIFI_SSID_32   (NONVOL_WIFI_IP    + ESP01_IP_SIZE)          // Storage for SSID
-#define NONVOL_NEXT           (NONVOL_WIFI_IP    + ESP01_SSID_SIZE_32)     //
+#define NONVOL_WIFI_PWD       (NONVOL_WIFI_SSID  + esp01_SSID_SIZE)        // Storage for SSID Password
+#define NONVOL_WIFI_IP        (NONVOL_WIFI_PWD   + esp01_PWD_SIZE)         // Storage forIP Address
+#define NONVOL_WIFI_SSID_32   (NONVOL_WIFI_IP    + esp01_IP_SIZE)          // Storage for SSID
+#define NONVOL_NEXT           (NONVOL_WIFI_IP    + esp01_SSID_SIZE_32)     //
 
 #define NEXT_NONVOL           (NONVOL_WIFI_DHCP + sizeof(int) )
 #define NONVOL_SIZE           4096                                         // 4K available

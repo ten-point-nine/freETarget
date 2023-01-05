@@ -24,20 +24,20 @@ bool         esp01_is_present(void);              // TRUE if an ESP-01 was found
 void         esp01_test(void);                    // Diagnostic self test
 void         esp01_status(void);                  // Read the device status
 void         esp01_close(unsigned int channel);   // Close this connection
-void         esp01_status(void);                  // Get the status of the ESP01
+void         esp01_status(void);                  // Get the status of the esp01
 void         esp01_broadcast(void);               // Just blab out a count
 void         esp01_myIP(char* s);                 // Obtain the working IP address
 
 /*
  * Definitions
  */
-#define ESP01_N_CONNECT      3                    // Allow up to 3 connections
-#define ESP01_MAX_POWER     80                    // Set the max power to 80dBM
-#define ESP01_MAX_WAITOK  2000                    // Wait for 2 seconds for the OK to come back
-#define ESP01_BUFFER_SIZE  2048                   // The ESP buffer size
+#define esp01_N_CONNECT      3                    // Allow up to 3 connections
+#define esp01_MAX_POWER     80                    // Set the max power to 80dBM
+#define esp01_MAX_WAITOK  2000                    // Wait for 2 seconds for the OK to come back
+#define esp01_BUFFER_SIZE  2048                   // The ESP buffer size
 
-#define ESP01_SSID_SIZE     (16+1)                // Give 16+1 characters for SSID *** DO NOT UDE **
-#define ESP01_SSID_SIZE_32  (32+1)                // Give 32+1 characters for SSID
-#define ESP01_PWD_SIZE      17                    // Give 16+1 characters for PWD
-#define ESP01_IP_SIZE       17                    // Use 192.168.100.100 for IP
+#define esp01_SSID_SIZE     (16+1)                // Give 16+1 characters for SSID *** DO NOT UDE **
+#define esp01_SSID_SIZE_32  (32+1)                // Give 32+1 characters for SSID
+#define esp01_PWD_SIZE      17                    // Give 16+1 characters for PWD
+#define esp01_IP_SIZE       17                    // Use 192.168.100.100 for IP
 #endif

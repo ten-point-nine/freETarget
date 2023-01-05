@@ -698,22 +698,30 @@ struct new_target
 };
 
 typedef new_target new_target_t;
-
+#define LAST_BULL (-1000.0)
 #define D5_74 (74/2)                   // Five bull air rifle is 74mm centre-centre
-new_target_t five_bull_air_rifle_74mm[] = { {-D5_74, D5_74}, {D5_74, D5_74}, {-D5_74, -D5_74}, {D5_74, -D5_74}, {0,0}};
-#define D5_79 (79/2)                   // Five bull air rifle is 74mm centre-centre
-new_target_t five_bull_air_rifle_79mm[] = { {-D5_79, D5_79}, {D5_79, D5_79}, {-D5_79, -D5_79}, {D5_79, -D5_79}, {0,0}};
+new_target_t five_bull_air_rifle_74mm[] = { {-D5_74, D5_74}, {D5_74, D5_74}, {0,0}, {-D5_74, -D5_74}, {D5_74, -D5_74}, {LAST_BULL, LAST_BULL}};
+#define D5_79 (79/2)                   // Five bull air rifle is 79mm centre-centre
+new_target_t five_bull_air_rifle_79mm[] = { {-D5_79, D5_79}, {D5_79, D5_79}, {0,0}, {-D5_79, -D5_79}, {D5_79, -D5_79}, {LAST_BULL, LAST_BULL}};
+#define D12_H (95)                     // Twelve bull air rifle 95mm Horizontal
+#define D12_V (64)                     // Twelve bull air rifle 84mm Vertical
+new_target_t twelve_bull_air_rifle[]    = { {-D12_H,   D12_V + D12_V/2},  {0,   D12_V + D12_V/2},  {-D12_H,   D12_V + D12_V/2},
+                                            {-D12_H,           D12_V/2},  {0,           D12_V/2},  {-D12_H,           D12_V/2},
+                                            {-D12_H,         - D12_V/2},  {0,         - D12_V/2},  {-D12_H,          -D12_V/2},
+                                            {-D12_H, -(D12_V + D12_V/2)}, {0, -(D12_V + D12_V/2)}, {-D12_H, -(D12_V + D12_V/2)},
+                                            {LAST_BULL, LAST_BULL}};
+
+new_target_t* ptr_list[] = { 0, five_bull_air_rifle_74mm, five_bull_air_rifle_79mm, twelve_bull_air_rifle};
 
 static void remap_target
   (
-  double* x,                        // Computed X location of shot
-  double* y                         // Computed Y location of shot
+  double* x,                        // Computed X location of shot (returned)
+  double* y                         // Computed Y location of shot (returned)
   )
 {
   double distance, closest;        // Distance to bull in clock ticks
   double dx, dy;                   // Best fitting bullseye
   new_target_t* ptr;               // Bull pointer
-  int    which_one;                // Which target was selected
   
   if ( DLT(DLT_DIAG) )
   {
@@ -723,32 +731,22 @@ static void remap_target
 /*
  * Find the closest bull
  */
-  switch ( json_target_type )
+  if ( (json_target_type < 1) || ( json_target_type > sizeof(ptr_list)/sizeof(new_target_t*) ) ) 
   {
-    case FIVE_BULL_AIR_RIFLE_74:
-      ptr = &five_bull_air_rifle_74mm[0];
-      break;
-      
-    case FIVE_BULL_AIR_RIFLE_79:
-      ptr = &five_bull_air_rifle_79mm[0];
-      break;
-    
-    default:                      // Not defined, assume a regular       
-      return;                     // bull and do nothing
+    return;                         // Check for limits
   }
-  
+  ptr = ptr_list[json_target_type];
   closest = 100000.0;             // Distance to closest bull
   
 /*
- * Loop and find the closest
+ * Loop and find the closest target
  */
-  which_one = 0;
-  while ( ptr->x != 0 )
+  while ( ptr->x != LAST_BULL )
   {
     distance = sqrt(sq(ptr->x - *x) + sq(ptr->y - *y));
     if ( DLT(DLT_DIAG) )
     {
-      Serial.print(T("which_one:")); Serial.print(which_one); Serial.print(T(" distance:")); Serial.print(distance); 
+      Serial.print(T(" distance:")); Serial.print(distance); 
     }
     if ( distance < closest )   // Found a closer one?
     {
@@ -761,23 +759,6 @@ static void remap_target
       }
     }
     ptr++;
-    which_one++;
-  }
-
-  distance = sqrt(sq(*x) + sq(*y)); // Last one is the centre bull
-  if ( DLT(DLT_DIAG) )
-  {
-    Serial.print(T("which_one:")); Serial.print(which_one); Serial.print(T(" distance:")); Serial.print(distance);
-  }
-  if ( distance < closest )   // Found a closer one?
-  {
-    closest = distance;       // Remember it
-    dx = 0;
-    dy = 0;
-    if ( DLT(DLT_DIAG) )
-    {
-      Serial.print(T(" dx:")); Serial.print(dx); Serial.print(T(" dy:")); Serial.print(dy); 
-    }
   }
 
 /*

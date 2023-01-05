@@ -552,7 +552,7 @@ void update_nonvol
   
   if ( current_version == 9 )                             // Extend SSID to 32 bits                  
   {
-    for (i=0; i != ESP01_SSID_SIZE; i++ )
+    for (i=0; i != esp01_SSID_SIZE; i++ )
     {
       EEPROM.get(NONVOL_WIFI_SSID+i, x);
       EEPROM.put(NONVOL_WIFI_SSID_32+i, x);

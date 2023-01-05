@@ -24,7 +24,7 @@
 
 void init_timer(void)
 {
-  if ( DLT(DLT_CRITICAL) )
+  if ( DLT(INIT_TRACE) )
   {
     Serial.print(T("init_timer()"));
   }

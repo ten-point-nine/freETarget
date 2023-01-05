@@ -53,8 +53,8 @@ int     json_rapid_count;           // Number of shots expected in string
 int     json_rapid_enable;          // Set to TRUE if the rapid fire event is enabled
 int     json_rapid_time;            // When will the rapid fire event end?
 int     json_rapid_wait;            // Delay applied to rapid start
-char    json_wifi_ssid[ESP01_SSID_SIZE_32]; // Stored value of SSID
-char    json_wifi_pwd[ESP01_PWD_SIZE];// Stored value of password
+char    json_wifi_ssid[esp01_SSID_SIZE_32]; // Stored value of SSID
+char    json_wifi_pwd[esp01_PWD_SIZE];// Stored value of password
 int     json_wifi_dhcp;             // The ESP is a DHCP server
 int     json_rh;                    // Relative Humidity 0-1005
 
@@ -576,7 +576,7 @@ void show_echo(int v)
     sprintf(s, "\"WiFi_IP_ADDRESS\": \"%s:1090\", \n\r", str_c);                            // Print out the IP address
     output_to_all(s);
   
-    for ( i=0; i != ESP01_N_CONNECT; i++)
+    for ( i=0; i != esp01_N_CONNECT; i++)
     {
       sprintf(s, "\"WiFi_CONNECT %d\": %d, \n\r", i+1, esp01_connect[i]);                   // TRUE if Client[i] connected
       output_to_all(s);
