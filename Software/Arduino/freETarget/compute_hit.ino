@@ -710,8 +710,8 @@ new_target_t twelve_bull_air_rifle[]    = { {-D12_H,   D12_V + D12_V/2},  {0,   
                                             {-D12_H,         - D12_V/2},  {0,         - D12_V/2},  {-D12_H,          -D12_V/2},
                                             {-D12_H, -(D12_V + D12_V/2)}, {0, -(D12_V + D12_V/2)}, {-D12_H, -(D12_V + D12_V/2)},
                                             {LAST_BULL, LAST_BULL}};
-
-new_target_t* ptr_list[] = { 0, five_bull_air_rifle_74mm, five_bull_air_rifle_79mm, twelve_bull_air_rifle};
+//                           0              2             2  3  4              5             6  7  8  9  10  11          12
+new_target_t* ptr_list[] = { 0, five_bull_air_rifle_74mm, 0, 0, 0, five_bull_air_rifle_79mm, 0, 0, 0, 0, 0 , 0 , twelve_bull_air_rifle};
 
 static void remap_target
   (
@@ -736,6 +736,10 @@ static void remap_target
     return;                         // Check for limits
   }
   ptr = ptr_list[json_target_type];
+  if ( ptr == 0 )                   // Check for unassigned targets
+  {
+    return;
+  }
   closest = 100000.0;             // Distance to closest bull
   
 /*

@@ -97,12 +97,6 @@ void setup(void)
   keep_alive = millis();
   
 /*
- * Initialize the WiFi if available
- */
-   set_LED('*', '*', '.');                 // Hello World
-   esp01_init();                           // Prepare the WiFi channel if installed
-
-/*
  * Initialize variables
  */
    set_LED('.', '.', '*');                // Hello World
@@ -118,7 +112,13 @@ void setup(void)
     Serial.print(T("POST_2 Failed\r\n"));// Blink the LEDs
     blink_fault(POST_COUNT_FAILED);       // and try again
   }
-
+  
+/*
+ * Initialize the WiFi if available
+ */
+   set_LED('*', '*', '.');                 // Hello World
+   esp01_init();                           // Prepare the WiFi channel if installed
+   
 /*
  * Ready to go
  */ 

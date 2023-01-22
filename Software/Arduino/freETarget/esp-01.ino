@@ -94,17 +94,12 @@ static bool esp01_connect[esp01_N_CONNECT]; // Set to true when a client (0-3) c
  *--------------------------------------------------------------*/
 void esp01_init(void)
 {  
-  if ( DLT(INIT_TRACE))
-  {
-    Serial.print(T("esp01_init()"));
-  }
-  
   if ( DLT(DLT_DIAG) )
   {
-    Serial.print(T("Initializing ESP-01"));
+    Serial.print(T("Initializing ESP-01 - Waiting for Power Up"));
   }
   
-  esp01_restart();
+  esp01_reset();
   esp01_flush();
   
 /*
@@ -177,8 +172,14 @@ void esp01_init(void)
   {
     if ( DLT(INIT_TRACE) )
     {
-      Serial.print(T("ESP-01: Configuring as an access point: ")); Serial.print(json_wifi_ssid); Serial.print(T(",")); Serial.print(json_wifi_pwd);
+      Serial.print(T("ESP-01: Connecting to an access point: ")); Serial.print(json_wifi_ssid); Serial.print(T(",")); Serial.print(json_wifi_pwd);
     }
+    
+    WIFI_SERIAL.print(T("AT+CWQAP\r\n"));        // Disconnect
+    if ( (esp01_waitOK(1,esp01_MAX_WAITOK) == false) && DLT(INIT_TRACE) )
+    {
+      Serial.print(T("ESP-01: Failed AT+CWQAP"));
+    } 
     
     WIFI_SERIAL.print(T("AT+CWMODE_DEF=1\r\n"));        // We want to be an in Station Mode
     if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(INIT_TRACE) )
@@ -238,7 +239,7 @@ void esp01_init(void)
 
 /*----------------------------------------------------------------
  *
- * function: void esp01_restart
+ * function: void esp01_reset
  *
  * brief:    Take control of the ESP and issue a reset
  * 
@@ -251,7 +252,7 @@ void esp01_init(void)
  * factory defaults. 
  *   
  *--------------------------------------------------------------*/
-static bool esp01_restart(void)
+static bool esp01_reset(void)
 {
   unsigned int i;
 
@@ -358,29 +359,11 @@ bool esp01_is_present(void)
  * do anything with the AT command
  *   
  *--------------------------------------------------------------*/
-void esp01_test(void)
+void esp01_echo(void)
 {
-  char ch;                                // Character read from ESP-01
+   char ch;                                // Character read from ESP-01
   long unsigned int start;                // Start time
-  esp01_flush();                          // Eat any garbage that might be on the port
 
-  if ( esp01_is_present() == false )
-  {
-    Serial.print(T("\n\rESP-01 not present. Continuing test anyway")); 
-  }
-
-  Serial.print(T("\n\rResetting ESP-01"));
-  
-  WIFI_SERIAL.print(T("+++"));
-  delay(ONE_SECOND);
-  WIFI_SERIAL.print(T("AT+RST\r\n"));
-  
-  Serial.print(T("\r\nSending AT\r\n"));
-  WIFI_SERIAL.print(T("AT\r\n"));          // Send out an AT command to the port
-
-/*
- * Echo what comes back
- */
   start = millis();
   while ( (millis() - start) < esp01_MAX_WAITOK )
   {
@@ -391,7 +374,44 @@ void esp01_test(void)
       start = millis();
     }
   }
+  return;
+}
 
+void esp01_test(void)
+{
+
+  esp01_flush();                          // Eat any garbage that might be on the port
+
+  if ( esp01_is_present() == false )
+  {
+    Serial.print(T("\n\rESP-01 not present. Continuing test anyway")); 
+  }
+
+/*
+ * Send out status commands
+ */
+ 
+  Serial.print(T("\n\rResetting ESP-01\n\r"));
+  WIFI_SERIAL.print(T("+++"));
+  delay(ONE_SECOND);
+  WIFI_SERIAL.print(T("AT+RST\r\n"));
+  esp01_echo();
+    
+  Serial.print(T("\r\nSoftware Version\r\n"));
+  WIFI_SERIAL.print(T("AT+GMR\r\n"));         // Send out an AT command to the port
+  esp01_echo();
+
+  Serial.print(T("\r\nList of SSIDs\r\n"));
+  WIFI_SERIAL.print(T("AT+CWLAP\r\n"));       // Send out an AT command to the port
+  esp01_echo();
+    
+/*
+ * Initialize the WiFi if available
+ */
+   set_LED('*', '*', '.');                 // Hello World
+   Serial.print(T("\r\nReinitializing ESP-01\r\n")); 
+   esp01_init();                           // Prepare the WiFi channel if installed
+   
 /*
  * All done, return the esp-01 present state
  */
