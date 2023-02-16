@@ -28,7 +28,7 @@ typedef struct  {
 
 void reset_JSON(void);            // Clear the JSON input buffer
 bool read_JSON(void);             // Scan the serial port looking for JSON input
-void show_echo(int v);            // Display the settings
+void show_echo(void);             // Display the settings
 
 extern int    json_dip_switch;    // DIP switch overwritten by JSON message
 extern double json_sensor_dia;    // Sensor radius overwitten by JSON message
@@ -82,4 +82,6 @@ extern char   json_wifi_ssid[];   // Text of WiFI SSID
 extern char   json_wifi_pwd[];    // Text of WiFI password
 extern char   json_wifi_ip[];     // Text of IP address
 extern int    json_rh;            // Relative Humidity, 0-100%
+extern int    json_min_ring_time; // Time to wait for ringing to stop
+
 #endif _JSON_H_

@@ -223,7 +223,7 @@ void factory_nonvol
  * Read the NONVOL and print the results
  */
   read_nonvol();                          // Read back the new values
-  show_echo(0);                           // Display these settings
+  show_echo();                            // Display these settings
   
 /*
  * All done, return
@@ -405,7 +405,7 @@ void read_nonvol(void)
 /*
  * Go through and verify that the special cases are taken care of
  */
-
+  multifunction_switch();                                   // Look for an override on the target type
   
 /*
  * All done, begin the program
@@ -471,9 +471,20 @@ void update_nonvol
    Serial.print(T("\r\nDone\r\n"));
   }
 
-  if ( (current_version < 1) || (current_version > PS_VERSION) )
+/*
+ * Look through the list of PS versions and see if we have initialized before
+ * Old memory has a completly bogus verion number that is not in range
+ */
+  for (i=0; i <= (PS_VERSION+1); i++)
+  {  
+    if ( current_version == i )
+    {
+      break;
+    }
+  }
+  if ( i == (PS_VERSION+1) )
   {
-    current_version = 1;                                    // If the  version is out of range, start over
+    current_version = 1;
   }
   
 /*
@@ -579,6 +590,15 @@ void update_nonvol
     current_version = 12;
     EEPROM.put(NONVOL_PS_VERSION, current_version);
   }
+
+  if ( current_version == 12 )                            // Add in minimum ring time
+  {
+    x=50;
+    EEPROM.put(NONVOL_MIN_RING_TIME, x);                       // Set ring time to 50ms
+    current_version = 13;
+    EEPROM.put(NONVOL_PS_VERSION, current_version);
+  }
+
 /*
  * Up to date, return
  */

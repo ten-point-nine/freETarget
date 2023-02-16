@@ -84,7 +84,11 @@ void init_gpio(void)
 {
   int i;
 
-  if ( DLT(DLT_CRITICAL) ) 
+  if ( DLT(INIT_TRACE) ) 
+  {
+    Serial.print(T("init_gpio()"));  
+  }
+  else if ( DLT(DLT_CRITICAL) ) 
   {
     Serial.print(T("init_gpio()"));  
   }
@@ -700,7 +704,6 @@ void blink_fault
 /*
  * The initialization override has been finished
  */
-  multifunction_wait_open();
   return;
 }
 
@@ -722,15 +725,16 @@ void blink_fault
  * turns the LEDs on, and holding it will carry out 
  * the alternate activity.
  * 
+ * MFS_TAP1\": \"%s\",\n\r\"MFS_TAP2\": \"%s\",\n\r\"MFS_HOLD1\": \"%s\",\n\r\"MFS_HOLD2\": \"%s\",\n\r\"MFS_HOLD12\": \"%s\",\n\r", 
  * Special Cases
  * 
  * Both switches pressed, Toggle the Tabata State
- * 
+ * Either switch set for target type switch
  *-----------------------------------------------------*/
-
+                           
 void multifunction_switch(void)
  {
-    unsigned int  x;                    // Working Value
+    unsigned int  action;               // Action to happen
     unsigned int  i;                    // Iteration Counter
     unsigned long now;
     
@@ -740,25 +744,34 @@ void multifunction_switch(void)
     }
 
 /*
- * Don't do anyting if the switches are'nt pressed
+ * Figure out what switches are pressed
  */
-  if ( (DIP_SW_A == 0 )
-        && (DIP_SW_B == 0 ) )             // Both switches are open?  
-   {
-     return;                              // Nothing is happening, return
-   }
-
-   x = 0;                                 // Some switch is pressed
+   action = 0;                         // No switches pressed
    if ( DIP_SW_A != 0 )
    {
-     x += 1;                              // Remember how we got here
+     action += 1;                     // Remember how we got here
    }
    if ( DIP_SW_B != 0 )
    {
-     x += 2;
+     action += 2;
    }
 
 /*
+ * Special case of a target type, ALWAYS process this switch even if it is closed
+ */
+   if ( HOLD1(json_multifunction) == TARGET_TYPE ) 
+   {
+     sw_state(HOLD1(json_multifunction));
+     action &= ~1;
+   }
+   else if ( HOLD2(json_multifunction) == TARGET_TYPE ) 
+   {
+     sw_state(HOLD2(json_multifunction));
+     action &= ~2;
+   }
+   
+/*
+ * Delay for one second to detect a tap
  * Check to see if the switch has been pressed for the first time
  */
   now = millis();
@@ -785,13 +798,13 @@ void multifunction_switch(void)
   if ( (DIP_SW_A == 0 )
         && (DIP_SW_B == 0 ) )             // Both switches are open? (tap)
    {
-      if ( x & 1 )
+      if ( action & 1 )
       {
-        sw_state(HHI10(json_multifunction));
+        sw_state(TAP1(json_multifunction));
       }
-      if ( x & 2 )
+      if ( action & 2 )
       {
-        sw_state(HHH10(json_multifunction));
+        sw_state(TAP2(json_multifunction));
       }
    }
    
@@ -800,21 +813,21 @@ void multifunction_switch(void)
  */
   if ( (DIP_SW_A) && (DIP_SW_B) )         // Both pressed?
   {
-    sw_state(HLO10(json_multifunction));
+    sw_state(HOLD12(json_multifunction));
   }
       
 /*
- * Single button pressed Manage the GPIO based on the configuration
+ * Single button pressed manage the target based on the configuration
  */
   else
   {
     if ( DIP_SW_A )
     {
-      sw_state(LO10(json_multifunction));
+      sw_state(HOLD1(json_multifunction));
     }
     if ( DIP_SW_B )
     {
-      sw_state(HI10(json_multifunction));
+      sw_state(HOLD2(json_multifunction));
     }
   }
   
@@ -910,6 +923,24 @@ static void sw_state
       sprintf(s, "\r\n{\LED_BRIGHT\": %d}\n\r", json_LED_PWM);
       output_to_all(s);  
       break;
+
+    case TARGET_TYPE:                     // Over ride the target type if the switch is closed
+      json_target_type = 0;
+      if (HOLD1(json_multifunction) == TARGET_TYPE) // If the switch is set for a target type
+      {
+        if ( DIP_SW_A )
+        {
+          json_target_type = 1;           // 
+        }
+      }
+      if (HOLD2(json_multifunction) == TARGET_TYPE) 
+      {
+        if ( DIP_SW_B )
+        {
+          json_target_type = 1;
+        }
+      }
+      break;
       
     default:
       break;
@@ -928,19 +959,27 @@ static void sw_state
  */
 void multifunction_wait_open(void)
 {
-  while ( (DIP_SW_A != 0 )
-        || (DIP_SW_B != 0) ) 
+  while (1)
   {
-    set_LED(L('*', '.', '.'));       // Scroll the LEDs
-    delay(ONE_SECOND/10);
-    
-    set_LED(L('.', '*', '.'));
-    delay(ONE_SECOND/10);
-        
-    set_LED(L('.', '.', '*'));
-    delay(ONE_SECOND/10);
-  }
+    if ( (DIP_SW_A == 0 )
+        && (DIP_SW_B == 0) ) 
+    {
+      return;
+    }
 
+    if ( (HOLD1(json_multifunction) == TARGET_TYPE ) 
+      && (DIP_SW_B == 0) )
+    {
+      return;
+    }
+    
+    if ( ( HOLD2(json_multifunction) == TARGET_TYPE) 
+      && ( DIP_SW_A == 0 ) )
+    {
+      return;
+    }
+  }
+  
   return;
 }
 
@@ -960,15 +999,15 @@ void multifunction_wait_open(void)
  * text in a JSON message.
  * 
  *-----------------------------------------------------*/
- //                             0            1            2             3            4             5            6    7    8    9
-static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED", "ADJUST_LED", "PAPER_SHOT", "PC_TEST",  "POWER_ON_OFF",   "6", "7", "8", "9"};
+ //                             0            1            2             3            4             5            6    7    8          9
+static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED", "ADJUST_LED", "PAPER_SHOT", "PC_TEST",  "POWER_ON_OFF",   "6", "7", "8", "TARGET_TYPE"};
 
 void multifunction_display(void)
 {
   char s[128];                          // Holding string
 
   sprintf(s, "\"MFS_TAP1\": \"%s\",\n\r\"MFS_TAP2\": \"%s\",\n\r\"MFS_HOLD1\": \"%s\",\n\r\"MFS_HOLD2\": \"%s\",\n\r\"MFS_HOLD12\": \"%s\",\n\r", 
-  mfs_text[HHI10(json_multifunction)], mfs_text[HHH10(json_multifunction)], mfs_text[LO10(json_multifunction)], mfs_text[HI10(json_multifunction)], mfs_text[HLO10(json_multifunction)]);
+  mfs_text[TAP1(json_multifunction)], mfs_text[TAP2(json_multifunction)], mfs_text[HOLD1(json_multifunction)], mfs_text[HOLD2(json_multifunction)], mfs_text[HOLD12(json_multifunction)]);
 
   output_to_all(s);  
   

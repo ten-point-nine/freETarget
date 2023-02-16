@@ -71,6 +71,7 @@ void setup(void)
   DISPLAY_SERIAL.begin(115200); 
   POST_version();                         // Show the version string on all ports
   is_trace = INIT_TRACE;
+
   
 /*
  *  Set up the port pins
@@ -122,7 +123,7 @@ void setup(void)
 /*
  * Ready to go
  */ 
-  show_echo(0);
+  show_echo();
   set_LED('*', '*', '*');                 // Hello World
   
   if ( VERBOSE_TRACE )                    

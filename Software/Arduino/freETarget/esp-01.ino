@@ -1112,7 +1112,7 @@ void esp01_receive(void)
           Serial.print(T("{\"CONNECTION_START\": ")); Serial.print(connection); Serial.print(T("}"));
           esp01_connect[connection] = true;// Record the connection       
           POST_version();               // Send out the software version to keep the PC happy
-          show_echo(0);                 // Send out the settings
+          show_echo();                  // Send out the settings
           state = WAIT_IDLE;            // and go back to waiting
         }
         if ( (message_type & IS_CLOSED) && (s_closed[i] == 0) )         // Reached the end of CLOSED?

@@ -183,7 +183,7 @@ ISR(TIMER1_COMPA_vect)
       else
       {
         isr_timer++;                            // Quiet
-        if ( isr_timer >= MAX_RING_TIME )       // Make sure there is no rigning
+        if ( isr_timer >= json_min_ring_time )  // Make sure there is no rigning
         {
           arm_timers();                         // and arm for the next time
           isr_state = PORT_STATE_IDLE;          // and go back to idle

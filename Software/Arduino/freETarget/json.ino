@@ -57,10 +57,11 @@ char    json_wifi_ssid[esp01_SSID_SIZE_32]; // Stored value of SSID
 char    json_wifi_pwd[esp01_PWD_SIZE];// Stored value of password
 int     json_wifi_dhcp;             // The ESP is a DHCP server
 int     json_rh;                    // Relative Humidity 0-1005
+int     json_min_ring_time;              // Time to wait for ringing to stop
 
 #define JSON_DEBUG false            // TRUE to echo DEBUG messages
 
-       void show_echo(int v);       // Display the current settings
+       void show_echo(void);        // Display the current settings
 static void show_test(int v);       // Execute the self test once
 static void show_test0(int v);      // Help Menu
 static void show_names(int v);
@@ -87,6 +88,7 @@ const json_message JSON[] = {
                                                                                                                           + (PAPER_SHOT * 100) 
                                                                                                                           + (ON_OFF * 10) 
                                                                                                                           + (PAPER_FEED) },  // Multifunction switch action
+  {"\"MIN_RING_TIME\":",  &json_min_ring_time,               0,                IS_INT16,  0,                NONVOL_MIN_RING_TIME,  500 },    // Minimum time for ringing to stop (ms)
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT16,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
   {"\"NONVOL_BACKUP\":",  0,                                 0,                IS_VOID,   &backup_nonvol,   0,                       0 },    // Backup the NONVOL
   {"\"NONVOL_RESTORE\":", 0,                                 0,                IS_VOID,   &restore_nonvol,  0,                       0 },    // Restore the NONVOL
@@ -189,7 +191,11 @@ bool read_JSON(void)
     {
       ch = '"';                             // Fix for European keyboards(?)
     }
-    
+    if ( ch == '?' )
+    {
+      show_echo();                         // Show status if ? entered
+      return;
+    }
 /*
  * Parse the stream
  */
@@ -468,15 +474,14 @@ int instr(char* s1, char* s2)
  * 
  *-----------------------------------------------------*/
 
-void show_echo(int v)
+void show_echo(void)
 {
   unsigned int i, j;
   char   s[512], str_c[32];   // String holding buffers
   
   sprintf(s, "\r\n{\r\n\"NAME\":\"%s\", \r\n", names[json_name_id]);
-  
   output_to_all(s);
-    
+
 /*
  * Loop through all of the JSON tokens
  */

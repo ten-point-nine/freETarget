@@ -79,6 +79,14 @@ void paper_on_off(bool on);                               // Turn the motor on o
 #define DIP_1       10
 #define DIP_2       11
 #define DIP_3       12
+/*
+ * Multifunction Switch Use when using DIP Switch for MFS
+ */
+#define HOLD1(x)    LO10((x))          // Low digit        xxxx2
+#define HOLD2(x)    HI10((x))          // High digit       xxx2x
+#define TAP1(x)     HLO10((x))         // High Low digit   xx2xx
+#define TAP2(x)     HHI10((x))         // High High digit  x2xxx
+#define HOLD12(x)   HHH10((x))         // Highest digit    2xxxx
 
 /*
  * DIP Switch Use. 
@@ -121,7 +129,7 @@ void paper_on_off(bool on);                               // Turn the motor on o
 #define FACE_SENSOR  19
 
 #define SPARE_1      22
-#define POWER_TAP     0                   // DIP a/B used to wake up
+#define POWER_TAP     0                   // DIP A/B used to wake up
 #define PAPER_FEED    1                   // DIP A/B used as a paper feed
 #define LED_ADJUST    2                   // DIP A/B used to set LED brightness
 #define PAPER_SHOT    3                   // DIP A/B Advance paper one cycle
@@ -130,7 +138,7 @@ void paper_on_off(bool on);                               // Turn the motor on o
 #define MFS_SPARE_6   6
 #define MFS_SPARE_7   7
 #define MFS_SPARE_8   8
-#define MFS_SPARE_9   9
+#define TARGET_TYPE   9                   // Sent target type with score
 
 #define J10_1      VCC
 #define J10_2       14                    // TX3
