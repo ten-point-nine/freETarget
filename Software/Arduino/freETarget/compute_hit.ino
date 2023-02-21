@@ -510,6 +510,7 @@ void send_score
 {
   int    i;                       // Iteration Counter
   double x, y;                    // Shot location in mm X, Y
+  double real_x, real_y;          // Shot location in mm X, Y before remap
   double radius;
   double angle;
   unsigned int volts;
@@ -527,8 +528,8 @@ void send_score
  /* 
   *  Work out the hole in perfect coordinates
   */
-  x = shot->x * s_of_sound * CLOCK_PERIOD;
-  y = shot->y * s_of_sound * CLOCK_PERIOD;
+  x = shot->x * s_of_sound * CLOCK_PERIOD;        // Distance in mm
+  y = shot->y * s_of_sound * CLOCK_PERIOD;        // Distance in mm
   radius = sqrt(sq(x) + sq(y));
   angle = atan2(shot->y, shot->x) / PI * 180.0d;
 
@@ -536,9 +537,11 @@ void send_score
  * Rotate the result based on the construction, and recompute the hit
  */
   angle += json_sensor_angle;
-  x = radius * cos(PI * angle / 180.0d);
+  x = radius * cos(PI * angle / 180.0d);          // Rotate onto the target face
   y = radius * sin(PI * angle / 180.0d);
-  remap_target(&x, &y);             // Change the target if needed
+  real_x = x;
+  real_y = y;                                     // Remember the original target valuee
+  remap_target(&x, &y);                           // Change the target if needed
   
 /* 
  *  Display the results
@@ -570,6 +573,16 @@ void send_score
   dtostrf(y, 2, 2, str_c );
   sprintf(str, "\"y\":%s, ", str_c);
   output_to_all(str);
+  
+  if ( json_target_type > 1 )
+  {
+    dtostrf(real_x, 2, 2, str_c );
+    sprintf(str, "\"real_x\":%s, ", str_c);
+    output_to_all(str);
+    dtostrf(real_y, 2, 2, str_c );
+    sprintf(str, "\"real_y\":%s, ", str_c);
+    output_to_all(str);
+  }
 #endif
 
 #if ( S_POLAR )
@@ -705,10 +718,10 @@ new_target_t five_bull_air_rifle_74mm[] = { {-D5_74, D5_74}, {D5_74, D5_74}, {0,
 new_target_t five_bull_air_rifle_79mm[] = { {-D5_79, D5_79}, {D5_79, D5_79}, {0,0}, {-D5_79, -D5_79}, {D5_79, -D5_79}, {LAST_BULL, LAST_BULL}};
 #define D12_H (95)                     // Twelve bull air rifle 95mm Horizontal
 #define D12_V (64)                     // Twelve bull air rifle 84mm Vertical
-new_target_t twelve_bull_air_rifle[]    = { {-D12_H,   D12_V + D12_V/2},  {0,   D12_V + D12_V/2},  {-D12_H,   D12_V + D12_V/2},
-                                            {-D12_H,           D12_V/2},  {0,           D12_V/2},  {-D12_H,           D12_V/2},
-                                            {-D12_H,         - D12_V/2},  {0,         - D12_V/2},  {-D12_H,          -D12_V/2},
-                                            {-D12_H, -(D12_V + D12_V/2)}, {0, -(D12_V + D12_V/2)}, {-D12_H, -(D12_V + D12_V/2)},
+new_target_t twelve_bull_air_rifle[]    = { {-D12_H,   D12_V + D12_V/2},  {0,   D12_V + D12_V/2},  {D12_H,   D12_V + D12_V/2},
+                                            {-D12_H,           D12_V/2},  {0,           D12_V/2},  {D12_H,           D12_V/2},
+                                            {-D12_H,         - D12_V/2},  {0,         - D12_V/2},  {D12_H,          -D12_V/2},
+                                            {-D12_H, -(D12_V + D12_V/2)}, {0, -(D12_V + D12_V/2)}, {D12_H, -(D12_V + D12_V/2)},
                                             {LAST_BULL, LAST_BULL}};
 //                           0  1  2  3              4                        5              6  7  8  9  10  11          12
 new_target_t* ptr_list[] = { 0, 0, 0, 0, five_bull_air_rifle_74mm, five_bull_air_rifle_79mm, 0, 0, 0, 0, 0 , 0 , twelve_bull_air_rifle};
@@ -721,17 +734,19 @@ static void remap_target
 {
   double distance, closest;        // Distance to bull in clock ticks
   double dx, dy;                   // Best fitting bullseye
+  int i;
+  
   new_target_t* ptr;               // Bull pointer
   
   if ( DLT(DLT_DIAG) )
   {
-    Serial.print(T("remap_target x:")); Serial.print(*x); Serial.print(" y:"); Serial.print(*y);
+    Serial.print(T("remap_target x:")); Serial.print(*x); Serial.print(T("mm y:")); Serial.print(*y); (T("mm"));
   }
 
 /*
  * Find the closest bull
  */
-  if ( (json_target_type < 1) || ( json_target_type > sizeof(ptr_list)/sizeof(new_target_t*) ) ) 
+  if ( (json_target_type <= 1) || ( json_target_type > sizeof(ptr_list)/sizeof(new_target_t*) ) ) 
   {
     return;                         // Check for limits
   }
@@ -745,6 +760,7 @@ static void remap_target
 /*
  * Loop and find the closest target
  */
+  i=0;
   while ( ptr->x != LAST_BULL )
   {
     distance = sqrt(sq(ptr->x - *x) + sq(ptr->y - *y));
@@ -759,10 +775,11 @@ static void remap_target
       dy = ptr->y;              // Remember the closest bull
       if ( DLT(DLT_DIAG) )
       {
-        Serial.print(T(" dx:")); Serial.print(dx); Serial.print(T(" dy:")); Serial.print(dy); 
+        Serial.print(T("Target: ")); Serial.print(i); Serial.print(T("   dx:")); Serial.print(dx); Serial.print(T(" dy:")); Serial.print(dy); 
       }
     }
     ptr++;
+    i++;
   }
 
 /*
