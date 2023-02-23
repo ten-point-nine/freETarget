@@ -255,7 +255,7 @@ unsigned int compute_hit
  * Compensate for sound attenuation over a long distance
  * 
  * For large targets the sound will attenuate between the closest and furthest sensor.  For small targets this is negligable, but for a Type 12
- * target the difference can be measured in microseconds.  This loop subtracts an amount proportional to the distance between the closest and 
+ * target the difference can be measured in microseconds.  This loop subtracts an function of the distance between the closest and 
  * current sensor.
  * 
  * The value of SOUND_ATTENUATION is found by analyzing the closest and furthest traces
@@ -266,8 +266,8 @@ unsigned int compute_hit
   {
     x = (double)s[i].count;            // Time difference in clocks
     x = x * x ;                        // Square of the time
-    x = x / (700.0d * 700d);           // sq(time)/sq(700)
-    x = x * 7.0d * OSCILLATOR_HZ;      // x 7us x oscillator freq
+    x = x / (700.0d * 700.0d);         // sq(time)/sq(700)
+    x = x * 7.0d * OSCILLATOR_MHZ;     // x 7us x oscillator freq
     s[i].count -= (int)x;              // Add in the correction
   }
 
@@ -284,6 +284,7 @@ unsigned int compute_hit
      Serial.print(*which_one[i]); Serial.print(T(":")); Serial.print(((double)s[i].count) / ((double)OSCILLATOR_MHZ)); Serial.print(T(" "));
     }
   }
+  
 /*
  * Fill up the structure with the counter geometry
  */
