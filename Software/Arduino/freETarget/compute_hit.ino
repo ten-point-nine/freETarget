@@ -716,8 +716,8 @@ typedef new_target new_target_t;
 new_target_t five_bull_air_rifle_74mm[] = { {-D5_74, D5_74}, {D5_74, D5_74}, {0,0}, {-D5_74, -D5_74}, {D5_74, -D5_74}, {LAST_BULL, LAST_BULL}};
 #define D5_79 (79/2)                   // Five bull air rifle is 79mm centre-centre
 new_target_t five_bull_air_rifle_79mm[] = { {-D5_79, D5_79}, {D5_79, D5_79}, {0,0}, {-D5_79, -D5_79}, {D5_79, -D5_79}, {LAST_BULL, LAST_BULL}};
-#define D12_H (95)                     // Twelve bull air rifle 95mm Horizontal
-#define D12_V (64)                     // Twelve bull air rifle 84mm Vertical
+#define D12_H (191.0/2.0)              // Twelve bull air rifle 95mm Horizontal
+#define D12_V (195.0/3.0)              // Twelve bull air rifle 84mm Vertical
 new_target_t twelve_bull_air_rifle[]    = { {-D12_H,   D12_V + D12_V/2},  {0,   D12_V + D12_V/2},  {D12_H,   D12_V + D12_V/2},
                                             {-D12_H,           D12_V/2},  {0,           D12_V/2},  {D12_H,           D12_V/2},
                                             {-D12_H,         - D12_V/2},  {0,         - D12_V/2},  {D12_H,          -D12_V/2},
