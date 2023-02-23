@@ -154,6 +154,7 @@ unsigned int compute_hit
   double        reference;         // Time of reference counter
   int           location;          // Sensor chosen for reference location
   int           i, j, count;
+  double        x;                 // Floating point value
   double        estimate;          // Estimated position
   double        last_estimate, error; // Location error
   double        r1, r2;            // Distance between points
@@ -249,6 +250,40 @@ unsigned int compute_hit
     }
   }
 
+
+/*
+ * Compensate for sound attenuation over a long distance
+ * 
+ * For large targets the sound will attenuate between the closest and furthest sensor.  For small targets this is negligable, but for a Type 12
+ * target the difference can be measured in microseconds.  This loop subtracts an amount proportional to the distance between the closest and 
+ * current sensor.
+ * 
+ * The value of SOUND_ATTENUATION is found by analyzing the closest and furthest traces
+ * 
+ * From tests, the error was 7us over a 700us delay.  Since sound attenuates as the square of distance, this is 
+ */
+  for (i=N; i <= W; i++)
+  {
+    x = (double)s[i].count;            // Time difference in clocks
+    x = x * x ;                        // Square of the time
+    x = x / (700.0d * 700d);           // sq(time)/sq(700)
+    x = x * 7.0d * OSCILLATOR_HZ;      // x 7us x oscillator freq
+    s[i].count -= (int)x;              // Add in the correction
+  }
+
+  if ( DLT(DLT_DIAG) )
+  {
+    Serial.print(T("Compensate Counts       "));
+    for (i=N; i <= W; i++)
+    {
+     Serial.print(*which_one[i]); Serial.print(":"); Serial.print(s[i].count); Serial.print(T(" "));
+    }
+    Serial.print(T("\r\nMicroseconds "));
+    for (i=N; i <= W; i++)
+    {
+     Serial.print(*which_one[i]); Serial.print(T(":")); Serial.print(((double)s[i].count) / ((double)OSCILLATOR_MHZ)); Serial.print(T(" "));
+    }
+  }
 /*
  * Fill up the structure with the counter geometry
  */
@@ -797,6 +832,7 @@ static void remap_target
  */
   return;
 }
+
 /*----------------------------------------------------------------
  *
  * function: show_timer
