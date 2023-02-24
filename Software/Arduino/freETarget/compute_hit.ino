@@ -221,11 +221,13 @@ unsigned int compute_hit
  */
   for (i=N; i <= W; i++)
   {
-    x = (double)s[i].count;            // Time difference in clocks
-    x = x * x ;                        // Square of the time (distance)
-    x = x / (700.0d * 700.0d);         // sq(time)/sq(700)
-    x = x * 7.0d * OSCILLATOR_MHZ;     // x 7us x oscillator freq
-    s[i].count -= (int)x;              // Add in the correction
+    x = (double)s[i].count;             // Time difference in clock ticks
+    x = x / OSCILLATOR_MHZ;             // Convert to a time in us
+    x = x / 700.0d;                     // Normalize to 700us
+    x = x * x;                          // Dopper's inverse Square
+    x = x * 7.0d;                       // Compensation in us
+    x = x * OSCILLATOR_MHZ;             // Compensation in clock ticks
+    s[i].count -= (int)x;               // Add in the correction
   }
 
   if ( DLT(DLT_DIAG) )
