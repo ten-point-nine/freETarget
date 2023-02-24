@@ -303,7 +303,7 @@ unsigned int compute_hit
     x_avg /= 4.0d;
     y_avg /= 4.0d;
     
-    estimate = sqrt(sq(s[location].x - x_avg) + sq(s[location].y - y_avg));
+    estimate = (sqrt(sq(s[location].x - x_avg) + sq(s[location].y - y_avg)) + last_estimate)/2.0d;    // Damp the estimate
     error = abs(last_estimate - estimate);
 
     if ( DLT(DLT_DIAG) )
