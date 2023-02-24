@@ -31,6 +31,7 @@
 #define T_WIFI_BROADCAST 20
 #define T_LOG         21       // Log the shot levels
 #define T_SWITCH      25       // Test the switches
+#define T_S_OF_SOUND  26       // Test Speed of Sound algorithm
 
 /*
  * LED status messages
@@ -61,6 +62,9 @@
 #define UNUSED_2           0b100
 #define SHOT_MISS          0b000            // Shot missed
 
+/*
+ * Function Prototypes
+ */
 void self_test(uint16_t test);
 void show_sensor_status(unsigned int sensor_status);  // Display the sensor status as text
 void blink_fault(unsigned int fault_code);            // Blink a fault
@@ -69,5 +73,6 @@ void POST_LEDs(void);           // Verify the LED operation
 bool POST_counters(void);       // Verify the counter operation
 void POST_trip_point(void);     // Display the set point
 void set_trip_point(int v);     // Calibrate the trip point
+bool do_dlt(unsigned int level);// Diagnostics Log and Trace
 
 #endif

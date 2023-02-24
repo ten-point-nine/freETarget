@@ -25,49 +25,6 @@ unsigned int  pellet_calibre;     // Time offset to compensate for pellet diamet
 
 static void remap_target(double* x, double* y);  // Map a club target if used
 
-/*----------------------------------------------------------------
- *
- * function: speed_of_sound
- *
- * brief: Return the speed of sound (mm / us)
- *
- *----------------------------------------------------------------
- *
- * The speed of sound is computed based on the board temperature
- * The Relative Humitity is fixed at 50% pending the addtion of
- * a humidity sensor
- * 
- * Corrected tempeature algorithm from S. Carrington - Thanks
- * 
- * See https://www.weather.gov/epz/wxcalc_speedofsound
- *--------------------------------------------------------------*/
-
-#define TO_MM   1000.0d       // Convert Meters to MM
-#define TO_US 1000000.0d      // Convert seconds to microseconds
-
-double speed_of_sound
-  (
-  double temperature,         // Current temperature in degrees C
-  int    relative_humidity    // RH, 0-100%
-  )
-{
-  double speed_MPS;           // Speed Meters Per Second
-  double speed_mmPuS;         //  Speed mm per microsecond
-
-  speed_MPS   = 331.23d * sqrt( (temperature + 273.15d) / 273.15d )                                          // Temperature
-                + ((double)relative_humidity) / 10.0d * (0.0506900872d - (0.0014875218d*temperature) + (0.0002513188d * sq(temperature)));   // Humidity
-  
-
-  speed_mmPuS  = speed_MPS * TO_MM / TO_US;      // Convert down to mm/us
-
-  if ( DLT(DLT_DIAG) )
-    {
-    Serial.print(T("Speed of sound: ")); Serial.print(speed_mmPuS); Serial.print(T("mm/us"));
-    Serial.print(T("  Worst case delay: ")); Serial.print(json_sensor_dia / speed_mmPuS * OSCILLATOR_MHZ); Serial.print(T(" counts"));
-    }
-
-  return speed_mmPuS;  
-}
 
 /*----------------------------------------------------------------
  *
@@ -265,7 +222,7 @@ unsigned int compute_hit
   for (i=N; i <= W; i++)
   {
     x = (double)s[i].count;            // Time difference in clocks
-    x = x * x ;                        // Square of the time
+    x = x * x ;                        // Square of the time (distance)
     x = x / (700.0d * 700.0d);         // sq(time)/sq(700)
     x = x * 7.0d * OSCILLATOR_MHZ;     // x 7us x oscillator freq
     s[i].count -= (int)x;              // Add in the correction
@@ -631,7 +588,7 @@ void send_score
 #endif
 
 #if ( S_TIMERS )
-  sprintf(str, "\"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d, ", (int)shot->timer_count[N], (int)shot->timer_count[E], (int)shot->timer_count[S], (int)shot->timer_count[W]);
+  sprintf(str, "\"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d, ", (int)s[N].count, (int)s[E].count, (int)s[S].count, (int)s[W].count);
   output_to_all(str);
 #endif
 

@@ -97,6 +97,7 @@ void self_test(uint16_t test)
       Serial.print(T("\r\n23 - Log South Sensor"));
       Serial.print(T("\r\n24 - Log West Sensor"));
       Serial.print(T("\r\n25 - Test Push Buttons"));
+      Serial.print(T("\r\n26 - Unit Test speed_of_sound()"));
       Serial.print(T("\r\n"));
       break;
 
@@ -382,7 +383,16 @@ void self_test(uint16_t test)
     Serial.print(T("\n\rDone"));
     break;
 
+/*
+ * Test 26 Test speed_of_sound()
+ */
+  case T_S_OF_SOUND:
+    sound_test();
+    Serial.print(T("\n\rDone"));
+    break;
+
   }
+ 
  /* 
   *  All done, return;
   */
