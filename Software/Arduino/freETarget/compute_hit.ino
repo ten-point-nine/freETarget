@@ -303,7 +303,7 @@ unsigned int compute_hit
     x_avg /= 4.0d;
     y_avg /= 4.0d;
     
-    estimate = (sqrt(sq(s[location].x - x_avg) + sq(s[location].y - y_avg)) + last_estimate)/2.0d;    // Damp the estimate
+    estimate = sqrt(sq(s[location].x - x_avg) + sq(s[location].y - y_avg));
     error = abs(last_estimate - estimate);
 
     if ( DLT(DLT_DIAG) )
@@ -394,7 +394,8 @@ bool find_xy_3D
 {
   double ae, be;            // Locations with error added
   double rotation;          // Angle shot is rotated through
-
+  double x;                 // Temporary value
+  
 /*
  * Check to see if the sensor data is correct.  If not, return an error
  */
@@ -410,8 +411,27 @@ bool find_xy_3D
 /*
  * It looks like we have valid data.  Carry on
  */
-  ae = sqrt(sq(s->a + estimate) - sq(z_offset_clock));     // Dimenstion with error included
-  be = sqrt(sq(s->b + estimate) - sq(z_offset_clock));
+  x = sq(s->a + estimate) - sq(z_offset_clock);
+  if ( x < 0 )
+  {
+    sq(s->a + estimate);
+    if ( DLT(DLT_DIAG) )
+    {
+      Serial.print(T("s->a is complex, truncting"));
+    }
+  }
+  ae = sqrt(x);                             // Dimenstion with error included
+  
+  x = sq(s->b + estimate) - sq(z_offset_clock);
+  if ( x < 0 )
+  {
+    if ( DLT(DLT_DIAG) )
+    {
+      Serial.print(T("s->b is complex, truncting"));
+    }
+    sq(s->b + estimate);
+  }
+  be = sqrt(x);  
 
   if ( (ae + be) < s->c )   // Check for an accumulated round off error
     {
