@@ -436,7 +436,8 @@ void update_nonvol
   unsigned int i;                         // Iteration counter
   unsigned int ps_value;                  // Value read from persistent storage           
   unsigned int x;                         // Value read from table
-
+  double       y;                         // Floating point number
+  
   if ( DLT(DLT_CRITICAL) )
   {
     Serial.print(T("update_nonvol(")); Serial.print(current_version); Serial.print(T(")")); 
@@ -593,12 +594,20 @@ void update_nonvol
 
   if ( current_version == 12 )                            // Add in minimum ring time
   {
-    x=50;
-    EEPROM.put(NONVOL_MIN_RING_TIME, x);                       // Set ring time to 50ms
+    x=500;
+    EEPROM.put(NONVOL_MIN_RING_TIME, x);                  // Set ring time to 500ms
     current_version = 13;
     EEPROM.put(NONVOL_PS_VERSION, current_version);
   }
 
+  if ( current_version == 13 )                            // Correction for Doppler Inverse Square
+  {
+    y = 7.0d / (sq(700.0d));                      
+    EEPROM.put(NONVOL_DOPPLER, y);                        //  Adjust to 7 us per 700 us delay
+    current_version = 14;
+    EEPROM.put(NONVOL_PS_VERSION, current_version);
+  }
+  
 /*
  * Up to date, return
  */

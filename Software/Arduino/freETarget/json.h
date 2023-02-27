@@ -83,5 +83,6 @@ extern char   json_wifi_pwd[];    // Text of WiFI password
 extern char   json_wifi_ip[];     // Text of IP address
 extern int    json_rh;            // Relative Humidity, 0-100%
 extern int    json_min_ring_time; // Time to wait for ringing to stop
+extern double json_doppler;       // Adjutment for inverse square
 
 #endif _JSON_H_

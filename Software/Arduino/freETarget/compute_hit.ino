@@ -223,9 +223,8 @@ unsigned int compute_hit
   {
     x = (double)s[i].count;             // Time difference in clock ticks
     x = x / OSCILLATOR_MHZ;             // Convert to a time in us
-    x = x / 700.0d;                     // Normalize to 700us
     x = x * x;                          // Dopper's inverse Square
-    x = x * 7.0d;                       // Compensation in us
+    x = x * json_doppler;               // Compensation in us
     x = x * OSCILLATOR_MHZ;             // Compensation in clock ticks
     s[i].count -= (int)x;               // Add in the correction
   }

@@ -57,7 +57,8 @@ char    json_wifi_ssid[esp01_SSID_SIZE_32]; // Stored value of SSID
 char    json_wifi_pwd[esp01_PWD_SIZE];// Stored value of password
 int     json_wifi_dhcp;             // The ESP is a DHCP server
 int     json_rh;                    // Relative Humidity 0-1005
-int     json_min_ring_time;              // Time to wait for ringing to stop
+int     json_min_ring_time;         // Time to wait for ringing to stop
+double  json_doppler;               // Adjust for dopper inverse square
 
 #define JSON_DEBUG false            // TRUE to echo DEBUG messages
 
@@ -77,6 +78,7 @@ const json_message JSON[] = {
   {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT16,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
   {"\"DELAY\":",          0               ,                  0,                IS_INT16,  &diag_delay,                      0,       0 },    // Delay TBD seconds
   {"\"DIP\":",            &json_dip_switch,                  0,                IS_INT16,  0,                NONVOL_DIP_SWITCH,       0 },    // Remotely set the DIP switch
+  {"\"DOPPLER\":",        0,                     &json_doppler,                IS_FLOAT,  0,                NONVOL_DOPPLER, (7.0d/(700.0d * 700.0d))},    // Adjust timing based on Doppler Inverse SQ
   {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,                       0,       0 },    // Echo test
   {"\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT16,  0,                NONVOL_FACE_STRIKE,      5 },    // Face Strike Count 
   {"\"FOLLOW_THROUGH\":", &json_follow_through,              0,                IS_INT16,  0,                NONVOL_FOLLOW_THROUGH,   0 },    // Three second follow through
@@ -522,7 +524,7 @@ void show_echo(void)
 
         case IS_FLOAT:
         case IS_DOUBLE:
-          dtostrf(*JSON[i].d_value, 4, 2, str_c );
+          dtostrf(*JSON[i].d_value, 8, 6, str_c );
           sprintf(s, "%s %s, \r\n", JSON[i].token, str_c);
           break;
       }
