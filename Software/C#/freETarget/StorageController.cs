@@ -128,7 +128,7 @@ namespace freETarget {
                     connString = templateConnString;
                     MessageBox.Show("User database at '" + dbPath + "\\Storage.db' is not accesible, maybe due to write access privileges needed by SQLite. " + Environment.NewLine
                         + "The template database in the installation folder will be used: " + Environment.NewLine + connString + Environment.NewLine + Environment.NewLine
-                        + "This database will be overwritten when a new version of the program will be installed and all session will be lost. Be carefull.",
+                        + "This database will be overwritten when a new version of the program will be installed and all sessions will be lost. Be carefull.",
                          "Database problem", MessageBoxButtons.OK, MessageBoxIcon.Warning
                         );
 

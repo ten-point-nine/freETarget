@@ -1033,7 +1033,7 @@ namespace freETarget {
             decimal sessionDecimalScore = 0;
             int sessionInnerTens = 0;
 
-            foreach (Shot shot in getShotList()) {
+            foreach (Shot shot in getShots()) {
                 shot.calibrationX = calibrationX;
                 shot.computeScore(this.currentSession.getTarget());
 
@@ -1075,7 +1075,7 @@ namespace freETarget {
             decimal sessionDecimalScore = 0;
             int sessionInnerTens = 0;
 
-            foreach (Shot shot in getShotList()) {
+            foreach (Shot shot in getShots()) {
                 shot.calibrationY = calibrationY;
                 shot.computeScore(this.currentSession.getTarget());
 
@@ -1111,7 +1111,7 @@ namespace freETarget {
 
         public void calibrateAngle(decimal angle) {
             calibrationAngle += angle;
-            foreach (Shot shot in getShotList()) {
+            foreach (Shot shot in getShots()) {
                 shot.calibrationAngle = calibrationAngle;
                 shot.computeScore(this.currentSession.getTarget());
             }
