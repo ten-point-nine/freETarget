@@ -514,8 +514,8 @@ void self_test(uint16_t test)
 /*
  * Test 1, Arm the circuit and see if there are any random trips
  */
-  stop_timers();                    // Get the circuit ready
-  arm_timers();                     // Arm it. 
+  stop_timers();                      // Get the circuit ready
+  arm_timers();                       // Arm it. 
   delay(1);                           // Wait a millisecond  
   sensor_status = is_running();       // Remember all of the running timers
   if ( (sensor_status != 0) && DLT(INIT_TRACE) )
@@ -533,7 +533,7 @@ void self_test(uint16_t test)
 /*
  *  Test 2, Arm the circuit amd make sure it is off
  */
-    stop_timers();                  // Get the circuit ready
+    stop_timers();                    // Get the circuit ready
     arm_timers();
     delay(1);                         // Wait for a bit
     

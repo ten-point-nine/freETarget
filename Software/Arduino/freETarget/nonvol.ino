@@ -607,6 +607,14 @@ void update_nonvol
     current_version = 14;
     EEPROM.put(NONVOL_PS_VERSION, current_version);
   }
+
+  if ( current_version == 14 )                            // Correction for Doppler Inverse Square
+  {
+    x = 0;                      
+    EEPROM.put(NONVOL_TOKEN, x);                          //  Adjust to 7 us per 700 us delay
+    current_version = 15;
+    EEPROM.put(NONVOL_PS_VERSION, current_version);
+  }
   
 /*
  * Up to date, return

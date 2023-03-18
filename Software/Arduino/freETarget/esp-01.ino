@@ -36,6 +36,8 @@
  * transmission.
  * 
  *---------------------------------------------------------------*/
+#include "json.h"
+#include "token.h"
 
 /*
  * Function Prototypes
@@ -113,11 +115,14 @@ void esp01_init(void)
     }
     return;                                     // No hardware installed, nothing to do
   }
+
   if ( DLT(DLT_DIAG) )
   {
     Serial.print(T("ESP-01 Present"));
   }
-
+  
+  json_token == TOKEN_NONE;                     // If WiFi is present, then the TOKEN ring is disabled
+  
 /*
  * There is an ESP-01 on the freETarget.  We need to program it
  */

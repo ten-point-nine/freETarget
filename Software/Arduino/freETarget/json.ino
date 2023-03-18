@@ -59,6 +59,7 @@ int     json_wifi_dhcp;             // The ESP is a DHCP server
 int     json_rh;                    // Relative Humidity 0-1005
 int     json_min_ring_time;         // Time to wait for ringing to stop
 double  json_doppler;               // Adjust for dopper inverse square
+int     json_token;                 // Token ring state
 
 #define JSON_DEBUG false            // TRUE to echo DEBUG messages
 
@@ -115,8 +116,9 @@ const json_message JSON[] = {
   {"\"TABATA_WARN_ON\":", &json_tabata_warn_on,              0,                IS_INT16,  0,                0,                     200 },    // Time that the LEDs are OFF during a warning cycle
   {"\"TARGET_TYPE\":",    &json_target_type,                 0,                IS_INT16,  0,                NONVOL_TARGET_TYPE,      0 },    // Marify shot location (0 == Single Bull)
   {"\"TEST\":",           0,                                 0,                IS_INT16,  &show_test,       NONVOL_TEST_MODE,        0 },    // Execute a self test
-  {"\"TRACE\":",          0,                                 0,                IS_INT16,  &set_trace,                      0,        0 },    // Enter / exit diagnostic trace
-  {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_version,                   0,        0 },    // Return the version string
+  {"\"TOKEN\":",          &json_token,                       0,                IS_INT16,  0,                NONVOL_TOKEN,            0 },    // Token ring state
+  {"\"TRACE\":",          0,                                 0,                IS_INT16,  &set_trace,       0,                       0 },    // Enter / exit diagnostic trace
+  {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_version,    0,                       0 },    // Return the version string
   {"\"V_SET\":",          0,                                 &json_vset,       IS_FLOAT,  &compute_vset_PWM,NONVOL_VSET,             0 },    // Set the voltage reference
   {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT16,  0,                NONVOL_WIFI_CHANNEL,     6 },    // Set the wifi channel
   {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_SECRET, 0,                NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 

@@ -13,7 +13,18 @@
 #include "esp-01.h"
 #include "json.h"
 
+<<<<<<< Updated upstream
 #define SOFTWARE_VERSION "\"4.1.0 RC3 February 26, 2023\""
+=======
+#define RESCUE     (1==0)
+#if ( RESCUE )
+#define SOFTWARE_VERSION "\"RESCUE March 1, 2023\""
+#else
+#define SOFTWARE_VERSION "\"4.2.0 RC1 March 17, 2023\""
+#endif
+
+
+>>>>>>> Stashed changes
 #define REV_100    100
 #define REV_210    210
 #define REV_220    220

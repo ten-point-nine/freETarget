@@ -26,6 +26,8 @@ unsigned int  shot = 0;                 // Shot counter
 unsigned int  face_strike = 0;          // Miss Face Strike interrupt count
 unsigned int  is_trace = 0;             // Turn off tracing
 unsigned long rapid_on = 0;             // Duration of rapid fire event
+
+
 unsigned int  rapid_count = 0;          // Number of shots to be expected in Rapid Fire
 unsigned int  tabata_state;             // Tabata state
 unsigned int  shot_number;              // Shot Identifier
@@ -66,9 +68,9 @@ void setup(void)
 /*
  *  Setup the serial port
  */
-  Serial.begin(115200);
-  AUX_SERIAL.begin(115200); 
-  DISPLAY_SERIAL.begin(115200); 
+  Serial.begin(115200, SERIAL_8N1);
+  AUX_SERIAL.begin(115200, SERIAL_8N1); 
+  DISPLAY_SERIAL.begin(115200, SERIAL_8N1); 
   POST_version();                         // Show the version string on all ports
   is_trace = INIT_TRACE;
 
@@ -497,7 +499,7 @@ unsigned int reduce(void)
     if ( DLT(DLT_CRITICAL) )
     {
       Serial.print(T("Reducing shot: ")); Serial.print(last_shot); Serial.print(T("\r\nTrigger: ")); 
-      show_sensor_status(record[last_shot].sensor_status, &record[last_shot]);
+      show_sensor_status(record[last_shot].sensor_status, 0);
     }
 
     location = compute_hit(&record[last_shot], false);          // Compute the score

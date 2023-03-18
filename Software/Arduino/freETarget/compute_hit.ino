@@ -725,11 +725,14 @@ struct new_target
 };
 
 typedef new_target new_target_t;
+
 #define LAST_BULL (-1000.0)
 #define D5_74 (74/2)                   // Five bull air rifle is 74mm centre-centre
 new_target_t five_bull_air_rifle_74mm[] = { {-D5_74, D5_74}, {D5_74, D5_74}, {0,0}, {-D5_74, -D5_74}, {D5_74, -D5_74}, {LAST_BULL, LAST_BULL}};
+
 #define D5_79 (79/2)                   // Five bull air rifle is 79mm centre-centre
 new_target_t five_bull_air_rifle_79mm[] = { {-D5_79, D5_79}, {D5_79, D5_79}, {0,0}, {-D5_79, -D5_79}, {D5_79, -D5_79}, {LAST_BULL, LAST_BULL}};
+
 #define D12_H (191.0/2.0)              // Twelve bull air rifle 95mm Horizontal
 #define D12_V (195.0/3.0)              // Twelve bull air rifle 84mm Vertical
 new_target_t twelve_bull_air_rifle[]    = { {-D12_H,   D12_V + D12_V/2},  {0,   D12_V + D12_V/2},  {D12_H,   D12_V + D12_V/2},
@@ -737,8 +740,17 @@ new_target_t twelve_bull_air_rifle[]    = { {-D12_H,   D12_V + D12_V/2},  {0,   
                                             {-D12_H,         - D12_V/2},  {0,         - D12_V/2},  {D12_H,          -D12_V/2},
                                             {-D12_H, -(D12_V + D12_V/2)}, {0, -(D12_V + D12_V/2)}, {D12_H, -(D12_V + D12_V/2)},
                                             {LAST_BULL, LAST_BULL}};
-//                           0  1  2  3              4                        5              6  7  8  9  10  11          12
-new_target_t* ptr_list[] = { 0, 0, 0, 0, five_bull_air_rifle_74mm, five_bull_air_rifle_79mm, 0, 0, 0, 0, 0 , 0 , twelve_bull_air_rifle};
+
+#define O12_H (144.0/2.0)              // Twelve bull air rifle Orion
+#define O12_V (190.0/3.0)              // Twelve bull air rifle Orion
+new_target_t orion_bull_air_rifle[]    =  { {-O12_H,   O12_V + O12_V/2},  {0,   O12_V + O12_V/2},  {O12_H,   O12_V + O12_V/2},
+                                            {-O12_H,           O12_V/2},  {0,           O12_V/2},  {O12_H,           O12_V/2},
+                                            {-O12_H,         - O12_V/2},  {0,         - O12_V/2},  {O12_H,          -O12_V/2},
+                                            {-O12_H, -(O12_V + O12_V/2)}, {0, -(O12_V + O12_V/2)}, {O12_H, -(O12_V + O12_V/2)},
+                                            {LAST_BULL, LAST_BULL}};
+                                            
+//                           0  1  2  3              4                        5              6  7  8  9  10           11                     12
+new_target_t* ptr_list[] = { 0, 0, 0, 0, five_bull_air_rifle_74mm, five_bull_air_rifle_79mm, 0, 0, 0, 0, 0 , orion_bull_air_rifle , twelve_bull_air_rifle};
 
 static void remap_target
   (
