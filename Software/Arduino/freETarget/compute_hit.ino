@@ -539,6 +539,11 @@ void send_score
     Serial.print(T("Sending the score"));
   }
 
+  while ( !token_take() )                          // Grab the token ring
+  {
+    delay(ONE_SECOND);
+  }
+  
  /* 
   *  Work out the hole in perfect coordinates
   */
@@ -631,7 +636,10 @@ void send_score
 /*
  * All done, return
  */
-  
+  while ( !token_give() )                          // Give up the token ring
+  {
+    delay(ONE_SECOND);
+  }
   return;
 }
  

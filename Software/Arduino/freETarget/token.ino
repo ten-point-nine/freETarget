@@ -10,8 +10,7 @@
 #include "token.h"
 #include "esp-01.h"
 
-static int my_token;            // Token ring address
-static int my_ring;             // Set to 1 if I own the ring
+static int my_ring;             // Token ring address
 static int whos_ring;           // Who owns the ring right now?
 
 /*-----------------------------------------------------
@@ -41,7 +40,7 @@ void token_init(void)
  * If not in token ring mode or WiFi is present,do nothing
  */
  
-  if ( (json_token != TOKEN_NONE)                 // Not in token ring mode
+  if ( (json_token == TOKEN_NONE)                 // Not in token ring mode
     || (esp01_is_present() == 1) )                // In WiFi mode
   {
     return 0;
@@ -56,15 +55,6 @@ void token_init(void)
     Serial.print(T("token_init()"));  
   }
 
-  if ( json_token == TOKEN_MASTER )           // Is this the token master?
-  {
-    my_token = 1;                             // Yes, set myself to 1
-  }
-  else
-  {
-    my_token = TOKEN_UNDEF;                   // No, the token is unassigned
-  }
-
   my_ring = TOKEN_UNDEF;                      // The ring is unowned
   whos_ring = TOKEN_UNDEF;                    // The ring is available
   
@@ -76,12 +66,11 @@ void token_init(void)
 
   while ( (millis() - now) <= TOKEN_TIME_OUT )
   {
-    if ( token_poll() )                       // Wait for something to come back
+    if ( token_poll(TOKEN_ENUM) )             // Wait for something to come back
     {
       break;
     }
   }
-
 
   
 /*
@@ -107,9 +96,11 @@ void token_init(void)
  * the ring
  * 
  *-----------------------------------------------------*/
- int token_poll(void)
+ int token_poll
+ (
+    unsigned int token_wait                           // Action needed to exit poll
+ )
  {
-
   int token;                                          // Token read from serial port
 
 /*
@@ -146,11 +137,24 @@ void token_init(void)
         break;
           
     case TOKEN_ENUM:                                  // An enumeration byte is passing around
+        my_ring = token & TOKEN_RING;                 // Extract the node number
+        whos_ring = TOKEN_UNDEF;                      // Nobody owns the ring right now?
+        break;
+        
     case TOKEN_TAKE:                                  // A take is passing aroound
-    case TOKEN_RELEASE:                               // A release is passing around
-        break;                                        // Take it off of the ring
+        if ( (token & TOKEN_RING) == my_ring )        // Is it me?
+        {
+          whos_ring = my_ring;                        // Yes, Grab it
+        }
+        break;                                        // 
                            
-          
+    case TOKEN_RELEASE:                               // A release is passing around
+        if ( (token & TOKEN_RING) == my_ring )        // Is it me?
+        {
+          whos_ring = TOKEN_UNDEF;                    // Yes, Release it
+        }
+        break;                                        // 
+        
     case TOKEN_TAKE_REQUEST:                          // Request ownership of the bus
         if ( whos_ring == TOKEN_UNDEF )               // Is the ring available?
         {
@@ -165,16 +169,12 @@ void token_init(void)
         {
           AUX_SERIAL.print(TOKEN_TAKE + (token & TOKEN_RING));  // and pass it along
           whos_ring = TOKEN_UNDEF;                    // Yes, the ring is now undefined
-          return 0;
          }
-         return 0;
+         break;
              
-
     default:                                          // Not a control byte
-      Serial.print(token);                            // Send it out the USB port
-      return 0;
-      
-    }
+      break;      
+    }    
   }
 /*
  * Regular node
@@ -187,46 +187,203 @@ void token_init(void)
       case TOKEN_TAKE_REQUEST:                        // Request ownership of the bus     
       case TOKEN_RELEASE_REQUEST:                     // Give up ownership of the bus      
         AUX_SERIAL.print( token );                    // Just pass it along
-        return 0;
+        break;
 
-          
     case TOKEN_ENUM:                                  // An enumeration byte is passing around
-        my_token = token & TOKEN_RING;                // Extract the node number
-        AUX_SERIAL.print( TOKEN_ENUM | (my_token+1) ); // Add 1 and send it along
-        return 0;
+        my_ring = token & TOKEN_RING;                 // Extract the node number
+        whos_ring = TOKEN_UNDEF;                      // Nobody owns the ring right now?
+        AUX_SERIAL.print( TOKEN_ENUM | (my_ring+1) ); // Add 1 and send it along
+        break;
         
     case TOKEN_TAKE:                                  // A take is passing aroound
         whos_ring = token & TOKEN_RING;
-        if ( whos_ring == my_token )                  // Is it me?
-        {
-          my_ring = true;
-        }
-        else
-        {
-          my_ring = false;
-        }
         AUX_SERIAL.print( token);                      // Pass it along to the master
-        return 0;
+        break;
         
     case TOKEN_RELEASE:                               // A release is passing around
-        if ( (token & TOKEN_RING) == my_token )       // Is it me?
+        if ( (token & TOKEN_RING) == my_ring )        // Is it me?
         {
           whos_ring = TOKEN_UNDEF;                    // Yes, Release it
         }
         AUX_SERIAL.print(token);                      // Pass it along to the master
-        return 0;                                     // 
+        break;                                        // 
                            
     default:                                          // Not a control byte
       Serial.print(token);                            // Send it out the USB port
-      return 0;
+      break;
       
     }
   }
 
-   
- /*
-  * All done, return
-  */
-  return 0;
+/*
+ * See if the waaiting ation has been completed
+ */
+    if ( (token & TOKEN_CONTROL) == token_wait )
+    {
+      return 1;
+    }
+    else
+    {
+      return 0;
+    }
  }
+
   
+/*-----------------------------------------------------
+ * 
+ * function: token_take
+ * 
+ * brief:    Request to take the token ring
+ * 
+ * return:   who owns the ring
+ * 
+ *-----------------------------------------------------
+ *
+ * Issue a token ring take request and wait for 
+ * the reply to come back
+ * 
+ *-----------------------------------------------------*/
+int token_take(void)
+{
+  unsigned long now;
+  
+/*
+ * If not in token ring mode or WiFi is present,do nothing
+ */
+  if ( (json_token == TOKEN_NONE)                 // Not in token ring mode
+    || (esp01_is_present() == 1) )                // In WiFi mode
+  {
+    return 0;
+  }
+  
+  else if ( DLT(DLT_CRITICAL) ) 
+  {
+    Serial.print(T("token_init()"));  
+  }
+
+/*
+ * Check to see if the token ring is alreay used
+ */
+   if ( (whos_ring != TOKEN_UNDEF) )               // The ring belongs to somebody
+   {
+    return 1;
+   }
+   
+/*
+ * Send out the token initializaation request
+ */
+  now = millis();                                   // Remember the start time
+  AUX_SERIAL.print(TOKEN_TAKE_REQUEST + my_ring);   // Send out the request
+
+  while ( (millis() - now) <= TOKEN_TIME_OUT )
+  {
+    if ( token_poll(TOKEN_TAKE) )                  // Wait for something to come back
+    {
+      break;
+    }
+  }
+
+/*
+ * All done, return
+ */  
+  return 1;
+}
+
+/*-----------------------------------------------------
+ * 
+ * function: token_give
+ * 
+ * brief:    Return the token ring
+ * 
+ * return:   who owns the ring
+ * 
+ *-----------------------------------------------------
+ *
+ * Issue a token ring give request an wait for 
+ * the reply to come back
+ * 
+ *-----------------------------------------------------*/
+int token_give(void)
+{
+  unsigned long now;
+  
+/*
+ * If not in token ring mode or WiFi is present,do nothing
+ */
+  if ( (json_token == TOKEN_NONE)                 // Not in token ring mode
+    || (esp01_is_present() == 1) )                // In WiFi mode
+  {
+    return 0;
+  }
+  
+  else if ( DLT(DLT_CRITICAL) ) 
+  {
+    Serial.print(T("token_give()"));  
+  }
+
+/*
+ * Check to see if the token ring is alreay used
+ */
+   if ( whos_ring != my_ring )                    // The ring belongs to somebody
+   {
+    return 0;
+   }
+   
+/*
+ * Send out the token initializaation request
+ */
+  now = millis();                                   // Remember the start time
+  AUX_SERIAL.print(TOKEN_RELEASE_REQUEST + my_ring);// Send out the request
+
+  while ( (millis() - now) <= TOKEN_TIME_OUT )
+  {
+    if ( token_poll(TOKEN_RELEASE) )                // Wait for something to come back
+    {
+      break;
+    }
+  }
+
+/*
+ * All done, return
+ */  
+  return 1;
+}
+
+
+
+/*-----------------------------------------------------
+ * 
+ * function: token_available
+ * 
+ * brief:    Test to see if the token ring is available
+ * 
+ * return:   TRUE if the ring is available
+ * 
+ *-----------------------------------------------------
+ *
+ * The token ring outptu is available if 
+ * 
+ *     We are not in token ring mode
+ *     The WiFi is connected
+ *     We have requested and received the ring
+ * 
+ *-----------------------------------------------------*/
+int token_available(void)
+{
+  unsigned long now;
+  
+/*
+ * If not in token ring mode or WiFi is present,do nothing
+ */
+  if ( (json_token == TOKEN_NONE)                 // Not in token ring mode
+    || (esp01_is_present() == 1)                  // In WiFi mode
+    || (my_ring == whos_ring ) )                  // Or the ring belong to me
+  {
+    return 1;
+  }
+
+/*
+ * The ring is not available to me
+ */  
+  return 0;
+}

@@ -1045,21 +1045,24 @@ void multifunction_display(void)
   unsigned int i, j;              // Iteration Counter
   
   Serial.print(str);              // Main USB port
+  DISPLAY_SERIAL.print(str);      // Display Serial Port
 
-  if ( esp01_is_present() )
+/*
+ * Determine how the output is going to the auxilary port
+ */
+  if ( esp01_is_present() )       // WiFi Port
   {
     for (i=0; i != esp01_N_CONNECT; i++ )
     {
       esp01_send(str, i);
     }
+    return;
   }
-  else 
+
+  if ( token_available() )
   {
     AUX_SERIAL.print(str);        // No ESP-01, then use just the AUX port
   }
-
-  DISPLAY_SERIAL.print(str);      // Display Serial Port
-
 
  /*
   * All done, return

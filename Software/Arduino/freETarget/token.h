@@ -11,9 +11,10 @@
 /*
  * Global functions
  */
-void token_init(void);                      // Initialize the token ring
-void token_mutex(int state);                // Grab or release the token ring
-void token_restart(void);                   // Try to restart the bus
+void token_init(void);                        // Initialize the token ring
+int  token_take(void);                        // Grab the token ring
+int  token_give(void);                        // Rease the token ring
+int  token_available(void);                   // TRUE if the token ring can be taken
 
 /*
  *  State Definitions

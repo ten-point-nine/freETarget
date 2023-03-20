@@ -188,6 +188,8 @@ void loop()
 /*
  * Take care of any commands coming through
  */
+  token_poll(0);                  // Check the token ring
+  
   if ( read_JSON() )
   {
     power_save = millis();        // Reset the power down timer if something comes in
