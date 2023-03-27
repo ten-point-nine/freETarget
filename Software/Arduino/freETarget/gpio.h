@@ -16,7 +16,7 @@ void arm_timers(void);                                    // Make the board read
 void clear_running(void);                                 // Clear the run flip flop 
 unsigned int is_running(void);                            // Return a bit mask of running sensors 
 void set_LED(int state_RDY, int state_X, int state_y);    // Manage the LEDs
-unsigned int read_DIP(void);                              // Read the DIP switch register
+unsigned int read_DIP(unsigned int dip_mask);             // Read the DIP switch register
 unsigned int read_counter(unsigned int direction);
 void stop_timers(void);                                   // Turn off the counter registers
 void trip_timers(void);
@@ -35,6 +35,8 @@ void output_to_all(char* s);                              // Multipurpose driver
 void char_to_all(char ch);                                // Output a single character
 void digital_test(void);                                  // Execute the digital test
 void paper_on_off(bool on);                               // Turn the motor on or off
+void rapid_green(unsigned int state);                     // Drive the GREEN light
+void rapid_red(unsigned int state);                       // Drive the RED light
 
 /*
  *  Port Definitions
@@ -75,10 +77,16 @@ void paper_on_off(bool on);                               // Turn the motor on o
 #define STOP_N      52       
 #define CLOCK_START 53
 
-#define DIP_0        9                    // 
+#define DIP_0        9
+#define RED_OUT      9                  // Rapid fire RED on DIP0
 #define DIP_1       10
 #define DIP_2       11
 #define DIP_3       12
+#define GREEN_OUT   12                  // Rapid fire GREEN on DIP3
+
+#define RED_MASK     1                  // Use DIP 0
+#define GREEN_MASK   8                  // Use DIP 3
+
 /*
  * Multifunction Switch Use when using DIP Switch for MFS
  */
@@ -139,6 +147,9 @@ void paper_on_off(bool on);                               // Turn the motor on o
 #define MFS_SPARE_7   7
 #define MFS_SPARE_8   8
 #define TARGET_TYPE   9                   // Sent target type with score
+
+#define NO_ACTION     0                   // DIP usual function
+#define RAPID_OUT     1                   // Rapid fire output
 
 #define J10_1      VCC
 #define J10_2       14                    // TX3

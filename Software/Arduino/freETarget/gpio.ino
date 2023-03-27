@@ -66,6 +66,8 @@ static bool fcn_DIP_SW_B(void);           // Function to read DIP_SW_B
 static void sw_state (bool* (fcn_state)(void), unsigned long*  which_timer, void* (fcn_action)(void)); // Do something with the switches
 static void send_fake_score(void);        // Send a fake score to the PC
 
+static unsigned int dip_mask;             // Used if the MFS2 uses the DIP_0 or DIP_3
+
 /*-----------------------------------------------------
  * 
  * function: gpio_init
@@ -348,7 +350,10 @@ void disable_face_interrupt(void)
  * OR in the json_dip_switch to allow remote testing
  * OR in  0xF0 to allow for compile time testing
  *-----------------------------------------------------*/
-unsigned int read_DIP(void)
+unsigned int read_DIP
+(
+  unsigned int dip_mask
+)
 {
   unsigned int return_value;
   
@@ -360,6 +365,7 @@ unsigned int read_DIP(void)
   {
     return_value =  (~((digitalRead(DIP_3) << 0) + (digitalRead(DIP_2) << 1) + (digitalRead(DIP_1) << 2) + (digitalRead(DIP_0) << 3))) & 0x0F;  // DIP Switch
   }
+  return_value &= (~dip_mask);
   return_value |= json_dip_switch;  // JSON message
   return_value |= 0xF0;             // COMPILE TIME
 
@@ -671,7 +677,27 @@ void blink_fault
  {
   unsigned int dip;
 
-  dip = read_DIP() & 0x0f;              // Read the jumper header
+/*
+ * Check to see if the DIP switch has been overwritten
+ */
+  if ( TAP1(json_multifunction2) == RAPID_OUT )
+  {
+      pinMode(DIP_0, OUTPUT);
+      digitalWrite(DIP_0, 1);
+      dip_mask = RED_MASK;
+  }
+
+  if ( TAP2(json_multifunction2) == RAPID_OUT )
+  {
+      pinMode(DIP_3, OUTPUT);
+      digitalWrite(DIP_3, 1);
+      dip_mask |= GREEN_MASK;
+  }
+
+/*
+ * Continue to read the DIP switch
+ */
+  dip = read_DIP(dip_mask) & 0x0f;      // Read the jumper header
 
   if ( dip == 0 )                       // No jumpers in place
   { 
@@ -1002,13 +1028,19 @@ void multifunction_wait_open(void)
  //                             0            1            2             3            4             5            6    7    8          9
 static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED", "ADJUST_LED", "PAPER_SHOT", "PC_TEST",  "POWER_ON_OFF",   "6", "7", "8", "TARGET_TYPE"};
 
+ //                              0           1            2             3            4             5            6    7    8          9
+static char* mfs2_text[] = { "DEFAULT", "RAPID_OUT",      "2",          "3",         "4",          "5",   "      6", "7", "8",       "9"};
+
 void multifunction_display(void)
 {
   char s[128];                          // Holding string
 
   sprintf(s, "\"MFS_TAP1\": \"%s\",\n\r\"MFS_TAP2\": \"%s\",\n\r\"MFS_HOLD1\": \"%s\",\n\r\"MFS_HOLD2\": \"%s\",\n\r\"MFS_HOLD12\": \"%s\",\n\r", 
   mfs_text[TAP1(json_multifunction)], mfs_text[TAP2(json_multifunction)], mfs_text[HOLD1(json_multifunction)], mfs_text[HOLD2(json_multifunction)], mfs_text[HOLD12(json_multifunction)]);
+  output_to_all(s);  
 
+  sprintf(s, "\"MFS_CONFIG\": \"%s\",\n\r\"MFS_DIAG\": \"%s\",\n\r\"", 
+  mfs2_text[TAP1(json_multifunction2)], mfs2_text[TAP2(json_multifunction2)]);
   output_to_all(s);  
   
 /*
@@ -1095,7 +1127,7 @@ void digital_test(void)
  */
   Serial.print(T("\r\nTime:"));                      Serial.print(micros()/1000000); Serial.print("."); Serial.print(micros()%1000000); Serial.print(T("s"));
   Serial.print(T("\r\nBD Rev:"));                    Serial.print(revision());       
-  Serial.print(T("\r\nDIP: 0x"));                    Serial.print(read_DIP(), HEX); 
+  Serial.print(T("\r\nDIP: 0x"));                    Serial.print(read_DIP(0), HEX); 
   digitalWrite(STOP_N, 0);
   digitalWrite(STOP_N, 1);                        // Reset the fun flip flop
   Serial.print(T("\r\nRUN FlipFlop: 0x"));           Serial.print(is_running(), HEX);   
@@ -1194,3 +1226,49 @@ static void send_fake_score(void)
 
   return;
 } 
+
+/*----------------------------------------------------------------
+ * 
+ * function: rapid_red()
+ *           rapid_green()
+ * 
+ * brief: Set the RED and GREEN lights
+ * 
+ * return: Nothing
+ * 
+ *----------------------------------------------------------------
+ *
+ *  If MFS2 has enabled the rapid fire lights then allow the 
+ *  value to be set
+ *
+ *--------------------------------------------------------------*/
+
+void rapid_red
+(
+  unsigned int state          // New state for the RED light
+) 
+{
+  if ( TAP1(json_multifunction2) != RAPID_OUT )
+  {
+    return;
+  }
+
+  digitalWrite(RED_OUT, state);
+
+  return;
+}
+
+void rapid_green
+(
+  unsigned int state          // New state for the RED light
+) 
+{
+  if ( TAP2(json_multifunction2) != RAPID_OUT )
+  {
+    return;
+  }
+
+  digitalWrite(GREEN_OUT, state);
+
+  return;
+}

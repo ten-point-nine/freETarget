@@ -60,6 +60,7 @@ int     json_rh;                    // Relative Humidity 0-1005
 int     json_min_ring_time;         // Time to wait for ringing to stop
 double  json_doppler;               // Adjust for dopper inverse square
 int     json_token;                 // Token ring state
+int     json_multifunction2;        // Multifunction Switch 2
 
 #define JSON_DEBUG false            // TRUE to echo DEBUG messages
 
@@ -91,6 +92,11 @@ const json_message JSON[] = {
                                                                                                                           + (PAPER_SHOT * 100) 
                                                                                                                           + (ON_OFF * 10) 
                                                                                                                           + (PAPER_FEED) },  // Multifunction switch action
+  {"\"MFS2\":",            &json_multifunction2,             0,                IS_INT16,  0,                NONVOL_MFS2,  (NO_ACTION*10000) 
+                                                                                                                          + (NO_ACTION * 1000)
+                                                                                                                          + (NO_ACTION * 100) 
+                                                                                                                          + (NO_ACTION * 10) 
+                                                                                                                          + (NO_ACTION) },   // Multifunction switch action
   {"\"MIN_RING_TIME\":",  &json_min_ring_time,               0,                IS_INT16,  0,                NONVOL_MIN_RING_TIME,  500 },    // Minimum time for ringing to stop (ms)
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT16,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
   {"\"NONVOL_BACKUP\":",  0,                                 0,                IS_VOID,   &backup_nonvol,   0,                       0 },    // Backup the NONVOL
