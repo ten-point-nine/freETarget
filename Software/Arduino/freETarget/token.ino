@@ -12,6 +12,7 @@
 
 static int my_ring;             // Token ring address
 static int whos_ring;           // Who owns the ring right now?
+static long my_time = 0;        // Starting time reference
 
 /*-----------------------------------------------------
  * 
@@ -35,11 +36,10 @@ void token_init(void)
 {
   unsigned long now;
   unsigned char token;      // Token
-  
+
 /*
  * If not in token ring mode or WiFi is present,do nothing
  */
- 
   if ( (json_token == TOKEN_NONE)                 // Not in token ring mode
     || (esp01_is_present() == 1) )                // In WiFi mode
   {
@@ -76,6 +76,7 @@ void token_init(void)
 /*
  * All done, return
  */  
+  sys_time_reset();                           // Put the clock to 0
   return;
 }
 
@@ -176,6 +177,7 @@ void token_init(void)
       break;      
     }    
   }
+  
 /*
  * Regular node
  */
@@ -192,6 +194,7 @@ void token_init(void)
     case TOKEN_ENUM:                                  // An enumeration byte is passing around
         my_ring = token & TOKEN_RING;                 // Extract the node number
         whos_ring = TOKEN_UNDEF;                      // Nobody owns the ring right now?
+        sys_time_reset();                             // Synchronize the clocks
         AUX_SERIAL.print( TOKEN_ENUM | (my_ring+1) ); // Add 1 and send it along
         break;
         
@@ -386,4 +389,51 @@ int token_available(void)
  * The ring is not available to me
  */  
   return 0;
+}
+
+
+/*-----------------------------------------------------
+ * 
+ * function: sys_time()
+ * 
+ * brief:    Return the system time across all token ring
+ * 
+ * return:   Time in milliseconds
+ * 
+ *-----------------------------------------------------
+ *
+ * All members of the token ring share a common time
+ * base.  This function returns the time in milliseconds
+ * 
+ *-----------------------------------------------------*/
+unsigned long sys_time(void)
+{
+  if ( my_time == 0 )
+  {
+    my_time = millis();
+  }
+
+  return millis() - my_time;
+}
+
+
+/*-----------------------------------------------------
+ * 
+ * function: sys_time_reset
+ * 
+ * brief:    Reset the system time to zero
+ * 
+ * return:   None
+ * 
+ *-----------------------------------------------------
+ *
+ * All members of the token ring share a common time
+ * base.  This function returns the time in milliseconds
+ * 
+ *-----------------------------------------------------*/
+void sys_time_reset(void)
+{
+  my_time = millis();
+  return;
+
 }

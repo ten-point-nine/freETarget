@@ -15,6 +15,8 @@ void token_init(void);                        // Initialize the token ring
 int  token_take(void);                        // Grab the token ring
 int  token_give(void);                        // Rease the token ring
 int  token_available(void);                   // TRUE if the token ring can be taken
+unsigned long sys_time(void);                 // Return system time
+void sys_time_reset(void);                    // Set the system time back to 0
 
 /*
  *  State Definitions

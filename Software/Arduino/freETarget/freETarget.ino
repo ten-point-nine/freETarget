@@ -706,7 +706,7 @@ static long tabata
       case (TABATA_OFF):                  // The tabata is not enabled
         if ( json_tabata_enable != 0 )    // Just switched to enable. 
         {
-          time_end = millis() + (30 * ONE_SECOND);
+          time_end = sys_time() + (30 * ONE_SECOND);
           set_LED_PWM_now(0);             // Turn off the lights
           sprintf(s, "{\"TABATA_STARTING\":%d}\r\n", (30));
           output_to_all(s);
@@ -717,7 +717,7 @@ static long tabata
       case (TABATA_REST):                // OFF, wait for the time to expire
         if (millis() >= time_end)        // Don't do anything unless the time expires
         {
-          time_end = millis() + (json_tabata_warn_on * ONE_SECOND);
+          time_end = sys_time() + (json_tabata_warn_on * ONE_SECOND);
           set_LED_PWM_now(json_LED_PWM);  //     Turn on the lights
           sprintf(s, "{\"TABATA_WARN\":%d}\r\n", json_tabata_warn_on);
           output_to_all(s);
@@ -737,7 +737,7 @@ static long tabata
           set_LED_PWM_now(json_LED_PWM);
           }
         }
-        if (millis() >= time_end)         // Don't do anything unless the time expires
+        if (sys_time() >= time_end)         // Don't do anything unless the time expires
         {
           time_end = millis() + (json_tabata_warn_off * ONE_SECOND);
           set_LED_PWM_now(0);             // Turn off the lights
@@ -748,10 +748,10 @@ static long tabata
         break;
       
     case (TABATA_DARK):                   // Dark time in seconds
-        if (millis() >= time_end)         // Don't do anything unless the time expires
+        if (sys_time() >= time_end)         // Don't do anything unless the time expires
         {
-          tabata_start = millis();
-          time_end = millis() + (json_tabata_on * ONE_SECOND);
+          tabata_start = sys_time();
+          time_end = tabata_start + (json_tabata_on * ONE_SECOND);
           set_LED_PWM_now(json_LED_PWM);           // Turn on the lights
           sprintf(s, "{\"TABATA_ON\":%d}\r\n", json_tabata_on);
           output_to_all(s);
@@ -760,9 +760,9 @@ static long tabata
         break;
       
     case (TABATA_ON):                     // Keep the LEDs on for the tabata time
-        if (millis() >= time_end)           // Don't do anything unless the time expires
+        if (sys_time() >= time_end)           // Don't do anything unless the time expires
         {
-          time_end = millis() + ((long)(json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off) * ONE_SECOND);
+          time_end = sys_time + ((long)(json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off) * ONE_SECOND);
           sprintf(s, "{\"TABATA_OFF\":%d}\r\n", (json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off));
           output_to_all(s);
           set_LED_PWM_now(0);             // Turn off the LEDs
@@ -800,9 +800,9 @@ unsigned long tabata_time(void)
 {
   if ( tabata_state == TABATA_ON )
   {
-    return millis()-tabata_start;                               // Bail out now
+    return sys_time()-tabata_start;                               // Bail out now
   }
-  return millis();
+  return sys_time;
 }
 
 
@@ -931,7 +931,7 @@ bool discard_shot(void)
         delay(json_rapid_wait * ONE_SECOND);
       }
     }
-    rapid_on = millis() + ((long)json_rapid_time * 1000L);        // Duration of the event in ms
+    rapid_on = sys_time() + ((long)json_rapid_time * 1000L);        // Duration of the event in ms
     rapid_count = json_rapid_count;                               // Number of expected shots
     shot_number = 1;
   }

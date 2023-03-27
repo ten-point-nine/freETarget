@@ -9,6 +9,7 @@
 
 #include "freETarget.h"
 #include "gpio.h"
+#include "token.h"            // Time provided by the token ring
 
 const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 
@@ -319,7 +320,7 @@ void self_test(uint16_t test)
   case T_SHOT:
     shot.x = 10;
     shot.y = 20;
-    shot.shot_time = millis()/100;
+    shot.shot_time = sys_time();
     shot.shot_number = 1;
     send_score(&shot);
     send_miss(&shot);
