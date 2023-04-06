@@ -769,6 +769,11 @@ void multifunction_switch(void)
      sw_state(HOLD2(json_multifunction));
      action &= ~2;
    }
+
+   if ( action == 0 )                     // Nothing needs our attention
+   {
+     return;
+   }
    
 /*
  * Delay for one second to detect a tap
