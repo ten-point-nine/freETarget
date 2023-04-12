@@ -873,7 +873,7 @@ static void sw_state
   
   char s[128];                          // Holding string 
 
-  if ( DLT(DLT_CRITICAL) )
+  if ( DLT(DLT_INFO) )
   {
     Serial.print(T("Switch action: ")); Serial.print(action);
   }

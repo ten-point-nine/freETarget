@@ -915,15 +915,19 @@ bool discard_shot(void)
     {      
       if  ( json_rapid_wait >= RANDOM_INTERVAL )                  // > Random Interval
       {
-        random_wait = random(5, json_rapid_wait % 100);           // Use bottom two digits for the time
-        sprintf(str, "\r\n{\"RAPID_WAIT\":%d}", random_wait);
-        output_to_all(str);
+        random_wait = random(5, json_rapid_wait % 100);           // Use bottom two digits for the time  
+        if ( DLT(DLT_APPLICATION) )
+        {
+          Serial.print(T("RAPID_RANDOM:")); Serial.print(random_wait);
+        }
         delay(random_wait * ONE_SECOND);
       }
       else
       {
-        sprintf(str, "\r\n{\"RAPID_WAIT\":%d}", json_rapid_wait);     // Use this time 
-        output_to_all(str);
+        if ( DLT(DLT_APPLICATION) )
+        {
+          Serial.print(T("RAPID_WAIT:")); Serial.print(random_wait);
+        }
         delay(json_rapid_wait * ONE_SECOND);
       }
     }
@@ -944,13 +948,12 @@ bool discard_shot(void)
   {
     if ( enable )
     {
-      Serial.print(T("Starting Rapid Fire.  Time: "));Serial.print(json_rapid_time);
+      Serial.print(T("RAPID_START: ")); Serial.print(json_rapid_time);
     }
     else
     {
-      Serial.print(T("Rapid Fire disabled"));
+      Serial.print(T("RAPID_END"));
     }
-  }
   
 /*
  * All done, return
