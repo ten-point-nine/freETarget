@@ -954,6 +954,7 @@ bool discard_shot(void)
     {
       Serial.print(T("RAPID_END"));
     }
+  }
   
 /*
  * All done, return
