@@ -62,6 +62,7 @@ namespace freETarget {
 
 
         private String logFile = "";
+        private String shotFile = "";
 
         /*
          *  UI related variables
@@ -198,6 +199,22 @@ namespace freETarget {
             if (Properties.Settings.Default.fileLogging) {
                 displayMessage("Log location: " + logFile, false);
             }
+
+            //init shotfile - last shot is logged in this file, with X,Y coordinates and calculated score plus decimalscore
+            if (!File.Exists(logDirectory + "Shot.log")) {
+                FileStream shot = null;
+                try {
+                    shot = File.Create(logDirectory + "Shot.log");
+                    shotFile = logDirectory + "Shot.log";
+                } catch (Exception ex) {
+                    Console.WriteLine(ex.Message);
+                    shotFile = null;
+                } finally {
+                    shot.Close();
+                }
+            } else {
+                shotFile = logDirectory + "Shot.log";
+            }
         }
 
         public void log(string s) {
@@ -205,15 +222,25 @@ namespace freETarget {
         }
 
         public void log(string s, string logFile) {
+            log(s, logFile, false);
+        }
+
+        public void log(string s, string logFile, bool truncate) {
             if (s == null || s == "" || logFile == null) {
                 return;
             }
+
+            FileMode mode = FileMode.Append;
+            if (truncate) {
+                mode = FileMode.Truncate;
+            } 
+
 
             if (Properties.Settings.Default.fileLogging) { //log enabled from settings
 
                 try {
                     //Opens a new file stream which allows asynchronous reading and writing
-                    using (StreamWriter sw = new StreamWriter(new FileStream(logFile, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))) {
+                    using (StreamWriter sw = new StreamWriter(new FileStream(logFile, mode, FileAccess.Write, FileShare.ReadWrite))) {
 
                         sw.WriteLine(DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff") + " | " + s.Trim());
 
@@ -336,6 +363,8 @@ namespace freETarget {
 
                             displayMessage(message + " ---- " + "Computed shot X:" + shot.getX() + " Y:" + shot.getY() + " R:" + shot.radius + " A:" + shot.angle, false);
                             displayShotData(shot);
+                            log("{\"shot\":" + shot.count + " \"x\":" + shot.getX().ToString(CultureInfo.InvariantCulture) + " \"y\":" + shot.getY().ToString(CultureInfo.InvariantCulture) + " \"score\":" + shot.score + " \"decimal\":" + shot.decimalScore.ToString(CultureInfo.InvariantCulture) + "}", shotFile, true);
+
                             VirtualRO vro = new VirtualRO(currentSession);
                             vro.speakShot(shot);
 
