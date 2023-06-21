@@ -169,8 +169,8 @@ namespace freETarget.targets {
             return pistolFirstRing;
         }
 
-        public override bool isRapidFire() {
-            return pistolRapidFire;
+        public override (decimal, decimal) rapidFireBarDimensions() {
+            return (-1, -1);
         }
 
         public override bool drawNorthText() {

@@ -57,7 +57,7 @@ namespace freETarget.targets {
 
         public abstract int getFirstRing();
 
-        public abstract bool isRapidFire();
+        public abstract (decimal, decimal) rapidFireBarDimensions();
 
         public abstract bool drawNorthText();
 
@@ -216,11 +216,13 @@ namespace freETarget.targets {
                 it.FillPolygon(brushBlue, points);
             }
 
-            if (isRapidFire()) {
+            if (rapidFireBarDimensions() != (-1,-1)) {
                 //for the RF target, draw 2 lines on left and right 125mm x 5mm
 
-                float bar_height = getDimension(dimension, 5, zoomFactor);
-                float bar_width = getDimension(dimension, 125, zoomFactor);
+                (decimal, decimal) barDimension = rapidFireBarDimensions();
+
+                float bar_height = getDimension(dimension, barDimension.Item1, zoomFactor);
+                float bar_width = getDimension(dimension, barDimension.Item2, zoomFactor);
 
                 float bar_y = dimension / 2 - bar_height / 2;
 

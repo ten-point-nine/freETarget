@@ -140,8 +140,8 @@ namespace freETarget.targets {
             return 1;
         }
 
-        public override bool isRapidFire() {
-            return false;
+        public override (decimal, decimal) rapidFireBarDimensions() {
+            return (-1, -1);
         }
 
         public override bool drawNorthText() {

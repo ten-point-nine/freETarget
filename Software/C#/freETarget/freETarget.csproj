@@ -131,6 +131,7 @@
     <Compile Include="targets\NSRA_25Y.cs" />
     <Compile Include="targets\Pistol25mRF.cs" />
     <Compile Include="targets\Pistol50m.cs" />
+    <Compile Include="targets\RapidFire10m.cs" />
     <Compile Include="targets\Rifle300m.cs" />
     <Compile Include="targets\Rifle50m.cs" />
     <Compile Include="targets\Running10m.cs" />

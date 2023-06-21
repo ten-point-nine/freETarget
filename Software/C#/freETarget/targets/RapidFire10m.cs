@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace freETarget.targets {
     [Serializable]
-    class Pistol25mRF : aTarget {
+    class RapidFire10m : aTarget {
+
 
         private decimal pelletCaliber;
-        private const decimal targetSize = 550; //mm
+        private const decimal targetSize = 170; //mm
         private const int pistolBlackRings = 5;
         private const bool solidInnerTenRing = false;
 
@@ -18,20 +19,20 @@ namespace freETarget.targets {
         private const int trkZoomVal = 1;
         private const decimal pdfZoomFactor = 1;
 
-        private const decimal outterRing = 500m; //mm
-        private const decimal ring6 = 420m; //mm
-        private const decimal ring7 = 340m; //mm
-        private const decimal ring8 = 260m; //mm
-        private const decimal ring9 = 180m; //mm
-        private const decimal ring10 = 100m; //mm
-        private const decimal innerRing = 50m; //mm
+        private const decimal outterRing = 154.5m; //mm
+        private const decimal ring6 = 128m; //mm
+        private const decimal ring7 = 101.5m; //mm
+        private const decimal ring8 = 75m; //mm
+        private const decimal ring9 = 48.5m; //mm
+        private const decimal ring10 = 22m; //mm
+        private const decimal innerRing = 11m; //mm
 
         private decimal innerTenRadiusPistol;
 
         private static readonly decimal[] ringsPistol = new decimal[] { outterRing, ring6, ring7, ring8, ring9, ring10, innerRing };
 
 
-        public Pistol25mRF(decimal caliber) : base(caliber) {
+        public RapidFire10m(decimal caliber) : base(caliber) {
             this.pelletCaliber = caliber;
             innerTenRadiusPistol = innerRing / 2m + pelletCaliber / 2m;
         }
@@ -51,7 +52,7 @@ namespace freETarget.targets {
             return ring10 / 2m + pelletCaliber / 2m;
         }
         public override string getName() {
-            return typeof(Pistol25mRF).FullName;
+            return typeof(RapidFire10m).FullName;
         }
 
         public override decimal getOutterRing() {
@@ -59,7 +60,7 @@ namespace freETarget.targets {
         }
 
         public override float getFontSize(float diff) {
-            return diff / 18f; 
+            return diff / 18f;
         }
 
         public override decimal getPDFZoomFactor(List<Shot> shotList) {
@@ -135,7 +136,7 @@ namespace freETarget.targets {
         }
 
         public override (decimal, decimal) rapidFireBarDimensions() {
-            return (5,125);
+            return (2,42);
         }
 
         public override bool drawNorthText() {
@@ -154,21 +155,17 @@ namespace freETarget.targets {
             return false;
         }
 
+
+
         public override decimal getScore(decimal radius) {
             decimal score = 0;
-            if (radius > get10Radius()) {
-                score = 10 - (radius - get10Radius()) / 40;
-            } else {
-                score =  11 - (radius / get10Radius());
-            }
-
+            score = 11 - (radius / get10Radius());
             if(score > 5.0m) {
                 return score;
             } else {
                 return 0;
             }
         }
-
 
     }
 }
