@@ -891,7 +891,9 @@ namespace freETarget {
         private void frmMainWindow_Shown(object sender, EventArgs e) {
             displayDebugConsole(Properties.Settings.Default.displayDebugConsole);
 
-            splitContainer.SplitterDistance = splitContainer.Panel1.Height;
+            if (splitContainer != null && splitContainer.Panel1 != null) {
+                splitContainer.SplitterDistance = splitContainer.Panel1.Height;
+            }
 
             trkZoom.Focus();
         }

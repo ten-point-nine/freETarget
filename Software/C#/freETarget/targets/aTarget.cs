@@ -139,51 +139,62 @@ namespace freETarget.targets {
                         format.Alignment = StringAlignment.Center;
 
                         if (r <= 10) {
-                            float nextCircle = getDimension(dimension, rings[i + 1], zoomFactor);
-                            float diff = circle - nextCircle;
-                            float fontSize = getFontSize(diff);
-                            Font f = new Font("Arial", fontSize);
-
-
-
-                            if (drawNorthText()) {
+                            if (i + 1 == rings.Length) {
+                                //center 10 ring with no inner X
+                                float fontSize = getFontSize(0);
+                                Font f = new Font("Arial", fontSize);
                                 it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
                                 it.RotateTransform(getTextRotation());
-                                it.TranslateTransform(0, -(dimension / 2) + x + (diff / 4) - getTextOffset(diff, r)); //move coordinates at the exact center point of the text
                                 it.DrawString(txt, f, bText, 0, 0, format);
                                 it.ResetTransform();
-                            }
+                            } else {
+                                float nextCircle = getDimension(dimension, rings[i + 1], zoomFactor);
+                                float diff = circle - nextCircle;
+                                float fontSize = getFontSize(diff);
 
-                            if (drawSouthText()) {
-                                it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
-                                it.RotateTransform(getTextRotation());
-                                it.TranslateTransform(0, (dimension / 2) - x - (diff / 4) + getTextOffset(diff, r));
-                                if (getTextRotation() > 0) {
-                                    it.RotateTransform(180);
+                                Font f = new Font("Arial", fontSize);
+
+
+
+                                if (drawNorthText()) {
+                                    it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
+                                    it.RotateTransform(getTextRotation());
+                                    it.TranslateTransform(0, -(dimension / 2) + x + (diff / 4) - getTextOffset(diff, r)); //move coordinates at the exact center point of the text
+                                    it.DrawString(txt, f, bText, 0, 0, format);
+                                    it.ResetTransform();
                                 }
-                                it.DrawString(txt, f, bText, 0, 0, format);
-                                it.ResetTransform();
-                            }
 
-                            if (drawEastText()) {
-                                it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
-                                it.RotateTransform(getTextRotation());
-                                it.TranslateTransform(-(dimension / 2) + y - (diff / 4) + getTextOffset(diff, r), 0);
-                                if (getTextRotation() > 0) {
-                                    it.RotateTransform(90);
+                                if (drawSouthText()) {
+                                    it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
+                                    it.RotateTransform(getTextRotation());
+                                    it.TranslateTransform(0, (dimension / 2) - x - (diff / 4) + getTextOffset(diff, r));
+                                    if (getTextRotation() > 0) {
+                                        it.RotateTransform(180);
+                                    }
+                                    it.DrawString(txt, f, bText, 0, 0, format);
+                                    it.ResetTransform();
                                 }
-                                it.DrawString(txt, f, bText, 0, 0, format);
-                                it.ResetTransform();
-                            }
-                            if (drawWestText()) {
-                                it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
-                                it.RotateTransform(getTextRotation());
-                                it.TranslateTransform((dimension / 2) - y + (diff / 4) - getTextOffset(diff, r), 0);
-                                if (getTextRotation() > 0) {
-                                    it.RotateTransform(270);
+
+                                if (drawEastText()) {
+                                    it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
+                                    it.RotateTransform(getTextRotation());
+                                    it.TranslateTransform(-(dimension / 2) + y - (diff / 4) + getTextOffset(diff, r), 0);
+                                    if (getTextRotation() > 0) {
+                                        it.RotateTransform(90);
+                                    }
+                                    it.DrawString(txt, f, bText, 0, 0, format);
+                                    it.ResetTransform();
                                 }
-                                it.DrawString(txt, f, bText, 0, 0, format);
-                                it.ResetTransform();
+                                if (drawWestText()) {
+                                    it.TranslateTransform(dimension / 2, dimension / 2); //set coordinates in the middle of the target
+                                    it.RotateTransform(getTextRotation());
+                                    it.TranslateTransform((dimension / 2) - y + (diff / 4) - getTextOffset(diff, r), 0);
+                                    if (getTextRotation() > 0) {
+                                        it.RotateTransform(270);
+                                    }
+                                    it.DrawString(txt, f, bText, 0, 0, format);
+                                    it.ResetTransform();
+                                }
                             }
                         } else {
                             //r = 11

@@ -124,6 +124,8 @@
     <Compile Include="PDFGenerator.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="StorageController.cs" />
+    <Compile Include="targets\B2at10m.cs" />
+    <Compile Include="targets\B3at10m.cs" />
     <Compile Include="targets\AirPistol.cs" />
     <Compile Include="targets\AirRifle.cs" />
     <Compile Include="targets\aTarget.cs" />
