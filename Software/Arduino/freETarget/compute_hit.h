@@ -17,32 +17,33 @@
 /*
  *  Local Structures
  */
-struct sensor
+typedef struct sensor_t
 {
   unsigned int index;   // Which sensor is this one
   bool   is_valid;      // TRUE if the sensor contains a valid time
   double angle_A;       // Angle to be computed
   double diagonal;      // Diagonal angle to next sensor (45')
-  double x;             // Sensor Location (X us)
-  double y;             // Sensor Location (Y us)
-  double count;         // Working timer value
+  double x_tick;        // Sensor Location (X in clock ticks)
+  double y_tick;        // Sensor Location (Y in clock ticks)
+  double xr_tick;       // Sensor Location after rotation (X in clock ticks)
+  double yr_tick;       // Sensor Location after rotation (Y in clock ticks)
+  double xphys_mm;      // Physical Sensor location X (in mm)
+  double yphys_mm;      // Pyysical sensor location Y (in mm)
+  double count;         // Working timer value as read from counter
+  double doppler;       // Correction for doppler
   double a, b, c;       // Working dimensions
-  double xs;            // Computed X shot value
-  double ys;            // Computed Y shot value
-};
-
-typedef struct sensor sensor_t;
-
-
+  double xshot_mm;      // Computed X shot value (in mm)
+  double yshot_mm;      // Computed Y shot value (in mm)
+} sensor_t;
 
 /*
  *  Public Funcitons
  */
 void init_sensors(void);                                      // Initialize sensor structure
-unsigned int compute_hit(shot_record_t* shot, bool test_mode);// Find the location of the shot
+unsigned int compute_hit(shot_record_t* shot);                // Find the location of the shot
 void send_score(shot_record_t* shot);                         // Send the shot
 void rotate_hit(unsigned int location, shot_record_t* shot);  // Rotate the shot back into the correct quadrant 
-bool find_xy_3D(sensor_t* s, double estimate, double z_offset_clock);  // Estimated position including slant range
+bool find_xy_3D(sensor_t* sensor, double estimate, double z_offset_clock);  // Estimated position including slant range
 void send_timer(int sensor_status);                           // Show debugging information 
 void send_miss(shot_record_t* shot);                          // Send a miss message
 double speed_of_sound(double temperature, int relative_humidity); // Speed of sound in mm/us

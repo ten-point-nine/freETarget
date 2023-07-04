@@ -32,6 +32,9 @@
 #define T_LOG         21       // Log the shot levels
 #define T_SWITCH      25       // Test the switches
 #define T_S_OF_SOUND  26       // Test Speed of Sound algorithm
+#define T_TOKEN       27       // Token Ring Test
+#define T_LED_CYCLE   28       // Blink the 3 LEDs
+#define T_FORCE_CALC  29       // Force Calculations
 
 /*
  * LED status messages

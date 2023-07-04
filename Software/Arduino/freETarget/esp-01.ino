@@ -1,8 +1,8 @@
 /*----------------------------------------------------------------
  *
- * esp-01.ino
+ * esp01.ino
  *
- * WiFi Driver for ESP-01
+ * WiFi Driver for esp01
  * 
  *-----------------------------------------------------------------
  *
@@ -17,7 +17,7 @@
  * to the name of the target, ex FET-WODEN.  This helps to link up 
  * the WiFI to the target.
  * 
- * Each ESP-01 is a server so that the PC connects to it over 
+ * Each esp01 is a server so that the PC connects to it over 
  * IP address 192.168.10.9:1090
  * 
  * Unfortunatly as a server, each ESP expects to see more than one
@@ -29,13 +29,15 @@
  * port, parses the input and saves only the message to a 
  * circular buffer that is used later on by the application.
  * 
- * On output, the function esp01_send tells the ESP-01 to expect a 
+ * On output, the function esp01_send tells the esp01 to expect a 
  * very long null-terminated message.  The regular Serial.send()
  * messages are then used to send the body of the message and at 
  * the end esp01_send() inserts the null and kicks off the 
  * transmission.
  * 
  *---------------------------------------------------------------*/
+#include "json.h"
+#include "token.h"
 
 /*
  * Function Prototypes
@@ -46,7 +48,10 @@ static void esp01_flush(void);          // Flush any pending messages
 /*
  * Local Variables
  */
+static volatile unsigned long wdt_tick; // Watchdog timer tick
 static bool esp01_present = false;      // TRUE if the esp 01 is installed
+static bool esp01_known = false;        // The state of the ESP is not known
+static bool esp01_first = true;         // Start the first time through
 
 static char esp01_in_queue[32];         // Place to store incoming characters
 static int  esp01_in_ptr;               // Queue in pointer
@@ -58,9 +63,9 @@ static bool esp01_connect[esp01_N_CONNECT]; // Set to true when a client (0-3) c
  *
  * function: void esp01_init
  *
- * brief: Initialize the ESP-01
+ * brief: Initialize the esp01
  * 
- * return: esp_present - set to TRUE if an ESP-01 is on the board
+ * return: esp_present - set to TRUE if an esp01 is on the board
  *
  *----------------------------------------------------------------
  *   
@@ -94,43 +99,59 @@ static bool esp01_connect[esp01_N_CONNECT]; // Set to true when a client (0-3) c
  *--------------------------------------------------------------*/
 void esp01_init(void)
 {  
-  if ( DLT(DLT_DIAG) )
+  if ( DLT(DLT_CRITICAL) ) 
   {
-    Serial.print(T("Initializing ESP-01 - Waiting for Power Up"));
+    Serial.print(T("esp01_init()"));
   }
   
+  timer_new(&wdt_tick, 0);                    // Setup the timers in-case it is needed for diagnostics later
+  
+  if ( json_token != TOKEN_WIFI )             // The connector is used for token ring
+  {
+    if ( DLT(DLT_CRITICAL) ) 
+    {
+      Serial.print(T("In Token Ring mode. esp01 not available"));
+    }
+    return;
+  }
+  
+  esp01_first = true;                         // First time through
+  esp01_known = true;                         // Assume that one exists
   esp01_reset();
   esp01_flush();
   
 /*
- * Determine if the ESP-01 is attached to the Accessory Connector
+ * Determine if the esp01 is attached to the Accessory Connector
  */
   if (esp01_is_present() == false )
   {
-    if ( DLT(INIT_TRACE) ) 
+    if ( DLT(DLT_CRITICAL) ) 
     {
-      Serial.print(T("ESP-01: Not Found"));
+      Serial.print(T("esp01: Not Found"));
     }
     return;                                     // No hardware installed, nothing to do
   }
-  if ( DLT(DLT_DIAG) )
-  {
-    Serial.print(T("ESP-01 Present"));
-  }
 
+  if ( DLT(DLT_CRITICAL) )
+  {
+    Serial.print(T("esp01: Present"));
+  }
+  
+  json_token == TOKEN_WIFI;                     // If WiFi is present, then the TOKEN ring is disabled
+  
 /*
- * There is an ESP-01 on the freETarget.  We need to program it
+ * There is an esp01 on the freETarget.  We need to program it
  */
-  WIFI_SERIAL.print(T("ATE0\r\n"));                   // Turn off echo (don't use it)
-  if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(INIT_TRACE) )
+  AUX_SERIAL.print(T("ATE0\r\n"));                   // Turn off echo (don't use it)
+  if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("ESP-01: Failed ATE0"));
+    Serial.print(T("esp01: Failed ATE0"));
   }
 
-  WIFI_SERIAL.print(T("AT+RFPOWER=80\r\n"));          // Set max power
-  if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(INIT_TRACE))
+  AUX_SERIAL.print(T("AT+RFPOWER=80\r\n"));          // Set max power
+  if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(DLT_CRITICAL))
   {
-    Serial.print(T("ESP-01: Failed AT+RFPOWER=80"));  
+    Serial.print(T("esp01: Failed AT+RFPOWER=80"));  
   } 
 
   esp01_flush();
@@ -139,60 +160,61 @@ void esp01_init(void)
  */
   if ( *json_wifi_ssid == 0 )                           // If the SSID is empty, then we are an SSID and a DHCP server and our IP address is 192.168.10.9
   {                                                     // ******************************
-    if ( DLT(INIT_TRACE) )
+    if ( DLT(DLT_CRITICAL) )
     {
-      Serial.print(T("ESP-01: Configuring as an SSID"));
+      Serial.print(T("esp01: Configuring as an SSID"));
     }
       
-    WIFI_SERIAL.print(T("AT+CWMODE_DEF=2\r\n"));        // We want to be a soft access point
-    if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(INIT_TRACE) )
+    AUX_SERIAL.print(T("AT+CWMODE_DEF=2\r\n"));        // We want to be a soft access point
+    if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(DLT_CRITICAL) )
     {
-      Serial.print(T("ESP-01: Failed AT+CWMODE_DEF=2"));
+      Serial.print(T("esp01: Failed AT+CWMODE_DEF=2"));
     }
     
-    WIFI_SERIAL.print(T("AT+CWSAP_DEF=\"FET-")); WIFI_SERIAL.print(names[json_name_id]); WIFI_SERIAL.print(T("\",\"NA\",")); WIFI_SERIAL.print(json_wifi_channel); WIFI_SERIAL.print(T(",0\r\n"));
-    if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(INIT_TRACE) )
+    AUX_SERIAL.print(T("AT+CWSAP_DEF=\"FET-")); AUX_SERIAL.print(namesensor[json_name_id]); AUX_SERIAL.print(T("\",\"NA\",")); AUX_SERIAL.print(json_wifi_channel); AUX_SERIAL.print(T(",0\r\n"));
+    if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(DLT_CRITICAL) )
     {
-      Serial.print(T("ESP-01: Failed AT+CWSAP_DEF=\"FET-")); Serial.print(names[json_name_id]); Serial.print(T("\",\"NA\",")); Serial.print(json_wifi_channel); Serial.print(T(",0\r\n"));
+      Serial.print(T("esp01: Failed AT+CWSAP_DEF=\"FET-")); Serial.print(namesensor[json_name_id]); Serial.print(T("\",\"NA\",")); Serial.print(json_wifi_channel); Serial.print(T(",0\r\n"));
     }  
+    
+    AUX_SERIAL.print(T("AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\"\r\n")); // Set the freETarget IP to 192.168.10.9
+    if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(DLT_CRITICAL) )
+    {
+      Serial.print(T("\r\nesp01: Failed AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\""));
+    }
+      
+    AUX_SERIAL.print(T("AT+CWDHCP_DEF=0,1\r\n"));      // DHCP turned on
+    if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false ) && DLT(DLT_CRITICAL) )
+    {
+      Serial.print(T("esp01: Failed AT+CWDHCP_DEF=0,1"));
+    }
 
-    WIFI_SERIAL.print(T("AT+CWDHCP_DEF=0,1\r\n"));      // DHCP turned on
-    if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false ) && DLT(INIT_TRACE) )
-    {
-      Serial.print(T("ESP-01: Failed AT+CWDHCP_DEF=0,1"));
-    }
-  
-    WIFI_SERIAL.print(T("AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\"\r\n")); // Set the freETarget IP to 192.168.10.9
-    if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(INIT_TRACE) )
-    {
-      Serial.print(T("\r\nESP-01: Failed AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\""));
-    }
   }                                                     // ******************************
   else                                                  // Connect to an SSID, let it define the DHCP if needed
   {
-    if ( DLT(INIT_TRACE) )
+    if ( DLT(DLT_CRITICAL) )
     {
-      Serial.print(T("ESP-01: Connecting to an access point: ")); Serial.print(json_wifi_ssid); Serial.print(T(",")); Serial.print(json_wifi_pwd);
+      Serial.print(T("esp01: Connecting to an access point: ")); Serial.print(json_wifi_ssid); Serial.print(T(",")); Serial.print(json_wifi_pwd);
     }
     
-    WIFI_SERIAL.print(T("AT+CWQAP\r\n"));        // Disconnect
-    if ( (esp01_waitOK(1,esp01_MAX_WAITOK) == false) && DLT(INIT_TRACE) )
+    AUX_SERIAL.print(T("AT+CWQAP\r\n"));        // Disconnect
+    if ( (esp01_waitOK(1,esp01_MAX_WAITOK) == false) && DLT(DLT_CRITICAL) )
     {
-      Serial.print(T("ESP-01: Failed AT+CWQAP"));
+      Serial.print(T("esp01: Failed AT+CWQAP"));
     } 
     
-    WIFI_SERIAL.print(T("AT+CWMODE_DEF=1\r\n"));        // We want to be an in Station Mode
-    if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(INIT_TRACE) )
+    AUX_SERIAL.print(T("AT+CWMODE_DEF=1\r\n"));        // We want to be an in Station Mode
+    if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(DLT_CRITICAL) )
     {
-      Serial.print(T("ESP-01: Failed AT+CWMODE_DEF=1"));
+      Serial.print(T("esp01: Failed AT+CWMODE_DEF=1"));
     }
     
-    WIFI_SERIAL.print(T("AT+CWJAP_DEF=\"")); WIFI_SERIAL.print(json_wifi_ssid); WIFI_SERIAL.print(T("\",\"")); WIFI_SERIAL.print(json_wifi_pwd); WIFI_SERIAL.print(T("\""));
+    AUX_SERIAL.print(T("AT+CWJAP_DEF=\"")); AUX_SERIAL.print(json_wifi_ssid); AUX_SERIAL.print(T("\",\"")); AUX_SERIAL.print(json_wifi_pwd); AUX_SERIAL.print(T("\""));
     if ( (esp01_waitOK(1, esp01_MAX_WAITOK*10) == false) )               // Didn't connect to the SSID Try again
     { 
-      if ( DLT(INIT_TRACE))
+      if ( DLT(DLT_CRITICAL))
       {
-        Serial.print(T("ESP-01: Failed AT+CWJAP_DEF=\"")); Serial.print(json_wifi_ssid); Serial.print(T("\",\"")); Serial.print(json_wifi_pwd); Serial.print(T("\""));
+        Serial.print(T("esp01: Failed AT+CWJAP_DEF=\"")); Serial.print(json_wifi_ssid); Serial.print(T("\",\"")); Serial.print(json_wifi_pwd); Serial.print(T("\""));
       }
     }
   }
@@ -201,36 +223,36 @@ void esp01_init(void)
  * Other operating settings
  */
 /*
-  WIFI_SERIAL.print(T("AT+CIPMODE=0\r\n"));           // Normal Transmission Mode
-  if ( (esp01_waitOK(1,esp01_MAX_WAITOK) == false ) && DLT(INIT_TRACE) )
+  AUX_SERIAL.print(T("AT+CIPMODE=0\r\n"));           // Normal Transmission Mode
+  if ( (esp01_waitOK(1,esp01_MAX_WAITOK) == false ) && DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("ESP-01: Failed AT+CIPMODE=0"));
+    Serial.print(T("esp01: Failed AT+CIPMODE=0"));
   }
 */  
-  WIFI_SERIAL.print(T("AT+CIPMUX=1\r\n"));           // Allow multiple connections
-  if ( (esp01_waitOK(0,esp01_MAX_WAITOK * 10) == false ) && DLT(INIT_TRACE) )
+  AUX_SERIAL.print(T("AT+CIPMUX=1\r\n"));           // Allow multiple connections
+  if ( (esp01_waitOK(0,esp01_MAX_WAITOK * 10) == false ) && DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("ESP-01: Failed AT+CIPMUX=1"));
+    Serial.print(T("esp01: Failed AT+CIPMUX=1"));
   }
 
-  WIFI_SERIAL.print(T("AT+CIPSERVER=1,1090\r\n"));   // Turn on the server and listen on port 1090
-  if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false ) && DLT(INIT_TRACE) )
+  AUX_SERIAL.print(T("AT+CIPSERVER=1,1090\r\n"));   // Turn on the server and listen on port 1090
+  if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false ) && DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("ESP-01: Failed AT+CIPSERVER=1,1090"));
+    Serial.print(T("esp01: Failed AT+CIPSERVER=1,1090"));
   }
   
-  WIFI_SERIAL.print(T("AT+CIPSTO=7000\r\n"));        // Set the server time out
-  if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false ) && DLT(INIT_TRACE) )
+  AUX_SERIAL.print(T("AT+CIPSTO=7000\r\n"));        // Set the server time out
+  if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false ) && DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("ESP-01: Failed AT+CIPSTO=7000"));
+    Serial.print(T("esp01: Failed AT+CIPSTO=7000"));
   }
   
 /*
  * All done, return
  */
-  if ( DLT(INIT_TRACE) )
+  if ( DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("ESP-01: Initialization complete"));
+    Serial.print(T("esp01: Initialization complete"));
   }
 
   return;
@@ -256,20 +278,26 @@ static bool esp01_reset(void)
 {
   unsigned int i;
 
-  if ( DLT(INIT_TRACE) )
+  if ( json_token != TOKEN_WIFI )
   {
-    Serial.print(T("ESP-01: Resetting ESP-01"));
+    return false;
   }
 
+  if ( DLT(DLT_CRITICAL) )
+  {
+    Serial.print(T("esp01: Resetting esp01"));
+  }
+  
 /*
  * Send out the break then restart the module
  */
-  WIFI_SERIAL.print(T("+++"));
+  esp01_flush();
+  AUX_SERIAL.print(T("+++"));
   delay(ONE_SECOND);
-  WIFI_SERIAL.print(T("AT+RST\r\n"));
-  if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(INIT_TRACE) )
+  AUX_SERIAL.print(T("AT+RST\r\n"));
+  if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("ESP-01: Failed to reset ESP-01"));
+    Serial.print(T("esp01: Failed to reset esp01"));
     return false;
   }
 
@@ -295,7 +323,7 @@ static bool esp01_reset(void)
  *
  * function: bool esp01_is_present
  *
- * brief:    Determines if an ESP-01 is installed
+ * brief:    Determines if an esp01 is installed
  * 
  * return:   TRUE if the ESO-01 is installed
  *
@@ -309,9 +337,13 @@ static bool esp01_reset(void)
  * do anything with the AT command
  *   
  *--------------------------------------------------------------*/
+
 bool esp01_is_present(void)
 {
-  static bool esp01_first = true;    // Remember if we have results
+  if ( esp01_known == false )             // The ESP is known not to exist
+  {
+    return 0;                             // Say it is not present
+  }
   
 /*
  * If the function has been exectued once, return the old results 
@@ -322,19 +354,19 @@ bool esp01_is_present(void)
   }
 
 /*
- * Determine if the ESP-01 is attached to the Accessory Connector
+ * Determine if the esp01 is attached to the Accessory Connector
  */
-  esp01_present = false;                  // Assume that the ESP-01 is not installed
+  esp01_present = false;                  // Assume that the esp01 is not installed
   
   esp01_flush();                          // Eat any garbage that might be on the port
 
-  WIFI_SERIAL.print(T("+++"));
+  AUX_SERIAL.print(T("+++"));
   delay(ONE_SECOND);
-  WIFI_SERIAL.print(T("AT\r\n"));            // Send out an AT command to the port
+  AUX_SERIAL.print(T("AT\r\n"));            // Send out an AT command to the port
   esp01_present = esp01_waitOK(0,esp01_MAX_WAITOK);         // and wait for the OK to come back
 
 /*
- * All done, return the esp-01 present state
+ * All done, return the esp01 present state
  */
   esp01_first = false;                   // Done it once.
   return esp01_present;
@@ -361,59 +393,62 @@ bool esp01_is_present(void)
  *--------------------------------------------------------------*/
 void esp01_echo(void)
 {
-   char ch;                                // Character read from ESP-01
-  long unsigned int start;                // Start time
-
-  start = millis();
-  while ( (millis() - start) < esp01_MAX_WAITOK )
+  char ch;                                  // Character read from esp01
+  
+  timer_new(&wdt_tick, esp01_MAX_WAITOK);
+ 
+  while ( wdt_tick )
   {
-    if ( WIFI_SERIAL.available() != 0 ) 
+    delay(1);
+    if ( aux_spool_available() != 0 ) 
     {
-      ch = WIFI_SERIAL.read();
+      ch = aux_spool_read();
       Serial.print(ch);
-      start = millis();
+      wdt_tick = esp01_MAX_WAITOK;
     }
   }
+
   return;
 }
 
 void esp01_test(void)
 {
-
+  timer_new(&wdt_tick, 0);                // Setup the timers in-case it is needed for diagnostics later
+  
   esp01_flush();                          // Eat any garbage that might be on the port
 
   if ( esp01_is_present() == false )
   {
-    Serial.print(T("\n\rESP-01 not present. Continuing test anyway")); 
+    Serial.print(T("\n\resp01 not present. Continuing test anyway")); 
   }
 
 /*
  * Send out status commands
  */
  
-  Serial.print(T("\n\rResetting ESP-01\n\r"));
-  WIFI_SERIAL.print(T("+++"));
-  delay(ONE_SECOND);
-  WIFI_SERIAL.print(T("AT+RST\r\n"));
+  Serial.print(T("\n\rResetting esp01\n\r"));
+  AUX_SERIAL.print(T("+++"));
+  delay(ONE_SECOND * 1.1);
+  AUX_SERIAL.print(T("AT+RST\r\n"));
   esp01_echo();
     
   Serial.print(T("\r\nSoftware Version\r\n"));
-  WIFI_SERIAL.print(T("AT+GMR\r\n"));         // Send out an AT command to the port
+  AUX_SERIAL.print(T("AT+GMR\r\n"));         // Send out an AT command to the port
   esp01_echo();
 
   Serial.print(T("\r\nList of SSIDs\r\n"));
-  WIFI_SERIAL.print(T("AT+CWLAP\r\n"));       // Send out an AT command to the port
+  AUX_SERIAL.print(T("AT+CWLAP\r\n"));       // Send out an AT command to the port
   esp01_echo();
     
 /*
  * Initialize the WiFi if available
  */
    set_LED('*', '*', '.');                 // Hello World
-   Serial.print(T("\r\nReinitializing ESP-01\r\n")); 
+   Serial.print(T("\r\nReinitializing esp01\r\n")); 
    esp01_init();                           // Prepare the WiFi channel if installed
    
 /*
- * All done, return the esp-01 present state
+ * All done, return the esp01 present state
  */
   Serial.print(T("\r\nTest Over"));
   return;
@@ -442,8 +477,7 @@ static char* status_list[] = {"CWMODE_DEF",  "CWSAP_DEF", "CWJAP_DEF",
 
 void esp01_status(void)
 {
-  char ch;                                // Character read from ESP-01
-  long unsigned int start;                // Start time
+  char ch;                                // Character read from esp01
   unsigned int i;
   char str[32];
   
@@ -452,18 +486,18 @@ void esp01_status(void)
  */
   Serial.print(T("\n\resp01_status\r\n"));
 
-  WIFI_SERIAL.print(T("+++"));
+  AUX_SERIAL.print(T("+++"));
   delay(ONE_SECOND + ONE_SECOND/10);
-  WIFI_SERIAL.print(T("AT+CIPSTATUS\r\n"));
+  AUX_SERIAL.print(T("AT+CIPSTATUS\r\n"));
 
-  start = millis();
-  while ( (millis() - start) < esp01_MAX_WAITOK )
+  timer_new(&wdt_tick, esp01_MAX_WAITOK);
+  while ( wdt_tick  )
   {
-    if ( WIFI_SERIAL.available() != 0 ) 
+    if ( aux_spool_available() != 0 ) 
     {
-      ch = WIFI_SERIAL.read();                  // Echo what comes back
+      ch = aux_spool_read();                  // Echo what comes back
       Serial.print(ch);
-      start = millis();
+      wdt_tick = esp01_MAX_WAITOK;
     }
   }
 
@@ -474,15 +508,16 @@ void esp01_status(void)
   while (status_list[i] != 0)
   {
     Serial.print(T("\r\nStatus: ")); Serial.print(status_list[i]); Serial.print(T("\r\n"));
-    WIFI_SERIAL.print(T("AT+")); WIFI_SERIAL.print(status_list[i]); WIFI_SERIAL.print(T("?\r\n"));
-    start = millis();
-    while ( (millis() - start) < esp01_MAX_WAITOK )
+    AUX_SERIAL.print(T("AT+")); AUX_SERIAL.print(status_list[i]); AUX_SERIAL.print(T("?\r\n"));
+    timer_new(&wdt_tick, esp01_MAX_WAITOK);
+    
+    while ( wdt_tick )
     {
-      if ( WIFI_SERIAL.available() != 0 ) 
+      if ( aux_spool_available() != 0 ) 
       {
-        ch = WIFI_SERIAL.read();                  // Echo what comes back
+        ch = aux_spool_read();                  // Echo what comes back
         Serial.print(ch);
-        start = millis();
+        wdt_tick = esp01_MAX_WAITOK;
       }
     }
     i++;
@@ -495,25 +530,25 @@ void esp01_status(void)
 
   for (i=0; i != esp01_N_CONNECT; i++)
   {
-    WIFI_SERIAL.print(T("+++"));
+    AUX_SERIAL.print(T("+++"));
     delay(ONE_SECOND + ONE_SECOND/10);
     sprintf(str, "AT+PING=\"192.168.10.%d\"\r\n", i);
-    WIFI_SERIAL.print(str);
+    AUX_SERIAL.print(str);
     Serial.print(str);
-    start = millis();
-    while ( (millis() - start) < esp01_MAX_WAITOK )
+    wdt_tick = esp01_MAX_WAITOK;
+    while ( wdt_tick )
     {
-      if ( WIFI_SERIAL.available() != 0 ) 
+      if ( aux_spool_available() != 0 ) 
       {
-        ch = WIFI_SERIAL.read();
+        ch = aux_spool_read();
         Serial.print(ch);
-        start = millis();
+        wdt_tick = esp01_MAX_WAITOK;
       }
     }
   }
   
 /*
- * All done, return the esp-01 present state
+ * All done, return the esp01 present state
  */
   Serial.print(T("\r\nDone\r\n"));
   return;
@@ -545,7 +580,6 @@ void esp01_myIP
   char* return_value          // Place to return the results
   )
 {
-  unsigned long start;
   char ch;
   unsigned int myIP_state;
 
@@ -553,21 +587,22 @@ void esp01_myIP
   
   if ( *json_wifi_ssid == 0 )
   {
-    WIFI_SERIAL.print(T("AT+CIPAP_CUR?\r\n"));        // Request the IP address
+    AUX_SERIAL.print(T("AT+CIPAP_CUR?\r\n"));        // Request the IP address
   }
   else
   {
-    WIFI_SERIAL.print(T("AT+CIPSTA_CUR?\r\n"));       // Request the IP address
+    AUX_SERIAL.print(T("AT+CIPSTA_CUR?\r\n"));       // Request the IP address
   }
 
   myIP_state = myIP_IDLE;
   
-  start = millis();
-  while ( (millis() - start) < esp01_MAX_WAITOK )
+  timer_new(&wdt_tick, esp01_MAX_WAITOK);
+  
+  while ( wdt_tick )
   {
-    if ( WIFI_SERIAL.available() != 0 ) 
+    if ( aux_spool_available() != 0 ) 
     {
-      ch = WIFI_SERIAL.read();                      // Echo what comes back
+      ch = aux_spool_read();                      // Echo what comes back
 
       switch (myIP_state)
       {
@@ -576,7 +611,7 @@ void esp01_myIP
           {
             myIP_state = myIP_QUOTE1;
           }
-          start = millis();
+          wdt_tick = esp01_MAX_WAITOK;
           break;
           
       case myIP_QUOTE1:                             // Accumulate the IP addres
@@ -587,7 +622,7 @@ void esp01_myIP
           *return_value = ch;
           return_value++;
           *return_value = 0;
-          start = millis();
+           wdt_tick = esp01_MAX_WAITOK;
           break;
 
      case myIP_QUOTE2: 
@@ -595,6 +630,7 @@ void esp01_myIP
       }
     }
   }
+  
 /*
  * All done, return
  */
@@ -617,9 +653,9 @@ void esp01_myIP
 
  static void esp01_flush(void)
  {
-   while ( WIFI_SERIAL.available() != 0 ) 
+   while ( aux_spool_available() != 0 ) 
    {
-    WIFI_SERIAL.read();
+    aux_spool_read();
    }
 
  /*
@@ -672,8 +708,6 @@ static bool esp01_waitOK
   unsigned int i;
   long         start;                   // Timer start
   
-  start = millis();                     // Remember the starting time
-  
   i = 0;                                // Clear the indexes
   while (wait_message[i].ptr != 0 )
   {
@@ -689,13 +723,15 @@ static bool esp01_waitOK
 /*
  * Loop for a second and see if OK comes back
  */
-  while ( (millis() - start) < wait_time )
+  timer_new(&wdt_tick, wait_time);
+  
+  while ( wdt_tick )
   {
-    if ( WIFI_SERIAL.available() != 0 ) 
+    if ( aux_spool_available() != 0 ) 
     {
-      start = millis();                   // Reset the timeout
-      ch = WIFI_SERIAL.read();
-      if ( (trace_on != 0) || (is_trace >= DLT_DIAG) )
+      wdt_tick = wait_time;
+      ch = aux_spool_read();
+      if ( DLT(DLT_DIAG) )
       {
         Serial.print(ch);
       }
@@ -737,7 +773,7 @@ static bool esp01_waitOK
  *
  *----------------------------------------------------------------
  *   
- *   The function checks to see if an ESP-01 is attached to the
+ *   The function checks to see if an esp01 is attached to the
  *   board.  
  *   
  *   Not attached - Perform regular WIFI_SERIAL.read()
@@ -754,11 +790,12 @@ char esp01_read(void)
  */
   if ( esp01_is_present() == false )
   {
-    return WIFI_SERIAL.read();           // Just do a regular read from the aux port
+    ch = aux_spool_read();
+    return ch;                          // Just do a regular read from the aux port
   }
 
 /*  
- *   We have an ESP-01 attached,  Get the character from the queue
+ *   We have an esp01 attached,  Get the character from the queue
  */
   if ( esp01_in_ptr == esp01_out_ptr )  // Is the queue empty?
   {
@@ -778,7 +815,7 @@ char esp01_read(void)
 
 /*----------------------------------------------------------------
  *
- * function: unsigned int esp01_available()
+ * function: unsigned int esp01_available_all)
  *
  * brief:    Determine ihow many characters are available
  * 
@@ -786,10 +823,10 @@ char esp01_read(void)
  *
  *----------------------------------------------------------------
  *   
- *   The function checks to see if an ESP-01 is attached to the
+ *   The function checks to see if an esp01 is attached to the
  *   board.  
  *   
- *   Not attached - Perform regular WIFI_SERIAL.gavailable()
+ *   Not attached - Perform regular WIFI_SERIAL.gavailable_all)
  *   Attached     - Return the queue size
  *   
  *--------------------------------------------------------------*/
@@ -803,11 +840,11 @@ unsigned int esp01_available(void)
  */
   if ( esp01_is_present() == false )
   {
-    return WIFI_SERIAL.available();      // Just do a regular read fromthe aux port
+    return aux_spool_available();           // Chars available if in != out
   }
 
 /*  
- *   We have an ESP-01 attached,  Figure out the bytes in the queueu
+ *   We have an esp01 attached,  Figure out the bytes in the queueu
  */
   if ( esp01_in_ptr < esp01_out_ptr )   // Have we wrapped around?
   {
@@ -838,15 +875,15 @@ unsigned int esp01_available(void)
  *
  *----------------------------------------------------------------
  *   
- *   The function checks to see if an ESP-01 is attached to the
+ *   The function checks to see if an esp01 is attached to the
  *   board.  
  *   
  *   Not attached - Do nothing
  *   Attached     - Output the control bytes to begin IP transmission
  *   
- *   The function operates on a bit of a kluge.  The ESP-01 has a 
+ *   The function operates on a bit of a kluge.  The esp01 has a 
  *   command AT+CIPSENDEX which will transmit the next N bytes 
- *   over the IP connection. The ESP-01 will also stop collecting 
+ *   over the IP connection. The esp01 will also stop collecting 
  *   bytes and send the data if a NULL is received.
  *   
  *   The function uses a state machine
@@ -889,7 +926,6 @@ bool esp01_send
     int  connection                     // Which connection to send on
   )
 {
-  long         timer;                   // Timer start
   unsigned int retry_count;             // Number of times to try again
   char AT_command[64];                  // Place to store a string
   char ch;                              // Character read back
@@ -913,9 +949,9 @@ bool esp01_send
     len = esp01_BUFFER_SIZE;
   }
 
-  while ( WIFI_SERIAL.available() != 0 )      // Eat any availble characters
+  while ( aux_spool_available() != 0 )      // Eat any availble characters
   {
-    ch = WIFI_SERIAL.read();
+    ch = aux_spool_read();
     delay(2);
   }
   
@@ -929,17 +965,17 @@ bool esp01_send
     {
       case SEND_OFF:                                      // The ESP is not ready to send, 
         sprintf(AT_command, "AT+CIPSEND=%d,%d\r\n", connection, len); // Start and lie that we will send 2K of data
-        WIFI_SERIAL.print(AT_command);
-        timer = millis();                               // Remember the starting time
-        while ( (millis() - timer) < esp01_MAX_WAITOK ) // Wait for the > to come back within a second
+        AUX_SERIAL.print(AT_command);
+        timer_new(&wdt_tick, esp01_MAX_WAITOK);           // Remember the starting time
+        while ( wdt_tick ) // Wait for the > to come back within a second
         {
-          if ( WIFI_SERIAL.available() != 0 )           // Something available?
+          if ( aux_spool_available() != 0 )               // Something available?
           {
-            ch = WIFI_SERIAL.read();
+            ch = aux_spool_read();
             if ( ch == '>' )                            // Is it the prompt?
             {
               set_LED(LED_WIFI_SEND);
-              WIFI_SERIAL.print(str);                   // Yes, ready to send
+              AUX_SERIAL.print(str);                   // Yes, ready to send
               send_state[connection] = SEND_BUSY;       // Wait for the buffer to be sent
               break;                                    // Break from timer while
             }
@@ -963,7 +999,7 @@ bool esp01_send
         break;
 
     case SEND_WAIT:
-        WIFI_SERIAL.print(T("+++"));                    // Command not acted on
+        AUX_SERIAL.print(T("+++"));                    // Command not acted on
         delay(ONE_SECOND + ONE_SECOND/10);
         send_state[connection] = SEND_OFF;
         break;
@@ -1006,7 +1042,7 @@ bool esp01_send
  *
  *----------------------------------------------------------------
  *   
- *   The ESP-01 receives incoming characters on the IP connection, 
+ *   The esp01 receives incoming characters on the IP connection, 
  *   parses the frame, and informs the application of what 
  *   connection received data, the length, and the contents
  *   
@@ -1068,9 +1104,9 @@ void esp01_receive(void)
 /*
  * Loop here while we have characters waiting for us
  */
-  while ( WIFI_SERIAL.available() != 0 ) // Nothing is waiting for us
+  while ( aux_spool_available() != 0 ) // Nothing is waiting for us
   {
-    ch = WIFI_SERIAL.read();             // Pull in the next byte
+    ch = aux_spool_read();             // Pull in the next byte
     switch (state)                       // What do we do with it?
     {
       case WAIT_IDLE:                   // Stay here until we see a + or ,
@@ -1219,12 +1255,12 @@ void esp01_close
  */
   if ( esp01_is_present() );
   {
-    WIFI_SERIAL.print(T("+++"));
+    AUX_SERIAL.print(T("+++"));
     delay(ONE_SECOND);
       
     esp01_connect[connection] = false;                                 // and discard this connection
     sprintf(str, "AT+CIPCLOSE=%d\r\n", connection);                    // Close this connection
-    WIFI_SERIAL.print(str);
+    AUX_SERIAL.print(str);
     sprintf(str, "{\"CONNECTION_CLOSE\": %d}\r\n", connection);   // Close this connection
     Serial.print(str);
           
@@ -1232,9 +1268,9 @@ void esp01_close
  * Wait and eat any junk that might be coming back
  */
     delay(ONE_SECOND);
-    while ( WIFI_SERIAL.available() )
+    while ( aux_spool_available() )
     {
-      WIFI_SERIAL.read();
+      aux_spool_read();
     }
   }
   

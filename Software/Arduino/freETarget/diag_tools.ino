@@ -9,11 +9,13 @@
 
 #include "freETarget.h"
 #include "gpio.h"
+#include "token.h"            // Time provided by the token ring
+#include "json.h"
 
 const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 
 #define TICK(x) (((x) / 0.33) * OSCILLATOR_MHZ)   // Distance in clock ticks
-#define RX(Z,X,Y) (16000 - (sqrt(sq(TICK(x)-s[(Z)].x) + sq(TICK(y)-s[(Z)].y))))
+#define RX(Z,X,Y) (16000 - (sqrt(sq(TICK(x)-sensor[(Z)].x_tick) + sq(TICK(y)-sensor[(Z)].y_tick))))
 #define GRID_SIDE 25                              // Should be an odd number
 #define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
 
@@ -21,6 +23,7 @@ static void show_analog_on_PC(int v);
 static void unit_test(unsigned int mode);
 static bool sample_calculations(unsigned int mode, unsigned int sample);
 static void log_sensor(int sensor);
+extern int  json_clock[4];
 
 /*----------------------------------------------------------------
  *
@@ -34,6 +37,7 @@ static void log_sensor(int sensor);
  *   
  *   This function is a large case statement with each element
  *   of the case statement 
+ *   
  *--------------------------------------------------------------*/
 unsigned int tick;
 void self_test(uint16_t test)
@@ -98,6 +102,9 @@ void self_test(uint16_t test)
       Serial.print(T("\r\n24 - Log West Sensor"));
       Serial.print(T("\r\n25 - Test Push Buttons"));
       Serial.print(T("\r\n26 - Unit Test speed_of_sound()"));
+      Serial.print(T("\r\n27 - Token Ring Test()"));
+      Serial.print(T("\r\n28 - Count on the LEDs"));
+      Serial.print(T("\r\n29 - Force calculations"));
       Serial.print(T("\r\n"));
       break;
 
@@ -186,7 +193,7 @@ void self_test(uint16_t test)
  * Test 6, Advance the paper
  */
     case T_PAPER: 
-      Serial.print(T("\r\nAdvancing backer paper ")); Serial.print(((json_paper_time) + (json_step_time)) * 10); Serial.print(T(" ms  ")); Serial.print(json_step_count); Serial.print(T(" steps"));
+      Serial.print(T("\r\nAdvancing backer paper ")); Serial.print(((json_paper_time) + (json_step_time))); Serial.print(T(" ms  ")); Serial.print(json_step_count); Serial.print(T(" steps"));
       drive_paper();
       Serial.print(T("\r\nDone"));
       break;
@@ -220,9 +227,9 @@ void self_test(uint16_t test)
         {
           ch = Serial.read(); AUX_SERIAL.print(ch);
         }
-        if ( AUX_SERIAL.available() )
+        if ( aux_spool_available() )
         {
-          ch = AUX_SERIAL.read(); Serial.print(ch);
+          ch = aux_spool_read(); Serial.print(ch);
         }
       }
       break;
@@ -293,7 +300,7 @@ void self_test(uint16_t test)
           sample = face_strike;        
         }
         esp01_receive();                // Accumulate input from the IP port.
-        ch = GET();
+        ch = get_all();
     }
     Serial.print(T("\r\nDone\n\r"));
     break;
@@ -315,14 +322,32 @@ void self_test(uint16_t test)
   
 /*
  * Test 18 Sample shot value 
+ * Use {"NEW":25, "TA":20, "TB":10, "TEST":18}   
+ * TA = 20 mm diameter TB 10 tests starting at shot 25
+ * 
  */
   case T_SHOT:
-    shot.x = 10;
-    shot.y = 20;
-    shot.shot_time = millis()/100;
-    shot.shot_number = 1;
-    send_score(&shot);
-    send_miss(&shot);
+    if (json_B == 0 )
+    {
+      json_B = 1;
+    }
+    shot.shot_number = shot_number;
+    for ( i = 0; i != json_B; i++)
+    {
+      if ( json_A != 0 )
+      {
+        shot.xphys_mm = (double)json_A/2.0d - (double)random(json_A);
+        shot.yphys_mm = (double)json_A/2.0d - (double)random(json_A);
+      }
+      else
+      {
+        shot.xphys_mm = 10;
+        shot.yphys_mm = 20;
+      }
+      shot.shot_time = (FULL_SCALE - in_shot_timer);
+      send_score(&shot);
+      shot.shot_number++;
+    }
     break;
     
  /*
@@ -353,7 +378,7 @@ void self_test(uint16_t test)
       output_to_all(s);
       }
       esp01_receive();                // Accumulate input from the IP port.
-      ch = GET();
+      ch = get_all();
       delay(1000);
     }
     sprintf(s, "\r\nDone");
@@ -378,7 +403,7 @@ void self_test(uint16_t test)
     {
       set_LED( 1, DIP_SW_A, DIP_SW_B );   // Copy the switches
       esp01_receive();                    // Accumulate input from the IP port.
-      ch = GET();
+      ch = get_all();
     }
     Serial.print(T("\n\rDone"));
     break;
@@ -391,8 +416,72 @@ void self_test(uint16_t test)
     Serial.print(T("\n\rDone"));
     break;
 
+/*
+ * Test 27 Token Ring Test
+ */
+  case T_TOKEN:
+    token_init();
+    Serial.print(T("\n\rDone"));
+    break;
+
+/*
+ * Test 28 Cycle the LEds
+ */
+  case T_LED_CYCLE:
+    i = 0;
+    while ( !json_spool_available() )                     // Keep blinking the LEDs
+    {
+      set_LED( (i>>0) & 1, (i>>1) & 1, (i>>2)&1 );
+      delay(ONE_SECOND/2);
+      i++;
+      token_poll();                                       // Until something arrives
+    }
+    Serial.print(T("\n\rDone"));
+    break;
+
+ /*
+ * Test 29 Force Calculations
+ * Use {"TA":39, "TB":0, "TC":80, "TD":83 "TEST":29}  
+ *     {"TA":20465, "TB":20640, "TC":20565, "TD":20474, "TEST":29}  
+ */
+  case T_FORCE_CALC:
+    Serial.print(T("\r\nShot Test using entered counts.")); //  
+    is_trace = 255;       // Turn on all tracing
+    
+    set_mode();
+    arm();
+    this_shot = 1;
+    last_shot = 0;
+    record[last_shot].shot_number = 99;    // Current shot number
+    record[last_shot].xphys_mm = 0;        // Physical X location of shot (in mm)
+    record[last_shot].yphys_mm = 0;        // Physical Y location of shot (in mm)
+    if ( json_A != 0 )
+    {
+      record[last_shot].timer_count[N] = json_A;
+      record[last_shot].timer_count[E] = json_B;
+      record[last_shot].timer_count[S] = json_C;
+      record[last_shot].timer_count[W] = json_D;
+    }
+    else
+    {
+      record[last_shot].timer_count[N] = 20465;
+      record[last_shot].timer_count[E] = 20640;
+      record[last_shot].timer_count[S] = 20565;
+      record[last_shot].timer_count[W] = 20474;
+    }
+    record[last_shot].face_strike = 0;;     // Recording of face strike
+    record[last_shot].sensor_status = 0xf;  // Triggering register
+    record[last_shot].shot_time  =micros(); // Shot time since start of after tabata start
+
+    reduce();
+    finish();
+    shot.shot_time = (FULL_SCALE - in_shot_timer);
+    shot.shot_number = 99;
+    is_trace = 0;         // Turn the tracing off
+    Serial.print(T("\r\nDone.")); //  
+    break;
   }
- 
+    
  /* 
   *  All done, return;
   */
@@ -417,10 +506,8 @@ void self_test(uint16_t test)
  {
   int i;
   char str[64];
-
   sprintf(str, "\r\nfreETarget %s\r\n", SOFTWARE_VERSION);
   output_to_all(str);
-
 /*
  * All done, return
  */
@@ -493,7 +580,7 @@ void self_test(uint16_t test)
    unsigned int sensor_status;   // Sensor status
    int          x;               // Time difference (signed)
    bool         test_passed;     // Record if the test failed
-   long         now;             // Current time
+   unsigned long now;            // Timer
    
 /*
  * The test only works on V2.2 and higher
@@ -504,7 +591,7 @@ void self_test(uint16_t test)
     return true;                      // Fake a positive response  
   }
   
-  if ( DLT(INIT_TRACE) )
+  if ( DLT(DLT_CRITICAL) )
   {
     Serial.print(T("POST_counters()"));
   }
@@ -514,11 +601,11 @@ void self_test(uint16_t test)
 /*
  * Test 1, Arm the circuit and see if there are any random trips
  */
-  stop_timers();                    // Get the circuit ready
-  arm_timers();                     // Arm it. 
+  stop_timers();                      // Get the circuit ready
+  arm_timers();                       // Arm it. 
   delay(1);                           // Wait a millisecond  
   sensor_status = is_running();       // Remember all of the running timers
-  if ( (sensor_status != 0) && DLT(INIT_TRACE) )
+  if ( (sensor_status != 0) && DLT(DLT_CRITICAL) )
   {
     Serial.print(T("\r\nFailed Clock Test. Spurious trigger:")); show_sensor_status(sensor_status, 0);
     return false;                     // No point in any more tests
@@ -533,13 +620,13 @@ void self_test(uint16_t test)
 /*
  *  Test 2, Arm the circuit amd make sure it is off
  */
-    stop_timers();                  // Get the circuit ready
+    stop_timers();                    // Get the circuit ready
     arm_timers();
     delay(1);                         // Wait for a bit
     
     for (j=N; j <= W; j++ )           // Check all of the counters
     {
-      if ( (read_counter(j) != 0) && DLT(INIT_TRACE) )     // Make sure they stay at zero
+      if ( (read_counter(j) != 0) && DLT(DLT_CRITICAL) )     // Make sure they stay at zero
       {
         Serial.print(T("Failed Clock Test. Counter free running:")); Serial.print(nesw[j]);
         test_passed =  false;         // return a failed test
@@ -563,7 +650,7 @@ void self_test(uint16_t test)
     }
     
     stop_timers();
-    if ( (sensor_status != 0x0F) && DLT(INIT_TRACE) )      // The circuit was triggered but not all
+    if ( (sensor_status != 0x0F) && DLT(DLT_CRITICAL) )      // The circuit was triggered but not all
     {                                 // FFs latched
       Serial.print(T("Failed Clock Test. sensor_status:")); show_sensor_status(sensor_status, 0);
       test_passed = false;
@@ -576,7 +663,7 @@ void self_test(uint16_t test)
     for (j=N; j <= W; j++ )           // Check all of the counters
     {
       x  = read_counter(j);
-      if ( (read_counter(j) != x) && DLT(INIT_TRACE) )
+      if ( (read_counter(j) != x) && DLT(DLT_CRITICAL) )
       {
         Serial.print(T("Failed Clock Test. Counter did not stop:")); Serial.print(nesw[j]); show_sensor_status(sensor_status, 0);
         test_passed = false;          // since there is delay  in
@@ -591,7 +678,7 @@ void self_test(uint16_t test)
         x = -x;
       }
       
-      if ( (x > CLOCK_TEST_LIMIT) && DLT(INIT_TRACE) )     // The time should be positive and within limits
+      if ( (x > CLOCK_TEST_LIMIT) && DLT(DLT_CRITICAL) )     // The time should be positive and within limits
       { 
         Serial.print(T("Failed Clock Test. Counter:")); Serial.print(nesw[j]); Serial.print(T(" Is:")); Serial.print(read_counter(j)); Serial.print(T(" Should be:")); Serial.print(random_delay); Serial.print(T(" Delta:")); Serial.print(x);
         test_passed = false;          // since there is delay  in
@@ -620,7 +707,7 @@ void self_test(uint16_t test)
  *--------------------------------------------------------------*/
  void POST_trip_point(void)
  {
-   if ( DLT(DLT_CRITICAL) )
+   if ( DLT(DLT_APPLICATION) )
    {
     Serial.print(T("POST trip point"));
    }
@@ -639,41 +726,7 @@ void self_test(uint16_t test)
  * return: Potentiometer set for the desired trip point
  *----------------------------------------------------------------
  *
- *  The reference voltage is divided into 8 bands from 0.5 volt
- *  to 1.5 volts in 1/8 volt increments.
- *  
- *  This function averages the voltage over 1/2 second and
- *  determines what band the reference belongs in and displays
- *  it on the LEDs as a Grey code.
- *  
- *  The function will remain here 
- *     If started by a CAL jumper until the jumper is removed
- *     If the voltage is out of spec on power up
- *     If started by a {TEST} forever
- *     
- *  Calibration Display
- *  
- *  V_REF           S  X  Y
- *  0.350           .  .  .
- *  0.400           .  .  *
- *  0.450           .  .  B
- *  0.500           .  *  .
- *  0.550           .  B  .
- *  0.600           .  *  *
- *  0.650           .  B  B
- *  0.700           *  .  .
- *  0.750           B  .  .
- *  0.800           *  .  *
- *  0.900           B  .  B
- *  1.000           *  *  .
- *  1.100           B  B  .
- *  1.200           *  *  *
- *  1.3^^           B  B  B
- *  
- *  Calibration Modes 
- *  No Jumpers          Regular Range
- *  CAL_LOW             Reduced Detection
- *  CAL_HI              Increased Detetion
+ * The various running registers and displayshot_mm them for use
  *  
  *--------------------------------------------------------------*/
 #define CT(x) (1023l * (long)(x+25) / 5000l )   // 1/16 volt = 12.8 counts
@@ -682,7 +735,7 @@ void self_test(uint16_t test)
 #define NOT_IN_SPEC  0x40
 //                                         0           1         2       3         4        5        6        7        8        9        10      11        12          13      14          15
 const unsigned int volts_to_LED[] = { NOT_IN_SPEC,     1,    BLINK+1,    2,     BLINK+2,    3,    BLINK+3,    4,    BLINK+4,    5,    BLINK+5,    6,     BLINK+6,       7,   BLINK+7,  NOT_IN_SPEC, 0 };
-const unsigned int mv_to_counts[] = {   CT(350),    CT(400), CT(450), CT(500),  CT(550), CT(600), CT(650), CT(700), CT(750), CT(800), CT(900), CT(1000), CT(1100), CT(1200), CT(1300),   CT(5000),  0 };
+const unsigned int mv_to_countsensor[] = {   CT(350),    CT(400), CT(450), CT(500),  CT(550), CT(600), CT(650), CT(700), CT(750), CT(800), CT(900), CT(1000), CT(1100), CT(1200), CT(1300),   CT(5000),  0 };
 
 static void start_over(void)    // Start the test over again
 {
@@ -699,16 +752,13 @@ void set_trip_point
   int pass_count                                            // Number of passes to allow before exiting (0==infinite)
   )
 {
-  unsigned long start_time;                                 // Starting time of average loop 
-  unsigned long sample;                                     // Counts read from ADC
-           bool blinky;                                     // Blink the LEDs on an over flow
   bool          stay_forever;                               // Stay forever if called with pass_count == 0;
   unsigned int  sensor_status;                              // OR of the sensor bits that have tripped
   bool          pause;                                      // Stop the test
   unsigned int  i, j;                                       // Iteration Counter
   
   Serial.print(T("Setting trip point. Type ! of cycle power to exit\r\n"));
-  blinky = 0;
+
   sensor_status = 0;                                        // No sensors have tripped
   stay_forever = false;
   if (pass_count == 0 )                                     // A pass count of 0 means stay
@@ -717,7 +767,7 @@ void set_trip_point
   }
   arm_timers();                                             // Arm the flip flops for later
   enable_face_interrupt();                                  // Arm the face sensor
-  disable_timer_interrupt();                                // Disarm the sensor input interrupt
+  disable_timer_interrupt();                                // Prevent the timer from overwriting
   face_strike = 0;
 
 /*
@@ -985,7 +1035,7 @@ static void unit_test(unsigned int mode)
   {
     if ( sample_calculations(mode, i) )
     {
-    location = compute_hit(&record[0], true);
+    location = compute_hit(&record[0]);
     sensor_status = 0xF;        // Fake all sensors good
     record[0].shot_number = shot_number++;
     send_score(&record[0]);
@@ -1209,7 +1259,7 @@ void show_sensor_status
 
 void log_sensor
   (
-  int sensor                      // Sensor to be monitored
+  int sensor_n                    // Sensor to be monitored
   )
 {
   unsigned int i;
@@ -1222,7 +1272,7 @@ void log_sensor
   char         ch;                // Input character
   bool         is_new;            // TRUE if a change was found
 
-  sprintf(s, "\r\nLogging %s Use X to reset,  ! to exit\r\n", which_one[sensor]);
+  sprintf(s, "\r\nLogging %s Use X to reset,  ! to exit\r\n", which_one[sensor_n]);
   output_to_all(s);
   output_to_all(0);
   max_all =  0;
@@ -1234,11 +1284,11 @@ void log_sensor
  * Loop for the sample time, picking up the analog voltage as quick as we can
  */
     start = LOG_TIME;                         // Pick up the starting time
-    max_cycle = analogRead(channel[sensor]);
+    max_cycle = analogRead(channel[sensor_n]);
     is_new = false;
     while ( (--start) )                       // For Log Time, 
     {
-      sample = analogRead(channel[sensor]);   // Read the ADC
+      sample = analogRead(channel[sensor_n]);   // Read the ADC
       if ( sample > max_cycle )
       {
         max_cycle = sample;
@@ -1257,9 +1307,8 @@ void log_sensor
     sensor_status = is_running();
     if ( is_new  || (sensor_status != 0) )
     {
-      sprintf(s, "\r\n%s cycle:%d  max:%d is_running:", which_one[sensor], max_cycle, max_all);
-      output_to_all(s);
-      output_to_all(0);      
+      sprintf(s, "\r\n%s cycle:%d  max:%d is_running:", which_one[sensor_n], max_cycle, max_all);
+      output_to_all(s);   
 
       s[1] = 0;
       for (i=N; i<=W; i++)
@@ -1271,15 +1320,14 @@ void log_sensor
       arm_timers();
     }
 
-    while ( AVAILABLE )
+    while ( available_all() )
     {
-      ch = GET();
+      ch = get_all();
       switch ( ch )
       {
         case '!':
           sprintf(s, "\r\nDone");
           output_to_all(s);
-          output_to_all(0);
           return;
 
         case 'x':
@@ -1309,6 +1357,8 @@ void log_sensor
  * 
  * is_trace is compared to the log level and if valid the
  * current time stamp is printed
+ * 
+ * DLT_CRItiCAL levels are alwayshot_mm printed
  *   
  *--------------------------------------------------------------*/
 bool do_dlt
@@ -1316,10 +1366,16 @@ bool do_dlt
   unsigned int level
   )
 { 
-  if ((is_trace) < (level))
+  char s[20], str[20];
+
+  if ((level & (is_trace | DLT_CRITICAL)) == 0 )
   {
-    return false;      // Send out if the trace is higher than the level 
+    return false;      // Send out if the trace is enabled
   }
-  Serial.print(T("\n\r")); Serial.print(micros()/1000000); Serial.print(T(".")); Serial.print(micros()%1000000); Serial.print(T(": "));
+
+  dtostrf(micros()/1000000.0, 7, 6, str );
+  sprintf(s, "\n\r%s: ", str);
+  Serial.print(s);
+
   return true;
 }

@@ -5,7 +5,7 @@
  * JSON driver
  * 
  * ----------------------------------------------------*/
-
+#include "freETarget.h"
 #include <EEPROM.h>
 
 static char input_JSON[256];
@@ -59,6 +59,10 @@ int     json_wifi_dhcp;             // The ESP is a DHCP server
 int     json_rh;                    // Relative Humidity 0-1005
 int     json_min_ring_time;         // Time to wait for ringing to stop
 double  json_doppler;               // Adjust for dopper inverse square
+int     json_token;                 // Token ring state
+int     json_multifunction2;        // Multifunction Switch 2
+
+int     json_A, json_B, json_C, json_D; // Test variables
 
 #define JSON_DEBUG false            // TRUE to echo DEBUG messages
 
@@ -78,7 +82,7 @@ const json_message JSON[] = {
   {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT16,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
   {"\"DELAY\":",          0               ,                  0,                IS_INT16,  &diag_delay,                      0,       0 },    // Delay TBD seconds
   {"\"DIP\":",            &json_dip_switch,                  0,                IS_INT16,  0,                NONVOL_DIP_SWITCH,       0 },    // Remotely set the DIP switch
-  {"\"DOPPLER\":",        0,                     &json_doppler,                IS_FLOAT,  0,                NONVOL_DOPPLER, (7.0d/(700.0d * 700.0d))},    // Adjust timing based on Doppler Inverse SQ
+  {"\"DOPPLER\":",        0,                     &json_doppler,                IS_FLOAT,  0,                NONVOL_DOPPLER,         50 },    // Adjust timing based on Doppler Inverse SQ
   {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,                       0,       0 },    // Echo test
   {"\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT16,  0,                NONVOL_FACE_STRIKE,      5 },    // Face Strike Count 
   {"\"FOLLOW_THROUGH\":", &json_follow_through,              0,                IS_INT16,  0,                NONVOL_FOLLOW_THROUGH,   0 },    // Three second follow through
@@ -90,8 +94,14 @@ const json_message JSON[] = {
                                                                                                                           + (PAPER_SHOT * 100) 
                                                                                                                           + (ON_OFF * 10) 
                                                                                                                           + (PAPER_FEED) },  // Multifunction switch action
+  {"\"MFS2\":",            &json_multifunction2,             0,                IS_INT16,  0,                NONVOL_MFS2,  (NO_ACTION*10000) 
+                                                                                                                          + (NO_ACTION * 1000)
+                                                                                                                          + (NO_ACTION * 100) 
+                                                                                                                          + (NO_ACTION * 10) 
+                                                                                                                          + (NO_ACTION) },   // Multifunction switch action
   {"\"MIN_RING_TIME\":",  &json_min_ring_time,               0,                IS_INT16,  0,                NONVOL_MIN_RING_TIME,  500 },    // Minimum time for ringing to stop (ms)
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT16,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
+  {"\"NEW\":",            &shot_number,                      0,                IS_INT16,  0,                0,                       0 },    // Start a new session
   {"\"NONVOL_BACKUP\":",  0,                                 0,                IS_VOID,   &backup_nonvol,   0,                       0 },    // Backup the NONVOL
   {"\"NONVOL_RESTORE\":", 0,                                 0,                IS_VOID,   &restore_nonvol,  0,                       0 },    // Restore the NONVOL
   {"\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT16,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
@@ -115,8 +125,9 @@ const json_message JSON[] = {
   {"\"TABATA_WARN_ON\":", &json_tabata_warn_on,              0,                IS_INT16,  0,                0,                     200 },    // Time that the LEDs are OFF during a warning cycle
   {"\"TARGET_TYPE\":",    &json_target_type,                 0,                IS_INT16,  0,                NONVOL_TARGET_TYPE,      0 },    // Marify shot location (0 == Single Bull)
   {"\"TEST\":",           0,                                 0,                IS_INT16,  &show_test,       NONVOL_TEST_MODE,        0 },    // Execute a self test
-  {"\"TRACE\":",          0,                                 0,                IS_INT16,  &set_trace,                      0,        0 },    // Enter / exit diagnostic trace
-  {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_version,                   0,        0 },    // Return the version string
+  {"\"TOKEN\":",          &json_token,                       0,                IS_INT16,  0,                NONVOL_TOKEN,            0 },    // Token ring state
+  {"\"TRACE\":",          0,                                 0,                IS_INT16,  &set_trace,       0,                       0 },    // Enter / exit diagnostic trace
+  {"\"VERSION\":",        0,                                 0,                IS_INT16,  &POST_version,    0,                       0 },    // Return the version string
   {"\"V_SET\":",          0,                                 &json_vset,       IS_FLOAT,  &compute_vset_PWM,NONVOL_VSET,             0 },    // Set the voltage reference
   {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT16,  0,                NONVOL_WIFI_CHANNEL,     6 },    // Set the wifi channel
   {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_SECRET, 0,                NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
@@ -130,6 +141,11 @@ const json_message JSON[] = {
   {"\"SOUTH_Y\":",        &json_south_y,                     0,                IS_INT16,  0,                NONVOL_SOUTH_Y,          0 },    //
   {"\"WEST_X\":",         &json_west_x,                      0,                IS_INT16,  0,                NONVOL_WEST_X,           0 },    //
   {"\"WEST_Y\":",         &json_west_y,                      0,                IS_INT16,  0,                NONVOL_WEST_Y,           0 },    //
+
+  {"\"TA\":",             &json_A,                           0,                IS_INT16,  0,                0,                       0 },    // Values forced into timer for
+  {"\"TB\":",             &json_B,                           0,                IS_INT16,  0,                0,                       0 },    // diagnostics
+  {"\"TC\":",             &json_C,                           0,                IS_INT16,  0,                0,                       0 },    //
+  {"\"TD\":",             &json_D,                           0,                IS_INT16,  0,                0,                       0 },    //
 
 { 0, 0, 0, 0, 0, 0}
 };
@@ -166,6 +182,20 @@ static int16_t got_right = false;
 static bool not_found;
 static bool keep_space;   // Set to 1 if keeping spaces
 
+static int to_int(char h)
+{
+  h = toupper(h);
+  
+  if ( h > '9' )
+  {
+    return 10 + (h-'A');
+  }
+  else
+  {
+    return h - '0';
+  }
+}
+
 bool read_JSON(void)
 {
   unsigned int  i;      // Index across JSON message
@@ -174,21 +204,21 @@ bool read_JSON(void)
   unsigned int  l;      // Index across the gpio init table (init_table)
   unsigned int  m;      // Index into NONVOL text storage
   unsigned int  x;      // Temporary working variable
-  char*    s;           // Pointer to stored text string
-  double  y;
-  bool    return_value;
+  char*         s;      // Pointer to stored text string
+  double        y;
+  bool          return_value;
+  char          ch;
 
   
   return_value = false;
-  
 /*
  * See if anything is waiting and if so, add it in
  */
-  while ( AVAILABLE != 0)
+  while ( available_all() != 0 )
   {
     return_value = true;
     
-    ch = GET();
+    ch = get_all();
     if ( ch == '*' )
     {
       ch = '"';                             // Fix for European keyboards(?)
@@ -198,6 +228,7 @@ bool read_JSON(void)
       show_echo();                         // Show status if ? entered
       return;
     }
+
 /*
  * Parse the stream
  */
@@ -313,7 +344,15 @@ bool read_JSON(void)
               break;
               
             case IS_INT16:                                      // Convert an integer
-              x = atoi(&input_JSON[i+k]);
+              if ( (input_JSON[i+k] == '0')
+                  && ( (input_JSON[i+k+1] == 'X') || (input_JSON[i+k+1] == 'x')) )  // Is it Hex?
+              {
+                x = (to_int(input_JSON[i+k+2]) << 4) + to_int(input_JSON[i+k+3]);
+              }
+              else
+              {
+                x = atoi(&input_JSON[i+k]);                     // Integer
+              }
               if ( JSON[j].value != 0 )
               {
                 *JSON[j].value = x;                             // Save the value
@@ -354,8 +393,8 @@ bool read_JSON(void)
             not_found = false;                                    // Read and convert the JSON value
             Serial.print(T("\r\n")); Serial.print(init_table[j].gpio_name);
             if ( init_table[j].in_or_out == INPUT_PULLUP )
-              {
-                Serial.print(T(" is input only"));
+            {
+              Serial.print(T(" is input only"));
               break;
             }
           
@@ -480,8 +519,15 @@ void show_echo(void)
 {
   unsigned int i, j;
   char   s[512], str_c[32];   // String holding buffers
-  
-  sprintf(s, "\r\n{\r\n\"NAME\":\"%s\", \r\n", names[json_name_id]);
+
+  if ( (json_token == TOKEN_WIFI) || (my_ring == TOKEN_UNDEF) )
+  {
+    sprintf(s, "\r\n{\r\n\"NAME\":\"%s\", \r\n", namesensor[json_name_id]);
+  }
+  else
+  {
+    sprintf(s, "\r\n{\r\n\"NAME\":\"%s\", \r\n", namesensor[json_name_id+my_ring]);
+  }
   output_to_all(s);
 
 /*
@@ -548,7 +594,7 @@ void show_echo(void)
   sprintf(s, "\"TRACE\": %d, \n\r", is_trace);                                             // TRUE to if trace is enabled
   output_to_all(s);
 
-  sprintf(s, "\"RUNNING_MINUTES\": %ld, \n\r", micros()/1000000/60);                      // On Time
+  sprintf(s, "\"RUNNING_MINUTES\": %ld, \n\r", millis()/1000/60);                       // On Time
   output_to_all(s);
   
   dtostrf(temperature_C(), 4, 2, str_c );
@@ -574,20 +620,30 @@ void show_echo(void)
   output_to_all(s);
 
 
-  sprintf(s, "\"WiFi_PRESENT\": %d, \n\r", esp01_is_present());                           // TRUE if WiFi is available
-  output_to_all(s);
-  
-  if ( esp01_is_present() )
+  if ( json_token == TOKEN_WIFI )
   {
-    esp01_myIP(str_c);
-    sprintf(s, "\"WiFi_IP_ADDRESS\": \"%s:1090\", \n\r", str_c);                            // Print out the IP address
+    sprintf(s, "\"WiFi_PRESENT\": %d, \n\r", esp01_is_present());                         // TRUE if WiFi is available
     output_to_all(s);
   
-    for ( i=0; i != esp01_N_CONNECT; i++)
+    if ( esp01_is_present() )
     {
-      sprintf(s, "\"WiFi_CONNECT %d\": %d, \n\r", i+1, esp01_connect[i]);                   // TRUE if Client[i] connected
+      esp01_myIP(str_c);
+      sprintf(s, "\"WiFi_IP_ADDRESS\": \"%s:1090\", \n\r", str_c);                        // Print out the IP address
       output_to_all(s);
+  
+      for ( i=0; i != esp01_N_CONNECT; i++)
+      {
+        sprintf(s, "\"WiFi_CONNECT %d\": %d, \n\r", i+1, esp01_connect[i]);               // TRUE if Client[i] connected
+        output_to_all(s);
+      }
     }
+  }
+  else
+  {
+    sprintf(s, "\"TOKEN_RING\":  %d, \n\r", my_ring);                                     // My token ring address
+    output_to_all(s);
+    sprintf(s, "\"TOKEN_OWNER\": %d, \n\r", whos_ring);                                  // Who owns the token ring
+    output_to_all(s);
   }
   
   sprintf(s, "\"VERSION\": %s, \n\r", SOFTWARE_VERSION);                                  // Current software version
@@ -636,9 +692,9 @@ static void show_names(int v)
   Serial.print(T("\r\nNames\r\n"));
   
   i=0;
-  while (names[i] != 0 )
+  while (namesensor[i] != 0 )
   {
-    Serial.print(i); Serial.print(T(": \""));  Serial.print(names[i]); Serial.print(T("\", \r\n"));
+    Serial.print(i); Serial.print(T(": \""));  Serial.print(namesensor[i]); Serial.print(T("\", \r\n"));
     i++;
   }
 
@@ -684,20 +740,21 @@ static void show_test(int test_number)
    int trace                // Trace on or off
    )
  {
-   char s[32]; 
+    char s[32];
 
-   switch (trace)
-   {
-    default: 
-    case DLT_NONE:        sprintf(s, "\r\nDLT NONE\r\n");       break;
-    case DLT_CRITICAL:    sprintf(s, "\r\nDLT CRITICAL\r\n");   break;
-    case DLT_APPLICATION: sprintf(s, "\r\nDLT APPLICATON\r\n"); break;
-    case DLT_DIAG:        sprintf(s, "\r\nDLT DIAG\r\n");       break;
-    case DLT_INFO:        sprintf(s, "\r\nDLT INFO\r\n");       break;
-   }
-   
-   output_to_all(s);
-   
+    trace |= DLT_CRITICAL;        // Critical is alwayshot_mm enabled
+    
+    if ( trace & DLT_CRITICAL)    {sprintf(s, "\r\rDLT CRITICAL");   output_to_all(s);}
+    if ( trace & DLT_APPLICATION) {sprintf(s, "\r\nDLT APPLICATON"); output_to_all(s);}
+    if ( trace & DLT_DIAG)        {sprintf(s, "\r\nDLT DIAG");       output_to_all(s);}
+    if ( trace & DLT_INFO)        {sprintf(s, "\r\nDLT INFO");       output_to_all(s);}
+    
+    sprintf(s, "\r\n\nSettings"); output_to_all(s);
+    sprintf(s, "\r\n0x01 DLT APPLICATON"); output_to_all(s);
+    sprintf(s, "\r\n0x02 DLT DIAG");       output_to_all(s);
+    sprintf(s, "\r\n0x04 DLT INFO");       output_to_all(s);
+    sprintf(s, "\r\n0x89 DLT CRITICAL");   output_to_all(s);
+
 /*
  * The DIP switch has been remotely set
  */

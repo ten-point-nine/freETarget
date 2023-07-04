@@ -66,6 +66,12 @@ static bool fcn_DIP_SW_B(void);           // Function to read DIP_SW_B
 static void sw_state (bool* (fcn_state)(void), unsigned long*  which_timer, void* (fcn_action)(void)); // Do something with the switches
 static void send_fake_score(void);        // Send a fake score to the PC
 
+static unsigned int dip_mask;             // Used if the MFS2 uses the DIP_0 or DIP_3
+static char aux_spool[128];               // Spooling buffer from the AUX port
+static char json_spool[64];               // Spool for JSON
+static unsigned int  aux_spool_in, aux_spool_out; // Pointer to the spool
+static unsigned int  json_spool_in, json_spool_out; // Pointer to the spool
+
 /*-----------------------------------------------------
  * 
  * function: gpio_init
@@ -84,11 +90,7 @@ void init_gpio(void)
 {
   int i;
 
-  if ( DLT(INIT_TRACE) ) 
-  {
-    Serial.print(T("init_gpio()"));  
-  }
-  else if ( DLT(DLT_CRITICAL) ) 
+  if ( DLT(DLT_CRITICAL) ) 
   {
     Serial.print(T("init_gpio()"));  
   }
@@ -348,7 +350,10 @@ void disable_face_interrupt(void)
  * OR in the json_dip_switch to allow remote testing
  * OR in  0xF0 to allow for compile time testing
  *-----------------------------------------------------*/
-unsigned int read_DIP(void)
+unsigned int read_DIP
+(
+  unsigned int dip_mask
+)
 {
   unsigned int return_value;
   
@@ -360,6 +365,7 @@ unsigned int read_DIP(void)
   {
     return_value =  (~((digitalRead(DIP_3) << 0) + (digitalRead(DIP_2) << 1) + (digitalRead(DIP_1) << 2) + (digitalRead(DIP_0) << 3))) & 0x0F;  // DIP Switch
   }
+  return_value &= (~dip_mask);
   return_value |= json_dip_switch;  // JSON message
   return_value |= 0xF0;             // COMPILE TIME
 
@@ -500,11 +506,14 @@ void read_timers
  * Step Count = X
  * Step Time = Step On time
  * 
+ * {"PAPER":1, "DELAY":1, "PAPER":0}
  *-----------------------------------------------------*/
- 
- void drive_paper(void)
- {
-  unsigned int s_time, s_count;                   // Step time and count
+
+void drive_paper(void)
+{
+  unsigned long s_time, s_count;              // Step time and count
+  volatile unsigned long paper_time;
+
 /*
  * Set up the count or times based on whether a DC or stepper motor is used
  */
@@ -528,16 +537,34 @@ void read_timers
   
   if ( DLT(DLT_INFO) )
   {
-    Serial.print(T("Advancing paper:")); Serial.print(s_time);
+    Serial.print(T("Advancing paper: ")); Serial.print(s_time); Serial.print(T("ms  Steps: ")); Serial.print(s_count);
   }
 
 /*
  * Drive the motor on and off for the number of cycles
  * at duration
  */
-  paper_on_off(true);                             // Turn the motor on
-  set_motor_time(s_time, s_count);                // Update the counts in the timer thread
+  timer_new(&paper_time, s_time);         // Create the timer
 
+  while ( s_count )
+  {
+    paper_on_off(true);                 // Motor ON
+    paper_time = s_time; 
+    while ( paper_time != 0 )
+    {    
+      continue;
+    }
+    paper_on_off(false);                  // Motor OFF
+    paper_time = 5;
+    while ( paper_time )
+    {
+      continue;
+    }
+    s_count--;                            // Repeat for the steps
+  }
+
+  timer_delete(&paper_time);              // Finished with the timer
+  
  /*
   * All done, return
   */
@@ -561,12 +588,17 @@ void read_timers
  * the FET accordingly
  * 
  *-----------------------------------------------------*/
- 
+
 static void paper_on_off                        // Function to turn the motor on and off
   (
   bool on                                       // on == true, turn on motor drive
   )
 {
+  if ( DLT(DLT_INFO) )
+  {
+    Serial.print("paper_on_off("); Serial.print(on); Serial.print(T(")"));
+  }
+  
   if ( on == true )
   {
     if ( revision() < REV_300 )                 // Rev 3.0 changed the motor sense
@@ -620,7 +652,7 @@ static void paper_on_off                        // Function to turn the motor on
  {
   face_strike++;      // Got a face strike
 
-  if ( DLT(DLT_INFO) )
+  if ( DLT(DLT_CRITICAL) )
   {
     Serial.print(T("\r\nface_ISR():")); Serial.print(face_strike);
   }
@@ -671,7 +703,29 @@ void blink_fault
  {
   unsigned int dip;
 
-  dip = read_DIP() & 0x0f;              // Read the jumper header
+/*
+ * Check to see if the DIP switch has been overwritten
+ */
+  if ( (HOLD1(json_multifunction2) == RAPID_RED) 
+        || (HOLD1(json_multifunction2) == RAPID_GREEN))
+  {
+      pinMode(DIP_0, OUTPUT);
+      digitalWrite(DIP_0, 1);
+      dip_mask = RED_MASK;
+  }
+
+  if (  (HOLD2(json_multifunction2) == RAPID_RED)
+      || (HOLD2(json_multifunction2) == RAPID_GREEN ) )
+  {
+      pinMode(DIP_3, OUTPUT);
+      digitalWrite(DIP_3, 1);
+      dip_mask |= GREEN_MASK;
+  }
+
+/*
+ * Continue to read the DIP switch
+ */
+  dip = read_DIP(dip_mask) & 0x0f;      // Read the jumper header
 
   if ( dip == 0 )                       // No jumpers in place
   { 
@@ -757,20 +811,22 @@ void multifunction_switch(void)
    }
 
 /*
- * Special case of a target type, ALWAYS process this switch even if it is closed
+ * Special case of a target type, ALWAyshot_mm process this switch even if it is closed
  */
    if ( HOLD1(json_multifunction) == TARGET_TYPE ) 
    {
      sw_state(HOLD1(json_multifunction));
      action &= ~1;
+     action += 4;
    }
    else if ( HOLD2(json_multifunction) == TARGET_TYPE ) 
    {
      sw_state(HOLD2(json_multifunction));
      action &= ~2;
+     action += 8;
    }
 
-   if ( action == 0 )                     // Nothing needs our attention
+   if ( action == 0 )                 // Nothing to do
    {
      return;
    }
@@ -779,8 +835,8 @@ void multifunction_switch(void)
  * Delay for one second to detect a tap
  * Check to see if the switch has been pressed for the first time
  */
-  now = millis();
-  while ( (millis() - now) <= ONE_SECOND )
+  timer_new(&now, ONE_SECOND);
+  while ( now )
   {
     if ( DIP_SW_A )
     {
@@ -799,6 +855,7 @@ void multifunction_switch(void)
       set_LED(L('-', '-', '.'));
     }
   }
+  timer_delete(&now);
   
   if ( (DIP_SW_A == 0 )
         && (DIP_SW_B == 0 ) )             // Both switches are open? (tap)
@@ -873,7 +930,7 @@ static void sw_state
   
   char s[128];                          // Holding string 
 
-  if ( DLT(DLT_INFO) )
+  if ( DLT(DLT_DIAG) )
   {
     Serial.print(T("Switch action: ")); Serial.print(action);
   }
@@ -886,7 +943,7 @@ static void sw_state
       set_LED_PWM_now(0);                 // Blink
       delay(ONE_SECOND/2);
       set_LED_PWM_now(json_LED_PWM);      // and leave it on
-      power_save = millis();              // and resets the power save time
+      power_save = (long)json_power_save * 60L * (long)ONE_SECOND; // and resets the power save time
       json_power_save += 30;      
       sprintf(s, "\r\n{\LED_PWM\": %d}\n\r", json_power_save);
       output_to_all(s);  
@@ -1007,13 +1064,19 @@ void multifunction_wait_open(void)
  //                             0            1            2             3            4             5            6    7    8          9
 static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED", "ADJUST_LED", "PAPER_SHOT", "PC_TEST",  "POWER_ON_OFF",   "6", "7", "8", "TARGET_TYPE"};
 
+ //                              0           1            2             3            4             5            6    7    8          9
+static char* mfs2_text[] = { "DEFAULT", "RAPID_RED", "RAPID_GREEN",    "3",         "4",          "5",   "      6", "7", "8",       "9"};
+
 void multifunction_display(void)
 {
   char s[128];                          // Holding string
 
   sprintf(s, "\"MFS_TAP1\": \"%s\",\n\r\"MFS_TAP2\": \"%s\",\n\r\"MFS_HOLD1\": \"%s\",\n\r\"MFS_HOLD2\": \"%s\",\n\r\"MFS_HOLD12\": \"%s\",\n\r", 
   mfs_text[TAP1(json_multifunction)], mfs_text[TAP2(json_multifunction)], mfs_text[HOLD1(json_multifunction)], mfs_text[HOLD2(json_multifunction)], mfs_text[HOLD12(json_multifunction)]);
+  output_to_all(s);  
 
+  sprintf(s, "\"MFS_CONFIG\": \"%s\",\n\r\"MFS_DIAG\": \"%s\",\n\r", 
+  mfs2_text[HOLD1(json_multifunction2)], mfs2_text[HOLD2(json_multifunction2)]);
   output_to_all(s);  
   
 /*
@@ -1022,6 +1085,154 @@ void multifunction_display(void)
   return;
 }
 
+/*-----------------------------------------------------
+ * 
+ * function: get_all
+ * 
+ * brief:    Read all of the serial ports
+ * 
+ * return:   Next character in the serial port
+ * 
+ *-----------------------------------------------------
+ *
+ * Each of the available serial ports are polled for
+ * a character.
+ * 
+ * If a token ring is enabled, the get_all() function is 
+ * uses the JSON spool
+ * 
+ *-----------------------------------------------------*/
+char get_all(void) 
+{
+  char ch;
+
+  if ( DISPLAY_SERIAL.available() )                   // Display port
+  {
+    ch =  DISPLAY_SERIAL.read();
+    return ch;
+  }
+
+  if ( Serial.available() )                         // Check the serial port
+  {
+    ch = Serial.read();
+      return ch;
+  }
+  
+  switch (json_token)
+  {
+    case TOKEN_WIFI:
+      if ( esp01_available() )
+      {
+        ch = esp01_read();
+        return ch;                                      // ESP01 only avaialbe in WIFI
+      }
+      break;
+
+    case TOKEN_SLAVE:   
+    case TOKEN_MASTER:  
+      if (json_spool_available() )                        // AUX input
+      {
+        return json_spool_read();
+      }
+      break;
+  }
+  
+  return 0;
+}
+
+/*
+ * Spooling function associated with the AUX port
+ */
+char aux_spool_read(void)                                 // Take something out of the spool
+{
+    char ch = 0;
+    
+    if ( aux_spool_in != aux_spool_out )
+    {
+      ch = aux_spool[aux_spool_out];
+      aux_spool_out = (aux_spool_out+1) % sizeof(aux_spool);
+    }
+    return ch;
+}
+
+void aux_spool_put(char ch)                               // Put something into the spool
+{
+    aux_spool[aux_spool_in] = ch;
+    aux_spool_in = (aux_spool_in+1) % sizeof(aux_spool);
+
+    return;
+}
+
+/*
+ * Spooling functions associated with handling JSON commands
+ */
+char json_spool_read(void)                                 // Take something out of the spool
+{
+    char ch = 0;
+    
+    if ( json_spool_in != json_spool_out )
+    {
+      ch = json_spool[json_spool_out];
+      json_spool_out = (json_spool_out+1) % sizeof(json_spool);
+    }
+    return ch;
+}
+
+void json_spool_put(char ch)                               // Put something into the spool
+{
+    json_spool[json_spool_in] = ch;
+    json_spool_in = (json_spool_in+1) % sizeof(json_spool);
+
+    return;
+}
+
+
+/*-----------------------------------------------------
+ * 
+ * function: available
+ * 
+ * brief:    Check for an available character
+ * 
+ * return:   TRUE if something is waiting
+ * 
+ *-----------------------------------------------------
+ *
+ * Each of the available serial ports are polled for
+ * a character.
+ * 
+ * If a token ring is enabled, the get_all() function is 
+ * bypassed
+ * 
+ *-----------------------------------------------------*/
+char available_all(void)
+{
+  if ( Serial.available() || DISPLAY_SERIAL.available() )         // USB is always acive
+  {
+    return 1;
+  }
+
+  switch (json_token)
+  {
+     case TOKEN_WIFI:
+       return esp01_available();
+      
+     case TOKEN_MASTER:
+     case TOKEN_SLAVE:
+        return json_spool_available();
+  }
+  
+  return 0;
+}
+
+int aux_spool_available(void)
+{
+  return (aux_spool_in != aux_spool_out);
+}
+
+int json_spool_available(void)
+{
+  return (json_spool_in != json_spool_out);
+}
 /*-----------------------------------------------------
  * 
  * function: output_to_all
@@ -1050,21 +1261,25 @@ void multifunction_display(void)
   unsigned int i, j;              // Iteration Counter
   
   Serial.print(str);              // Main USB port
+  DISPLAY_SERIAL.print(str);      // Display Serial Port
 
-  if ( esp01_is_present() )
+/*
+ * Determine how the output is going to the auxilary port
+ */
+  if ( esp01_is_present() )       // WiFi Port
   {
     for (i=0; i != esp01_N_CONNECT; i++ )
     {
       esp01_send(str, i);
     }
+    return;
   }
-  else 
+
+  if ( (json_token == TOKEN_WIFI) // Is the AUX port in normal mode?
+      || (token_available()))     // Or the token ring is running?
   {
     AUX_SERIAL.print(str);        // No ESP-01, then use just the AUX port
   }
-
-  DISPLAY_SERIAL.print(str);      // Display Serial Port
-
 
  /*
   * All done, return
@@ -1097,7 +1312,7 @@ void digital_test(void)
  */
   Serial.print(T("\r\nTime:"));                      Serial.print(micros()/1000000); Serial.print("."); Serial.print(micros()%1000000); Serial.print(T("s"));
   Serial.print(T("\r\nBD Rev:"));                    Serial.print(revision());       
-  Serial.print(T("\r\nDIP: 0x"));                    Serial.print(read_DIP(), HEX); 
+  Serial.print(T("\r\nDIP: 0x"));                    Serial.print(read_DIP(0), HEX); 
   digitalWrite(STOP_N, 0);
   digitalWrite(STOP_N, 1);                        // Reset the fun flip flop
   Serial.print(T("\r\nRUN FlipFlop: 0x"));           Serial.print(is_running(), HEX);   
@@ -1152,16 +1367,18 @@ void aquire(void)
 /*
  * Pull in the data amd save it in the record array
  */
-  if ( DLT(DLT_CRITICAL) )
+  if ( DLT(DLT_INFO) )
   {
     Serial.print(T("Aquiring shot:")); Serial.print(this_shot);
   }
   stop_timers();                                    // Stop the counters
   read_timers(&record[this_shot].timer_count[0]);   // Record this count
-  record[this_shot].shot_time = tabata_time();      // Capture the time into the shot
+  record[this_shot].shot_time = FULL_SCALE - in_shot_timer; // Capture the time into the shot
   record[this_shot].face_strike = face_strike;      // Record if it's a face strike
   record[this_shot].sensor_status = is_running();   // Record the sensor status
   record[this_shot].shot_number = shot_number++;    // Record the shot number and increment
+  record[this_shot].xphys_mm  = 0;
+  record[this_shot].yphys_mm  = 0;                  // Assume we hit a 10.9
   this_shot = (this_shot+1) % SHOT_STRING;          // Prepare for the next shot
 
 /*
@@ -1189,10 +1406,60 @@ static void send_fake_score(void)
 { 
   static   shot_record_t shot;
     
-  shot.x = random(-json_sensor_dia/2.0, json_sensor_dia/2.0);
-  shot.y = 0;
+  shot.xphys_mm = random(-json_sensor_dia/2.0, json_sensor_dia/2.0);
+  shot.yphys_mm = 0;
   shot.shot_number++;
   send_score(&shot);
 
   return;
 } 
+
+/*----------------------------------------------------------------
+ * 
+ * function: rapid_red()
+ *           rapid_green()
+ * 
+ * brief: Set the RED and GREEN lights
+ * 
+ * return: Nothing
+ * 
+ *----------------------------------------------------------------
+ *
+ *  If MFS2 has enabled the rapid fire lights then allow the 
+ *  value to be set
+ *
+ *--------------------------------------------------------------*/
+
+void rapid_red
+(
+  unsigned int state          // New state for the RED light
+) 
+{
+  if ( HOLD1(json_multifunction2) == RAPID_RED )
+  {
+      digitalWrite(DIP_0, state);
+  }
+  if ( HOLD2(json_multifunction2) == RAPID_RED )
+  {
+      digitalWrite(DIP_3, state);
+  }
+
+  return;
+}
+
+void rapid_green
+(
+  unsigned int state          // New state for the RED light
+) 
+{
+  if ( HOLD1(json_multifunction2) == RAPID_GREEN )
+  {
+      digitalWrite(DIP_0, state);
+  }
+  if ( HOLD2(json_multifunction2) == RAPID_GREEN )
+  {
+      digitalWrite(DIP_3, state);
+  }
+
+  return;
+}

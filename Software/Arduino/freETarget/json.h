@@ -7,6 +7,7 @@
  *---------------------------------------------------------------*/
 #ifndef _JSON_H_
 #define _JSON_H_
+#include "freETarget.h"
 
 typedef struct  {
   char*             token;    // JSON token string, ex "RADIUS": 
@@ -84,5 +85,10 @@ extern char   json_wifi_ip[];     // Text of IP address
 extern int    json_rh;            // Relative Humidity, 0-100%
 extern int    json_min_ring_time; // Time to wait for ringing to stop
 extern double json_doppler;       // Adjutment for inverse square
+extern int    json_token;         // Token ring setting
+extern int    json_multifunction2;// Multifunction Switch 2
+
+extern int    json_A, json_B, json_C, json_D;// Test parameters
+
 
 #endif _JSON_H_

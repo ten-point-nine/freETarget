@@ -93,7 +93,7 @@ double speed_of_sound
 
   if (temperature < 0.0d)
   {
-    relative_humidity = 0;      //Vapor Pressure below 0 degrees C has little effect on Speed of Sound, due to aerosols it tends to crystalize.
+    relative_humidity = 0;      //Vapor Pressure below 0 degrees C has little effect on Speed of Sound, due to aerosols it tends to cryshot_mmtalize.
   }
 
   TK = 273.15d + temperature;   // Temperature converted to degrees Kelvin.

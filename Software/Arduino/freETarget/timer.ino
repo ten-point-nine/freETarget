@@ -5,6 +5,27 @@
  * Timer interrupt file
  * 
  * ----------------------------------------------------*/
+#include "gpio.h"
+#include "json.h"
+
+/*
+ * Definitions
+ */
+#define FREQUENCY 1000ul                // 1000 Hz
+#define N_TIMERS  12                     // Keep space for 8 timrs
+#define PORT_STATE_IDLE 0                       // There are no sensor inputs
+#define PORT_STATE_WAIT 1                       // Some sensor inputs are present, but not all
+#define PORT_STATE_DONE 2                       // All of the inmputs are present
+
+#define MAX_WAIT_TIME   10                      // Wait up to 10 ms for the input to arrive
+
+/*
+ * Local Variables
+ */
+static unsigned long* timersensor[N_TIMERS]; // Active timer list
+static unsigned long isr_timer;         // Elapsed time counter
+static unsigned int isr_state = PORT_STATE_IDLE;// Current aquisition state
+
 
 /*-----------------------------------------------------
  * 
@@ -20,11 +41,11 @@
  * Timer 1 is used by freETarget to sample the sensor inputs
  * Timer 2 is unassigned
  *-----------------------------------------------------*/
-#define FREQUENCY 1000ul                // 1000 Hz
-
 void init_timer(void)
 {
-  if ( DLT(INIT_TRACE) )
+  int i;
+  
+  if ( DLT(DLT_CRITICAL) )
   {
     Serial.print(T("init_timer()"));
   }
@@ -40,7 +61,14 @@ void init_timer(void)
   TCCR1A |= B00000010;                  // Enable CTC Mode
   TCCR1B |= B00000011;                  // Prescale 64
   TIMSK1 &= ~(B0000010);                // Make sure the interrupt is disabled
-  
+
+  for (i=0; i != N_TIMERS; i++ )        // Clear the timer callback
+  {
+    timersensor[i] = 0;
+  }
+
+  timer_new(&isr_timer, 0);             // Setup two local timers
+
 /*
  * All done, return
  */  
@@ -116,31 +144,27 @@ void disable_timer_interrupt(void)
  * CYCLE   - Count the number of stepper motor cycles
  * 
  *-----------------------------------------------------*/
-#define PORT_STATE_IDLE 0                       // There are no sensor inputs
-#define PORT_STATE_WAIT 1                       // Some sensor inputs are present, but not all
-#define PORT_STATE_DONE 2                       // All of the inmputs are present
-
-#define MOTOR_STATE_IDLE     0                  // The motor is not running
-#define MOTOR_STATE_RUNNING  1                  // The motor is running
-#define MOTOR_STATE_CYCLE    2                  // Cycle the stepper motor
-
-#define MAX_WAIT_TIME   10                      // Wait up to 10 ms for the input to arrive
-#define MAX_RING_TIME   50                      // Wait 50 ms for the ringing to stop
-
-static unsigned int isr_state = PORT_STATE_IDLE;// Current aquisition state
-static unsigned int isr_timer;                  // Elapsed time counter
-
-static unsigned int motor_state   = MOTOR_STATE_IDLE; // Current motor state
-static unsigned int motor_time    = 0;          // How long the motor will run for (ms)
-static unsigned int motor_reload  = 0;          // Reload count
-static unsigned int motor_cycles  = 0;          // Number of cycles to execute (stepper motor)
 
 ISR(TIMER1_COMPA_vect)
 {
   unsigned int pin;                             // Value read from the port
+  unsigned char ch;                             // Byte input
+  unsigned int  i;                              // Iteration counter
+  
+  TCNT1  = 0;                                   // Reset the counter back to 0
 
-  TCNT1  = 0;                                   // Rest the counter back to 0
-
+/*
+ * Refresh the timers
+ */
+  for (i=0; i != N_TIMERS; i++)
+  {
+    if ( (timersensor[i] != 0)
+        && ( *timersensor[i] != 0 ) )
+    {
+      (*timersensor[i])--;
+    }
+  }
+  
 /*
  * Decide what to do if based on what inputs are present
  */
@@ -154,36 +178,31 @@ ISR(TIMER1_COMPA_vect)
     case PORT_STATE_IDLE:                       // Idle, Wait for something to show up
       if ( pin != 0 )                           // Something has triggered
       { 
-        isr_timer = 0;                          // Reset the timer to 0
+        isr_timer = 1 + (int)(json_sensor_dia / 2.0 / 0.30 / 1000.0);              // Start the wait timer
         isr_state = PORT_STATE_WAIT;            // Got something wait for all of the sensors tro trigger
       }
       break;
           
     case PORT_STATE_WAIT:                       // Something is present, wait for all of the inputs
       if ( (pin == RUN_A_MASK)                  // We have all of the inputs
-          || (isr_timer >= MAX_WAIT_TIME) )     // or ran out of time.  Read the timers and rwestart
+          || (isr_timer == 0) )                 // or ran out of time.  Read the timers and restart
       {
         aquire();                               // Read the counters
         clear_running();                        // Reset the RUN flip Flop
-        isr_timer = 0;                          // Reset the timer
+        isr_timer = json_min_ring_time;         // Reset the timer
         isr_state = PORT_STATE_DONE;            // and wait for the all clear
-      }
-      else
-      {
-        isr_timer++;                            // Wait TBD milliseconds for them to arrive
       }
       break;
       
     case PORT_STATE_DONE:                       // Waiting for the ringing to stop
       if ( pin != 0 )                           // Something got latched
       {
-        isr_timer = 0;
+        isr_timer = json_min_ring_time;
         clear_running();                        // Reset and try later
       }
       else
       {
-        isr_timer++;                            // Quiet
-        if ( isr_timer >= json_min_ring_time )  // Make sure there is no rigning
+        if ( isr_timer == 0 )                   // Make sure there is no rigning
         {
           arm_timers();                         // and arm for the next time
           isr_state = PORT_STATE_IDLE;          // and go back to idle
@@ -193,87 +212,88 @@ ISR(TIMER1_COMPA_vect)
   }
 
 /*
- * Run the witness paper drive if enabled
+ * Spool the AUX input
  */
-  switch (motor_state)
+  while ( AUX_SERIAL.available() )
   {
-    case MOTOR_STATE_IDLE:                       // Idle, Wait for something to show up
-      break;
-          
-    case MOTOR_STATE_RUNNING:                   // The motor has been turned on
-      if ( motor_time != 0 )                    // If there is time remaining
-      {
-        motor_time--;                           // run down the timer
-      }
-      else                                      // Hit zero, Time over
-      {
-        paper_on_off(false);                    // Turn off the motor
-        if ( motor_cycles != 0 )
-        {
-          motor_cycles--;                         // Decriment cycles remaining
-        }
-        if ( motor_cycles == 0 )
-        {
-          motor_state = MOTOR_STATE_IDLE;       // None left, go to idle
-        }
-        else
-        {
-          motor_state = MOTOR_STATE_CYCLE;
-        }
-      }
-      break;
-
-    case MOTOR_STATE_CYCLE:                       // Issue one more motor pulse
-      paper_on_off(true);                         // Turn it back on
-      motor_time = motor_reload;                  // Reload the time
-      motor_state = MOTOR_STATE_RUNNING;
-      break;
+    ch = AUX_SERIAL.read();     
+    aux_spool_put(ch);
   }
- 
+
+
 /*
  * Undo the mutex and return
  */
   return;
 }
 
+
 /*-----------------------------------------------------
  * 
- * function: set_motor_time
+ * function: timer_new()
+ *           timer_delete()
  * 
- * brief:    Setup the duration of the witness paper motor
+ * brief:    Add or remove timers
  *  
- * return:   None
+ * return:   TRUE if the operation was a success
  * 
  *-----------------------------------------------------
  *
- * The duration of the motor time is set into memory.
+ * The timer interrupt has the ability to manage a 
+ * count down timer
  * 
- * The motor time is cumulative. Ie if the shot is registered
- * while the paper is moving then it is left moving and
- * the new shot added to it.
+ * These functions add or remove a timer from the active
+ * timer list
  * 
+ * IMPORTANT
+ * 
+ * The timers should be static variables, otherwise they
+ * will overflow the available space every time they are
+ * instantiated.
  *-----------------------------------------------------*/
-void set_motor_time
-  (
-  unsigned int duration,              // Duration in milliseconds
-  unsigned int cycles                 // Number of cycles
-  )
+unsigned int timer_new
+(
+  unsigned long* new_timer,         // Pointer to new down counter
+  unsigned long  start_time         // Starting value
+)
 {
-  if ( duration == 0 )                // The duration == 0 
+  unsigned int i;
+
+  for (i=0;  i != N_TIMERS; i++ )   // Look through the space
   {
-    motor_state = MOTOR_STATE_IDLE;   // Force Idle
-    return;
+    if ( (timersensor[i] == 0)           // Got an empty timer slot
+      || (timersensor[i] == new_timer) ) // or it already exists
+    {
+      timersensor[i] = new_timer;        // Add it in
+      *timersensor[i] = start_time;
+      return 1;
+    }
   }
 
-  motor_time += (10*duration);        // Otherwiose remember for later
-  motor_reload += (10*duration);      // Set the reload count
-  motor_state = MOTOR_STATE_RUNNING;  // And start running
-  motor_cycles += cycles;             // Number of steps to pulse
-
-  if ( motor_cycles == 0 )
+  if ( DLT(DLT_CRITICAL) )
   {
-    motor_cycles = 1;
+    Serial.print(T("No space for timer"));
   }
   
-  return;
+  return 0;
+}
+
+ unsigned int timer_delete
+(
+  unsigned long* old_timer          // Pointer to new down counter
+)
+{
+  unsigned int i;
+
+  for (i=0;  i != N_TIMERS; i++ )   // Look through the space
+  {
+    if ( timersensor[i] == old_timer )   // Found the existing timer
+    {
+      timersensor[i] = 0;                // Add it in
+      return 1;
+    }
+  }
+
+  return 0;
+  
 }

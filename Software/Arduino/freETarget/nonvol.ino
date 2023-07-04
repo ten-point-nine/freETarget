@@ -23,9 +23,9 @@ void check_nonvol(void)
 {
   unsigned int nonvol_init;
   
-  if ( DLT(DLT_DIAG) )
+  if ( DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("Checking NONVOL"));
+    Serial.print(T("check_nonvol()"));
   }
   
 /*
@@ -78,11 +78,6 @@ void factory_nonvol
   unsigned int x;                         // Temporary Value
   double       dx;                        // Temporarty Value
   unsigned int i, j;                      // Iteration Counter
-  
-  EEPROM.get(NONVOL_SERIAL_NO, serial_number); // record the staring serial number
-  Serial.print(serial_number);
-  Serial.print(new_serial_number);
-  delay(5);
   
 /*
  * Fill up all of memory with a known (bogus) value
@@ -315,23 +310,16 @@ void read_nonvol(void)
     Serial.print(T("read_nonvol()"));
   }
   
-  if ( DLT(DLT_DIAG) )
-  {
-    Serial.print(T("Reading NONVOL"));
-  }
-  
 /*
  * Read the nonvol marker and if uninitialized then set up values
  */
   EEPROM.get(NONVOL_INIT, nonvol_init);
-  
   if ( nonvol_init != INIT_DONE)                       // EEPROM never programmed
   {
     factory_nonvol(true);                              // Force in good values
   }
   
   EEPROM.get(NONVOL_SERIAL_NO, nonvol_init);
-  
   if ( nonvol_init == (-1) )                          // Serial Number never programmed
   {
     factory_nonvol(true);                             // Force in good values
@@ -405,7 +393,6 @@ void read_nonvol(void)
 /*
  * Go through and verify that the special cases are taken care of
  */
-  multifunction_switch();                                   // Look for an override on the target type
   
 /*
  * All done, begin the program
@@ -491,123 +478,94 @@ void update_nonvol
 /*
  * Previously initialized memory.  Add in the new fields and values
  */
-  if ( current_version == 1 )                     
+  switch ( current_version )
   {
-    x = 3;                                                  // Use an int to make sure that
-    EEPROM.put(NONVOL_FOLLOW_THROUGH, x);                   // EEPROM.put uses the right size
-    current_version = 2;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-  
-  if ( current_version == 2 )                     
-  {
-    x = 120;                                                // Set to 120.  No harm if it's sent
-    EEPROM.put(NONVOL_KEEP_ALIVE, x);
-    current_version = 3;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-  
-  if ( current_version == 3 )                     
-  {
-    x = 20;                                                // 20 x 100 ms increments
-    EEPROM.put(NONVOL_TABATA_WARN_ON, x);
-    x = 20;                                                // 20 x 100 ms increments
-    EEPROM.put(NONVOL_TABATA_WARN_OFF, x);
-    current_version = 4;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-  
-  if ( current_version == 4 )                     
-  {
-    x = 5;                                                 // Five rings to accept a face strike
-    EEPROM.put(NONVOL_FACE_STRIKE, x);
-    current_version = 5;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
+    case 1:
+      x = 3;                                                  // Use an int to make sure that
+      EEPROM.put(NONVOL_FOLLOW_THROUGH, x);                   // EEPROM.put uses the right size
+    
+    case 2:
+      x = 120;                                                // Set to 120.  No harm if it's sent
+      EEPROM.put(NONVOL_KEEP_ALIVE, x);
+
+    case 3:
+      x = 20;                                                // 20 x 100 ms increments
+      EEPROM.put(NONVOL_TABATA_WARN_ON, x);
+      x = 20;                                                // 20 x 100 ms increments
+      EEPROM.put(NONVOL_TABATA_WARN_OFF, x);
+
+    case 4:
+      x = 5;                                                 // Five rings to accept a face strike
+      EEPROM.put(NONVOL_FACE_STRIKE, x);
+
+    case 5:
+      x = 0;
+      EEPROM.put(NONVOL_RAPID_COUNT, x);
+      x = 1;
+      EEPROM.put(NONVOL_WIFI_CHANNEL, x);                     // Default to channel 1
+
+    case 6:
+
+    case 7:
+      x = 1;
+      EEPROM.put(NONVOL_WIFI_DHCP, x);                      // Default DHCP to be on
+      x = 0;
+      EEPROM.put(NONVOL_WIFI_SSID, x);                      // No default SSID
+      EEPROM.put(NONVOL_WIFI_PWD, x);                       // No default password
+      EEPROM.put(NONVOL_WIFI_IP, x);                        // No default IP Address
+
+    case 8:
+      x = 0;
+      EEPROM.put(NONVOL_WIFI_IP, x);                        // No default IP address
+
+    case 9:
+      x = 0;
+      for (i=0; i != esp01_SSID_SIZE; i++ )
+      {
+        EEPROM.get(NONVOL_WIFI_SSID+i, x);
+        EEPROM.put(NONVOL_WIFI_SSID_32+i, x);
+      }
+
+   case 10:
+      x=0;
+      EEPROM.put(NONVOL_WIFI_SSID, x);                      // Version 10 put the SSID_32 in the
+      EEPROM.put(NONVOL_WIFI_SSID_32, x);                   // wrong place so this patch
+      EEPROM.put(NONVOL_WIFI_IP, x);                        // zero's out the variables.
+      EEPROM.put(NONVOL_WIFI_PWD, x);
+
+    case 11:
+      x=50;
+      EEPROM.put(NONVOL_RH, x);                             // Set RH to 50%
+
+    case 12:
+      x=500;
+      EEPROM.put(NONVOL_MIN_RING_TIME, x);                  // Set ring time to 500ms
+
+    case 13:
+      y = 50;                      
+      EEPROM.put(NONVOL_DOPPLER, y);                        //  50 clocks per 100 mm
+
+    case 14:
+      x = TOKEN_WIFI;                      
+      EEPROM.put(NONVOL_TOKEN, x);                          //  Turn off the token ring
+
+    case 15:
+      x = 0;                      
+      EEPROM.put(NONVOL_MFS2, x);                          //  Turn off MFS2
+      if ( json_paper_time < 100 )
+      {
+        json_paper_time *= 10;
+      }
+      EEPROM.put(NONVOL_PAPER_TIME, json_paper_time);      //  Convert paper_time in 0.010 seconds to 0.001 seconds
+
+    default:
+    case PS_VERSION:                                       // Do nothing
+      break;
   }
 
-  if ( current_version == 5 )                     
-  {
-    x = 0;                                                 // 0 shots in a rapid cycle
-    EEPROM.put(NONVOL_RAPID_COUNT, x);
-    x = 1;
-    EEPROM.put(NONVOL_WIFI_CHANNEL, x);                     // Default to channel 1
-    current_version = 6;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-
-  if ( current_version == 6 )                             // Version 6 removed
-  {
-    current_version = 7;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-
-  if ( current_version == 7 )                     
-  {
-    x = 1;
-    EEPROM.put(NONVOL_WIFI_DHCP, x);                      // Default DHCP to be on
-    x = 0;
-    EEPROM.put(NONVOL_WIFI_SSID, x);                      // No default SSID
-    EEPROM.put(NONVOL_WIFI_PWD, x);                       // No default password
-    EEPROM.put(NONVOL_WIFI_IP, x);                        // No default IP Address
-    current_version = 8;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-
-  if ( current_version == 8 )                     
-  {
-    x = 0;
-    EEPROM.put(NONVOL_WIFI_IP, x);                        // No default IP address
-    current_version = 9;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-
-  
-  if ( current_version == 9 )                             // Extend SSID to 32 bits                  
-  {
-    for (i=0; i != esp01_SSID_SIZE; i++ )
-    {
-      EEPROM.get(NONVOL_WIFI_SSID+i, x);
-      EEPROM.put(NONVOL_WIFI_SSID_32+i, x);
-    }
-    current_version = 10;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-
-  if ( current_version == 10 )                             // Fix PS Version 10 bug                
-  {
-    x=0;
-    EEPROM.put(NONVOL_WIFI_SSID, x);                      // Version 10 put the SSID_32 in the
-    EEPROM.put(NONVOL_WIFI_SSID_32, x);                   // wrong place so this patch
-    EEPROM.put(NONVOL_WIFI_IP, x);                        // zero's out the variables.
-    EEPROM.put(NONVOL_WIFI_PWD, x);
-    current_version = 11;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-
-  if ( current_version == 11 )                            // Add in Relative Humidity
-  {
-    x=50;
-    EEPROM.put(NONVOL_RH, x);                             // Set RH to 50%
-    current_version = 12;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-
-  if ( current_version == 12 )                            // Add in minimum ring time
-  {
-    x=500;
-    EEPROM.put(NONVOL_MIN_RING_TIME, x);                  // Set ring time to 500ms
-    current_version = 13;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-
-  if ( current_version == 13 )                            // Correction for Doppler Inverse Square
-  {
-    y = 7.0d / (sq(700.0d));                      
-    EEPROM.put(NONVOL_DOPPLER, y);                        //  Adjust to 7 us per 700 us delay
-    current_version = 14;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-  
+  current_version = PS_VERSION;
+  EEPROM.put(NONVOL_PS_VERSION, current_version);
+      
 /*
  * Up to date, return
  */
@@ -759,7 +717,11 @@ void backup_nonvol(void)
   int i;
   char x;
 
-  Serial.print(T("\r\nStarting backup"));
+  if ( DLT(DLT_CRITICAL) )
+  {
+    Serial.print(T("\r\nStarting backup"));
+  }
+  
 /*
  * Loop and print out the nonvol
  */
@@ -769,8 +731,6 @@ void backup_nonvol(void)
       EEPROM.put(i + NONVOL_SIZE/2, x);
   }
   
- Serial.print(T(" - done"));
-   
  /* 
   *  All done, return
   */
@@ -797,7 +757,11 @@ void restore_nonvol(void)
   int i;
   char x;
 
-  Serial.print(T("\r\nStarting restore"));
+  if( DLT(DLT_DIAG))
+  {
+    Serial.print(T("\r\nStarting restore"));
+  }
+  
 /*
  * Loop and print out the nonvol
  */

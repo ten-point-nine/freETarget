@@ -2,7 +2,7 @@
  *
  * mechanical.h
  *
- * Header file for physical constant
+ * Header file for physical constants
  *
  *---------------------------------------------------------------*/
 #ifndef _MECHANICAL_H_

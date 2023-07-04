@@ -68,7 +68,7 @@ void set_LED_PWM_now
     return;
   }
   
-  if ( DLT(DLT_INFO) )
+  if ( DLT(DLT_DIAG) )
   {
     Serial.print(T("new_LED_percent:")); Serial.print(new_LED_percent); Serial.print(T("  old_LED_percent:")); Serial.print(old_LED_percent);
   }
@@ -85,7 +85,7 @@ void set_LED_PWM                                  // Theatre lighting
   int new_LED_percent                            // Desired LED level (0-100%)
   )
 {
-  if ( DLT(DLT_INFO) )
+  if ( DLT(DLT_DIAG) )
   {
     Serial.print(T("new_LED_percent:")); Serial.print(new_LED_percent); Serial.print(T("  old_LED_percent:")); Serial.print(old_LED_percent);
   }

@@ -4,8 +4,11 @@
  *
  * Determine the score
  *
+ *-----------------------------------------------------------------
+ * 
  *---------------------------------------------------------------*/
 #include "freETarget.h"
+#include "json.h"
 
 #define THRESHOLD (0.001)
 
@@ -18,13 +21,16 @@
  *  Variables
  */
 extern const char* which_one[4];
+extern int json_clock[4];
 
-static sensor_t s[4];
+static sensor_t sensor[4];
 
 unsigned int  pellet_calibre;     // Time offset to compensate for pellet diameter
 
 static void remap_target(double* x, double* y);  // Map a club target if used
-
+static void dopper_fade(shot_record_t* record, sensor_t sensor[]);      // Take care of a fading signal
+static int  adjust_clocks( shot_record_t* shot, sensor_t sensor[]);     // Adjust the clocks
+static void target_geometry( shot_record_t* shot, sensor_t sensor[]);   // Work out the target geometyr
 
 /*----------------------------------------------------------------
  *
@@ -47,7 +53,7 @@ static void remap_target(double* x, double* y);  // Map a club target if used
  * The layout of the sensors is shown above.  0 is the middle of
  * the target, and the sensors located at the cardinal points.
  * 
- * This function takes the physical location of the sensors (mm)
+ * This function takes the physhot_mmical location of the sensors (mm)
  * and generates the sensor array based on time. (ex us / mm)
  *--------------------------------------------------------------*/
 void init_sensors(void)
@@ -64,24 +70,31 @@ void init_sensors(void)
   pellet_calibre = ((double)json_calibre_x10 / s_of_sound / 2.0d / 10.0d) * OSCILLATOR_MHZ; // Clock adjustement
   
  /*
-  * Work out the geometry of the sensors
+  * Work out the geometry of the sensors.  Sensors are located at the cardinal points
   */
-  s[N].index = N;
-  s[N].x = json_north_x / s_of_sound * OSCILLATOR_MHZ;
-  s[N].y = (json_sensor_dia /2.0d + json_north_y) / s_of_sound * OSCILLATOR_MHZ;
-
-  s[E].index = E;
-  s[E].x = (json_sensor_dia /2.0d + json_east_x) / s_of_sound * OSCILLATOR_MHZ;
-  s[E].y = (0.0d + json_east_y) / s_of_sound * OSCILLATOR_MHZ;
-
-  s[S].index = S;
-  s[S].x = 0.0d + json_south_x / s_of_sound * OSCILLATOR_MHZ;
-  s[S].y = -(json_sensor_dia/ 2.0d + json_south_y) / s_of_sound * OSCILLATOR_MHZ;
-
-  s[W].index = W;
-  s[W].x = -(json_sensor_dia / 2.0d  + json_west_x) / s_of_sound * OSCILLATOR_MHZ;
-  s[W].y = json_west_y / s_of_sound * OSCILLATOR_MHZ;
+  sensor[N].index = N;
+  sensor[N].x_tick = json_north_x / s_of_sound * OSCILLATOR_MHZ;
+  sensor[N].y_tick = (json_sensor_dia /2.0d + json_north_y) / s_of_sound * OSCILLATOR_MHZ;
+  sensor[N].xphys_mm = 0;         // Located at the NW corner
+  sensor[N].yphys_mm = json_sensor_dia / 2.0;
   
+  sensor[E].index = E;
+  sensor[E].x_tick = (json_sensor_dia /2.0d + json_east_x) / s_of_sound * OSCILLATOR_MHZ;
+  sensor[E].y_tick = (0.0d + json_east_y) / s_of_sound * OSCILLATOR_MHZ;
+  sensor[E].xphys_mm = json_sensor_dia / 2.0d;
+  sensor[E].yphys_mm = 0;
+  
+  sensor[S].index = S;
+  sensor[S].x_tick = 0.0d + json_south_x / s_of_sound * OSCILLATOR_MHZ;
+  sensor[S].y_tick = -(json_sensor_dia/ 2.0d + json_south_y) / s_of_sound * OSCILLATOR_MHZ;
+  sensor[S].xphys_mm = 0;
+  sensor[S].yphys_mm = -(json_sensor_dia / 2.0d);
+  
+  sensor[W].index = W;
+  sensor[W].x_tick = -(json_sensor_dia / 2.0d  + json_west_x) / s_of_sound * OSCILLATOR_MHZ;
+  sensor[W].y_tick = json_west_y / s_of_sound * OSCILLATOR_MHZ;
+  sensor[W].xphys_mm = -(json_sensor_dia / 2.0d);
+  sensor[W].yphys_mm = 0;
  /* 
   *  All done, return
   */
@@ -98,33 +111,28 @@ void init_sensors(void)
  *
  *----------------------------------------------------------------
  *
+ * Computing the score takes place over a number of steps
+ * 
+ * 1 - 
  * See freETarget documentaton for algorithm
  * 
  *--------------------------------------------------------------*/
 
 unsigned int compute_hit
   (
-  shot_record_t* shot,             // Storing the results
-  bool         test_mode           // Fake counters in test mode
+  shot_record_t* shot              // Storing the results
   )
 {
-  double        reference;         // Time of reference counter
-  int           location;          // Sensor chosen for reference location
   int           i, j, count;
-  double        x;                 // Floating point value
   double        estimate;          // Estimated position
+  int           trigger_sensor;    // Which sensor started the process
   double        last_estimate, error; // Location error
-  double        r1, r2;            // Distance between points
-  double        x_avg, y_avg;      // Running average location
-  double        smallest;          // Smallest non-zero value measured
+  double        x_avg, y_avg;      // Running average location in clock ticks
   double        z_offset_clock;    // Time offset between paper and sensor plane
-  unsigned long now;               // Estimate time
-
-  now = millis();
-      
+  double        clock_to_mm;       // Conversion from clock counts to mm
+  
   if ( DLT(DLT_DIAG) )
   {
-
     Serial.print(T("compute_hit()")); 
   }
 
@@ -135,7 +143,11 @@ unsigned int compute_hit
   {
     if ( DLT(DLT_DIAG) )
     {
-      Serial.print(T("Miss detected"));
+      Serial.print(T("Miss detected: F:")); Serial.print(shot->face_strike); 
+      Serial.print(T(" N:")); Serial.print(shot->timer_count[N]);
+      Serial.print(T(" E:")); Serial.print(shot->timer_count[E]);
+      Serial.print(T(" S:")); Serial.print(shot->timer_count[S]);
+      Serial.print(T(" W:")); Serial.print(shot->timer_count[W]);
     }
     return MISS;
   }
@@ -144,6 +156,7 @@ unsigned int compute_hit
  *  Compute the current geometry based on the speed of sound
  */
   init_sensors();
+  clock_to_mm = speed_of_sound(temperature_C(), json_rh) / OSCILLATOR_MHZ;
   z_offset_clock = (double)json_z_offset  * OSCILLATOR_MHZ / s_of_sound; // Clock adjustement for paper to sensor difference
   if ( DLT(DLT_DIAG) )
   {
@@ -160,155 +173,46 @@ unsigned int compute_hit
       Serial.print(which_one[i]); Serial.print(shot->timer_count[i]); Serial.print(T(" ")); 
     }
   }
-  
-/*
- * Determine the location of the reference counter (longest time)
- */
-  reference = shot->timer_count[N];
-  location = N;
-  for (i=E; i <= W; i++)
-  {
-    if ( shot->timer_count[i] > reference )
-    {
-      reference = shot->timer_count[i];
-      location = i;
-    }
-  }
-  
- if ( DLT(DLT_DIAG) )
- {
-   Serial.print(T("Reference: ")); Serial.print(reference); Serial.print(T("  location:")); Serial.print(nesw[location]);
- }
 
-/*
- * Correct the time to remove the shortest distance
- */
-  for (i=N; i <= W; i++)
-  {
-    s[i].count = reference - shot->timer_count[i];
-    s[i].is_valid = true;
-    if ( shot->timer_count[i] == 0 )
-    {
-      s[i].is_valid = false;
-    }
-  }
-
-  if ( DLT(DLT_DIAG) )
-  {
-    Serial.print(T("Counts       "));
-    for (i=N; i <= W; i++)
-    {
-     Serial.print(*which_one[i]); Serial.print(":"); Serial.print(s[i].count); Serial.print(T(" "));
-    }
-    Serial.print(T("\r\nMicroseconds "));
-    for (i=N; i <= W; i++)
-    {
-     Serial.print(*which_one[i]); Serial.print(T(":")); Serial.print(((double)s[i].count) / ((double)OSCILLATOR_MHZ)); Serial.print(T(" "));
-    }
-  }
-
-
-/*
- * Compensate for sound attenuation over a long distance
- * 
- * For large targets the sound will attenuate between the closest and furthest sensor.  For small targets this is negligable, but for a Type 12
- * target the difference can be measured in microseconds.  This loop subtracts an function of the distance between the closest and 
- * current sensor.
- * 
- * The value of SOUND_ATTENUATION is found by analyzing the closest and furthest traces
- * 
- * From tests, the error was 7us over a 700us delay.  Since sound attenuates as the square of distance, this is 
- */
-  for (i=N; i <= W; i++)
-  {
-    x = (double)s[i].count;             // Time difference in clock ticks
-    x = x / OSCILLATOR_MHZ;             // Convert to a time in us
-    x = x * x;                          // Dopper's inverse Square
-    x = x * json_doppler;               // Compensation in us
-    x = x * OSCILLATOR_MHZ;             // Compensation in clock ticks
-    s[i].count -= (int)x;               // Add in the correction
-  }
-
-  if ( DLT(DLT_DIAG) )
-  {
-    Serial.print(T("Compensate Counts       "));
-    for (i=N; i <= W; i++)
-    {
-     Serial.print(*which_one[i]); Serial.print(":"); Serial.print(s[i].count); Serial.print(T(" "));
-    }
-    Serial.print(T("\r\nMicroseconds "));
-    for (i=N; i <= W; i++)
-    {
-     Serial.print(*which_one[i]); Serial.print(T(":")); Serial.print(((double)s[i].count) / ((double)OSCILLATOR_MHZ)); Serial.print(T(" "));
-    }
-  }
-  
-/*
- * Fill up the structure with the counter geometry
- */
-  for (i=N; i <= W; i++)
-  {
-    s[i].b = s[i].count;
-    s[i].c = sqrt(sq(s[(i) % 4].x - s[(i+1) % 4].x) + sq(s[(i) % 4].y - s[(i+1) % 4].y));
-   }
-  
-  for (i=N; i <= W; i++)
-  {
-    s[i].a = s[(i+1) % 4].b;
-  }
-  
-/*
- * Find the smallest non-zero value, this is the sensor furthest away from the sensor
- */
-  smallest = s[N].count;
-  for (i=N+1; i <= W; i++)
-  {
-    if ( s[i].count < smallest )
-    {
-      smallest = s[i].count;
-    }
-  }
-  
-/*  
- *  Loop and calculate the unknown radius (estimate)
- */
-  estimate = s[N].c - smallest + 1.0d;
- 
-  if ( DLT(DLT_DIAG) )
-  {
-   Serial.print(T("estimate: ")); Serial.print(estimate);
-  }
   error = 999999;                  // Start with a big error
   count = 0;
-
+  estimate = json_sensor_dia / 2.0d * OSCILLATOR_MHZ;
+  
  /*
   * Iterate to minimize the error
   */
   while (error > THRESHOLD )
   {
+    doppler_fade(shot, sensor);
+    trigger_sensor = adjust_clocks(shot, sensor);
+    target_geometry(shot, sensor);
+    
     x_avg = 0;                     // Zero out the average values
     y_avg = 0;
     last_estimate = estimate;
 
     for (i=N; i <= W; i++)        // Calculate X/Y for each sensor
     {
-      if ( find_xy_3D(&s[i], estimate, z_offset_clock) )
+      if ( find_xy_3D(&sensor[i], estimate, z_offset_clock) )
       {
-        x_avg += s[i].xs;        // Keep the running average
-        y_avg += s[i].ys;
+        x_avg += sensor[i].xr_tick;        // Keep the running average
+        y_avg += sensor[i].yr_tick;        // Average in clocks
       }
     }
 
     x_avg /= 4.0d;
     y_avg /= 4.0d;
+    shot->xphys_mm = x_avg * clock_to_mm;         // Write this back into the shot record
+    shot->yphys_mm = y_avg * clock_to_mm;
     
-    estimate = sqrt(sq(s[location].x - x_avg) + sq(s[location].y - y_avg));
+    estimate = sqrt(sq(sensor[trigger_sensor].x_tick - x_avg) + sq(sensor[trigger_sensor].y_tick - y_avg));
     error = abs(last_estimate - estimate);
 
     if ( DLT(DLT_DIAG) )
     {
       Serial.print(T("x_avg:"));  Serial.print(x_avg);   Serial.print(T("  y_avg:")); Serial.print(y_avg); Serial.print(T(" estimate:")),  Serial.print(estimate);  Serial.print(T(" error:")); Serial.print(error);
-      Serial.println();
+      Serial.print(T("  shot->xphys_mm:"));  Serial.print(shot->xphys_mm);   Serial.print(T("  shot->yphys_mm:")); Serial.print(shot->yphys_mm); 
+      Serial.print("\r\n");
     }
     count++;
     if ( count > 20 )
@@ -320,11 +224,176 @@ unsigned int compute_hit
  /*
   * All done return
   */
-  shot->x = x_avg;             
-  shot->y = y_avg;
 
   return location;
 }
+
+
+/*----------------------------------------------------------------
+ *
+ * function: dopper_fade
+ *
+ * brief:    Compensate for the fading signal with distance
+ * 
+ * return:   Compensation computed
+ *
+ *----------------------------------------------------------------
+ * 
+ * Compensate for sound attenuation over a long distance
+ * 
+ * For large targets the sound will attenuate between the closest and 
+ * furthest sensor.  For small targets this is negligable, but for a 
+ * Type 12 target the difference can be measured in microseconds.  
+ * This loop subtracts an function of the distance between the closest and 
+ * current sensor.
+ * 
+ * The value of SOUND_ATTENUATION is found by analyzing the closest and furthest traces
+ * 
+ * From tests, the error was 7us over a 700us delay.  
+ * Since sound attenuates as the square of distance, this is 
+ * 
+ *----------------------------------------------------------*/
+#define DOPPLER_RATIO    100.0          // Normalize everything to 100mm
+
+static void doppler_fade
+(
+   shot_record_t* shot,                 // Storing the results
+   sensor_t       sensor[]              // Sensor Geometry
+)
+{
+  int i;
+  double distance;                     // Shot distance in mm
+  double ratio;                        // distance = 100mm 
+
+/*
+ * The count correction is a function of the squate of the distance
+ */
+  for (i=N; i <= W; i++)
+  {
+    distance = sqrt(sq(sensor[i].xphys_mm - shot->xphys_mm) + sq(sensor[i].yphys_mm - shot->yphys_mm));      // Distance between shot and sensor
+    ratio = sq(distance / DOPPLER_RATIO);                     // Normalize to 100 mm ans square
+    sensor[i].doppler = (int)((json_doppler * ratio) + 0.5);  // Record the correction
+    if ( DLT(DLT_DIAG) )
+    {
+      Serial.print(T("Doppler Correction ")); Serial.print(which_one[i]); 
+      Serial.print(T("\r\n   X_mm: ")); Serial.print(sensor[i].xphys_mm); Serial.print(T(" x_mm: ")); Serial.print(shot->xphys_mm); 
+      Serial.print(T("\r\n   Y_mm: ")); Serial.print(sensor[i].yphys_mm); Serial.print(T(" y_mm: ")); Serial.print(shot->yphys_mm); 
+      Serial.print(T("\r\n   dist: ")); Serial.print(distance); Serial.print(T(" ratio: ")); Serial.print(ratio); Serial.print(" doppler: "); Serial.print(sensor[i].doppler); 
+    }
+  }
+
+/*
+ * All done, return
+ */
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * function: adjust_clocks
+ *
+ * brief:    Adjust the clocks based on the doppler fading
+ * 
+ * return:   Index to trigger sensor
+ *
+ *----------------------------------------------------------------
+ * 
+ * Compensate for sound attenuation over a long distance
+ * 
+ * For large targets the sound will attenuate between the closest and 
+ * furthest sensor.  For small targets this is negligable, but for a 
+ * Type 12 target the difference can be measured in microseconds.  
+ * This loop subtracts an function of the distance between the closest and 
+ * current sensor.
+ * 
+ * The value of SOUND_ATTENUATION is found by analyzing the closest and furthest traces
+ * 
+ * From tests, the error was 7us over a 700us delay.  
+ * Since sound attenuates as the square of distance, this is 
+ * 
+ *----------------------------------------------------------*/
+static int adjust_clocks
+(
+   shot_record_t* shot,                 // Storing the results
+   sensor_t       sensor[]              // Sensor Geometry
+)
+{
+  int       i;
+  int       largest;                    // Largest timer value
+  int       trigger_sensor;             // What sensor triggered the start
+  
+/*
+ * Find the largest count.  This is the one closest to the shot
+ */
+  largest = 0;
+  for (i=N; i <= W; i++)
+  {
+    sensor[i].count = shot->timer_count[i] + sensor[i].doppler;  // Adding because sound arrived "sooner"
+    if ( sensor[i].count > largest )
+    {
+      largest = sensor[i].count;
+      trigger_sensor = i;
+    }
+  }
+
+/*
+ * Normalize the times so that the closest sensor is the smallest time.  Subtract the doppler fade
+ */
+  for (i=N; i <= W; i++)
+  {
+    sensor[i].count = largest - sensor[i].count;
+  }
+
+/*
+ * All done, return
+ */
+  return trigger_sensor;
+}
+
+ /*----------------------------------------------------------------
+ *
+ * function: target_geometry
+ *
+ * brief:    Compute the target geometry based on speed of sound
+ *           and doppler fade
+ * 
+ * return:   sensor strucure updated
+ *
+ *----------------------------------------------------------------
+ * 
+ * The timing is adjusted based on the physical assembly of the  
+ * target and the adjustments based on geometry and where the
+ * shot falls
+ * 
+ *----------------------------------------------------------*/ 
+static void target_geometry
+(
+   shot_record_t* shot,                 // Storing the results
+   sensor_t       sensor[]              // Sensor Geometry
+)
+{
+  int i;          // Iteration counter
+  
+/*
+ * Fill up the structure with the counter geometry
+ */
+  for (i=N; i <= W; i++)
+  {
+    sensor[i].b = sensor[i].count;
+    sensor[i].c = sqrt(sq(sensor[(i) % 4].x_tick - sensor[(i+1) % 4].x_tick) + sq(sensor[(i) % 4].y_tick - sensor[(i+1) % 4].y_tick));
+   }
+  
+  for (i=N; i <= W; i++)
+  {
+    sensor[i].a = sensor[(i+1) % 4].b;
+  }
+  
+/*
+ * All done, return
+ */
+  return;
+}
+
 
 
 /*----------------------------------------------------------------
@@ -334,6 +403,7 @@ unsigned int compute_hit
  * brief: Calaculate where the shot seems to lie
  * 
  * return: TRUE if the shot was computed correctly
+ *         sensor->xr/yr Rotated shot position in clocks from ctr
  *
  *----------------------------------------------------------------
  *
@@ -352,7 +422,7 @@ unsigned int compute_hit
  *  A = arccos( ----------------)
  *            (      -2bc       )
  *            
- *  In our system, a is the estimate for the shot location
+ *  In our syshot_mmtem, a is the estimate for the shot location
  *                 b is the measured time + estimate of the shot location
  *                 c is the fixed distance between the sensors
  *                 
@@ -386,7 +456,7 @@ unsigned int compute_hit
 
 bool find_xy_3D
     (
-     sensor_t* s,           // Sensor to be operatated on
+     sensor_t* sensor,      // Sensor to be operatated on
      double estimate,       // Estimated position
      double z_offset_clock  // Time difference between paper and sensor plane
      )
@@ -396,84 +466,72 @@ bool find_xy_3D
   double x;                 // Temporary value
   
 /*
- * Check to see if the sensor data is correct.  If not, return an error
- */
-  if ( s->is_valid == false )
-  {
-    if ( DLT(DLT_DIAG) )
-    {
-      Serial.print(T("Sensor: ")); Serial.print(s->index); Serial.print(T(" no data"));
-    }
-    return false;           // Sensor did not trigger.
-  }
-
-/*
  * It looks like we have valid data.  Carry on
  */
-  x = sq(s->a + estimate) - sq(z_offset_clock);
+  x = sq(sensor->a + estimate) - sq(z_offset_clock);
   if ( x < 0 )
   {
-    sq(s->a + estimate);
+    sq(sensor->a + estimate);
     if ( DLT(DLT_DIAG) )
     {
-      Serial.print(T("s->a is complex, truncting"));
+      Serial.print(T("sensor->a is complex, truncting"));
     }
   }
   ae = sqrt(x);                             // Dimenstion with error included
   
-  x = sq(s->b + estimate) - sq(z_offset_clock);
+  x = sq(sensor->b + estimate) - sq(z_offset_clock);
   if ( x < 0 )
   {
     if ( DLT(DLT_DIAG) )
     {
-      Serial.print(T("s->b is complex, truncting"));
+      Serial.print(T("sensor->b is complex, truncting"));
     }
-    sq(s->b + estimate);
+    sq(sensor->b + estimate);
   }
   be = sqrt(x);  
 
-  if ( (ae + be) < s->c )   // Check for an accumulated round off error
+  if ( (ae + be) < sensor->c )   // Check for an accumulated round off error
     {
-    s->angle_A = 0;         // Yes, then force to zero.
+    sensor->angle_A = 0;         // Yes, then force to zero.
     }
   else
     {  
-    s->angle_A = acos( (sq(ae) - sq(be) - sq(s->c))/(-2.0d * be * s->c));
+    sensor->angle_A = acos( (sq(ae) - sq(be) - sq(sensor->c))/(-2.0d * be * sensor->c));
     }
   
 /*
  *  Compute the X,Y based on the detection sensor
  */
-  switch (s->index)
+  switch (sensor->index)
   {
     case (N): 
-      rotation = PI_ON_2 - PI_ON_4 - s->angle_A;
-      s->xs = s->x + ((be) * sin(rotation));
-      s->ys = s->y - ((be) * cos(rotation));
+      rotation = PI_ON_2 - PI_ON_4 - sensor->angle_A;
+      sensor->xr_tick = sensor->x_tick + ((be) * sin(rotation));      // Relocating relative to the cardinal points
+      sensor->yr_tick = sensor->y_tick - ((be) * cos(rotation));
       break;
       
     case (E): 
-      rotation = s->angle_A - PI_ON_4;
-      s->xs = s->x - ((be) * cos(rotation));
-      s->ys = s->y + ((be) * sin(rotation));
+      rotation = sensor->angle_A - PI_ON_4;
+      sensor->xr_tick = sensor->x_tick - ((be) * cos(rotation));
+      sensor->yr_tick = sensor->y_tick + ((be) * sin(rotation));
       break;
       
     case (S): 
-      rotation = s->angle_A + PI_ON_4;
-      s->xs = s->x - ((be) * cos(rotation));
-      s->ys = s->y + ((be) * sin(rotation));
+      rotation = sensor->angle_A + PI_ON_4;
+      sensor->xr_tick = sensor->x_tick - ((be) * cos(rotation));
+      sensor->yr_tick = sensor->y_tick + ((be) * sin(rotation));
       break;
       
     case (W): 
-      rotation = PI_ON_2 - PI_ON_4 - s->angle_A;
-      s->xs = s->x + ((be) * cos(rotation));
-      s->ys = s->y + ((be) * sin(rotation));
+      rotation = PI_ON_2 - PI_ON_4 - sensor->angle_A;
+      sensor->xr_tick = sensor->x_tick + ((be) * cos(rotation));
+      sensor->yr_tick = sensor->y_tick + ((be) * sin(rotation));
       break;
 
     default:
       if ( DLT(DLT_DIAG) )
       {
-        Serial.print(T("\n\nUnknown Rotation:")); Serial.print(s->index);
+        Serial.print(T("\n\nUnknown Rotation:")); Serial.print(sensor->index);
       }
       break;
   }
@@ -483,12 +541,12 @@ bool find_xy_3D
  */
   if ( DLT(DLT_DIAG) )
     {
-    Serial.print(T("index:")); Serial.print(s->index) ; 
-    Serial.print(T(" a:"));        Serial.print(s->a);       Serial.print(T("  b:"));  Serial.print(s->b);
-    Serial.print(T(" ae:"));       Serial.print(ae);         Serial.print(T("  be:")); Serial.print(be);    Serial.print(T(" c:")),  Serial.print(s->c);
+    Serial.print(T("index:")); Serial.print(sensor->index) ; 
+    Serial.print(T(" a:"));        Serial.print(sensor->a);       Serial.print(T("  b:"));  Serial.print(sensor->b);
+    Serial.print(T(" ae:"));       Serial.print(ae);         Serial.print(T("  be:")); Serial.print(be);    Serial.print(T(" c:")),  Serial.print(sensor->c);
     Serial.print(T(" cos:"));      Serial.print(cos(rotation)); Serial.print(T(" sin: ")); Serial.print(sin(rotation));
-    Serial.print(T(" angle_A:"));  Serial.print(s->angle_A); Serial.print(T("  x:"));  Serial.print(s->x);  Serial.print(T(" y:"));  Serial.print(s->y);
-    Serial.print(T(" rotation:")); Serial.print(rotation);   Serial.print(T("  xs:")); Serial.print(s->xs); Serial.print(T(" ys:")); Serial.print(s->ys);
+    Serial.print(T(" angle_A:"));  Serial.print(sensor->angle_A); Serial.print(T("  x:"));  Serial.print(sensor->x_tick);  Serial.print(T(" y:"));  Serial.print(sensor->y_tick);
+    Serial.print(T(" rotation:")); Serial.print(rotation);   Serial.print(T("  xr:")); Serial.print(sensor->xr_tick); Serial.print(T(" yr:")); Serial.print(sensor->yr_tick);
     }
  
 /*
@@ -497,7 +555,6 @@ bool find_xy_3D
   return true;
 }
 
-  
 /*----------------------------------------------------------------
  *
  * function: send_score
@@ -522,7 +579,6 @@ void send_score
   shot_record_t* shot             //  record
   )
 {
-  int    i;                       // Iteration Counter
   double x, y;                    // Shot location in mm X, Y
   double real_x, real_y;          // Shot location in mm X, Y before remap
   double radius;
@@ -539,13 +595,31 @@ void send_score
     Serial.print(T("Sending the score"));
   }
 
+/*
+ * Grab the token ring if needed
+ */
+  if ( json_token != TOKEN_WIFI )
+  {
+     while(my_ring != whos_ring)
+    {
+      token_take();                              // Grab the token ring
+      gpt = ONE_SECOND * 2;
+      while ( gpt                               // Wati up to two seconds
+        && (whos_ring != my_ring) )             // Or we own the ring
+      { 
+        token_poll();
+      }
+    }
+    set_LED(LED_WIFI_SEND);
+  }
+  
  /* 
   *  Work out the hole in perfect coordinates
   */
-  x = shot->x * s_of_sound * CLOCK_PERIOD;        // Distance in mm
-  y = shot->y * s_of_sound * CLOCK_PERIOD;        // Distance in mm
+  x = shot->xphys_mm;         // Distance in mm
+  y = shot->yphys_mm;         // Distance in mm
   radius = sqrt(sq(x) + sq(y));
-  angle = atan2(shot->y, shot->x) / PI * 180.0d;
+  angle = atan2(shot->yphys_mm, shot->xphys_mm) / PI * 180.0d;
 
 /*
  * Rotate the result based on the construction, and recompute the hit
@@ -564,65 +638,84 @@ void send_score
   output_to_all(str);
   
 #if ( S_SHOT )
-  sprintf(str, "\"shot\":%d, \"miss\":0, \"name\":\"%s\", ", shot->shot_number,  names[json_name_id]);
+  if ( (json_token == TOKEN_WIFI) || (my_ring == TOKEN_UNDEF))
+  {
+    sprintf(str, "\"shot\":%d, \"miss\":0, \"name\":\"%s\"", shot->shot_number,  namesensor[json_name_id]);
+  }
+  else
+  {
+    sprintf(str, "\"shot\":%d, \"name\":\"%d\"", shot->shot_number,  my_ring);
+  }
   output_to_all(str);
   dtostrf((float)shot->shot_time/(float)(ONE_SECOND), 2, 2, str_c );
-  sprintf(str, "\"time\":%s, ", str_c);
+  sprintf(str, ", \"time\":%s ", str_c);
   output_to_all(str);
 #endif
 
 #if ( S_SCORE )
-  coeff = 9.9 / (((double)json_1_ring_x10 + (double)json_calibre_x10) / 20.0d);
-  score = 10.9 - (coeff * radius);
-  z = 360 - (((int)angle - 90) % 360);
-  clock_face = (double)z / 30.0;
-  sprintf(str, "\"score\": %d, "\"clock\":\"%d:%d, \"  ", score,(int)clock_face, (int)(60*(clock_face-((int)clock_face))) ;
-  output_to_all(str);
+  if ( json_token == TOKEN_WIFI )
+  {
+    coeff = 9.9 / (((double)json_1_ring_x10 + (double)json_calibre_x10) / 20.0d);
+    score = 10.9 - (coeff * radius);
+    z = 360 - (((int)angle - 90) % 360);
+    clock_face = (double)z / 30.0;
+    sprintf(str, ", \"score\": %d, "\"clock\":\"%d:%d, \"  ", score,(int)clock_face, (int)(60*(clock_face-((int)clock_face))) ;
+    output_to_all(str);
+  }
 #endif
 
 #if ( S_XY )
   dtostrf(x, 2, 2, str_c );
-  sprintf(str, "\"x\":%s, ", str_c);
+  sprintf(str, ",\"x\":%s", str_c);
   output_to_all(str);
   dtostrf(y, 2, 2, str_c );
-  sprintf(str, "\"y\":%s, ", str_c);
+  sprintf(str, ", \"y\":%s ", str_c);
   output_to_all(str);
   
   if ( json_target_type > 1 )
   {
     dtostrf(real_x, 2, 2, str_c );
-    sprintf(str, "\"real_x\":%s, ", str_c);
+    sprintf(str, ", \"real_x\":%s ", str_c);
     output_to_all(str);
     dtostrf(real_y, 2, 2, str_c );
-    sprintf(str, "\"real_y\":%s, ", str_c);
+    sprintf(str, ", \"real_y\":%s ", str_c);
     output_to_all(str);
   }
 #endif
 
 #if ( S_POLAR )
-  dtostrf(radius, 4, 2, str_c );
-  sprintf(str, " \"r\":%s, ", str_c);
-  output_to_all(str);
-  dtostrf(angle, 4, 2, str_c );
-  sprintf(str, "\"a\":%s, ", str_c);
-  output_to_all(str);
+  if ( json_token == TOKEN_WIFI )
+  {
+    dtostrf(radius, 4, 2, str_c );
+    sprintf(str, ", \"r\":%s, ", str_c);
+    output_to_all(str);
+    dtostrf(angle, 4, 2, str_c );
+    sprintf(str, ", \"a\":%s, ", str_c);
+    output_to_all(str);
+  }
 #endif
 
 #if ( S_TIMERS )
-  sprintf(str, "\"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d, ", (int)s[N].count, (int)s[E].count, (int)s[S].count, (int)s[W].count);
-  output_to_all(str);
+  if ( json_token == TOKEN_WIFI )
+  {
+    sprintf(str, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)sensor[N].count, (int)sensor[E].count, (int)sensor[S].count, (int)sensor[W].count);
+    output_to_all(str);
+  }
 #endif
 
 #if ( S_MISC ) 
-  volts = analogRead(V_REFERENCE);
-  dtostrf(TO_VOLTS(volts), 2, 2, str_c );
-  sprintf(str, "\"V_REF\":%s, ", str_c);
-  output_to_all(str);
-  dtostrf(temperature_C(), 2, 2, str_c );
-  sprintf(str, "\"T\":%s, ", str_c);
-  output_to_all(str);
-  sprintf(str, "\"VERSION\":%s ", SOFTWARE_VERSION);
-  output_to_all(str);
+  if ( json_token == TOKEN_WIFI )
+  {
+    volts = analogRead(V_REFERENCE);
+    dtostrf(TO_VOLTS(volts), 2, 2, str_c );
+    sprintf(str, ", \"V_REF\":%s, ", str_c);
+      output_to_all(str);
+    dtostrf(temperature_C(), 2, 2, str_c );
+    sprintf(str, ", \"T\":%s, ", str_c);
+    output_to_all(str);
+    sprintf(str, ", \"VERSION\":%s ", SOFTWARE_VERSION);
+    output_to_all(str);
+  }
 #endif
 
   sprintf(str, "}\r\n");
@@ -631,7 +724,11 @@ void send_score
 /*
  * All done, return
  */
-  
+  if ( json_token != TOKEN_WIFI )
+  {
+    token_give();                            // Give up the token ring
+    set_LED(LED_READY);
+  }
   return;
 }
  
@@ -654,12 +751,32 @@ void send_miss
   shot_record_t* shot                    // record record
   )
 {
-  char str[256];    // String holding buffer
-
+  char str[256];                        // String holding buffer
+  
   if ( json_send_miss != 0)               // If send_miss not enabled
   {
     return;                               // Do nothing
   }
+
+/*
+ * Grab the token ring if needed
+ */
+  
+  if ( json_token != TOKEN_WIFI )
+  {
+     while(my_ring != whos_ring)
+    {
+      token_take();                              // Grab the token ring
+      gpt = ONE_SECOND;
+      while ( gpt 
+        && ( my_ring == whos_ring) )
+      { 
+        token_poll();
+      }
+      set_LED(LED_WIFI_SEND);
+    }
+  }
+  
 /* 
  *  Display the results
  */
@@ -667,22 +784,38 @@ void send_miss
   output_to_all(str);
   
  #if ( S_SHOT )
-  sprintf(str, "\"shot\":%d, \"miss\":1, \"name\":\"%s\" ", shot->shot_number, names[json_name_id], shot->shot_time) ;
+   if ( (json_token == TOKEN_WIFI) || (my_ring == TOKEN_UNDEF))
+  {
+    sprintf(str, "\"shot\":%d, \"miss\":0, \"name\":\"%s\"", shot->shot_number,  namesensor[json_name_id]);
+  }
+  else
+  {
+    sprintf(str, "\"shot\":%d, \"miss\":1, \"name\":\"%d\"", shot->shot_number,  my_ring);
+  }
   output_to_all(str);
   dtostrf((float)shot->shot_time/(float)(ONE_SECOND), 2, 2, str );
-  sprintf(str, ",\"time\":%s ", str);
+  sprintf(str, ", \"time\":%s ", str);
 #endif
 
 #if ( S_XY )
-  sprintf(str, ", \"x\":0, \"y\":0 ");
-  output_to_all(str);
+  if ( json_token == TOKEN_WIFI )
+  { 
+    sprintf(str, ", \"x\":0, \"y\":0 ");
+    output_to_all(str);
+  }
+
+
+  
 #endif
 
 #if ( S_TIMERS )
-  sprintf(str, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)shot->timer_count[N], (int)shot->timer_count[E], (int)shot->timer_count[S], (int)shot->timer_count[W]);
-  output_to_all(str);
-  sprintf(str, ", \"face\":%d ", shot->face_strike);
-  output_to_all(str);
+  if ( json_token == TOKEN_WIFI )
+  {
+    sprintf(str, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)shot->timer_count[N], (int)shot->timer_count[E], (int)shot->timer_count[S], (int)shot->timer_count[W]);
+    output_to_all(str);
+    sprintf(str, ", \"face\":%d ", shot->face_strike);
+    output_to_all(str);
+  }
 #endif
 
   sprintf(str, "}\n\r");
@@ -691,6 +824,8 @@ void send_miss
 /*
  * All done, go home
  */
+  token_give();
+  set_LED(LED_READY);
   return;
 }
 
@@ -725,11 +860,14 @@ struct new_target
 };
 
 typedef new_target new_target_t;
+
 #define LAST_BULL (-1000.0)
 #define D5_74 (74/2)                   // Five bull air rifle is 74mm centre-centre
 new_target_t five_bull_air_rifle_74mm[] = { {-D5_74, D5_74}, {D5_74, D5_74}, {0,0}, {-D5_74, -D5_74}, {D5_74, -D5_74}, {LAST_BULL, LAST_BULL}};
+
 #define D5_79 (79/2)                   // Five bull air rifle is 79mm centre-centre
 new_target_t five_bull_air_rifle_79mm[] = { {-D5_79, D5_79}, {D5_79, D5_79}, {0,0}, {-D5_79, -D5_79}, {D5_79, -D5_79}, {LAST_BULL, LAST_BULL}};
+
 #define D12_H (191.0/2.0)              // Twelve bull air rifle 95mm Horizontal
 #define D12_V (195.0/3.0)              // Twelve bull air rifle 84mm Vertical
 new_target_t twelve_bull_air_rifle[]    = { {-D12_H,   D12_V + D12_V/2},  {0,   D12_V + D12_V/2},  {D12_H,   D12_V + D12_V/2},
@@ -737,8 +875,17 @@ new_target_t twelve_bull_air_rifle[]    = { {-D12_H,   D12_V + D12_V/2},  {0,   
                                             {-D12_H,         - D12_V/2},  {0,         - D12_V/2},  {D12_H,          -D12_V/2},
                                             {-D12_H, -(D12_V + D12_V/2)}, {0, -(D12_V + D12_V/2)}, {D12_H, -(D12_V + D12_V/2)},
                                             {LAST_BULL, LAST_BULL}};
-//                           0  1  2  3              4                        5              6  7  8  9  10  11          12
-new_target_t* ptr_list[] = { 0, 0, 0, 0, five_bull_air_rifle_74mm, five_bull_air_rifle_79mm, 0, 0, 0, 0, 0 , 0 , twelve_bull_air_rifle};
+
+#define O12_H (144.0/2.0)              // Twelve bull air rifle Orion
+#define O12_V (190.0/3.0)              // Twelve bull air rifle Orion
+new_target_t orion_bull_air_rifle[]    =  { {-O12_H,   O12_V + O12_V/2},  {0,   O12_V + O12_V/2},  {O12_H,   O12_V + O12_V/2},
+                                            {-O12_H,           O12_V/2},  {0,           O12_V/2},  {O12_H,           O12_V/2},
+                                            {-O12_H,         - O12_V/2},  {0,         - O12_V/2},  {O12_H,          -O12_V/2},
+                                            {-O12_H, -(O12_V + O12_V/2)}, {0, -(O12_V + O12_V/2)}, {O12_H, -(O12_V + O12_V/2)},
+                                            {LAST_BULL, LAST_BULL}};
+                                            
+//                           0  1  2  3              4                        5              6  7  8  9  10           11                     12
+new_target_t* ptr_list[] = { 0, 0, 0, 0, five_bull_air_rifle_74mm, five_bull_air_rifle_79mm, 0, 0, 0, 0, 0 , orion_bull_air_rifle , twelve_bull_air_rifle};
 
 static void remap_target
   (
