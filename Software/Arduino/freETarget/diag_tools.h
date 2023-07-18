@@ -69,8 +69,8 @@
  * Function Prototypes
  */
 void self_test(uint16_t test);
-void show_sensor_status(unsigned int sensor_status);  // Display the sensor status as text
-void blink_fault(unsigned int fault_code);            // Blink a fault
+void show_sensor_status(unsigned int sensor_status, shot_record_t* shot);  // Display the sensor status as text
+void blink_fault(unsigned int fault_code);                      // Blink a fault
 void POST_version(void);        // Show the version string
 void POST_LEDs(void);           // Verify the LED operation
 bool POST_counters(void);       // Verify the counter operation

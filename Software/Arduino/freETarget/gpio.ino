@@ -652,7 +652,7 @@ static void paper_on_off                        // Function to turn the motor on
  {
   face_strike++;      // Got a face strike
 
-  if ( DLT(DLT_CRITICAL) )
+  if ( DLT(DLT_INFO) )
   {
     Serial.print(T("\r\nface_ISR():")); Serial.print(face_strike);
   }
