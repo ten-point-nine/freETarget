@@ -78,6 +78,7 @@ void factory_nonvol
   unsigned int x;                         // Temporary Value
   double       dx;                        // Temporarty Value
   unsigned int i, j;                      // Iteration Counter
+  char         str[32];                   // String to hold numbers 
   
 /*
  * Fill up all of memory with a known (bogus) value
@@ -132,13 +133,25 @@ void factory_nonvol
         {
           EEPROM.put(JSON[i].non_vol, x);                    // Read in the value
         }
+        if ( JSON[j].value != 0 )
+        {
+          *JSON[j].value = x;                               // Save the value
+        }
         break;
 
       case IS_FLOAT:
       case IS_DOUBLE:
         dx = (double)JSON[i].init_value;
-        Serial.print(T("\r\n")); Serial.print(JSON[i].token); Serial.print(T(" ")); Serial.print(dx);
-        EEPROM.put(JSON[i].non_vol, dx);                    // Read in the value
+        dtostrf(dx, 2, 2, str );
+        Serial.print(T("\r\n")); Serial.print(JSON[i].token); Serial.print(T(" ")); Serial.print(str);
+        if ( JSON[i].non_vol != 0 )
+        {
+          EEPROM.put(JSON[i].non_vol, dx);                // Read in the value
+        }
+        if ( JSON[j].d_value != 0 )
+        {
+          *JSON[j].d_value = dx;                          // Save the value
+        }
         break;
     }
    i++;
@@ -213,17 +226,11 @@ void factory_nonvol
 
   nonvol_init = INIT_DONE;
   EEPROM.put(NONVOL_INIT, nonvol_init);
-
-/*
- * Read the NONVOL and print the results
- */
-  read_nonvol();                          // Read back the new values
-  show_echo();                            // Display these settings
   
 /*
  * All done, return
  */    
-
+  soft_reset();
   return;
 }
 

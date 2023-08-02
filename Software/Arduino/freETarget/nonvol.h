@@ -83,9 +83,9 @@ void restore_nonvol(void);                        // Copyt the nonvol back
 #define NONVOL_MIN_RING_TIME  (NONVOL_WIFI_SSID_32 + esp01_SSID_SIZE_32)   // Minimum time for ringing to stop 
 #define NONVOL_DOPPLER        (NONVOL_MIN_RING_TIME  + sizeof(int))        // Compensation for signal fading
 #define NONVOL_TOKEN          (NONVOL_DOPPLER    + sizeof(double))         // Token ring state
-#define NONVOL_MFS2           (NONVOL_DOPPLER    + sizeof(int))            // Multifunction Switch 2
+#define NONVOL_MFS2           (NONVOL_TOKEN      + sizeof(int))              // Multifunction Switch 2
 
-#define NONVOL_NEXT           (NONVOL_DOPPLER    + sizeof(double))         //
+#define NONVOL_NEXT           (NONVOL_MFS2       + sizeof(double))         //
 
 #define NONVOL_SIZE           4096                                         // 4K available
 

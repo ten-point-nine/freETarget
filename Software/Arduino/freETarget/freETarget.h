@@ -19,7 +19,7 @@
 #if ( RESCUE )
 #define SOFTWARE_VERSION "\"RESCUE March 1, 2023\""
 #else
-#define SOFTWARE_VERSION "\"4.2.1 July 17, 2023\""
+#define SOFTWARE_VERSION "\"4.2.2 August 2, 2023\""
 #endif
 
 #define REV_100    100
@@ -112,15 +112,21 @@ extern unsigned int face_strike;
 extern const char nesw[];             // Cardinal Points
 extern shot_record_t record[];
 
-/*
- *  Factory settings via Arduino monitor
- */
-/*
-#define FACTORY        {"NAME_ID":1, "TRGT_1_RINGx10":1550, "ECHO":2}
-#define FACTORY_BOSS   {"NAME_ID":1, "TRGT_1_RINGx10":1550, "ECHO":2}
-#define FACTORY_MINION {"NAME_ID":2, "TRGT_1_RINGx10":1550, "ECHO":2}
-#define SERIAL_NUMBER  {"NAME_ID":1, "TRGT_1_RINGx10":1550, "SN":1234, "ECHO":2}
-#define LONG_TEST      {"SENSOR":231, "Z_OFFSET":5, "STEP_TIME":50, "STEP_COUNT":0, "NORTH_X":0, "NORTH_Y":0, "EAST_X":0, "EAST_Y":0, "SOUTH_X":0, "SOUTH_Y":0, "WEST_X":0, "WEST_Y":0, "LED_BRIGHT":50, "NAME_ID":0, "ECHO":9}
-*/
+/*----------------------------------------------------------------
+ * 
+ * function: soft_reset
+ * 
+ * brief:    Reset the board
+ * 
+ * return:   Never
+ * 
+ *----------------------------------------------------------------
+ *
+ * When the keep alive expires, send a new one out and reset.
+ * 
+ * It is sent out to the USB port as a diagnostic check 
+ * 
+ *--------------------------------------------------------------*/
+static void(* soft_reset) (void) = 0;
 
 #endif

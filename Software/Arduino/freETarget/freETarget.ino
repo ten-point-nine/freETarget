@@ -75,7 +75,6 @@ void setup(void)
   DISPLAY_SERIAL.begin(115200, SERIAL_8N1); 
   POST_version();                         // Show the version string on all ports
   
-  init_gpio();  
   set_LED('*', '.', '.');                 // Hello World
   read_nonvol();
   
@@ -85,7 +84,7 @@ void setup(void)
  *  Set up the port pins
  */
 
-
+  init_gpio();  
   init_sensors();
   init_analog_io();
   init_timer();
