@@ -129,6 +129,7 @@
     <Compile Include="targets\AirPistol.cs" />
     <Compile Include="targets\AirRifle.cs" />
     <Compile Include="targets\aTarget.cs" />
+    <Compile Include="targets\BB_NRA.cs" />
     <Compile Include="targets\NRA_B3.cs" />
     <Compile Include="targets\NSRA_25Y.cs" />
     <Compile Include="targets\Pistol25mRF.cs" />

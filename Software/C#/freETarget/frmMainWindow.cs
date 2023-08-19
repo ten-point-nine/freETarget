@@ -150,7 +150,7 @@ namespace freETarget {
 
             toolTipButtons.SetToolTip(btnCalibration, "Calibration - X: " + calibrationX + " Y: " + calibrationY + " Angle: " + calibrationAngle);
 
-            toolTipButtons.SetToolTip(btnConfig, "Settings - Target distance percent: " + Properties.Settings.Default.targetDistance.ToString(CultureInfo.InvariantCulture));
+            toolTipButtons.SetToolTip(btnConfig, "App Config - Target distance percent: " + Properties.Settings.Default.targetDistance.ToString(CultureInfo.InvariantCulture));
 
             initBreakdownChart();
 

@@ -1470,7 +1470,7 @@
             this.MinimizeBox = false;
             this.Name = "frmSettings";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Local Settings";
+            this.Text = "Application Configuration";
             this.Load += new System.EventHandler(this.frmSettings_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
