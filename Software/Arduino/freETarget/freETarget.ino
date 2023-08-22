@@ -75,6 +75,10 @@ void setup(void)
   DISPLAY_SERIAL.begin(115200, SERIAL_8N1); 
   POST_version();                         // Show the version string on all ports
   
+  init_gpio();  
+  init_sensors();
+  init_analog_io();
+  init_timer();
   set_LED('*', '.', '.');                 // Hello World
   read_nonvol();
   
@@ -83,11 +87,6 @@ void setup(void)
 /*
  *  Set up the port pins
  */
-
-  init_gpio();  
-  init_sensors();
-  init_analog_io();
-  init_timer();
   timer_new(&keep_alive,    (unsigned long)json_keep_alive * ONE_SECOND); // Keep alive timer
   timer_new(&tabata_rapid_timer,   0);                                    // Free running tabata or rapid fire timer
   timer_new(&in_shot_timer, FULL_SCALE);                                  // Time inside of the shot window
@@ -190,7 +189,7 @@ void loop()
  */
   multifunction_switch();         // Read the switches
   tabata(false);                  // Update the Tabata state
-  
+
 /*
  * Take care of any commands coming through
  */

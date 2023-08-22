@@ -883,9 +883,16 @@ new_target_t orion_bull_air_rifle[]    =  { {-O12_H,   O12_V + O12_V/2},  {0,   
                                             {-O12_H,         - O12_V/2},  {0,         - O12_V/2},  {O12_H,          -O12_V/2},
                                             {-O12_H, -(O12_V + O12_V/2)}, {0, -(O12_V + O12_V/2)}, {O12_H, -(O12_V + O12_V/2)},
                                             {LAST_BULL, LAST_BULL}};
+#define DBB_H (238.0 / 3.0)              // Twelve bull Daisy BB
+#define DBB_V (144.0 / 2.0)              // Twelve bull Daisy BB
+new_target_t daisy_bb_rifle[]        =  { {-(DBB_H + DBB_H/2), DBB_V},  {-DBB_H/2,   DBB_V},  {DBB_H/2,   DBB_V}, {(DBB_H + DBB_H/2),   DBB_V},
+                                          {-(DBB_H + DBB_H/2), 0},      {-DBB_H/2,   0},      {DBB_H/2,   0},     {(DBB_H + DBB_H/2),   0}, 
+                                          {-(DBB_H + DBB_H/2), -DBB_V}, {-DBB_H/2,  -DBB_V},  {DBB_H/2,  -DBB_V}, {(DBB_H + DBB_H/2),  -DBB_V},
+                                          {LAST_BULL, LAST_BULL}};
+
                                             
-//                           0  1  2  3              4                        5              6  7  8  9  10           11                     12
-new_target_t* ptr_list[] = { 0, 0, 0, 0, five_bull_air_rifle_74mm, five_bull_air_rifle_79mm, 0, 0, 0, 0, 0 , orion_bull_air_rifle , twelve_bull_air_rifle};
+//                           0  1  2  3              4                        5              6  7  8  9  10           11                     12           13      14 (0xd)
+new_target_t* ptr_list[] = { 0, 0, 0, 0, five_bull_air_rifle_74mm, five_bull_air_rifle_79mm, 0, 0, 0, 0, 0 , orion_bull_air_rifle , twelve_bull_air_rifle, 0, daisy_bb_rifle};
 
 static void remap_target
   (

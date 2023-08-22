@@ -19,7 +19,7 @@
 #if ( RESCUE )
 #define SOFTWARE_VERSION "\"RESCUE March 1, 2023\""
 #else
-#define SOFTWARE_VERSION "\"4.2.2 August 2, 2023\""
+#define SOFTWARE_VERSION "\"4.2.4 August 21, 2023\""
 #endif
 
 #define REV_100    100
