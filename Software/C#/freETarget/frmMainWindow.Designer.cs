@@ -109,8 +109,9 @@ namespace freETarget
             this.btnStart = new System.Windows.Forms.Button();
             this.toolTipTimer = new System.Windows.Forms.Timer(this.components);
             this.toolTipButtons = new System.Windows.Forms.ToolTip(this.components);
-            this.digitalClock = new freETarget.SevenSegmentArray();
             this.rapidFireTimer = new System.Windows.Forms.Timer(this.components);
+            this.btnResume = new System.Windows.Forms.Button();
+            this.digitalClock = new freETarget.SevenSegmentArray();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.imgTarget)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.imgArrow)).BeginInit();
@@ -919,6 +920,25 @@ namespace freETarget
             this.toolTipTimer.Interval = 1000;
             this.toolTipTimer.Tick += new System.EventHandler(this.toolTipTimer_Tick);
             // 
+            // rapidFireTimer
+            // 
+            this.rapidFireTimer.Tick += new System.EventHandler(this.rapidFireTimer_Tick);
+            // 
+            // btnResume
+            // 
+            this.btnResume.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnResume.Enabled = false;
+            this.btnResume.Image = global::freETarget.Properties.Resources.resume1;
+            this.btnResume.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnResume.Location = new System.Drawing.Point(620, 8);
+            this.btnResume.Name = "btnResume";
+            this.btnResume.Size = new System.Drawing.Size(138, 25);
+            this.btnResume.TabIndex = 42;
+            this.btnResume.Text = "Resume Session";
+            this.toolTipButtons.SetToolTip(this.btnResume, "Continues a previous saved session that was interupted");
+            this.btnResume.UseVisualStyleBackColor = true;
+            this.btnResume.Click += new System.EventHandler(this.btnResume_Click);
+            // 
             // digitalClock
             // 
             this.digitalClock.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -937,15 +957,12 @@ namespace freETarget
             this.digitalClock.TabStop = false;
             this.digitalClock.Value = null;
             // 
-            // rapidFireTimer
-            // 
-            this.rapidFireTimer.Tick += new System.EventHandler(this.rapidFireTimer_Tick);
-            // 
             // frmMainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1185, 700);
+            this.Controls.Add(this.btnResume);
             this.Controls.Add(this.btnTargetSettings);
             this.Controls.Add(this.splitContainer);
             this.Controls.Add(this.btnUpload);
@@ -1087,6 +1104,7 @@ namespace freETarget
         private System.Windows.Forms.ToolStripStatusLabel connectionStatus;
         private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.Timer rapidFireTimer;
+        private System.Windows.Forms.Button btnResume;
     }
 }
 

@@ -478,6 +478,83 @@ namespace freETarget {
             }
         }
 
+        public void updateSession(Session session) {
+            SQLiteConnection con = new SQLiteConnection(connString);
+            con.Open();
+            SQLiteCommand cmd = new SQLiteCommand(con);
+            cmd.CommandText = "UPDATE Sessions SET " +
+                "courseOfFire = @courseOfFire," +
+                "targetType = @targetType, " +
+                "numberOfShots = @numberOfShots, " +
+                "decimalScoring = @decimalScoring, " +
+                "sessionType = @sessionType, " +
+                "minutes = @minutes, " +
+                "score = @score, " +
+                "decimalScore = @decimalScore, " +
+                "innerX = @innerX, " +
+                "xBar = @xBar, " +
+                "ybar = @ybar, " +
+                "rbar = @rbar, " +
+                "shots = @shots, " +
+                "startTime = @startTime, " +
+                "endTime = @endTime, " +
+                "user = @user, " +
+                "averageScore = @averageScore, " +
+                "actualNumberOfShots = @actualNumberOfShots, " +
+                "diary = @diary, " +
+                "averageShotDuration = @averageShotDuration, " +
+                "longestShot = @longestShot, " +
+                "shortestShot = @shortestShot, " +
+                "groupSize = @groupSize, " +
+                "hash = @hash " +
+                "WHERE id = @id ";
+
+
+            session.prepareForSaving();
+            
+            cmd.Parameters.AddWithValue("@courseOfFire", session.eventType.ID);
+            cmd.Parameters.AddWithValue("@targetType", session.targetType);
+            cmd.Parameters.AddWithValue("@numberOfShots", session.numberOfShots);
+            cmd.Parameters.AddWithValue("@decimalScoring", convertBoolToInt(session.decimalScoring));
+            cmd.Parameters.AddWithValue("@sessionType", session.sessionType);
+            cmd.Parameters.AddWithValue("@minutes", session.minutes);
+            cmd.Parameters.AddWithValue("@score", session.score);
+            cmd.Parameters.AddWithValue("@decimalScore", session.decimalScore);
+            cmd.Parameters.AddWithValue("@innerX", session.innerX);
+            cmd.Parameters.AddWithValue("@xBar", session.xbar);
+            cmd.Parameters.AddWithValue("@ybar", session.ybar);
+            cmd.Parameters.AddWithValue("@rbar", session.rbar);
+            cmd.Parameters.AddWithValue("@groupSize", session.groupSize);
+            cmd.Parameters.AddWithValue("@shots", convertListOfShotsToString(session.Shots));
+            cmd.Parameters.AddWithValue("@startTime", convertDatetimeToString(session.startTime));
+            cmd.Parameters.AddWithValue("@endTime", convertDatetimeToString(session.endTime));
+            cmd.Parameters.AddWithValue("@user", session.user);
+            cmd.Parameters.AddWithValue("@averageScore", session.averageScore.ToString("F2", CultureInfo.InvariantCulture));
+            cmd.Parameters.AddWithValue("@actualNumberOfShots", session.actualNumberOfShots);
+            cmd.Parameters.AddWithValue("@diary", session.diaryEntry);
+            cmd.Parameters.AddWithValue("@averageShotDuration", convertTimespanToDecimal(session.averageTimePerShot));
+            cmd.Parameters.AddWithValue("@longestShot", convertTimespanToDecimal(session.longestShot));
+            cmd.Parameters.AddWithValue("@shortestShot", convertTimespanToDecimal(session.shortestShot));
+            string controlString = getControlString(session);
+            cmd.Parameters.AddWithValue("@hash", GetMd5Hash(controlString));
+            cmd.Parameters.AddWithValue("@id", session.id);
+
+            try {
+                cmd.Prepare();
+
+                cmd.ExecuteNonQuery();
+
+                Console.WriteLine("Session " + session.id + " updated");
+            } catch (Exception ex) {
+                string s = "Error updating session " + session.id + " to the database. Make sure you have write access to the folder." + Environment.NewLine + ex.Message;
+                mainWindow.log(s);
+                MessageBox.Show(s, "Error writing to DB", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            } finally {
+                con.Close();
+            }
+        }
+
+
         public void storeEvent(Event ev){
             SQLiteConnection con = new SQLiteConnection(connString);
             con.Open();
