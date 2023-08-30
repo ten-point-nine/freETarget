@@ -233,7 +233,7 @@ namespace freETarget {
             FileMode mode = FileMode.Append;
             if (truncate) {
                 mode = FileMode.Truncate;
-            } 
+            }
 
 
             if (Properties.Settings.Default.fileLogging) { //log enabled from settings
@@ -370,6 +370,11 @@ namespace freETarget {
 
                             var d = new SafeCallDelegate3(targetRefresh); //draw shot
                             this.Invoke(d);
+
+                            btnResume.BeginInvoke((Action)delegate ()
+                            {
+                                btnResume.Enabled = false;
+                            });
                         }
 
                         if (incomingJSON.IndexOf("}") != -1) {
@@ -377,7 +382,6 @@ namespace freETarget {
                             comms.CommEventArgs e2 = new comms.CommEventArgs("");
                             DataReceived(sender, e2); //call the event again to parse the remains. maybe there is another full message in there
                         }
-
                     } else {
                         lastEcho = Echo.parseJson(message);
 
@@ -515,6 +519,7 @@ namespace freETarget {
             btnArduino.Enabled = true;
             btnTargetSettings.Enabled = true;
             btnUpload.Enabled = false;
+            btnResume.Enabled = true;
             trkZoom.Enabled = true;
             tcSessionType.Enabled = true;
             tcSessionType.Refresh();
@@ -559,7 +564,7 @@ namespace freETarget {
                 }
 
                 //write to total textbox
-                if (Properties.Settings.Default.showScoring) { 
+                if (Properties.Settings.Default.showScoring) {
                     txtTotal.Text = getShots().Count + ": " + currentSession.score.ToString() + " (" + currentSession.decimalScore.ToString(CultureInfo.InvariantCulture) + ") -" + currentSession.innerX.ToString() + "x";
                 } else {
                     txtTotal.Text = "XXX";
@@ -900,8 +905,13 @@ namespace freETarget {
 
         private void initNewSession() {
             if (currentSession != null && currentSession.Shots.Count > 0 && currentStatus != Status.LOADED) {
-                storage.storeSession(currentSession, true);
-                displayMessage("Session saved", true);
+                if (currentSession.id == 0) {
+                    storage.storeSession(currentSession, true);
+                    displayMessage("Session saved", true);
+                } else {
+                    storage.updateSession(currentSession);
+                    displayMessage("Session " + currentSession.id + " updated", true);
+                }
 
             }
 
@@ -991,8 +1001,14 @@ namespace freETarget {
                     + Environment.NewLine + "'Cancel' will keep the current session alive.", "Save session", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
 
                 if (result == DialogResult.Yes) {
-                    storage.storeSession(currentSession, true);
-                    displayMessage("Session saved", true);
+
+                    if (currentSession.id == 0) {
+                        storage.storeSession(currentSession, true);
+                        displayMessage("Session saved", true);
+                    } else {
+                        storage.updateSession(currentSession);
+                        displayMessage("Session " + currentSession.id + " updated", true);
+                    }
 
                 } else if (result == DialogResult.Cancel) {
                     return true;
@@ -1286,11 +1302,11 @@ namespace freETarget {
             }
 
             if (rowShot < 0) {
-                displayMessage("Error computing grid row " + rowShot,true);
+                displayMessage("Error computing grid row " + rowShot, true);
                 return;
             }
 
-            if(cellShot<0 || cellShot > 9) {
+            if (cellShot < 0 || cellShot > 9) {
                 displayMessage("Error computing grid cell " + cellShot, true);
                 return;
             }
@@ -1328,7 +1344,7 @@ namespace freETarget {
                         total += Decimal.Parse(row.Cells[i].Value.ToString(), CultureInfo.InvariantCulture);
                     }
                 }
-                 totalCell.Value = total;
+                totalCell.Value = total;
             } else {
                 totalCell.Value = "XX";
             }
@@ -1439,6 +1455,7 @@ namespace freETarget {
             btnArduino.Enabled = false;
             btnTargetSettings.Enabled = false;
             btnUpload.Enabled = true;
+            btnResume.Enabled = false;
             trkZoom.Enabled = false;
             tcSessionType.Enabled = false;
             tcSessionType.Refresh();
@@ -1710,9 +1727,9 @@ namespace freETarget {
 
         private void rapidFireTimer_Tick(object sender, EventArgs e) {
 
-            if(RFduelCounter == -1) {
+            if (RFduelCounter == -1) {
                 //first tick - load time over
-                this.RFduelCounter=0;
+                this.RFduelCounter = 0;
 
                 //send first commands to target
                 if (this.currentSession.eventType.RF_TimePerShot > 0) {
@@ -1726,7 +1743,7 @@ namespace freETarget {
                     sb.Append(" }");
                     Console.WriteLine(sb.ToString());
                     commModule.sendData(sb.ToString());
-                    log("Sending: "+sb.ToString());
+                    log("Sending: " + sb.ToString());
                     this.RFduelCounter++;
                     rapidFireTimer.Interval = (this.currentSession.eventType.RF_TimeBetweenShots + this.currentSession.eventType.RF_TimePerShot) * 1000;
                 } else if (this.currentSession.eventType.RF_TimePerSerie > 0) {
@@ -1749,8 +1766,8 @@ namespace freETarget {
                     rapidFireTimer.Stop();
                     currentSession.RFseriesActive = false;
                 }
-            } else if (RFduelCounter >=0 && RFduelCounter<1000) {
-               //second tick onward
+            } else if (RFduelCounter >= 0 && RFduelCounter < 1000) {
+                //second tick onward
                 if (this.currentSession.eventType.RF_TimePerShot > 0) {
                     //duel
                     if (RFduelCounter < this.currentSession.eventType.RF_NumberOfShots) {
@@ -1796,6 +1813,44 @@ namespace freETarget {
             }
 
 
+        }
+
+        private void btnResume_Click(object sender, EventArgs e) {
+            frmResumeSession resumeForm = new frmResumeSession(this);
+            if (resumeForm.ShowDialog(this) == DialogResult.OK) {
+
+                shotsList.Items.Clear();
+                shotsList.Refresh();
+                imgListDirections.Images.Clear();
+                gridTargets.Rows.Clear();
+                clearBreakdownChart();
+
+                ListBoxSessionItem sessionToBeResumed = resumeForm.selectedSession;
+                currentSession = storage.findSession(sessionToBeResumed.id);
+                currentSession.repopulateSeries();
+
+
+                foreach (Shot s in currentSession.Shots) {
+                    displayShotData(s);
+                    Application.DoEvents();
+                }
+
+                targetRefresh();
+
+                if (currentSession.minutes > 0) {
+                    currentSession.endTime = currentSession.startTime.AddMinutes(currentSession.minutes);
+                } else {
+                    currentSession.endTime = DateTime.MinValue;
+                }
+
+                displayMessage("Session " + currentSession.id + " resumed", false);
+                log("Session " + currentSession.id + " resumed");
+            }
+            resumeForm.Dispose();
+        }
+
+        public Session getCurrentSession() {
+            return this.currentSession;
         }
     }
 

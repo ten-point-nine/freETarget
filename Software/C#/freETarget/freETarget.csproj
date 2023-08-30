@@ -109,6 +109,12 @@
     <Compile Include="frmArduino.Designer.cs">
       <DependentUpon>frmArduino.cs</DependentUpon>
     </Compile>
+    <Compile Include="frmResumeSession.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmResumeSession.Designer.cs">
+      <DependentUpon>frmResumeSession.cs</DependentUpon>
+    </Compile>
     <Compile Include="frmTargetSettings.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -178,6 +184,9 @@
     <EmbeddedResource Include="frmMainWindow.resx">
       <DependentUpon>frmMainWindow.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="frmResumeSession.resx">
+      <DependentUpon>frmResumeSession.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmSettings.resx">
       <DependentUpon>frmSettings.cs</DependentUpon>
     </EmbeddedResource>
@@ -207,6 +216,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <Content Include="avrdude\avrdude.conf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -228,6 +238,7 @@
     <Content Include="avrdude\libusb0.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="resume.png" />
     <Content Include="Storage.db">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -295,12 +295,22 @@ namespace freETarget {
                 }
             }
 
+            if(allSeries.Count==1 && allSeries[0].Count == 0) {
+                newSeries = false; //first shot
+            }
+
             if (newSeries) {
                 currentSeries = new List<Shot>();
                 allSeries.Add(currentSeries);
                 currentSeries.Add(s);
             } else {
                 currentSeries.Add(s);
+            }
+        }
+
+        public void repopulateSeries() {
+            foreach (Shot s in Shots) {
+                addToSeries(s);
             }
         }
 
