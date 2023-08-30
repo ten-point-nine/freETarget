@@ -354,7 +354,8 @@ void loop()
 unsigned int arm(void)
 {
   face_strike = 0;                  // Reset the face strike count
-  if ( json_send_miss )
+  if ( json_send_miss
+        && (json_face_strike != 0))
   {
     enable_face_interrupt();        // Turn on the face strike interrupt
   }

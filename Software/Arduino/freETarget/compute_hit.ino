@@ -66,6 +66,7 @@ void init_sensors(void)
 /*
  * Determine the speed of sound and ajust
  */
+
   s_of_sound = speed_of_sound(temperature_C(), json_rh);
   pellet_calibre = ((double)json_calibre_x10 / s_of_sound / 2.0d / 10.0d) * OSCILLATOR_MHZ; // Clock adjustement
   
@@ -885,8 +886,8 @@ new_target_t orion_bull_air_rifle[]    =  { {-O12_H,   O12_V + O12_V/2},  {0,   
                                             {LAST_BULL, LAST_BULL}};
 #define DBB_H (238.0 / 3.0)              // Twelve bull Daisy BB
 #define DBB_V (144.0 / 2.0)              // Twelve bull Daisy BB
-new_target_t daisy_bb_rifle[]        =  { {-(DBB_H + DBB_H/2), DBB_V},  {-DBB_H/2,   DBB_V},  {DBB_H/2,   DBB_V}, {(DBB_H + DBB_H/2),   DBB_V},
-                                          {-(DBB_H + DBB_H/2), 0},      {-DBB_H/2,   0},      {DBB_H/2,   0},     {(DBB_H + DBB_H/2),   0}, 
+new_target_t daisy_bb_rifle[]        =  { {-(DBB_H + DBB_H/2),  DBB_V}, {-DBB_H/2,   DBB_V},  {DBB_H/2,   DBB_V}, {(DBB_H + DBB_H/2),   DBB_V},
+                                          {-(DBB_H + DBB_H/2),  0},     {-DBB_H/2,   0},      {DBB_H/2,   0},     {(DBB_H + DBB_H/2),   0}, 
                                           {-(DBB_H + DBB_H/2), -DBB_V}, {-DBB_H/2,  -DBB_V},  {DBB_H/2,  -DBB_V}, {(DBB_H + DBB_H/2),  -DBB_V},
                                           {LAST_BULL, LAST_BULL}};
 
