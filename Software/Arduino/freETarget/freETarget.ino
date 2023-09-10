@@ -19,7 +19,7 @@
 #include "token.h"
 
 shot_record_t record[SHOT_STRING];          //Array of shot records
-volatile unsigned int this_shot;            // Index into the shot array
+volatile unsigned int this_shot;            // Index into the shot array  
 volatile unsigned int last_shot;            // Last shot processed.
 
 double        s_of_sound;                   // Speed of sound

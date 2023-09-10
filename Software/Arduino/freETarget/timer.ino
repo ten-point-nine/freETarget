@@ -178,7 +178,7 @@ ISR(TIMER1_COMPA_vect)
     case PORT_STATE_IDLE:                       // Idle, Wait for something to show up
       if ( pin != 0 )                           // Something has triggered
       { 
-        isr_timer = 1 + (int)(json_sensor_dia / 2.0 / 0.30 / 1000.0);              // Start the wait timer
+        isr_timer = (int)(json_sensor_dia / 0.30 / 1000.0) + 1; // Start the wait timer
         isr_state = PORT_STATE_WAIT;            // Got something wait for all of the sensors tro trigger
       }
       break;
