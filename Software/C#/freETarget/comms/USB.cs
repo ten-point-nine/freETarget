@@ -36,6 +36,7 @@ namespace freETarget.comms {
 
                 serialPort.Open();
                 mainWindow.log("USB channel open...");
+                serialPort.Write("*");
             } else {
                 Console.WriteLine("Open params are not for USB");
             }
