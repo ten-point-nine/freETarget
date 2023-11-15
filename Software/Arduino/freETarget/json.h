@@ -52,6 +52,8 @@ extern int    json_LED_PWM;       // PWM Setting (%)
 extern int    json_power_save;    // How long to run target before turning off LEDs
 extern int    json_send_miss;     // Sent the miss message when TRUE
 extern int    json_serial_number; // EIN 
+
+
 extern int    json_step_count;    // Number of times paper motor is stepped
 extern int    json_step_time;     // Duration of step pulse
 extern int    json_multifunction; // Multifunction switch operation
@@ -87,7 +89,7 @@ extern int    json_min_ring_time; // Time to wait for ringing to stop
 extern double json_doppler;       // Adjutment for inverse square
 extern int    json_token;         // Token ring setting
 extern int    json_multifunction2;// Multifunction Switch 2
-
+extern int    json_start_ip;      // Starting IP address
 extern int    json_A, json_B, json_C, json_D;// Test parameters
 
 

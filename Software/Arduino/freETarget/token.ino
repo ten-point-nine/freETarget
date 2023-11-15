@@ -12,15 +12,15 @@
  *  
  *  The token ring driver has a number of modes of operation
  *  
- *  1 - TOKEN_WIFI -    The auxilary port is used for the ESP01 
- *                      WiFi adapter, andno token ring operations
+ *  0 - TOKEN_WIFI -    The auxilary port is used for the ESP01 
+ *                      WiFi adapter, and no token ring operations
  *                      are supported
  *
- *  2 - TOKEN_MASTER -  The token ring is connected to the PC via
+ *  1 - TOKEN_MASTER -  The token ring is connected to the PC via
  *                      USB and messages on the ring are passed
  *                      to and from the PC
  *                      
- *  3 - TOKEN_SLAVE -   These are subordinate devices that report
+ *  2 - TOKEN_SLAVE -   These are subordinate devices that report
  *                      scores to the PC via the master
  *                      
  *  How It Works

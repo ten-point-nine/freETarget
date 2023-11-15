@@ -69,7 +69,7 @@ void check_nonvol(void)
  *------------------------------------------------------------*/
 void factory_nonvol
   (
-   bool new_serial_number
+   bool new_serial_number                 // Set in a new serial number if TRUE
   )
 {
   unsigned int nonvol_init;               // Initialization token
@@ -100,11 +100,8 @@ void factory_nonvol
   gen_position(0); 
   x = 0;
   EEPROM.put(vset_PWM, x);
-  if ( new_serial_number == false )
-  {
-    EEPROM.put(NONVOL_SERIAL_NO, serial_number);  // Put the serial number back
-  }
- 
+  EEPROM.get(NONVOL_SERIAL_NO, serial_number);             // Remember the serial number
+
 /*
  * Use the JSON table to initialize the local variables
  */
@@ -216,6 +213,10 @@ void factory_nonvol
         serial_number += ch - '0';
       }
     }
+  }
+  else  // Put the old serial number back
+  {
+    EEPROM.put(NONVOL_SERIAL_NO, serial_number);
   }
   
 /*
