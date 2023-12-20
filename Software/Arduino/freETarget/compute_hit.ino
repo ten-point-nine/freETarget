@@ -787,7 +787,7 @@ void send_miss
  #if ( S_SHOT )
    if ( (json_token == TOKEN_WIFI) || (my_ring == TOKEN_UNDEF))
   {
-    sprintf(str, "\"shot\":%d, \"miss\":0, \"name\":\"%s\"", shot->shot_number,  namesensor[json_name_id]);
+    sprintf(str, "\"shot\":%d, \"miss\":1, \"name\":\"%s\"", shot->shot_number,  namesensor[json_name_id]);
   }
   else
   {
