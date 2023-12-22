@@ -785,18 +785,18 @@ void send_miss
   output_to_all(str);
   
  #if ( S_SHOT )
-   if ( (json_token == TOKEN_WIFI) || (my_ring == TOKEN_UNDEF))
+  sprintf(str, "\"shot\":%d, \"miss\":1, \"name\":\"", shot->shot_number);
+  output_to_all(str);
+  if ( (json_token == TOKEN_WIFI) || (my_ring == TOKEN_UNDEF))
   {
-    sprintf(str, "\"shot\":%d, \"miss\":1, \"name\":\"%s\"", shot->shot_number,  namesensor[json_name_id]);
+    sprintf(str, "%s\"", namesensor[json_name_id]);
   }
-  else
-  {
-    sprintf(str, "\"shot\":%d, \"miss\":1, \"name\":\"%d\"", shot->shot_number,  my_ring);
-  }
+
   output_to_all(str);
   dtostrf((float)shot->shot_time/(float)(ONE_SECOND), 2, 2, str );
   sprintf(str, ", \"time\":%s ", str);
 #endif
+
 
 #if ( S_XY )
   if ( json_token == TOKEN_WIFI )
