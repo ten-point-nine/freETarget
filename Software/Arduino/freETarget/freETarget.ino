@@ -379,25 +379,25 @@ unsigned int arm(void)
  */
   if ( sensor_status & TRIP_EAST  )
   {
-    Serial.print(T("\r\n{ \"Fault\": \"NORTH\" }"));
+    Serial.print(T("\r\n{ \"Fault\": \"N\" }"));
     set_LED(NORTH_FAILED);           // Fault code North
     delay(ONE_SECOND);
   }
   if ( sensor_status & TRIP_EAST  )
   {
-    Serial.print(T("\r\n{ \"Fault\": \"EAST\" }"));
+    Serial.print(T("\r\n{ \"Fault\": \"E\" }"));
     set_LED(EAST_FAILED);           // Fault code East
     delay(ONE_SECOND);
   }
   if ( sensor_status & TRIP_SOUTH )
   {
-    Serial.print(T("\r\n{ \"Fault\": \"SOUTH\" }"));
+    Serial.print(T("\r\n{ \"Fault\": \"S\" }"));
     set_LED(SOUTH_FAILED);         // Fault code South
     delay(ONE_SECOND);
   }
   if ( sensor_status & TRIP_WEST )
   {
-    Serial.print(T("\r\n{ \"Fault\": \"WEST\" }"));
+    Serial.print(T("\r\n{ \"Fault\": \"W\" }"));
     set_LED(WEST_FAILED);         // Fault code West
     delay(ONE_SECOND);
   }

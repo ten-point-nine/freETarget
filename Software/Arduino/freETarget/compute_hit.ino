@@ -153,6 +153,20 @@ unsigned int compute_hit
     return MISS;
   }
 
+/* 
+ *  Find out which sensor got us here.  Look for the longest time
+ */
+  location = N;
+  count = shot->timer_count[N];
+  for (i=N; i <= W; i++ )
+  {
+    if ( count > shot->timer_count[i] )
+    {
+      location = i;
+      count = shot->timer_count[location];
+    }
+  }
+  
 /*
  *  Compute the current geometry based on the speed of sound
  */
