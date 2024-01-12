@@ -1,4 +1,4 @@
-/* * Data converted from C:/Users/allan/Documents/freETarget/Software/ESP32/freeETarget/build/esp-idf/mbedtls/x509_crt_bundle
+/* * Data converted from C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/mbedtls/x509_crt_bundle
  */
 .data
 .section .rodata.embedded

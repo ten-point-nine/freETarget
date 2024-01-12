@@ -1,8 +1,8 @@
 {
     "project_name":       "bootloader",
     "project_path":       "C:/Users/allan/esp/esp-idf/esp-idf/components/bootloader/subproject",
-    "build_dir":          "C:/Users/allan/Documents/freETarget/Software/ESP32/freeETarget/build/bootloader",
-    "config_file":        "C:/Users/allan/Documents/freETarget/Software/ESP32/freeETarget/sdkconfig",
+    "build_dir":          "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader",
+    "config_file":        "C:/Users/allan/Documents/freETarget/Software/ESP32/sdkconfig",
     "config_defaults":    "",
     "app_elf":            "bootloader.elf",
     "app_bin":            "bootloader.bin",
