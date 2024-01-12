@@ -1,0 +1,7 @@
+source "C:/Users/allan/esp/esp-idf/esp-idf/components/bootloader/Kconfig.projbuild"
+source "C:/Users/allan/esp/esp-idf/esp-idf/components/esp_app_format/Kconfig.projbuild"
+source "C:/Users/allan/esp/esp-idf/esp-idf/components/esp_rom/Kconfig.projbuild"
+source "C:/Users/allan/esp/esp-idf/esp-idf/components/esptool_py/Kconfig.projbuild"
+source "C:/Users/allan/esp/esp-idf/esp-idf/components/partition_table/Kconfig.projbuild"
+source "C:/Users/allan/Documents/freETarget/Software/ESP32/freeETarget/main/Kconfig.projbuild"
+source "C:/Users/allan/esp/esp-idf/esp-idf/examples/common_components/protocol_examples_common/Kconfig.projbuild"

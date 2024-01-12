@@ -1,0 +1,22 @@
+{
+    "project_name":       "bootloader",
+    "project_path":       "C:/Users/allan/esp/esp-idf/esp-idf/components/bootloader/subproject",
+    "build_dir":          "C:/Users/allan/Documents/freETarget/Software/ESP32/freeETarget/build/bootloader",
+    "config_file":        "C:/Users/allan/Documents/freETarget/Software/ESP32/freeETarget/sdkconfig",
+    "config_defaults":    "",
+    "app_elf":            "bootloader.elf",
+    "app_bin":            "bootloader.bin",
+    "git_revision":       "v5.0-dirty",
+    "target":             "esp32s3",
+    "rev":                "",
+    "phy_data_partition": "",
+    "monitor_baud" :      "115200",
+    "monitor_toolprefix": "xtensa-esp32s3-elf-",
+    "config_environment" : {
+        "COMPONENT_KCONFIGS" : "C:/Users/allan/esp/esp-idf/esp-idf/components/efuse/Kconfig;C:/Users/allan/esp/esp-idf/esp-idf/components/esp_common/Kconfig;C:/Users/allan/esp/esp-idf/esp-idf/components/esp_hw_support/Kconfig;C:/Users/allan/esp/esp-idf/esp-idf/components/esp_system/Kconfig;C:/Users/allan/esp/esp-idf/esp-idf/components/freertos/Kconfig;C:/Users/allan/esp/esp-idf/esp-idf/components/hal/Kconfig;C:/Users/allan/esp/esp-idf/esp-idf/components/log/Kconfig;C:/Users/allan/esp/esp-idf/esp-idf/components/newlib/Kconfig;C:/Users/allan/esp/esp-idf/esp-idf/components/spi_flash/Kconfig",
+        "COMPONENT_KCONFIGS_PROJBUILD" : "C:/Users/allan/esp/esp-idf/esp-idf/components/bootloader/Kconfig.projbuild;C:/Users/allan/esp/esp-idf/esp-idf/components/esp_app_format/Kconfig.projbuild;C:/Users/allan/esp/esp-idf/esp-idf/components/esp_rom/Kconfig.projbuild;C:/Users/allan/esp/esp-idf/esp-idf/components/esptool_py/Kconfig.projbuild;C:/Users/allan/esp/esp-idf/esp-idf/components/partition_table/Kconfig.projbuild"
+    },
+    "build_components" : [ "bootloader", "bootloader_support", "efuse", "esp_app_format", "esp_common", "esp_hw_support", "esp_rom", "esp_system", "esptool_py", "freertos", "hal", "log", "main", "micro-ecc", "newlib", "partition_table", "soc", "spi_flash", "xtensa", "" ],
+    "build_component_paths" : [ "C:/Users/allan/esp/esp-idf/esp-idf/components/bootloader", "C:/Users/allan/esp/esp-idf/esp-idf/components/bootloader_support", "C:/Users/allan/esp/esp-idf/esp-idf/components/efuse", "C:/Users/allan/esp/esp-idf/esp-idf/components/esp_app_format", "C:/Users/allan/esp/esp-idf/esp-idf/components/esp_common", "C:/Users/allan/esp/esp-idf/esp-idf/components/esp_hw_support", "C:/Users/allan/esp/esp-idf/esp-idf/components/esp_rom", "C:/Users/allan/esp/esp-idf/esp-idf/components/esp_system", "C:/Users/allan/esp/esp-idf/esp-idf/components/esptool_py", "C:/Users/allan/esp/esp-idf/esp-idf/components/freertos", "C:/Users/allan/esp/esp-idf/esp-idf/components/hal", "C:/Users/allan/esp/esp-idf/esp-idf/components/log", "C:/Users/allan/esp/esp-idf/esp-idf/components/bootloader/subproject/main", "C:/Users/allan/esp/esp-idf/esp-idf/components/bootloader/subproject/components/micro-ecc", "C:/Users/allan/esp/esp-idf/esp-idf/components/newlib", "C:/Users/allan/esp/esp-idf/esp-idf/components/partition_table", "C:/Users/allan/esp/esp-idf/esp-idf/components/soc", "C:/Users/allan/esp/esp-idf/esp-idf/components/spi_flash", "C:/Users/allan/esp/esp-idf/esp-idf/components/xtensa", "" ],
+    "debug_prefix_map_gdbinit": ""
+}
