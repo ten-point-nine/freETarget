@@ -109,8 +109,9 @@ namespace freETarget
             this.btnStart = new System.Windows.Forms.Button();
             this.toolTipTimer = new System.Windows.Forms.Timer(this.components);
             this.toolTipButtons = new System.Windows.Forms.ToolTip(this.components);
-            this.rapidFireTimer = new System.Windows.Forms.Timer(this.components);
             this.btnResume = new System.Windows.Forms.Button();
+            this.rapidFireTimer = new System.Windows.Forms.Timer(this.components);
+            this.imgListBoards = new System.Windows.Forms.ImageList(this.components);
             this.digitalClock = new freETarget.SevenSegmentArray();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.imgTarget)).BeginInit();
@@ -920,10 +921,6 @@ namespace freETarget
             this.toolTipTimer.Interval = 1000;
             this.toolTipTimer.Tick += new System.EventHandler(this.toolTipTimer_Tick);
             // 
-            // rapidFireTimer
-            // 
-            this.rapidFireTimer.Tick += new System.EventHandler(this.rapidFireTimer_Tick);
-            // 
             // btnResume
             // 
             this.btnResume.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -938,6 +935,17 @@ namespace freETarget
             this.toolTipButtons.SetToolTip(this.btnResume, "Continues a previous saved session that was interupted");
             this.btnResume.UseVisualStyleBackColor = true;
             this.btnResume.Click += new System.EventHandler(this.btnResume_Click);
+            // 
+            // rapidFireTimer
+            // 
+            this.rapidFireTimer.Tick += new System.EventHandler(this.rapidFireTimer_Tick);
+            // 
+            // imgListBoards
+            // 
+            this.imgListBoards.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imgListBoards.ImageStream")));
+            this.imgListBoards.TransparentColor = System.Drawing.Color.Transparent;
+            this.imgListBoards.Images.SetKeyName(0, "arduino4.png");
+            this.imgListBoards.Images.SetKeyName(1, "esp32_3.png");
             // 
             // digitalClock
             // 
@@ -1105,6 +1113,7 @@ namespace freETarget
         private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.Timer rapidFireTimer;
         private System.Windows.Forms.Button btnResume;
+        private System.Windows.Forms.ImageList imgListBoards;
     }
 }
 

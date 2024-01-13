@@ -13,13 +13,15 @@ namespace freETarget {
     public partial class frmUpload : Form {
         string filePath = string.Empty;
         frmMainWindow mainWindow;
+        string board  = string.Empty;
 
         public frmUpload(frmMainWindow mainWin) {
             InitializeComponent();
             this.mainWindow = mainWin;
             string com = Properties.Settings.Default.portName;
             string baud = Properties.Settings.Default.baudRate.ToString();
-            lblPort.Text = "Port: " + com + " @ " + baud;
+            board = Properties.Settings.Default.Board;
+            lblPort.Text = "Board: " + board + "     Port: " + com + " @ " + baud;
         }
 
         private void btnClose_Click(object sender, EventArgs e) {
@@ -31,7 +33,11 @@ namespace freETarget {
 
             using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
                 openFileDialog.InitialDirectory = ".";
-                openFileDialog.Filter = "hex files (*.hex)|*.hex|All files (*.*)|*.*";
+                if (board == frmMainWindow.Arduino) {
+                    openFileDialog.Filter = "hex files (*.hex)|*.hex|All files (*.*)|*.*";
+                } else {
+                    openFileDialog.Filter = "bin files (*.bin)|*.bin|All files (*.*)|*.*";
+                }
                 openFileDialog.FilterIndex = 1;
                 openFileDialog.RestoreDirectory = true;
 
@@ -53,10 +59,18 @@ namespace freETarget {
             string baud = Properties.Settings.Default.baudRate.ToString();
 
             using (System.Diagnostics.Process pProcess = new System.Diagnostics.Process()) {
-                pProcess.StartInfo.FileName = avrPath + "avrdude.exe";
-                pProcess.StartInfo.Arguments = "-C" + avrPath + "avrdude.conf" + " "
-                                                + "-v -patmega2560 -cwiring -P"+com+" -b"+baud+" -D" + " "
-                                                + "-Uflash:w:" + filePath + ":i";
+                if (Properties.Settings.Default.Board == frmMainWindow.Arduino) {
+                    pProcess.StartInfo.FileName = avrPath + "avrdude.exe";
+                    pProcess.StartInfo.Arguments = "-C" + avrPath + "avrdude.conf" + " "
+                                                    + "-v -patmega2560 -cwiring -P" + com + " -b" + baud + " -D" + " "
+                                                    + "-Uflash:w:" + filePath + ":i";
+                } else {
+                    pProcess.StartInfo.FileName ="esptool";
+                    pProcess.StartInfo.Arguments = "-p "+com+" -b " + baud+ " " +
+                        "--before default_reset " +
+                        "--after hard_reset " +
+                        "--chip esp32s3 write_flash --flash_mode dio --flash_freq 80m --flash_size 2MB 0x10000 " + filePath;
+                }
                 //pProcess.StartInfo.Arguments = "-?";
                 pProcess.StartInfo.UseShellExecute = false;
                 pProcess.StartInfo.RedirectStandardOutput = true;
@@ -77,9 +91,9 @@ namespace freETarget {
                 }
             }
 
-            Console.WriteLine("AVRDUDE finished");
-            mainWindow.displayMessage("Upload firmware finished.", false);
-            mainWindow.log("Firmware upload of file " + filePath + " completed.");
+            Console.WriteLine("Upload finished");
+            mainWindow.displayMessage("Upload firmware to " + board + " finished.", false);
+            mainWindow.log("Firmware upload to " + board + " of file " + filePath + " completed.");
 
         }
 

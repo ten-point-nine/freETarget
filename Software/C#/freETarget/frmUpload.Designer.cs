@@ -94,9 +94,9 @@ namespace freETarget {
             // lblPort
             // 
             this.lblPort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblPort.Location = new System.Drawing.Point(460, 12);
+            this.lblPort.Location = new System.Drawing.Point(273, 12);
             this.lblPort.Name = "lblPort";
-            this.lblPort.Size = new System.Drawing.Size(196, 16);
+            this.lblPort.Size = new System.Drawing.Size(383, 16);
             this.lblPort.TabIndex = 5;
             this.lblPort.Text = "Port";
             this.lblPort.TextAlign = System.Drawing.ContentAlignment.MiddleRight;

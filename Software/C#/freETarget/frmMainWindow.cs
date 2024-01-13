@@ -45,6 +45,9 @@ namespace freETarget {
 
         public const String FET_SSID_PREFIX = "FET-";
 
+        public const String Arduino = "Arduino";
+        public const String ESP32 = "ESP32";
+
         private string incomingJSON = "";               // Cumulative serial message
 
 
@@ -129,8 +132,12 @@ namespace freETarget {
             }
             log("Events loaded: " + events.Substring(0, events.Length - 2));
 
-
-
+            toolTipButtons.SetToolTip(btnArduino, "Terminal " + Settings.Default.Board);
+            if (Settings.Default.Board == Arduino) {
+                btnArduino.Image = imgListBoards.Images[0];
+            } else {
+                btnArduino.Image = imgListBoards.Images[1];
+            }
 
             this.calibrationX = Settings.Default.calibrationX;
             this.calibrationY = Settings.Default.calibrationY;
@@ -440,7 +447,13 @@ namespace freETarget {
                     ((comms.UsbOpenParams)para).portName = Properties.Settings.Default.portName;
                     ((comms.UsbOpenParams)para).baudRate = Properties.Settings.Default.baudRate;
                     ((comms.UsbOpenParams)para).dataBits = 8;
-                    ((comms.UsbOpenParams)para).dtrEnable = true;
+                    if (Properties.Settings.Default.Board == Arduino) {
+                        ((comms.UsbOpenParams)para).dtrEnable = true; //seems like both ESP and Arduino work with the same settings
+                        ((comms.UsbOpenParams)para).rtsEnable = true; //but this might change in the future
+                    } else {
+                        ((comms.UsbOpenParams)para).dtrEnable = true;
+                        ((comms.UsbOpenParams)para).rtsEnable = true;
+                    }
                 } else {
                     para = new comms.TcpOpenParams();
                     ((comms.TcpOpenParams)para).IP = Settings.Default.TcpIP;
@@ -849,6 +862,14 @@ namespace freETarget {
                 Properties.Settings.Default.CommProtocol = settingsFrom.cmbCommProtocol.SelectedItem.ToString();
                 Properties.Settings.Default.TcpIP = settingsFrom.txtIP.Text;
                 Properties.Settings.Default.TcpPort = int.Parse(settingsFrom.txtPort.Text, CultureInfo.InvariantCulture);
+
+                if (settingsFrom.rbArduino.Checked) {
+                    Properties.Settings.Default.Board = Arduino;
+                    btnArduino.Image = imgListBoards.Images[0];
+                } else {
+                    Properties.Settings.Default.Board = ESP32;
+                    btnArduino.Image = imgListBoards.Images[1];
+                }
 
                 Properties.Settings.Default.Save();
                 saveSettings(); //save settings to DB as well
@@ -1534,7 +1555,7 @@ namespace freETarget {
         }
 
         private void imgLogo_Click(object sender, EventArgs e) {
-            MessageBox.Show("Copyright (c) 2020-2022 Azmodan -> youtube.com/ArmeVechi");
+            MessageBox.Show("Copyright (c) 2020-2024 Azmodan -> youtube.com/ArmeVechi");
         }
 
         private void btnArduino_Click(object sender, EventArgs e) {
