@@ -164,7 +164,7 @@ void multifunction_switch(void)
  * Delay for one second to detect a tap
  * Check to see if the switch has been pressed for the first time
  */
-  set_status_LED("-  ");
+  set_status_LED(LED_MFS_PUSH);
   if ( DIP_SW_A )
   {
     set_status_LED(LED_MFS_A);
@@ -215,8 +215,7 @@ void multifunction_switch(void)
  * All done, return the GPIO state
  */
   multifunction_wait_open();      // Wait here for the switches to be open
-
-  set_status_LED(LED_READY);
+  set_status_LED(LED_MFS_POP);    // Restore the LEDs
   return;
 }
 

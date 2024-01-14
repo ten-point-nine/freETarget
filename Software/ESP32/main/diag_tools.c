@@ -387,7 +387,7 @@ bool POST_counters(void)
   DLT(DLT_CRITICAL);  
   printf("POST_counters()");
 
-  set_status_LED("   ");                  // Turn them all off
+  set_status_LED(LED_OFF);                  // Turn them all off
   
 /*
  *  Test 1, Make sure we can turn off the reference clock

@@ -52,6 +52,7 @@ void    zapple(unsigned int test);                      // ZAPPLE console monito
 //                         R                // RDY indicates operating status 
 //                          X               // X indicates communications status
 //                           Y              // Y indicates feature status
+#define LED_OFF           "   "             // Turn off all of the LEDs
 #define LED_HELLO_WORLD   "RWB"             // Hello World
 #define LED_RESET         "   "             // Force them all off
 #define LED_READY_PUSH    "P--"             // Push the READY LED onto the stack
@@ -69,6 +70,9 @@ void    zapple(unsigned int test);                      // ZAPPLE console monito
 #define LED_TX            "-W-"             // Transmitting over WiFi / Serial
 #define LED_SIO_PUSH      "-P-"             // Push the LEDs
 #define LED_SIO_POP       "-p-"             // Pop the LEDs
+
+#define LED_MFS_PUSH      "-PP"             // Push the MFS LEDs
+#define LED_MFS_PUSH      "-PP"             // Pop the MFS LEDs
 
 #define LED_MFS_A         "-G-"             // Copy MFS to the LEDs
 #define LED_MFS_B         "--G"
