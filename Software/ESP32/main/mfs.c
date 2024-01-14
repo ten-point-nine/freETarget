@@ -167,11 +167,11 @@ void multifunction_switch(void)
   set_status_LED("-  ");
   if ( DIP_SW_A )
   {
-    set_status_LED("--G");
+    set_status_LED(LED_MFS_A);
   }
   if ( DIP_SW_B )
   {
-    set_status_LED("-G-");
+    set_status_LED(LED_MFS_B);
   }
   vTaskDelay(ONE_SECOND);
 

@@ -37,6 +37,10 @@ typedef struct status_struct {
   int green;
   int red;   
   int blink;                              // TRUE if blinking enabled
+  int push_blue;                          // Pushed value
+  int push_green;
+  int push_red;
+  int push_blink;
   }  status_struct_t;
 
 /* 
@@ -228,9 +232,13 @@ void status_LED_init
  *
  * The state of the LEDs can be turned on or off 
  * 
- * 'R' - Set the LED to Red'
+ * 'R' - Set the LED to Red
+ * 'r' - Blink the LED in red
  * '-' - Leave the LED alone
- *  
+ * '.' - Turn the LED off
+ * 'P' - Push the current state onto the stack
+ * 'p' - Pop the current state from the statck
+ *
  *-----------------------------------------------------*/
 #define   LED_ON 0x1F
 
@@ -238,7 +246,6 @@ rmt_transmit_config_t tx_config = {
         .loop_count = 0, // no transfer loop
     };
 
-  
 unsigned char led_strip_pixels[3 * 3];
 
 void set_status_LED
@@ -254,48 +261,71 @@ void set_status_LED
   i=0;
   while (*new_state != 0)
   {
-    if ( *new_state != '-' )
+    if ( *new_state != '-' )      // - Leave the setting alone
     {
-      status[i].blink = 0;
-      status[i].red = 0;
-      status[i].green = 0;
-      status[i].blue = 0;          // Turn off the LED
+      status[i].blink = 0;        // Default to blink off
       switch (*new_state)
       {
+        case 'P':                 // Push current status if stack is empty
+          if ( status[i].blink == (-1)) 
+            status[i].push_blink = status[i].blink;
+          if ( status[i].blue  == (-1)) 
+            status[i].push_blue  = status[i].blue;
+          if ( status[i].green == (-1)) 
+            status[i].push_green = status[i].green;
+          if ( status[i].red   == (-1)) 
+            status[i].push_red   = status[i].red;
+          break;
+
+        case 'p':                            // Pop from stack to current
+          status[i].blink = status[i].push_blink;
+          status[i].blue  = status[i].push_blue;
+          status[i].green = status[i].push_green;
+          status[i].red   = status[i].push_red;
+          status[i].push_blink = -1;         // Empty the stack
+          status[i].push_blue  = -1;
+          status[i].push_green = -1;
+          status[i].push_red   = -1;
+          break;
+
         case 'r':                 // RED LED
           status[i].blink = 1;    // Turn on Blinking
         case 'R':
           status[i].red   = LED_ON;
           break;
 
-        case 'y':                 // RED LED
+        case 'y':                 // YELLOW LED
           status[i].blink = 1;    // Turn on Blinking
         case 'Y':
           status[i].red   = LED_ON/2;
           status[i].green = LED_ON/2;
           break;
 
-        case 'g':               // GREEN LED
+        case 'g':                 // GREEN LED
           status[i].blink = 1;    // Turn on Blinking
         case 'G':
           status[i].green = LED_ON;
           break;
 
-        case 'b':
+        case 'b':                 // BLUE LED
           status[i].blink = 1;
         case 'B':
           status[i].blue  = LED_ON;
           break;
 
         case 'w':
-          status[i].blink = 1;
+          status[i].blink = 1;    // WHITE LED
         case 'W':
           status[i].red   = LED_ON/3;
           status[i].green = LED_ON/3;
           status[i].blue  = LED_ON/3;
           break;
 
-        case ' ':             // The LEDs are already off
+        case ' ':                 // LEDs are all off
+          status[i].blink = 0;
+          status[i].red = 0;
+          status[i].green = 0;
+          status[i].blue = 0;    
           break;
       }
     }
@@ -382,12 +412,12 @@ void commit_status_LEDs
  *             *     +
  *    vref_lo *      +
  *           *++++++++
- *         *   pcnt_hi
+ *         *   pcnt_hi3
  *        *
  *       * origin
  * 
  *                         vref_lo
- * origin = pcnt_lo + ----------------  * pcnt_hi
+ * origin = pcnt_lo - ----------------  * pcnt_hi
  *                    vref_hi - vref_lo
  * 
  * IMPORTANT

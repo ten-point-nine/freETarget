@@ -159,11 +159,21 @@ unsigned int serial_available
       n_available += length;
     }
   }
-
+   
+/*
+ * Return the number of characters waiting 
+ */
+  if ( n_available != 0 )               // Something waiting,
+  {
+    set_status_LED(LED_SIO_PUSH);
+    set_status_LED(LED_RX);             // Turn on the Receive LED
+  }
+  else
+  {
+    set_status_LED(LED_SIO_POP);
+  }
   return n_available;
 }
-
-
 
 /*******************************************************************************
  * 
@@ -319,15 +329,15 @@ void serial_to_all
   bool  tcpip                     // Output to the TCPIP socket
 )
 {
-  unsigned int len;
+  unsigned int length;
 
 /*
  *  Figure out the string length
  */
-  len = 0;
-  while (str[len])
+  length = 0;
+  while (str[length])
   {
-    len++;
+    length++;
   }
 
 /*
@@ -340,17 +350,21 @@ void serial_to_all
   
   if ( aux )
   {
-    uart_write_bytes(uart_aux, (const char *) str, len);
+    uart_write_bytes(uart_aux, (const char *) str, length);
   }
   
   if ( tcpip )
   {
-    tcpip_app_2_queue(str, len);
+    tcpip_app_2_queue(str, length);
   }
 
 /*
  * All done
  */
+  set_status_LED(LED_SIO_PUSH);              // Flash the LED for a bit
+  set_status_LED(LED_TX);
+  vTaskDelay(ONE_SECOND/10);
+  set_status_LED(LED_SIO_POP);
   return;
 }
 

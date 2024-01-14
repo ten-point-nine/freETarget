@@ -182,6 +182,7 @@ void WiFi_AP_init(void)
 /*
  * Ready to go
  */
+   set_status_LED(LED_ACCESS);                 // I am an access point
    return;
 }
 
@@ -268,6 +269,7 @@ void WiFi_station_init(void)
 /*
  *  All done
  */
+   set_status_LED(LED_STATION);
    return;
 }
 
@@ -304,6 +306,7 @@ void WiFi_event_handler
       if ( event_id == WIFI_EVENT_STA_START)
       {
          esp_wifi_connect();
+         set_status_LED(LED_STATION_CN);
       }
 
       if ( event_id == WIFI_EVENT_STA_DISCONNECTED )
@@ -317,6 +320,7 @@ void WiFi_event_handler
          {
             xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
          }
+         set_status_LED(LED_STATION);
       }
    }   
    
@@ -339,11 +343,13 @@ void WiFi_event_handler
     if (event_id == WIFI_EVENT_AP_STACONNECTED)
     {
       printf("AP Connected");
+      set_status_LED(LED_ACCESS_CN);
     } 
    
    if (event_id == WIFI_EVENT_AP_STADISCONNECTED)
    {
       printf("STATION disconnected");
+      set_status_LED(LED_ACCESS);
    }
 
 /*

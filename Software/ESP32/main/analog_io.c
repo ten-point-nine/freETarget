@@ -7,21 +7,22 @@
  *****************************************************************************/
 
 #include "stdbool.h"
-#include "gpio.h"
-#include "analog_io.h"
+#include "stdio.h"
 #include "driver/gpio.h"
 #include "driver/ledc.h"
+#include "driver/adc.h"
+
+#include "freETarget.h"
+#include "diag_tools.h"
+#include "gpio.h"
+#include "analog_io.h"
 #include "gpio_types.h"
 #include "adc_types.h"
 #include "adc_oneshot.h"
 #include "pwm.h"
 #include "gpio_define.h"
 #include "i2c.h"
-#include "driver/adc.h"
 #include "dac.h"
-#include "freETarget.h"
-#include "diag_tools.h"
-#include "stdio.h"
 #include "json.h"
 
 

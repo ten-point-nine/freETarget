@@ -42,8 +42,8 @@
  *   This function sets the DACs to the desired value
  *  
  *--------------------------------------------------------------*/
-#define V_REF 5.0
-#define DAC_FS 4095.0
+#define V_REF 5.0                         // VREF = Supply, nominally 5V
+#define DAC_FS (0xfff)                    // 12 bit DAC
 
 void DAC_write
 (

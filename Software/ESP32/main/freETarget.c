@@ -440,7 +440,6 @@ unsigned int reduce(void)
   {   
     if ( DLT(DLT_APPLICATION) )
     {
-//      printf("Reducing shot: %d \n\rTrigger: ", last_shot);
       show_sensor_status(record[last_shot].sensor_status);
     }
 

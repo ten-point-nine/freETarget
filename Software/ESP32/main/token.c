@@ -317,21 +317,17 @@ void token_poll(void)
         
           case TOKEN_TAKE:                                  // A take is passing aroound
               whos_ring = token & TOKEN_RING;
-              if ( whos_ring == my_ring )
-              {
-                set_status_LED(LED_WIFI_SEND);
-              }
               serial_putch(token, AUX);                      // Pass it along to the master
               break;
           
           case TOKEN_RELEASE:                               // A release is passing around
               whos_ring = TOKEN_UNDEF;                      // Yes, Release it
-              set_status_LED(LED_READY);                           // And show it is ready
-              serial_putch(token, AUX);                      // Pass it along to the master
+              set_status_LED(LED_READY);                    // And show it is ready
+              serial_putch(token, AUX);                     // Pass it along to the master
               break;                                        // 
                
           default:                                          // Not a control byte
-              serial_putch(token, AUX);                      // Send it on to the next node
+              serial_putch(token, AUX);                     // Send it on to the next node
              break;  
         }
       }
