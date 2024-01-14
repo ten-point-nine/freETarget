@@ -384,10 +384,9 @@ bool POST_counters(void)
   bool         test1, test2, test3, test4; // Record if the test failed
   unsigned int count, toggle;              // Cycle counter
 
-  DLT(DLT_CRITICAL);  
-  printf("POST_counters()");
-
-  set_status_LED(LED_OFF);                  // Turn them all off
+  DZZ(DLT_CRITICAL, printf("POST_counters()");)
+  set_status_LED(LED_ALL_PUSH);            // Turn them all off
+  set_status_LED(LED_OFF);                 // Turn them all off
   
 /*
  *  Test 1, Make sure we can turn off the reference clock
@@ -514,6 +513,7 @@ bool POST_counters(void)
 /*
  * We get here regardless of whether or not the test failed
  */
+  set_status_LED(LED_ALL_POP);
   return test1 && test2 && test3 && test4;
 }
 

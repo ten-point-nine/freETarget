@@ -53,6 +53,8 @@ void    zapple(unsigned int test);                      // ZAPPLE console monito
 //                          X               // X indicates communications status
 //                           Y              // Y indicates feature status
 #define LED_OFF           "   "             // Turn off all of the LEDs
+#define LED_ALL_PUSH      "PPP"             // Push all of the LEDs
+#define LED_ALL_POP       "ppp"             // Pop all of the LEDs
 #define LED_HELLO_WORLD   "RWB"             // Hello World
 #define LED_RESET         "   "             // Force them all off
 #define LED_READY_PUSH    "P--"             // Push the READY LED onto the stack
@@ -72,7 +74,7 @@ void    zapple(unsigned int test);                      // ZAPPLE console monito
 #define LED_SIO_POP       "-p-"             // Pop the LEDs
 
 #define LED_MFS_PUSH      "-PP"             // Push the MFS LEDs
-#define LED_MFS_PUSH      "-PP"             // Pop the MFS LEDs
+#define LED_MFS_POP       "-pp"             // Pop the MFS LEDs
 
 #define LED_MFS_A         "-G-"             // Copy MFS to the LEDs
 #define LED_MFS_B         "--G"
@@ -107,7 +109,7 @@ void    zapple(unsigned int test);                      // ZAPPLE console monito
 /*
  * Tracing 
  */
-#define DZZ(level, z) if ( do_dlt(level)){ z}
+#define DZZ(level, z) if ( do_dlt(level)){z}
 #define DLT(level)      ( do_dlt(level) )
 #define DLT_NONE          0                       // No DLT messages displayed
 #define DLT_CRITICAL      0x80                    // Display messages that will compromise the target

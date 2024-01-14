@@ -129,8 +129,7 @@ void freeETarget_init(void)
   serial_flush(ALL);                      // Get rid of everything
   this_shot = 0;                          // Clear out any junk
   last_shot = 0;
-  DLT(DLT_CRITICAL);
-  printf("Initialization complete\r\n");
+  DZZ(DLT_CRITICAL, printf("Initialization complete\r\n");)
 
 /*
  * Start the tasks running

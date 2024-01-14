@@ -440,8 +440,8 @@ void read_timers
     timer[i] = pcnt_read(i);
   }
 
-#if ( COMPENSATE_RISE_TIME )
-  if ( (json_vref_hi - json_vref_lo) > 0 )
+  if ( (json_pcnt_latency != 0)                   // Latecy has a valid setting
+          && ((json_vref_hi - json_vref_lo) > 0 ) ) // The voltage references are good
   {
     for (i=N; i <= W; i++)                        // Add the rise time to the signal to get a better estimate
     {
@@ -452,7 +452,6 @@ void read_timers
       }
     }
   }
-#endif
 
   return;
 }
