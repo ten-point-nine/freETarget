@@ -17,6 +17,7 @@
 #include "json.h"
 #include "nonvol.h"
 #include "serial_io.h"
+#include "timer.h"
 
 /*
  *  Definitions
@@ -211,14 +212,20 @@ void multifunction_switch(void)
     }
   }
 
-   if ( action == 0 )                 // Nothing to do
-   {
-     return;
-   }
+  if ( (switch_A_count >= LONG_PRESS) && (switch_B_count >= LONG_PRESS) )
+  {
+    action = SWITCH_AB_HOLD;
+  }
+
+  if ( action == 0 )                 // Nothing to do
+  {
+    return;
+  }
    
 /*
  * Carry out the switch action
  */
+  printf("mfs Action:%d", action);
   switch (action)
   {
     case SWITCH_A_TAP:
@@ -245,9 +252,9 @@ void multifunction_switch(void)
 /*
  * All done, return the GPIO state
  */
-  multifunction_wait_open();      // Wait here for the switches to be open
   switch_A_count = 0;
   switch_B_count = 0;
+  set_status_LED(LED_MFS_OFF);
   return;
 }
 
@@ -307,10 +314,6 @@ static void sw_state
 
    case PAPER_SHOT:                       // The switch acts as paper feed control
       drive_paper();                      // Turn on the paper drive
-      while ( (DIP_SW_A || DIP_SW_B) )    // Keep it on while the switches are pressed 
-      {
-        continue; 
-      }
       break;
       
    case PC_TEST:                         // Send a fake score to the PC

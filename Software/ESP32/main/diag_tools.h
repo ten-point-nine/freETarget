@@ -55,8 +55,6 @@ void    zapple(unsigned int test);                      // ZAPPLE console monito
 #define LED_OFF           "   "             // Turn off all of the LEDs
 #define LED_HELLO_WORLD   "RWB"             // Hello World
 #define LED_RESET         "   "             // Force them all off
-#define LED_READY_PUSH    "P--"             // Push the READY LED onto the stack
-#define LED_READY_POP     "p--"             // Take the READY LED from the stack 
 #define LED_GOOD          "G  "             // The software has started but not in shot mode
 #define LED_READY         "g  "             // The shot is ready to go.  Blik to show we are alive
 #define LED_READY_OFF     " --"             // Turn off the READY light
@@ -66,19 +64,15 @@ void    zapple(unsigned int test);                      // ZAPPLE console monito
 #define LED_STATION_CN    "-G-"             // The WiFI is in station mode and connected 
 #define LED_ACCESS        "-b-"             // The WiFi is in access mode and not connected
 #define LED_ACCESS_CN     "-B-"             // The WiFI is in access mode and connected 
-#define LED_RX            "-R-"             // Receiving over WiFi/Serial
-#define LED_TX            "-W-"             // Transmitting over WiFi / Serial
+#define LED_RX            "--R"             // Receiving over WiFi/Serial
+#define LED_TX            "--G"             // Transmitting over WiFi / Serial
+#define LED_RXTX_OFF      "-- "             // Turn off the TX/RX LED
 
 #define LED_MFS_a         "-G-"             // Short Press Copy MFS to the LEDs
-#define LED_MFS_b         "--G"
 #define LED_MFS_A         "-W-"             // Long Press Copy MFS to the LEDs
+#define LED_MFS_b         "--G"
 #define LED_MFS_B         "--W"
-
-#define LED_TABATA_ON     "--G"             // Tabata is ready to go, leave the others alone
-#define LED_TABATA_OFF    "-- "             // Tabata is turned off, leave the others alone
-#define LED_RAPID_ON      "--G"             // Rapidfire course of fire on
-#define LED_RAPID_OFF     "-- "             // Rapidfire course of fire off
-#define LED_WIFI_DONE     "-- "             // Finished sending
+#define LED_MFS_OFF       "-  "             // Turn them off if they were on
 
 // Fault Codes - RDY LED set to RED to indiate a fault
 #define LED_NORTH_FAILED   "RRR"            // North sensor failed

@@ -59,7 +59,8 @@ static volatile unsigned long  keep_alive;        // Keep alive timer
 static volatile unsigned long  tabata_timer;      // Free running state timer
        volatile unsigned long  power_save;        // Power save timer
 static volatile unsigned long  rapid_timer;       // Timer used for rapid fire ecents 
-                  
+       volatile unsigned long  LED_timer;         // Timer to reset LED status 
+                
 volatile unsigned int run_state = 0;              // Current operating state 
 
 const char* names[] = { "TARGET",                                                                                           //  0
@@ -231,7 +232,6 @@ void freeETarget_target_loop(void* arg)
   if ( json_tabata_enable || json_rapid_enable ) // If the Tabata or rapid fire is enabled, 
   {
     set_LED_PWM_now(0);             // Turn off the LEDs
-    set_status_LED(LED_TABATA_ON);  // Just turn on X
     json_rapid_enable = 0;          // Disable the rapid fire
   }                                 // Until the session starts
   else

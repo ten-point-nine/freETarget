@@ -127,5 +127,6 @@ extern unsigned int  this_shot;        // Index into the shot array
 extern unsigned int  shot_number;
 extern volatile unsigned long power_save;       // Power down timer
 extern volatile unsigned int run_state;         // IPC states 
+extern volatile unsigned long LED_timer;        // Turn off the LEDs when not in use
 
 #endif

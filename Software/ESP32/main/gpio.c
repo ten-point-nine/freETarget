@@ -234,7 +234,7 @@ void status_LED_init
  * '.' - Turn the LED off
  *
  *-----------------------------------------------------*/
-#define   LED_ON 0x1F
+#define   LED_ON 0x3F
 
 rmt_transmit_config_t tx_config = {
         .loop_count = 0, // no transfer loop
@@ -255,14 +255,13 @@ void set_status_LED
   i=0;
   while (*new_state != 0)
   {
-    status[i].blink = 0;
-    status[i].red   = 0;
-    status[i].green = 0;
-    status[i].blue  = 0;    
-
     if ( *new_state != '-' )      // - Leave the setting alone
     {
       status[i].blink = 0;        // Default to blink off
+      status[i].red   = 0;
+      status[i].green = 0;
+      status[i].blue  = 0;    
+
       switch (*new_state)
       {
         case 'r':                 // RED LED
@@ -347,13 +346,13 @@ void commit_status_LEDs
     led_strip_pixels[i * 3 + 1] = 0;
     if ( (status[i].blink == 0) || (blink_state == 1) )
     {
-      led_strip_pixels[i * 3 + 0] = 0; //status[i].green;
-      led_strip_pixels[i * 3 + 2] = 0; //status[i].blue;
-      led_strip_pixels[i * 3 + 1] = 0; //status[i].red;
+      led_strip_pixels[i * 3 + 0] = status[i].green;
+      led_strip_pixels[i * 3 + 2] = status[i].blue;
+      led_strip_pixels[i * 3 + 1] = status[i].red;
     }
   }
     
-  //ESP_ERROR_CHECK(rmt_transmit(led_channel, led_encoder, led_strip_pixels, sizeof(led_strip_pixels), &tx_config));
+  rmt_transmit(led_channel, led_encoder, led_strip_pixels, sizeof(led_strip_pixels), &tx_config);
 
 /*
  * All done, return
@@ -480,6 +479,9 @@ void drive_paper_tick(void)
   if ( paper_time == 0 )
   {
     paper_on_off(false);                      // Motor OFF
+    timer_delete(&paper_time);
+    paper_time = 1;
+    DLT(DLT_DIAG, printf("Done");)
   }
   
  /*

@@ -130,11 +130,4 @@ void multifunction_display(void);                         // Display the MFS set
 #define RAPID_RED     1                   // Rapid Fire Red Output
 #define RAPID_GREEN   2                   // Rapid Fire Green Output
 
-#define J10_1      VCC
-#define J10_2       14                    // TX3
-#define J10_3       15                    // RX3
-#define J10_4       19                    // RX1
-#define J10_5       18                    // TX1
-#define J10_6      GND
-
 #endif
