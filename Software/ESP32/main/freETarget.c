@@ -115,8 +115,7 @@ void freeETarget_init(void)
  */
   if ( POST_counters() == false )         // If the timers fail
   {
-    DLT(DLT_CRITICAL);
-    printf("POST_counters failed");   // Failed the test
+    DZZ(DLT_CRITICAL, printf("POST_counters failed"); )  // Failed the test
     vTaskDelay(2*ONE_SECOND);
   }
   
@@ -129,7 +128,7 @@ void freeETarget_init(void)
   serial_flush(ALL);                      // Get rid of everything
   this_shot = 0;                          // Clear out any junk
   last_shot = 0;
-  DZZ(DLT_CRITICAL, printf("Initialization complete\r\n");)
+  DZZ(DLT_CRITICAL, printf("Initialization complete");)
 
 /*
  * Start the tasks running
@@ -275,10 +274,7 @@ unsigned int arm(void)
   sensor_status = is_running();     // and immediatly read the status
   if ( sensor_status == 0 )         // After arming, the sensor status should be zero
   { 
-    if ( DLT(DLT_APPLICATION) )
-    {
-      printf("Waiting...");
-    }  
+    DZZ(DLT_APPLICATION, printf("Waiting...");)
     return WAIT;                   // Fall through to WAIT
   }
 
@@ -369,15 +365,7 @@ unsigned int wait(void)
     {
       set_LED_PWM_now(0);
 
-      if ( DLT(DLT_APPLICATION) )
-      {
-        printf("Rapid fire complete");
-      }
-      
-      if ( DLT(DLT_APPLICATION) )
-      {
-        printf("Rapid fire complete");
-      }
+      DZZ(DLT_APPLICATION, printf("Rapid fire complete");)
       return REDUCE;                   // Finish this rapid fire cycle
     }
     else
@@ -437,10 +425,7 @@ unsigned int reduce(void)
  */
   while (last_shot != this_shot )
   {   
-    if ( DLT(DLT_APPLICATION) )
-    {
-      show_sensor_status(record[last_shot].sensor_status);
-    }
+    DZZ(DLT_APPLICATION, show_sensor_status(record[last_shot].sensor_status);)
 
     location = compute_hit(&record[last_shot]);                 // Compute the score
     if ( location != MISS )                                     // Was it a miss or face strike?
@@ -464,10 +449,7 @@ unsigned int reduce(void)
     }
     else
     {
-      if ( DLT(DLT_APPLICATION) )
-      {
-        printf("Shot miss...\r\n");
-      }
+      DZZ(DLT_APPLICATION, printf("Shot miss...\r\n");)
       set_status_LED(LED_MISS);
       send_miss(&record[last_shot]);
       rapid_green(0);
@@ -554,7 +536,7 @@ void tabata_enable
   tabata_state = TABATA_OFF;                                      // Reset back to the beginning
   json_tabata_enable = enable;                                    // And enable
 
-  if ( DLT(DLT_APPLICATION) )
+  DZZ(DLT_APPLICATION, 
   {
     if ( enable )
     {
@@ -565,6 +547,7 @@ void tabata_enable
       printf("Tabata disabled");
     }
   }
+  )
   
 /*
  * All done, return

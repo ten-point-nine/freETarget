@@ -17,6 +17,9 @@
 
 
 #define REV_500    500   // ESP32
+#define REV_510    510
+#define REV_520    520
+#define BUILD_REV  REV_510
 
 #define INIT_DONE       0xabcd                    // NON-VOL Initialization complete signature
 #ifndef true

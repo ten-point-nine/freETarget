@@ -83,8 +83,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args);
 
 void freeETarget_timer_init(void)
 {
-  DLT(DLT_CRITICAL); 
-  printf("freeETarget_timer_init()");
+  DZZ(DLT_CRITICAL, printf("freeETarget_timer_init()");)
   timer_init(TIMER_GROUP_0, TIMER_1, &config);
   timer_set_counter_value(TIMER_GROUP_0, TIMER_1, 0);                   // Start the timer at 0
   timer_set_alarm_value(TIMER_GROUP_0, TIMER_1, ONE_MS);                // Trigger on this value
@@ -324,10 +323,7 @@ unsigned long timer_new
       return 1;
     }
   }
-  if ( DLT(DLT_CRITICAL) )
-  {
-    printf("No space for new timer");
-  }
+  DZZ(DLT_CRITICAL,  printf("No space for new timer");)
   
   return 0;
 }

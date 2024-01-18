@@ -248,10 +248,7 @@ static void sw_state
 
   char s[128];                          // Holding string 
   
-  if ( DLT(DLT_CRITICAL) )
-  {
-    printf("Switch action: %d", action);
-  }
+  DZZ(DLT_CRITICAL, printf("Switch action: %d", action);)
 
   switch (action)
   {

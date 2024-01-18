@@ -214,7 +214,7 @@ void freeETarget_json
 {
   char          ch;
 
-  DLT(DLT_CRITICAL); printf("freeETarget_json()\r\n");
+  DZZ(DLT_CRITICAL, printf("freeETarget_json()");)
 
   while (1)
   {

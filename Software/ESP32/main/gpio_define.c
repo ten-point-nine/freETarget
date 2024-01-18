@@ -223,10 +223,7 @@ void gpio_init(void)
 {
     int i;
 
-    if ( DLT(DLT_CRITICAL) )
-    {
-        printf("gpio_init()\r\n");
-    }
+    DZZ(DLT_CRITICAL, printf("gpio_init()\r\n");)
 /*
  *  Loop and setup the GPIO
  */
@@ -235,8 +232,8 @@ void gpio_init(void)
     {
         if (gpio_table[i].gpio_uses != NULL )
         {   
-            DLT(DLT_CRITICAL); 
-            printf("%s: %d  %s",gpio_table[i].gpio_name, gpio_table[i].gpio_number, gpio_use[((DIO_struct_t*)(gpio_table[i].gpio_uses))->type]);
+            DZZ(DLT_CRITICAL,  
+            printf("%s: %d  %s",gpio_table[i].gpio_name, gpio_table[i].gpio_number, gpio_use[((DIO_struct_t*)(gpio_table[i].gpio_uses))->type]);)
 
             switch (((DIO_struct_t*)(gpio_table[i].gpio_uses))->type)
             {      

@@ -236,8 +236,6 @@ void status_LED_init
  * 'r' - Blink the LED in red
  * '-' - Leave the LED alone
  * '.' - Turn the LED off
- * 'P' - Push the current state onto the stack
- * 'p' - Pop the current state from the statck
  *
  *-----------------------------------------------------*/
 #define   LED_ON 0x1F
@@ -266,28 +264,6 @@ void set_status_LED
       status[i].blink = 0;        // Default to blink off
       switch (*new_state)
       {
-        case 'P':                 // Push current status if stack is empty
-          if ( status[i].blink == (-1)) 
-            status[i].push_blink = status[i].blink;
-          if ( status[i].blue  == (-1)) 
-            status[i].push_blue  = status[i].blue;
-          if ( status[i].green == (-1)) 
-            status[i].push_green = status[i].green;
-          if ( status[i].red   == (-1)) 
-            status[i].push_red   = status[i].red;
-          break;
-
-        case 'p':                            // Pop from stack to current
-          status[i].blink = status[i].push_blink;
-          status[i].blue  = status[i].push_blue;
-          status[i].green = status[i].push_green;
-          status[i].red   = status[i].push_red;
-          status[i].push_blink = -1;         // Empty the stack
-          status[i].push_blue  = -1;
-          status[i].push_green = -1;
-          status[i].push_red   = -1;
-          break;
-
         case 'r':                 // RED LED
           status[i].blink = 1;    // Turn on Blinking
         case 'R':
@@ -380,7 +356,7 @@ void commit_status_LEDs
     }
   }
     
-  ESP_ERROR_CHECK(rmt_transmit(led_chan, led_encoder, led_strip_pixels, sizeof(led_strip_pixels), &tx_config));
+//  ESP_ERROR_CHECK(rmt_transmit(led_chan, led_encoder, led_strip_pixels, sizeof(led_strip_pixels), &tx_config));
 
 /*
  * All done, return
@@ -493,11 +469,7 @@ volatile unsigned long paper_time;
 
 void drive_paper(void)
 {
-
-  if ( DLT(DLT_DIAG) )
-  {
-    printf("Advancing paper: %dms", json_paper_time);
-  }
+  DZZ(DLT_DIAG, printf("Advancing paper: %dms", json_paper_time);)
 
 /*
  * Drive the motor on and off for the number of cycles
@@ -579,10 +551,7 @@ void paper_on_off                               // Function to turn the motor on
  {
   face_strike++;      // Got a face strike
 
-  if ( DLT(DLT_CRITICAL) )
-  {
-    printf("\r\nface_ISR(): %d", face_strike);
-  }
+  DZZ(DLT_CRITICAL, printf("\r\nface_ISR(): %d", face_strike);)
 
   return;
  }
