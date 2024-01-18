@@ -167,7 +167,7 @@ void set_LED_PWM_now
     return;
   }
   
-  DZZ(DLT_INFO, printf("new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);)
+  DLT(DLT_INFO, printf("new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);)
 
   old_LED_percent = new_LED_percent;
   pwm_set(LED_PWM, new_LED_percent);  // Write the value out
@@ -181,7 +181,7 @@ void set_LED_PWM                                  // Theatre lighting
   int new_LED_percent                            // Desired LED level (0-100%)
   )
 {
-  DZZ(DLT_INFO, printf("new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);)
+  DLT(DLT_INFO, printf("new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);)
 
 /*
  * Loop and ramp the LED  PWM up or down slowly
@@ -330,7 +330,7 @@ void set_VREF(void)
 {
   if ( json_vref_lo >= json_vref_hi )
   {
-    DZZ(DLT_CRITICAL, printf("ERROR: json_vref_lo or json_vref_hi are out of order.");)
+    DLT(DLT_CRITICAL, printf("ERROR: json_vref_lo or json_vref_hi are out of order.");)
   }
 
   DAC_write(0, json_vref_lo);

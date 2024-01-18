@@ -92,7 +92,7 @@ static void tcpip_server_io(void);        // Manage TCPIP traffic
  *******************************************************************************/
 void WiFi_init(void)
 {
-    DZZ(DLT_CRITICAL, printf("WiFi_init()\r\n");)
+    DLT(DLT_CRITICAL, printf("WiFi_init()\r\n");)
 
 /* 
  * Initialize the WiFI
@@ -132,7 +132,7 @@ void WiFi_AP_init(void)
     esp_netif_t* wifiAP;
     wifi_init_config_t WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
-    DZZ(DLT_CRITICAL, printf("WiFi_AP_init()");)
+    DLT(DLT_CRITICAL, printf("WiFi_AP_init()");)
     
 /*
  * Create the network interface
@@ -206,7 +206,7 @@ void WiFi_station_init(void)
 {
    wifi_init_config_t   WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
-   DZZ(DLT_CRITICAL, printf("WiFi_station_init()");)
+   DLT(DLT_CRITICAL, printf("WiFi_station_init()");)
 
    s_wifi_event_group = xEventGroupCreate();
    esp_netif_init();
@@ -246,7 +246,7 @@ void WiFi_station_init(void)
 /*
  *  The target has connected to an access point
  */
-    DZZ(DLT_INFO, 
+    DLT(DLT_INFO, 
     {
         if (bits & WIFI_CONNECTED_BIT)
         {
@@ -327,7 +327,7 @@ void WiFi_event_handler
         if ( event_id == IP_EVENT_STA_GOT_IP )
         {
             ipInfo.ip = event->ip_info.ip;
-            DZZ(DLT_INFO, printf(" Received IP:" IPSTR, IP2STR(&event->ip_info.ip));)
+            DLT(DLT_INFO, printf(" Received IP:" IPSTR, IP2STR(&event->ip_info.ip));)
             s_retry_num = 0;
             xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
         }
@@ -375,7 +375,7 @@ static char greeting[] = "{\"CONNECTED\"}";
 
 void WiFi_tcp_server_task(void *pvParameters)
 {
-   DZZ(DLT_CRITICAL, printf("WiFi_tcp_server_task()");)
+   DLT(DLT_CRITICAL, printf("WiFi_tcp_server_task()");)
 
 /*
  *  Move data in and out of the TCP queues
@@ -460,7 +460,7 @@ void tcpip_socket_poll_0(void* parameters)
     int length;
     char rx_buffer[256];
 
-    DZZ(DLT_CRITICAL, printf("tcp_socket_poll_0()");)
+    DLT(DLT_CRITICAL, printf("tcp_socket_poll_0()");)
 
     while (1)
     {
@@ -482,7 +482,7 @@ void tcpip_socket_poll_1(void* parameters)
     int length;
     char rx_buffer[256];
 
-    DZZ(DLT_CRITICAL, printf("tcp_socket_poll_1()");)
+    DLT(DLT_CRITICAL, printf("tcp_socket_poll_1()");)
 
     while (1)
     {
@@ -504,7 +504,7 @@ void tcpip_socket_poll_2(void* parameters)
     int length;
     char rx_buffer[256];
 
-    DZZ(DLT_CRITICAL, printf("tcp_socket_poll_2()");)
+    DLT(DLT_CRITICAL, printf("tcp_socket_poll_2()");)
 
     while (1)
     {
@@ -526,7 +526,7 @@ void tcpip_socket_poll_3(void* parameters)
     int length;
     char rx_buffer[256];
 
-    DZZ(DLT_CRITICAL, printf("tcp_socket_poll_3()");)
+    DLT(DLT_CRITICAL, printf("tcp_socket_poll_3()");)
 
     while (1)
     {
@@ -559,7 +559,7 @@ void tcpip_accept_poll(void* parameters)
    int sock;
    int i;
 
-   DZZ(DLT_CRITICAL, printf("tcp_accept_poll()");)
+   DLT(DLT_CRITICAL, printf("tcp_accept_poll()");)
    
 /*
  * Start the server
@@ -578,7 +578,7 @@ void tcpip_accept_poll(void* parameters)
    listen_sock = socket(AF_INET, SOCK_STREAM, ip_protocol);
    if (listen_sock < 0) 
    {
-      DZZ(DLT_CRITICAL, printf("Unable to create socket: errno %d\r\n", errno);)
+      DLT(DLT_CRITICAL, printf("Unable to create socket: errno %d\r\n", errno);)
       vTaskDelete(NULL);
       return;
    }
@@ -611,7 +611,7 @@ void tcpip_accept_poll(void* parameters)
             setsockopt(sock, IPPROTO_TCP, TCP_KEEPINTVL, &keepInterval, sizeof(int));
             setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT, &keepCount, sizeof(int));
 
-            DZZ(DLT_CRITICAL, 
+            DLT(DLT_CRITICAL, 
             {         
                 inet_ntoa_r(((struct sockaddr_in *)&source_addr)->sin_addr, addr_str, sizeof(addr_str) - 1);
                 printf("Socket accepted ip address: %s\r\n", addr_str);

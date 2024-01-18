@@ -22,6 +22,7 @@ unsigned int read_counter(unsigned int direction);
 void stop_timers(void);                                   // Turn off the counter registers
 void read_timers(int* timer_count);                      // Read and return the counter registers
 void drive_paper(void);                                   // Turn on the paper motor
+void drive_paper_tick(void);                              // Turn the motor off when the time runs out
 void aquire(void);                                        // Read the clock registers
 // void enable_face_interrupt();                             // Turn on the face strike interrupt
 void disable_face_interrupt(void);                        // Turn off the face strike interrupt

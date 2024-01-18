@@ -47,7 +47,7 @@ void read_nonvol(void)
   size_t        length;        // Length of input string
   esp_err_t     err;           // ESP32 error type
 
-  DZZ(DLT_CRITICAL, printf("read_nonvol()");)
+  DLT(DLT_CRITICAL, printf("read_nonvol()");)
 
  /*
   * Initialize NVS
@@ -55,7 +55,7 @@ void read_nonvol(void)
     err = nvs_flash_init();
     if (err != 0)
     {
-        DZZ(DLT_CRITICAL, printf("read_nonvol(): Failed to initialize NVM");)
+        DLT(DLT_CRITICAL, printf("read_nonvol(): Failed to initialize NVM");)
         ESP_ERROR_CHECK(nvs_flash_erase());        // NVS partition was truncated and needs to be erased
         err = nvs_flash_init();
     }
@@ -66,7 +66,7 @@ void read_nonvol(void)
 
   if (nvs_open(NAME_SPACE, NVS_READWRITE, &my_handle) != ESP_OK)
   {
-    DZZ(DLT_CRITICAL, printf("read_nonvol(): Failed to open NVM");)
+    DLT(DLT_CRITICAL, printf("read_nonvol(): Failed to open NVM");)
   }
         
   nvs_get_i32(my_handle, "NONVOL_INIT", &nonvol_init);
@@ -176,7 +176,7 @@ void factory_nonvol
   unsigned int i;                         // Iteration Counter
   int          length;
   
-  DZZ(DLT_CRITICAL, printf("factory_nonvol()\r\n"); )
+  DLT(DLT_CRITICAL, printf("factory_nonvol()\r\n"); )
 
   serial_number = 0;
   x = 0;
@@ -287,7 +287,7 @@ void factory_nonvol
   nvs_set_i32(my_handle, NONVOL_INIT, INIT_DONE);
   if ( nvs_commit(my_handle) )
   {
-    DZZ(DLT_CRITICAL, printf("Failed to write factory defaults to NONVOL");)
+    DLT(DLT_CRITICAL, printf("Failed to write factory defaults to NONVOL");)
   }
   
 /*
@@ -373,7 +373,7 @@ void update_nonvol
   unsigned int  i;                // Iteration counter
   long          ps_value;         // Value read from persistent storage  
   
-  DZZ(DLT_CRITICAL, printf("update_nonvol(%d)\r\n", current_version);)
+  DLT(DLT_CRITICAL, printf("update_nonvol(%d)\r\n", current_version);)
 
 /*
  * Check to see if this persistent storage has never had a version number

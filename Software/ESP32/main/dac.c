@@ -57,7 +57,7 @@ void DAC_write
   scaled_value = ((int)(volts / V_REF * DAC_FS)) & 0xfff;  // Figure the bits to send
   gpio_set_level(LDAC, 0);
 
-  DZZ(DLT_DIAG, printf("DAC_write(channel:%d Volts:%f scale:%d)", channel, volts, scaled_value);)
+  DLT(DLT_DIAG, printf("DAC_write(channel:%d Volts:%f scale:%d)", channel, volts, scaled_value);)
 
   data[0] = DAC_WRITE                     // Write
                 + ((channel & 0x3) << 1)  // Channel

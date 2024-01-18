@@ -83,7 +83,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args);
 
 void freeETarget_timer_init(void)
 {
-  DZZ(DLT_CRITICAL, printf("freeETarget_timer_init()");)
+  DLT(DLT_CRITICAL, printf("freeETarget_timer_init()");)
   timer_init(TIMER_GROUP_0, TIMER_1, &config);
   timer_set_counter_value(TIMER_GROUP_0, TIMER_1, 0);                   // Start the timer at 0
   timer_set_alarm_value(TIMER_GROUP_0, TIMER_1, ONE_MS);                // Trigger on this value
@@ -231,10 +231,6 @@ void freeETarget_synchronous
 
   while (1)
   {
-/*
- *  10 ms band
- */
-//    token_cycle();
     for (i=0; i != N_TIMERS; i++)  // Refresh the timers
     {
       if ( (timers[i] != 0)
@@ -243,6 +239,13 @@ void freeETarget_synchronous
         (*timers[i])--;
       }
     }
+/*
+ *  10 ms band
+ */
+//    token_cycle();
+    multifunction_switch_tick();
+    multifunction_switch();
+    drive_paper_tick();
 
 /*
  *  500 ms band
@@ -251,7 +254,7 @@ void freeETarget_synchronous
     {
       commit_status_LEDs( toggle );
       toggle ^= 1;
-      multifunction_switch();
+
       tabata_task();
       rapid_fire_task();
     }
@@ -323,7 +326,7 @@ unsigned long timer_new
       return 1;
     }
   }
-  DZZ(DLT_CRITICAL,  printf("No space for new timer");)
+  DLT(DLT_CRITICAL,  printf("No space for new timer");)
   
   return 0;
 }

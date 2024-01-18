@@ -165,12 +165,7 @@ unsigned int serial_available
  */
   if ( n_available != 0 )               // Something waiting,
   {
-    set_status_LED(LED_SIO_PUSH);
     set_status_LED(LED_RX);             // Turn on the Receive LED
-  }
-  else
-  {
-    set_status_LED(LED_SIO_POP);
   }
   return n_available;
 }
@@ -361,10 +356,7 @@ void serial_to_all
 /*
  * All done
  */
-  set_status_LED(LED_SIO_PUSH);              // Flash the LED for a bit
-  set_status_LED(LED_TX);
-  vTaskDelay(ONE_SECOND/10);
-  set_status_LED(LED_SIO_POP);
+   set_status_LED(LED_TX);
   return;
 }
 
@@ -530,7 +522,7 @@ int tcpip_socket_2_queue
     in_buffer.in = (in_buffer.in+1) % sizeof(in_buffer.queue);
     if ( in_buffer.out == in_buffer.in )
     {
-      DZZ(DLT_CRITICAL, printf("TCPIP input queue overrun\r\n");)   // Reached the end
+      DLT(DLT_CRITICAL, printf("TCPIP input queue overrun\r\n");)   // Reached the end
       break;
     }
   }

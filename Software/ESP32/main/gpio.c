@@ -37,16 +37,12 @@ typedef struct status_struct {
   int green;
   int red;   
   int blink;                              // TRUE if blinking enabled
-  int push_blue;                          // Pushed value
-  int push_green;
-  int push_red;
-  int push_blink;
   }  status_struct_t;
 
 /* 
  * Variables
  */
-status_struct_t status[3];
+status_struct_t status[3] = {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
 
 /*-----------------------------------------------------
  * 
@@ -195,7 +191,7 @@ unsigned int read_DIP(void)
  *-----------------------------------------------------*/
 #define RMT_LED_STRIP_RESOLUTION_HZ 10000000 // 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
 
-rmt_channel_handle_t led_chan = NULL;
+rmt_channel_handle_t led_channel = NULL;
 rmt_tx_channel_config_t tx_chan_config = {
     .clk_src           = RMT_CLK_SRC_DEFAULT, // select source clock
     .mem_block_symbols = 64, // increase the block size can make the LED less flickering
@@ -214,9 +210,9 @@ void status_LED_init
 )
 {
   tx_chan_config.gpio_num = led_gpio;
-  ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config, &led_chan));
+  ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config, &led_channel));
   ESP_ERROR_CHECK(rmt_new_led_strip_encoder(&encoder_config, &led_encoder));
-  ESP_ERROR_CHECK(rmt_enable(led_chan));
+  ESP_ERROR_CHECK(rmt_enable(led_channel));
   return;
 }
 
@@ -259,6 +255,11 @@ void set_status_LED
   i=0;
   while (*new_state != 0)
   {
+    status[i].blink = 0;
+    status[i].red   = 0;
+    status[i].green = 0;
+    status[i].blue  = 0;    
+
     if ( *new_state != '-' )      // - Leave the setting alone
     {
       status[i].blink = 0;        // Default to blink off
@@ -298,10 +299,6 @@ void set_status_LED
           break;
 
         case ' ':                 // LEDs are all off
-          status[i].blink = 0;
-          status[i].red = 0;
-          status[i].green = 0;
-          status[i].blue = 0;    
           break;
       }
     }
@@ -350,13 +347,13 @@ void commit_status_LEDs
     led_strip_pixels[i * 3 + 1] = 0;
     if ( (status[i].blink == 0) || (blink_state == 1) )
     {
-      led_strip_pixels[i * 3 + 0] = status[i].green;
-      led_strip_pixels[i * 3 + 2] = status[i].blue;
-      led_strip_pixels[i * 3 + 1] = status[i].red;
+      led_strip_pixels[i * 3 + 0] = 0; //status[i].green;
+      led_strip_pixels[i * 3 + 2] = 0; //status[i].blue;
+      led_strip_pixels[i * 3 + 1] = 0; //status[i].red;
     }
   }
     
-//  ESP_ERROR_CHECK(rmt_transmit(led_chan, led_encoder, led_strip_pixels, sizeof(led_strip_pixels), &tx_config));
+  //ESP_ERROR_CHECK(rmt_transmit(led_channel, led_encoder, led_strip_pixels, sizeof(led_strip_pixels), &tx_config));
 
 /*
  * All done, return
@@ -364,7 +361,6 @@ void commit_status_LEDs
   return;
 
 }
-
 
 /*-----------------------------------------------------
  * 
@@ -457,11 +453,6 @@ void read_timers
  * Step Count = 0
  * Step Time = 0
  * Paper Time = Motor ON time
- *
- * Stepper
- * Paper Time = 0
- * Step Count = X
- * Step Time = Step On time
  * 
  *-----------------------------------------------------*/
 
@@ -469,20 +460,28 @@ volatile unsigned long paper_time;
 
 void drive_paper(void)
 {
-  DZZ(DLT_DIAG, printf("Advancing paper: %dms", json_paper_time);)
+  DLT(DLT_DIAG, printf("Advancing paper: %dms", json_paper_time);)
 
 /*
  * Drive the motor on and off for the number of cycles
  * at duration
  */
   timer_new(&paper_time, json_paper_time);  // Create the timer
-  paper_on_off(true);                       // Motor ON
-  while ( paper_time != 0 )
-  {
-    vTaskDelay(1);
-  }
-  paper_on_off(false);                      // Motor OFF
+  paper_on_off(true);                       // Motor OFF
 
+ /*
+  * All done, return
+  */
+  return;
+ }
+
+void drive_paper_tick(void)
+{
+  if ( paper_time == 0 )
+  {
+    paper_on_off(false);                      // Motor OFF
+  }
+  
  /*
   * All done, return
   */
@@ -551,7 +550,7 @@ void paper_on_off                               // Function to turn the motor on
  {
   face_strike++;      // Got a face strike
 
-  DZZ(DLT_CRITICAL, printf("\r\nface_ISR(): %d", face_strike);)
+  DLT(DLT_CRITICAL, printf("\r\nface_ISR(): %d", face_strike);)
 
   return;
  }

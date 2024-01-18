@@ -19,6 +19,16 @@
 #include "serial_io.h"
 
 /*
+ *  Definitions
+ */
+#define LONG_PRESS (ONE_SECOND)
+#define SWITCH_A_TAP   1
+#define SWITCH_A_HOLD  2
+#define SWITCH_B_TAP   3
+#define SWITCH_B_HOLD  4
+#define SWITCH_AB_HOLD 5
+
+/*
  * Function Prototypes 
  */
 static void send_fake_score(void);
@@ -28,6 +38,8 @@ static void sw_state(unsigned int action);      // Carry out the MFS function
  * Variables 
  */
 static unsigned int dip_mask;                   // Output to the DIP port if selected
+static unsigned int switch_A_count;
+static unsigned int switch_B_count;             // How long has the switch been pressed
 
 /*-----------------------------------------------------
  * 
@@ -121,39 +133,83 @@ static unsigned int dip_mask;                   // Output to the DIP port if sel
  * Both switches pressed, Toggle the Tabata State
  * Either switch set for target type switch
  *-----------------------------------------------------*/
-                           
+void multifunction_switch_tick(void)
+ {
+/*
+ * Figure out what switches are pressed
+ */
+   if ( DIP_SW_A )
+   { 
+     switch_A_count++;
+     if ( switch_A_count < LONG_PRESS)
+     {
+      set_status_LED(LED_MFS_a);
+     }
+     else
+     {
+      set_status_LED(LED_MFS_A);
+     }
+   }
+
+   if ( DIP_SW_B )
+   { 
+     switch_B_count++;
+     if ( switch_B_count < LONG_PRESS)
+     {
+      set_status_LED(LED_MFS_b);
+     }
+     else
+     {
+      set_status_LED(LED_MFS_B);
+     }
+   }  
+/*
+ *  All done
+ */   
+  return;
+ }
+
+
 void multifunction_switch(void)
  {
     unsigned int  action;               // Action to happen
 
+  if ( DIP_SW_A || DIP_SW_B )           // Do nothing if the switches are pressed
+  {
+    return;
+  }
+
 /*
  * Figure out what switches are pressed
  */
-   action = 0;                         // No switches pressed
-   if ( DIP_SW_A )
-   {
-     action += 1;                     // Remember how we got here
-   }
-   if ( DIP_SW_B )
-   {
-     action += 2;
-   }
-
-/*
- * Special case of a target type, ALWAYS process this switch even if it is closed
- */
-   if ( HOLD1(json_multifunction) == TARGET_TYPE ) 
-   {
-     sw_state(HOLD1(json_multifunction));
-     action &= ~1;
-     action += 4;
-   }
-   else if ( HOLD2(json_multifunction) == TARGET_TYPE ) 
-   {
-     sw_state(HOLD2(json_multifunction));
-     action &= ~2;
-     action += 8;
-   }
+  action = 0;
+  if ( switch_A_count != 0 )
+  {
+    action = SWITCH_A_TAP;
+    if ( switch_A_count >= LONG_PRESS )
+    {
+      action = SWITCH_A_HOLD;
+      if ( HOLD1(json_multifunction) == TARGET_TYPE ) 
+      {
+        sw_state(HOLD1(json_multifunction));
+        action = 0;
+      }
+    }
+  }
+  
+  if ( switch_B_count != 0 )
+  {
+    action = SWITCH_B_TAP;
+    if ( switch_B_count >= LONG_PRESS )
+    {
+      action = SWITCH_B_HOLD;
+      if ( HOLD2(json_multifunction) == TARGET_TYPE ) 
+      {
+        sw_state(HOLD2(json_multifunction));
+        action = 0;
+      }
+    }
+  }
 
    if ( action == 0 )                 // Nothing to do
    {
@@ -161,61 +217,37 @@ void multifunction_switch(void)
    }
    
 /*
- * Delay for one second to detect a tap
- * Check to see if the switch has been pressed for the first time
+ * Carry out the switch action
  */
-  set_status_LED(LED_MFS_PUSH);
-  if ( DIP_SW_A )
+  switch (action)
   {
-    set_status_LED(LED_MFS_A);
-  }
-  if ( DIP_SW_B )
-  {
-    set_status_LED(LED_MFS_B);
-  }
-  vTaskDelay(ONE_SECOND);
+    case SWITCH_A_TAP:
+      sw_state(TAP1(json_multifunction));
+      break;
 
-  if ( (!DIP_SW_A)
-        && (!DIP_SW_B) )             // Both switches are open? (tap)
-   {
-      if ( action & 1 )
-      {
-        sw_state(TAP1(json_multifunction));
-      }
-      if ( action & 2 )
-      {
-        sw_state(TAP2(json_multifunction));
-      }
-   }
-   
-/*
- * Look for the special case of both switches pressed
- */
-  if ( (DIP_SW_A) && (DIP_SW_B) )         // Both pressed?
-  {
-    sw_state(HOLD12(json_multifunction));
-  }
-      
-/*
- * Single button pressed manage the target based on the configuration
- */
-  else
-  {
-    if ( DIP_SW_A )
-    {
+    case SWITCH_B_TAP:
+      sw_state(TAP2(json_multifunction));
+      break;
+
+    case SWITCH_A_HOLD:
       sw_state(HOLD1(json_multifunction));
-    }
-    if ( DIP_SW_B )
-    {
+      break;
+
+    case SWITCH_B_HOLD:
       sw_state(HOLD2(json_multifunction));
-    }
+      break;
+
+    case SWITCH_AB_HOLD:
+      sw_state(HOLD12(json_multifunction));
+      break;
   }
   
 /*
  * All done, return the GPIO state
  */
   multifunction_wait_open();      // Wait here for the switches to be open
-  set_status_LED(LED_MFS_POP);    // Restore the LEDs
+  switch_A_count = 0;
+  switch_B_count = 0;
   return;
 }
 
@@ -248,7 +280,7 @@ static void sw_state
 
   char s[128];                          // Holding string 
   
-  DZZ(DLT_CRITICAL, printf("Switch action: %d", action);)
+  DLT(DLT_CRITICAL, printf("Switch action: %d", action);)
 
   switch (action)
   {
