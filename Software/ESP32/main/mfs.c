@@ -18,6 +18,7 @@
 #include "nonvol.h"
 #include "serial_io.h"
 #include "timer.h"
+#include "mfs.h"
 
 /*
  *  Definitions
@@ -225,7 +226,6 @@ void multifunction_switch(void)
 /*
  * Carry out the switch action
  */
-  printf("mfs Action:%d", action);
   switch (action)
   {
     case SWITCH_A_TAP:
@@ -261,17 +261,16 @@ void multifunction_switch(void)
 
 /*-----------------------------------------------------
  * 
- * @function: multifunction_switch helper functions
+ * @function: sw_state 
  * 
- * @brief:    Small functioins to work with the MFC
+ * @brief:    Switch to MFS function and execute it 
  * 
- * @return:   Switch state
+ * @return:   None
  * 
  *-----------------------------------------------------
  *
- * The MFC software above has been organized to use helper
- * @functions to simplify the construction and provide
- * consistency in the operation.
+ * This function executes the function defined by the 
+ * MFS switch
  * 
  *-----------------------------------------------------*/
 
@@ -287,7 +286,7 @@ static void sw_state
 
   char s[128];                          // Holding string 
   
-  DLT(DLT_CRITICAL, printf("Switch action: %d", action);)
+  DLT(DLT_INFO, printf("Switch action: %d", action);)
 
   switch (action)
   {
@@ -301,26 +300,31 @@ static void sw_state
       json_power_save += 30;      
       sprintf(s, "\r\n{\"LED_PWM\": %d}\n\r", json_power_save);
       serial_to_all(s, ALL);  
-        break;
+      break;
         
-    case PAPER_FEED:                      // The switch acts as paper feed control
-      paper_on_off(true);                 // Turn on the paper drive
-      while ( (DIP_SW_A || DIP_SW_B) )    // Keep it on while the switches are pressed 
+    case PAPER_FEED:                      // Turn on the paper untill the switch is pressed again 
+      DLT(DLT_INFO, printf("\r\nAdvancing paper");)
+      paper_on_off(true);
+      while ( (DIP_SW_A == 0) && (DIP_SW_B == 0))
       {
-        continue; 
+        timer_delay(1);
       }
-      paper_on_off(false);                // Then turn it off
+      paper_on_off(false);
+      switch_A_count = 0;                 // Reset the LEDs if they are on
+      switch_B_count = 0;
+      set_status_LED(LED_MFS_OFF);
+      DLT(DLT_INFO, printf("\r\nDone");)
       break;
 
-   case PAPER_SHOT:                       // The switch acts as paper feed control
+    case PAPER_SHOT:                      // The switch acts as paper feed control
       drive_paper();                      // Turn on the paper drive
       break;
       
-   case PC_TEST:                         // Send a fake score to the PC
+    case PC_TEST:                         // Send a fake score to the PC
       send_fake_score();
       break;
       
-   case ON_OFF:                          // Turn the target off
+    case ON_OFF:                         // Turn the target off
       bye();                             // Stay in the Bye state until a wake up event comes along
       break;
       
@@ -373,35 +377,6 @@ static void sw_state
 /*
  * All done, return
  */
-  return;
-}
-
-/*
- * Wait here for the switches to be opened
- */
-void multifunction_wait_open(void)
-{
-  while (1)
-  {
-    if ( (DIP_SW_A == 0 )
-        && (DIP_SW_B == 0) ) 
-    {
-      return;
-    }
-
-    if ( (HOLD1(json_multifunction) == TARGET_TYPE ) 
-      && (DIP_SW_B == 0) )
-    {
-      return;
-    }
-    
-    if ( ( HOLD2(json_multifunction) == TARGET_TYPE) 
-      && ( DIP_SW_A == 0 ) )
-    {
-      return;
-    }
-  }
-  
   return;
 }
 

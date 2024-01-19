@@ -566,7 +566,7 @@ void serial_port_test(void)
 
     while ( serial_available(AUX) == 0 )
     {
-      vTaskDelay(1);                  // Wait for it to come back
+      timer_delay(1);              // Wait for it to come back
       if ( test_time == 0 )
       {
         printf("\r\nTest failed, no input from AUX\r\n");

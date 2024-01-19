@@ -112,22 +112,6 @@ void multifunction_display(void);                         // Display the MFS set
 
 #define FACE_SENSOR  19
 
-/*
- *  MFS Uset
- */
-#define POWER_TAP     0                   // DIP A/B used to wake up
-#define PAPER_FEED    1                   // DIP A/B used as a paper feed
-#define LED_ADJUST    2                   // DIP A/B used to set LED brightness
-#define PAPER_SHOT    3                   // DIP A/B Advance paper one cycle
-#define PC_TEST       4                   // DIP A/B used to trigger fake shot
-#define ON_OFF        5                   // DIP A/B used to turn the target ON or OFF
-#define MFS_SPARE_6   6
-#define MFS_SPARE_7   7
-#define MFS_SPARE_8   8
-#define TARGET_TYPE   9                   // Sent target type with score
 
-#define NO_ACTION     0                   // DIP usual function
-#define RAPID_RED     1                   // Rapid Fire Red Output
-#define RAPID_GREEN   2                   // Rapid Fire Green Output
 
 #endif

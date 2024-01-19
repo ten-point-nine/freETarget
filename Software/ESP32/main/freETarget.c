@@ -95,7 +95,7 @@ void freeETarget_init(void)
   POST_version();                         // Show the version string on all ports
   gpio_init();  
   set_status_LED(LED_HELLO_WORLD);        // Hello World
-  vTaskDelay(ONE_SECOND);
+  timer_delay(ONE_SECOND);
   read_nonvol();
   WiFi_init();
 
@@ -641,11 +641,11 @@ void tabata_task(void)
         break;
       
       case (TABATA_DARK):                   // Dark time in seconds
-        if (tabata_timer == 0 )            // Don't do anything unless the time expires
+        if (tabata_timer == 0 )             // Don't do anything unless the time expires
         {
-          in_shot_timer = FULL_SCALE;     // Set the timer on
+          in_shot_timer = FULL_SCALE;       // Set the timer on
           timer_new(&tabata_timer, json_tabata_on * ONE_SECOND);
-          set_LED_PWM_now(json_LED_PWM);           // Turn on the lights
+          set_LED_PWM_now(json_LED_PWM);    // Turn on the lights
           sprintf(s, "{\"TABATA_ON\":%d}\r\n", json_tabata_on);
           serial_to_all(s, ALL);
           tabata_state = TABATA_ON;
@@ -653,7 +653,7 @@ void tabata_task(void)
         break;
       
       case (TABATA_ON):                     // Keep the LEDs on for the tabata time
-        if ( tabata_timer == 0 )           // Don't do anything unless the time expires
+        if ( tabata_timer == 0 )            // Don't do anything unless the time expires
         {
           timer_new(&tabata_timer, (long)(json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off) * ONE_SECOND);
           sprintf(s, "{\"TABATA_OFF\":%d}\r\n", (json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off));

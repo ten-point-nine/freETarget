@@ -213,7 +213,12 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
  * Synchronous tasks are called on a 10ms time band
  * 
  * Unless you don't care about the time, always use
- * timer_new(&timer, ONE_SECOND * duration)
+ * timer_new(&timer, ONE_SECOND * duration).
+ * 
+ * IMPORTANT
+ * 
+ * timers are deleted when they expire
+ * 
  *-----------------------------------------------------*/
 #define TICK    1       // 1 Tick = 10 ms
 #define BAND_10ms       (TICK * 1)
@@ -235,12 +240,16 @@ void freeETarget_synchronous
  */
   while (1)
   {
-    for (i=0; i != N_TIMERS; i++)  // Refresh the timers.  Decriment in 10ms increments
+    for (i=0; i != N_TIMERS; i++)   // Refresh the timers.  Decriment in 10ms increments
     {
       if ( (timers[i] != 0)
         && ( *timers[i] != 0 ) )
       {
-        (*timers[i])--;
+        (*timers[i])--;             // Decriment the timer
+        if ( *timers[i] == 0 )      // When it hits zero,
+        {
+          timers[i] = 0;            // Delete the timer so it isn't re triggered 
+        }
       }
     }
 /*
@@ -253,7 +262,6 @@ void freeETarget_synchronous
     if ( LED_timer == 0 )               // Check to see if the timer ran down
     {
       set_status_LED(LED_RXTX_OFF);     // If so Turn off the LEDs
-      timer_delete(&LED_timer);
       LED_timer = 1;                    // and kill the timer
     }
 /*

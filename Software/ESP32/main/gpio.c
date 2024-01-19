@@ -22,6 +22,7 @@
 #include "timer.h"
 #include "pcnt.h"
 #include "gpio_define.h"
+#include "mfs.h"
 
 #include "../managed_components/espressif__led_strip/src/led_strip_rmt_encoder.h"
 
@@ -478,7 +479,6 @@ void drive_paper_tick(void)
   if ( paper_time == 0 )
   {
     paper_on_off(false);                      // Motor OFF
-    timer_delete(&paper_time);
     paper_time = 1;
     DLT(DLT_DIAG, printf("Done");)
   }
