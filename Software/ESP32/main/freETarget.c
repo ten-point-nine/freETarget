@@ -759,7 +759,7 @@ void rapid_fire_task(void)
       case (RAPID_WAIT):                   // Keep the LEDs on for the tabata time
         if ( rapid_timer == 0 )            // Don't do anything unless the time expires
         {
-          timer_new(&rapid_timer, json_rapid_on);
+          timer_new(&rapid_timer, json_rapid_on * ONE_SECOND);
           sprintf(s, "{\"RAPID_ON\":%d}\r\n", (json_rapid_time));
           serial_to_all(s, ALL);
           set_LED_PWM_now(0);             // Turn off the LEDs

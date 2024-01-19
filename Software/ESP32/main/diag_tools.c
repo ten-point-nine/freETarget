@@ -182,7 +182,7 @@ void self_test
         pwm_set(LED_PWM,i);       
         vTaskDelay(ONE_SECOND/10);
       }
-      printf(" done\r\n");
+      printf("\r\nDone\r\n");
       break;
 
 /*

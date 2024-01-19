@@ -21,5 +21,5 @@ void freeETarget_synchronous(void *pvParameters);                               
 /*
  *  Definitions
  */
-#define timer_delay(t) while((t) != 0) continue;
+#define timer_delay(t) while((t) != 0) vTaskDelay(1);
 #endif

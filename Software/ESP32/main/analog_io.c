@@ -197,8 +197,8 @@ void set_LED_PWM                                  // Theatre lighting
     {
       old_LED_percent++;                        // Ramp the value up
     }
-    pwm_set(LED_PWM, old_LED_percent);  // Write the value out
-    vTaskDelay((unsigned long)ONE_SECOND/50);                       // Worst case, take 2 seconds to get there
+    pwm_set(LED_PWM, old_LED_percent);          // Write the value out
+    vTaskDelay((unsigned long)ONE_SECOND/50);   // Worst case, take 2 seconds to get there
   }
   
 /*

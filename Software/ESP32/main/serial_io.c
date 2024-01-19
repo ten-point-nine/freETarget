@@ -552,26 +552,36 @@ void serial_port_test(void)
   unsigned char test[] = "PASS - This is the loopback test";
   unsigned int  i;
   unsigned char ch;
+  volatile unsigned long test_time;
+
+  timer_new(&test_time, ONE_SECOND * 10);
 
 /*
  * Send out the AUX port, back in, and then to the console
  */
-  printf("\r\nAUX Serial Port Loopback.  Make sure AUX port is looped back\r\n");
+  printf("\r\nAUX Serial Port Loopback.  Make sure AUX port is looped back");
   for (i=0; i != sizeof(test); i++)
   {
     serial_putch(test[i], AUX);    // Output to the AUX Port
+
     while ( serial_available(AUX) == 0 )
     {
-      continue;
+      vTaskDelay(1);                  // Wait for it to come back
+      if ( test_time == 0 )
+      {
+        printf("\r\nTest failed, no input from AUX\r\n");
+        return;
+      }
     }
-    
+      
     ch = serial_getch(AUX);
-    serial_putch(ch, CONSOLE);
+    serial_putch(CONSOLE, ch);
   }
 
 /*
  *  The test is over
  */ 
+  timer_delete(&test_time);
   printf("\r\nDone");
   return;
 }

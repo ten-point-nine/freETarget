@@ -1,1 +1,12 @@
-cd3d51b0992d990312f91fc954e13cf148879476
+9432fafd56528551fcae85a97aea8870c71f9ba2 9210d1dec1eb162e5017f04ce88155cd1abe005c Allan Brown <58998445+ten-point-nine@users.noreply.github.com> 1697999971 -0500	pull: fast-forward
+9210d1dec1eb162e5017f04ce88155cd1abe005c f4f54e368a62ebddc9dcc16b0a9a959ebcc04095 Allan Brown <58998445+ten-point-nine@users.noreply.github.com> 1700364216 -0600	pull: fast-forward
+f4f54e368a62ebddc9dcc16b0a9a959ebcc04095 9087845e28d1fc55fae871c364aaeeba90900ccb Allan Brown <58998445+ten-point-nine@users.noreply.github.com> 1704337301 -0600	pull: fast-forward
+9087845e28d1fc55fae871c364aaeeba90900ccb 9a6f5d297fd145da68a9f520907d782b7ca3c140 Allan Brown <58998445+ten-point-nine@users.noreply.github.com> 1705030663 -0600	commit: Adding ESP32 to Master
+9a6f5d297fd145da68a9f520907d782b7ca3c140 8845f5361fd5163e084eed185231f17162636f54 Allan Brown <58998445+ten-point-nine@users.noreply.github.com> 1705031103 -0600	commit: ESP32 Compile and Link
+8845f5361fd5163e084eed185231f17162636f54 9637277f85a0271d3ea96dabf2652b7fe5e0455f Allan Brown <58998445+ten-point-nine@users.noreply.github.com> 1705181938 -0600	pull --ff --recurse-submodules --progress origin: Fast-forward
+9637277f85a0271d3ea96dabf2652b7fe5e0455f f318a0beb0c2a4eb0153aac83ab8d2bc86c62949 Allan Brown <58998445+ten-point-nine@users.noreply.github.com> 1705268496 -0500	commit: ESP32 V0.6.4
+f318a0beb0c2a4eb0153aac83ab8d2bc86c62949 5d9d4388537ca295086b763c251f84354824c964 Allan Brown <58998445+ten-point-nine@users.noreply.github.com> 1705269240 -0500	commit: ESP32 0.6.4
+5d9d4388537ca295086b763c251f84354824c964 fbd56496c3eac7fc0c58dfc7bf37268502dcc49b Allan Brown <58998445+ten-point-nine@users.noreply.github.com> 1705270804 -0500	commit: ESP 0/.6.4 Continued
+fbd56496c3eac7fc0c58dfc7bf37268502dcc49b c6388c50f0b1e7a74d8c9b54bd00a33443ea100c Allan Brown <58998445+ten-point-nine@users.noreply.github.com> 1705545490 -0500	commit: ESP0.6.4 Continued
+c6388c50f0b1e7a74d8c9b54bd00a33443ea100c cd3d51b0992d990312f91fc954e13cf148879476 Allan Brown <58998445+ten-point-nine@users.noreply.github.com> 1705548837 -0500	commit: ESP32 Updated Multi Function Switches
+cd3d51b0992d990312f91fc954e13cf148879476 7f4eee1d178f01a03ad3d1630ecfae11c1b5d08a Allan Brown <58998445+ten-point-nine@users.noreply.github.com> 1705552575 -0500	commit: ESP32 Fixing up LEDs

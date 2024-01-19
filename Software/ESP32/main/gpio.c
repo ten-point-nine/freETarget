@@ -465,7 +465,7 @@ void drive_paper(void)
  * Drive the motor on and off for the number of cycles
  * at duration
  */
-  timer_new(&paper_time, json_paper_time);  // Create the timer
+  timer_new(&paper_time, ONE_SECOND * json_paper_time / 1000);  // Create the timer
   paper_on_off(true);                       // Motor OFF
 
  /*
@@ -710,25 +710,29 @@ void status_LED_test(void)
  * 
  *----------------------------------------------------------------
  *
- *  Drive the motor in 500 ms increments
+ *  Drive the motor in 500 ms increments.
+ * 
+ *  This function drives the motor directly and does not use the 
+ *  functions drive_paper() or drive_paper_tick().
+ * 
  *--------------------------------------------------------------*/
 void paper_test(void)
 {
   volatile unsigned long time_delay;
   int i;
 
-  timer_new(&time_delay, 500); 
+  timer_new(&time_delay, ONE_SECOND / 2); 
 
   printf("\r\nAdvancing paper 500 ms at a time");
   for (i=0; i != 10; i++)
   {
     printf("  %d+", (i+1));
     paper_on_off(true);
-    time_delay = 500;
+    time_delay = ONE_SECOND / 2;
     timer_delay(time_delay);
     printf("-");
     paper_on_off(false);
-    time_delay = 500;
+    time_delay = ONE_SECOND / 2;
     timer_delay(time_delay);
   }
 

@@ -210,9 +210,10 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
  *
  * This task runs every 10ms.  
  * 
- * Synchronous tasks are called on a time band
+ * Synchronous tasks are called on a 10ms time band
  * 
- * 
+ * Unless you don't care about the time, always use
+ * timer_new(&timer, ONE_SECOND * duration)
  *-----------------------------------------------------*/
 #define TICK    1       // 1 Tick = 10 ms
 #define BAND_10ms       (TICK * 1)
@@ -229,9 +230,12 @@ void freeETarget_synchronous
   unsigned int toggle =0;
   unsigned int i;
 
+/*
+ *  Decrement the timers on a 10ms (100Hz) interval
+ */
   while (1)
   {
-    for (i=0; i != N_TIMERS; i++)  // Refresh the timers
+    for (i=0; i != N_TIMERS; i++)  // Refresh the timers.  Decriment in 10ms increments
     {
       if ( (timers[i] != 0)
         && ( *timers[i] != 0 ) )
@@ -298,7 +302,7 @@ void freeETarget_synchronous
  * 
  * IMPORTANT
  * 
- * The timers shall be static variables, otherwise they
+ * The timers must be static variables, otherwise they
  * will overflow the available space every time they are
  * instantiated.
  * 
