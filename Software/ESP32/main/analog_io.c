@@ -24,7 +24,7 @@
 #include "i2c.h"
 #include "dac.h"
 #include "json.h"
-
+#include "timer.h"
 
 
 void set_vset_PWM(unsigned int pwm);
@@ -198,7 +198,7 @@ void set_LED_PWM                                  // Theatre lighting
       old_LED_percent++;                        // Ramp the value up
     }
     pwm_set(LED_PWM, old_LED_percent);          // Write the value out
-    vTaskDelay((unsigned long)ONE_SECOND/50);   // Worst case, take 2 seconds to get there
+    timer_delay((unsigned long)ONE_SECOND/50);  // Worst case, take 2 seconds to get there
   }
   
 /*

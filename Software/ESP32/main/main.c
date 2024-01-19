@@ -49,4 +49,5 @@ void app_main(void)
    xTaskCreate(tcpip_accept_poll,       "tcpip_accept_poll",         4096, NULL, 2, NULL);
    vTaskDelay(1);
    freeETarget_timer_init();
+   printf("\r\n");
 }

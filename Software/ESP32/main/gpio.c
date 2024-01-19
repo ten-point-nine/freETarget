@@ -454,7 +454,6 @@ void read_timers
  * Paper Time = Motor ON time
  * 
  *-----------------------------------------------------*/
-
 volatile unsigned long paper_time;
 
 void drive_paper(void)
@@ -685,16 +684,19 @@ void digital_test(void)
 void status_LED_test(void)
 {
   printf("\r\nStatus LED test");
-  set_status_LED("R--");
-  vTaskDelay(ONE_SECOND);
-  set_status_LED("RG-");
-  vTaskDelay(ONE_SECOND);
-  set_status_LED("RGB");
-  vTaskDelay(ONE_SECOND);
+  timer_delay(2*ONE_SECOND);
+  set_status_LED("RRR");
+  timer_delay(ONE_SECOND);
+  set_status_LED("GGG");
+  timer_delay(ONE_SECOND);
+  set_status_LED("BBB");
+  timer_delay(ONE_SECOND);
   set_status_LED("WWW");
-  vTaskDelay(ONE_SECOND);
-  set_status_LED("rwb");
-  vTaskDelay(5*ONE_SECOND);         // Blink for 5 seconds
+  timer_delay(ONE_SECOND);
+  set_status_LED("RGB");
+  timer_delay(ONE_SECOND);
+  set_status_LED("rgb");
+  timer_delay(5*ONE_SECOND);         // Blink for 5 seconds
   set_status_LED(LED_READY);
   printf("\r\nDone\r\n");
   return;
@@ -721,22 +723,17 @@ void paper_test(void)
   volatile unsigned long time_delay;
   int i;
 
-  timer_new(&time_delay, ONE_SECOND / 2); 
-
   printf("\r\nAdvancing paper 500 ms at a time");
   for (i=0; i != 10; i++)
   {
     printf("  %d+", (i+1));
     paper_on_off(true);
-    time_delay = ONE_SECOND / 2;
-    timer_delay(time_delay);
+    timer_delay(ONE_SECOND / 2);
     printf("-");
     paper_on_off(false);
-    time_delay = ONE_SECOND / 2;
-    timer_delay(time_delay);
+    timer_delay(ONE_SECOND / 2);
   }
 
-  timer_delete(&time_delay);
   printf("\r\nDone\r\n");
 
   return;

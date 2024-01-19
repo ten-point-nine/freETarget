@@ -180,15 +180,10 @@ unsigned int compute_hit
   DLT(DLT_DIAG,
   {
     printf("Counts       ");
-    for (i=N; i <= W; i++)
-    {
-     printf("%s: %4.2f ", which_one[i], s[i].count);
-    }
+    for (i=N; i <= W; i++) printf("%s: %4.2f ", which_one[i], s[i].count);
+  
     printf("\r\nMicroseconds ");
-    for (i=N; i <= W; i++)
-    {
-     printf("%s: %4.2f ", which_one[i], (double)s[i].count / ((double)OSCILLATOR_MHZ));
-    }
+    for (i=N; i <= W; i++) printf("%s: %4.2f ", which_one[i], (double)s[i].count / ((double)OSCILLATOR_MHZ));
   }
   )
 #if(0)

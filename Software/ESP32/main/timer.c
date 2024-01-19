@@ -312,7 +312,7 @@ void freeETarget_synchronous
  * same timer addess without creating a problem
  * 
  *-----------------------------------------------------*/
-unsigned long timer_new
+int timer_new
 (
   volatile unsigned long* new_timer, // Pointer to new down counter
            unsigned long  duration   // Duration of the timer
@@ -340,7 +340,7 @@ unsigned long timer_new
   return 0;
 }
 
-unsigned long timer_delete
+int timer_delete
 (
   volatile unsigned long* old_timer   // Pointer to new down counter
 )

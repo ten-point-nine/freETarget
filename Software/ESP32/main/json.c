@@ -85,10 +85,10 @@ int     json_token;                 // Token ring state
 double  json_vref_lo;               // Low Voltage DAC setting
 double  json_vref_hi;               // High Voltage DAC setting
 int     json_pcnt_latency;          // pcnt interrupt latency
+
        void show_echo(void);        // Display the current settings
 static void show_test(int v);       // Execute the self test once
 static void show_names(int v);
-//static void nop(void);
 static void set_trace(int v);       // Set the trace on and off
 static void diag_delay(int x) ;     // Insert a delay
 

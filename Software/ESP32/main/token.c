@@ -99,7 +99,7 @@ void token_init(void)
     return;
   }
 
-  timer_new(&token_tick,    5 * ONE_SECOND);                              // Token ring watchdog
+  timer_new(&token_tick, 5 * ONE_SECOND);      // Token ring watchdog
 
   DLT(DLT_CRITICAL, printf("token_init()"); )
   
