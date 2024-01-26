@@ -182,7 +182,7 @@ void self_test
         pwm_set(LED_PWM,i);       
         vTaskDelay(ONE_SECOND/10);
       }
-      printf(" done\r\n");
+      printf("\r\nDone\r\n");
       break;
 
 /*
@@ -384,18 +384,15 @@ bool POST_counters(void)
   bool         test1, test2, test3, test4; // Record if the test failed
   unsigned int count, toggle;              // Cycle counter
 
-  DLT(DLT_CRITICAL);  
-  printf("POST_counters()");
-
-  set_status_LED("   ");                  // Turn them all off
+  DLT(DLT_CRITICAL, printf("POST_counters()");)
+  set_status_LED(LED_OFF);                 // Turn them all off
   
 /*
  *  Test 1, Make sure we can turn off the reference clock
  */
   test1 = true;                           // Start of assuming it passes
   count = 0;
-  DLT(DLT_CRITICAL); 
-  printf("Turn Clock OFF");
+  DLT(DLT_CRITICAL, printf("Turn Clock OFF");)
   gpio_set_level(OSC_CONTROL, OSC_OFF);   // Turn off the oscillator
   set_status_LED("W--");
   toggle = gpio_get_level(REF_CLK);
@@ -412,8 +409,7 @@ bool POST_counters(void)
   {
     set_status_LED("R--");
     test1 = false;
-    DLT(DLT_CRITICAL); 
-    printf("Reference clock cannot be stopped");
+    DLT(DLT_CRITICAL, printf("Reference clock cannot be stopped");)
     vTaskDelay(5*ONE_SECOND);
   }
   else
@@ -427,8 +423,7 @@ bool POST_counters(void)
  */
   test2 = false;
   count = 0;
-  DLT(DLT_CRITICAL); 
-  printf("Turn Clock ON");
+  DLT(DLT_CRITICAL, printf("Turn Clock ON");)
   gpio_set_level(OSC_CONTROL, OSC_ON);
   toggle = gpio_get_level(REF_CLK);
   for  (i=0; i != 1000; i++)               // Try 1000 times
@@ -444,7 +439,7 @@ bool POST_counters(void)
   if ( count == 0  )
   {
     set_status_LED("R--");
-    DLT(DLT_CRITICAL); printf("Reference clock cannot be started");
+    DLT(DLT_CRITICAL, printf("Reference clock cannot be started");)
     vTaskDelay(5*ONE_SECOND);
   }
   else
@@ -457,8 +452,7 @@ bool POST_counters(void)
  *  Test 3, Make sure we can turn the triggers off
  */
   test3 = false;
-  DLT(DLT_CRITICAL); 
-  printf("Sensor trigger test OFF");
+  DLT(DLT_CRITICAL, printf("Sensor trigger test OFF");)
   gpio_set_level(STOP_N, 0);        // Clear the latch
   gpio_set_level(STOP_N, 1);        // and reenable it
   set_status_LED("-Y-");
@@ -470,8 +464,7 @@ bool POST_counters(void)
   if ( test3 == false )
   {
       set_status_LED("-R-");
-      DLT(DLT_CRITICAL);
-      printf("Stuck bit in run latch: ");
+      DLT(DLT_CRITICAL, printf("Stuck bit in run latch: ");)
       count = is_running();
       for (i=0; i != 8; i++)
       {
@@ -490,7 +483,7 @@ bool POST_counters(void)
  * Test 4, trigger the timers
  */
   test4 = false;
-  DLT(DLT_CRITICAL); printf("Sensor trigger test ON");
+  DLT(DLT_CRITICAL, printf("Sensor trigger test ON");)
   set_status_LED("--Y");
   gpio_set_level(STOP_N, 0);          // Clear the latch
   gpio_set_level(STOP_N, 1);
@@ -505,8 +498,7 @@ bool POST_counters(void)
   else
   {
     set_status_LED("--R");
-    DLT(DLT_CRITICAL);
-    printf("Failed to start clock in run latch: %02X", is_running());
+    DLT(DLT_CRITICAL, printf("Failed to start clock in run latch: %02X", is_running());)
     vTaskDelay(5*ONE_SECOND);
   }
   vTaskDelay(ONE_SECOND);

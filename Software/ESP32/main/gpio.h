@@ -22,6 +22,7 @@ unsigned int read_counter(unsigned int direction);
 void stop_timers(void);                                   // Turn off the counter registers
 void read_timers(int* timer_count);                      // Read and return the counter registers
 void drive_paper(void);                                   // Turn on the paper motor
+void drive_paper_tick(void);                              // Turn the motor off when the time runs out
 void aquire(void);                                        // Read the clock registers
 // void enable_face_interrupt();                             // Turn on the face strike interrupt
 void disable_face_interrupt(void);                        // Turn off the face strike interrupt
@@ -62,9 +63,16 @@ void multifunction_display(void);                         // Display the MFS set
 #define PAPER_ON       1
 #define PAPER_OFF      0
 
+#if (BUILD_REV == REV_500)
 #define STOP_N          GPIO_NUM_47                 // Stop the RUN flipflops       
 #define CLOCK_START     GPIO_NUM_21                 // Trigger a test cycle
-#define OSC_CONTROL       GPIO_NUM_48                 // Enable / kill 10MHz Oscillator
+#define OSC_CONTROL     GPIO_NUM_48                 // Enable / kill 10MHz Oscillator
+#endif 
+#if (BUILD_REV == REV_510)
+#define STOP_N          GPIO_NUM_21                 // Stop the RUN flipflops       
+#define CLOCK_START     GPIO_NUM_47                 // Trigger a test cycle
+#define OSC_CONTROL     GPIO_NUM_48                 // Enable / kill 10MHz Oscillator
+#endif 
 #define OSC_ON          1                           // Enable the oscillator
 #define OSC_OFF         0                           // Tristate the oscillator
 #define LDAC            GPIO_NUM_42
@@ -104,29 +112,6 @@ void multifunction_display(void);                         // Display the MFS set
 
 #define FACE_SENSOR  19
 
-/*
- *  MFS Uset
- */
-#define POWER_TAP     0                   // DIP A/B used to wake up
-#define PAPER_FEED    1                   // DIP A/B used as a paper feed
-#define LED_ADJUST    2                   // DIP A/B used to set LED brightness
-#define PAPER_SHOT    3                   // DIP A/B Advance paper one cycle
-#define PC_TEST       4                   // DIP A/B used to trigger fake shot
-#define ON_OFF        5                   // DIP A/B used to turn the target ON or OFF
-#define MFS_SPARE_6   6
-#define MFS_SPARE_7   7
-#define MFS_SPARE_8   8
-#define TARGET_TYPE   9                   // Sent target type with score
 
-#define NO_ACTION     0                   // DIP usual function
-#define RAPID_RED     1                   // Rapid Fire Red Output
-#define RAPID_GREEN   2                   // Rapid Fire Green Output
-
-#define J10_1      VCC
-#define J10_2       14                    // TX3
-#define J10_3       15                    // RX3
-#define J10_4       19                    // RX1
-#define J10_5       18                    // TX1
-#define J10_6      GND
 
 #endif

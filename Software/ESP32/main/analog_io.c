@@ -7,23 +7,24 @@
  *****************************************************************************/
 
 #include "stdbool.h"
-#include "gpio.h"
-#include "analog_io.h"
+#include "stdio.h"
 #include "driver/gpio.h"
 #include "driver/ledc.h"
+#include "driver/adc.h"
+
+#include "freETarget.h"
+#include "diag_tools.h"
+#include "gpio.h"
+#include "analog_io.h"
 #include "gpio_types.h"
 #include "adc_types.h"
 #include "adc_oneshot.h"
 #include "pwm.h"
 #include "gpio_define.h"
 #include "i2c.h"
-#include "driver/adc.h"
 #include "dac.h"
-#include "freETarget.h"
-#include "diag_tools.h"
-#include "stdio.h"
 #include "json.h"
-
+#include "timer.h"
 
 
 void set_vset_PWM(unsigned int pwm);
@@ -166,10 +167,7 @@ void set_LED_PWM_now
     return;
   }
   
-  if ( DLT(DLT_INFO) )
-  {
-    printf("new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);
-  }
+  DLT(DLT_INFO, printf("new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);)
 
   old_LED_percent = new_LED_percent;
   pwm_set(LED_PWM, new_LED_percent);  // Write the value out
@@ -183,10 +181,7 @@ void set_LED_PWM                                  // Theatre lighting
   int new_LED_percent                            // Desired LED level (0-100%)
   )
 {
-  if ( DLT(DLT_INFO) )
-  {
-    printf("new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);
-  }
+  DLT(DLT_INFO, printf("new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);)
 
 /*
  * Loop and ramp the LED  PWM up or down slowly
@@ -202,8 +197,8 @@ void set_LED_PWM                                  // Theatre lighting
     {
       old_LED_percent++;                        // Ramp the value up
     }
-    pwm_set(LED_PWM, old_LED_percent);  // Write the value out
-    vTaskDelay((unsigned long)ONE_SECOND/50);                       // Worst case, take 2 seconds to get there
+    pwm_set(LED_PWM, old_LED_percent);          // Write the value out
+    timer_delay((unsigned long)ONE_SECOND/50);  // Worst case, take 2 seconds to get there
   }
   
 /*
@@ -335,8 +330,7 @@ void set_VREF(void)
 {
   if ( json_vref_lo >= json_vref_hi )
   {
-    DLT(DLT_CRITICAL);
-    printf("ERROR: json_vref_lo or json_vref_hi are out of order.");
+    DLT(DLT_CRITICAL, printf("ERROR: json_vref_lo or json_vref_hi are out of order.");)
   }
 
   DAC_write(0, json_vref_lo);

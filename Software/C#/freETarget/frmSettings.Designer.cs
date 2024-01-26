@@ -145,6 +145,9 @@
             this.label9 = new System.Windows.Forms.Label();
             this.cmbOldBack = new System.Windows.Forms.ComboBox();
             this.helpProvider = new System.Windows.Forms.HelpProvider();
+            this.grpBoard = new System.Windows.Forms.GroupBox();
+            this.rbArduino = new System.Windows.Forms.RadioButton();
+            this.rbEsp = new System.Windows.Forms.RadioButton();
             this.groupBox1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPageGeneral.SuspendLayout();
@@ -156,6 +159,7 @@
             this.grpEvent.SuspendLayout();
             this.tabPageTarget.SuspendLayout();
             this.grpBoxShotColors.SuspendLayout();
+            this.grpBoard.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnOK
@@ -375,7 +379,7 @@
             // 
             this.chkScoreVoice.AutoSize = true;
             this.helpProvider.SetHelpString(this.chkScoreVoice, "Speak the score of each shot");
-            this.chkScoreVoice.Location = new System.Drawing.Point(16, 179);
+            this.chkScoreVoice.Location = new System.Drawing.Point(214, 156);
             this.chkScoreVoice.Name = "chkScoreVoice";
             this.helpProvider.SetShowHelp(this.chkScoreVoice, true);
             this.chkScoreVoice.Size = new System.Drawing.Size(92, 17);
@@ -421,6 +425,7 @@
             // 
             // tabPageGeneral
             // 
+            this.tabPageGeneral.Controls.Add(this.grpBoard);
             this.tabPageGeneral.Controls.Add(this.chkShowScoring);
             this.tabPageGeneral.Controls.Add(this.groupBox2);
             this.tabPageGeneral.Controls.Add(this.grpTCP);
@@ -453,7 +458,7 @@
             // 
             this.chkShowScoring.AutoSize = true;
             this.helpProvider.SetHelpString(this.chkShowScoring, "If unchecked, hides the shot scores and scoring rings on the target");
-            this.chkShowScoring.Location = new System.Drawing.Point(229, 225);
+            this.chkShowScoring.Location = new System.Drawing.Point(214, 133);
             this.chkShowScoring.Name = "chkShowScoring";
             this.helpProvider.SetShowHelp(this.chkShowScoring, true);
             this.chkShowScoring.Size = new System.Drawing.Size(90, 17);
@@ -463,9 +468,9 @@
             // 
             // groupBox2
             // 
-            this.groupBox2.Location = new System.Drawing.Point(16, 249);
+            this.groupBox2.Location = new System.Drawing.Point(16, 179);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(302, 7);
+            this.groupBox2.Size = new System.Drawing.Size(303, 7);
             this.groupBox2.TabIndex = 37;
             this.groupBox2.TabStop = false;
             // 
@@ -598,7 +603,7 @@
             this.chkMiss.AutoSize = true;
             this.helpProvider.SetHelpString(this.chkMiss, "If checked, when the target reports a miss, shot will be ignored. Otherwise it wi" +
         "ll be scored as a zero");
-            this.chkMiss.Location = new System.Drawing.Point(16, 225);
+            this.chkMiss.Location = new System.Drawing.Point(214, 110);
             this.chkMiss.Name = "chkMiss";
             this.helpProvider.SetShowHelp(this.chkMiss, true);
             this.chkMiss.Size = new System.Drawing.Size(90, 17);
@@ -610,7 +615,7 @@
             // 
             this.chkLog.AutoSize = true;
             this.helpProvider.SetHelpString(this.chkLog, "Save all incoming text from the target to a log file");
-            this.chkLog.Location = new System.Drawing.Point(16, 202);
+            this.chkLog.Location = new System.Drawing.Point(214, 87);
             this.chkLog.Name = "chkLog";
             this.helpProvider.SetShowHelp(this.chkLog, true);
             this.chkLog.Size = new System.Drawing.Size(96, 17);
@@ -1454,6 +1459,41 @@
             this.cmbOldBack.TabIndex = 17;
             this.cmbOldBack.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.cmbColor_DrawItem);
             // 
+            // grpBoard
+            // 
+            this.grpBoard.Controls.Add(this.rbEsp);
+            this.grpBoard.Controls.Add(this.rbArduino);
+            this.grpBoard.Location = new System.Drawing.Point(16, 199);
+            this.grpBoard.Name = "grpBoard";
+            this.grpBoard.Size = new System.Drawing.Size(303, 62);
+            this.grpBoard.TabIndex = 39;
+            this.grpBoard.TabStop = false;
+            this.grpBoard.Text = "Board Type";
+            // 
+            // rbArduino
+            // 
+            this.rbArduino.Image = ((System.Drawing.Image)(resources.GetObject("rbArduino.Image")));
+            this.rbArduino.Location = new System.Drawing.Point(123, 10);
+            this.rbArduino.Name = "rbArduino";
+            this.rbArduino.Size = new System.Drawing.Size(61, 54);
+            this.rbArduino.TabIndex = 0;
+            this.rbArduino.TabStop = true;
+            this.rbArduino.Text = "Arduino";
+            this.rbArduino.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
+            this.rbArduino.UseVisualStyleBackColor = true;
+            // 
+            // rbEsp
+            // 
+            this.rbEsp.Image = ((System.Drawing.Image)(resources.GetObject("rbEsp.Image")));
+            this.rbEsp.Location = new System.Drawing.Point(211, 10);
+            this.rbEsp.Name = "rbEsp";
+            this.rbEsp.Size = new System.Drawing.Size(61, 54);
+            this.rbEsp.TabIndex = 1;
+            this.rbEsp.TabStop = true;
+            this.rbEsp.Text = "ESP32";
+            this.rbEsp.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
+            this.rbEsp.UseVisualStyleBackColor = true;
+            // 
             // frmSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1493,6 +1533,7 @@
             this.tabPageTarget.PerformLayout();
             this.grpBoxShotColors.ResumeLayout(false);
             this.grpBoxShotColors.PerformLayout();
+            this.grpBoard.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -1615,5 +1656,8 @@
         private System.Windows.Forms.TextBox txtRFNrShots;
         private System.Windows.Forms.CheckBox chkRapidFire;
         public System.Windows.Forms.CheckBox chkShowScoring;
+        private System.Windows.Forms.GroupBox grpBoard;
+        public System.Windows.Forms.RadioButton rbEsp;
+        public System.Windows.Forms.RadioButton rbArduino;
     }
 }

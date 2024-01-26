@@ -59,7 +59,8 @@ static volatile unsigned long  keep_alive;        // Keep alive timer
 static volatile unsigned long  tabata_timer;      // Free running state timer
        volatile unsigned long  power_save;        // Power save timer
 static volatile unsigned long  rapid_timer;       // Timer used for rapid fire ecents 
-                  
+       volatile unsigned long  LED_timer;         // Timer to reset LED status 
+                
 volatile unsigned int run_state = 0;              // Current operating state 
 
 const char* names[] = { "TARGET",                                                                                           //  0
@@ -94,7 +95,7 @@ void freeETarget_init(void)
   POST_version();                         // Show the version string on all ports
   gpio_init();  
   set_status_LED(LED_HELLO_WORLD);        // Hello World
-  vTaskDelay(ONE_SECOND);
+  timer_delay(ONE_SECOND);
   read_nonvol();
   WiFi_init();
 
@@ -115,8 +116,7 @@ void freeETarget_init(void)
  */
   if ( POST_counters() == false )         // If the timers fail
   {
-    DLT(DLT_CRITICAL);
-    printf("POST_counters failed");   // Failed the test
+    DLT(DLT_CRITICAL, printf("POST_counters failed"); )  // Failed the test
     vTaskDelay(2*ONE_SECOND);
   }
   
@@ -129,8 +129,7 @@ void freeETarget_init(void)
   serial_flush(ALL);                      // Get rid of everything
   this_shot = 0;                          // Clear out any junk
   last_shot = 0;
-  DLT(DLT_CRITICAL);
-  printf("Initialization complete\r\n");
+  DLT(DLT_CRITICAL, printf("Initialization complete");)
 
 /*
  * Start the tasks running
@@ -233,7 +232,6 @@ void freeETarget_target_loop(void* arg)
   if ( json_tabata_enable || json_rapid_enable ) // If the Tabata or rapid fire is enabled, 
   {
     set_LED_PWM_now(0);             // Turn off the LEDs
-    set_status_LED(LED_TABATA_ON);  // Just turn on X
     json_rapid_enable = 0;          // Disable the rapid fire
   }                                 // Until the session starts
   else
@@ -276,10 +274,7 @@ unsigned int arm(void)
   sensor_status = is_running();     // and immediatly read the status
   if ( sensor_status == 0 )         // After arming, the sensor status should be zero
   { 
-    if ( DLT(DLT_APPLICATION) )
-    {
-      printf("Waiting...");
-    }  
+    DLT(DLT_APPLICATION, printf("Waiting...");)
     return WAIT;                   // Fall through to WAIT
   }
 
@@ -370,15 +365,7 @@ unsigned int wait(void)
     {
       set_LED_PWM_now(0);
 
-      if ( DLT(DLT_APPLICATION) )
-      {
-        printf("Rapid fire complete");
-      }
-      
-      if ( DLT(DLT_APPLICATION) )
-      {
-        printf("Rapid fire complete");
-      }
+      DLT(DLT_APPLICATION, printf("Rapid fire complete");)
       return REDUCE;                   // Finish this rapid fire cycle
     }
     else
@@ -438,11 +425,7 @@ unsigned int reduce(void)
  */
   while (last_shot != this_shot )
   {   
-    if ( DLT(DLT_APPLICATION) )
-    {
-//      printf("Reducing shot: %d \n\rTrigger: ", last_shot);
-      show_sensor_status(record[last_shot].sensor_status);
-    }
+    DLT(DLT_APPLICATION, show_sensor_status(record[last_shot].sensor_status);)
 
     location = compute_hit(&record[last_shot]);                 // Compute the score
     if ( location != MISS )                                     // Was it a miss or face strike?
@@ -466,10 +449,7 @@ unsigned int reduce(void)
     }
     else
     {
-      if ( DLT(DLT_APPLICATION) )
-      {
-        printf("Shot miss...\r\n");
-      }
+      DLT(DLT_APPLICATION, printf("Shot miss...\r\n");)
       set_status_LED(LED_MISS);
       send_miss(&record[last_shot]);
       rapid_green(0);
@@ -556,7 +536,7 @@ void tabata_enable
   tabata_state = TABATA_OFF;                                      // Reset back to the beginning
   json_tabata_enable = enable;                                    // And enable
 
-  if ( DLT(DLT_APPLICATION) )
+  DLT(DLT_APPLICATION, 
   {
     if ( enable )
     {
@@ -567,7 +547,8 @@ void tabata_enable
       printf("Tabata disabled");
     }
   }
-  
+  )
+
 /*
  * All done, return
  */
@@ -660,11 +641,11 @@ void tabata_task(void)
         break;
       
       case (TABATA_DARK):                   // Dark time in seconds
-        if (tabata_timer == 0 )            // Don't do anything unless the time expires
+        if (tabata_timer == 0 )             // Don't do anything unless the time expires
         {
-          in_shot_timer = FULL_SCALE;     // Set the timer on
+          in_shot_timer = FULL_SCALE;       // Set the timer on
           timer_new(&tabata_timer, json_tabata_on * ONE_SECOND);
-          set_LED_PWM_now(json_LED_PWM);           // Turn on the lights
+          set_LED_PWM_now(json_LED_PWM);    // Turn on the lights
           sprintf(s, "{\"TABATA_ON\":%d}\r\n", json_tabata_on);
           serial_to_all(s, ALL);
           tabata_state = TABATA_ON;
@@ -672,7 +653,7 @@ void tabata_task(void)
         break;
       
       case (TABATA_ON):                     // Keep the LEDs on for the tabata time
-        if ( tabata_timer == 0 )           // Don't do anything unless the time expires
+        if ( tabata_timer == 0 )            // Don't do anything unless the time expires
         {
           timer_new(&tabata_timer, (long)(json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off) * ONE_SECOND);
           sprintf(s, "{\"TABATA_OFF\":%d}\r\n", (json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off));
@@ -778,7 +759,7 @@ void rapid_fire_task(void)
       case (RAPID_WAIT):                   // Keep the LEDs on for the tabata time
         if ( rapid_timer == 0 )            // Don't do anything unless the time expires
         {
-          timer_new(&rapid_timer, json_rapid_on);
+          timer_new(&rapid_timer, json_rapid_on * ONE_SECOND);
           sprintf(s, "{\"RAPID_ON\":%d}\r\n", (json_rapid_time));
           serial_to_all(s, ALL);
           set_LED_PWM_now(0);             // Turn off the LEDs

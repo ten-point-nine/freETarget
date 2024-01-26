@@ -259,6 +259,7 @@
             this.Text = "Arduino";
             this.Activated += new System.EventHandler(this.frmArduino_Activated);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmArduino_FormClosing);
+            this.Load += new System.EventHandler(this.frmArduino_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);

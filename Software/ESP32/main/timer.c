@@ -83,8 +83,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args);
 
 void freeETarget_timer_init(void)
 {
-  DLT(DLT_CRITICAL); 
-  printf("freeETarget_timer_init()");
+  DLT(DLT_CRITICAL, printf("freeETarget_timer_init()");)
   timer_init(TIMER_GROUP_0, TIMER_1, &config);
   timer_set_counter_value(TIMER_GROUP_0, TIMER_1, 0);                   // Start the timer at 0
   timer_set_alarm_value(TIMER_GROUP_0, TIMER_1, ONE_MS);                // Trigger on this value
@@ -211,8 +210,14 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
  *
  * This task runs every 10ms.  
  * 
- * Synchronous tasks are called on a time band
+ * Synchronous tasks are called on a 10ms time band
  * 
+ * Unless you don't care about the time, always use
+ * timer_new(&timer, ONE_SECOND * duration).
+ * 
+ * IMPORTANT
+ * 
+ * timers are deleted when they expire
  * 
  *-----------------------------------------------------*/
 #define TICK    1       // 1 Tick = 10 ms
@@ -230,21 +235,35 @@ void freeETarget_synchronous
   unsigned int toggle =0;
   unsigned int i;
 
+/*
+ *  Decrement the timers on a 10ms (100Hz) interval
+ */
   while (1)
   {
-/*
- *  10 ms band
- */
-//    token_cycle();
-    for (i=0; i != N_TIMERS; i++)  // Refresh the timers
+    for (i=0; i != N_TIMERS; i++)   // Refresh the timers.  Decriment in 10ms increments
     {
       if ( (timers[i] != 0)
         && ( *timers[i] != 0 ) )
       {
-        (*timers[i])--;
+        (*timers[i])--;             // Decriment the timer
+        if ( *timers[i] == 0 )      // When it hits zero,
+        {
+          timers[i] = 0;            // Delete the timer so it isn't re triggered 
+        }
       }
     }
-
+/*
+ *  10 ms band
+ */
+//    token_cycle();
+    multifunction_switch_tick();
+    multifunction_switch();
+    drive_paper_tick();
+    if ( LED_timer == 0 )               // Check to see if the timer ran down
+    {
+      set_status_LED(LED_RXTX_OFF);     // If so Turn off the LEDs
+      LED_timer = 1;                    // and kill the timer
+    }
 /*
  *  500 ms band
  */
@@ -252,7 +271,7 @@ void freeETarget_synchronous
     {
       commit_status_LEDs( toggle );
       toggle ^= 1;
-      multifunction_switch();
+
       tabata_task();
       rapid_fire_task();
     }
@@ -291,7 +310,7 @@ void freeETarget_synchronous
  * 
  * IMPORTANT
  * 
- * The timers shall be static variables, otherwise they
+ * The timers must be static variables, otherwise they
  * will overflow the available space every time they are
  * instantiated.
  * 
@@ -301,7 +320,7 @@ void freeETarget_synchronous
  * same timer addess without creating a problem
  * 
  *-----------------------------------------------------*/
-unsigned long timer_new
+int timer_new
 (
   volatile unsigned long* new_timer, // Pointer to new down counter
            unsigned long  duration   // Duration of the timer
@@ -324,15 +343,12 @@ unsigned long timer_new
       return 1;
     }
   }
-  if ( DLT(DLT_CRITICAL) )
-  {
-    printf("No space for new timer");
-  }
+  DLT(DLT_CRITICAL,  printf("No space for new timer");)
   
   return 0;
 }
 
-unsigned long timer_delete
+int timer_delete
 (
   volatile unsigned long* old_timer   // Pointer to new down counter
 )

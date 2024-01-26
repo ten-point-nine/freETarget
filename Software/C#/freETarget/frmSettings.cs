@@ -64,17 +64,19 @@ namespace freETarget
 
                     //detect names of devices connected to COM ports
                     var ports = devices.Get().Cast<ManagementBaseObject>().ToList();
+
                     var device_list = (from n in portnames
                                        join p in ports on n equals p["DeviceID"].ToString()
                                        select p["Caption"]).ToList();
 
-                    //detect arduino on COM
+                    //try detect arduino on COM. not not work for ESP32 :/
                     bool arduinoFound = false;
                     for (int i = 0; i < portnames.Length; i++) {
                         cmbPorts.Items.Add(portnames[i]);
 
                         if (i < device_list.Count) {
                             string portDevice = device_list[i].ToString();
+                            Console.WriteLine(portnames[i] + ": " + portDevice);
 
                             if (portDevice.Contains("Arduino")) {
                                 cmbPorts.SelectedItem = portnames[i];
@@ -134,7 +136,7 @@ namespace freETarget
             loadSettings();
 
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            lblVersion.Text = "freETarget Project  -  v"+ assembly.GetName().Version.Major + "." + assembly.GetName().Version.Minor + "." + assembly.GetName().Version.Build + "   (c) 2020-2023";
+            lblVersion.Text = "freETarget Project  -  v"+ assembly.GetName().Version.Major + "." + assembly.GetName().Version.Minor + "." + assembly.GetName().Version.Build + "   (c) 2020-2024";
         }
 
         private void loadEvents() {
@@ -199,6 +201,14 @@ namespace freETarget
             } else {
                 //TCP
                 cmbCommProtocol.SelectedItem = "TCP";
+            }
+
+            if(Properties.Settings.Default.Board == frmMainWindow.Arduino) {
+                rbArduino.Checked = true;
+                rbEsp.Checked = false;
+            } else {
+                rbArduino.Checked = false;
+                rbEsp.Checked = true;
             }
             txtName.Text = Properties.Settings.Default.name;
             txtBaud.Text = Properties.Settings.Default.baudRate.ToString(CultureInfo.InvariantCulture);

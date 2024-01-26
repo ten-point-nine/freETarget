@@ -18,6 +18,7 @@
 #include "freETarget.h"
 #include "diag_tools.h"
 #include "serial_io.h"
+#include "timer.h"
 
 /*
  *  Serial IO port configuration
@@ -159,11 +160,17 @@ unsigned int serial_available
       n_available += length;
     }
   }
-
+   
+/*
+ * Return the number of characters waiting 
+ */
+  if ( n_available != 0 )               // Something waiting,
+  {
+    set_status_LED(LED_RX);             // Turn on the Receive LED
+    timer_new(&LED_timer, ONE_SECOND);
+  }
   return n_available;
 }
-
-
 
 /*******************************************************************************
  * 
@@ -319,15 +326,15 @@ void serial_to_all
   bool  tcpip                     // Output to the TCPIP socket
 )
 {
-  unsigned int len;
+  unsigned int length;
 
 /*
  *  Figure out the string length
  */
-  len = 0;
-  while (str[len])
+  length = 0;
+  while (str[length])
   {
-    len++;
+    length++;
   }
 
 /*
@@ -340,17 +347,20 @@ void serial_to_all
   
   if ( aux )
   {
-    uart_write_bytes(uart_aux, (const char *) str, len);
+    uart_write_bytes(uart_aux, (const char *) str, length);
   }
   
   if ( tcpip )
   {
-    tcpip_app_2_queue(str, len);
+    tcpip_app_2_queue(str, length);
   }
 
 /*
  * All done
  */
+  set_status_LED(LED_TX);
+  timer_new(&LED_timer, ONE_SECOND);
+
   return;
 }
 
@@ -516,8 +526,7 @@ int tcpip_socket_2_queue
     in_buffer.in = (in_buffer.in+1) % sizeof(in_buffer.queue);
     if ( in_buffer.out == in_buffer.in )
     {
-      DLT(DLT_CRITICAL);
-      printf("TCPIP input queue overrun\r\n");              // Reached the end
+      DLT(DLT_CRITICAL, printf("TCPIP input queue overrun\r\n");)   // Reached the end
       break;
     }
   }
@@ -543,26 +552,36 @@ void serial_port_test(void)
   unsigned char test[] = "PASS - This is the loopback test";
   unsigned int  i;
   unsigned char ch;
+  volatile unsigned long test_time;
+
+  timer_new(&test_time, ONE_SECOND * 10);
 
 /*
  * Send out the AUX port, back in, and then to the console
  */
-  printf("\r\nAUX Serial Port Loopback.  Make sure AUX port is looped back\r\n");
+  printf("\r\nAUX Serial Port Loopback.  Make sure AUX port is looped back");
   for (i=0; i != sizeof(test); i++)
   {
     serial_putch(test[i], AUX);    // Output to the AUX Port
+
     while ( serial_available(AUX) == 0 )
     {
-      continue;
+      timer_delay(1);              // Wait for it to come back
+      if ( test_time == 0 )
+      {
+        printf("\r\nTest failed, no input from AUX\r\n");
+        return;
+      }
     }
-    
+      
     ch = serial_getch(AUX);
-    serial_putch(ch, CONSOLE);
+    serial_putch(CONSOLE, ch);
   }
 
 /*
  *  The test is over
  */ 
+  timer_delete(&test_time);
   printf("\r\nDone");
   return;
 }

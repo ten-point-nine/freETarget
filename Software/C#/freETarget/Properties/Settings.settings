@@ -89,5 +89,8 @@
     <Setting Name="showScoring" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="Board" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Arduino</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

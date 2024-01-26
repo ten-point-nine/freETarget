@@ -47,29 +47,40 @@ void    zapple(unsigned int test);                      // ZAPPLE console monito
 
 /*
  * LED status messages
+ *
  */
-
+//                         R                // RDY indicates operating status 
+//                          X               // X indicates communications status
+//                           Y              // Y indicates feature status
+#define LED_OFF           "   "             // Turn off all of the LEDs
+#define LED_HELLO_WORLD   "RWB"             // Hello World
 #define LED_RESET         "   "             // Force them all off
+#define LED_GOOD          "G  "             // The software has started but not in shot mode
 #define LED_READY         "g  "             // The shot is ready to go.  Blik to show we are alive
 #define LED_READY_OFF     " --"             // Turn off the READY light
-#define LED_TABATA_ON     "--G"             // Tabata is ready to go, leave the others alone
-#define LED_TABATA_OFF    "-- "             // Tabata is turned off, leave the others alone
-#define LED_RAPID_ON      "--G"             // Rapidfire course of fire on
-#define LED_RAPID_OFF     "-- "             // Rapidfire course of fire off
-#define LED_HIT           "-G-"             // A shot has been detected
-#define LED_MISS          "-R-"             // Last shot was a miss
-#define LED_WIFI_SEND     "--B"             // There is something going over the WiFi
-#define LED_WIFI_DONE     "-- "             // Finished sending
-#define LED_HELLO_WORLD   "RWB"             // Hello World
 
-// Fault Codes
-#define LED_FAULT          "--R"            // Generic fault
+#define LED_WIFI_OFF      "- -"             // The WiFi is not operational
+#define LED_STATION       "-g-"             // The WiFi is in station mode but not connected
+#define LED_STATION_CN    "-G-"             // The WiFI is in station mode and connected 
+#define LED_ACCESS        "-b-"             // The WiFi is in access mode and not connected
+#define LED_ACCESS_CN     "-B-"             // The WiFI is in access mode and connected 
+#define LED_RX            "--R"             // Receiving over WiFi/Serial
+#define LED_TX            "--G"             // Transmitting over WiFi / Serial
+#define LED_RXTX_OFF      "-- "             // Turn off the TX/RX LED
+
+#define LED_MFS_a         "-G-"             // Short Press Copy MFS to the LEDs
+#define LED_MFS_A         "-W-"             // Long Press Copy MFS to the LEDs
+#define LED_MFS_b         "--G"
+#define LED_MFS_B         "--W"
+#define LED_MFS_OFF       "-  "             // Turn them off if they were on
+
+// Fault Codes - RDY LED set to RED to indiate a fault
 #define LED_NORTH_FAILED   "RRR"            // North sensor failed
-#define LED_EAST_FAILED    "GRR"            // East sensor failed
-#define LED_SOUTH_FAILED   "BRR"            // South sensor failed
-#define LED_WEST_FAILED    "WRR"            // 3 West sensor failed
+#define LED_EAST_FAILED    "RRG"            // East sensor failed
+#define LED_SOUTH_FAILED   "RRB"            // South sensor failed
+#define LED_WEST_FAILED    "RRY"            // 3 West sensor failed
 
-#define LED_FAIL_A         "RGR"            // 
+#define LED_MISS           "RGR"            // Shot was detected as a miss
 #define LED_FAIL_B         "RGG"            // 
 #define LED_FAIL_C         "RGB"            // 
 #define LED_FAIL_D         "RGW"            // 
@@ -87,8 +98,7 @@ void    zapple(unsigned int test);                      // ZAPPLE console monito
 /*
  * Tracing 
  */
-#define DZZ(level, z) if ( do_dlt(level)){ z}
-#define DLT(level)      ( do_dlt(level) )
+#define DLT(level, z) if ( do_dlt(level)){z}
 #define DLT_NONE          0                       // No DLT messages displayed
 #define DLT_CRITICAL      0x80                    // Display messages that will compromise the target
 #define DLT_APPLICATION   0x01                    // Application level messages displayed

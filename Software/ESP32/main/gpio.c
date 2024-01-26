@@ -22,6 +22,7 @@
 #include "timer.h"
 #include "pcnt.h"
 #include "gpio_define.h"
+#include "mfs.h"
 
 #include "../managed_components/espressif__led_strip/src/led_strip_rmt_encoder.h"
 
@@ -42,7 +43,7 @@ typedef struct status_struct {
 /* 
  * Variables
  */
-status_struct_t status[3];
+status_struct_t status[3] = {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
 
 /*-----------------------------------------------------
  * 
@@ -191,7 +192,7 @@ unsigned int read_DIP(void)
  *-----------------------------------------------------*/
 #define RMT_LED_STRIP_RESOLUTION_HZ 10000000 // 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
 
-rmt_channel_handle_t led_chan = NULL;
+rmt_channel_handle_t led_channel = NULL;
 rmt_tx_channel_config_t tx_chan_config = {
     .clk_src           = RMT_CLK_SRC_DEFAULT, // select source clock
     .mem_block_symbols = 64, // increase the block size can make the LED less flickering
@@ -210,9 +211,9 @@ void status_LED_init
 )
 {
   tx_chan_config.gpio_num = led_gpio;
-  ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config, &led_chan));
+  ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config, &led_channel));
   ESP_ERROR_CHECK(rmt_new_led_strip_encoder(&encoder_config, &led_encoder));
-  ESP_ERROR_CHECK(rmt_enable(led_chan));
+  ESP_ERROR_CHECK(rmt_enable(led_channel));
   return;
 }
 
@@ -228,17 +229,18 @@ void status_LED_init
  *
  * The state of the LEDs can be turned on or off 
  * 
- * 'R' - Set the LED to Red'
+ * 'R' - Set the LED to Red
+ * 'r' - Blink the LED in red
  * '-' - Leave the LED alone
- *  
+ * '.' - Turn the LED off
+ *
  *-----------------------------------------------------*/
-#define   LED_ON 0x1F
+#define   LED_ON 0x3F
 
 rmt_transmit_config_t tx_config = {
         .loop_count = 0, // no transfer loop
     };
 
-  
 unsigned char led_strip_pixels[3 * 3];
 
 void set_status_LED
@@ -254,12 +256,13 @@ void set_status_LED
   i=0;
   while (*new_state != 0)
   {
-    if ( *new_state != '-' )
+    if ( *new_state != '-' )      // - Leave the setting alone
     {
-      status[i].blink = 0;
-      status[i].red = 0;
+      status[i].blink = 0;        // Default to blink off
+      status[i].red   = 0;
       status[i].green = 0;
-      status[i].blue = 0;          // Turn off the LED
+      status[i].blue  = 0;    
+
       switch (*new_state)
       {
         case 'r':                 // RED LED
@@ -268,34 +271,34 @@ void set_status_LED
           status[i].red   = LED_ON;
           break;
 
-        case 'y':                 // RED LED
+        case 'y':                 // YELLOW LED
           status[i].blink = 1;    // Turn on Blinking
         case 'Y':
           status[i].red   = LED_ON/2;
           status[i].green = LED_ON/2;
           break;
 
-        case 'g':               // GREEN LED
+        case 'g':                 // GREEN LED
           status[i].blink = 1;    // Turn on Blinking
         case 'G':
           status[i].green = LED_ON;
           break;
 
-        case 'b':
+        case 'b':                 // BLUE LED
           status[i].blink = 1;
         case 'B':
           status[i].blue  = LED_ON;
           break;
 
         case 'w':
-          status[i].blink = 1;
+          status[i].blink = 1;    // WHITE LED
         case 'W':
           status[i].red   = LED_ON/3;
           status[i].green = LED_ON/3;
           status[i].blue  = LED_ON/3;
           break;
 
-        case ' ':             // The LEDs are already off
+        case ' ':                 // LEDs are all off
           break;
       }
     }
@@ -350,7 +353,7 @@ void commit_status_LEDs
     }
   }
     
-  ESP_ERROR_CHECK(rmt_transmit(led_chan, led_encoder, led_strip_pixels, sizeof(led_strip_pixels), &tx_config));
+  rmt_transmit(led_channel, led_encoder, led_strip_pixels, sizeof(led_strip_pixels), &tx_config);
 
 /*
  * All done, return
@@ -358,7 +361,6 @@ void commit_status_LEDs
   return;
 
 }
-
 
 /*-----------------------------------------------------
  * 
@@ -382,12 +384,12 @@ void commit_status_LEDs
  *             *     +
  *    vref_lo *      +
  *           *++++++++
- *         *   pcnt_hi
+ *         *   pcnt_hi3
  *        *
  *       * origin
  * 
  *                         vref_lo
- * origin = pcnt_lo + ----------------  * pcnt_hi
+ * origin = pcnt_lo - ----------------  * pcnt_hi
  *                    vref_hi - vref_lo
  * 
  * IMPORTANT
@@ -410,8 +412,8 @@ void read_timers
     timer[i] = pcnt_read(i);
   }
 
-#if ( COMPENSATE_RISE_TIME )
-  if ( (json_vref_hi - json_vref_lo) > 0 )
+  if ( (json_pcnt_latency != 0)                   // Latecy has a valid setting
+          && ((json_vref_hi - json_vref_lo) > 0 ) ) // The voltage references are good
   {
     for (i=N; i <= W; i++)                        // Add the rise time to the signal to get a better estimate
     {
@@ -422,7 +424,6 @@ void read_timers
       }
     }
   }
-#endif
 
   return;
 }
@@ -452,36 +453,36 @@ void read_timers
  * Step Count = 0
  * Step Time = 0
  * Paper Time = Motor ON time
- *
- * Stepper
- * Paper Time = 0
- * Step Count = X
- * Step Time = Step On time
  * 
  *-----------------------------------------------------*/
-
 volatile unsigned long paper_time;
 
 void drive_paper(void)
 {
-
-  if ( DLT(DLT_DIAG) )
-  {
-    printf("Advancing paper: %dms", json_paper_time);
-  }
+  DLT(DLT_DIAG, printf("Advancing paper: %dms", json_paper_time);)
 
 /*
  * Drive the motor on and off for the number of cycles
  * at duration
  */
-  timer_new(&paper_time, json_paper_time);  // Create the timer
-  paper_on_off(true);                       // Motor ON
-  while ( paper_time != 0 )
-  {
-    vTaskDelay(1);
-  }
-  paper_on_off(false);                      // Motor OFF
+  timer_new(&paper_time, ONE_SECOND * json_paper_time / 1000);  // Create the timer
+  paper_on_off(true);                       // Motor OFF
 
+ /*
+  * All done, return
+  */
+  return;
+ }
+
+void drive_paper_tick(void)
+{
+  if ( paper_time == 0 )
+  {
+    paper_on_off(false);                      // Motor OFF
+    paper_time = 1;
+    DLT(DLT_DIAG, printf("Done");)
+  }
+  
  /*
   * All done, return
   */
@@ -550,10 +551,7 @@ void paper_on_off                               // Function to turn the motor on
  {
   face_strike++;      // Got a face strike
 
-  if ( DLT(DLT_CRITICAL) )
-  {
-    printf("\r\nface_ISR(): %d", face_strike);
-  }
+  DLT(DLT_CRITICAL, printf("\r\nface_ISR(): %d", face_strike);)
 
   return;
  }
@@ -686,16 +684,19 @@ void digital_test(void)
 void status_LED_test(void)
 {
   printf("\r\nStatus LED test");
-  set_status_LED("R--");
-  vTaskDelay(ONE_SECOND);
-  set_status_LED("RG-");
-  vTaskDelay(ONE_SECOND);
-  set_status_LED("RGB");
-  vTaskDelay(ONE_SECOND);
+  timer_delay(2*ONE_SECOND);
+  set_status_LED("RRR");
+  timer_delay(ONE_SECOND);
+  set_status_LED("GGG");
+  timer_delay(ONE_SECOND);
+  set_status_LED("BBB");
+  timer_delay(ONE_SECOND);
   set_status_LED("WWW");
-  vTaskDelay(ONE_SECOND);
-  set_status_LED("rwb");
-  vTaskDelay(5*ONE_SECOND);         // Blink for 5 seconds
+  timer_delay(ONE_SECOND);
+  set_status_LED("RGB");
+  timer_delay(ONE_SECOND);
+  set_status_LED("rgb");
+  timer_delay(5*ONE_SECOND);         // Blink for 5 seconds
   set_status_LED(LED_READY);
   printf("\r\nDone\r\n");
   return;
@@ -711,29 +712,28 @@ void status_LED_test(void)
  * 
  *----------------------------------------------------------------
  *
- *  Drive the motor in 500 ms increments
+ *  Drive the motor in 500 ms increments.
+ * 
+ *  This function drives the motor directly and does not use the 
+ *  functions drive_paper() or drive_paper_tick().
+ * 
  *--------------------------------------------------------------*/
 void paper_test(void)
 {
   volatile unsigned long time_delay;
   int i;
 
-  timer_new(&time_delay, 500); 
-
   printf("\r\nAdvancing paper 500 ms at a time");
   for (i=0; i != 10; i++)
   {
     printf("  %d+", (i+1));
     paper_on_off(true);
-    time_delay = 500;
-    timer_delay(time_delay);
+    timer_delay(ONE_SECOND / 2);
     printf("-");
     paper_on_off(false);
-    time_delay = 500;
-    timer_delay(time_delay);
+    timer_delay(ONE_SECOND / 2);
   }
 
-  timer_delete(&time_delay);
   printf("\r\nDone\r\n");
 
   return;

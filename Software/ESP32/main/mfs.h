@@ -13,9 +13,9 @@
  */
 void multifunction_init(void);                            // Initialize the multifunction switches
 void multifunction_switch(void);                          // Handle the actions of the DIP Switch signal
+void multifunction_switch_tick(void);                     // Monitor the switches for long and short presses
 void multifuction_display(void);                          // Display the MFS settings
 void multifunction_wait_open(void);                       // Wait for both multifunction switches to be open
-
 
 /*
  * Multifunction Switch Use when using DIP Switch for MFS

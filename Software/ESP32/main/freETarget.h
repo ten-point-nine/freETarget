@@ -13,10 +13,13 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"0.6.3 January 10, 2023\""
+#define SOFTWARE_VERSION "\"0.6.4 January 14, 2023\""
 
 
 #define REV_500    500   // ESP32
+#define REV_510    510
+#define REV_520    520
+#define BUILD_REV  REV_510
 
 #define INIT_DONE       0xabcd                    // NON-VOL Initialization complete signature
 #ifndef true
@@ -124,5 +127,6 @@ extern unsigned int  this_shot;        // Index into the shot array
 extern unsigned int  shot_number;
 extern volatile unsigned long power_save;       // Power down timer
 extern volatile unsigned int run_state;         // IPC states 
+extern volatile unsigned long LED_timer;        // Turn off the LEDs when not in use
 
 #endif

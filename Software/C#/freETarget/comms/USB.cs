@@ -24,6 +24,8 @@ namespace freETarget.comms {
 
         public override void close() {
             this.serialPort.Close();
+            this.serialPort.Dispose();
+            this.serialPort = null;
         }
 
         public override void open(OpenParams value) {
@@ -33,8 +35,12 @@ namespace freETarget.comms {
                 serialPort.BaudRate = usbP.baudRate;
                 serialPort.DataBits = usbP.dataBits;
                 serialPort.DtrEnable = usbP.dtrEnable;
+                serialPort.RtsEnable = usbP.rtsEnable;
+
 
                 serialPort.Open();
+               
+
                 mainWindow.log("USB channel open...");
                 serialPort.Write("*");
             } else {
@@ -70,5 +76,6 @@ namespace freETarget.comms {
         public int baudRate;
         public int dataBits;
         public bool dtrEnable;
+        public bool rtsEnable;
     }
 }

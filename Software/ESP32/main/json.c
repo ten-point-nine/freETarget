@@ -22,6 +22,7 @@
 #include "serial_io.h"
 #include "mechanical.h"
 #include "wifi.h"
+#include "mfs.h"
 
 /*
  *  Function Prototypes
@@ -85,10 +86,10 @@ int     json_token;                 // Token ring state
 double  json_vref_lo;               // Low Voltage DAC setting
 double  json_vref_hi;               // High Voltage DAC setting
 int     json_pcnt_latency;          // pcnt interrupt latency
+
        void show_echo(void);        // Display the current settings
 static void show_test(int v);       // Execute the self test once
 static void show_names(int v);
-//static void nop(void);
 static void set_trace(int v);       // Set the trace on and off
 static void diag_delay(int x) ;     // Insert a delay
 
@@ -96,11 +97,11 @@ static void diag_delay(int x) ;     // Insert a delay
 const json_message_t JSON[] = {
 //    token                 value stored in RAM     double stored in RAM        convert    service fcn()     NONVOL location      Initial Value
   {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT32,  0,                NONVOL_SENSOR_ANGLE,    45 },    // Locate the sensor angles
-  {"\"BYE\":",            0,                                 0,                IS_VOID,  (void *)&bye,                      0,       0 },    // Shut down the target
+  {"\"BYE\":",            0,                                 0,                IS_VOID,   &bye,             0,                       0 },    // Shut down the target
   {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT32,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
   {"\"DELAY\":",          0,                                 0,                IS_INT32,  &diag_delay,                      0,       0 },    // Delay TBD seconds
   {"\"DOPPLER\":",        0,                     &json_doppler,                IS_FLOAT,  0,                NONVOL_DOPPLER,      40000 },    // Adjust timing based on Doppler Inverse SQ
-  {"\"ECHO\":",           0,                                 0,                IS_VOID,   (void*)&show_echo,                0,       0 },    // Echo test
+  {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,       0,                       0 },    // Echo test
   {"\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT32,  0,                NONVOL_FACE_STRIKE,      0 },    // Face Strike Count 
   {"\"FOLLOW_THROUGH\":", &json_follow_through,              0,                IS_INT32,  0,                NONVOL_FOLLOW_THROUGH,   0 },    // Three second follow through
   {"\"INIT\":",           0,                                 0,                IS_INT32,  &init_nonvol,     NONVOL_INIT,             0 },    // Initialize the NONVOL memory
@@ -110,7 +111,7 @@ const json_message_t JSON[] = {
                                                                                                                           + (POWER_TAP * 1000)
                                                                                                                           + (PAPER_SHOT * 100) 
                                                                                                                           + (ON_OFF * 10) 
-                                                                                                                          + (PAPER_FEED) },  // Multifunction switch action
+                                                                                                                          + (PAPER_SHOT) },  // Multifunction switch action
   {"\"MFS2\":",            &json_multifunction2,             0,                IS_INT32,  0,                NONVOL_MFS2,  (NO_ACTION*10000) 
                                                                                                                           + (NO_ACTION * 1000)
                                                                                                                           + (NO_ACTION * 100) 
@@ -214,7 +215,7 @@ void freeETarget_json
 {
   char          ch;
 
-  DLT(DLT_CRITICAL); printf("freeETarget_json()\r\n");
+  DLT(DLT_CRITICAL, printf("freeETarget_json()");)
 
   while (1)
   {

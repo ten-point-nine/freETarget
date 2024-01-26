@@ -78,7 +78,12 @@ namespace freETarget {
         }
 
         private void frmArduino_Load(object sender, EventArgs e) {
-            
+            this.Text = "Terminal " + Properties.Settings.Default.Board;
+            if (Properties.Settings.Default.Board == frmMainWindow.Arduino) {
+                this.Icon = Properties.Resources.arduino;
+            } else {
+                this.Icon = Properties.Resources.esp32;
+            }
         }
 
         private void btnClose_Click(object sender, EventArgs e) {

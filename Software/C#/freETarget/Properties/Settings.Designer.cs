@@ -370,5 +370,17 @@ namespace freETarget.Properties {
                 this["showScoring"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Arduino")]
+        public string Board {
+            get {
+                return ((string)(this["Board"]));
+            }
+            set {
+                this["Board"] = value;
+            }
+        }
     }
 }
