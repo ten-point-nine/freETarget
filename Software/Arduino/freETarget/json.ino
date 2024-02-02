@@ -385,49 +385,12 @@ bool read_JSON(void)
             
           }
         }
-        if ( init_table[l].port != 0xff )                  // Cycle through the tokens
-        {
-          k = instr(&input_JSON[i], init_table[l].gpio_name );    // Compare the input against the list of JSON tags
-          if ( k > 0 )                                            // Non zero, found something
-          {
-            not_found = false;                                    // Read and convert the JSON value
-            Serial.print(T("\r\n")); Serial.print(init_table[j].gpio_name);
-            if ( init_table[j].in_or_out == INPUT_PULLUP )
-            {
-              Serial.print(T(" is input only"));
-              break;
-            }
-          
-            if ( instr("LED_PWM", init_table[j].gpio_name ) > 0 )  // Special case analog output
-            {
-              x = atoi(&input_JSON[i+k]);
-              analogWrite(LED_PWM, x); 
-              Serial.print(x);
-            }
-            else if ( instr("vset_PWM", init_table[j].gpio_name ) > 0 )  // Special case analog output
-            {
-              x = atoi(&input_JSON[i+k]);
-              analogWrite(vset_PWM, x); 
-              Serial.print(x);
-            }
-            else
-            {
-              x = atoi(&input_JSON[i+k]);
-              digitalWrite(init_table[j].port, x);
-              Serial.print(x); 
-              Serial.print(T(" Verify:")); Serial.print(digitalRead(init_table[j].port));
-            }
-          }
-        }
-
+        
      if ( JSON[j].token != 0 )
      {
        j++;
      }
-     if ( init_table[l].gpio_name != 0xff )
-     {
-       l++;
-     }
+
    }
   }
 
@@ -446,20 +409,6 @@ bool read_JSON(void)
       {
         Serial.print(T("\r\n"));
       }
-    }
-    Serial.print(T("\r\n\r\n  *** GPIO ***"));
-    j=0;
-    while ( init_table[j].port != 0xff ) 
-    {
-      if ( init_table[j].in_or_out == OUTPUT )
-      {
-        Serial.print(T("\r\n")); Serial.print(init_table[j].gpio_name);
-        if ( (j%4) == 0 ) 
-        {
-          Serial.print(T("\r\n"));
-        }
-      }
-      j++;
     }
   }
   
