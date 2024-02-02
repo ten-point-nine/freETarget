@@ -31,6 +31,7 @@ static void remap_target(double* x, double* y);  // Map a club target if used
 static void dopper_fade(shot_record_t* record, sensor_t sensor[]);      // Take care of a fading signal
 static int  adjust_clocks( shot_record_t* shot, sensor_t sensor[]);     // Adjust the clocks
 static void target_geometry( shot_record_t* shot, sensor_t sensor[]);   // Work out the target geometyr
+static bool check_for_inside( shot_record_t* shot);                     // Verify that the shot is inside the target
 
 /*----------------------------------------------------------------
  *
@@ -239,7 +240,10 @@ unsigned int compute_hit
  /*
   * All done return
   */
-
+  if ( check_for_inside(shot) == false )
+  {
+    return MISS;
+  }
   return location;
 }
 
@@ -570,6 +574,53 @@ bool find_xy_3D
   return true;
 }
 
+
+/*----------------------------------------------------------------
+ *
+ * funtion: check_for_inside
+ *
+ * brief:   Verify the data to check for inside shots
+ * 
+ * return:  TRUE if the shot is good
+ *
+ *----------------------------------------------------------------
+ *
+ * In some cases external shots are picked up by the target and 
+ * returned as valid shots but with garbage results
+ * 
+ * This function looks at the data and results to make sure
+ * that they make sense.
+ * 
+ *--------------------------------------------------------------*/
+static bool check_for_inside
+(
+    shot_record_t* shot             //  record
+)
+{
+  double x, y;                    // Shot location in mm X, Y
+  double radius;
+
+  if ( DLT(DLT_DIAG) )
+  {
+    Serial.print(T("check_for_outside"));
+  }
+
+/*
+ * Where did compute_hit think the shot fell?
+ */
+  x = shot->xphys_mm;         // Distance in mm
+  y = shot->yphys_mm;         // Distance in mm
+  radius = sqrt(sq(x) + sq(y));
+  if ( radius > (json_sensor_dia / 2.0) )
+  {
+    return false;
+  }
+
+/*
+ * Got here, no errors in the mapping
+ */
+  return true;
+}
 /*----------------------------------------------------------------
  *
  * function: send_score
