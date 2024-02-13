@@ -56,7 +56,17 @@ void multifunction_display(void);                         // Display the MFS set
 #define RUN_EAST_HI    GPIO_NUM_9
 #define RUN_SOUTH_HI   GPIO_NUM_10
 #define RUN_WEST_HI    GPIO_NUM_11
-#define RUN_MASK     0x00ff
+
+#define BIT_NORTH_HI   0x80
+#define BIT_EAST_HI    0x40
+#define BIT_SOUTH_HI   0x20
+#define BIT_WEST_HI    0x10
+#define BIT_NORTH_LO   0x08
+#define BIT_EAST_LO    0x04
+#define BIT_SOUTH_LO   0x02
+#define BIT_WEST_LO    0x01
+
+#define RUN_MASK       0x00ff
 #define REF_CLK        GPIO_NUM_8
 
 #define PAPER          GPIO_NUM_12                  // Paper advance drive active high
@@ -105,7 +115,7 @@ void multifunction_display(void);                         // Display the MFS set
 #define DIP_SW_A        (gpio_get_level(DIP_A) == 0)  // Switch Input A
 #define DIP_SW_B        (gpio_get_level(DIP_B) == 0)  // Switch Input B
 #define DIP_SW_C        (gpio_get_level(DIP_C) == 0)  // Switch Input C
-#define DIP_SW_D        (gpio_get_level(DIP_C) == 0)  // Switch Input D
+#define DIP_SW_D        (gpio_get_level(DIP_D) == 0)  // Switch Input D
 #define VERBOSE_TRACE   (DIP_D)         // 8 Show the verbose software trace
 
 

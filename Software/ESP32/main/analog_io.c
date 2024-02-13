@@ -328,13 +328,25 @@ double humidity_RH(void)
  *--------------------------------------------------------------*/
 void set_VREF(void)
 {
+  float volts[4];
+
+  DLT(DLT_CRITICAL, printf("Set VREF: %4.2f %4.2f", json_vref_lo, json_vref_hi);)
+
+  if ( (json_vref_lo == 0)          // Check for an uninitialized VREF
+        || (json_vref_hi == 0) )
+  {
+    json_vref_lo = 1.25;            // and force to something other than 0
+    json_vref_hi = 2.00;            // Otherwise the sensors continioustly interrupt
+  }
+  
   if ( json_vref_lo >= json_vref_hi )
   {
     DLT(DLT_CRITICAL, printf("ERROR: json_vref_lo or json_vref_hi are out of order.");)
   }
 
-  DAC_write(0, json_vref_lo);
-  DAC_write(1, json_vref_hi);
+  volts[VREF_LO] = json_vref_lo;
+  volts[VREF_HI] = json_vref_hi;
+  DAC_write(volts);
 
 /*
  *  All done, return

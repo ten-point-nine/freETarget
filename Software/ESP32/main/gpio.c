@@ -23,6 +23,8 @@
 #include "pcnt.h"
 #include "gpio_define.h"
 #include "mfs.h"
+#include "dac.h"
+#include "analog_io.h"
 
 #include "../managed_components/espressif__led_strip/src/led_strip_rmt_encoder.h"
 
@@ -61,7 +63,8 @@ status_struct_t status[3] = {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
  *-----------------------------------------------------*/
 static unsigned int clock[] = { RUN_NORTH_LO, RUN_EAST_LO, RUN_SOUTH_LO, RUN_WEST_LO, 
                                 RUN_NORTH_HI, RUN_EAST_HI, RUN_SOUTH_HI, RUN_WEST_HI  };
-static unsigned int run_mask[] = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
+static unsigned int run_mask[] = {BIT_NORTH_LO, BIT_EAST_LO, BIT_SOUTH_LO, BIT_WEST_LO,
+                                  BIT_NORTH_HI, BIT_EAST_HI, BIT_SOUTH_HI, BIT_WEST_HI};
 
 unsigned int is_running (void)
 {
@@ -114,7 +117,7 @@ void arm_timers(void)
   gpio_intr_enable(RUN_SOUTH_HI);
   gpio_intr_enable(RUN_WEST_HI);
   gpio_set_level(OSC_CONTROL, OSC_ON);
-  vTaskDelay(1);                                        // Let the oscillator start up
+  vTaskDelay(1);                              // Let the oscillator start up
   gpio_set_level(STOP_N, 1);                  // Then enable it
   return;
 }
@@ -641,6 +644,7 @@ void rapid_green
   return;
 }
 
+
 /*-----------------------------------------------------
  * 
  * @function: digital_test()
@@ -668,7 +672,6 @@ void digital_test(void)
 
    return;
 }
-
 
 /*----------------------------------------------------------------
  * 

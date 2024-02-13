@@ -27,6 +27,7 @@
 #include "dac.h"
 #include "pcnt.h"
 #include "WiFi.h"
+#include "diag_tools.h"
 
 /*
  *  Function Prototypes
@@ -70,7 +71,7 @@ const char* names[] = { "TARGET",                                               
                         "ODIN",   "WODEN",   "THOR",   "BALDAR",                                                            // 26
                         0};
                   
-const char    nesw[]   = "NESW";                  // Cardinal Points
+const char    nesw[]   = "NESWnesw";              // Cardinal Points
 const char    to_hex[] = "0123456789ABCDEF";      // Quick Hex to ASCII
 
 /*----------------------------------------------------------------
@@ -93,11 +94,26 @@ void freeETarget_init(void)
  */
   serial_io_init();
   POST_version();                         // Show the version string on all ports
-  gpio_init();  
+  gpio_init(); 
+  read_nonvol();
   set_status_LED(LED_HELLO_WORLD);        // Hello World
   timer_delay(ONE_SECOND);
-  read_nonvol();
   WiFi_init();
+  set_VREF();
+
+  if ( DIP_SW_D )
+  {
+    while(1)
+    {
+      zapple(0);
+    }
+  }
+
+  if ( DIP_SW_C )
+  {
+    DLT(DLT_CRITICAL, printf("Setting trace to 255");)
+    is_trace = 255;
+  }
 
 /*
  *  Set up the long running timers
@@ -105,11 +121,6 @@ void freeETarget_init(void)
   timer_new(&keep_alive,    (unsigned long)json_keep_alive * ONE_SECOND * 60l); // Keep alive timer
   timer_new(&in_shot_timer, FULL_SCALE);                                  // Time inside of the shot window
   timer_new(&power_save,    (unsigned long)(json_power_save) * (long)ONE_SECOND * 60L);// Power save timer
-
-/*
- *  Finish setting up special IO
- */
-  set_VREF();
 
 /*
  * Run the power on self test
@@ -168,6 +179,7 @@ void freeETarget_target_loop(void* arg)
     if ( (run_state & IN_TEST) == IN_TEST)    // If in test, 
     {
       run_state &= ~ IN_OPERATION;           // Exit operation
+      continue;
     }
 /*
  * Cycle through the state machine
@@ -941,10 +953,7 @@ void send_keep_alive(void)
  {
 
   int i;
-  int target_count;                     // How many cycles we have passed
-  int timer_count[8];                   // Space for the 8 counters
-
-  target_count = 1;
+  int running;                          // Copy of the is_running state
 
   printf("\r\nPolled target shot test\r\n");
   freeETarget_timer_pause();             // Kill the background timer interrupt
@@ -958,22 +967,26 @@ void send_keep_alive(void)
     printf("\r\nArmed\r\n");
     while(is_running() != 0xff)
     {
-      continue;
+      running = is_running();
+      printf("\r\nis_running: %02X", running);
+      
+      for (i=0; i != 8; i++)
+      {
+        if (running & (1<<i))
+        {
+          printf(" %s ", which_one[i] );
+        }
+      }
     }
     stop_timers();
-    printf("\r\nStopped %d   ", target_count);
-    read_timers(&timer_count[0]);
-    for (i=0; i != 8; i++)
-    {
-      printf("%s:%5d  ", which_one[i], timer_count[i]);
-    }
-    target_count++;
     vTaskDelay(10);
   }
 
 /*
  * Nothing more to do
  */
+  set_VREF();
+  freeETarget_timer_start();        // Turn on the timers again
   return;
  }
 

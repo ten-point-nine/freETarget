@@ -229,21 +229,9 @@ void factory_nonvol
 /*    
  *     Test the board only if it is a factor init
  */
-
   if ( new_serial_number )
   {
-    printf("\r\n Testing motor drive ");
-    for (x=10; x != 0; x--)
-    {
-      printf("%d+ ", x);
-      paper_on_off(true);
-      vTaskDelay(ONE_SECOND/4);
-      printf("- ");
-      paper_on_off(false);
-      vTaskDelay(ONE_SECOND/4);
-    }
-    paper_on_off(false);
-    printf(" Test Complete\r\n");
+    factory_test();
   }
 
 /*
@@ -289,13 +277,7 @@ void factory_nonvol
   {
     DLT(DLT_CRITICAL, printf("Failed to write factory defaults to NONVOL");)
   }
-  
-/*
- * Read the NONVOL and print the results
- */
-  read_nonvol();                          // Read back the new values
-  show_echo();                            // Display these settings
-  
+    
 /*
  * All done, return
  */    

@@ -43,7 +43,7 @@ static volatile unsigned long isr_timer;          // Interrupt timer
  *  Function Prototypes
  */
 static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args);
-   
+
 /*-----------------------------------------------------
  * 
  * @function: freeETarget_timer_init
@@ -144,7 +144,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
   BaseType_t high_task_awoken = pdFALSE;
   unsigned int pin;                             // Value read from the port
 
-  if ( run_state & IN_TEST )
+  if ( run_state & IN_OPERATION )
   {
 /*
  * Decide what to do if based on what inputs are present
@@ -152,7 +152,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
     pin = is_running();                         // Read in the RUN bits
 
 /*
- * Read the timer hardware based on the ISR state
+ * Read the shot based on the ISR state
  */
     switch (isr_state)
     {
@@ -220,11 +220,11 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
  * timers are deleted when they expire
  * 
  *-----------------------------------------------------*/
-#define TICK    1       // 1 Tick = 10 ms
-#define BAND_10ms       (TICK * 1)
-#define BAND_100ms      (TICK * 10)
-#define BAND_500ms      (TICK * 50)
-#define BAND_1000ms     (TICK * 100)
+#define TICK_10ms                1       // 1 TICK_10ms = 10 ms
+#define BAND_10ms   (TICK_10ms * 1)
+#define BAND_100ms  (TICK_10ms * 10)
+#define BAND_500ms  (TICK_10ms * 50)
+#define BAND_1000ms (TICK_10ms * 100)
 
 void freeETarget_synchronous
 (
@@ -255,7 +255,7 @@ void freeETarget_synchronous
 /*
  *  10 ms band
  */
-//    token_cycle();
+    token_cycle();
     multifunction_switch_tick();
     multifunction_switch();
     drive_paper_tick();
@@ -289,7 +289,7 @@ void freeETarget_synchronous
  * All done, prepare for the next cycle
  */
     cycle_count++;
-    vTaskDelay(BAND_10ms);                           // Delay 10ms
+    vTaskDelay(TICK_10ms);                           // Delay 10ms
   }
 
 }

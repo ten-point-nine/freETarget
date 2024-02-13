@@ -16,12 +16,13 @@
  */
 #define DAC_ADDR  0x60    // DAC I2C address
 #define DAC_WRITE 0x58    // Single write
-#define DAC_LO    0       // Channel 0
-#define DAC_HI    1       // Channel 1
+#define VREF_LO   0
+#define VREF_HI   1
+#define VREF_2    2
+#define VREF_3    3
 
 /*
  *  Functions
  */
-void DAC_init(int not_used);      // Initialize the DAC
-void DAC_write(unsigned int channel, float value);
+void DAC_write(float value[4]);
 void DAC_test(void);              // Ramp the DACs

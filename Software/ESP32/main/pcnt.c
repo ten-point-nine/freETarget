@@ -27,6 +27,7 @@
 #include "gpio_define.h"
 #include "pcnt.h"
 #include "timer.h"
+#include "serial_io.h"
 
 /*
  *  Working variables
@@ -228,8 +229,11 @@ void pcnt_clear(void)
  *
  * This drives the PCNT registers in the expected modes
  * 
- * 1 - 
- * 
+ * 1 - Verify that the counters can be cleared
+ * 2 - Verify that the counters can be started and stopped together 
+ * 3 - Turn on the counters and verify that they increment in the right direction 
+ * 4 - Stop the timers before going into servcie
+ *
  **************************************************************************/     
 
 void pcnt_test
@@ -349,6 +353,124 @@ void pcnt_test
   return;
 }
 
+/*************************************************************************
+ * 
+ * @function:     pcnt_cal()
+ * 
+ * @description:  Trigger the North sensor from a function generator
+ *                and observe pcnt
+ * `
+ * @return:       Nothing
+ * 
+ **************************************************************************
+ *
+ * The NORTH sensor is driven from a triangle wave and the time delay in
+ * the NORTH_HI counter is printed on the display.
+ * 
+ * The NORTH_HI counter should be steady and can be used to estimate the 
+ * interrupt latentcy on the NORTH GPIO line.
+ *
+ **************************************************************************/     
+#define NORTH_HL (BIT_NORTH_HI + BIT_NORTH_LO)
+
+void pcnt_cal(void)
+{
+  int north_min, north_max;               // Running statistics
+  int north_hi, north_average;            // Read from counters
+  int count;
+
+  printf("\r\nPCNT-CAL  Display triggering jitter");
+
+  north_min     = 10000;
+  north_max     = 0;
+  north_average = 0;
+  count         = 0;
+
+/*
+ *  Setup the hardware
+ */
+  gpio_set_level(CLOCK_START, 0);             // Turn off the test start
+  gpio_intr_enable(RUN_NORTH_HI);             // Turn on the interrupts
+  gpio_intr_enable(RUN_EAST_HI);
+  gpio_intr_enable(RUN_SOUTH_HI);
+  gpio_intr_enable(RUN_WEST_HI);
+  gpio_set_level(OSC_CONTROL, OSC_ON);        // Turn on the oscillator
+  vTaskDelay(1);                              // Let the oscillator start up
+ 
+/*
+ * Loop, arm the counters and see what comes back
+ */
+  while (1)
+  {
+    if ( serial_available(CONSOLE) != 0 )
+    {
+      if ( serial_getch(CONSOLE) == '!' )
+      {
+        break;
+      }
+
+      north_min = 10000;                        // Anything else start over
+      north_max = 0;
+      north_average = 0;
+      count = 0;
+    }
+
+/*
+ *  Wait here until the input signal is LOW
+ */
+    gpio_set_level(STOP_N, 0);                  // Put the latches into the meta-stable state 
+     while ( (is_running() & NORTH_HL) != 0x0 )
+    {
+      continue;                                 // Wait for both comparitors to go low
+    }
+    while ( (is_running() & NORTH_HL) != NORTH_HL ) // Read the inputs directly
+    {
+      continue;                                 // And wait for both comparitors to go high
+    }
+    while ( (is_running() & NORTH_HL) != 0x0 )
+    {
+      continue;                                 // Wait for both comparitors to go low
+    }
+    gpio_set_level(STOP_N, 1);                  // Take it out of metastable
+    pcnt_clear();                               // and clear the counters
+
+/*
+ * Trigger the timer and wait for a reading 
+ */
+    while ((is_running() & NORTH_HL) != NORTH_HL )// Should trigger almost instantly
+    {
+      continue;
+    }
+
+/*
+ *  Read in the counters and find the min and max
+ */
+    north_hi = pcnt_read(NORTH_HI);
+    north_average += north_hi;
+    count++;
+    if ( north_hi < north_min )
+    {
+      north_min = north_hi;
+    }
+
+    if ( north_hi > north_max )
+    {
+      north_max = north_hi;
+    }
+
+/*
+ *  Display the results and wait before turning on the timers again
+ */
+    printf("\r\nnorth_hi: %d  north_avg: %d  north_min: %d   north_max: %d   diff: %d", north_hi, north_average/count, north_min, north_max, (north_max - north_min));
+    vTaskDelay(ONE_SECOND/2);
+  }
+
+/*
+ * Test Over
+ */
+  printf("\r\nDone");
+  return;
+}
 
 /*************************************************************************
  * 

@@ -172,7 +172,7 @@ gpio_struct_t gpio_table[] = {
     {"USB_D+",       GPIO_NUM_20, NULL},              // JTAG USB D+
     {"USB_JTAG",     GPIO_NUM_3,  NULL},              // JTAG Strap to 3V3
     {"ROM_MSG",      GPIO_NUM_46, NULL},              // Enable ROM messages
-    {"RUN_EAST_HI",  GPIO_NUM_9,  (void*)&dio09},     // RUN_EAST_HI Not used on ESP32-S3
+    {"RUN_EAST_HI",  GPIO_NUM_9,  (void*)&dio09},     // RUN_EAST_HI Direct to GPIO
     {"RUN_SOUTH_HI", GPIO_NUM_10, (void*)&dio10},     // RUN_SOUTH_HI
     {"RUN_WEST_HI",  GPIO_NUM_11, (void*)&dio11},     // RUN_WEST_HI
     {"PAPER",        GPIO_NUM_12, (void*)&dio12},     // PAPER  Drive

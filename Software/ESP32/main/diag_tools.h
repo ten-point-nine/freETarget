@@ -20,30 +20,37 @@ void    POST_trip_point(void);                          // Display the set point
 void    set_trip_point(int x);                          // Calibrate the trip point
 bool    do_dlt(unsigned int level);                     // Diagnostics Log and Trace
 void    zapple(unsigned int test);                      // ZAPPLE console monitor
+void    factory_test(void);                             // Test the hardware in production
 
 #define T_HELP           0        // Help test
-#define T_DIGITAL        1        // Digital test
-#define T_PAPER          2        // Advance paper backer
-#define T_LED            3        // Test the LED PWM
-#define T_STATUS         4        // Send colours across the status LEDs
-#define T_TEMPERATURE    5        // Read the temperature and humidity
-#define T_DAC            6        // Ramp the DAC outputs 
-#define T_PCNT           7        // PCNT register test
-#define T_SENSOR         8        // Sensor POST test
-#define T_AUX_SERIAL     9        // AUX Serial Port loopback
-#define T_TARGET        10        // Polled target sensor test
-#define T_TARGET_2      11        // Interrupt target test
-#define T_WIFI_AP       12        // Test WiFi as an Access Point
-#define T_WIFI_STATION  13        // Test WiFI as a station 
-#define T_WIFI_SERVER   14        // Enable the WiFI Server
-#define T_WIFI_STATION_LOOPBACK 15 // Send an receive over the WiFi conduit
-#define T_WIFI_AP_LOOPBACK 16     // Send an receive over the WiFi conduit
-#define T_CYCLE_CLOCK   17        // Turn the clock on and off
-#define T_RUN_ALL       18        // Toggle the RUN lines on and off 
-#define T_PCNT_STOP     19        // PCNT timers stopped
-#define T_PCNT_SHORT    20        // PCNT timers start-stop  
-#define T_PCNT_FREE     21        // PCNT timers free running
-#define T_PCNT_CLEAR    22        // PCNT timers cleared after running
+#define T_FACTORY        1        // Factory Test
+
+#define T_DIGITAL       10        // Digital test
+#define T_PAPER         11        // Advance paper backer
+#define T_LED           12        // Test the LED PWM
+#define T_STATUS        13        // Send colours across the status LEDs
+#define T_TEMPERATURE   14        // Read the temperature and humidity
+#define T_DAC           15        // Ramp the DAC outputs 
+
+#define T_PCNT          20        // PCNT register test
+#define T_PCNT_STOP     21        // PCNT timers stopped
+#define T_PCNT_SHORT    22        // PCNT timers start-stop  
+#define T_PCNT_FREE     23        // PCNT timers free running
+#define T_PCNT_CLEAR    24        // PCNT timers cleared after running
+#define T_CYCLE_CLOCK   25        // Turn the clock on and off
+#define T_RUN_ALL       26        // Toggle the RUN lines on and off 
+#define T_PCNT_CAL      27        // Trigger PCNT via a triangle wave and watch the outcome
+
+#define T_AUX_SERIAL    30        // AUX Serial Port loopback
+#define T_WIFI_AP       31        // Test WiFi as an Access Point
+#define T_WIFI_STATION  32        // Test WiFI as a station 
+#define T_WIFI_SERVER   33        // Enable the WiFI Server
+#define T_WIFI_STATION_LOOPBACK 34 // Send an receive over the WiFi conduit
+#define T_WIFI_AP_LOOPBACK 35     // Send an receive over the WiFi conduit
+
+#define T_SENSOR        40        // Sensor POST test
+#define T_TARGET        41        // Polled target sensor test
+#define T_TARGET_2      42        // Interrupt target test
 
 /*
  * LED status messages

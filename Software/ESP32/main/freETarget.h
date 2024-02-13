@@ -13,7 +13,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"0.6.4 January 14, 2023\""
+#define SOFTWARE_VERSION "\"0.9.2 February 12, 2024\""
 
 
 #define REV_500    500   // ESP32
@@ -92,7 +92,6 @@ void rapid_fire_task(void);                             // Run the Rapid Fire st
 /* 
  * freeRTOS Definitions 
  */
-//extern const TickType_t json_delay;                   // Poll the serial port at 10Hz
 
 /*
  *  Types
@@ -121,12 +120,12 @@ extern double        s_of_sound;
 extern const char*   names[];
 extern const char    to_hex[];
 extern unsigned int  face_strike;
-extern const char    nesw[];           // Cardinal Points
-extern unsigned int  is_trace;         // Tracing level(s)
-extern unsigned int  this_shot;        // Index into the shot array
+extern const char    nesw[];                  // Cardinal Points
+extern unsigned int  is_trace;                // Tracing level(s)
+extern unsigned int  this_shot;               // Index into the shot array
 extern unsigned int  shot_number;
-extern volatile unsigned long power_save;       // Power down timer
-extern volatile unsigned int run_state;         // IPC states 
-extern volatile unsigned long LED_timer;        // Turn off the LEDs when not in use
+extern volatile unsigned long power_save;     // Power down timer
+extern volatile unsigned int  run_state;      // IPC states 
+extern volatile unsigned long LED_timer;      // Turn off the LEDs when not in use
 
 #endif

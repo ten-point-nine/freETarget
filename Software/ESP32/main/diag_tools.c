@@ -126,59 +126,74 @@ void self_test
  * Test 0, Display the help
  */
     default:                // Undefined, show the tests
-    case T_HELP:                
-      printf("\r\n 1 - Digital inputs");
-      printf("\r\n 2 - Advance paper backer");
-      printf("\r\n 3 - LED brightness test");
-      printf("\r\n 4 - Status LED driver");
-      printf("\r\n 5 - Temperature and sendor test");
-      printf("\r\n 6 - DAC test");
-      printf("\r\n 7 - PCNT Test");
-      printf("\r\n 8 - Sensor POST test");
-      printf("\r\n 9 - AUX Port loopback");
-      printf("\r\n10 - Polled Target Test");
-      printf("\r\n11 - Interrupt Target Test");
-      printf("\r\n12 - Test WiFi as an Access Point");
-      printf("\r\n13 - Test WiFI as a station"); 
-      printf("\r\n14 - Enable the WiFi Server");
-      printf("\r\n15 - Loopback the TCPIP data");
-      printf("\r\n16 - Loopback AUX connector");
-      printf("\r\n17 - Turn the oscillator on and off");
-      printf("\r\n18 - Turn the RUN lines on and off");
-      printf("\r\n19 - pcnt(1) - Timers not running"); 
-      printf("\r\n20 - pcnt(2) - Timers start - stop together"); 
-      printf("\r\n21 - pcnt(3) - Timers free running"); 
-      printf("\r\n22 - pcnt(4) - Timers cleared"); 
+    case T_HELP:  
+      printf("\r\n 1 - Factory test");
+      printf("\r\n");              
+      printf("\r\n 10 - Digital inputs");
+      printf("\r\n 11 - Advance paper backer");
+      printf("\r\n 12 - LED brightness test");
+      printf("\r\n 13 - Status LED driver");
+      printf("\r\n 14 - Temperature and sendor test");
+      printf("\r\n 15 - DAC test");
+      printf("\r\n"); 
+      printf("\r\n20 - PCNT Test");
+      printf("\r\n21 - pcnt(1) - Timers not running"); 
+      printf("\r\n22 - pcnt(2) - Timers start - stop together"); 
+      printf("\r\n23 - pcnt(3) - Timers free running"); 
+      printf("\r\n24 - pcnt(4) - Timers cleared"); 
+      printf("\r\n25 - Turn the oscillator on and off");
+      printf("\r\n26 - Turn the RUN lines on and off");
+      printf("\r\n27 - Trigger NORTH from a function generator");
+      printf("\r\n"); 
+      printf("\r\n30 - AUX Port loopback");
+      printf("\r\n31 - Test WiFi as an Access Point");
+      printf("\r\n32 - Test WiFI as a station"); 
+      printf("\r\n33 - Enable the WiFi Server");
+      printf("\r\n34 - Loopback the TCPIP data");
+      printf("\r\n35 - Loopback WiFI");
+      printf("\r\n");
+      printf("\r\n40 - Sensor POST test");
+      printf("\r\n41 - Polled Target Test");
+      printf("\r\n42 - Interrupt Target Test");
+      printf("\r\n");
       printf("\r\n99 - Zapple Debug Monitor");
       printf("\r\n");
     break;
 
 /*
- * Test 1, Display GPIO inputs
+ * Test all of the hardware
+ */
+    case T_FACTORY: 
+      factory_test();
+      break;
+/*
+ * Display GPIO inputs
  */
     case T_DIGITAL: 
       digital_test();
       break;
 
 /*
- * Test 2, Advance the paper
+ * Advance the paper
  */
     case T_PAPER:
       paper_test();
       break;
 
 /*
- * Test 3, Set the LED bightness
+ * Set the LED bightness
  */
     case T_LED:
       printf("\r\nCycling the LED");
-      for (i=0; i <= 100; i++)
+      for (i=0; i <= 100; i+= 5)
       {
+        printf("%d   ", i);
         pwm_set(LED_PWM, i);       
         vTaskDelay(ONE_SECOND/10);
       }
-      for (i=100; i >= 0; i--)
+      for (i=100; i >= 0; i-=5)
       {
+        printf("%d   ", i);
         pwm_set(LED_PWM,i);       
         vTaskDelay(ONE_SECOND/10);
       }
@@ -186,28 +201,28 @@ void self_test
       break;
 
 /*
- * Test 4, Set status LEDs
+ * Set status LEDs
  */
     case T_STATUS:
       status_LED_test();
       break;
 
 /*
- * Test 5,  Analog In
+ * Analog In
  */
     case T_TEMPERATURE:
       analog_input_test();
       break;
 
 /*
- * Test 6, DAC
+ * DAC
  */
     case T_DAC:
       DAC_test();
       break;
 
 /*
- * Test 7, PCNT test
+ * PCNT test
  */
     case T_PCNT:
       pcnt_test(1);
@@ -216,56 +231,60 @@ void self_test
       pcnt_test(4);
       break;
 
+    case T_PCNT_CAL:
+      pcnt_cal();
+      break;
+
 /*
- *  Test 8: Sensor Trigger
+ *  Sensor Trigger
  */
     case T_SENSOR:
       POST_counters();
       break;
 
 /*
- *  Test 9: AUX Serial Port
+ *  AUX Serial Port
  */
     case T_AUX_SERIAL:
       serial_port_test();
       break;
 
 /*
- *  Test 10: Polled Target Test
+ *  Polled Target Test
  */
     case T_TARGET:
       polled_target_test();
       break;      
 /*
- *  Test 11: Polled Target Test
+ *  Interrupt Target Test
  */
     case T_TARGET_2:
       interrupt_target_test();
       break; 
 
 /*
- *  Test 12: Start WiFi AP
+ *  Start WiFi AP
  */
     case T_WIFI_AP:
       WiFi_AP_init();
       break; 
 
 /*
- *  Test 13: Start WiFi station
+ *  Start WiFi station
  */
     case T_WIFI_STATION:
       WiFi_station_init();
       break; 
 
 /*
- *  Test 14: Enable the WiFi Server
+ *  Enable the WiFi Server
  */
     case T_WIFI_SERVER:
       xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",      4096, NULL, 5, NULL);
       break; 
 
 /*
- *  Test 15: Send and receive something
+ *  Send and receive something
  */
     case T_WIFI_STATION_LOOPBACK:
       WiFi_station_init();
@@ -275,7 +294,7 @@ void self_test
       break; 
 
 /*
- *  Test 16: Send and receive something
+ *  Send and receive something
  */
     case T_WIFI_AP_LOOPBACK:
       WiFi_AP_init();
@@ -285,7 +304,7 @@ void self_test
       break; 
 
 /*
- *  Test 17: Cycle the 10MHz clock input
+ *  Cycle the 10MHz clock input
  */
     case T_CYCLE_CLOCK:
       printf("\r\nCycle 10MHz Osc 2:1 duty cycle\r\n");
@@ -298,7 +317,7 @@ void self_test
       }
       break; 
 /*
- *  Test 18: Turn the RUN lines on and off
+ *  Turn the RUN lines on and off
  */
     case T_RUN_ALL:
       printf("\r\nCycle RUN lines at 2:1 duty cycle\r\n");
@@ -315,7 +334,7 @@ void self_test
       break; 
 
 /*
- *  Rest 19-22 - Single PCNT test
+ *  Single PCNT test
  */
     case T_PCNT_STOP:
     case T_PCNT_SHORT:
@@ -331,6 +350,163 @@ void self_test
     run_state &= ~IN_TEST;              // Exit the test 
     freeETarget_timer_start();          // Start interrupts
     return;
+}
+/*-----------------------------------------------------
+ * 
+ * @function: factory_test()
+ * 
+ * @brief:    Test all the things we can test
+ * 
+ * @return:   None
+ * 
+ *-----------------------------------------------------
+ *
+ * This is the factory test to test all of the circuit 
+ * elements.
+ * 
+ *-----------------------------------------------------*/
+
+#define PASS_RUNNING 0x00FF
+#define PASS_A       0x0100
+#define PASS_B       0x0200
+#define PASS_MASK    (PASS_RUNNING | PASS_A | PASS_B)
+
+void factory_test(void)
+{
+  int i, percent;
+  int running;            // Bit mask from run flip flops
+  int dip;                // Input from DIP input
+  char ch;
+  char ABCD[] = "DCBA";   // DIP switch order
+  int  pass;              // Pass YES/NO
+  float volts[4];
+
+/*
+ *  Force the refernce voltages - Incase the board has been uninitialized
+ */
+  if ( (json_vref_lo == 0) || (json_vref_hi == 0))
+  {
+    volts[VREF_LO] = 1.25;
+    volts[VREF_HI] = 2.00;
+    volts[VREF_2]  = 0.00;
+    volts[VREF_3]  = 0.00;
+    DAC_write(volts);
+  }
+/*
+ * Ready to continue the test
+ */
+  printf("\r\nFactory Test");
+  arm_timers();
+  pass = 0;
+  percent = 0;
+
+/*
+ * Loop and poll the various inputs and output
+ */
+  while (1)
+  {
+    running = is_running();
+    if ( running == 0x00FF )
+    {
+      pass |= PASS_RUNNING;
+    }
+    printf("\r\nSens: ");
+      
+    for (i=0; i != 8; i++)
+    {
+      if ( i == 4 )
+      {
+        printf(" ");
+      }
+      if (running & (1<<i))
+      {
+        printf("%c", nesw[i] );
+      }
+      else
+      {
+        printf("-");
+      }
+    }
+      
+    dip = read_DIP();
+    printf("  DIP: "); 
+    if ( DIP_SW_A )
+    {
+      set_status_LED("-W-");
+      pass |= PASS_A;
+    }
+    else
+    {
+      set_status_LED("- -");
+    }
+
+    if ( DIP_SW_B )
+    {
+      set_status_LED("--W");
+      pass |= PASS_B;
+    }
+    else
+    {
+      set_status_LED("-- ");
+    }
+    
+    for (i=3; i >= 0; i--)
+    {
+      if ((dip & (1<<i)) == 0)
+      {
+        printf("%c", ABCD[i] );
+      }
+      else
+      {
+        printf("-");
+      }
+    }
+    
+    printf("  12V: %4.2fV", v12_supply());
+    printf("  BD Rv: %d", revision());
+    printf("  Temp: %4.2fC", temperature_C());
+    printf("  Humd: %4.2f%%", humidity_RH());
+    printf("  M+");
+    paper_on_off(true);
+    timer_delay(ONE_SECOND / 2);
+    printf("-");
+    paper_on_off(false);
+    set_LED_PWM_now(percent);
+    percent = (percent + 10) % 100;
+    
+    if ( pass == PASS_MASK ) 
+    {
+      printf("  PASS");
+    }
+    timer_delay(ONE_SECOND / 2);
+/*
+ *  See if there is any user controls 
+ */
+    if ( serial_available(CONSOLE) )
+    {
+      ch = serial_getch(CONSOLE);
+      switch (ch)
+      {
+        default:
+        case 'R':               // Reset the test
+        case 'r':
+          pass = 0;             // Reset the pass/fail
+          arm_timers();
+          break;
+
+        case 'X':               // Exit
+        case 'x':
+        case '!':
+          printf("\r\nDone");
+          return;
+      }
+    }
+  }
+
+/*
+ *  The test has been terminated
+ */
+
 }
 
 /*******************************************************************************
@@ -386,6 +562,8 @@ bool POST_counters(void)
 
   DLT(DLT_CRITICAL, printf("POST_counters()");)
   set_status_LED(LED_OFF);                 // Turn them all off
+  
+  return 1;
   
 /*
  *  Test 1, Make sure we can turn off the reference clock
