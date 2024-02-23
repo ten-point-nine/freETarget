@@ -240,55 +240,58 @@ void freeETarget_synchronous
  */
   while (1)
   {
-    for (i=0; i != N_TIMERS; i++)   // Refresh the timers.  Decriment in 10ms increments
+    if ( run_state & IN_OPERATION )
     {
-      if ( (timers[i] != 0)
-        && ( *timers[i] != 0 ) )
+      for (i=0; i != N_TIMERS; i++)   // Refresh the timers.  Decriment in 10ms increments
       {
-        (*timers[i])--;             // Decriment the timer
-        if ( *timers[i] == 0 )      // When it hits zero,
+        if ( (timers[i] != 0)
+          && ( *timers[i] != 0 ) )
         {
-          timers[i] = 0;            // Delete the timer so it isn't re triggered 
+          (*timers[i])--;             // Decriment the timer
+          if ( *timers[i] == 0 )      // When it hits zero,
+          {
+            timers[i] = 0;            // Delete the timer so it isn't re triggered 
+          }
         }
       }
-    }
 /*
  *  10 ms band
  */
-    token_cycle();
-    multifunction_switch_tick();
-    multifunction_switch();
-    drive_paper_tick();
-    if ( LED_timer == 0 )               // Check to see if the timer ran down
-    {
-      set_status_LED(LED_RXTX_OFF);     // If so Turn off the LEDs
-      LED_timer = 1;                    // and kill the timer
-    }
+      token_cycle();
+      multifunction_switch_tick();
+      multifunction_switch();
+      drive_paper_tick();
+      if ( LED_timer == 0 )               // Check to see if the timer ran down
+      {
+        set_status_LED(LED_RXTX_OFF);     // If so Turn off the LEDs
+        LED_timer = 1;                    // and kill the timer
+      }
 /*
  *  500 ms band
  */
-    if ( (cycle_count  %  BAND_500ms) == 0 )
-    {
-      commit_status_LEDs( toggle );
-      toggle ^= 1;
+      if ( (cycle_count  %  BAND_500ms) == 0 )
+      {
+        commit_status_LEDs( toggle );
+        toggle ^= 1;
 
-      tabata_task();
-      rapid_fire_task();
-    }
+        tabata_task();
+        rapid_fire_task();
+      }
 
 /*
  * 1000 ms band
  */
-    if ( (cycle_count % BAND_1000ms) == 0 )
-    {
-      bye();                                           // Dim the lights  
-      send_keep_alive();
-    }
+      if ( (cycle_count % BAND_1000ms) == 0 )
+      {
+        bye();                                           // Dim the lights  
+        send_keep_alive();
+      }
 
 /*
  * All done, prepare for the next cycle
  */
-    cycle_count++;
+      cycle_count++;
+    }
     vTaskDelay(TICK_10ms);                           // Delay 10ms
   }
 

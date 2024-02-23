@@ -111,7 +111,7 @@ const json_message_t JSON[] = {
                                                                                                                           + (POWER_TAP * 1000)
                                                                                                                           + (PAPER_SHOT * 100) 
                                                                                                                           + (ON_OFF * 10) 
-                                                                                                                          + (PAPER_SHOT) },  // Multifunction switch action
+                                                                                                                          + (PAPER_FEED) },  // Multifunction switch action
   {"\"MFS2\":",            &json_multifunction2,             0,                IS_INT32,  0,                NONVOL_MFS2,  (NO_ACTION*10000) 
                                                                                                                           + (NO_ACTION * 1000)
                                                                                                                           + (NO_ACTION * 100) 
@@ -219,6 +219,7 @@ void freeETarget_json
 
   while (1)
   {
+
 /*
  * See if anything is waiting and if so, add it in
  */

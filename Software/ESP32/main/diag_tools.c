@@ -111,9 +111,10 @@ void self_test
  *  Switch over to test mode 
  */
   run_state |= IN_TEST;             // Show the test is running 
-  while ( (run_state & IN_OPERATION) == IN_OPERATION )
+  
+  while ( run_state & IN_OPERATION )
   {
-    vTaskDelay(10);
+    vTaskDelay(10);                 // Wait for everyone else to turn off
   }
   freeETarget_timer_pause();        // Stop interrupts
 
@@ -395,7 +396,16 @@ void factory_test(void)
 /*
  * Ready to continue the test
  */
-  printf("\r\nFactory Test");
+  printf("\r\nFactory Test\r\n");
+  printf("  12V: %4.2fV", v12_supply());
+  vTaskDelay(1);
+  printf("  BD Rev: %d", revision());
+  vTaskDelay(1);
+  printf("  Temp: %4.2fC", temperature_C());
+  vTaskDelay(1);
+  printf("  Humd: %4.2f%%", humidity_RH());
+  vTaskDelay(1);
+
   arm_timers();
   pass = 0;
   percent = 0;
@@ -427,7 +437,7 @@ void factory_test(void)
         printf("-");
       }
     }
-      
+
     dip = read_DIP();
     printf("  DIP: "); 
     if ( DIP_SW_A )
@@ -449,7 +459,7 @@ void factory_test(void)
     {
       set_status_LED("-- ");
     }
-    
+
     for (i=3; i >= 0; i--)
     {
       if ((dip & (1<<i)) == 0)
@@ -461,24 +471,35 @@ void factory_test(void)
         printf("-");
       }
     }
-    
+
     printf("  12V: %4.2fV", v12_supply());
-    printf("  BD Rv: %d", revision());
+    vTaskDelay(1);
+    printf("  BD Rev: %d", revision());
+    vTaskDelay(1);
     printf("  Temp: %4.2fC", temperature_C());
+    vTaskDelay(1);
     printf("  Humd: %4.2f%%", humidity_RH());
+    vTaskDelay(1);
+
     printf("  M+");
     paper_on_off(true);
-    timer_delay(ONE_SECOND / 2);
+    vTaskDelay(ONE_SECOND/2);
     printf("-");
     paper_on_off(false);
+
     set_LED_PWM_now(percent);
-    percent = (percent + 10) % 100;
-    
+    printf("  LED: %d%% ", percent);
+    percent = percent + 25;
+    if ( percent > 100 )
+    {
+      percent = 0;
+    }
+
     if ( pass == PASS_MASK ) 
     {
       printf("  PASS");
     }
-    timer_delay(ONE_SECOND / 2);
+
 /*
  *  See if there is any user controls 
  */
@@ -501,6 +522,9 @@ void factory_test(void)
           return;
       }
     }
+
+    vTaskDelay(ONE_SECOND / 2);
+
   }
 
 /*

@@ -172,38 +172,37 @@ unsigned int  location;               // Sensor location
 
 void freeETarget_target_loop(void* arg)
 {
-  run_state |= IN_OPERATION;          // In operation 
-
   while(1)
   {
     if ( (run_state & IN_TEST) == IN_TEST)    // If in test, 
     {
       run_state &= ~ IN_OPERATION;           // Exit operation
+      vTaskDelay(ONE_SECOND);
       continue;
     }
+
+    run_state |= IN_OPERATION;          // In operation 
+
 /*
  * Cycle through the state machine
  */
-    else
+    switch (state)
     {
-      switch (state)
-      {
-        default:
-        case START:    // Start of the loop
-          power_save = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L;  //  Reset the timer
-          set_mode();
-          arm();
-          state = WAIT;
-          break;
+      default:
+        case START:                     // Start of the loop
+        power_save = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L;  //  Reset the timer
+        set_mode();
+        arm();
+        state = WAIT;
+        break;
     
-        case WAIT:  
-          if ( wait() == REDUCE )
-          {
-            reduce();
-            state = START;
-          }
-          break;
-      }
+      case WAIT:  
+        if ( wait() == REDUCE )
+        {
+          reduce();
+          state = START;
+        }
+        break;
     }
 /*
  * End of the loop. timeout till the next time
