@@ -381,6 +381,7 @@ void factory_test(void)
   char ABCD[] = "DCBA";   // DIP switch order
   int  pass;              // Pass YES/NO
   float volts[4];
+  int  motor_toggle;      // Toggle motor on an off
 
 /*
  *  Force the refernce voltages - Incase the board has been uninitialized
@@ -397,19 +398,11 @@ void factory_test(void)
  * Ready to continue the test
  */
   printf("\r\nFactory Test\r\n");
-  printf("  12V: %4.2fV", v12_supply());
-  vTaskDelay(1);
-  printf("  BD Rev: %d", revision());
-  vTaskDelay(1);
-  printf("  Temp: %4.2fC", temperature_C());
-  vTaskDelay(1);
-  printf("  Humd: %4.2f%%", humidity_RH());
-  vTaskDelay(1);
 
   arm_timers();
   pass = 0;
   percent = 0;
-
+  motor_toggle = 0;
 /*
  * Loop and poll the various inputs and output
  */
@@ -481,12 +474,18 @@ void factory_test(void)
     printf("  Humd: %4.2f%%", humidity_RH());
     vTaskDelay(1);
 
-    printf("  M+");
-    paper_on_off(true);
-    vTaskDelay(ONE_SECOND/2);
-    printf("-");
-    paper_on_off(false);
-
+    if ( motor_toggle )
+    {
+      printf("  M+");
+      paper_on_off(true);
+    }
+    else
+    {
+      printf("  M-");
+      paper_on_off(false);
+    }
+    motor_toggle ^= 1;
+    
     set_LED_PWM_now(percent);
     printf("  LED: %d%% ", percent);
     percent = percent + 25;
