@@ -22,6 +22,17 @@ namespace freETarget {
             string baud = Properties.Settings.Default.baudRate.ToString();
             board = Properties.Settings.Default.Board;
             lblPort.Text = "Board: " + board + "     Port: " + com + " @ " + baud;
+            if (Properties.Settings.Default.Board == frmMainWindow.Arduino) {
+                txtUploaderLocation.Text = @".\avrdude";
+                lblEsptoolExplain.Visible = false;
+                txtUploadConsole.Top = 67;
+            } else {
+                txtUploaderLocation.Text = "";
+                lblEsptoolExplain.Visible = true;
+                txtUploadConsole.Top = 79;
+            }
+
+
         }
 
         private void btnClose_Click(object sender, EventArgs e) {
@@ -54,18 +65,23 @@ namespace freETarget {
         }
 
         private void btnUpload_Click(object sender, EventArgs e) {
-            string avrPath = @".\avrdude\";
+            string path = txtUploaderLocation.Text;
+            if (path != "") { //if path is empty, rely on exe being on the system PATH environment variable
+                if (!path.EndsWith("\\")) {
+                    path+="\\";
+                }
+            }
             string com = Properties.Settings.Default.portName;
             string baud = Properties.Settings.Default.baudRate.ToString();
 
             using (System.Diagnostics.Process pProcess = new System.Diagnostics.Process()) {
                 if (Properties.Settings.Default.Board == frmMainWindow.Arduino) {
-                    pProcess.StartInfo.FileName = avrPath + "avrdude.exe";
-                    pProcess.StartInfo.Arguments = "-C" + avrPath + "avrdude.conf" + " "
+                    pProcess.StartInfo.FileName = path + "avrdude.exe";
+                    pProcess.StartInfo.Arguments = "-C" + path + "avrdude.conf" + " "
                                                     + "-v -patmega2560 -cwiring -P" + com + " -b" + baud + " -D" + " "
                                                     + "-Uflash:w:" + filePath + ":i";
                 } else {
-                    pProcess.StartInfo.FileName ="esptool";
+                    pProcess.StartInfo.FileName = path  + "esptool";
                     pProcess.StartInfo.Arguments = "-p "+com+" -b " + baud+ " " +
                         "--before default_reset " +
                         "--after hard_reset " +
@@ -78,17 +94,43 @@ namespace freETarget {
                 pProcess.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
                 pProcess.StartInfo.CreateNoWindow = true; //not diplay a windows
 
+                mainWindow.log("Launching: " + pProcess.StartInfo.FileName + " " + pProcess.StartInfo.Arguments);
+
                 pProcess.OutputDataReceived += new DataReceivedEventHandler(sortOutputHandler);
                 pProcess.ErrorDataReceived += new DataReceivedEventHandler(sortOutputHandler);
 
-                pProcess.Start();
+                try {
+                    btnClose.Enabled = false;
+                    btnBrowse.Enabled = false;
+                    btnUpload.Enabled= false;
+                    btnSelectFile.Enabled = false;
+                    Application.DoEvents();
+                    pProcess.Start();
+                } catch (Exception ex) {
+                    String s = ex.Message;
+                    if (Properties.Settings.Default.Board == frmMainWindow.Arduino) {
+                        s = "Could not start the external uploader tool - " + path + "avrdude.exe" + Environment.NewLine
+                            + "Make sure it is in the avrdude subdirectory." + Environment.NewLine + ex.Message;
+                    } else {
+                        s = "Could not start the external uploader tool - " + path + "esptool." + Environment.NewLine +
+                            "Make sure Python is installed in the system and " + Environment.NewLine +
+                            "that the esptool was installed with the 'pip install esptool' command." + Environment.NewLine + ex.Message;
+                    }
+                    MessageBox.Show(s, "Upload error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
 
                 pProcess.BeginOutputReadLine();
                 pProcess.BeginErrorReadLine();
 
                 while (!pProcess.HasExited) {
                     Application.DoEvents(); // This keeps your form responsive by processing events
+                   
                 }
+                btnClose.Enabled = true;
+                btnBrowse.Enabled = true;
+                btnUpload.Enabled = true;
+                btnSelectFile.Enabled= true;
             }
 
             Console.WriteLine("Upload finished");
@@ -105,6 +147,14 @@ namespace freETarget {
             }));
 
 
+        }
+
+        private void btnBrowse_Click(object sender, EventArgs e) {
+            folderBrowserDialog.SelectedPath = txtUploaderLocation.Text;
+            SendKeys.Send("{TAB}{TAB}{RIGHT}");
+            if (folderBrowserDialog.ShowDialog() == DialogResult.OK) {
+                txtUploaderLocation.Text = folderBrowserDialog.SelectedPath;
+            }
         }
     }
 }
