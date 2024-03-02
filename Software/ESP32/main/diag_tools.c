@@ -466,33 +466,32 @@ void factory_test(void)
     }
 
     printf("  12V: %4.2fV", v12_supply());
-    vTaskDelay(1);
-    printf("  BD Rev: %d", revision());
-    vTaskDelay(1);
+    printf("  Rev: %d", revision());
     printf("  Temp: %4.2fC", temperature_C());
-    vTaskDelay(1);
     printf("  Humd: %4.2f%%", humidity_RH());
-    vTaskDelay(1);
 
+    printf("  M");
     if ( motor_toggle )
     {
-      printf("  M+");
+      printf("+");
       paper_on_off(true);
     }
     else
     {
-      printf("  M-");
+      printf("-");
       paper_on_off(false);
     }
     motor_toggle ^= 1;
     
     set_LED_PWM_now(percent);
-    printf("  LED: %d%% ", percent);
+    printf("  LED: %3d%% ", percent);
     percent = percent + 25;
     if ( percent > 100 )
     {
       percent = 0;
     }
+
+    printf("V:%s:",SOFTWARE_VERSION);
 
     if ( pass == PASS_MASK ) 
     {
@@ -517,6 +516,7 @@ void factory_test(void)
         case 'X':               // Exit
         case 'x':
         case '!':
+          paper_on_off(true);
           printf("\r\nDone");
           return;
       }

@@ -121,7 +121,7 @@ const json_message_t JSON[] = {
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT32,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
   {"\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT32,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
   {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT32,  0,                NONVOL_PAPER_TIME,     500 },    // Set the paper advance time
-  {"\"PCNT\":",           &json_pcnt_latency,                0,                IS_INT32,  0,                NONVOL_PCNT_LATENCY,    10 },    // Interrupt latency for PCNT adjustment
+  {"\"PCNT_LATENCY\":",   &json_pcnt_latency,                0,                IS_INT32,  0,                NONVOL_PCNT_LATENCY,    33 },    // Interrupt latency for PCNT adjustment
   {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
   {"\"RAPID_COUNT\":",    &json_rapid_count,                 0,                IS_INT32,  0,                0,                       0 },    // Number of shots expected in series
   {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT32,  0,                0,                       0 },    // Enable the rapid fire fieature
@@ -219,6 +219,7 @@ void freeETarget_json
 
   while (1)
   {
+    IF_NOT(IN_OPERATION) { vTaskDelay(ONE_SECOND); continue;}
 
 /*
  * See if anything is waiting and if so, add it in
@@ -551,7 +552,7 @@ void show_echo(void)
 /*
  * Finish up with the special cases
  */
-  sprintf(s, "\n\r");                                                                    // Blank Line
+  sprintf(s, "\n\rStatus\r\n");                                                                    // Blank Line
   serial_to_all(s, ALL);
   
   multifunction_display();
@@ -559,7 +560,10 @@ void show_echo(void)
   sprintf(s, "\"TRACE\": %d, \n\r", is_trace);                                          // TRUE to if trace is enabled
   serial_to_all(s, ALL);
 
-  sprintf(s, "\"RUNNING_MINUTES\": %10.6f, \n\r", esp_timer_get_time()/100000.0/60.0);                        // On Time
+  sprintf(s, "\"RUNNING_MINUTES\": %10.6f, \n\r", esp_timer_get_time()/100000.0/60.0);  // On Time
+  serial_to_all(s, ALL);
+  
+  sprintf(s, "\"TIME_TO_SLEEP\": %4.2f, \n\r", (float)power_save/(float)(ONE_SECOND*60));                 // How long until we sleep
   serial_to_all(s, ALL);
   
   sprintf(s, "\"TEMPERATURE\": %4.2f, \n\r", temperature_C());                          // Temperature in degrees C
@@ -578,13 +582,22 @@ void show_echo(void)
   serial_to_all(s, ALL);
 
 
-  if ( json_token == TOKEN_NONE )
+  WiFi_my_ip_address(str_c);
+  sprintf(s, "\"WiFi_IP_ADDRESS\": \"%s:1090\", \n\r", str_c);   
+  serial_to_all(s, ALL);
+  if ( json_wifi_ssid[0] == 0 )                       // The SSID is undefined
   {
-      WiFi_my_ip_address(str_c);
-      sprintf(s, "\"WiFi_IP_ADDRESS\": \"%s:1090\", \n\r", str_c);                        // Print out the IP address
-      serial_to_all(s, ALL);
+    sprintf(s, "\"WiFI is an Access Point\",\n\r");    // Print out the IP address
+    serial_to_all(s, ALL);
   }
   else
+  {
+    sprintf(s, "\"Target connected to SSID: %s,\n\r", (char*)json_wifi_ssid[0]);   
+    serial_to_all(s, ALL);
+ 
+  }
+
+  if ( json_token == TOKEN_NONE )
   {
     sprintf(s, "\"TOKEN_RING\":  %d, \n\r", my_ring);                                     // My token ring address
     serial_to_all(s, ALL);

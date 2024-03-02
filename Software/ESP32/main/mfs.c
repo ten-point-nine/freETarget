@@ -136,7 +136,9 @@ static unsigned int switch_B_count;             // How long has the switch been 
  * Either switch set for target type switch
  *-----------------------------------------------------*/
 void multifunction_switch_tick(void)
- {
+{
+  IF_NOT(IN_OPERATION) return;
+
 /*
  * Figure out what switches are pressed
  */
@@ -173,8 +175,10 @@ void multifunction_switch_tick(void)
 
 
 void multifunction_switch(void)
- {
-    unsigned int  action;               // Action to happen
+{
+  unsigned int  action;               // Action to happen
+
+  IF_NOT(IN_OPERATION) return;
 
   if ( DIP_SW_A || DIP_SW_B )           // Do nothing if the switches are pressed
   {
@@ -288,6 +292,9 @@ static void sw_state
   
   DLT(DLT_INFO, printf("Switch action: %d", action);)
 
+/*
+ *  Act on the MFS setting(s) 
+ */
   switch (action)
   {
     case POWER_TAP:

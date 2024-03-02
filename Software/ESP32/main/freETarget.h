@@ -13,7 +13,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"0.9.3 February 22, 2024\""
+#define SOFTWARE_VERSION "\"0.9.5 March 2, 2024\""
 
 
 #define REV_500    500   // ESP32
@@ -31,7 +31,11 @@
 #define IN_STARTUP    0x0001                      // The software is in initialization
 #define IN_OPERATION  0x0002                      // The software is operational
 #define IN_TEST       0x0004                      // A self test has been selected (Suspend operation)
+#define IN_SLEEP      0x0008                      // The unit has powered down 
+#define IF_NOT(x) if ( (run_state & (x)) == 0) 
+#define IF_IN(x)  if ( (run_state & (x)) != 0) 
 
+#define ALL_OUT(format, who) {sprintf(format); serial_to_all(who);}
 
 /*
  * Options

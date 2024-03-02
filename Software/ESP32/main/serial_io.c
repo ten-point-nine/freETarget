@@ -124,7 +124,7 @@ void serial_io_init(void)
  *
  * 
  ******************************************************************************/
-unsigned int serial_available
+int serial_available
 (
   bool console,    // TRUE if reading console
   bool aux,        // TRUE if reading AUX port

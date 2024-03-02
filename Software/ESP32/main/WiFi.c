@@ -356,7 +356,7 @@ void WiFi_event_handler
 
 /*****************************************************************************
  *
- * @function: tcp_server_task()
+ * @function: WiFi_tcp_server_task()
  *
  * @brief: Synchorous task to manage the TCPIP Stack
  * 
@@ -400,8 +400,9 @@ void WiFi_tcp_server_task(void *pvParameters)
  *
  ******************************************************************************
  *
- * Synchronous task called from freeRTOS to interrogate the TCPIP stack and 
- * accept calls from clients
+ * If there is any data in the tcpip_queue_2_socket queue, this function 
+ * extracts the data and then loops through the active sockets to put the data
+ * out to the client.
  * 
  *******************************************************************************/
 static void tcpip_server_io(void)
@@ -440,7 +441,7 @@ static void tcpip_server_io(void)
 
 /*****************************************************************************
  *
- * @function: tcpip_socket_poll()
+ * @function: tcpip_socket_poll()  0-3
  *
  * @brief:    Tasks to poll the sockets
  * 
@@ -543,6 +544,24 @@ void tcpip_socket_poll_3(void* parameters)
     }
 }
 
+/*****************************************************************************
+ *
+ * @function: tcpip_accept_poll()
+ *
+ * @brief:    Tasks to poll waiting for an incoming connection
+ * 
+ * @return:   None
+ *
+ ******************************************************************************
+ *
+ * Once the WiFi has been set up, the target waits here for an incoming
+ * connection.
+ * 
+ * Once the connection has been made, the function determines the socket address
+ * and then looks for an empty entry in the socket list. The new socket is now
+ * added to the socket list and polled via the functions above.
+ *
+ *******************************************************************************/
 void tcpip_accept_poll(void* parameters)
 {
    char addr_str[128];

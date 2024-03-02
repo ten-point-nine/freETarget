@@ -16,7 +16,7 @@ void serial_to_all(char* s, bool console, bool aux, bool tcpip);  // Multipurpos
 void serial_putch(char ch, bool console, bool aux, bool tcpip);   // Output a single character
 char serial_gets(bool console, bool aux, bool tcpip);             // Read from all of the ports
 char serial_getch(bool console, bool aux, bool tcpip);            // Read the selected port
-unsigned int serial_available(bool console, bool aux, bool tcpip);// Find out how much is waiting for us
+int serial_available(bool console, bool aux, bool tcpip);         // Find out how much is waiting for us
 void serial_flush(bool console, bool aux, bool tcpip);            // Get rid of everything
 int tcpip_app_2_queue(char* buffer, int length);                  // Save for later output to the socket  
 int tcpip_queue_2_socket(char* buffer, int length);               // Take from queue and put to socket

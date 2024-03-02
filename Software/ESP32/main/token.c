@@ -140,6 +140,8 @@ void token_init(void)
  *-----------------------------------------------------*/
 void token_cycle(void)
 {
+  IF_NOT(IN_OPERATION) return;
+
   switch (json_token )
   {
     case TOKEN_NONE:

@@ -169,8 +169,9 @@ void set_LED_PWM_now
   
   DLT(DLT_INFO, printf("new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);)
 
-  old_LED_percent = new_LED_percent;
   pwm_set(LED_PWM, new_LED_percent);  // Write the value out
+  
+  old_LED_percent = new_LED_percent;
   
   return;
 }

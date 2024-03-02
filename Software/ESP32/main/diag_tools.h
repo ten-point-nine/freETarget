@@ -64,6 +64,7 @@ void    factory_test(void);                             // Test the hardware in 
 #define LED_RESET         "   "             // Force them all off
 #define LED_GOOD          "G  "             // The software has started but not in shot mode
 #define LED_READY         "g  "             // The shot is ready to go.  Blik to show we are alive
+#define LED_BYE           "B  "             // Go to sleep
 #define LED_READY_OFF     " --"             // Turn off the READY light
 
 #define LED_WIFI_OFF      "- -"             // The WiFi is not operational

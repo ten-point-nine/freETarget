@@ -144,53 +144,54 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
   BaseType_t high_task_awoken = pdFALSE;
   unsigned int pin;                             // Value read from the port
 
-  if ( run_state & IN_OPERATION )
-  {
+  IF_NOT(IN_OPERATION) return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISR 
+
 /*
  * Decide what to do if based on what inputs are present
  */
-    pin = is_running();                         // Read in the RUN bits
+  pin = is_running();                         // Read in the RUN bits
 
 /*
  * Read the shot based on the ISR state
  */
-    switch (isr_state)
-    {
-      case PORT_STATE_IDLE:                       // Idle, Wait for something to show up
-        if ( pin != 0 )                           // Something has triggered
-        { 
-          isr_timer = MAX_WAIT_TIME;              // Start the wait timer
-          isr_state = PORT_STATE_WAIT;            // Got something wait for all of the sensors tro trigger
-        }
-        break;
+  switch (isr_state)
+  {
+    case PORT_STATE_IDLE:                       // Idle, Wait for something to show up
+      if ( pin != 0 )                           // Something has triggered
+      { 
+        isr_timer = MAX_WAIT_TIME;              // Start the wait timer
+        isr_state = PORT_STATE_WAIT;            // Got something wait for all of the sensors tro trigger
+      }
+      break;
           
-      case PORT_STATE_WAIT:                       // Something is present, wait for all of the inputs
-        if ( (pin == RUN_MASK)                    // We have all of the inputs
-            || (isr_timer == 0) )                 // or ran out of time.  Read the timers and restart
-         { 
-          aquire();                               // Read the counters
-          isr_timer = json_min_ring_time;         // Reset the timer
-          isr_state = PORT_STATE_DONE;            // and wait for the all clear
-        }
-        break;
+    case PORT_STATE_WAIT:                       // Something is present, wait for all of the inputs
+      if ( (pin == RUN_MASK)                    // We have all of the inputs
+          || (isr_timer == 0) )                 // or ran out of time.  Read the timers and restart 
+      { 
+        aquire();                               // Read the counters
+
+        isr_timer = json_min_ring_time;         // Reset the timer
+        isr_state = PORT_STATE_DONE;            // and wait for the all clear
+      }
+      break;
       
-      case PORT_STATE_DONE:                       // Waiting for the ringing to stop
-        if ( pin != 0 )                           // Something got latched
+    case PORT_STATE_DONE:                       // Waiting for the ringing to stop
+      if ( pin != 0 )                           // Something got latched
+      {
+        isr_timer = json_min_ring_time;
+        stop_timers();                          // Reset and try later
+      }
+      else
+      {
+        if ( isr_timer == 0 )                   // Make sure there is no rigning
         {
-          isr_timer = json_min_ring_time;
-          stop_timers();                          // Reset and try later
-        }
-        else
-        {
-          if ( isr_timer == 0 )                   // Make sure there is no rigning
-          {
-            arm_timers();                         // and arm for the next time
-            isr_state = PORT_STATE_IDLE;          // and go back to idle
-          } 
-        }
-        break;
-    }
+          arm_timers();                         // and arm for the next time
+          isr_state = PORT_STATE_IDLE;          // and go back to idle
+        } 
+      }
+      break;
   }
+
 
 /*
  * Return from interrupts
@@ -240,62 +241,58 @@ void freeETarget_synchronous
  */
   while (1)
   {
-    if ( run_state & IN_OPERATION )
+    for (i=0; i != N_TIMERS; i++)   // Refresh the timers.  Decriment in 10ms increments
     {
-      for (i=0; i != N_TIMERS; i++)   // Refresh the timers.  Decriment in 10ms increments
+      if ( (timers[i] != 0)
+        && ( *timers[i] != 0 ) )
       {
-        if ( (timers[i] != 0)
-          && ( *timers[i] != 0 ) )
+        (*timers[i])--;             // Decriment the timer
+        if ( *timers[i] == 0 )      // When it hits zero,
         {
-          (*timers[i])--;             // Decriment the timer
-          if ( *timers[i] == 0 )      // When it hits zero,
-          {
-            timers[i] = 0;            // Delete the timer so it isn't re triggered 
-          }
+          timers[i] = 0;            // Delete the timer so it isn't re triggered 
         }
       }
+    }
 /*
  *  10 ms band
  */
-      token_cycle();
-      multifunction_switch_tick();
-      multifunction_switch();
-      drive_paper_tick();
-      if ( LED_timer == 0 )               // Check to see if the timer ran down
-      {
-        set_status_LED(LED_RXTX_OFF);     // If so Turn off the LEDs
-        LED_timer = 1;                    // and kill the timer
-      }
+    token_cycle();
+    multifunction_switch_tick();
+    multifunction_switch();
+    drive_paper_tick();
+    if ( LED_timer == 0 )               // Check to see if the timer ran down
+    {
+      set_status_LED(LED_RXTX_OFF);     // If so Turn off the LEDs
+      LED_timer = 1;                    // and kill the timer
+    }
 /*
  *  500 ms band
  */
-      if ( (cycle_count  %  BAND_500ms) == 0 )
-      {
-        commit_status_LEDs( toggle );
-        toggle ^= 1;
-
-        tabata_task();
-        rapid_fire_task();
-      }
+    if ( (cycle_count  %  BAND_500ms) == 0 )
+    {
+      toggle ^= 1;
+      commit_status_LEDs( toggle );
+      tabata_task();
+      rapid_fire_task();
+    }
 
 /*
  * 1000 ms band
  */
-      if ( (cycle_count % BAND_1000ms) == 0 )
-      {
-        bye();                                           // Dim the lights  
-        send_keep_alive();
-      }
+    if ( (cycle_count % BAND_1000ms) == 0 )
+    {
+      bye();                                           // Dim the lights  
+      send_keep_alive();
+    }
 
 /*
  * All done, prepare for the next cycle
  */
-      cycle_count++;
-    }
+    cycle_count++;
     vTaskDelay(TICK_10ms);                           // Delay 10ms
   }
-
 }
+
 /*-----------------------------------------------------
  * 
  * @function: timer_new()

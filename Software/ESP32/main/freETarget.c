@@ -146,7 +146,6 @@ void freeETarget_init(void)
  * Start the tasks running
  */
   run_state &= ~IN_STARTUP;               // Exit startup 
-
   return;
 }
 
@@ -174,14 +173,14 @@ void freeETarget_target_loop(void* arg)
 {
   while(1)
   {
-    if ( (run_state & IN_TEST) == IN_TEST)    // If in test, 
+    IF_IN( IN_SLEEP | IN_TEST)        // If Not in operation, 
     {
-      run_state &= ~ IN_OPERATION;           // Exit operation
+      run_state &= ~ IN_OPERATION;    // Exit operation
       vTaskDelay(ONE_SECOND);
       continue;
     }
 
-    run_state |= IN_OPERATION;          // In operation 
+    run_state |= IN_OPERATION;        // In operation 
 
 /*
  * Cycle through the state machine
@@ -199,8 +198,7 @@ void freeETarget_target_loop(void* arg)
       case WAIT:  
         if ( wait() == REDUCE )
         {
-          reduce();
-          state = START;
+          state = reduce();
         }
         break;
     }
@@ -271,8 +269,6 @@ void freeETarget_target_loop(void* arg)
  * 
  * This initializes the variables.
  * 
- * The illumination LED is set depending on whether or not 
- * the Tabata or Rapid fire feature is enabled
  *
  *--------------------------------------------------------------*/
 unsigned int arm(void)
@@ -285,7 +281,6 @@ unsigned int arm(void)
   sensor_status = is_running();     // and immediatly read the status
   if ( sensor_status == 0 )         // After arming, the sensor status should be zero
   { 
-    DLT(DLT_APPLICATION, printf("Waiting...");)
     return WAIT;                   // Fall through to WAIT
   }
 
@@ -294,54 +289,47 @@ unsigned int arm(void)
  */
   if ( sensor_status & 0x80  )
   {
-    printf("\r\n{ \"Fault\": \"NORTH_HI\" }");
     set_status_LED(LED_NORTH_FAILED);           // Fault code North
     vTaskDelay(ONE_SECOND);
   }
   if ( sensor_status & 0x40  )
   {
-    printf("\r\n{ \"Fault\": \"EAST_HI\" }");
     set_status_LED(LED_EAST_FAILED);           // Fault code East
     vTaskDelay(ONE_SECOND);
   }
   if ( sensor_status & 0x20)
   {
-    printf("\n\r{ \"Fault\": \"SOUTH_HI\" }");
     set_status_LED(LED_SOUTH_FAILED);         // Fault code South
     vTaskDelay(ONE_SECOND);
   }
   if ( sensor_status & 0x10)
   {
-    printf("\r\n{ \"Fault\": \"WEST_HI\" }");
     set_status_LED(LED_WEST_FAILED);         // Fault code West
     vTaskDelay(ONE_SECOND);
   }
   if ( sensor_status & 0x08  )
   {
-    printf("\r\n{ \"Fault\": \"NORTH_LO\" }");
     set_status_LED(LED_NORTH_FAILED);           // Fault code North
     vTaskDelay(ONE_SECOND);
   }
   if ( sensor_status & 0x04  )
   {
-    printf("\r\n{ \"Fault\": \"EAST_LO\" }");
     set_status_LED(LED_EAST_FAILED);           // Fault code East
     vTaskDelay(ONE_SECOND);
   }
   if ( sensor_status & 0x02)
   {
-    printf("\n\r{ \"Fault\": \"SOUTH_LO\" }");
     set_status_LED(LED_SOUTH_FAILED);         // Fault code South
     vTaskDelay(ONE_SECOND);
   }
   if ( sensor_status & 0x01)
   {
-    printf("\r\n{ \"Fault\": \"WEST_LO\" }");
     set_status_LED(LED_WEST_FAILED);         // Fault code West
     vTaskDelay(ONE_SECOND);
   }
+
 /*
- * Got an error, try to arm again
+ * Finished displaying the error so trying again
  */
   return WAIT;
 }
@@ -595,6 +583,8 @@ void tabata_task(void)
 {
   char s[32];
 
+  IF_NOT(IN_OPERATION) return;
+
 /*
  * Reset the variables based on the arguements
  */
@@ -744,6 +734,8 @@ void rapid_fire_task(void)
 {
   char s[32];
 
+  IF_NOT(IN_OPERATION) return;
+
 /*
  * Reset the variables based on the arguements
  */
@@ -840,13 +832,16 @@ void bye(void)
       json_tabata_enable = false;     // Turn off any automatic cycles 
       json_rapid_enable = false;
       set_LED_PWM(0);                 // Going to sleep 
+      set_status_LED(LED_BYE);
       serial_flush(ALL);              // Purge the com port
+      run_state &= ~IN_OPERATION;     // Take the system out of operating mode
+      run_state |= IN_SLEEP;          // Put it to sleep 
       bye_state = BYE_HOLD;
       break;
 
     case BYE_HOLD:                    // Loop waiting for something to happen
-      if ( (DIP_SW_A != 0)            // Wait for the switch to be pressed
-        || (DIP_SW_B != 0)            // Or the switch to be pressed
+      if ( (DIP_SW_A )                // Wait for the switch to be pressed
+        || (DIP_SW_B )                // Or the switch to be pressed
         || ( serial_available(ALL) != 0)// Or a character to arrive
         || ( is_running() != 0) )     // Or a shot arrives
       {
@@ -855,8 +850,8 @@ void bye(void)
       break;
 
     case BYE_START:
-      if (  (DIP_SW_A == 0)           // Wait here for both switches to be released
-        && ( DIP_SW_B == 0 ) )
+      if (  !(DIP_SW_A)               // Wait here for both switches to be released
+        && !(DIP_SW_B) )
       {
         hello();
         bye_state = BYE_BYE;
@@ -887,15 +882,16 @@ void hello(void)
 {
   char str[128];
 
+/*
+ * Woken up again.  Turn things back on
+ */  
   sprintf(str, "{\"Hello_World\":0}");
   serial_to_all(str, ALL);
-  
-/*
- * Woken up again
- */  
+  set_status_LED(LED_READY);
   set_LED_PWM_now(json_LED_PWM);
-  power_save = json_power_save * (unsigned long)ONE_SECOND * 60L;   // and reset the power save time
-  
+  timer_new(&power_save, json_power_save * (unsigned long)ONE_SECOND * 60L);
+  run_state &= ~IN_SLEEP;       // Out of sleep and back in operation
+  run_state |= IN_OPERATION;
   return;
 }
 

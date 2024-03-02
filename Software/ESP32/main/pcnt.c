@@ -15,19 +15,21 @@
  * 
  ***************************************************************************/
 #include "stdbool.h"
-#include "diag_tools.h"
 #include "driver/pulse_cnt.h"
 #include "driver/gpio.h"
 #include "driver/timer.h"
-#include "driver/ledc.h"
-#include "led_strip.h"
-#include "led_strip_types.h"
+#include "nvs_flash.h"
+#include "nvs.h"
+#include "nonvol.h"
 
 #include "freETarget.h"
+#include "diag_tools.h"
 #include "gpio_define.h"
 #include "pcnt.h"
 #include "timer.h"
 #include "serial_io.h"
+#include "json.h"
+#include "dac.h"
 
 /*
  *  Working variables
@@ -364,27 +366,34 @@ void pcnt_test
  * 
  **************************************************************************
  *
+ * The function sets the high and low trip points to the same value.  When
+ * a trip occurs, the high value is read a tiny bit after the start, with 
+ * the time delay corresponding to the interrupt latencey. Thus the latency
+ * and the time correction can be read directly as the average NORTH_HI time.
+ * 
  * The NORTH sensor is driven from a triangle wave and the time delay in
  * the NORTH_HI counter is printed on the display.
- * 
- * The NORTH_HI counter should be steady and can be used to estimate the 
- * interrupt latentcy on the NORTH GPIO line.
  *
- **************************************************************************/     
-#define NORTH_HL (BIT_NORTH_HI + BIT_NORTH_LO)
+ **************************************************************************/
+#define NORTH_HI_DIP 0x80
 
 void pcnt_cal(void)
 {
   int north_min, north_max;               // Running statistics
   int north_hi, north_average;            // Read from counters
-  int count;
-
-  printf("\r\nPCNT-CAL  Display triggering jitter");
+  int count;                              // Number of samples in average
+  char ch;
+  float value[] = { 2.0, 2.0, 0.0, 0.0};   // Set both trip points to 2 volts 
 
   north_min     = 10000;
   north_max     = 0;
   north_average = 0;
   count         = 0;
+  
+  DAC_write(value);                       // Set both trip points to the same value 
+
+  printf("\r\nPCNT-CAL  Display triggering jitter.");
+  printf("\r\n! to exit, R to reset");
 
 /*
  *  Setup the hardware
@@ -402,44 +411,39 @@ void pcnt_cal(void)
  */
   while (1)
   {
-    if ( serial_available(CONSOLE) != 0 )
-    {
-      if ( serial_getch(CONSOLE) == '!' )
-      {
-        break;
-      }
-
-      north_min = 10000;                        // Anything else start over
-      north_max = 0;
-      north_average = 0;
-      count = 0;
-    }
-
-/*
- *  Wait here until the input signal is LOW
- */
-    gpio_set_level(STOP_N, 0);                  // Put the latches into the meta-stable state 
-     while ( (is_running() & NORTH_HL) != 0x0 )
-    {
-      continue;                                 // Wait for both comparitors to go low
-    }
-    while ( (is_running() & NORTH_HL) != NORTH_HL ) // Read the inputs directly
-    {
-      continue;                                 // And wait for both comparitors to go high
-    }
-    while ( (is_running() & NORTH_HL) != 0x0 )
-    {
-      continue;                                 // Wait for both comparitors to go low
-    }
-    gpio_set_level(STOP_N, 1);                  // Take it out of metastable
     pcnt_clear();                               // and clear the counters
-
 /*
- * Trigger the timer and wait for a reading 
+ * Wait for a reading to be triggered
  */
-    while ((is_running() & NORTH_HL) != NORTH_HL )// Should trigger almost instantly
+    while ((is_running() & NORTH_HI_DIP) != NORTH_HI_DIP )// Should trigger almost instantly
     {
-      continue;
+      if ( serial_available(CONSOLE) != 0 )       // See if there is any console iput
+      {
+
+        ch = serial_getch(CONSOLE);
+        if ( ch == '!' )                          // Exit
+        {
+          printf("\r\nSave this correction (y/n)?");
+          while ( serial_available(CONSOLE) == 0 )
+          {
+            continue;
+          }
+          ch = serial_getch(CONSOLE);
+          if ( (ch == 'Y') || (ch == 'y') )
+          {
+            json_pcnt_latency = north_average/count;
+            nvs_set_i32(my_handle, NONVOL_PCNT_LATENCY, json_pcnt_latency);
+            printf("\r\nSaved");
+          }
+
+          printf("\r\nDone\r\n");
+          return;
+        }
+        north_min = 10000;                        // Anything else start over
+        north_max = 0;
+        north_average = 0;
+        count = 0;
+      }
     }
 
 /*
@@ -461,7 +465,7 @@ void pcnt_cal(void)
 /*
  *  Display the results and wait before turning on the timers again
  */
-    printf("\r\nnorth_hi: %d  north_avg: %d  north_min: %d   north_max: %d   diff: %d", north_hi, north_average/count, north_min, north_max, (north_max - north_min));
+    printf("\r\nnorth_hi: %d  north_avg: %d  north_min: %d   north_max: %d   north_hi-avg: %d", north_hi, north_average/count, north_min, north_max, (north_hi - (north_average/count)));
     vTaskDelay(ONE_SECOND/2);
   }
 
