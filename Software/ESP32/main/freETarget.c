@@ -136,7 +136,6 @@ void freeETarget_init(void)
  */ 
   show_echo();
   set_LED_PWM(json_LED_PWM);
-  set_status_LED(LED_READY);              // to a client, then the RDY light is steady on
   serial_flush(ALL);                      // Get rid of everything
   this_shot = 0;                          // Clear out any junk
   last_shot = 0;
@@ -171,6 +170,10 @@ unsigned int  location;               // Sensor location
 
 void freeETarget_target_loop(void* arg)
 {
+
+  DLT(DLT_CRITICAL, printf("freeETarget_target_loop()");)
+  set_status_LED(LED_READY);
+
   while(1)
   {
     IF_IN( IN_SLEEP | IN_TEST)        // If Not in operation, 
@@ -181,6 +184,7 @@ void freeETarget_target_loop(void* arg)
     }
 
     run_state |= IN_OPERATION;        // In operation 
+
 
 /*
  * Cycle through the state machine

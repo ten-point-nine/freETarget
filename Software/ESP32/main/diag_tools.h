@@ -63,7 +63,7 @@ void    factory_test(void);                             // Test the hardware in 
 #define LED_HELLO_WORLD   "RWB"             // Hello World
 #define LED_RESET         "   "             // Force them all off
 #define LED_GOOD          "G  "             // The software has started but not in shot mode
-#define LED_READY         "g  "             // The shot is ready to go.  Blik to show we are alive
+#define LED_READY         "g  "             // The shot is ready to go.  Blink to show we are alive
 #define LED_BYE           "B  "             // Go to sleep
 #define LED_READY_OFF     " --"             // Turn off the READY light
 
@@ -86,7 +86,7 @@ void    factory_test(void);                             // Test the hardware in 
 #define LED_NORTH_FAILED   "RRR"            // North sensor failed
 #define LED_EAST_FAILED    "RRG"            // East sensor failed
 #define LED_SOUTH_FAILED   "RRB"            // South sensor failed
-#define LED_WEST_FAILED    "RRY"            // 3 West sensor failed
+#define LED_WEST_FAILED    "RRY"            // West sensor failed
 
 #define LED_MISS           "RGR"            // Shot was detected as a miss
 #define LED_FAIL_B         "RGG"            // 

@@ -169,7 +169,6 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
           || (isr_timer == 0) )                 // or ran out of time.  Read the timers and restart 
       { 
         aquire();                               // Read the counters
-
         isr_timer = json_min_ring_time;         // Reset the timer
         isr_state = PORT_STATE_DONE;            // and wait for the all clear
       }
@@ -218,7 +217,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
  * 
  * IMPORTANT
  * 
- * timers are deleted when they expire
+ * timers are NOT deleted when they expire.
  * 
  *-----------------------------------------------------*/
 #define TICK_10ms                1       // 1 TICK_10ms = 10 ms
@@ -236,6 +235,7 @@ void freeETarget_synchronous
   unsigned int toggle =0;
   unsigned int i;
 
+  DLT(DLT_CRITICAL, printf("freeETarget_synchronous()");)
 /*
  *  Decrement the timers on a 10ms (100Hz) interval
  */
@@ -247,10 +247,6 @@ void freeETarget_synchronous
         && ( *timers[i] != 0 ) )
       {
         (*timers[i])--;             // Decriment the timer
-        if ( *timers[i] == 0 )      // When it hits zero,
-        {
-          timers[i] = 0;            // Delete the timer so it isn't re triggered 
-        }
       }
     }
 /*

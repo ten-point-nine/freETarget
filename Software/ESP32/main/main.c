@@ -15,6 +15,7 @@
 #include "timer.h"
 #include "serial_io.h"
 #include "wifi.h"
+#include "diag_tools.h"
 
 void app_main(void)
 {
@@ -35,7 +36,7 @@ void app_main(void)
 
    xTaskCreate(freeETarget_json,        "json_task",                 4096, NULL, 15, NULL);
    vTaskDelay(1);
-#if(0)
+
    xTaskCreate(tcpip_socket_poll_0,     "tcpip_socket_poll_0",       4096, NULL,  5, NULL);
    vTaskDelay(1);
    xTaskCreate(tcpip_socket_poll_1,     "tcpip_socket_poll_1",       4096, NULL,  5, NULL);
@@ -49,10 +50,8 @@ void app_main(void)
    vTaskDelay(1);
    xTaskCreate(tcpip_accept_poll,       "tcpip_accept_poll",         4096, NULL,  2, NULL);
    vTaskDelay(1);
-#endif
 
    freeETarget_timer_init();
 
-   printf("\r\nRunning");
-   printf("\r\n");
+   DLT(DLT_CRITICAL, printf("Running");)
 }

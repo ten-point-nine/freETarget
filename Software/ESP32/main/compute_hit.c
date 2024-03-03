@@ -749,16 +749,17 @@ static void remap_target
   dy = 0.0;
 
   new_target_t* ptr;               // Bull pointer
-  
-  DLT(DLT_DIAG, printf("remap_target x: %4.2fmm  y: %4.2fmm", *x, *y); )
 
-/*
- * Find the closest bull
- */
   if ( (json_target_type <= 1) || ( json_target_type > sizeof(ptr_list)/sizeof(new_target_t*) ) ) 
   {
     return;                         // Check for limits
   }
+
+/*
+ * Find the closest bull
+ */
+  DLT(DLT_DIAG, printf("remap_target x: %4.2fmm  y: %4.2fmm", *x, *y); )
+
   ptr = ptr_list[json_target_type];
   if ( ptr == 0 )                   // Check for unassigned targets
   {

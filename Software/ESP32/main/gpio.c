@@ -119,10 +119,7 @@ void arm_timers(void)
   gpio_intr_enable(RUN_SOUTH_HI);
   gpio_intr_enable(RUN_WEST_HI);
   gpio_set_level(OSC_CONTROL, OSC_ON);        // Turn on the oscillator
-  for (waste = 0; waste != 10000; waste++)
-  {
-    continue;
-  }
+
   gpio_set_level(STOP_N, 1);                  // Then enable it
   return;
 }

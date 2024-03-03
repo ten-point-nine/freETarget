@@ -182,6 +182,11 @@ void set_LED_PWM                                  // Theatre lighting
   int new_LED_percent                            // Desired LED level (0-100%)
   )
 {
+  if ( new_LED_percent == old_LED_percent )
+  {
+    return;
+  }
+
   DLT(DLT_INFO, printf("new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);)
 
 /*
@@ -230,7 +235,7 @@ void set_LED_PWM                                  // Theatre lighting
  *  
  *--------------------------------------------------------------*/
 //                                       0      1  2  3  4  5  6  7  8  9   A   B   C   D   E   F
-const static unsigned int version[] = {REV_500, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+const static unsigned int version[] = {REV_520, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
   
 unsigned int revision(void)
 {

@@ -560,6 +560,9 @@ void show_echo(void)
   sprintf(s, "\"TRACE\": %d, \n\r", is_trace);                                          // TRUE to if trace is enabled
   serial_to_all(s, ALL);
 
+  sprintf(s, "\"RUN_STATE\": %d, \n\r", run_state);                                          // TRUE to if trace is enabled
+  serial_to_all(s, ALL);
+
   sprintf(s, "\"RUNNING_MINUTES\": %10.6f, \n\r", esp_timer_get_time()/100000.0/60.0);  // On Time
   serial_to_all(s, ALL);
   
@@ -572,15 +575,14 @@ void show_echo(void)
   sprintf(s, "\"RELATIVE_HUMIDITY\": %4.2f, \n\r", humidity_RH());
   serial_to_all(s, ALL);
 
-  sprintf(s, "\"SPEED_SOUND\": %4.2f, \n\r", speed_of_sound(temperature_C(), humidity_RH()));
+  sprintf(s, "\"SPEED_OF_SOUND\": %4.2f, \n\r", speed_of_sound(temperature_C(), humidity_RH()));
   serial_to_all(s, ALL);
 
-  sprintf(s, "\"V_12_LED\": %4.2f, \n\r", v12_supply());                                            // 12 Volt LED supply
+  sprintf(s, "\"V12\": %4.2f, \n\r", v12_supply());                                            // 12 Volt LED supply
   serial_to_all(s, ALL);
   
   sprintf(s, "\"TIMER_COUNT\": %d, \n\r", (int)(SHOT_TIME * OSCILLATOR_MHZ));             // Maximum number of clock cycles to record shot (target dependent)
   serial_to_all(s, ALL);
-
 
   WiFi_my_ip_address(str_c);
   sprintf(s, "\"WiFi_IP_ADDRESS\": \"%s:1090\", \n\r", str_c);   
