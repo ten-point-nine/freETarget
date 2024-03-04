@@ -186,40 +186,7 @@ unsigned int compute_hit
     for (i=N; i <= W; i++) printf("%s: %4.2f ", which_one[i], (double)s[i].count / ((double)OSCILLATOR_MHZ));
   }
   )
-#if(0)
 
-/*
- * Compensate for sound attenuation over a long distance
- * 
- * For large targets the sound will attenuate between the closest and furthest sensor.  For small targets this is negligable, but for a Type 12
- * target the difference can be measured in microseconds.  This loop subtracts an function of the distance between the closest and 
- * current sensor.
- * 
- * The value of SOUND_ATTENUATION is found by analyzing the closest and furthest traces
- * 
- * From tests, the error was 7us over a 700us delay.  Since sound attenuates as the square of distance, this is 
- */
-  for (i=N; i <= W; i++)
-  {
-    printf("\r\n%s %4.2f", which_one[i], s[i].count);
-    x = (double)s[i].count;             // Time difference in clock ticks
-    x = x / OSCILLATOR_MHZ;             // Convert to a time in us
-    x = x * x;                          // Dopper's inverse Square
-    x = x * json_doppler;               // Compensation in us
-    x = x * OSCILLATOR_MHZ;             // Compensation in clock ticks
-    s[i].count -= (int)x;               // Add in the correction
-  }
-
-  DLT(DLT_DIAG, 
-  {
-    printf("Compensate Counts       ");
-    for (i=N; i <= W; i++)
-    {
-     printf("%s:%4.2f  ", which_one[i], (double)s[i].count / ((double)OSCILLATOR_MHZ));
-    }
-  }
-  )
-#endif
 /*
  * Fill up the structure with the counter geometry
  */
@@ -568,7 +535,9 @@ void send_score
 #if ( S_TIMERS )
   if ( json_token == TOKEN_NONE )
   {
-    sprintf(str, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)s[N].count, (int)s[E].count, (int)s[S].count, (int)s[W].count);
+    sprintf(str, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d ", (int)s[N].count, (int)s[E].count, (int)s[S].count, (int)s[W].count);
+    serial_to_all(str, ALL);
+    sprintf(str, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)shot->timer_count[N+4], (int)shot->timer_count[E+4], (int)shot->timer_count[S+4], (int)shot->timer_count[W+4]);
     serial_to_all(str, ALL);
   }
 #endif

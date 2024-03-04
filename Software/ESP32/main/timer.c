@@ -232,7 +232,7 @@ void freeETarget_synchronous
 )
 {
   unsigned int cycle_count = 0;
-  unsigned int toggle =0;
+  unsigned int toggle = 0;
   unsigned int i;
 
   DLT(DLT_CRITICAL, printf("freeETarget_synchronous()");)
@@ -259,6 +259,7 @@ void freeETarget_synchronous
     if ( LED_timer == 0 )               // Check to see if the timer ran down
     {
       set_status_LED(LED_RXTX_OFF);     // If so Turn off the LEDs
+      timer_delete(&LED_timer);
       LED_timer = 1;                    // and kill the timer
     }
 /*
@@ -355,7 +356,7 @@ int timer_delete
   {
     if ( timers[i] == old_timer )   // Found the existing timer
     {
-      timers[i] = 0;                // Add it in
+      timers[i] = 0;                // Remove the pointer
       return 1;
     }
   }

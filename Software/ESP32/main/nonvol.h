@@ -30,7 +30,6 @@ void restore_nonvol(void);                        // Copyt the nonvol back
 
 #define NONVOL_INIT           "NONVOL_INIT"    // Show when the INIT is done
 #define NONVOL_CALIBRE_X10    "CALIBRE_X10"    // Pellet Calibre
-#define NONVOL_DOPPLER        "DOPPLER"        // Compensation for signal fading
 #define NONVOL_SENSOR_DIA     "SENSOR_DIA"     // Sensor diameter
 
 

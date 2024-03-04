@@ -412,10 +412,12 @@ void read_timers
   unsigned int i;
   double pcnt_hi;                               // Reading from high counter 
 
-  for (i=0; i<=8; i++)
+  for (i=0; i != 8; i++)
   {
     timer[i] = pcnt_read(i);
   }
+
+return;
 
   if ( (json_pcnt_latency != 0)                   // Latecy has a valid setting
           && ((json_vref_hi - json_vref_lo) > 0 ) ) // The voltage references are good
@@ -581,9 +583,8 @@ void aquire(void)
 /*
  * Pull in the data amd save it in the record array
  */
-  stop_timers();                                    // Stop the counters
   read_timers(&record[this_shot].timer_count[0]);   // Record this count
-  record[this_shot].shot_time = 0;                  //FULL_SCALE - in_shot_timer; // Capture the time into the shot
+  record[this_shot].shot_time = 0;                  // Capture the time into the shot
   record[this_shot].face_strike = face_strike;      // Record if it's a face strike
   record[this_shot].sensor_status = is_running();   // Record the sensor status
   record[this_shot].shot_number = shot_number++;    // Record the shot number and increment

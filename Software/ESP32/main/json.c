@@ -81,7 +81,6 @@ char    json_wifi_ssid[SSID_SIZE];  // Stored value of SSID
 char    json_wifi_pwd[PWD_SIZE];    // Stored value of password
 int     json_wifi_dhcp;             // The ESP is a DHCP server
 int     json_min_ring_time;         // Time to wait for ringing to stop
-double  json_doppler;               // Adjust for dopper inverse square
 int     json_token;                 // Token ring state
 double  json_vref_lo;               // Low Voltage DAC setting
 double  json_vref_hi;               // High Voltage DAC setting
@@ -100,7 +99,6 @@ const json_message_t JSON[] = {
   {"\"BYE\":",            0,                                 0,                IS_VOID,   &bye,             0,                       0 },    // Shut down the target
   {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT32,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
   {"\"DELAY\":",          0,                                 0,                IS_INT32,  &diag_delay,                      0,       0 },    // Delay TBD seconds
-  {"\"DOPPLER\":",        0,                     &json_doppler,                IS_FLOAT,  0,                NONVOL_DOPPLER,      40000 },    // Adjust timing based on Doppler Inverse SQ
   {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,       0,                       0 },    // Echo test
   {"\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT32,  0,                NONVOL_FACE_STRIKE,      0 },    // Face Strike Count 
   {"\"FOLLOW_THROUGH\":", &json_follow_through,              0,                IS_INT32,  0,                NONVOL_FOLLOW_THROUGH,   0 },    // Three second follow through

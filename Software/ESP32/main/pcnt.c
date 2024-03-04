@@ -172,6 +172,8 @@ int pcnt_read
 {
   int value;
 
+  unit &= 7;
+
   switch (unit)
   {
     case 0:
