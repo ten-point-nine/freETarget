@@ -218,7 +218,9 @@ void WiFi_station_init(void)
    esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFi_event_handler, NULL, &instance_any_id);
    esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &WiFi_event_handler, NULL, &instance_got_ip);
 
+   DLT(DLT_CRITICAL, printf("WiFI SSID:%s", json_wifi_ssid);)
    strcpy((char*)&WiFi_config.sta.ssid, json_wifi_ssid);
+   DLT(DLT_CRITICAL, printf("WiFI password:%s", json_wifi_pwd);)
    strcpy((char*)&WiFi_config.sta.password, json_wifi_pwd);
    if ( json_wifi_pwd[0] == 0)
    {

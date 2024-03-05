@@ -31,8 +31,6 @@ void restore_nonvol(void);                        // Copyt the nonvol back
 #define NONVOL_INIT           "NONVOL_INIT"    // Show when the INIT is done
 #define NONVOL_CALIBRE_X10    "CALIBRE_X10"    // Pellet Calibre
 #define NONVOL_SENSOR_DIA     "SENSOR_DIA"     // Sensor diameter
-
-
 #define NONVOL_SENSOR_ANGLE   "SENSOR_ANGLE"   // Angular displacement of sensors
 #define NONVOL_NORTH_X        "NORTH_X"        // Offset applied to North sensor
 #define NONVOL_NORTH_Y        "NORTH_Y"

@@ -143,8 +143,8 @@ const json_message_t JSON[] = {
   {"\"VREF_LO\":",        0,                                 &json_vref_lo,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_LO,       1250 },    // Low trip point value (Volts)
   {"\"VREF_HI\":",        0,                                 &json_vref_hi,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_HI,       2000 },    // High trip point value (Volts)
   {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT32,  0,                NONVOL_WIFI_CHANNEL,     6 },    // Set the wifi channel
-  {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_SECRET, 0,                NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
-  {"\"WIFI_SSID\":",      (int*)&json_wifi_ssid,             0,                IS_TEXT,   0,                NONVOL_WIFI_SSID,        0 },    // Name of SSID to attach to 
+  {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_SECRET+PWD_SIZE, 0,       NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
+  {"\"WIFI_SSID\":",      (int*)&json_wifi_ssid,             0,                IS_TEXT+SSID_SIZE,  0,       NONVOL_WIFI_SSID,        0 },    // Name of SSID to attach to 
   {"\"ZAPPLE\":",         0,                                 0,                IS_VOID,   &zapple,          0,                       0 },    // Start a ZAPPLE console monitor
   {"\"Z_OFFSET\":",       &json_z_offset,                    0,                IS_INT32,  0,                NONVOL_Z_OFFSET,        13 },    // Distance from paper to sensor plane (mm)
   {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT32,  0,                NONVOL_NORTH_X,          0 },    //
@@ -309,13 +309,13 @@ static void handle_json(void)
   int   x;
   float f;
   int   i, j, k;
-  char* s;
+  char  s[64];          // Place to store a string
   int   m;
 
 /*
  * Found out where the braces are, extract the contents.
  */
-  nvs_flash_init();
+//  nvs_flash_init();
   not_found = true;
   for ( i=0; i != got_right_bracket; i++)                       // Go across the JSON input 
   {
@@ -330,7 +330,7 @@ static void handle_json(void)
         if ( k > 0 )                                            // Non zero, found something
         {
           not_found = false;                                    // Read and convert the JSON value
-          switch ( JSON[j].convert )
+          switch ( JSON[j].convert & IS_MASK )
           {
             default:
             case IS_VOID:                                       // Void, default to zero
@@ -346,26 +346,18 @@ static void handle_json(void)
               }
               k++;                                              // Advance to the text
 
-              s = (char *)JSON[j].value;                        // Fake a pointer to text
-              *s = 0;                                           // Put in a null
               m = 0;
-              nvs_set_i32(my_handle, JSON[j].non_vol, 0);                  // Put in a null
+              s[0] = 0;                                         // Put in a null
               while ( input_JSON[i+k] != '"' )                  // Skip to the opening quote
               {
-                if ( s != 0 )
-                {
-                   *s = input_JSON[i+k];                        // Save the value
-                   s++;
-                   *s = 0;                                      // Null terminate 
-                }
-                
-                if ( JSON[j].non_vol != 0 )                     // Save to persistent storage if present
-                {
-                  nvs_set_u32(my_handle, JSON[j].non_vol+m, input_JSON[i+k]); // Store into NON-VOL
-                  m++;
-                  nvs_set_u32(my_handle, JSON[j].non_vol+m, 0);             // Null terminate
-                }
+                s[m] = input_JSON[i+k];                        // Save the value
+                m++;
+                s[m] = 0;                                      // Null terminate 
                 k++;
+              }             
+              if ( JSON[j].non_vol != 0 )                       // Save to persistent storage if present
+              {
+                nvs_set_str(my_handle, JSON[j].non_vol, s);     // Store into NON-VOL
               }
               break;
               
@@ -508,7 +500,7 @@ void show_echo(void)
   {
     if ( (JSON[i].value != NULL) || (JSON[i].d_value != NULL) )              // It has a value ?
     {
-      switch ( JSON[i].convert )              // Display based on it's type
+      switch ( JSON[i].convert & IS_MASK )              // Display based on it's type
       {
         default:
         case IS_VOID:
@@ -519,7 +511,7 @@ void show_echo(void)
             j = 0;
             while ( *((char*)(JSON[i].value)+j) != 0)
             {
-              if ( JSON[i].convert == IS_SECRET )
+              if ( (JSON[i].convert & IS_MASK) == IS_SECRET )
               {
                 str_c[j] = '*';
               }
@@ -543,6 +535,7 @@ void show_echo(void)
           break;
       }
       serial_to_all(s, ALL);
+      vTaskDelay(10); 
     }
     i++;
   }
@@ -592,9 +585,9 @@ void show_echo(void)
   }
   else
   {
-    sprintf(s, "\"Target connected to SSID: %s,\n\r", (char*)json_wifi_ssid[0]);   
+    sprintf(s, "\"Target connected to SSID: \"%s\",\n\r", (char*)&json_wifi_ssid);   
     serial_to_all(s, ALL);
- 
+
   }
 
   if ( json_token == TOKEN_NONE )

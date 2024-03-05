@@ -151,7 +151,7 @@ void self_test
       printf("\r\n32 - Test WiFI as a station"); 
       printf("\r\n33 - Enable the WiFi Server");
       printf("\r\n34 - Loopback the TCPIP data");
-      printf("\r\n35 - Loopback WiFI");
+      printf("\r\n35 - Loopback WiFi");
       printf("\r\n");
       printf("\r\n40 - Sensor POST test");
       printf("\r\n41 - Polled Target Test");

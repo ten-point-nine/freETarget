@@ -31,17 +31,17 @@ typedef struct  {
 
 extern const json_message_t JSON[];
 
-#define IS_VOID       0x00       // Value is a void
-#define IS_TEXT       0x80       // Value is a string
-#define IS_SECRET     0x40       // Value is a string but hidden
-#define IS_INT32      0x20       // Value is a 64 bit int
-#define IS_FLOAT      0x10       // Value is a floating point number
-#define IS_FIXED      0x08       // The value cannot be changed
+#define IS_VOID       0xE0       //Value is a void
+#define IS_TEXT       0xC0       // Value is a string
+#define IS_SECRET     0xA0       // Value is a string but hidden
+#define IS_INT32      0x80       // Value is a 64 bit int
+#define IS_FLOAT      0x60       // Value is a floating point number
+#define IS_FIXED      0x40       // The value cannot be changed
 #define IS_MASK       (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED)
 #define FLOAT_MASK    ((~IS_MASK) & 0xFF)    // Scaling factor
 
-#define SSID_SIZE     32          // Reserve 32 bytes for SSID
-#define  PWD_SIZE     32          // Reserve 32 bytes for Password
+#define SSID_SIZE     31         // Reserve 30+1 bytes for SSID
+#define  PWD_SIZE     31         // Reserve 30+1 bytes for Password
 
 /*
  * Global JSON variables and settings

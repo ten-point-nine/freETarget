@@ -37,6 +37,8 @@ void app_main(void)
    xTaskCreate(freeETarget_json,        "json_task",                 4096, NULL, 15, NULL);
    vTaskDelay(1);
 
+   xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",           4096, NULL,  5, NULL);
+   vTaskDelay(1);
    xTaskCreate(tcpip_socket_poll_0,     "tcpip_socket_poll_0",       4096, NULL,  5, NULL);
    vTaskDelay(1);
    xTaskCreate(tcpip_socket_poll_1,     "tcpip_socket_poll_1",       4096, NULL,  5, NULL);
@@ -44,9 +46,6 @@ void app_main(void)
    xTaskCreate(tcpip_socket_poll_2,     "tcpip_socket_poll_2",       4096, NULL,  5, NULL);
    vTaskDelay(1);
    xTaskCreate(tcpip_socket_poll_3,     "tcpip_socket_poll_3",       4096, NULL,  5, NULL);
-   vTaskDelay(1);
-
-   xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",           4096, NULL,  5, NULL);
    vTaskDelay(1);
    xTaskCreate(tcpip_accept_poll,       "tcpip_accept_poll",         4096, NULL,  2, NULL);
    vTaskDelay(1);

@@ -171,7 +171,7 @@ void factory_nonvol
   )
 {
   unsigned int serial_number;             // Board serial number
-  char         ch;
+  char         ch, s[32];
   unsigned int x;                         // Temporary Value
   unsigned int i;                         // Iteration Counter
   int          length;
@@ -202,8 +202,8 @@ void factory_nonvol
        case IS_SECRET:
         if ( JSON[i].non_vol != 0 )
         {
-          length = JSON[i].convert & FLOAT_MASK;
-          nvs_set_i32(my_handle, JSON[i].non_vol, length);                    // Zero out the text
+          s[0] = 0;
+          nvs_set_str(my_handle, JSON[i].non_vol, s);      // Zero out the text
         }
         break;
         
@@ -366,7 +366,7 @@ void update_nonvol
     i=0;
     while ( JSON[i].token != 0 )
     { 
-      switch ( JSON[i].convert )
+      switch ( JSON[i].convert & IS_MASK )
       {        
       case IS_INT32:
         nvs_get_i32(my_handle, JSON[i].non_vol, &ps_value);             // Pull up the value from memory
