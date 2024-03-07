@@ -548,9 +548,8 @@ void factory_test(void)
  *******************************************************************************/
  void POST_version(void)
  {
-  char str[64];
-  sprintf(str, "\r\nfreETarget %s\r\n", SOFTWARE_VERSION);
-  serial_to_all(str, ALL);
+  SEND(sprintf(_xs, "\r\nfreETarget %s\r\n", SOFTWARE_VERSION);)
+
 /*
  * All done, return
  */

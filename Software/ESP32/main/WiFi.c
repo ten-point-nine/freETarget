@@ -388,7 +388,7 @@ void WiFi_tcp_server_task(void *pvParameters)
 /*
  *  Time out till the next time
  */
-        vTaskDelay(ONE_SECOND/4);
+        vTaskDelay(ONE_SECOND/2);
     }
 }
 

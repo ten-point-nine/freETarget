@@ -1,11 +1,16 @@
-/* Blink Example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
+/*******************************************************************************
+ *
+ * main.c
+ *
+ * FreeETarget control loop
+ * 
+ *******************************************************************************
+ *
+ * Initialize the hardware and software
+ * 
+ * Then setup all of the tasks and exit back to freeRTOS
+ *
+ ******************************************************************************/
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -39,6 +44,8 @@ void app_main(void)
 
    xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",           4096, NULL,  5, NULL);
    vTaskDelay(1);
+   xTaskCreate(tcpip_accept_poll,       "tcpip_accept_poll",         4096, NULL,  2, NULL);
+   vTaskDelay(1);
    xTaskCreate(tcpip_socket_poll_0,     "tcpip_socket_poll_0",       4096, NULL,  5, NULL);
    vTaskDelay(1);
    xTaskCreate(tcpip_socket_poll_1,     "tcpip_socket_poll_1",       4096, NULL,  5, NULL);
@@ -46,8 +53,6 @@ void app_main(void)
    xTaskCreate(tcpip_socket_poll_2,     "tcpip_socket_poll_2",       4096, NULL,  5, NULL);
    vTaskDelay(1);
    xTaskCreate(tcpip_socket_poll_3,     "tcpip_socket_poll_3",       4096, NULL,  5, NULL);
-   vTaskDelay(1);
-   xTaskCreate(tcpip_accept_poll,       "tcpip_accept_poll",         4096, NULL,  2, NULL);
    vTaskDelay(1);
 
    freeETarget_timer_init();

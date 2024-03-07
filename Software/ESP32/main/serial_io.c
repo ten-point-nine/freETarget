@@ -352,7 +352,7 @@ void serial_to_all
   
   if ( tcpip )
   {
-    tcpip_app_2_queue(str, length);
+    tcpip_app_2_queue(str, length); 
   }
 
 /*

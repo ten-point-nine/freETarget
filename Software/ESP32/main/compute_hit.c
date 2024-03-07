@@ -454,7 +454,6 @@ void send_score
   double real_x, real_y;          // Shot location in mm X, Y before remap
   double radius;
   double angle;
-  char   str[256];                // String holding buffers
   
   DLT(DLT_DIAG, printf("Sending the score");)
 
@@ -496,54 +495,45 @@ void send_score
 /* 
  *  Display the results
  */
-  sprintf(str, "\r\n{");
-  serial_to_all(str, ALL);
+  SEND(sprintf(_xs, "\r\n{");)
   
 #if ( S_SHOT )
   if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF))
   {
-    sprintf(str, "\"shot\":%d, \"miss\":0, \"name\":\"%s\"", shot->shot_number,  names[json_name_id]);
+    SEND(sprintf(_xs, "\"shot\":%d, \"miss\":0, \"name\":\"%s\"", shot->shot_number,  names[json_name_id]);)
   }
   else
   {
-    sprintf(str, "\"shot\":%d, \"name\":\"%d\"", shot->shot_number,  my_ring);
+    SEND(sprintf(_xs, "\"shot\":%d, \"name\":\"%d\"", shot->shot_number,  my_ring);)
   }
-  serial_to_all(str, ALL);
-  sprintf(str, ", \"time\":%4.2f ", (float)shot->shot_time/(float)(ONE_SECOND));
-  serial_to_all(str, ALL);
+  SEND(printf(_xs, ", \"time\":%4.2f ", (float)shot->shot_time/(float)(ONE_SECOND));)
 #endif
 
 #if ( S_XY )
-  sprintf(str, ",\"x\":%4.2f, \"y\":%4.2f ", x, y);
-  serial_to_all(str, ALL);
+  SEND(sprintf(_xs, ",\"x\":%4.2f, \"y\":%4.2f ", x, y);)
   
   if ( json_target_type > 1 )
   {
-    sprintf(str, ",\"real_x\":%4.2f, \"real_y\":%4.2f ", real_x, real_y);
-    serial_to_all(str, ALL);
+    SEND(sprintf(_xs, ",\"real_x\":%4.2f, \"real_y\":%4.2f ", real_x, real_y);)
   }
 #endif
 
 #if ( S_POLAR )
   if ( json_token == TOKEN_NONE )
   {
-    dtostrf(radius, 4, 2, str_c );
-    sprintf(str, ", \"r\":%4.2f,  \"a\":%s, ", radius, angle``);
+    SEND(sprintf(_xs, ", \"r\":%4.2f,  \"a\":%s, ", radius, angle``);)
   }
 #endif
 
 #if ( S_TIMERS )
   if ( json_token == TOKEN_NONE )
   {
-    sprintf(str, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d ", (int)s[N].count, (int)s[E].count, (int)s[S].count, (int)s[W].count);
-    serial_to_all(str, ALL);
-    sprintf(str, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)shot->timer_count[N+4], (int)shot->timer_count[E+4], (int)shot->timer_count[S+4], (int)shot->timer_count[W+4]);
-    serial_to_all(str, ALL);
+    SEND(sprintf(_xs, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d ", (int)s[N].count, (int)s[E].count, (int)s[S].count, (int)s[W].count);)
+    SEND(sprintf(_xs, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)shot->timer_count[N+4], (int)shot->timer_count[E+4], (int)shot->timer_count[S+4], (int)shot->timer_count[W+4]);)
   }
 #endif
 
-  sprintf(str, "}\r\n");
-  serial_to_all(str, ALL);
+  SEND(sprintf(_xs, "}\r\n");)
   
 /*
  * All done, return
@@ -575,9 +565,7 @@ void send_miss
   shot_record_t* shot                    // record record
   )
 {
-  char str[256];                          // String holding buffer
-  
-  if ( json_send_miss != 0)               // If send_miss not enabled
+  if ( json_send_miss == 0)               // If send_miss not enabled
   {
     return;                               // Do nothing
   }
@@ -602,42 +590,36 @@ void send_miss
 /* 
  *  Display the results
  */
-  sprintf(str, "\r\n{");
-  serial_to_all(str, ALL);
+  SEND(sprintf(_xs, "\r\n{");)
   
  #if ( S_SHOT )
    if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF))
   {
-    sprintf(str, "\"shot\":%d, \"miss\":0, \"name\":\"%s\"", shot->shot_number,  names[json_name_id]);
+    SEND(sprintf(_xs, "\"shot\":%d, \"miss\":0, \"name\":\"%s\"", shot->shot_number,  names[json_name_id]);)
   }
   else
   {
-    sprintf(str, "\"shot\":%d, \"miss\":1, \"name\":\"%d\"", shot->shot_number,  my_ring);
+    SEND(sprintf(_xs, "\"shot\":%d, \"miss\":1, \"name\":\"%d\"", shot->shot_number,  my_ring);)
   }
-  serial_to_all(str, ALL);
-  sprintf(str, ", \"time\":%4.2f ", (float)shot->shot_time/(float)(ONE_SECOND));
+  SEND(sprintf(_xs, ", \"time\":%4.2f ", (float)shot->shot_time/(float)(ONE_SECOND));)
 #endif
 
 #if ( S_XY )
   if ( json_token == TOKEN_NONE )
   { 
-    sprintf(str, ", \"x\":0, \"y\":0 ");
-    serial_to_all(str, ALL);
+    SEND(sprintf(_xs, ", \"x\":0, \"y\":0 ");)
   }
 #endif
 
 #if ( S_TIMERS )
   if ( json_token == TOKEN_NONE )
   {
-    sprintf(str, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)shot->timer_count[N], (int)shot->timer_count[E], (int)shot->timer_count[S], (int)shot->timer_count[W]);
-    serial_to_all(str, ALL);
-    sprintf(str, ", \"face\":%d ", shot->face_strike);
-    serial_to_all(str, ALL);
+    SEND(sprintf(_xs, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)shot->timer_count[N], (int)shot->timer_count[E], (int)shot->timer_count[S], (int)shot->timer_count[W]);)
+    SEND(sprintf(_xs, ", \"face\":%d ", shot->face_strike);)
   }
 #endif
 
-  sprintf(str, "}\n\r");
-  serial_to_all(str, ALL);
+  SEND(sprintf(_xs, "}\n\r");)
 
 /*
  * All done, go home

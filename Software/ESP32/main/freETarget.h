@@ -13,7 +13,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"0.9.7 March 5, 2024\""
+#define SOFTWARE_VERSION "\"0.9.9 March 7, 2024\""
 
 
 #define REV_500    500   // ESP32
@@ -35,7 +35,7 @@
 #define IF_NOT(x) if ( (run_state & (x)) == 0) 
 #define IF_IN(x)  if ( (run_state & (x)) != 0) 
 
-#define ALL_OUT(format, who) {sprintf(format); serial_to_all(who);}
+#define SEND(message) {message} serial_to_all(_xs, ALL);
 
 /*
  * Options
@@ -131,5 +131,6 @@ extern unsigned int  shot_number;
 extern volatile unsigned long power_save;     // Power down timer
 extern volatile unsigned int  run_state;      // IPC states 
 extern volatile unsigned long LED_timer;      // Turn off the LEDs when not in use
+extern char _xs[512];
 
 #endif

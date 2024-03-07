@@ -305,8 +305,7 @@ static void sw_state
       set_LED_PWM_now(json_LED_PWM);      // and leave it on
       power_save = (long)json_power_save * 60L * (long)ONE_SECOND; // and resets the power save time
       json_power_save += 30;      
-      sprintf(s, "\r\n{\"LED_PWM\": %d}\n\r", json_power_save);
-      serial_to_all(s, ALL);  
+      SEND(sprintf(_xs, "\r\n{\"LED_PWM\": %d}\n\r", json_power_save);)
       break;
         
     case PAPER_FEED:                      // Turn on the paper untill the switch is pressed again 
@@ -351,8 +350,7 @@ static void sw_state
           led_step = +5;                 // Force to zero on wrap around
         }
         set_LED_PWM_now(json_LED_PWM);   // Set the brightness
-        sprintf(s, "\r\n{\"LED_BRIGHT\": %d}\n\r", json_LED_PWM);
-        serial_to_all(s, ALL);
+        SEND(sprintf(s, "\r\n{\"LED_BRIGHT\": %d}\n\r", json_LED_PWM);)
         vTaskDelay(ONE_SECOND/4);
       }
       nvs_set_i32(my_handle, NONVOL_LED_PWM, json_LED_PWM);
@@ -411,15 +409,10 @@ static char* mfs2_text[] = { "DEFAULT", "RAPID_RED", "RAPID_GREEN",    "3",     
 
 void multifunction_display(void)
 {
-  char s[256];                          // Holding string
-
-  sprintf(s, "\"MFS_TAP1\": \"%s\",\n\r\"MFS_TAP2\": \"%s\",\n\r\"MFS_HOLD1\": \"%s\",\n\r\"MFS_HOLD2\": \"%s\",\n\r\"MFS_HOLD12\": \"%s\",\n\r", 
-  mfs_text[TAP1(json_multifunction)], mfs_text[TAP2(json_multifunction)], mfs_text[HOLD1(json_multifunction)], mfs_text[HOLD2(json_multifunction)], mfs_text[HOLD12(json_multifunction)]);
-  serial_to_all(s, ALL);  
-
-  sprintf(s, "\"MFS_CONFIG\": \"%s\",\n\r\"MFS_DIAG\": \"%s\",\n\r", 
-  mfs2_text[HOLD1(json_multifunction2)], mfs2_text[HOLD2(json_multifunction2)]);
-  serial_to_all(s, ALL);  
+  SEND(sprintf(_xs, "\"MFS_TAP1\": \"%s\",\n\r\"MFS_TAP2\": \"%s\",\n\r\"MFS_HOLD1\": \"%s\",\n\r\"MFS_HOLD2\": \"%s\",\n\r\"MFS_HOLD12\": \"%s\",\n\r", 
+  mfs_text[TAP1(json_multifunction)], mfs_text[TAP2(json_multifunction)], mfs_text[HOLD1(json_multifunction)], mfs_text[HOLD2(json_multifunction)], mfs_text[HOLD12(json_multifunction)]);)
+  SEND(sprintf(_xs, "\"MFS_CONFIG\": \"%s\",\n\r\"MFS_DIAG\": \"%s\",\n\r", 
+  mfs2_text[HOLD1(json_multifunction2)], mfs2_text[HOLD2(json_multifunction2)]);)
   
 /*
  * All done, return
