@@ -158,8 +158,7 @@ void WiFi_AP_init(void)
 
     esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFi_event_handler, NULL, NULL);
 
-    strcpy((char*)&WiFi_config.ap.ssid, "FET-");
-    strcat((char*)&WiFi_config.ap.ssid, names[json_name_id]);   // SSID Name ->FET-name
+    sprintf((char*)&WiFi_config.ap.ssid, "FET-%s", names[json_name_id]);   // SSID Name ->FET-name
     WiFi_config.ap.ssid_len = strlen(json_wifi_ssid);
     WiFi_config.ap.channel  = json_wifi_channel;
     strcpy((char*)&WiFi_config.ap.password, json_wifi_pwd);
@@ -458,6 +457,34 @@ static void tcpip_server_io(void)
  * put it into the queue.
  *
  *******************************************************************************/
+void tcpip_socket_poll(void* parameters)
+{
+    int length;
+    char rx_buffer[256];
+    int i;
+
+    DLT(DLT_CRITICAL, printf("tcp_socket_poll()");)
+
+    while (1)
+    {
+        for (i=0; i != sizeof(socket_list) / sizeof(int); i++)
+        {
+            if (socket_list[i] > 0 )
+            {
+                length = recv(socket_list[i], rx_buffer, sizeof(rx_buffer), 0 );
+                rx_buffer[length] = 0;
+                while ( length > 0 )
+                {
+                length -= tcpip_socket_2_queue(rx_buffer, length);
+                }
+            }
+        }
+        vTaskDelay(50);
+    }
+}
+
+
+
 void tcpip_socket_poll_0(void* parameters)
 {
     int length;
