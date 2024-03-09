@@ -13,13 +13,13 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"0.9.9 March 7, 2024\""
+#define SOFTWARE_VERSION "\"0.9.10 March 8, 2024\""
 
 
 #define REV_500    500   // ESP32
 #define REV_510    510
 #define REV_520    520
-#define BUILD_REV  REV_510
+#define BUILD_REV  REV_520
 
 #define INIT_DONE       0xabcd                    // NON-VOL Initialization complete signature
 #ifndef true

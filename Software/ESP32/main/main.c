@@ -48,16 +48,6 @@ void app_main(void)
    vTaskDelay(1);
    xTaskCreate(tcpip_socket_poll,       "tcpip_socket_poll",         4096, NULL,  5, NULL);
    vTaskDelay(1);
-   #if(0)
-   xTaskCreate(tcpip_socket_poll_0,     "tcpip_socket_poll_0",       4096, NULL,  5, NULL);
-   vTaskDelay(1);
-   xTaskCreate(tcpip_socket_poll_1,     "tcpip_socket_poll_1",       4096, NULL,  5, NULL);
-   vTaskDelay(1);
-   xTaskCreate(tcpip_socket_poll_2,     "tcpip_socket_poll_2",       4096, NULL,  5, NULL);
-   vTaskDelay(1);
-   xTaskCreate(tcpip_socket_poll_3,     "tcpip_socket_poll_3",       4096, NULL,  5, NULL);
-   vTaskDelay(1);
-   #endif 
 
    freeETarget_timer_init();
 
