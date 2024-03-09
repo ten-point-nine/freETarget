@@ -647,8 +647,6 @@ static void show_test(int test_number)
    int trace                // Trace on or off
    )
  {
-  char s[32];
-
   trace |= DLT_CRITICAL;        // Critical is always enabled
     
   if ( trace & DLT_CRITICAL)    {SEND(sprintf(_xs, "\r\r%03d DLT CRITICAL", DLT_CRITICAL);)}

@@ -288,8 +288,6 @@ static void sw_state
 {     
   unsigned int led_step;
 
-  char s[128];                          // Holding string 
-  
   DLT(DLT_INFO, printf("Switch action: %d", action);)
 
 /*

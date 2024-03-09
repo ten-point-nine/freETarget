@@ -825,7 +825,7 @@ void bye(void)
   switch (bye_state)
   {
     case BYE_BYE:                     // Say Good Night Gracie!
-      serial_to_all("{\"GOOD_BYE\":0}", ALL);
+      SEND(sprintf(_xs, "{\"GOOD_BYE\":0}");)
       json_tabata_enable = false;     // Turn off any automatic cycles 
       json_rapid_enable = false;
       set_LED_PWM(0);                 // Going to sleep 
@@ -877,8 +877,6 @@ void bye(void)
  *--------------------------------------------------------------*/
 void hello(void)
 {
-  char str[128];
-
 /*
  * Woken up again.  Turn things back on
  */  
@@ -913,7 +911,8 @@ void send_keep_alive(void)
   if ( (json_keep_alive != 0)
       && (keep_alive == 0) )              // Time in seconds
   {
-    SEND(sprintf(_xs, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);)
+    sprintf(_xs, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);
+    serial_to_all(_xs, TCPIP);
     timer_new(&keep_alive, (unsigned long)json_keep_alive * (unsigned long)ONE_SECOND * 60l);
   }
 
