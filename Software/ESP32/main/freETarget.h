@@ -13,7 +13,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"0.9.10 March 8, 2024\""
+#define SOFTWARE_VERSION "\"5.0.0 April 4, 2024\""
 
 
 #define REV_500    500   // ESP32

@@ -71,7 +71,7 @@ const char* names[] = { "TARGET",                                               
                         "ODIN",   "WODEN",   "THOR",   "BALDAR",                                                            // 26
                         0};
                   
-const char    nesw[]   = "NESWnesw";              // Cardinal Points
+const char    nesw[]   = "WSENwsen";              // Cardinal Points
 const char    to_hex[] = "0123456789ABCDEF";      // Quick Hex to ASCII
 
 char   _xs[512];       // Holding buffer for sprintf

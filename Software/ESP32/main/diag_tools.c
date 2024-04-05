@@ -516,7 +516,7 @@ void factory_test(void)
         case 'X':               // Exit
         case 'x':
         case '!':
-          paper_on_off(true);
+          paper_on_off(false);
           printf("\r\nDone");
           return;
       }

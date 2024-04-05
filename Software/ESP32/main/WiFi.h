@@ -19,7 +19,6 @@ void WiFi_loopback_test(void);                // Loopback the TCPIP channel
 void WiFi_my_ip_address(char* s);             // Return the current IP address 
 
 void tcpip_socket_poll(void* parameters);     // Listen to TCPIP recv calls 
-
 void tcpip_accept_poll(void* parameters);     // Wait for a socket connection
 
 

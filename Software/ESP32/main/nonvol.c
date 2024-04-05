@@ -174,9 +174,8 @@ void factory_nonvol
   char         ch, s[32];
   unsigned int x;                         // Temporary Value
   unsigned int i;                         // Iteration Counter
-  int          length;
   
-  DLT(DLT_CRITICAL, printf("factory_nonvol()\r\n"); )
+  DLT(DLT_CRITICAL, printf("factory_nonvol(%d)\r\n", new_serial_number); )
 
   serial_number = 0;
   x = 0;
@@ -192,6 +191,7 @@ void factory_nonvol
   i=0;
   while ( JSON[i].token != 0 )
   {
+    printf("%d ", i);
     switch ( JSON[i].convert & IS_MASK )
     {
        case IS_VOID:                                        // Variable does not contain anything 
@@ -258,12 +258,21 @@ void factory_nonvol
           printf("\r\nSetting Serial Number to: %d", serial_number);
           break;
         }
+
         if ( (ch == 'x') || (ch == 'X') )
         {
           break;
         }
-        serial_number *= 10;
-        serial_number += ch - '0';
+
+        if ( ch == 0x08 )          // Backspace
+        {
+          serial_number /= 10;
+        }
+        else
+        {
+          serial_number *= 10;
+          serial_number += ch - '0';
+        }
       }
     }
   }
@@ -281,7 +290,7 @@ void factory_nonvol
 /*
  * All done, return
  */    
-
+  DLT(DLT_CRITICAL, printf("Factory Init complete\r\n");)
   return;
 }
 
