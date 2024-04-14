@@ -383,6 +383,87 @@ static void sw_state
  */
   return;
 }
+
+/*-----------------------------------------------------
+ * 
+ * @function: multifunction_hold12()
+ *            multifunction_hold2()
+ *            multifunction_hold1()
+ *            multifunction_tap2()
+ *            multifunction_tap1()
+ * 
+ * @brief:    Modify the individual filelds
+ * 
+ * @return:   mfs updated with the new field
+ * 
+ *-----------------------------------------------------
+ *
+ * The MFS is encoded as a 3 digit packed BCD number
+ * 
+ * This function unpacks the numbers and displayes it as
+ * text in a JSON message.
+ * 
+ *-----------------------------------------------------*/ 
+void multifunction_common
+(
+  unsigned int newMFS,
+  unsigned int place,
+  unsigned int oldMFS
+)
+{
+  newMFS %= 10;
+  json_multifunction -= oldMFS * place;
+  json_multifunction += newMFS * place;
+  nvs_set_i32(my_handle, NONVOL_MFS, json_multifunction);    // Store into NON-VOL
+  return;
+
+}
+
+void multifunction_hold12
+(
+  unsigned int newMFS         // New field value
+)
+{
+  multifunction_common(newMFS, SHIFT_HOLD12, HOLD12(json_multifunction));
+  return;
+}
+
+void multifunction_hold2
+(
+  unsigned int newMFS         // New field value
+)
+{
+  multifunction_common(newMFS, SHIFT_HOLD2, HOLD2(json_multifunction));
+  return;
+}
+
+void multifunction_hold1
+(
+  unsigned int newMFS         // New field value
+)
+{
+  multifunction_common(newMFS, SHIFT_HOLD1, HOLD1(json_multifunction));
+  return;
+}
+
+void multifunction_tap2
+(
+  unsigned int newMFS         // New field value
+)
+{
+  multifunction_common(newMFS, SHIFT_TAP2, TAP2(json_multifunction));
+  return;
+}
+
+void multifunction_tap1
+(
+  unsigned int newMFS         // New field value
+)
+{
+  multifunction_common(newMFS, SHIFT_TAP1,TAP1(json_multifunction));
+  return;
+}
+
 /*-----------------------------------------------------
  * 
  * @function: multifunction_show()
@@ -415,9 +496,6 @@ void multifunction_show(unsigned int x)
     SEND(sprintf(_xs, "\"%d:%s\",\n\r", i, mfs_text[i]);) 
   }
 
-  SEND(sprintf(_xs, "\n\r\"MFS\": %d\n\r\n\r", json_multifunction);)
-
-  multifunction_display();
 
 /*
  * All done, return

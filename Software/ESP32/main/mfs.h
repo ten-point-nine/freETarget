@@ -16,6 +16,12 @@ void multifunction_switch(void);                          // Handle the actions 
 void multifunction_switch_tick(void);                     // Monitor the switches for long and short presses
 void multifuction_display(void);                          // Display the MFS settings
 void multifunction_wait_open(void);                       // Wait for both multifunction switches to be open
+void multifunction_show(unsigned int);                    // Show the value of the settings 
+void multifunction_hold12(unsigned int);                  // Modify the hold 12 field
+void multifunction_hold2(unsigned int);                   // Modify the hold 2 field
+void multifunction_hold1(unsigned int);                   // Modify the hold 1 field
+void multifunction_tap2(unsigned int);                    // Modify the tap 2 field
+void multifunction_tap1(unsigned int);                    // Modify the tap 1 field
 
 /*
  * Multifunction Switch Use when using DIP Switch for MFS
@@ -25,7 +31,11 @@ void multifunction_wait_open(void);                       // Wait for both multi
 #define TAP1(x)     HLO10((x))         // High Low digit   xx2xx
 #define TAP2(x)     HHI10((x))         // High High digit  x2xxx
 #define HOLD12(x)   HHH10((x))         // Highest digit    2xxxx
-
+#define SHIFT_HOLD1      1             // Hold 1 place
+#define SHIFT_HOLD2     10             // *
+#define SHIFT_TAP1     100             // *
+#define SHIFT_TAP2    1000             // *
+#define SHIFT_HOLD12 10000             // * 
 
 /*
  *  MFS Use
