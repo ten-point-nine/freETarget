@@ -73,6 +73,7 @@ static esp_netif_ip_info_t ipInfo;         // IP Address of the access point
 void WiFi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 static void tcpip_server_io(void);        // Manage TCPIP traffic
 
+esp_err_t esp_base_mac_addr_get(uint8_t *mac);
 
 /*****************************************************************************
  *
@@ -632,6 +633,7 @@ void WiFi_loopback_task(void* parameters)
  *  Never get here
  */
 }
+
 /*****************************************************************************
  *
  * @function: WiFi_my_IP_address()
@@ -649,4 +651,23 @@ void WiFi_my_ip_address
 {
     sprintf(s, "%d.%d.%d.%d", TO_IP(ipInfo.ip.addr));
     return;
+}
+
+
+/*****************************************************************************
+ *
+ * @function: WiFi_MAC_address()
+ *
+ * @brief:    Return the MAC address as an array of bytes
+ * 
+ * @return:   None
+ *
+ ****************************************************************************/
+void WiFi_MAC_address
+(
+    char* mac             // Where to return the string
+)
+{
+    esp_base_mac_addr_get((uint8_t*)mac);
+        return;
 }

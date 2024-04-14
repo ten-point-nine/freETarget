@@ -489,9 +489,8 @@ void send_score
   x = radius * cos(PI * angle / 180.0d);          // Rotate onto the target face
   y = radius * sin(PI * angle / 180.0d);
   real_x = x;
-  real_y = y;                                     // Remember the original target valuee
+  real_y = y;                                     // Remember the original target value
   remap_target(&x, &y);                           // Change the target if needed
-  
 /* 
  *  Display the results
  */
@@ -504,9 +503,10 @@ void send_score
   }
   else
   {
+    printf("five");
     SEND(sprintf(_xs, "\"shot\":%d, \"name\":\"%d\"", shot->shot_number,  my_ring);)
   }
-  SEND(printf(_xs, ", \"time\":%4.2f ", (float)shot->shot_time/(float)(ONE_SECOND));)
+  SEND(sprintf(_xs, ", \"time\":%4.2f ", (float)shot->shot_time/(float)(ONE_SECOND));)
 #endif
 
 #if ( S_XY )

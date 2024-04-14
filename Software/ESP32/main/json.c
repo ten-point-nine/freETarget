@@ -100,6 +100,7 @@ const json_message_t JSON[] = {
   {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT32,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
   {"\"DELAY\":",          0,                                 0,                IS_INT32,  &diag_delay,                      0,       0 },    // Delay TBD seconds
   {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,       0,                       0 },    // Echo test
+  {"\"ECHO\"",            0,                                 0,                IS_VOID,   &show_echo,       0,                       0 },    // Echo test
   {"\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT32,  0,                NONVOL_FACE_STRIKE,      0 },    // Face Strike Count 
   {"\"FOLLOW_THROUGH\":", &json_follow_through,              0,                IS_INT32,  0,                NONVOL_FOLLOW_THROUGH,   0 },    // Three second follow through
   {"\"INIT\":",           0,                                 0,                IS_INT32,  &init_nonvol,     NONVOL_INIT,             0 },    // Initialize the NONVOL memory
@@ -115,6 +116,7 @@ const json_message_t JSON[] = {
                                                                                                                           + (NO_ACTION * 100) 
                                                                                                                           + (NO_ACTION * 10) 
                                                                                                                           + (NO_ACTION) },   // Multifunction switch action
+  {"\"MFS\"",             0,                                 0,                IS_VOID,   &multifunction_show, 0,                    0 },
   {"\"MIN_RING_TIME\":",  &json_min_ring_time,               0,                IS_INT32,  0,                NONVOL_MIN_RING_TIME,  500 },    // Minimum time for ringing to stop (ms)
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT32,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
   {"\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT32,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
@@ -315,7 +317,6 @@ static void handle_json(void)
 /*
  * Found out where the braces are, extract the contents.
  */
-//  nvs_flash_init();
   not_found = true;
   for ( i=0; i != got_right_bracket; i++)                       // Go across the JSON input 
   {
@@ -542,17 +543,19 @@ void show_echo(void)
   SEND(sprintf(_xs, "\"TEMPERATURE\": %4.2f, \n\r", temperature_C());)                          // Temperature in degrees C
   SEND(sprintf(_xs, "\"RELATIVE_HUMIDITY\": %4.2f, \n\r", humidity_RH());)
   SEND(sprintf(_xs, "\"SPEED_OF_SOUND\": %4.2f, \n\r", speed_of_sound(temperature_C(), humidity_RH()));)
-  SEND(sprintf(_xs, "\"V12\": %4.2f, \n\r", v12_supply());)    // 12 Volt LED supply
   SEND(sprintf(_xs, "\"TIMER_COUNT\": %d, \n\r", (int)(SHOT_TIME * OSCILLATOR_MHZ));)             // Maximum number of clock cycles to record shot (target dependent)
+  SEND(sprintf(_xs, "\"V12\": %4.2f, \n\r", v12_supply());)    // 12 Volt LED supply
+  WiFi_MAC_address(str_c);
+  SEND(sprintf(_xs, "\"WiFi_MAC\": \"%02X:%02X:%02X:%02X:%02X:%02X\", \n\r", str_c[0], str_c[1],str_c[2], str_c[3], str_c[4], str_c[5]);)
   WiFi_my_ip_address(str_c);
   SEND(sprintf(_xs, "\"WiFi_IP_ADDRESS\": \"%s:1090\", \n\r", str_c);)
   if ( json_wifi_ssid[0] == 0 )                       // The SSID is undefined
   {
-    SEND(sprintf(_xs, "\"WiFI is an Access Point\",\n\r");)    // Print out the IP address
+    SEND(sprintf(_xs, "\"WiFi_MODE\": \"Access Point\",\n\r");)    // Print out the IP address
   }
   else
   {
-    SEND(sprintf(_xs, "\"Target connected to SSID: \"%s\",\n\r", (char*)&json_wifi_ssid);) 
+    SEND(sprintf(_xs, "\"WiFi_MODE\": \"Station connected to SSID \"%s\",\n\r", (char*)&json_wifi_ssid);) 
   }
 
   if ( json_token == TOKEN_NONE )

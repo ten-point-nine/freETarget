@@ -261,7 +261,7 @@ unsigned int revision(void)
  *----------------------------------------------------------------
  *
  * See TI Documentation for HDC3022
- * https://www.ti.com/product/HDC3022
+ * https://www.ti.com/product/HDC3022, Page 13
  *
  * A simple interrogation is used. 
  * 
@@ -289,7 +289,7 @@ double temperature_C(void)
  *  Return the temperature in C
  */
   raw = (temp_buffer[0] << 8) + temp_buffer[1];
-  t_c = -42.0 + (175.0 * (float)raw / 65535.0);
+  t_c = -45.0 + (175.0 * (float)raw / 65535.0);
   raw = (temp_buffer[3] << 8) + temp_buffer[4];
   rh  =  100.0 * (float)raw / 65535.0;
 

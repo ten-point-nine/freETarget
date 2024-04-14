@@ -8,6 +8,7 @@
 #include "driver/gpio.h"
 #include "stdio.h"
 #include "nvs.h"
+#include "esp_random.h"
 
 #include "freETarget.h"
 #include "diag_tools.h"
@@ -382,6 +383,47 @@ static void sw_state
  */
   return;
 }
+/*-----------------------------------------------------
+ * 
+ * @function: multifunction_show()
+ * 
+ * @brief:    Display the MFS values
+ * 
+ * @return:   None
+ * 
+ *-----------------------------------------------------
+ *
+ * The MFS is encoded as a 3 digit packed BCD number
+ * 
+ * This function unpacks the numbers and displayes it as
+ * text in a JSON message.
+ * 
+ *-----------------------------------------------------*/ 
+ //                             0            1            2             3            4             5            6    7    8          9
+static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED", "ADJUST_LED", "PAPER_SHOT", "PC_TEST",  "POWER_ON_OFF",   "6", "7", "8", "TARGET_TYPE"};
+
+ //                              0           1            2             3            4             5            6    7    8          9
+static char* mfs2_text[] = { "DEFAULT", "RAPID_RED", "RAPID_GREEN",    "3",         "4",          "5",   "      6", "7", "8",       "9"};
+
+void multifunction_show(unsigned int x)
+{
+  int i;
+
+  SEND(sprintf(_xs, "\n\r");) 
+  for (i=0; i <= 9; i++)
+  {
+    SEND(sprintf(_xs, "\"%d:%s\",\n\r", i, mfs_text[i]);) 
+  }
+
+  SEND(sprintf(_xs, "\n\r\"MFS\": %d\n\r\n\r", json_multifunction);)
+
+  multifunction_display();
+
+/*
+ * All done, return
+ */
+  return;
+}
 
 /*-----------------------------------------------------
  * 
@@ -399,16 +441,11 @@ static void sw_state
  * text in a JSON message.
  * 
  *-----------------------------------------------------*/
- //                             0            1            2             3            4             5            6    7    8          9
-static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED", "ADJUST_LED", "PAPER_SHOT", "PC_TEST",  "POWER_ON_OFF",   "6", "7", "8", "TARGET_TYPE"};
-
- //                              0           1            2             3            4             5            6    7    8          9
-static char* mfs2_text[] = { "DEFAULT", "RAPID_RED", "RAPID_GREEN",    "3",         "4",          "5",   "      6", "7", "8",       "9"};
 
 void multifunction_display(void)
 {
-  SEND(sprintf(_xs, "\"MFS_TAP1\": \"%s\",\n\r\"MFS_TAP2\": \"%s\",\n\r\"MFS_HOLD1\": \"%s\",\n\r\"MFS_HOLD2\": \"%s\",\n\r\"MFS_HOLD12\": \"%s\",\n\r", 
-  mfs_text[TAP1(json_multifunction)], mfs_text[TAP2(json_multifunction)], mfs_text[HOLD1(json_multifunction)], mfs_text[HOLD2(json_multifunction)], mfs_text[HOLD12(json_multifunction)]);)
+  SEND(sprintf(_xs, "\"MFS_HOLD12\": \"%s\",\n\r\"MFS_TAP2\": \"%s\",\n\r\"MFS_TAP1\": \"%s\",\n\r\"MFS_HOLD2\": \"%s\",\n\r\"MFS_HOLD1\": \"%s\",\n\r", 
+  mfs_text[HOLD12(json_multifunction)], mfs_text[TAP2(json_multifunction)], mfs_text[TAP1(json_multifunction)], mfs_text[HOLD2(json_multifunction)], mfs_text[HOLD1(json_multifunction)]);)
   SEND(sprintf(_xs, "\"MFS_CONFIG\": \"%s\",\n\r\"MFS_DIAG\": \"%s\",\n\r", 
   mfs2_text[HOLD1(json_multifunction2)], mfs2_text[HOLD2(json_multifunction2)]);)
   
@@ -437,10 +474,10 @@ static void send_fake_score(void)
 { 
   static   shot_record_t shot;
     
-  shot.x = 0 ; // esp_random() % (json_sensor_dia/2.0);
-  shot.y = 0;
+  shot.x = esp_random() % (5000);
+  shot.y = esp_random() % (5000);
+  s_of_sound = speed_of_sound(temperature_C(), humidity_RH());
   shot.shot_number++;
   send_score(&shot);
-
   return;
 } 
