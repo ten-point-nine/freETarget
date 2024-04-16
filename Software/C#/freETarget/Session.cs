@@ -317,7 +317,15 @@ namespace freETarget {
         public void start() {
             this.startTime = DateTime.Now;
             if (this.minutes > 0) {
-                this.endTime = DateTime.Now.AddMinutes(this.minutes);
+                this.endTime = this.startTime.AddMinutes(this.minutes);
+            } else {
+                this.endTime = DateTime.MinValue;
+            }
+        }
+
+        public void continueSession() {
+            if (this.minutes > 0) {
+                this.endTime = this.startTime.AddMinutes(this.minutes);
             } else {
                 this.endTime = DateTime.MinValue;
             }

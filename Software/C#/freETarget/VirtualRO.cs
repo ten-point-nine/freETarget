@@ -39,9 +39,9 @@ namespace freETarget {
         private readonly SpeechSynthesizer synth;
 
         private const int readyDelay = 3; //seconds
-        private const int loadDelay = 5;
+        private const int loadDelay = 7;
         private const int betweenSeries = 15;
-        private const int betweenShots = 7;
+        private const int betweenShots = 3;
 
         private const int RFcooldown = 1; //seconds
 
