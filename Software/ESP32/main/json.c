@@ -111,17 +111,18 @@ const json_message_t JSON[] = {
                                                                                                                           + (PAPER_SHOT * 100) 
                                                                                                                           + (ON_OFF * 10) 
                                                                                                                           + (PAPER_FEED) },  // Multifunction switch action
+  {"\"MFS_HOLD12\":",     &json_multifunction,               0,                IS_MFS+_HOLD12, 0,           NONVOL_MFS,                        0 },
+  {"\"MFS_HOLD2\":",      &json_multifunction,               0,                IS_MFS+_HOLD2,  0,           NONVOL_MFS,                        0 },
+  {"\"MFS_HOLD1\":",      &json_multifunction,               0,                IS_MFS+_HOLD1,  0,           NONVOL_MFS,                        0 },
+  {"\"MFS_TAP2\":",       &json_multifunction,               0,                IS_MFS+_TAP2,   0,           NONVOL_MFS,                        0 },
+  {"\"MFS_TAP1\":",       &json_multifunction,               0,                IS_MFS+_TAP1,   0,           NONVOL_MFS,                        0 },
   {"\"MFS2\":",            &json_multifunction2,             0,                IS_INT32,  0,                NONVOL_MFS2,  (NO_ACTION*10000) 
                                                                                                                           + (NO_ACTION * 1000)
                                                                                                                           + (NO_ACTION * 100) 
                                                                                                                           + (NO_ACTION * 10) 
                                                                                                                           + (NO_ACTION) },   // Multifunction switch action
-  {"\"MFS?\"",            0,                                 0,                IS_VOID,   &multifunction_show,   0,                  0 },
-  {"\"MFS_HOLD12\":",     0,                                 0,                IS_INT32,  &multifunction_hold12, 0,                  0 },
-  {"\"MFS_HOLD2\":",      0,                                 0,                IS_INT32,  &multifunction_hold2,  0,                  0 },
-  {"\"MFS_HOLD1\":",      0,                                 0,                IS_INT32,  &multifunction_hold1,  0,                  0 },
-  {"\"MFS_TAP2\":",       0,                                 0,                IS_INT32,  &multifunction_tap2,   0,                  0 },
-  {"\"MFS_TAP1\":",       0,                                 0,                IS_INT32,  &multifunction_tap1,   0,                  0 },
+  {"\"MFS?\"",            0,                                 0,                IS_VOID,   &multifunction_show,                       0 },
+
   {"\"MIN_RING_TIME\":",  &json_min_ring_time,               0,                IS_INT32,  0,                NONVOL_MIN_RING_TIME,  500 },    // Minimum time for ringing to stop (ms)
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT32,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
   {"\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT32,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
@@ -343,7 +344,42 @@ static void handle_json(void)
             case IS_FIXED:                                      // Fixed cannot be changed
               x = 0;
             break;
-                        
+
+            case IS_MFS:                                      // 
+              x = atoi(&input_JSON[i+k]);                     // Integer
+              switch(JSON[j].convert & FLOAT_MASK)
+              {
+                case _HOLD1:
+                  x = multifunction_hold1(x);
+                  break;
+                
+                case _HOLD2:
+                  x = multifunction_hold2(x);
+                  break;
+                                  
+                case _TAP1:
+                  x = multifunction_tap1(x);
+                  break;
+                
+                case _TAP2:
+                  x = multifunction_tap2(x);
+                  break;
+                
+                case _HOLD12:
+                  x = multifunction_hold12(x);
+                  break;
+              }
+
+              if ( JSON[j].value != 0 )
+              {
+                *JSON[j].value = x;                             // Save the value
+              }
+              if ( JSON[i].non_vol != 0 )
+              {
+                nvs_set_i32(my_handle, JSON[j].non_vol, x);    // Store into NON-VOL
+              }
+              break;
+
             case IS_TEXT:                                       // Convert to text
             case IS_SECRET:
               while ( input_JSON[i+k] != '"' )                  // Skip to the opening quote
@@ -475,7 +511,7 @@ int instr(char* s1, char* s2)
 
 void show_echo(void)
 {
-  unsigned int i, j;
+  unsigned int i, j, k;
   char str_c[32];   // String holding buffers
 
   if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF) )
@@ -520,6 +556,33 @@ void show_echo(void)
             SEND(sprintf(_xs, "%s \"%s\", \r\n", JSON[i].token, str_c);)
             break;
             
+          case IS_MFS:                                        // Covert to a switch ID
+              switch (JSON[i].convert & FLOAT_MASK)
+              {
+                default:
+                case _HOLD1:
+                  k = HOLD1(*JSON[i].value);
+                  break;
+
+                case _HOLD2:
+                  k = HOLD2(*JSON[i].value);
+                  break;
+
+                case _TAP1:
+                  k = TAP1(*JSON[i].value);
+                  break;
+
+                case _TAP2:
+                  k = TAP2(*JSON[i].value);
+                  break;
+
+                case _HOLD12:
+                  k = HOLD12(*JSON[i].value);
+                  break;
+              }
+          SEND(sprintf(_xs, "%s \"%s\", \r\n", JSON[i].token, multifunction_str(k));)
+          break;
+
         case IS_INT32:
         case IS_FIXED:
           SEND(sprintf(_xs, "%s %d, \r\n", JSON[i].token, *JSON[i].value);)
@@ -538,9 +601,6 @@ void show_echo(void)
  * Finish up with the special cases
  */
   SEND(sprintf(_xs, "\n\rStatus\r\n");)                                                                    // Blank Line
-  
-  multifunction_display();
-  
   SEND(sprintf(_xs, "\"TRACE\": %d, \n\r", is_trace);)         // TRUE to if trace is enabled
   SEND(sprintf(_xs, "\"RUN_STATE\": %d, \n\r", run_state);)    // TRUE to if trace is enabled
   SEND(sprintf(_xs, "\"RUNNING_MINUTES\": %10.6f, \n\r", esp_timer_get_time()/100000.0/60.0);)  // On Time

@@ -404,64 +404,61 @@ static void sw_state
  * text in a JSON message.
  * 
  *-----------------------------------------------------*/ 
-void multifunction_common
+unsigned int multifunction_common
 (
   unsigned int newMFS,
   unsigned int place,
   unsigned int oldMFS
 )
 {
+  unsigned int x;
+
   newMFS %= 10;
-  json_multifunction -= oldMFS * place;
-  json_multifunction += newMFS * place;
-  nvs_set_i32(my_handle, NONVOL_MFS, json_multifunction);    // Store into NON-VOL
-  return;
+  x = json_multifunction;
+  x -= oldMFS * place;
+  x += newMFS * place;
+  return x;
 
 }
 
-void multifunction_hold12
+unsigned int multifunction_hold12
 (
   unsigned int newMFS         // New field value
 )
 {
-  multifunction_common(newMFS, SHIFT_HOLD12, HOLD12(json_multifunction));
-  return;
+  return multifunction_common(newMFS, SHIFT_HOLD12, HOLD12(json_multifunction));
 }
 
-void multifunction_hold2
+unsigned int multifunction_hold2
 (
   unsigned int newMFS         // New field value
 )
 {
-  multifunction_common(newMFS, SHIFT_HOLD2, HOLD2(json_multifunction));
-  return;
+  return multifunction_common(newMFS, SHIFT_HOLD2, HOLD2(json_multifunction));
 }
 
-void multifunction_hold1
+unsigned int multifunction_hold1
 (
   unsigned int newMFS         // New field value
 )
 {
-  multifunction_common(newMFS, SHIFT_HOLD1, HOLD1(json_multifunction));
-  return;
+  return multifunction_common(newMFS, SHIFT_HOLD1, HOLD1(json_multifunction));
 }
 
-void multifunction_tap2
+unsigned int multifunction_tap2
 (
   unsigned int newMFS         // New field value
 )
 {
-  multifunction_common(newMFS, SHIFT_TAP2, TAP2(json_multifunction));
-  return;
+  return multifunction_common(newMFS, SHIFT_TAP2, TAP2(json_multifunction));
 }
 
-void multifunction_tap1
+unsigned int multifunction_tap1
 (
   unsigned int newMFS         // New field value
 )
 {
-  multifunction_common(newMFS, SHIFT_TAP1,TAP1(json_multifunction));
-  return;
+  return multifunction_common(newMFS, SHIFT_TAP1,TAP1(json_multifunction));
 }
 
 /*-----------------------------------------------------
@@ -531,6 +528,29 @@ void multifunction_display(void)
  * All done, return
  */
   return;
+}
+
+/*-----------------------------------------------------
+ * 
+ * @function: multifunction_str
+ * 
+ * @brief:    Return the text string for this function
+ * 
+ * @return:   Pointer to text
+ * 
+ *-----------------------------------------------------
+ *
+ * Returns the text string for the switch so that it can
+ * be dislayed.
+ * 
+ *-----------------------------------------------------*/
+
+char *multifunction_str
+(
+  unsigned int mfs_function     // Switch to be displayed
+)
+{
+  return mfs_text[mfs_function]; // Return a pointer to the string
 }
 
 /*----------------------------------------------------------------

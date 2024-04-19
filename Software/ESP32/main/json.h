@@ -23,22 +23,23 @@ typedef struct  {
   char*             token;    // JSON token string, ex "RADIUS": 
   int*              value;    // Where value is stored 
   double*         d_value;    // Where value is stored 
-  byte_t          convert;    // Conversion type
-  void        (*f)(int x);   // Function to execute with message
+  int             convert;    // Conversion type
+  void        (*f)(int x);    // Function to execute with message
   char*           non_vol;    // Storage in NON-VOL
   int          init_value;    // Initial Value
 } json_message_t;
 
 extern const json_message_t JSON[];
 
-#define IS_VOID       0xE0       //Value is a void
-#define IS_TEXT       0xC0       // Value is a string
-#define IS_SECRET     0xA0       // Value is a string but hidden
-#define IS_INT32      0x80       // Value is a 64 bit int
-#define IS_FLOAT      0x60       // Value is a floating point number
-#define IS_FIXED      0x40       // The value cannot be changed
+#define IS_VOID       (7<<6)   // Value is a void
+#define IS_MFS        (6<<6)   // Value is a multifunction switch
+#define IS_TEXT       (5<<6)   // Value is a string
+#define IS_SECRET     (4<<6)   // Value is a string but hidden
+#define IS_INT32      (3<<6)   // Value is a 64 bit int
+#define IS_FLOAT      (2<<6)   // Value is a floating point number
+#define IS_FIXED      (1<<6)   // The value cannot be changed
 #define IS_MASK       (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED)
-#define FLOAT_MASK    ((~IS_MASK) & 0xFF)    // Scaling factor
+#define FLOAT_MASK    ((~IS_MASK) & 0xFF)    // Scaling factor 6 bits
 
 #define SSID_SIZE     31         // Reserve 30+1 bytes for SSID
 #define  PWD_SIZE     31         // Reserve 30+1 bytes for Password

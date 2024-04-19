@@ -17,20 +17,26 @@ void multifunction_switch_tick(void);                     // Monitor the switche
 void multifuction_display(void);                          // Display the MFS settings
 void multifunction_wait_open(void);                       // Wait for both multifunction switches to be open
 void multifunction_show(unsigned int);                    // Show the value of the settings 
-void multifunction_hold12(unsigned int);                  // Modify the hold 12 field
-void multifunction_hold2(unsigned int);                   // Modify the hold 2 field
-void multifunction_hold1(unsigned int);                   // Modify the hold 1 field
-void multifunction_tap2(unsigned int);                    // Modify the tap 2 field
-void multifunction_tap1(unsigned int);                    // Modify the tap 1 field
+unsigned int multifunction_hold12(unsigned int);          // Modify the hold 12 field
+unsigned int multifunction_hold2(unsigned int);           // Modify the hold 2 field
+unsigned int multifunction_hold1(unsigned int);           // Modify the hold 1 field
+unsigned int multifunction_tap2(unsigned int);            // Modify the tap 2 field
+unsigned int multifunction_tap1(unsigned int);            // Modify the tap 1 field
+char* multifunction_str(unsigned int);                    // Return the string name of the switch action
 
 /*
  * Multifunction Switch Use when using DIP Switch for MFS
  */
 #define HOLD1(x)    LO10((x))          // Low digit        xxxx2
+#define _HOLD1              1
 #define HOLD2(x)    HI10((x))          // High digit       xxx2x
+#define _HOLD2              2
 #define TAP1(x)     HLO10((x))         // High Low digit   xx2xx
+#define _TAP1               3
 #define TAP2(x)     HHI10((x))         // High High digit  x2xxx
+#define _TAP2               4
 #define HOLD12(x)   HHH10((x))         // Highest digit    2xxxx
+#define _HOLD12             5
 #define SHIFT_HOLD1      1             // Hold 1 place
 #define SHIFT_HOLD2     10             // *
 #define SHIFT_TAP1     100             // *

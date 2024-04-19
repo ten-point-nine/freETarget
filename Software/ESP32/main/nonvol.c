@@ -194,8 +194,9 @@ void factory_nonvol
     printf("%d ", i);
     switch ( JSON[i].convert & IS_MASK )
     {
-       case IS_VOID:                                        // Variable does not contain anything 
-       case IS_FIXED:                                       // Variable cannot be overwritten
+       case IS_VOID:                                      // Variable does not contain anything 
+       case IS_FIXED:                                     // Variable cannot be overwritten
+       case IS_MFS:                                       // MFS initialized from MFS entry
        break;
        
        case IS_TEXT:
