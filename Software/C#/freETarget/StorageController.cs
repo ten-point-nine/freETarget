@@ -469,6 +469,7 @@ namespace freETarget {
                 cmd.ExecuteNonQuery();
 
                 Console.WriteLine("Session saved");
+                mainWindow.log("~~~ Session saved ~~~");
             } catch(Exception ex){
                 string s = "Error saving session to the database. Make sure you have write access to the folder." + Environment.NewLine + ex.Message;
                 mainWindow.log(s);

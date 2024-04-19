@@ -128,6 +128,7 @@
       <DependentUpon>frmUpload.cs</DependentUpon>
     </Compile>
     <Compile Include="PDFGenerator.cs" />
+    <Compile Include="ReverseTextReader.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="StorageController.cs" />
     <Compile Include="targets\B2at10m.cs" />

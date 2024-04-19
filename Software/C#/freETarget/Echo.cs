@@ -177,6 +177,18 @@ namespace freETarget {
                 return null;
             }
         }
+
+        public override string ToString() {
+            StringBuilder sb = new StringBuilder();
+            foreach (System.Reflection.FieldInfo property in this.GetType().GetFields()) {
+                sb.Append(property.Name);
+                sb.Append(": ");
+                sb.Append(property.GetValue(this));
+                sb.Append(", ");
+            }
+
+            return sb.ToString();
+        }
     }
 
 

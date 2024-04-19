@@ -60,6 +60,10 @@ namespace freETarget {
 
         private Session currentSession;
 
+        private String recoverySessionName="";
+        private String recoverySessionTime="";
+        private List<String> recoveryLines;
+
         public StorageController storage;
         public EventManager eventManager;
 
@@ -97,6 +101,8 @@ namespace freETarget {
             this.reconnectTimer = new System.Windows.Forms.Timer();
             this.reconnectTimer.Interval = 2000; //reconnect time interval set to 2 seconds
             this.reconnectTimer.Tick += new System.EventHandler(this.reconnectTimer_Tick);
+
+            bool cleanEnd = checkLogForCleanDisconnect();
 
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             string v = "v" + assembly.GetName().Version.Major + "." + assembly.GetName().Version.Minor + "." + assembly.GetName().Version.Build;
@@ -168,6 +174,10 @@ namespace freETarget {
             digitalClock.ResizeSegments();
 
             loadEventsOnTabs();
+
+            if (cleanEnd == false) {
+                recoverySessionName = recovery();
+            }
 
         }
 
@@ -242,15 +252,12 @@ namespace freETarget {
                 mode = FileMode.Truncate;
             }
 
-
             if (Properties.Settings.Default.fileLogging) { //log enabled from settings
 
                 try {
                     //Opens a new file stream which allows asynchronous reading and writing
                     using (StreamWriter sw = new StreamWriter(new FileStream(logFile, mode, FileAccess.Write, FileShare.ReadWrite))) {
-
-                        sw.WriteLine(DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss:fff") + " | " + s.Trim());
-
+                        sw.WriteLine(DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss:fff",CultureInfo.InvariantCulture) + " | " + s.Trim());
                     }
                 } catch (Exception ex) {
                     //oh well...
@@ -391,7 +398,7 @@ namespace freETarget {
                         }
                     } else {
                         lastEcho = Echo.parseJson(message);
-
+                        log("Echo received =   " + (lastEcho != null ? lastEcho.ToString() : "null"));
 
                         if (incomingJSON.IndexOf("}") != -1) {
 
@@ -541,6 +548,18 @@ namespace freETarget {
 
             initNewSession();
             targetRefresh();
+
+            if (recoveryLines!=null) {
+                //there are shots to recover
+                log("Recovering shots...");
+                foreach (string line in recoveryLines) {
+                    comms.CommEventArgs e2 = new comms.CommEventArgs(line);
+                    DataReceived(null, e2);
+                }
+
+                currentSession.startTime = DateTime.ParseExact(recoverySessionTime, "yyyy.MM.dd HH:mm:ss:fff", CultureInfo.InvariantCulture);
+                currentSession.continueSession();
+            }
 
         }
 
@@ -912,6 +931,8 @@ namespace freETarget {
                 disconnect();
 
             }
+
+            log("@@@@@ normal shutdown @@@@@");
         }
 
         private void frmMainWindow_Shown(object sender, EventArgs e) {
@@ -936,13 +957,24 @@ namespace freETarget {
 
             }
 
-            this.log("       Starting new session with name: " + tcSessionType.SelectedTab.Text.Trim());
+            string sessionName = tcSessionType.SelectedTab.Text.Trim();
+            if (recoverySessionName != "") {
+                sessionName = recoverySessionName.Trim();
+                foreach (TabPage tab in tcSessionType.TabPages) {
+                    if (sessionName.Contains(tab.Text.Trim())) {
+                        tcSessionType.SelectedTab = tab;
+                        break;
+                    }
+                }
+            }
 
-            Event ev = eventManager.findEventByName(tcSessionType.SelectedTab.Text.Trim());
+            this.log("       Starting new session with name: " + sessionName);
+
+            Event ev = eventManager.findEventByName(sessionName);
             if (ev == null) {
-                this.displayMessage("Could not find event with name " + tcSessionType.SelectedTab.Text.Trim(), false);
-                this.log("Could not find event with name " + tcSessionType.SelectedTab.Text.Trim());
-                MessageBox.Show("Could not find event with name " + tcSessionType.SelectedTab.Text.Trim(), "Configuration error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                this.displayMessage("Could not find event with name " + sessionName, false);
+                this.log("Could not find event with name " + sessionName);
+                MessageBox.Show("Could not find event with name " + sessionName, "Configuration error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                 return;
             }
@@ -1481,7 +1513,7 @@ namespace freETarget {
             tcSessionType.Enabled = false;
             tcSessionType.Refresh();
 
-            initNewSession();
+            //initNewSession();
             targetRefresh();
 
             frmArduino ard = frmArduino.getInstance(this);
@@ -1872,6 +1904,86 @@ namespace freETarget {
 
         public Session getCurrentSession() {
             return this.currentSession;
+        }
+
+        private string recovery() {
+            DialogResult result = MessageBox.Show("freETarget has detected that the program did not shutdown corectly."
+                    + Environment.NewLine + Environment.NewLine
+                    + "Do you want to try to recover the shots of the last session from the log?"
+                    + Environment.NewLine + Environment.NewLine
+                    + "Recovery will happen after the PC client connects to the target."
+                   , "Abnormal shutdown detected", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+            if (result == DialogResult.Yes) {
+                //parsing log from the end to search for unsaved shots
+                FileStream stream = new FileStream(this.logFile, FileMode.Open, FileAccess.Read);
+                var reader = new ReverseTextReader(stream, Encoding.Default);
+                List<String> tempLines = new List<string>();
+                while (!reader.EndOfStream) {
+                    String line = reader.ReadLine().Trim();
+                    //Console.WriteLine(line);
+                    tempLines.Add(line);
+                    if (line.Contains("### New Session")) {
+                        //we reached the start of the last session
+                        break;
+                    }
+                }
+                reader = null;
+                stream.Close();
+
+                //select only the actual shots
+                List<String> sessionLines = new List<string>();
+                String sessionTitle = "";
+                for (int i = tempLines.Count - 1; i >= 0; i--) {
+                    if (tempLines[i].Contains("------------------------------------------------------------------------")) { 
+                        //stop at the last start
+                        break; 
+                    }
+
+                    //isolate the session line
+                    if (tempLines[i].Contains("### New Session")) {
+                        sessionTitle = tempLines[i];
+                    }
+
+                    sessionLines.Add(tempLines[i]);
+                }
+
+                int firstQuote = sessionTitle.IndexOf("'");
+                int secondQuote = sessionTitle.LastIndexOf("'");
+                if (firstQuote > 0) {
+                    recoverySessionTime = sessionTitle.Substring(0, sessionTitle.IndexOf("|")-1);
+                    sessionTitle = sessionTitle.Substring(firstQuote + 1, secondQuote - firstQuote - 1);
+                }
+
+                //isolate just the shot jsons
+                for (int i =0; i < sessionLines.Count; i++) {
+                    if (sessionLines[i].IndexOf("|") == -1){
+                        continue;
+                    }
+                    sessionLines[i] = sessionLines[i].Substring(sessionLines[i].IndexOf("|") + 2);
+                }
+
+                log("Recovering session '" + sessionTitle + "' that started at <" + recoverySessionTime + "> ... after connect");
+
+                recoveryLines = sessionLines;
+                return sessionTitle;
+            }
+            return "";
+        }
+
+        private bool checkLogForCleanDisconnect() {
+            IEnumerable<String> lines = File.ReadLines(this.logFile);
+            int count = lines.Count();
+            if (count > 0) {
+                String lastLine = lines.Last();
+                if (lastLine.Contains("@@@@@ normal shutdown @@@@@")) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return true;
+            }
         }
     }
 
