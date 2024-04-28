@@ -370,7 +370,10 @@ void self_test
 #define PASS_RUNNING 0x00FF
 #define PASS_A       0x0100
 #define PASS_B       0x0200
+#define PASS_C       0X4000
+#define PASS_D       0x8000
 #define PASS_MASK    (PASS_RUNNING | PASS_A | PASS_B)
+#define PASS_TEST    (PASS_RUNNING | PASS_C)
 
 void factory_test(void)
 {
@@ -453,6 +456,16 @@ void factory_test(void)
       set_status_LED("-- ");
     }
 
+    if ( DIP_SW_C )
+    {
+      pass |= PASS_C;
+    }
+
+    if ( DIP_SW_D )
+    {
+      pass |= PASS_D;
+    }
+
     for (i=3; i >= 0; i--)
     {
       if ((dip & (1<<i)) == 0)
@@ -493,9 +506,12 @@ void factory_test(void)
 
     printf("V:%s:",SOFTWARE_VERSION);
 
-    if ( pass == PASS_MASK ) 
+    if ( (pass == PASS_MASK) || (pass == PASS_TEST) ) 
     {
       printf("  PASS");
+      vTaskDelay(ONE_SECOND);
+      arm_timers();
+      pass = 0;
     }
 
 /*

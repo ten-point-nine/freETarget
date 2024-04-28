@@ -191,7 +191,6 @@ void factory_nonvol
   i=0;
   while ( JSON[i].token != 0 )
   {
-    printf("%d ", i);
     switch ( JSON[i].convert & IS_MASK )
     {
        case IS_VOID:                                      // Variable does not contain anything 
