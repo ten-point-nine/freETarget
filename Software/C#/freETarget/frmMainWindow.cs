@@ -559,6 +559,10 @@ namespace freETarget {
 
                 currentSession.startTime = DateTime.ParseExact(recoverySessionTime, "yyyy.MM.dd HH:mm:ss:fff", CultureInfo.InvariantCulture);
                 currentSession.continueSession();
+
+                recoveryLines = null;
+                recoverySessionName = "";
+                recoverySessionTime = "";
             }
 
         }
