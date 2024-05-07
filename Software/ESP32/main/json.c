@@ -580,7 +580,7 @@ void show_echo(void)
                   k = HOLD12(*JSON[i].value);
                   break;
               }
-          SEND(sprintf(_xs, "%s \"%s\", \r\n", JSON[i].token, multifunction_str(k));)
+          SEND(sprintf(_xs, "%s \"(%d) - %s\", \r\n", JSON[i].token, k, multifunction_str(k));)
           break;
 
         case IS_INT32:

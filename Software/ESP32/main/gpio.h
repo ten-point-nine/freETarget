@@ -31,6 +31,7 @@ void disable_sensor_interrupt(void);                      // Turn off the sensor
 
 void digital_test(void);                                  // Execute the digital test
 void paper_on_off(bool on);                               // Turn the motor on or off
+int is_paper_on();                                        // Return the current running state
 void rapid_green(unsigned int state);                     // Drive the GREEN light
 void rapid_red(unsigned int state);                       // Drive the RED light
 
@@ -117,8 +118,6 @@ void multifunction_display(void);                         // Display the MFS set
 #define DIP_SW_C        (gpio_get_level(DIP_C) == 0)  // Switch Input C
 #define DIP_SW_D        (gpio_get_level(DIP_D) == 0)  // Switch Input D
 #define VERBOSE_TRACE   (DIP_D)         // 8 Show the verbose software trace
-
-
 
 #define FACE_SENSOR  19
 

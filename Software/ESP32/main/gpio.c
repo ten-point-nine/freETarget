@@ -483,10 +483,9 @@ void drive_paper(void)
 
 void drive_paper_tick(void)
 {
-  if ( paper_time == 0 )
+  if ( (paper_time == 0) && (is_paper_on() != 0) )
   {
     paper_on_off(false);                      // Motor OFF
-    paper_time = 1;
     DLT(DLT_DIAG, printf("Done");)
   }
   
@@ -513,7 +512,7 @@ void drive_paper_tick(void)
  * the FET accordingly
  * 
  *-----------------------------------------------------*/
-
+int paper_state;
 void paper_on_off                               // Function to turn the motor on and off
 (
   bool on                                      // on == true, turn on motor drive
@@ -525,16 +524,21 @@ void paper_on_off                               // Function to turn the motor on
   }
   else
   {
+    paper_time = 0;
     gpio_set_level(PAPER, PAPER_OFF);            // Turn it off
   }
 
 /*
  * No more, return
  */
+  paper_state = on;
   return;
 }
 
-
+int is_paper_on(void)
+{
+  return paper_state;
+}
 /*-----------------------------------------------------
  * 
  * @function: face_ISR

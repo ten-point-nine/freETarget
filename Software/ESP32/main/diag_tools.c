@@ -417,7 +417,6 @@ void factory_test(void)
       pass |= PASS_RUNNING;
     }
     printf("\r\nSens: ");
-      
     for (i=0; i != 8; i++)
     {
       if ( i == 4 )

@@ -25,11 +25,14 @@
  *  Definitions
  */
 #define LONG_PRESS (ONE_SECOND)
-#define SWITCH_A_TAP   1
-#define SWITCH_A_HOLD  2
-#define SWITCH_B_TAP   3
-#define SWITCH_B_HOLD  4
-#define SWITCH_AB_HOLD 5
+#define TAP_A_PENDING 0x01
+#define TAP_B_PENDING 0x02
+#define TAP_A         0x04
+#define TAP_B         0x08
+#define HOLD_A        0x10
+#define HOLD_B        0x20
+#define HOLD_AB       (HOLD_A | HOLD_B)
+#define SWITCH_VALID  0x80
 
 /*
  * Function Prototypes 
@@ -41,8 +44,7 @@ static void sw_state(unsigned int action);      // Carry out the MFS function
  * Variables 
  */
 static unsigned int dip_mask;                   // Output to the DIP port if selected
-static unsigned int switch_A_count;
-static unsigned int switch_B_count;             // How long has the switch been pressed
+static unsigned int switch_state;               // What switches are pressed
 
 /*-----------------------------------------------------
  * 
@@ -115,6 +117,106 @@ static unsigned int switch_B_count;             // How long has the switch been 
  
 /*-----------------------------------------------------
  * 
+ * @function: multifunction_switch_tick
+ * 
+ * @brief:    Determine the operation of the switched
+ * 
+ * @return:   Switch state
+ * 
+ *-----------------------------------------------------
+ *
+ * The function polls the switches and keeps track of
+ * how long the switch has been closed for.
+ * 
+ * Turn on the coloured LEDs based on how long the switch
+ * has been closed for.
+ * 
+ *-----------------------------------------------------*/
+void multifunction_switch_tick(void)
+{
+  static unsigned int switch_A_count;
+  static unsigned int switch_B_count;             // How long has the switch been pressed
+
+  IF_NOT(IN_OPERATION) return;
+
+  if ( switch_state & SWITCH_VALID )
+  {
+    return;       // Stop checking once we have a valid switch
+  }
+
+/*
+ * Figure out what switches are pressed
+ */
+   if ( DIP_SW_A )
+   { 
+    switch_A_count++;
+    if ( switch_A_count < LONG_PRESS)
+    {
+      switch_state |= TAP_A_PENDING;
+      set_status_LED(LED_MFS_a);
+    }
+    else
+    {
+      switch_state &= ~TAP_A_PENDING;
+      switch_state |= HOLD_A | SWITCH_VALID;
+      switch_A_count = LONG_PRESS;
+      set_status_LED(LED_MFS_A);
+    }
+  }
+  else  // Released the switch,  See if it was a tap
+  {
+    if ( switch_state & TAP_A_PENDING )
+    {
+      switch_state |= TAP_A | SWITCH_VALID;
+      switch_state &= ~TAP_A_PENDING;
+    }
+    switch_A_count = 0;
+  }
+
+  if ( DIP_SW_B )
+  { 
+    switch_B_count++;
+    if ( switch_B_count < LONG_PRESS)
+    {
+      switch_state |= TAP_B_PENDING;
+      set_status_LED(LED_MFS_b);
+    }
+    else
+    {
+      switch_state &= ~TAP_B_PENDING;
+      switch_state |= HOLD_B | SWITCH_VALID;
+      switch_B_count = LONG_PRESS;
+      set_status_LED(LED_MFS_B);
+    }
+  }
+  else    // Released the switch, seeif it was a tap
+  {
+    if ( switch_state & TAP_B_PENDING )
+    {
+      switch_state |= SWITCH_VALID | TAP_B;
+      switch_state &= ~TAP_B_PENDING;
+    }
+    switch_B_count = 0;
+  }
+
+/*
+ *  Look for the special case where there is HOLD_12, but 
+ *  there is some kind of bounce
+ */
+  if ( (switch_state & (HOLD_A | HOLD_B))
+        && (switch_state & (TAP_A | TAP_B )) )
+  {
+      switch_state |= (HOLD_A | HOLD_B);
+      switch_state &= ~(TAP_A | TAP_B);
+  }
+
+/*
+ *  All done
+ */   
+  return;
+ }
+/*-----------------------------------------------------
+ * 
  * @function: multifunction_switch
  * 
  * @brief:    Carry out the functions of the multifunction switch
@@ -136,44 +238,6 @@ static unsigned int switch_B_count;             // How long has the switch been 
  * Both switches pressed, Toggle the Tabata State
  * Either switch set for target type switch
  *-----------------------------------------------------*/
-void multifunction_switch_tick(void)
-{
-  IF_NOT(IN_OPERATION) return;
-
-/*
- * Figure out what switches are pressed
- */
-   if ( DIP_SW_A )
-   { 
-     switch_A_count++;
-     if ( switch_A_count < LONG_PRESS)
-     {
-      set_status_LED(LED_MFS_a);
-     }
-     else
-     {
-      set_status_LED(LED_MFS_A);
-     }
-   }
-
-   if ( DIP_SW_B )
-   { 
-     switch_B_count++;
-     if ( switch_B_count < LONG_PRESS)
-     {
-      set_status_LED(LED_MFS_b);
-     }
-     else
-     {
-      set_status_LED(LED_MFS_B);
-     }
-   }  
-/*
- *  All done
- */   
-  return;
- }
-
 
 void multifunction_switch(void)
 {
@@ -181,7 +245,7 @@ void multifunction_switch(void)
 
   IF_NOT(IN_OPERATION) return;
 
-  if ( DIP_SW_A || DIP_SW_B )           // Do nothing if the switches are pressed
+  if ( (switch_state & SWITCH_VALID) == 0 ) // Invalid switch state
   {
     return;
   }
@@ -189,76 +253,58 @@ void multifunction_switch(void)
 /*
  * Figure out what switches are pressed
  */
-  action = 0;
-  if ( switch_A_count != 0 )
+  action = switch_state & (~SWITCH_VALID);
+  if ( switch_state & HOLD_A )
   {
-    action = SWITCH_A_TAP;
-    if ( switch_A_count >= LONG_PRESS )
+    if ( HOLD1(json_multifunction) == TARGET_TYPE ) 
     {
-      action = SWITCH_A_HOLD;
-      if ( HOLD1(json_multifunction) == TARGET_TYPE ) 
-      {
-        sw_state(HOLD1(json_multifunction));
-        action = 0;
-      }
+      sw_state(HOLD1(json_multifunction));
+      action = 0;
     }
   }
+
+  if ( switch_state & HOLD_B )
+  {
+    if ( HOLD2(json_multifunction) == TARGET_TYPE ) 
+    {
+      sw_state(HOLD2(json_multifunction));
+      action = 0;
+    }
+  }  
   
-  if ( switch_B_count != 0 )
-  {
-    action = SWITCH_B_TAP;
-    if ( switch_B_count >= LONG_PRESS )
-    {
-      action = SWITCH_B_HOLD;
-      if ( HOLD2(json_multifunction) == TARGET_TYPE ) 
-      {
-        sw_state(HOLD2(json_multifunction));
-        action = 0;
-      }
-    }
-  }
-
-  if ( (switch_A_count >= LONG_PRESS) && (switch_B_count >= LONG_PRESS) )
-  {
-    action = SWITCH_AB_HOLD;
-  }
-
-  if ( action == 0 )                 // Nothing to do
-  {
-    return;
-  }
-   
 /*
  * Carry out the switch action
  */
   switch (action)
   {
-    case SWITCH_A_TAP:
+    case TAP_A:
       sw_state(TAP1(json_multifunction));
       break;
 
-    case SWITCH_B_TAP:
+    case TAP_B:
       sw_state(TAP2(json_multifunction));
       break;
 
-    case SWITCH_A_HOLD:
+    case HOLD_A:
       sw_state(HOLD1(json_multifunction));
       break;
 
-    case SWITCH_B_HOLD:
+    case HOLD_B:
       sw_state(HOLD2(json_multifunction));
       break;
 
-    case SWITCH_AB_HOLD:
+    case HOLD_AB:
       sw_state(HOLD12(json_multifunction));
+      break;
+
+    default:
       break;
   }
   
 /*
  * All done, return the GPIO state
  */
-  switch_A_count = 0;
-  switch_B_count = 0;
+  switch_state = 0;
   set_status_LED(LED_MFS_OFF);
   return;
 }
@@ -303,20 +349,17 @@ static void sw_state
       vTaskDelay(ONE_SECOND/2);
       set_LED_PWM_now(json_LED_PWM);      // and leave it on
       power_save = (long)json_power_save * 60L * (long)ONE_SECOND; // and resets the power save time
-      json_power_save += 30;      
-      SEND(sprintf(_xs, "\r\n{\"LED_PWM\": %d}\n\r", json_power_save);)
+      json_power_save += 30;
       break;
         
     case PAPER_FEED:                      // Turn on the paper untill the switch is pressed again 
       DLT(DLT_INFO, printf("\r\nAdvancing paper");)
       paper_on_off(true);
-      while ( (DIP_SW_A == 0) && (DIP_SW_B == 0))
+      while ( DIP_SW_A || DIP_SW_B )
       {
         timer_delay(1);
       }
       paper_on_off(false);
-      switch_A_count = 0;                 // Reset the LEDs if they are on
-      switch_B_count = 0;
       set_status_LED(LED_MFS_OFF);
       DLT(DLT_INFO, printf("\r\nDone");)
       break;
@@ -335,23 +378,14 @@ static void sw_state
       
     case LED_ADJUST:
       led_step = 5;
-      while ( (DIP_SW_A || DIP_SW_B) )    // Keep it on while the switches are pressed 
+      json_LED_PWM += led_step;         // Bump up the LED by 5%
+      if ( json_LED_PWM > 100 )
       {
-        json_LED_PWM += led_step;         // Bump up the LED by 5%
-        if ( json_LED_PWM > 100 )
-        {
-          json_LED_PWM = 100;
-          led_step = -5;                 // Force to zero on wrap around
-        }
-        if ( json_LED_PWM <0 )
-        {
-          json_LED_PWM = 0;
-          led_step = +5;                 // Force to zero on wrap around
-        }
-        set_LED_PWM_now(json_LED_PWM);   // Set the brightness
-        SEND(sprintf(s, "\r\n{\"LED_BRIGHT\": %d}\n\r", json_LED_PWM);)
-        vTaskDelay(ONE_SECOND/4);
+        json_LED_PWM = 0;
       }
+      set_LED_PWM_now(json_LED_PWM);   // Set the brightness
+      vTaskDelay(ONE_SECOND/4);
+      
       nvs_set_i32(my_handle, NONVOL_LED_PWM, json_LED_PWM);
       nvs_commit(my_handle);
       break;
