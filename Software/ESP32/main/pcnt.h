@@ -33,4 +33,6 @@ void pcnt_cal(void);                                    // Trigger the counters 
 #define SOUTH_HI    6
 #define WEST_HI     7
 
+#define PCNT_NOT_TRIGGERED  200         // Ignore any value over 200 counts
+
 #endif

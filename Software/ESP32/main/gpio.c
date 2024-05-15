@@ -417,14 +417,16 @@ void read_timers
     timer[i] = pcnt_read(i);
   }
 
-return;
-
   if ( (json_pcnt_latency != 0)                   // Latecy has a valid setting
           && ((json_vref_hi - json_vref_lo) > 0 ) ) // The voltage references are good
   {
     for (i=N; i <= W; i++)                        // Add the rise time to the signal to get a better estimate
     {
       pcnt_hi = timer[i+4] - json_pcnt_latency;   // PCNT HI   (reading - latentcy)
+      if ( pcnt_hi > PCNT_NOT_TRIGGERED )         // Check to make sure the high timer was triggered by a shot
+      {                                           // and not dinged from the pellet trap
+        pcnt_hi = 0;                              // Not triggered by a shot
+      }
       if ( pcnt_hi > 0 )
       {
         timer[i] = timer[i] + pcnt_hi * (json_vref_lo / (json_vref_hi - json_vref_lo));

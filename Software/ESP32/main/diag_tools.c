@@ -398,10 +398,19 @@ void factory_test(void)
     DAC_write(volts);
   }
 /*
- * Ready to continue the test
+ * Ready to start the test
  */
-  printf("\r\nFactory Test\r\n");
+  printf("\r\nFactory Test");
+  printf("\r\nHas the tape seal been removed from the temperature sensor?");
+  printf("\r\nPress 1 & 2 to continue\r\n");
+  while ( (DIP_SW_A == 0) || (DIP_SW_B == 0) )
+  {
+    continue;
+  }
 
+/*
+ *  Begin test
+ */
   arm_timers();
   pass = 0;
   percent = 0;
