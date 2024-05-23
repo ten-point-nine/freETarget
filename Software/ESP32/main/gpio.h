@@ -106,6 +106,8 @@ void multifunction_display(void);                         // Display the MFS set
  */
 #define HOLD1(x)    LO10((x))          // Low digit        xxxx2
 #define HOLD2(x)    HI10((x))          // High digit       xxx2x
+#define HOLD3(x)    LO10((x))          // Low digit        xxxx2
+#define HOLD4(x)    HI10((x))          // High digit       xxx2x
 #define TAP1(x)     HLO10((x))         // High Low digit   xx2xx
 #define TAP2(x)     HHI10((x))         // High High digit  x2xxx
 #define HOLD12(x)   HHH10((x))         // Highest digit    2xxxx

@@ -116,11 +116,14 @@ const json_message_t JSON[] = {
   {"\"MFS_HOLD1\":",      &json_multifunction,               0,                IS_MFS+_HOLD1,  0,           NONVOL_MFS,                        0 },
   {"\"MFS_TAP2\":",       &json_multifunction,               0,                IS_MFS+_TAP2,   0,           NONVOL_MFS,                        0 },
   {"\"MFS_TAP1\":",       &json_multifunction,               0,                IS_MFS+_TAP1,   0,           NONVOL_MFS,                        0 },
-  {"\"MFS2\":",            &json_multifunction2,             0,                IS_INT32,  0,                NONVOL_MFS2,  (NO_ACTION*10000) 
+  {"\"MFS2\":",           &json_multifunction2,              0,                IS_INT32,  0,                NONVOL_MFS2,  (NO_ACTION*10000) 
                                                                                                                           + (NO_ACTION * 1000)
                                                                                                                           + (NO_ACTION * 100) 
                                                                                                                           + (NO_ACTION * 10) 
                                                                                                                           + (NO_ACTION) },   // Multifunction switch action
+  {"\"MFS2_HOLD3\":",     &json_multifunction2,              0,                IS_MFS+_HOLD3,  0,            NONVOL_MFS2,                       0 },
+  {"\"MFS2_HOLD4\":",     &json_multifunction2,              0,                IS_MFS+_HOLD4,  0,            NONVOL_MFS2,                       0 },
+ 
   {"\"MFS?\"",            0,                                 0,                IS_VOID,   &multifunction_show,                       0 },
 
   {"\"MIN_RING_TIME\":",  &json_min_ring_time,               0,                IS_INT32,  0,                NONVOL_MIN_RING_TIME,  500 },    // Minimum time for ringing to stop (ms)
@@ -368,6 +371,14 @@ static void handle_json(void)
                 case _HOLD12:
                   x = multifunction_hold12(x);
                   break;
+
+                case _HOLD3:
+                  x = multifunction_hold3(x);
+                  break;
+ 
+                case _HOLD4:
+                  x = multifunction_hold4(x);
+                  break;                 
               }
 
               if ( JSON[j].value != 0 )
@@ -562,25 +573,39 @@ void show_echo(void)
                 default:
                 case _HOLD1:
                   k = HOLD1(*JSON[i].value);
+                  SEND(sprintf(_xs, "%s \"(%d) - %s\", \r\n", JSON[i].token, k, multifunction_str(k));)
                   break;
 
                 case _HOLD2:
                   k = HOLD2(*JSON[i].value);
+                  SEND(sprintf(_xs, "%s \"(%d) - %s\", \r\n", JSON[i].token, k, multifunction_str(k));)
                   break;
 
                 case _TAP1:
                   k = TAP1(*JSON[i].value);
+                  SEND(sprintf(_xs, "%s \"(%d) - %s\", \r\n", JSON[i].token, k, multifunction_str(k));)
                   break;
 
                 case _TAP2:
                   k = TAP2(*JSON[i].value);
+                  SEND(sprintf(_xs, "%s \"(%d) - %s\", \r\n", JSON[i].token, k, multifunction_str(k));)
                   break;
 
                 case _HOLD12:
                   k = HOLD12(*JSON[i].value);
+                  SEND(sprintf(_xs, "%s \"(%d) - %s\", \r\n", JSON[i].token, k, multifunction_str(k));)
+                  break;
+
+                case _HOLD3:
+                  k = HOLD3(*JSON[i].value);
+                  SEND(sprintf(_xs, "%s \"(%d) - %s\", \r\n", JSON[i].token, k, multifunction_str_2(k));)
+                  break;
+
+                case _HOLD4:
+                  k = HOLD4(*JSON[i].value);
+                  SEND(sprintf(_xs, "%s \"(%d) - %s\", \r\n", JSON[i].token, k, multifunction_str_2(k));)
                   break;
               }
-          SEND(sprintf(_xs, "%s \"(%d) - %s\", \r\n", JSON[i].token, k, multifunction_str(k));)
           break;
 
         case IS_INT32:

@@ -59,6 +59,9 @@ static unsigned int switch_state;               // What switches are pressed
  * Read the jumper header and modify the initialization
  * 
  *-----------------------------------------------------*/
+#define HOLDC_GPIO GPIO_NUM_36
+#define HOLDD_GPIO GPIO_NUM_35
+
  void multifunction_init(void)
  {
   unsigned int dip;
@@ -66,19 +69,22 @@ static unsigned int switch_state;               // What switches are pressed
 /*
  * Check to see if the DIP switch has been overwritten
  */
-  if ( (HOLD1(json_multifunction2) == RAPID_RED) 
-        || (HOLD1(json_multifunction2) == RAPID_GREEN))
+  if ( (HOLD3(json_multifunction2) == RAPID_RED) 
+        || (HOLD3(json_multifunction2) == RAPID_GREEN))
   {
-      gpio_set_level(DIP_A, 1);
-      dip_mask = RED_MASK;
+    gpio_set_direction(HOLDC_GPIO,  GPIO_MODE_OUTPUT);
+    gpio_set_pull_mode(HOLDC_GPIO,  GPIO_PULLUP_PULLDOWN);
+    gpio_set_level(HOLDC_GPIO, 0);
   }
 
-  if (  (HOLD2(json_multifunction2) == RAPID_RED)
-      || (HOLD2(json_multifunction2) == RAPID_GREEN ) )
+  if ( (HOLD4(json_multifunction2) == RAPID_RED) 
+        || (HOLD4(json_multifunction2) == RAPID_GREEN))
   {
-      gpio_set_level(DIP_C, 1);
-      dip_mask |= GREEN_MASK;
+    gpio_set_direction(HOLDD_GPIO,  GPIO_MODE_OUTPUT);
+    gpio_set_pull_mode(HOLDD_GPIO,  GPIO_PULLUP_PULLDOWN);
+    gpio_set_level(HOLDD_GPIO, 0);
   }
+
 
 /*
  * Continue to read the DIP switch
@@ -495,6 +501,22 @@ unsigned int multifunction_tap1
   return multifunction_common(newMFS, SHIFT_TAP1,TAP1(json_multifunction));
 }
 
+unsigned int multifunction_hold3
+(
+  unsigned int newMFS         // New field value
+)
+{
+  return multifunction_common(newMFS, SHIFT_HOLD12, HOLD3(json_multifunction2));
+}
+
+unsigned int multifunction_hold4
+(
+  unsigned int newMFS         // New field value
+)
+{
+  return multifunction_common(newMFS, SHIFT_HOLD12, HOLD4(json_multifunction2));
+}
+
 /*-----------------------------------------------------
  * 
  * @function: multifunction_show()
@@ -514,8 +536,8 @@ unsigned int multifunction_tap1
  //                             0            1            2             3            4             5            6    7    8          9
 static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED", "ADJUST_LED", "PAPER_SHOT", "PC_TEST",  "POWER_ON_OFF",   "6", "7", "8", "TARGET_TYPE"};
 
- //                              0           1            2             3            4             5            6    7    8          9
-static char* mfs2_text[] = { "DEFAULT", "RAPID_RED", "RAPID_GREEN",    "3",         "4",          "5",   "      6", "7", "8",       "9"};
+ //                              0           1               2             3            4             5            6    7    8          9
+static char* mfs2_text[] = { "UNUSED", "TARGET SELECT", "RAPID_RED", "RAPID_GREEN",    "3",         "4",          "5",   "      6", "7", "8",       "9"};
 
 void multifunction_show(unsigned int x)
 {
@@ -528,36 +550,6 @@ void multifunction_show(unsigned int x)
   }
 
 
-/*
- * All done, return
- */
-  return;
-}
-
-/*-----------------------------------------------------
- * 
- * @function: multifunction_display
- * 
- * @brief:    Display the MFS settings as text
- * 
- * @return:   None
- * 
- *-----------------------------------------------------
- *
- * The MFS is encoded as a 3 digit packed BCD number
- * 
- * This function unpacks the numbers and displayes it as
- * text in a JSON message.
- * 
- *-----------------------------------------------------*/
-
-void multifunction_display(void)
-{
-  SEND(sprintf(_xs, "\"MFS_HOLD12\": \"%s\",\n\r\"MFS_TAP2\": \"%s\",\n\r\"MFS_TAP1\": \"%s\",\n\r\"MFS_HOLD2\": \"%s\",\n\r\"MFS_HOLD1\": \"%s\",\n\r", 
-  mfs_text[HOLD12(json_multifunction)], mfs_text[TAP2(json_multifunction)], mfs_text[TAP1(json_multifunction)], mfs_text[HOLD2(json_multifunction)], mfs_text[HOLD1(json_multifunction)]);)
-  SEND(sprintf(_xs, "\"MFS_CONFIG\": \"%s\",\n\r\"MFS_DIAG\": \"%s\",\n\r", 
-  mfs2_text[HOLD1(json_multifunction2)], mfs2_text[HOLD2(json_multifunction2)]);)
-  
 /*
  * All done, return
  */
@@ -587,6 +579,13 @@ char *multifunction_str
   return mfs_text[mfs_function]; // Return a pointer to the string
 }
 
+char *multifunction_str_2
+(
+  unsigned int mfs_function     // Switch to be displayed
+)
+{
+  return mfs2_text[mfs_function]; // Return a pointer to the string
+}
 /*----------------------------------------------------------------
  * 
  * @function: send_fake_score

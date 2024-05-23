@@ -14,16 +14,17 @@
 void multifunction_init(void);                            // Initialize the multifunction switches
 void multifunction_switch(void);                          // Handle the actions of the DIP Switch signal
 void multifunction_switch_tick(void);                     // Monitor the switches for long and short presses
-void multifuction_display(void);                          // Display the MFS settings
 void multifunction_wait_open(void);                       // Wait for both multifunction switches to be open
 void multifunction_show(unsigned int);                    // Show the value of the settings 
 unsigned int multifunction_hold12(unsigned int);          // Modify the hold 12 field
 unsigned int multifunction_hold2(unsigned int);           // Modify the hold 2 field
 unsigned int multifunction_hold1(unsigned int);           // Modify the hold 1 field
+unsigned int multifunction_hold3(unsigned int);           // Modify the hold 2 field
+unsigned int multifunction_hold4(unsigned int);           // Modify the hold 1 field
 unsigned int multifunction_tap2(unsigned int);            // Modify the tap 2 field
 unsigned int multifunction_tap1(unsigned int);            // Modify the tap 1 field
 char* multifunction_str(unsigned int);                    // Return the string name of the switch action
-
+char* multifunction_str_2(unsigned int);                  // Return the string name of the switch action
 /*
  * Multifunction Switch Use when using DIP Switch for MFS
  */
@@ -37,6 +38,10 @@ char* multifunction_str(unsigned int);                    // Return the string n
 #define _TAP2               4
 #define HOLD12(x)   HHH10((x))         // Highest digit    2xxxx
 #define _HOLD12             5
+#define HOLD3(x)     LO10((x))          // Low digit        xxxx2
+#define _HOLD3              6
+#define HOLD4(x)     HI10((x))          // High digit       xxx2x
+#define _HOLD4              7
 #define SHIFT_HOLD1      1             // Hold 1 place
 #define SHIFT_HOLD2     10             // *
 #define SHIFT_TAP1     100             // *
