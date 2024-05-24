@@ -43,7 +43,6 @@ static void sw_state(unsigned int action);      // Carry out the MFS function
 /*
  * Variables 
  */
-static unsigned int dip_mask;                   // Output to the DIP port if selected
 static unsigned int switch_state;               // What switches are pressed
 
 /*-----------------------------------------------------
@@ -69,16 +68,14 @@ static unsigned int switch_state;               // What switches are pressed
 /*
  * Check to see if the DIP switch has been overwritten
  */
-  if ( (HOLD3(json_multifunction2) == RAPID_RED) 
-        || (HOLD3(json_multifunction2) == RAPID_GREEN))
+  if ( (HOLD3(json_multifunction2) & MFS2_DOP_MASK) != 0 ) 
   {
     gpio_set_direction(HOLDC_GPIO,  GPIO_MODE_OUTPUT);
     gpio_set_pull_mode(HOLDC_GPIO,  GPIO_PULLUP_PULLDOWN);
     gpio_set_level(HOLDC_GPIO, 0);
   }
 
-  if ( (HOLD4(json_multifunction2) == RAPID_RED) 
-        || (HOLD4(json_multifunction2) == RAPID_GREEN))
+  if ( (HOLD4(json_multifunction2) & MFS2_DOP_MASK) != 0) 
   {
     gpio_set_direction(HOLDD_GPIO,  GPIO_MODE_OUTPUT);
     gpio_set_pull_mode(HOLDD_GPIO,  GPIO_PULLUP_PULLDOWN);
@@ -260,23 +257,6 @@ void multifunction_switch(void)
  * Figure out what switches are pressed
  */
   action = switch_state & (~SWITCH_VALID);
-  if ( switch_state & HOLD_A )
-  {
-    if ( HOLD1(json_multifunction) == TARGET_TYPE ) 
-    {
-      sw_state(HOLD1(json_multifunction));
-      action = 0;
-    }
-  }
-
-  if ( switch_state & HOLD_B )
-  {
-    if ( HOLD2(json_multifunction) == TARGET_TYPE ) 
-    {
-      sw_state(HOLD2(json_multifunction));
-      action = 0;
-    }
-  }  
   
 /*
  * Carry out the switch action
@@ -396,24 +376,6 @@ static void sw_state
       nvs_commit(my_handle);
       break;
 
-    case TARGET_TYPE:                     // Over ride the target type if the switch is closed
-      json_target_type = 0;
-      if (HOLD1(json_multifunction) == TARGET_TYPE) // If the switch is set for a target type
-      {
-        if ( DIP_SW_A )
-        {
-          json_target_type = 1;           // 
-        }
-      }
-      if (HOLD2(json_multifunction) == TARGET_TYPE) 
-      {
-        if ( DIP_SW_B )
-        {
-          json_target_type = 1;
-        }
-      }
-      break;
-      
     default:
       break;
   }
@@ -533,11 +495,11 @@ unsigned int multifunction_hold4
  * text in a JSON message.
  * 
  *-----------------------------------------------------*/ 
- //                             0            1            2             3            4             5            6    7    8          9
-static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED", "ADJUST_LED", "PAPER_SHOT", "PC_TEST",  "POWER_ON_OFF",   "6", "7", "8", "TARGET_TYPE"};
+ //                             0            1            2             3            4             5            6    7    8    9
+static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED", "ADJUST_LED", "PAPER_SHOT", "PC_TEST",  "POWER_ON_OFF",   "6", "7", "8", "9"};
 
- //                              0           1               2             3            4             5            6    7    8          9
-static char* mfs2_text[] = { "UNUSED", "TARGET SELECT", "RAPID_RED", "RAPID_GREEN",    "3",         "4",          "5",   "      6", "7", "8",       "9"};
+//                               0           1         2    3       4             5           6    7    8    9
+static char* mfs2_text[] = { "UNUSED", "TARGET TYPE", "2", "3", "RAPID_RED", "RAPID_GREEN",  "6", "7", "8", "9"};
 
 void multifunction_show(unsigned int x)
 {

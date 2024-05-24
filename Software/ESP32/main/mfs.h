@@ -60,10 +60,11 @@ char* multifunction_str_2(unsigned int);                  // Return the string n
 #define MFS_SPARE_6   6
 #define MFS_SPARE_7   7
 #define MFS_SPARE_8   8
-#define TARGET_TYPE   9                   // Sent target type with score
 
 #define NO_ACTION     0                   // DIP usual function
-#define RAPID_RED     1                   // Rapid Fire Red Output
-#define RAPID_GREEN   2                   // Rapid Fire Green Output
-
+#define TARGET_TYPE   1                   // Input outputs target type with score
+#define MFS2_DIP_MASK 0x03                // Bottom 2 bits are DIPs
+#define RAPID_RED     4                   // Rapid Fire Red Output
+#define RAPID_GREEN   5                   // Rapid Fire Green Output
+#define MFS2_DOP_MASK 0x04                // Upper bits are DOPs
 #endif

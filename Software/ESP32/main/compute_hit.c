@@ -14,10 +14,11 @@
 
 #include "freETarget.h"
 #include "json.h"
-#include "compute_hit.h"
+#include "mfs.h"
 #include "diag_tools.h"
 #include "token.h"
 #include "timer.h"
+#include "compute_hit.h"
 
 #define THRESHOLD (0.001)
 
@@ -503,7 +504,6 @@ void send_score
   }
   else
   {
-    printf("five");
     SEND(sprintf(_xs, "\"shot\":%d, \"name\":\"%d\"", shot->shot_number,  my_ring);)
   }
   SEND(sprintf(_xs, ", \"time\":%4.2f ", (float)shot->shot_time/(float)(ONE_SECOND));)
@@ -533,8 +533,18 @@ void send_score
   }
 #endif
 
+  if ( HOLD3(json_multifunction2)  == TARGET_TYPE )
+  {
+    SEND(sprintf(_xs, ", \"target_type\":%d ", DIP_C););
+  }
+
+  if ( HOLD4(json_multifunction2)  == TARGET_TYPE )
+  {
+    SEND(sprintf(_xs, ", \"target_type\":%d ", DIP_D););
+  }
+
   SEND(sprintf(_xs, "}\r\n");)
-  
+
 /*
  * All done, return
  */
