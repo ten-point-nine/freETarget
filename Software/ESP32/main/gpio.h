@@ -30,7 +30,7 @@ void enable_sensor_interrupt();                           // Turn on the sensor 
 void disable_sensor_interrupt(void);                      // Turn off the sensor strike interrupt
 
 void digital_test(void);                                  // Execute the digital test
-void paper_on_off(bool on);                               // Turn the motor on or off
+void paper_on_off(bool on, unsigned long duration);       // Turn the motor on or off
 int is_paper_on();                                        // Return the current running state
 void rapid_green(unsigned int state);                     // Drive the GREEN light
 void rapid_red(unsigned int state);                       // Drive the RED light

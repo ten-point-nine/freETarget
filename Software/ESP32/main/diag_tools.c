@@ -38,6 +38,8 @@ const char* which_one[] = {"North_lo", "East_lo ", "South_lo", "West_lo ", "Nort
 #define GRID_SIDE 25                              // Should be an odd number
 #define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
 
+extern volatile unsigned long paper_time;
+
 /*******************************************************************************
  *
  * @function: void self_test
@@ -495,12 +497,12 @@ void factory_test(void)
     if ( motor_toggle )
     {
       printf("+");
-      paper_on_off(true);
+      paper_on_off(true, ONE_SECOND);
     }
     else
     {
       printf("-");
-      paper_on_off(false);
+      paper_on_off(false, 0);
     }
     motor_toggle ^= 1;
     
@@ -540,7 +542,7 @@ void factory_test(void)
         case 'X':               // Exit
         case 'x':
         case '!':
-          paper_on_off(false);
+          paper_on_off(false, 0);
           printf("\r\nDone");
           return;
       }

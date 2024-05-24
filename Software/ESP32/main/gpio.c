@@ -46,6 +46,8 @@ typedef struct status_struct {
  * Variables
  */
 status_struct_t status[3] = {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
+int paper_state;                    // Drive is ON or OFF
+volatile unsigned long paper_time;  // How long the paper will be on for
 
 /*-----------------------------------------------------
  * 
@@ -108,8 +110,6 @@ unsigned int is_running (void)
  *-----------------------------------------------------*/
 void arm_timers(void)
 {
-  volatile int waste;
-
   gpio_set_level(CLOCK_START, 0);
   gpio_set_level(STOP_N, 0);                  // Reset the timer
   gpio_set_level(OSC_CONTROL, OSC_OFF);       // Turn off the oscillator
@@ -464,8 +464,6 @@ void read_timers
  * Paper Time = Motor ON time
  * 
  *-----------------------------------------------------*/
-volatile unsigned long paper_time;
-
 void drive_paper(void)
 {
   DLT(DLT_DIAG, printf("Advancing paper: %dms", json_paper_time);)
@@ -474,8 +472,7 @@ void drive_paper(void)
  * Drive the motor on and off for the number of cycles
  * at duration
  */
-  timer_new(&paper_time, ONE_SECOND * json_paper_time / 1000);  // Create the timer
-  paper_on_off(true);                       // Motor OFF
+  paper_on_off(true, ONE_SECOND * json_paper_time / 1000);                       // Motor OFF
 
  /*
   * All done, return
@@ -487,7 +484,7 @@ void drive_paper_tick(void)
 {
   if ( (paper_time == 0) && (is_paper_on() != 0) )
   {
-    paper_on_off(false);                      // Motor OFF
+    paper_on_off(false, 0);                      // Motor OFF
     DLT(DLT_DIAG, printf("Done");)
   }
   
@@ -514,26 +511,27 @@ void drive_paper_tick(void)
  * the FET accordingly
  * 
  *-----------------------------------------------------*/
-int paper_state;
 void paper_on_off                               // Function to turn the motor on and off
 (
-  bool on                                      // on == true, turn on motor drive
+  bool on,                                      // on == true, turn on motor drive
+  unsigned long duration                        // How long will it be on for? 
 )
 {
+  paper_state = on;
+
   if ( on == true )
   {
     gpio_set_level(PAPER, PAPER_ON);            // Turn it on
   }
   else
   {
-    paper_time = 0;
     gpio_set_level(PAPER, PAPER_OFF);            // Turn it off
   }
 
 /*
  * No more, return
  */
-  paper_state = on;
+  timer_new(&paper_time, duration);
   return;
 }
 
@@ -638,14 +636,14 @@ void rapid_red
 
 void rapid_green
 (
-  unsigned int state          // New state for the RED light
+  unsigned int state          // New state for the GREEN light
 ) 
 {
-  if ( HOLDC(json_multifunction2) == RAPID_GREEN )
+  if ( HOLD3(json_multifunction2) == RAPID_GREEN )
   {
       gpio_set_level(DIP_C, state);
   }
-  if ( HOLDC(json_multifunction2) == RAPID_GREEN )
+  if ( HOLD4(json_multifunction2) == RAPID_GREEN )
   {
       gpio_set_level(DIP_D, state);
   }
@@ -739,10 +737,10 @@ void paper_test(void)
   for (i=0; i != 10; i++)
   {
     printf("  %d+", (i+1));
-    paper_on_off(true);
+    paper_on_off(true, ONE_SECOND/2);
     timer_delay(ONE_SECOND / 2);
     printf("-");
-    paper_on_off(false);
+    paper_on_off(false, 0);
     timer_delay(ONE_SECOND / 2);
   }
 
