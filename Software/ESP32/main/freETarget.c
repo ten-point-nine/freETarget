@@ -913,7 +913,7 @@ void send_keep_alive(void)
   {
     sprintf(_xs, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);
     serial_to_all(_xs, TCPIP);
-    timer_new(&keep_alive, (unsigned long)json_keep_alive * (unsigned long)ONE_SECOND * 60l);
+    timer_new(&keep_alive, (unsigned long)json_keep_alive * ONE_SECOND);
   }
 
   return;
