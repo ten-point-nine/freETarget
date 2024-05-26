@@ -28,25 +28,25 @@ char* multifunction_str_2(unsigned int);                  // Return the string n
 /*
  * Multifunction Switch Use when using DIP Switch for MFS
  */
-#define HOLD1(x)    LO10((x))          // Low digit        xxxx2
-#define _HOLD1              1
-#define HOLD2(x)    HI10((x))          // High digit       xxx2x
-#define _HOLD2              2
-#define TAP1(x)     HLO10((x))         // High Low digit   xx2xx
-#define _TAP1               3
-#define TAP2(x)     HHI10((x))         // High High digit  x2xxx
-#define _TAP2               4
-#define HOLD12(x)   HHH10((x))         // Highest digit    2xxxx
-#define _HOLD12             5
-#define HOLD3(x)     LO10((x))          // Low digit        xxxx2
-#define _HOLD3              6
-#define HOLD4(x)     HI10((x))          // High digit       xxx2x
-#define _HOLD4              7
-#define SHIFT_HOLD1      1             // Hold 1 place
-#define SHIFT_HOLD2     10             // *
-#define SHIFT_TAP1     100             // *
-#define SHIFT_TAP2    1000             // *
-#define SHIFT_HOLD12 10000             // * 
+#define HOLD_A(x)    LO10((x))          // Low digit        xxxx2
+#define _HOLD_A              1
+#define HOLD_B(x)    HI10((x))          // High digit       xxx2x
+#define _HOLD_B              2
+#define TAP_A(x)     HLO10((x))         // High Low digit   xx2xx
+#define _TAP_A               3
+#define TAP_B(x)     HHI10((x))         // High High digit  x2xxx
+#define _TAP_B               4
+#define HOLD_AB(x)   HHH10((x))         // Highest digit    2xxxx
+#define _HOLD_AB             5
+#define HOLD_C(x)     LO10((x))         // Low digit        xxxx2
+#define _HOLD_C              6
+#define HOLD_D(x)     HI10((x))         // High digit       xxx2x
+#define _HOLD_D              7
+#define SHIFT_HOLD_A      1             // Hold 1 place
+#define SHIFT_HOLD_B     10             // *
+#define SHIFT_TAP_A     100             // *
+#define SHIFT_TAP_B    1000             // *
+#define SHIFT_HOLD_AB 10000             // * 
 
 /*
  *  MFS Use
@@ -63,8 +63,12 @@ char* multifunction_str_2(unsigned int);                  // Return the string n
 
 #define NO_ACTION     0                   // DIP usual function
 #define TARGET_TYPE   1                   // Input outputs target type with score
-#define MFS2_DIP_MASK 0x03                // Bottom 2 bits are DIPs
-#define RAPID_RED     4                   // Rapid Fire Red Output
-#define RAPID_GREEN   5                   // Rapid Fire Green Output
-#define MFS2_DOP_MASK 0x04                // Upper bits are DOPs
+#define MFS2_NU_2     2
+#define MFS2_NU_3     3
+#define MFS2_DIP      4                   // 0-4 are DIPs
+#define RAPID_RED     5                   // Rapid Fire Red Output
+#define RAPID_GREEN   6                   // Rapid Fire Green Output
+#define MFS2_NU_7     7
+#define MFS2_NU_8     8
+#define MFS2_NU_9     9
 #endif

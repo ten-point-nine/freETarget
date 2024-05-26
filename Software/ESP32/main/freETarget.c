@@ -908,12 +908,13 @@ void send_keep_alive(void)
   static int keep_alive_count = 0;
   static int keep_alive = 0;
 
+printf("%d \r\n", keep_alive);
   if ( (json_keep_alive != 0)
       && (keep_alive == 0) )              // Time in seconds
   {
     sprintf(_xs, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);
     serial_to_all(_xs, TCPIP);
-    timer_new(&keep_alive, (unsigned long)json_keep_alive * (unsigned long)ONE_SECOND * 60l);
+    timer_new(&keep_alive, (unsigned long)json_keep_alive * ONE_SECOND);
   }
 
   return;

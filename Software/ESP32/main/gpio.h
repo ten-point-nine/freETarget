@@ -104,13 +104,13 @@ void multifunction_display(void);                         // Display the MFS set
 /*
  * Multifunction Switch Use when using DIP Switch for MFS
  */
-#define HOLD1(x)    LO10((x))          // Low digit        xxxx2
-#define HOLD2(x)    HI10((x))          // High digit       xxx2x
-#define HOLD3(x)    LO10((x))          // Low digit        xxxx2
-#define HOLD4(x)    HI10((x))          // High digit       xxx2x
-#define TAP1(x)     HLO10((x))         // High Low digit   xx2xx
-#define TAP2(x)     HHI10((x))         // High High digit  x2xxx
-#define HOLD12(x)   HHH10((x))         // Highest digit    2xxxx
+#define HOLD_A(x)    LO10((x))          // Low digit        xxxx2
+#define HOLD_B(x)    HI10((x))          // High digit       xxx2x
+#define HOLD_C(x)    LO10((x))          // Low digit        xxxx2
+#define HOLD_D(x)    HI10((x))          // High digit       xxx2x
+#define TAP_A(x)     HLO10((x))         // High Low digit   xx2xx
+#define TAP_B(x)     HHI10((x))         // High High digit  x2xxx
+#define HOLD_AB(x)   HHH10((x))         // Highest digit    2xxxx
 
 /*
  * DIP Switch Use. 

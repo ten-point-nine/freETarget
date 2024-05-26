@@ -27,11 +27,11 @@
 #define LONG_PRESS (ONE_SECOND)
 #define TAP_A_PENDING 0x01
 #define TAP_B_PENDING 0x02
-#define TAP_A         0x04
-#define TAP_B         0x08
-#define HOLD_A        0x10
-#define HOLD_B        0x20
-#define HOLD_AB       (HOLD_A | HOLD_B)
+#define TAP_MASK_A    0x04
+#define TAP_MASK_B    0x08
+#define HOLD_MASK_A   0x10
+#define HOLD_MASK_B   0x20
+#define HOLD_MASK_AB  (HOLD_MASK_A | HOLD_MASK_B)
 #define SWITCH_VALID  0x80
 
 /*
@@ -58,8 +58,8 @@ static unsigned int switch_state;               // What switches are pressed
  * Read the jumper header and modify the initialization
  * 
  *-----------------------------------------------------*/
-#define HOLDC_GPIO GPIO_NUM_36
-#define HOLDD_GPIO GPIO_NUM_35
+#define HOLD_C_GPIO GPIO_NUM_36
+#define HOLD_D_GPIO GPIO_NUM_35
 
  void multifunction_init(void)
  {
@@ -68,18 +68,18 @@ static unsigned int switch_state;               // What switches are pressed
 /*
  * Check to see if the DIP switch has been overwritten
  */
-  if ( (HOLD3(json_multifunction2) & MFS2_DOP_MASK) != 0 ) 
+  if ( HOLD_C(json_multifunction2) > MFS2_DIP ) 
   {
-    gpio_set_direction(HOLDC_GPIO,  GPIO_MODE_OUTPUT);
-    gpio_set_pull_mode(HOLDC_GPIO,  GPIO_PULLUP_PULLDOWN);
-    gpio_set_level(HOLDC_GPIO, 0);
+    gpio_set_direction(HOLD_C_GPIO,  GPIO_MODE_OUTPUT);
+    gpio_set_pull_mode(HOLD_C_GPIO,  GPIO_PULLUP_PULLDOWN);
+    gpio_set_level(HOLD_C_GPIO, 0);
   }
 
-  if ( (HOLD4(json_multifunction2) & MFS2_DOP_MASK) != 0) 
+  if ( HOLD_D(json_multifunction2) > MFS2_DIP) 
   {
-    gpio_set_direction(HOLDD_GPIO,  GPIO_MODE_OUTPUT);
-    gpio_set_pull_mode(HOLDD_GPIO,  GPIO_PULLUP_PULLDOWN);
-    gpio_set_level(HOLDD_GPIO, 0);
+    gpio_set_direction(HOLD_D_GPIO,  GPIO_MODE_OUTPUT);
+    gpio_set_pull_mode(HOLD_D_GPIO,  GPIO_PULLUP_PULLDOWN);
+    gpio_set_level(HOLD_D_GPIO, 0);
   }
 
 
@@ -161,7 +161,7 @@ void multifunction_switch_tick(void)
     else
     {
       switch_state &= ~TAP_A_PENDING;
-      switch_state |= HOLD_A | SWITCH_VALID;
+      switch_state |= HOLD_MASK_A | SWITCH_VALID;
       switch_A_count = LONG_PRESS;
       set_status_LED(LED_MFS_A);
     }
@@ -170,7 +170,7 @@ void multifunction_switch_tick(void)
   {
     if ( switch_state & TAP_A_PENDING )
     {
-      switch_state |= TAP_A | SWITCH_VALID;
+      switch_state |= TAP_MASK_A | SWITCH_VALID;
       switch_state &= ~TAP_A_PENDING;
     }
     switch_A_count = 0;
@@ -187,7 +187,7 @@ void multifunction_switch_tick(void)
     else
     {
       switch_state &= ~TAP_B_PENDING;
-      switch_state |= HOLD_B | SWITCH_VALID;
+      switch_state |= HOLD_MASK_B | SWITCH_VALID;
       switch_B_count = LONG_PRESS;
       set_status_LED(LED_MFS_B);
     }
@@ -196,7 +196,7 @@ void multifunction_switch_tick(void)
   {
     if ( switch_state & TAP_B_PENDING )
     {
-      switch_state |= SWITCH_VALID | TAP_B;
+      switch_state |= TAP_MASK_B | SWITCH_VALID;
       switch_state &= ~TAP_B_PENDING;
     }
     switch_B_count = 0;
@@ -206,11 +206,11 @@ void multifunction_switch_tick(void)
  *  Look for the special case where there is HOLD_12, but 
  *  there is some kind of bounce
  */
-  if ( (switch_state & (HOLD_A | HOLD_B))
-        && (switch_state & (TAP_A | TAP_B )) )
+  if ( (switch_state & (HOLD_MASK_A | HOLD_MASK_B))
+        && (switch_state & (TAP_MASK_A | TAP_MASK_B )) )
   {
-      switch_state |= (HOLD_A | HOLD_B);
-      switch_state &= ~(TAP_A | TAP_B);
+      switch_state |= (HOLD_MASK_A | HOLD_MASK_B);
+      switch_state &= ~(TAP_MASK_A | TAP_MASK_B);
   }
 
 /*
@@ -235,7 +235,7 @@ void multifunction_switch_tick(void)
  * turns the LEDs on, and holding it will carry out 
  * the alternate activity.
  * 
- * MFS_TAP1\": \"%s\",\n\r\"MFS_TAP2\": \"%s\",\n\r\"MFS_HOLD1\": \"%s\",\n\r\"MFS_HOLD2\": \"%s\",\n\r\"MFS_HOLD12\": \"%s\",\n\r", 
+ * MFS_TAP_A\": \"%s\",\n\r\"MFS_TAP_B\": \"%s\",\n\r\"MFS_HOLD_A\": \"%s\",\n\r\"MFS_HOLD_B\": \"%s\",\n\r\"MFS_HOLD_AB\": \"%s\",\n\r", 
  * Special Cases
  * 
  * Both switches pressed, Toggle the Tabata State
@@ -263,24 +263,24 @@ void multifunction_switch(void)
  */
   switch (action)
   {
-    case TAP_A:
-      sw_state(TAP1(json_multifunction));
+    case TAP_MASK_A:
+      sw_state(TAP_A(json_multifunction));
       break;
 
-    case TAP_B:
-      sw_state(TAP2(json_multifunction));
+    case TAP_MASK_B:
+      sw_state(TAP_B(json_multifunction));
       break;
 
-    case HOLD_A:
-      sw_state(HOLD1(json_multifunction));
+    case HOLD_MASK_A:
+      sw_state(HOLD_A(json_multifunction));
       break;
 
-    case HOLD_B:
-      sw_state(HOLD2(json_multifunction));
+    case HOLD_MASK_B:
+      sw_state(HOLD_B(json_multifunction));
       break;
 
-    case HOLD_AB:
-      sw_state(HOLD12(json_multifunction));
+    case HOLD_MASK_AB:
+      sw_state(HOLD_AB(json_multifunction));
       break;
 
     default:
@@ -428,7 +428,7 @@ unsigned int multifunction_hold12
   unsigned int newMFS         // New field value
 )
 {
-  return multifunction_common(newMFS, SHIFT_HOLD12, HOLD12(json_multifunction));
+  return multifunction_common(newMFS, SHIFT_HOLD_AB, HOLD_AB(json_multifunction));
 }
 
 unsigned int multifunction_hold2
@@ -436,7 +436,7 @@ unsigned int multifunction_hold2
   unsigned int newMFS         // New field value
 )
 {
-  return multifunction_common(newMFS, SHIFT_HOLD2, HOLD2(json_multifunction));
+  return multifunction_common(newMFS, SHIFT_HOLD_B, HOLD_B(json_multifunction));
 }
 
 unsigned int multifunction_hold1
@@ -444,7 +444,7 @@ unsigned int multifunction_hold1
   unsigned int newMFS         // New field value
 )
 {
-  return multifunction_common(newMFS, SHIFT_HOLD1, HOLD1(json_multifunction));
+  return multifunction_common(newMFS, SHIFT_HOLD_A, HOLD_A(json_multifunction));
 }
 
 unsigned int multifunction_tap2
@@ -452,7 +452,7 @@ unsigned int multifunction_tap2
   unsigned int newMFS         // New field value
 )
 {
-  return multifunction_common(newMFS, SHIFT_TAP2, TAP2(json_multifunction));
+  return multifunction_common(newMFS, SHIFT_TAP_B, TAP_B(json_multifunction));
 }
 
 unsigned int multifunction_tap1
@@ -460,7 +460,7 @@ unsigned int multifunction_tap1
   unsigned int newMFS         // New field value
 )
 {
-  return multifunction_common(newMFS, SHIFT_TAP1,TAP1(json_multifunction));
+  return multifunction_common(newMFS, SHIFT_TAP_A,TAP_A(json_multifunction));
 }
 
 unsigned int multifunction_hold3
@@ -468,7 +468,7 @@ unsigned int multifunction_hold3
   unsigned int newMFS         // New field value
 )
 {
-  return multifunction_common(newMFS, SHIFT_HOLD12, HOLD3(json_multifunction2));
+  return multifunction_common(newMFS, SHIFT_HOLD_AB, HOLD_C(json_multifunction2));
 }
 
 unsigned int multifunction_hold4
@@ -476,7 +476,7 @@ unsigned int multifunction_hold4
   unsigned int newMFS         // New field value
 )
 {
-  return multifunction_common(newMFS, SHIFT_HOLD12, HOLD4(json_multifunction2));
+  return multifunction_common(newMFS, SHIFT_HOLD_AB, HOLD_D(json_multifunction2));
 }
 
 /*-----------------------------------------------------
@@ -498,8 +498,8 @@ unsigned int multifunction_hold4
  //                             0            1            2             3            4             5            6    7    8    9
 static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED", "ADJUST_LED", "PAPER_SHOT", "PC_TEST",  "POWER_ON_OFF",   "6", "7", "8", "9"};
 
-//                               0           1         2    3       4             5           6    7    8    9
-static char* mfs2_text[] = { "UNUSED", "TARGET TYPE", "2", "3", "RAPID_RED", "RAPID_GREEN",  "6", "7", "8", "9"};
+//                               0           1         2    3       4         5           6            7    8    9
+static char* mfs2_text[] = { "UNUSED", "TARGET TYPE", "2", "3",    "4",  "RAPID_RED", "RAPID_GREEN",  "7", "8", "9"};
 
 void multifunction_show(unsigned int x)
 {

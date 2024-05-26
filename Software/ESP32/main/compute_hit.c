@@ -533,12 +533,12 @@ void send_score
   }
 #endif
 
-  if ( HOLD3(json_multifunction2)  == TARGET_TYPE )
+  if ( HOLD_C(json_multifunction2)  == TARGET_TYPE )
   {
     SEND(sprintf(_xs, ", \"target_type\":%d ", DIP_C););
   }
 
-  if ( HOLD4(json_multifunction2)  == TARGET_TYPE )
+  if ( HOLD_D(json_multifunction2)  == TARGET_TYPE )
   {
     SEND(sprintf(_xs, ", \"target_type\":%d ", DIP_D););
   }

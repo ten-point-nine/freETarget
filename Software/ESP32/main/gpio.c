@@ -622,11 +622,11 @@ void rapid_red
   unsigned int state          // New state for the RED light
 ) 
 {
-  if ( HOLD3(json_multifunction2) == RAPID_RED )
+  if ( HOLD_C(json_multifunction2) == RAPID_RED )
   {
       gpio_set_level(DIP_C, state);
   }
-  if ( HOLD4(json_multifunction2) == RAPID_RED )
+  if ( HOLD_D(json_multifunction2) == RAPID_RED )
   {
       gpio_set_level(DIP_D, state);
   }
@@ -639,11 +639,11 @@ void rapid_green
   unsigned int state          // New state for the GREEN light
 ) 
 {
-  if ( HOLD3(json_multifunction2) == RAPID_GREEN )
+  if ( HOLD_C(json_multifunction2) == RAPID_GREEN )
   {
       gpio_set_level(DIP_C, state);
   }
-  if ( HOLD4(json_multifunction2) == RAPID_GREEN )
+  if ( HOLD_D(json_multifunction2) == RAPID_GREEN )
   {
       gpio_set_level(DIP_D, state);
   }
