@@ -505,12 +505,12 @@ int tcpip_queue_2_app
  * 
  *******************************************************************************
  *
- * Characters from the TCPIP input queue are returned to the application
+ * The input from the TCPIP socket is buffered in the input queue.
  * 
  ******************************************************************************/
 int tcpip_socket_2_queue
 (
-  char* buffer,         // Where to return the bytes
+  char* buffer,         // String of bytes from the TCPIP input queue
   int   length          // Maximum transfer size
 )
 {

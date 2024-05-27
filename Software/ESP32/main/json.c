@@ -225,7 +225,7 @@ void freeETarget_json
 
   while (1)
   {
-    IF_NOT(IN_OPERATION) { vTaskDelay(ONE_SECOND); continue;}
+    IF_NOT(IN_OPERATION) { vTaskDelay(ONE_SECOND); printf("*\r\n"); continue;}
 
 /*
  * See if anything is waiting and if so, add it in
@@ -233,8 +233,8 @@ void freeETarget_json
     while ( serial_available(ALL) != 0 )
     {
       ch = serial_getch(ALL);
-      printf("%c", ch);
-
+      SEND(sprintf(_xs, "%c%c", ch, 0);)
+      
 /*
  * Parse the stream
  */
