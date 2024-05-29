@@ -21,7 +21,11 @@ void    set_trip_point(int x);                          // Calibrate the trip po
 bool    do_dlt(unsigned int level);                     // Diagnostics Log and Trace
 void    zapple(unsigned int test);                      // ZAPPLE console monitor
 void    factory_test(void);                             // Test the hardware in production
+void    rapid_LED_test(void);                           // Test the rapid fire LEDs
 
+/*
+ *  Definitions
+ */
 #define T_HELP           0        // Help test
 #define T_FACTORY        1        // Factory Test
 
@@ -31,6 +35,7 @@ void    factory_test(void);                             // Test the hardware in 
 #define T_STATUS        13        // Send colours across the status LEDs
 #define T_TEMPERATURE   14        // Read the temperature and humidity
 #define T_DAC           15        // Ramp the DAC outputs 
+#define T_RAPID_LEDS    16        // Test the Rapid Fire LEDs
 
 #define T_PCNT          20        // PCNT register test
 #define T_PCNT_STOP     21        // PCNT timers stopped

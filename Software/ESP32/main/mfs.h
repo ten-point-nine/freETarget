@@ -21,10 +21,13 @@ unsigned int multifunction_hold2(unsigned int);           // Modify the hold 2 f
 unsigned int multifunction_hold1(unsigned int);           // Modify the hold 1 field
 unsigned int multifunction_hold3(unsigned int);           // Modify the hold 2 field
 unsigned int multifunction_hold4(unsigned int);           // Modify the hold 1 field
+unsigned int multifunction_hold5(unsigned int);           // Modify the hold 1 field
 unsigned int multifunction_tap2(unsigned int);            // Modify the tap 2 field
 unsigned int multifunction_tap1(unsigned int);            // Modify the tap 1 field
 char* multifunction_str(unsigned int);                    // Return the string name of the switch action
 char* multifunction_str_2(unsigned int);                  // Return the string name of the switch action
+char* multifunction_str_3(unsigned int);                  // Return the string name of the switch action
+
 /*
  * Multifunction Switch Use when using DIP Switch for MFS
  */
@@ -42,6 +45,12 @@ char* multifunction_str_2(unsigned int);                  // Return the string n
 #define _HOLD_C              6
 #define HOLD_D(x)     HI10((x))         // High digit       xxx2x
 #define _HOLD_D              7
+#define SELECT_CD(x)   HLO10(x)         // High Low digit   xx2xx
+#define _SELECT_CD           8
+#define _SELECT_LED_LOW      0          // Active low LED
+#define _SELECT_LED_HIGH     1          // Active high LED
+#define _SELECT_LED_ADDR     2          // Adressable LED
+
 #define SHIFT_HOLD_A      1             // Hold 1 place
 #define SHIFT_HOLD_B     10             // *
 #define SHIFT_TAP_A     100             // *

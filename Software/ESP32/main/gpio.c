@@ -614,6 +614,10 @@ void aquire(void)
  *
  *  If MFS2 has enabled the rapid fire lights then allow the 
  *  value to be set
+ * 
+ *  IMPORTANT
+ *   
+ *  LEDs are driven ON by an active low signal
  *
  *--------------------------------------------------------------*/
 
@@ -622,6 +626,10 @@ void rapid_red
   unsigned int state          // New state for the RED light
 ) 
 {
+  if ( SELECT_CD(json_multifunction2) == _SELECT_LED_LOW )   // Inverted drive
+  {
+    state = !state;
+  }
   if ( HOLD_C(json_multifunction2) == RAPID_RED )
   {
       gpio_set_level(DIP_C, state);
@@ -639,6 +647,12 @@ void rapid_green
   unsigned int state          // New state for the GREEN light
 ) 
 {
+
+  if ( SELECT_CD(json_multifunction2) == _SELECT_LED_LOW )   // Inverted drive
+  {
+    state = !state;
+  }
+
   if ( HOLD_C(json_multifunction2) == RAPID_GREEN )
   {
       gpio_set_level(DIP_C, state);
@@ -708,6 +722,48 @@ void status_LED_test(void)
   set_status_LED("rgb");
   timer_delay(5*ONE_SECOND);         // Blink for 5 seconds
   set_status_LED(LED_READY);
+  printf("\r\nDone\r\n");
+  return;
+}
+
+/*----------------------------------------------------------------
+ * 
+ * @function: rapid_LED_test()
+ * 
+ * @brief:    Cycle the status LEDs
+ * 
+ * @return:   Nothing
+ * 
+ *----------------------------------------------------------------
+ *
+ *--------------------------------------------------------------*/
+void rapid_LED_test(void)
+{
+  printf("\r\nRapid LED test\r\n");
+  gpio_set_direction(HOLD_C_GPIO,  GPIO_MODE_OUTPUT);
+  gpio_set_pull_mode(HOLD_C_GPIO,  GPIO_PULLUP_PULLDOWN);
+  gpio_set_direction(HOLD_D_GPIO,  GPIO_MODE_OUTPUT);
+  gpio_set_pull_mode(HOLD_D_GPIO,  GPIO_PULLUP_PULLDOWN);
+
+  json_multifunction2 = 65;
+  while (1)
+  {
+    rapid_red(0);
+    rapid_green(0);
+    timer_delay(ONE_SECOND);
+
+    rapid_red(1);
+    rapid_green(0);
+    timer_delay(ONE_SECOND);
+
+    rapid_red(0);
+    rapid_green(1);
+    timer_delay(ONE_SECOND);
+
+    rapid_red(1);
+    rapid_green(1);
+    timer_delay(ONE_SECOND);
+  }
   printf("\r\nDone\r\n");
   return;
 }

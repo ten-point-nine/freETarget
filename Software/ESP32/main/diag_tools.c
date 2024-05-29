@@ -132,12 +132,13 @@ void self_test
     case T_HELP:  
       printf("\r\n 1 - Factory test");
       printf("\r\n");              
-      printf("\r\n 10 - Digital inputs");
-      printf("\r\n 11 - Advance paper backer");
-      printf("\r\n 12 - LED brightness test");
-      printf("\r\n 13 - Status LED driver");
-      printf("\r\n 14 - Temperature and sendor test");
-      printf("\r\n 15 - DAC test");
+      printf("\r\n10 - Digital inputs");
+      printf("\r\n11 - Advance paper backer");
+      printf("\r\n12 - LED brightness test");
+      printf("\r\n13 - Status LED driver");
+      printf("\r\n14 - Temperature and sendor test");
+      printf("\r\n15 - DAC test");
+      printf("\r\n16 - Rapid fire LED test");
       printf("\r\n"); 
       printf("\r\n20 - PCNT Test");
       printf("\r\n21 - pcnt(1) - Timers not running"); 
@@ -222,6 +223,13 @@ void self_test
  */
     case T_DAC:
       DAC_test();
+      break;
+
+/*
+ * Set Rapid Fire LEDs
+ */
+    case T_RAPID_LEDS:
+      rapid_LED_test();
       break;
 
 /*

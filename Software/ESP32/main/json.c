@@ -116,11 +116,11 @@ const json_message_t JSON[] = {
   {"\"MFS_TAP_A\"  : ",   &json_multifunction,               0,                IS_MFS+_TAP_A,   0,          NONVOL_MFS,                        0 },
   {"\"MFS_HOLD_B\" :",    &json_multifunction,               0,                IS_MFS+_HOLD_B,  0,          NONVOL_MFS,                        0 },
   {"\"MFS_HOLD_A\" :",    &json_multifunction,               0,                IS_MFS+_HOLD_A,  0,          NONVOL_MFS,                        0 },
-  {"\"MFS2\":",           &json_multifunction2,              0,                IS_INT32,         0,         NONVOL_MFS2,  + (RAPID_RED * 10) 
-                                                                                                                          + (RAPID_GREEN) },   // Multifunction switch action
+  {"\"MFS2\":",           &json_multifunction2,              0,                IS_INT32,        0,          NONVOL_MFS2,                       0},   // Multifunction switch action
   {"\"MFS2_HOLD_D\":",    &json_multifunction2,              0,                IS_MFS+_HOLD_D,  0,          NONVOL_MFS2,                       0 },
   {"\"MFS2_HOLD_C\":",    &json_multifunction2,              0,                IS_MFS+_HOLD_C,  0,          NONVOL_MFS2,                       0 },
- 
+  {"\"MFS2_SELECT_CD\":", &json_multifunction2,              0,                IS_MFS+_SELECT_CD,0,         NONVOL_MFS2,                       0 },
+  
   {"\"MIN_RING_TIME\":",  &json_min_ring_time,               0,                IS_INT32,  0,                NONVOL_MIN_RING_TIME,  500 },    // Minimum time for ringing to stop (ms)
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT32,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
   {"\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT32,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
@@ -373,7 +373,11 @@ static void handle_json(void)
  
                 case _HOLD_D:
                   x = multifunction_hold4(x);
-                  break;                 
+                  break; 
+              
+                case _SELECT_CD:
+                  x = multifunction_hold5(x);
+                  break; 
               }
 
               if ( JSON[j].value != 0 )
@@ -599,6 +603,11 @@ void show_echo(void)
                 case _HOLD_D:
                   k = HOLD_D(*JSON[i].value);
                   SEND(sprintf(_xs, "%s \"(%d) - %s\", \r\n", JSON[i].token, k, multifunction_str_2(k));)
+                  break;
+
+                case _SELECT_CD:
+                  k = TAP_A(*JSON[i].value);
+                  SEND(sprintf(_xs, "%s \"(%d) - %s\", \r\n", JSON[i].token, k, multifunction_str_3(k));)
                   break;
               }
           break;

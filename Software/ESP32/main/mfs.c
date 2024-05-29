@@ -58,8 +58,6 @@ static unsigned int switch_state;               // What switches are pressed
  * Read the jumper header and modify the initialization
  * 
  *-----------------------------------------------------*/
-#define HOLD_C_GPIO GPIO_NUM_36
-#define HOLD_D_GPIO GPIO_NUM_35
 
  void multifunction_init(void)
  {
@@ -479,6 +477,14 @@ unsigned int multifunction_hold4
   return multifunction_common(newMFS, SHIFT_HOLD_AB, HOLD_D(json_multifunction2));
 }
 
+unsigned int multifunction_hold5
+(
+  unsigned int newMFS         // New field value
+)
+{
+  return multifunction_common(newMFS, SHIFT_TAP_A, TAP_A(json_multifunction2));
+}
+
 /*-----------------------------------------------------
  * 
  * @function: multifunction_show()
@@ -498,8 +504,9 @@ unsigned int multifunction_hold4
  //                             0            1            2             3            4             5            6    7    8    9
 static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED", "ADJUST_LED", "PAPER_SHOT", "PC_TEST",  "POWER_ON_OFF",   "6", "7", "8", "9"};
 
-//                               0           1         2    3       4         5           6            7    8    9
-static char* mfs2_text[] = { "UNUSED", "TARGET TYPE", "2", "3",    "4",  "RAPID_RED", "RAPID_GREEN",  "7", "8", "9"};
+//                               0           1         2              3       4         5           6            7    8    9
+static char* mfs2_text[] = { "UNUSED", "TARGET TYPE", "2", "          3",    "4",  "RAPID_RED", "RAPID_GREEN",  "7", "8", "9"};
+static char* mfs3_text[] = { "LED_LOW", "LED_HIGH",   "ADDRESSABLE", "3",    "4",  "RAPID_RED", "RAPID_GREEN",  "7", "8", "9"};
 
 void multifunction_show(unsigned int x)
 {
@@ -547,6 +554,14 @@ char *multifunction_str_2
 )
 {
   return mfs2_text[mfs_function]; // Return a pointer to the string
+}
+
+char *multifunction_str_3
+(
+  unsigned int mfs_function     // Switch to be displayed
+)
+{
+  return mfs3_text[mfs_function]; // Return a pointer to the string
 }
 /*----------------------------------------------------------------
  * 

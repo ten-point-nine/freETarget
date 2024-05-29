@@ -908,7 +908,6 @@ void send_keep_alive(void)
   static int keep_alive_count = 0;
   static int keep_alive = 0;
 
-printf("%d \r\n", keep_alive);
   if ( (json_keep_alive != 0)
       && (keep_alive == 0) )              // Time in seconds
   {

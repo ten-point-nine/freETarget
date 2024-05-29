@@ -95,11 +95,12 @@ void multifunction_display(void);                         // Display the MFS set
 #define DIP_B           37      // V
 #define DIP_C           36      // V
 #define DIP_D           35      // V
+#define HOLD_C_GPIO GPIO_NUM_36 // Rapid Fire controls when enabled
+#define HOLD_D_GPIO GPIO_NUM_35
+//#define GREEN_OUT   12                  // Rapid fire GREEN on DIP3
 
-#define GREEN_OUT   12                  // Rapid fire GREEN on DIP3
-
-#define RED_MASK     1                  // Use DIP 0
-#define GREEN_MASK   8                  // Use DIP 3
+//#define RED_MASK     1                  // Use DIP 0
+//#define GREEN_MASK   8                  // Use DIP 3
 
 /*
  * Multifunction Switch Use when using DIP Switch for MFS
