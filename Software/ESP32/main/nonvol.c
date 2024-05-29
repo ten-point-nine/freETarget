@@ -194,8 +194,7 @@ void factory_nonvol
     switch ( JSON[i].convert & IS_MASK )
     {
        case IS_VOID:                                      // Variable does not contain anything 
-       case IS_FIXED:                                     // Variable cannot be overwritten
-       case IS_MFS:                                       // MFS initialized from MFS entry
+       case IS_FIXED:                                     // Variable cannot be overwritten                                    // MFS initialized from MFS entry
        break;
        
        case IS_TEXT:
@@ -207,10 +206,14 @@ void factory_nonvol
         }
         break;
         
+      case IS_MFS:
+      printf("Here");
       case IS_INT32:
         x = JSON[i].init_value;                                               // Read in the value 
+        printf("%d", x);
         if ( JSON[i].non_vol != 0 )
         {
+          printf("***");
           nvs_set_i32(my_handle, JSON[i].non_vol, x);                         // Read in the value
         }
         break;
@@ -371,7 +374,6 @@ void update_nonvol
  */
   if ( PS_UNINIT(current_version) )
   {
-
     i=0;
     while ( JSON[i].token != 0 )
     { 
@@ -395,8 +397,43 @@ void update_nonvol
    nvs_commit(my_handle);
   }
 
+/* 
+ * Version 0 -> 1 Split MFS apart and store separatly
+ */
+  if ( current_version == 0 )
+  {  
+    DLT(DLT_CRITICAL, printf("Updating PS0 to PS1");)
+
+    json_mfs_hold_ab = HOLD_AB(json_multifunction);
+    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_AB,   json_mfs_hold_ab);
+
+    json_mfs_tap_a = TAP_A(json_multifunction);
+    nvs_set_i32(my_handle, NONVOL_MFS_TAP_A,     json_mfs_tap_a);
+
+    json_mfs_tap_b = TAP_B(json_multifunction);
+    nvs_set_i32(my_handle, NONVOL_MFS_TAP_B,     json_mfs_tap_b);
+
+    json_mfs_hold_a = HOLD_A(json_multifunction);
+    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_A,     json_mfs_hold_a);
+
+    json_mfs_hold_b = HOLD_B(json_multifunction);
+    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_B,     json_mfs_hold_b);
+
+    json_mfs_hold_c = 0;
+    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_C,    json_mfs_hold_c);
+
+    json_mfs_hold_d = 0;
+    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_D,    json_mfs_hold_d);
+
+    json_mfs_select_cd = 0;
+    nvs_set_i32(my_handle, NONVOL_MFS_SELECT_CD, json_mfs_select_cd);
+    current_version = 1;
+  }
+
 /*
  * Up to date, return
  */
+  nvs_set_i32(my_handle, NONVOL_PS_VERSION, current_version);
+  nvs_commit(my_handle);
   return;
 }

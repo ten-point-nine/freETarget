@@ -44,7 +44,19 @@ static void sw_state(unsigned int action);      // Carry out the MFS function
  * Variables 
  */
 static unsigned int switch_state;               // What switches are pressed
-
+mfs_action_t mfs_action[] = {
+  { POWER_TAP,  mfs_power_tap,  "WAKE_UP"      },// Take the target out of sleep
+  { PAPER_FEED, mfs_paper_feed, "PAPER_FEED"   },// Feed paper until button released
+  { LED_ADJUST, mfs_led_adjust, "LED_ADJUST"   },// Adjust LED brighness
+  { PAPER_SHOT, mfs_paper_shot, "PAPER SHOT"   },// Advance paper the distance of one shot 
+  { PC_TEST,    mfs_pc_test,    "PC TEST"      },// Send a test shot to the PC
+  { ON_OFF,     mfs_on_off,     "TARGET ON OFF"},// Turn the target on or off
+  { NO_ACTION,  NULL,           "NO ACTION"    },// No action on C & D inputs
+  { TARGET_TYPE,NULL,           "TARGET TYPE"  },// Put the target type into the send score
+  { RAPID_RED,  NULL,           "RAPID_RED"    },// The output is used to drive the RED rapid fire LED
+  { RAPID_GREEN,NULL,           "RAPID_GREEN"  },// The output is used to drive the GREEN rapid fire LED
+  { 0, 0, 0 }
+};
 /*-----------------------------------------------------
  * 
  * @function: multifunction_init
@@ -262,23 +274,23 @@ void multifunction_switch(void)
   switch (action)
   {
     case TAP_MASK_A:
-      sw_state(TAP_A(json_multifunction));
+      sw_state(json_mfs_tap_a);
       break;
 
     case TAP_MASK_B:
-      sw_state(TAP_B(json_multifunction));
+      sw_state(json_mfs_tap_b);
       break;
 
     case HOLD_MASK_A:
-      sw_state(HOLD_A(json_multifunction));
+      sw_state(json_mfs_hold_a);
       break;
 
     case HOLD_MASK_B:
-      sw_state(HOLD_B(json_multifunction));
+      sw_state(json_mfs_hold_b);
       break;
 
     case HOLD_MASK_AB:
-      sw_state(HOLD_AB(json_multifunction));
+      sw_state(json_mfs_hold_ab);
       break;
 
     default:
@@ -317,221 +329,94 @@ static void sw_state
     unsigned int action
     )
 {     
-  unsigned int led_step;
+  mfs_action_t* mfs_ptr;
 
   DLT(DLT_INFO, printf("Switch action: %d", action);)
 
-/*
- *  Act on the MFS setting(s) 
- */
-  switch (action)
+  mfs_ptr = mfs_find(sw_state);
+  if ( (mfs_ptr != NULL) && (mfs_ptr->fcn != NULL) )
   {
-    case POWER_TAP:
-      set_LED_PWM_now(json_LED_PWM);      // Yes, a quick press to turn the LED on
-      vTaskDelay(ONE_SECOND/2),
-      set_LED_PWM_now(0);                 // Blink
-      vTaskDelay(ONE_SECOND/2);
-      set_LED_PWM_now(json_LED_PWM);      // and leave it on
-      power_save = (long)json_power_save * 60L * (long)ONE_SECOND; // and resets the power save time
-      json_power_save += 30;
-      break;
-        
-    case PAPER_FEED:                      // Turn on the paper untill the switch is pressed again 
-      DLT(DLT_INFO, printf("\r\nAdvancing paper");)
-      paper_on_off(true, 10 * ONE_SECOND);
-      while ( DIP_SW_A || DIP_SW_B )
-      {
-        timer_delay(1);
-      }
-      paper_on_off(false, 0);
-      set_status_LED(LED_MFS_OFF);
-      DLT(DLT_INFO, printf("\r\nDone");)
-      break;
-
-    case PAPER_SHOT:                      // The switch acts as paper feed control
-      drive_paper();                      // Turn on the paper drive
-      break;
-      
-    case PC_TEST:                         // Send a fake score to the PC
-      send_fake_score();
-      break;
-      
-    case ON_OFF:                         // Turn the target off
-      bye();                             // Stay in the Bye state until a wake up event comes along
-      break;
-      
-    case LED_ADJUST:
-      led_step = 5;
-      json_LED_PWM += led_step;         // Bump up the LED by 5%
-      if ( json_LED_PWM > 100 )
-      {
-        json_LED_PWM = 0;
-      }
-      set_LED_PWM_now(json_LED_PWM);   // Set the brightness
-      vTaskDelay(ONE_SECOND/4);
-      
-      nvs_set_i32(my_handle, NONVOL_LED_PWM, json_LED_PWM);
-      nvs_commit(my_handle);
-      break;
-
-    default:
-      break;
+    (mfs_ptr->fcn)();
   }
 
-/*
- * All done, return
- */
   return;
 }
 
-/*-----------------------------------------------------
- * 
- * @function: multifunction_hold12()
- *            multifunction_hold2()
- *            multifunction_hold1()
- *            multifunction_tap2()
- *            multifunction_tap1()
- * 
- * @brief:    Modify the individual filelds
- * 
- * @return:   mfs updated with the new field
- * 
- *-----------------------------------------------------
- *
- * The MFS is encoded as a 3 digit packed BCD number
- * 
- * This function unpacks the numbers and displayes it as
- * text in a JSON message.
- * 
- *-----------------------------------------------------*/ 
-unsigned int multifunction_common
-(
-  unsigned int newMFS,
-  unsigned int place,
-  unsigned int oldMFS
-)
+void mfs_power_tap (void)
 {
-  unsigned int x;
-
-  newMFS %= 10;
-  x = json_multifunction;
-  x -= oldMFS * place;
-  x += newMFS * place;
-  return x;
-
-}
-
-unsigned int multifunction_hold12
-(
-  unsigned int newMFS         // New field value
-)
-{
-  return multifunction_common(newMFS, SHIFT_HOLD_AB, HOLD_AB(json_multifunction));
-}
-
-unsigned int multifunction_hold2
-(
-  unsigned int newMFS         // New field value
-)
-{
-  return multifunction_common(newMFS, SHIFT_HOLD_B, HOLD_B(json_multifunction));
-}
-
-unsigned int multifunction_hold1
-(
-  unsigned int newMFS         // New field value
-)
-{
-  return multifunction_common(newMFS, SHIFT_HOLD_A, HOLD_A(json_multifunction));
-}
-
-unsigned int multifunction_tap2
-(
-  unsigned int newMFS         // New field value
-)
-{
-  return multifunction_common(newMFS, SHIFT_TAP_B, TAP_B(json_multifunction));
-}
-
-unsigned int multifunction_tap1
-(
-  unsigned int newMFS         // New field value
-)
-{
-  return multifunction_common(newMFS, SHIFT_TAP_A,TAP_A(json_multifunction));
-}
-
-unsigned int multifunction_hold3
-(
-  unsigned int newMFS         // New field value
-)
-{
-  return multifunction_common(newMFS, SHIFT_HOLD_AB, HOLD_C(json_multifunction2));
-}
-
-unsigned int multifunction_hold4
-(
-  unsigned int newMFS         // New field value
-)
-{
-  return multifunction_common(newMFS, SHIFT_HOLD_AB, HOLD_D(json_multifunction2));
-}
-
-unsigned int multifunction_hold5
-(
-  unsigned int newMFS         // New field value
-)
-{
-  return multifunction_common(newMFS, SHIFT_TAP_A, TAP_A(json_multifunction2));
-}
-
-/*-----------------------------------------------------
- * 
- * @function: multifunction_show()
- * 
- * @brief:    Display the MFS values
- * 
- * @return:   None
- * 
- *-----------------------------------------------------
- *
- * The MFS is encoded as a 3 digit packed BCD number
- * 
- * This function unpacks the numbers and displayes it as
- * text in a JSON message.
- * 
- *-----------------------------------------------------*/ 
- //                             0            1            2             3            4             5            6    7    8    9
-static char* mfs_text[] = { "WAKE_UP", "PAPER_FEED", "ADJUST_LED", "PAPER_SHOT", "PC_TEST",  "POWER_ON_OFF",   "6", "7", "8", "9"};
-
-//                               0           1         2              3       4         5           6            7    8    9
-static char* mfs2_text[] = { "UNUSED", "TARGET TYPE", "2", "          3",    "4",  "RAPID_RED", "RAPID_GREEN",  "7", "8", "9"};
-static char* mfs3_text[] = { "LED_LOW", "LED_HIGH",   "ADDRESSABLE", "3",    "4",  "RAPID_RED", "RAPID_GREEN",  "7", "8", "9"};
-
-void multifunction_show(unsigned int x)
-{
-  int i;
-
-  SEND(sprintf(_xs, "\n\r");) 
-  for (i=0; i <= 9; i++)
-  {
-    SEND(sprintf(_xs, "\"%d:%s\",\n\r", i, mfs_text[i]);) 
-  }
-
-
-/*
- * All done, return
- */
+  set_LED_PWM_now(json_LED_PWM);      // Yes, a quick press to turn the LED on
+  vTaskDelay(ONE_SECOND/2),
+  set_LED_PWM_now(0);                 // Blink
+  vTaskDelay(ONE_SECOND/2);
+  set_LED_PWM_now(json_LED_PWM);      // and leave it on
+  power_save = (long)json_power_save * 60L * (long)ONE_SECOND; // and resets the power save time
+  json_power_save += 30;
+  
   return;
 }
 
+void mfs_paper_feed(void)
+{
+  DLT(DLT_INFO, printf("\r\nAdvancing paper");)
+  paper_on_off(true, 10 * ONE_SECOND);
+  while ( DIP_SW_A || DIP_SW_B )
+  {
+    timer_delay(1);
+  }
+  paper_on_off(false, 0);
+  set_status_LED(LED_MFS_OFF);
+  
+  DLT(DLT_INFO, printf("\r\nDone");)
+  
+  return;
+}
+
+void mfs_paper_shot(void)
+{
+  drive_paper();                      // Turn on the paper drive
+  return;
+}
+
+void mfs_pc_test(void)
+{
+  send_fake_score();
+  return;
+}
+
+void mfs_on_off(void)
+{
+  bye();                             // Stay in the Bye state until a wake up event comes along
+  return;
+}
+
+void mfs_led_adjust(void)
+{
+  unsigned int led_step;
+
+  led_step = 5;
+  
+  json_LED_PWM += led_step;         // Bump up the LED by 5%
+  if ( json_LED_PWM > 100 )
+  {
+    json_LED_PWM = 0;
+  }
+  set_LED_PWM_now(json_LED_PWM);   // Set the brightness
+  vTaskDelay(ONE_SECOND/4);
+      
+  nvs_set_i32(my_handle, NONVOL_LED_PWM, json_LED_PWM);
+  nvs_commit(my_handle);
+  
+  return;
+}
+
+
 /*-----------------------------------------------------
  * 
- * @function: multifunction_str
+ * @function: mfs_find
  * 
- * @brief:    Return the text string for this function
+ * @brief:    Find the structure corresponding to the index
  * 
- * @return:   Pointer to text
+ * @return:   Pointer mfs_structure
  * 
  *-----------------------------------------------------
  *
@@ -540,29 +425,26 @@ void multifunction_show(unsigned int x)
  * 
  *-----------------------------------------------------*/
 
-char *multifunction_str
+mfs_action_t* mfs_find
 (
-  unsigned int mfs_function     // Switch to be displayed
+  unsigned int action     // Switch to be displayed
 )
 {
-  return mfs_text[mfs_function]; // Return a pointer to the string
+  unsigned int i;
+
+  i = 0;
+  while (mfs_action[i].text != NULL )
+  {
+    if (mfs_action[i].index == action )
+    {
+      return &mfs_action[i];
+    }
+    i++;
+  }
+
+  return NULL;
 }
 
-char *multifunction_str_2
-(
-  unsigned int mfs_function     // Switch to be displayed
-)
-{
-  return mfs2_text[mfs_function]; // Return a pointer to the string
-}
-
-char *multifunction_str_3
-(
-  unsigned int mfs_function     // Switch to be displayed
-)
-{
-  return mfs3_text[mfs_function]; // Return a pointer to the string
-}
 /*----------------------------------------------------------------
  * 
  * @function: send_fake_score

@@ -663,13 +663,12 @@ void send_miss
  * This function finds the closest bull and then maps the pellet
  * onto the centre one.
  *--------------------------------------------------------------*/
-struct new_target
+typedef struct
 {
   double       x;       // X location of Bull
   double       y;       // Y location of Bull
-};
+} new_target_t;
 
-typedef struct new_target new_target_t;
 
 #define LAST_BULL (-1000.0)
 #define D5_74 (74/2)                   // Five bull air rifle is 74mm centre-centre

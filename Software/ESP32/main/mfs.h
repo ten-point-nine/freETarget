@@ -9,13 +9,33 @@
 #define _MFS_H_
 
 /*
+ *  Types
+ */
+typedef struct {
+    unsigned int index;       // Index used to identify MFS action (ex POWER_TAP)
+    void        (*fcn)(void); // Function to carry out the MFS action
+    char*       text;         // Help text associated with the index
+    } mfs_action_t;
+
+/*
  * Global functions
  */
 void multifunction_init(void);                            // Initialize the multifunction switches
 void multifunction_switch(void);                          // Handle the actions of the DIP Switch signal
 void multifunction_switch_tick(void);                     // Monitor the switches for long and short presses
 void multifunction_wait_open(void);                       // Wait for both multifunction switches to be open
+mfs_action_t* mfs_find(unsigned int action);              // Find the MFS entry corresponding to the index 
+
+void mfs_power_tap (void);                               // Functions to carry out mfs actions.
+void mfs_paper_feed(void);
+void mfs_paper_shot(void);
+void mfs_paper_test(void);
+void mfs_on_off(void);
+void mfs_led_adjust(void);
+void mfs_pc_test(void);
+void mfs_on_off(void);
 void multifunction_show(unsigned int);                    // Show the value of the settings 
+
 unsigned int multifunction_hold12(unsigned int);          // Modify the hold 12 field
 unsigned int multifunction_hold2(unsigned int);           // Modify the hold 2 field
 unsigned int multifunction_hold1(unsigned int);           // Modify the hold 1 field
@@ -70,14 +90,14 @@ char* multifunction_str_3(unsigned int);                  // Return the string n
 #define MFS_SPARE_7   7
 #define MFS_SPARE_8   8
 
-#define NO_ACTION     0                   // DIP usual function
-#define TARGET_TYPE   1                   // Input outputs target type with score
-#define MFS2_NU_2     2
-#define MFS2_NU_3     3
-#define MFS2_DIP      4                   // 0-4 are DIPs
-#define RAPID_RED     5                   // Rapid Fire Red Output
-#define RAPID_GREEN   6                   // Rapid Fire Green Output
-#define MFS2_NU_7     7
-#define MFS2_NU_8     8
-#define MFS2_NU_9     9
+#define NO_ACTION     9                   // DIP usual function
+#define TARGET_TYPE  10                   // Input outputs target type with score
+#define MFS2_NU_2    11
+#define MFS2_NU_3    12
+#define MFS2_DIP     13                   // 0-4 are DIPs
+#define RAPID_RED    14                   // Rapid Fire Red Output
+#define RAPID_GREEN  15                   // Rapid Fire Green Output
+#define MFS2_NU_7    16
+#define MFS2_NU_8    17
+#define MFS2_NU_9    18
 #endif

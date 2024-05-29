@@ -8,7 +8,7 @@
 #ifndef _NONVOL_H
 #define _NONVOL_H
 
-#define PS_VERSION        0                       // Persistent storage version
+#define PS_VERSION        1                       // Persistent storage version
 #define PS_UNINIT(x)     ( ((x) == 0xABAB) || ((x) == 0xFFFF))  // Uninitilized value
 
 #define NAME_SPACE "freETarget"
@@ -68,4 +68,12 @@ void restore_nonvol(void);                        // Copyt the nonvol back
 #define NONVOL_WIFI_PWD       "WIFI_PWD"       // Storage for SSID Password
 #define NONVOL_WIFI_IP        "WIFI_IP"        // Storage forIP Address
 #define NONVOL_Z_OFFSET       "Z_OFFSET"       // Distance from sensor plane to paper plane
+#define NONVOL_MFS_HOLD_AB    "MFS_HOLD_AB"    // Action to take place when A & B are held
+#define NONVOL_MFS_TAP_B      "MFS_TAP_B"      // Action to take place when B is tapped
+#define NONVOL_MFS_TAP_A      "MFS_TAP_A"      // Action to take place when A is tapped
+#define NONVOL_MFS_HOLD_B     "MFS_HOLD_B"     // Action to take place when B is held
+#define NONVOL_MFS_HOLD_A     "MFS_HOLD_A"     // Action to take place when A is held 
+#define NONVOL_MFS_HOLD_D     "MFS_HOLD_D"     // Action to take place when D is held 
+#define NONVOL_MFS_HOLD_C     "MFS_HOLD_C"     // Action to take place when C is held
+#define NONVOL_MFS_SELECT_CD  "MFS_SELECT_CD"  // Hardware attached to CD
 #endif
