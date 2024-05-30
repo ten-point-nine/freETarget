@@ -34,19 +34,6 @@ void mfs_on_off(void);
 void mfs_led_adjust(void);
 void mfs_pc_test(void);
 void mfs_on_off(void);
-void multifunction_show(unsigned int);                    // Show the value of the settings 
-
-unsigned int multifunction_hold12(unsigned int);          // Modify the hold 12 field
-unsigned int multifunction_hold2(unsigned int);           // Modify the hold 2 field
-unsigned int multifunction_hold1(unsigned int);           // Modify the hold 1 field
-unsigned int multifunction_hold3(unsigned int);           // Modify the hold 2 field
-unsigned int multifunction_hold4(unsigned int);           // Modify the hold 1 field
-unsigned int multifunction_hold5(unsigned int);           // Modify the hold 1 field
-unsigned int multifunction_tap2(unsigned int);            // Modify the tap 2 field
-unsigned int multifunction_tap1(unsigned int);            // Modify the tap 1 field
-char* multifunction_str(unsigned int);                    // Return the string name of the switch action
-char* multifunction_str_2(unsigned int);                  // Return the string name of the switch action
-char* multifunction_str_3(unsigned int);                  // Return the string name of the switch action
 
 /*
  * Multifunction Switch Use when using DIP Switch for MFS

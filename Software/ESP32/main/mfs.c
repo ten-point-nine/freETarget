@@ -57,6 +57,22 @@ mfs_action_t mfs_action[] = {
   { RAPID_GREEN,NULL,           "RAPID_GREEN"  },// The output is used to drive the GREEN rapid fire LED
   { 0, 0, 0 }
 };
+
+/*
+ * Test Vectors
+  {"MFS_HOLD_AB":2, "MFS_TAP_B": 0, "MFS_TAP_A":3 , "MFS_HOLD_B": 5, "MFS_HOLD_A":1, "MFS_HOLD_D":5, "MFS_HOLD_C":6, "MFS_SELECT_CD":1, "ECHO":0}
+  {"MFS_HOLD_AB":2}
+  {"MFS_TAP_B":0}
+  {"MFS_TAP_A":3}
+  {"MFS_HOLD_B":5}
+  {"MFS_HOLD_A":1}
+  {"MFS_HOLD_D":5}
+  {"MFS_HOLD_C":6}
+  {"MFS_SELECT_CD":1}
+  {"ECHO":0}
+
+*/
+
 /*-----------------------------------------------------
  * 
  * @function: multifunction_init

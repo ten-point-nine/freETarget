@@ -113,6 +113,7 @@ void read_nonvol(void)
 
         case IS_INT32:
         case IS_FIXED:
+        case IS_MFS:
           if ( JSON[i].non_vol != 0 )                          // Is persistent storage enabled?
           {
             nvs_get_i32(my_handle, JSON[i].non_vol, &x);       // Read in the value
@@ -159,10 +160,14 @@ void read_nonvol(void)
  * @brief: Initialize the NONVOL back to factory settings
  * 
  * @return: None
+ * 
  *---------------------------------------------------------------
  *
  * If the init_nonvol location is not set to INIT_DONE then
- * initilze the memory
+ * initilze the memory.
+ * 
+ * Copy the initial values from the JSON table to the NONVOL
+ * memory.
  * 
  *------------------------------------------------------------*/
 void factory_nonvol
@@ -207,13 +212,10 @@ void factory_nonvol
         break;
         
       case IS_MFS:
-      printf("Here");
       case IS_INT32:
         x = JSON[i].init_value;                                               // Read in the value 
-        printf("%d", x);
         if ( JSON[i].non_vol != 0 )
         {
-          printf("***");
           nvs_set_i32(my_handle, JSON[i].non_vol, x);                         // Read in the value
         }
         break;

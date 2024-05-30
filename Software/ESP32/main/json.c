@@ -115,13 +115,13 @@ const json_message_t JSON[] = {
   {"\"KEEP_ALIVE\":",     &json_keep_alive,                  0,                IS_INT32,  0,                NONVOL_KEEP_ALIVE,     120 },    // TCPIP Keep alive period (in seconds)
   {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT32,  &set_LED_PWM_now, NONVOL_LED_PWM,         50 },    // Set the LED brightness
   {"\"MFS_HOLD_AB\":",    &json_mfs_hold_ab,                 0,                IS_MFS,    0,                NONVOL_MFS_HOLD_AB,  LED_ADJUST },
-  {"\"MFS_TAP_B\"  :",    &json_mfs_tap_b,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_B,    POWER_TAP  },
-  {"\"MFS_TAP_A\"  :",    &json_mfs_tap_a,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_A,    PAPER_SHOT },
-  {"\"MFS_HOLD_B\" :",    &json_mfs_hold_b,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_B,   ON_OFF     },
-  {"\"MFS_HOLD_A\" :",    &json_mfs_hold_a,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_A,   PAPER_FEED },
-  {"\"MFS_HOLD_D\" :",    &json_mfs_hold_d,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_D,   NO_ACTION  },
-  {"\"MFS_HOLD_C\" :",    &json_mfs_hold_c,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_C,   NO_ACTION  },
-  {"\"MFS_SELECT_CD\":",  &json_mfs_select_cd,               0,                IS_MFS,    0,                NONVOL_MFS_SELECT_CD,NO_ACTION    },
+  {"\"MFS_TAP_B\":",      &json_mfs_tap_b,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_B,    POWER_TAP  },
+  {"\"MFS_TAP_A\":",      &json_mfs_tap_a,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_A,    PAPER_SHOT },
+  {"\"MFS_HOLD_B\":",     &json_mfs_hold_b,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_B,   ON_OFF     },
+  {"\"MFS_HOLD_A\":",     &json_mfs_hold_a,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_A,   PAPER_FEED },
+  {"\"MFS_HOLD_D\":",     &json_mfs_hold_d,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_D,   NO_ACTION  },
+  {"\"MFS_HOLD_C\":",     &json_mfs_hold_c,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_C,   NO_ACTION  },
+  {"\"MFS_SELECT_CD\":",  &json_mfs_select_cd,               0,                IS_MFS,    0,                NONVOL_MFS_SELECT_CD,NO_ACTION  },
   
   {"\"MIN_RING_TIME\":",  &json_min_ring_time,               0,                IS_INT32,  0,                NONVOL_MIN_RING_TIME,  500 },    // Minimum time for ringing to stop (ms)
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT32,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
@@ -385,6 +385,7 @@ static void handle_json(void)
               }
               if ( JSON[j].non_vol != 0 )
               {
+                printf("Here");
                 nvs_set_i32(my_handle, JSON[j].non_vol, x);    // Store into NON-VOL
               }
               break;

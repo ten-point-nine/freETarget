@@ -38,7 +38,7 @@ extern const json_message_t JSON[];
 #define IS_INT32      (3<<6)   // Value is a 64 bit int
 #define IS_FLOAT      (2<<6)   // Value is a floating point number
 #define IS_FIXED      (1<<6)   // The value cannot be changed
-#define IS_MASK       (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED)
+#define IS_MASK       (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED | IS_MFS)
 #define FLOAT_MASK    ((~IS_MASK) & 0xFF)    // Scaling factor 6 bits
 
 #define SSID_SIZE     31         // Reserve 30+1 bytes for SSID
