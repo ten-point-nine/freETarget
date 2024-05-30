@@ -339,13 +339,13 @@ void WiFi_event_handler
  */
     if (event_id == WIFI_EVENT_AP_STACONNECTED)
     {
-      printf("AP Connected");
+      DLT(DLT_CRITICAL, printf("AP Connected\r\n");)
       set_status_LED(LED_ACCESS_CN);
     } 
    
    if (event_id == WIFI_EVENT_AP_STADISCONNECTED)
    {
-      printf("STATION disconnected");
+      DLT(DLT_CRITICAL, printf("STATION disconnected");)
       set_status_LED(LED_ACCESS);
    }
 
@@ -451,33 +451,97 @@ static void tcpip_server_io(void)
  *
  ******************************************************************************
  *
- * The recv function is a blocking call that waits for something to 
- * appear in the TCPIP channel.  
+ * There are four identical functions that wait for a TCPIP message to arrive.
+ * On receipt of the message, the bytes are copied from TCPIP into a circular
+ * queue that holds everything until needed.
  * 
- * These are tasks that pend waiting for something to appear and then
- * put it into the queue.
+ * IMPORTANT
+ * 
+ * The recv function is a blocking call that waits for something to 
+ * appear in the TCPIP channel. Meaning that these functions will be suspended
+ * indefinitly until something arrives and then be woken up until the next
+ * recv() call is made.  For this reason, the functions are separated out, one
+ * for each possible socket.
  *
  *******************************************************************************/
-void tcpip_socket_poll(void* parameters)
+void tcpip_socket_poll_0(void* parameters)
 {
     int length;
     char rx_buffer[256];
-    int i;
 
-    DLT(DLT_CRITICAL, printf("tcp_socket_poll()");)
+    DLT(DLT_CRITICAL, printf("tcp_socket_poll_0()");)
 
     while (1)
     {
-        for (i=0; i != sizeof(socket_list) / sizeof(int); i++)
+        if (socket_list[0] > 0 )
         {
-            if (socket_list[i] > 0 )
+            length = recv(socket_list[0], rx_buffer, sizeof(rx_buffer), 0 );
+            if ( length > 0 )
             {
-                length = recv(socket_list[i], rx_buffer, sizeof(rx_buffer), 0 );
-                rx_buffer[length] = 0;
-                while ( length > 0 )
-                {
-                length -= tcpip_socket_2_queue(rx_buffer, length);
-                }
+                tcpip_socket_2_queue(rx_buffer, length);
+            }
+        }
+        vTaskDelay(10);
+    }
+}
+
+void tcpip_socket_poll_1(void* parameters)
+{
+    int length;
+    char rx_buffer[256];
+
+    DLT(DLT_CRITICAL, printf("tcp_socket_poll_1()");)
+
+    while (1)
+    {
+        if (socket_list[1] > 0 )
+        {
+            length = recv(socket_list[1], rx_buffer, sizeof(rx_buffer), 0 );
+            if ( length > 0 )
+            {
+                tcpip_socket_2_queue(rx_buffer, length);
+            }
+        }
+        vTaskDelay(10);
+    }
+}
+
+void tcpip_socket_poll_2(void* parameters)
+{
+    int length;
+    char rx_buffer[256];
+
+    DLT(DLT_CRITICAL, printf("tcp_socket_poll_2()");)
+
+    while (1)
+    {
+        if (socket_list[2] > 0 )
+        {
+            length = recv(socket_list[2], rx_buffer, sizeof(rx_buffer), 0 );
+            if ( length > 0 )
+            {
+                tcpip_socket_2_queue(rx_buffer, length);
+            }
+        }
+        vTaskDelay(10);
+    }
+}
+
+void tcpip_socket_poll_3(void* parameters)
+{
+    int length;
+    char rx_buffer[256];
+
+    DLT(DLT_CRITICAL, printf("tcp_socket_poll_0()");)
+
+    while (1)
+    {
+        if (socket_list[3] > 0 )
+        {
+            length = recv(socket_list[3], rx_buffer, sizeof(rx_buffer), 0 );
+            if ( length > 0 )
+            {
+                tcpip_socket_2_queue(rx_buffer, length);
             }
         }
         vTaskDelay(10);
