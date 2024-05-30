@@ -354,12 +354,12 @@ static void sw_state
         
     case PAPER_FEED:                      // Turn on the paper untill the switch is pressed again 
       DLT(DLT_INFO, printf("\r\nAdvancing paper");)
-      paper_on_off(true);
       while ( DIP_SW_A || DIP_SW_B )
       {
+        paper_on_off(true, 10);
         timer_delay(1);
       }
-      paper_on_off(false);
+      paper_on_off(false, 0);
       set_status_LED(LED_MFS_OFF);
       DLT(DLT_INFO, printf("\r\nDone");)
       break;

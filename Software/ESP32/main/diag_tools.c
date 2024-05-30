@@ -495,12 +495,12 @@ void factory_test(void)
     if ( motor_toggle )
     {
       printf("+");
-      paper_on_off(true);
+      paper_on_off(true, ONE_SECOND/4);
     }
     else
     {
       printf("-");
-      paper_on_off(false);
+      paper_on_off(false, 0);
     }
     motor_toggle ^= 1;
     
@@ -540,7 +540,7 @@ void factory_test(void)
         case 'X':               // Exit
         case 'x':
         case '!':
-          paper_on_off(false);
+          paper_on_off(false, 0);
           printf("\r\nDone");
           return;
       }

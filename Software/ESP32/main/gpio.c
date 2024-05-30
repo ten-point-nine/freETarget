@@ -46,6 +46,7 @@ typedef struct status_struct {
  * Variables
  */
 status_struct_t status[3] = {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
+volatile unsigned long paper_time;
 
 /*-----------------------------------------------------
  * 
@@ -464,8 +465,6 @@ void read_timers
  * Paper Time = Motor ON time
  * 
  *-----------------------------------------------------*/
-volatile unsigned long paper_time;
-
 void drive_paper(void)
 {
   DLT(DLT_DIAG, printf("Advancing paper: %dms", json_paper_time);)
@@ -474,8 +473,7 @@ void drive_paper(void)
  * Drive the motor on and off for the number of cycles
  * at duration
  */
-  timer_new(&paper_time, ONE_SECOND * json_paper_time / 1000);  // Create the timer
-  paper_on_off(true);                       // Motor OFF
+  paper_on_off(true, ONE_SECOND * json_paper_time / 1000);                       // Motor OFF
 
  /*
   * All done, return
@@ -487,7 +485,7 @@ void drive_paper_tick(void)
 {
   if ( (paper_time == 0) && (is_paper_on() != 0) )
   {
-    paper_on_off(false);                      // Motor OFF
+    paper_on_off(false, 0);                      // Motor OFF
     DLT(DLT_DIAG, printf("Done");)
   }
   
@@ -517,17 +515,19 @@ void drive_paper_tick(void)
 int paper_state;
 void paper_on_off                               // Function to turn the motor on and off
 (
-  bool on                                      // on == true, turn on motor drive
+  bool on,                                      // on == true, turn on motor drive
+  unsigned long duration                        // How long will it be turned on for
 )
 {
   if ( on == true )
-  {
+  {  
+    timer_new(&paper_time, duration);           // Create the timer
     gpio_set_level(PAPER, PAPER_ON);            // Turn it on
   }
   else
   {
-    paper_time = 0;
-    gpio_set_level(PAPER, PAPER_OFF);            // Turn it off
+    timer_new(&paper_time, 0);                  // Remove the timer
+    gpio_set_level(PAPER, PAPER_OFF);           // Turn it off
   }
 
 /*
@@ -739,10 +739,10 @@ void paper_test(void)
   for (i=0; i != 10; i++)
   {
     printf("  %d+", (i+1));
-    paper_on_off(true);
+    paper_on_off(true, ONE_SECOND);
     timer_delay(ONE_SECOND / 2);
     printf("-");
-    paper_on_off(false);
+    paper_on_off(false, 0);
     timer_delay(ONE_SECOND / 2);
   }
 
