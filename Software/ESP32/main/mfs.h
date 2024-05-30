@@ -26,15 +26,6 @@ void multifunction_switch_tick(void);                     // Monitor the switche
 void multifunction_wait_open(void);                       // Wait for both multifunction switches to be open
 mfs_action_t* mfs_find(unsigned int action);              // Find the MFS entry corresponding to the index 
 
-void mfs_power_tap (void);                               // Functions to carry out mfs actions.
-void mfs_paper_feed(void);
-void mfs_paper_shot(void);
-void mfs_paper_test(void);
-void mfs_on_off(void);
-void mfs_led_adjust(void);
-void mfs_pc_test(void);
-void mfs_on_off(void);
-
 /*
  * Multifunction Switch Use when using DIP Switch for MFS
  */
@@ -53,16 +44,7 @@ void mfs_on_off(void);
 #define HOLD_D(x)     HI10((x))         // High digit       xxx2x
 #define _HOLD_D              7
 #define SELECT_CD(x)   HLO10(x)         // High Low digit   xx2xx
-#define _SELECT_CD           8
-#define _SELECT_LED_LOW      0          // Active low LED
-#define _SELECT_LED_HIGH     1          // Active high LED
-#define _SELECT_LED_ADDR     2          // Adressable LED
 
-#define SHIFT_HOLD_A      1             // Hold 1 place
-#define SHIFT_HOLD_B     10             // *
-#define SHIFT_TAP_A     100             // *
-#define SHIFT_TAP_B    1000             // *
-#define SHIFT_HOLD_AB 10000             // * 
 
 /*
  *  MFS Use
@@ -84,7 +66,7 @@ void mfs_on_off(void);
 #define MFS2_DIP     13                   // 0-4 are DIPs
 #define RAPID_RED    14                   // Rapid Fire Red Output
 #define RAPID_GREEN  15                   // Rapid Fire Green Output
-#define MFS2_NU_7    16
-#define MFS2_NU_8    17
-#define MFS2_NU_9    18
+#define RAPID_LOW    16                   // Select Rapid Fire LED type
+#define RAPID_HIGH   16                   // Select Rapid Fire LED type
+#define RAPID_ADDR   17                   // Select Rapid Fire LED type
 #endif

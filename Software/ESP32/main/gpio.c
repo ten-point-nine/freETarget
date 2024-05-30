@@ -626,15 +626,15 @@ void rapid_red
   unsigned int state          // New state for the RED light
 ) 
 {
-  if ( SELECT_CD(json_multifunction2) == _SELECT_LED_LOW )   // Inverted drive
+  if ( json_mfs_select_cd == RAPID_LOW )   // Inverted drive
   {
     state = !state;
   }
-  if ( HOLD_C(json_multifunction2) == RAPID_RED )
+  if ( json_mfs_hold_c == RAPID_RED )
   {
       gpio_set_level(DIP_C, state);
   }
-  if ( HOLD_D(json_multifunction2) == RAPID_RED )
+  if ( json_mfs_hold_d == RAPID_RED )
   {
       gpio_set_level(DIP_D, state);
   }
@@ -647,17 +647,16 @@ void rapid_green
   unsigned int state          // New state for the GREEN light
 ) 
 {
-
-  if ( SELECT_CD(json_multifunction2) == _SELECT_LED_LOW )   // Inverted drive
+  if ( json_mfs_select_cd == RAPID_LOW )   // Inverted drive
   {
     state = !state;
   }
 
-  if ( HOLD_C(json_multifunction2) == RAPID_GREEN )
+  if ( json_mfs_hold_c == RAPID_GREEN )
   {
       gpio_set_level(DIP_C, state);
   }
-  if ( HOLD_D(json_multifunction2) == RAPID_GREEN )
+  if ( json_mfs_hold_d == RAPID_GREEN )
   {
       gpio_set_level(DIP_D, state);
   }
@@ -745,7 +744,10 @@ void rapid_LED_test(void)
   gpio_set_direction(HOLD_D_GPIO,  GPIO_MODE_OUTPUT);
   gpio_set_pull_mode(HOLD_D_GPIO,  GPIO_PULLUP_PULLDOWN);
 
-  json_multifunction2 = 65;
+  json_mfs_hold_d = RAPID_RED;          // Hold D
+  json_mfs_hold_c = RAPID_GREEN;        // Hold C
+  json_mfs_select_cd = RAPID_LOW;       // Select C and D operation
+  
   while (1)
   {
     rapid_red(0);

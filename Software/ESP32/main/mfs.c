@@ -1,8 +1,8 @@
 /*----------------------------------------------------------------
  * 
- * freETarget        
+ * mfs.c       
  * 
- * Software to run the Air-Rifle / Small Bore Electronic Target
+ * Multifunction Switch support
  * 
  *-------------------------------------------------------------*/
 #include "driver/gpio.h"
@@ -37,24 +37,35 @@
 /*
  * Function Prototypes 
  */
-static void send_fake_score(void);
+
 static void sw_state(unsigned int action);      // Carry out the MFS function
+static void mfs_power_tap (void);                               // Functions to carry out mfs actions.
+static void mfs_paper_feed(void);
+static void mfs_paper_shot(void);
+static void mfs_paper_test(void);
+static void mfs_on_off(void);
+static void mfs_led_adjust(void);
+static void mfs_pc_test(void);
+static void mfs_on_off(void);
 
 /*
  * Variables 
  */
 static unsigned int switch_state;               // What switches are pressed
 mfs_action_t mfs_action[] = {
-  { POWER_TAP,  mfs_power_tap,  "WAKE_UP"      },// Take the target out of sleep
-  { PAPER_FEED, mfs_paper_feed, "PAPER_FEED"   },// Feed paper until button released
-  { LED_ADJUST, mfs_led_adjust, "LED_ADJUST"   },// Adjust LED brighness
-  { PAPER_SHOT, mfs_paper_shot, "PAPER SHOT"   },// Advance paper the distance of one shot 
-  { PC_TEST,    mfs_pc_test,    "PC TEST"      },// Send a test shot to the PC
-  { ON_OFF,     mfs_on_off,     "TARGET ON OFF"},// Turn the target on or off
-  { NO_ACTION,  NULL,           "NO ACTION"    },// No action on C & D inputs
-  { TARGET_TYPE,NULL,           "TARGET TYPE"  },// Put the target type into the send score
-  { RAPID_RED,  NULL,           "RAPID_RED"    },// The output is used to drive the RED rapid fire LED
-  { RAPID_GREEN,NULL,           "RAPID_GREEN"  },// The output is used to drive the GREEN rapid fire LED
+  { POWER_TAP,   mfs_power_tap,  "WAKE UP"        },// Take the target out of sleep
+  { PAPER_FEED,  mfs_paper_feed, "PAPER FEED"     },// Feed paper until button released
+  { LED_ADJUST,  mfs_led_adjust, "LED_ADJUST"     },// Adjust LED brighness
+  { PAPER_SHOT,  mfs_paper_shot, "PAPER SHOT"     },// Advance paper the distance of one shot 
+  { PC_TEST,     mfs_pc_test,    "PC TEST"        },// Send a test shot to the PC
+  { ON_OFF,      mfs_on_off,     "TARGET ON OFF"  },// Turn the target on or off
+  { NO_ACTION,   NULL,           "NO ACTION"      },// No action on C & D inputs
+  { TARGET_TYPE, NULL,           "TARGET TYPE"    },// Put the target type into the send score
+  { RAPID_RED,   NULL,           "RAPID RED"      },// The output is used to drive the RED rapid fire LED
+  { RAPID_GREEN, NULL,           "RAPID_GREEN"    },// The output is used to drive the GREEN rapid fire LED
+  { RAPID_LOW,   NULL,           "RAPID LOW"      },// The output is used to drive the GREEN rapid fire LED
+  { RAPID_HIGH,  NULL,           "RAPID HIGH"     },// The output is used to drive the GREEN rapid fire LED
+  { RAPID_ADDR,  NULL,           "RAPID ADDR"     },// The output is used to drive the GREEN rapid fire LED
   { 0, 0, 0 }
 };
 
@@ -336,10 +347,6 @@ void multifunction_switch(void)
  * MFS switch
  * 
  *-----------------------------------------------------*/
-
-/*
- * Carry out an action based on the switch state
- */
 static void sw_state 
     (
     unsigned int action
@@ -349,7 +356,7 @@ static void sw_state
 
   DLT(DLT_INFO, printf("Switch action: %d", action);)
 
-  mfs_ptr = mfs_find(sw_state);
+  mfs_ptr = mfs_find(action);
   if ( (mfs_ptr != NULL) && (mfs_ptr->fcn != NULL) )
   {
     (mfs_ptr->fcn)();
@@ -358,7 +365,7 @@ static void sw_state
   return;
 }
 
-void mfs_power_tap (void)
+static void mfs_power_tap (void)
 {
   set_LED_PWM_now(json_LED_PWM);      // Yes, a quick press to turn the LED on
   vTaskDelay(ONE_SECOND/2),
@@ -371,7 +378,7 @@ void mfs_power_tap (void)
   return;
 }
 
-void mfs_paper_feed(void)
+static void mfs_paper_feed(void)
 {
   DLT(DLT_INFO, printf("\r\nAdvancing paper");)
   paper_on_off(true, 10 * ONE_SECOND);
@@ -387,25 +394,31 @@ void mfs_paper_feed(void)
   return;
 }
 
-void mfs_paper_shot(void)
+static void mfs_paper_shot(void)
 {
   drive_paper();                      // Turn on the paper drive
   return;
 }
 
-void mfs_pc_test(void)
+static void mfs_pc_test(void)
 {
-  send_fake_score();
+  static   shot_record_t shot;
+    
+  shot.x = esp_random() % (5000);
+  shot.y = esp_random() % (5000);
+  s_of_sound = speed_of_sound(temperature_C(), humidity_RH());
+  shot.shot_number++;
+  send_score(&shot);
   return;
-}
+} 
 
-void mfs_on_off(void)
+static void mfs_on_off(void)
 {
   bye();                             // Stay in the Bye state until a wake up event comes along
   return;
 }
 
-void mfs_led_adjust(void)
+static void mfs_led_adjust(void)
 {
   unsigned int led_step;
 
@@ -461,29 +474,3 @@ mfs_action_t* mfs_find
   return NULL;
 }
 
-/*----------------------------------------------------------------
- * 
- * @function: send_fake_score
- * 
- * @brief: Send a fake score to the PC for testing
- * 
- * @return: Nothing
- * 
- *----------------------------------------------------------------
- *
- *  This function reads the values from the counters and saves
- *  saves them into the record structure to be reduced later 
- *  on.
- *
- *--------------------------------------------------------------*/
-static void send_fake_score(void) 
-{ 
-  static   shot_record_t shot;
-    
-  shot.x = esp_random() % (5000);
-  shot.y = esp_random() % (5000);
-  s_of_sound = speed_of_sound(temperature_C(), humidity_RH());
-  shot.shot_number++;
-  send_score(&shot);
-  return;
-} 

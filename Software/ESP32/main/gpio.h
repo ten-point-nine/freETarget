@@ -93,8 +93,8 @@ void multifunction_display(void);                         // Display the MFS set
 
 #define DIP_A           38      // V
 #define DIP_B           37      // V
-#define DIP_C           36      // V
-#define DIP_D           35      // V
+#define DIP_C           35      // V
+#define DIP_D           36      // V
 #define HOLD_C_GPIO GPIO_NUM_36 // Rapid Fire controls when enabled
 #define HOLD_D_GPIO GPIO_NUM_35
 //#define GREEN_OUT   12                  // Rapid fire GREEN on DIP3

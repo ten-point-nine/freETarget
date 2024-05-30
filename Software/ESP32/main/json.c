@@ -550,38 +550,38 @@ void show_echo(void)
  * Finish up with the special cases
  */
   SEND(sprintf(_xs, "\n\rStatus\r\n");)                                                                    // Blank Line
-  SEND(sprintf(_xs, "\"TRACE\": %d, \n\r", is_trace);)         // TRUE to if trace is enabled
-  SEND(sprintf(_xs, "\"RUN_STATE\": %d, \n\r", run_state);)    // TRUE to if trace is enabled
-  SEND(sprintf(_xs, "\"RUNNING_MINUTES\": %10.6f, \n\r", esp_timer_get_time()/100000.0/60.0);)  // On Time
-  SEND(sprintf(_xs, "\"TIME_TO_SLEEP\": %4.2f, \n\r", (float)power_save/(float)(ONE_SECOND*60));)                 // How long until we sleep
-  SEND(sprintf(_xs, "\"TEMPERATURE\": %4.2f, \n\r", temperature_C());)                          // Temperature in degrees C
+  SEND(sprintf(_xs, "\"TRACE\":             %d, \n\r", is_trace);)         // TRUE to if trace is enabled
+  SEND(sprintf(_xs, "\"RUN_STATE\":         %d, \n\r", run_state);)    // TRUE to if trace is enabled
+  SEND(sprintf(_xs, "\"RUNNING_MINUTES\":  %10.6f, \n\r", esp_timer_get_time()/100000.0/60.0);)  // On Time
+  SEND(sprintf(_xs, "\"TIME_TO_SLEEP\":     %4.2f, \n\r", (float)power_save/(float)(ONE_SECOND*60));)                 // How long until we sleep
+  SEND(sprintf(_xs, "\"TEMPERATURE\":       %4.2f, \n\r", temperature_C());)                          // Temperature in degrees C
   SEND(sprintf(_xs, "\"RELATIVE_HUMIDITY\": %4.2f, \n\r", humidity_RH());)
-  SEND(sprintf(_xs, "\"SPEED_OF_SOUND\": %4.2f, \n\r", speed_of_sound(temperature_C(), humidity_RH()));)
-  SEND(sprintf(_xs, "\"TIMER_COUNT\": %d, \n\r", (int)(SHOT_TIME * OSCILLATOR_MHZ));)             // Maximum number of clock cycles to record shot (target dependent)
-  SEND(sprintf(_xs, "\"V12\": %4.2f, \n\r", v12_supply());)    // 12 Volt LED supply
+  SEND(sprintf(_xs, "\"SPEED_OF_SOUND\":    %4.2f, \n\r", speed_of_sound(temperature_C(), humidity_RH()));)
+  SEND(sprintf(_xs, "\"TIMER_COUNT\":       %d, \n\r", (int)(SHOT_TIME * OSCILLATOR_MHZ));)             // Maximum number of clock cycles to record shot (target dependent)
+  SEND(sprintf(_xs, "\"V12\":               %4.2f, \n\r", v12_supply());)    // 12 Volt LED supply
   WiFi_MAC_address(str_c);
-  SEND(sprintf(_xs, "\"WiFi_MAC\": \"%02X:%02X:%02X:%02X:%02X:%02X\", \n\r", str_c[0], str_c[1],str_c[2], str_c[3], str_c[4], str_c[5]);)
+  SEND(sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\", \n\r", str_c[0], str_c[1],str_c[2], str_c[3], str_c[4], str_c[5]);)
   WiFi_my_ip_address(str_c);
-  SEND(sprintf(_xs, "\"WiFi_IP_ADDRESS\": \"%s:1090\", \n\r", str_c);)
+  SEND(sprintf(_xs, "\"WiFi_IP_ADDRESS\":   \"%s:1090\", \n\r", str_c);)
   if ( json_wifi_ssid[0] == 0 )                       // The SSID is undefined
   {
-    SEND(sprintf(_xs, "\"WiFi_MODE\": \"Access Point\",\n\r");)    // Print out the IP address
+    SEND(sprintf(_xs, "\"WiFi_MODE\":        \"Access Point\",\n\r");)    // Print out the IP address
   }
   else
   {
-    SEND(sprintf(_xs, "\"WiFi_MODE\": \"Station connected to SSID \"%s\",\n\r", (char*)&json_wifi_ssid);) 
+    SEND(sprintf(_xs, "\"WiFi_MODE\":     \"Station connected to SSID \"%s\",\n\r", (char*)&json_wifi_ssid);) 
   }
 
   if ( json_token == TOKEN_NONE )
   {
-    SEND(sprintf(_xs, "\"TOKEN_RING\":  %d, \n\r", my_ring);)           // My token ring address
-    SEND(sprintf(_xs, "\"TOKEN_OWNER\": %d, \n\r", whos_ring);)         // Who owns the token ring
+    SEND(sprintf(_xs, "\"TOKEN_RING\":     %d, \n\r", my_ring);)           // My token ring address
+    SEND(sprintf(_xs, "\"TOKEN_OWNER\":    %d, \n\r", whos_ring);)         // Who owns the token ring
   }
   
-  SEND(sprintf(_xs, "\"VERSION\": %s, \n\r", SOFTWARE_VERSION);)        // Current software version
+  SEND(sprintf(_xs, "\"VERSION\":          %s, \n\r", SOFTWARE_VERSION);)        // Current software version
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
-  SEND(sprintf(_xs, "\"PS_VERSION\": %d, \n\r", j);)                    // Current persistent storage version
-  SEND(sprintf(_xs, "\"BD_REV\": %4.2f \n\r", (float)(revision())/100.0);)                                             // Current board versoin
+  SEND(sprintf(_xs, "\"PS_VERSION\":       %d, \n\r", j);)                    // Current persistent storage version
+  SEND(sprintf(_xs, "\"BD_REV\":           %4.2f \n\r", (float)(revision())/100.0);)                                             // Current board versoin
   SEND(sprintf(_xs, "}\r\n");) 
   
 /*
