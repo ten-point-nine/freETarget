@@ -35,6 +35,7 @@
 #include "lwip/sys.h"
 #include "lwip/sockets.h"
 #include "lwip/netdb.h"
+#include "lwip/dns.h"
 
 #include "freETarget.h"
 #include "serial_io.h"
@@ -64,15 +65,17 @@ static EventGroupHandle_t s_wifi_event_group;
 static esp_event_handler_instance_t instance_any_id;
 static esp_event_handler_instance_t instance_got_ip;
 static int s_retry_num = 0;
-static int socket_list[MAX_SOCKETS];       // Space to remember four sockets
-static esp_netif_ip_info_t ipInfo;         // IP Address of the access point
+static int socket_list[MAX_SOCKETS];        // Space to remember four sockets
+static esp_netif_ip_info_t ipInfo;          // IP Address of the access point
+static int dns_valid;                       // We have a valid IP address for the URL
+static ip_addr_t url_ip_address;            // Address of the server
 
 /*
  * Private Functions
  */
 void WiFi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 static void tcpip_server_io(void);        // Manage TCPIP traffic
-
+static void dns_found_cb ( const char* name, const ip_addr_t* ip_addr, void* callback_arg);
 esp_err_t esp_base_mac_addr_get(uint8_t *mac);
 
 /*****************************************************************************
@@ -708,7 +711,7 @@ void WiFi_loopback_task(void* parameters)
  *
  ****************************************************************************/
 #define TO_IP(x) ((int)x) & 0xff, ((int)x >> 8) & 0xff, ((int)x >> 16) & 0xff, ((int)x >> 24) & 0xff
-void WiFi_my_ip_address
+void WiFi_my_IP_address
 (
     char* s             // Where to return the string
 )
@@ -717,6 +720,14 @@ void WiFi_my_ip_address
     return;
 }
 
+void WiFi_remote_IP_address
+(
+    char* s             // Where to return the string
+)
+{
+//    sprintf(s, "%d.%d.%d.%d", TO_IP(url_ip_address.u_addr.ip4));
+    return;
+}
 
 /*****************************************************************************
  *
@@ -734,4 +745,40 @@ void WiFi_MAC_address
 {
     esp_base_mac_addr_get((uint8_t*)mac);
         return;
+}
+
+
+/*****************************************************************************
+ *
+ * @function: WiFi_get_remote_ip()
+ *
+ * @brief:    Find the address of the remote IP
+ * 
+ * @return:   None
+ *
+ ****************************************************************************/
+void WiFi_get_remote_ip
+(
+    char* remote_url             // Text string of the remote URL 
+)
+{
+
+/*
+ * Prepare the callback for the result 
+ */
+    dns_gethostbyname(json_remote_url, &url_ip_address, dns_found_cb, NULL);
+
+    return;
+}
+
+static void dns_found_cb
+(
+    const char* name,           // Name of dns search
+    const ip_addr_t* ip_addr,   // IP address of the URL
+    void* callback_arg          // Not used 
+)
+{
+    url_ip_address = *ip_addr;
+    dns_valid = true;
+    return;
 }

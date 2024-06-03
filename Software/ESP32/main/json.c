@@ -93,6 +93,7 @@ int     json_mfs_hold_a;            // Hold A
 int     json_mfs_hold_d;            // Hold D
 int     json_mfs_hold_c;            // Hold C
 int     json_mfs_select_cd;         // Select C and D operation
+char    json_remote_url[URL_SIZE];  // URL of calling server
 
        void show_echo(void);        // Display the current settings
 static void show_test(int v);       // Execute the self test once
@@ -129,6 +130,7 @@ const json_message_t JSON[] = {
   {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT32,  0,                NONVOL_PAPER_TIME,     500 },    // Set the paper advance time
   {"\"PCNT_LATENCY\":",   &json_pcnt_latency,                0,                IS_INT32,  0,                NONVOL_PCNT_LATENCY,    33 },    // Interrupt latency for PCNT adjustment
   {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
+  {"\"REMOTE_URL\":     ",(int*)&json_remote_url,            0,                IS_TEXT+URL_SIZE, 0,         NONVOL_REMOTE_URL,       0 },    // Reserve space for remote URL
   {"\"RAPID_COUNT\":",    &json_rapid_count,                 0,                IS_INT32,  0,                0,                       0 },    // Number of shots expected in series
   {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT32,  0,                0,                       0 },    // Enable the rapid fire fieature
   {"\"RAPID_TIME\":",     &json_rapid_time,                  0,                IS_INT32,  0,                0,                       0 },    // Set the duration of the rapid fire event and start
@@ -355,13 +357,15 @@ static void handle_json(void)
 
               m = 0;
               s[0] = 0;                                         // Put in a null
-              while ( input_JSON[i+k] != '"' )                  // Skip to the opening quote
+              while ( (input_JSON[i+k] != '"') 
+                  && (m != (JSON[j].convert & FLOAT_MASK)) )                  // Skip to the opening quote
               {
-                s[m] = input_JSON[i+k];                        // Save the value
+                s[m] = input_JSON[i+k];      
+                printf("%c", s[m]);                  // Save the value
                 m++;
                 s[m] = 0;                                      // Null terminate 
                 k++;
-              }             
+              }        
               if ( JSON[j].non_vol != 0 )                       // Save to persistent storage if present
               {
                 nvs_set_str(my_handle, JSON[j].non_vol, s);     // Store into NON-VOL
@@ -385,7 +389,6 @@ static void handle_json(void)
               }
               if ( JSON[j].non_vol != 0 )
               {
-                printf("Here");
                 nvs_set_i32(my_handle, JSON[j].non_vol, x);    // Store into NON-VOL
               }
               break;
@@ -561,15 +564,20 @@ void show_echo(void)
   SEND(sprintf(_xs, "\"V12\":               %4.2f, \n\r", v12_supply());)    // 12 Volt LED supply
   WiFi_MAC_address(str_c);
   SEND(sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\", \n\r", str_c[0], str_c[1],str_c[2], str_c[3], str_c[4], str_c[5]);)
-  WiFi_my_ip_address(str_c);
-  SEND(sprintf(_xs, "\"WiFi_IP_ADDRESS\":   \"%s:1090\", \n\r", str_c);)
+  WiFi_my_IP_address(str_c);
+  SEND(sprintf(_xs, "\"WiFi_IP_ADDRESS\":   \"%s\", \n\r", str_c);)  
+  WiFi_remote_IP_address(str_c);
+  SEND(sprintf(_xs, "\"WiFi_DNS\":   \"%s\", \n\r", str_c);)  
+  
+
+
   if ( json_wifi_ssid[0] == 0 )                       // The SSID is undefined
   {
     SEND(sprintf(_xs, "\"WiFi_MODE\":        \"Access Point\",\n\r");)    // Print out the IP address
   }
   else
   {
-    SEND(sprintf(_xs, "\"WiFi_MODE\":     \"Station connected to SSID \"%s\",\n\r", (char*)&json_wifi_ssid);) 
+    SEND(sprintf(_xs, "\"WiFi_MODE\":     \"Station connected to SSID %s\",\n\r", (char*)&json_wifi_ssid);) 
   }
 
   if ( json_token == TOKEN_NONE )

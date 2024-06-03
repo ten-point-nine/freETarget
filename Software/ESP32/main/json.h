@@ -43,6 +43,8 @@ extern const json_message_t JSON[];
 
 #define SSID_SIZE     31         // Reserve 30+1 bytes for SSID
 #define  PWD_SIZE     31         // Reserve 30+1 bytes for Password
+#define URL_SIZE      33         // Reserve 32+1 bytes for remote URL
+
 
 /*
  * Global JSON variables and settings
@@ -111,4 +113,5 @@ extern int    json_mfs_hold_a;    // Hold A
 extern int    json_mfs_hold_d;    // Hold D
 extern int    json_mfs_hold_c;    // Hold C
 extern int    json_mfs_select_cd; // Select C and D operation
+extern char   json_remote_url[];  // Text string of remote URL ex "http://google.com"
 #endif
