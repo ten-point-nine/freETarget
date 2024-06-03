@@ -155,6 +155,7 @@ void self_test
       printf("\r\n33 - Enable the WiFi Server");
       printf("\r\n34 - Loopback the TCPIP data");
       printf("\r\n35 - Loopback WiFi");
+      printf("\r\n36 - DNS lookup test");
       printf("\r\n");
       printf("\r\n40 - Sensor POST test");
       printf("\r\n41 - Polled Target Test");
@@ -313,6 +314,13 @@ void self_test
       xTaskCreate(tcpip_accept_poll,       "tcpip_accept_poll",    4096, NULL, 4, NULL);
       WiFi_loopback_test();
       break; 
+
+/*
+ *  DNS lookup test
+ */
+    case T_WIFI_DNS_LOOKUP:
+      WiFi_DNS_test();
+      break;
 
 /*
  *  Cycle the 10MHz clock input

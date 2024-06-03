@@ -94,6 +94,7 @@ int     json_mfs_hold_d;            // Hold D
 int     json_mfs_hold_c;            // Hold C
 int     json_mfs_select_cd;         // Select C and D operation
 char    json_remote_url[URL_SIZE];  // URL of calling server
+int     json_remote_active;         // Set to 1 to send score to a remote server
 
        void show_echo(void);        // Display the current settings
 static void show_test(int v);       // Execute the self test once
@@ -130,6 +131,7 @@ const json_message_t JSON[] = {
   {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT32,  0,                NONVOL_PAPER_TIME,     500 },    // Set the paper advance time
   {"\"PCNT_LATENCY\":",   &json_pcnt_latency,                0,                IS_INT32,  0,                NONVOL_PCNT_LATENCY,    33 },    // Interrupt latency for PCNT adjustment
   {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
+  {"\"REMOTE_ACTIVE\":",  &json_remote_active,               0,                IS_INT32,  0,                NONVOL_REMOTE_ACTIVE,    0 },    // Send score to a remote server
   {"\"REMOTE_URL\":     ",(int*)&json_remote_url,            0,                IS_TEXT+URL_SIZE, 0,         NONVOL_REMOTE_URL,       0 },    // Reserve space for remote URL
   {"\"RAPID_COUNT\":",    &json_rapid_count,                 0,                IS_INT32,  0,                0,                       0 },    // Number of shots expected in series
   {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT32,  0,                0,                       0 },    // Enable the rapid fire fieature

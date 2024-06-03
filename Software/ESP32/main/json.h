@@ -114,4 +114,6 @@ extern int    json_mfs_hold_d;    // Hold D
 extern int    json_mfs_hold_c;    // Hold C
 extern int    json_mfs_select_cd; // Select C and D operation
 extern char   json_remote_url[];  // Text string of remote URL ex "http://google.com"
+extern int    json_remote_active; // Set to 1 if the remote server is used to display score 
+
 #endif

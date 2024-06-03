@@ -52,7 +52,7 @@ void    rapid_LED_test(void);                           // Test the rapid fire L
 #define T_WIFI_SERVER   33        // Enable the WiFI Server
 #define T_WIFI_STATION_LOOPBACK 34 // Send an receive over the WiFi conduit
 #define T_WIFI_AP_LOOPBACK 35     // Send an receive over the WiFi conduit
-
+#define T_WIFI_DNS_LOOKUP  36     // Lookup the DNS address
 #define T_SENSOR        40        // Sensor POST test
 #define T_TARGET        41        // Polled target sensor test
 #define T_TARGET_2      42        // Interrupt target test

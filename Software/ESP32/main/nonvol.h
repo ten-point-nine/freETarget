@@ -77,4 +77,5 @@ void restore_nonvol(void);                        // Copyt the nonvol back
 #define NONVOL_MFS_HOLD_C     "MFS_HOLD_C"     // Action to take place when C is held
 #define NONVOL_MFS_SELECT_CD  "MFS_SELECT_CD"  // Hardware attached to CD
 #define NONVOL_REMOTE_URL     "REMOTE_URL"     // URL of remote server
+#define NONVOL_REMOTE_ACTIVE  "REMOTE_ACTIVE"  // Remote server available for scoring
 #endif

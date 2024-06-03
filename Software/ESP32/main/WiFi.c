@@ -651,6 +651,7 @@ void tcpip_accept_poll(void* parameters)
  */
     return;
 }
+
 /*****************************************************************************
  *
  * @function: WiFi_loopback_test
@@ -699,6 +700,54 @@ void WiFi_loopback_task(void* parameters)
 /*
  *  Never get here
  */
+}
+
+/*****************************************************************************
+ *
+ * @function: WiFi_DNS_test
+ *
+ * @brief:    Use the DNS sofware to find an IP address
+ * 
+ * @return:   Nothing
+ *
+ ******************************************************************************
+ *
+ * A waiting task is started.
+ * 
+ * The waiting task copies the input to the output of the synchronous IO 
+ * 
+ *******************************************************************************/
+static const test_url[] = "google.com";
+void WiFi_DNS_test(void)
+{
+    printf("WiFi_DNS_test\r\n");
+
+/*
+ * Make sure we ares setup correctly
+ */
+
+    if ( json_wifi_ssid[0] == 0 )
+    {
+        printf("\r\nWiFi must be attached to gateway");
+        return;
+    }
+
+/*
+ *  Go look for the remote address
+ */
+    WiFi_get_remote_IP(test_URL);
+
+    while ( dns_valid == 0)
+    {
+        printf("*");
+        vTaskDelay(ONE_SECOND)
+    }
+
+/*
+ *  Got it
+ */
+    printf("\r\nThe IP address of %s is %d.%d.%d.%d", test_url, TO_IP(url_ip_address));
+    return;
 }
 
 /*****************************************************************************
