@@ -566,12 +566,8 @@ void show_echo(void)
   SEND(sprintf(_xs, "\"V12\":               %4.2f, \n\r", v12_supply());)    // 12 Volt LED supply
   WiFi_MAC_address(str_c);
   SEND(sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\", \n\r", str_c[0], str_c[1],str_c[2], str_c[3], str_c[4], str_c[5]);)
-  WiFi_my_IP_address(str_c);
-  SEND(sprintf(_xs, "\"WiFi_IP_ADDRESS\":   \"%s\", \n\r", str_c);)  
-  WiFi_remote_IP_address(str_c);
-  SEND(sprintf(_xs, "\"WiFi_DNS\":   \"%s\", \n\r", str_c);)  
-  
-
+{"  WiFi_my_IP_address(str_c);
+  SEND(sprintf(_xs, "\"WiFi_IP_ADDRESS\":   \"%s\", \n\r", str_c);) "}
 
   if ( json_wifi_ssid[0] == 0 )                       // The SSID is undefined
   {

@@ -36,6 +36,7 @@
 #include "lwip/sockets.h"
 #include "lwip/netdb.h"
 #include "lwip/dns.h"
+#include "lwip/ip4_addr.h"
 
 #include "freETarget.h"
 #include "serial_io.h"
@@ -77,6 +78,11 @@ void WiFi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id
 static void tcpip_server_io(void);        // Manage TCPIP traffic
 static void dns_found_cb ( const char* name, const ip_addr_t* ip_addr, void* callback_arg);
 esp_err_t esp_base_mac_addr_get(uint8_t *mac);
+
+/*
+ * Definitions 
+ */
+#define TO_IP(x) ((int)x) & 0xff, ((int)x >> 8) & 0xff, ((int)x >> 16) & 0xff, ((int)x >> 24) & 0xff
 
 /*****************************************************************************
  *
@@ -717,18 +723,21 @@ void WiFi_loopback_task(void* parameters)
  * The waiting task copies the input to the output of the synchronous IO 
  * 
  *******************************************************************************/
-static const test_url[] = "google.com";
+static char test_URL[] = "google.com";
+
 void WiFi_DNS_test(void)
 {
-    printf("WiFi_DNS_test\r\n");
+    int i;
+    char str_c[16];
+
+    DLT(DLT_CRITICAL, printf("WiFi_DNS_test()\r\n");)
 
 /*
  * Make sure we ares setup correctly
  */
-
     if ( json_wifi_ssid[0] == 0 )
     {
-        printf("\r\nWiFi must be attached to gateway");
+        DLT(DLT_CRITICAL, printf("\r\nWiFi must be attached to gateway");)
         return;
     }
 
@@ -737,16 +746,27 @@ void WiFi_DNS_test(void)
  */
     WiFi_get_remote_IP(test_URL);
 
-    while ( dns_valid == 0)
+    i = 0;
+    while ( (dns_valid == 0) && ( i != 10) )
     {
-        printf("*");
-        vTaskDelay(ONE_SECOND)
+        printf("%d ", i);
+        vTaskDelay(ONE_SECOND);
+        i++;
     }
 
 /*
  *  Got it
  */
-    printf("\r\nThe IP address of %s is %d.%d.%d.%d", test_url, TO_IP(url_ip_address));
+    if ( i == 10 )
+    {
+        DLT(DLT_CRITICAL, printf("DNS lookup failed");)
+    }
+    else
+    {
+        WiFi_remote_IP_address(str_c);
+        printf("\r\nThe IP address of %s is %s\r\n", test_URL, str_c);
+    }
+    
     return;
 }
 
@@ -759,7 +779,6 @@ void WiFi_DNS_test(void)
  * @return:   None
  *
  ****************************************************************************/
-#define TO_IP(x) ((int)x) & 0xff, ((int)x >> 8) & 0xff, ((int)x >> 16) & 0xff, ((int)x >> 24) & 0xff
 void WiFi_my_IP_address
 (
     char* s             // Where to return the string
@@ -774,7 +793,7 @@ void WiFi_remote_IP_address
     char* s             // Where to return the string
 )
 {
-//    sprintf(s, "%d.%d.%d.%d", TO_IP(url_ip_address.u_addr.ip4));
+    sprintf(s, "%d.%d.%d.%d", TO_IP(url_ip_address.u_addr.ip4.addr));
     return;
 }
 
@@ -799,24 +818,41 @@ void WiFi_MAC_address
 
 /*****************************************************************************
  *
- * @function: WiFi_get_remote_ip()
+ * @function: WiFi_get_remote_IP()
  *
  * @brief:    Find the address of the remote IP
  * 
  * @return:   None
  *
+ ****************************************************************************
+ *
+ * This function calls the DNS server to obtain the IP address of a URL.
+ * 
+ * Example "google.com" is 142.250.190.14
+ * 
+ * See https://gist.github.com/MakerAsia/37d2659310484bdbba9d38558e2c3cdb
+ * for programming example
+ * 
+ * See https://www.nongnu.org/lwip/2_0_x/group__infrastructure__errors.html
+ * for LWIP errors
+ * 
  ****************************************************************************/
-void WiFi_get_remote_ip
+void WiFi_get_remote_IP
 (
     char* remote_url             // Text string of the remote URL 
 )
 {
-
 /*
  * Prepare the callback for the result 
  */
-    dns_gethostbyname(json_remote_url, &url_ip_address, dns_found_cb, NULL);
-
+    if ( dns_gethostbyname(remote_url, &url_ip_address, dns_found_cb, NULL) == 0 )
+    {
+        dns_valid = 1;
+    }
+    else
+    {
+        dns_valid = 0;
+    }
     return;
 }
 
@@ -829,5 +865,6 @@ static void dns_found_cb
 {
     url_ip_address = *ip_addr;
     dns_valid = true;
+
     return;
 }
