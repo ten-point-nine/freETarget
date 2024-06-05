@@ -92,5 +92,8 @@
     <Setting Name="Board" Type="System.String" Scope="User">
       <Value Profile="(Default)">Arduino</Value>
     </Setting>
+    <Setting Name="uploaderLoc" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

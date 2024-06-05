@@ -986,6 +986,11 @@ namespace freETarget {
             currentSession = Session.createNewSession(ev, Settings.Default.name);
             currentSession.start();
             this.log("### New Session '" + currentSession.ToString() + "' started ###");
+            if (commModule != null) { // there is a default session starting before the connection to the target is done
+                String sessionStart = "{\"ATHLETE\":\"" + currentSession.user + "\", \"EVENT\":\"" + currentSession.ToString() + "\", \"TARGET_TYPE\":\"" + currentSession.targetType + "\"}";
+                commModule.sendData(sessionStart);
+                log("Sending: " + sessionStart);
+            }
 
             setTrkZoom(currentSession.getTarget());
 
@@ -1687,7 +1692,7 @@ namespace freETarget {
             }
         }
 
-        private void saveSettings() {
+        public void saveSettings() {
             List<string> exclusionList = new List<string> { "SettingsKey", "Item" };
             Type sett = Settings.Default.GetType();
             PropertyInfo[] members = sett.GetProperties();

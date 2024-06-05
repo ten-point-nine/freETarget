@@ -168,6 +168,8 @@ namespace freETarget {
             this.Name = "frmUpload";
             this.ShowInTaskbar = false;
             this.Text = "Upload firmware";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmUpload_FormClosing);
+            this.Load += new System.EventHandler(this.frmUpload_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

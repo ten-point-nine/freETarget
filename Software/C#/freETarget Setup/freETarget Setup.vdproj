@@ -483,6 +483,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_FBFA392042F6463C9A55BE75765D942C"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_884637F3A3ED42269A26ED73469827A2"
         "MsmSig" = "8:_UNDEFINED"
@@ -2204,6 +2210,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_FBFA392042F6463C9A55BE75765D942C"
+            {
+            "SourcePath" = "8:drivers\\ESP32\\CDM212364_Setup.exe"
+            "TargetName" = "8:CDM212364_Setup.exe"
+            "Tag" = "8:"
+            "Folder" = "8:_3D6CDDF6A19343F9A189A98553652A43"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
         }
         "FileType"
         {
@@ -2269,6 +2295,17 @@
                             "Condition" = "8:"
                             "Transitive" = "11:FALSE"
                             "Property" = "8:_A4B83D4A4CC849A98EEA3763E027377A"
+                                "Folders"
+                                {
+                                }
+                            }
+                            "{9EF0B969-E518-4E46-987F-47570745A589}:_3D6CDDF6A19343F9A189A98553652A43"
+                            {
+                            "Name" = "8:ESP32"
+                            "AlwaysCreate" = "11:FALSE"
+                            "Condition" = "8:"
+                            "Transitive" = "11:FALSE"
+                            "Property" = "8:_5885B39B59CF43189E1334873B453BB6"
                                 "Folders"
                                 {
                                 }
@@ -2491,15 +2528,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:freETarget"
-        "ProductCode" = "8:{446119E3-F99C-4878-9B5B-ACC53C9B18D5}"
-        "PackageCode" = "8:{B01BE2F3-F6A7-4D1A-A5AB-788C4B14C6C6}"
+        "ProductCode" = "8:{4634550B-0E61-4227-98A5-ECBFC68BBCFE}"
+        "PackageCode" = "8:{EF467548-206E-4C86-936B-449D51410D15}"
         "UpgradeCode" = "8:{E11572A0-0587-4903-AE84-9016332FEE88}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:4.8.1"
+        "ProductVersion" = "8:4.8.2"
         "Manufacturer" = "8:Azmodan"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:https://free-e-target.com/"

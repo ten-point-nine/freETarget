@@ -156,5 +156,15 @@ namespace freETarget {
                 txtUploaderLocation.Text = folderBrowserDialog.SelectedPath;
             }
         }
+
+        private void frmUpload_Load(object sender, EventArgs e) {
+            txtUploaderLocation.Text = Properties.Settings.Default.uploaderLoc;
+        }
+
+        private void frmUpload_FormClosing(object sender, FormClosingEventArgs e) {
+            Properties.Settings.Default.uploaderLoc = txtUploaderLocation.Text;
+            Properties.Settings.Default.Save();
+            mainWindow.saveSettings();
+        }
     }
 }

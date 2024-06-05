@@ -382,5 +382,17 @@ namespace freETarget.Properties {
                 this["Board"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string uploaderLoc {
+            get {
+                return ((string)(this["uploaderLoc"]));
+            }
+            set {
+                this["uploaderLoc"] = value;
+            }
+        }
     }
 }
