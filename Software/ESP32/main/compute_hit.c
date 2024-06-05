@@ -555,7 +555,68 @@ void send_score
   }
   return;
 }
+
+  
+/*----------------------------------------------------------------
+ *
+ * @function: send_score_to_server
+ *
+ * @brief: Send the score to a remote server if enabled
+ * 
+ * @return: None
+ *
+ *----------------------------------------------------------------
+ * 
+ * The score is sent as:
+ * 
+ * {"shot":n, "x":x, "y":y, "r(adius)":r, "a(ngle)": a, debugging info ..... }
+ * 
+ * It is up to the PC program to convert x & y or radius and angle
+ * into a meaningful score relative to the target.
+ *    
+ *--------------------------------------------------------------*/
+
+void send_score_to_server
+  (
+  shot_record_t* shot             //  record
+  )
+{
+  double x, y;                    // Shot location in mm X, Y
+  double real_x, real_y;          // Shot location in mm X, Y before remap
+  double radius;
+  double angle;
+  
+  DLT(DLT_DIAG, printf("Sending the score to the server");)
+
+  /* 
+  *  Work out the hole in perfect coordinates
+  */
+  x = shot->x * s_of_sound * CLOCK_PERIOD;        // Distance in mm
+  y = shot->y * s_of_sound * CLOCK_PERIOD;        // Distance in mm
+  radius = sqrt(sq(x) + sq(y));
+  angle = atan2(shot->y, shot->x) / PI * 180.0d;
+
+/*
+ * Rotate the result based on the construction, and recompute the hit
+ */
+  angle += json_sensor_angle;
+  x = radius * cos(PI * angle / 180.0d);          // Rotate onto the target face
+  y = radius * sin(PI * angle / 180.0d);
+  real_x = x;
+  real_y = y;                                     // Remember the original target value
+  remap_target(&x, &y);                           // Change the target if needed
+/* 
+ *  Display the results
+ */
+  sprintf(_xs, "\r\n{\"shot\":%d, \"miss\":0, \"athelete\":\"%s\"",\"x\":%4.2f, \"y\":%4.2f ", shot->shot_number,  names[json_name_id]);
  
+/*
+ * All done, return
+ */
+  return;
+}
+
+
 /*----------------------------------------------------------------
  *
  * @function: send_miss

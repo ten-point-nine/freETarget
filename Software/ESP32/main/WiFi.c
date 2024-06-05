@@ -284,6 +284,59 @@ void WiFi_station_init(void)
 
 /*****************************************************************************
  *
+ * @function: WiFi_get_remote_IP()
+ *
+ * @brief:    Find the address of the remote IP
+ * 
+ * @return:   None
+ *
+ ****************************************************************************
+ *
+ * This function calls the DNS server to obtain the IP address of a URL.
+ * 
+ * Example "google.com" is 142.250.190.14
+ * 
+ * See https://gist.github.com/MakerAsia/37d2659310484bdbba9d38558e2c3cdb
+ * for programming example
+ * 
+ * See https://www.nongnu.org/lwip/2_0_x/group__infrastructure__errors.html
+ * for LWIP errors
+ * 
+ ****************************************************************************/
+void WiFi_get_remote_IP
+(
+    char* remote_url             // Text string of the remote URL 
+)
+{
+/*
+ * Prepare the callback for the result 
+ */
+    if ( dns_gethostbyname(remote_url, &url_ip_address, dns_found_cb, NULL) == 0 )
+    {
+        dns_valid = 1;              // IP was cached and available
+    }
+    else
+    {
+        dns_valid = 0;              // IP is not currently valid
+    }
+    return;
+}
+
+static void dns_found_cb
+(
+    const char* name,           // Name of dns search
+    const ip_addr_t* ip_addr,   // IP address of the URL
+    void* callback_arg          // Not used 
+)
+{
+    url_ip_address = *ip_addr;
+    dns_valid = true;
+
+    return;
+}
+
+/*****************************************************************************
+ *
  * @function:WiFi_event_handler
  *
  * @brief:   Manage events coming from the FreeRTOS event handler
@@ -815,56 +868,3 @@ void WiFi_MAC_address
         return;
 }
 
-
-/*****************************************************************************
- *
- * @function: WiFi_get_remote_IP()
- *
- * @brief:    Find the address of the remote IP
- * 
- * @return:   None
- *
- ****************************************************************************
- *
- * This function calls the DNS server to obtain the IP address of a URL.
- * 
- * Example "google.com" is 142.250.190.14
- * 
- * See https://gist.github.com/MakerAsia/37d2659310484bdbba9d38558e2c3cdb
- * for programming example
- * 
- * See https://www.nongnu.org/lwip/2_0_x/group__infrastructure__errors.html
- * for LWIP errors
- * 
- ****************************************************************************/
-void WiFi_get_remote_IP
-(
-    char* remote_url             // Text string of the remote URL 
-)
-{
-/*
- * Prepare the callback for the result 
- */
-    if ( dns_gethostbyname(remote_url, &url_ip_address, dns_found_cb, NULL) == 0 )
-    {
-        dns_valid = 1;
-    }
-    else
-    {
-        dns_valid = 0;
-    }
-    return;
-}
-
-static void dns_found_cb
-(
-    const char* name,           // Name of dns search
-    const ip_addr_t* ip_addr,   // IP address of the URL
-    void* callback_arg          // Not used 
-)
-{
-    url_ip_address = *ip_addr;
-    dns_valid = true;
-
-    return;
-}

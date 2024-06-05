@@ -132,7 +132,7 @@ const json_message_t JSON[] = {
   {"\"PCNT_LATENCY\":",   &json_pcnt_latency,                0,                IS_INT32,  0,                NONVOL_PCNT_LATENCY,    33 },    // Interrupt latency for PCNT adjustment
   {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
   {"\"REMOTE_ACTIVE\":",  &json_remote_active,               0,                IS_INT32,  0,                NONVOL_REMOTE_ACTIVE,    0 },    // Send score to a remote server
-  {"\"REMOTE_URL\":     ",(int*)&json_remote_url,            0,                IS_TEXT+URL_SIZE, 0,         NONVOL_REMOTE_URL,       0 },    // Reserve space for remote URL
+  {"\"REMOTE_URL\":",     (int*)&json_remote_url,            0,                IS_TEXT+URL_SIZE, 0,         NONVOL_REMOTE_URL,       0 },    // Reserve space for remote URL
   {"\"RAPID_COUNT\":",    &json_rapid_count,                 0,                IS_INT32,  0,                0,                       0 },    // Number of shots expected in series
   {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT32,  0,                0,                       0 },    // Enable the rapid fire fieature
   {"\"RAPID_TIME\":",     &json_rapid_time,                  0,                IS_INT32,  0,                0,                       0 },    // Set the duration of the rapid fire event and start
@@ -526,7 +526,7 @@ void show_echo(void)
               j++;
             }
             str_c[j] = 0;
-            SEND(sprintf(_xs, "%s \"%s\", \r\n", JSON[i].token, str_c);)
+            SEND(sprintf(_xs, "%-18s \"%s\", \r\n", JSON[i].token, str_c);)
             break;
             
           case IS_MFS:                                        // Covert to a switch ID
