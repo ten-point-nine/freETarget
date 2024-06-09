@@ -439,7 +439,7 @@ bool find_xy_3D
  * 
  * The score is sent as:
  * 
- * {"shot":n, "x":x, "y":y, "r(adius)":r, "a(ngle)": a, debugging info ..... }
+ * {"shot":n, "x":x, "y":y,  debugging info ..... }
  * 
  * It is up to the PC program to convert x & y or radius and angle
  * into a meaningful score relative to the target.
@@ -546,6 +546,10 @@ void send_score
   SEND(sprintf(_xs, "}\r\n");)
 
 /*
+ * Send to the server if needed
+ */
+
+/*
  * All done, return
  */
   if ( json_token != TOKEN_NONE )
@@ -569,7 +573,7 @@ void send_score
  * 
  * The score is sent as:
  * 
- * {"shot":n, "x":x, "y":y, "r(adius)":r, "a(ngle)": a, debugging info ..... }
+ * {"shot": s, "athlete":"name", "event": "Pistol Practice", "target_name":"frETarget.targets.AirPistol", "x":x, "y":y}
  * 
  * It is up to the PC program to convert x & y or radius and angle
  * into a meaningful score relative to the target.
@@ -608,14 +612,28 @@ void send_score_to_server
 /* 
  *  Display the results
  */
-  sprintf(_xs, "\r\n{\"shot\":%d, \"miss\":0, \"athelete\":\"%s\"",\"x\":%4.2f, \"y\":%4.2f ", shot->shot_number,  names[json_name_id]);
- 
+  sprintf(_xs, "\r\n{\"shot\":%d, \"athlete\":\"%s\", \"event\": \"%s\", \"target_name\":\"%s\", x\":%4.2f, \"y\":%4.2f ", 
+      shot->shot_number,  json_athlete, json_event, json_target_name, x, y);
+
+/*
+ *  Go look for the remote address
+ */
+    WiFi_get_remote_IP(test_URL);
+
+    i = 0;
+    while ( (dns_valid == 0) && ( i != 10) )
+    {
+        printf("%d ", i);
+        vTaskDelay(ONE_SECOND);
+        i++;
+    }
+
+    
 /*
  * All done, return
  */
   return;
 }
-
 
 /*----------------------------------------------------------------
  *

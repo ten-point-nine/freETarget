@@ -31,20 +31,20 @@ typedef struct  {
 
 extern const json_message_t JSON[];
 
-#define IS_VOID       (7<<6)   // Value is a void
-#define IS_MFS        (6<<6)   // Value is a multifunction switch
-#define IS_TEXT       (5<<6)   // Value is a string
-#define IS_SECRET     (4<<6)   // Value is a string but hidden
-#define IS_INT32      (3<<6)   // Value is a 64 bit int
-#define IS_FLOAT      (2<<6)   // Value is a floating point number
-#define IS_FIXED      (1<<6)   // The value cannot be changed
+#define IS_VOID       (7<<8)   // Value is a void
+#define IS_MFS        (6<<8)   // Value is a multifunction switch
+#define IS_TEXT       (5<<8)   // Value is a string
+#define IS_SECRET     (4<<8)   // Value is a string but hidden
+#define IS_INT32      (3<<8)   // Value is a 64 bit int
+#define IS_FLOAT      (2<<8)   // Value is a floating point number
+#define IS_FIXED      (1<<8)   // The value cannot be changed
 #define IS_MASK       (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED | IS_MFS)
-#define FLOAT_MASK    ((~IS_MASK) & 0xFF)    // Scaling factor 6 bits
+#define FLOAT_MASK    ((~IS_MASK) & 0xFF)    // Scaling factor 8 bits
 
 #define SSID_SIZE     31         // Reserve 30+1 bytes for SSID
 #define  PWD_SIZE     31         // Reserve 30+1 bytes for Password
 #define URL_SIZE      33         // Reserve 32+1 bytes for remote URL
-
+#define SMALL_STRING  63        // Reserver 64 bytes for a short string
 
 /*
  * Global JSON variables and settings
@@ -115,5 +115,7 @@ extern int    json_mfs_hold_c;    // Hold C
 extern int    json_mfs_select_cd; // Select C and D operation
 extern char   json_remote_url[];  // Text string of remote URL ex "http://google.com"
 extern int    json_remote_active; // Set to 1 if the remote server is used to display score 
-
+extern char   json_athlete[SMALL_STRING];    // Shooter name
+extern char   json_event[SMALL_STRING];       // Shooting event
+extern char   json_target_name[SMALL_STRING]; // Target name
 #endif

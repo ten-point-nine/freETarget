@@ -95,6 +95,10 @@ int     json_mfs_hold_c;            // Hold C
 int     json_mfs_select_cd;         // Select C and D operation
 char    json_remote_url[URL_SIZE];  // URL of calling server
 int     json_remote_active;         // Set to 1 to send score to a remote server
+char    json_athlete[SMALL_STRING];// Shooter name
+char    json_event[SMALL_STRING];   // Shooting event
+char    json_target_name[SMALL_STRING]; // Target name
+
 
        void show_echo(void);        // Display the current settings
 static void show_test(int v);       // Execute the self test once
@@ -167,6 +171,9 @@ const json_message_t JSON[] = {
   {"\"SOUTH_Y\":",        &json_south_y,                     0,                IS_INT32,  0,                NONVOL_SOUTH_Y,          0 },    //
   {"\"WEST_X\":",         &json_west_x,                      0,                IS_INT32,  0,                NONVOL_WEST_X,           0 },    //
   {"\"WEST_Y\":",         &json_west_y,                      0,                IS_INT32,  0,                NONVOL_WEST_Y,           0 },    //
+  {"\"ATHELETE\":",       &json_athlete,                    0,                IS_TEXT+SMALL_STRING,  0,    0,                       0 },    // Athelete name from PC client
+  {"\"EVENT\":",          &json_event,                       0,                IS_TEXT+SMALL_STRING,  0,    0,                       0 },    // Event being shot
+  {"\"TARGET_NAME\":",    &json_target_name,                 0,                IS_TEXT+SMALL_STRING,  0,    0,                       0 },    // Name of target being shot
   {0,                     0,                                 0,                0,         0,                0,                       0 },    //
 
 };
@@ -566,8 +573,8 @@ void show_echo(void)
   SEND(sprintf(_xs, "\"V12\":               %4.2f, \n\r", v12_supply());)    // 12 Volt LED supply
   WiFi_MAC_address(str_c);
   SEND(sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\", \n\r", str_c[0], str_c[1],str_c[2], str_c[3], str_c[4], str_c[5]);)
-{"  WiFi_my_IP_address(str_c);
-  SEND(sprintf(_xs, "\"WiFi_IP_ADDRESS\":   \"%s\", \n\r", str_c);) "}
+  WiFi_my_IP_address(str_c);
+  SEND(sprintf(_xs, "\"WiFi_IP_ADDRESS\":   \"%s\", \n\r", str_c);)
 
   if ( json_wifi_ssid[0] == 0 )                       // The SSID is undefined
   {
