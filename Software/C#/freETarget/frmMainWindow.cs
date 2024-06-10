@@ -987,7 +987,7 @@ namespace freETarget {
             currentSession.start();
             this.log("### New Session '" + currentSession.ToString() + "' started ###");
             if (commModule != null) { // there is a default session starting before the connection to the target is done
-                String sessionStart = "{\"ATHLETE\":\"" + currentSession.user + "\", \"EVENT\":\"" + currentSession.ToString() + "\", \"TARGET_TYPE\":\"" + currentSession.targetType + "\"}";
+                String sessionStart = "{\"ATHLETE\":\"" + currentSession.user + "\", \"EVENT\":\"" + currentSession.ToString() + "\", \"TARGET_NAME\":\"" + currentSession.targetType + "\"}";
                 commModule.sendData(sessionStart);
                 log("Sending: " + sessionStart);
             }
