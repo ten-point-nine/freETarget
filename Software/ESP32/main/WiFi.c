@@ -288,7 +288,7 @@ void WiFi_station_init(void)
  *
  * @brief:    Find the address of the remote IP
  * 
- * @return:   None
+ * @return:   TRUE if the dns has been found
  *
  ****************************************************************************
  *
@@ -303,11 +303,12 @@ void WiFi_station_init(void)
  * for LWIP errors
  * 
  ****************************************************************************/
-void WiFi_get_remote_IP
+bool WiFi_get_remote_IP
 (
     char* remote_url             // Text string of the remote URL 
 )
 {
+    int i;
 /*
  * Prepare the callback for the result 
  */
@@ -319,7 +320,20 @@ void WiFi_get_remote_IP
     {
         dns_valid = 0;              // IP is not currently valid
     }
-    return;
+
+/*
+ * Wait here for the DNS to come back
+ */
+    i = 10;
+    while ( (dns_valid == 0) || ( i != 0) )
+    {
+        vTaskDelay(ONE_SECOND);
+    }
+
+/*
+ *  Return if the DNS is valid
+ */
+    return dns_valid;
 }
 
 static void dns_found_cb

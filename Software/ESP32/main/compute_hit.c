@@ -19,6 +19,7 @@
 #include "token.h"
 #include "timer.h"
 #include "compute_hit.h"
+#include "WiFi.h"
 
 #define THRESHOLD (0.001)
 
@@ -578,6 +579,11 @@ void send_score
  * It is up to the PC program to convert x & y or radius and angle
  * into a meaningful score relative to the target.
  *    
+ * See 
+ * https://github.com/espressif/esp-idf/blob/8760e6d2a7e19913bc40675dd71f374bcd51b0ae/examples/protocols/esp_http_client/main/esp_http_client_example.c
+ * 
+ * For HTTP Client example
+ * 
  *--------------------------------------------------------------*/
 
 void send_score_to_server
@@ -586,10 +592,10 @@ void send_score_to_server
   )
 {
   double x, y;                    // Shot location in mm X, Y
-  double real_x, real_y;          // Shot location in mm X, Y before remap
-  double radius;
+  double radius;                  // Polar coordinates of X & Y
   double angle;
-  
+  int i;
+
   DLT(DLT_DIAG, printf("Sending the score to the server");)
 
   /* 
@@ -605,9 +611,7 @@ void send_score_to_server
  */
   angle += json_sensor_angle;
   x = radius * cos(PI * angle / 180.0d);          // Rotate onto the target face
-  y = radius * sin(PI * angle / 180.0d);
-  real_x = x;
-  real_y = y;                                     // Remember the original target value
+  y = radius * sin(PI * angle / 180.0d);                                  // Remember the original target value
   remap_target(&x, &y);                           // Change the target if needed
 /* 
  *  Display the results
@@ -616,18 +620,12 @@ void send_score_to_server
       shot->shot_number,  json_athlete, json_event, json_target_name, x, y);
 
 /*
- *  Go look for the remote address
+ *  Look up the remote address and send the package to it
  */
-    WiFi_get_remote_IP(test_URL);
-
-    i = 0;
-    while ( (dns_valid == 0) && ( i != 10) )
+    if ( WiFi_get_remote_IP(json_remote_url) == 1)  // Look for the DNS 
     {
-        printf("%d ", i);
-        vTaskDelay(ONE_SECOND);
-        i++;
-    }
 
+    }
     
 /*
  * All done, return

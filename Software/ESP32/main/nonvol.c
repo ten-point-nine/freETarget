@@ -11,6 +11,7 @@
  * ----------------------------------------------------*/
 #include "nvs_flash.h"
 #include "nvs.h"
+#include "string.h"
 
 #include "freETarget.h"
 #include "diag_tools.h"
@@ -285,6 +286,9 @@ void factory_nonvol
 /*
  * Initialization complete.  Mark the init done
  */
+
+  strcpy(json_remote_url, REMOTE_URL);
+  nvs_set_str(my_handle, NONVOL_REMOTE_URL,    json_remote_url);
   nvs_set_i32(my_handle, NONVOL_PS_VERSION, PS_VERSION); // Write in the version number
   nvs_set_i32(my_handle, NONVOL_INIT, INIT_DONE);
   if ( nvs_commit(my_handle) )
@@ -360,7 +364,6 @@ void init_nonvol
  * storage version and update if needed.
  * 
  *------------------------------------------------------------*/
-
 void update_nonvol
   (
     unsigned int current_version  // Version present in persistent storage
@@ -429,6 +432,9 @@ void update_nonvol
 
     json_mfs_select_cd = 0;
     nvs_set_i32(my_handle, NONVOL_MFS_SELECT_CD, json_mfs_select_cd);
+
+    strcpy(json_remote_url, REMOTE_URL);
+    nvs_set_str(my_handle, NONVOL_REMOTE_URL,    json_remote_url);
     current_version = 1;
   }
 

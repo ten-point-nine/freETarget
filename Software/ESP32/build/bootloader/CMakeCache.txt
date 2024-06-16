@@ -248,7 +248,7 @@ IDF_TOOLCHAIN:STRING=gcc
 PROJECT_SOURCE_DIR:UNINITIALIZED=C:/Users/allan/Documents/freETarget/Software/ESP32
 
 //No help, variable specified on the command line.
-PYTHON:UNINITIALIZED=c:/Users/allan/esp/esp-idf/tools/python_env/idf5.0_py3.8_env/Scripts/python.exe
+PYTHON:UNINITIALIZED=c:/Users/allan/esp/esp-idf/tools/python_env/idf5.0_py3.11_env/Scripts/python.exe
 
 //No help, variable specified on the command line.
 PYTHON_DEPS_CHECKED:UNINITIALIZED=1

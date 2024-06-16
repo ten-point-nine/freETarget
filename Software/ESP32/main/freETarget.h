@@ -14,6 +14,7 @@
 #include "freertos/task.h"
 
 #define SOFTWARE_VERSION "\"5.3.1 June 4, 2024\""
+#define REMOTE_URL       "josua.10nini.co"
 
 #define REV_500    500   // ESP32
 #define REV_510    510
