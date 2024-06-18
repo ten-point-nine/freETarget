@@ -164,7 +164,7 @@ void read_nonvol(void)
  * 
  *---------------------------------------------------------------
  *
- * If the init_nonvol location is not set to INIT_DONE then
+ * If the nonvol_init location is not set to INIT_DONE then
  * initilze the memory.
  * 
  * Copy the initial values from the JSON table to the NONVOL
@@ -230,8 +230,12 @@ void factory_nonvol
         break;
     }
    i++;
- }
-  
+  }
+
+  strcpy(json_remote_url, REMOTE_URL);
+  nvs_set_str(my_handle, NONVOL_REMOTE_URL, json_remote_url);
+  nvs_set_i32(my_handle, NONVOL_REMOTE_ACTIVE, 0);
+
 /*    
  *     Test the board only if it is a factor init
  */
@@ -286,7 +290,6 @@ void factory_nonvol
 /*
  * Initialization complete.  Mark the init done
  */
-
   strcpy(json_remote_url, REMOTE_URL);
   nvs_set_str(my_handle, NONVOL_REMOTE_URL,    json_remote_url);
   nvs_set_i32(my_handle, NONVOL_PS_VERSION, PS_VERSION); // Write in the version number
@@ -306,7 +309,7 @@ void factory_nonvol
  
 /*----------------------------------------------------------------
  * 
- * @function: init_nonvol
+ * @function: nonvol_init
  * 
  * @brief: Initialize the NONVOL back to factory settings
  * 
@@ -328,7 +331,7 @@ void factory_nonvol
  #define INIT_ALLOWED         1234        // Number user must enter to allow initialization
  #define INIT_SERIAL_NUMBER   1235        // Number used to re-enter the serial number
  
-void init_nonvol
+void nonvol_init
   (
     int verify                            // Verification code entered by user
   )
@@ -435,6 +438,12 @@ void update_nonvol
 
     strcpy(json_remote_url, REMOTE_URL);
     nvs_set_str(my_handle, NONVOL_REMOTE_URL,    json_remote_url);
+    
+    strcpy(json_remote_url, REMOTE_URL);
+    nvs_set_str(my_handle, NONVOL_REMOTE_URL, json_remote_url);
+    
+    nvs_set_i32(my_handle, NONVOL_REMOTE_ACTIVE, 0);
+
     current_version = 1;
   }
 

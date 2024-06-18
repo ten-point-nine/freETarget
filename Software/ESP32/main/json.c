@@ -9,16 +9,17 @@
 #include "nvs_flash.h"
 #include "nvs.h"
 #include "nonvol.h"
+#include "ctype.h"
+#include "string.h"
+#include "stdio.h"
+#include "stdio.h"
 
 #include "freETarget.h"
 #include "diag_tools.h"
 #include "json.h"
-#include "ctype.h"
-#include "stdio.h"
 #include "serial_io.h"
 #include "analog_io.h"
 #include "token.h"
-#include "stdio.h"
 #include "serial_io.h"
 #include "mechanical.h"
 #include "wifi.h"
@@ -99,8 +100,6 @@ char    json_athlete[SMALL_STRING];// Shooter name
 char    json_event[SMALL_STRING];   // Shooting event
 char    json_target_name[SMALL_STRING]; // Target name
 
-
-       void show_echo(void);        // Display the current settings
 static void show_test(int v);       // Execute the self test once
 static void show_names(int v);
 static void set_trace(int v);       // Set the trace on and off
@@ -109,72 +108,71 @@ static void diag_delay(int x) ;     // Insert a delay
   
 const json_message_t JSON[] = {
 //    token                 value stored in RAM     double stored in RAM        convert    service fcn()     NONVOL location      Initial Value
-  {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT32,  0,                NONVOL_SENSOR_ANGLE,    45 },    // Locate the sensor angles
-  {"\"BYE\":",            0,                                 0,                IS_VOID,   &bye,             0,                       0 },    // Shut down the target
-//  {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT32,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
-  {"\"DELAY\":",          0,                                 0,                IS_INT32,  &diag_delay,                      0,       0 },    // Delay TBD seconds
-  {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,       0,                       0 },    // Echo test
-  {"\"ECHO?\"",           0,                                 0,                IS_VOID,   &show_echo,       0,                       0 },    // Echo test
-//  {"\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT32,  0,                NONVOL_FACE_STRIKE,      0 },    // Face Strike Count 
-  {"\"FOLLOW_THROUGH\":", &json_follow_through,              0,                IS_INT32,  0,                NONVOL_FOLLOW_THROUGH,   0 },    // Three second follow through
-  {"\"INIT\":",           0,                                 0,                IS_INT32,  &init_nonvol,     NONVOL_INIT,             0 },    // Initialize the NONVOL memory
-  {"\"KEEP_ALIVE\":",     &json_keep_alive,                  0,                IS_INT32,  0,                NONVOL_KEEP_ALIVE,     120 },    // TCPIP Keep alive period (in seconds)
-  {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT32,  &set_LED_PWM_now, NONVOL_LED_PWM,         50 },    // Set the LED brightness
-  {"\"MFS_HOLD_AB\":",    &json_mfs_hold_ab,                 0,                IS_MFS,    0,                NONVOL_MFS_HOLD_AB,  LED_ADJUST },
-  {"\"MFS_TAP_B\":",      &json_mfs_tap_b,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_B,    POWER_TAP  },
-  {"\"MFS_TAP_A\":",      &json_mfs_tap_a,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_A,    PAPER_SHOT },
-  {"\"MFS_HOLD_B\":",     &json_mfs_hold_b,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_B,   ON_OFF     },
-  {"\"MFS_HOLD_A\":",     &json_mfs_hold_a,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_A,   PAPER_FEED },
-  {"\"MFS_HOLD_D\":",     &json_mfs_hold_d,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_D,   NO_ACTION  },
-  {"\"MFS_HOLD_C\":",     &json_mfs_hold_c,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_C,   NO_ACTION  },
-  {"\"MFS_SELECT_CD\":",  &json_mfs_select_cd,               0,                IS_MFS,    0,                NONVOL_MFS_SELECT_CD,NO_ACTION  },
+  {EC, "\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT32,  0,                NONVOL_SENSOR_ANGLE,    45 },    // Locate the sensor angles
+  {EI, "\"BYE\":",            0,                                 0,                IS_VOID,   &bye,             0,                       0 },    // Shut down the target
+//  {1, "\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT32,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
+  {EI, "\"DELAY\":",          0,                                 0,                IS_INT32,  &diag_delay,                      0,       0 },    // Delay TBD seconds
+  {EI, "\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,       0,                       0 },    // Echo test
+ //  {1, "\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT32,  0,                NONVOL_FACE_STRIKE,      0 },    // Face Strike Count 
+  {EO, "\"FOLLOW_THROUGH\":", &json_follow_through,              0,                IS_INT32,  0,                NONVOL_FOLLOW_THROUGH,   0 },    // Three second follow through
+  {EI, "\"INIT\":",           0,                                 0,                IS_INT32,  &nonvol_init,     NONVOL_INIT,             0 },    // Initialize the NONVOL memory
+  {ES, "\"KEEP_ALIVE\":",     &json_keep_alive,                  0,                IS_INT32,  0,                NONVOL_KEEP_ALIVE,     120 },    // TCPIP Keep alive period (in seconds)
+  {ES, "\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT32,  &set_LED_PWM_now, NONVOL_LED_PWM,         50 },    // Set the LED brightness
+  {EO, "\"MFS_HOLD_AB\":",    &json_mfs_hold_ab,                 0,                IS_MFS,    0,                NONVOL_MFS_HOLD_AB,  LED_ADJUST },
+  {EO, "\"MFS_TAP_B\":",      &json_mfs_tap_b,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_B,    POWER_TAP  },
+  {EO, "\"MFS_TAP_A\":",      &json_mfs_tap_a,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_A,    PAPER_SHOT },
+  {EO, "\"MFS_HOLD_B\":",     &json_mfs_hold_b,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_B,   ON_OFF     },
+  {EO, "\"MFS_HOLD_A\":",     &json_mfs_hold_a,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_A,   PAPER_FEED },
+  {EO, "\"MFS_HOLD_D\":",     &json_mfs_hold_d,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_D,   NO_ACTION  },
+  {EO, "\"MFS_HOLD_C\":",     &json_mfs_hold_c,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_C,   NO_ACTION  },
+  {EO, "\"MFS_SELECT_CD\":",  &json_mfs_select_cd,               0,                IS_MFS,    0,                NONVOL_MFS_SELECT_CD,NO_ACTION  },
   
-  {"\"MIN_RING_TIME\":",  &json_min_ring_time,               0,                IS_INT32,  0,                NONVOL_MIN_RING_TIME,  500 },    // Minimum time for ringing to stop (ms)
-  {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT32,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
-  {"\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT32,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
-  {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT32,  0,                NONVOL_PAPER_TIME,     500 },    // Set the paper advance time
-  {"\"PCNT_LATENCY\":",   &json_pcnt_latency,                0,                IS_INT32,  0,                NONVOL_PCNT_LATENCY,    33 },    // Interrupt latency for PCNT adjustment
-  {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
-  {"\"REMOTE_ACTIVE\":",  &json_remote_active,               0,                IS_INT32,  0,                NONVOL_REMOTE_ACTIVE,    0 },    // Send score to a remote server
-  {"\"REMOTE_URL\":",     (int*)&json_remote_url,            0,                IS_TEXT+URL_SIZE, 0,         NONVOL_REMOTE_URL,       0 },    // Reserve space for remote URL
-  {"\"RAPID_COUNT\":",    &json_rapid_count,                 0,                IS_INT32,  0,                0,                       0 },    // Number of shots expected in series
-  {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT32,  0,                0,                       0 },    // Enable the rapid fire fieature
-  {"\"RAPID_TIME\":",     &json_rapid_time,                  0,                IS_INT32,  0,                0,                       0 },    // Set the duration of the rapid fire event and start
-  {"\"RAPID_WAIT\":",     &json_rapid_wait,                  0,                IS_INT32,  0,                0,                       0 },    // Delay applied between enable and ready
-  {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT32,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
-  {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  0,                NONVOL_SENSOR_DIA,  230000 },    // Generate the sensor postion array
-  {"\"SN\":",             &json_serial_number,               0,                IS_FIXED,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
-  {"\"STEP_COUNT\":",     &json_step_count,                  0,                IS_INT32,  0,                NONVOL_STEP_COUNT,       0 },    // Set the duration of the stepper motor ON time
-  {"\"STEP_TIME\":",      &json_step_time,                   0,                IS_INT32,  0,                NONVOL_STEP_TIME,        0 },    // Set the number of times stepper motor is stepped
-  {"\"TABATA_ENABLE\":",  &json_tabata_enable,               0,                IS_INT32,  &tabata_enable,   0,                       0 },    // Enable the tabata feature
-  {"\"TABATA_ON\":",      &json_tabata_on,                   0,                IS_INT32,  0,                0,                       0 },    // Time that the LEDs are ON for a Tabata timer (1/10 seconds)
-  {"\"TABATA_REST\":",    &json_tabata_rest,                 0,                IS_INT32,  0,                0,                       0 },    // Time that the LEDs are OFF for a Tabata timer
-  {"\"TABATA_WARN_OFF\":",&json_tabata_warn_off,             0,                IS_INT32,  0,                0,                       0 },    // Time that the LEDs are ON during a warning cycle
-  {"\"TABATA_WARN_ON\":", &json_tabata_warn_on,              0,                IS_INT32,  0,                0,                     200 },    // Time that the LEDs are OFF during a warning cycle
-  {"\"TARGET_TYPE\":",    &json_target_type,                 0,                IS_INT32,  0,                NONVOL_TARGET_TYPE,      0 },    // Marify shot location (0 == Single Bull)
-  {"\"TEST\":",           0,                                 0,                IS_INT32,  &show_test,       0,                       0 },    // Execute a self test
-  {"\"TOKEN\":",          &json_token,                       0,                IS_INT32,  0,                NONVOL_TOKEN,            0 },    // Token ring state
-  {"\"TRACE\":",          0,                                 0,                IS_INT32,  &set_trace,       0,                       0 },    // Enter / exit diagnostic trace
-  {"\"VERSION\":",        0,                                 0,                IS_INT32,  &POST_version,    0,                       0 },    // Return the version string
-  {"\"VREF_LO\":",        0,                                 &json_vref_lo,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_LO,       1250 },    // Low trip point value (Volts)
-  {"\"VREF_HI\":",        0,                                 &json_vref_hi,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_HI,       2000 },    // High trip point value (Volts)
-  {"\"WIFI_CONFIG\"",     0,                                 0,                IS_VOID,   &WiFi_setup,      0,                         },    // Set the wifi configuration
-  {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT32,  0,                NONVOL_WIFI_CHANNEL,     6 },    // Set the wifi channel
-  {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_SECRET+PWD_SIZE, 0,       NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
-  {"\"WIFI_SSID\":",      (int*)&json_wifi_ssid,             0,                IS_TEXT+SSID_SIZE,  0,       NONVOL_WIFI_SSID,        0 },    // Name of SSID to attach to 
-  {"\"ZAPPLE\":",         0,                                 0,                IS_VOID,   &zapple,          0,                       0 },    // Start a ZAPPLE console monitor
-  {"\"Z_OFFSET\":",       &json_z_offset,                    0,                IS_INT32,  0,                NONVOL_Z_OFFSET,        13 },    // Distance from paper to sensor plane (mm)
-  {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT32,  0,                NONVOL_NORTH_X,          0 },    //
-  {"\"NORTH_Y\":",        &json_north_y,                     0,                IS_INT32,  0,                NONVOL_NORTH_Y,          0 },    //
-  {"\"EAST_X\":",         &json_east_x,                      0,                IS_INT32,  0,                NONVOL_EAST_X,           0 },    //
-  {"\"EAST_Y\":",         &json_east_y,                      0,                IS_INT32,  0,                NONVOL_EAST_Y,           0 },    //
-  {"\"SOUTH_X\":",        &json_south_x,                     0,                IS_INT32,  0,                NONVOL_SOUTH_X,          0 },    //
-  {"\"SOUTH_Y\":",        &json_south_y,                     0,                IS_INT32,  0,                NONVOL_SOUTH_Y,          0 },    //
-  {"\"WEST_X\":",         &json_west_x,                      0,                IS_INT32,  0,                NONVOL_WEST_X,           0 },    //
-  {"\"WEST_Y\":",         &json_west_y,                      0,                IS_INT32,  0,                NONVOL_WEST_Y,           0 },    //
-  {"\"ATHELETE\":",       &json_athlete,                    0,                IS_TEXT+SMALL_STRING,  0,    0,                       0 },    // Athelete name from PC client
-  {"\"EVENT\":",          &json_event,                       0,                IS_TEXT+SMALL_STRING,  0,    0,                       0 },    // Event being shot
-  {"\"TARGET_NAME\":",    &json_target_name,                 0,                IS_TEXT+SMALL_STRING,  0,    0,                       0 },    // Name of target being shot
+  {EO, "\"MIN_RING_TIME\":",  &json_min_ring_time,               0,                IS_INT32,  0,                NONVOL_MIN_RING_TIME,  500 },    // Minimum time for ringing to stop (ms)
+  {EN, "\"NAME_ID\":",        &json_name_id,                     0,                IS_INT32,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
+  {EO, "\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT32,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
+  {ES, "\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT32,  0,                NONVOL_PAPER_TIME,     500 },    // Set the paper advance time
+  {EC, "\"PCNT_LATENCY\":",   &json_pcnt_latency,                0,                IS_INT32,  0,                NONVOL_PCNT_LATENCY,    33 },    // Interrupt latency for PCNT adjustment
+  {EO, "\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
+  {EN, "\"REMOTE_ACTIVE\":",  &json_remote_active,               0,                IS_INT32,  0,                NONVOL_REMOTE_ACTIVE,    0 },    // Send score to a remote server
+  {EN, "\"REMOTE_URL\":",     (int*)&json_remote_url,            0,                IS_TEXT+URL_SIZE, 0,         NONVOL_REMOTE_URL,       0 },    // Reserve space for remote URL
+  {EO, "\"RAPID_COUNT\":",    &json_rapid_count,                 0,                IS_INT32,  0,                0,                       0 },    // Number of shots expected in series
+  {EO, "\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT32,  0,                0,                       0 },    // Enable the rapid fire fieature
+  {EO, "\"RAPID_TIME\":",     &json_rapid_time,                  0,                IS_INT32,  0,                0,                       0 },    // Set the duration of the rapid fire event and start
+  {EO, "\"RAPID_WAIT\":",     &json_rapid_wait,                  0,                IS_INT32,  0,                0,                       0 },    // Delay applied between enable and ready
+  {EO, "\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT32,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
+  {EC, "\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  0,                NONVOL_SENSOR_DIA,  230000 },    // Generate the sensor postion array
+  {ES, "\"SN\":",             &json_serial_number,               0,                IS_FIXED,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
+  {EO, "\"STEP_COUNT\":",     &json_step_count,                  0,                IS_INT32,  0,                NONVOL_STEP_COUNT,       0 },    // Set the duration of the stepper motor ON time
+  {EO, "\"STEP_TIME\":",      &json_step_time,                   0,                IS_INT32,  0,                NONVOL_STEP_TIME,        0 },    // Set the number of times stepper motor is stepped
+  {EO, "\"TABATA_ENABLE\":",  &json_tabata_enable,               0,                IS_INT32,  &tabata_enable,   0,                       0 },    // Enable the tabata feature
+  {EO, "\"TABATA_ON\":",      &json_tabata_on,                   0,                IS_INT32,  0,                0,                       0 },    // Time that the LEDs are ON for a Tabata timer (1/10 seconds)
+  {EO, "\"TABATA_REST\":",    &json_tabata_rest,                 0,                IS_INT32,  0,                0,                       0 },    // Time that the LEDs are OFF for a Tabata timer
+  {EO, "\"TABATA_WARN_OFF\":",&json_tabata_warn_off,             0,                IS_INT32,  0,                0,                       0 },    // Time that the LEDs are ON during a warning cycle
+  {EO, "\"TABATA_WARN_ON\":", &json_tabata_warn_on,              0,                IS_INT32,  0,                0,                     200 },    // Time that the LEDs are OFF during a warning cycle
+  {EO, "\"TARGET_TYPE\":",    &json_target_type,                 0,                IS_INT32,  0,                NONVOL_TARGET_TYPE,      0 },    // Marify shot location (0 == Single Bull)
+  {EO, "\"TEST\":",           0,                                 0,                IS_INT32,  &show_test,       0,                       0 },    // Execute a self test
+  {EN, "\"TOKEN\":",          &json_token,                       0,                IS_INT32,  0,                NONVOL_TOKEN,            0 },    // Token ring state
+  {EX, "\"TRACE\":",          0,                                 0,                IS_INT32,  &set_trace,       0,                       0 },    // Enter / exit diagnostic trace
+  {ES, "\"VERSION\":",        0,                                 0,                IS_INT32,  &POST_version,    0,                       0 },    // Return the version string
+  {EO, "\"VREF_LO\":",        0,                                 &json_vref_lo,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_LO,       1250 },    // Low trip point value (Volts)
+  {EO, "\"VREF_HI\":",        0,                                 &json_vref_hi,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_HI,       2000 },    // High trip point value (Volts)
+  {EN, "\"WIFI_CONFIG\"",     0,                                 0,                IS_VOID,   &WiFi_setup,      0,                         },    // Set the wifi configuration
+  {EN, "\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT32,  0,                NONVOL_WIFI_CHANNEL,     6 },    // Set the wifi channel
+  {EN, "\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_SECRET+PWD_SIZE, 0,       NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
+  {EN, "\"WIFI_SSID\":",      (int*)&json_wifi_ssid,             0,                IS_TEXT+SSID_SIZE,  0,       NONVOL_WIFI_SSID,        0 },    // Name of SSID to attach to 
+  {EX, "\"ZAPPLE\":",         0,                                 0,                IS_VOID,   &zapple,          0,                       0 },    // Start a ZAPPLE console monitor
+  {EO, "\"Z_OFFSET\":",       &json_z_offset,                    0,                IS_INT32,  0,                NONVOL_Z_OFFSET,        13 },    // Distance from paper to sensor plane (mm)
+  {EX, "\"NORTH_X\":",        &json_north_x,                     0,                IS_INT32,  0,                NONVOL_NORTH_X,          0 },    //
+  {EX, "\"NORTH_Y\":",        &json_north_y,                     0,                IS_INT32,  0,                NONVOL_NORTH_Y,          0 },    //
+  {EX, "\"EAST_X\":",         &json_east_x,                      0,                IS_INT32,  0,                NONVOL_EAST_X,           0 },    //
+  {EX, "\"EAST_Y\":",         &json_east_y,                      0,                IS_INT32,  0,                NONVOL_EAST_Y,           0 },    //
+  {EX, "\"SOUTH_X\":",        &json_south_x,                     0,                IS_INT32,  0,                NONVOL_SOUTH_X,          0 },    //
+  {EX, "\"SOUTH_Y\":",        &json_south_y,                     0,                IS_INT32,  0,                NONVOL_SOUTH_Y,          0 },    //
+  {EX, "\"WEST_X\":",         &json_west_x,                      0,                IS_INT32,  0,                NONVOL_WEST_X,           0 },    //
+  {EX, "\"WEST_Y\":",         &json_west_y,                      0,                IS_INT32,  0,                NONVOL_WEST_Y,           0 },    //
+  {EN, "\"ATHLETE\":",        &json_athlete,                     0,                IS_TEXT+SMALL_STRING,  0,    0,                       0 },    // Athelete name from PC client
+  {EN, "\"EVENT\":",          &json_event,                       0,                IS_TEXT+SMALL_STRING,  0,    0,                       0 },    // Event being shot
+  {EN, "\"TARGET_NAME\":",    &json_target_name,                 0,                IS_TEXT+SMALL_STRING,  0,    0,                       0 },    // Name of target being shot
   {0,                     0,                                 0,                0,         0,                0,                       0 },    //
 
 };
@@ -194,13 +192,14 @@ static void diag_delay(int x) { printf("\r\n\"DELAY\":%d", x); vTaskDelay(x*1000
  *
  * The format of the JSON stings used here is
  * 
- * {"LABLE":value }
+ * {1, "LABLE":value }
  * 
- * {"ECHO":23"}
- * {"ECHO":12, "DIP":8}
- * {"DIP":9, "SENSOR":230.0, "ECHO":32}
- * {"TEST":7, "ECHO":5}
- * {"PAPER":1, "DELAY":5, "PAPER":0, "TEST":16}
+ * {1, "ECHO":23"}
+ * {1, "ECHO":12, "DIP":8}
+ * {1, "DIP":9, "SENSOR":230.0, "ECHO":32}
+ * {1, "TEST":7, "ECHO":5}
+ * {1, "PAPER":1, "DELAY":5, "PAPER":0, "TEST":16}
+ * {1, "ATHLETE":"Allan Brown", "EVENT":"Rapid Final", "TARGET_NAME":"AP10m.png"}
  * 
  * Find the lable, ex "DIP": and save in the
  * corresponding memory location
@@ -245,7 +244,7 @@ void freeETarget_json
     while ( serial_available(ALL) != 0 )
     {
       ch = serial_getch(ALL);
-      printf("%c", ch);
+      serial_putch(ch, ALL);
 
 /*
  * Parse the stream
@@ -280,7 +279,7 @@ void freeETarget_json
           if ( got_left_bracket == false )    // Whenever we are not between
           {                                   // {}
             POST_version();
-            show_echo();
+            show_echo(EA);
             break;
           }                                   // Otherwise fall through
 
@@ -371,10 +370,13 @@ static void handle_json(void)
                   && (m != (JSON[j].convert & FLOAT_MASK)) )                  // Skip to the opening quote
               {
                 s[m] = input_JSON[i+k];      
-                printf("%c", s[m]);                  // Save the value
                 m++;
                 s[m] = 0;                                      // Null terminate 
                 k++;
+              }
+              if ( JSON[j].value != 0 )                         // Save to json memory
+              {
+                strcpy((char*)JSON[j].value, &s[0]);
               }        
               if ( JSON[j].non_vol != 0 )                       // Save to persistent storage if present
               {
@@ -489,7 +491,10 @@ int instr(char* s1, char* s2)
  * 
  *-----------------------------------------------------*/
 
-void show_echo(void)
+void show_echo
+(
+  unsigned int level            // Filter level
+)
 {
   unsigned int i, j;
   char str_c[32];   // String holding buffers
@@ -507,10 +512,12 @@ void show_echo(void)
 /*
  * Loop through all of the JSON tokens
  */
+printf("Level: %d", level);
   i=0;
   while ( JSON[i].token != 0 )                 // Still more to go?  
   {
-    if ( (JSON[i].value != NULL) || (JSON[i].d_value != NULL) )              // It has a value ?
+    if ( ((JSON[i].level == level) || (level == 0))
+      && ((JSON[i].value != NULL) || (JSON[i].d_value != NULL)) )              // It has a value ?
     {
       switch ( JSON[i].convert & IS_MASK )              // Display based on it's type
       {

@@ -447,6 +447,10 @@ bool find_xy_3D
  * It is up to the PC program to convert x & y or radius and angle
  * into a meaningful score relative to the target.
  *    
+ * When testing for remote use the following setup
+ * 
+ * {"ATHLETE":"Allan Brown", "EVENT":"Rapid Final", "TARGET_NAME":"AP10m.png"}
+ * 
  *--------------------------------------------------------------*/
 
 void send_score
@@ -551,12 +555,14 @@ void send_score
 /*
  * Send to the server if needed
  */
-
-  sprintf(_xs, "\r\n{\"shot\":%d, \"athlete\":\"%s\", \"event\": \"%s\", \"target_name\":\"%s\", x\":%4.2f, \"y\":%4.2f ", 
+  if ( json_remote_active != 0 )
+  {
+    sprintf(_xs, "\r\n{\"shot\":%d, \"athlete\":\"%s\", \"event\": \"%s\", \"target_name\":\"%s\", x\":%4.2f, \"y\":%4.2f ", 
       shot->shot_number,  json_athlete, json_event, json_target_name, x, y);
   
-  http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
-
+    http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
+  }
+  
 /*
  * All done, return
  */

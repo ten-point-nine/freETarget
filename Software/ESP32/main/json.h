@@ -12,14 +12,15 @@
 /*
  * Public Functions
  */
-void reset_JSON(void);            // Clear the JSON input buffer
-void freeETarget_json(void*);     // Task to scan the serial port looking for JSON input
-void show_echo(void);             // Display the settings
+void reset_JSON(void);              // Clear the JSON input buffer
+void freeETarget_json(void*);       // Task to scan the serial port looking for JSON input
+void show_echo(unsigned int level); // Display the settings
 
 /* 
  * JSON message typedefs
  */
 typedef struct  {
+  int               level;    // Display level
   char*             token;    // JSON token string, ex "RADIUS": 
   int*              value;    // Where value is stored 
   double*         d_value;    // Where value is stored 
@@ -31,6 +32,9 @@ typedef struct  {
 
 extern const json_message_t JSON[];
 
+/*
+ * Definitioins
+ */
 #define IS_VOID       (7<<8)   // Value is a void
 #define IS_MFS        (6<<8)   // Value is a multifunction switch
 #define IS_TEXT       (5<<8)   // Value is a string
@@ -41,10 +45,18 @@ extern const json_message_t JSON[];
 #define IS_MASK       (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED | IS_MFS)
 #define FLOAT_MASK    ((~IS_MASK) & 0xFF)    // Scaling factor 8 bits
 
-#define SSID_SIZE     31         // Reserve 30+1 bytes for SSID
-#define PWD_SIZE      31         // Reserve 30+1 bytes for Password
-#define URL_SIZE      33         // Reserve 32+1 bytes for remote URL
+#define SSID_SIZE     31        // Reserve 30+1 bytes for SSID
+#define PWD_SIZE      31        // Reserve 30+1 bytes for Password
+#define URL_SIZE      33        // Reserve 32+1 bytes for remote URL
 #define SMALL_STRING  63        // Reserver 64 bytes for a short string
+
+#define EA             0        // Echo everything
+#define EX             0        // Echo Never
+#define ES             1        // Echo the things we most care about
+#define EN             2        // Echo network settings 
+#define EC             3        // Echo the things that affect calculations 
+#define EO             4        // Echo operational settings
+#define EI             9        // Echo information settings 
 
 /*
  * Global JSON variables and settings

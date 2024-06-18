@@ -13,11 +13,12 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"5.3.2 June 17, 2024\""
-#define REMOTE_URL       "josua.10nini.co"
+#define SOFTWARE_VERSION "\"5.3.2 June 18, 2024\""
+#define REMOTE_URL       "http://josua.10nine.co/api/shots"
 
 #define REV_500    500   // ESP32
 #define REV_510    510
+
 #define REV_520    520
 #define BUILD_REV  REV_520
 

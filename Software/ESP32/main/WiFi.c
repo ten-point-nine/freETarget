@@ -973,7 +973,7 @@ void WiFi_setup(void)
 /*
  * Enter the new settings
  */
-    printf("\r\n0 - Exit");
+    printf("\r\n! - Exit");
     printf("\r\n1 - SSID");
     printf("\r\n2 - password");
     printf("\r\n3 - channel");
@@ -989,7 +989,7 @@ void WiFi_setup(void)
             printf("%c", ch); 
             switch(ch)
             {
-                case '0':           // Exit
+                case '!':           // Exit
                     printf("\r\nDone\r\n");
                     return;
 
@@ -1031,7 +1031,8 @@ void WiFi_setup(void)
                     printf("\r\nEnable remote URL :");
                     if ( get_string(_xs, 2) )
                     {
-                        strcpy(json_remote_active, _xs);
+                        json_remote_active = atoi(_xs);
+                        nvs_set_i32(my_handle, NONVOL_REMOTE_ACTIVE, json_remote_active);
                     }
                     break;
 
