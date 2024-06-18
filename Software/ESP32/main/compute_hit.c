@@ -11,6 +11,7 @@
 #include "math.h"
 #include "stdbool.h"
 #include "serial_io.h"
+#include "esp_http_client.h"
 
 #include "freETarget.h"
 #include "json.h"
@@ -20,6 +21,7 @@
 #include "timer.h"
 #include "compute_hit.h"
 #include "WiFi.h"
+#include "http_client.h"
 
 #define THRESHOLD (0.001)
 
@@ -550,6 +552,11 @@ void send_score
  * Send to the server if needed
  */
 
+  sprintf(_xs, "\r\n{\"shot\":%d, \"athlete\":\"%s\", \"event\": \"%s\", \"target_name\":\"%s\", x\":%4.2f, \"y\":%4.2f ", 
+      shot->shot_number,  json_athlete, json_event, json_target_name, x, y);
+  
+  http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
+
 /*
  * All done, return
  */
@@ -561,77 +568,6 @@ void send_score
   return;
 }
 
-  
-/*----------------------------------------------------------------
- *
- * @function: send_score_to_server
- *
- * @brief: Send the score to a remote server if enabled
- * 
- * @return: None
- *
- *----------------------------------------------------------------
- * 
- * The score is sent as:
- * 
- * {"shot": s, "athlete":"name", "event": "Pistol Practice", "target_name":"frETarget.targets.AirPistol", "x":x, "y":y}
- * 
- * It is up to the PC program to convert x & y or radius and angle
- * into a meaningful score relative to the target.
- *    
- * See 
- * https://github.com/espressif/esp-idf/blob/8760e6d2a7e19913bc40675dd71f374bcd51b0ae/examples/protocols/esp_http_client/main/esp_http_client_example.c
- * 
- * For HTTP Client example
- * 
- *--------------------------------------------------------------*/
-
-void send_score_to_server
-  (
-  shot_record_t* shot             //  record
-  )
-{
-  double x, y;                    // Shot location in mm X, Y
-  double radius;                  // Polar coordinates of X & Y
-  double angle;
-  int i;
-
-  DLT(DLT_DIAG, printf("Sending the score to the server");)
-
-  /* 
-  *  Work out the hole in perfect coordinates
-  */
-  x = shot->x * s_of_sound * CLOCK_PERIOD;        // Distance in mm
-  y = shot->y * s_of_sound * CLOCK_PERIOD;        // Distance in mm
-  radius = sqrt(sq(x) + sq(y));
-  angle = atan2(shot->y, shot->x) / PI * 180.0d;
-
-/*
- * Rotate the result based on the construction, and recompute the hit
- */
-  angle += json_sensor_angle;
-  x = radius * cos(PI * angle / 180.0d);          // Rotate onto the target face
-  y = radius * sin(PI * angle / 180.0d);                                  // Remember the original target value
-  remap_target(&x, &y);                           // Change the target if needed
-/* 
- *  Display the results
- */
-  sprintf(_xs, "\r\n{\"shot\":%d, \"athlete\":\"%s\", \"event\": \"%s\", \"target_name\":\"%s\", x\":%4.2f, \"y\":%4.2f ", 
-      shot->shot_number,  json_athlete, json_event, json_target_name, x, y);
-
-/*
- *  Look up the remote address and send the package to it
- */
-    if ( WiFi_get_remote_IP(json_remote_url) == 1)  // Look for the DNS 
-    {
-
-    }
-    
-/*
- * All done, return
- */
-  return;
-}
 
 /*----------------------------------------------------------------
  *

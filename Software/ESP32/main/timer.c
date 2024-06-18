@@ -259,7 +259,7 @@ void freeETarget_synchronous
     if ( LED_timer == 0 )               // Check to see if the timer ran down
     {
       set_status_LED(LED_RXTX_OFF);     // If so Turn off the LEDs
-      timer_delete(&LED_timer);
+      timer_new(&LED_timer, 0);
       LED_timer = 1;                    // and kill the timer
     }
 /*
@@ -293,7 +293,6 @@ void freeETarget_synchronous
 /*-----------------------------------------------------
  * 
  * @function: timer_new()
- *            timer_delete()
  * 
  * @brief:    Add or remove timers
  *  
@@ -335,8 +334,15 @@ int timer_new
     if ( (timers[i] == 0)           // Got an empty timer slot
       || (timers[i] == new_timer) ) // or it already exists
     {
-      timers[i] = new_timer;        // Add it in
-      *new_timer = duration;
+      if ( duration != 0 )
+      {
+        timers[i] = new_timer;      // Add it in
+        *new_timer = duration;
+      }
+      else                          // The duration is zero
+      {
+        timers[i] = 0;              // Free this timer
+      }
       return 1;
     }
   }
@@ -345,22 +351,3 @@ int timer_new
   return 0;
 }
 
-int timer_delete
-(
-  volatile unsigned long* old_timer   // Pointer to new down counter
-)
-{
-  unsigned int i;
-
-  for (i=0;  i != N_TIMERS; i++ )   // Look through the space
-  {
-    if ( timers[i] == old_timer )   // Found the existing timer
-    {
-      timers[i] = 0;                // Remove the pointer
-      return 1;
-    }
-  }
-
-  return 0;
-  
-}

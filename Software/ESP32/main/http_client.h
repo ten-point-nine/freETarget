@@ -55,7 +55,7 @@ extern const char postman_root_cert_pem_end[];
 void http_client_init(void);                                    // Initialize the HTTP/HTTPS stack
 
 #if BUILD_HTTP
-esp_err_t _http_event_handler(esp_http_client_event_t *evt);    // HTTP Event Handler 
+//esp_err_t _http_event_handler(esp_http_client_event_t *evt);    // HTTP Event Handler 
 void http_rest_with_url(char *url, int method, char* payload);  // Send the payload to the URL
 #endif
 
@@ -64,10 +64,12 @@ void https_with_url(char *url, int method, char* payload);      // HTTPS transfe
 void https_async(char *url, char* payload);
 #endif 
 
+#if(0)
 void http_encoded_query(void);
 void http_relative_redirect(void);
 void http_absolute_redirect(void);
 void http_absolute_redirect_manual(void);
+#endif 
 
 void http_download_chunk(char *url, char* payload);
 void http_perform_as_stream_reader(char *url, char* payload);

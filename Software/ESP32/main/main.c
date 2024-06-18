@@ -21,6 +21,7 @@
 #include "serial_io.h"
 #include "wifi.h"
 #include "diag_tools.h"
+#include "http_client.h"
 
 void app_main(void)
 {
@@ -55,6 +56,7 @@ void app_main(void)
    xTaskCreate(tcpip_socket_poll_3,     "tcpip_socket_poll_3",       4096, NULL,  5, NULL);
    vTaskDelay(1);
 
+   http_client_init();
    freeETarget_timer_init();
 
    DLT(DLT_CRITICAL, printf("Running\r\n");)

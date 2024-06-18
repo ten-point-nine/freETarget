@@ -42,7 +42,6 @@ static void sw_state(unsigned int action);      // Carry out the MFS function
 static void mfs_power_tap (void);                               // Functions to carry out mfs actions.
 static void mfs_paper_feed(void);
 static void mfs_paper_shot(void);
-static void mfs_paper_test(void);
 static void mfs_on_off(void);
 static void mfs_led_adjust(void);
 static void mfs_pc_test(void);

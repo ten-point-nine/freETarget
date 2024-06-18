@@ -594,7 +594,7 @@ void tabata_task(void)
  */
   if ( json_tabata_enable == 0 )        // Reset the timer
   {
-    timer_delete(&tabata_timer);      
+    timer_new(&tabata_timer, 0);      
     tabata_state = 0;
     return;
   }
@@ -740,7 +740,7 @@ void rapid_fire_task(void)
  */
   if ( json_rapid_enable == 0 )        // Reset the timer
   {
-    timer_delete(&rapid_timer);      
+    timer_new(&rapid_timer, 0);      
     rapid_state = RAPID_OFF;
     return;
   }

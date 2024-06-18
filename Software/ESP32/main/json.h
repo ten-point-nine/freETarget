@@ -42,7 +42,7 @@ extern const json_message_t JSON[];
 #define FLOAT_MASK    ((~IS_MASK) & 0xFF)    // Scaling factor 8 bits
 
 #define SSID_SIZE     31         // Reserve 30+1 bytes for SSID
-#define  PWD_SIZE     31         // Reserve 30+1 bytes for Password
+#define PWD_SIZE      31         // Reserve 30+1 bytes for Password
 #define URL_SIZE      33         // Reserve 32+1 bytes for remote URL
 #define SMALL_STRING  63        // Reserver 64 bytes for a short string
 

@@ -581,7 +581,7 @@ void serial_port_test(void)
 /*
  *  The test is over
  */ 
-  timer_delete(&test_time);
+  timer_new(&test_time, 0);
   printf("\r\nDone");
   return;
 }

@@ -111,11 +111,11 @@ const json_message_t JSON[] = {
 //    token                 value stored in RAM     double stored in RAM        convert    service fcn()     NONVOL location      Initial Value
   {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT32,  0,                NONVOL_SENSOR_ANGLE,    45 },    // Locate the sensor angles
   {"\"BYE\":",            0,                                 0,                IS_VOID,   &bye,             0,                       0 },    // Shut down the target
-  {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT32,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
+//  {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT32,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
   {"\"DELAY\":",          0,                                 0,                IS_INT32,  &diag_delay,                      0,       0 },    // Delay TBD seconds
   {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,       0,                       0 },    // Echo test
   {"\"ECHO?\"",           0,                                 0,                IS_VOID,   &show_echo,       0,                       0 },    // Echo test
-  {"\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT32,  0,                NONVOL_FACE_STRIKE,      0 },    // Face Strike Count 
+//  {"\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT32,  0,                NONVOL_FACE_STRIKE,      0 },    // Face Strike Count 
   {"\"FOLLOW_THROUGH\":", &json_follow_through,              0,                IS_INT32,  0,                NONVOL_FOLLOW_THROUGH,   0 },    // Three second follow through
   {"\"INIT\":",           0,                                 0,                IS_INT32,  &init_nonvol,     NONVOL_INIT,             0 },    // Initialize the NONVOL memory
   {"\"KEEP_ALIVE\":",     &json_keep_alive,                  0,                IS_INT32,  0,                NONVOL_KEEP_ALIVE,     120 },    // TCPIP Keep alive period (in seconds)
@@ -158,6 +158,7 @@ const json_message_t JSON[] = {
   {"\"VERSION\":",        0,                                 0,                IS_INT32,  &POST_version,    0,                       0 },    // Return the version string
   {"\"VREF_LO\":",        0,                                 &json_vref_lo,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_LO,       1250 },    // Low trip point value (Volts)
   {"\"VREF_HI\":",        0,                                 &json_vref_hi,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_HI,       2000 },    // High trip point value (Volts)
+  {"\"WIFI_CONFIG\"",     0,                                 0,                IS_VOID,   &WiFi_setup,      0,                         },    // Set the wifi configuration
   {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT32,  0,                NONVOL_WIFI_CHANNEL,     6 },    // Set the wifi channel
   {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_SECRET+PWD_SIZE, 0,       NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
   {"\"WIFI_SSID\":",      (int*)&json_wifi_ssid,             0,                IS_TEXT+SSID_SIZE,  0,       NONVOL_WIFI_SSID,        0 },    // Name of SSID to attach to 

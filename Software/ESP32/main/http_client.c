@@ -12,6 +12,7 @@
  * The softwareis based on 
  * https://github.com/espressif/esp-idf/blob/8760e6d2a7e19913bc40675dd71f374bcd51b0ae/examples/protocols/esp_http_client/main/esp_http_client_example.c
  * 
+ * 
  * See http_client.h for the various compilation options
  * 
  *-----------------------------------------------------*/
@@ -76,7 +77,7 @@ const char postman_root_cert_pem_end[]   asm("_binary_postman_root_cert_pem_end"
 void http_client_init(void)
 {
     ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
+//    ESP_ERROR_CHECK(esp_event_loop_create_default());
 }
 
 /*----------------------------------------------------------------
@@ -556,10 +557,11 @@ void https_async
  * 
  * The url is of the form http://my_url.com/option/option...
  *
+ * test URL http://freetarget/
  *------------------------------------------------------------*/
 void http_native_request
 (
-    char* url,                      // URL to be accessed
+    char* server_url,               // URL to be accessed
     int   method,                   // Transfer method
     char* payload,                  // Payload to be sent/received
     int   payload_length            // How much space is available
@@ -570,15 +572,14 @@ void http_native_request
     int   data_read;                // Size of data read on header 
 #endif
 
-    esp_http_client_config_t config = {
-        .url = url,
-    };
+    esp_http_client_config_t config = {.url = "http://freetarget/api/shots"};
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
     switch (method)
     {
 #if ( INCLUDE_GET )
         case METHOD_GET:
+            esp_http_client_set_url(client, server_url);
             esp_http_client_set_method(client, HTTP_METHOD_GET);
             esp_err_t err = esp_http_client_open(client, 0);
             if (err != ESP_OK)
@@ -614,18 +615,18 @@ void http_native_request
 
 #if ( INCLUDE_POST )
         case METHOD_POST:
-            esp_http_client_set_url(client, url);
+            esp_http_client_set_url(client, server_url);
             esp_http_client_set_method(client, HTTP_METHOD_POST);
             esp_http_client_set_header(client, "Content-Type", "application/json");
             if (esp_http_client_open(client, strlen(payload)) != ESP_OK) 
             {
-                DLT(DLT_DIAG, printf("Failed to open HTTP connection: %s", url);)
+                DLT(DLT_CRITICAL, printf("Failed to open HTTP connection: %s", server_url);)
             } 
             else 
             {
                 if (esp_http_client_write(client, payload, strlen(payload)) < 0)
                 {
-                    DLT(DLT_DIAG, printf("HTTP Write failed %s", url);)
+                    DLT(DLT_DIAG, printf("HTTP Write failed %s", server_url);)
                 }
                 if (esp_http_client_fetch_headers(client) < 0) 
                 {
@@ -638,7 +639,7 @@ void http_native_request
                         DLT(DLT_DIAG, printf("HTTP POST Status = %d, content_length = %"PRId64,
                         esp_http_client_get_status_code(client),
                         esp_http_client_get_content_length(client));)
-                        DLT(DLT_DIAG, printf("%s", payload);)
+                        DLT(DLT_DIAG, printf("\r\npayload:%s\r\n", payload);)
                     } 
                 else
                 {

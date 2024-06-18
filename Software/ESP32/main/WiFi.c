@@ -43,6 +43,7 @@
 #include "json.h"
 #include "diag_tools.h"
 #include "WiFi.h"
+#include "nonvol.h"
 
 #define PORT                        1090
 #define KEEPALIVE_IDLE              true
@@ -882,3 +883,172 @@ void WiFi_MAC_address
         return;
 }
 
+/*****************************************************************************
+ *
+ * @function: WiFi_config()
+ *
+ * @brief:    Configure the WiFi
+ * 
+ * @return:   None
+ *
+ ****************************************************************************
+ *
+ * This function walks the user throught the operation of the WiFi to tailor
+ * it for thier needs.
+ * 
+ ****************************************************************************/
+bool get_string
+(
+    char  destination[],
+    int   size
+)
+{
+    int ch;             // Input character
+    int i;              // Input index
+
+    i = 0;
+    destination[0] = 0;
+    while (1)
+    {
+        if ( serial_available(ALL) != 0 )
+        {
+            ch = serial_getch(ALL);
+            printf("%c", ch); 
+
+            switch (ch)
+            {
+                case 8:                 // Backspace
+                    i--;
+                    if ( i < 0 )
+                    {
+                        i = 0;
+                    }
+                    destination[i] = 0;
+                    break;
+
+                case '\r':                // Enter
+                case '\n':                // newline
+                    return 1;
+
+                default:
+                    destination[i] = ch;
+                    if ( i < size )
+                    {
+                        i++;
+                    }
+                    destination[i] = 0;
+                    break;
+            }
+        }
+        vTaskDelay(10);
+    }
+}
+void WiFi_setup(void)
+{
+    char ch;
+    int i;
+
+    printf("\r\nWiFi Configuration");
+    printf("\r\n");
+
+/*
+ *  Show the current settings
+ */
+    printf("\r\nWiFi Mode:");
+    if ( json_wifi_ssid[0] == 0 )
+    {
+        printf("\r\nTarget creates it's own SSID: FET-%s",names[json_name_id] );
+    }
+    else
+    {
+        printf("\r\nTarget uses local SSID: %s", json_wifi_ssid);
+        printf(" with password: %s", json_wifi_pwd);
+    }
+
+    if ( json_remote_url[0] != 0 )
+    {
+        printf("\r\nTarget connects to remote server: %s", json_remote_url);
+    }
+
+/*
+ * Enter the new settings
+ */
+    printf("\r\n0 - Exit");
+    printf("\r\n1 - SSID");
+    printf("\r\n2 - password");
+    printf("\r\n3 - channel");
+    printf("\r\n4 - enable remote server");
+    printf("\r\n5 - remote server URL");
+    printf("\r\n:");
+
+    while (1)
+    {
+        if ( serial_available(ALL) != 0 )
+        {
+            ch = serial_getch(ALL);
+            printf("%c", ch); 
+            switch(ch)
+            {
+                case '0':           // Exit
+                    printf("\r\nDone\r\n");
+                    return;
+
+                case '1':           // SSID
+                    printf("\r\nEnter SSID:");
+                    if ( get_string(_xs, SSID_SIZE) )
+                    {
+                        strcpy(json_wifi_ssid, _xs);
+                        nvs_set_str(my_handle, NONVOL_WIFI_SSID, json_wifi_ssid);
+                    }
+                    break;
+
+                case '2':           // PWD
+                    printf("\r\nEnter Password:");
+                    if ( get_string(_xs, PWD_SIZE) )
+                    {
+                        strcpy(json_wifi_pwd, _xs);
+                        nvs_set_str(my_handle, NONVOL_WIFI_PWD, json_wifi_pwd);
+                    }
+                    break;
+
+                case '3':           // WiFi Channel
+                    printf("\r\nWiFi channel (1-11):");
+                    if ( get_string(_xs, 2) )
+                    {
+                        i=0;
+                        json_wifi_channel = 0;
+                        while (_xs[i] != 0)
+                        {
+                           json_wifi_channel *= 10;
+                           json_wifi_channel += (_xs[i] - '0');
+                           i++;
+                        }
+                        nvs_set_i32(my_handle, NONVOL_WIFI_CHANNEL, json_wifi_channel);
+                    }
+                    break;
+
+                case '4':           // Enable remote URL
+                    printf("\r\nEnable remote URL :");
+                    if ( get_string(_xs, 2) )
+                    {
+                        strcpy(json_remote_active, _xs);
+                    }
+                    break;
+
+                case '5':           // Remote Server URL
+                    printf("\r\nEnter remote server URL:");
+                    if ( get_string(_xs, URL_SIZE) )
+                    {
+                        strcpy(json_remote_url, _xs);
+                        nvs_set_str(my_handle, NONVOL_REMOTE_URL, json_remote_url);
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+            printf("\r\n");
+        }
+        vTaskDelay(ONE_SECOND/4);
+    }
+}
