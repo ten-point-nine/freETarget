@@ -558,12 +558,19 @@ void send_score
  */
   if ( json_remote_active != 0 )
   {
-    sprintf(_xs, "\r\n{\"shotnumber\":%d, \"athlete\":\"%s\", \"event\": \"%s\", \"target_name\":\"%s\", \"x\":%4.2f, \"y\":%4.2f} ", 
-      shot->shot_number,  json_athlete, json_event, json_target_name, x, y);
+    if ( (json_athlete[0] != 0) && (json_event[0] != 0) && (json_target_name[0] != 0) )
+    {
+      sprintf(_xs, "\r\n{\"shotnumber\":%d, \"athlete\":\"%s\", \"event\": \"%s\", \"target_name\":\"%s\", \"x\":%4.2f, \"y\":%4.2f} ", 
+        shot->shot_number,  json_athlete, json_event, json_target_name, x, y);
   
-    http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
+      http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
+    }
+    else
+    {
+      DLT(DLT_INFO, printf("Missing arguement for remote payload"););
+    }
   }
-  
+
 /*
  * All done, return
  */

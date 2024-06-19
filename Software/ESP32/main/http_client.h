@@ -29,6 +29,8 @@
 #define INCLUDE_PATCH   0     // Include PATCH methods
 #define INCLUDE_DELETE  0     // Include DELETE methods
 #define INCLUDE_HEAD    0     // Include HEAD methods
+#define INCLUDE_API_KEY 1     // Include an API key 
+#define API_KEY         "cpe-1704-tks"
 
 #define METHOD_GET      0     // enum used to identify a get method
 #define METHOD_POST     1     // enum used to identify a post method

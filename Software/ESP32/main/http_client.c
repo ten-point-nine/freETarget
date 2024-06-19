@@ -38,6 +38,7 @@
 
 #include "http_client.h"
 #include "diag_tools.h"
+#include "json.h"
 
 #define MAX_HTTP_RECV_BUFFER 512
 #define MAX_HTTP_OUTPUT_BUFFER 2048
@@ -625,7 +626,9 @@ void http_native_request
             esp_http_client_set_url(client, server_url);
             esp_http_client_set_method(client, HTTP_METHOD_POST);
             esp_http_client_set_header(client, "Content-Type", "application/json");
-            esp_http_client_set_header(client, "X-API-KEY", "cpe-1704-tks");
+#if ( INCLUDE_API_KEY)
+            esp_http_client_set_header(client, "X-API-KEY", API_KEY);
+#endif
             DLT(DLT_APPLICATION, printf("POST");)
             DLT(DLT_APPLICATION, printf("URL:%s", server_url);)
             DLT(DLT_APPLICATION, printf("Payload: %s", payload);)
@@ -645,7 +648,7 @@ void http_native_request
                 } 
                 else
                 {
-                    DLT(DLT_APPLICATION, for(i=0; i != payload_length; i++){payload[i] = 0;})
+ //                   DLT(DLT_APPLICATION, for(i=0; i != payload_length; i++){payload[i] = 0;})
                     if (esp_http_client_read_response(client, payload, payload_length) >= 0)
                     {
                         if ( esp_http_client_get_status_code(client) != 200 )
