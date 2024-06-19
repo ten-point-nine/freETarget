@@ -449,8 +449,9 @@ bool find_xy_3D
  *    
  * When testing for remote use the following setup
  * 
+ * {"REMOTE_URL":"http://joshua.10nine.co/api/shots", "REMOTE_ACTIVE":1}
  * {"ATHLETE":"Allan Brown", "EVENT":"Rapid Final", "TARGET_NAME":"AP10m.png"}
- * 
+ * {"TRACE":255}
  *--------------------------------------------------------------*/
 
 void send_score
@@ -557,7 +558,7 @@ void send_score
  */
   if ( json_remote_active != 0 )
   {
-    sprintf(_xs, "\r\n{\"shot\":%d, \"athlete\":\"%s\", \"event\": \"%s\", \"target_name\":\"%s\", x\":%4.2f, \"y\":%4.2f ", 
+    sprintf(_xs, "\r\n{\"shotnumber\":%d, \"athlete\":\"%s\", \"event\": \"%s\", \"target_name\":\"%s\", \"x\":%4.2f, \"y\":%4.2f} ", 
       shot->shot_number,  json_athlete, json_event, json_target_name, x, y);
   
     http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));

@@ -136,7 +136,7 @@ void freeETarget_init(void)
 /*
  * Ready to go
  */ 
-  show_echo(ES);
+  show_echo(ES + EN);
   set_LED_PWM(json_LED_PWM);
   serial_flush(ALL);                      // Get rid of everything
   this_shot = 0;                          // Clear out any junk

@@ -77,9 +77,12 @@ const char postman_root_cert_pem_end[]   asm("_binary_postman_root_cert_pem_end"
 void http_client_init(void)
 {
     ESP_ERROR_CHECK(esp_netif_init());
-//    ESP_ERROR_CHECK(esp_event_loop_create_default());
+#if ( BUILD_HTTP  )
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+#endif
 }
 
+#if ( BUILD_HTTP )
 /*----------------------------------------------------------------
  * 
  * @function: _http_event_handler
@@ -201,7 +204,6 @@ esp_err_t _http_event_handler
     return ESP_OK;
 }
 
-#if ( BUILD_HTTP )
 /*----------------------------------------------------------------
  * 
  * @function: http_rest_with_url
@@ -230,7 +232,9 @@ void http_rest_with_url
         .host = url,
         .path = "/get",
         .query = "esp",
+#if ( BUILD_EVENT_HDR )
         .event_handler = _http_event_handler,
+#endif
         .user_data = payload,           // Where data comes from and goes to
         .disable_auto_redirect = true,
     };
@@ -405,7 +409,7 @@ static void https_with_url
 #endif // CONFIG_MBEDTLS_CERTIFICATE_BUNDLE
 #endif
 
-
+#if ( BUILD_HTTP )
 void http_download_chunk
 (
     char* url,                  // URL to read
@@ -538,8 +542,9 @@ void https_async
     }
     esp_http_client_cleanup(client);
 }
+#endif
 
-#if (BUILD_HTTP)
+#if (BUILD_SIMPLE)
 /*----------------------------------------------------------------
  * 
  * @function: http_native_request
@@ -558,6 +563,7 @@ void https_async
  * The url is of the form http://my_url.com/option/option...
  *
  * test URL http://freetarget/
+ * 
  *------------------------------------------------------------*/
 void http_native_request
 (
@@ -571,8 +577,9 @@ void http_native_request
     int   content_length;           // Size of internal transfer
     int   data_read;                // Size of data read on header 
 #endif
+    unsigned int i;
 
-    esp_http_client_config_t config = {.url = "http://freetarget/api/shots"};
+    esp_http_client_config_t config = {.url = "http://joshua.10nine.co/api/shots"};
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
     switch (method)
@@ -618,6 +625,10 @@ void http_native_request
             esp_http_client_set_url(client, server_url);
             esp_http_client_set_method(client, HTTP_METHOD_POST);
             esp_http_client_set_header(client, "Content-Type", "application/json");
+            esp_http_client_set_header(client, "X-API-KEY", "cpe-1704-tks");
+            DLT(DLT_APPLICATION, printf("POST");)
+            DLT(DLT_APPLICATION, printf("URL:%s", server_url);)
+            DLT(DLT_APPLICATION, printf("Payload: %s", payload);)
             if (esp_http_client_open(client, strlen(payload)) != ESP_OK) 
             {
                 DLT(DLT_CRITICAL, printf("Failed to open HTTP connection: %s", server_url);)
@@ -634,21 +645,25 @@ void http_native_request
                 } 
                 else
                 {
+                    DLT(DLT_APPLICATION, for(i=0; i != payload_length; i++){payload[i] = 0;})
                     if (esp_http_client_read_response(client, payload, payload_length) >= 0)
                     {
-                        DLT(DLT_DIAG, printf("HTTP POST Status = %d, content_length = %"PRId64,
-                        esp_http_client_get_status_code(client),
-                        esp_http_client_get_content_length(client));)
-                        DLT(DLT_DIAG, printf("\r\npayload:%s\r\n", payload);)
+                        if ( esp_http_client_get_status_code(client) != 200 )
+                        {
+                            DLT(DLT_CRITICAL, printf("HTTP POST Status = %d, content_length = %"PRId64,
+                            esp_http_client_get_status_code(client),
+                            esp_http_client_get_content_length(client));)
+                            DLT(DLT_APPLICATION, printf("\r\npayload:%s\r\n", payload);)
+                        }
                     } 
-                else
-                {
-                    DLT(DLT_DIAG, printf("Failed to read response");)
+                    else
+                    {
+                        DLT(DLT_DIAG, printf("Failed to read response");)
+                    }
                 }
             }
-    }
-    esp_http_client_cleanup(client);
-    break;
+        esp_http_client_cleanup(client);
+        break;
     }
 #endif
 /*
@@ -659,6 +674,7 @@ void http_native_request
 #endif
 
 #if CONFIG_MBEDTLS_CERTIFICATE_BUNDLE
+#if (BUILD_HTTP)
 /*----------------------------------------------------------------
  * 
  * @function: http_partial_download
@@ -701,6 +717,7 @@ void http_partial_download
     esp_http_client_cleanup(client);
 }
 #endif // CONFIG_MBEDTLS_CERTIFICATE_BUNDLE
+#endif 
 
 #if(0)
 static void http_test_task(void *pvParameters)

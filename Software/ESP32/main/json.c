@@ -132,7 +132,7 @@ const json_message_t JSON[] = {
   {EO, "\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT32,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
   {ES, "\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT32,  0,                NONVOL_PAPER_TIME,     500 },    // Set the paper advance time
   {EC, "\"PCNT_LATENCY\":",   &json_pcnt_latency,                0,                IS_INT32,  0,                NONVOL_PCNT_LATENCY,    33 },    // Interrupt latency for PCNT adjustment
-  {EO, "\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
+  {EO, "\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,       0 },    // Set the power saver time
   {EN, "\"REMOTE_ACTIVE\":",  &json_remote_active,               0,                IS_INT32,  0,                NONVOL_REMOTE_ACTIVE,    0 },    // Send score to a remote server
   {EN, "\"REMOTE_URL\":",     (int*)&json_remote_url,            0,                IS_TEXT+URL_SIZE, 0,         NONVOL_REMOTE_URL,       0 },    // Reserve space for remote URL
   {EO, "\"RAPID_COUNT\":",    &json_rapid_count,                 0,                IS_INT32,  0,                0,                       0 },    // Number of shots expected in series
@@ -140,7 +140,7 @@ const json_message_t JSON[] = {
   {EO, "\"RAPID_TIME\":",     &json_rapid_time,                  0,                IS_INT32,  0,                0,                       0 },    // Set the duration of the rapid fire event and start
   {EO, "\"RAPID_WAIT\":",     &json_rapid_wait,                  0,                IS_INT32,  0,                0,                       0 },    // Delay applied between enable and ready
   {EO, "\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT32,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
-  {EC, "\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  0,                NONVOL_SENSOR_DIA,  230000 },    // Generate the sensor postion array
+  {EC, "\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  0,                NONVOL_SENSOR_DIA,  232000 },    // Generate the sensor postion array
   {ES, "\"SN\":",             &json_serial_number,               0,                IS_FIXED,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
   {EO, "\"STEP_COUNT\":",     &json_step_count,                  0,                IS_INT32,  0,                NONVOL_STEP_COUNT,       0 },    // Set the duration of the stepper motor ON time
   {EO, "\"STEP_TIME\":",      &json_step_time,                   0,                IS_INT32,  0,                NONVOL_STEP_TIME,        0 },    // Set the number of times stepper motor is stepped
@@ -512,11 +512,11 @@ void show_echo
 /*
  * Loop through all of the JSON tokens
  */
-printf("Level: %d", level);
+
   i=0;
   while ( JSON[i].token != 0 )                 // Still more to go?  
   {
-    if ( ((JSON[i].level == level) || (level == 0))
+    if ( ((JSON[i].level & level) || (level == 0))
       && ((JSON[i].value != NULL) || (JSON[i].d_value != NULL)) )              // It has a value ?
     {
       switch ( JSON[i].convert & IS_MASK )              // Display based on it's type
@@ -586,23 +586,20 @@ printf("Level: %d", level);
 
   if ( json_wifi_ssid[0] == 0 )                       // The SSID is undefined
   {
-    SEND(sprintf(_xs, "\"WiFi_MODE\":        \"Access Point\",\n\r");)    // Print out the IP address
+    SEND(sprintf(_xs, "\"WiFi_MODE\":         \"Access Point: FET-%s\",\n\r", names[json_name_id]);)    // Print out the IP address
   }
   else
   {
-    SEND(sprintf(_xs, "\"WiFi_MODE\":     \"Station connected to SSID %s\",\n\r", (char*)&json_wifi_ssid);) 
+    SEND(sprintf(_xs, "\"WiFi_MODE\":         \"Station connected to SSID %s\",\n\r", (char*)&json_wifi_ssid);) 
   }
 
-  if ( json_token == TOKEN_NONE )
-  {
-    SEND(sprintf(_xs, "\"TOKEN_RING\":     %d, \n\r", my_ring);)           // My token ring address
-    SEND(sprintf(_xs, "\"TOKEN_OWNER\":    %d, \n\r", whos_ring);)         // Who owns the token ring
-  }
+  SEND(sprintf(_xs, "\"TOKEN_RING\":        %d, \n\r", my_ring);)           // My token ring address
+  SEND(sprintf(_xs, "\"TOKEN_OWNER\":       %d, \n\r", whos_ring);)         // Who owns the token ring
   
-  SEND(sprintf(_xs, "\"VERSION\":          %s, \n\r", SOFTWARE_VERSION);)        // Current software version
+  SEND(sprintf(_xs, "\"VERSION\":           %s, \n\r", SOFTWARE_VERSION);)        // Current software version
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
-  SEND(sprintf(_xs, "\"PS_VERSION\":       %d, \n\r", j);)                    // Current persistent storage version
-  SEND(sprintf(_xs, "\"BD_REV\":           %4.2f \n\r", (float)(revision())/100.0);)                                             // Current board versoin
+  SEND(sprintf(_xs, "\"PS_VERSION\":        %d, \n\r", j);)                    // Current persistent storage version
+  SEND(sprintf(_xs, "\"BD_REV\":            %4.2f \n\r", (float)(revision())/100.0);)                                             // Current board versoin
   SEND(sprintf(_xs, "}\r\n");) 
   
 /*

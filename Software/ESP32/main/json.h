@@ -50,13 +50,13 @@ extern const json_message_t JSON[];
 #define URL_SIZE      33        // Reserve 32+1 bytes for remote URL
 #define SMALL_STRING  63        // Reserver 64 bytes for a short string
 
-#define EA             0        // Echo everything
+#define EA          0xff        // Echo everything
 #define EX             0        // Echo Never
-#define ES             1        // Echo the things we most care about
-#define EN             2        // Echo network settings 
-#define EC             3        // Echo the things that affect calculations 
-#define EO             4        // Echo operational settings
-#define EI             9        // Echo information settings 
+#define ES          0x01        // Echo the things we most care about
+#define EN          0x03        // Echo network settings (included in standard)
+#define EC          0x04        // Echo the things that affect calculations 
+#define EO          0x08        // Echo operational settings
+#define EI          0x80        // Echo information settings 
 
 /*
  * Global JSON variables and settings
