@@ -125,9 +125,11 @@ extern int    json_mfs_hold_a;    // Hold A
 extern int    json_mfs_hold_d;    // Hold D
 extern int    json_mfs_hold_c;    // Hold C
 extern int    json_mfs_select_cd; // Select C and D operation
+#if ( BUIILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE)
 extern char   json_remote_url[];  // Text string of remote URL ex "http://google.com"
 extern int    json_remote_active; // Set to 1 if the remote server is used to display score 
 extern char   json_athlete[SMALL_STRING];    // Shooter name
 extern char   json_event[SMALL_STRING];       // Shooting event
 extern char   json_target_name[SMALL_STRING]; // Target name
+#endif
 #endif

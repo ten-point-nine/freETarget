@@ -48,6 +48,7 @@ typedef struct status_struct {
 status_struct_t status[3] = {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
 int paper_state;                    // Drive is ON or OFF
 volatile unsigned long paper_time;  // How long the paper will be on for
+volatile unsigned long step_count;  // How many step counts do we need?
 
 /*-----------------------------------------------------
  * 
@@ -463,31 +464,83 @@ void read_timers
  * Step Time = 0
  * Paper Time = Motor ON time
  * 
+ * Stepper Motor
+ * Step Count = Number of pulses to send
+ * Step Time =  Period on/off of each pulse (50% duty cycle)
+ * Paper Time = 0
+ * 
+ * {"PAPER_TIME":500, "STEP_COUNT": 0, {"STEP_TIME":0}
+ * {"PAPER_TIME":0, "STEP_COUNT": 100, {"STEP_TIME":20}
+ * 
  *-----------------------------------------------------*/
 void drive_paper(void)
 {
   DLT(DLT_DIAG, printf("Advancing paper: %dms", json_paper_time);)
 
 /*
- * Drive the motor on and off for the number of cycles
- * at duration
+ * See what kind of drive we are using
  */
-  paper_on_off(true, ONE_SECOND * json_paper_time / 1000);                       // Motor OFF
+  if ( json_paper_time != 0 )       // DC motor - Turn the output on once
+  {
+    paper_on_off(true, ONE_SECOND * json_paper_time / 1000);         // Motor OFF
+  }
+  else if ( json_step_count != 0 )  // Stepper motor - Toggle the output
+  {
+    step_count = json_step_count * 2;// Two states per cycle
+    stepper_off_toggle(false, ONE_SECOND * json_step_time / 1000);  // Motor OFF
+  }
 
  /*
   * All done, return
   */
   return;
  }
-
+/*-----------------------------------------------------
+ * 
+ * @function: drive_paper_tick
+ * 
+ * @brief:    Drive the DC or Stepper motor drive
+ * 
+ * @return:  None
+ * 
+ *-----------------------------------------------------
+ *
+ * The function is called every 10 ms to update the
+ * controls to the DC or stepper motor depending on 
+ * what has been selected in the configuration
+ * 
+ *-----------------------------------------------------*/
 void drive_paper_tick(void)
 {
-  if ( (paper_time == 0) && (is_paper_on() != 0) )
+
+/*
+ * Drive the DC motor
+ */
+  if ( json_paper_time != 0 )
   {
-    paper_on_off(false, 0);                      // Motor OFF
-    DLT(DLT_DIAG, printf("Done");)
+    if ( (paper_time == 0) && (is_paper_on() != 0) )
+    {
+      paper_on_off(false, 0);                      // Motor OFF
+      DLT(DLT_DIAG, printf("Done");)
+    }
   }
   
+/*
+ * Drive the stepper motor
+ */
+  if ( json_step_count != 0 )   // Stepper enabled
+  {
+    if ( step_count >= 1)       // In motion
+    {
+      stepper_off_toggle(true, ONE_SECOND * json_step_time / 1000); // Motor toggle
+      step_count--;
+    }
+    else                        // Motion finished
+    {
+      stepper_off_toggle(false, 0); // Motor OFF
+    }
+  }
+
  /*
   * All done, return
   */
@@ -664,6 +717,68 @@ void rapid_green
   return;
 }
 
+/*----------------------------------------------------------------
+ * 
+ * @function: stepper_off_toggle()
+ * 
+ * @brief: Set the stepper motor state
+ * 
+ * @return: Nothing
+ * 
+ *----------------------------------------------------------------
+ *
+ *  If MFS2 has enabled the rapid fire lights then allow the 
+ *  value to be set
+ * 
+ *  IMPORTANT
+ *   
+ *  LEDs are driven ON by an active low signal
+ *
+ *--------------------------------------------------------------*/
+
+void stepper_off_toggle
+(
+  unsigned int  action,         // action, off (0) or toggle (1)
+  unsigned long duration        // Time to next state
+) 
+{
+  static int current_state;     // Memory of the output
+
+  if ( json_mfs_hold_c == STEPPER_DRIVE )
+  {
+      if ( action == false )
+      {
+        current_state = 0;
+        gpio_set_level(DIP_C, 0);
+        timer_new(paper_time, 0);
+      }
+      else
+      {
+        current_state = ! current_state;
+        gpio_set_level(DIP_C, current_state);
+        timer_new(paper_time, ONE_SECOND * json_step_time / 1000);
+      }
+
+  }
+
+  if ( json_mfs_hold_d == STEPPER_DRIVE )
+  {
+      if ( action == false )
+      {
+        current_state = 0;
+        gpio_set_level(DIP_D, 0);
+        timer_new(paper_time, 0);
+      }
+      else
+      {
+        current_state = ! current_state;
+        gpio_set_level(DIP_D, current_state);
+        timer_new(paper_time, ONE_SECOND * json_step_time / 1000);
+      }
+  }
+
+  return;
+}
 
 /*-----------------------------------------------------
  * 

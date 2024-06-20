@@ -94,11 +94,13 @@ int     json_mfs_hold_a;            // Hold A
 int     json_mfs_hold_d;            // Hold D
 int     json_mfs_hold_c;            // Hold C
 int     json_mfs_select_cd;         // Select C and D operation
+#if ( BUIILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE)
 char    json_remote_url[URL_SIZE];  // URL of calling server
 int     json_remote_active;         // Set to 1 to send score to a remote server
 char    json_athlete[SMALL_STRING];// Shooter name
 char    json_event[SMALL_STRING];   // Shooting event
 char    json_target_name[SMALL_STRING]; // Target name
+#endif 
 
 static void show_test(int v);       // Execute the self test once
 static void show_names(int v);
@@ -133,8 +135,10 @@ const json_message_t JSON[] = {
   {ES, "\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT32,  0,                NONVOL_PAPER_TIME,     500 },    // Set the paper advance time
   {EC, "\"PCNT_LATENCY\":",   &json_pcnt_latency,                0,                IS_INT32,  0,                NONVOL_PCNT_LATENCY,    33 },    // Interrupt latency for PCNT adjustment
   {EO, "\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,       0 },    // Set the power saver time
+#if ( BUIILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE)
   {EN, "\"REMOTE_ACTIVE\":",  &json_remote_active,               0,                IS_INT32,  0,                NONVOL_REMOTE_ACTIVE,    0 },    // Send score to a remote server
   {EN, "\"REMOTE_URL\":",     (int*)&json_remote_url,            0,                IS_TEXT+URL_SIZE, 0,         NONVOL_REMOTE_URL,       0 },    // Reserve space for remote URL
+#endif 
   {EO, "\"RAPID_COUNT\":",    &json_rapid_count,                 0,                IS_INT32,  0,                0,                       0 },    // Number of shots expected in series
   {EO, "\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT32,  0,                0,                       0 },    // Enable the rapid fire fieature
   {EO, "\"RAPID_TIME\":",     &json_rapid_time,                  0,                IS_INT32,  0,                0,                       0 },    // Set the duration of the rapid fire event and start
@@ -170,9 +174,11 @@ const json_message_t JSON[] = {
   {EX, "\"SOUTH_Y\":",        &json_south_y,                     0,                IS_INT32,  0,                NONVOL_SOUTH_Y,          0 },    //
   {EX, "\"WEST_X\":",         &json_west_x,                      0,                IS_INT32,  0,                NONVOL_WEST_X,           0 },    //
   {EX, "\"WEST_Y\":",         &json_west_y,                      0,                IS_INT32,  0,                NONVOL_WEST_Y,           0 },    //
+#if ( BUIILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE)
   {EN, "\"ATHLETE\":",        &json_athlete,                     0,                IS_TEXT+SMALL_STRING,  0,    0,                       0 },    // Athelete name from PC client
   {EN, "\"EVENT\":",          &json_event,                       0,                IS_TEXT+SMALL_STRING,  0,    0,                       0 },    // Event being shot
   {EN, "\"TARGET_NAME\":",    &json_target_name,                 0,                IS_TEXT+SMALL_STRING,  0,    0,                       0 },    // Name of target being shot
+#endif
   {0,                     0,                                 0,                0,         0,                0,                       0 },    //
 
 };

@@ -556,6 +556,7 @@ void send_score
 /*
  * Send to the server if needed
  */
+#if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE )    // Include only if remote server is needed
   if ( json_remote_active != 0 )
   {
     if ( (json_athlete[0] != 0) && (json_event[0] != 0) && (json_target_name[0] != 0) )
@@ -570,6 +571,7 @@ void send_score
       DLT(DLT_INFO, printf("Missing arguement for remote payload"););
     }
   }
+#endif
 
 /*
  * All done, return

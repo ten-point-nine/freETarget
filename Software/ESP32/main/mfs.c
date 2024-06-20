@@ -52,19 +52,19 @@ static void mfs_on_off(void);
  */
 static unsigned int switch_state;               // What switches are pressed
 mfs_action_t mfs_action[] = {
-  { POWER_TAP,   mfs_power_tap,  "WAKE UP"        },// Take the target out of sleep
-  { PAPER_FEED,  mfs_paper_feed, "PAPER FEED"     },// Feed paper until button released
-  { LED_ADJUST,  mfs_led_adjust, "LED_ADJUST"     },// Adjust LED brighness
-  { PAPER_SHOT,  mfs_paper_shot, "PAPER SHOT"     },// Advance paper the distance of one shot 
-  { PC_TEST,     mfs_pc_test,    "PC TEST"        },// Send a test shot to the PC
-  { ON_OFF,      mfs_on_off,     "TARGET ON OFF"  },// Turn the target on or off
-  { NO_ACTION,   NULL,           "NO ACTION"      },// No action on C & D inputs
-  { TARGET_TYPE, NULL,           "TARGET TYPE"    },// Put the target type into the send score
-  { RAPID_RED,   NULL,           "RAPID RED"      },// The output is used to drive the RED rapid fire LED
-  { RAPID_GREEN, NULL,           "RAPID_GREEN"    },// The output is used to drive the GREEN rapid fire LED
-  { RAPID_LOW,   NULL,           "RAPID LOW"      },// The output is used to drive the GREEN rapid fire LED
-  { RAPID_HIGH,  NULL,           "RAPID HIGH"     },// The output is used to drive the GREEN rapid fire LED
-  { RAPID_ADDR,  NULL,           "RAPID ADDR"     },// The output is used to drive the GREEN rapid fire LED
+  { POWER_TAP,      mfs_power_tap,  "WAKE UP"        },// Take the target out of sleep
+  { PAPER_FEED,     mfs_paper_feed, "PAPER FEED"     },// Feed paper until button released
+  { LED_ADJUST,     mfs_led_adjust, "LED_ADJUST"     },// Adjust LED brighness
+  { PAPER_SHOT,     mfs_paper_shot, "PAPER SHOT"     },// Advance paper the distance of one shot 
+  { PC_TEST,        mfs_pc_test,    "PC TEST"        },// Send a test shot to the PC
+  { ON_OFF,         mfs_on_off,     "TARGET ON OFF"  },// Turn the target on or off
+  { NO_ACTION,      NULL,           "NO ACTION"      },// No action on C & D inputs
+  { TARGET_TYPE,    NULL,           "TARGET TYPE"    },// Put the target type into the send score
+  { RAPID_RED,      NULL,           "RAPID RED"      },// The output is used to drive the RED rapid fire LED
+  { RAPID_GREEN,    NULL,           "RAPID_GREEN"    },// The output is used to drive the GREEN rapid fire LED
+  { RAPID_LOW,      NULL,           "RAPID LOW"      },// The output is active low
+  { RAPID_HIGH,     NULL,           "RAPID HIGH"     },// The output is active high
+  { STEPPER_DRIVE,  NULL,           "STEPPER_DRIVE"  },// The output is used to drive stepper motor
   { 0, 0, 0 }
 };
 
@@ -88,16 +88,19 @@ mfs_action_t mfs_action[] = {
  * 
  * @function: multifunction_init
  * 
- * @brief:    Use the multifunction switches during starup
+ * @brief:    Setup the MFS
  * 
  * @return:   None
  * 
  *-----------------------------------------------------
  * 
- * Read the jumper header and modify the initialization
+ * Program the GPIO outputs depending on the setup
+ * entered into MFS2
+ * 
+ * Then continue to look at DIP A and DIP B to perform
+ * any initialization functions
  * 
  *-----------------------------------------------------*/
-
  void multifunction_init(void)
  {
   unsigned int dip;

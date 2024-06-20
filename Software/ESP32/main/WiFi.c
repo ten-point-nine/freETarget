@@ -776,6 +776,7 @@ void WiFi_loopback_task(void* parameters)
  */
 }
 
+#if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE )
 /*****************************************************************************
  *
  * @function: WiFi_DNS_test
@@ -837,6 +838,7 @@ void WiFi_DNS_test(void)
     
     return;
 }
+#endif 
 
 /*****************************************************************************
  *
@@ -856,6 +858,7 @@ void WiFi_my_IP_address
     return;
 }
 
+#if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE )
 void WiFi_remote_IP_address
 (
     char* s             // Where to return the string
@@ -864,6 +867,7 @@ void WiFi_remote_IP_address
     sprintf(s, "%d.%d.%d.%d", TO_IP(url_ip_address.u_addr.ip4.addr));
     return;
 }
+#endif 
 
 /*****************************************************************************
  *
@@ -965,10 +969,12 @@ void WiFi_setup(void)
         printf(" with password: %s", json_wifi_pwd);
     }
 
+#if ( BUIILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE)
     if ( json_remote_url[0] != 0 )
     {
         printf("\r\nTarget connects to remote server: %s", json_remote_url);
     }
+#endif
 
 /*
  * Enter the new settings
@@ -977,8 +983,10 @@ void WiFi_setup(void)
     printf("\r\n1 - SSID");
     printf("\r\n2 - password");
     printf("\r\n3 - channel");
+#if ( BUIILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE)
     printf("\r\n4 - enable remote server");
     printf("\r\n5 - remote server URL");
+#endif
     printf("\r\n:");
 
     while (1)
@@ -1026,7 +1034,7 @@ void WiFi_setup(void)
                         nvs_set_i32(my_handle, NONVOL_WIFI_CHANNEL, json_wifi_channel);
                     }
                     break;
-
+#if ( BUIILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE)
                 case '4':           // Enable remote URL
                     printf("\r\nEnable remote URL :");
                     if ( get_string(_xs, 2) )
@@ -1044,7 +1052,7 @@ void WiFi_setup(void)
                         nvs_set_str(my_handle, NONVOL_REMOTE_URL, json_remote_url);
                     }
                     break;
-
+#endif
                 default:
                     break;
             }

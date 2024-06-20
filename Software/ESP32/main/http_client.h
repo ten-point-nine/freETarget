@@ -20,11 +20,11 @@
  *  Definitions
  */
 #define BUILD_HTTP      0     // Build HTTP transfers
-#define BUILD_SIMPLE    1     // Build for simple HTTP transfers
+#define BUILD_SIMPLE    0     // Build for simple HTTP transfers
 #define BUILD_HTTPS     0     // BUild HTTPS transfers
 
 #define INCLUDE_GET     0     // Include GET methods
-#define INCLUDE_POST    1     // Include POST methods
+#define INCLUDE_POST    0     // Include POST methods
 #define INCLUDE_PUT     0     // Include PUT methods
 #define INCLUDE_PATCH   0     // Include PATCH methods
 #define INCLUDE_DELETE  0     // Include DELETE methods
@@ -49,11 +49,13 @@
    To embed it in the app binary, the PEM file is named
    in the component.mk COMPONENT_EMBED_TXTFILES variable.
 */
+#if ( BUILD_HTTPS )
 extern const char howsmyssl_com_root_cert_pem_start[];
 extern const char howsmyssl_com_root_cert_pem_end[];
 
 extern const char postman_root_cert_pem_start[];
 extern const char postman_root_cert_pem_end[];
+#endif 
 
 void http_client_init(void);                                    // Initialize the HTTP/HTTPS stack
 

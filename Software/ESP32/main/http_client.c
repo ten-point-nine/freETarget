@@ -53,11 +53,13 @@
    To embed it in the app binary, the PEM file is named
    in the component.mk COMPONENT_EMBED_TXTFILES variable.
 */
+#if ( BUILD_HTTPS )
 const char howsmyssl_com_root_cert_pem_start[] asm("_binary_howsmyssl_com_root_cert_pem_start");
 const char howsmyssl_com_root_cert_pem_end[]   asm("_binary_howsmyssl_com_root_cert_pem_end");
 
 const char postman_root_cert_pem_start[] asm("_binary_postman_root_cert_pem_start");
 const char postman_root_cert_pem_end[]   asm("_binary_postman_root_cert_pem_end");
+#endif 
 
 /*----------------------------------------------------------------
  * 

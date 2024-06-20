@@ -232,10 +232,11 @@ void factory_nonvol
    i++;
   }
 
+#if ( BUIILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE)
   strcpy(json_remote_url, REMOTE_URL);
   nvs_set_str(my_handle, NONVOL_REMOTE_URL, json_remote_url);
   nvs_set_i32(my_handle, NONVOL_REMOTE_ACTIVE, 0);
-
+#endif 
 /*    
  *     Test the board only if it is a factor init
  */
@@ -290,8 +291,10 @@ void factory_nonvol
 /*
  * Initialization complete.  Mark the init done
  */
+#if ( BUIILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE)
   strcpy(json_remote_url, REMOTE_URL);
   nvs_set_str(my_handle, NONVOL_REMOTE_URL,    json_remote_url);
+#endif
   nvs_set_i32(my_handle, NONVOL_PS_VERSION, PS_VERSION); // Write in the version number
   nvs_set_i32(my_handle, NONVOL_INIT, INIT_DONE);
   if ( nvs_commit(my_handle) )
@@ -436,6 +439,7 @@ void update_nonvol
     json_mfs_select_cd = 0;
     nvs_set_i32(my_handle, NONVOL_MFS_SELECT_CD, json_mfs_select_cd);
 
+#if ( BUIILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE)
     strcpy(json_remote_url, REMOTE_URL);
     nvs_set_str(my_handle, NONVOL_REMOTE_URL,    json_remote_url);
     
@@ -443,7 +447,7 @@ void update_nonvol
     nvs_set_str(my_handle, NONVOL_REMOTE_URL, json_remote_url);
     
     nvs_set_i32(my_handle, NONVOL_REMOTE_ACTIVE, 0);
-
+#endif
     current_version = 1;
   }
 

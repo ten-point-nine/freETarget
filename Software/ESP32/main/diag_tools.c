@@ -315,12 +315,14 @@ void self_test
       WiFi_loopback_test();
       break; 
 
+#if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE )
 /*
  *  DNS lookup test
  */
     case T_WIFI_DNS_LOOKUP:
       WiFi_DNS_test();
       break;
+#endif 
 
 /*
  *  Cycle the 10MHz clock input

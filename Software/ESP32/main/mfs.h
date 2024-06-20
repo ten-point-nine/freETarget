@@ -61,12 +61,13 @@ mfs_action_t* mfs_find(unsigned int action);              // Find the MFS entry 
 
 #define NO_ACTION     9                   // DIP usual function
 #define TARGET_TYPE  10                   // Input outputs target type with score
-#define MFS2_NU_2    11
-#define MFS2_NU_3    12
-#define MFS2_DIP     13                   // 0-4 are DIPs
-#define RAPID_RED    14                   // Rapid Fire Red Output
-#define RAPID_GREEN  15                   // Rapid Fire Green Output
-#define RAPID_LOW    16                   // Select Rapid Fire LED type
-#define RAPID_HIGH   16                   // Select Rapid Fire LED type
-#define RAPID_ADDR   17                   // Select Rapid Fire LED type
+#define MFS2_NU_2    12
+#define MFS2_NU_3    14
+#define MFS2_DIP     16                   // C and D are DIPs
+#define RAPID_RED    18                   // Rapid Fire Red Output
+#define RAPID_GREEN  20                   // Rapid Fire Green Output
+#define RAPID_LOW    22                   // Select Rapid Fire LED type
+#define RAPID_HIGH   24                   // Select Rapid Fire LED type
+#define STEPPER_DRIVE 26                  // The output drives a stepper motor
+
 #endif

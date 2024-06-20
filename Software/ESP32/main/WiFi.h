@@ -19,8 +19,10 @@ void WiFi_loopback_test(void);                // Loopback the TCPIP channel
 void WiFi_my_IP_address(char* s);             // Return the current IP address 
 void WiFi_remote_IP_address(char* s);         // Return the current gateway address 
 void WiFi_MAC_address(char* mac);             // Read the MAC address 
+#if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE )
 bool WiFi_get_remote_IP(char* url);           // Get the IP address of the remote URL 
 void WiFi_DNS_test(void);                     // Exercise the DNS lookup
+#endif
 void WiFi_setup(void);                        // Configure the WiFi operation
 
 void tcpip_accept_poll(void* parameters);     // Wait for a socket connection

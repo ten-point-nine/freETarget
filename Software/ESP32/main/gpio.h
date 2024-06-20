@@ -34,6 +34,7 @@ void paper_on_off(bool on, unsigned long duration);       // Turn the motor on o
 int is_paper_on();                                        // Return the current running state
 void rapid_green(unsigned int state);                     // Drive the GREEN light
 void rapid_red(unsigned int state);                       // Drive the RED light
+void stepper_off_toggle(unsigned int state, unsigned long duration); // New state for the Stepper motor output
 
 void status_LED_init(unsigned int gpio_number);           // Initialize the RMT driver 
 void status_LED_test(void);                               // Cycle the status LEDs
