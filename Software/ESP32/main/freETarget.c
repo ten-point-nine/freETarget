@@ -28,7 +28,7 @@
 #include "pcnt.h"
 #include "WiFi.h"
 #include "diag_tools.h"
-
+#include "mfs.h"
 /*
  *  Function Prototypes
  */
@@ -92,7 +92,7 @@ void freeETarget_init(void)
   run_state = IN_STARTUP;
 
 /*
- *  Setup the serial port
+ *  Setup the hardware
  */
   serial_io_init();
   POST_version();                         // Show the version string on all ports
@@ -102,20 +102,7 @@ void freeETarget_init(void)
   timer_delay(ONE_SECOND);
   WiFi_init();
   set_VREF();
-
-  if ( DIP_SW_D )
-  {
-    while(1)
-    {
-      zapple(0);
-    }
-  }
-
-  if ( DIP_SW_C )
-  {
-    DLT(DLT_CRITICAL, printf("Setting trace to 255");)
-    is_trace = 255;
-  }
+  multifunction_init();
 
 /*
  *  Set up the long running timers

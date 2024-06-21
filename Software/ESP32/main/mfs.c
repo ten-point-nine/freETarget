@@ -25,13 +25,13 @@
  *  Definitions
  */
 #define LONG_PRESS (ONE_SECOND)
-#define TAP_A_PENDING 0x01
-#define TAP_B_PENDING 0x02
-#define TAP_MASK_A    0x04
-#define TAP_MASK_B    0x08
-#define HOLD_MASK_A   0x10
-#define HOLD_MASK_B   0x20
-#define HOLD_MASK_AB  (HOLD_MASK_A | HOLD_MASK_B)
+#define TAP_1_PENDING 0x01
+#define TAP_2_PENDING 0x02
+#define TAP_MASK_1    0x04
+#define TAP_MASK_2    0x08
+#define HOLD_MASK_1   0x10
+#define HOLD_MASK_2   0x20
+#define HOLD_MASK_12  (HOLD_MASK_1 | HOLD_MASK_2)
 #define SWITCH_VALID  0x80
 
 /*
@@ -104,18 +104,19 @@ mfs_action_t mfs_action[] = {
  void multifunction_init(void)
  {
   unsigned int dip;
-
+  DLT(DLT_CRITICAL, printf("Multifunction_init()");)
 /*
  * Check to see if the DIP switch has been overwritten
  */
-  if ( HOLD_C(json_multifunction2) > MFS2_DIP ) 
+  if ( json_mfs_hold_c >= MFS2_DIP ) 
   {
+printf("turn off C\r\n");
     gpio_set_direction(HOLD_C_GPIO,  GPIO_MODE_OUTPUT);
     gpio_set_pull_mode(HOLD_C_GPIO,  GPIO_PULLUP_PULLDOWN);
     gpio_set_level(HOLD_C_GPIO, 0);
   }
 
-  if ( HOLD_D(json_multifunction2) > MFS2_DIP) 
+  if ( json_mfs_hold_d >= MFS2_DIP) 
   {
     gpio_set_direction(HOLD_D_GPIO,  GPIO_MODE_OUTPUT);
     gpio_set_pull_mode(HOLD_D_GPIO,  GPIO_PULLUP_PULLDOWN);
@@ -127,11 +128,6 @@ mfs_action_t mfs_action[] = {
  * Continue to read the DIP switch
  */
   dip = read_DIP();                     // Read the jumper header
-
-  if ( dip == 0 )                       // No jumpers in place
-  { 
-    return;                             // Carry On
-  }
 
   if ( DIP_SW_A && DIP_SW_B )           // Both switches closed?
   {
@@ -195,23 +191,23 @@ void multifunction_switch_tick(void)
     switch_A_count++;
     if ( switch_A_count < LONG_PRESS)
     {
-      switch_state |= TAP_A_PENDING;
+      switch_state |= TAP_1_PENDING;
       set_status_LED(LED_MFS_a);
     }
     else
     {
-      switch_state &= ~TAP_A_PENDING;
-      switch_state |= HOLD_MASK_A | SWITCH_VALID;
+      switch_state &= ~TAP_1_PENDING;
+      switch_state |= HOLD_MASK_1 | SWITCH_VALID;
       switch_A_count = LONG_PRESS;
       set_status_LED(LED_MFS_A);
     }
   }
   else  // Released the switch,  See if it was a tap
   {
-    if ( switch_state & TAP_A_PENDING )
+    if ( switch_state & TAP_1_PENDING )
     {
-      switch_state |= TAP_MASK_A | SWITCH_VALID;
-      switch_state &= ~TAP_A_PENDING;
+      switch_state |= TAP_MASK_1 | SWITCH_VALID;
+      switch_state &= ~TAP_1_PENDING;
     }
     switch_A_count = 0;
   }
@@ -221,23 +217,23 @@ void multifunction_switch_tick(void)
     switch_B_count++;
     if ( switch_B_count < LONG_PRESS)
     {
-      switch_state |= TAP_B_PENDING;
+      switch_state |= TAP_2_PENDING;
       set_status_LED(LED_MFS_b);
     }
     else
     {
-      switch_state &= ~TAP_B_PENDING;
-      switch_state |= HOLD_MASK_B | SWITCH_VALID;
+      switch_state &= ~TAP_2_PENDING;
+      switch_state |= HOLD_MASK_2 | SWITCH_VALID;
       switch_B_count = LONG_PRESS;
       set_status_LED(LED_MFS_B);
     }
   }
   else    // Released the switch, seeif it was a tap
   {
-    if ( switch_state & TAP_B_PENDING )
+    if ( switch_state & TAP_2_PENDING )
     {
-      switch_state |= TAP_MASK_B | SWITCH_VALID;
-      switch_state &= ~TAP_B_PENDING;
+      switch_state |= TAP_MASK_2 | SWITCH_VALID;
+      switch_state &= ~TAP_2_PENDING;
     }
     switch_B_count = 0;
   }
@@ -246,11 +242,11 @@ void multifunction_switch_tick(void)
  *  Look for the special case where there is HOLD_12, but 
  *  there is some kind of bounce
  */
-  if ( (switch_state & (HOLD_MASK_A | HOLD_MASK_B))
-        && (switch_state & (TAP_MASK_A | TAP_MASK_B )) )
+  if ( (switch_state & (HOLD_MASK_1 | HOLD_MASK_2))
+        && (switch_state & (TAP_MASK_1 | TAP_MASK_2 )) )
   {
-      switch_state |= (HOLD_MASK_A | HOLD_MASK_B);
-      switch_state &= ~(TAP_MASK_A | TAP_MASK_B);
+      switch_state |= (HOLD_MASK_1 | HOLD_MASK_2);
+      switch_state &= ~(TAP_MASK_1 | TAP_MASK_2);
   }
 
 /*
@@ -303,24 +299,24 @@ void multifunction_switch(void)
  */
   switch (action)
   {
-    case TAP_MASK_A:
-      sw_state(json_mfs_tap_a);
+    case TAP_MASK_1:
+      sw_state(json_mfs_tap_1);
       break;
 
-    case TAP_MASK_B:
-      sw_state(json_mfs_tap_b);
+    case TAP_MASK_2:
+      sw_state(json_mfs_tap_2);
       break;
 
-    case HOLD_MASK_A:
-      sw_state(json_mfs_hold_a);
+    case HOLD_MASK_1:
+      sw_state(json_mfs_hold_1);
       break;
 
-    case HOLD_MASK_B:
-      sw_state(json_mfs_hold_b);
+    case HOLD_MASK_2:
+      sw_state(json_mfs_hold_2);
       break;
 
-    case HOLD_MASK_AB:
-      sw_state(json_mfs_hold_ab);
+    case HOLD_MASK_12:
+      sw_state(json_mfs_hold_12);
       break;
 
     default:

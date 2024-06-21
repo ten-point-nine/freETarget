@@ -106,11 +106,11 @@ extern int    json_multifunction2;// Multifunction Switch 2
 extern double json_vref_lo;       // Sensor Voltage Reference Low (V)
 extern double json_vref_hi;       // Sensor Voltage Reference High (V)
 extern int    json_pcnt_latency;  // pcnt interrupt latancy
-extern int    json_mfs_hold_ab;   // Hold A and B
-extern int    json_mfs_tap_b;     // Tap B
-extern int    json_mfs_tap_a;     // Tap A
-extern int    json_mfs_hold_b;    // Hold B
-extern int    json_mfs_hold_a;    // Hold A
+extern int    json_mfs_hold_12;   // Hold A and B
+extern int    json_mfs_tap_2;     // Tap B
+extern int    json_mfs_tap_1;     // Tap A
+extern int    json_mfs_hold_2;    // Hold B
+extern int    json_mfs_hold_1;    // Hold A
 extern int    json_mfs_hold_d;    // Hold D
 extern int    json_mfs_hold_c;    // Hold C
 extern int    json_mfs_select_cd; // Select C and D operation

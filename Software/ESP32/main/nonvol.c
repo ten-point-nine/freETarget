@@ -17,6 +17,8 @@
 #include "json.h"
 #include "serial_io.h"
 #include "nonvol.h"
+#include "mfs.h"
+
 
 /*
  *  Local variables
@@ -406,20 +408,20 @@ void update_nonvol
   {  
     DLT(DLT_CRITICAL, printf("Updating PS0 to PS1");)
 
-    json_mfs_hold_ab = HOLD_AB(json_multifunction);
-    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_AB,   json_mfs_hold_ab);
+    json_mfs_hold_12 = HOLD_12(json_multifunction);
+    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_AB,   json_mfs_hold_12);
 
-    json_mfs_tap_a = TAP_A(json_multifunction);
-    nvs_set_i32(my_handle, NONVOL_MFS_TAP_A,     json_mfs_tap_a);
+    json_mfs_tap_1 = TAP_1(json_multifunction);
+    nvs_set_i32(my_handle, NONVOL_MFS_TAP_A,     json_mfs_tap_1);
 
-    json_mfs_tap_b = TAP_B(json_multifunction);
-    nvs_set_i32(my_handle, NONVOL_MFS_TAP_B,     json_mfs_tap_b);
+    json_mfs_tap_2 = TAP_2(json_multifunction);
+    nvs_set_i32(my_handle, NONVOL_MFS_TAP_B,     json_mfs_tap_2);
 
-    json_mfs_hold_a = HOLD_A(json_multifunction);
-    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_A,     json_mfs_hold_a);
+    json_mfs_hold_1 = HOLD_1(json_multifunction);
+    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_A,     json_mfs_hold_1);
 
-    json_mfs_hold_b = HOLD_B(json_multifunction);
-    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_B,     json_mfs_hold_b);
+    json_mfs_hold_2 = HOLD_2(json_multifunction);
+    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_B,     json_mfs_hold_2);
 
     json_mfs_hold_c = 0;
     nvs_set_i32(my_handle, NONVOL_MFS_HOLD_C,    json_mfs_hold_c);

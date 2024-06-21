@@ -42,7 +42,6 @@ void paper_test(void);                                    // Advance the motor
 void target_test(void);                                   // Monitor the target sensors for a shot
 void trigger_timers(void);                                // Trigger a self test 
 
-void multifunction_init(void);                            // Initialize the multifunction switches
 void multifunction_switch(void);                          // Handle the actions of the DIP Switch signal
 void multifuction_display(void);                          // Display the MFS settings
 void multifunction_wait_open(void);                       // Wait for both multifunction switches to be open
@@ -106,13 +105,13 @@ void multifunction_display(void);                         // Display the MFS set
 /*
  * Multifunction Switch Use when using DIP Switch for MFS
  */
-#define HOLD_A(x)    LO10((x))          // Low digit        xxxx2
-#define HOLD_B(x)    HI10((x))          // High digit       xxx2x
+#define HOLD_1(x)    LO10((x))          // Low digit        xxxx2
+#define HOLD_2(x)    HI10((x))          // High digit       xxx2x
 #define HOLD_C(x)    LO10((x))          // Low digit        xxxx2
 #define HOLD_D(x)    HI10((x))          // High digit       xxx2x
-#define TAP_A(x)     HLO10((x))         // High Low digit   xx2xx
-#define TAP_B(x)     HHI10((x))         // High High digit  x2xxx
-#define HOLD_AB(x)   HHH10((x))         // Highest digit    2xxxx
+#define TAP_1(x)     HLO10((x))         // High Low digit   xx2xx
+#define TAP_2(x)     HHI10((x))         // High High digit  x2xxx
+#define HOLD_12(x)   HHH10((x))         // Highest digit    2xxxx
 
 /*
  * DIP Switch Use. 

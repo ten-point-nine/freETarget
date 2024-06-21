@@ -85,11 +85,11 @@ int     json_token;                 // Token ring state
 double  json_vref_lo;               // Low Voltage DAC setting
 double  json_vref_hi;               // High Voltage DAC setting
 int     json_pcnt_latency;          // pcnt interrupt latency
-int     json_mfs_hold_ab;           // Hold A and B
-int     json_mfs_tap_b;             // Tap B
-int     json_mfs_tap_a;             // Tap A
-int     json_mfs_hold_b;            // Hold B
-int     json_mfs_hold_a;            // Hold A
+int     json_mfs_hold_12;           // Hold A and B
+int     json_mfs_tap_2;             // Tap B
+int     json_mfs_tap_1;             // Tap A
+int     json_mfs_hold_2;            // Hold B
+int     json_mfs_hold_1;            // Hold A
 int     json_mfs_hold_d;            // Hold D
 int     json_mfs_hold_c;            // Hold C
 int     json_mfs_select_cd;         // Select C and D operation
@@ -114,11 +114,11 @@ const json_message_t JSON[] = {
   {"\"INIT\":",           0,                                 0,                IS_INT32,  &init_nonvol,     NONVOL_INIT,             0 },    // Initialize the NONVOL memory
   {"\"KEEP_ALIVE\":",     &json_keep_alive,                  0,                IS_INT32,  0,                NONVOL_KEEP_ALIVE,     120 },    // TCPIP Keep alive period (in seconds)
   {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT32,  &set_LED_PWM_now, NONVOL_LED_PWM,         50 },    // Set the LED brightness
-  {"\"MFS_HOLD_AB\":",    &json_mfs_hold_ab,                 0,                IS_MFS,    0,                NONVOL_MFS_HOLD_AB,  LED_ADJUST },
-  {"\"MFS_TAP_B\":",      &json_mfs_tap_b,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_B,    POWER_TAP  },
-  {"\"MFS_TAP_A\":",      &json_mfs_tap_a,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_A,    PAPER_SHOT },
-  {"\"MFS_HOLD_B\":",     &json_mfs_hold_b,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_B,   ON_OFF     },
-  {"\"MFS_HOLD_A\":",     &json_mfs_hold_a,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_A,   PAPER_FEED },
+  {"\"MFS_HOLD_12\":",    &json_mfs_hold_12,                 0,                IS_MFS,    0,                NONVOL_MFS_HOLD_AB,  LED_ADJUST },
+  {"\"MFS_TAP_2\":",      &json_mfs_tap_2,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_B,    POWER_TAP  },
+  {"\"MFS_TAP_1\":",      &json_mfs_tap_1,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_A,    PAPER_SHOT },
+  {"\"MFS_HOLD_2\":",     &json_mfs_hold_2,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_B,   ON_OFF     },
+  {"\"MFS_HOLD_1\":",     &json_mfs_hold_1,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_A,   PAPER_FEED },
   {"\"MFS_HOLD_D\":",     &json_mfs_hold_d,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_D,   NO_ACTION  },
   {"\"MFS_HOLD_C\":",     &json_mfs_hold_c,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_C,   NO_ACTION  },
   {"\"MFS_SELECT_CD\":",  &json_mfs_select_cd,               0,                IS_MFS,    0,                NONVOL_MFS_SELECT_CD,NO_ACTION  },
@@ -128,7 +128,7 @@ const json_message_t JSON[] = {
   {"\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT32,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
   {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT32,  0,                NONVOL_PAPER_TIME,     500 },    // Set the paper advance time
   {"\"PCNT_LATENCY\":",   &json_pcnt_latency,                0,                IS_INT32,  0,                NONVOL_PCNT_LATENCY,    33 },    // Interrupt latency for PCNT adjustment
-  {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
+  {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,       0 },    // Set the power saver time
   {"\"RAPID_COUNT\":",    &json_rapid_count,                 0,                IS_INT32,  0,                0,                       0 },    // Number of shots expected in series
   {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT32,  0,                0,                       0 },    // Enable the rapid fire fieature
   {"\"RAPID_TIME\":",     &json_rapid_time,                  0,                IS_INT32,  0,                0,                       0 },    // Set the duration of the rapid fire event and start

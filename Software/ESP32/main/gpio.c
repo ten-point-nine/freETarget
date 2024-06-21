@@ -469,25 +469,26 @@ void read_timers
  * Step Time =  Period on/off of each pulse (50% duty cycle)
  * Paper Time = 0
  * 
- * {"PAPER_TIME":500, "STEP_COUNT": 0, {"STEP_TIME":0}
- * {"PAPER_TIME":0, "STEP_COUNT": 100, {"STEP_TIME":20}
+ * {"PAPER_TIME":500, "STEP_COUNT": 0, "STEP_TIME":0}
+ * {"PAPER_TIME":0, "STEP_COUNT": 100, "STEP_TIME":20}
  * 
  *-----------------------------------------------------*/
 void drive_paper(void)
 {
-  DLT(DLT_DIAG, printf("Advancing paper: %dms", json_paper_time);)
 
 /*
  * See what kind of drive we are using
  */
   if ( json_paper_time != 0 )       // DC motor - Turn the output on once
   {
+    DLT(DLT_DIAG, printf("Advancing paper: %dms", json_paper_time);)
     paper_on_off(true, ONE_SECOND * json_paper_time / 1000);         // Motor OFF
   }
   else if ( json_step_count != 0 )  // Stepper motor - Toggle the output
   {
+    DLT(DLT_DIAG, printf("Advancing paper: %d counts", json_step_count);)
     step_count = json_step_count * 2;// Two states per cycle
-    stepper_off_toggle(false, ONE_SECOND * json_step_time / 1000);  // Motor OFF
+    stepper_off_toggle(true, ONE_SECOND * json_step_time / 1000);  // Motor OFF
   }
 
  /*
@@ -532,8 +533,11 @@ void drive_paper_tick(void)
   {
     if ( step_count >= 1)       // In motion
     {
-      stepper_off_toggle(true, ONE_SECOND * json_step_time / 1000); // Motor toggle
-      step_count--;
+      if ( paper_time == 0 )    // Timer for next pulse?
+      {
+        stepper_off_toggle(true, ONE_SECOND * json_step_time / 1000); // Motor toggle
+        step_count--;
+      }
     }
     else                        // Motion finished
     {
@@ -749,14 +753,14 @@ void stepper_off_toggle
       if ( action == false )
       {
         current_state = 0;
-        gpio_set_level(DIP_C, 0);
-        timer_new(paper_time, 0);
+        gpio_set_level(HOLD_C_GPIO, 0);
+        timer_delete(&paper_time);
       }
       else
       {
-        current_state = ! current_state;
-        gpio_set_level(DIP_C, current_state);
-        timer_new(paper_time, ONE_SECOND * json_step_time / 1000);
+        current_state = 1 - current_state;
+        gpio_set_level(HOLD_C_GPIO, current_state);
+        timer_new(&paper_time, ONE_SECOND * json_step_time / 1000);
       }
 
   }
@@ -766,13 +770,13 @@ void stepper_off_toggle
       if ( action == false )
       {
         current_state = 0;
-        gpio_set_level(DIP_D, 0);
-        timer_new(paper_time, 0);
+        gpio_set_level(HOLD_D_GPIO, 0);
+        timer_new(&paper_time, 0);
       }
       else
       {
-        current_state = ! current_state;
-        gpio_set_level(DIP_D, current_state);
+        current_state = 1 - current_state;
+        gpio_set_level(HOLD_D_GPIO, current_state);
         timer_new(paper_time, ONE_SECOND * json_step_time / 1000);
       }
   }

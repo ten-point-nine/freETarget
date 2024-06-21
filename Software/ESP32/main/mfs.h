@@ -29,16 +29,16 @@ mfs_action_t* mfs_find(unsigned int action);              // Find the MFS entry 
 /*
  * Multifunction Switch Use when using DIP Switch for MFS
  */
-#define HOLD_A(x)    LO10((x))          // Low digit        xxxx2
-#define _HOLD_A              1
-#define HOLD_B(x)    HI10((x))          // High digit       xxx2x
-#define _HOLD_B              2
-#define TAP_A(x)     HLO10((x))         // High Low digit   xx2xx
-#define _TAP_A               3
-#define TAP_B(x)     HHI10((x))         // High High digit  x2xxx
-#define _TAP_B               4
-#define HOLD_AB(x)   HHH10((x))         // Highest digit    2xxxx
-#define _HOLD_AB             5
+#define HOLD_1(x)    LO10((x))          // Low digit        xxxx2
+#define _HOLD_2              1
+#define HOLD_2(x)    HI10((x))          // High digit       xxx2x
+#define _HOLD_2              2
+#define TAP_1(x)     HLO10((x))         // High Low digit   xx2xx
+#define _TAP_1               3
+#define TAP_2(x)     HHI10((x))         // High High digit  x2xxx
+#define _TAP_2               4
+#define HOLD_12(x)   HHH10((x))         // Highest digit    2xxxx
+#define _HOLD_12             5
 #define HOLD_C(x)     LO10((x))         // Low digit        xxxx2
 #define _HOLD_C              6
 #define HOLD_D(x)     HI10((x))         // High digit       xxx2x
