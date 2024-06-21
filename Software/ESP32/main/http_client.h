@@ -31,6 +31,7 @@
 #define INCLUDE_HEAD    0     // Include HEAD methods
 #define INCLUDE_API_KEY 1     // Include an API key 
 #define API_KEY         "cpe-1704-tks"
+#define REMOTE_URL       "http://joshua.10nine.co/api/shots"
 
 #define METHOD_GET      0     // enum used to identify a get method
 #define METHOD_POST     1     // enum used to identify a post method
