@@ -463,19 +463,17 @@ void read_timers
  * Step Count = 0
  * Step Time = 0
  * Paper Time = Motor ON time
+ * {"PAPER_TIME":500, "STEP_COUNT": 0, "STEP_TIME":0,  "MFS_HOLD_C":9}
  * 
  * Stepper Motor
  * Step Count = Number of pulses to send
  * Step Time =  Period on/off of each pulse (50% duty cycle)
  * Paper Time = 0
- * 
- * {"PAPER_TIME":500, "STEP_COUNT": 0, "STEP_TIME":0}
- * {"PAPER_TIME":0, "STEP_COUNT": 100, "STEP_TIME":20}
+ * {"PAPER_TIME":0, "STEP_COUNT": 100, "STEP_TIME":20, "MFS_HOLD_C":26}
  * 
  *-----------------------------------------------------*/
 void drive_paper(void)
 {
-
 /*
  * See what kind of drive we are using
  */
@@ -535,7 +533,7 @@ void drive_paper_tick(void)
     {
       if ( paper_time == 0 )    // Timer for next pulse?
       {
-        stepper_off_toggle(true, ONE_SECOND * json_step_time / 1000); // Motor toggle
+        stepper_off_toggle(true, ONE_SECOND * json_step_time / 2 / 1000); // Motor toggle
         step_count--;
       }
     }
@@ -760,7 +758,7 @@ void stepper_off_toggle
       {
         current_state = 1 - current_state;
         gpio_set_level(HOLD_C_GPIO, current_state);
-        timer_new(&paper_time, ONE_SECOND * json_step_time / 1000);
+        timer_new(&paper_time, ONE_SECOND * json_step_time / 2 / 1000);
       }
 
   }
