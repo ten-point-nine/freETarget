@@ -110,7 +110,6 @@ mfs_action_t mfs_action[] = {
  */
   if ( json_mfs_hold_c >= MFS2_DIP ) 
   {
-printf("turn off C\r\n");
     gpio_set_direction(HOLD_C_GPIO,  GPIO_MODE_OUTPUT);
     gpio_set_pull_mode(HOLD_C_GPIO,  GPIO_PULLUP_PULLDOWN);
     gpio_set_level(HOLD_C_GPIO, 0);
@@ -122,7 +121,6 @@ printf("turn off C\r\n");
     gpio_set_pull_mode(HOLD_D_GPIO,  GPIO_PULLUP_PULLDOWN);
     gpio_set_level(HOLD_D_GPIO, 0);
   }
-
 
 /*
  * Continue to read the DIP switch
@@ -377,18 +375,23 @@ static void mfs_power_tap (void)
   return;
 }
 
-static void mfs_paper_feed(void)
+static void mfs_paper_feed(void)            // Feed paper so long as the switch is pressed
 {
-  DLT(DLT_INFO, printf("\r\nAdvancing paper");)
-  paper_on_off(true, 10 * ONE_SECOND);
+  DLT(DLT_INFO, printf("Advancing paper");)
+  drive_paper();                            // Turn it on for 10 seconds
   while ( DIP_SW_A || DIP_SW_B )
   {
-    timer_delay(1);
+    vTaskDelay(1);
+    if ( is_paper_on() == 0 )             // Turn the motor back on
+    {
+      drive_paper();                      // every time is stops
+    }
   }
   paper_on_off(false, 0);
+  stepper_off_toggle(false, 0);
   set_status_LED(LED_MFS_OFF);
-  
-  DLT(DLT_INFO, printf("\r\nDone");)
+
+  DLT(DLT_INFO, printf("Done");)
   
   return;
 }

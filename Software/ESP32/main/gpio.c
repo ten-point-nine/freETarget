@@ -448,16 +448,20 @@ void read_timers
  * 
  *-----------------------------------------------------
  *
- * The function turns on the motor for the specified
- * time.  The motor is cycled json_paper_step times
+ * The function turns on the motor for the time 
+ * needed to move the paper for one shot.
+ * 
+ * The function in two parts:
+ *      Drive a DC motor for X ms
+ *      Drive a stepper motor for X steps
+ * 
+ * The motor is cycled json_paper_step times
  * to drive a stepper motor using the same circuit.
  * 
  * Use an A4988 to drive te stepper in place of a DC
  * motor
  * 
- * There is a hardare change between Version 2.2 which
- * used a transistor and 3.0 that uses a FET.
- * The driving circuit is reversed in the two boards.
+ * Test Settings
  * 
  * DC Motor
  * Step Count = 0
@@ -474,6 +478,7 @@ void read_timers
  *-----------------------------------------------------*/
 void drive_paper(void)
 {
+
 /*
  * See what kind of drive we are using
  */
@@ -482,7 +487,8 @@ void drive_paper(void)
     DLT(DLT_DIAG, printf("Advancing paper: %dms", json_paper_time);)
     paper_on_off(true, ONE_SECOND * json_paper_time / 1000);         // Motor OFF
   }
-  else if ( json_step_count != 0 )  // Stepper motor - Toggle the output
+  
+  if ( json_step_count != 0 )  // Stepper motor - Toggle the output
   {
     DLT(DLT_DIAG, printf("Advancing paper: %d counts", json_step_count);)
     step_count = json_step_count * 2;// Two states per cycle
@@ -511,16 +517,14 @@ void drive_paper(void)
  *-----------------------------------------------------*/
 void drive_paper_tick(void)
 {
-
 /*
  * Drive the DC motor
  */
   if ( json_paper_time != 0 )
   {
-    if ( (paper_time == 0) && (is_paper_on() != 0) )
+    if ( paper_time == 0 )
     {
       paper_on_off(false, 0);                      // Motor OFF
-      DLT(DLT_DIAG, printf("Done");)
     }
   }
   
@@ -529,12 +533,15 @@ void drive_paper_tick(void)
  */
   if ( json_step_count != 0 )   // Stepper enabled
   {
-    if ( step_count >= 1)       // In motion
+    if ( step_count != 0)       // In motion
     {
       if ( paper_time == 0 )    // Timer for next pulse?
       {
         stepper_off_toggle(true, ONE_SECOND * json_step_time / 2 / 1000); // Motor toggle
-        step_count--;
+        if ( step_count != 0 )
+        {
+          step_count--;
+        }
       }
     }
     else                        // Motion finished
@@ -559,11 +566,12 @@ void drive_paper_tick(void)
  * 
  *-----------------------------------------------------
  *
- * The witness paper motor changed polarity between 2.2
- * and Version 3.0.
+ * paper_on_off turns the DC motor drive on or off
+ * for the specified duration.
  * 
- * This function reads the board revision and controls 
- * the FET accordingly
+ * To stop the motor once it is running use
+ * 
+ * paper_on_off(false, 0)
  * 
  *-----------------------------------------------------*/
 void paper_on_off                               // Function to turn the motor on and off
@@ -577,23 +585,81 @@ void paper_on_off                               // Function to turn the motor on
   if ( on == true )
   {
     gpio_set_level(PAPER, PAPER_ON);            // Turn it on
+    timer_new(&paper_time, duration);
   }
   else
   {
     gpio_set_level(PAPER, PAPER_OFF);            // Turn it off
+    timer_delete(&paper_time);
   }
 
 /*
  * No more, return
  */
-  timer_new(&paper_time, duration);
   return;
 }
 
-int is_paper_on(void)
-{
-  return paper_state;
+int is_paper_on(void)         // Return true if there is still time
+{              
+  return paper_time != 0;
 }
+
+/*----------------------------------------------------------------
+ * 
+ * @function: stepper_off_toggle()
+ * 
+ * @brief: Set the stepper motor state
+ * 
+ * @return: Nothing
+ * 
+ *----------------------------------------------------------------
+ *
+ *  This is the companion to paper_on_off for the stepper motor
+ *
+ *--------------------------------------------------------------*/
+
+void stepper_off_toggle
+(
+  unsigned int  action,         // action, off (0) or toggle (1)
+  unsigned long duration        // Time to next state
+) 
+{
+  static int current_state;     // Memory of the output
+
+  if ( action == false )
+  {
+    current_state = 0;
+    if ( json_mfs_hold_c == STEPPER_DRIVE )
+    {
+      gpio_set_level(HOLD_C_GPIO, 0);
+    }
+    if ( json_mfs_hold_d == STEPPER_DRIVE )
+    {
+      gpio_set_level(HOLD_D_GPIO, 0);
+    }
+    timer_delete(&paper_time);
+  }
+  else
+  {
+    current_state = 1 - current_state;
+    if ( json_mfs_hold_c == STEPPER_DRIVE )
+    {
+      gpio_set_level(HOLD_C_GPIO, current_state);
+    }
+    if ( json_mfs_hold_d == STEPPER_DRIVE )
+    {
+      gpio_set_level(HOLD_D_GPIO, current_state);
+    }
+    timer_new(&paper_time, ONE_SECOND * json_step_time / 2 / 1000);
+  }
+
+/*
+ *  All done, return
+ */
+  return;
+}
+
+
 /*-----------------------------------------------------
  * 
  * @function: face_ISR
@@ -714,69 +780,6 @@ void rapid_green
   if ( json_mfs_hold_d == RAPID_GREEN )
   {
       gpio_set_level(DIP_D, state);
-  }
-
-  return;
-}
-
-/*----------------------------------------------------------------
- * 
- * @function: stepper_off_toggle()
- * 
- * @brief: Set the stepper motor state
- * 
- * @return: Nothing
- * 
- *----------------------------------------------------------------
- *
- *  If MFS2 has enabled the rapid fire lights then allow the 
- *  value to be set
- * 
- *  IMPORTANT
- *   
- *  LEDs are driven ON by an active low signal
- *
- *--------------------------------------------------------------*/
-
-void stepper_off_toggle
-(
-  unsigned int  action,         // action, off (0) or toggle (1)
-  unsigned long duration        // Time to next state
-) 
-{
-  static int current_state;     // Memory of the output
-
-  if ( json_mfs_hold_c == STEPPER_DRIVE )
-  {
-      if ( action == false )
-      {
-        current_state = 0;
-        gpio_set_level(HOLD_C_GPIO, 0);
-        timer_delete(&paper_time);
-      }
-      else
-      {
-        current_state = 1 - current_state;
-        gpio_set_level(HOLD_C_GPIO, current_state);
-        timer_new(&paper_time, ONE_SECOND * json_step_time / 2 / 1000);
-      }
-
-  }
-
-  if ( json_mfs_hold_d == STEPPER_DRIVE )
-  {
-      if ( action == false )
-      {
-        current_state = 0;
-        gpio_set_level(HOLD_D_GPIO, 0);
-        timer_new(&paper_time, 0);
-      }
-      else
-      {
-        current_state = 1 - current_state;
-        gpio_set_level(HOLD_D_GPIO, current_state);
-        timer_new(paper_time, ONE_SECOND * json_step_time / 1000);
-      }
   }
 
   return;

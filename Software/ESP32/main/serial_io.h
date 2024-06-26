@@ -11,26 +11,27 @@
 /*
  * Global functions
  */
-void serial_io_init(void);                                        // Initialize the Serial ports
-void serial_to_all(char* s, bool console, bool aux, bool tcpip);  // Multipurpose driver
-void serial_putch(char ch, bool console, bool aux, bool tcpip);   // Output a single character
-char serial_gets(bool console, bool aux, bool tcpip);             // Read from all of the ports
-char serial_getch(bool console, bool aux, bool tcpip);            // Read the selected port
-int serial_available(bool console, bool aux, bool tcpip);         // Find out how much is waiting for us
-void serial_flush(bool console, bool aux, bool tcpip);            // Get rid of everything
-int tcpip_app_2_queue(char* buffer, int length);                  // Save for later output to the socket  
-int tcpip_queue_2_socket(char* buffer, int length);               // Take from queue and put to socket
-int tcpip_socket_2_queue(char* buffer, int length);               // Take from socket and queue
-int tcpip_queue_2_app(char* buffer, int length);                  // Take from queue and return to application
-void serial_port_test(void);                                      // Loopback the AUX port
+void serial_io_init(void);                          // Initialize the Serial ports
+void serial_to_all(char* s, int ports);             // Multipurpose driver
+void serial_putch(char ch, int ports);              // Output a single character
+char serial_gets(int ports);                        // Read from all of the ports
+char serial_getch(int ports);                       // Read the selected port
+int  serial_available(int ports);                   // Find out how much is waiting for us
+int  serial_who(void);                              // Determine WHO is trying to talk to us
+void serial_flush(int ports);                       // Get rid of everything
+int tcpip_app_2_queue(char* buffer, int length);    // Save for later output to the socket  
+int tcpip_queue_2_socket(char* buffer, int length); // Take from queue and put to socket
+int tcpip_socket_2_queue(char* buffer, int length); // Take from socket and queue
+int tcpip_queue_2_app(char* buffer, int length);    // Take from queue and return to application
+void serial_port_test(void);                        // Loopback the AUX port
 
 /*
  *  Definitions
  *              CONSOLE   AUX    TCPIP
  */
-#define CONSOLE  true,   false,  false
-#define AUX      false,  true,   false
-#define TCPIP    false,  false,  true
-#define ALL      true,   true,   true
+#define CONSOLE  0x01
+#define AUX      0x02
+#define TCPIP    0x04
+#define ALL      (CONSOLE + AUX + TCPIP)
 
 #endif

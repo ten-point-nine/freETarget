@@ -797,6 +797,7 @@ bool get_string
         vTaskDelay(10);
     }
 }
+
 void WiFi_setup(void)
 {
     char ch;
