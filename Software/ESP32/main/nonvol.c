@@ -231,7 +231,11 @@ void factory_nonvol
  */
   if ( new_serial_number )
   {
-    factory_test();
+    if ( factory_test() == false )
+    {
+      printf("\r\nFactory test did not pass.");
+      printf("\r\nFactory Test will not be recorded");
+    }
   }
 
 /*

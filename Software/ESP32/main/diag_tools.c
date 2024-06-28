@@ -375,7 +375,7 @@ void self_test
 #define PASS_MASK    (PASS_RUNNING | PASS_A | PASS_B)
 #define PASS_TEST    (PASS_RUNNING | PASS_C)
 
-void factory_test(void)
+bool factory_test(void)
 {
   int i, percent;
   int running;            // Bit mask from run flip flops
@@ -383,6 +383,7 @@ void factory_test(void)
   char ch;
   char ABCD[] = "DCBA";   // DIP switch order
   int  pass;              // Pass YES/NO
+  bool passed_once;       // Passed all of the tests at least once
   float volts[4];
   int  motor_toggle;      // Toggle motor on an off
 
@@ -402,9 +403,16 @@ void factory_test(void)
  */
   printf("\r\nFactory Test");
   printf("\r\nHas the tape seal been removed from the temperature sensor?");
-  printf("\r\nPress 1 & 2 to continue\r\n");
-  while ( (DIP_SW_A == 0) || (DIP_SW_B == 0) )
+  printf("\r\nPress 1 & 2 or ! to continue\r\n");
+  while ( (DIP_SW_A == 0) || !(DIP_SW_B == 0) )
   {
+    if ( serial_available(ALL) )
+    {
+      if ( serial_getch(ALL) == '!' )
+      {
+        break;
+      }
+    }
     continue;
   }
 
@@ -413,6 +421,7 @@ void factory_test(void)
  */
   arm_timers();
   pass = 0;
+  passed_once = false;
   percent = 0;
   motor_toggle = 0;
 /*
@@ -520,6 +529,7 @@ void factory_test(void)
       vTaskDelay(ONE_SECOND);
       arm_timers();
       pass = 0;
+      passed_once = true;
     }
 
 /*
@@ -541,8 +551,15 @@ void factory_test(void)
         case 'x':
         case '!':
           paper_on_off(false, 0);
-          printf("\r\nDone");
-          return;
+          if ( passed_once == true )
+          {
+            printf("\r\nTest completed successfully\r\n");
+          }
+          else
+          {
+            printf("\r\nTest finished without PASS\r\n");
+          }
+          return passed_once;
       }
     }
 
@@ -553,7 +570,7 @@ void factory_test(void)
 /*
  *  The test has been terminated
  */
-
+  return passed_once;
 }
 
 /*******************************************************************************

@@ -94,7 +94,7 @@ CMAKE_C_FLAGS_RELEASE:STRING=-O3 -DNDEBUG
 CMAKE_C_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
 
 //Path to a program.
-CMAKE_DLLTOOL:FILEPATH=CMAKE_DLLTOOL-NOTFOUND
+CMAKE_DLLTOOL:FILEPATH=C:/Strawberry/c/bin/dlltool.exe
 
 //Flags used by the linker during all build types.
 CMAKE_EXE_LINKER_FLAGS:STRING=
@@ -233,7 +233,7 @@ CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 EXTRA_COMPONENT_DIRS:UNINITIALIZED=C:/Users/allan/esp/esp-idf/esp-idf/components/bootloader
 
 //Git command line client
-GIT_EXECUTABLE:FILEPATH=C:/Users/allan/esp/esp-idf/tools/tools/idf-git/2.30.1/cmd/git.exe
+GIT_EXECUTABLE:FILEPATH=C:/Users/allan/esp/esp-idf/tools/tools/idf-git/2.39.2/cmd/git.exe
 
 //No help, variable specified on the command line.
 IDF_PATH:UNINITIALIZED=C:/Users/allan/esp/esp-idf/esp-idf
@@ -248,7 +248,7 @@ IDF_TOOLCHAIN:STRING=gcc
 PROJECT_SOURCE_DIR:UNINITIALIZED=C:/Users/allan/Documents/freETarget/Software/ESP32
 
 //No help, variable specified on the command line.
-PYTHON:UNINITIALIZED=c:/Users/allan/esp/esp-idf/tools/python_env/idf5.0_py3.8_env/Scripts/python.exe
+PYTHON:UNINITIALIZED=c:/Users/allan/esp/esp-idf/tools/python_env/idf5.0_py3.11_env/Scripts/python.exe
 
 //No help, variable specified on the command line.
 PYTHON_DEPS_CHECKED:UNINITIALIZED=1
@@ -430,7 +430,7 @@ CMAKE_STRIP-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
 //Details about finding Git
-FIND_PACKAGE_MESSAGE_DETAILS_Git:INTERNAL=[C:/Users/allan/esp/esp-idf/tools/tools/idf-git/2.30.1/cmd/git.exe][v2.30.1.windows.1()]
+FIND_PACKAGE_MESSAGE_DETAILS_Git:INTERNAL=[C:/Users/allan/esp/esp-idf/tools/tools/idf-git/2.39.2/cmd/git.exe][v2.39.2.windows.1()]
 //ADVANCED property for variable: GIT_EXECUTABLE
 GIT_EXECUTABLE-ADVANCED:INTERNAL=1
 //Have include stddef.h
