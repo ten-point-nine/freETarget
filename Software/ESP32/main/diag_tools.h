@@ -20,8 +20,7 @@ void    POST_trip_point(void);                          // Display the set point
 void    set_trip_point(int x);                          // Calibrate the trip point
 bool    do_dlt(unsigned int level);                     // Diagnostics Log and Trace
 void    zapple(unsigned int test);                      // ZAPPLE console monitor
-void    factory_test(void);                             // Test the hardware in production
-void    rapid_LED_test(void);                           // Test the rapid fire LEDs
+bool    factory_test(void);                             // Test the hardware in production
 
 /*
  *  Definitions
