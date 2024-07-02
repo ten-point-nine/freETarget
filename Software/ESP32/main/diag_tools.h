@@ -13,6 +13,7 @@
  */
 void    self_test(unsigned int test);
 void    show_sensor_status(unsigned int sensor_status); // Display the sensor status as text
+void    show_sensor_fault(unsigned int sensor_status);  // Use the LEDs to show what sensor didn't work
 void    blink_fault(unsigned int fault_code);           // Blink a fault
 void    POST_version(void);                             // Show the version string
 bool    POST_counters(void);                            // Verify the counter operation

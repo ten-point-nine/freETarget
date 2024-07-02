@@ -198,6 +198,7 @@ void freeETarget_target_loop(void* arg)
         power_save = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L;  //  Reset the timer
         set_mode();
         arm();
+        set_status_LED(LED_READY);
         state = WAIT;
         break;
     
@@ -432,6 +433,8 @@ unsigned int reduce(void)
   {   
     DLT(DLT_APPLICATION, show_sensor_status(record[last_shot].sensor_status);)
 
+    show_sensor_fault(record[last_shot].sensor_status);
+    
     location = compute_hit(&record[last_shot]);                 // Compute the score
     if ( location != MISS )                                     // Was it a miss or face strike?
     {

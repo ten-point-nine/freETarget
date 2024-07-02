@@ -817,6 +817,45 @@ void show_sensor_status
 
 /*----------------------------------------------------------------
  *
+ * @function: show_sensor_fault()
+ * 
+ * @brief:    Use the LEDs to show if a sensor failed
+ *
+ * @return:   Nothing
+ * 
+ *----------------------------------------------------------------
+ * 
+ * This function is intended as a diagnostic to show if a sensor
+ * failed to detect a show
+ *   
+ *--------------------------------------------------------------*/
+static char* led_fault[] = {LED_NORTH_FAILED, LED_EAST_FAILED, LED_SOUTH_FAILED, LED_WEST_FAILED};
+
+void show_sensor_fault
+(
+  unsigned int   sensor_status
+)
+{
+  unsigned int i;
+  
+  for (i=N; i<=W; i++)
+  {
+    if ( (sensor_status & (1<<i)) == 0)
+    {
+      set_status_LED(led_fault[i]);
+      vTaskDelay(ONE_SECOND*2);
+      return;
+    }
+  }
+
+/*
+ * All done, return
+ */
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
  * @function: do_dlt
  *
  * @brief:    Check for a DLT log and print the time
