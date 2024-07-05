@@ -79,6 +79,7 @@ int     json_rapid_time;            // When will the rapid fire event end?
 int     json_rapid_wait;            // Delay applied to rapid start
 char    json_wifi_ssid[SSID_SIZE];  // Stored value of SSID
 char    json_wifi_pwd[PWD_SIZE];    // Stored value of password
+int     json_wifi_hidden;           // The SSID FET- is hidden
 int     json_wifi_dhcp;             // The ESP is a DHCP server
 int     json_min_ring_time;         // Time to wait for ringing to stop
 int     json_token;                 // Token ring state
@@ -116,7 +117,7 @@ const json_message_t JSON[] = {
   {"\"MFS_HOLD1\":",      &json_multifunction,               0,                IS_MFS+_HOLD1,  0,           NONVOL_MFS,                        0 },
   {"\"MFS_TAP2\":",       &json_multifunction,               0,                IS_MFS+_TAP2,   0,           NONVOL_MFS,                        0 },
   {"\"MFS_TAP1\":",       &json_multifunction,               0,                IS_MFS+_TAP1,   0,           NONVOL_MFS,                        0 },
-  {"\"MFS2\":",            &json_multifunction2,             0,                IS_INT32,  0,                NONVOL_MFS2,  (NO_ACTION*10000) 
+  {"\"MFS2\":",           &json_multifunction2,              0,                IS_INT32,  0,                NONVOL_MFS2,  (NO_ACTION*10000) 
                                                                                                                           + (NO_ACTION * 1000)
                                                                                                                           + (NO_ACTION * 100) 
                                                                                                                           + (NO_ACTION * 10) 
@@ -151,6 +152,7 @@ const json_message_t JSON[] = {
   {"\"VREF_LO\":",        0,                                 &json_vref_lo,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_LO,       1250 },    // Low trip point value (Volts)
   {"\"VREF_HI\":",        0,                                 &json_vref_hi,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_HI,       2000 },    // High trip point value (Volts)
   {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT32,  0,                NONVOL_WIFI_CHANNEL,     6 },    // Set the wifi channel
+  {"\"WIFI_HIDDEN\":",    &json_wifi_hidden,                 0,                IS_INT32,  0,                NONVOL_WIFI_HIDDEN,      0 },    // Hide the SSID 
   {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_SECRET+PWD_SIZE, 0,       NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
   {"\"WIFI_SSID\":",      (int*)&json_wifi_ssid,             0,                IS_TEXT+SSID_SIZE,  0,       NONVOL_WIFI_SSID,        0 },    // Name of SSID to attach to 
   {"\"ZAPPLE\":",         0,                                 0,                IS_VOID,   &zapple,          0,                       0 },    // Start a ZAPPLE console monitor

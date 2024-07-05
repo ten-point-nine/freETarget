@@ -172,7 +172,7 @@ void WiFi_AP_init(void)
     {
         WiFi_config.ap.authmode = WIFI_AUTH_WPA2_PSK;
     }
-
+    WiFi_config.ap.ssid_hidden = json_wifi_hidden;
     esp_wifi_set_mode(WIFI_MODE_AP);
     esp_wifi_set_config(WIFI_IF_AP, &WiFi_config);
     esp_wifi_start();

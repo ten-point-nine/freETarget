@@ -68,4 +68,6 @@ void restore_nonvol(void);                        // Copyt the nonvol back
 #define NONVOL_WIFI_PWD       "WIFI_PWD"       // Storage for SSID Password
 #define NONVOL_WIFI_IP        "WIFI_IP"        // Storage forIP Address
 #define NONVOL_Z_OFFSET       "Z_OFFSET"       // Distance from sensor plane to paper plane
+#define NONVOL_WIFI_HIDDEN    "WIFI_HIDDEN"    // Hide the SSID if set to 1
+
 #endif

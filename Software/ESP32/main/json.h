@@ -97,6 +97,7 @@ extern int    json_wifi_dhcp;     // TRUE if the DHCP server is enabled
 extern char   json_wifi_ssid[];   // Text of WiFI SSID
 extern char   json_wifi_pwd[];    // Text of WiFI password
 extern char   json_wifi_ip[];     // Text of IP address
+extern int    json_wifi_hidden;   // Hide the SSID if enabled
 extern int    json_min_ring_time; // Time to wait for ringing to stop
 extern int    json_token;         // Token ring setting
 extern int    json_multifunction2;// Multifunction Switch 2
