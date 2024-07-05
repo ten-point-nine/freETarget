@@ -406,14 +406,21 @@ void update_nonvol
   }
 
 /* 
- * Version 0 -> 1 Split MFS apart and store separatly
+ * Version 1 -> 2 Split MFS apart and store separatly
  */
   if ( current_version == 0 )
   {  
     DLT(DLT_CRITICAL, printf("Updating PS0 to PS1");)
 
-    json_mfs_hold_12 = HOLD_12(json_multifunction);
-    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_AB,   json_mfs_hold_12);
+    nvs_set_i32(my_handle, NONVOL_WIFI_HIDDEN,   0);
+    current_version = 1;
+  }
+
+  if ( current_version == 1 )
+  {  
+    DLT(DLT_CRITICAL, printf("Updating PS1 to PS2");)
+
+    nvs_set_i32(my_handle, NONVOL_WIFI_HIDDEN,   0);
 
     json_mfs_tap_1 = TAP_1(json_multifunction);
     nvs_set_i32(my_handle, NONVOL_MFS_TAP_A,     json_mfs_tap_1);
@@ -435,7 +442,7 @@ void update_nonvol
 
     json_mfs_select_cd = 0;
     nvs_set_i32(my_handle, NONVOL_MFS_SELECT_CD, json_mfs_select_cd);
-    current_version = 1;
+    current_version = 2;
   }
 
 /*
