@@ -406,7 +406,7 @@ void update_nonvol
   }
 
 /* 
- * Version 1 -> 2 Split MFS apart and store separatly
+ * Version 0 -> 1 Set WiFi Hidden to 0
  */
   if ( current_version == 0 )
   {  
@@ -416,6 +416,9 @@ void update_nonvol
     current_version = 1;
   }
 
+/* 
+ * Version 1 -> 2 Fixup MFS variables
+ */
   if ( current_version == 1 )
   {  
     DLT(DLT_CRITICAL, printf("Updating PS1 to PS2");)
