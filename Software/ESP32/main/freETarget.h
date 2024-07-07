@@ -10,10 +10,11 @@
  */
 #ifndef _FREETARget_H
 #define _FREETARget_H
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"5.2.X June 28, 2024\""
+#define SOFTWARE_VERSION "\"5.2.X July 6, 2024\""
 
 #define REV_500    500   // ESP32
 #define REV_510    510

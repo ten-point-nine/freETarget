@@ -237,7 +237,7 @@ void freeETarget_json
     {
       ch = serial_getch(ALL);
       serial_putch(ch, ALL);
-
+      
 /*
  * Parse the stream
  */

@@ -744,27 +744,28 @@ void rapid_fire_task(void)
       {
         timer_new(&rapid_timer, json_rapid_wait * ONE_SECOND);
         set_LED_PWM_now(0);             // Turn off the lights
-        SEND(sprintf(_xs, "{\"RAPID_ON\":%d}\r\n", (30));)
-        tabata_state = RAPID_WAIT;
+        SEND(sprintf(_xs, "{\"RAPID_WAIT\":%d}\r\n", (int)json_rapid_wait);)
+        rapid_state = RAPID_WAIT;
       } 
       break;
         
     case (RAPID_WAIT):                   // Keep the LEDs on for the tabata time
       if ( rapid_timer == 0 )            // Don't do anything unless the time expires
       {
-        timer_new(&rapid_timer, json_rapid_on * ONE_SECOND);
-        SEND(sprintf(_xs, "{\"RAPID_ON\":%d}\r\n", (json_rapid_time));)
-        set_LED_PWM_now(0);             // Turn off the LEDs
-        tabata_state = RAPID_ON;
+        timer_new(&rapid_timer, json_rapid_time * ONE_SECOND);
+        SEND(sprintf(_xs, "{\"RAPID_ON\":%d}\r\n", (int)json_rapid_time);)
+        set_LED_PWM_now(json_LED_PWM);   // Turn on the LEDs
+        rapid_state = RAPID_ON;
       }
       break;
 
     case (RAPID_ON):                    // Keep the LEDs on for the tabata time
       if ( rapid_timer == 0 )           // Don't do anything unless the time expires
       {
+        timer_delete(&rapid_timer);
         SEND(sprintf(_xs, "{\"RAPID_OFF\":0}\r\n");)
         set_LED_PWM_now(0);             // Turn off the LEDs
-        tabata_state = RAPID_OFF;
+        rapid_state = RAPID_OFF;
       }
       break;
     }

@@ -24,6 +24,7 @@ int tcpip_queue_2_socket(char* buffer, int length); // Take from queue and put t
 int tcpip_socket_2_queue(char* buffer, int length); // Take from socket and queue
 int tcpip_queue_2_app(char* buffer, int length);    // Take from queue and return to application
 void serial_port_test(void);                        // Loopback the AUX port
+bool get_string(char  destination[], int   size);   // Collect a string from the input ports
 
 /*
  *  Definitions

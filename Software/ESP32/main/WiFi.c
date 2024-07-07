@@ -751,52 +751,6 @@ void WiFi_MAC_address
  * it for thier needs.
  * 
  ****************************************************************************/
-bool get_string
-(
-    char  destination[],
-    int   size
-)
-{
-    int ch;             // Input character
-    int i;              // Input index
-
-    i = 0;
-    destination[0] = 0;
-    while (1)
-    {
-        if ( serial_available(ALL) != 0 )
-        {
-            ch = serial_getch(ALL);
-            printf("%c", ch); 
-
-            switch (ch)
-            {
-                case 8:                 // Backspace
-                    i--;
-                    if ( i < 0 )
-                    {
-                        i = 0;
-                    }
-                    destination[i] = 0;
-                    break;
-
-                case '\r':                // Enter
-                case '\n':                // newline
-                    return 1;
-
-                default:
-                    destination[i] = ch;
-                    if ( i < size )
-                    {
-                        i++;
-                    }
-                    destination[i] = 0;
-                    break;
-            }
-        }
-        vTaskDelay(10);
-    }
-}
 
 void WiFi_setup(void)
 {
@@ -820,6 +774,8 @@ void WiFi_setup(void)
         printf(" with password: %s", json_wifi_pwd);
     }
 
+    printf("\r\nWiFi SSID hidden %d", json_wifi_hidden);
+
 #if ( BUIILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE)
     if ( json_remote_url[0] != 0 )
     {
@@ -834,6 +790,7 @@ void WiFi_setup(void)
     printf("\r\n1 - SSID");
     printf("\r\n2 - password");
     printf("\r\n3 - channel");
+    printf("\r\n4 - Hide access point SSID");
     printf("\r\n:");
 
     while (1)
@@ -871,16 +828,21 @@ void WiFi_setup(void)
                     if ( get_string(_xs, 2) )
                     {
                         i=0;
-                        json_wifi_channel = 0;
-                        while (_xs[i] != 0)
-                        {
-                           json_wifi_channel *= 10;
-                           json_wifi_channel += (_xs[i] - '0');
-                           i++;
-                        }
+                        json_wifi_channel = atoi(_xs);
                         nvs_set_i32(my_handle, NONVOL_WIFI_CHANNEL, json_wifi_channel);
                     }
                     break;
+
+                case '4':           // Hide Accesss point SSID
+                    printf("\r\nWiFi hide SSID (0/1):");
+                    if ( get_string(_xs, 1) )
+                    {
+                        i=0;
+                        json_wifi_channel = atoi(_xs);
+                        nvs_set_i32(my_handle, NONVOL_WIFI_HIDDEN, json_wifi_hidden);
+                    }
+                    break;
+
 #if ( BUIILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE)
                 case '4':           // Enable remote URL
                     printf("\r\nEnable remote URL :");

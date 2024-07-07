@@ -562,6 +562,73 @@ int tcpip_socket_2_queue
   return bytes_moved;
 
 }
+
+/*******************************************************************************
+ * 
+ * @function: get_string
+ * 
+ * @brief:    Read a text string from the available ports
+ * 
+ * @return:   TRUE if a CR or LF string terminator is entered
+ * 
+ *******************************************************************************
+ *
+ * Stay in a loop waiting for characters to arrive on any of the serial input
+ * streams.  Collect each character as it arrives and return when a CR or LF
+ * has been received.
+ * 
+ ******************************************************************************/
+bool get_string
+(
+    char  destination[],
+    int   size
+)
+{
+    int ch;             // Input character
+    int i;              // Input index
+
+    i = 0;
+    destination[0] = 0;
+    while (1)
+    {
+        if ( serial_available(ALL) != 0 )
+        {
+            ch = serial_getch(ALL);
+            printf("%c", ch); 
+
+            switch (ch)
+            {
+                case 8:                 // Backspace
+                    i--;
+                    if ( i < 0 )
+                    {
+                        i = 0;
+                    }
+                    destination[i] = 0;
+                    break;
+
+                case '\r':                // Enter
+                case '\n':                // newline
+                    return 1;
+
+                case 'C' & 0x1F:          // Control C, exit
+                case 0x1B:                // Escape
+                    return 0;
+
+                default:
+                    destination[i] = ch;
+                    if ( i < size )
+                    {
+                        i++;
+                    }
+                    destination[i] = 0;
+                    break;
+            }
+        }
+        vTaskDelay(10);
+    }
+}
+
 /*******************************************************************************
  * 
  * @function: serial_port_test
