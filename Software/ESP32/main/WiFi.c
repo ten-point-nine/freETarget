@@ -755,7 +755,6 @@ void WiFi_MAC_address
 void WiFi_setup(void)
 {
     char ch;
-    int i;
 
     printf("\r\nWiFi Configuration");
     printf("\r\n");
@@ -827,7 +826,6 @@ void WiFi_setup(void)
                     printf("\r\nWiFi channel (1-11):");
                     if ( get_string(_xs, 2) )
                     {
-                        i=0;
                         json_wifi_channel = atoi(_xs);
                         nvs_set_i32(my_handle, NONVOL_WIFI_CHANNEL, json_wifi_channel);
                     }
@@ -835,10 +833,9 @@ void WiFi_setup(void)
 
                 case '4':           // Hide Accesss point SSID
                     printf("\r\nWiFi hide SSID (0/1):");
-                    if ( get_string(_xs, 1) )
+                    if ( get_string(_xs, 2) )
                     {
-                        i=0;
-                        json_wifi_channel = atoi(_xs);
+                        json_wifi_hidden = atoi(_xs);
                         nvs_set_i32(my_handle, NONVOL_WIFI_HIDDEN, json_wifi_hidden);
                     }
                     break;

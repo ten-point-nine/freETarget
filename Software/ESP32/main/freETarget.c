@@ -585,7 +585,7 @@ void tabata_task(void)
   if ( json_tabata_enable == 0 )        // Reset the timer
   {
     timer_delete(&tabata_timer);      
-    tabata_state = 0;
+    tabata_state = TABATA_OFF;
     return;
   }
 
@@ -594,28 +594,25 @@ void tabata_task(void)
  */    
   switch (tabata_state)
   {
-    case (TABATA_OFF):                  // The tabata is not enabled
-      if ( json_tabata_enable != 0 )    // Just switched to enable. 
-      {
-        timer_new(&tabata_timer, json_tabata_on * ONE_SECOND);
-        set_LED_PWM_now(0);             // Turn off the lights
-        SEND(sprintf(_xs, "{\"TABATA_STARTING\":%d}\r\n", (30));)
-        tabata_state = TABATA_REST;
-      } 
+    case (TABATA_OFF):                  // First time through after enable
+      timer_new(&tabata_timer, json_tabata_on * ONE_SECOND);
+      set_LED_PWM_now(0);               // Turn off the lights
+      SEND(sprintf(_xs, "{\"TABATA_REST\":%d}\r\n", json_tabata_on);)
+      tabata_state = TABATA_REST;
       break;
         
-    case (TABATA_REST):                // OFF, wait for the time to expire
-      if (tabata_timer == 0)             // Don't do anything unless the time expires
+    case (TABATA_REST):                 // OFF, wait for the time to expire
+      if (tabata_timer == 0)            // Don't do anything unless the time expires
       {
         timer_new(&tabata_timer, json_tabata_warn_on * ONE_SECOND);
         set_LED_PWM_now(json_LED_PWM);  //     Turn on the lights
-        SEND(sprintf(_xs, "{\"TABATA_WARN\":%d}\r\n", json_tabata_warn_on);)
+        SEND(sprintf(_xs, "{\"TABATA_WARNING\":%d}\r\n", json_tabata_warn_on);)
         tabata_state = TABATA_WARNING;
       }
       break;
         
-    case (TABATA_WARNING):                 // Warning time in seconds
-      if ( (tabata_timer % 50) == 0 )
+    case (TABATA_WARNING):                  // Warning time in seconds
+      if ( (tabata_timer % 50) == 0 )       // Blink the LEDs during the warning
       {
         if ( ((tabata_timer / 50) & 1) == 0 )
         {

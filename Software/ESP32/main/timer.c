@@ -389,6 +389,13 @@ int timer_delete
 {
   unsigned int i;
 
+  if ( old_timer == 0 )
+  {
+    return 0;
+  }
+
+  *old_timer = 0;                   // Set the timer to zero
+
   for (i=0;  i != N_TIMERS; i++ )   // Look through the space
   {
     if ( timers[i] == old_timer )   // Found the existing timer
@@ -398,6 +405,8 @@ int timer_delete
     }
   }
 
+/*
+ *  The timer doesn't exist, return an error
+ */
   return 0;
-  
 }
