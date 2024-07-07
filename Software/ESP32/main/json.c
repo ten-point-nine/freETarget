@@ -151,7 +151,7 @@ const json_message_t JSON[] = {
   {"\"VERSION\":",        0,                                 0,                IS_INT32,  &POST_version,    0,                       0 },    // Return the version string
   {"\"VREF_LO\":",        0,                                 &json_vref_lo,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_LO,       1250 },    // Low trip point value (Volts)
   {"\"VREF_HI\":",        0,                                 &json_vref_hi,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_HI,       2000 },    // High trip point value (Volts)
-  {"\"WC\"",              0,                                 0,                IS_VOID,   &WiFi_setup,      0,                       6 },    // Set the wifi channel
+  {"\"WC\"",              0,                                 0,                IS_VOID,   &WiFi_configuration,0,                     6 },    // Simple WiFi setup command
   {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT32,  0,                NONVOL_WIFI_CHANNEL,     6 },    // Set the wifi channel
   {"\"WIFI_HIDDEN\":",    &json_wifi_hidden,                 0,                IS_INT32,  0,                NONVOL_WIFI_HIDDEN,      0 },    // Hide the SSID 
   {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_SECRET+PWD_SIZE, 0,       NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 

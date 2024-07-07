@@ -752,7 +752,7 @@ void WiFi_MAC_address
  * 
  ****************************************************************************/
 
-void WiFi_setup(void)
+void WiFi_configuration(void)
 {
     char ch;
 
@@ -772,6 +772,9 @@ void WiFi_setup(void)
         printf("\r\nTarget uses local SSID: %s", json_wifi_ssid);
         printf(" with password: %s", json_wifi_pwd);
     }
+
+    WiFi_my_IP_address(_xs);
+    printf("\r\nIP address: %s", _xs);
 
     printf("\r\nWiFi SSID hidden %d", json_wifi_hidden);
 
