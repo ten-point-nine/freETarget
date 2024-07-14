@@ -71,17 +71,18 @@ namespace freETarget {
                     path+="\\";
                 }
             }
+
             string com = Properties.Settings.Default.portName;
             string baud = Properties.Settings.Default.baudRate.ToString();
 
             using (System.Diagnostics.Process pProcess = new System.Diagnostics.Process()) {
                 if (Properties.Settings.Default.Board == frmMainWindow.Arduino) {
-                    pProcess.StartInfo.FileName = path + "avrdude.exe";
+                    pProcess.StartInfo.FileName = "\"" + path + "avrdude.exe" + "\"";
                     pProcess.StartInfo.Arguments = "-C" + path + "avrdude.conf" + " "
                                                     + "-v -patmega2560 -cwiring -P" + com + " -b" + baud + " -D" + " "
                                                     + "-Uflash:w:" + filePath + ":i";
                 } else {
-                    pProcess.StartInfo.FileName = path  + "esptool";
+                    pProcess.StartInfo.FileName = "\"" + path  + "esptool" + "\"";
                     pProcess.StartInfo.Arguments = "-p "+com+" -b " + baud+ " " +
                         "--before default_reset " +
                         "--after hard_reset " +
