@@ -8,7 +8,7 @@
 #ifndef _NONVOL_H
 #define _NONVOL_H
 
-#define PS_VERSION        0                       // Persistent storage version
+#define PS_VERSION        1                       // Persistent storage version
 #define PS_UNINIT(x)     ( ((x) == 0xABAB) || ((x) == 0xFFFF))  // Uninitilized value
 
 #define NAME_SPACE "freETarget"

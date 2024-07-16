@@ -393,11 +393,23 @@ void update_nonvol
         break;
       }
       i++;
-   }
-   current_version = PS_VERSION;                            // Initialized, force in the current version
-   nvs_set_i32(my_handle, NONVOL_PS_VERSION, current_version);
-   nvs_commit(my_handle);
+    }
   }
+
+/*
+ *  Version 0 - 1
+ */
+  if ( current_version == 0 )
+  {
+    nvs_set_i32(my_handle, NONVOL_WIFI_HIDDEN, 0);
+    nvs_set_i32(my_handle, NONVOL_PCNT_LATENCY, 0);
+    nvs_set_i32(my_handle, NONVOL_SENSOR_DIA, 232000);
+    current_version = 1;
+  }
+  
+  current_version = PS_VERSION;                            // Initialized, force in the current version
+  nvs_set_i32(my_handle, NONVOL_PS_VERSION, current_version);
+  nvs_commit(my_handle);
 
 /*
  * Up to date, return
