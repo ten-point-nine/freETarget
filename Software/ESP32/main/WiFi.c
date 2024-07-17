@@ -789,11 +789,11 @@ void WiFi_configuration(void)
  * Enter the new settings
  */
     printf("\r\n! - Exit");
-    printf("\r\n1 - SSID");
-    printf("\r\n2 - password");
-    printf("\r\n3 - channel");
-    printf("\r\n4 - Hide access point SSID");
-    printf("\r\n:");
+    printf("\r\n1 - SSID:     %s", json_wifi_ssid);
+    printf("\r\n2 - password: %s", json_wifi_pwd);
+    printf("\r\n3 - channel:  %d", json_wifi_channel);
+    printf("\r\n4 - Hide access point SSID: %d", json_wifi_hidden);
+    printf("\r\n>");
 
     while (1)
     {

@@ -412,7 +412,9 @@ void update_nonvol
   {  
     DLT(DLT_CRITICAL, printf("Updating PS0 to PS1");)
 
-    nvs_set_i32(my_handle, NONVOL_WIFI_HIDDEN,   0);
+    nvs_set_i32(my_handle, NONVOL_WIFI_HIDDEN, 0);
+    nvs_set_i32(my_handle, NONVOL_PCNT_LATENCY, 0);
+    nvs_set_i32(my_handle, NONVOL_SENSOR_DIA, 232000);
     current_version = 1;
   }
 
