@@ -332,7 +332,7 @@ namespace freETarget {
             Application.DoEvents();
             //received data from serial port
             //SerialPort sp = (SerialPort)sender;
-            string indata = e.Text.Trim();
+            string indata = e.Text.Trim().Replace('\0',' ');
 
             //first incoming text from target after port open is "freETarget VX.x" - use this to confirm connection
             if (/*indata.Contains("freETarget") &&*/ currentStatus == Status.CONECTING) {
