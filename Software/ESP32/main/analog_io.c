@@ -277,7 +277,7 @@ double temperature_C(void)
  * Read in the temperature and humidity together
  */
   temp_buffer[0] = 0x24;        // Trigger read on demand
-  temp_buffer[1] = 0x00;
+  temp_buffer[1] = 0x00;!!
   i2c_write( TEMP_IC, temp_buffer, 2 );
   temp_buffer[0] = 0xAB;
   temp_buffer[1] = 0xCD;
