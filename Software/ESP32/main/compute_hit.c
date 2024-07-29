@@ -26,7 +26,13 @@
 /*
  *  Variables
  */
-sensor_t s[4];
+sensor_t s[4] = {
+  {0, {'n', "NORTH_LO", LED_NORTH_FAILED, 0x80}, {'N', "NORTH_HI", LED_NORTH_FAILED, 0x08} },
+  {1, {'e', "EAST_LO",  LED_EAST_FAILED,  0x40}, {'E', "EAST_HI",  LED_EAST_FAILED,  0x04} },
+  {2, {'s', "SOUTH_LO", LED_SOUTH_FAILED, 0x20}, {'S', "SOUTH_HI", LED_SOUTH_FAILED, 0x02} },
+  {3, {'w', "WEST_LO",  LED_WEST_FAILED,  0x10}, {'W', "WEST_HI",  LED_WEST_FAILED,  0x01} }
+};
+
 unsigned int  pellet_calibre;     // Time offset to compensate for pellet diameter
 static volatile unsigned long wdt; // Warchdog  timer
 

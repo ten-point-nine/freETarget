@@ -11,18 +11,22 @@
 /*
  * @function Prototypes
  */
-void    self_test(unsigned int test);
-void    show_sensor_status(unsigned int sensor_status); // Display the sensor status as text
-void    show_sensor_fault(unsigned int sensor_status);  // Use the LEDs to show what sensor didn't work
-void    blink_fault(unsigned int fault_code);           // Blink a fault
-void    POST_version(void);                             // Show the version string
-bool    POST_counters(void);                            // Verify the counter operation
-void    POST_trip_point(void);                          // Display the set point
-void    set_trip_point(int x);                          // Calibrate the trip point
-bool    do_dlt(unsigned int level);                     // Diagnostics Log and Trace
-void    zapple(unsigned int test);                      // ZAPPLE console monitor
-bool    factory_test(void);                             // Test the hardware in production
+void self_test(unsigned int test);
+void show_sensor_status(unsigned int sensor_status);      // Display the sensor status as text
+void show_sensor_fault(unsigned int sensor_status);       // Use the LEDs to show what sensor didn't work
+void blink_fault(unsigned int fault_code);                // Blink a fault
+void POST_version(void);                                  // Show the version string
+bool POST_counters(void);                                 // Verify the counter operation
+void POST_trip_point(void);                               // Display the set point
+void set_trip_point(int x);                               // Calibrate the trip point
+bool do_dlt(unsigned int level);                          // Diagnostics Log and Trace
+void zapple(unsigned int test);                           // ZAPPLE console monitor
+bool factory_test(void);                                  // Test the hardware in production
+void set_diag_LED(char* new_LEDs, unsigned int duration); // Display the LED failure code
 
+/* 
+ *  Definitions
+ */
 #define T_HELP           0        // Help test
 #define T_FACTORY        1        // Factory Test
 
@@ -89,20 +93,27 @@ bool    factory_test(void);                             // Test the hardware in 
 #define LED_SOUTH_FAILED   "RRB"            // South sensor failed
 #define LED_WEST_FAILED    "RRY"            // West sensor failed
 
+#define LED_FAIL_CLOCK_STOP  "RBR"          // The reference clock cannot be stopped 
+#define LED_FAIL_CLOCK_START "RBG"          // The reference clock cannot be started
+#define LED_FAIL_RUN_STUCK   "RBB"          // There is a stuck bit in the RUN latch
+#define LED_FAIL_RUN_OPEN    "RBW"          // The sensor line is open circuit 
+
 #define LED_MISS           "RGR"            // Shot was detected as a miss
-#define LED_FAIL_B         "RGG"            // 
+#define LED_LOW_12V        "RGG"            // 12 Volt supply out of spec
 #define LED_FAIL_C         "RGB"            // 
 #define LED_FAIL_D         "RGW"            // 
 
-#define LED_FAIL_E         "RBR"            // 
-#define LED_FAIL_F         "RBG"            // 
-#define LED_FAIL_G         "RBB"            // 
-#define LED_FAIL_H         "RBW"            // 
 
 #define LED_FAIL_I         "RWR"            // 
 #define LED_FAIL_J         "RWG"            // 
 #define LED_FAIL_K         "RWB"            // 
 #define LED_FAIL_L         "RWW"            // 
+
+#define LED_INFO_START     "Y  "            // Start of self test
+#define LED_INFO_A         "YGG"            // Second Info
+#define LED_INFO_B         "YRR "           // Third Info
+#define LED_INFO_C         "YBB "           // Fourth Info
+#define LED_INFO_D         "YWE "           // Fifth Info
 
 /*
  * Tracing 

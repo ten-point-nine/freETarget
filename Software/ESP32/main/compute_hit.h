@@ -17,18 +17,32 @@
 /*
  *  Local Structures
  */
+
+struct sensor_ID
+{
+  char  short_name;     // Short name, ex 'N'
+  char* long_name;      // Long name, ex "NORTH_HI"
+  char* diag_LED;       // LEDs to be set if a fault occurs
+  int   run_mask;       // What bit is set in the RUN latch
+};
+
+typedef struct sensor_ID sensor_ID_t;
+
 struct sensor
 {
-  unsigned int index;   // Which sensor is this one
-  bool is_valid;      // TRUE if the sensor contains a valid time
-  double angle_A;       // Angle to be computed
-  double diagonal;      // Diagonal angle to next sensor (45')
-  double x;             // Sensor Location (X us)
-  double y;             // Sensor Location (Y us)
-  double count;         // Working timer value
-  double a, b, c;       // Working dimensions
-  double xs;            // Computed X shot value
-  double ys;            // Computed Y shot value
+  unsigned int index;       // Which sensor is this one
+  sensor_ID_t  low_sense;   // Information about the low trip point
+  sensor_ID_t  high_sense;  // Information about the high trip point
+  bool is_valid;            // TRUE if the sensor contains a valid time
+  double angle_A;           // Angle to be computed
+  double diagonal;          // Diagonal angle to next sensor (45')
+  double x;                 // Sensor Location (X us)
+  double y;                 // Sensor Location (Y us)
+  double count;             // Working timer value
+  double a, b, c;           // Working dimensions
+  double xs;                // Computed X shot value
+  double ys;                // Computed Y shot value
+  char*  diag_LED;          // LEDs to display if a fault is detected
 };
 
 typedef struct sensor sensor_t;
@@ -37,7 +51,7 @@ extern sensor_t s[4];
 
 
 /*
- *  Public Funcitons
+ *  Public Functions
  */
 void          init_sensors(void);                                       // Initialize sensor structure
 unsigned int  compute_hit(shot_record_t* shot);                         // Find the location of the shot

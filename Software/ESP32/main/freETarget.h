@@ -13,7 +13,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"5.1.13 July 16, 2024\""
+#define SOFTWARE_VERSION "\"5.1.14 July 28, 2024\""
 
 #define REV_500    500   // ESP32
 #define REV_510    510
@@ -114,7 +114,6 @@ struct shot_r
 
 typedef struct shot_r shot_record_t;
 extern shot_record_t record[SHOT_STRING];      //Array of shot records
-
 
 /*
  *  Global Variables
