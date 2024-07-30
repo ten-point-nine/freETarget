@@ -322,8 +322,8 @@ void WiFi_event_handler
             xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
          }
          set_status_LED(LED_STATION);
-      }
-   }   
+        }
+    }   
    
    if ( event_base == IP_EVENT )
    {
@@ -627,6 +627,7 @@ void tcpip_accept_poll(void* parameters)
                 }
             }
 
+
 /*
  * Set tcp keepalive option
  */
@@ -635,12 +636,13 @@ void tcpip_accept_poll(void* parameters)
             setsockopt(sock, IPPROTO_TCP, TCP_KEEPINTVL, &keepInterval, sizeof(int));
             setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT, &keepCount, sizeof(int));
 
-            DLT(DLT_CRITICAL, 
+            DLT(DLT_INFO, 
             {         
                 inet_ntoa_r(((struct sockaddr_in *)&source_addr)->sin_addr, addr_str, sizeof(addr_str) - 1);
                 printf("Socket accepted ip address: %s\r\n", addr_str);
             }
             )
+            set_status_LED(LED_STATION_CN);
         }
     }
 
