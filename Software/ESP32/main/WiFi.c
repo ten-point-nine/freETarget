@@ -134,7 +134,7 @@ void WiFi_AP_init(void)
     esp_netif_t* wifiAP;
     wifi_init_config_t WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
-    DLT(DLT_CRITICAL, printf("WiFi_AP_init()");)
+    DLT(DLT_CRITICAL, printf("WiFi_AP_init()\r\n");)
     
 /*
  * Create the network interface
@@ -340,7 +340,7 @@ void WiFi_event_handler
  */
     if (event_id == WIFI_EVENT_AP_STACONNECTED)
     {
-      DLT(DLT_CRITICAL, printf("AP Connected\r\n");)
+      DLT(DLT_CRITICAL, printf("AP Connected");)
       set_status_LED(LED_ACCESS_CN);
     } 
    

@@ -46,6 +46,7 @@ typedef struct status_struct {
  * Variables
  */
 status_struct_t status[3] = {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
+status_struct_t push[3]   = {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
 int paper_state;                    // Drive is ON or OFF
 volatile unsigned long paper_time;  // How long the paper will be on for
 volatile unsigned long step_count;  // How many step counts do we need?
@@ -241,13 +242,13 @@ void status_LED_init
  * '.' - Turn the LED off
  *
  *-----------------------------------------------------*/
-#define   LED_ON 0x3F
+#define   LED_ON 0x3F    // Max full scale is 0xff (too bright)
 
 rmt_transmit_config_t tx_config = {
         .loop_count = 0, // no transfer loop
     };
 
-unsigned char led_strip_pixels[3 * 3];
+static unsigned char led_strip_pixels[3 * 3]; // 3 LEDs + 3 Bytes per LED
 
 void set_status_LED
   (
@@ -348,12 +349,13 @@ void commit_status_LEDs
  */
   for (i=0; i < 3; i++)
   {
-    led_strip_pixels[i * 3 + 0] = 0;
+    led_strip_pixels[i * 3 + 0] = 0;                        // Turn them all off
     led_strip_pixels[i * 3 + 2] = 0;
     led_strip_pixels[i * 3 + 1] = 0;
-    if ( (status[i].blink == 0) || (blink_state == 1) )
+    if ( (status[i].blink == 0)                             // Blinking is off (ie, always on)
+        || (blink_state == 1) )                             // Or, we are in a blink-on cycle
     {
-      led_strip_pixels[i * 3 + 0] = status[i].green;
+      led_strip_pixels[i * 3 + 0] = status[i].green;        // Set the RGB
       led_strip_pixels[i * 3 + 2] = status[i].blue;
       led_strip_pixels[i * 3 + 1] = status[i].red;
     }
@@ -478,7 +480,14 @@ void read_timers
  *-----------------------------------------------------*/
 void drive_paper(void)
 {
-
+/*
+ *  Verify and report on the 12V supply
+ */
+  if ( check_12V() == false )                   // See if we have 12V
+  {
+    return;                                     // NO, then nothing to do
+  }
+  
 /*
  * See what kind of drive we are using
  */
@@ -580,14 +589,6 @@ void paper_on_off                               // Function to turn the motor on
   unsigned long duration                        // How long will it be on for? 
 )
 {
-/*
- *  Verify and report on the 12V supply
- */
-  if ( check_12V() == false )                   // See if we have 12V
-  {
-    return;                                     // NO, then nothing to do
-  }
-
 /*
  *  We have a supply, continue
  */

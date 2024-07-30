@@ -68,10 +68,10 @@
 #define E       1                                     // Index to East Timer
 #define S       2                                     // Index to South Timer
 #define W       3                                     // Index to West Timer
-#define N_lo    4
-#define E_lo    5
-#define S_lo    6
-#define W_lo    7
+#define N_HI    4
+#define E_HI    5
+#define S_HI    6
+#define W_HI    7
 
 #define MISS    9                                     // Timer was a miss
 

@@ -224,8 +224,6 @@ void freeETarget_timers
   void *pvParameters
 )
 {
-  unsigned int cycle_count = 0;
-  unsigned int toggle = 0;
   unsigned int i;
 
   DLT(DLT_CRITICAL, printf("freeETarget_timers()");)
@@ -292,12 +290,6 @@ void freeETarget_synchronous
     multifunction_switch_tick();
     multifunction_switch();
     drive_paper_tick();
-    if ( LED_timer == 0 )               // Check to see if the timer ran down
-    {
-      set_status_LED(LED_RXTX_OFF);     // If so Turn off the LEDs
-      timer_delete(&LED_timer);
-      LED_timer = 1;                    // and kill the timer
-    }
 /*
  *  500 ms band
  */

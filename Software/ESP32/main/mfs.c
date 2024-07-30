@@ -141,7 +141,6 @@ mfs_action_t mfs_action[] = {
   
     if ( DIP_SW_B )                     // Switch B pressed
     {
-
     }
   }
   
@@ -190,14 +189,12 @@ void multifunction_switch_tick(void)
     if ( switch_A_count < LONG_PRESS)
     {
       switch_state |= TAP_1_PENDING;
-      set_status_LED(LED_MFS_a);
     }
     else
     {
       switch_state &= ~TAP_1_PENDING;
       switch_state |= HOLD_MASK_1 | SWITCH_VALID;
       switch_A_count = LONG_PRESS;
-      set_status_LED(LED_MFS_A);
     }
   }
   else  // Released the switch,  See if it was a tap
@@ -216,14 +213,12 @@ void multifunction_switch_tick(void)
     if ( switch_B_count < LONG_PRESS)
     {
       switch_state |= TAP_2_PENDING;
-      set_status_LED(LED_MFS_b);
     }
     else
     {
       switch_state &= ~TAP_2_PENDING;
       switch_state |= HOLD_MASK_2 | SWITCH_VALID;
       switch_B_count = LONG_PRESS;
-      set_status_LED(LED_MFS_B);
     }
   }
   else    // Released the switch, seeif it was a tap
@@ -325,7 +320,6 @@ void multifunction_switch(void)
  * All done, return the GPIO state
  */
   switch_state = 0;
-  set_status_LED(LED_MFS_OFF);
   return;
 }
 
@@ -389,7 +383,6 @@ static void mfs_paper_feed(void)            // Feed paper so long as the switch 
   }
   paper_on_off(false, 0);
   stepper_off_toggle(false, 0);
-  set_status_LED(LED_MFS_OFF);
 
   DLT(DLT_INFO, printf("Done");)
   

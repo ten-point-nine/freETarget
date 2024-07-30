@@ -162,11 +162,6 @@ int serial_available
 /*
  * Return the number of characters waiting 
  */
-  if ( n_available != 0 )               // Something waiting,
-  {
-    set_status_LED(LED_RX);             // Turn on the Receive LED
-    timer_new(&LED_timer, ONE_SECOND);
-  }
   return n_available;
 }
 
@@ -386,9 +381,6 @@ void serial_to_all
 /*
  * All done
  */
-  set_status_LED(LED_TX);
-  timer_new(&LED_timer, ONE_SECOND);
-
   return;
 }
 

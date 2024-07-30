@@ -612,19 +612,21 @@ bool factory_test(void)
  * 
  * @brief: Verify the counter circuit operation
  * 
- * @return: None
+ * @return: TRUE if the tests pass
+ *          Never if the tests fail
  * 
  *----------------------------------------------------------------
  *
  *  Trigger the counters from inside the circuit board and 
  *  read back the results and look for an expected value.
  *  
- *  Return TRUE if the complete circuit is working
+ *  Return only if all of the tests pass
  *  
  *  Test 1, Make sure the 10MHz clock is running
  *  Test 2, Clear the flip flops and make sure the run latches are clear
  *  Test 3, Trigger the flip flops and make sure that no run latche are set
  *  Test 4, Trigger a run and verify that the counters change
+ * 
  *--------------------------------------------------------------*/
 bool POST_counters(void)
 {
@@ -637,7 +639,6 @@ bool POST_counters(void)
  */
   count = 0;
   gpio_set_level(OSC_CONTROL, OSC_OFF);   // Turn off the oscillator
-  set_status_LED(LED_INFO_START);
   toggle = gpio_get_level(REF_CLK);
   for  (i=0; i != 1000; i++)               // Try 1000 times
   {
@@ -653,12 +654,10 @@ bool POST_counters(void)
     DLT(DLT_CRITICAL, printf("Reference clock cannot be stopped");)
     set_diag_LED(LED_FAIL_CLOCK_STOP, 0);
   }
-  vTaskDelay(ONE_SECOND);
 
 /*
  *  Test 2, Make sure we can turn the reference clock on
  */
-  set_status_LED(LED_INFO_A);
   count = 0;
   gpio_set_level(OSC_CONTROL, OSC_ON);
   toggle = gpio_get_level(REF_CLK);
@@ -676,14 +675,12 @@ bool POST_counters(void)
     DLT(DLT_CRITICAL, printf("Reference clock cannot be started");)
     set_diag_LED(LED_FAIL_CLOCK_START, 0);
   }
-  vTaskDelay(ONE_SECOND);
 
 /*
  *  Test 3, Make sure we can turn the triggers off
  */
   gpio_set_level(STOP_N, 0);        // Clear the latch
   gpio_set_level(STOP_N, 1);        // and reenable it
-  set_status_LED(LED_INFO_B);
   running = is_running();
   if ( running != 0  )
   {
@@ -706,7 +703,6 @@ bool POST_counters(void)
 /*
  * Test 4, Trigger the timers
  */
-  set_status_LED(LED_INFO_C);
   gpio_set_level(STOP_N, 0);          // Clear the latch
   gpio_set_level(STOP_N, 1);
   gpio_set_level(CLOCK_START, 1);     // Triger the run latch
@@ -717,11 +713,9 @@ bool POST_counters(void)
     DLT(DLT_CRITICAL, printf("Failed to start clock in run latch: %02X", is_running());)
     set_diag_LED(LED_FAIL_RUN_STUCK, 0);
   }
-  vTaskDelay(ONE_SECOND);
-
 
 /*
- * We get here regardless of whether or not the test failed
+ * We get here only if all of the tests pass
  */
   return 1;
 }

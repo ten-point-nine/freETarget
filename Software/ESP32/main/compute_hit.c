@@ -152,7 +152,7 @@ unsigned int compute_hit
  /* 
   *  Display the timer registers if in trace mode
   */  
-  DLT(DLT_DIAG, for (i=N; i <= W_lo; i++) printf("%s: %d ", long_name(1<<i), shot->timer_count[i]);)
+  DLT(DLT_DIAG, for (i=N; i <= W_HI; i++) printf("%s: %d ", long_name(1<<i), shot->timer_count[i]);)
   
 /*
  * Determine the location of the reference counter (longest time)

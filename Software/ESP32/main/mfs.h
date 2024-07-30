@@ -30,7 +30,7 @@ mfs_action_t* mfs_find(unsigned int action);              // Find the MFS entry 
  * Multifunction Switch Use when using DIP Switch for MFS
  */
 #define HOLD_1(x)    LO10((x))          // Low digit        xxxx2
-#define _HOLD_2              1
+#define _HOLD_1              1
 #define HOLD_2(x)    HI10((x))          // High digit       xxx2x
 #define _HOLD_2              2
 #define TAP_1(x)     HLO10((x))         // High Low digit   xx2xx

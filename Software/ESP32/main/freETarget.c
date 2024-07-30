@@ -99,6 +99,7 @@ void freeETarget_init(void)
   read_nonvol();
   set_status_LED(LED_HELLO_WORLD);        // Hello World
   timer_delay(ONE_SECOND);
+  set_status_LED(LED_RESET);
   WiFi_init();
   set_VREF();
   multifunction_init();
@@ -277,46 +278,7 @@ unsigned int arm(void)
 /*
  * The sensors are tripping, display the error
  */
-  if ( sensor_status & 0x80  )
-  {
-    set_status_LED(LED_NORTH_FAILED);           // Fault code North
-    vTaskDelay(ONE_SECOND);
-  }
-  if ( sensor_status & 0x40  )
-  {
-    set_status_LED(LED_EAST_FAILED);           // Fault code East
-    vTaskDelay(ONE_SECOND);
-  }
-  if ( sensor_status & 0x20)
-  {
-    set_status_LED(LED_SOUTH_FAILED);         // Fault code South
-    vTaskDelay(ONE_SECOND);
-  }
-  if ( sensor_status & 0x10)
-  {
-    set_status_LED(LED_WEST_FAILED);         // Fault code West
-    vTaskDelay(ONE_SECOND);
-  }
-  if ( sensor_status & 0x08  )
-  {
-    set_status_LED(LED_NORTH_FAILED);           // Fault code North
-    vTaskDelay(ONE_SECOND);
-  }
-  if ( sensor_status & 0x04  )
-  {
-    set_status_LED(LED_EAST_FAILED);           // Fault code East
-    vTaskDelay(ONE_SECOND);
-  }
-  if ( sensor_status & 0x02)
-  {
-    set_status_LED(LED_SOUTH_FAILED);         // Fault code South
-    vTaskDelay(ONE_SECOND);
-  }
-  if ( sensor_status & 0x01)
-  {
-    set_status_LED(LED_WEST_FAILED);         // Fault code West
-    vTaskDelay(ONE_SECOND);
-  }
+  set_diag_LED(diag_LED(sensor_status), 5);
 
 /*
  * Finished displaying the error so trying again

@@ -16,15 +16,17 @@ void arm_timers(void);                                    // Make the board read
 void clear_running(void);                                 // Clear the run flip flop 
 unsigned int is_running(void);                            // Return a bit mask of running sensors 
 void set_status_LED(char* new_state);                     // Manage the LEDs
+void push_status_LED(void);                               // Preserve the current state
+void pop_status_LED(void);                                // Bring back the old state 
 void commit_status_LEDs(unsigned int blink_state);        // Write the LED control to the hardware
 unsigned int read_DIP(void);                              // Read the DIP switch register
 unsigned int read_counter(unsigned int direction);
 void stop_timers(void);                                   // Turn off the counter registers
-void read_timers(int* timer_count);                      // Read and return the counter registers
+void read_timers(int* timer_count);                       // Read and return the counter registers
 void drive_paper(void);                                   // Turn on the paper motor
 void drive_paper_tick(void);                              // Turn the motor off when the time runs out
 void aquire(void);                                        // Read the clock registers
-// void enable_face_interrupt();                             // Turn on the face strike interrupt
+void enable_face_interrupt();                             // Turn on the face strike interrupt
 void disable_face_interrupt(void);                        // Turn off the face strike interrupt
 void enable_sensor_interrupt();                           // Turn on the sensor interrupt
 void disable_sensor_interrupt(void);                      // Turn off the sensor strike interrupt
@@ -124,7 +126,5 @@ void multifunction_display(void);                         // Display the MFS set
 #define VERBOSE_TRACE   (DIP_D)         // 8 Show the verbose software trace
 
 #define FACE_SENSOR  19
-
-
 
 #endif

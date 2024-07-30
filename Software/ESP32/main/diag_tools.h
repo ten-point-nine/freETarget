@@ -68,7 +68,7 @@ bool check_12V(void);                                     // Check the 12 volt s
 //                           Y              // Y indicates feature status
 #define LED_OFF           "   "             // Turn off all of the LEDs
 #define LED_HELLO_WORLD   "RWB"             // Hello World
-#define LED_RESET         "   "             // Force them all off
+#define LED_RESET         " - "             // Force them all off
 #define LED_GOOD          "G--"             // The software has started but not in shot mode
 #define LED_READY         "g--"             // The shot is ready to go.  Blink to show we are alive
 #define LED_BYE           "B--"             // Go to sleep
@@ -79,47 +79,21 @@ bool check_12V(void);                                     // Check the 12 volt s
 #define LED_STATION_CN    "-G-"             // The WiFI is in station mode and connected 
 #define LED_ACCESS        "-b-"             // The WiFi is in access mode and not connected
 #define LED_ACCESS_CN     "-B-"             // The WiFI is in access mode and connected 
-#define LED_RX            "--R"             // Receiving over WiFi/Serial
-#define LED_TX            "--G"             // Transmitting over WiFi / Serial
-#define LED_RXTX_OFF      "-- "             // Turn off the TX/RX LED
 
-#define LED_MFS_a         "-G-"             // Short Press Copy MFS to the LEDs
-#define LED_MFS_A         "-W-"             // Long Press Copy MFS to the LEDs
-#define LED_MFS_b         "--G"
-#define LED_MFS_B         "--W"
-#define LED_MFS_OFF       "-  "             // Turn them off if they were on
-
-// Fault Codes - RDY LED set to RED to indiate a fault
-#define LED_NORTH_FAILED   "RRR"            // North sensor failed
-#define LED_EAST_FAILED    "RRG"            // East sensor failed
-#define LED_SOUTH_FAILED   "RRB"            // South sensor failed
-#define LED_WEST_FAILED    "RRY"            // West sensor failed
+// Fatal Error.  Halts operation
 
 #define LED_FAIL_CLOCK_STOP  "RBR"          // The reference clock cannot be stopped 
 #define LED_FAIL_CLOCK_START "RBG"          // The reference clock cannot be started
 #define LED_FAIL_RUN_STUCK   "RBB"          // There is a stuck bit in the RUN latch
 #define LED_FAIL_RUN_OPEN    "RBW"          // The sensor line is open circuit 
 
-#define LED_MISS           "RGR"            // Shot was detected as a miss
-#define LED_LOW_12V        "RGG"            // 12 Volt supply out of spec
-#define LED_FAIL_C         "RGB"            // 
-#define LED_FAIL_D         "RGW"            // 
-
-#define LED_FAIL_E         "RBR"            // 
-#define LED_FAIL_F         "RBG"            // 
-#define LED_FAIL_G         "RBB"            // 
-#define LED_FAIL_H         "RBW"            // 
-
-#define LED_FAIL_I         "RWR"            // 
-#define LED_FAIL_J         "RWG"            // 
-#define LED_FAIL_K         "RWB"            // 
-#define LED_FAIL_L         "RWW"            // 
-
-#define LED_INFO_START     "Y  "            // Start of self test
-#define LED_INFO_A         "YGG"            // Second Info
-#define LED_INFO_B         "YRR "           // Third Info
-#define LED_INFO_C         "YBB "           // Fourth Info
-#define LED_INFO_D         "YWE "           // Fifth Info
+// Fault Codes - RDY LED set to RED to indiate a fault
+#define LED_NORTH_FAILED   "r-R"            // North sensor failed
+#define LED_EAST_FAILED    "r-G"            // East sensor failed
+#define LED_SOUTH_FAILED   "r-B"            // South sensor failed
+#define LED_WEST_FAILED    "r-Y"            // West sensor failed
+#define LED_MISS           "r-r"            // Shot was detected as a miss
+#define LED_LOW_12V        "r-b"            // 12 Volt supply out of spec
 
 /*
  * Tracing 

@@ -174,7 +174,7 @@ void read_nonvol(void)
  *------------------------------------------------------------*/
 void factory_nonvol
   (
-   bool new_serial_number
+   bool new_serial_number               // TRUE if prompting for a new S/N
   )
 {
   unsigned int serial_number;             // Board serial number
