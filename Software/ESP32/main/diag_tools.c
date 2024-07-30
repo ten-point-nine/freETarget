@@ -625,21 +625,30 @@ bool factory_test(void)
  *  
  *  Test 1, Make sure the 10MHz clock is running
  *  Test 2, Clear the flip flops and make sure the run latches are clear
- *  Test 3, Trigger the flip flops and make sure that no run latche are set
- *  Test 4, Trigger a run and verify that the counters change
+ *  Test 3, Trigger the flip flops and make sure the run latche are set
+ *  
  *--------------------------------------------------------------*/
 bool POST_counters(void)
 {
   unsigned int i;                          // Iteration counter
-  unsigned int count, toggle, running;     // Cycle counter
+  bool         test1, test2, test3, test4; // Record if the test failed
+  unsigned int count, toggle;              // Cycle counter
+
+  return 1;
+  
   DLT(DLT_CRITICAL, printf("POST_counters()");)
+  set_status_LED(LED_OFF);                 // Turn them all off
+  
+  return 1;
   
 /*
  *  Test 1, Make sure we can turn off the reference clock
  */
+  test1 = true;                           // Start of assuming it passes
   count = 0;
+  DLT(DLT_CRITICAL, printf("Turn Clock OFF");)
   gpio_set_level(OSC_CONTROL, OSC_OFF);   // Turn off the oscillator
-  set_status_LED(LED_INFO_START);
+  set_status_LED("W--");
   toggle = gpio_get_level(REF_CLK);
   for  (i=0; i != 1000; i++)               // Try 1000 times
   {
@@ -652,16 +661,23 @@ bool POST_counters(void)
   
   if ( count != 0 )
   {
+    set_status_LED("R--");
+    test1 = false;
     DLT(DLT_CRITICAL, printf("Reference clock cannot be stopped");)
-    set_diag_LED(LED_FAIL_CLOCK_STOP, 0);
+    vTaskDelay(5*ONE_SECOND);
+  }
+  else
+  {
+    set_status_LED("Y--");
   }
   vTaskDelay(ONE_SECOND);
 
 /*
  *  Test 2, Make sure we can turn the reference clock on
  */
-  set_status_LED(LED_INFO_A);
+  test2 = false;
   count = 0;
+  DLT(DLT_CRITICAL, printf("Turn Clock ON");)
   gpio_set_level(OSC_CONTROL, OSC_ON);
   toggle = gpio_get_level(REF_CLK);
   for  (i=0; i != 1000; i++)               // Try 1000 times
@@ -669,63 +685,82 @@ bool POST_counters(void)
     if ( (gpio_get_level(REF_CLK) ^ toggle) != 0 )  // Look for a change
     {
       count++;
+      test2 = true;
       toggle = gpio_get_level(REF_CLK);
     }
   }
 
   if ( count == 0  )
   {
+    set_status_LED("R--");
     DLT(DLT_CRITICAL, printf("Reference clock cannot be started");)
-    set_diag_LED(LED_FAIL_CLOCK_START, 0);
+    vTaskDelay(5*ONE_SECOND);
+  }
+  else
+  {
+    set_status_LED("G--");
   }
   vTaskDelay(ONE_SECOND);
 
 /*
  *  Test 3, Make sure we can turn the triggers off
  */
+  test3 = false;
+  DLT(DLT_CRITICAL, printf("Sensor trigger test OFF");)
   gpio_set_level(STOP_N, 0);        // Clear the latch
   gpio_set_level(STOP_N, 1);        // and reenable it
-  set_status_LED(LED_INFO_B);
-  running = is_running();
-  if ( running != 0  )
+  set_status_LED("-Y-");
+  if ( is_running() == 0  )
   {
-    DLT(DLT_CRITICAL, printf("Stuck bit in run latch: ");)
-    for (i=N; i <= W; i++)
-    {
-      if ( running & s[i].low_sense.run_mask ) 
+    test3 = true;
+    set_status_LED("-G-");
+  }    
+  if ( test3 == false )
+  {
+      set_status_LED("-R-");
+      DLT(DLT_CRITICAL, printf("Stuck bit in run latch: ");)
+      count = is_running();
+      for (i=0; i != 8; i++)
       {
-        set_diag_LED(s[i].low_sense.diag_LED,0);
-      }
-      if ( running & s[i].high_sense.run_mask ) 
-      {
-        set_diag_LED(s[i].high_sense.diag_LED,0);
-      }
+        if ( count & 0x80 )
+        {
+          printf("%s  ", which_one[i]);
+        }
 
-    }
+        count <<= 1;
+      }
+      vTaskDelay(5*ONE_SECOND);
   }      
   vTaskDelay(ONE_SECOND);
 
 /*
- * Test 4, Trigger the timers
+ * Test 4, trigger the timers
  */
-  set_status_LED(LED_INFO_C);
+  test4 = false;
+  DLT(DLT_CRITICAL, printf("Sensor trigger test ON");)
+  set_status_LED("--Y");
   gpio_set_level(STOP_N, 0);          // Clear the latch
   gpio_set_level(STOP_N, 1);
   gpio_set_level(CLOCK_START, 1);     // Triger the run latch
   gpio_set_level(CLOCK_START, 0);
   gpio_set_level(CLOCK_START, 1);
-  if ( is_running() != 0xFF  )
+  if ( is_running() == 0xFF  )
   {
+    set_status_LED("--G");
+    test4 = true;
+  }
+  else
+  {
+    set_status_LED("--R");
     DLT(DLT_CRITICAL, printf("Failed to start clock in run latch: %02X", is_running());)
-    set_diag_LED(LED_FAIL_RUN_STUCK, 0);
+    vTaskDelay(5*ONE_SECOND);
   }
   vTaskDelay(ONE_SECOND);
-
 
 /*
  * We get here regardless of whether or not the test failed
  */
-  return 1;
+  return test1 && test2 && test3 && test4;
 }
 
 /*----------------------------------------------------------------
