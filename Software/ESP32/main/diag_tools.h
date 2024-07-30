@@ -88,12 +88,16 @@ bool check_12V(void);                                     // Check the 12 volt s
 #define LED_FAIL_RUN_OPEN    "RBW"          // The sensor line is open circuit 
 
 // Fault Codes - RDY LED set to RED to indiate a fault
-#define LED_NORTH_FAILED   "r-R"            // North sensor failed
-#define LED_EAST_FAILED    "r-G"            // East sensor failed
-#define LED_SOUTH_FAILED   "r-B"            // South sensor failed
-#define LED_WEST_FAILED    "r-Y"            // West sensor failed
-#define LED_MISS           "r-r"            // Shot was detected as a miss
-#define LED_LOW_12V        "r-b"            // 12 Volt supply out of spec
+#define LED_NORTH_FAILED   "--R"            // North sensor failed
+#define LED_EAST_FAILED    "--G"            // East sensor failed
+#define LED_SOUTH_FAILED   "--B"            // South sensor failed
+#define LED_WEST_FAILED    "--Y"            // West sensor failed
+#define LED_MISS           "--r"            // Shot was detected as a miss
+#define LED_LOW_12V        "--g"            // 12 Volt supply out of spec
+#define LED_SPARE_A        "--b"
+#define LED_SPARE_B        "--y"
+#define LED_SPARE_C        "--W"
+#define LED_SPARE_D        "--w"
 
 /*
  * Tracing 
