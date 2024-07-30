@@ -30,7 +30,6 @@
 #include "analog_io.h"
 #include "gpio_define.h"
 #include "WiFi.h"
-#include "compute_hit.h"
 
 const char* which_one[] = {"North_lo", "East_lo ", "South_lo", "West_lo ", "North_hi", "East_hi ", "South_hi", "West_hi "};
 
@@ -634,8 +633,6 @@ bool POST_counters(void)
   bool         test1, test2, test3, test4; // Record if the test failed
   unsigned int count, toggle;              // Cycle counter
 
-  return 1;
-  
   DLT(DLT_CRITICAL, printf("POST_counters()");)
   set_status_LED(LED_OFF);                 // Turn them all off
   
@@ -898,47 +895,3 @@ bool do_dlt
   return true;
 }
 
-/*----------------------------------------------------------------
- *
- * @function: set_diag_LED
- *
- * @brief:    Set the state of the diagnostics LED
- *
- * @return:   Nothing
- * 
- *----------------------------------------------------------------
- * 
- * This function is similar to set_status_LED() except that the
- * duration of the LED is configurable
- *   
- *--------------------------------------------------------------*/
-void set_diag_LED
-(
-  char* new_LEDs,           // NEW LED display
-  unsigned int duration     // How long the display is present for in seconds
-)
-{
-  set_status_LED(new_LEDs);
-
-/*
- *  Test for infinit wait
- */
-  if ( duration == 0 )      // Wait here forever 
-  {
-    while (1)
-    {
-      vTaskDelay(ONE_SECOND);
-    }
-  }
-
-/*
- *  The fault is displayed for a short time
- */
-  vTaskDelay(ONE_SECOND * duration);
-
-/*
- *  All done, return
- */
-  return;
-
-}
