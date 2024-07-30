@@ -23,6 +23,7 @@ bool do_dlt(unsigned int level);                          // Diagnostics Log and
 void zapple(unsigned int test);                           // ZAPPLE console monitor
 bool factory_test(void);                                  // Test the hardware in production
 void set_diag_LED(char* new_LEDs, unsigned int duration); // Display the LED failure code
+bool check_12V(void);                                     // Check the 12 volt supply
 
 /* 
  *  Definitions
@@ -68,9 +69,9 @@ void set_diag_LED(char* new_LEDs, unsigned int duration); // Display the LED fai
 #define LED_OFF           "   "             // Turn off all of the LEDs
 #define LED_HELLO_WORLD   "RWB"             // Hello World
 #define LED_RESET         "   "             // Force them all off
-#define LED_GOOD          "G  "             // The software has started but not in shot mode
-#define LED_READY         "g  "             // The shot is ready to go.  Blink to show we are alive
-#define LED_BYE           "B  "             // Go to sleep
+#define LED_GOOD          "G--"             // The software has started but not in shot mode
+#define LED_READY         "g--"             // The shot is ready to go.  Blink to show we are alive
+#define LED_BYE           "B--"             // Go to sleep
 #define LED_READY_OFF     " --"             // Turn off the READY light
 
 #define LED_WIFI_OFF      "- -"             // The WiFi is not operational
@@ -133,5 +134,4 @@ void set_diag_LED(char* new_LEDs, unsigned int duration); // Display the LED fai
 /*
  *  Variables
  */
-extern const char* which_one[8];
 #endif

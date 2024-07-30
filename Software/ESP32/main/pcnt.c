@@ -274,7 +274,7 @@ void pcnt_test
           {
             printf("    ");
           }
-          printf("%s: %d   ", which_one[j], array[i][j]);
+          printf("%s: %d   ", long_name(1<<i), array[i][j]);
         }
       }
       printf("\r\nis_running: %02X  ", is_running());
@@ -306,7 +306,7 @@ void pcnt_test
           {
             printf("      ");
           }
-          printf("%s: %d   ", which_one[j], array[i][j]);
+          printf("%s: %d   ", long_name(1<<i), array[i][j]);
         }
       }
       printf("\r\nis_running(): %02X\r\n", is_running());
@@ -335,7 +335,7 @@ void pcnt_test
           {
             printf("    ");
           }
-          printf("%s: %d  ", which_one[j], array[i][j]);
+          printf("%s: %d  ", long_name(1<<i), array[i][j]);
         }
       }
       printf("\r\nis_running(): %02X  ", is_running());

@@ -71,7 +71,6 @@ const char* names[] = { "TARGET",                                               
                         "ODIN",   "WODEN",   "THOR",   "BALDAR",                                                            // 26
                         0};
                   
-const char    nesw[]   = "wsenWSEN";              // Cardinal Points
 const char    to_hex[] = "0123456789ABCDEF";      // Quick Hex to ASCII
 
 char   _xs[512];       // Holding buffer for sprintf
@@ -114,11 +113,8 @@ void freeETarget_init(void)
 /*
  * Run the power on self test
  */
-  if ( POST_counters() == false )         // If the timers fail
-  {
-    DLT(DLT_CRITICAL, printf("POST_counters failed"); )  // Failed the test
-    vTaskDelay(2*ONE_SECOND);
-  }
+  POST_counters();          // POST counters does not return if there is an error
+  check_12V();              // Verify the 12 volt supply
   
 /*
  * Ready to go
@@ -950,7 +946,7 @@ void send_keep_alive(void)
       {
         if (running & (1<<i))
         {
-          printf(" %s ", which_one[i] );
+          printf(" %s ", long_name(1<<i) );
         }
       }
     }
@@ -1001,7 +997,7 @@ extern int isr_state;
       printf("\r\n");
       for (i=0; i != 8; i++)
       {
-        printf("%s:%5d  ", which_one[i], record[last_shot].timer_count[i]);
+        printf("%s:%5d  ", long_name(1<<i), record[last_shot].timer_count[i]);
       }
       last_shot = (last_shot+1) % SHOT_STRING;
     }
@@ -1013,3 +1009,137 @@ extern int isr_state;
  */
   return;
  }
+
+/*----------------------------------------------------------------
+ * 
+ * @function: short_name
+ * 
+ * @brief:    Return the short name belonging to the running bit
+ * 
+ * @return:   Short_name
+ * 
+ *----------------------------------------------------------------
+ *
+ * Information about a sensor is saved in the structure s[].
+ * 
+ * This function inspects the structure looking for the bit
+ * corresponding to the bit set in the run latch
+ * 
+ *--------------------------------------------------------------*/
+char short_name
+(
+  unsigned int run_mask       // Run mask to look for a match
+)
+{
+  unsigned int i;
+/*
+ *  Loop throught the sensors looking for a matching run mask
+ */
+  for (i=N; i <= W; i++ )
+  {
+    if ( s[i].low_sense.run_mask == run_mask )
+    {
+      return s[i].low_sense.short_name;
+    }
+
+    if ( s[i].high_sense.run_mask == run_mask )
+    {
+      return s[i].high_sense.short_name;
+    }
+  }
+
+/*
+ * Not found, return null
+ */
+  return 0;
+}
+
+/*----------------------------------------------------------------
+ * 
+ * @function: long_name
+ * 
+ * @brief:    Return the long name belonging to the running bit
+ * 
+ * @return:   long_name
+ * 
+ *----------------------------------------------------------------
+ *
+ * Information about a sensor is saved in the structure s[].
+ * 
+ * This function inspects the structure looking for the bit
+ * corresponding to the bit set in the run latch
+ * 
+ *--------------------------------------------------------------*/
+char* long_name
+(
+  unsigned int run_mask       // Run mask to look for a match
+)
+{
+  unsigned int i;
+
+/*
+ *  Loop throught the sensors looking for a matching run mask
+ */
+  for (i=N; i <= W; i++ )
+  {
+    if ( s[i].low_sense.run_mask == run_mask )
+    {
+      return s[i].low_sense.long_name;
+    }
+
+    if ( s[i].high_sense.run_mask == run_mask )
+    {
+      return s[i].high_sense.long_name;
+    }
+  }
+
+/*
+ * Not found, return null
+ */
+  return 0;
+}
+
+/*----------------------------------------------------------------
+ * 
+ * @function: diag_LED
+ * 
+ * @brief:    Return the diagnostics LED belonging to the running bit
+ * 
+ * @return:   diag_LED
+ * 
+ *----------------------------------------------------------------
+ *
+ * Information about a sensor is saved in the structure s[].
+ * 
+ * This function inspects the structure looking for the bit
+ * corresponding to the bit set in the run latch
+ * 
+ *--------------------------------------------------------------*/
+char* diag_LED
+(
+  unsigned int run_mask       // Run mask to look for a match
+)
+{
+  unsigned int i;
+
+/*
+ *  Loop throught the sensors looking for a matching run mask
+ */
+  for (i=N; i <= W; i++ )
+  {
+    if ( s[i].low_sense.run_mask == run_mask )
+    {
+      return s[i].low_sense.diag_LED;
+    }
+
+    if ( s[i].high_sense.run_mask == run_mask )
+    {
+      return s[i].high_sense.diag_LED;
+    }
+  }
+
+/*
+ * Not found, return null
+ */
+  return 0;
+}

@@ -279,7 +279,6 @@ void freeETarget_synchronous
 {
   unsigned int cycle_count = 0;
   unsigned int toggle = 0;
-  unsigned int i;
 
   DLT(DLT_CRITICAL, printf("freeETarget_synchronous()");)
 

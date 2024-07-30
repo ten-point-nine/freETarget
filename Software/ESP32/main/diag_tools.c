@@ -32,8 +32,6 @@
 #include "WiFi.h"
 #include "compute_hit.h"
 
-const char* which_one[] = {"North_lo", "East_lo ", "South_lo", "West_lo ", "North_hi", "East_hi ", "South_hi", "West_hi "};
-
 #define TICK(x) (((x) / 0.33) * OSCILLATOR_MHZ)   // Distance in clock ticks
 #define RX(Z,X,Y) (16000 - (sqrt(sq(TICK(x)-s[(Z)].x) + sq(TICK(y)-s[(Z)].y))))
 #define GRID_SIDE 25                              // Should be an odd number
@@ -454,7 +452,7 @@ bool factory_test(void)
       }
       if (running & (1<<i))
       {
-        printf("%c", nesw[i] );
+        printf("%c", short_name(1<<i) );
       }
       else
       {
@@ -753,7 +751,7 @@ void show_sensor_status
 
   for (i=N; i<=W; i++)
   {
-    if ( sensor_status & (1<<i) )   printf("%c", nesw[i]);
+    if ( sensor_status & (1<<i) )   printf("%c", short_name(1<<i));
     else                            printf(".");
   }
 
@@ -807,8 +805,6 @@ void show_sensor_status
  * failed to detect a show
  *   
  *--------------------------------------------------------------*/
-static char* led_fault[] = {LED_NORTH_FAILED, LED_EAST_FAILED, LED_SOUTH_FAILED, LED_WEST_FAILED};
-
 void show_sensor_fault
 (
   unsigned int   sensor_status
@@ -820,7 +816,7 @@ void show_sensor_fault
   {
     if ( (sensor_status & (1<<i)) == 0)
     {
-      set_status_LED(led_fault[i]);
+      set_status_LED(diag_LED(1<<i));
       vTaskDelay(ONE_SECOND*2);
       return;
     }
@@ -906,4 +902,31 @@ void set_diag_LED
  */
   return;
 
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: check_12V
+ *
+ * @brief:    Make sure the 12 Volt supply is within limits
+ *
+ * @return:   Nothing
+ * 
+ *----------------------------------------------------------------
+ * 
+ * The 12V supply is read and compared against limits.
+ * 
+ * If it is out of spec, then the 12V fault LEDs are displayed
+ * for 5 seconds and then control returns to the caller.
+ *   
+ *--------------------------------------------------------------*/
+bool check_12V(void)
+{
+  if ( v12_supply() < 10.0 )
+  {
+    set_diag_LED(LED_LOW_12V, 5);
+    return false;
+  }
+
+  return true;
 }

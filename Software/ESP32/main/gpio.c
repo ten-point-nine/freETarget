@@ -580,6 +580,17 @@ void paper_on_off                               // Function to turn the motor on
   unsigned long duration                        // How long will it be on for? 
 )
 {
+/*
+ *  Verify and report on the 12V supply
+ */
+  if ( check_12V() == false )                   // See if we have 12V
+  {
+    return;                                     // NO, then nothing to do
+  }
+
+/*
+ *  We have a supply, continue
+ */
   paper_state = on;
 
   if ( on == true )

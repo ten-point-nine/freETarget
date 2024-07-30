@@ -14,7 +14,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"5.2.X July 17, 2024\""
+#define SOFTWARE_VERSION "\"5.2.X July 30, 2024\""
 
 #define REV_500    500   // ESP32
 #define REV_510    510
@@ -82,16 +82,19 @@
 /* 
  * FreeETarget functions
  */
-void freeETarget_init(void);                            // Get the target software ready
-void freeETarget_target_loop(void* arg);                // Target polling loop
-void send_keep_alive(void);                             // Send out the keep alive signal for TCPIP
-void hello(void);                                       // Say Hello World
-void bye(void);                                         // Shut down and say goodbye
-void tabata_enable(int enable);                         // Arm the Tabata counters
-void polled_target_test(void);                          // Test the target aquisition software
-void interrupt_target_test(void);                       // Test the target aquisition software
-void tabata_task(void);                                 // Run the TABATA timersArm the Tabata counter
-void rapid_fire_task(void);                             // Run the Rapid Fire state machine
+void  freeETarget_init(void);                            // Get the target software ready
+void  freeETarget_target_loop(void* arg);                // Target polling loop
+void  send_keep_alive(void);                             // Send out the keep alive signal for TCPIP
+void  hello(void);                                       // Say Hello World
+void  bye(void);                                         // Shut down and say goodbye
+void  tabata_enable(int enable);                         // Arm the Tabata counters
+void  polled_target_test(void);                          // Test the target aquisition software
+void  interrupt_target_test(void);                       // Test the target aquisition software
+void  tabata_task(void);                                 // Run the TABATA timersArm the Tabata counter
+void  rapid_fire_task(void);                             // Run the Rapid Fire state machine
+char  short_name(unsigned int run_mask);                 // Find the short name corresponding to the run mask
+char* long_name(unsigned int run_mask);                  // Find the long name corresponding to the run mask
+char* diag_LED(unsigned int run_mask);                   // Find the diagnostics LED corresponding to the run mask
 
 /* 
  * freeRTOS Definitions 
@@ -124,7 +127,6 @@ extern double        s_of_sound;
 extern const char*   names[];
 extern const char    to_hex[];
 extern unsigned int  face_strike;
-extern const char    nesw[];                  // Cardinal Points
 extern unsigned int  is_trace;                // Tracing level(s)
 extern unsigned int  this_shot;               // Index into the shot array
 extern unsigned int  shot_number;

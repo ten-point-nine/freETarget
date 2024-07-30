@@ -20,10 +20,10 @@
 
 struct sensor_ID
 {
-  char  short_name;     // Short name, ex 'N'
-  char* long_name;      // Long name, ex "NORTH_HI"
-  char* diag_LED;       // LEDs to be set if a fault occurs
-  int   run_mask;       // What bit is set in the RUN latch
+  char         short_name;  // Short name, ex 'N'
+  char*        long_name;   // Long name, ex "NORTH_HI"
+  char*        diag_LED;    // LEDs to be set if a fault occurs
+  unsigned int run_mask;    // What bit is set in the RUN latch
 };
 
 typedef struct sensor_ID sensor_ID_t;
