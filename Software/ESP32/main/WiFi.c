@@ -29,6 +29,7 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "nvs_flash.h"
 
 #include "lwip/err.h"
@@ -126,7 +127,8 @@ void WiFi_init(void)
  *
  * This function initializes the WiFi to act as an Access Point.
  * 
- * The target broadcasts an SSID and lets clients connect to it.
+ * The target broadcasts an SSID and lets clients connect to it.  For example
+ * FET-TARGET
  * 
  *******************************************************************************/
 void WiFi_AP_init(void)
@@ -198,13 +200,16 @@ void WiFi_AP_init(void)
  *
  * This function initializes the WiFi to act as an station
  * 
- * The target connects to an SSID and lets clients connect to it.
+ * The target connects to an SSID and lets clients connect to it. For example
+ * SSID = myHomeInternet
  * 
  * See: https://github.com/espressif/esp-idf/blob/v4.3/examples/wifi/getting_started/station/main/station_example_main.c
  * 
  *******************************************************************************/
 void WiFi_station_init(void)
 {
+   char str_c[256];
+
    wifi_init_config_t   WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
    DLT(DLT_CRITICAL, printf("WiFi_station_init()");)
@@ -245,16 +250,15 @@ void WiFi_station_init(void)
             pdFALSE,
             pdFALSE,
             portMAX_DELAY);
-
 /*
  *  The target has connected to an access point
  */
-    DLT(DLT_INFO, 
+    DLT(DLT_CRITICAL, 
     {
         if (bits & WIFI_CONNECTED_BIT)
         {
-            printf( "Connected to ap SSID:%s password:%s",
-                     json_wifi_ssid, json_wifi_pwd);
+            WiFi_my_IP_address(str_c);
+            printf( "Connected to ap SSID: %s\r\nWiFi_IP_ADDRESS: \"%s\",", json_wifi_ssid, str_c);
         } 
         else if (bits & WIFI_FAIL_BIT) 
             {
@@ -289,6 +293,10 @@ void WiFi_station_init(void)
  * 
  * Once that is done the appropriate configuration is made and the target enabled.
  * 
+ * IMPORTANT
+ * 
+ * This function only relates to the WiFi connecting to the SSID.
+ * 
  *******************************************************************************/
 void WiFi_event_handler
 (
@@ -299,18 +307,18 @@ void WiFi_event_handler
 )
 {
     ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+
 /*
  * I am a station
  */
    if ( event_base == WIFI_EVENT )
    {
-      if ( event_id == WIFI_EVENT_STA_START)
+      if ( event_id == WIFI_EVENT_STA_START)                // Begin a connection to the SSID
       {
          esp_wifi_connect();
-         set_status_LED(LED_STATION_CN);
       }
 
-      if ( event_id == WIFI_EVENT_STA_DISCONNECTED )
+      if ( event_id == WIFI_EVENT_STA_DISCONNECTED )        // End a connection to the SSID
       {
          if (s_retry_num < WIFI_MAX_RETRY)
          {
@@ -340,14 +348,12 @@ void WiFi_event_handler
  */
     if (event_id == WIFI_EVENT_AP_STACONNECTED)
     {
-      DLT(DLT_CRITICAL, printf("AP Connected");)
-      set_status_LED(LED_ACCESS_CN);
+      DLT(DLT_CRITICAL, printf("AP connected");)
     } 
    
    if (event_id == WIFI_EVENT_AP_STADISCONNECTED)
    {
-      DLT(DLT_CRITICAL, printf("STATION disconnected");)
-      set_status_LED(LED_ACCESS);
+      DLT(DLT_CRITICAL, printf("AP disconnected");)
    }
 
 /*
@@ -374,7 +380,7 @@ void WiFi_event_handler
  * to send and receive data
  * 
  *******************************************************************************/
-static char greeting[] = "{\"CONNECTED\"}";
+#define GREETING "CONNECTED"
 
 void WiFi_tcp_server_task(void *pvParameters)
 {
@@ -407,35 +413,74 @@ void WiFi_tcp_server_task(void *pvParameters)
  * extracts the data and then loops through the active sockets to put the data
  * out to the client.
  * 
+ * When trying to send to a previously active socket which is now closed, the
+ * send() function will return a -1 to indicate that no information was sent.
+ * This is the signal that the connection has been dropped.  At the end of the
+ * loop, if all of the sockets have been closed the connection indication is
+ * updated.
+ * 
  *******************************************************************************/
 static void tcpip_server_io(void)
 {
-    int length;
+    int  length;
     char rx_buffer[128];
-    int  to_write;
+    int  to_send;
     int  i;
     int  buffer_offset;
+    bool new_socket_closed;
 
+    new_socket_closed = false;              // Was a socket closed this cycle?
 /*
  * Out to TCPIP
  */      
-    to_write = tcpip_queue_2_socket(rx_buffer,  sizeof(rx_buffer));
-    if ( to_write > 0 )
+    to_send = tcpip_queue_2_socket(rx_buffer,  sizeof(rx_buffer));
+    if ( to_send > 0 )
     {
         for (i=0; i != MAX_SOCKETS; i++)
         {
             if (socket_list[i] > 0 )
             {      
                 buffer_offset = 0;
-                while (  buffer_offset < to_write)
+                while (  buffer_offset < to_send)
                 {
-                    length = send(socket_list[i], rx_buffer + buffer_offset, to_write-buffer_offset, 0);
+                    length = send(socket_list[i], rx_buffer + buffer_offset, to_send-buffer_offset, 0);
+                    if ( length <= 0 )
+                    {
+                        close(socket_list[i]);
+                        socket_list[i] = -1;
+                        new_socket_closed = true;
+                        break;
+                    }
                     buffer_offset += length;
                 }
             }
         }
     }
+/*
+ *  See if all of the sockets are closed
+ */
+    if ( new_socket_closed )
+    {
+        for (i=0; i != MAX_SOCKETS; i++)
+        {
+            if (socket_list[i] > 0 )
+            {
+                break;
+            }
+        }
 
+        if ( i == MAX_SOCKETS )                 // All of them are closed?
+        {
+            if ( json_wifi_ssid[0] != 0 )       //  I'm a station
+            {
+                set_status_LED(LED_STATION);
+            }
+            else                                // I'm an access point
+            {
+                set_status_LED(LED_ACCESS);
+            }       
+        }
+    }
 /*
  *  All done
  */
@@ -622,7 +667,8 @@ void tcpip_accept_poll(void* parameters)
                 if  (socket_list[i] == -1 )
                 {
                     socket_list[i] = sock;
-                    send(sock, greeting, sizeof(greeting), 0);
+                    sprintf(_xs, "{\"%s\":%10.6f}", GREETING, esp_timer_get_time()/100000.0/60.0);
+                    send(sock, _xs, strlen(_xs), 0);
                     break;
                 }
             }
