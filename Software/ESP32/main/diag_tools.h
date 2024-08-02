@@ -68,7 +68,6 @@ bool check_12V(void);                                     // Check the 12 volt s
 //                           Y              // Y indicates feature status
 #define LED_OFF           "   "             // Turn off all of the LEDs
 #define LED_HELLO_WORLD   "RWB"             // Hello World
-#define LED_RESET         " - "             // Force them all off
 #define LED_GOOD          "G--"             // The software has started but not in shot mode
 #define LED_READY         "g--"             // The shot is ready to go.  Blink to show we are alive
 #define LED_BYE           "B--"             // Go to sleep
@@ -88,14 +87,14 @@ bool check_12V(void);                                     // Check the 12 volt s
 #define LED_FAIL_RUN_OPEN    "RBW"          // The sensor line is open circuit 
 
 // Fault Codes - RDY LED set to RED to indiate a fault
-#define LED_NORTH_FAILED   "--R"            // North sensor failed
-#define LED_EAST_FAILED    "--G"            // East sensor failed
-#define LED_SOUTH_FAILED   "--B"            // South sensor failed
-#define LED_WEST_FAILED    "--Y"            // West sensor failed
-#define LED_MISS           "--r"            // Shot was detected as a miss
-#define LED_LOW_12V        "--g"            // 12 Volt supply out of spec
+#define LED_NORTH_FAILED   "R-R"            // North sensor failed
+#define LED_EAST_FAILED    "R-G"            // East sensor failed
+#define LED_SOUTH_FAILED   "R-B"            // South sensor failed
+#define LED_WEST_FAILED    "R-Y"            // West sensor failed
+#define LED_MISS           "R-r"            // Shot was detected as a miss
+#define LED_LOW_12V        "--y"            // 12 Volt supply out of spec
+#define LED_OK_12V         "--g"            // The 12 Volt supply is in spec
 #define LED_SPARE_A        "--b"
-#define LED_SPARE_B        "--y"
 #define LED_SPARE_C        "--W"
 #define LED_SPARE_D        "--w"
 

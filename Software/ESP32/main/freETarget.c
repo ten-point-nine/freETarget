@@ -99,7 +99,7 @@ void freeETarget_init(void)
   read_nonvol();
   set_status_LED(LED_HELLO_WORLD);        // Hello World
   timer_delay(ONE_SECOND);
-  set_status_LED(LED_RESET);
+  set_status_LED(LED_OFF);
   WiFi_init();
   set_VREF();
   multifunction_init();
@@ -283,7 +283,7 @@ unsigned int arm(void)
 /*
  * Finished displaying the error so trying again
  */
-  return WAIT;
+  return START;
 }
    
 /*----------------------------------------------------------------
@@ -1089,12 +1089,12 @@ char* diag_LED
  */
   for (i=N; i <= W; i++ )
   {
-    if ( s[i].low_sense.run_mask == run_mask )
+    if ( (run_mask & s[i].low_sense.run_mask) != 0 )
     {
       return s[i].low_sense.diag_LED;
     }
 
-    if ( s[i].high_sense.run_mask == run_mask )
+    if ( (run_mask & s[i].high_sense.run_mask) != 0  )
     {
       return s[i].high_sense.diag_LED;
     }

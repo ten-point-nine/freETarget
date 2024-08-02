@@ -598,7 +598,7 @@ bool factory_test(void)
  *******************************************************************************/
  void POST_version(void)
  {
-  SEND(sprintf(_xs, "\r\nfreETarget %s\r\n", SOFTWARE_VERSION);)
+  SEND(sprintf(_xs, "\r\n{\"VERSION\": %s}", SOFTWARE_VERSION);)
 
 /*
  * All done, return
@@ -810,8 +810,7 @@ void show_sensor_fault
   {
     if ( (sensor_status & (1<<i)) == 0)
     {
-      set_status_LED(diag_LED(1<<i));
-      vTaskDelay(ONE_SECOND*2);
+      set_diag_LED(diag_LED(1<<i), 2);
       return;
     }
   }
@@ -916,10 +915,19 @@ void set_diag_LED
  *--------------------------------------------------------------*/
 bool check_12V(void)
 {
+  static bool fault_12V = true;
+
   if ( v12_supply() < 10.0 )
   {
-    set_diag_LED(LED_LOW_12V, 5);
+    set_status_LED(LED_LOW_12V);
+    fault_12V = true;
     return false;
+  }
+
+  if ( fault_12V == true )              // Did we have an error last time?
+  {
+    set_status_LED(LED_OK_12V);         // Gone, clear the error
+    fault_12V = false;
   }
 
   return true;

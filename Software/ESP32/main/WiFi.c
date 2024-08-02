@@ -673,7 +673,6 @@ void tcpip_accept_poll(void* parameters)
                 }
             }
 
-
 /*
  * Set tcp keepalive option
  */

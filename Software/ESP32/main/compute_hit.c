@@ -186,14 +186,10 @@ unsigned int compute_hit
 
   DLT(DLT_DIAG,
   {
-    printf("Counts       ");
-    for (i=N; i <= W; i++) printf("%s: %4.2f ", long_name(1<<i), s[i].count);
-  
     printf("\r\nMicroseconds ");
-    for (i=N; i <= W; i++) printf("%s: %4.2f ", long_name(i<<1), (double)s[i].count / ((double)OSCILLATOR_MHZ));
+    for (i=0; i < 8; i++) printf("%s: %4.2f ", long_name(1<<i), (double)s[i].count / ((double)OSCILLATOR_MHZ));
   }
   )
-
 /*
  * Fill up the structure with the counter geometry
  */
@@ -208,13 +204,12 @@ unsigned int compute_hit
     s[i].a = s[(i+1) % 4].b;
   }
 
-
 /*
  * Find the smallest non-zero value, this is the sensor furthest away from the sensor
  */
   smallest = s[N].count;
   location = N;
-  for (i=N+1; i <= W; i++)
+  for (i=E; i <= W; i++)
   {
     if ( s[i].count < smallest )
     {

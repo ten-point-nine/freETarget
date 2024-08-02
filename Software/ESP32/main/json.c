@@ -166,6 +166,9 @@ const json_message_t JSON[] = {
   {"\"SOUTH_Y\":",        &json_south_y,                     0,                IS_INT32,  0,                NONVOL_SOUTH_Y,          0 },    //
   {"\"WEST_X\":",         &json_west_x,                      0,                IS_INT32,  0,                NONVOL_WEST_X,           0 },    //
   {"\"WEST_Y\":",         &json_west_y,                      0,                IS_INT32,  0,                NONVOL_WEST_Y,           0 },    //
+  {"\"ATHLETE\":",        0,                                 0,                IS_VOID,   0,                0,                       0 },    // Athlete name for online version
+  {"\"EVENT\":",          0,                                 0,                IS_VOID,   0,                0,                       0 },    // Shooting event for online version
+  {"\"TARGET_NAME\":",    0,                                 0,                IS_VOID,   0,                0,                       0 },    // Target name for online version 
   {0,                     0,                                 0,                0,         0,                0,                       0 },    //
 
 };
