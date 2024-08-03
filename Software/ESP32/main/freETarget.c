@@ -278,7 +278,7 @@ unsigned int arm(void)
 /*
  * The sensors are tripping, display the error
  */
-  set_diag_LED(diag_LED(sensor_status), 5);
+  set_diag_LED(find_sensor(sensor_status)->diag_LED, 5);
 
 /*
  * Finished displaying the error so trying again
@@ -908,7 +908,7 @@ void send_keep_alive(void)
       {
         if (running & (1<<i))
         {
-          printf(" %s ", long_name(1<<i) );
+          printf(" %s ", find_sensor(1<<i)->long_name );
         }
       }
     }
@@ -959,7 +959,7 @@ extern int isr_state;
       printf("\r\n");
       for (i=0; i != 8; i++)
       {
-        printf("%s:%5d  ", long_name(1<<i), record[last_shot].timer_count[i]);
+        printf("%s:%5d  ", find_sensor(1<<i)->long_name, record[last_shot].timer_count[i]);
       }
       last_shot = (last_shot+1) % SHOT_STRING;
     }
@@ -971,95 +971,6 @@ extern int isr_state;
  */
   return;
  }
-
-/*----------------------------------------------------------------
- * 
- * @function: short_name
- * 
- * @brief:    Return the short name belonging to the running bit
- * 
- * @return:   Short_name
- * 
- *----------------------------------------------------------------
- *
- * Information about a sensor is saved in the structure s[].
- * 
- * This function inspects the structure looking for the bit
- * corresponding to the bit set in the run latch
- * 
- *--------------------------------------------------------------*/
-char short_name
-(
-  unsigned int run_mask       // Run mask to look for a match
-)
-{
-  unsigned int i;
-/*
- *  Loop throught the sensors looking for a matching run mask
- */
-  for (i=N; i <= W; i++ )
-  {
-    if ( s[i].low_sense.run_mask == run_mask )
-    {
-      return s[i].low_sense.short_name;
-    }
-
-    if ( s[i].high_sense.run_mask == run_mask )
-    {
-      return s[i].high_sense.short_name;
-    }
-  }
-
-/*
- * Not found, return null
- */
-  return 0;
-}
-
-/*----------------------------------------------------------------
- * 
- * @function: long_name
- * 
- * @brief:    Return the long name belonging to the running bit
- * 
- * @return:   long_name
- * 
- *----------------------------------------------------------------
- *
- * Information about a sensor is saved in the structure s[].
- * 
- * This function inspects the structure looking for the bit
- * corresponding to the bit set in the run latch
- * 
- *--------------------------------------------------------------*/
-char* long_name
-(
-  unsigned int run_mask       // Run mask to look for a match
-)
-{
-  unsigned int i;
-
-/*
- *  Loop throught the sensors looking for a matching run mask
- */
-  for (i=N; i <= W; i++ )
-  {
-    if ( s[i].low_sense.run_mask == run_mask )
-    {
-      return s[i].low_sense.long_name;
-    }
-
-    if ( s[i].high_sense.run_mask == run_mask )
-    {
-      return s[i].high_sense.long_name;
-    }
-  }
-
-/*
- * Not found, return null
- */
-  return 0;
-}
 
 /*----------------------------------------------------------------
  * 
@@ -1077,7 +988,7 @@ char* long_name
  * corresponding to the bit set in the run latch
  * 
  *--------------------------------------------------------------*/
-char* diag_LED
+sensor_ID_t* find_sensor
 (
   unsigned int run_mask       // Run mask to look for a match
 )
@@ -1091,17 +1002,17 @@ char* diag_LED
   {
     if ( (run_mask & s[i].low_sense.run_mask) != 0 )
     {
-      return s[i].low_sense.diag_LED;
+      return &s[i].low_sense;
     }
 
     if ( (run_mask & s[i].high_sense.run_mask) != 0  )
     {
-      return s[i].high_sense.diag_LED;
+      return &s[i].high_sense;
     }
   }
 
 /*
  * Not found, return null
  */
-  return 0;
+  return LED_READY;
 }

@@ -152,7 +152,7 @@ unsigned int compute_hit
  /* 
   *  Display the timer registers if in trace mode
   */  
-  DLT(DLT_DIAG, for (i=N; i <= W_HI; i++) printf("%s: %d ", long_name(1<<i), shot->timer_count[i]);)
+  DLT(DLT_DIAG, for (i=N; i <= W_HI; i++) printf("%s: %d ", find_sensor(1<<i)->long_name, shot->timer_count[i]);)
   
 /*
  * Determine the location of the reference counter (longest time)
@@ -168,7 +168,7 @@ unsigned int compute_hit
     }
   }
   
-  DLT(DLT_DIAG, printf("Reference: %4.2f   location: %s", reference, long_name(1<<location));)
+  DLT(DLT_DIAG, printf("Reference: %4.2f   location: %s", reference, find_sensor(1<<location)->long_name);)
 
 /*
  * Correct the time to remove the shortest distance
@@ -187,7 +187,7 @@ unsigned int compute_hit
   DLT(DLT_DIAG,
   {
     printf("\r\nMicroseconds ");
-    for (i=0; i < 8; i++) printf("%s: %4.2f ", long_name(1<<i), (double)s[i].count / ((double)OSCILLATOR_MHZ));
+    for (i=0; i < 8; i++) printf("%s: %4.2f ", find_sensor(1<<i)->long_name, (double)s[i].count / ((double)OSCILLATOR_MHZ));
   }
   )
 /*

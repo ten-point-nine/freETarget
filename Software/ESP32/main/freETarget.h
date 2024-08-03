@@ -14,7 +14,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"5.2.X August 2, 2024\""
+#define SOFTWARE_VERSION "\"5.2.X August 3, 2024\""
 
 #define REV_500    500   // ESP32
 #define REV_510    510
@@ -80,29 +80,40 @@
 #define PI_ON_2 (PI / 2.0d)
 
 /* 
- * FreeETarget functions
- */
-void  freeETarget_init(void);                            // Get the target software ready
-void  freeETarget_target_loop(void* arg);                // Target polling loop
-void  send_keep_alive(void);                             // Send out the keep alive signal for TCPIP
-void  hello(void);                                       // Say Hello World
-void  bye(void);                                         // Shut down and say goodbye
-void  tabata_enable(int enable);                         // Arm the Tabata counters
-void  polled_target_test(void);                          // Test the target aquisition software
-void  interrupt_target_test(void);                       // Test the target aquisition software
-void  tabata_task(void);                                 // Run the TABATA timersArm the Tabata counter
-void  rapid_fire_task(void);                             // Run the Rapid Fire state machine
-char  short_name(unsigned int run_mask);                 // Find the short name corresponding to the run mask
-char* long_name(unsigned int run_mask);                  // Find the long name corresponding to the run mask
-char* diag_LED(unsigned int run_mask);                   // Find the diagnostics LED corresponding to the run mask
-
-/* 
  * freeRTOS Definitions 
  */
 
 /*
  *  Types
  */
+struct sensor_ID
+{
+  char         short_name;  // Short name, ex 'N'
+  char*        long_name;   // Long name, ex "NORTH_HI"
+  char*        diag_LED;    // LEDs to be set if a fault occurs
+  unsigned int run_mask;    // What bit is set in the RUN latch
+};
+
+typedef struct sensor_ID sensor_ID_t;
+
+struct sensor
+{
+  unsigned int index;       // Which sensor is this one
+  sensor_ID_t  low_sense;   // Information about the low trip point
+  sensor_ID_t  high_sense;  // Information about the high trip point
+  bool is_valid;            // TRUE if the sensor contains a valid time
+  double angle_A;           // Angle to be computed
+  double diagonal;          // Diagonal angle to next sensor (45')
+  double x;                 // Sensor Location (X us)
+  double y;                 // Sensor Location (Y us)
+  double count;             // Working timer value
+  double a, b, c;           // Working dimensions
+  double xs;                // Computed X shot value
+  double ys;                // Computed Y shot value
+};
+
+typedef struct sensor sensor_t;
+
 typedef unsigned char byte_t;
 
 struct shot_r
@@ -134,5 +145,20 @@ extern volatile unsigned long power_save;     // Power down timer
 extern volatile unsigned int  run_state;      // IPC states 
 extern volatile unsigned long LED_timer;      // Turn off the LEDs when not in use
 extern char _xs[512];                         // General purpose string buffer
+
+/* 
+ * FreeETarget functions
+ */
+void  freeETarget_init(void);                            // Get the target software ready
+void  freeETarget_target_loop(void* arg);                // Target polling loop
+void  send_keep_alive(void);                             // Send out the keep alive signal for TCPIP
+void  hello(void);                                       // Say Hello World
+void  bye(void);                                         // Shut down and say goodbye
+void  tabata_enable(int enable);                         // Arm the Tabata counters
+void  polled_target_test(void);                          // Test the target aquisition software
+void  interrupt_target_test(void);                       // Test the target aquisition software
+void  tabata_task(void);                                 // Run the TABATA timersArm the Tabata counter
+void  rapid_fire_task(void);                             // Run the Rapid Fire state machine
+sensor_ID_t* find_sensor(unsigned int run_mask);         // Locate the sensor settings for the run_latch
 
 #endif
