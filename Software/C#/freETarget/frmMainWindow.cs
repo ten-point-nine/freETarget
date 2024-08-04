@@ -467,7 +467,7 @@ namespace freETarget {
                     ((comms.TcpOpenParams)para).port = Settings.Default.TcpPort;
                     String ssid = getWifiSSID();
                     if (!ssid.StartsWith(FET_SSID_PREFIX)) {
-                        MessageBox.Show("Current Wi-Fi network(" + ssid + ") is not a freETarget SSID. It should start with 'FET-'", "Wrong WiFi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        log("Current Wi-Fi network(" + ssid + ") is not a freETarget SSID.");
                     }
 
                 }
