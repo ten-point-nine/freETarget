@@ -49,12 +49,12 @@ mfs_action_t* mfs_find(unsigned int action);              // Find the MFS entry 
 /*
  *  MFS Use
  */
-#define POWER_TAP     0                   // DIP A/B used to wake up
+#define TARGET_ON     0                   // DIP A/B used to turn the target ON
 #define PAPER_FEED    1                   // DIP A/B used as a paper feed
 #define LED_ADJUST    2                   // DIP A/B used to set LED brightness
 #define PAPER_SHOT    3                   // DIP A/B Advance paper one cycle
 #define PC_TEST       4                   // DIP A/B used to trigger fake shot
-#define ON_OFF        5                   // DIP A/B used to turn the target ON or OFF
+#define TARGET_OFF    5                   // DIP A/B used to turn the target OFF
 #define MFS_SPARE_6   6
 #define MFS_SPARE_7   7
 #define MFS_SPARE_8   8

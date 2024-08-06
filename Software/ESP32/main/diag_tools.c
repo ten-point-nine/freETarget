@@ -452,7 +452,7 @@ bool factory_test(void)
       }
       if (running & (1<<i))
       {
-        printf("%c", short_name(1<<i) );
+        printf("%c", find_sensor(1<<i)->short_name );
       }
       else
       {
@@ -534,6 +534,7 @@ bool factory_test(void)
 
     if ( (pass == PASS_MASK) || (pass == PASS_TEST) ) 
     {
+      set_status_LED(LED_GOOD);
       printf("  PASS");
       vTaskDelay(ONE_SECOND);
       arm_timers();
@@ -745,7 +746,7 @@ void show_sensor_status
 
   for (i=N; i<=W; i++)
   {
-    if ( sensor_status & (1<<i) )   printf("%c", short_name(1<<i));
+    if ( sensor_status & (1<<i) )   printf("%c", find_sensor(i<<i)->short_name);
     else                            printf(".");
   }
 
@@ -806,11 +807,11 @@ void show_sensor_fault
 {
   unsigned int i;
   
-  for (i=N; i<=W; i++)
+  for (i=N; i<=W_HI; i++)
   {
     if ( (sensor_status & (1<<i)) == 0)
     {
-      set_diag_LED(diag_LED(1<<i), 2);
+      set_diag_LED(find_sensor(1<<i)->diag_LED, 2);
       return;
     }
   }

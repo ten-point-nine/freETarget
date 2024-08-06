@@ -38,6 +38,7 @@
 #include "lwip/netdb.h"
 
 #include "freETarget.h"
+#include "compute_hit.h"
 #include "serial_io.h"
 #include "json.h"
 #include "diag_tools.h"
@@ -626,7 +627,7 @@ void tcpip_accept_poll(void* parameters)
    struct sockaddr_storage source_addr; // Large enough for both IPv4 or IPv6
    socklen_t addr_len = sizeof(source_addr);
    int sock;
-   int i;
+   int i, j;
 
    DLT(DLT_CRITICAL, printf("tcp_accept_poll()");)
    
@@ -669,6 +670,12 @@ void tcpip_accept_poll(void* parameters)
                     socket_list[i] = sock;
                     sprintf(_xs, "{\"%s\":%10.6f}", GREETING, esp_timer_get_time()/100000.0/60.0);
                     send(sock, _xs, strlen(_xs), 0);
+printf("current_shot %d", current_shot);
+                    for ( j = 0; j != current_shot; j++)
+                    {
+                        send_replay(&record[j]);
+                        send(sock, _xs, strlen(_xs), 0);
+                    }
                     break;
                 }
             }

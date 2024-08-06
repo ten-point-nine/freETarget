@@ -116,9 +116,9 @@ const json_message_t JSON[] = {
   {"\"KEEP_ALIVE\":",     &json_keep_alive,                  0,                IS_INT32,  0,                NONVOL_KEEP_ALIVE,     120 },    // TCPIP Keep alive period (in seconds)
   {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT32,  &set_LED_PWM_now, NONVOL_LED_PWM,         50 },    // Set the LED brightness
   {"\"MFS_HOLD_12\":",    &json_mfs_hold_12,                 0,                IS_MFS,    0,                NONVOL_MFS_HOLD_AB,  LED_ADJUST },
-  {"\"MFS_TAP_2\":",      &json_mfs_tap_2,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_B,    POWER_TAP  },
+  {"\"MFS_TAP_2\":",      &json_mfs_tap_2,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_B,    TARGET_ON  },
   {"\"MFS_TAP_1\":",      &json_mfs_tap_1,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_A,    PAPER_SHOT },
-  {"\"MFS_HOLD_2\":",     &json_mfs_hold_2,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_B,   ON_OFF     },
+  {"\"MFS_HOLD_2\":",     &json_mfs_hold_2,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_B,   TARGET_OFF     },
   {"\"MFS_HOLD_1\":",     &json_mfs_hold_1,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_A,   PAPER_FEED },
   {"\"MFS_HOLD_D\":",     &json_mfs_hold_d,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_D,   NO_ACTION  },
   {"\"MFS_HOLD_C\":",     &json_mfs_hold_c,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_C,   NO_ACTION  },
@@ -137,6 +137,7 @@ const json_message_t JSON[] = {
   {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT32,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
   {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  0,                NONVOL_SENSOR_DIA,  230000 },    // Generate the sensor postion array
   {"\"SN\":",             &json_serial_number,               0,                IS_FIXED,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
+  {"\"START\"",           0               ,                  0,                IS_VOID,   &start_new_session,0,                       0 },    // Start a new session
   {"\"STEP_COUNT\":",     &json_step_count,                  0,                IS_INT32,  0,                NONVOL_STEP_COUNT,       0 },    // Set the duration of the stepper motor ON time
   {"\"STEP_TIME\":",      &json_step_time,                   0,                IS_INT32,  0,                NONVOL_STEP_TIME,        0 },    // Set the number of times stepper motor is stepped
   {"\"TABATA_ENABLE\":",  &json_tabata_enable,               0,                IS_INT32,  &tabata_enable,   0,                       0 },    // Enable the tabata feature

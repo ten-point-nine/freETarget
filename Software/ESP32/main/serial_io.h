@@ -30,9 +30,14 @@ bool get_string(char  destination[], int   size);   // Collect a string from the
  *  Definitions
  *              CONSOLE   AUX    TCPIP
  */
-#define CONSOLE  0x01
-#define AUX      0x02
-#define TCPIP    0x04
+#define TCPIP_0  0x01
+#define TCPIP_1  0x02
+#define TCPIP_2  0x04
+#define TCPIP_3  0x08
+#define TCPIP    (TCPIP_0 + TCPIP_1 +TCPIP_2 +TCPIP_3)
+#define CONSOLE  0x10
+#define AUX      0x20
+
 #define ALL      (CONSOLE + AUX + TCPIP)
 
 #endif

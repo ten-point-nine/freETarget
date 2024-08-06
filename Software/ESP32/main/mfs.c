@@ -39,26 +39,24 @@
  */
 
 static void sw_state(unsigned int action);      // Carry out the MFS function
-static void mfs_power_tap (void);                               // Functions to carry out mfs actions.
+static void mfs_on(void);                      // Functions to carry out mfs actions.
 static void mfs_paper_feed(void);
 static void mfs_paper_shot(void);
-static void mfs_paper_test(void);
-static void mfs_on_off(void);
+static void mfs_off(void);
 static void mfs_led_adjust(void);
 static void mfs_pc_test(void);
-static void mfs_on_off(void);
 
 /*
  * Variables 
  */
 static unsigned int switch_state;               // What switches are pressed
 mfs_action_t mfs_action[] = {
-  { POWER_TAP,      mfs_power_tap,  "WAKE UP"        },// Take the target out of sleep
+  { TARGET_ON,      mfs_on,         "TARGET_ON"      },// Take the target out of sleep
   { PAPER_FEED,     mfs_paper_feed, "PAPER FEED"     },// Feed paper until button released
   { LED_ADJUST,     mfs_led_adjust, "LED_ADJUST"     },// Adjust LED brighness
   { PAPER_SHOT,     mfs_paper_shot, "PAPER SHOT"     },// Advance paper the distance of one shot 
   { PC_TEST,        mfs_pc_test,    "PC TEST"        },// Send a test shot to the PC
-  { ON_OFF,         mfs_on_off,     "TARGET ON OFF"  },// Turn the target on or off
+  { TARGET_OFF,     mfs_off,        "TARGET OFF"     },// Turn the target on or off
   { NO_ACTION,      NULL,           "NO ACTION"      },// No action on C & D inputs
   { TARGET_TYPE,    NULL,           "TARGET TYPE"    },// Put the target type into the send score
   { RAPID_RED,      NULL,           "RAPID RED"      },// The output is used to drive the RED rapid fire LED
@@ -71,12 +69,12 @@ mfs_action_t mfs_action[] = {
 
 /*
  * Test Vectors
-  {"MFS_HOLD_AB":2, "MFS_TAP_B": 0, "MFS_TAP_A":3 , "MFS_HOLD_B": 5, "MFS_HOLD_A":1, "MFS_HOLD_D":5, "MFS_HOLD_C":6, "MFS_SELECT_CD":1, "ECHO":0}
-  {"MFS_HOLD_AB":2}
-  {"MFS_TAP_B":0}
-  {"MFS_TAP_A":3}
-  {"MFS_HOLD_B":5}
-  {"MFS_HOLD_A":1}
+  {"MFS_HOLD_12":2, "MFS_TAP_2": 0, "MFS_TAP_1":3 , "MFS_HOLD_2": 5, "MFS_HOLD_1":1, "MFS_HOLD_D":9, "MFS_HOLD_C":9, "MFS_SELECT_CD":9, "ECHO":0}
+  {"MFS_HOLD_12":2}
+  {"MFS_TAP_2":0}
+  {"MFS_TAP_1":4}
+  {"MFS_HOLD_2":5}
+  {"MFS_HOLD_1":1}
   {"MFS_HOLD_D":9}
   {"MFS_HOLD_C":9}
   {"MFS_SELECT_CD":9}
@@ -103,7 +101,7 @@ mfs_action_t mfs_action[] = {
  *-----------------------------------------------------*/
  void multifunction_init(void)
  {
-  unsigned int dip;
+
   DLT(DLT_CRITICAL, printf("Multifunction_init()");)
 /*
  * Check to see if the DIP switch has been overwritten
@@ -125,8 +123,6 @@ mfs_action_t mfs_action[] = {
 /*
  * Continue to read the DIP switch
  */
-  dip = read_DIP();                     // Read the jumper header
-
   if ( DIP_SW_A && DIP_SW_B )           // Both switches closed?
   {
     factory_nonvol(false);              // Initalize the nonvol but do not calibrate
@@ -356,7 +352,7 @@ static void sw_state
   return;
 }
 
-static void mfs_power_tap (void)
+static void mfs_on (void)
 {
   set_LED_PWM_now(json_LED_PWM);      // Yes, a quick press to turn the LED on
   vTaskDelay(ONE_SECOND/2),
@@ -397,17 +393,20 @@ static void mfs_paper_shot(void)
 
 static void mfs_pc_test(void)
 {
-  static   shot_record_t shot;
-    
-  shot.x = esp_random() % (5000);
-  shot.y = esp_random() % (5000);
+  static unsigned int test_shot = 1;
+
+  record[test_shot].x = esp_random() % (5000);
+  record[test_shot].y = esp_random() % (5000);
   s_of_sound = speed_of_sound(temperature_C(), humidity_RH());
-  shot.shot_number++;
-  send_score(&shot);
+  record[test_shot].shot_number = test_shot;
+  current_shot = record[test_shot].shot_number;
+  last_received_shot = record[test_shot].shot_number;
+  send_score(&record[test_shot]);
+  test_shot++;
   return;
 } 
 
-static void mfs_on_off(void)
+static void mfs_off(void)
 {
   bye();                             // Stay in the Bye state until a wake up event comes along
   return;

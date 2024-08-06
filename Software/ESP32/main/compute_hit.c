@@ -452,7 +452,7 @@ void send_score
   shot_record_t* shot             //  record
   )
 {
-  double x, y;                    // Shot location in mm X, Y
+  double x, y;                    // Shot location in mm X, Y before rotation
   double real_x, real_y;          // Shot location in mm X, Y before remap
   double radius;
   double angle;
@@ -493,6 +493,9 @@ void send_score
   real_x = x;
   real_y = y;                                     // Remember the original target value
   remap_target(&x, &y);                           // Change the target if needed
+  shot->xs = x;
+  shot->ys = y;
+
 /* 
  *  Display the results
  */
@@ -511,7 +514,7 @@ void send_score
 #endif
 
 #if ( S_XY )
-  SEND(sprintf(_xs, ",\"x\":%4.2f, \"y\":%4.2f ", x, y);)
+  SEND(sprintf(_xs, ",\"x\":%4.2f, \"y\":%4.2f ", shot->xs, shot->ys);)
   
   if ( json_target_type > 1 )
   {
@@ -556,7 +559,40 @@ void send_score
   }
   return;
 }
- 
+
+  
+/*----------------------------------------------------------------
+ *
+ * @function: send_replay
+ *
+ * @brief: Replay the scores
+ * 
+ * @return: None
+ *
+ *----------------------------------------------------------------
+ * 
+ * The score is sent as:
+ * 
+ * {"shot":n, "x":x, "y":y,}
+ * 
+ * Shots are stored in memory as they occur.  When a new TCPIP 
+ * connection is made, all of the accumulated scores are sent out
+ * to update the new PC client
+ *    
+ *--------------------------------------------------------------*/
+
+void send_replay
+  (
+  shot_record_t* shot             //  record
+  )
+{
+  sprintf(_xs, "\r\n{\"shot\":%d, \"x\":%4.2f, \"y\":%4.2f}\r\n", shot->shot_number, shot->xs, shot->ys);
+/*
+ * All done, return
+ */
+  return;
+}
+
 /*----------------------------------------------------------------
  *
  * @function: send_miss

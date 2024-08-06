@@ -54,7 +54,7 @@
 
 
 #define SHOT_TIME     ((int)(json_sensor_dia / 0.33)) // Worst case delay (microseconds) = sensor diameter / speed of sound)
-#define SHOT_STRING   20                              // Allow a maximum of SHOT_STRING for rapid fire
+#define SHOT_STRING   100                             // 40 Sighters + 60 on Score
 
 #define HI(x) (((x) >> 8 ) & 0x00ff)                  // High nibble
 #define LO(x) ((x) & 0x00ff)                          // Low nibble
@@ -119,8 +119,10 @@ typedef unsigned char byte_t;
 struct shot_r
 {
   unsigned int shot_number;     // Current shot number
-  double       x;               // X location of shot
+  double       x;               // X location of shot as computed
   double       y;               // Y location of shot
+  double       xs;              // X location of shot as scored
+  double       ys;              // Y location of shot
            int timer_count[8];  // Array of timer values 4 in hardware and 4 in software
   unsigned int face_strike;     // Recording of face strike
   unsigned int sensor_status;   // Triggering register
@@ -139,7 +141,8 @@ extern const char*   names[];
 extern const char    to_hex[];
 extern unsigned int  face_strike;
 extern unsigned int  is_trace;                // Tracing level(s)
-extern unsigned int  this_shot;               // Index into the shot array
+extern unsigned int  last_received_shot;               // Index into the shot array (The shot that has JUST arrived)
+extern unsigned int  current_shot;               // Index into the shot array (Last shot processed)
 extern unsigned int  shot_number;
 extern volatile unsigned long power_save;     // Power down timer
 extern volatile unsigned int  run_state;      // IPC states 
@@ -160,5 +163,6 @@ void  interrupt_target_test(void);                       // Test the target aqui
 void  tabata_task(void);                                 // Run the TABATA timersArm the Tabata counter
 void  rapid_fire_task(void);                             // Run the Rapid Fire state machine
 sensor_ID_t* find_sensor(unsigned int run_mask);         // Locate the sensor settings for the run_latch
+void  start_new_session(void);                           // Start a new shooting session
 
 #endif

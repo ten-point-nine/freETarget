@@ -96,7 +96,7 @@ void freeETarget_timer_init(void)
   timer_isr_callback_add(TIMER_GROUP_0, TIMER_1, freeETarget_timer_isr_callback, NULL, 0);
   timer_start(TIMER_GROUP_0, TIMER_1);
   timer_new(&isr_timer, 0);
-  this_shot = 0;
+  last_received_shot = 0;
 
 /*
  *  Timer running. return

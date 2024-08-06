@@ -43,8 +43,8 @@ extern void gpio_init(void);
  *  Variables
  */
 shot_record_t record[SHOT_STRING];      //Array of shot records
-unsigned int this_shot;                 // Index into the shot array
-unsigned int last_shot;                 // Last shot processed.
+unsigned int last_received_shot;                 // Index into the shot array
+unsigned int current_shot;                 // Last shot processed.
 
 double        s_of_sound;               // Speed of sound
 unsigned int  shot = 0;                 // Shot counter
@@ -53,7 +53,7 @@ unsigned int  is_trace = 0;             // Turn off tracing
 unsigned long rapid_on = 0;             // Duration of rapid fire event
 
 unsigned int  rapid_count = 0;          // Number of shots to be expected in Rapid Fire
-unsigned int  shot_number;              // Shot Identifier
+unsigned int  shot_number;              // Shot Identifier (1-100)
 volatile unsigned long  in_shot_timer;  // Time inside of the shot window
 
 static volatile unsigned long  keep_alive;        // Keep alive timer
@@ -123,8 +123,8 @@ void freeETarget_init(void)
   show_echo();
   set_LED_PWM(json_LED_PWM);
   serial_flush(ALL);                      // Get rid of everything
-  this_shot = 0;                          // Clear out any junk
-  last_shot = 0;
+  last_received_shot = 0;                          // Clear out any junk
+  current_shot = 0;
   DLT(DLT_CRITICAL, printf("Initialization complete");)
 
 /*
@@ -159,6 +159,8 @@ void freeETarget_target_loop(void* arg)
 
   DLT(DLT_CRITICAL, printf("freeETarget_target_loop()");)
   set_status_LED(LED_READY);
+
+  shot_number = 1;                    // Start counting shots at 1
 
   while(1)
   {
@@ -328,7 +330,7 @@ unsigned int wait(void)
 /*
  * See if any shots have arrived
  */
-  if ( this_shot != last_shot )
+  if ( last_received_shot != current_shot )
   {
     return REDUCE;
   }
@@ -366,35 +368,35 @@ unsigned int reduce(void)
  */
   if ( discard_shot() )                                       // Tabata is on but the shot is invalid
   {
-    last_shot = this_shot;
-    send_miss(&record[last_shot]);
+    current_shot = last_received_shot;
+    send_miss(&record[current_shot]);
     return START;                                              // Throw out any shots while dark
   }
   
 /*
  * Loop and process the shots
  */
-  while (last_shot != this_shot )
+  while (current_shot != last_received_shot )
   {   
-    DLT(DLT_APPLICATION, show_sensor_status(record[last_shot].sensor_status);)
+    DLT(DLT_APPLICATION, show_sensor_status(record[current_shot].sensor_status);)
 
-    show_sensor_fault(record[last_shot].sensor_status);
+    show_sensor_fault(record[current_shot].sensor_status);
     
-    location = compute_hit(&record[last_shot]);                 // Compute the score
+    location = compute_hit(&record[current_shot]);                 // Compute the score
     if ( location != MISS )                                     // Was it a miss or face strike?
     {
       if ( (json_rapid_enable == 0) && (json_tabata_enable = 0))// If in a regular session, hold off for the follow through time
       {
         vTaskDelay(ONE_SECOND * json_follow_through);
       }
-      send_score(&record[last_shot]);
+      send_score(&record[current_shot]);
       rapid_red(0);
       rapid_green(1);                                           // Turn off the RED and turn on the GREEN
 
       if ( (json_paper_time + json_step_time) != 0 )            // Has the witness paper been enabled?
       {
         if ( ((json_paper_eco == 0)                             // ECO turned off
-            || ( sqrt(sq(record[this_shot].x) + sq(record[this_shot].y)) < json_paper_eco )) ) // Outside the black
+            || ( sqrt(sq(record[last_received_shot].x) + sq(record[last_received_shot].y)) < json_paper_eco )) ) // Outside the black
         {
           drive_paper();                                        // to follow through.
         }
@@ -404,7 +406,7 @@ unsigned int reduce(void)
     {
       DLT(DLT_APPLICATION, printf("Shot miss...\r\n");)
       set_status_LED(LED_MISS);
-      send_miss(&record[last_shot]);
+      send_miss(&record[current_shot]);
       rapid_green(0);
       rapid_red(1);                                             // Show a miss
     }
@@ -424,12 +426,12 @@ unsigned int reduce(void)
     {
       if ( rapid_count == 0 )                                   // And the shots used up?
       {
-        last_shot = this_shot;                                  // Stop processing
+        current_shot = last_received_shot;                                  // Stop processing
         break;
       }
     }
     
-    last_shot = (last_shot+1) % SHOT_STRING;
+    current_shot = (current_shot+1) % SHOT_STRING;
   }
 
 /*
@@ -445,6 +447,43 @@ unsigned int reduce(void)
   }
 }
 
+/*----------------------------------------------------------------
+ * 
+ * @function: start_new_session()
+ * 
+ * @brief: Reset and start a new session from the beginning
+ * 
+ * @return: None
+ * 
+ *----------------------------------------------------------------
+ *
+ * The target can be commanded to start a new session by receiving
+ * the command {"START"}
+ * 
+ * This function resets the various counters and pointers back
+ * to the beginning
+ *
+ *--------------------------------------------------------------*/
+void start_new_session(void)
+{
+  unsigned int i;
+
+/*
+ *  Clear the shot information
+ */
+  current_shot = 0;
+  last_received_shot = 0;
+  
+  for (i=0; i != SHOT_STRING; i++)
+  {
+    record[i].shot_number = 0;
+  }
+  
+/*
+ *  All done, return
+ */
+  return;
+}
 /*----------------------------------------------------------------
  * 
  * @function: tabata_enable
@@ -635,14 +674,14 @@ static bool discard_shot(void)
   if ( (json_rapid_enable != 0)                 // Rapid Fire
       &&  (rapid_count == 0) )                  // No shots remaining
   {
-    last_shot = this_shot;
+    current_shot = last_received_shot;
     return true;                                // Discard any new shots    
   }
 
   if ( (json_tabata_enable != 0)                // Tabata cycle
     && ( tabata_state != TABATA_ON ) )          // Lights not on
   {
-    last_shot = this_shot;                      // Discard new shots
+    current_shot = last_received_shot;          // Discard new shots
     return true;
   }
   
@@ -947,21 +986,21 @@ extern int isr_state;
 
   int i;
 
-  printf("\r\nInterrupt target shot test: this: %d last %d\r\n", this_shot, last_shot);
+  printf("\r\nInterrupt target shot test: this: %d last %d\r\n", last_received_shot, current_shot);
 
 /*
  * Stay here watching the counters
  */
   while (1)
   {
-    while ( this_shot != last_shot )    // While we have a queue o shots
+    while ( last_received_shot != current_shot )    // While we have a queue o shots
     {
       printf("\r\n");
       for (i=0; i != 8; i++)
       {
-        printf("%s:%5d  ", find_sensor(1<<i)->long_name, record[last_shot].timer_count[i]);
+        printf("%s:%5d  ", find_sensor(1<<i)->long_name, record[current_shot].timer_count[i]);
       }
-      last_shot = (last_shot+1) % SHOT_STRING;
+      current_shot = (current_shot+1) % SHOT_STRING;
     }
     vTaskDelay(1);
   }

@@ -720,12 +720,12 @@ void aquire(void)
 /*
  * Pull in the data amd save it in the record array
  */
-  read_timers(&record[this_shot].timer_count[0]);   // Record this count
-  record[this_shot].shot_time = 0;                  // Capture the time into the shot
-  record[this_shot].face_strike = face_strike;      // Record if it's a face strike
-  record[this_shot].sensor_status = is_running();   // Record the sensor status
-  record[this_shot].shot_number = shot_number++;    // Record the shot number and increment
-  this_shot = (this_shot+1) % SHOT_STRING;          // Prepare for the next shot
+  read_timers(&record[last_received_shot].timer_count[0]);   // Record this count
+  record[last_received_shot].shot_time = 0;                  // Capture the time into the shot
+  record[last_received_shot].face_strike = face_strike;      // Record if it's a face strike
+  record[last_received_shot].sensor_status = is_running();   // Record the sensor status
+  record[last_received_shot].shot_number = shot_number++;    // Record the shot number and increment
+  last_received_shot = (last_received_shot+1) % SHOT_STRING;          // Prepare for the next shot
 
 /*
  * All done for now
