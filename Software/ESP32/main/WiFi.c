@@ -29,6 +29,7 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "nvs_flash.h"
 
 #include "lwip/err.h"
@@ -37,16 +38,21 @@
 #include "lwip/netdb.h"
 
 #include "freETarget.h"
+#include "compute_hit.h"
 #include "serial_io.h"
 #include "json.h"
 #include "diag_tools.h"
 #include "WiFi.h"
+#include "nonvol.h"
 
+#define DEFAULT_IP          192,168,10,9
 #define PORT                        1090
 #define KEEPALIVE_IDLE              true
 #define KEEPALIVE_INTERVAL          100
 #define KEEPALIVE_COUNT             50
 #define MAX_SOCKETS                 4     // Allow for four sockets
+#define AVAILABLE_SOCKET            -1    // The socket is unused  
+#define GREETING            "CONNECTED"   // Message to send on connection
 
 /*
  * Macros
@@ -64,8 +70,9 @@ static EventGroupHandle_t s_wifi_event_group;
 static esp_event_handler_instance_t instance_any_id;
 static esp_event_handler_instance_t instance_got_ip;
 static int s_retry_num = 0;
-static int socket_list[MAX_SOCKETS];       // Space to remember four sockets
-static esp_netif_ip_info_t ipInfo;         // IP Address of the access point
+static int socket_list[MAX_SOCKETS];            // Space to remember four sockets
+static esp_netif_ip_info_t ipInfo;              // IP Address of the access point
+static void WiFi_start_new_connection(int sock);// Socket token to use
 
 /*
  * Private Functions
@@ -125,7 +132,8 @@ void WiFi_init(void)
  *
  * This function initializes the WiFi to act as an Access Point.
  * 
- * The target broadcasts an SSID and lets clients connect to it.
+ * The target broadcasts an SSID and lets clients connect to it.  For example
+ * FET-TARGET
  * 
  *******************************************************************************/
 void WiFi_AP_init(void)
@@ -133,7 +141,7 @@ void WiFi_AP_init(void)
     esp_netif_t* wifiAP;
     wifi_init_config_t WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
-    DLT(DLT_CRITICAL, printf("WiFi_AP_init()");)
+    DLT(DLT_CRITICAL, printf("WiFi_AP_init()\r\n");)
     
 /*
  * Create the network interface
@@ -197,13 +205,16 @@ void WiFi_AP_init(void)
  *
  * This function initializes the WiFi to act as an station
  * 
- * The target connects to an SSID and lets clients connect to it.
+ * The target connects to an SSID and lets clients connect to it. For example
+ * SSID = myHomeInternet
  * 
  * See: https://github.com/espressif/esp-idf/blob/v4.3/examples/wifi/getting_started/station/main/station_example_main.c
  * 
  *******************************************************************************/
 void WiFi_station_init(void)
 {
+   char str_c[256];
+
    wifi_init_config_t   WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
    DLT(DLT_CRITICAL, printf("WiFi_station_init()");)
@@ -244,16 +255,15 @@ void WiFi_station_init(void)
             pdFALSE,
             pdFALSE,
             portMAX_DELAY);
-
 /*
  *  The target has connected to an access point
  */
-    DLT(DLT_INFO, 
+    DLT(DLT_CRITICAL, 
     {
         if (bits & WIFI_CONNECTED_BIT)
         {
-            printf( "Connected to ap SSID:%s password:%s",
-                     json_wifi_ssid, json_wifi_pwd);
+            WiFi_my_IP_address(str_c);
+            printf( "Connected to ap SSID: %s\r\nWiFi_IP_ADDRESS: \"%s\",", json_wifi_ssid, str_c);
         } 
         else if (bits & WIFI_FAIL_BIT) 
             {
@@ -288,6 +298,10 @@ void WiFi_station_init(void)
  * 
  * Once that is done the appropriate configuration is made and the target enabled.
  * 
+ * IMPORTANT
+ * 
+ * This function only relates to the WiFi connecting to the SSID.
+ * 
  *******************************************************************************/
 void WiFi_event_handler
 (
@@ -298,18 +312,18 @@ void WiFi_event_handler
 )
 {
     ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+
 /*
  * I am a station
  */
    if ( event_base == WIFI_EVENT )
    {
-      if ( event_id == WIFI_EVENT_STA_START)
+      if ( event_id == WIFI_EVENT_STA_START)                // Begin a connection to the SSID
       {
          esp_wifi_connect();
-         set_status_LED(LED_STATION_CN);
       }
 
-      if ( event_id == WIFI_EVENT_STA_DISCONNECTED )
+      if ( event_id == WIFI_EVENT_STA_DISCONNECTED )        // End a connection to the SSID
       {
          if (s_retry_num < WIFI_MAX_RETRY)
          {
@@ -321,8 +335,8 @@ void WiFi_event_handler
             xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
          }
          set_status_LED(LED_STATION);
-      }
-   }   
+        }
+    }   
    
    if ( event_base == IP_EVENT )
    {
@@ -339,14 +353,12 @@ void WiFi_event_handler
  */
     if (event_id == WIFI_EVENT_AP_STACONNECTED)
     {
-      DLT(DLT_CRITICAL, printf("AP Connected\r\n");)
-      set_status_LED(LED_ACCESS_CN);
+      DLT(DLT_CRITICAL, printf("AP connected");)
     } 
    
    if (event_id == WIFI_EVENT_AP_STADISCONNECTED)
    {
-      DLT(DLT_CRITICAL, printf("STATION disconnected");)
-      set_status_LED(LED_ACCESS);
+      DLT(DLT_CRITICAL, printf("AP disconnected");)
    }
 
 /*
@@ -373,7 +385,6 @@ void WiFi_event_handler
  * to send and receive data
  * 
  *******************************************************************************/
-static char greeting[] = "{\"CONNECTED\"}";
 
 void WiFi_tcp_server_task(void *pvParameters)
 {
@@ -406,35 +417,74 @@ void WiFi_tcp_server_task(void *pvParameters)
  * extracts the data and then loops through the active sockets to put the data
  * out to the client.
  * 
+ * When trying to send to a previously active socket which is now closed, the
+ * send() function will return a -1 to indicate that no information was sent.
+ * This is the signal that the connection has been dropped.  At the end of the
+ * loop, if all of the sockets have been closed the connection indication is
+ * updated.
+ * 
  *******************************************************************************/
 static void tcpip_server_io(void)
 {
-    int length;
+    int  length;
     char rx_buffer[128];
-    int  to_write;
+    int  to_send;
     int  i;
     int  buffer_offset;
+    bool new_socket_closed;
 
+    new_socket_closed = false;              // Was a socket closed this cycle?
 /*
  * Out to TCPIP
  */      
-    to_write = tcpip_queue_2_socket(rx_buffer,  sizeof(rx_buffer));
-    if ( to_write > 0 )
+    to_send = tcpip_queue_2_socket(rx_buffer,  sizeof(rx_buffer));
+    if ( to_send > 0 )
     {
         for (i=0; i != MAX_SOCKETS; i++)
         {
             if (socket_list[i] > 0 )
             {      
                 buffer_offset = 0;
-                while (  buffer_offset < to_write)
+                while (  buffer_offset < to_send)
                 {
-                    length = send(socket_list[i], rx_buffer + buffer_offset, to_write-buffer_offset, 0);
+                    length = send(socket_list[i], rx_buffer + buffer_offset, to_send-buffer_offset, 0);
+                    if ( length <= 0 )
+                    {
+                        close(socket_list[i]);
+                        socket_list[i] = AVAILABLE_SOCKET;
+                        new_socket_closed = true;
+                        break;
+                    }
                     buffer_offset += length;
                 }
             }
         }
     }
+/*
+ *  See if all of the sockets are closed
+ */
+    if ( new_socket_closed )
+    {
+        for (i=0; i != MAX_SOCKETS; i++)
+        {
+            if (socket_list[i] > 0 )
+            {
+                break;
+            }
+        }
 
+        if ( i == MAX_SOCKETS )                 // All of them are closed?
+        {
+            if ( json_wifi_ssid[0] != 0 )       //  I'm a station
+            {
+                set_status_LED(LED_STATION);
+            }
+            else                                // I'm an access point
+            {
+                set_status_LED(LED_ACCESS);
+            }       
+        }
+    }
 /*
  *  All done
  */
@@ -589,7 +639,7 @@ void tcpip_accept_poll(void* parameters)
  */
    for (i=0; i != MAX_SOCKETS; i++)
    {
-      socket_list[i] = -1;
+      socket_list[i] = AVAILABLE_SOCKET;
    }
 
    struct sockaddr_in *dest_addr_ip4 = (struct sockaddr_in *)&dest_addr;
@@ -618,10 +668,10 @@ void tcpip_accept_poll(void* parameters)
         {
             for (i= 0; i != MAX_SOCKETS; i++ )
             {
-                if  (socket_list[i] == -1 )
+                if  (socket_list[i] == AVAILABLE_SOCKET )
                 {
                     socket_list[i] = sock;
-                    send(sock, greeting, sizeof(greeting), 0);
+                    WiFi_start_new_connection(sock);
                     break;
                 }
             }
@@ -634,17 +684,85 @@ void tcpip_accept_poll(void* parameters)
             setsockopt(sock, IPPROTO_TCP, TCP_KEEPINTVL, &keepInterval, sizeof(int));
             setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT, &keepCount, sizeof(int));
 
-            DLT(DLT_CRITICAL, 
+            DLT(DLT_INFO, 
             {         
                 inet_ntoa_r(((struct sockaddr_in *)&source_addr)->sin_addr, addr_str, sizeof(addr_str) - 1);
                 printf("Socket accepted ip address: %s\r\n", addr_str);
             }
             )
+            set_status_LED(LED_STATION_CN);
         }
     }
 
 /*
  *  Never get here
+ */
+    return;
+}
+
+/*****************************************************************************
+ *
+ * @function: WiFi_start_new_connection
+ *
+ * @brief:    Prepare a new connection
+ * 
+ * @return:   Nothing
+ *
+ ******************************************************************************
+ *
+ * A new socket connection has been made.
+ * 
+ * This function checks to see if it is the first connection, and if so
+ * reset everything 
+ * 
+ * Once that has been done, then update the PC client with all of  the pending
+ * scores.
+ * 
+ *******************************************************************************/
+static void WiFi_start_new_connection
+(
+    int sock            // Socket token to use
+)
+{
+    int i, j;
+
+/*
+ *  See if this is the first connection on a WiFi socket
+ */
+    if ( json_wifi_reset_first != 0 )               // Reset on first connection?
+    {
+        j = 0;
+        for (i=0; i != MAX_SOCKETS; i++)            // How many connections do we have?
+        {
+            if (socket_list[i] == AVAILABLE_SOCKET)
+            {
+                j++;
+            }
+        }
+
+        if ( j == 1)                                // This is the first, start new
+        {
+            start_new_session();
+        }
+    }
+
+/*
+ *  Inform the PC what is going on
+ */
+    sprintf(_xs, "{\"%s\":%10.6f}", GREETING, esp_timer_get_time()/100000.0/60.0);
+    send(sock, _xs, strlen(_xs), 0);                    // Only send to the most recent connection
+
+    for (i=0; i != SHOT_SPACE; i++)
+    {
+        if ( record[i].is_valid == true )
+        {
+            send_replay(&record[i], i);
+            send(sock, _xs, strlen(_xs), 0);
+        }
+    }
+
+/*
+ *  All done, return
  */
     return;
 }
@@ -708,7 +826,7 @@ void WiFi_loopback_task(void* parameters)
  *
  ****************************************************************************/
 #define TO_IP(x) ((int)x) & 0xff, ((int)x >> 8) & 0xff, ((int)x >> 16) & 0xff, ((int)x >> 24) & 0xff
-void WiFi_my_ip_address
+void WiFi_my_IP_address
 (
     char* s             // Where to return the string
 )
@@ -734,4 +852,138 @@ void WiFi_MAC_address
 {
     esp_base_mac_addr_get((uint8_t*)mac);
         return;
+}
+
+/*****************************************************************************
+ *
+ * @function: WiFi_config()
+ *
+ * @brief:    Configure the WiFi
+ * 
+ * @return:   None
+ *
+ ****************************************************************************
+ *
+ * This function walks the user throught the operation of the WiFi to tailor
+ * it for thier needs.
+ * 
+ ****************************************************************************/
+
+void WiFi_configuration(void)
+{
+    char ch;
+
+    printf("\r\nWiFi Configuration");
+    printf("\r\n");
+
+/*
+ *  Show the current settings
+ */
+    printf("\r\nWiFi Mode:");
+    if ( json_wifi_ssid[0] == 0 )
+    {
+        printf("\r\nTarget creates it's own SSID: FET-%s",names[json_name_id] );
+    }
+    else
+    {
+        printf("\r\nTarget uses local SSID: %s", json_wifi_ssid);
+        printf(" with password: %s", json_wifi_pwd);
+    }
+
+    WiFi_my_IP_address(_xs);
+    printf("\r\nIP address: %s", _xs);
+
+    printf("\r\nWiFi SSID hidden %d", json_wifi_hidden);
+
+#if ( BUIILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE)
+    if ( json_remote_url[0] != 0 )
+    {
+        printf("\r\nTarget connects to remote server: %s", json_remote_url);
+    }
+#endif
+
+/*
+ * Enter the new settings
+ */
+    printf("\r\n! - Exit");
+    printf("\r\n1 - SSID:     %s", json_wifi_ssid);
+    printf("\r\n2 - password: %s", json_wifi_pwd);
+    printf("\r\n3 - channel:  %d", json_wifi_channel);
+    printf("\r\n4 - Hide access point SSID: %d", json_wifi_hidden);
+    printf("\r\n>");
+
+    while (1)
+    {
+        if ( serial_available(ALL) != 0 )
+        {
+            ch = serial_getch(ALL);
+            printf("%c", ch); 
+            switch(ch)
+            {
+                case '!':           // Exit
+                    printf("\r\nDone\r\n");
+                    return;
+
+                case '1':           // SSID
+                    printf("\r\nEnter SSID:");
+                    if ( get_string(_xs, SSID_SIZE) )
+                    {
+                        strcpy(json_wifi_ssid, _xs);
+                        nvs_set_str(my_handle, NONVOL_WIFI_SSID, json_wifi_ssid);
+                    }
+                    break;
+
+                case '2':           // PWD
+                    printf("\r\nEnter Password:");
+                    if ( get_string(_xs, PWD_SIZE) )
+                    {
+                        strcpy(json_wifi_pwd, _xs);
+                        nvs_set_str(my_handle, NONVOL_WIFI_PWD, json_wifi_pwd);
+                    }
+                    break;
+
+                case '3':           // WiFi Channel
+                    printf("\r\nWiFi channel (1-11):");
+                    if ( get_string(_xs, 2) )
+                    {
+                        json_wifi_channel = atoi(_xs);
+                        nvs_set_i32(my_handle, NONVOL_WIFI_CHANNEL, json_wifi_channel);
+                    }
+                    break;
+
+                case '4':           // Hide Accesss point SSID
+                    printf("\r\nWiFi hide SSID (0/1):");
+                    if ( get_string(_xs, 2) )
+                    {
+                        json_wifi_hidden = atoi(_xs);
+                        nvs_set_i32(my_handle, NONVOL_WIFI_HIDDEN, json_wifi_hidden);
+                    }
+                    break;
+
+#if ( BUIILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE)
+                case '4':           // Enable remote URL
+                    printf("\r\nEnable remote URL :");
+                    if ( get_string(_xs, 2) )
+                    {
+                        json_remote_active = atoi(_xs);
+                        nvs_set_i32(my_handle, NONVOL_REMOTE_ACTIVE, json_remote_active);
+                    }
+                    break;
+
+                case '5':           // Remote Server URL
+                    printf("\r\nEnter remote server URL:");
+                    if ( get_string(_xs, URL_SIZE) )
+                    {
+                        strcpy(json_remote_url, _xs);
+                        nvs_set_str(my_handle, NONVOL_REMOTE_URL, json_remote_url);
+                    }
+                    break;
+#endif
+                default:
+                    break;
+            }
+            printf("\r\n");
+        }
+        vTaskDelay(ONE_SECOND/4);
+    }
 }

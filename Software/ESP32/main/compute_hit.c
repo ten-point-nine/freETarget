@@ -14,10 +14,11 @@
 
 #include "freETarget.h"
 #include "json.h"
-#include "compute_hit.h"
+#include "mfs.h"
 #include "diag_tools.h"
 #include "token.h"
 #include "timer.h"
+#include "compute_hit.h"
 
 #define THRESHOLD (0.001)
 
@@ -151,14 +152,14 @@ unsigned int compute_hit
  /* 
   *  Display the timer registers if in trace mode
   */  
-  DLT(DLT_DIAG, for (i=N; i <= W_lo; i++) printf("%s: %d ", which_one[i], shot->timer_count[i]);)
+  DLT(DLT_DIAG, for (i=N; i <= W_HI; i++) printf("%s: %d ", find_sensor(1<<i)->long_name, shot->timer_count[i]);)
   
 /*
  * Determine the location of the reference counter (longest time)
  */
   reference = shot->timer_count[N];
   location = N;
-  for (i=E; i <= W; i++)
+  for (i=N; i <= W; i++)
   {
     if ( shot->timer_count[i] > reference )
     {
@@ -167,7 +168,7 @@ unsigned int compute_hit
     }
   }
   
-  DLT(DLT_DIAG, printf("Reference: %4.2f   location: %s", reference, which_one[location]);)
+  DLT(DLT_DIAG, printf("Reference: %4.2f   location: %s", reference, find_sensor(1<<location)->long_name);)
 
 /*
  * Correct the time to remove the shortest distance
@@ -185,14 +186,10 @@ unsigned int compute_hit
 
   DLT(DLT_DIAG,
   {
-    printf("Counts       ");
-    for (i=N; i <= W; i++) printf("%s: %4.2f ", which_one[i], s[i].count);
-  
     printf("\r\nMicroseconds ");
-    for (i=N; i <= W; i++) printf("%s: %4.2f ", which_one[i], (double)s[i].count / ((double)OSCILLATOR_MHZ));
+    for (i=0; i < 8; i++) printf("%s: %4.2f ", find_sensor(1<<i)->long_name, (double)s[i].count / ((double)OSCILLATOR_MHZ));
   }
   )
-
 /*
  * Fill up the structure with the counter geometry
  */
@@ -207,13 +204,12 @@ unsigned int compute_hit
     s[i].a = s[(i+1) % 4].b;
   }
 
-
 /*
  * Find the smallest non-zero value, this is the sensor furthest away from the sensor
  */
   smallest = s[N].count;
   location = N;
-  for (i=N+1; i <= W; i++)
+  for (i=E; i <= W; i++)
   {
     if ( s[i].count < smallest )
     {
@@ -453,10 +449,11 @@ bool find_xy_3D
 
 void send_score
   (
-  shot_record_t* shot             //  record
+  shot_record_t* shot,            //  record
+  unsigned int shot_number        // What shot are we
   )
 {
-  double x, y;                    // Shot location in mm X, Y
+  double x, y;                    // Shot location in mm X, Y before rotation
   double real_x, real_y;          // Shot location in mm X, Y before remap
   double radius;
   double angle;
@@ -497,6 +494,10 @@ void send_score
   real_x = x;
   real_y = y;                                     // Remember the original target value
   remap_target(&x, &y);                           // Change the target if needed
+  shot->xs = x;
+  shot->ys = y;
+  shot->is_valid = true;
+
 /* 
  *  Display the results
  */
@@ -505,18 +506,17 @@ void send_score
 #if ( S_SHOT )
   if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF))
   {
-    SEND(sprintf(_xs, "\"shot\":%d, \"miss\":0, \"name\":\"%s\"", shot->shot_number,  names[json_name_id]);)
+    SEND(sprintf(_xs, "\"shot\":%d, \"miss\":0, \"name\":\"%s\"", shot_number + 1,  names[json_name_id]);)
   }
   else
   {
-    printf("five");
-    SEND(sprintf(_xs, "\"shot\":%d, \"name\":\"%d\"", shot->shot_number,  my_ring);)
+    SEND(sprintf(_xs, "\"shot\":%d, \"name\":\"%d\"", shot_number,  my_ring);)
   }
   SEND(sprintf(_xs, ", \"time\":%4.2f ", (float)shot->shot_time/(float)(ONE_SECOND));)
 #endif
 
 #if ( S_XY )
-  SEND(sprintf(_xs, ",\"x\":%4.2f, \"y\":%4.2f ", x, y);)
+  SEND(sprintf(_xs, ",\"x\":%4.2f, \"y\":%4.2f ", shot->xs, shot->ys);)
   
   if ( json_target_type > 1 )
   {
@@ -539,8 +539,18 @@ void send_score
   }
 #endif
 
+  if ( HOLD_C(json_multifunction2)  == TARGET_TYPE )
+  {
+    SEND(sprintf(_xs, ", \"target_type\":%d ", DIP_C););
+  }
+
+  if ( HOLD_D(json_multifunction2)  == TARGET_TYPE )
+  {
+    SEND(sprintf(_xs, ", \"target_type\":%d ", DIP_D););
+  }
+
   SEND(sprintf(_xs, "}\r\n");)
-  
+
 /*
  * All done, return
  */
@@ -551,7 +561,49 @@ void send_score
   }
   return;
 }
- 
+
+  
+/*----------------------------------------------------------------
+ *
+ * @function: send_replay
+ *
+ * @brief: Replay the scores
+ * 
+ * @return: None
+ *
+ *----------------------------------------------------------------
+ * 
+ * The score is sent as:
+ * 
+ * {"shot":n, "x":x, "y":y,}
+ * 
+ * Shots are stored in memory as they occur.  When a new TCPIP 
+ * connection is made, all of the accumulated scores are sent out
+ * to update the new PC client
+ *    
+ *--------------------------------------------------------------*/
+
+void send_replay
+  (
+  shot_record_t* shot,             //  record
+  unsigned int   shot_number
+  )
+{
+  if ( shot->is_valid == true )
+  {
+    sprintf(_xs, "\r\n{\"shot\":%d, \"x\":%4.2f, \"y\":%4.2f}\r\n", shot_number+1, shot->xs, shot->ys);
+  }
+  else
+  {
+    _xs[0] = 0;
+  }
+
+/*
+ * All done, return
+ */
+  return;
+}
+
 /*----------------------------------------------------------------
  *
  * @function: send_miss
@@ -568,7 +620,8 @@ void send_score
 
 void send_miss
   (
-  shot_record_t* shot                    // record record
+  shot_record_t* shot,                    // record record
+  unsigned int shot_number
   )
 {
   if ( json_send_miss == 0)               // If send_miss not enabled
@@ -601,11 +654,11 @@ void send_miss
  #if ( S_SHOT )
    if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF))
   {
-    SEND(sprintf(_xs, "\"shot\":%d, \"miss\":0, \"name\":\"%s\"", shot->shot_number,  names[json_name_id]);)
+    SEND(sprintf(_xs, "\"shot\":%d, \"miss\":0, \"name\":\"%s\"", shot_number,  names[json_name_id]);)
   }
   else
   {
-    SEND(sprintf(_xs, "\"shot\":%d, \"miss\":1, \"name\":\"%d\"", shot->shot_number,  my_ring);)
+    SEND(sprintf(_xs, "\"shot\":%d, \"miss\":1, \"name\":\"%d\"", shot_number,  my_ring);)
   }
   SEND(sprintf(_xs, ", \"time\":%4.2f ", (float)shot->shot_time/(float)(ONE_SECOND));)
 #endif
@@ -659,13 +712,12 @@ void send_miss
  * This function finds the closest bull and then maps the pellet
  * onto the centre one.
  *--------------------------------------------------------------*/
-struct new_target
+typedef struct
 {
   double       x;       // X location of Bull
   double       y;       // Y location of Bull
-};
+} new_target_t;
 
-typedef struct new_target new_target_t;
 
 #define LAST_BULL (-1000.0)
 #define D5_74 (74/2)                   // Five bull air rifle is 74mm centre-centre

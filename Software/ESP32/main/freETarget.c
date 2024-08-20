@@ -28,7 +28,7 @@
 #include "pcnt.h"
 #include "WiFi.h"
 #include "diag_tools.h"
-
+#include "mfs.h"
 /*
  *  Function Prototypes
  */
@@ -42,9 +42,9 @@ extern void gpio_init(void);
 /*
  *  Variables
  */
-shot_record_t record[SHOT_STRING];      //Array of shot records
-unsigned int this_shot;                 // Index into the shot array
-unsigned int last_shot;                 // Last shot processed.
+shot_record_t record[SHOT_SPACE];      //Array of shot records
+unsigned int shot_in;                   // Index to the shot just received
+unsigned int shot_out;                  // Index to the shot just sent to the PC (shot_out <= shot_in)
 
 double        s_of_sound;               // Speed of sound
 unsigned int  shot = 0;                 // Shot counter
@@ -53,7 +53,7 @@ unsigned int  is_trace = 0;             // Turn off tracing
 unsigned long rapid_on = 0;             // Duration of rapid fire event
 
 unsigned int  rapid_count = 0;          // Number of shots to be expected in Rapid Fire
-unsigned int  shot_number;              // Shot Identifier
+unsigned int  shot_number;              // Shot Identifier (1-100)
 volatile unsigned long  in_shot_timer;  // Time inside of the shot window
 
 static volatile unsigned long  keep_alive;        // Keep alive timer
@@ -71,7 +71,6 @@ const char* names[] = { "TARGET",                                               
                         "ODIN",   "WODEN",   "THOR",   "BALDAR",                                                            // 26
                         0};
                   
-const char    nesw[]   = "wsenWSEN";              // Cardinal Points
 const char    to_hex[] = "0123456789ABCDEF";      // Quick Hex to ASCII
 
 char   _xs[512];       // Holding buffer for sprintf
@@ -92,7 +91,7 @@ void freeETarget_init(void)
   run_state = IN_STARTUP;
 
 /*
- *  Setup the serial port
+ *  Setup the hardware
  */
   serial_io_init();
   POST_version();                         // Show the version string on all ports
@@ -100,22 +99,10 @@ void freeETarget_init(void)
   read_nonvol();
   set_status_LED(LED_HELLO_WORLD);        // Hello World
   timer_delay(ONE_SECOND);
+  set_status_LED(LED_OFF);
   WiFi_init();
   set_VREF();
-
-  if ( DIP_SW_D )
-  {
-    while(1)
-    {
-      zapple(0);
-    }
-  }
-
-  if ( DIP_SW_C )
-  {
-    DLT(DLT_CRITICAL, printf("Setting trace to 255");)
-    is_trace = 255;
-  }
+  multifunction_init();
 
 /*
  *  Set up the long running timers
@@ -127,11 +114,8 @@ void freeETarget_init(void)
 /*
  * Run the power on self test
  */
-  if ( POST_counters() == false )         // If the timers fail
-  {
-    DLT(DLT_CRITICAL, printf("POST_counters failed"); )  // Failed the test
-    vTaskDelay(2*ONE_SECOND);
-  }
+  POST_counters();          // POST counters does not return if there is an error
+  check_12V();              // Verify the 12 volt supply
   
 /*
  * Ready to go
@@ -139,8 +123,8 @@ void freeETarget_init(void)
   show_echo();
   set_LED_PWM(json_LED_PWM);
   serial_flush(ALL);                      // Get rid of everything
-  this_shot = 0;                          // Clear out any junk
-  last_shot = 0;
+  shot_in = 0;                 // Clear out any junk
+  shot_out = 0;
   DLT(DLT_CRITICAL, printf("Initialization complete");)
 
 /*
@@ -175,6 +159,8 @@ void freeETarget_target_loop(void* arg)
 
   DLT(DLT_CRITICAL, printf("freeETarget_target_loop()");)
   set_status_LED(LED_READY);
+
+  shot_number = 1;                    // Start counting shots at 1
 
   while(1)
   {
@@ -240,7 +226,7 @@ void freeETarget_target_loop(void* arg)
 
   rapid_on  = 0;                    // Turn off the timer
     
-  for (i=0; i != SHOT_STRING; i++)
+  for (i=0; i != SHOT_SPACE; i++)
   {
     record[i].face_strike = 100;    // Disable the shot record
   }
@@ -294,51 +280,12 @@ unsigned int arm(void)
 /*
  * The sensors are tripping, display the error
  */
-  if ( sensor_status & 0x80  )
-  {
-    set_status_LED(LED_NORTH_FAILED);           // Fault code North
-    vTaskDelay(ONE_SECOND);
-  }
-  if ( sensor_status & 0x40  )
-  {
-    set_status_LED(LED_EAST_FAILED);           // Fault code East
-    vTaskDelay(ONE_SECOND);
-  }
-  if ( sensor_status & 0x20)
-  {
-    set_status_LED(LED_SOUTH_FAILED);         // Fault code South
-    vTaskDelay(ONE_SECOND);
-  }
-  if ( sensor_status & 0x10)
-  {
-    set_status_LED(LED_WEST_FAILED);         // Fault code West
-    vTaskDelay(ONE_SECOND);
-  }
-  if ( sensor_status & 0x08  )
-  {
-    set_status_LED(LED_NORTH_FAILED);           // Fault code North
-    vTaskDelay(ONE_SECOND);
-  }
-  if ( sensor_status & 0x04  )
-  {
-    set_status_LED(LED_EAST_FAILED);           // Fault code East
-    vTaskDelay(ONE_SECOND);
-  }
-  if ( sensor_status & 0x02)
-  {
-    set_status_LED(LED_SOUTH_FAILED);         // Fault code South
-    vTaskDelay(ONE_SECOND);
-  }
-  if ( sensor_status & 0x01)
-  {
-    set_status_LED(LED_WEST_FAILED);         // Fault code West
-    vTaskDelay(ONE_SECOND);
-  }
+  set_diag_LED(find_sensor(sensor_status)->diag_LED, 5);
 
 /*
  * Finished displaying the error so trying again
  */
-  return WAIT;
+  return START;
 }
    
 /*----------------------------------------------------------------
@@ -383,7 +330,7 @@ unsigned int wait(void)
 /*
  * See if any shots have arrived
  */
-  if ( this_shot != last_shot )
+  if ( shot_in != shot_out )
   {
     return REDUCE;
   }
@@ -421,35 +368,35 @@ unsigned int reduce(void)
  */
   if ( discard_shot() )                                       // Tabata is on but the shot is invalid
   {
-    last_shot = this_shot;
-    send_miss(&record[last_shot]);
+    shot_out = shot_in;
+    send_miss(&record[shot_out], shot_out);
     return START;                                              // Throw out any shots while dark
   }
   
 /*
  * Loop and process the shots
  */
-  while (last_shot != this_shot )
+  while (shot_out != shot_in )
   {   
-    DLT(DLT_APPLICATION, show_sensor_status(record[last_shot].sensor_status);)
+    DLT(DLT_APPLICATION, show_sensor_status(record[shot_out].sensor_status);)
 
-    show_sensor_fault(record[last_shot].sensor_status);
+    show_sensor_fault(record[shot_out].sensor_status);
     
-    location = compute_hit(&record[last_shot]);                 // Compute the score
+    location = compute_hit(&record[shot_out]);                 // Compute the score
     if ( location != MISS )                                     // Was it a miss or face strike?
     {
       if ( (json_rapid_enable == 0) && (json_tabata_enable = 0))// If in a regular session, hold off for the follow through time
       {
         vTaskDelay(ONE_SECOND * json_follow_through);
       }
-      send_score(&record[last_shot]);
+      send_score(&record[shot_out], shot_out);
       rapid_red(0);
       rapid_green(1);                                           // Turn off the RED and turn on the GREEN
 
       if ( (json_paper_time + json_step_time) != 0 )            // Has the witness paper been enabled?
       {
         if ( ((json_paper_eco == 0)                             // ECO turned off
-            || ( sqrt(sq(record[this_shot].x) + sq(record[this_shot].y)) < json_paper_eco )) ) // Outside the black
+            || ( sqrt(sq(record[shot_in].x) + sq(record[shot_in].y)) < json_paper_eco )) ) // Outside the black
         {
           drive_paper();                                        // to follow through.
         }
@@ -459,7 +406,7 @@ unsigned int reduce(void)
     {
       DLT(DLT_APPLICATION, printf("Shot miss...\r\n");)
       set_status_LED(LED_MISS);
-      send_miss(&record[last_shot]);
+      send_miss(&record[shot_out], shot_out);
       rapid_green(0);
       rapid_red(1);                                             // Show a miss
     }
@@ -479,12 +426,12 @@ unsigned int reduce(void)
     {
       if ( rapid_count == 0 )                                   // And the shots used up?
       {
-        last_shot = this_shot;                                  // Stop processing
+        shot_out = shot_in;                      // Stop processing
         break;
       }
     }
     
-    last_shot = (last_shot+1) % SHOT_STRING;
+    shot_out = (shot_out+1) % SHOT_SPACE;
   }
 
 /*
@@ -500,6 +447,44 @@ unsigned int reduce(void)
   }
 }
 
+/*----------------------------------------------------------------
+ * 
+ * @function: start_new_session()
+ * 
+ * @brief: Reset and start a new session from the beginning
+ * 
+ * @return: None
+ * 
+ *----------------------------------------------------------------
+ *
+ * The target can be commanded to start a new session by receiving
+ * the command {"START"}
+ * 
+ * This function resets the various counters and pointers back
+ * to the beginning
+ *
+ *--------------------------------------------------------------*/
+void start_new_session(void)
+{
+  unsigned int i;
+
+  DLT(DLT_CRITICAL, printf("start_new_session()");)
+/*
+ *  Clear the shot information
+ */
+  shot_out = 0;
+  shot_in = 0;
+    
+  for (i=0; i != SHOT_SPACE; i++)
+  {
+    record[i].is_valid = false;
+  }
+
+/*
+ *  All done, return
+ */
+  return;
+}
 /*----------------------------------------------------------------
  * 
  * @function: tabata_enable
@@ -598,7 +583,7 @@ void tabata_task(void)
   if ( json_tabata_enable == 0 )        // Reset the timer
   {
     timer_delete(&tabata_timer);      
-    tabata_state = 0;
+    tabata_state = TABATA_OFF;
     return;
   }
 
@@ -607,28 +592,25 @@ void tabata_task(void)
  */    
   switch (tabata_state)
   {
-    case (TABATA_OFF):                  // The tabata is not enabled
-      if ( json_tabata_enable != 0 )    // Just switched to enable. 
-      {
-        timer_new(&tabata_timer, json_tabata_on * ONE_SECOND);
-        set_LED_PWM_now(0);             // Turn off the lights
-        SEND(sprintf(_xs, "{\"TABATA_STARTING\":%d}\r\n", (30));)
-        tabata_state = TABATA_REST;
-      } 
+    case (TABATA_OFF):                  // First time through after enable
+      timer_new(&tabata_timer, json_tabata_on * ONE_SECOND);
+      set_LED_PWM_now(0);               // Turn off the lights
+      SEND(sprintf(_xs, "{\"TABATA_REST\":%d}\r\n", json_tabata_on);)
+      tabata_state = TABATA_REST;
       break;
         
-    case (TABATA_REST):                // OFF, wait for the time to expire
-      if (tabata_timer == 0)             // Don't do anything unless the time expires
+    case (TABATA_REST):                 // OFF, wait for the time to expire
+      if (tabata_timer == 0)            // Don't do anything unless the time expires
       {
         timer_new(&tabata_timer, json_tabata_warn_on * ONE_SECOND);
         set_LED_PWM_now(json_LED_PWM);  //     Turn on the lights
-        SEND(sprintf(_xs, "{\"TABATA_WARN\":%d}\r\n", json_tabata_warn_on);)
+        SEND(sprintf(_xs, "{\"TABATA_WARNING\":%d}\r\n", json_tabata_warn_on);)
         tabata_state = TABATA_WARNING;
       }
       break;
         
-    case (TABATA_WARNING):                 // Warning time in seconds
-      if ( (tabata_timer % 50) == 0 )
+    case (TABATA_WARNING):                  // Warning time in seconds
+      if ( (tabata_timer % 50) == 0 )       // Blink the LEDs during the warning
       {
         if ( ((tabata_timer / 50) & 1) == 0 )
         {
@@ -693,14 +675,14 @@ static bool discard_shot(void)
   if ( (json_rapid_enable != 0)                 // Rapid Fire
       &&  (rapid_count == 0) )                  // No shots remaining
   {
-    last_shot = this_shot;
+    shot_out = shot_in;
     return true;                                // Discard any new shots    
   }
 
   if ( (json_tabata_enable != 0)                // Tabata cycle
     && ( tabata_state != TABATA_ON ) )          // Lights not on
   {
-    last_shot = this_shot;                      // Discard new shots
+    shot_out = shot_in;          // Discard new shots
     return true;
   }
   
@@ -757,27 +739,28 @@ void rapid_fire_task(void)
       {
         timer_new(&rapid_timer, json_rapid_wait * ONE_SECOND);
         set_LED_PWM_now(0);             // Turn off the lights
-        SEND(sprintf(_xs, "{\"RAPID_ON\":%d}\r\n", (30));)
-        tabata_state = RAPID_WAIT;
+        SEND(sprintf(_xs, "{\"RAPID_WAIT\":%d}\r\n", (int)json_rapid_wait);)
+        rapid_state = RAPID_WAIT;
       } 
       break;
         
     case (RAPID_WAIT):                   // Keep the LEDs on for the tabata time
       if ( rapid_timer == 0 )            // Don't do anything unless the time expires
       {
-        timer_new(&rapid_timer, json_rapid_on * ONE_SECOND);
-        SEND(sprintf(_xs, "{\"RAPID_ON\":%d}\r\n", (json_rapid_time));)
-        set_LED_PWM_now(0);             // Turn off the LEDs
-        tabata_state = RAPID_ON;
+        timer_new(&rapid_timer, json_rapid_time * ONE_SECOND);
+        SEND(sprintf(_xs, "{\"RAPID_ON\":%d}\r\n", (int)json_rapid_time);)
+        set_LED_PWM_now(json_LED_PWM);   // Turn on the LEDs
+        rapid_state = RAPID_ON;
       }
       break;
 
     case (RAPID_ON):                    // Keep the LEDs on for the tabata time
       if ( rapid_timer == 0 )           // Don't do anything unless the time expires
       {
+        timer_delete(&rapid_timer);
         SEND(sprintf(_xs, "{\"RAPID_OFF\":0}\r\n");)
         set_LED_PWM_now(0);             // Turn off the LEDs
-        tabata_state = RAPID_OFF;
+        rapid_state = RAPID_OFF;
       }
       break;
     }
@@ -965,7 +948,7 @@ void send_keep_alive(void)
       {
         if (running & (1<<i))
         {
-          printf(" %s ", which_one[i] );
+          printf(" %s ", find_sensor(1<<i)->long_name );
         }
       }
     }
@@ -1004,21 +987,21 @@ extern int isr_state;
 
   int i;
 
-  printf("\r\nInterrupt target shot test: this: %d last %d\r\n", this_shot, last_shot);
+  printf("\r\nInterrupt target shot test: this: %d last %d\r\n", shot_in, shot_out);
 
 /*
  * Stay here watching the counters
  */
   while (1)
   {
-    while ( this_shot != last_shot )    // While we have a queue o shots
+    while ( shot_in != shot_out )    // While we have a queue o shots
     {
       printf("\r\n");
       for (i=0; i != 8; i++)
       {
-        printf("%s:%5d  ", which_one[i], record[last_shot].timer_count[i]);
+        printf("%s:%5d  ", find_sensor(1<<i)->long_name, record[shot_out].timer_count[i]);
       }
-      last_shot = (last_shot+1) % SHOT_STRING;
+      shot_out = (shot_out+1) % SHOT_SPACE;
     }
     vTaskDelay(1);
   }
@@ -1028,3 +1011,48 @@ extern int isr_state;
  */
   return;
  }
+
+/*----------------------------------------------------------------
+ * 
+ * @function: diag_LED
+ * 
+ * @brief:    Return the diagnostics LED belonging to the running bit
+ * 
+ * @return:   diag_LED
+ * 
+ *----------------------------------------------------------------
+ *
+ * Information about a sensor is saved in the structure s[].
+ * 
+ * This function inspects the structure looking for the bit
+ * corresponding to the bit set in the run latch
+ * 
+ *--------------------------------------------------------------*/
+sensor_ID_t* find_sensor
+(
+  unsigned int run_mask       // Run mask to look for a match
+)
+{
+  unsigned int i;
+
+/*
+ *  Loop throught the sensors looking for a matching run mask
+ */
+  for (i=N; i <= W; i++ )
+  {
+    if ( (run_mask & s[i].low_sense.run_mask) != 0 )
+    {
+      return &s[i].low_sense;
+    }
+
+    if ( (run_mask & s[i].high_sense.run_mask) != 0  )
+    {
+      return &s[i].high_sense;
+    }
+  }
+
+/*
+ * Not found, return null
+ */
+  return LED_READY;
+}

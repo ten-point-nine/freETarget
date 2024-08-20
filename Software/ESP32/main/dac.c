@@ -97,7 +97,7 @@ void DAC_write
     DLT(DLT_DIAG, printf("DAC_write(channel:%d Volts:%4.2f scale:%d)", i+1, volts[i], scaled_value);)
     data[(i*3)+0] = DAC_WRITE             // Write
                   + ((i & 0x3) << 1)      // Channel
-                  + 1;                    // UDAC = 1  update late
+                  + 1;                    // UDAC = 1  update automatically
     data[(i*3)+1] = v_source              // Internal or external VREF
                   + 0x00                  // Normal Power Down
                   + 0x00                  // Gain x 1
@@ -106,10 +106,7 @@ void DAC_write
     data[(i*3)+2] = scaled_value & 0xff;  // Bottom 8 bits of the setting
   }
 
-  i2c_write(DAC_ADDR, data,  (4*3));
-  gpio_set_level(LDAC, 1);
-  gpio_set_level(LDAC, 0);
-  gpio_set_level(LDAC, 1);
+  i2c_write(DAC_ADDR, data,  (4*3));      // Data transferred on last bit.
 
  /* 
   *  All done, return;
@@ -136,8 +133,8 @@ void DAC_test(void)
   int i;
 
   printf("\r\nDAC Test");
-  printf("\r\nDAC 0 Ramp");
-  printf("\r\nDAC 1 Sine");
+  printf("\r\nDAC 0 Up ramp");
+  printf("\r\nDAC 1 Down ramp");
 
   i = 0;
   while ( 1 )
@@ -150,8 +147,9 @@ void DAC_test(void)
       }
     }
     volts[VREF_LO] = 2.048*(float)(i%100)/100.0;
-    volts[VREF_HI] = 1.0 + sin((float)i*0.05);
+    volts[VREF_HI] = 2.048 - volts[VREF_LO];
     DAC_write(volts);
+    vTaskDelay(5);
     i++;
   }
 

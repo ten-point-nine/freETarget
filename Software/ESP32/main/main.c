@@ -36,6 +36,9 @@ void app_main(void)
    xTaskCreate(freeETarget_target_loop, "freeETarget_target_loop",   4096, NULL, 25, NULL);
    vTaskDelay(1);
 
+   xTaskCreate(freeETarget_timers,      "freeETarget_timer",         4096, NULL, 20, NULL);
+   vTaskDelay(1);
+
    xTaskCreate(freeETarget_synchronous, "freeETarget_synchronous",   4096, NULL, 20, NULL);
    vTaskDelay(1);
 

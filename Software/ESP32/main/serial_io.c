@@ -126,9 +126,7 @@ void serial_io_init(void)
  ******************************************************************************/
 int serial_available
 (
-  bool console,    // TRUE if reading console
-  bool aux,        // TRUE if reading AUX port
-  bool tcpip       // TRUE if checking the TCPIP port
+  int ports     // Bit mask of active ports
 )
 {
   int n_available;
@@ -136,19 +134,19 @@ int serial_available
 
   n_available = 0;
 
-  if ( console )
+  if ( ports & CONSOLE )
   {
     uart_get_buffered_data_len(uart_console, (size_t*)&length);
     n_available += length;
   }
 
-  if ( aux )
+  if ( ports & AUX )
   {
     uart_get_buffered_data_len(uart_aux, (size_t*)&length);
     n_available += length;
   }
 
-  if ( tcpip )
+  if ( ports & TCPIP)
   {
     if (in_buffer.in != in_buffer.out )
     {
@@ -164,12 +162,45 @@ int serial_available
 /*
  * Return the number of characters waiting 
  */
-  if ( n_available != 0 )               // Something waiting,
-  {
-    set_status_LED(LED_RX);             // Turn on the Receive LED
-    timer_new(&LED_timer, ONE_SECOND);
-  }
   return n_available;
+}
+
+/*******************************************************************************
+ * 
+ * @function: serial_who
+ * 
+ * @brief:    Determine WHICH serial channel is active
+ * 
+ * @return:   Active serial channel
+ * 
+ *******************************************************************************
+ *
+ * Look at each of the queues and return the queue number which has data ready
+ * to be read.
+ * 
+ ******************************************************************************/
+int serial_who(void)
+{
+  int length;
+
+  uart_get_buffered_data_len(uart_console, (size_t*)&length);
+  if ( length != 0  )
+  {
+    return CONSOLE;
+  }
+
+  uart_get_buffered_data_len(uart_aux, (size_t*)&length);
+  if ( length != 0  )
+  {
+    return AUX;
+  }
+
+  if (in_buffer.in != in_buffer.out )
+  {
+    return TCPIP;
+  }
+   
+  return 0;
 }
 
 /*******************************************************************************
@@ -186,22 +217,20 @@ int serial_available
  ********************************************************************************/
 void serial_flush
 (
-  bool console,    // TRUE if reading console
-  bool aux,        // TRUE if reading AUX port
-  bool tcpip       // TRUE if flushing the TCPIP channel
+  int ports    // active port list
 )
 {
-  if ( console )
+  if ( ports & CONSOLE )
   {
     uart_flush(uart_console);
   }
 
-  if ( aux )
+  if ( ports & AUX )
   {
     uart_flush(uart_aux);
   }
 
-  if ( tcpip )
+  if ( ports & TCPIP )
   {
     in_buffer.in  = 0;
     in_buffer.out = 0;
@@ -224,9 +253,7 @@ void serial_flush
  *******************************************************************************-*/
 char serial_getch
   (
-    bool console,       // Read the console
-    bool aux,           // Read the AUX port
-    bool tcpip
+    int ports       // Bit mask of active ports
   )
 {
   char ch;
@@ -234,7 +261,7 @@ char serial_getch
 /*
  * Bring in the console bytes
  */
-  if ( console )
+  if ( ports & CONSOLE )
   {
     if ( uart_read_bytes(uart_console, &ch, 1, 0) > 0 )
     {
@@ -245,7 +272,7 @@ char serial_getch
 /*
  *  Bring in the AUX bytes
  */
-  if ( aux )
+  if ( ports & AUX )
   {
     if ( uart_read_bytes(uart_aux, &ch, 1, 0) > 0 )
     {
@@ -256,7 +283,7 @@ char serial_getch
 /*
  *  Bring in the TCPIP bytes
  */
-  if ( tcpip )
+  if ( ports & TCPIP )
   {
     if ( tcpip_queue_2_app(&ch, 1) > 0 )
     {
@@ -287,26 +314,24 @@ char serial_getch
  void serial_putch
  (
     char ch,
-    bool console, 
-    bool aux,
-    bool tcpip
+    int ports     // Bitmask of active ports
 )
 {
 
 /*
  * Output to the devices
  */
-  if ( console )
+  if ( ports & CONSOLE )
   {
     printf("%c", ch);
   }
 
-  if ( aux )
+  if ( ports & AUX )
   {
     uart_write_bytes(uart_aux, (const char *) &ch, 1);
   }
   
-  if ( tcpip )
+  if ( ports & TCPIP )
   {
     tcpip_app_2_queue(&ch, 1);
   }
@@ -321,9 +346,7 @@ char serial_getch
 void serial_to_all
 (
   char*   str,                      // String to output
-  bool  console,                  // Output to the console
-  bool  aux,                      // Output to the aux port
-  bool  tcpip                     // Output to the TCPIP socket
+  int ports                        // List of active ports
 )
 {
   unsigned int length;
@@ -340,17 +363,17 @@ void serial_to_all
 /*
  * Output to the devices
  */
-  if ( console )
+  if ( ports & CONSOLE )
   {
     printf("%s", str);
   }
   
-  if ( aux )
+  if ( ports & AUX )
   {
     uart_write_bytes(uart_aux, (const char *) str, length);
   }
   
-  if ( tcpip )
+  if ( ports & TCPIP )
   {
     tcpip_app_2_queue(str, length); 
   }
@@ -358,9 +381,6 @@ void serial_to_all
 /*
  * All done
  */
-  set_status_LED(LED_TX);
-  timer_new(&LED_timer, ONE_SECOND);
-
   return;
 }
 
@@ -505,12 +525,12 @@ int tcpip_queue_2_app
  * 
  *******************************************************************************
  *
- * The input from the TCPIP socket is buffered in the input queue.
+ * Characters from the TCPIP input queue are returned to the application
  * 
  ******************************************************************************/
 int tcpip_socket_2_queue
 (
-  char* buffer,         // String of bytes from the TCPIP input queue
+  char* buffer,         // Where to return the bytes
   int   length          // Maximum transfer size
 )
 {
@@ -534,6 +554,73 @@ int tcpip_socket_2_queue
   return bytes_moved;
 
 }
+
+/*******************************************************************************
+ * 
+ * @function: get_string
+ * 
+ * @brief:    Read a text string from the available ports
+ * 
+ * @return:   TRUE if a CR or LF string terminator is entered
+ * 
+ *******************************************************************************
+ *
+ * Stay in a loop waiting for characters to arrive on any of the serial input
+ * streams.  Collect each character as it arrives and return when a CR or LF
+ * has been received.
+ * 
+ ******************************************************************************/
+bool get_string
+(
+    char  destination[],
+    int   size
+)
+{
+    int ch;             // Input character
+    int i;              // Input index
+
+    i = 0;
+    destination[0] = 0;
+    while (1)
+    {
+        if ( serial_available(ALL) != 0 )
+        {
+            ch = serial_getch(ALL);
+            printf("%c", ch); 
+
+            switch (ch)
+            {
+                case 8:                 // Backspace
+                    i--;
+                    if ( i < 0 )
+                    {
+                        i = 0;
+                    }
+                    destination[i] = 0;
+                    break;
+
+                case '\r':                // Enter
+                case '\n':                // newline
+                    return 1;
+
+                case 'C' & 0x1F:          // Control C, exit
+                case 0x1B:                // Escape
+                    return 0;
+
+                default:
+                    destination[i] = ch;
+                    if ( i < size )
+                    {
+                        i++;
+                    }
+                    destination[i] = 0;
+                    break;
+            }
+        }
+        vTaskDelay(10);
+    }
+}
+
 /*******************************************************************************
  * 
  * @function: serial_port_test

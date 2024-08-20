@@ -32,12 +32,12 @@
 #include "WiFi.h"
 #include "compute_hit.h"
 
-const char* which_one[] = {"North_lo", "East_lo ", "South_lo", "West_lo ", "North_hi", "East_hi ", "South_hi", "West_hi "};
-
 #define TICK(x) (((x) / 0.33) * OSCILLATOR_MHZ)   // Distance in clock ticks
 #define RX(Z,X,Y) (16000 - (sqrt(sq(TICK(x)-s[(Z)].x) + sq(TICK(y)-s[(Z)].y))))
 #define GRID_SIDE 25                              // Should be an odd number
 #define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
+
+extern volatile unsigned long paper_time;
 
 /*******************************************************************************
  *
@@ -131,12 +131,13 @@ void self_test
     case T_HELP:  
       printf("\r\n 1 - Factory test");
       printf("\r\n");              
-      printf("\r\n 10 - Digital inputs");
-      printf("\r\n 11 - Advance paper backer");
-      printf("\r\n 12 - LED brightness test");
-      printf("\r\n 13 - Status LED driver");
-      printf("\r\n 14 - Temperature and sendor test");
-      printf("\r\n 15 - DAC test");
+      printf("\r\n10 - Digital inputs");
+      printf("\r\n11 - Advance paper backer");
+      printf("\r\n12 - LED brightness test");
+      printf("\r\n13 - Status LED driver");
+      printf("\r\n14 - Temperature and sendor test");
+      printf("\r\n15 - DAC test");
+      printf("\r\n16 - Rapid fire LED test");
       printf("\r\n"); 
       printf("\r\n20 - PCNT Test");
       printf("\r\n21 - pcnt(1) - Timers not running"); 
@@ -221,6 +222,13 @@ void self_test
  */
     case T_DAC:
       DAC_test();
+      break;
+
+/*
+ * Set Rapid Fire LEDs
+ */
+    case T_RAPID_LEDS:
+      rapid_LED_test();
       break;
 
 /*
@@ -444,7 +452,7 @@ bool factory_test(void)
       }
       if (running & (1<<i))
       {
-        printf("%c", nesw[i] );
+        printf("%c", find_sensor(1<<i)->short_name );
       }
       else
       {
@@ -505,7 +513,7 @@ bool factory_test(void)
     if ( motor_toggle )
     {
       printf("+");
-      paper_on_off(true, ONE_SECOND/4);
+      paper_on_off(true, ONE_SECOND);
     }
     else
     {
@@ -526,6 +534,7 @@ bool factory_test(void)
 
     if ( (pass == PASS_MASK) || (pass == PASS_TEST) ) 
     {
+      set_status_LED(LED_GOOD);
       printf("  PASS");
       vTaskDelay(ONE_SECOND);
       arm_timers();
@@ -590,7 +599,7 @@ bool factory_test(void)
  *******************************************************************************/
  void POST_version(void)
  {
-  SEND(sprintf(_xs, "\r\nfreETarget %s\r\n", SOFTWARE_VERSION);)
+  SEND(sprintf(_xs, "\r\n{\"VERSION\": %s}\r\n", SOFTWARE_VERSION);)
 
 /*
  * All done, return
@@ -604,19 +613,21 @@ bool factory_test(void)
  * 
  * @brief: Verify the counter circuit operation
  * 
- * @return: None
+ * @return: TRUE if the tests pass
+ *          Never if the tests fail
  * 
  *----------------------------------------------------------------
  *
  *  Trigger the counters from inside the circuit board and 
  *  read back the results and look for an expected value.
  *  
- *  Return TRUE if the complete circuit is working
+ *  Return only if all of the tests pass
  *  
  *  Test 1, Make sure the 10MHz clock is running
  *  Test 2, Clear the flip flops and make sure the run latches are clear
  *  Test 3, Trigger the flip flops and make sure that no run latche are set
  *  Test 4, Trigger a run and verify that the counters change
+ * 
  *--------------------------------------------------------------*/
 bool POST_counters(void)
 {
@@ -629,7 +640,6 @@ bool POST_counters(void)
  */
   count = 0;
   gpio_set_level(OSC_CONTROL, OSC_OFF);   // Turn off the oscillator
-  set_status_LED(LED_INFO_START);
   toggle = gpio_get_level(REF_CLK);
   for  (i=0; i != 1000; i++)               // Try 1000 times
   {
@@ -645,12 +655,10 @@ bool POST_counters(void)
     DLT(DLT_CRITICAL, printf("Reference clock cannot be stopped");)
     set_diag_LED(LED_FAIL_CLOCK_STOP, 0);
   }
-  vTaskDelay(ONE_SECOND);
 
 /*
  *  Test 2, Make sure we can turn the reference clock on
  */
-  set_status_LED(LED_INFO_A);
   count = 0;
   gpio_set_level(OSC_CONTROL, OSC_ON);
   toggle = gpio_get_level(REF_CLK);
@@ -668,14 +676,12 @@ bool POST_counters(void)
     DLT(DLT_CRITICAL, printf("Reference clock cannot be started");)
     set_diag_LED(LED_FAIL_CLOCK_START, 0);
   }
-  vTaskDelay(ONE_SECOND);
 
 /*
  *  Test 3, Make sure we can turn the triggers off
  */
   gpio_set_level(STOP_N, 0);        // Clear the latch
   gpio_set_level(STOP_N, 1);        // and reenable it
-  set_status_LED(LED_INFO_B);
   running = is_running();
   if ( running != 0  )
   {
@@ -698,7 +704,6 @@ bool POST_counters(void)
 /*
  * Test 4, Trigger the timers
  */
-  set_status_LED(LED_INFO_C);
   gpio_set_level(STOP_N, 0);          // Clear the latch
   gpio_set_level(STOP_N, 1);
   gpio_set_level(CLOCK_START, 1);     // Triger the run latch
@@ -709,11 +714,9 @@ bool POST_counters(void)
     DLT(DLT_CRITICAL, printf("Failed to start clock in run latch: %02X", is_running());)
     set_diag_LED(LED_FAIL_RUN_STUCK, 0);
   }
-  vTaskDelay(ONE_SECOND);
-
 
 /*
- * We get here regardless of whether or not the test failed
+ * We get here only if all of the tests pass
  */
   return 1;
 }
@@ -743,7 +746,7 @@ void show_sensor_status
 
   for (i=N; i<=W; i++)
   {
-    if ( sensor_status & (1<<i) )   printf("%c", nesw[i]);
+    if ( sensor_status & (1<<i) )   printf("%c", find_sensor(i<<i)->short_name);
     else                            printf(".");
   }
 
@@ -797,8 +800,6 @@ void show_sensor_status
  * failed to detect a show
  *   
  *--------------------------------------------------------------*/
-static char* led_fault[] = {LED_NORTH_FAILED, LED_EAST_FAILED, LED_SOUTH_FAILED, LED_WEST_FAILED};
-
 void show_sensor_fault
 (
   unsigned int   sensor_status
@@ -806,12 +807,11 @@ void show_sensor_fault
 {
   unsigned int i;
   
-  for (i=N; i<=W; i++)
+  for (i=N; i<=W_HI; i++)
   {
     if ( (sensor_status & (1<<i)) == 0)
     {
-      set_status_LED(led_fault[i]);
-      vTaskDelay(ONE_SECOND*2);
+      set_diag_LED(find_sensor(1<<i)->diag_LED, 2);
       return;
     }
   }
@@ -896,4 +896,40 @@ void set_diag_LED
  */
   return;
 
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: check_12V
+ *
+ * @brief:    Make sure the 12 Volt supply is within limits
+ *
+ * @return:   Nothing
+ * 
+ *----------------------------------------------------------------
+ * 
+ * The 12V supply is read and compared against limits.
+ * 
+ * If it is out of spec, then the 12V fault LEDs are displayed
+ * for 5 seconds and then control returns to the caller.
+ *   
+ *--------------------------------------------------------------*/
+bool check_12V(void)
+{
+  static bool fault_12V = true;
+
+  if ( v12_supply() < 10.0 )
+  {
+    set_status_LED(LED_LOW_12V);
+    fault_12V = true;
+    return false;
+  }
+
+  if ( fault_12V == true )              // Did we have an error last time?
+  {
+    set_status_LED(LED_OK_12V);         // Gone, clear the error
+    fault_12V = false;
+  }
+
+  return true;
 }

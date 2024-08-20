@@ -23,6 +23,7 @@ bool do_dlt(unsigned int level);                          // Diagnostics Log and
 void zapple(unsigned int test);                           // ZAPPLE console monitor
 bool factory_test(void);                                  // Test the hardware in production
 void set_diag_LED(char* new_LEDs, unsigned int duration); // Display the LED failure code
+bool check_12V(void);                                     // Check the 12 volt supply
 
 /* 
  *  Definitions
@@ -36,6 +37,7 @@ void set_diag_LED(char* new_LEDs, unsigned int duration); // Display the LED fai
 #define T_STATUS        13        // Send colours across the status LEDs
 #define T_TEMPERATURE   14        // Read the temperature and humidity
 #define T_DAC           15        // Ramp the DAC outputs 
+#define T_RAPID_LEDS    16        // Test the Rapid Fire LEDs
 
 #define T_PCNT          20        // PCNT register test
 #define T_PCNT_STOP     21        // PCNT timers stopped
@@ -66,10 +68,9 @@ void set_diag_LED(char* new_LEDs, unsigned int duration); // Display the LED fai
 //                           Y              // Y indicates feature status
 #define LED_OFF           "   "             // Turn off all of the LEDs
 #define LED_HELLO_WORLD   "RWB"             // Hello World
-#define LED_RESET         "   "             // Force them all off
-#define LED_GOOD          "G  "             // The software has started but not in shot mode
-#define LED_READY         "g  "             // The shot is ready to go.  Blink to show we are alive
-#define LED_BYE           "B  "             // Go to sleep
+#define LED_GOOD          "G--"             // The software has started but not in shot mode
+#define LED_READY         "g--"             // The shot is ready to go.  Blink to show we are alive
+#define LED_BYE           "B--"             // Go to sleep
 #define LED_READY_OFF     " --"             // Turn off the READY light
 
 #define LED_WIFI_OFF      "- -"             // The WiFi is not operational
@@ -77,43 +78,25 @@ void set_diag_LED(char* new_LEDs, unsigned int duration); // Display the LED fai
 #define LED_STATION_CN    "-G-"             // The WiFI is in station mode and connected 
 #define LED_ACCESS        "-b-"             // The WiFi is in access mode and not connected
 #define LED_ACCESS_CN     "-B-"             // The WiFI is in access mode and connected 
-#define LED_RX            "--R"             // Receiving over WiFi/Serial
-#define LED_TX            "--G"             // Transmitting over WiFi / Serial
-#define LED_RXTX_OFF      "-- "             // Turn off the TX/RX LED
 
-#define LED_MFS_a         "-G-"             // Short Press Copy MFS to the LEDs
-#define LED_MFS_A         "-W-"             // Long Press Copy MFS to the LEDs
-#define LED_MFS_b         "--G"
-#define LED_MFS_B         "--W"
-#define LED_MFS_OFF       "-  "             // Turn them off if they were on
-
-// Fault Codes - RDY LED set to RED to indiate a fault
-#define LED_NORTH_FAILED   "RRR"            // North sensor failed
-#define LED_EAST_FAILED    "RRG"            // East sensor failed
-#define LED_SOUTH_FAILED   "RRB"            // South sensor failed
-#define LED_WEST_FAILED    "RRY"            // West sensor failed
+// Fatal Error.  Halts operation
 
 #define LED_FAIL_CLOCK_STOP  "RBR"          // The reference clock cannot be stopped 
 #define LED_FAIL_CLOCK_START "RBG"          // The reference clock cannot be started
 #define LED_FAIL_RUN_STUCK   "RBB"          // There is a stuck bit in the RUN latch
 #define LED_FAIL_RUN_OPEN    "RBW"          // The sensor line is open circuit 
 
-#define LED_MISS           "RGR"            // Shot was detected as a miss
-#define LED_LOW_12V        "RGG"            // 12 Volt supply out of spec
-#define LED_FAIL_C         "RGB"            // 
-#define LED_FAIL_D         "RGW"            // 
-
-
-#define LED_FAIL_I         "RWR"            // 
-#define LED_FAIL_J         "RWG"            // 
-#define LED_FAIL_K         "RWB"            // 
-#define LED_FAIL_L         "RWW"            // 
-
-#define LED_INFO_START     "Y  "            // Start of self test
-#define LED_INFO_A         "YGG"            // Second Info
-#define LED_INFO_B         "YRR "           // Third Info
-#define LED_INFO_C         "YBB "           // Fourth Info
-#define LED_INFO_D         "YWE "           // Fifth Info
+// Fault Codes - RDY LED set to RED to indiate a fault
+#define LED_NORTH_FAILED   "R-R"            // North sensor failed
+#define LED_EAST_FAILED    "R-G"            // East sensor failed
+#define LED_SOUTH_FAILED   "R-B"            // South sensor failed
+#define LED_WEST_FAILED    "R-Y"            // West sensor failed
+#define LED_MISS           "R-r"            // Shot was detected as a miss
+#define LED_LOW_12V        "--y"            // 12 Volt supply out of spec
+#define LED_OK_12V         "--g"            // The 12 Volt supply is in spec
+#define LED_SPARE_A        "--b"
+#define LED_SPARE_C        "--W"
+#define LED_SPARE_D        "--w"
 
 /*
  * Tracing 
@@ -128,5 +111,4 @@ void set_diag_LED(char* new_LEDs, unsigned int duration); // Display the LED fai
 /*
  *  Variables
  */
-extern const char* which_one[8];
 #endif

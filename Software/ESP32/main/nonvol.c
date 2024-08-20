@@ -17,6 +17,9 @@
 #include "json.h"
 #include "serial_io.h"
 #include "nonvol.h"
+#include "mfs.h"
+#include "string.h"
+
 
 /*
  *  Local variables
@@ -113,6 +116,7 @@ void read_nonvol(void)
 
         case IS_INT32:
         case IS_FIXED:
+        case IS_MFS:
           if ( JSON[i].non_vol != 0 )                          // Is persistent storage enabled?
           {
             nvs_get_i32(my_handle, JSON[i].non_vol, &x);       // Read in the value
@@ -159,15 +163,19 @@ void read_nonvol(void)
  * @brief: Initialize the NONVOL back to factory settings
  * 
  * @return: None
+ * 
  *---------------------------------------------------------------
  *
  * If the init_nonvol location is not set to INIT_DONE then
- * initilze the memory
+ * initilze the memory.
+ * 
+ * Copy the initial values from the JSON table to the NONVOL
+ * memory.
  * 
  *------------------------------------------------------------*/
 void factory_nonvol
   (
-   bool new_serial_number
+   bool new_serial_number               // TRUE if prompting for a new S/N
   )
 {
   unsigned int serial_number;             // Board serial number
@@ -194,8 +202,7 @@ void factory_nonvol
     switch ( JSON[i].convert & IS_MASK )
     {
        case IS_VOID:                                      // Variable does not contain anything 
-       case IS_FIXED:                                     // Variable cannot be overwritten
-       case IS_MFS:                                       // MFS initialized from MFS entry
+       case IS_FIXED:                                     // Variable cannot be overwritten                                    // MFS initialized from MFS entry
        break;
        
        case IS_TEXT:
@@ -207,6 +214,7 @@ void factory_nonvol
         }
         break;
         
+      case IS_MFS:
       case IS_INT32:
         x = JSON[i].init_value;                                               // Read in the value 
         if ( JSON[i].non_vol != 0 )
@@ -247,7 +255,7 @@ void factory_nonvol
     serial_number = 0;
     serial_flush(ALL);
     
-    printf("\r\nSerial Number? (ex 223! or x))");
+    printf("\r\nSerial Number? (ex 223! or X to cancel))");
 
     while (1)
     {
@@ -333,7 +341,8 @@ void init_nonvol
  */
   if ( (verify != INIT_ALLOWED) && (verify != INIT_SERIAL_NUMBER) )
   {
-    printf("\r\nUse {\"INIT\":1234}\r\n");
+    printf("\r\nUse {\"INIT\":1234} Initialize memory only\r\n");
+    printf("\r\nUse {\"INIT\":1235} Reset serial number\r\n");
     return;
   }
 
@@ -375,7 +384,6 @@ void update_nonvol
  */
   if ( PS_UNINIT(current_version) )
   {
-
     i=0;
     while ( JSON[i].token != 0 )
     { 
@@ -393,26 +401,79 @@ void update_nonvol
         break;
       }
       i++;
-    }
+   }
+   current_version = PS_VERSION;                            // Initialized, force in the current version
+   nvs_set_i32(my_handle, NONVOL_PS_VERSION, current_version);
+   nvs_commit(my_handle);
   }
 
-/*
- *  Version 0 - 1
+/* 
+ * Version 0 -> 1 Set WiFi Hidden to 0
  */
   if ( current_version == 0 )
-  {
+  {  
+    DLT(DLT_CRITICAL, printf("Updating PS0 to PS1");)
+
     nvs_set_i32(my_handle, NONVOL_WIFI_HIDDEN, 0);
     nvs_set_i32(my_handle, NONVOL_PCNT_LATENCY, 0);
     nvs_set_i32(my_handle, NONVOL_SENSOR_DIA, 232000);
     current_version = 1;
   }
-  
-  current_version = PS_VERSION;                            // Initialized, force in the current version
-  nvs_set_i32(my_handle, NONVOL_PS_VERSION, current_version);
-  nvs_commit(my_handle);
+
+/* 
+ * Version 1 -> 2 Fixup MFS variables
+ */
+  if ( current_version == 1 )
+  {  
+    DLT(DLT_CRITICAL, printf("Updating PS1 to PS2");)
+
+    nvs_set_i32(my_handle, NONVOL_WIFI_HIDDEN,   0);
+
+    json_multifunction = 20351;
+
+    json_mfs_tap_1 = TAP_1(json_multifunction);
+    nvs_set_i32(my_handle, NONVOL_MFS_TAP_A,     json_mfs_tap_1);
+
+    json_mfs_tap_2 = TAP_2(json_multifunction);
+    nvs_set_i32(my_handle, NONVOL_MFS_TAP_B,     json_mfs_tap_2);
+
+    json_mfs_hold_1 = HOLD_1(json_multifunction);
+    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_A,     json_mfs_hold_1);
+
+    json_mfs_hold_2 = HOLD_2(json_multifunction);
+    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_B,     json_mfs_hold_2);
+
+    json_mfs_hold_c = 0;
+    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_C,    json_mfs_hold_c);
+
+    json_mfs_hold_d = 0;
+    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_D,    json_mfs_hold_d);
+
+    json_mfs_select_cd = 0;
+    nvs_set_i32(my_handle, NONVOL_MFS_SELECT_CD, json_mfs_select_cd);
+    
+    current_version = 2;
+  }
+
+/* 
+ * Version 2 -> 3 Fixup WiFi IP address and first connect
+ */
+  if ( current_version == 2 )
+  {  
+    DLT(DLT_CRITICAL, printf("Updating PS2 to PS3");)
+
+    json_wifi_reset_first = 0;
+    nvs_set_i32(my_handle, NONVOL_WIFI_RESET_FIRST,   0);
+
+    strcpy(json_wifi_ip, "192.168.10.9");
+    nvs_set_str(my_handle, NONVOL_WIFI_IP, json_wifi_ip);
+    current_version = 3;
+  }
 
 /*
  * Up to date, return
  */
+  nvs_set_i32(my_handle, NONVOL_PS_VERSION, current_version);
+  nvs_commit(my_handle);
   return;
 }

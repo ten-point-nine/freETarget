@@ -86,6 +86,16 @@ int     json_token;                 // Token ring state
 double  json_vref_lo;               // Low Voltage DAC setting
 double  json_vref_hi;               // High Voltage DAC setting
 int     json_pcnt_latency;          // pcnt interrupt latency
+int     json_mfs_hold_12;           // Hold A and B
+int     json_mfs_tap_2;             // Tap B
+int     json_mfs_tap_1;             // Tap A
+int     json_mfs_hold_2;            // Hold B
+int     json_mfs_hold_1;            // Hold A
+int     json_mfs_hold_d;            // Hold D
+int     json_mfs_hold_c;            // Hold C
+int     json_mfs_select_cd;         // Select C and D operation
+int     json_wifi_reset_first;      // Reset the target on first connection
+char    json_wifi_ip[IP_SIZE];      // User defined IP address
 
        void show_echo(void);        // Display the current settings
 static void show_test(int v);       // Execute the self test once
@@ -98,38 +108,30 @@ const json_message_t JSON[] = {
 //    token                 value stored in RAM     double stored in RAM        convert    service fcn()     NONVOL location      Initial Value
   {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT32,  0,                NONVOL_SENSOR_ANGLE,    45 },    // Locate the sensor angles
   {"\"BYE\":",            0,                                 0,                IS_VOID,   &bye,             0,                       0 },    // Shut down the target
-  {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT32,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
+//  {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT32,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
   {"\"DELAY\":",          0,                                 0,                IS_INT32,  &diag_delay,                      0,       0 },    // Delay TBD seconds
   {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,       0,                       0 },    // Echo test
-  {"\"ECHO?\"",           0,                                 0,                IS_VOID,   &show_echo,       0,                       0 },    // Echo test
+  {"\"ECHO",              0,                                 0,                IS_VOID,   &show_echo,       0,                       0 },    // Echo test
   {"\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT32,  0,                NONVOL_FACE_STRIKE,      0 },    // Face Strike Count 
   {"\"FOLLOW_THROUGH\":", &json_follow_through,              0,                IS_INT32,  0,                NONVOL_FOLLOW_THROUGH,   0 },    // Three second follow through
   {"\"INIT\":",           0,                                 0,                IS_INT32,  &init_nonvol,     NONVOL_INIT,             0 },    // Initialize the NONVOL memory
   {"\"KEEP_ALIVE\":",     &json_keep_alive,                  0,                IS_INT32,  0,                NONVOL_KEEP_ALIVE,     120 },    // TCPIP Keep alive period (in seconds)
   {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT32,  &set_LED_PWM_now, NONVOL_LED_PWM,         50 },    // Set the LED brightness
-  {"\"MFS\":",            &json_multifunction,               0,                IS_INT32,  0,                NONVOL_MFS,  (LED_ADJUST*10000) 
-                                                                                                                          + (POWER_TAP * 1000)
-                                                                                                                          + (PAPER_SHOT * 100) 
-                                                                                                                          + (ON_OFF * 10) 
-                                                                                                                          + (PAPER_FEED) },  // Multifunction switch action
-  {"\"MFS_HOLD12\":",     &json_multifunction,               0,                IS_MFS+_HOLD12, 0,           NONVOL_MFS,                        0 },
-  {"\"MFS_HOLD2\":",      &json_multifunction,               0,                IS_MFS+_HOLD2,  0,           NONVOL_MFS,                        0 },
-  {"\"MFS_HOLD1\":",      &json_multifunction,               0,                IS_MFS+_HOLD1,  0,           NONVOL_MFS,                        0 },
-  {"\"MFS_TAP2\":",       &json_multifunction,               0,                IS_MFS+_TAP2,   0,           NONVOL_MFS,                        0 },
-  {"\"MFS_TAP1\":",       &json_multifunction,               0,                IS_MFS+_TAP1,   0,           NONVOL_MFS,                        0 },
-  {"\"MFS2\":",           &json_multifunction2,              0,                IS_INT32,  0,                NONVOL_MFS2,  (NO_ACTION*10000) 
-                                                                                                                          + (NO_ACTION * 1000)
-                                                                                                                          + (NO_ACTION * 100) 
-                                                                                                                          + (NO_ACTION * 10) 
-                                                                                                                          + (NO_ACTION) },   // Multifunction switch action
-  {"\"MFS?\"",            0,                                 0,                IS_VOID,   &multifunction_show,                       0 },
-
+  {"\"MFS?",              0,                                 0,                IS_VOID,   &mfs_show,        0,                       0 },    // Display the MFS settings
+  {"\"MFS_TAP_2\":",      &json_mfs_tap_2,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_B,    TARGET_ON  },
+  {"\"MFS_TAP_1\":",      &json_mfs_tap_1,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_A,    PAPER_SHOT },
+  {"\"MFS_HOLD_2\":",     &json_mfs_hold_2,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_B,   TARGET_OFF },
+  {"\"MFS_HOLD_1\":",     &json_mfs_hold_1,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_A,   PAPER_FEED },
+  {"\"MFS_HOLD_D\":",     &json_mfs_hold_d,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_D,   NO_ACTION  },
+  {"\"MFS_HOLD_C\":",     &json_mfs_hold_c,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_C,   NO_ACTION  },
+  {"\"MFS_SELECT_CD\":",  &json_mfs_select_cd,               0,                IS_MFS,    0,                NONVOL_MFS_SELECT_CD,NO_ACTION  },
+  
   {"\"MIN_RING_TIME\":",  &json_min_ring_time,               0,                IS_INT32,  0,                NONVOL_MIN_RING_TIME,  500 },    // Minimum time for ringing to stop (ms)
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT32,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
   {"\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT32,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
   {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT32,  0,                NONVOL_PAPER_TIME,     500 },    // Set the paper advance time
-  {"\"PCNT_LATENCY\":",   &json_pcnt_latency,                0,                IS_INT32,  0,                NONVOL_PCNT_LATENCY,    33 },    // Interrupt latency for PCNT adjustment
-  {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
+  {"\"PCNT_LATENCY\":",   &json_pcnt_latency,                0,                IS_INT32,  0,                NONVOL_PCNT_LATENCY,     0 },    // Interrupt latency for PCNT adjustment
+  {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,       0 },    // Set the power saver time
   {"\"RAPID_COUNT\":",    &json_rapid_count,                 0,                IS_INT32,  0,                0,                       0 },    // Number of shots expected in series
   {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT32,  0,                0,                       0 },    // Enable the rapid fire fieature
   {"\"RAPID_TIME\":",     &json_rapid_time,                  0,                IS_INT32,  0,                0,                       0 },    // Set the duration of the rapid fire event and start
@@ -137,6 +139,7 @@ const json_message_t JSON[] = {
   {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT32,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
   {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  0,                NONVOL_SENSOR_DIA,  230000 },    // Generate the sensor postion array
   {"\"SN\":",             &json_serial_number,               0,                IS_FIXED,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
+  {"\"START\"",           0               ,                  0,                IS_VOID,   &start_new_session,0,                       0 },    // Start a new session
   {"\"STEP_COUNT\":",     &json_step_count,                  0,                IS_INT32,  0,                NONVOL_STEP_COUNT,       0 },    // Set the duration of the stepper motor ON time
   {"\"STEP_TIME\":",      &json_step_time,                   0,                IS_INT32,  0,                NONVOL_STEP_TIME,        0 },    // Set the number of times stepper motor is stepped
   {"\"TABATA_ENABLE\":",  &json_tabata_enable,               0,                IS_INT32,  &tabata_enable,   0,                       0 },    // Enable the tabata feature
@@ -151,9 +154,12 @@ const json_message_t JSON[] = {
   {"\"VERSION\":",        0,                                 0,                IS_INT32,  &POST_version,    0,                       0 },    // Return the version string
   {"\"VREF_LO\":",        0,                                 &json_vref_lo,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_LO,       1250 },    // Low trip point value (Volts)
   {"\"VREF_HI\":",        0,                                 &json_vref_hi,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_HI,       2000 },    // High trip point value (Volts)
+  {"\"WC\"",              0,                                 0,                IS_VOID,   &WiFi_configuration,0,                     6 },    // Simple WiFi setup command
   {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT32,  0,                NONVOL_WIFI_CHANNEL,     6 },    // Set the wifi channel
   {"\"WIFI_HIDDEN\":",    &json_wifi_hidden,                 0,                IS_INT32,  0,                NONVOL_WIFI_HIDDEN,      0 },    // Hide the SSID 
+ // {"\"WIFI_IP\":",        (int*)&json_wifi_ip,               0,                IS_TEXT+IP_SIZE, 0,          NONVOL_WIFI_IP,          0 },    // Static IP address
   {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_SECRET+PWD_SIZE, 0,       NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
+  {"\"WIFI_RESET\":",     &json_wifi_reset_first,            0,                IS_INT32,  0,                NONVOL_WIFI_RESET_FIRST, 1 },    // Reset everything on the first WiFI connection
   {"\"WIFI_SSID\":",      (int*)&json_wifi_ssid,             0,                IS_TEXT+SSID_SIZE,  0,       NONVOL_WIFI_SSID,        0 },    // Name of SSID to attach to 
   {"\"ZAPPLE\":",         0,                                 0,                IS_VOID,   &zapple,          0,                       0 },    // Start a ZAPPLE console monitor
   {"\"Z_OFFSET\":",       &json_z_offset,                    0,                IS_INT32,  0,                NONVOL_Z_OFFSET,        13 },    // Distance from paper to sensor plane (mm)
@@ -165,6 +171,9 @@ const json_message_t JSON[] = {
   {"\"SOUTH_Y\":",        &json_south_y,                     0,                IS_INT32,  0,                NONVOL_SOUTH_Y,          0 },    //
   {"\"WEST_X\":",         &json_west_x,                      0,                IS_INT32,  0,                NONVOL_WEST_X,           0 },    //
   {"\"WEST_Y\":",         &json_west_y,                      0,                IS_INT32,  0,                NONVOL_WEST_Y,           0 },    //
+  {"\"ATHLETE\":",        0,                                 0,                IS_VOID,   0,                0,                       0 },    // Athlete name for online version
+  {"\"EVENT\":",          0,                                 0,                IS_VOID,   0,                0,                       0 },    // Shooting event for online version
+  {"\"TARGET_NAME\":",    0,                                 0,                IS_VOID,   0,                0,                       0 },    // Target name for online version 
   {0,                     0,                                 0,                0,         0,                0,                       0 },    //
 
 };
@@ -227,7 +236,7 @@ void freeETarget_json
 
   while (1)
   {
-    IF_NOT(IN_OPERATION) { vTaskDelay(ONE_SECOND); printf("*\r\n"); continue;}
+    IF_NOT(IN_OPERATION) { vTaskDelay(ONE_SECOND); continue;}
 
 /*
  * See if anything is waiting and if so, add it in
@@ -235,7 +244,7 @@ void freeETarget_json
     while ( serial_available(ALL) != 0 )
     {
       ch = serial_getch(ALL);
-      SEND(sprintf(_xs, "%c%c", ch, 0);)
+      serial_putch(ch, ALL);
       
 /*
  * Parse the stream
@@ -270,7 +279,6 @@ void freeETarget_json
           if ( got_left_bracket == false )    // Whenever we are not between
           {                                   // {}
             POST_version();
-            show_echo();
             break;
           }                                   // Otherwise fall through
 
@@ -347,41 +355,6 @@ static void handle_json(void)
               x = 0;
             break;
 
-            case IS_MFS:                                      // 
-              x = atoi(&input_JSON[i+k]);                     // Integer
-              switch(JSON[j].convert & FLOAT_MASK)
-              {
-                case _HOLD1:
-                  x = multifunction_hold1(x);
-                  break;
-                
-                case _HOLD2:
-                  x = multifunction_hold2(x);
-                  break;
-                                  
-                case _TAP1:
-                  x = multifunction_tap1(x);
-                  break;
-                
-                case _TAP2:
-                  x = multifunction_tap2(x);
-                  break;
-                
-                case _HOLD12:
-                  x = multifunction_hold12(x);
-                  break;
-              }
-
-              if ( JSON[j].value != 0 )
-              {
-                *JSON[j].value = x;                             // Save the value
-              }
-              if ( JSON[i].non_vol != 0 )
-              {
-                nvs_set_i32(my_handle, JSON[j].non_vol, x);    // Store into NON-VOL
-              }
-              break;
-
             case IS_TEXT:                                       // Convert to text
             case IS_SECRET:
               while ( input_JSON[i+k] != '"' )                  // Skip to the opening quote
@@ -405,6 +378,7 @@ static void handle_json(void)
               }
               break;
               
+            case IS_MFS:
             case IS_INT32:                                      // Convert an integer
               if ( (input_JSON[i+k] == '0')
                   && ( (input_JSON[i+k+1] == 'X') || (input_JSON[i+k+1] == 'x')) )  // Is it Hex?
@@ -513,8 +487,9 @@ int instr(char* s1, char* s2)
 
 void show_echo(void)
 {
-  unsigned int i, j, k;
+  unsigned int i, j;
   char str_c[32];   // String holding buffers
+  mfs_action_t* mfs_ptr;
 
   if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF) )
   {
@@ -559,39 +534,20 @@ void show_echo(void)
             break;
             
           case IS_MFS:                                        // Covert to a switch ID
-              switch (JSON[i].convert & FLOAT_MASK)
+              mfs_ptr = mfs_find(*JSON[i].value);
+              if ( mfs_ptr != NULL )
               {
-                default:
-                case _HOLD1:
-                  k = HOLD1(*JSON[i].value);
-                  break;
-
-                case _HOLD2:
-                  k = HOLD2(*JSON[i].value);
-                  break;
-
-                case _TAP1:
-                  k = TAP1(*JSON[i].value);
-                  break;
-
-                case _TAP2:
-                  k = TAP2(*JSON[i].value);
-                  break;
-
-                case _HOLD12:
-                  k = HOLD12(*JSON[i].value);
-                  break;
+                SEND(sprintf(_xs, "%-18s \"(%d) - %s\", \r\n", JSON[i].token, *JSON[i].value, mfs_ptr->text);)
               }
-          SEND(sprintf(_xs, "%s \"(%d) - %s\", \r\n", JSON[i].token, k, multifunction_str(k));)
           break;
 
         case IS_INT32:
         case IS_FIXED:
-          SEND(sprintf(_xs, "%s %d, \r\n", JSON[i].token, *JSON[i].value);)
+          SEND(sprintf(_xs, "%-18s %d, \r\n", JSON[i].token, *JSON[i].value);)
           break;
 
         case IS_FLOAT:
-          SEND(sprintf(_xs, "%s %6.2f, \r\n", JSON[i].token, *JSON[i].d_value);)
+          SEND(sprintf(_xs, "%-18s %6.2f, \r\n", JSON[i].token, *JSON[i].d_value);)
           break;
       }
       vTaskDelay(10); 
@@ -603,38 +559,39 @@ void show_echo(void)
  * Finish up with the special cases
  */
   SEND(sprintf(_xs, "\n\rStatus\r\n");)                                                                    // Blank Line
-  SEND(sprintf(_xs, "\"TRACE\": %d, \n\r", is_trace);)         // TRUE to if trace is enabled
-  SEND(sprintf(_xs, "\"RUN_STATE\": %d, \n\r", run_state);)    // TRUE to if trace is enabled
-  SEND(sprintf(_xs, "\"RUNNING_MINUTES\": %10.6f, \n\r", esp_timer_get_time()/100000.0/60.0);)  // On Time
-  SEND(sprintf(_xs, "\"TIME_TO_SLEEP\": %4.2f, \n\r", (float)power_save/(float)(ONE_SECOND*60));)                 // How long until we sleep
-  SEND(sprintf(_xs, "\"TEMPERATURE\": %4.2f, \n\r", temperature_C());)                          // Temperature in degrees C
+  SEND(sprintf(_xs, "\"TRACE\":             %d, \n\r", is_trace);)         // TRUE to if trace is enabled
+  SEND(sprintf(_xs, "\"RUN_STATE\":         %d, \n\r", run_state);)    // TRUE to if trace is enabled
+  SEND(sprintf(_xs, "\"RUNNING_MINUTES\":  %10.6f, \n\r", esp_timer_get_time()/100000.0/60.0/60.0);)  // On Time
+  SEND(sprintf(_xs, "\"TIME_TO_SLEEP\":     %4.2f, \n\r", (float)power_save/(float)(ONE_SECOND*60));)                 // How long until we sleep
+  SEND(sprintf(_xs, "\"TEMPERATURE\":       %4.2f, \n\r", temperature_C());)                          // Temperature in degrees C
   SEND(sprintf(_xs, "\"RELATIVE_HUMIDITY\": %4.2f, \n\r", humidity_RH());)
-  SEND(sprintf(_xs, "\"SPEED_OF_SOUND\": %4.2f, \n\r", speed_of_sound(temperature_C(), humidity_RH()));)
-  SEND(sprintf(_xs, "\"TIMER_COUNT\": %d, \n\r", (int)(SHOT_TIME * OSCILLATOR_MHZ));)             // Maximum number of clock cycles to record shot (target dependent)
-  SEND(sprintf(_xs, "\"V12\": %4.2f, \n\r", v12_supply());)    // 12 Volt LED supply
+  SEND(sprintf(_xs, "\"SPEED_OF_SOUND\":    %4.2f, \n\r", speed_of_sound(temperature_C(), humidity_RH()));)
+  SEND(sprintf(_xs, "\"TIMER_COUNT\":       %d, \n\r", (int)(SHOT_TIME * OSCILLATOR_MHZ));)             // Maximum number of clock cycles to record shot (target dependent)
+  SEND(sprintf(_xs, "\"V12\":               %4.2f, \n\r", v12_supply());)    // 12 Volt LED supply
   WiFi_MAC_address(str_c);
-  SEND(sprintf(_xs, "\"WiFi_MAC\": \"%02X:%02X:%02X:%02X:%02X:%02X\", \n\r", str_c[0], str_c[1],str_c[2], str_c[3], str_c[4], str_c[5]);)
-  WiFi_my_ip_address(str_c);
-  SEND(sprintf(_xs, "\"WiFi_IP_ADDRESS\": \"%s:1090\", \n\r", str_c);)
+  SEND(sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\", \n\r", str_c[0], str_c[1],str_c[2], str_c[3], str_c[4], str_c[5]);)
+  WiFi_my_IP_address(str_c);
+  SEND(sprintf(_xs, "\"WiFi_IP_ADDRESS\":   \"%s\", \n\r", str_c);)
+
   if ( json_wifi_ssid[0] == 0 )                       // The SSID is undefined
   {
-    SEND(sprintf(_xs, "\"WiFi_MODE\": \"Access Point\",\n\r");)    // Print out the IP address
+    SEND(sprintf(_xs, "\"WiFi_MODE\":         \"Access Point: FET-%s\",\n\r", names[json_name_id]);)    // Print out the IP address
   }
   else
   {
-    SEND(sprintf(_xs, "\"WiFi_MODE\": \"Station connected to SSID \"%s\",\n\r", (char*)&json_wifi_ssid);) 
+    SEND(sprintf(_xs, "\"WiFi_MODE\":         \"Station connected to SSID %s\",\n\r", (char*)&json_wifi_ssid);) 
   }
 
   if ( json_token == TOKEN_NONE )
   {
-    SEND(sprintf(_xs, "\"TOKEN_RING\":  %d, \n\r", my_ring);)           // My token ring address
-    SEND(sprintf(_xs, "\"TOKEN_OWNER\": %d, \n\r", whos_ring);)         // Who owns the token ring
+    SEND(sprintf(_xs, "\"TOKEN_RING\":     %d, \n\r", my_ring);)           // My token ring address
+    SEND(sprintf(_xs, "\"TOKEN_OWNER\":    %d, \n\r", whos_ring);)         // Who owns the token ring
   }
   
-  SEND(sprintf(_xs, "\"VERSION\": %s, \n\r", SOFTWARE_VERSION);)        // Current software version
+  SEND(sprintf(_xs, "\"VERSION\":          %s, \n\r", SOFTWARE_VERSION);)        // Current software version
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
-  SEND(sprintf(_xs, "\"PS_VERSION\": %d, \n\r", j);)                    // Current persistent storage version
-  SEND(sprintf(_xs, "\"BD_REV\": %4.2f \n\r", (float)(revision())/100.0);)                                             // Current board versoin
+  SEND(sprintf(_xs, "\"PS_VERSION\":       %d, \n\r", j);)                    // Current persistent storage version
+  SEND(sprintf(_xs, "\"BD_REV\":           %4.2f \n\r", (float)(revision())/100.0);)                                             // Current board versoin
   SEND(sprintf(_xs, "}\r\n");) 
   
 /*

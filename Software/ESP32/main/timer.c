@@ -32,6 +32,11 @@
 #define MAX_WAIT_TIME   10                      // Wait up to 10 ms for the input to arrive
 #define MAX_RING_TIME   50                      // Wait 50 ms for the ringing to stop
 
+#define TICK_10ms        1                      // vTaskDelay in 10 ms
+#define BAND_100ms    (TICK_10ms * 10)          // vTaskDelay in 100 ms
+#define BAND_500ms    (TICK_10ms * 50)          // vTaskDelay in 500 ms
+#define BAND_1000ms   (TICK_10ms * 100)         // vTaskDelay in 1000 ms
+
 /*
  * Local Variables
  */
@@ -91,7 +96,8 @@ void freeETarget_timer_init(void)
   timer_isr_callback_add(TIMER_GROUP_0, TIMER_1, freeETarget_timer_isr_callback, NULL, 0);
   timer_start(TIMER_GROUP_0, TIMER_1);
   timer_new(&isr_timer, 0);
-  this_shot = 0;
+  shot_in = 0;
+  shot_out = 0;
 
 /*
  *  Timer running. return
@@ -200,6 +206,51 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
 
 /*-----------------------------------------------------
  * 
+ * @function: freeETarget_timers
+ * 
+ * @brief:    Update the free running timers
+ *  
+ * @return:   Never
+ * 
+ *-----------------------------------------------------
+ *
+ * This task runs every 10ms.  
+ * 
+ * The free running timers are decrimented and when they
+ * hit zero, the individual timer is deleted
+ * 
+ *-----------------------------------------------------*/
+void freeETarget_timers
+(
+  void *pvParameters
+)
+{
+  unsigned int i;
+
+  DLT(DLT_CRITICAL, printf("freeETarget_timers()");)
+/*
+ *  Decrement the timers on a 10ms (100Hz) interval
+ */
+  while (1)
+  {
+    for (i=0; i != N_TIMERS; i++)   // Refresh the timers.  Decriment in 10ms increments
+    {
+      if ( (timers[i] != 0)
+        && ( *timers[i] != 0 ) )
+      {
+        (*timers[i])--;             // Decriment the timer
+      }
+    }
+    vTaskDelay(TICK_10ms);
+  }
+/*
+ * Never get here
+ */
+  return;
+}
+
+/*-----------------------------------------------------
+ * 
  * @function: freeETarget_synchronous
  * 
  * @brief:    Synchronous task scheduler
@@ -220,12 +271,6 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
  * timers are NOT deleted when they expire.
  * 
  *-----------------------------------------------------*/
-#define TICK_10ms                1       // 1 TICK_10ms = 10 ms
-#define BAND_10ms   (TICK_10ms * 1)
-#define BAND_100ms  (TICK_10ms * 10)
-#define BAND_500ms  (TICK_10ms * 50)
-#define BAND_1000ms (TICK_10ms * 100)
-
 void freeETarget_synchronous
 (
   void *pvParameters
@@ -233,22 +278,12 @@ void freeETarget_synchronous
 {
   unsigned int cycle_count = 0;
   unsigned int toggle = 0;
-  unsigned int i;
 
   DLT(DLT_CRITICAL, printf("freeETarget_synchronous()");)
-/*
- *  Decrement the timers on a 10ms (100Hz) interval
- */
+
   while (1)
   {
-    for (i=0; i != N_TIMERS; i++)   // Refresh the timers.  Decriment in 10ms increments
-    {
-      if ( (timers[i] != 0)
-        && ( *timers[i] != 0 ) )
-      {
-        (*timers[i])--;             // Decriment the timer
-      }
-    }
+
 /*
  *  10 ms band
  */
@@ -256,12 +291,6 @@ void freeETarget_synchronous
     multifunction_switch_tick();
     multifunction_switch();
     drive_paper_tick();
-    if ( LED_timer == 0 )               // Check to see if the timer ran down
-    {
-      set_status_LED(LED_RXTX_OFF);     // If so Turn off the LEDs
-      timer_delete(&LED_timer);
-      LED_timer = 1;                    // and kill the timer
-    }
 /*
  *  500 ms band
  */
@@ -352,6 +381,13 @@ int timer_delete
 {
   unsigned int i;
 
+  if ( old_timer == 0 )
+  {
+    return 0;
+  }
+
+  *old_timer = 0;                   // Set the timer to zero
+
   for (i=0;  i != N_TIMERS; i++ )   // Look through the space
   {
     if ( timers[i] == old_timer )   // Found the existing timer
@@ -361,6 +397,8 @@ int timer_delete
     }
   }
 
+/*
+ *  The timer doesn't exist, return an error
+ */
   return 0;
-  
 }

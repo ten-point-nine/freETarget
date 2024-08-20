@@ -46,7 +46,10 @@ typedef struct status_struct {
  * Variables
  */
 status_struct_t status[3] = {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
-volatile unsigned long paper_time;
+status_struct_t push[3]   = {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
+int paper_state;                    // Drive is ON or OFF
+volatile unsigned long paper_time;  // How long the paper will be on for
+volatile unsigned long step_count;  // How many step counts do we need?
 
 /*-----------------------------------------------------
  * 
@@ -109,8 +112,6 @@ unsigned int is_running (void)
  *-----------------------------------------------------*/
 void arm_timers(void)
 {
-  volatile int waste;
-
   gpio_set_level(CLOCK_START, 0);
   gpio_set_level(STOP_N, 0);                  // Reset the timer
   gpio_set_level(OSC_CONTROL, OSC_OFF);       // Turn off the oscillator
@@ -241,13 +242,13 @@ void status_LED_init
  * '.' - Turn the LED off
  *
  *-----------------------------------------------------*/
-#define   LED_ON 0x3F
+#define   LED_ON 0x3F    // Max full scale is 0xff (too bright)
 
 rmt_transmit_config_t tx_config = {
         .loop_count = 0, // no transfer loop
     };
 
-unsigned char led_strip_pixels[3 * 3];
+static unsigned char led_strip_pixels[3 * 3]; // 3 LEDs + 3 Bytes per LED
 
 void set_status_LED
   (
@@ -348,12 +349,13 @@ void commit_status_LEDs
  */
   for (i=0; i < 3; i++)
   {
-    led_strip_pixels[i * 3 + 0] = 0;
+    led_strip_pixels[i * 3 + 0] = 0;                        // Turn them all off
     led_strip_pixels[i * 3 + 2] = 0;
     led_strip_pixels[i * 3 + 1] = 0;
-    if ( (status[i].blink == 0) || (blink_state == 1) )
+    if ( (status[i].blink == 0)                             // Blinking is off (ie, always on)
+        || (blink_state == 1) )                             // Or, we are in a blink-on cycle
     {
-      led_strip_pixels[i * 3 + 0] = status[i].green;
+      led_strip_pixels[i * 3 + 0] = status[i].green;        // Set the RGB
       led_strip_pixels[i * 3 + 2] = status[i].blue;
       led_strip_pixels[i * 3 + 1] = status[i].red;
     }
@@ -448,47 +450,115 @@ void read_timers
  * 
  *-----------------------------------------------------
  *
- * The function turns on the motor for the specified
- * time.  The motor is cycled json_paper_step times
+ * The function turns on the motor for the time 
+ * needed to move the paper for one shot.
+ * 
+ * The function in two parts:
+ *      Drive a DC motor for X ms
+ *      Drive a stepper motor for X steps
+ * 
+ * The motor is cycled json_paper_step times
  * to drive a stepper motor using the same circuit.
  * 
  * Use an A4988 to drive te stepper in place of a DC
  * motor
  * 
- * There is a hardare change between Version 2.2 which
- * used a transistor and 3.0 that uses a FET.
- * The driving circuit is reversed in the two boards.
+ * Test Settings
  * 
  * DC Motor
  * Step Count = 0
  * Step Time = 0
  * Paper Time = Motor ON time
+ * {"PAPER_TIME":500, "STEP_COUNT": 0, "STEP_TIME":0,  "MFS_HOLD_C":0}
+ * 
+ * Stepper Motor
+ * Step Count = Number of pulses to send
+ * Step Time =  Period on/off of each pulse (50% duty cycle)
+ * Paper Time = 0
+ * {"PAPER_TIME":0, "STEP_COUNT": 100, "STEP_TIME":20, "MFS_HOLD_C":26}
  * 
  *-----------------------------------------------------*/
 void drive_paper(void)
 {
-  DLT(DLT_DIAG, printf("Advancing paper: %dms", json_paper_time);)
-
 /*
- * Drive the motor on and off for the number of cycles
- * at duration
+ *  Verify and report on the 12V supply
  */
-  paper_on_off(true, ONE_SECOND * json_paper_time / 1000);                       // Motor OFF
+  if ( check_12V() == false )                   // See if we have 12V
+  {
+    return;                                     // NO, then nothing to do
+  }
+  
+/*
+ * See what kind of drive we are using
+ */
+  if ( json_paper_time != 0 )       // DC motor - Turn the output on once
+  {
+    DLT(DLT_DIAG, printf("Advancing paper: %dms", json_paper_time);)
+    paper_on_off(true, ONE_SECOND * json_paper_time / 1000);         // Motor OFF
+  }
+  
+  if ( json_step_count != 0 )  // Stepper motor - Toggle the output
+  {
+    DLT(DLT_DIAG, printf("Advancing paper: %d counts", json_step_count);)
+    step_count = json_step_count * 2;// Two states per cycle
+    stepper_off_toggle(true, ONE_SECOND * json_step_time / 1000);  // Motor OFF
+  }
 
  /*
   * All done, return
   */
   return;
  }
-
+/*-----------------------------------------------------
+ * 
+ * @function: drive_paper_tick
+ * 
+ * @brief:    Drive the DC or Stepper motor drive
+ * 
+ * @return:  None
+ * 
+ *-----------------------------------------------------
+ *
+ * The function is called every 10 ms to update the
+ * controls to the DC or stepper motor depending on 
+ * what has been selected in the configuration
+ * 
+ *-----------------------------------------------------*/
 void drive_paper_tick(void)
 {
-  if ( (paper_time == 0) && (is_paper_on() != 0) )
+/*
+ * Drive the DC motor
+ */
+  if ( json_paper_time != 0 )
   {
-    paper_on_off(false, 0);                      // Motor OFF
-    DLT(DLT_DIAG, printf("Done");)
+    if ( paper_time == 0 )
+    {
+      paper_on_off(false, 0);                      // Motor OFF
+    }
   }
   
+/*
+ * Drive the stepper motor
+ */
+  if ( json_step_count != 0 )   // Stepper enabled
+  {
+    if ( step_count != 0)       // In motion
+    {
+      if ( paper_time == 0 )    // Timer for next pulse?
+      {
+        stepper_off_toggle(true, ONE_SECOND * json_step_time / 2 / 1000); // Motor toggle
+        if ( step_count != 0 )
+        {
+          step_count--;
+        }
+      }
+    }
+    else                        // Motion finished
+    {
+      stepper_off_toggle(false, 0); // Motor OFF
+    }
+  }
+
  /*
   * All done, return
   */
@@ -505,42 +575,103 @@ void drive_paper_tick(void)
  * 
  *-----------------------------------------------------
  *
- * The witness paper motor changed polarity between 2.2
- * and Version 3.0.
+ * paper_on_off turns the DC motor drive on or off
+ * for the specified duration.
  * 
- * This function reads the board revision and controls 
- * the FET accordingly
+ * To stop the motor once it is running use
+ * 
+ * paper_on_off(false, 0)
  * 
  *-----------------------------------------------------*/
-int paper_state;
 void paper_on_off                               // Function to turn the motor on and off
 (
   bool on,                                      // on == true, turn on motor drive
-  unsigned long duration                        // How long will it be turned on for
+  unsigned long duration                        // How long will it be on for? 
 )
 {
+/*
+ *  We have a supply, continue
+ */
+  paper_state = on;
+
   if ( on == true )
-  {  
-    timer_new(&paper_time, duration);           // Create the timer
+  {
     gpio_set_level(PAPER, PAPER_ON);            // Turn it on
+    timer_new(&paper_time, duration);
   }
   else
   {
-    timer_new(&paper_time, 0);                  // Remove the timer
-    gpio_set_level(PAPER, PAPER_OFF);           // Turn it off
+    gpio_set_level(PAPER, PAPER_OFF);            // Turn it off
+    timer_delete(&paper_time);
   }
 
 /*
  * No more, return
  */
-  paper_state = on;
   return;
 }
 
-int is_paper_on(void)
-{
-  return paper_state;
+int is_paper_on(void)         // Return true if there is still time
+{              
+  return paper_time != 0;
 }
+
+/*----------------------------------------------------------------
+ * 
+ * @function: stepper_off_toggle()
+ * 
+ * @brief: Set the stepper motor state
+ * 
+ * @return: Nothing
+ * 
+ *----------------------------------------------------------------
+ *
+ *  This is the companion to paper_on_off for the stepper motor
+ *
+ *--------------------------------------------------------------*/
+
+void stepper_off_toggle
+(
+  unsigned int  action,         // action, off (0) or toggle (1)
+  unsigned long duration        // Time to next state
+) 
+{
+  static int current_state;     // Memory of the output
+
+  if ( action == false )
+  {
+    current_state = 0;
+    if ( json_mfs_hold_c == STEPPER_DRIVE )
+    {
+      gpio_set_level(HOLD_C_GPIO, 0);
+    }
+    if ( json_mfs_hold_d == STEPPER_DRIVE )
+    {
+      gpio_set_level(HOLD_D_GPIO, 0);
+    }
+    timer_delete(&paper_time);
+  }
+  else
+  {
+    current_state = 1 - current_state;
+    if ( json_mfs_hold_c == STEPPER_DRIVE )
+    {
+      gpio_set_level(HOLD_C_GPIO, current_state);
+    }
+    if ( json_mfs_hold_d == STEPPER_DRIVE )
+    {
+      gpio_set_level(HOLD_D_GPIO, current_state);
+    }
+    timer_new(&paper_time, ONE_SECOND * json_step_time / 2 / 1000);
+  }
+
+/*
+ *  All done, return
+ */
+  return;
+}
+
+
 /*-----------------------------------------------------
  * 
  * @function: face_ISR
@@ -589,12 +720,11 @@ void aquire(void)
 /*
  * Pull in the data amd save it in the record array
  */
-  read_timers(&record[this_shot].timer_count[0]);   // Record this count
-  record[this_shot].shot_time = 0;                  // Capture the time into the shot
-  record[this_shot].face_strike = face_strike;      // Record if it's a face strike
-  record[this_shot].sensor_status = is_running();   // Record the sensor status
-  record[this_shot].shot_number = shot_number++;    // Record the shot number and increment
-  this_shot = (this_shot+1) % SHOT_STRING;          // Prepare for the next shot
+  read_timers(&record[shot_in].timer_count[0]);   // Record this count
+  record[shot_in].shot_time = 0;                  // Capture the time into the shot
+  record[shot_in].face_strike = face_strike;      // Record if it's a face strike
+  record[shot_in].sensor_status = is_running();   // Record the sensor status
+  shot_in = (shot_in+1) % SHOT_SPACE;          // Prepare for the next shot
 
 /*
  * All done for now
@@ -616,6 +746,10 @@ void aquire(void)
  *
  *  If MFS2 has enabled the rapid fire lights then allow the 
  *  value to be set
+ * 
+ *  IMPORTANT
+ *   
+ *  LEDs are driven ON by an active low signal
  *
  *--------------------------------------------------------------*/
 
@@ -624,13 +758,17 @@ void rapid_red
   unsigned int state          // New state for the RED light
 ) 
 {
-  if ( HOLD1(json_multifunction2) == RAPID_RED )
+  if ( json_mfs_select_cd == RAPID_LOW )   // Inverted drive
   {
-      gpio_set_level(DIP_0, state);
+    state = !state;
   }
-  if ( HOLD2(json_multifunction2) == RAPID_RED )
+  if ( json_mfs_hold_c == RAPID_RED )
   {
       gpio_set_level(DIP_C, state);
+  }
+  if ( json_mfs_hold_d == RAPID_RED )
+  {
+      gpio_set_level(DIP_D, state);
   }
 
   return;
@@ -638,21 +776,25 @@ void rapid_red
 
 void rapid_green
 (
-  unsigned int state          // New state for the RED light
+  unsigned int state          // New state for the GREEN light
 ) 
 {
-  if ( HOLD1(json_multifunction2) == RAPID_GREEN )
+  if ( json_mfs_select_cd == RAPID_LOW )   // Inverted drive
   {
-      gpio_set_level(DIP_B, state);
+    state = !state;
   }
-  if ( HOLD2(json_multifunction2) == RAPID_GREEN )
+
+  if ( json_mfs_hold_c == RAPID_GREEN )
   {
-      gpio_set_level(DIP_A, state);
+      gpio_set_level(DIP_C, state);
+  }
+  if ( json_mfs_hold_d == RAPID_GREEN )
+  {
+      gpio_set_level(DIP_D, state);
   }
 
   return;
 }
-
 
 /*-----------------------------------------------------
  * 
@@ -716,6 +858,51 @@ void status_LED_test(void)
 
 /*----------------------------------------------------------------
  * 
+ * @function: rapid_LED_test()
+ * 
+ * @brief:    Cycle the status LEDs
+ * 
+ * @return:   Nothing
+ * 
+ *----------------------------------------------------------------
+ *
+ *--------------------------------------------------------------*/
+void rapid_LED_test(void)
+{
+  printf("\r\nRapid LED test\r\n");
+  gpio_set_direction(HOLD_C_GPIO,  GPIO_MODE_OUTPUT);
+  gpio_set_pull_mode(HOLD_C_GPIO,  GPIO_PULLUP_PULLDOWN);
+  gpio_set_direction(HOLD_D_GPIO,  GPIO_MODE_OUTPUT);
+  gpio_set_pull_mode(HOLD_D_GPIO,  GPIO_PULLUP_PULLDOWN);
+
+  json_mfs_hold_d = RAPID_RED;          // Hold D
+  json_mfs_hold_c = RAPID_GREEN;        // Hold C
+  json_mfs_select_cd = RAPID_LOW;       // Select C and D operation
+  
+  while (1)
+  {
+    rapid_red(0);
+    rapid_green(0);
+    timer_delay(ONE_SECOND);
+
+    rapid_red(1);
+    rapid_green(0);
+    timer_delay(ONE_SECOND);
+
+    rapid_red(0);
+    rapid_green(1);
+    timer_delay(ONE_SECOND);
+
+    rapid_red(1);
+    rapid_green(1);
+    timer_delay(ONE_SECOND);
+  }
+  printf("\r\nDone\r\n");
+  return;
+}
+
+/*----------------------------------------------------------------
+ * 
  * @function: paper_test
  * 
  * @brief:    Drive the motor
@@ -739,7 +926,7 @@ void paper_test(void)
   for (i=0; i != 10; i++)
   {
     printf("  %d+", (i+1));
-    paper_on_off(true, ONE_SECOND);
+    paper_on_off(true, ONE_SECOND/2);
     timer_delay(ONE_SECOND / 2);
     printf("-");
     paper_on_off(false, 0);
