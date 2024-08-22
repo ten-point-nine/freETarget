@@ -904,31 +904,61 @@ void set_diag_LED
  *
  * @brief:    Make sure the 12 Volt supply is within limits
  *
- * @return:   Nothing
+ * @return:   TRUE if the 12V is within spec
  * 
  *----------------------------------------------------------------
  * 
  * The 12V supply is read and compared against limits.
  * 
- * If it is out of spec, then the 12V fault LEDs are displayed
- * for 5 seconds and then control returns to the caller.
+ * V >= 10 V  Green LED          Working
+ * 5 < V <=   10 Yellow LED      Caution
+ * V <= 5     Red LED            Disabld
+ * 
+ * Return TRUE if the motor can be driven
  *   
+ * The LEDs are only set on a change from (say) working to caution
+ * this is done to prevent the LEDs from flickering
+ * 
  *--------------------------------------------------------------*/
+#define NONE  0
+#define SOME  1
+#define V12OK 2
+#define UNKNOWN 99
+
+#define WORKING  10.0
+#define CAUTION  5.0
+
 bool check_12V(void)
 {
-  static bool fault_12V = true;
+  static unsigned int fault_V12 = UNKNOWN;
+  float  v12;
 
-  if ( v12_supply() < 10.0 )
+  v12 = v12_supply();
+
+  if ( v12 <= CAUTION )
   {
-    set_status_LED(LED_LOW_12V);
-    fault_12V = true;
+    if ( fault_V12 != NONE)
+    {
+      set_status_LED(LED_NO_12V);
+      fault_V12 = NONE;
+    }
     return false;
   }
 
-  if ( fault_12V == true )              // Did we have an error last time?
+  if ( v12 <= WORKING )
+  {
+    if ( fault_V12 != SOME )
+    {
+      set_status_LED(LED_LOW_12V);
+      fault_V12 = SOME;
+    }
+    return false;
+  }
+
+  if ( fault_V12 != V12OK )              // Did we have an error last time?
   {
     set_status_LED(LED_OK_12V);         // Gone, clear the error
-    fault_12V = false;
+    fault_V12 = V12OK;
   }
 
   return true;

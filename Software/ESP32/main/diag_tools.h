@@ -92,8 +92,9 @@ bool check_12V(void);                                     // Check the 12 volt s
 #define LED_SOUTH_FAILED   "R-B"            // South sensor failed
 #define LED_WEST_FAILED    "R-Y"            // West sensor failed
 #define LED_MISS           "R-r"            // Shot was detected as a miss
-#define LED_LOW_12V        "--y"            // 12 Volt supply out of spec
-#define LED_OK_12V         "--g"            // The 12 Volt supply is in spec
+#define LED_NO_12V         "--R"            // The 12 Volt supply is not present
+#define LED_LOW_12V        "--Y"            // 12 Volt supply out of spec
+#define LED_OK_12V         "--G"            // The 12 Volt supply is in spec
 #define LED_SPARE_A        "--b"
 #define LED_SPARE_C        "--W"
 #define LED_SPARE_D        "--w"

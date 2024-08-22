@@ -475,7 +475,7 @@ void read_timers
  * Step Count = Number of pulses to send
  * Step Time =  Period on/off of each pulse (50% duty cycle)
  * Paper Time = 0
- * {"PAPER_TIME":0, "STEP_COUNT": 100, "STEP_TIME":20, "MFS_HOLD_C":26}
+ * {"MFS_HOLD_C":26, "STEP_TIME":75, "STEP_COUNT": 15, "PAPER_TIME":0,}
  * 
  *-----------------------------------------------------*/
 void drive_paper(void)
@@ -499,7 +499,7 @@ void drive_paper(void)
   
   if ( json_step_count != 0 )  // Stepper motor - Toggle the output
   {
-    DLT(DLT_DIAG, printf("Advancing paper: %d counts", json_step_count);)
+    DLT(DLT_DIAG, printf("Advancing paper: %d counts, @%dms", json_step_count, json_step_time);)
     step_count = json_step_count * 2;// Two states per cycle
     stepper_off_toggle(true, ONE_SECOND * json_step_time / 1000);  // Motor OFF
   }

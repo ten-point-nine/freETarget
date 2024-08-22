@@ -103,6 +103,7 @@ mfs_action_t mfs_action[] = {
  {
 
   DLT(DLT_CRITICAL, printf("Multifunction_init()");)
+  
 /*
  * Check to see if the DIP switch has been overwritten
  */
