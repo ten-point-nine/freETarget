@@ -69,6 +69,6 @@ void mfs_show(void);                            // Show the available settings
 #define RAPID_GREEN  20                   // Rapid Fire Green Output
 #define RAPID_LOW    22                   // Select Rapid Fire LED type
 #define RAPID_HIGH   24                   // Select Rapid Fire LED type
-#define STEPPER_DRIVE 26                  // The output drives a stepper motor
-
+#define STEPPER_DRIVE  26                 // The output drives a stepper motor
+#define STEPPER_ENABLE 28                 // The output enables the stepper motor
 #endif

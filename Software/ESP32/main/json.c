@@ -53,7 +53,7 @@ int     json_power_save;            // Power down time
 int     json_send_miss;             // Send a miss message
 int     json_serial_number;         // Electonic serial number
 int     json_step_count;            // Number of steps ouput to motor
-int     json_step_time;             // Duration of each step
+int     json_step_time;             // Duration of each step in ms
 int     json_multifunction;         // Multifunction switch operation
 int     json_multifunction2;        // Multifunction Switch 2
 int     json_z_offset;              // Distance between paper and sensor plane in 0.1mm
@@ -109,21 +109,21 @@ const json_message_t JSON[] = {
   {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT32,  0,                NONVOL_SENSOR_ANGLE,    45 },    // Locate the sensor angles
   {"\"BYE\":",            0,                                 0,                IS_VOID,   &bye,             0,                       0 },    // Shut down the target
 //  {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT32,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
-  {"\"DELAY\":",          0,                                 0,                IS_INT32,  &diag_delay,                      0,       0 },    // Delay TBD seconds
+//  {"\"DELAY\":",          0,                                 0,                IS_INT32,  &diag_delay,                      0,       0 },    // Delay TBD seconds
   {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,       0,                       0 },    // Echo test
-  {"\"ECHO",              0,                                 0,                IS_VOID,   &show_echo,       0,                       0 },    // Echo test
   {"\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT32,  0,                NONVOL_FACE_STRIKE,      0 },    // Face Strike Count 
   {"\"FOLLOW_THROUGH\":", &json_follow_through,              0,                IS_INT32,  0,                NONVOL_FOLLOW_THROUGH,   0 },    // Three second follow through
   {"\"INIT\":",           0,                                 0,                IS_INT32,  &init_nonvol,     NONVOL_INIT,             0 },    // Initialize the NONVOL memory
   {"\"KEEP_ALIVE\":",     &json_keep_alive,                  0,                IS_INT32,  0,                NONVOL_KEEP_ALIVE,     120 },    // TCPIP Keep alive period (in seconds)
   {"\"LED_BRIGHT\":",     &json_LED_PWM,                     0,                IS_INT32,  &set_LED_PWM_now, NONVOL_LED_PWM,         50 },    // Set the LED brightness
   {"\"MFS?",              0,                                 0,                IS_VOID,   &mfs_show,        0,                       0 },    // Display the MFS settings
-  {"\"MFS_TAP_2\":",      &json_mfs_tap_2,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_B,    TARGET_ON  },
   {"\"MFS_TAP_1\":",      &json_mfs_tap_1,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_A,    PAPER_SHOT },
-  {"\"MFS_HOLD_2\":",     &json_mfs_hold_2,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_B,   TARGET_OFF },
+  {"\"MFS_TAP_2\":",      &json_mfs_tap_2,                   0,                IS_MFS,    0,                NONVOL_MFS_TAP_B,    TARGET_ON  },
   {"\"MFS_HOLD_1\":",     &json_mfs_hold_1,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_A,   PAPER_FEED },
-  {"\"MFS_HOLD_D\":",     &json_mfs_hold_d,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_D,   NO_ACTION  },
+  {"\"MFS_HOLD_2\":",     &json_mfs_hold_2,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_B,   TARGET_OFF },
+  {"\"MFS_HOLD_12\":",    &json_mfs_hold_12,                 0,                IS_MFS,    0,                NONVOL_MFS_HOLD_AB,  LED_ADJUST },
   {"\"MFS_HOLD_C\":",     &json_mfs_hold_c,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_C,   NO_ACTION  },
+  {"\"MFS_HOLD_D\":",     &json_mfs_hold_d,                  0,                IS_MFS,    0,                NONVOL_MFS_HOLD_D,   NO_ACTION  },
   {"\"MFS_SELECT_CD\":",  &json_mfs_select_cd,               0,                IS_MFS,    0,                NONVOL_MFS_SELECT_CD,NO_ACTION  },
   
   {"\"MIN_RING_TIME\":",  &json_min_ring_time,               0,                IS_INT32,  0,                NONVOL_MIN_RING_TIME,  500 },    // Minimum time for ringing to stop (ms)
@@ -137,7 +137,7 @@ const json_message_t JSON[] = {
   {"\"RAPID_TIME\":",     &json_rapid_time,                  0,                IS_INT32,  0,                0,                       0 },    // Set the duration of the rapid fire event and start
   {"\"RAPID_WAIT\":",     &json_rapid_wait,                  0,                IS_INT32,  0,                0,                       0 },    // Delay applied between enable and ready
   {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT32,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
-  {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  0,                NONVOL_SENSOR_DIA,  230000 },    // Generate the sensor postion array
+  {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  0,                NONVOL_SENSOR_DIA,  232000 },    // Generate the sensor postion array
   {"\"SN\":",             &json_serial_number,               0,                IS_FIXED,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
   {"\"START\"",           0               ,                  0,                IS_VOID,   &start_new_session,0,                       0 },    // Start a new session
   {"\"STEP_COUNT\":",     &json_step_count,                  0,                IS_INT32,  0,                NONVOL_STEP_COUNT,       0 },    // Set the duration of the stepper motor ON time

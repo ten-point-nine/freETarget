@@ -49,7 +49,8 @@ status_struct_t status[3] = {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
 status_struct_t push[3]   = {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
 int paper_state;                    // Drive is ON or OFF
 volatile unsigned long paper_time;  // How long the paper will be on for
-volatile unsigned long step_count;  // How many step counts do we need?
+volatile unsigned int  step_count;  // How many step counts do we need?
+volatile unsigned int  step_time;   // Interval to next step
 
 /*-----------------------------------------------------
  * 
@@ -442,23 +443,23 @@ void read_timers
 
 /*-----------------------------------------------------
  * 
- * @function: drive_paper
+ * @function: paper_start
  * 
- * @brief:    Turn on the witness paper motor for json_paper_time
+ * @brief:    Start advancing the paper
  * 
  * @return:  None
  * 
  *-----------------------------------------------------
  *
- * The function turns on the motor for the time 
- * needed to move the paper for one shot.
+ * These are the starting activities to begin moving
+ * the witness paper.
  * 
- * The function in two parts:
- *      Drive a DC motor for X ms
- *      Drive a stepper motor for X steps
+ * In the case of the DC motor, turn on the FET
  * 
- * The motor is cycled json_paper_step times
- * to drive a stepper motor using the same circuit.
+ * Stepper motors require the stepper to be ramped up
+ * 
+ * Once the motors have started, paper_drive_tick will
+ * keep it moving
  * 
  * Use an A4988 to drive te stepper in place of a DC
  * motor
@@ -469,39 +470,79 @@ void read_timers
  * Step Count = 0
  * Step Time = 0
  * Paper Time = Motor ON time
- * {"PAPER_TIME":500, "STEP_COUNT": 0, "STEP_TIME":0,  "MFS_HOLD_C":0}
+ * {"PAPER_TIME":500, "STEP_COUNT": 0, "STEP_TIME":0,  "MFS_HOLD_C":0, "MFS_HOLD_D":0}
  * 
  * Stepper Motor
  * Step Count = Number of pulses to send
  * Step Time =  Period on/off of each pulse (50% duty cycle)
  * Paper Time = 0
- * {"MFS_HOLD_C":26, "STEP_TIME":75, "STEP_COUNT": 15, "PAPER_TIME":0,}
+ * {"MFS_HOLD_C":26, "MFS_HOLD_D":28, "STEP_TIME":30, "STEP_COUNT": 200, "PAPER_TIME":0}
  * 
  *-----------------------------------------------------*/
-void drive_paper(void)
+void paper_start(void)
 {
+
 /*
- *  Verify and report on the 12V supply
+ *  DC Motor, turn on the FET to start the motor
  */
-  if ( check_12V() == false )                   // See if we have 12V
+  if ( IS_DC_WITNESS )                    // DC motor, 
   {
-    return;                                     // NO, then nothing to do
+    DLT(DLT_INFO,  printf("DC motor start: %d ms", json_paper_time);)
+    DCmotor_on_off(true, json_paper_time);
   }
+
+/*
+ * Set up the stepper and trigger the first pulse
+ */
+  if ( IS_STEPPER_WITNESS )               // Stepper
+  {
+    if ( json_mfs_hold_d == STEPPER_ENABLE )
+    {
+      gpio_set_level(HOLD_D_GPIO, STEP_ENABLE);
+    }
+    step_count = json_step_count;         // Set local variables
+    step_time  = 200;                     // Start off slowly
+    paper_drive_tick();                   // Send out the first tick
+  }
+
+  return;
+}
+
+
+
+/*-----------------------------------------------------
+ * 
+ * @function: paper_stop
+ * 
+ * @brief:    Stop advancing the paper
+ * 
+ * @return:  None
+ * 
+ *-----------------------------------------------------
+ *
+ *  General purpose function to stop the paper advancing
+ * 
+ *-----------------------------------------------------*/
+void paper_stop(void)
+{
   
 /*
  * See what kind of drive we are using
  */
-  if ( json_paper_time != 0 )       // DC motor - Turn the output on once
+  if ( IS_DC_WITNESS )                           // DC motor - Turn the output on once
   {
-    DLT(DLT_DIAG, printf("Advancing paper: %dms", json_paper_time);)
-    paper_on_off(true, ONE_SECOND * json_paper_time / 1000);         // Motor OFF
+    DCmotor_on_off(false, 0);                    // Motor OFF
+    timer_delete(&paper_time);
   }
   
-  if ( json_step_count != 0 )  // Stepper motor - Toggle the output
+  if ( IS_STEPPER_WITNESS )                     // Stepper motor - Toggle the output
   {
-    DLT(DLT_DIAG, printf("Advancing paper: %d counts, @%dms", json_step_count, json_step_time);)
-    step_count = json_step_count * 2;// Two states per cycle
-    stepper_off_toggle(true, ONE_SECOND * json_step_time / 1000);  // Motor OFF
+    step_count = 0;
+    if ( json_mfs_hold_d == STEPPER_ENABLE )
+    {
+      gpio_set_level(HOLD_D_GPIO, STEP_DISABLE);
+    }
+    timer_delete(&paper_time);
   }
 
  /*
@@ -509,9 +550,11 @@ void drive_paper(void)
   */
   return;
  }
+
+
 /*-----------------------------------------------------
  * 
- * @function: drive_paper_tick
+ * @function: paper_drive_tick
  * 
  * @brief:    Drive the DC or Stepper motor drive
  * 
@@ -524,38 +567,35 @@ void drive_paper(void)
  * what has been selected in the configuration
  * 
  *-----------------------------------------------------*/
-void drive_paper_tick(void)
+void paper_drive_tick(void)
 {
+
 /*
  * Drive the DC motor
  */
-  if ( json_paper_time != 0 )
+  if ( IS_DC_WITNESS )
   {
     if ( paper_time == 0 )
     {
-      paper_on_off(false, 0);                      // Motor OFF
+      paper_stop();                      // Motor OFF
     }
   }
   
 /*
  * Drive the stepper motor
  */
-  if ( json_step_count != 0 )   // Stepper enabled
+  if ( IS_STEPPER_WITNESS )             // Stepper enabled
   {
-    if ( step_count != 0)       // In motion
+    if ( step_count != 0)               // In motion
     {
-      if ( paper_time == 0 )    // Timer for next pulse?
+      if ( paper_time == 0 )            // Timer for next pulse?
       {
-        stepper_off_toggle(true, ONE_SECOND * json_step_time / 2 / 1000); // Motor toggle
-        if ( step_count != 0 )
-        {
-          step_count--;
-        }
+        stepper_pulse();                // Motor toggle
       }
     }
-    else                        // Motion finished
+    else
     {
-      stepper_off_toggle(false, 0); // Motor OFF
+      paper_stop();
     }
   }
 
@@ -567,7 +607,7 @@ void drive_paper_tick(void)
 
 /*-----------------------------------------------------
  * 
- * @function: paper_on_off
+ * @function: DCmotor_on_off
  * 
  * @brief:    Turn the withness paper motor on or off
  * 
@@ -575,18 +615,18 @@ void drive_paper_tick(void)
  * 
  *-----------------------------------------------------
  *
- * paper_on_off turns the DC motor drive on or off
+ * DCmotor_on_off turns the DC motor drive on or off
  * for the specified duration.
  * 
  * To stop the motor once it is running use
  * 
- * paper_on_off(false, 0)
+ * DCmotor_on_off(false, 0)
  * 
  *-----------------------------------------------------*/
-void paper_on_off                               // Function to turn the motor on and off
+void DCmotor_on_off                               // Function to turn the motor on and off
 (
   bool on,                                      // on == true, turn on motor drive
-  unsigned long duration                        // How long will it be on for? 
+  unsigned long duration                        // How long will it be on for in ms? 
 )
 {
 /*
@@ -597,7 +637,7 @@ void paper_on_off                               // Function to turn the motor on
   if ( on == true )
   {
     gpio_set_level(PAPER, PAPER_ON);            // Turn it on
-    timer_new(&paper_time, duration);
+    timer_new(&paper_time, MS_TO_TICKS(duration));
   }
   else
   {
@@ -613,56 +653,44 @@ void paper_on_off                               // Function to turn the motor on
 
 int is_paper_on(void)         // Return true if there is still time
 {              
-  return paper_time != 0;
+  return (paper_time != 0);
 }
 
 /*----------------------------------------------------------------
  * 
- * @function: stepper_off_toggle()
+ * @function: stepper_pulse()
  * 
- * @brief: Set the stepper motor state
+ * @brief: Send a single pulse to the stepper motor driver
  * 
  * @return: Nothing
  * 
  *----------------------------------------------------------------
  *
- *  This is the companion to paper_on_off for the stepper motor
+ * This is the companion to DCmotor_on_off for the stepper motor
+ * 
+ * The function also calculates a slew rate from stopped to full
+ * speed
  *
  *--------------------------------------------------------------*/
 
-void stepper_off_toggle
-(
-  unsigned int  action,         // action, off (0) or toggle (1)
-  unsigned long duration        // Time to next state
-) 
+void stepper_pulse(void)
 {
-  static int current_state;     // Memory of the output
+  gpio_set_level(HOLD_C_GPIO, STEP_ON);
+  gpio_set_level(HOLD_C_GPIO, STEP_OFF);
 
-  if ( action == false )
+  step_time = step_time - 5;
+
+  if ( step_time < json_step_time )
   {
-    current_state = 0;
-    if ( json_mfs_hold_c == STEPPER_DRIVE )
-    {
-      gpio_set_level(HOLD_C_GPIO, 0);
-    }
-    if ( json_mfs_hold_d == STEPPER_DRIVE )
-    {
-      gpio_set_level(HOLD_D_GPIO, 0);
-    }
-    timer_delete(&paper_time);
+    step_time = json_step_time;
   }
-  else
+
+  DLT(DLT_INFO, printf("step_time %d", step_time);)
+  timer_new(&paper_time, MS_TO_TICKS(step_time));
+
+  if ( step_count != 0 )
   {
-    current_state = 1 - current_state;
-    if ( json_mfs_hold_c == STEPPER_DRIVE )
-    {
-      gpio_set_level(HOLD_C_GPIO, current_state);
-    }
-    if ( json_mfs_hold_d == STEPPER_DRIVE )
-    {
-      gpio_set_level(HOLD_D_GPIO, current_state);
-    }
-    timer_new(&paper_time, ONE_SECOND * json_step_time / 2 / 1000);
+    step_count--;
   }
 
 /*
@@ -914,22 +942,21 @@ void rapid_LED_test(void)
  *  Drive the motor in 500 ms increments.
  * 
  *  This function drives the motor directly and does not use the 
- *  functions drive_paper() or drive_paper_tick().
+ *  functions paper_drive() or paper_drive_tick().
  * 
  *--------------------------------------------------------------*/
 void paper_test(void)
 {
-  volatile unsigned long time_delay;
   int i;
 
-  printf("\r\nAdvancing paper 500 ms at a time");
+  printf("\r\nAdvancing paper: 500 ms at a time");
   for (i=0; i != 10; i++)
   {
     printf("  %d+", (i+1));
-    paper_on_off(true, ONE_SECOND/2);
+    DCmotor_on_off(true, ONE_SECOND/2);
     timer_delay(ONE_SECOND / 2);
     printf("-");
-    paper_on_off(false, 0);
+    DCmotor_on_off(false, 0);
     timer_delay(ONE_SECOND / 2);
   }
 

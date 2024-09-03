@@ -290,7 +290,8 @@ void freeETarget_synchronous
     token_cycle();
     multifunction_switch_tick();
     multifunction_switch();
-    drive_paper_tick();
+    paper_drive_tick();
+    
 /*
  *  500 ms band
  */

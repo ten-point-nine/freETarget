@@ -143,11 +143,6 @@ void read_nonvol(void)
    }
    i++;
  }
-
-/*
- * Go through and verify that the special cases are taken care of
- */
-//  multifunction_switch();                                   // Look for an override on the target type
   
 /*
  * All done, begin the program
@@ -244,13 +239,10 @@ void factory_nonvol
       printf("\r\nFactory test did not pass.");
       printf("\r\nFactory Test will not be recorded");
     }
-  }
 
 /*
  * Ask for the serial number.  Exit when you get !
  */
-  if ( new_serial_number )
-  {
     ch = 0;
     serial_number = 0;
     serial_flush(ALL);
@@ -264,31 +256,40 @@ void factory_nonvol
         ch = serial_getch(CONSOLE);
         serial_putch(ch, CONSOLE);
         
-        if ( ch == '!' )
-        {  
-          nvs_set_i32(my_handle, NONVOL_SERIAL_NO, serial_number);
-          printf("\r\nSetting Serial Number to: %d", serial_number);
-          break;
-        }
+        switch (ch)
+        {
+          case '!':
+            nvs_set_i32(my_handle, NONVOL_SERIAL_NO, serial_number);
+            printf("\r\nSetting Serial Number to: %d", serial_number);
+            break;
 
-        if ( (ch == 'x') || (ch == 'X') )
-        {
-          break;
-        }
+          case 0x08:          // Backspace
+            serial_number /= 10;
+            break;
 
-        if ( ch == 0x08 )          // Backspace
-        {
-          serial_number /= 10;
-        }
-        else
-        {
-          serial_number *= 10;
-          serial_number += ch - '0';
+          case '0':
+          case '1':
+          case '2':
+          case '3':
+          case '4':
+          case '5':
+          case '6':
+          case '7':
+          case '8':
+          case '9':
+            serial_number *= 10;
+            serial_number += ch - '0';
+            break;
         }
       }
+      vTaskDelay(10);
+      if ( (ch == 'x') || (ch == 'X') || (ch == '!') )
+      {
+        break;
+      }
     }
-  }
-  
+  }  
+
 /*
  * Initialization complete.  Mark the init done
  */
@@ -302,6 +303,7 @@ void factory_nonvol
 /*
  * All done, return
  */    
+  read_nonvol();            // Put the NONVOL into the working JSON variables
   DLT(DLT_CRITICAL, printf("Factory Init complete\r\n");)
   return;
 }
@@ -316,20 +318,11 @@ void factory_nonvol
  * @return: None
  *---------------------------------------------------------------
  *
- * {"INIT":1234} Reset but leave serial number alone
- * {"INIT":1235} Reset and prompt for new serial number
- * 
- * The variable NONVOL_INIT is corrupted. and the values
- * copied out of the JSON[] table.  If the serial number has
- * not been initialized before, the user is prompted to enter
- * a serial number.
- * 
- * The function then continues to display the current trip
- * point value.
+ * init_nonvol is called from the command line by {"INIT":1234}
+ * It will reset the NONVOL as a factory nonvol.
  * 
  *------------------------------------------------------------*/
  #define INIT_ALLOWED         1234        // Number user must enter to allow initialization
- #define INIT_SERIAL_NUMBER   1235        // Number used to re-enter the serial number
  
 void init_nonvol
   (
@@ -339,14 +332,13 @@ void init_nonvol
 /*
  * Ensure that the user wants to init the unit
  */
-  if ( (verify != INIT_ALLOWED) && (verify != INIT_SERIAL_NUMBER) )
+  if ( verify != INIT_ALLOWED )
   {
-    printf("\r\nUse {\"INIT\":1234} Initialize memory only\r\n");
-    printf("\r\nUse {\"INIT\":1235} Reset serial number\r\n");
+    printf("\r\nUse {\"INIT\":1234} Initialize memory\r\n");
     return;
   }
 
-  factory_nonvol(verify == INIT_SERIAL_NUMBER);
+  factory_nonvol(false);                   // Reset to facgtory defaults and prompt for serial number
   
 /*
  * All done, return

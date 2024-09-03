@@ -64,6 +64,7 @@ mfs_action_t mfs_action[] = {
   { RAPID_LOW,      NULL,           "RAPID LOW"      },// The output is active low
   { RAPID_HIGH,     NULL,           "RAPID HIGH"     },// The output is active high
   { STEPPER_DRIVE,  NULL,           "STEPPER_DRIVE"  },// The output is used to drive stepper motor
+  { STEPPER_ENABLE, NULL,           "STEPPER_ENABLE" },// The output is used to drive stepper motor enable
   { 0, 0, 0 }
 };
 
@@ -107,18 +108,18 @@ mfs_action_t mfs_action[] = {
 /*
  * Check to see if the DIP switch has been overwritten
  */
-  if ( json_mfs_hold_c >= MFS2_DIP ) 
+  if ( json_mfs_hold_c >= STEPPER_DRIVE ) 
   {
     gpio_set_direction(HOLD_C_GPIO,  GPIO_MODE_OUTPUT);
     gpio_set_pull_mode(HOLD_C_GPIO,  GPIO_PULLUP_PULLDOWN);
-    gpio_set_level(HOLD_C_GPIO, 0);
+    gpio_set_level(HOLD_C_GPIO, 1);
   }
 
-  if ( json_mfs_hold_d >= MFS2_DIP) 
+  if ( json_mfs_hold_d >= STEPPER_DRIVE) 
   {
     gpio_set_direction(HOLD_D_GPIO,  GPIO_MODE_OUTPUT);
     gpio_set_pull_mode(HOLD_D_GPIO,  GPIO_PULLUP_PULLDOWN);
-    gpio_set_level(HOLD_D_GPIO, 0);
+    gpio_set_level(HOLD_D_GPIO, 1);
   }
 
 /*
@@ -368,19 +369,40 @@ static void mfs_on (void)
 
 static void mfs_paper_feed(void)            // Feed paper so long as the switch is pressed
 {
-  DLT(DLT_INFO, printf("Advancing paper");)
-  drive_paper();                            // Turn it on for 10 seconds
-  while ( DIP_SW_A || DIP_SW_B )
-  {
-    vTaskDelay(1);
-    if ( is_paper_on() == 0 )             // Turn the motor back on
-    {
-      drive_paper();                      // every time is stops
-    }
-  }
-  paper_on_off(false, 0);
-  stepper_off_toggle(false, 0);
+  DLT(DLT_INFO, printf("mfs_paper_feed()");)
 
+/*
+ *  Advance paper using the DC motor
+ */
+  if ( IS_DC_WITNESS )
+  {
+    paper_start();
+    while ( DIP_SW_A || DIP_SW_B )        // and loop until the switches are
+    {
+      vTaskDelay(1);                      // released
+    }
+    paper_stop();
+  }
+
+
+/*
+ *  Advance the paper using the stepper motor
+ */
+  if ( IS_STEPPER_WITNESS )
+  {
+    paper_start();
+    while ( DIP_SW_A || DIP_SW_B )        // and loop until the switches are
+    {
+      paper_drive_tick();                 // Fake a timer tick since mfs_paper_feed() is blocking
+      vTaskDelay(1);                      // released
+      step_count = 1000;                  // Keep the motor moving
+    }
+    paper_stop();
+  }  
+
+/*
+ *  End of action
+ */
   DLT(DLT_INFO, printf("Done");)
   
   return;
@@ -388,7 +410,16 @@ static void mfs_paper_feed(void)            // Feed paper so long as the switch 
 
 static void mfs_paper_shot(void)
 {
-  drive_paper();                      // Turn on the paper drive
+  paper_start();
+  while (1)
+  {
+    vTaskDelay(10);
+    if ( is_paper_on() == 0 )
+    {
+      break;
+    }
+  }
+  printf("\r\nDone\r\n");
   return;
 }
 

@@ -14,7 +14,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"5.2.1 August 22, 2024\""
+#define SOFTWARE_VERSION "\"5.2.3 September 2, 2024\""
 
 #define REV_500    500   // ESP32
 #define REV_510    510
@@ -37,6 +37,9 @@
 
 #define SEND(message) {message} serial_to_all(_xs, ALL);
 
+#define IS_DC_WITNESS      (json_paper_time != 0) // Determine the witness paper drive (DC Motor)
+#define IS_STEPPER_WITNESS (json_step_count != 0) // Determine the witness paper drive (stepper)
+
 /*
  * Options
  */
@@ -51,7 +54,7 @@
 #define ONE_SECOND    (100)                           // 10 ms delay per LSB
 #define MIN_DELAY     (1)                             // Minimum timeout 10ms
 #define FULL_SCALE      0xffffffff                    // Full scale timer
-
+#define MS_TO_TICKS(x) (ONE_SECOND * (x) / 1000)      // Convert from time in ms to time ticks
 
 #define SHOT_TIME     ((int)(json_sensor_dia / 0.33)) // Worst case delay (microseconds) = sensor diameter / speed of sound)
 #define SHOT_SPACE   100                             // 40 Sighters + 60 on Score

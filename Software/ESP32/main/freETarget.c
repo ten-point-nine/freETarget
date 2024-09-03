@@ -393,12 +393,12 @@ unsigned int reduce(void)
       rapid_red(0);
       rapid_green(1);                                           // Turn off the RED and turn on the GREEN
 
-      if ( (json_paper_time + json_step_time) != 0 )            // Has the witness paper been enabled?
+      if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )                // Has the witness paper been enabled?
       {
         if ( ((json_paper_eco == 0)                             // ECO turned off
             || ( sqrt(sq(record[shot_in].x) + sq(record[shot_in].y)) < json_paper_eco )) ) // Outside the black
         {
-          drive_paper();                                        // to follow through.
+          paper_start();                                        // to follow through.
         }
       } 
     }

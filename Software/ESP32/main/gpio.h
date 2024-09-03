@@ -23,8 +23,9 @@ unsigned int read_DIP(void);                              // Read the DIP switch
 unsigned int read_counter(unsigned int direction);
 void stop_timers(void);                                   // Turn off the counter registers
 void read_timers(int* timer_count);                       // Read and return the counter registers
-void drive_paper(void);                                   // Turn on the paper motor
-void drive_paper_tick(void);                              // Turn the motor off when the time runs out
+void paper_start(void);                                   // Turn on the witness papervoid paper_stop(void);                                    // Turn off the paper drive if it is running
+void paper_drive_tick(void);                              // Turn the motor off when the time runs out
+void paper_stop(void);                                    // Stop the paper transport
 void aquire(void);                                        // Read the clock registers
 void enable_face_interrupt();                             // Turn on the face strike interrupt
 void disable_face_interrupt(void);                        // Turn off the face strike interrupt
@@ -32,13 +33,12 @@ void enable_sensor_interrupt();                           // Turn on the sensor 
 void disable_sensor_interrupt(void);                      // Turn off the sensor strike interrupt
 
 void digital_test(void);                                  // Execute the digital test
-void paper_on_off(bool on, unsigned long duration);       // Turn the motor on or off
+void DCmotor_on_off(bool on, unsigned long duration);       // Turn the motor on or off
 int is_paper_on();                                        // Return the current running state
 void rapid_green(unsigned int state);                     // Drive the GREEN light
 void rapid_red(unsigned int state);                       // Drive the RED light
 void rapid_LED_test(void);
-void stepper_off_toggle(unsigned int state, unsigned long duration); // New state for the Stepper motor output
-
+void stepper_pulse(void);                                 // New state for the Stepper motor output
 void status_LED_init(unsigned int gpio_number);           // Initialize the RMT driver 
 void status_LED_test(void);                               // Cycle the status LEDs
 void paper_test(void);                                    // Advance the motor
@@ -49,6 +49,12 @@ void multifunction_switch(void);                          // Handle the actions 
 void multifuction_display(void);                          // Display the MFS settings
 void multifunction_wait_open(void);                       // Wait for both multifunction switches to be open
 void multifunction_display(void);                         // Display the MFS settings as text
+
+/*
+ *  Global Variables
+ */
+extern volatile unsigned int step_count;                  // Number of steps before stopping
+
 /*
  *  Port Definitions
  */
@@ -122,5 +128,13 @@ void multifunction_display(void);                         // Display the MFS set
 #define VERBOSE_TRACE   (DIP_D)         // 8 Show the verbose software trace
 
 #define FACE_SENSOR  19
+
+/*
+ *  Driver Settings
+ */
+#define STEP_ON      1                  // Pulse stepper on
+#define STEP_OFF     0                  // Pulse setpper off
+#define STEP_ENABLE  0                  // Enable the stepper circuit
+#define STEP_DISABLE 1                  // Disable stepper circuit
 
 #endif

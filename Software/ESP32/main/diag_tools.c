@@ -513,12 +513,12 @@ bool factory_test(void)
     if ( motor_toggle )
     {
       printf("+");
-      paper_on_off(true, ONE_SECOND);
+      DCmotor_on_off(true, ONE_SECOND);
     }
     else
     {
       printf("-");
-      paper_on_off(false, 0);
+      DCmotor_on_off(false, 0);
     }
     motor_toggle ^= 1;
     
@@ -560,7 +560,7 @@ bool factory_test(void)
         case 'X':               // Exit
         case 'x':
         case '!':
-          paper_on_off(false, 0);
+          DCmotor_on_off(false, 0);
           if ( passed_once == true )
           {
             printf("\r\nTest completed successfully\r\n");
