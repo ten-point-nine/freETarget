@@ -53,6 +53,8 @@ int     json_power_save;            // Power down time
 int     json_send_miss;             // Send a miss message
 int     json_serial_number;         // Electonic serial number
 int     json_step_count;            // Number of steps ouput to motor
+int     json_step_ramp;             // Step increment when starting
+int     json_step_start;            // Value to start motor moving
 int     json_step_time;             // Duration of each step in ms
 int     json_multifunction;         // Multifunction switch operation
 int     json_multifunction2;        // Multifunction Switch 2
@@ -139,9 +141,11 @@ const json_message_t JSON[] = {
   {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT32,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
   {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  0,                NONVOL_SENSOR_DIA,  232000 },    // Generate the sensor postion array
   {"\"SN\":",             &json_serial_number,               0,                IS_FIXED,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
-  {"\"START\"",           0               ,                  0,                IS_VOID,   &start_new_session,0,                       0 },    // Start a new session
-  {"\"STEP_COUNT\":",     &json_step_count,                  0,                IS_INT32,  0,                NONVOL_STEP_COUNT,       0 },    // Set the duration of the stepper motor ON time
-  {"\"STEP_TIME\":",      &json_step_time,                   0,                IS_INT32,  0,                NONVOL_STEP_TIME,        0 },    // Set the number of times stepper motor is stepped
+  {"\"START\"",           0,                                 0,                IS_VOID,   &start_new_session,0,                      0 },    // Start a new session
+  {"\"STEP_COUNT\":",     &json_step_count,                  0,                IS_INT32,  0,                NONVOL_STEP_COUNT,       0 },    // Number of pulses to send when running 
+  {"\"STEP_RAMP\":",      &json_step_ramp,                   0,                IS_INT32,  0,                NONVOL_STEP_RAMP,        0 },    // Interval (in ms) to ramp the stepper motor
+  {"\"STEP_START\":",     &json_step_start,                  0,                IS_INT32,  0,                NONVOL_STEP_START,       0 },    // Starting interval (in ms) for the stepper moro
+  {"\"STEP_TIME\":",      &json_step_time,                   0,                IS_INT32,  0,                NONVOL_STEP_TIME,        0 },    // Interval (in ms) between pulses when running
   {"\"TABATA_ENABLE\":",  &json_tabata_enable,               0,                IS_INT32,  &tabata_enable,   0,                       0 },    // Enable the tabata feature
   {"\"TABATA_ON\":",      &json_tabata_on,                   0,                IS_INT32,  0,                0,                       0 },    // Time that the LEDs are ON for a Tabata timer (1/10 seconds)
   {"\"TABATA_REST\":",    &json_tabata_rest,                 0,                IS_INT32,  0,                0,                       0 },    // Time that the LEDs are OFF for a Tabata timer

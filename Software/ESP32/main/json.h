@@ -72,6 +72,8 @@ extern int    json_power_save;    // How long to run target before turning off L
 extern int    json_send_miss;     // Sent the miss message when TRUE
 extern int    json_serial_number; // EIN 
 extern int    json_step_count;    // Number of times paper motor is stepped
+extern int    json_step_ramp;     // Time interval between ramp cycles
+extern int    json_step_start;    // Starting ramp inteval
 extern int    json_step_time;     // Duration of step pulse
 extern int    json_multifunction; // Multifunction switch operation
 extern int    json_z_offset;      // Distance between paper and sensor plane (1mm / LSB)

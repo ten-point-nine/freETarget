@@ -8,7 +8,7 @@
 #ifndef _NONVOL_H
 #define _NONVOL_H
 
-#define PS_VERSION        3                       // Persistent storage version
+#define PS_VERSION        4                       // Persistent storage version
 #define PS_UNINIT(x)     ( ((x) == 0xABAB) || ((x) == 0xFFFF))  // Uninitilized value
 
 #define NAME_SPACE "freETarget"
@@ -47,10 +47,12 @@ void restore_nonvol(void);                        // Copyt the nonvol back
 #define NONVOL_SEND_MISS      "SEND_MISS"      // Send the MISS message when true
 #define NONVOL_SERIAL_NO      "SERIAL_NO"      // EIN
 #define NONVOL_STEP_COUNT     "STEP_COUNT"     // Number of paper pulse steps
+#define NONVOL_STEP_RAMP      "STEP_RAMP"      // Amount to decreas every ramp cycle
+#define NONVOL_STEP_START     "STEP_START"     // Starting ramp interval in ms
+#define NONVOL_STEP_TIME      "STEP_TIME"      // Stepper motor pulse duration
 #define NONVOL_MFS            "MFS"            // Multifunction switch operation 
 #define NONVOL_MFS2           "MFS2"           // Multifunction switch operation
 #define NONVOL_PAPER_TIME     "PAPER_TIME"     // Paper advance time
-#define NONVOL_STEP_TIME      "STEP_TIME"      // Stepper motor pulse duration
 #define NONVOL_PAPER_ECO      "PAPER_ECO"      // Advance witness paper if the shot is less than paper_eco
 #define NONVOL_TARGET_TYPE    "TARGET_TYPE"    // Modify the target processing (0 == Regular single bull)
 #define NONVOL_PS_VERSION     "PS_VERSION"     // Persistent storage version

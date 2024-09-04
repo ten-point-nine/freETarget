@@ -462,6 +462,20 @@ void update_nonvol
     current_version = 3;
   }
 
+/* 
+ * Version 3 ->  Add in new parameters for stepper motor
+ */
+  if ( current_version == 3 )
+  {  
+    DLT(DLT_CRITICAL, printf("Updating PS3 to PS4");)
+
+    json_step_ramp = 0;
+    nvs_set_i32(my_handle, NONVOL_STEP_RAMP,  0);
+
+    json_step_start = 0;
+    nvs_set_i32(my_handle, NONVOL_STEP_START, 0);
+    current_version = 4;
+  }
 /*
  * Up to date, return
  */

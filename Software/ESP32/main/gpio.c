@@ -474,9 +474,11 @@ void read_timers
  * 
  * Stepper Motor
  * Step Count = Number of pulses to send
+ * Step Start = Starting number of pulses
+ * Step Ramp =  Time period to reduce each cycle while starting
  * Step Time =  Period on/off of each pulse (50% duty cycle)
  * Paper Time = 0
- * {"MFS_HOLD_C":26, "MFS_HOLD_D":28, "STEP_TIME":30, "STEP_COUNT": 200, "PAPER_TIME":0}
+ * {"MFS_HOLD_C":26, "MFS_HOLD_D":28, "STEP_START":200, "STEP_RAMP": 5, "STEP_TIME":30, "STEP_COUNT": 200, "PAPER_TIME":0}
  * 
  *-----------------------------------------------------*/
 void paper_start(void)
@@ -501,55 +503,12 @@ void paper_start(void)
       gpio_set_level(HOLD_D_GPIO, STEP_ENABLE);
     }
     step_count = json_step_count;         // Set local variables
-    step_time  = 200;                     // Start off slowly
+    step_time  = json_step_start;         // Start off slowly
     paper_drive_tick();                   // Send out the first tick
   }
 
   return;
 }
-
-
-
-/*-----------------------------------------------------
- * 
- * @function: paper_stop
- * 
- * @brief:    Stop advancing the paper
- * 
- * @return:  None
- * 
- *-----------------------------------------------------
- *
- *  General purpose function to stop the paper advancing
- * 
- *-----------------------------------------------------*/
-void paper_stop(void)
-{
-  
-/*
- * See what kind of drive we are using
- */
-  if ( IS_DC_WITNESS )                           // DC motor - Turn the output on once
-  {
-    DCmotor_on_off(false, 0);                    // Motor OFF
-    timer_delete(&paper_time);
-  }
-  
-  if ( IS_STEPPER_WITNESS )                     // Stepper motor - Toggle the output
-  {
-    step_count = 0;
-    if ( json_mfs_hold_d == STEPPER_ENABLE )
-    {
-      gpio_set_level(HOLD_D_GPIO, STEP_DISABLE);
-    }
-    timer_delete(&paper_time);
-  }
-
- /*
-  * All done, return
-  */
-  return;
- }
 
 
 /*-----------------------------------------------------
@@ -604,6 +563,49 @@ void paper_drive_tick(void)
   */
   return;
  }
+
+
+/*-----------------------------------------------------
+ * 
+ * @function: paper_stop
+ * 
+ * @brief:    Stop advancing the paper
+ * 
+ * @return:  None
+ * 
+ *-----------------------------------------------------
+ *
+ *  General purpose function to stop the paper advancing
+ * 
+ *-----------------------------------------------------*/
+void paper_stop(void)
+{
+  
+/*
+ * See what kind of drive we are using
+ */
+  if ( IS_DC_WITNESS )                           // DC motor - Turn the output on once
+  {
+    DCmotor_on_off(false, 0);                    // Motor OFF
+    timer_delete(&paper_time);
+  }
+  
+  if ( IS_STEPPER_WITNESS )                     // Stepper motor - Toggle the output
+  {
+    step_count = 0;
+    if ( json_mfs_hold_d == STEPPER_ENABLE )
+    {
+      gpio_set_level(HOLD_D_GPIO, STEP_DISABLE);
+    }
+    timer_delete(&paper_time);
+  }
+
+ /*
+  * All done, return
+  */
+  return;
+ }
+
 
 /*-----------------------------------------------------
  * 
@@ -678,7 +680,7 @@ void stepper_pulse(void)
   gpio_set_level(HOLD_C_GPIO, STEP_ON);
   gpio_set_level(HOLD_C_GPIO, STEP_OFF);
 
-  step_time = step_time - 5;
+  step_time = step_time - json_step_ramp;
 
   if ( step_time < json_step_time )
   {
