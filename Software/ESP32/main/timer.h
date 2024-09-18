@@ -9,6 +9,10 @@
 #define _TIMER_H_
 
 /*
+ * Variables
+ */
+
+/*
  * function Prototypes
  */
 void freeETarget_timer_init(void);                                         // Initialize the timers

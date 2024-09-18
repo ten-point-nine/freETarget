@@ -746,7 +746,7 @@ void show_sensor_status
 
   for (i=N; i<=W; i++)
   {
-    if ( sensor_status & (1<<i) )   printf("%c", find_sensor(i<<i)->short_name);
+    if ( sensor_status & (1<<i) )   printf("%c", find_sensor(1<<i)->short_name);
     else                            printf(".");
   }
 

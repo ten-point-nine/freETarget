@@ -23,13 +23,13 @@
 /*
  * Definitions
  */
-#define FREQUENCY 1000ul                        // 1000 Hz
-#define N_TIMERS       32                       // Keep space for 32 timers
-#define PORT_STATE_IDLE 0                       // There are no sensor inputs
-#define PORT_STATE_WAIT 1                       // Some sensor inputs are present, but not all
-#define PORT_STATE_DONE 2                       // All of the inmputs are present
+#define FREQUENCY 1000ul          // 1000 Hz
+#define N_TIMERS          32      // Keep space for 32 timers
+#define PORT_STATE_IDLE    0      // There are no sensor inputs
+#define PORT_STATE_WAIT    1      // Some sensor inputs are present
+#define PORT_STATE_TIMEOUT 2      // Wait for the ringing to stop
 
-#define MAX_WAIT_TIME   10                      // Wait up to 10 ms for the input to arrive
+#define MAX_WAIT_TIME   10        // Wait up to 10 ms for the input to arrive
 #define MAX_RING_TIME   50                      // Wait 50 ms for the ringing to stop
 
 #define TICK_10ms        1                      // vTaskDelay in 10 ms
@@ -41,7 +41,7 @@
  * Local Variables
  */
 static volatile unsigned long* timers[N_TIMERS];  // Active timer list
-       unsigned int isr_state;                    // What sensor state are we in 
+static unsigned int isr_state;                    // What sensor state are we in 
 static volatile unsigned long isr_timer;          // Interrupt timer 
 
 /*
@@ -176,23 +176,14 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
       { 
         aquire();                               // Read the counters
         isr_timer = json_min_ring_time;         // Reset the timer
-        isr_state = PORT_STATE_DONE;            // and wait for the all clear
+        isr_state = PORT_STATE_TIMEOUT;         // and wait for the all clear
       }
       break;
-      
-    case PORT_STATE_DONE:                       // Waiting for the ringing to stop
-      if ( pin != 0 )                           // Something got latched
+
+    case PORT_STATE_TIMEOUT:                    // Wait for the ringing to stop
+      if ( isr_timer == 0 )
       {
-        isr_timer = json_min_ring_time;
-        stop_timers();                          // Reset and try later
-      }
-      else
-      {
-        if ( isr_timer == 0 )                   // Make sure there is no rigning
-        {
-          arm_timers();                         // and arm for the next time
-          isr_state = PORT_STATE_IDLE;          // and go back to idle
-        } 
+        isr_state = PORT_STATE_IDLE;            // The ringing has stopped
       }
       break;
   }

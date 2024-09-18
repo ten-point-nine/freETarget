@@ -65,7 +65,7 @@ static void remap_target(double* x, double* y);  // Map a club target if used
  *--------------------------------------------------------------*/
 void init_sensors(void)
 {
-  DLT(DLT_DIAG, printf("init_sensors()");)
+  DLT(DLT_APPLICATION, printf("init_sensors()");)
   
 /*
  * Determine the speed of sound and ajust
@@ -131,14 +131,14 @@ unsigned int compute_hit
   
   timer_new(&wdt, 20);
       
-  DLT(DLT_DIAG, printf("compute_hit()"); )
+  DLT(DLT_APPLICATION, printf("compute_hit()"); )
 
 /* 
  *  Check for a miss
  */
   if ( (shot->face_strike != 0) || (shot->timer_count[N] == 0) || (shot->timer_count[E] == 0) || (shot->timer_count[S] == 0) || (shot->timer_count[W] == 0 ) )
   {
-    DLT(DLT_DIAG, printf("Miss detected");)
+    DLT(DLT_APPLICATION, printf("Miss detected");)
     return MISS;
   }
 
@@ -147,12 +147,12 @@ unsigned int compute_hit
  */
   init_sensors();
   z_offset_clock = (double)json_z_offset  * OSCILLATOR_MHZ / s_of_sound; // Clock adjustement for paper to sensor difference
-  DLT(DLT_DIAG, printf("z_offset_clock: %4.2f", z_offset_clock);)
+  DLT(DLT_APPLICATION, printf("z_offset_clock: %4.2f", z_offset_clock);)
   
  /* 
   *  Display the timer registers if in trace mode
   */  
-  DLT(DLT_DIAG, for (i=N; i <= W_HI; i++) printf("%s: %d ", find_sensor(1<<i)->long_name, shot->timer_count[i]);)
+  DLT(DLT_APPLICATION, for (i=N; i <= W_HI; i++) printf("%s: %d ", find_sensor(1<<i)->long_name, shot->timer_count[i]);)
   
 /*
  * Determine the location of the reference counter (longest time)
@@ -168,7 +168,7 @@ unsigned int compute_hit
     }
   }
   
-  DLT(DLT_DIAG, printf("Reference: %4.2f   location: %s", reference, find_sensor(1<<location)->long_name);)
+  DLT(DLT_APPLICATION, printf("Reference: %4.2f   location: %s", reference, find_sensor(1<<location)->long_name);)
 
 /*
  * Correct the time to remove the shortest distance
@@ -184,7 +184,7 @@ unsigned int compute_hit
   }
 
 
-  DLT(DLT_DIAG,
+  DLT(DLT_APPLICATION,
   {
     printf("\r\nMicroseconds ");
     for (i=0; i < 8; i++) printf("%s: %4.2f ", find_sensor(1<<i)->long_name, (double)s[i].count / ((double)OSCILLATOR_MHZ));
@@ -223,7 +223,7 @@ unsigned int compute_hit
  */
   estimate = s[N].count - smallest + 1.0d;
  
-  DLT(DLT_DIAG, printf("estimate: %4.2f", estimate);)
+  DLT(DLT_APPLICATION, printf("estimate: %4.2f", estimate);)
   error = 999999;                  // Start with a big error
   count = 0;
 
@@ -251,7 +251,7 @@ unsigned int compute_hit
     estimate = sqrt(sq(s[location].x - x_avg) + sq(s[location].y - y_avg));
     error = fabs(last_estimate - estimate);
 
-    DLT(DLT_DIAG, printf("x_avg: %4.2f  y_avg: %4.2f estimate: %4.2f error: %4.2f", x_avg, y_avg, estimate, error);)
+    DLT(DLT_APPLICATION, printf("x_avg: %4.2f  y_avg: %4.2f estimate: %4.2f error: %4.2f", x_avg, y_avg, estimate, error);)
 
     count++;
     if ( count > 20 )
@@ -343,7 +343,7 @@ bool find_xy_3D
  */
   if ( s->is_valid == false )
   {
-    DLT(DLT_DIAG, printf("Sensor: %d no data", s->index);)
+    DLT(DLT_APPLICATION, printf("Sensor: %d no data", s->index);)
     return false;           // Sensor did not trigger.
   }
 
@@ -354,14 +354,14 @@ bool find_xy_3D
   if ( x < 0 )
   {
     sq(s->a + estimate);
-    DLT(DLT_DIAG, printf("s->a is complex, truncting");)
+    DLT(DLT_APPLICATION, printf("s->a is complex, truncting");)
   }
   ae = sqrt(x);                             // Dimenstion with error included
   
   x = sq(s->b + estimate); // - sq(z_offset_clock);
   if ( x < 0 )
   {
-    DLT(DLT_DIAG, printf("s->b is complex, truncting");)
+    DLT(DLT_APPLICATION, printf("s->b is complex, truncting");)
     sq(s->b + estimate);
   }
   be = sqrt(x);  
@@ -406,14 +406,14 @@ bool find_xy_3D
       break;
 
     default:
-      DLT(DLT_DIAG,  printf("\n\nUnknown Rotation:, %d", s->index);)
+      DLT(DLT_APPLICATION,  printf("\n\nUnknown Rotation:, %d", s->index);)
       break;
   }
 
 /*
  * Debugging
  */
-  DLT(DLT_DIAG,
+  DLT(DLT_APPLICATION,
     {
     printf("index: %d  a:%4.2f b: %4.2f ae: %4.2f  be: %4.2f c: %4.2f", s->index, s->a, s->b, ae, be, s->c);
     printf(" cos: %4.2f  sin: %4.2f  angle_A: %4.2f  x: %4.2f y: %4.2f", cos(rotation), sin(rotation), s->angle_A, s->x, s->y);
@@ -458,7 +458,7 @@ void send_score
   double radius;
   double angle;
   
-  DLT(DLT_DIAG, printf("Sending the score");)
+  DLT(DLT_APPLICATION, printf("Sending the score");)
 
 /*
  * Grab the token ring if needed
@@ -767,7 +767,7 @@ static void remap_target
 /*
  * Find the closest bull
  */
-  DLT(DLT_DIAG, printf("remap_target x: %4.2fmm  y: %4.2fmm", *x, *y); )
+  DLT(DLT_APPLICATION, printf("remap_target x: %4.2fmm  y: %4.2fmm", *x, *y); )
 
   ptr = ptr_list[json_target_type];
   if ( ptr == 0 )                   // Check for unassigned targets
@@ -783,13 +783,13 @@ static void remap_target
   while ( ptr->x != LAST_BULL )
   {
     distance = sqrt(sq(ptr->x - *x) + sq(ptr->y - *y));
-    DLT(DLT_DIAG, printf(" distance: %4.2f", distance); )
+    DLT(DLT_APPLICATION, printf(" distance: %4.2f", distance); )
     if ( distance < closest )   // Found a closer one?
     {
       closest = distance;       // Remember it
       dx = ptr->x;
       dy = ptr->y;              // Remember the closest bull
-      DLT(DLT_DIAG, printf("Target: %d   dx: %4.2f   dy: %4.2f", i, dx, dy); )
+      DLT(DLT_APPLICATION, printf("Target: %d   dx: %4.2f   dy: %4.2f", i, dx, dy); )
     }
     ptr++;
     i++;
@@ -800,7 +800,7 @@ static void remap_target
  */
   *x = *x - dx;
   *y = *y - dy;
-  DLT(DLT_DIAG, printf("x: %4.2f , y: %4.2f ", *x, *y); )
+  DLT(DLT_APPLICATION, printf("x: %4.2f , y: %4.2f ", *x, *y); )
   
 /*
  *  All done, return

@@ -50,7 +50,6 @@ double        s_of_sound;               // Speed of sound
 unsigned int  shot = 0;                 // Shot counter
 unsigned int  face_strike = 0;          // Miss Face Strike interrupt count
 unsigned int  is_trace = 0;             // Turn off tracing
-unsigned long rapid_on = 0;             // Duration of rapid fire event
 
 unsigned int  rapid_count = 0;          // Number of shots to be expected in Rapid Fire
 unsigned int  shot_number;              // Shot Identifier (1-100)
@@ -61,7 +60,30 @@ static volatile unsigned long  tabata_timer;      // Free running state timer
        volatile unsigned long  power_save;        // Power save timer
 static volatile unsigned long  rapid_timer;       // Timer used for rapid fire ecents 
        volatile unsigned long  LED_timer;         // Timer to reset LED status 
-                
+
+static enum 
+{
+  START = 0,              // Set the operating mode
+  WAIT,                   // ARM the circuit and wait for a shot
+  REDUCE                  // Reduce the data and send the score
+} state;
+
+static enum
+{
+  TABATA_OFF = 0,                     // No tabata cycles at all
+  TABATA_REST,                        // Tabata is doing nothing (typically 60 seconds)
+  TABATA_WARNING,                     // Time the warning LED is on (typically 2 seconds)
+  TABATA_DARK,                        // Time the warning LED is off before the shot (typically 2 seconds)
+  TABATA_ON                           // Time the TABATA lED is on (typically 5 seconds)
+} tabata_state;
+
+static enum {
+  RAPID_OFF = 0,               // No rapid fire cycles at all
+  RAPID_WAIT,                  // Rapid fire is doing nothing (typically 60 seconds)
+  RAPID_ON,                    // Time the RAPID lED is on (typically 5 seconds)
+  RAPID_SEND                   // The event is over, send the results
+} rapid_state;                 // Rapid fire state
+
 volatile unsigned int run_state = 0;              // Current operating state 
 
 const char* names[] = { "TARGET",                                                                                           //  0
@@ -144,12 +166,6 @@ void freeETarget_init(void)
  * 
  *----------------------------------------------------------------
  */
-enum 
-{
-  START = 0,              // Set the operating mode
-  WAIT,                   // ARM the circuit and wait for a shot
-  REDUCE                  // Reduce the data and send the score
-} state;
 
 unsigned int  sensor_status;          // Record which sensors contain valid data
 unsigned int  location;               // Sensor location 
@@ -173,7 +189,6 @@ void freeETarget_target_loop(void* arg)
 
     run_state |= IN_OPERATION;        // In operation 
 
-
 /*
  * Cycle through the state machine
  */
@@ -181,18 +196,23 @@ void freeETarget_target_loop(void* arg)
     {
       default:
         case START:                     // Start of the loop
+        DLT(DLT_DEBUG, printf("START");)
         power_save = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L;  //  Reset the timer
         set_mode();
         arm();
         set_status_LED(LED_READY);
         state = WAIT;
+        DLT(DLT_DEBUG, printf("WAIT");)
         break;
     
       case WAIT:  
-        if ( wait() == REDUCE )
-        {
-          state = reduce();
-        }
+        state = wait();
+        break;
+
+      case REDUCE:  
+        DLT(DLT_DEBUG, printf("REDUCE");)
+        reduce();
+        state = START;
         break;
     }
 /*
@@ -224,8 +244,8 @@ void freeETarget_target_loop(void* arg)
  {
   unsigned int i;
 
-  rapid_on  = 0;                    // Turn off the timer
-    
+  DLT(DLT_DEBUG, printf("set_mode()");)
+
   for (i=0; i != SHOT_SPACE; i++)
   {
     record[i].face_strike = 100;    // Disable the shot record
@@ -234,7 +254,6 @@ void freeETarget_target_loop(void* arg)
   if ( json_tabata_enable || json_rapid_enable ) // If the Tabata or rapid fire is enabled, 
   {
     set_LED_PWM_now(0);             // Turn off the LEDs
-    json_rapid_enable = 0;          // Disable the rapid fire
   }                                 // Until the session starts
   else
   {
@@ -266,8 +285,9 @@ void freeETarget_target_loop(void* arg)
  *--------------------------------------------------------------*/
 unsigned int arm(void)
 {
-  face_strike = 0;                  // Reset the face strike count
+  DLT(DLT_DEBUG, printf("arm()");)
 
+  face_strike = 0;                  // Reset the face strike count
   stop_timers();
   arm_timers();                     // Arm the counters
 
@@ -301,30 +321,32 @@ unsigned int arm(void)
  *
  * This loop is executed indefinitly until a shot is detected
  * 
- * In this loop check
- *    - State of the WiFi interface
- *
+ * Once the shot has been detected (or rapid fire complete) the
+ * state machine calls reduce() to process the timers and send
+ * the score.
+ * 
+ * IMPORTANT
+ * 
+ * Since the shots are buffered in a queue, it is possible for
+ * the wait loop to be behind by more than one shot.
+ * 
  *--------------------------------------------------------------*/
 unsigned int wait(void)
 {
-
+   
 /*
  * Check to see if the time has run out if there is a rapid fire event in progress
  */
-  if ( (json_rapid_enable == 1)         // The rapid fire timer has been turned on
-          && (rapid_on != 0) )          // And there is a defined interval
+  if ( json_rapid_enable == 1 )
   {
-    if (rapid_on)           // Do this until the timer expires
+    if ( rapid_state == RAPID_SEND )
     {
-      set_LED_PWM_now(0);
-
-      DLT(DLT_APPLICATION, printf("Rapid fire complete");)
+      DLT(DLT_DEBUG, printf("Rapid fire complete");)
+      rapid_state = RAPID_OFF;
+      json_rapid_enable = 0;
       return REDUCE;                   // Finish this rapid fire cycle
     }
-    else
-    {
-      set_LED_PWM_now(json_LED_PWM);   // make sure the lighs are on
-    }
+    return WAIT;
   }
 
 /*
@@ -357,18 +379,20 @@ unsigned int wait(void)
  * shot structure whenever there are shots in hardware to be
  * reduced.
  * 
- * In the case of rapid fire, the shot processing stops when
- * the requisite number of shots have been received.
- *
+ * In the case of Rapid Fire, the Rapid fire loop will hold all
+ * of the shots until the time runs out our all of the shots have
+ * been made.
  *--------------------------------------------------------------*/
 unsigned int reduce(void)
 {
   static unsigned int paper_shot = 0;                        // Number of shots before advangin paper
+
 /*
  * See if any shots are allowed to be processed
  */
   if ( discard_shot() )                                       // Tabata is on but the shot is invalid
   {
+    DLT(DLT_DEBUG, printf("Discarding shot");)
     shot_out = shot_in;
     send_miss(&record[shot_out], shot_out);
     return START;                                              // Throw out any shots while dark
@@ -379,7 +403,8 @@ unsigned int reduce(void)
  */
   while (shot_out != shot_in )
   {   
-    DLT(DLT_APPLICATION, show_sensor_status(record[shot_out].sensor_status);)
+    DLT(DLT_DEBUG, printf("shot_in: %d,  shot_out:%d", shot_in, shot_out);)
+    DLT(DLT_DEBUG, show_sensor_status(record[shot_out].sensor_status);)
 
     show_sensor_fault(record[shot_out].sensor_status);
     
@@ -420,26 +445,6 @@ unsigned int reduce(void)
       rapid_red(1);                                             // Show a miss
     }
 
-/* 
- *  Check to see if we should stop sending scores
- */
-    if ( rapid_count != 0 )                                     // Decriment shots remaining
-    {
-      rapid_count--;                                            // in rapid fire
-    }
-    
-/*
- * Increment and process the next
- */
-    if ( json_rapid_enable != 0 )                               // In a rapid fire cycle
-    {
-      if ( rapid_count == 0 )                                   // And the shots used up?
-      {
-        shot_out = shot_in;                      // Stop processing
-        break;
-      }
-    }
-    
     shot_out = (shot_out+1) % SHOT_SPACE;
   }
 
@@ -509,14 +514,6 @@ void start_new_session(void)
  * {"TABATA_ENABLE":0}
  * 
  *--------------------------------------------------------------*/
-enum
-{
-  TABATA_OFF = 0,                     // No tabata cycles at all
-  TABATA_REST,                        // Tabata is doing nothing (typically 60 seconds)
-  TABATA_WARNING,                     // Time the warning LED is on (typically 2 seconds)
-  TABATA_DARK,                        // Time the warning LED is off before the shot (typically 2 seconds)
-  TABATA_ON                           // Time the TABATA lED is on (typically 5 seconds)
-} tabata_state;
 
 void tabata_enable
 (
@@ -677,16 +674,13 @@ void tabata_task(void)
  * 
  *----------------------------------------------------------------
  *  
+ * In rapid fire or Tabata, a shot is only valid if the feature is
+ * enabled, and there is time on the clock.
+ * 
  *--------------------------------------------------------------*/
 
 static bool discard_shot(void)
 {
-  if ( (json_rapid_enable != 0)                 // Rapid Fire
-      &&  (rapid_count == 0) )                  // No shots remaining
-  {
-    shot_out = shot_in;
-    return true;                                // Discard any new shots    
-  }
 
   if ( (json_tabata_enable != 0)                // Tabata cycle
     && ( tabata_state != TABATA_ON ) )          // Lights not on
@@ -708,39 +702,39 @@ static bool discard_shot(void)
  * 
  *----------------------------------------------------------------
  *
- * The end of the rapid fire session (rapid_on) is computed
- * by adding the user entered time {"RAPID_ON":xx) to the current
- * time to get the end time in milliseconds
+ * This is a state machine to control the LEDs and timers for
+ * the rapid fire event.
+ * 
+ * At the end of the cycle, the state RAPID_SEND is used top send
+ * a message to the wait loop to begin processing the shots
  * 
  * Test Message
  * {"RAPID_TIME":20, "RAPID_COUNT":10, "RAPID_WAIT": 5, "RAPID_ENABLE":1}
  * {"RAPID_TIME":10, "RAPID_COUNT":10, "RAPID_AUTO":1,  "RAPID_ENABLE":1}
- * 
+ * {"TRACE":8, "RAPID_TIME":20, "RAPID_COUNT":5,  "RAPID_AUTO":1,  "RAPID_ENABLE":1}
  *--------------------------------------------------------------*/
 #define RANDOM_INTERVAL 100    // 100 signals random time, %10 is the duration
 
-enum {
-  RAPID_OFF = 0,               // No rapid fire cycles at all
-  RAPID_WAIT,                  // Rapid fire is doing nothing (typically 60 seconds)
-  RAPID_ON                     // Time the RAPID lED is on (typically 5 seconds)
-} rapid_state;
-
 void rapid_fire_task(void)
 {
+  static int new_shot = 0;      // A new shot has arrived
+
   IF_NOT(IN_OPERATION) return;
 
 /*
  * Exit if Rapid fire has not been enabled
  */
-  if ( json_rapid_enable == 0 )        // Reset the timer
+  if ( json_rapid_enable == 0 )        // Reset the state machine
   {
-    timer_delete(&rapid_timer);      
     rapid_state = RAPID_OFF;
     return;
   }
 
 /*
- * Take care of the */
+ * Take care of the rapid fire state
+ */
+  DLT(DLT_DEBUG, printf("Rapid State: %d,  rapid_timer: %ld,  shot_in: %d,  shot_out: %d", rapid_state, rapid_timer, shot_in, shot_out);)
+  
   switch (rapid_state)
   {
     case (RAPID_OFF):                   // The tabata is not enabled
@@ -766,11 +760,29 @@ void rapid_fire_task(void)
     case (RAPID_ON):                    // Keep the LEDs on for the tabata time
       if ( rapid_timer == 0 )           // Don't do anything unless the time expires
       {
-        timer_delete(&rapid_timer);
         SEND(sprintf(_xs, "{\"RAPID_OFF\":0}\r\n");)
         set_LED_PWM_now(0);             // Turn off the LEDs
-        rapid_state = RAPID_OFF;
+        rapid_state = RAPID_SEND;       // Ran out of time, start sending
       }
+      else
+      {
+        if (new_shot != shot_in)        // Has a shot arrived?
+        {
+          stop_timers();                // Reset thet timers
+          arm_timers();                 // and start over
+          DLT(DLT_DEBUG, printf("Bang!");)
+          new_shot = shot_in;
+          rapid_count--;
+          if ( rapid_count == 0 )       // Ran out of shots,
+          {
+            rapid_timer = 0;            // shut down and 
+            rapid_state = RAPID_SEND;   // send
+          }
+        }
+      }
+      break;
+
+    case (RAPID_SEND):                  // Compute the score and send it
       break;
     }
 

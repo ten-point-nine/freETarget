@@ -582,7 +582,7 @@ void tcpip_socket_poll_3(void* parameters)
     int length;
     char rx_buffer[256];
 
-    DLT(DLT_CRITICAL, printf("tcp_socket_poll_0()");)
+    DLT(DLT_CRITICAL, printf("tcp_socket_poll_3()");)
 
     while (1)
     {

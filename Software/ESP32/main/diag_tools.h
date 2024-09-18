@@ -108,7 +108,7 @@ bool check_12V(void);                                     // Check the 12 volt s
 #define DLT_APPLICATION   0x01                    // Application level messages displayed
 #define DLT_DIAG          0x02                    // Diagnostics messages displayed
 #define DLT_INFO          0x04                    // Informational messages
-
+#define DLT_DEBUG         0x08                    // Specific debug information
 /*
  *  Variables
  */
