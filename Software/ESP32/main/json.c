@@ -111,8 +111,6 @@ const json_message_t JSON[] = {
 //    token                 value stored in RAM     double stored in RAM        convert    service fcn()     NONVOL location      Initial Value
   {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT32,  0,                NONVOL_SENSOR_ANGLE,    45 },    // Locate the sensor angles
   {"\"BYE\":",            0,                                 0,                IS_VOID,   &bye,             0,                       0 },    // Shut down the target
-//  {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT32,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
-//  {"\"DELAY\":",          0,                                 0,                IS_INT32,  &diag_delay,                      0,       0 },    // Delay TBD seconds
   {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,       0,                       0 },    // Echo test
   {"\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT32,  0,                NONVOL_FACE_STRIKE,      0 },    // Face Strike Count 
   {"\"FOLLOW_THROUGH\":", &json_follow_through,              0,                IS_INT32,  0,                NONVOL_FOLLOW_THROUGH,   0 },    // Three second follow through
@@ -132,7 +130,7 @@ const json_message_t JSON[] = {
   {"\"MIN_RING_TIME\":",  &json_min_ring_time,               0,                IS_INT32,  0,                NONVOL_MIN_RING_TIME,  500 },    // Minimum time for ringing to stop (ms)
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT32,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
   {"\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT32,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
-  {"\"PAPER_SHOT\":",     &json_paper_shot,                  0,                IS_INT32,  0,                NONVOL_PAPER_SHOT,       0 },    // Set the paper advance time
+  {"\"PAPER_SHOT\":",     &json_paper_shot,                  0,                IS_INT32,  0,                NONVOL_PAPER_SHOT,       0 },    // How many shots before advancing paper
   {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT32,  0,                NONVOL_PAPER_TIME,     500 },    // Set the paper advance time
   {"\"PCNT_LATENCY\":",   &json_pcnt_latency,                0,                IS_INT32,  0,                NONVOL_PCNT_LATENCY,     0 },    // Interrupt latency for PCNT adjustment
   {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,       0 },    // Set the power saver time

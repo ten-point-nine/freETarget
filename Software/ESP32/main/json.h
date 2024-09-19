@@ -96,7 +96,6 @@ extern int    json_follow_through;// Follow through timer
 extern int    json_keep_alive;    // Keepalive period
 extern int    json_face_strike;   // Number of cycles to accept a face strike
 extern int    json_rapid_time;    // When will the rapid fire event end
-extern int    json_rapid_count;   // Number of allowable shots
 extern int    json_wifi_channel;  // Channel assigned to this SSID
 extern int    json_rapid_wait;    // Delay applied to rapid fire
 extern int    json_wifi_dhcp;     // TRUE if the DHCP server is enabled

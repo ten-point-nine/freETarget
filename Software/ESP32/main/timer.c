@@ -34,6 +34,7 @@
 
 #define TICK_10ms        1                      // vTaskDelay in 10 ms
 #define BAND_100ms    (TICK_10ms * 10)          // vTaskDelay in 100 ms
+#define BAND_250ms    (TICK_10ms * 25)          // vTaskDelay in 250 ms
 #define BAND_500ms    (TICK_10ms * 50)          // vTaskDelay in 500 ms
 #define BAND_1000ms   (TICK_10ms * 100)         // vTaskDelay in 1000 ms
 
@@ -282,6 +283,23 @@ void freeETarget_synchronous
     multifunction_switch_tick();
     multifunction_switch();
     paper_drive_tick();
+
+
+/*
+ *  100 ms band
+ */
+    if ( (cycle_count  %  BAND_100ms) == 0 )
+    {
+
+    }
+
+/*
+ *  250 ms band
+ */
+    if ( (cycle_count  %  BAND_250ms) == 0 )
+    {
+
+    }
     
 /*
  *  500 ms band

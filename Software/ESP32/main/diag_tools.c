@@ -917,7 +917,10 @@ void set_diag_LED
  * Return TRUE if the motor can be driven
  *   
  * The LEDs are only set on a change from (say) working to caution
- * this is done to prevent the LEDs from flickering
+ * this is done to prevent the LEDs from flickering.
+ * 
+ * For targets that don't use witness paper, the status LED can be
+ * turned off to indicate that that part has been disabled.
  * 
  *--------------------------------------------------------------*/
 #define NONE  0
@@ -933,6 +936,19 @@ bool check_12V(void)
   static unsigned int fault_V12 = UNKNOWN;
   float  v12;
 
+/*
+ *  Check to see that the witness paper is enabled
+ */
+  if ( json_paper_time == 0 )             // The witness paper is not used
+  {
+    set_status_LED(LED_NO_12V_USED);
+    fault_V12 = NONE;
+    return false;
+  }
+
+/*
+ * Continue on to check the voltage
+ */
   v12 = v12_supply();
 
   if ( v12 <= CAUTION )
