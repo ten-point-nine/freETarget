@@ -188,7 +188,7 @@ void WiFi_AP_init(void)
 /*
  * Ready to go
  */
-   set_status_LED(LED_ACCESS);                 // I am an access point
+   set_status_LED(LED_WIFI_ACCESS);                 // I am an access point
    return;
 }
 
@@ -279,7 +279,7 @@ void WiFi_station_init(void)
 /*
  *  All done
  */
-   set_status_LED(LED_STATION);
+   set_status_LED(LED_WIFI_STATION);
    return;
 }
 
@@ -334,7 +334,7 @@ void WiFi_event_handler
          {
             xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
          }
-         set_status_LED(LED_STATION);
+         set_status_LED(LED_WIFI_STATION);
         }
     }   
    
@@ -477,11 +477,11 @@ static void tcpip_server_io(void)
         {
             if ( json_wifi_ssid[0] != 0 )       //  I'm a station
             {
-                set_status_LED(LED_STATION);
+                set_status_LED(LED_WIFI_STATION);
             }
             else                                // I'm an access point
             {
-                set_status_LED(LED_ACCESS);
+                set_status_LED(LED_WIFI_ACCESS);
             }       
         }
     }
@@ -690,7 +690,7 @@ void tcpip_accept_poll(void* parameters)
                 printf("Socket accepted ip address: %s\r\n", addr_str);
             }
             )
-            set_status_LED(LED_STATION_CN);
+            set_status_LED(LED_WIFI_STATION_CN);
         }
     }
 

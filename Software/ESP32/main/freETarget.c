@@ -63,26 +63,27 @@ static volatile unsigned long  rapid_timer;       // Timer used for rapid fire e
 
 static enum 
 {
-  START = 0,              // Set the operating mode
-  WAIT,                   // ARM the circuit and wait for a shot
-  REDUCE                  // Reduce the data and send the score
-} state;
+  START = 0,              // 0 et the operating mode
+  WAIT,                   // 1 ARM the circuit and wait for a shot
+  REDUCE,                 // 2 Reduce the data and send the score
+  DARK                    // 3 Go dark for a while
+  } state;
 
 static enum
 {
-  TABATA_OFF = 0,                     // No tabata cycles at all
-  TABATA_REST,                        // Tabata is doing nothing (typically 60 seconds)
-  TABATA_WARNING,                     // Time the warning LED is on (typically 2 seconds)
-  TABATA_DARK,                        // Time the warning LED is off before the shot (typically 2 seconds)
-  TABATA_ON                           // Time the TABATA lED is on (typically 5 seconds)
+  TABATA_OFF = 0,         // 0 No tabata cycles at all
+  TABATA_REST,            // 1 Tabata is doing nothing (typically 60 seconds)
+  TABATA_WARNING,         // 2 Time the warning LED is on (typically 2 seconds)
+  TABATA_DARK,            // 3 Time the warning LED is off before the shot (typically 2 seconds)
+  TABATA_ON               // 4 Time the TABATA lED is on (typically 5 seconds)
 } tabata_state;
 
 static enum {
-  RAPID_OFF = 0,               // 0 No rapid fire cycles at all
-  RAPID_WAIT,                  // 1 Rapid fire is doing nothing (typically 60 seconds)
-  RAPID_ON,                    // 2 Time the RAPID lED is on (typically 5 seconds)
-  RAPID_SEND                   // 3 The event is over, send the results
-} rapid_state;                 // Rapid fire state
+  RAPID_OFF = 0,          // 0 No rapid fire cycles at all
+  RAPID_WAIT,             // 1 Rapid fire is doing nothing (typically 60 seconds)
+  RAPID_ON,               // 2 Time the RAPID lED is on (typically 5 seconds)
+  RAPID_SEND              // 3 The event is over, send the results
+} rapid_state;            // Rapid fire state
 
 volatile unsigned int run_state = 0;              // Current operating state 
 
@@ -117,14 +118,23 @@ void freeETarget_init(void)
  */
   serial_io_init();
   POST_version();                         // Show the version string on all ports
-  gpio_init(); 
   read_nonvol();
-  set_status_LED(LED_HELLO_WORLD);        // Hello World
-  timer_delay(ONE_SECOND);
-  set_status_LED(LED_OFF);
-  WiFi_init();
+  gpio_init(); 
   set_VREF();
   multifunction_init();
+
+  set_status_LED(LED_HELLO_WORLD);        // Hello World
+  rapid_red(1);                           // Drive the rapid fire lights if installed
+  rapid_green(0);
+  timer_delay(ONE_SECOND);
+  rapid_red(0);
+  rapid_green(1);
+  timer_delay(ONE_SECOND);
+  set_status_LED(LED_OFF);
+  rapid_red(0);
+  rapid_green(0);
+
+  WiFi_init();
 
 /*
  *  Set up the long running timers
@@ -212,9 +222,26 @@ void freeETarget_target_loop(void* arg)
       case REDUCE:  
         DLT(DLT_DEBUG, printf("state: REDUCE");)
         reduce();
-        state = START;      
-        rapid_state = RAPID_OFF;              // No longer in rapid fire
-        json_rapid_enable = false;            // No longer enabled
+        state = DARK;
+        if ( json_rapid_enable == true )
+        {
+          timer_new(&rapid_timer, ONE_SECOND * 10);
+          state = DARK;
+          DLT(DLT_DEBUG, printf("state: DARK");)
+        }      
+        else 
+        {
+          state = START;
+        }
+        break;
+
+      case DARK:  
+       if ( rapid_timer == 0 )
+        {
+          state = START;      
+          rapid_state = RAPID_OFF;              // No longer in rapid fire
+          json_rapid_enable = false;            // No longer enabled
+        }
         break;
     }
 /*
@@ -417,8 +444,6 @@ unsigned int reduce(void)
         vTaskDelay(ONE_SECOND * json_follow_through);
       }
       send_score(&record[shot_out], shot_out);
-      rapid_red(0);
-      rapid_green(1);                                           // Turn off the RED and turn on the GREEN
 
       if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )                // Has the witness paper been enabled?
       {
@@ -442,9 +467,7 @@ unsigned int reduce(void)
     {
       DLT(DLT_APPLICATION, printf("Shot miss...\r\n");)
       set_status_LED(LED_MISS);
-      send_miss(&record[shot_out], shot_out);
-      rapid_green(0);
-      rapid_red(1);                                             // Show a miss
+      send_miss(&record[shot_out], shot_out);                             // Show a miss
     }
 
     shot_out = (shot_out+1) % SHOT_SPACE;
@@ -713,8 +736,9 @@ static bool discard_shot(void)
  * Test Message
  * {"RAPID_TIME":20, "RAPID_COUNT":10, "RAPID_WAIT":5, "RAPID_ENABLE":1}
  * {"RAPID_TIME":10, "RAPID_COUNT":10, "RAPID_WAIT":0,  "RAPID_ENABLE":1}
- * {"TRACE":8, "RAPID_TIME":20, "RAPID_COUNT":5,  "RAPID_WAIT":0,  "RAPID_ENABLE":1}
- * {"TRACE":8, "RAPID_TIME":60, "RAPID_COUNT":5,  "RAPID_WAIT":0,  "RAPID_ENABLE":1}
+ * {"RAPID_TIME":20, "RAPID_COUNT":5,  "RAPID_WAIT":0,  "RAPID_ENABLE":1}
+ * {"RAPID_TIME":30, "RAPID_COUNT":5,  "RAPID_WAIT":5,  "RAPID_ENABLE":1}
+ * {"MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":22, "RAPID_TIME":60, "RAPID_COUNT":5,  "RAPID_WAIT":0,  "RAPID_ENABLE":1}
  * 
  *--------------------------------------------------------------*/
 #define RANDOM_INTERVAL 100    // 100 signals random time, %10 is the duration
@@ -748,7 +772,9 @@ void rapid_fire_task(void)
         set_LED_PWM_now(0);             // Turn off the lights
         SEND(sprintf(_xs, "{\"RAPID_WAIT\":%d}\r\n", (int)json_rapid_wait);)
         rapid_state = RAPID_WAIT;
-        rapid_count = 0;                // No shots receied yet
+        rapid_count = 0;                // No shots received yet
+        rapid_red(1);
+        rapid_green(0);
       } 
       break;
         
@@ -759,6 +785,8 @@ void rapid_fire_task(void)
         SEND(sprintf(_xs, "{\"RAPID_ON\":%d}\r\n", (int)json_rapid_time);)
         set_LED_PWM_now(json_LED_PWM);   // Turn on the LEDs
         rapid_state = RAPID_ON;
+        rapid_red(0);
+        rapid_green(1);
       }
       break;
 
@@ -768,6 +796,8 @@ void rapid_fire_task(void)
         SEND(sprintf(_xs, "{\"RAPID_OFF\":0}\r\n");)
         set_LED_PWM_now(0);             // Turn off the LEDs
         rapid_state = RAPID_SEND;       // Ran out of time, start sending
+        rapid_red(1);
+        rapid_green(0);
       }
       else
       {

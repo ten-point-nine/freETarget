@@ -256,7 +256,14 @@ void set_status_LED
     char* new_state       // New LED colours
   )
 { 
+  static char* old_state = "   ";
   int i;
+
+  if ( new_state == old_state )       // Dont't do anything if the state is the same
+  {
+    return;                       
+  }
+  old_state = new_state;
 
 /*
  * Decode the calling string into a list of pixels
@@ -809,7 +816,7 @@ void rapid_green
   unsigned int state          // New state for the GREEN light
 ) 
 {
-  if ( json_mfs_select_cd == RAPID_LOW )   // Inverted drive
+  if ( json_mfs_select_cd == RAPID_LOW)   // Inverted drive
   {
     state = !state;
   }
@@ -899,6 +906,8 @@ void status_LED_test(void)
  *--------------------------------------------------------------*/
 void rapid_LED_test(void)
 {
+  unsigned int i;
+
   printf("\r\nRapid LED test\r\n");
   gpio_set_direction(HOLD_C_GPIO,  GPIO_MODE_OUTPUT);
   gpio_set_pull_mode(HOLD_C_GPIO,  GPIO_PULLUP_PULLDOWN);
@@ -909,7 +918,7 @@ void rapid_LED_test(void)
   json_mfs_hold_c = RAPID_GREEN;        // Hold C
   json_mfs_select_cd = RAPID_LOW;       // Select C and D operation
   
-  while (1)
+  for (i=0; i != 10; i++)
   {
     rapid_red(0);
     rapid_green(0);
@@ -926,7 +935,9 @@ void rapid_LED_test(void)
     rapid_red(1);
     rapid_green(1);
     timer_delay(ONE_SECOND);
+    printf("*");
   }
+
   printf("\r\nDone\r\n");
   return;
 }

@@ -63,21 +63,28 @@ bool check_12V(void);                                     // Check the 12 volt s
  * LED status messages
  *
  */
-//                         R                // RDY indicates operating status 
-//                          X               // X indicates communications status
-//                           Y              // Y indicates feature status
-#define LED_OFF           "   "             // Turn off all of the LEDs
-#define LED_HELLO_WORLD   "RWB"             // Hello World
-#define LED_GOOD          "G--"             // The software has started but not in shot mode
-#define LED_READY         "g--"             // The shot is ready to go.  Blink to show we are alive
-#define LED_BYE           "B--"             // Go to sleep
-#define LED_READY_OFF     " --"             // Turn off the READY light
+//                           R              // RDY indicates operating status 
+//                            X             // X indicates communications status
+//                             Y            // Y indicates feature status
+#define LED_OFF             "   "           // Turn off all of the LEDs
+#define LED_HELLO_WORLD     "RWB"           // Hello World
+#define LED_GOOD            "G--"           // The software has started but not in shot mode
+#define LED_READY           "g--"           // The shot is ready to go.  Blink to show we are alive
+#define LED_BYE             "B--"           // Go to sleep
+#define LED_READY_OFF       " --"           // Turn off the READY light
 
-#define LED_WIFI_OFF      "- -"             // The WiFi is not operational
-#define LED_STATION       "-g-"             // The WiFi is in station mode but not connected
-#define LED_STATION_CN    "-G-"             // The WiFI is in station mode and connected 
-#define LED_ACCESS        "-b-"             // The WiFi is in access mode and not connected
-#define LED_ACCESS_CN     "-B-"             // The WiFI is in access mode and connected 
+#define LED_WIFI_OFF        "- -"           // The WiFi is not operational
+#define LED_WIFI_STATION    "-g-"           // The WiFi is in station mode but not connected
+#define LED_WIFI_STATION_CN "-G-"           // The WiFI is in station mode and connected 
+#define LED_WIFI_ACCESS     "-b-"           // The WiFi is in access mode and not connected
+#define LED_WIFI_ACCESS_CN  "-B-"           // The WiFI is in access mode and connected 
+
+#define LED_NO_12V          "--R"           // The 12 Volt supply is not present
+#define LED_LOW_12V         "-bY"           // 12 Volt supply out of spec
+#define LED_OK_12V          "--g"           // The 12 Volt supply is in spec
+#define LED_12V_NOT_USED    "-bb"           // The 12V is not used, 
+#define LED_SPARE_C         "--W"
+#define LED_SPARE_D         "--w"
 
 // Fatal Error.  Halts operation
 
@@ -92,12 +99,7 @@ bool check_12V(void);                                     // Check the 12 volt s
 #define LED_SOUTH_FAILED   "R-B"            // South sensor failed
 #define LED_WEST_FAILED    "R-Y"            // West sensor failed
 #define LED_MISS           "R-r"            // Shot was detected as a miss
-#define LED_NO_12V         "--R"            // The 12 Volt supply is not present
-#define LED_LOW_12V        "--Y"            // 12 Volt supply out of spec
-#define LED_OK_12V         "--G"            // The 12 Volt supply is in spec
-#define LED_NO_12V_USED    "--b"            // The 12V is not used, 
-#define LED_SPARE_C        "--W"
-#define LED_SPARE_D        "--w"
+
 
 /*
  * Tracing 

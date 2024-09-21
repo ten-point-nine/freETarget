@@ -100,10 +100,10 @@ extern volatile unsigned int step_count;                  // Number of steps bef
 #define DIP_0           9
 #define RED_OUT         9                  // Rapid fire RED on DIP0
 
-#define DIP_A           38      // V
-#define DIP_B           37      // V
-#define DIP_C           35      // V
-#define DIP_D           36      // V
+#define DIP_A       GPIO_NUM_38 // V
+#define DIP_B       GPIO_NUM_37 // V
+#define DIP_C                36 // V
+#define DIP_D                35 // V
 #define HOLD_C_GPIO GPIO_NUM_36 // Rapid Fire controls when enabled
 #define HOLD_D_GPIO GPIO_NUM_35
 

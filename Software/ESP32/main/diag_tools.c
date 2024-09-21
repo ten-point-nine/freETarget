@@ -941,7 +941,7 @@ bool check_12V(void)
  */
   if ( json_paper_time == 0 )             // The witness paper is not used
   {
-    set_status_LED(LED_NO_12V_USED);
+    set_status_LED(LED_12V_NOT_USED);
     fault_V12 = NONE;
     return false;
   }
