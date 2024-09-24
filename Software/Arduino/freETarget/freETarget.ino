@@ -377,7 +377,7 @@ unsigned int arm(void)
 /*
  * The sensors are tripping, display the error
  */
-  if ( sensor_status & TRIP_EAST  )
+  if ( sensor_status & TRIP_NORTH  )
   {
     Serial.print(T("\r\n{ \"Fault\": \"N\" }"));
     set_LED(NORTH_FAILED);           // Fault code North
