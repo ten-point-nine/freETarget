@@ -119,4 +119,5 @@ extern int    json_mfs_hold_c;    // Hold C
 extern int    json_mfs_select_cd; // Select C and D operation
 extern int    json_wifi_reset_first;// Reset the target on first WiFi connection
 extern int    json_paper_shot;    // How many shots before advancing paper
+extern int    json_aux_port_enable; // Enable comms from the AUX port
 #endif

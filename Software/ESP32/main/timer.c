@@ -19,6 +19,7 @@
 #include "diag_tools.h"
 #include "gpio_types.h"
 #include "json.h"
+#include "serial_io.h"
 
 /*
  * Definitions
@@ -283,7 +284,6 @@ void freeETarget_synchronous
     multifunction_switch_tick();
     multifunction_switch();
     paper_drive_tick();
-
 
 /*
  *  100 ms band

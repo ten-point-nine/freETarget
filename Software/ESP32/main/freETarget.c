@@ -118,8 +118,8 @@ void freeETarget_init(void)
  */
   serial_io_init();
   POST_version();                         // Show the version string on all ports
-  read_nonvol();
   gpio_init(); 
+  read_nonvol();
   set_VREF();
   multifunction_init();
 

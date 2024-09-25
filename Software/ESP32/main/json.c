@@ -99,6 +99,7 @@ int     json_mfs_select_cd;         // Select C and D operation
 int     json_wifi_reset_first;      // Reset the target on first connection
 char    json_wifi_ip[IP_SIZE];      // User defined IP address
 int     json_paper_shot;            // How many shots before advancing paper
+int     json_aux_port_enable;       // Enable the AUX port only if there is Aux hardware installed
 
        void show_echo(void);        // Display the current settings
 static void show_test(int v);       // Execute the self test once
@@ -110,6 +111,7 @@ static void diag_delay(int x) ;     // Insert a delay
 const json_message_t JSON[] = {
 //    token                 value stored in RAM     double stored in RAM        convert    service fcn()     NONVOL location      Initial Value
   {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT32,  0,                NONVOL_SENSOR_ANGLE,    45 },    // Locate the sensor angles
+  {"\"AUX_PORT_ENABLE\":",&json_aux_port_enable,             0,                IS_INT32,  0,                NONVOL_AUX_PORT_ENABLE,  0 },    // Enable the AUX Port
   {"\"BYE\":",            0,                                 0,                IS_VOID,   &bye,             0,                       0 },    // Shut down the target
   {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,       0,                       0 },    // Echo test
   {"\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT32,  0,                NONVOL_FACE_STRIKE,      0 },    // Face Strike Count 
@@ -565,7 +567,7 @@ void show_echo(void)
   SEND(sprintf(_xs, "\n\rStatus\r\n");)                                                                    // Blank Line
   SEND(sprintf(_xs, "\"TRACE\":             %d, \n\r", is_trace);)         // TRUE to if trace is enabled
   SEND(sprintf(_xs, "\"RUN_STATE\":         %d, \n\r", run_state);)    // TRUE to if trace is enabled
-  SEND(sprintf(_xs, "\"RUNNING_MINUTES\":  %10.6f, \n\r", esp_timer_get_time()/100000.0/60.0/60.0);)  // On Time
+  SEND(sprintf(_xs, "\"RUNNING_MINUTES\":  %10.6f, \n\r", esp_timer_get_time()/1000000.0/60.0);)  // On Time
   SEND(sprintf(_xs, "\"TIME_TO_SLEEP\":     %4.2f, \n\r", (float)power_save/(float)(ONE_SECOND*60));)                 // How long until we sleep
   SEND(sprintf(_xs, "\"TEMPERATURE\":       %4.2f, \n\r", temperature_C());)                          // Temperature in degrees C
   SEND(sprintf(_xs, "\"RELATIVE_HUMIDITY\": %4.2f, \n\r", humidity_RH());)

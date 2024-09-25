@@ -338,7 +338,7 @@ void init_nonvol
     return;
   }
 
-  factory_nonvol(false);                   // Reset to facgtory defaults and prompt for serial number
+  factory_nonvol(true);                   // Reset to facgtory defaults and prompt for serial number
   
 /*
  * All done, return
@@ -488,6 +488,19 @@ void update_nonvol
     nvs_set_i32(my_handle, NONVOL_PAPER_SHOT,  0);
 
     current_version = 5;
+  }
+
+/* 
+ * Version 5 -> 6  Disable the AUX port
+ */
+  if ( current_version == 5 )
+  {  
+    DLT(DLT_CRITICAL, printf("Updating PS5 to PS6");)
+
+    json_aux_port_enable = 0;
+    nvs_set_i32(my_handle, NONVOL_AUX_PORT_ENABLE,  json_aux_port_enable);
+
+    current_version = 6;
   }
 /*
  * Up to date, return

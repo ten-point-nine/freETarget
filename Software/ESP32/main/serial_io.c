@@ -19,6 +19,7 @@
 #include "diag_tools.h"
 #include "serial_io.h"
 #include "timer.h"
+#include "json.h"
 
 /*
  *  Serial IO port configuration
@@ -140,7 +141,8 @@ int serial_available
     n_available += length;
   }
 
-  if ( ports & AUX )
+  if ( (json_aux_port_enable == true)                     // Is there hardware on the Aux port?
+        && (ports & AUX) )                                // Are we reading the AUX port
   {
     uart_get_buffered_data_len(uart_aux, (size_t*)&length);
     n_available += length;
@@ -272,7 +274,8 @@ char serial_getch
 /*
  *  Bring in the AUX bytes
  */
-  if ( ports & AUX )
+  if ( (json_aux_port_enable == true)                     // Is there hardware on the Aux port?
+        && (ports & AUX) )                                // Are we reading the AUX port
   {
     if ( uart_read_bytes(uart_aux, &ch, 1, 0) > 0 )
     {
@@ -326,7 +329,8 @@ char serial_getch
     printf("%c", ch);
   }
 
-  if ( ports & AUX )
+  if ( (json_aux_port_enable == true)                     // Is there hardware on the Aux port?
+        && (ports & AUX) )                                // Are we reading the AUX port
   {
     uart_write_bytes(uart_aux, (const char *) &ch, 1);
   }
@@ -368,7 +372,8 @@ void serial_to_all
     printf("%s", str);
   }
   
-  if ( ports & AUX )
+  if ( (json_aux_port_enable == true)                     // Is there hardware on the Aux port?
+        && (ports & AUX) )                                // Are we reading the AUX port
   {
     uart_write_bytes(uart_aux, (const char *) str, length);
   }
