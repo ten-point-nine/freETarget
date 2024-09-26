@@ -84,20 +84,30 @@ void serial_io_init(void)
  *  Load the driver
  */
   uart_driver_install(UART_NUM_0, uart_console_size,  uart_console_size, 10, &uart_console_queue, 0);
-  uart_driver_install(UART_NUM_1, uart_aux_size,      uart_aux_size,     10, &uart_aux_queue, 0);
+
+  if ( json_aux_port_enable == true )
+  {
+    uart_driver_install(UART_NUM_1, uart_aux_size,      uart_aux_size,     10, &uart_aux_queue, 0);
+  }
 
 /*
  *  Setup the communications parameters
  */
   uart_param_config(uart_console, &uart_console_config);
   setvbuf(stdout, NULL, _IONBF, 0);                         // Send something out as soon as you get it.
-  uart_param_config(uart_aux,     &uart_aux_config);
+  if ( json_aux_port_enable == true )
+  {
+    uart_param_config(uart_aux,     &uart_aux_config);
+  }
 
 /*
  *  Set UART pins(TX: IO4, RX: IO5, RTS: IO18, CTS: IO19)
  */
-  ESP_ERROR_CHECK(uart_set_pin(UART_NUM_1, 17, 18, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
-
+  if ( json_aux_port_enable == true )
+  {
+    ESP_ERROR_CHECK(uart_set_pin(UART_NUM_1, 17, 18, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
+  }
+  
  /* 
   *  Prepare the TCPIP queues
   */

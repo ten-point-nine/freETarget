@@ -11,6 +11,7 @@
 /*
  * Variables
  */
+extern volatile unsigned long ring_timer;         // Let the ring on the backstop end
 
 /*
  * function Prototypes

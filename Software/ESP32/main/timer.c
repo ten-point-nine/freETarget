@@ -44,7 +44,8 @@
  */
 static volatile unsigned long* timers[N_TIMERS];  // Active timer list
 static unsigned int isr_state;                    // What sensor state are we in 
-static volatile unsigned long isr_timer;          // Interrupt timer 
+static volatile unsigned long shot_timer;         // Wait for the sound to hit all sensors
+       volatile unsigned long ring_timer;         // Let the ring on the backstop end
 
 /*
  *  Function Prototypes
@@ -92,12 +93,13 @@ void freeETarget_timer_init(void)
 {
   DLT(DLT_CRITICAL, printf("freeETarget_timer_init()");)
   timer_init(TIMER_GROUP_0, TIMER_1, &config);
-  timer_set_counter_value(TIMER_GROUP_0, TIMER_1, 0);                   // Start the timer at 0
-  timer_set_alarm_value(TIMER_GROUP_0, TIMER_1, ONE_MS);                // Trigger on this value
-  timer_enable_intr(TIMER_GROUP_0, TIMER_1);                            // Interrupt associated with this interrupt
+  timer_set_counter_value(TIMER_GROUP_0, TIMER_1, 0);            // Start the timer at 0
+  timer_set_alarm_value(TIMER_GROUP_0, TIMER_1, ONE_MS);         // Trigger on this value
+  timer_enable_intr(TIMER_GROUP_0, TIMER_1);                     // Interrupt associated with this interrupt
   timer_isr_callback_add(TIMER_GROUP_0, TIMER_1, freeETarget_timer_isr_callback, NULL, 0);
   timer_start(TIMER_GROUP_0, TIMER_1);
-  timer_new(&isr_timer, 0);
+  timer_new(&ring_timer, 0);                                     // Let the pellet trap stop ringing                                  
+  timer_new(&shot_timer, 0);                                     // Let the sound propagate to the sensors
   shot_in = 0;
   shot_out = 0;
 
@@ -167,24 +169,25 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
     case PORT_STATE_IDLE:                       // Idle, Wait for something to show up
       if ( pin != 0 )                           // Something has triggered
       { 
-        isr_timer = MAX_WAIT_TIME;              // Start the wait timer
+        shot_timer = MAX_WAIT_TIME;             // Start the wait timer
         isr_state = PORT_STATE_WAIT;            // Got something wait for all of the sensors tro trigger
       }
       break;
           
     case PORT_STATE_WAIT:                       // Something is present, wait for all of the inputs
       if ( (pin == RUN_MASK)                    // We have all of the inputs
-          || (isr_timer == 0) )                 // or ran out of time.  Read the timers and restart 
+          || (shot_timer == 0) )                // or ran out of time.  Read the timers and restart 
       { 
         aquire();                               // Read the counters
-        isr_timer = json_min_ring_time;         // Reset the timer
+        ring_timer = json_min_ring_time * ONE_SECOND / 1000;        // Reset the ring timer
         isr_state = PORT_STATE_TIMEOUT;         // and wait for the all clear
       }
       break;
 
     case PORT_STATE_TIMEOUT:                    // Wait for the ringing to stop
-      if ( isr_timer == 0 )
+      if ( ring_timer == 0 )
       {
+        stop_timers();                          // Clear the flipflops
         isr_state = PORT_STATE_IDLE;            // The ringing has stopped
       }
       break;

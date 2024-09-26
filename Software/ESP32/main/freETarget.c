@@ -116,12 +116,15 @@ void freeETarget_init(void)
 /*
  *  Setup the hardware
  */
-  serial_io_init();
+  json_aux_port_enable = false;           // Assume the AUX port is not used
+  serial_io_init();                       // Setup the console for debug messages
+  read_nonvol();                          // Read in the settings
+  serial_io_init();                       // Update the serial port if there is a change
+
   POST_version();                         // Show the version string on all ports
-  gpio_init(); 
-  read_nonvol();
+  gpio_init();                            // Setup the hardware
   set_VREF();
-  multifunction_init();
+  multifunction_init();                   // Override the MFS if we have to
 
   set_status_LED(LED_HELLO_WORLD);        // Hello World
   rapid_red(1);                           // Drive the rapid fire lights if installed
@@ -471,11 +474,18 @@ unsigned int reduce(void)
     }
 
     shot_out = (shot_out+1) % SHOT_SPACE;
+
   }
 
 /*
  * All done, Exit to FINISH if the timer has expired
  */
+  while ( ring_timer != 0 )           // Wait here to make sure the ringing has stopped
+  {
+    DLT(DLT_DEBUG, printf("ring_timer: %ld", ring_timer);)
+    vTaskDelay(10);
+  }
+
   if ( tabata_timer == 0 )
   {
     return START;

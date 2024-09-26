@@ -133,8 +133,8 @@ void arm_timers(void)
  */
 void stop_timers(void)
 {
-  gpio_set_level(OSC_CONTROL, OSC_OFF);
-  gpio_set_level(STOP_N, 0);      // Reset the timer
+  gpio_set_level(OSC_CONTROL, OSC_OFF); // Turn off the oscillator
+  gpio_set_level(STOP_N, 0);            // Clear the flip flop
   return;
 }
 

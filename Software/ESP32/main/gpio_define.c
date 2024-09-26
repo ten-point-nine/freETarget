@@ -165,8 +165,8 @@ gpio_struct_t gpio_table[] = {
     {"RUN_WEST_LO",  GPIO_NUM_15, (void*)&pcnt3},     // RUN_WEST_LO
     {"RUN_NORTH_HI", GPIO_NUM_16, (void*)&dio16},     // RUN_NORTH_HI Not used on ESP32-S3
 
-    {"ATX",          GPIO_NUM_17, NULL},              // ATX
-    {"ARX",          GPIO_NUM_18, NULL},              // ARX
+    {"ATX",          GPIO_NUM_17, (void*)&dio17},     // ATX Initailize as input
+    {"ARX",          GPIO_NUM_18, (void*)&dio18},     // ARX and override later
     {"REF_CLK",      GPIO_NUM_8,  NULL},              // Re rence CLock Used by pcnt
     {"USB_D-",       GPIO_NUM_19, NULL},              // JTAG USB D-
     {"USB_D+",       GPIO_NUM_20, NULL},              // JTAG USB D+
@@ -178,8 +178,8 @@ gpio_struct_t gpio_table[] = {
     {"PAPER",        GPIO_NUM_12, (void*)&dio12},     // PAPER  Drive
     {"V12_REF",      GPIO_NUM_1, (void*)&adc1_ch0},   // LED Feedback (Measure 12VDC)
     {"LED_PWM",      GPIO_NUM_2, (void*)&pwm0},       // LED_PWM
-    {"TXD",          43, NULL},                       // UART Transmit   Initialized in serial_io_init
-    {"RXD",          44, NULL},                       // UART Receive
+    {"TXD",          GPIO_NUM_43, NULL},              // UART Transmit   Initialized in serial_io_init
+    {"RXD",          GPIO_NUM_44, NULL},              // UART Receive
     {"LDAC*",        GPIO_NUM_42, (void*)&dio42},     // Load DAC* 
     {"SPARE0",       GPIO_NUM_41, NULL},              // 
     {"FACE_HALF",    GPIO_NUM_40, (void*)&dio40},     // FACE Interrupt
