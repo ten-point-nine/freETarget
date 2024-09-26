@@ -244,12 +244,15 @@ void status_LED_init
  *
  *-----------------------------------------------------*/
 #define   LED_ON 0x3F    // Max full scale is 0xff (too bright)
+#define   N_SERIAL_LED 3
 
 rmt_transmit_config_t tx_config = {
         .loop_count = 0, // no transfer loop
     };
 
 static unsigned char led_strip_pixels[3 * 3]; // 3 LEDs + 3 Bytes per LED
+static unsigned char LED_C = ' ';             // Rapid fire LED C
+static unsigned char LED_D = ' ';             // Rapid fire LED D
 
 void set_status_LED
   (
@@ -268,8 +271,7 @@ void set_status_LED
 /*
  * Decode the calling string into a list of pixels
  */
-  i=0;
-  while (*new_state != 0)
+  for (i=0; i != N_SERIAL_LED; i++)
   {
     if ( *new_state != '-' )      // - Leave the setting alone
     {
@@ -317,9 +319,13 @@ void set_status_LED
           break;
       }
     }
-    i++;
-    new_state++;
   }
+
+/*
+ *  Record the C/D LEDs
+ */
+  LED_C = new_state[3];
+  LED_D = new_state[4];
 
 /*
  * Ready to output the LEDs
@@ -355,7 +361,7 @@ void commit_status_LEDs
 /*
  *  Send out the new settings
  */
-  for (i=0; i < 3; i++)
+  for (i=0; i < N_SERIAL_LED; i++)
   {
     led_strip_pixels[i * 3 + 0] = 0;                        // Turn them all off
     led_strip_pixels[i * 3 + 2] = 0;
@@ -370,6 +376,29 @@ void commit_status_LEDs
   }
     
   rmt_transmit(led_channel, led_encoder, led_strip_pixels, sizeof(led_strip_pixels), &tx_config);
+
+/*
+ *  Send out the Rapid Fire LEDs
+ */
+  switch (LED_C)
+  {
+    default:
+    case ' ': rapid_green(0);           break;
+    case 'g': rapid_green(blink_state); break;
+    case 'G': rapid_green(1);           break;
+    case 'r': rapid_red(blink_state);   break;
+    case 'R': rapid_red(1);             break;
+  }
+
+  switch (LED_D)
+  {
+    default:
+    case ' ': rapid_red(0);             break;
+    case 'g': rapid_green(blink_state); break;
+    case 'G': rapid_green(1);           break;
+    case 'r': rapid_red(blink_state);   break;
+    case 'R': rapid_red(1);             break;
+  }
 
 /*
  * All done, return

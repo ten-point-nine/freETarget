@@ -127,15 +127,12 @@ void freeETarget_init(void)
   multifunction_init();                   // Override the MFS if we have to
 
   set_status_LED(LED_HELLO_WORLD);        // Hello World
-  rapid_red(1);                           // Drive the rapid fire lights if installed
-  rapid_green(0);
+  set_status_LED(LED_RAPID_RED);          // 
   timer_delay(ONE_SECOND);
-  rapid_red(0);
-  rapid_green(1);
+  set_status_LED(LED_RAPID_GREEN);        // 
   timer_delay(ONE_SECOND);
   set_status_LED(LED_OFF);
-  rapid_red(0);
-  rapid_green(0);
+  set_status_LED(LED_RAPID_OFF);          // 
 
   WiFi_init();
 
@@ -612,6 +609,7 @@ void tabata_enable
  * Test JSON 
  * {"TABATA_WARN_ON": 1, "TABATA_WARN_OFF":5, "TABATA_ON":7, "TABATA_REST":30, "TABATA_ENABLE":1}
  * {"TABATA_WARN_ON": 2, "TABATA_WARN_OFF":2, "TABATA_ON":7, "TABATA_REST":45, "TABATA_ENABLE":1}
+ * {"MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":22}
  * 
  *-------------------------------------------------------------*/
 void tabata_task(void)
@@ -636,6 +634,7 @@ void tabata_task(void)
     case (TABATA_OFF):                  // First time through after enable
       timer_new(&tabata_timer, json_tabata_on * ONE_SECOND);
       set_LED_PWM_now(0);               // Turn off the lights
+      set_status_LED(LED_TABATA_OFF);
       SEND(sprintf(_xs, "{\"TABATA_REST\":%d}\r\n", json_tabata_on);)
       tabata_state = TABATA_REST;
       break;
@@ -645,6 +644,7 @@ void tabata_task(void)
       {
         timer_new(&tabata_timer, json_tabata_warn_on * ONE_SECOND);
         set_LED_PWM_now(json_LED_PWM);  //     Turn on the lights
+        set_status_LED(LED_TABATA_WARN);
         SEND(sprintf(_xs, "{\"TABATA_WARNING\":%d}\r\n", json_tabata_warn_on);)
         tabata_state = TABATA_WARNING;
       }
@@ -666,6 +666,7 @@ void tabata_task(void)
       {
         timer_new(&tabata_timer, json_tabata_warn_off * ONE_SECOND);
         set_LED_PWM_now(0);             // Turn off the lights
+        set_status_LED(LED_TABATA_OFF);
         SEND(sprintf(_xs, "{\"TABATA_DARK\":%d}\r\n", json_tabata_warn_off);)
         tabata_state = TABATA_DARK;
       }
@@ -677,6 +678,7 @@ void tabata_task(void)
         in_shot_timer = FULL_SCALE;       // Set the timer on
         timer_new(&tabata_timer, json_tabata_on * ONE_SECOND);
         set_LED_PWM_now(json_LED_PWM);    // Turn on the lights
+        set_status_LED(LED_TABATA_ON);
         SEND(sprintf(_xs, "{\"TABATA_ON\":%d}\r\n", json_tabata_on);)
         tabata_state = TABATA_ON;
       }
@@ -688,6 +690,7 @@ void tabata_task(void)
         timer_new(&tabata_timer, (long)(json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off) * ONE_SECOND);
         SEND(sprintf(_xs, "{\"TABATA_OFF\":%d}\r\n", (json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off));)
         set_LED_PWM_now(0);             // Turn off the LEDs
+        set_status_LED(LED_TABATA_OFF);
         tabata_state = TABATA_REST;
       }
       break;
@@ -776,15 +779,16 @@ void rapid_fire_task(void)
   switch (rapid_state)
   {
     case (RAPID_OFF):                   // The tabata is not enabled
+      set_status_LED(LED_RAPID_OFF);
       if ( json_rapid_enable != 0 )     // Just switched to enable. 
       {
         timer_new(&rapid_timer, json_rapid_wait * ONE_SECOND);
         set_LED_PWM_now(0);             // Turn off the lights
+        set_status_LED(LED_RAPID_WARN);
         SEND(sprintf(_xs, "{\"RAPID_WAIT\":%d}\r\n", (int)json_rapid_wait);)
         rapid_state = RAPID_WAIT;
         rapid_count = 0;                // No shots received yet
-        rapid_red(1);
-        rapid_green(0);
+
       } 
       break;
         
@@ -794,9 +798,9 @@ void rapid_fire_task(void)
         timer_new(&rapid_timer, json_rapid_time * ONE_SECOND);
         SEND(sprintf(_xs, "{\"RAPID_ON\":%d}\r\n", (int)json_rapid_time);)
         set_LED_PWM_now(json_LED_PWM);   // Turn on the LEDs
+        set_status_LED(LED_RAPID_GREEN);
         rapid_state = RAPID_ON;
-        rapid_red(0);
-        rapid_green(1);
+
       }
       break;
 
@@ -806,8 +810,7 @@ void rapid_fire_task(void)
         SEND(sprintf(_xs, "{\"RAPID_OFF\":0}\r\n");)
         set_LED_PWM_now(0);             // Turn off the LEDs
         rapid_state = RAPID_SEND;       // Ran out of time, start sending
-        rapid_red(1);
-        rapid_green(0);
+        set_status_LED(LED_RAPID_RED);
       }
       else
       {
