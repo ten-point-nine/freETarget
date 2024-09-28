@@ -237,7 +237,8 @@ void serial_flush
     uart_flush(uart_console);
   }
 
-  if ( ports & AUX )
+  if ( (json_aux_port_enable == true)                     // Is there hardware on the Aux port?
+        && (ports & AUX) )                                // Are we reading the AUX port
   {
     uart_flush(uart_aux);
   }
