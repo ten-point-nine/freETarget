@@ -961,20 +961,20 @@ void rapid_LED_test(void)
     set_status_LED(LED_RAPID_GREEN_WARN); 
     timer_delay(3*ONE_SECOND);
 
-    set_status_LED(LED_RAPID_RED); 
+    set_status_LED(LED_RAPID_RED);        // Both
     set_status_LED(LED_RAPID_GREEN);     
     timer_delay(ONE_SECOND);
 
-    set_status_LED(LED_RAPID_RED); 
+    set_status_LED(LED_RAPID_RED);        // Red
     set_status_LED(LED_RAPID_GREEN_OFF); 
     timer_delay(ONE_SECOND);
 
     set_status_LED(LED_RAPID_RED_OFF); 
-    set_status_LED(LED_RAPID_GREEN); 
+    set_status_LED(LED_RAPID_GREEN);      // Green
     timer_delay(ONE_SECOND);
 
     set_status_LED(LED_RAPID_RED_OFF); 
-    set_status_LED(LED_RAPID_GREEN_OFF); 
+    set_status_LED(LED_RAPID_GREEN_OFF);  // Off
     timer_delay(ONE_SECOND);
 
     printf("%d ", i);
