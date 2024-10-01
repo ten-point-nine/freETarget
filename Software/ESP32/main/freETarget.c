@@ -126,6 +126,8 @@ void freeETarget_init(void)
   set_VREF();
   multifunction_init();                   // Override the MFS if we have to
 
+  set_status_LED(LED_RAPID_RED_OFF);
+  set_status_LED(LED_RAPID_GREEN_OFF);
   set_status_LED(LED_HELLO_WORLD);        // Hello World
   set_status_LED(LED_RAPID_RED);          // 
   timer_delay(ONE_SECOND);
@@ -542,7 +544,7 @@ void start_new_session(void)
  *----------------------------------------------------------------
  *
  * {"TABATA_WARN_ON": 1, "TABATA_WARN_OFF":5, "TABATA_ON":7, "TABATA_REST":30, "TABATA_ENABLE":1}
- * {"TABATA_WARN_ON": 2, "TABATA_WARN_OFF":2, "TABATA_ON":7, "TABATA_REST":45, "TABATA_ENABLE":1}
+ * {"TABATA_WARN_ON": 5, "TABATA_WARN_OFF":2, "TABATA_ON":7, "TABATA_REST":45, "TABATA_ENABLE":1}
  * {"TABATA_ENABLE":0}
  * 
  *--------------------------------------------------------------*/
@@ -784,7 +786,7 @@ void rapid_fire_task(void)
       {
         timer_new(&rapid_timer, json_rapid_wait * ONE_SECOND);
         set_LED_PWM_now(0);             // Turn off the lights
-        set_status_LED(LED_RAPID_WARN);
+        set_status_LED(LED_RAPID_GREEN_WARN);
         SEND(sprintf(_xs, "{\"RAPID_WAIT\":%d}\r\n", (int)json_rapid_wait);)
         rapid_state = RAPID_WAIT;
         rapid_count = 0;                // No shots received yet

@@ -15,7 +15,7 @@ void init_gpio(void);                                     // Initialize the GPIO
 void arm_timers(void);                                    // Make the board ready
 void clear_running(void);                                 // Clear the run flip flop 
 unsigned int is_running(void);                            // Return a bit mask of running sensors 
-void set_status_LED(char* new_state);                     // Manage the LEDs
+void set_status_LED(char new_state[]);                    // Manage the LEDs
 void push_status_LED(void);                               // Preserve the current state
 void pop_status_LED(void);                                // Bring back the old state 
 void commit_status_LEDs(unsigned int blink_state);        // Write the LED control to the hardware

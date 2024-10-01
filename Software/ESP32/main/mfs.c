@@ -131,7 +131,6 @@ mfs_action_t mfs_action[] = {
       case RAPID_GREEN:   rapid_green(0);                 break;     
       case STEPPER_DRIVE: gpio_set_level(HOLD_D_GPIO, 0); break;
       case STEPPER_ENABLE:gpio_set_level(HOLD_D_GPIO, 0); break; 
-      
     }
   }
 

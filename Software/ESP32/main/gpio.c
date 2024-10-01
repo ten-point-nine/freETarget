@@ -245,6 +245,8 @@ void status_LED_init
  *-----------------------------------------------------*/
 #define   LED_ON 0x3F    // Max full scale is 0xff (too bright)
 #define   N_SERIAL_LED 3
+#define   CEE 3          // LED C takes the fourth position
+#define   DEE 4          // LED D takes the fifth position
 
 rmt_transmit_config_t tx_config = {
         .loop_count = 0, // no transfer loop
@@ -256,7 +258,7 @@ static unsigned char LED_D = ' ';             // Rapid fire LED D
 
 void set_status_LED
   (
-    char* new_state       // New LED colours
+    char new_state[]       // New LED colours
   )
 { 
   static char* old_state = "   ";
@@ -273,14 +275,14 @@ void set_status_LED
  */
   for (i=0; i != N_SERIAL_LED; i++)
   {
-    if ( *new_state != '-' )      // - Leave the setting alone
+    if ( new_state[i] != '-' )      // - Leave the setting alone
     {
       status[i].blink = 0;        // Default to blink off
       status[i].red   = 0;
       status[i].green = 0;
       status[i].blue  = 0;    
 
-      switch (*new_state)
+      switch (new_state[i])
       {
         case 'r':                 // RED LED
           status[i].blink = 1;    // Turn on Blinking
@@ -324,8 +326,14 @@ void set_status_LED
 /*
  *  Record the C/D LEDs
  */
-  LED_C = new_state[3];
-  LED_D = new_state[4];
+  if ( new_state[CEE] != '-')
+  {
+    LED_C = new_state[CEE];
+  }
+  if ( new_state[DEE] != '-')
+  {
+    LED_D = new_state[DEE];
+  }
 
 /*
  * Ready to output the LEDs
@@ -359,7 +367,7 @@ void commit_status_LEDs
   unsigned int i;
 
 /*
- *  Send out the new settings
+ *  Send out the new settings to the serial LEDs
  */
   for (i=0; i < N_SERIAL_LED; i++)
   {
@@ -945,26 +953,31 @@ void rapid_LED_test(void)
 
   json_mfs_hold_d = RAPID_RED;          // Hold D
   json_mfs_hold_c = RAPID_GREEN;        // Hold C
-  json_mfs_select_cd = RAPID_LOW;       // Select C and D operation
+  json_mfs_select_cd = RAPID_HIGH;      // Select C and D operation
   
   for (i=0; i != 10; i++)
   {
-    rapid_red(0);
-    rapid_green(0);
+    set_status_LED(LED_RAPID_RED_WARN); 
+    set_status_LED(LED_RAPID_GREEN_WARN); 
+    timer_delay(3*ONE_SECOND);
+
+    set_status_LED(LED_RAPID_RED); 
+    set_status_LED(LED_RAPID_GREEN);     
     timer_delay(ONE_SECOND);
 
-    rapid_red(1);
-    rapid_green(0);
+    set_status_LED(LED_RAPID_RED); 
+    set_status_LED(LED_RAPID_GREEN_OFF); 
     timer_delay(ONE_SECOND);
 
-    rapid_red(0);
-    rapid_green(1);
+    set_status_LED(LED_RAPID_RED_OFF); 
+    set_status_LED(LED_RAPID_GREEN); 
     timer_delay(ONE_SECOND);
 
-    rapid_red(1);
-    rapid_green(1);
+    set_status_LED(LED_RAPID_RED_OFF); 
+    set_status_LED(LED_RAPID_GREEN_OFF); 
     timer_delay(ONE_SECOND);
-    printf("*");
+
+    printf("%d ", i);
   }
 
   printf("\r\nDone\r\n");
