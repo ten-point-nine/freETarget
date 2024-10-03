@@ -447,21 +447,24 @@ unsigned int reduce(void)
       }
       send_score(&record[shot_out], shot_out);
 
-      if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )                // Has the witness paper been enabled?
+      if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )                                // Has the witness paper been enabled?
       {
-        paper_shot++;                                           // One more shot has been processed
         DLT(DLT_DEBUG, printf("paper_shot: %d,  json_paper_shot:%d, rapid_count:%d, rapid_state: %d", paper_shot, json_paper_shot, rapid_count, rapid_state );)
 
         if ( ((json_paper_shot == 0) && (rapid_state == RAPID_OFF))             // Paper not limited, and not a rapid sequnce
-              || ((json_paper_shot != 0) && ( paper_shot == json_paper_shot ))  // Or we have reached the required number
+              || ((json_paper_shot != 0) && (paper_shot == json_paper_shot ))   // Or we have reached the required number
               || ((rapid_count != 0 ) && ( paper_shot == rapid_count )) )       // Or rapid fire has finished
         {
-          if ( ((json_paper_eco == 0)                             // ECO turned off
+          if ( ((json_paper_eco == 0)                                           // ECO turned off
               || ( sqrt(sq(record[shot_in].x) + sq(record[shot_in].y)) < json_paper_eco )) ) // Outside the black
           {
-            paper_start();                                        // to follow through.
+            paper_shot++;                                                       // One more shot has been processed
+            if ( paper_shot >= json_paper_shot )                                // 
+            {
+              paper_shot = 0;
+            }
+            paper_start();                                                      // to follow through.
           }
-          paper_shot = 0;                                         // Start the shot counter over
         }
       } 
     }
