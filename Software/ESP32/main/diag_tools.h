@@ -118,6 +118,11 @@ bool check_12V(void);                                     // Check the 12 volt s
 #define LED_WEST_FAILED    "R-Y"            // West sensor failed
 #define LED_MISS           "R-r"            // Shot was detected as a miss
 
+/*
+ *  On board expected values
+ */
+#define V12_WORKING  10.0                   // Expect that the 12 Volt supply is over 10 volts
+#define V12_CAUTION   5.0                   // Caution if the 12 Volts supply is less than 5 volts
 
 /*
  * Tracing 

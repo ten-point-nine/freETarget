@@ -410,10 +410,13 @@ bool factory_test(void)
 /*
  * Ready to start the test
  */
-  printf("\r\nFactory Test");
-  printf("\r\nHas the tape seal been removed from the temperature sensor?");
-  printf("\r\nPress 1 & 2 or ! to continue\r\n");
-  while ( (DIP_SW_A == 0) || !(DIP_SW_B == 0) )
+  SEND(sprintf(_xs, "\r\nFactory Test");)
+  
+  SEND(sprintf(_xs, "\r\nFirmware version:%s  Board version: %d",SOFTWARE_VERSION, revision());)
+  SEND(sprintf(_xs, "\r\n");)
+  SEND(sprintf(_xs, "\r\nHas the tape seal been removed from the temperature sensor?");)
+  SEND(sprintf(_xs, "\r\nPress 1 & 2 or ! to continue\r\n");)
+  while ( (DIP_SW_A == 0) || (DIP_SW_B == 0) )
   {
     if ( serial_available(ALL) )
     {
@@ -443,25 +446,25 @@ bool factory_test(void)
     {
       pass |= PASS_RUNNING;
     }
-    printf("\r\nSens: ");
+    SEND(sprintf(_xs, "\r\nSens: ");)
     for (i=0; i != 8; i++)
     {
       if ( i == 4 )
       {
-        printf(" ");
+        SEND(sprintf(_xs, " ");)
       }
       if (running & (1<<i))
       {
-        printf("%c", find_sensor(1<<i)->short_name );
+        SEND(sprintf(_xs, "%c", find_sensor(1<<i)->short_name );)
       }
       else
       {
-        printf("-");
+        SEND(sprintf(_xs, "-");)
       }
     }
 
     dip = read_DIP();
-    printf("  DIP: "); 
+    SEND(sprintf(_xs, "  DIP: ");) 
     if ( DIP_SW_A )
     {
       set_status_LED("-W-");
@@ -496,46 +499,46 @@ bool factory_test(void)
     {
       if ((dip & (1<<i)) == 0)
       {
-        printf("%c", ABCD[i] );
+        SEND(sprintf(_xs, "%c", ABCD[i] );)
       }
       else
       {
-        printf("-");
+        SEND(sprintf(_xs, "-");)
       }
     }
 
-    printf("  12V: %4.2fV", v12_supply());
-    printf("  Rev: %d", revision());
-    printf("  Temp: %4.2fC", temperature_C());
-    printf("  Humd: %4.2f%%", humidity_RH());
+    SEND(sprintf(_xs, "  12V: %4.2fV", v12_supply());)
+    SEND(sprintf(_xs, "  Temp: %4.2fC", temperature_C());)
+    SEND(sprintf(_xs, "  Humd: %4.2f%%", humidity_RH());)
 
-    printf("  M");
-    if ( motor_toggle )
+    if ( v12_supply() >= V12_WORKING)            // Skip the motor and LED test if 12 volts not used
     {
-      printf("+");
-      DCmotor_on_off(true, ONE_SECOND);
-    }
-    else
-    {
-      printf("-");
-      DCmotor_on_off(false, 0);
-    }
-    motor_toggle ^= 1;
+      SEND(sprintf(_xs, "  M");)
+      if ( motor_toggle )
+      {
+        SEND(sprintf(_xs, "+");)
+        DCmotor_on_off(true, ONE_SECOND);
+      }
+      else
+      {
+        SEND(sprintf(_xs, "-");)
+        DCmotor_on_off(false, 0);
+      }
+      motor_toggle ^= 1;
     
-    set_LED_PWM_now(percent);
-    printf("  LED: %3d%% ", percent);
-    percent = percent + 25;
-    if ( percent > 100 )
-    {
-      percent = 0;
+      set_LED_PWM_now(percent);
+      SEND(sprintf(_xs, "  LED: %3d%% ", percent);)
+      percent = percent + 25;
+      if ( percent > 100 )
+      {
+        percent = 0;
+      }
     }
-
-    printf("V:%s:",SOFTWARE_VERSION);
 
     if ( (pass == PASS_MASK) || (pass == PASS_TEST) ) 
     {
       set_status_LED(LED_GOOD);
-      printf("  PASS");
+      SEND(sprintf(_xs, "  PASS");)
       vTaskDelay(ONE_SECOND);
       arm_timers();
       pass = 0;
@@ -563,11 +566,11 @@ bool factory_test(void)
           DCmotor_on_off(false, 0);
           if ( passed_once == true )
           {
-            printf("\r\nTest completed successfully\r\n");
+            SEND(sprintf(_xs, "\r\nTest completed successfully\r\n");)
           }
           else
           {
-            printf("\r\nTest finished without PASS\r\n");
+            SEND(sprintf(_xs, "\r\nTest finished without PASS\r\n");)
           }
           return passed_once;
       }
@@ -928,9 +931,6 @@ void set_diag_LED
 #define V12OK 2
 #define UNKNOWN 99
 
-#define WORKING  10.0
-#define CAUTION  5.0
-
 bool check_12V(void)
 {
   static unsigned int fault_V12 = UNKNOWN;
@@ -951,7 +951,7 @@ bool check_12V(void)
  */
   v12 = v12_supply();
 
-  if ( v12 <= CAUTION )
+  if ( v12 <= V12_CAUTION )
   {
     if ( fault_V12 != NONE)
     {
@@ -961,7 +961,7 @@ bool check_12V(void)
     return false;
   }
 
-  if ( v12 <= WORKING )
+  if ( v12 <= V12_WORKING )
   {
     if ( fault_V12 != SOME )
     {

@@ -451,15 +451,15 @@ unsigned int reduce(void)
       {
         DLT(DLT_DEBUG, printf("paper_shot: %d,  json_paper_shot:%d, rapid_count:%d, rapid_state: %d", paper_shot, json_paper_shot, rapid_count, rapid_state );)
 
-        if ( ((json_paper_shot == 0) && (rapid_state == RAPID_OFF))             // Paper not limited, and not a rapid sequnce
-              || ((json_paper_shot != 0) && (paper_shot == json_paper_shot ))   // Or we have reached the required number
-              || ((rapid_count != 0 ) && ( paper_shot == rapid_count )) )       // Or rapid fire has finished
-        {
-          if ( ((json_paper_eco == 0)                                           // ECO turned off
+        if ( ((json_paper_eco == 0)                                             // PAPER_ECO turned off
               || ( sqrt(sq(record[shot_in].x) + sq(record[shot_in].y)) < json_paper_eco )) ) // Outside the black
+        {
+          if ( ((json_paper_shot == 0) && (rapid_state == RAPID_OFF))           // Paper not limited, and not a rapid sequnce
+                || ((json_paper_shot != 0) && (paper_shot == json_paper_shot )) // Or we have reached the required number
+                || ((rapid_count != 0 ) && ( paper_shot == rapid_count )) )     // Or rapid fire has finished
           {
-            paper_shot++;                                                       // One more shot has been processed
-            if ( paper_shot >= json_paper_shot )                                // 
+            paper_shot++;
+            if ( paper_shot > json_paper_shot )                                 // Increment to the next shot
             {
               paper_shot = 0;
             }
