@@ -461,8 +461,8 @@ unsigned int reduce(void)
               || ( sqrt(sq(record[shot_in].x) + sq(record[shot_in].y)) < (json_paper_eco * 2.0) )) ) // Outside the black
         {
           if ( ((json_paper_shot == 0) && (rapid_state == RAPID_OFF))           // Paper not limited, and not a rapid sequnce
-                || (paper_shot >= json_paper_shot)                              // Or we have reached the required number
-                || (paper_shot >= rapid_count) )                                // Or rapid fire has finished
+                || ((json_paper_shot == 0 ) || (paper_shot >= json_paper_shot))                              // Or we have reached the required number
+                || ((json_rapid_count == 0 ) || (paper_shot >= rapid_count) ) )                               // Or rapid fire has finished
           {
             paper_shot++;
             if ( paper_shot > json_paper_shot )                                 // Increment to the next shot
