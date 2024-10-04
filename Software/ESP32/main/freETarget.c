@@ -411,6 +411,12 @@ unsigned int wait(void)
  * In the case of Rapid Fire, the Rapid fire loop will hold all
  * of the shots until the time runs out our all of the shots have
  * been made.
+ * 
+ * Sample Settings
+ * 
+ * {"PAPER_ECO":0,  "PAPER_SHOT": 0}
+ * {"PAPER_ECO":10, "PAPER_SHOT": 5}
+ * 
  *--------------------------------------------------------------*/
 unsigned int reduce(void)
 {
@@ -452,11 +458,11 @@ unsigned int reduce(void)
         DLT(DLT_DEBUG, printf("paper_shot: %d,  json_paper_shot:%d, rapid_count:%d, rapid_state: %d", paper_shot, json_paper_shot, rapid_count, rapid_state );)
 
         if ( ((json_paper_eco == 0)                                             // PAPER_ECO turned off
-              || ( sqrt(sq(record[shot_in].x) + sq(record[shot_in].y)) < json_paper_eco )) ) // Outside the black
+              || ( sqrt(sq(record[shot_in].x) + sq(record[shot_in].y)) < (json_paper_eco * 2.0) )) ) // Outside the black
         {
           if ( ((json_paper_shot == 0) && (rapid_state == RAPID_OFF))           // Paper not limited, and not a rapid sequnce
-                || ((json_paper_shot != 0) && (paper_shot == json_paper_shot )) // Or we have reached the required number
-                || ((rapid_count != 0 ) && ( paper_shot == rapid_count )) )     // Or rapid fire has finished
+                || (paper_shot >= json_paper_shot)                              // Or we have reached the required number
+                || (paper_shot >= rapid_count) )                                // Or rapid fire has finished
           {
             paper_shot++;
             if ( paper_shot > json_paper_shot )                                 // Increment to the next shot

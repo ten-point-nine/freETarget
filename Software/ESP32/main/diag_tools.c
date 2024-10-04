@@ -411,8 +411,7 @@ bool factory_test(void)
  * Ready to start the test
  */
   SEND(sprintf(_xs, "\r\nFactory Test");)
-  
-  SEND(sprintf(_xs, "\r\nFirmware version:%s  Board version: %d",SOFTWARE_VERSION, revision());)
+  SEND(sprintf(_xs, "\r\nFirmware version: %s   Board version: %d",SOFTWARE_VERSION, revision());)
   SEND(sprintf(_xs, "\r\n");)
   SEND(sprintf(_xs, "\r\nHas the tape seal been removed from the temperature sensor?");)
   SEND(sprintf(_xs, "\r\nPress 1 & 2 or ! to continue\r\n");)
