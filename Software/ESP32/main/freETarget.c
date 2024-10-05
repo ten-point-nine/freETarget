@@ -129,12 +129,13 @@ void freeETarget_init(void)
   set_status_LED(LED_RAPID_RED_OFF);
   set_status_LED(LED_RAPID_GREEN_OFF);
   set_status_LED(LED_HELLO_WORLD);        // Hello World
-  set_status_LED(LED_RAPID_RED);          // 
+  set_status_LED(LED_RAPID_RED);          // Red
   timer_delay(ONE_SECOND);
-  set_status_LED(LED_RAPID_GREEN);        // 
+  set_status_LED(LED_RAPID_OFF);
+  set_status_LED(LED_RAPID_GREEN);        // Green
   timer_delay(ONE_SECOND);
   set_status_LED(LED_OFF);
-  set_status_LED(LED_RAPID_OFF);          // 
+  set_status_LED(LED_RAPID_OFF);          // Off
 
   WiFi_init();
 
@@ -214,6 +215,7 @@ void freeETarget_target_loop(void* arg)
         arm();
         set_status_LED(LED_READY);
         state = WAIT;
+        json_rapid_count = 0;
         DLT(DLT_DEBUG, printf("state: WAIT");)
         break;
     
@@ -420,7 +422,8 @@ unsigned int wait(void)
  *--------------------------------------------------------------*/
 unsigned int reduce(void)
 {
-  static unsigned int paper_shot = 0;            // Count of reduced shots
+  static unsigned int paper_shot = 0;             // Count of reduced shots
+         unsigned int missing_shots = 0;          // Rapid fire shots that were not shot
 
 /*
  * See if any shots are allowed to be processed
@@ -436,7 +439,7 @@ unsigned int reduce(void)
 /*
  * Loop and process the shots
  */
-  while (shot_out != shot_in )
+  while (shot_out != shot_in )                    // Process the shots on the queue
   {   
     DLT(DLT_DEBUG, printf("shot_in: %d,  shot_out:%d", shot_in, shot_out);)
     DLT(DLT_DEBUG, show_sensor_status(record[shot_out].sensor_status);)
@@ -445,6 +448,9 @@ unsigned int reduce(void)
     
     location = compute_hit(&record[shot_out]);                 // Compute the score
 
+/*
+ *  Delay for a follow through
+ */
     if ( location != MISS )                                     // Was it a miss or face strike?
     {
       if ( (json_rapid_enable == 0) && (json_tabata_enable = 0))// If in a regular session, hold off for the follow through time
@@ -453,23 +459,26 @@ unsigned int reduce(void)
       }
       send_score(&record[shot_out], shot_out);
 
+/*
+ *  Advance the paper
+ */
       if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )                                // Has the witness paper been enabled?
       {
         DLT(DLT_DEBUG, printf("paper_shot: %d,  json_paper_shot:%d, rapid_count:%d, rapid_state: %d", paper_shot, json_paper_shot, rapid_count, rapid_state );)
 
         if ( ((json_paper_eco == 0)                                             // PAPER_ECO turned off
-              || ( sqrt(sq(record[shot_in].x) + sq(record[shot_in].y)) < (json_paper_eco * 2.0) )) ) // Outside the black
+              || ( sqrt(sq(record[shot_in].x) + sq(record[shot_in].y)) < (json_paper_eco / 2) )) ) // Inside the black (radius)
         {
           if ( ((json_paper_shot == 0) && (rapid_state == RAPID_OFF))           // Paper not limited, and not a rapid sequnce
-                || ((json_paper_shot == 0 ) || (paper_shot >= json_paper_shot))                              // Or we have reached the required number
-                || ((json_rapid_count == 0 ) || (paper_shot >= rapid_count) ) )                               // Or rapid fire has finished
+                || ((json_paper_shot == 0 ) || (paper_shot >= json_paper_shot)) // Or we have reached the required number opf hits?
+                || ((json_rapid_count == 0 ) || (paper_shot >= rapid_count) ) ) // Or rapid fire has finished
           {
             paper_shot++;
             if ( paper_shot > json_paper_shot )                                 // Increment to the next shot
             {
               paper_shot = 0;
             }
-            paper_start();                                                      // to follow through.
+            paper_start();                                                      // Roll the paper
           }
         }
       } 
@@ -478,11 +487,22 @@ unsigned int reduce(void)
     {
       DLT(DLT_APPLICATION, printf("Shot miss...\r\n");)
       set_status_LED(LED_MISS);
-      send_miss(&record[shot_out], shot_out);                             // Show a miss
+      send_miss(&record[shot_out], shot_out);                                 // Show a miss
     }
+    shot_out = (shot_out+1) % SHOT_SPACE;                                     // Increment to the next shot
+  }
 
-    shot_out = (shot_out+1) % SHOT_SPACE;
-
+/*
+ *  Take care of the special case where the actual shots are LESS than programmed for rapid fire
+ */
+  if (json_rapid_count != 0)
+  {
+    while ( rapid_count != json_rapid_count )                                 // And shots were incomplete
+    {
+      send_miss(&record[shot_out], shot_out);
+      shot_out = (shot_out+1) % SHOT_SPACE;
+      rapid_count++;
+    }
   }
 
 /*
@@ -836,6 +856,9 @@ void rapid_fire_task(void)
           {
             rapid_timer = 0;            // shut down and 
             rapid_state = RAPID_SEND;   // send
+            SEND(sprintf(_xs, "{\"RAPID_OFF\":0}\r\n");)
+            set_LED_PWM_now(0);             // Turn off the LEDs
+            set_status_LED(LED_RAPID_RED);
           }
         }
       }
