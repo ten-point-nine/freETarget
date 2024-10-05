@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
 using PdfSharp;
 using PdfSharp.Drawing;
 using PdfSharp.Drawing.Layout;
@@ -42,6 +43,7 @@ namespace freETarget {
             decimal[] rings= session.getTarget().getRings();
 
             XPen penBlack = new XPen(XColor.FromKnownColor(XKnownColor.Black), 0.75);
+            XPen penBlackThin = new XPen(XColor.FromKnownColor(XKnownColor.Black), 0.5);
             XBrush brushBlack = new XSolidBrush(XColor.FromKnownColor(XKnownColor.Black));
             Font f = new Font("Arial", 12, GraphicsUnit.World);
 
@@ -54,12 +56,8 @@ namespace freETarget {
             printSessionData(firstPage, 280, 20, 295, 250, session);
 
 
-            //draw series header
+
             XGraphics gfx = XGraphics.FromPdfPage(firstPage);
-            gfx.DrawLine(penBlack, 20, 290, 575, 290);
-            
-            gfx.DrawString("Series (" + session.AllSeries.Count + ")", f, brushBlack, 25, 285);
-            
 
 
             //draw footer
@@ -70,11 +68,20 @@ namespace freETarget {
             XImage img = XImage.FromStream(imageStream);
             gfx.DrawImage(img, new XPoint(22,771));
 
+            //draw shot / time graph
+            gfx.DrawRectangle(penBlackThin, 20, 275, 555, 150);
+            XImage chartImg = getChartImage(session, 735, 195);
+            gfx.DrawImage(chartImg, new XPoint(21, 276));
+
+            //draw series header 
+            gfx.DrawLine(penBlack, 20, 450, 575, 450);
+            gfx.DrawString("Series (" + session.AllSeries.Count + ")", f, brushBlack, 25, 445);
+
             gfx.Dispose();
 
             //series 1
             if (session.AllSeries.Count > 0) {
-                int y = 295;
+                int y = 455; // 295;
                 decimal zoom2 = session.getTarget().getPDFZoomFactor(session.AllSeries[0]);
                 paintTarget(150, 20, y, blackRings, rings, zoom2, solidInner, session.AllSeries[0], firstPage, session.getTarget().getSize(), session.getTarget().getProjectileCaliber());
                 printSeriesData(firstPage, 180, y, 395, 150, session.AllSeries[0], 1,session);
@@ -82,12 +89,12 @@ namespace freETarget {
 
             //series 2
             if (session.AllSeries.Count > 1) {
-                int y = 455;
+                int y = 615;// 455;
                 decimal zoom2 = session.getTarget().getPDFZoomFactor(session.AllSeries[1]);
                 paintTarget(150, 20, y, blackRings, rings, zoom2, solidInner, session.AllSeries[1], firstPage, session.getTarget().getSize(), session.getTarget().getProjectileCaliber());
                 printSeriesData(firstPage, 180, y, 395, 150, session.AllSeries[1], 2, session);
             }
-
+            /*
             //series 3
             if (session.AllSeries.Count > 2) {
                 int y = 615;
@@ -95,15 +102,15 @@ namespace freETarget {
                 paintTarget(150, 20, y, blackRings, rings, zoom2, solidInner, session.AllSeries[2], firstPage, session.getTarget().getSize(), session.getTarget().getProjectileCaliber());
                 printSeriesData(firstPage, 180, y, 395, 150, session.AllSeries[2], 3, session);
             }
+            */
 
-
-            if (session.AllSeries.Count > 3) {
+            if (session.AllSeries.Count > 2) {
                 //more pages needed
                 PdfPage page = null;
                 int y = 20;
-                for (int p = 3; p < session.AllSeries.Count; p++) { 
+                for (int p = 2; p < session.AllSeries.Count; p++) { 
 
-                    if ((p + 1) % 4 == 0) {
+                    if ((p + 2) % 4 == 0) {
                         page = document.AddPage();
                         pageNo++;
                         y = 20;
@@ -874,6 +881,36 @@ namespace freETarget {
                 innerXs = Xs;
                 return scoreSum;
             }
+        }
+
+        private static XImage getChartImage(Session session, int wight, int heigth) {
+            frmGraph frm = new frmGraph(session);
+            Chart chart = frm.getChart();
+
+            chart.Width = wight;
+            chart.Height =  heigth;
+
+            long totalSeconds = (long)(session.endTime - session.startTime).TotalSeconds;
+
+            decimal[] x = new decimal[totalSeconds];
+
+            foreach (Shot s in session.Shots) {
+                long seconds = (long)(s.timestamp - session.startTime).TotalSeconds;
+                //chart.Series[0].Points.AddXY(seconds, s.decimalScore);
+                x[seconds] = s.decimalScore;
+            }
+
+            for (int i = 0; i < totalSeconds; i++) {
+                chart.Series[0].Points.AddXY(i, x[i]);
+            }
+
+           var stream = new System.IO.MemoryStream();
+
+            chart.ResetAutoValues();
+            chart.Update();
+            chart.SaveImage(stream , System.Windows.Forms.DataVisualization.Charting.ChartImageFormat.Png);
+            XImage img = XImage.FromStream(stream);
+            return img;
         }
 
     }

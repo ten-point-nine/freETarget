@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace freETarget {
     public partial class frmGraph : Form {
@@ -40,6 +41,11 @@ namespace freETarget {
 
             chart.ResetAutoValues();
             chart.Update();
+            //chart.SaveImage("chartTemp.jpg", System.Windows.Forms.DataVisualization.Charting.ChartImageFormat.Png);
+        }
+
+        public Chart getChart() {
+            return chart;
         }
     }
 }
