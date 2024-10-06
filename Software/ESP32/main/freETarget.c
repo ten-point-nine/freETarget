@@ -227,7 +227,7 @@ void freeETarget_target_loop(void* arg)
         DLT(DLT_DEBUG, printf("state: REDUCE");)
         reduce();
         state = DARK;
-        if ( json_rapid_enable == true )
+        if ( json_rapid_enable == true )       // 
         {
           timer_new(&rapid_timer, ONE_SECOND * 10);
           state = DARK;
@@ -239,7 +239,7 @@ void freeETarget_target_loop(void* arg)
         }
         break;
 
-      case DARK:  
+      case DARK:                                // Ghost state to say dark for 10 seconds
        if ( rapid_timer == 0 )
         {
           state = START;      
@@ -453,7 +453,7 @@ unsigned int reduce(void)
  */
     if ( location != MISS )                                     // Was it a miss or face strike?
     {
-      if ( (json_rapid_enable == 0) && (json_tabata_enable = 0))// If in a regular session, hold off for the follow through time
+      if ( (json_rapid_enable == false) && (json_tabata_enable = false))// If in a regular session, hold off for the follow through time
       {
         vTaskDelay(ONE_SECOND * json_follow_through);
       }
@@ -495,7 +495,7 @@ unsigned int reduce(void)
 /*
  *  Take care of the special case where the actual shots are LESS than programmed for rapid fire
  */
-  if (json_rapid_count != 0)
+  if (json_rapid_enable == true)
   {
     while ( rapid_count != json_rapid_count )                                 // And shots were incomplete
     {
@@ -796,7 +796,7 @@ void rapid_fire_task(void)
 /*
  * Exit if Rapid fire has not been enabled
  */
-  if ( json_rapid_enable == 0 )        // Reset the state machine
+  if ( json_rapid_enable == false )        // Reset the state machine
   {
     rapid_state = RAPID_OFF;
     return;
@@ -811,7 +811,7 @@ void rapid_fire_task(void)
   {
     case (RAPID_OFF):                   // The tabata is not enabled
       set_status_LED(LED_RAPID_OFF);
-      if ( json_rapid_enable != 0 )     // Just switched to enable. 
+      if ( json_rapid_enable != false ) // Just switched to enable. 
       {
         timer_new(&rapid_timer, json_rapid_wait * ONE_SECOND);
         set_LED_PWM_now(0);             // Turn off the lights
