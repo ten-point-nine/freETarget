@@ -465,20 +465,19 @@ unsigned int reduce(void)
       if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )                                // Has the witness paper been enabled?
       {
         DLT(DLT_DEBUG, printf("paper_shot: %d,  json_paper_shot:%d, rapid_count:%d, rapid_state: %d", paper_shot, json_paper_shot, rapid_count, rapid_state );)
+        DLT(DLT_DEBUG, printf("shot_xs:    %4.2f,  shot_ys:%4.2f, paper_eco:%d", record[shot_out].xs, record[shot_out].ys, json_paper_eco);)
 
         if ( ((json_paper_eco == 0)                                             // PAPER_ECO turned off
-              || ( sqrt(sq(record[shot_in].x) + sq(record[shot_in].y)) < (json_paper_eco / 2) )) ) // Inside the black (radius)
+              || ( sqrt(sq(record[shot_out].xs) + sq(record[shot_out].ys)) < (json_paper_eco / 2) )) ) // Inside the black (radius)
         {
+          paper_shot++;
+          DLT(DLT_DEBUG, printf("Good shot: %d/%d", paper_shot, json_paper_shot);)
           if ( ((json_paper_shot == 0) && (rapid_state == RAPID_OFF))           // Paper not limited, and not a rapid sequnce
-                || ((json_paper_shot == 0 ) || (paper_shot >= json_paper_shot)) // Or we have reached the required number opf hits?
-                || ((json_rapid_count == 0 ) || (paper_shot >= rapid_count) ) ) // Or rapid fire has finished
+                || ((json_paper_shot != 0 ) && (paper_shot >= json_paper_shot)) // Or we have reached the required number opf hits?
+                || ((json_rapid_count != 0 ) && (paper_shot >= rapid_count) ) ) // Or rapid fire has finished
           {
-            paper_shot++;
-            if ( paper_shot > json_paper_shot )                                 // Increment to the next shot
-            {
-              paper_shot = 0;
-            }
             paper_start();                                                      // Roll the paper
+            paper_shot = 0;                                                     // And start over
           }
         }
       } 
@@ -896,19 +895,26 @@ static enum bye_state {
   BYE_START         // Go back into service
 };
 
-void bye(void)
+
+void bye
+(
+  unsigned int force_bye    // Set to true to force a shutdown
+)         
 {
   static int bye_state = BYE_BYE;
 
 /*
  * The BYE function does not work if we are a token ring.
  */
-  if ( (json_token != TOKEN_NONE)     // Skip if token ring enabled
-    || (json_power_save == 0)         // Power down has not been enabled
-    || (power_save != 0) )            // Power down has not run out
+  if ( force_bye == 0 )                 // Regular 
   {
-    bye_state = BYE_BYE;
-    return;
+    if ( (json_token != TOKEN_NONE)     // Skip if token ring enabled
+      || (json_power_save == 0)         // Power down has not been enabled
+      || (power_save != 0) )            // Power down has not run out
+    {
+      bye_state = BYE_BYE;
+      return;
+    }
   }
 
   switch (bye_state)

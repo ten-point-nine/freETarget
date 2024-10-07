@@ -320,7 +320,7 @@ void freeETarget_synchronous
  */
     if ( (cycle_count % BAND_1000ms) == 0 )
     {
-      bye();                                           // Dim the lights  
+      bye(false);                                           // Dim the lights  
       check_12V();
       send_keep_alive();
     }

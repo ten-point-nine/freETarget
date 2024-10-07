@@ -112,7 +112,7 @@ const json_message_t JSON[] = {
 //    token                 value stored in RAM     double stored in RAM        convert    service fcn()     NONVOL location      Initial Value
   {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT32,  0,                NONVOL_SENSOR_ANGLE,    45 },    // Locate the sensor angles
   {"\"AUX_PORT_ENABLE\":",&json_aux_port_enable,             0,                IS_INT32,  0,                NONVOL_AUX_PORT_ENABLE,  0 },    // Enable the AUX Port
-  {"\"BYE\":",            0,                                 0,                IS_VOID,   &bye,             0,                       0 },    // Shut down the target
+  {"\"BYE\":",            0,                                 0,                IS_INT32,  &bye,             0,                       0 },    // Shut down the target
   {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,       0,                       0 },    // Echo test
   {"\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT32,  0,                NONVOL_FACE_STRIKE,      0 },    // Face Strike Count 
   {"\"FOLLOW_THROUGH\":", &json_follow_through,              0,                IS_INT32,  0,                NONVOL_FOLLOW_THROUGH,   0 },    // Three second follow through

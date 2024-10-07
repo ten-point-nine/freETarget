@@ -98,7 +98,7 @@ bool check_12V(void);                                     // Check the 12 volt s
 #define LED_RAPID_RED_OFF   "---- "         // Rapid fire RED is OFF
 #define LED_RAPID_GREEN     "---G-"         // Rapid fire GREEN is ON
 #define LED_RAPID_GREEN_OFF "--- -"         // Rapid fire GREEN is OFF
-#define LED_RAPID_GREEN_WARN "---g-"         // Rapid fire GREEN is BLINKING
+#define LED_RAPID_GREEN_WARN "---g-"        // Rapid fire GREEN is BLINKING
 #define LED_TABATA_OFF      "----R"         // TABATA LEDs are OFF
 #define LED_TABATA_WARN     "---g-"         // TABATA LEDS are blinking
 #define LED_TABATA_ON       "---G-"         // TABATA LEDs are ON
@@ -106,17 +106,17 @@ bool check_12V(void);                                     // Check the 12 volt s
 
 // Fatal Error.  Halts operation
 
-#define LED_FAIL_CLOCK_STOP  "RBR"          // The reference clock cannot be stopped 
-#define LED_FAIL_CLOCK_START "RBG"          // The reference clock cannot be started
-#define LED_FAIL_RUN_STUCK   "RBB"          // There is a stuck bit in the RUN latch
-#define LED_FAIL_RUN_OPEN    "RBW"          // The sensor line is open circuit 
+#define LED_FAIL_CLOCK_STOP  "RBR--"        // The reference clock cannot be stopped 
+#define LED_FAIL_CLOCK_START "RBG--"        // The reference clock cannot be started
+#define LED_FAIL_RUN_STUCK   "RBB--"        // There is a stuck bit in the RUN latch
+#define LED_FAIL_RUN_OPEN    "RBW--"        // The sensor line is open circuit 
 
 // Fault Codes - RDY LED set to RED to indiate a fault
-#define LED_NORTH_FAILED   "R-R"            // North sensor failed
-#define LED_EAST_FAILED    "R-G"            // East sensor failed
-#define LED_SOUTH_FAILED   "R-B"            // South sensor failed
-#define LED_WEST_FAILED    "R-Y"            // West sensor failed
-#define LED_MISS           "R-r"            // Shot was detected as a miss
+#define LED_NORTH_FAILED   "R-R--"          // North sensor failed
+#define LED_EAST_FAILED    "R-G--"          // East sensor failed
+#define LED_SOUTH_FAILED   "R-B--"          // South sensor failed
+#define LED_WEST_FAILED    "R-Y--"          // West sensor failed
+#define LED_MISS           "R-r--"          // Shot was detected as a miss
 
 /*
  *  On board expected values
@@ -130,10 +130,10 @@ bool check_12V(void);                                     // Check the 12 volt s
 #define DLT(level, z) if ( do_dlt(level)){z}
 #define DLT_NONE          0                       // No DLT messages displayed
 #define DLT_CRITICAL      0x80                    // Display messages that will compromise the target
-#define DLT_APPLICATION   0x01                    // Application level messages displayed
-#define DLT_DIAG          0x02                    // Diagnostics messages displayed
-#define DLT_INFO          0x04                    // Informational messages
-#define DLT_DEBUG         0x08                    // Specific debug information
+#define DLT_APPLICATION   0x40                    // Application level messages displayed
+#define DLT_DIAG          0x20                    // Hardware diagnostics messages displayed
+#define DLT_INFO          0x08                    // Informational messages
+#define DLT_DEBUG         0x01                    // Specific debug information
 /*
  *  Variables
  */

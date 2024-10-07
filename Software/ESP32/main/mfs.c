@@ -457,7 +457,7 @@ static void mfs_pc_test(void)
 
 static void mfs_off(void)
 {
-  bye();                             // Stay in the Bye state until a wake up event comes along
+  bye(true);                             // Stay in the Bye state until a wake up event comes along
   return;
 }
 
