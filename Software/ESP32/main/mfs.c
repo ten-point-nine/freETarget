@@ -131,7 +131,6 @@ mfs_action_t mfs_action[] = {
       case RAPID_GREEN:   rapid_green(0);                 break;     
       case STEPPER_DRIVE: gpio_set_level(HOLD_D_GPIO, 0); break;
       case STEPPER_ENABLE:gpio_set_level(HOLD_D_GPIO, 0); break; 
-      
     }
   }
 
@@ -458,7 +457,7 @@ static void mfs_pc_test(void)
 
 static void mfs_off(void)
 {
-  bye();                             // Stay in the Bye state until a wake up event comes along
+  bye(true);                             // Stay in the Bye state until a wake up event comes along
   return;
 }
 

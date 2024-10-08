@@ -134,9 +134,13 @@ unsigned int compute_hit
   DLT(DLT_APPLICATION, printf("compute_hit()"); )
 
 /* 
- *  Check for a miss
+ *  Check for a miss, If there is a face strike, or one of the timers did not start, it's a miss
  */
-  if ( (shot->face_strike != 0) || (shot->timer_count[N] == 0) || (shot->timer_count[E] == 0) || (shot->timer_count[S] == 0) || (shot->timer_count[W] == 0 ) )
+  if ( (shot->face_strike != 0) 
+      || (shot->timer_count[N] == 0) 
+      || (shot->timer_count[E] == 0)
+      || (shot->timer_count[S] == 0)
+      || (shot->timer_count[W] == 0 ) )
   {
     DLT(DLT_APPLICATION, printf("Miss detected");)
     return MISS;
@@ -183,13 +187,13 @@ unsigned int compute_hit
     }
   }
 
-
   DLT(DLT_APPLICATION,
   {
     printf("\r\nMicroseconds ");
     for (i=0; i < 8; i++) printf("%s: %4.2f ", find_sensor(1<<i)->long_name, (double)s[i].count / ((double)OSCILLATOR_MHZ));
-  }
-  )
+  })
+
+
 /*
  * Fill up the structure with the counter geometry
  */
@@ -654,7 +658,7 @@ void send_miss
  #if ( S_SHOT )
    if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF))
   {
-    SEND(sprintf(_xs, "\"shot\":%d, \"miss\":0, \"name\":\"%s\"", shot_number,  names[json_name_id]);)
+    SEND(sprintf(_xs, "\"shot\":%d, \"miss\":1, \"name\":\"%s\"", shot_number,  names[json_name_id]);)
   }
   else
   {
@@ -673,7 +677,7 @@ void send_miss
 #if ( S_TIMERS )
   if ( json_token == TOKEN_NONE )
   {
-    SEND(sprintf(_xs, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)shot->timer_count[N], (int)shot->timer_count[E], (int)shot->timer_count[S], (int)shot->timer_count[W]);)
+    SEND(sprintf(_xs, ", \"N\":%d, \"e\":%d, \"s\":%d, \"w\":%d ", (int)shot->timer_count[N], (int)shot->timer_count[E], (int)shot->timer_count[S], (int)shot->timer_count[W]);)
     SEND(sprintf(_xs, ", \"face\":%d ", shot->face_strike);)
   }
 #endif

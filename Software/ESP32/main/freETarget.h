@@ -8,13 +8,13 @@
  *
  *
  */
-#ifndef _FREETARget_H
-#define _FREETARget_H
+#ifndef _FREETARGET_H
+#define _FREETARGET_H
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"5.2.9 September 26, 2024\""
+#define SOFTWARE_VERSION "\"5.2.10 October 7, 2024\""
 
 #define REV_500    500   // ESP32
 #define REV_510    510
@@ -155,7 +155,7 @@ void  freeETarget_init(void);                            // Get the target softw
 void  freeETarget_target_loop(void* arg);                // Target polling loop
 void  send_keep_alive(void);                             // Send out the keep alive signal for TCPIP
 void  hello(void);                                       // Say Hello World
-void  bye(void);                                         // Shut down and say goodbye
+void  bye(unsigned int force_bye);                       // Shut down and say goodbye
 void  tabata_enable(int enable);                         // Arm the Tabata counters
 void  polled_target_test(void);                          // Test the target aquisition software
 void  interrupt_target_test(void);                       // Test the target aquisition software
