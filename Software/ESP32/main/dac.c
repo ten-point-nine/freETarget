@@ -86,7 +86,7 @@ void DAC_write
     v_source = V_EXTERNAL;       // Otherwise 
     v_ref  = V_REF_EXT;          // Default to 5.0 volts
   }
-  DLT(DLT_DIAG, printf("DAC v_source:%d  v_ref:%4.2f)", v_source, v_ref);)
+  DLT(DLT_DIAG, SEND(sprintf(_xs, "DAC v_source:%d  v_ref:%4.2f)", v_source, v_ref);))
 
 /*
  *  Fill up the I2C buffer
@@ -94,7 +94,7 @@ void DAC_write
   for (i=0; i != 4; i++)
   {
     scaled_value = ((int)(volts[i] / v_ref * DAC_FS)) & 0xfff;  // Figure the bits to send
-    DLT(DLT_DIAG, printf("DAC_write(channel:%d Volts:%4.2f scale:%d)", i+1, volts[i], scaled_value);)
+    DLT(DLT_DIAG, SEND(sprintf(_xs, "DAC_write(channel:%d Volts:%4.2f scale:%d)", i+1, volts[i], scaled_value);))
     data[(i*3)+0] = DAC_WRITE             // Write
                   + ((i & 0x3) << 1)      // Channel
                   + 1;                    // UDAC = 1  update automatically

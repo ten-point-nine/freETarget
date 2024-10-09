@@ -189,8 +189,8 @@ unsigned int compute_hit
 
   DLT(DLT_APPLICATION,
   {
-    printf("\r\nMicroseconds ");
-    for (i=0; i < 8; i++) printf("%s: %4.2f ", find_sensor(1<<i)->long_name, (double)s[i].count / ((double)OSCILLATOR_MHZ));
+    SEND(sprintf(_xs, "\r\nMicroseconds ");)
+    for (i=0; i < 8; i++) SEND(sprintf(_xs, "%s: %4.2f ", find_sensor(1<<i)->long_name, (double)s[i].count / ((double)OSCILLATOR_MHZ));)
   })
 
 
@@ -410,7 +410,7 @@ bool find_xy_3D
       break;
 
     default:
-      DLT(DLT_APPLICATION,  SEND(sprintf(_xs, "\n\nUnknown Rotation:, %d", s->index);))
+      DLT(DLT_APPLICATION, SEND(sprintf(_xs, "\n\nUnknown Rotation:, %d", s->index);))
       break;
   }
 
@@ -419,9 +419,9 @@ bool find_xy_3D
  */
   DLT(DLT_APPLICATION,
     {
-    printf("index: %d  a:%4.2f b: %4.2f ae: %4.2f  be: %4.2f c: %4.2f", s->index, s->a, s->b, ae, be, s->c);
-    printf(" cos: %4.2f  sin: %4.2f  angle_A: %4.2f  x: %4.2f y: %4.2f", cos(rotation), sin(rotation), s->angle_A, s->x, s->y);
-    printf(" rotation: %4.2f  xs: %4.2f  ys: %4.2f", rotation, s->xs, s->ys);
+    SEND(sprintf(_xs, "index: %d  a:%4.2f b: %4.2f ae: %4.2f  be: %4.2f c: %4.2f", s->index, s->a, s->b, ae, be, s->c);)
+    SEND(sprintf(_xs, " cos: %4.2f  sin: %4.2f  angle_A: %4.2f  x: %4.2f y: %4.2f", cos(rotation), sin(rotation), s->angle_A, s->x, s->y);)
+    SEND(sprintf(_xs, " rotation: %4.2f  xs: %4.2f  ys: %4.2f", rotation, s->xs, s->ys);)
     }
     )
 

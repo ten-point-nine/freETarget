@@ -635,7 +635,7 @@ bool POST_counters(void)
 {
   unsigned int i;                          // Iteration counter
   unsigned int count, toggle, running;     // Cycle counter
-  DLT(DLT_CRITICAL, printf("POST_counters()");)
+  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "POST_counters()");))
   
 /*
  *  Test 1, Make sure we can turn off the reference clock
@@ -654,7 +654,7 @@ bool POST_counters(void)
   
   if ( count != 0 )
   {
-    DLT(DLT_CRITICAL, printf("Reference clock cannot be stopped");)
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Reference clock cannot be stopped");))
     set_diag_LED(LED_FAIL_CLOCK_STOP, 0);
   }
 
@@ -675,7 +675,7 @@ bool POST_counters(void)
 
   if ( count == 0  )
   {
-    DLT(DLT_CRITICAL, printf("Reference clock cannot be started");)
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Reference clock cannot be started");))
     set_diag_LED(LED_FAIL_CLOCK_START, 0);
   }
 
@@ -687,7 +687,7 @@ bool POST_counters(void)
   running = is_running();
   if ( running != 0  )
   {
-    DLT(DLT_CRITICAL, printf("Stuck bit in run latch: ");)
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Stuck bit in run latch: ");))
     for (i=N; i <= W; i++)
     {
       if ( running & s[i].low_sense.run_mask ) 
@@ -713,7 +713,7 @@ bool POST_counters(void)
   gpio_set_level(CLOCK_START, 1);
   if ( is_running() != 0xFF  )
   {
-    DLT(DLT_CRITICAL, printf("Failed to start clock in run latch: %02X", is_running());)
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to start clock in run latch: %02X", is_running());))
     set_diag_LED(LED_FAIL_RUN_STUCK, 0);
   }
 
