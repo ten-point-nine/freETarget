@@ -731,7 +731,7 @@ void stepper_pulse(void)
     step_time = json_step_time;
   }
 
-  DLT(DLT_INFO, SEND(sprintf("step_time %d", step_time);))
+  DLT(DLT_INFO, SEND(sprintf(_xs, "step_time %d", step_time);))
   timer_new(&paper_time, MS_TO_TICKS(step_time));
 
   if ( step_count != 0 )
@@ -886,14 +886,14 @@ void rapid_green
  *-----------------------------------------------------*/
 void digital_test(void)
 {
-  printf("\r\nDigital test");
+  SEND(sprintf(_xs, "\r\nDigital test");)
 
 /*
  * Read in the fixed digital inputs
  */
-  printf("\r\nTime: %4.2fs", (float)(esp_timer_get_time()/1000000));
-  printf("\r\nDIP: 0x%02X", read_DIP()); 
-  printf("\r\nDone\r\n");
+  SEND(sprintf(_xs, "\r\nTime: %4.2fs", (float)(esp_timer_get_time()/1000000));)
+  SEND(sprintf(_xs, "\r\nDIP: 0x%02X", read_DIP()); )
+  SEND(sprintf(_xs, "\r\nDone\r\n");)
 
    return;
 }
@@ -911,7 +911,7 @@ void digital_test(void)
  *--------------------------------------------------------------*/
 void status_LED_test(void)
 {
-  printf("\r\nStatus LED test");
+  SEND(sprintf(_xs, "\r\nStatus LED test");)
   timer_delay(2*ONE_SECOND);
   set_status_LED("RRR");
   timer_delay(ONE_SECOND);
@@ -926,7 +926,7 @@ void status_LED_test(void)
   set_status_LED("rgb");
   timer_delay(5*ONE_SECOND);         // Blink for 5 seconds
   set_status_LED(LED_READY);
-  printf("\r\nDone\r\n");
+  SEND(sprintf(_xs, "\r\nDone\r\n");)
   return;
 }
 
@@ -945,7 +945,7 @@ void rapid_LED_test(void)
 {
   unsigned int i;
 
-  printf("\r\nRapid LED test\r\n");
+  SEND(sprintf(_xs, "\r\nRapid LED test\r\n");)
   gpio_set_direction(HOLD_C_GPIO,  GPIO_MODE_OUTPUT);
   gpio_set_pull_mode(HOLD_C_GPIO,  GPIO_PULLUP_PULLDOWN);
   gpio_set_direction(HOLD_D_GPIO,  GPIO_MODE_OUTPUT);
@@ -977,10 +977,10 @@ void rapid_LED_test(void)
     set_status_LED(LED_RAPID_GREEN_OFF);  // Off
     timer_delay(ONE_SECOND);
 
-    printf("%d ", i);
+    SEND(sprintf(_xs, "%d ", i);)
   }
 
-  printf("\r\nDone\r\n");
+  SEND(sprintf(_xs, "\r\nDone\r\n");)
   return;
 }
 
@@ -1004,18 +1004,18 @@ void paper_test(void)
 {
   int i;
 
-  printf("\r\nAdvancing paper: 500 ms at a time");
+  SEND(sprintf(_xs, "\r\nAdvancing paper: 500 ms at a time");)
   for (i=0; i != 10; i++)
   {
-    printf("  %d+", (i+1));
+    SEND(sprintf(_xs, "  %d+", (i+1));)
     DCmotor_on_off(true, ONE_SECOND/2);
     timer_delay(ONE_SECOND / 2);
-    printf("-");
+    SEND(sprintf(_xs, "-");)
     DCmotor_on_off(false, 0);
     timer_delay(ONE_SECOND / 2);
   }
 
-  printf("\r\nDone\r\n");
+  SEND(sprintf(_xs, "\r\nDone\r\n");)
 
   return;
 }
