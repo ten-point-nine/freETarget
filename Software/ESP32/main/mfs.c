@@ -431,7 +431,7 @@ static void mfs_paper_shot(void)
       break;
     }
   }
-  printf("\r\nDone\r\n");
+  SEND(sprintf(_xs, "\r\nDone\r\n");)
   return;
 }
 

@@ -263,7 +263,7 @@ void WiFi_station_init(void)
         if (bits & WIFI_CONNECTED_BIT)
         {
             WiFi_my_IP_address(str_c);
-            SEND(sprintf( _xs, "Connected to ap SSID: %s\r\nWiFi_IP_ADDRESS: \"%s\",", json_wifi_ssid, str_c);)
+            SEND(sprintf(_xs, "Connected to ap SSID: %s\r\nWiFi_IP_ADDRESS: \"%s\",", json_wifi_ssid, str_c);)
         } 
         else if (bits & WIFI_FAIL_BIT) 
             {
@@ -749,7 +749,7 @@ static void WiFi_start_new_connection
 /*
  *  Inform the PC what is going on
  */
-    sprintf(_xs, "{\"%s\":%10.6f}", GREETING, esp_timer_get_time()/100000.0/60.0);
+    SEND(sprintf(_xs, "{\"%s\":%10.6f}", GREETING, esp_timer_get_time()/100000.0/60.0);)
     send(sock, _xs, strlen(_xs), 0);                    // Only send to the most recent connection
 
     for (i=0; i != SHOT_SPACE; i++)
@@ -785,7 +785,7 @@ void WiFi_loopback_task(void* parameters);
 
 void WiFi_loopback_test(void)
 {
-    printf("WiFi_loopback\r\n");
+    SEND(sprintf(_xs, "WiFi_loopback\r\n");)
     xTaskCreate(WiFi_loopback_task,    "WiFi_loopback_task",          4096, NULL, 5, NULL);
     return;
 }
@@ -831,7 +831,7 @@ void WiFi_my_IP_address
     char* s             // Where to return the string
 )
 {
-    sprintf(s, "%d.%d.%d.%d", TO_IP(ipInfo.ip.addr));
+    SEND(sprintf(_xs, "%d.%d.%d.%d", TO_IP(ipInfo.ip.addr));)
     return;
 }
 
