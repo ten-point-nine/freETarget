@@ -8,11 +8,13 @@
  * 
  * ----------------------------------------------------*/
 
+#include "math.h"
+#include "stdio.h"
+
 #include "freETarget.h"
 #include "gpio.h"
 #include "diag_tools.h"
-#include "math.h"
-#include "stdio.h"
+#include "serial_io.h"
 #include "compute_hit.h"
 
 #define TO_MM 1000.0d                  // Convert Metres to mm
@@ -126,7 +128,7 @@ double speed_of_sound
 
   speed_mmPuS = speed_MPS * TO_MM / TO_US;                    // Convert down to mm/us
   
-  DLT(DLT_DIAG, printf("Temperature: %4.2fC Humidity: %4.2f%% Speed of Sound: %4.2fmm/us", temperature, relative_humidity, speed_MPS);)
+  DLT(DLT_DIAG, SEND(sprintf(_xs, "Temperature: %4.2fC Humidity: %4.2f%% Speed of Sound: %4.2fmm/us", temperature, relative_humidity, speed_MPS);))
 
 /*
  * @return the speed of sound

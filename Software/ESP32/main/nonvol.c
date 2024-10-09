@@ -50,7 +50,7 @@ void read_nonvol(void)
   size_t        length;        // Length of input string
   esp_err_t     err;           // ESP32 error type
 
-  DLT(DLT_CRITICAL, printf("read_nonvol()");)
+  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "read_nonvol()");))
 
  /*
   * Initialize NVS
@@ -58,7 +58,7 @@ void read_nonvol(void)
     err = nvs_flash_init();
     if (err != 0)
     {
-        DLT(DLT_CRITICAL, printf("read_nonvol(): Failed to initialize NVM");)
+        DLT(DLT_CRITICAL, SEND(sprintf(_xs, "read_nonvol(): Failed to initialize NVM");))
         ESP_ERROR_CHECK(nvs_flash_erase());        // NVS partition was truncated and needs to be erased
         err = nvs_flash_init();
     }
@@ -69,7 +69,7 @@ void read_nonvol(void)
 
   if (nvs_open(NAME_SPACE, NVS_READWRITE, &my_handle) != ESP_OK)
   {
-    DLT(DLT_CRITICAL, printf("read_nonvol(): Failed to open NVM");)
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "read_nonvol(): Failed to open NVM");))
   }
         
   nvs_get_i32(my_handle, "NONVOL_INIT", &nonvol_init);
@@ -178,7 +178,7 @@ void factory_nonvol
   unsigned int x;                         // Temporary Value
   unsigned int i;                         // Iteration Counter
   
-  DLT(DLT_CRITICAL, printf("factory_nonvol(%d)\r\n", new_serial_number); )
+  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "factory_nonvol(%d)\r\n", new_serial_number); ))
 
   serial_number = 0;
   x = 0;
@@ -297,14 +297,14 @@ void factory_nonvol
   nvs_set_i32(my_handle, NONVOL_INIT, INIT_DONE);
   if ( nvs_commit(my_handle) )
   {
-    DLT(DLT_CRITICAL, printf("Failed to write factory defaults to NONVOL");)
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to write factory defaults to NONVOL");))
   }
     
 /*
  * All done, return
  */    
   read_nonvol();            // Put the NONVOL into the working JSON variables
-  DLT(DLT_CRITICAL, printf("Factory Init complete\r\n");)
+  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Factory Init complete\r\n");))
   return;
 }
 
@@ -369,7 +369,7 @@ void update_nonvol
   unsigned int  i;                // Iteration counter
   long          ps_value;         // Value read from persistent storage  
   
-  DLT(DLT_CRITICAL, printf("update_nonvol(%d)\r\n", current_version);)
+  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "update_nonvol(%d)\r\n", current_version);))
 
 /*
  * Check to see if this persistent storage has never had a version number
@@ -404,7 +404,7 @@ void update_nonvol
  */
   if ( current_version == 0 )
   {  
-    DLT(DLT_CRITICAL, printf("Updating PS0 to PS1");)
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Updating PS0 to PS1");))
 
     nvs_set_i32(my_handle, NONVOL_WIFI_HIDDEN, 0);
     nvs_set_i32(my_handle, NONVOL_PCNT_LATENCY, 0);
@@ -417,7 +417,7 @@ void update_nonvol
  */
   if ( current_version == 1 )
   {  
-    DLT(DLT_CRITICAL, printf("Updating PS1 to PS2");)
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Updating PS1 to PS2");))
 
     nvs_set_i32(my_handle, NONVOL_WIFI_HIDDEN,   0);
 
@@ -452,7 +452,7 @@ void update_nonvol
  */
   if ( current_version == 2 )
   {  
-    DLT(DLT_CRITICAL, printf("Updating PS2 to PS3");)
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Updating PS2 to PS3");))
 
     json_wifi_reset_first = 0;
     nvs_set_i32(my_handle, NONVOL_WIFI_RESET_FIRST,   0);
@@ -467,7 +467,7 @@ void update_nonvol
  */
   if ( current_version == 3 )
   {  
-    DLT(DLT_CRITICAL, printf("Updating PS3 to PS4");)
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Updating PS3 to PS4");))
 
     json_step_ramp = 0;
     nvs_set_i32(my_handle, NONVOL_STEP_RAMP,  0);
@@ -482,7 +482,7 @@ void update_nonvol
  */
   if ( current_version == 4 )
   {  
-    DLT(DLT_CRITICAL, printf("Updating PS4 to PS5");)
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Updating PS4 to PS5");))
 
     json_paper_shot = 0;
     nvs_set_i32(my_handle, NONVOL_PAPER_SHOT,  0);
@@ -495,7 +495,7 @@ void update_nonvol
  */
   if ( current_version == 5 )
   {  
-    DLT(DLT_CRITICAL, printf("Updating PS5 to PS6");)
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Updating PS5 to PS6");))
 
     json_aux_port_enable = 0;
     nvs_set_i32(my_handle, NONVOL_AUX_PORT_ENABLE,  json_aux_port_enable);

@@ -75,5 +75,5 @@ void app_main(void)
 
    freeETarget_timer_init();
 
-   DLT(DLT_CRITICAL, printf("Running\r\n");)
+   DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Running\r\n");))
 }

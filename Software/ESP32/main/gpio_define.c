@@ -29,9 +29,11 @@
 #include "pwm.h"
 #include "pcnt.h"
 
+#include "freETarget.h"
 #include "diag_tools.h"
 #include "analog_io.h"
 #include "gpio_define.h"
+#include "serial_io.h"
 
 /*
  *  Digital IO definitions
@@ -223,7 +225,7 @@ void gpio_init(void)
 {
     int i;
 
-    DLT(DLT_CRITICAL, printf("gpio_init()\r\n");)
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "gpio_init()\r\n");))
 /*
  *  Loop and setup the GPIO
  */
@@ -233,7 +235,7 @@ void gpio_init(void)
         if (gpio_table[i].gpio_uses != NULL )
         {   
             DLT(DLT_CRITICAL,  
-            printf("%s: %d  %s",gpio_table[i].gpio_name, gpio_table[i].gpio_number, gpio_use[((DIO_struct_t*)(gpio_table[i].gpio_uses))->type]);)
+            SEND(sprintf(_xs, "%s: %d  %s",gpio_table[i].gpio_name, gpio_table[i].gpio_number, gpio_use[((DIO_struct_t*)(gpio_table[i].gpio_uses))->type]);))
 
             switch (((DIO_struct_t*)(gpio_table[i].gpio_uses))->type)
             {      

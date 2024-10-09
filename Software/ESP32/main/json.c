@@ -237,7 +237,7 @@ void freeETarget_json
 {
   char          ch;
 
-  DLT(DLT_CRITICAL, printf("freeETarget_json()");)
+  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "freeETarget_json()");))
 
   while (1)
   {

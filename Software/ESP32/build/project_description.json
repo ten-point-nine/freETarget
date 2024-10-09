@@ -1,7 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "freeETarget",
-    "project_version":    "v4.8.6-35-g8c29226-dirty",
+    "project_version":    "v4.8.6-39-g7c39b2e-dirty",
     "project_path":       "C:/Users/allan/Documents/freETarget/Software/ESP32",
     "idf_path":           "C:/Users/allan/esp/v5.3.1/esp-idf",
     "build_dir":          "C:/Users/allan/Documents/freETarget/Software/ESP32/build",

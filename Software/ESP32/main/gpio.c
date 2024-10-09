@@ -533,7 +533,7 @@ void paper_start(void)
  */
   if ( IS_DC_WITNESS )                    // DC motor, 
   {
-    DLT(DLT_INFO,  printf("DC motor start: %d ms", json_paper_time);)
+    DLT(DLT_INFO,  SEND(sprintf(_xs, "DC motor start: %d ms", json_paper_time);))
     DCmotor_on_off(true, json_paper_time);
   }
 
@@ -731,7 +731,7 @@ void stepper_pulse(void)
     step_time = json_step_time;
   }
 
-  DLT(DLT_INFO, printf("step_time %d", step_time);)
+  DLT(DLT_INFO, SEND(sprintf("step_time %d", step_time);))
   timer_new(&paper_time, MS_TO_TICKS(step_time));
 
   if ( step_count != 0 )
@@ -769,7 +769,7 @@ void stepper_pulse(void)
  {
   face_strike++;      // Got a face strike
 
-  DLT(DLT_CRITICAL, printf("\r\nface_ISR(): %d", face_strike);)
+  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "\r\nface_ISR(): %d", face_strike);))
 
   return;
  }
