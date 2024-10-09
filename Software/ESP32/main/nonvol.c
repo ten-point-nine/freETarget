@@ -236,8 +236,8 @@ void factory_nonvol
   {
     if ( factory_test() == false )
     {
-      printf("\r\nFactory test did not pass.");
-      printf("\r\nFactory Test will not be recorded");
+      SEND(sprintf(_xs, "\r\nFactory test did not pass.");)
+      SEND(sprintf(_xs, "\r\nFactory Test will not be recorded");)
     }
 
 /*
@@ -247,7 +247,7 @@ void factory_nonvol
     serial_number = 0;
     serial_flush(ALL);
     
-    printf("\r\nSerial Number? (ex 223! or X to cancel))");
+    SEND(sprintf(_xs, "\r\nSerial Number? (ex 223! or X to cancel))");)
 
     while (1)
     {
@@ -260,7 +260,7 @@ void factory_nonvol
         {
           case '!':
             nvs_set_i32(my_handle, NONVOL_SERIAL_NO, serial_number);
-            printf("\r\nSetting Serial Number to: %d", serial_number);
+            SEND(sprintf(_xs, "\r\nSetting Serial Number to: %d", serial_number);)
             break;
 
           case 0x08:          // Backspace
@@ -334,7 +334,7 @@ void init_nonvol
  */
   if ( verify != INIT_ALLOWED )
   {
-    printf("\r\nUse {\"INIT\":1234} Initialize memory\r\n");
+    SEND(sprintf(_xs, "\r\nUse {\"INIT\":1234} Initialize memory\r\n");)
     return;
   }
 

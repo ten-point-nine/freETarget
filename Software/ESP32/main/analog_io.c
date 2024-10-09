@@ -375,12 +375,12 @@ void set_VREF(void)
  *--------------------------------------------------------------*/
 void analog_input_test(void)
 {
-  printf("\r\nAnalog Input ");
-  printf("\r\n12V %5.3f", v12_supply());
-  printf("\r\nBoard Rev %d", revision());
-  printf("\r\nTemperature: %f", temperature_C());
-  printf("\r\nHumidity: %f\r\n", humidity_RH());
-  printf("\r\nSpeed of Sound: %4.2fmm/us", speed_of_sound(temperature_C(), humidity_RH()));
-  printf("\r\nDone\r\n");
+  SEND(sprintf(_xs, "\r\nAnalog Input ");)
+  SEND(sprintf(_xs, "\r\n12V %5.3f", v12_supply());)
+  SEND(sprintf(_xs, "\r\nBoard Rev %d", revision());)
+  SEND(sprintf(_xs, "\r\nTemperature: %f", temperature_C());)
+  SEND(sprintf(_xs, "\r\nHumidity: %f\r\n", humidity_RH());)
+  SEND(sprintf(_xs, "\r\nSpeed of Sound: %4.2fmm/us", speed_of_sound(temperature_C(), humidity_RH()));)
+  SEND(sprintf(_xs, "\r\nDone\r\n");)
   return;
 }  
