@@ -184,7 +184,6 @@ const json_message_t JSON[] = {
 };
 
 int instr(char* s1, char* s2);
-static void diag_delay(int x) { printf("\r\n\"DELAY\":%d", x); vTaskDelay(x*1000);  return;}
 
 /*-----------------------------------------------------
  * 
@@ -434,7 +433,7 @@ static void handle_json(void)
  */
   if ( not_found == true )
   {
-    printf("\r\n\r\nCannot decode: {%s}", input_JSON);
+    SEND(sprintf(_xs, "\r\n\r\nCannot decode: {%s}", input_JSON);)
   }
   
 /*
@@ -628,12 +627,12 @@ static void show_names(int v)
     return;
   }
   
-  printf("\r\nNames\r\n");
+  SEND(sprintf(_xs, "\r\nNames\r\n");)
   
   i=0;
   while (names[i] != 0 )
   {
-    printf("%d: \"%s\", \r\n", i, names[i]);
+    SEND(sprintf(_xs, "%d: \"%s\", \r\n", i, names[i]);)
     i++;
   }
 
@@ -655,7 +654,7 @@ static void show_names(int v)
 
 static void show_test(int test_number)
  {
-  printf("\r\nSelf Test: %d\r\n", test_number);
+  SEND(sprintf(_xs, "\r\nSelf Test: %d\r\n", test_number);)
   
   self_test(test_number);
   return;
