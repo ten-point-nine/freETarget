@@ -602,7 +602,7 @@ bool get_string
         if ( serial_available(ALL) != 0 )
         {
             ch = serial_getch(ALL);
-            printf("%c", ch); 
+            SEND(sprintf(_xs, "%c", ch);)
 
             switch (ch)
             {
@@ -662,7 +662,7 @@ void serial_port_test(void)
 /*
  * Send out the AUX port, back in, and then to the console
  */
-  printf("\r\nAUX Serial Port Loopback.  Make sure AUX port is looped back");
+  SEND(sprintf(_xs, "\r\nAUX Serial Port Loopback.  Make sure AUX port is looped back");)
   for (i=0; i != sizeof(test); i++)
   {
     serial_putch(test[i], AUX);    // Output to the AUX Port

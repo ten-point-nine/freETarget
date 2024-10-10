@@ -13,7 +13,10 @@
  * 
  ***************************************************************************/
 #include "driver/ledc.h"
+
+#include "freETarget.h"
 #include "pwm.h"
+#include "serial_io.h"
 
 #define PWM_TIMER              LEDC_TIMER_0
 #define PWM_MODE               LEDC_LOW_SPEED_MODE
@@ -63,7 +66,7 @@ void pwm_init
         ledc_timer_config(&ledc_timer); // Setup the timer
         pwm_ready = 1;
     }
-    printf("channel: %d  gpio:%d", pwm_channel, pwm_gpio);
+    SEND(sprintf(_xs, "channel: %d  gpio:%d", pwm_channel, pwm_gpio);)
 /*
  * Configure the output port
  */
