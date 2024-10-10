@@ -471,7 +471,7 @@ unsigned int reduce(void)
               || ( sqrt(sq(record[shot_out].xs) + sq(record[shot_out].ys)) < (json_paper_eco / 2) )) ) // Inside the black (radius)
         {
           paper_shot++;
-          DLT(DLT_DEBUG, SEND(printf("Good shot: %d/%d", paper_shot, json_paper_shot);))
+          DLT(DLT_DEBUG, SEND(sprintf(_xs, "Good shot: %d/%d", paper_shot, json_paper_shot);))
           if ( ((json_paper_shot == 0) && (rapid_state == RAPID_OFF))           // Paper not limited, and not a rapid sequnce
                 || ((json_paper_shot != 0 ) && (paper_shot >= json_paper_shot)) // Or we have reached the required number opf hits?
                 || ((json_rapid_count != 0 ) && (paper_shot >= rapid_count) ) ) // Or rapid fire has finished
@@ -1038,7 +1038,7 @@ void send_keep_alive(void)
   int i;
   int running;                          // Copy of the is_running state
 
-  printf("\r\nPolled target shot test\r\n");
+  SEND(sprintf(_xs, "\r\nPolled target shot test\r\n");)
   freeETarget_timer_pause();             // Kill the background timer interrupt
 
 /*
@@ -1047,17 +1047,17 @@ void send_keep_alive(void)
   while (1)
   {
     arm_timers();
-    printf("\r\nArmed\r\n");
+    SEND(sprintf(_xs, "\r\nArmed\r\n");)
     while(is_running() != 0xff)
     {
       running = is_running();
-      printf("\r\nis_running: %02X", running);
+      SEND(sprintf(_xs, "\r\nis_running: %02X", running);)
       
       for (i=0; i != 8; i++)
       {
         if (running & (1<<i))
         {
-          printf(" %s ", find_sensor(1<<i)->long_name );
+          SEND(sprintf(_xs, " %s ", find_sensor(1<<i)->long_name );)
         }
       }
     }
@@ -1096,7 +1096,7 @@ extern int isr_state;
 
   int i;
 
-  printf("\r\nInterrupt target shot test: this: %d last %d\r\n", shot_in, shot_out);
+  SEND(sprintf(_xs, "\r\nInterrupt target shot test: this: %d last %d\r\n", shot_in, shot_out);)
 
 /*
  * Stay here watching the counters
@@ -1105,10 +1105,10 @@ extern int isr_state;
   {
     while ( shot_in != shot_out )    // While we have a queue o shots
     {
-      printf("\r\n");
+      SEND(sprintf(_xs, "\r\n");)
       for (i=0; i != 8; i++)
       {
-        printf("%s:%5d  ", find_sensor(1<<i)->long_name, record[shot_out].timer_count[i]);
+        SEND(sprintf(_xs, "%s:%5d  ", find_sensor(1<<i)->long_name, record[shot_out].timer_count[i]);)
       }
       shot_out = (shot_out+1) % SHOT_SPACE;
     }
