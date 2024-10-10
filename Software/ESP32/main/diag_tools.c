@@ -65,7 +65,7 @@ void zapple(unsigned int test)
 
   while (run_test != 0)
   {
-    printf("\r\nTest >");
+    SEND(sprintf(_xs, "\r\nTest >");)
     test = 0;
 
     while (1)
@@ -74,7 +74,7 @@ void zapple(unsigned int test)
       {
         ch = serial_getch(CONSOLE);
         ch = toupper(ch);
-        printf("%c", ch);
+        SEND(sprintf(_xs, "%c", ch);)
         if ( ch != '\r' )
         {
             test = ((test * 10) + (ch -'0')) % 100;
@@ -129,38 +129,38 @@ void self_test
  */
     default:                // Undefined, show the tests
     case T_HELP:  
-      printf("\r\n 1 - Factory test");
-      printf("\r\n");              
-      printf("\r\n10 - Digital inputs");
-      printf("\r\n11 - Advance paper backer");
-      printf("\r\n12 - LED brightness test");
-      printf("\r\n13 - Status LED driver");
-      printf("\r\n14 - Temperature and sendor test");
-      printf("\r\n15 - DAC test");
-      printf("\r\n16 - Rapid fire LED test");
-      printf("\r\n"); 
-      printf("\r\n20 - PCNT Test");
-      printf("\r\n21 - pcnt(1) - Timers not running"); 
-      printf("\r\n22 - pcnt(2) - Timers start - stop together"); 
-      printf("\r\n23 - pcnt(3) - Timers free running"); 
-      printf("\r\n24 - pcnt(4) - Timers cleared"); 
-      printf("\r\n25 - Turn the oscillator on and off");
-      printf("\r\n26 - Turn the RUN lines on and off");
-      printf("\r\n27 - Trigger NORTH from a function generator");
-      printf("\r\n"); 
-      printf("\r\n30 - AUX Port loopback");
-      printf("\r\n31 - Test WiFi as an Access Point");
-      printf("\r\n32 - Test WiFI as a station"); 
-      printf("\r\n33 - Enable the WiFi Server");
-      printf("\r\n34 - Loopback the TCPIP data");
-      printf("\r\n35 - Loopback WiFi");
-      printf("\r\n");
-      printf("\r\n40 - Sensor POST test");
-      printf("\r\n41 - Polled Target Test");
-      printf("\r\n42 - Interrupt Target Test");
-      printf("\r\n");
-      printf("\r\n99 - Zapple Debug Monitor");
-      printf("\r\n");
+      SEND(sprintf(_xs, "\r\n 1 - Factory test");)
+      SEND(sprintf(_xs, "\r\n");)
+      SEND(sprintf(_xs, "\r\n10 - Digital inputs");)
+      SEND(sprintf(_xs, "\r\n11 - Advance paper backer");)
+      SEND(sprintf(_xs, "\r\n12 - LED brightness test");)
+      SEND(sprintf(_xs, "\r\n13 - Status LED driver");)
+      SEND(sprintf(_xs, "\r\n14 - Temperature and sendor test");)
+      SEND(sprintf(_xs, "\r\n15 - DAC test");)
+      SEND(sprintf(_xs, "\r\n16 - Rapid fire LED test");)
+      SEND(sprintf(_xs, "\r\n");)
+      SEND(sprintf(_xs, "\r\n20 - PCNT Test");)
+      SEND(sprintf(_xs, "\r\n21 - pcnt(1) - Timers not running");)
+      SEND(sprintf(_xs, "\r\n22 - pcnt(2) - Timers start - stop together");)
+      SEND(sprintf(_xs, "\r\n23 - pcnt(3) - Timers free running");)
+      SEND(sprintf(_xs, "\r\n24 - pcnt(4) - Timers cleared");)
+      SEND(sprintf(_xs, "\r\n25 - Turn the oscillator on and off");)
+      SEND(sprintf(_xs, "\r\n26 - Turn the RUN lines on and off");)
+      SEND(sprintf(_xs, "\r\n27 - Trigger NORTH from a function generator");)
+      SEND(sprintf(_xs, "\r\n");)
+      SEND(sprintf(_xs, "\r\n30 - AUX Port loopback");)
+      SEND(sprintf(_xs, "\r\n31 - Test WiFi as an Access Point");)
+      SEND(sprintf(_xs, "\r\n32 - Test WiFI as a station");)
+      SEND(sprintf(_xs, "\r\n33 - Enable the WiFi Server");)
+      SEND(sprintf(_xs, "\r\n34 - Loopback the TCPIP data");)
+      SEND(sprintf(_xs, "\r\n35 - Loopback WiFi");)
+      SEND(sprintf(_xs, "\r\n");)
+      SEND(sprintf(_xs, "\r\n40 - Sensor POST test");)
+      SEND(sprintf(_xs, "\r\n41 - Polled Target Test");)
+      SEND(sprintf(_xs, "\r\n42 - Interrupt Target Test");)
+      SEND(sprintf(_xs, "\r\n");)
+      SEND(sprintf(_xs, "\r\n99 - Zapple Debug Monitor");)
+      SEND(sprintf(_xs, "\r\n");)
     break;
 
 /*
@@ -187,20 +187,20 @@ void self_test
  * Set the LED bightness
  */
     case T_LED:
-      printf("\r\nCycling the LED");
+      SEND(sprintf(_xs, "\r\nCycling the LED");)
       for (i=0; i <= 100; i+= 5)
       {
-        printf("%d   ", i);
+        SEND(sprintf(_xs, "%d   ", i);)
         pwm_set(LED_PWM, i);       
         vTaskDelay(ONE_SECOND/10);
       }
       for (i=100; i >= 0; i-=5)
       {
-        printf("%d   ", i);
+        SEND(sprintf(_xs, "%d   ", i);)
         pwm_set(LED_PWM,i);       
         vTaskDelay(ONE_SECOND/10);
       }
-      printf("\r\nDone\r\n");
+      SEND(sprintf(_xs, "\r\nDone\r\n");)
       break;
 
 /*
@@ -317,7 +317,7 @@ void self_test
  *  Cycle the 10MHz clock input
  */
     case T_CYCLE_CLOCK:
-      printf("\r\nCycle 10MHz Osc 2:1 duty cycle\r\n");
+      SEND(sprintf(_xs, "\r\nCycle 10MHz Osc 2:1 duty cycle\r\n");)
       while (serial_available(CONSOLE) == 0)
       {
         gpio_set_level(OSC_CONTROL, OSC_ON);       // Turn off the oscillator
@@ -330,7 +330,7 @@ void self_test
  *  Turn the RUN lines on and off
  */
     case T_RUN_ALL:
-      printf("\r\nCycle RUN lines at 2:1 duty cycle\r\n");
+      SEND(sprintf(_xs, "\r\nCycle RUN lines at 2:1 duty cycle\r\n");)
       while (serial_available(CONSOLE) == 0)
       {
         gpio_set_level(STOP_N, 1);                  // Let the clock go
@@ -508,7 +508,7 @@ bool factory_test(void)
 
     SEND(sprintf(_xs, "  12V: %4.2fV", v12_supply());)
     SEND(sprintf(_xs, "  Temp: %4.2fC", temperature_C());)
-    SEND(sprintf(_xs, "  Humd: %4.2f%%", humidity_RH());)
+    SEND(sprintf(_xs, "  Humidiity: %4.2f%%", humidity_RH());)
 
     if ( v12_supply() >= V12_WORKING)            // Skip the motor and LED test if 12 volts not used
     {
@@ -547,9 +547,9 @@ bool factory_test(void)
 /*
  *  See if there is any user controls 
  */
-    if ( serial_available(CONSOLE) )
+    if ( serial_available(ALL) )
     {
-      ch = serial_getch(CONSOLE);
+      ch = serial_getch(ALL);
       switch (ch)
       {
         default:
@@ -744,41 +744,42 @@ void show_sensor_status
 {
   unsigned int i;
   
-  printf(" Latch:");
+  SEND(sprintf(_xs, " Latch:");)
 
   for (i=N; i<=W; i++)
   {
-    if ( sensor_status & (1<<i) )   printf("%c", find_sensor(1<<i)->short_name);
-    else                            printf(".");
+    if ( sensor_status & (1<<i) )   {SEND(sprintf(_xs, "%c", find_sensor(1<<i)->short_name);)}
+    else                            {SEND(sprintf(_xs, ".");)}
   }
 
-  printf("  Face Strike: %d", face_strike);
+  SEND(sprintf(_xs, "  Face Strike: %d", face_strike);)
   
-  printf("  Temperature: %4.2f", temperature_C());
+  SEND(sprintf(_xs, "  Temperature: %4.2f", temperature_C());)
   
-  printf("  Switch:");
+  SEND(sprintf(_xs, "  Switch:");)
   
   if ( DIP_SW_A == 0 )
   {
-    printf("--");
+    SEND(sprintf(_xs, "--");)
   }
   else
   {
-    printf("A1");
+    SEND(sprintf(_xs, "A1");)
   }
-  printf(" ");
+  SEND(sprintf(_xs, " ");)
+
   if ( DIP_SW_B == 0 )
   {
-    printf("--");
+    SEND(sprintf(_xs, "--");)
   }
   else
   {
-    printf("B2");
+    SEND(sprintf(_xs, "B2");)
   }
 
   if (( sensor_status & 0x0f) == 0x0f)
   {
-    printf(" PASS");
+    SEND(sprintf(_xs, " PASS");)
     vTaskDelay(ONE_SECOND);                // Wait for click to go away
   }    
 
@@ -850,7 +851,7 @@ bool do_dlt
     return false;      // Send out if the trace is higher than the level 
   }
 
-  printf("\r\nI (%d) ", (int)(esp_timer_get_time()/1000) );
+  SEND(sprintf(_xs, "\r\nI (%d) ", (int)(esp_timer_get_time()/1000) );)
 
   return true;
 }

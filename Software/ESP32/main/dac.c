@@ -132,9 +132,9 @@ void DAC_test(void)
   float volts[4];
   int i;
 
-  printf("\r\nDAC Test");
-  printf("\r\nDAC 0 Up ramp");
-  printf("\r\nDAC 1 Down ramp");
+  SEND(sprintf(_xs, "\r\nDAC Test");)
+  SEND(sprintf(_xs, "\r\nDAC 0 Up ramp");)
+  SEND(sprintf(_xs, "\r\nDAC 1 Down ramp");)
 
   i = 0;
   while ( 1 )
@@ -157,6 +157,6 @@ void DAC_test(void)
  *  Test Complete
  */
   set_VREF();
-  printf("\r\nDone\r\n");
+  SEND(sprintf(_xs, "\r\nDone\r\n");)
   return;
 }

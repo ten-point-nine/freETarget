@@ -254,10 +254,10 @@ void pcnt_test
  * Test 1, verify that the counters can be cleared
  */
     case 1:
-      printf("\r\nPCNT-1  Counters cleared and not running.  Low counters should all be 0. High Counters 11, 22, 33, 44");
+      SEND(sprintf(_xs, "\r\nPCNT-1  Counters cleared and not running.  Low counters should all be 0. High Counters 11, 22, 33, 44");)
       arm_timers();                                 // Arm the timers
       gpio_set_level(CLOCK_START, 0);               // Do not trigger the clock
-      printf("\r\nis_running: %02X", is_running());
+      SEND(sprintf(_xs, "\r\nis_running: %02X", is_running());)
       for (i=0; i != 10; i++)
       {
         for (j=0; j != 8; j++)
@@ -267,28 +267,28 @@ void pcnt_test
       }
       for (i=0; i != 10; i++)
       {
-        printf("\r\n");
+        SEND(sprintf(_xs, "\r\n");)
         for (j=0; j != 8; j++)
         {
           if ( j == 4 )
           {
-            printf("    ");
+            SEND(sprintf(_xs, "    ");)
           }
-          printf("%s: %d   ", find_sensor(1<<i)->long_name, array[i][j]);
+          SEND(sprintf(_xs, "%s: %d   ", find_sensor(1<<i)->long_name, array[i][j]);)
         }
       }
-      printf("\r\nis_running: %02X  ", is_running());
+      SEND(sprintf(_xs, "\r\nis_running: %02X  ", is_running());)
     break;
 
 /*
  *  Test 2 - Verify that the counters can be started and stopped together 
  */
     case 2:
-      printf("\r\n\r\nPCNT-2  Start/stop counters together. Should all be the same");
+      SEND(sprintf(_xs, "\r\n\r\nPCNT-2  Start/stop counters together. Should all be the same");)
       arm_timers();
       trigger_timers();
       vTaskDelay(1);
-      printf("\r\nis_running(): %02X", is_running());
+      SEND(sprintf(_xs, "\r\nis_running(): %02X", is_running());)
       stop_timers();
       for (i=0; i != 10; i++)
       {
@@ -299,26 +299,26 @@ void pcnt_test
       }
       for (i=0; i != 10; i++)
       {
-        printf("\r\n");
+        SEND(sprintf(_xs, "\r\n");)
         for (j=0; j != 8; j++)
         {
           if ( j == 4 )
           {
-            printf("      ");
+            SEND(sprintf(_xs, "      ");)
           }
-          printf("%s: %d   ", find_sensor(1<<i)->long_name, array[i][j]);
+          SEND(sprintf(_xs, "%s: %d   ", find_sensor(1<<i)->long_name, array[i][j]);)
         }
       }
-      printf("\r\nis_running(): %02X\r\n", is_running());
+      SEND(sprintf(_xs, "\r\nis_running(): %02X\r\n", is_running());)
     break;
 /*
  * Test 3 - Turn on the counters and verify that they increment in the right direction 
  */
     case 3:
-      printf("\r\n\r\nPCNT-3  Start counters and do not stop. Should increase left-right, top-bottom");
+      SEND(sprintf(_xs, "\r\n\r\nPCNT-3  Start counters and do not stop. Should increase left-right, top-bottom");)
       arm_timers();                         
       trigger_timers();
-      printf("\r\nis_running(): %02X  ", is_running());
+      SEND(sprintf(_xs, "\r\nis_running(): %02X  ", is_running());)
       for (i=0; i != 10; i++)
       {
         for (j=0; j != 8; j++)
@@ -328,32 +328,32 @@ void pcnt_test
       }
       for (i=0; i != 10; i++)
       {
-        printf("\r\n");
+        SEND(sprintf(_xs, "\r\n");)
         for (j=0; j != 8; j++)
         {
           if ( j == 4 )
           {
-            printf("    ");
+            SEND(sprintf(_xs, "    ");)
           }
-          printf("%s: %d  ", find_sensor(1<<i)->long_name, array[i][j]);
+          SEND(sprintf(_xs, "%s: %d  ", find_sensor(1<<i)->long_name, array[i][j]);)
         }
       }
-      printf("\r\nis_running(): %02X  ", is_running());
+      SEND(sprintf(_xs, "\r\nis_running(): %02X  ", is_running());)
     break;
 
 /*
  *  Test 4 - Stop the timers before going into servcie
  */
     case 4:
-      printf("\r\n\r\nPCNT-4  Turn off all timers");
+      SEND(sprintf(_xs, "\r\n\r\nPCNT-4  Turn off all timers");)
       stop_timers();
-      printf("\r\nis_running(): %02X  ", is_running());
+      SEND(sprintf(_xs, "\r\nis_running(): %02X  ", is_running());)
     break;
   }
 /*
  * Test Over
  */
-  printf("\r\ndone");
+  SEND(sprintf(_xs, "\r\nDone");)
   return;
 }
 
@@ -394,8 +394,8 @@ void pcnt_cal(void)
   
   DAC_write(value);                       // Set both trip points to the same value 
 
-  printf("\r\nPCNT-CAL  Display triggering jitter.");
-  printf("\r\n! to exit, R to reset");
+  SEND(sprintf(_xs, "\r\nPCNT-CAL  Display triggering jitter.");)
+  SEND(sprintf(_xs, "\r\n! to exit, R to reset");)
 
 /*
  *  Setup the hardware
@@ -425,7 +425,7 @@ void pcnt_cal(void)
         ch = serial_getch(CONSOLE);
         if ( ch == '!' )                          // Exit
         {
-          printf("\r\nSave this correction (y/n)?");
+          SEND(sprintf(_xs, "\r\nSave this correction (y/n)?");)
           while ( serial_available(CONSOLE) == 0 )
           {
             continue;
@@ -435,10 +435,10 @@ void pcnt_cal(void)
           {
             json_pcnt_latency = north_average/count;
             nvs_set_i32(my_handle, NONVOL_PCNT_LATENCY, json_pcnt_latency);
-            printf("\r\nSaved");
+            SEND(sprintf(_xs, "\r\nSaved");)
           }
 
-          printf("\r\nDone\r\n");
+          SEND(sprintf(_xs, "\r\nDone\r\n");)
           return;
         }
         north_min = 10000;                        // Anything else start over
@@ -467,14 +467,15 @@ void pcnt_cal(void)
 /*
  *  Display the results and wait before turning on the timers again
  */
-    printf("\r\nnorth_hi: %d  north_avg: %d  north_min: %d   north_max: %d   north_hi-avg: %d", north_hi, north_average/count, north_min, north_max, (north_hi - (north_average/count)));
+    SEND(sprintf(_xs, "\r\nnorth_hi: %d  north_avg: %d  north_min: %d   north_max: %d   north_hi-avg: %d", 
+        north_hi, north_average/count, north_min, north_max, (north_hi - (north_average/count)));)
     vTaskDelay(ONE_SECOND/2);
   }
 
 /*
  * Test Over
  */
-  printf("\r\nDone");
+  SEND(sprintf(_xs, "\r\nDone");)
   return;
 }
 
