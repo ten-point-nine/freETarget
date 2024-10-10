@@ -337,7 +337,7 @@ char serial_getch
  */
   if ( ports & CONSOLE )
   {
-    printf("%c", ch);
+    printf("%c", ch);                                     // Must be printf
   }
 
   if ( (json_aux_port_enable == true)                     // Is there hardware on the Aux port?
@@ -380,7 +380,7 @@ void serial_to_all
  */
   if ( ports & CONSOLE )
   {
-    printf("%s", str);
+    printf("%s", str);                                    // Must be printf
   }
   
   if ( (json_aux_port_enable == true)                     // Is there hardware on the Aux port?
@@ -672,7 +672,7 @@ void serial_port_test(void)
       timer_delay(1);              // Wait for it to come back
       if ( test_time == 0 )
       {
-        printf("\r\nTest failed, no input from AUX\r\n");
+        SEND(sprintf(_xs, "\r\nTest failed, no input from AUX\r\n");)
         return;
       }
     }
@@ -685,6 +685,6 @@ void serial_port_test(void)
  *  The test is over
  */ 
   timer_delete(&test_time);
-  printf("\r\nDone");
+  SEND(sprintf(_xs, "\r\nDone");)
   return;
 }

@@ -508,7 +508,7 @@ bool factory_test(void)
 
     SEND(sprintf(_xs, "  12V: %4.2fV", v12_supply());)
     SEND(sprintf(_xs, "  Temp: %4.2fC", temperature_C());)
-    SEND(sprintf(_xs, "  Humd: %4.2f%%", humidity_RH());)
+    SEND(sprintf(_xs, "  Humidiity: %4.2f%%", humidity_RH());)
 
     if ( v12_supply() >= V12_WORKING)            // Skip the motor and LED test if 12 volts not used
     {
