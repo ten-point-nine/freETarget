@@ -105,6 +105,7 @@ void init_sensors(void)
  * @brief: Determine the location of the hit
  * 
  * @return: Sensor location used to recognize shot
+ *          MISS indicates calculation failed
  *
  *----------------------------------------------------------------
  *
@@ -244,8 +245,13 @@ unsigned int compute_hit
     {
       if ( find_xy_3D(&s[i], estimate, z_offset_clock) )
       {
-        x_avg += s[i].xs;        // Keep the running average
+        x_avg += s[i].xs;         // Keep the running average
         y_avg += s[i].ys;
+      }
+      else                        // The calculation failed
+      {
+        DLT(DLT_APPLICATION, SEND(sprintf(_xs, "Calculations failed");))
+        return MISS;              // Abort
       }
     }
 
@@ -428,6 +434,11 @@ bool find_xy_3D
 /*
  *  All done, return
  */
+  if ( isnan(s->x) || isnan(s->y ))         // If the computation failed,
+  {
+    return false;                           // return an error
+  }
+
   return true;
 }
 
@@ -677,7 +688,7 @@ void send_miss
 #if ( S_TIMERS )
   if ( json_token == TOKEN_NONE )
   {
-    SEND(sprintf(_xs, ", \"N\":%d, \"e\":%d, \"s\":%d, \"w\":%d ", (int)shot->timer_count[N], (int)shot->timer_count[E], (int)shot->timer_count[S], (int)shot->timer_count[W]);)
+    SEND(sprintf(_xs, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d ", (int)shot->timer_count[N], (int)shot->timer_count[E], (int)shot->timer_count[S], (int)shot->timer_count[W]);)
     SEND(sprintf(_xs, ", \"face\":%d ", shot->face_strike);)
   }
 #endif

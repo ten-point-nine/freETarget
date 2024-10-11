@@ -11,7 +11,8 @@
 /*
  * Global functions
  */
-void serial_io_init(void);                          // Initialize the Serial ports
+void serial_io_init(void);                          // Initialize the Console Port
+void serial_aux_init(void);                         // Initialize the AUX port
 void serial_to_all(char* s, int ports);             // Multipurpose driver
 void serial_putch(char ch, int ports);              // Output a single character
 char serial_gets(int ports);                        // Read from all of the ports

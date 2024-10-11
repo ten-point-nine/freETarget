@@ -635,7 +635,7 @@ bool POST_counters(void)
 {
   unsigned int i;                          // Iteration counter
   unsigned int count, toggle, running;     // Cycle counter
-  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "POST_counters()");))
+  DLT(DLT_INFO, SEND(sprintf(_xs, "POST_counters()");))
   
 /*
  *  Test 1, Make sure we can turn off the reference clock
@@ -838,7 +838,14 @@ void show_sensor_fault
  * is_trace is compared to the log level and if valid the
  * current time stamp is printed
  * 
- * DLT_CRItiCAL levels are always printed
+ * DLT_INFO level is  always printed
+ * DLT_CRITICAL level is printed with an error
+ * 
+ * Console colours 
+ * 
+ * E - Error       - Red
+ * I - Information - Green
+ * W - Warning     - Yellow
  *   
  *--------------------------------------------------------------*/
 bool do_dlt
@@ -846,12 +853,18 @@ bool do_dlt
   unsigned int level
   )
 { 
-  if ((level & (is_trace | DLT_CRITICAL)) == 0 )
+  char dlt_id = 'I';
+
+  if ((level & (is_trace | DLT_INFO | DLT_CRITICAL)) == 0 )
   {
     return false;      // Send out if the trace is higher than the level 
   }
 
-  SEND(sprintf(_xs, "\r\nI (%d) ", (int)(esp_timer_get_time()/1000) );)
+  if ( level & DLT_CRITICAL)      { dlt_id = 'E'; }    // Red
+  if ( level & DLT_INFO)          { dlt_id = 'I'; }    // Green
+  if ( level & DLT_APPLICATION)   { dlt_id = 'W'; }    // Yellow
+
+  SEND(sprintf(_xs, "\r\n%c (%d) ", dlt_id, (int)(esp_timer_get_time()/1000) );)
 
   return true;
 }

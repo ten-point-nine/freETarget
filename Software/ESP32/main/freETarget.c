@@ -117,12 +117,11 @@ void freeETarget_init(void)
  *  Setup the hardware
  */
   json_aux_port_enable = false;           // Assume the AUX port is not used
+  gpio_init();                            // Setup the hardware
   serial_io_init();                       // Setup the console for debug messages
   read_nonvol();                          // Read in the settings
-  serial_io_init();                       // Update the serial port if there is a change
-
+  serial_aux_init();                      // Update the serial port if there is a change
   POST_version();                         // Show the version string on all ports
-  gpio_init();                            // Setup the hardware
   set_VREF();
   multifunction_init();                   // Override the MFS if we have to
 
@@ -149,9 +148,12 @@ void freeETarget_init(void)
 /*
  * Run the power on self test
  */
-  POST_counters();          // POST counters does not return if there is an error
-  check_12V();              // Verify the 12 volt supply
-  
+  POST_counters();                // POST counters does not return if there is an error
+  if ( check_12V() == false )     // Verify the 12 volt supply
+  {
+    DLT(DLT_INFO, sprintf(_xs, "12V supply not present");)
+  }
+
 /*
  * Ready to go
  */ 
@@ -160,7 +162,7 @@ void freeETarget_init(void)
   serial_flush(ALL);                      // Get rid of everything
   shot_in = 0;                            // Clear out any junk
   shot_out = 0;
-  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Initialization complete");) )
+  DLT(DLT_INFO, SEND(sprintf(_xs, "Initialization complete");) )
 
 /*
  * Start the tasks running
@@ -186,7 +188,7 @@ unsigned int  location;               // Sensor location
 void freeETarget_target_loop(void* arg)
 {
 
-  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "freeETarget_target_loop()");))
+  DLT(DLT_INFO, SEND(sprintf(_xs, "freeETarget_target_loop()");))
   set_status_LED(LED_READY);
 
   shot_number = 1;                    // Start counting shots at 1
@@ -209,14 +211,14 @@ void freeETarget_target_loop(void* arg)
     {
       default:
         case START:                     // Start of the loop
-        DLT(DLT_DEBUG, SEND(sprintf(_xs, "state: START");))
+        DLT(DLT_APPLICATION, SEND(sprintf(_xs, "state: START");))
         power_save = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L;  //  Reset the timer
         set_mode();
         arm();
         set_status_LED(LED_READY);
         state = WAIT;
         json_rapid_count = 0;
-        DLT(DLT_DEBUG, SEND( sprintf(_xs, "state: WAIT");))
+        DLT(DLT_APPLICATION, SEND( sprintf(_xs, "state: WAIT");))
         break;
     
       case WAIT:  
@@ -224,14 +226,14 @@ void freeETarget_target_loop(void* arg)
         break;
 
       case REDUCE:  
-        DLT(DLT_DEBUG, SEND(sprintf(_xs, "state: REDUCE");))
+        DLT(DLT_APPLICATION, SEND(sprintf(_xs, "state: REDUCE");))
         reduce();
         state = DARK;
         if ( json_rapid_enable == true )       // 
         {
           timer_new(&rapid_timer, ONE_SECOND * 10);
           state = DARK;
-          DLT(DLT_DEBUG, SEND(printf(_xs, "state: DARK");))
+          DLT(DLT_APPLICATION, SEND(printf(_xs, "state: DARK");))
         }      
         else 
         {
@@ -277,7 +279,7 @@ void freeETarget_target_loop(void* arg)
  {
   unsigned int i;
 
-  DLT(DLT_DEBUG, SEND(sprintf(_xs, "set_mode()");))
+  DLT(DLT_APPLICATION, SEND(sprintf(_xs, "set_mode()");))
 
   for (i=0; i != SHOT_SPACE; i++)
   {
@@ -318,7 +320,7 @@ void freeETarget_target_loop(void* arg)
  *--------------------------------------------------------------*/
 unsigned int arm(void)
 {
-  DLT(DLT_DEBUG, SEND(sprintf(_xs, "arm()");))
+  DLT(DLT_APPLICATION, SEND(sprintf(_xs, "arm()");))
 
   face_strike = 0;                  // Reset the face strike count
   stop_timers();
@@ -374,7 +376,7 @@ unsigned int wait(void)
   {
     if ( rapid_state == RAPID_SEND )
     {
-      DLT(DLT_DEBUG, SEND(sprintf(_xs, "Rapid fire complete");))
+      DLT(DLT_APPLICATION, SEND(sprintf(_xs, "Rapid fire complete");))
       return REDUCE;                   // Finish this rapid fire cycle
     }
     return WAIT;
@@ -430,7 +432,7 @@ unsigned int reduce(void)
  */
   if ( discard_shot() )                          // Tabata is on but the shot is invalid
   {
-    DLT(DLT_DEBUG, SEND(sprintf(_xs, "Discarding shot");))
+    DLT(DLT_APPLICATION, SEND(sprintf(_xs, "Discarding shot");))
     shot_out = shot_in;
     send_miss(&record[shot_out], shot_out);
     return START;                                // Throw out any shots while dark
@@ -544,7 +546,7 @@ void start_new_session(void)
 {
   unsigned int i;
 
-  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "start_new_session()");))
+  DLT(DLT_APPLICATION, SEND(sprintf(_xs, "start_new_session()");))
 /*
  *  Clear the shot information
  */
@@ -804,7 +806,7 @@ void rapid_fire_task(void)
 /*
  * Take care of the rapid fire state
  */
-  DLT(DLT_DEBUG, SEND(sprintf(_xs, "Rapid State: %d,  rapid_timer: %ld,  shot_in: %d,  shot_out: %d", rapid_state, rapid_timer, shot_in, shot_out);))
+  DLT(DLT_APPLICATION, SEND(sprintf(_xs, "Rapid State: %d,  rapid_timer: %ld,  shot_in: %d,  shot_out: %d", rapid_state, rapid_timer, shot_in, shot_out);))
   
   switch (rapid_state)
   {

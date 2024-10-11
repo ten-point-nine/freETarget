@@ -187,7 +187,7 @@ void set_LED_PWM                                  // Theatre lighting
     return;
   }
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);))
+  DLT(DLT_DIAG, SEND(sprintf(_xs, "new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);))
 
 /*
  * Loop and ramp the LED  PWM up or down slowly
@@ -336,7 +336,7 @@ void set_VREF(void)
 {
   float volts[4];
 
-  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Set VREF: %4.2f %4.2f", json_vref_lo, json_vref_hi);))
+  DLT(DLT_INFO, SEND(sprintf(_xs, "Set VREF: %4.2f %4.2f", json_vref_lo, json_vref_hi);))
 
   if ( (json_vref_lo == 0)          // Check for an uninitialized VREF
         || (json_vref_hi == 0) )

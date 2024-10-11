@@ -236,7 +236,7 @@ void freeETarget_json
 {
   char          ch;
 
-  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "freeETarget_json()");))
+  DLT(DLT_INFO, SEND(sprintf(_xs, "freeETarget_json()");))
 
   while (1)
   {
@@ -678,12 +678,12 @@ static void show_test(int test_number)
    int trace                // Trace on or off
    )
  {
-  trace |= DLT_CRITICAL;        // Critical is always enabled
-    
-  if ( trace & DLT_CRITICAL)    {SEND(sprintf(_xs, "\r\r%03d DLT CRITICAL", DLT_CRITICAL);)}
+  trace |= DLT_INFO;        // Critical is always enabled
+
+  if ( trace & DLT_CRITICAL)    {SEND(sprintf(_xs, "\r\n%03d DLT CRITICAL", DLT_CRITICAL);)} 
+  if ( trace & DLT_INFO)        {SEND(sprintf(_xs, "\r\r%03d DLT INFO", DLT_INFO);)}
   if ( trace & DLT_APPLICATION) {SEND(sprintf(_xs, "\r\n%03d DLT APPLICATON", DLT_APPLICATION);)}
   if ( trace & DLT_DIAG)        {SEND(sprintf(_xs, "\r\n%03d DLT DIAG", DLT_DIAG);)}
-  if ( trace & DLT_INFO)        {SEND(sprintf(_xs, "\r\n%03d DLT INFO", DLT_INFO);)}
   if ( trace & DLT_DEBUG)       {SEND(sprintf(_xs, "\r\n%03d DLT DEBUG", DLT_DEBUG);)}
   SEND(sprintf(_xs, "\r\n");)
   

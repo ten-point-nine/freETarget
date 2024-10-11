@@ -66,7 +66,7 @@ static queue_struct_t out_buffer;     // TCPIP input buffer
  * 
  * @function: serial_io_init
  * 
- * @brief: Initalize the various Serial ports
+ * @brief: Initalize the Console port
  * 
  * @return: None
  * 
@@ -85,28 +85,11 @@ void serial_io_init(void)
  */
   uart_driver_install(UART_NUM_0, uart_console_size,  uart_console_size, 10, &uart_console_queue, 0);
 
-  if ( json_aux_port_enable == true )
-  {
-    uart_driver_install(UART_NUM_1, uart_aux_size,      uart_aux_size,     10, &uart_aux_queue, 0);
-  }
-
 /*
  *  Setup the communications parameters
  */
   uart_param_config(uart_console, &uart_console_config);
-  setvbuf(stdout, NULL, _IONBF, 0);                         // Send something out as soon as you get it.
-  if ( json_aux_port_enable == true )
-  {
-    uart_param_config(uart_aux,     &uart_aux_config);
-  }
-
-/*
- *  Set UART pins(TX: IO4, RX: IO5, RTS: IO18, CTS: IO19)
- */
-  if ( json_aux_port_enable == true )
-  {
-    ESP_ERROR_CHECK(uart_set_pin(UART_NUM_1, 17, 18, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
-  }
+  setvbuf(stdout, NULL, _IONBF, 0);                         // Send something out as soon as you get it
   
  /* 
   *  Prepare the TCPIP queues
@@ -122,6 +105,34 @@ void serial_io_init(void)
   return;
 }
 
+void serial_aux_init(void)
+{
+  if ( json_aux_port_enable == false )
+  {
+    return;
+  }
+
+/*
+ *  Load the driver
+ */
+  uart_driver_install(UART_NUM_1, uart_aux_size,      uart_aux_size,     10, &uart_aux_queue, 0);
+
+/*
+ *  Setup the communications parameters
+ */
+  uart_param_config(uart_aux,     &uart_aux_config);
+
+
+/*
+ *  Set UART pins(TX: IO4, RX: IO5, RTS: IO18, CTS: IO19)
+ */
+  ESP_ERROR_CHECK(uart_set_pin(UART_NUM_1, 17, 18, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
+
+/*
+ * All done, return
+ */  
+  return;
+}
 
 /*******************************************************************************
  * 
@@ -658,6 +669,15 @@ void serial_port_test(void)
   volatile unsigned long test_time;
 
   timer_new(&test_time, ONE_SECOND * 10);
+
+/*
+ * Abort the test if the AUX port is not available
+ */
+  if ( json_aux_port_enable == false )
+  {
+    SEND(sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_PORTS_ENABLE\": 1} to enable");)
+    return;
+  }
 
 /*
  * Send out the AUX port, back in, and then to the console

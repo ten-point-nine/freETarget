@@ -533,7 +533,7 @@ void paper_start(void)
  */
   if ( IS_DC_WITNESS )                    // DC motor, 
   {
-    DLT(DLT_INFO,  SEND(sprintf(_xs, "DC motor start: %d ms", json_paper_time);))
+    DLT(DLT_DIAG,  SEND(sprintf(_xs, "DC motor start: %d ms", json_paper_time);))
     DCmotor_on_off(true, json_paper_time);
   }
 
@@ -731,7 +731,7 @@ void stepper_pulse(void)
     step_time = json_step_time;
   }
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "step_time %d", step_time);))
+  DLT(DLT_DIAG, SEND(sprintf(_xs, "step_time %d", step_time);))
   timer_new(&paper_time, MS_TO_TICKS(step_time));
 
   if ( step_count != 0 )
@@ -769,7 +769,7 @@ void stepper_pulse(void)
  {
   face_strike++;      // Got a face strike
 
-  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "\r\nface_ISR(): %d", face_strike);))
+  DLT(DLT_INFO, SEND(sprintf(_xs, "\r\nface_ISR(): %d", face_strike);))
 
   return;
  }
@@ -1004,6 +1004,18 @@ void paper_test(void)
 {
   int i;
 
+/*
+ *  See if we have power attached
+ */
+  if ( check_12V() == false )
+  {
+    SEND(sprintf(_xs, "\r\nTest failed, no 12V supply");)
+    return;
+  }
+
+/*
+ * Try running the test
+ */
   SEND(sprintf(_xs, "\r\nAdvancing paper: 500 ms at a time");)
   for (i=0; i != 10; i++)
   {

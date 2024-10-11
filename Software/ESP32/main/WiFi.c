@@ -100,7 +100,7 @@ esp_err_t esp_base_mac_addr_get(uint8_t *mac);
  *******************************************************************************/
 void WiFi_init(void)
 {
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "WiFi_init()\r\n");))
+    DLT(DLT_INFO, SEND(sprintf(_xs, "WiFi_init()");))
 
 /* 
  * Initialize the WiFI
@@ -141,7 +141,7 @@ void WiFi_AP_init(void)
     esp_netif_t* wifiAP;
     wifi_init_config_t WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "WiFi_AP_init()\r\n");))
+    DLT(DLT_INFO, SEND(sprintf(_xs, "WiFi_AP_init()\r\n");))
     
 /*
  * Create the network interface
@@ -217,7 +217,7 @@ void WiFi_station_init(void)
 
    wifi_init_config_t   WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
-   DLT(DLT_CRITICAL, SEND(sprintf(_xs, "WiFi_station_init()");))
+   DLT(DLT_INFO, SEND(sprintf(_xs, "WiFi_station_init()");))
 
    s_wifi_event_group = xEventGroupCreate();
    esp_netif_init();
@@ -229,9 +229,9 @@ void WiFi_station_init(void)
    esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFi_event_handler, NULL, &instance_any_id);
    esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &WiFi_event_handler, NULL, &instance_got_ip);
 
-   DLT(DLT_CRITICAL, SEND(sprintf(_xs, "WiFI SSID:%s", json_wifi_ssid);))
+   DLT(DLT_INFO, SEND(sprintf(_xs, "WiFI SSID:%s", json_wifi_ssid);))
    strcpy((char*)&WiFi_config.sta.ssid, json_wifi_ssid);
-   DLT(DLT_CRITICAL, SEND(sprintf(_xs, "WiFI password:%s", json_wifi_pwd);))
+   DLT(DLT_INFO, SEND(sprintf(_xs, "WiFI password:%s", json_wifi_pwd);))
    strcpy((char*)&WiFi_config.sta.password, json_wifi_pwd);
    if ( json_wifi_pwd[0] == 0)
    {
@@ -258,7 +258,7 @@ void WiFi_station_init(void)
 /*
  *  The target has connected to an access point
  */
-    DLT(DLT_CRITICAL, 
+    DLT(DLT_INFO, 
     {
         if (bits & WIFI_CONNECTED_BIT)
         {
@@ -353,12 +353,12 @@ void WiFi_event_handler
  */
     if (event_id == WIFI_EVENT_AP_STACONNECTED)
     {
-      DLT(DLT_CRITICAL, SEND(sprintf(_xs, "AP connected");))
+      DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "AP connected");))
     } 
    
    if (event_id == WIFI_EVENT_AP_STADISCONNECTED)
    {
-      DLT(DLT_CRITICAL, SEND(sprintf(_xs, "AP disconnected");))
+      DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "AP disconnected");))
    }
 
 /*
@@ -388,7 +388,7 @@ void WiFi_event_handler
 
 void WiFi_tcp_server_task(void *pvParameters)
 {
-   DLT(DLT_CRITICAL, SEND(sprintf(_xs, "WiFi_tcp_server_task()");))
+   DLT(DLT_INFO, SEND(sprintf(_xs, "WiFi_tcp_server_task()");))
 
 /*
  *  Move data in and out of the TCP queues
@@ -519,7 +519,7 @@ void tcpip_socket_poll_0(void* parameters)
     int length;
     char rx_buffer[256];
 
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "tcp_socket_poll_0()");))
+    DLT(DLT_INFO, SEND(sprintf(_xs, "tcp_socket_poll_0()");))
 
     while (1)
     {
@@ -540,7 +540,7 @@ void tcpip_socket_poll_1(void* parameters)
     int length;
     char rx_buffer[256];
 
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "tcp_socket_poll_1()");))
+    DLT(DLT_INFO, SEND(sprintf(_xs, "tcp_socket_poll_1()");))
 
     while (1)
     {
@@ -561,7 +561,7 @@ void tcpip_socket_poll_2(void* parameters)
     int length;
     char rx_buffer[256];
 
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "tcp_socket_poll_2()");))
+    DLT(DLT_INFO, SEND(sprintf(_xs, "tcp_socket_poll_2()");))
 
     while (1)
     {
@@ -582,7 +582,7 @@ void tcpip_socket_poll_3(void* parameters)
     int length;
     char rx_buffer[256];
 
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "tcp_socket_poll_3()");))
+    DLT(DLT_INFO, SEND(sprintf(_xs, "tcp_socket_poll_3()");))
 
     while (1)
     {
@@ -632,7 +632,7 @@ void tcpip_accept_poll(void* parameters)
    int sock;
    int i;
 
-   DLT(DLT_CRITICAL, SEND(sprintf(_xs, "tcp_accept_poll()");))
+   DLT(DLT_INFO, SEND(sprintf(_xs, "tcp_accept_poll()");))
    
 /*
  * Start the server

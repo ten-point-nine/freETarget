@@ -209,7 +209,7 @@ static char* gpio_use[] = {
     
 /*************************************************************************
  * 
- * file: gpio_init()
+ * function: gpio_init()
  * 
  * description:  Initialize the GPIO states
  * 
@@ -225,7 +225,7 @@ void gpio_init(void)
 {
     int i;
 
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "gpio_init()\r\n");))
+    DLT(DLT_INFO, SEND(sprintf(_xs, "gpio_init()");))
 /*
  *  Loop and setup the GPIO
  */
@@ -234,7 +234,7 @@ void gpio_init(void)
     {
         if (gpio_table[i].gpio_uses != NULL )
         {   
-            DLT(DLT_CRITICAL,  
+            DLT(DLT_INFO,  
             SEND(sprintf(_xs, "%s: %d  %s",gpio_table[i].gpio_name, gpio_table[i].gpio_number, gpio_use[((DIO_struct_t*)(gpio_table[i].gpio_uses))->type]);))
 
             switch (((DIO_struct_t*)(gpio_table[i].gpio_uses))->type)

@@ -103,7 +103,7 @@ mfs_action_t mfs_action[] = {
  void multifunction_init(void)
  {
 
-  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Multifunction_init()");))
+  DLT(DLT_INFO, SEND(sprintf(_xs, "Multifunction_init()");))
   
 /*
  * Check to see if the DIP switch has been overwritten
@@ -355,7 +355,7 @@ static void sw_state
 {     
   mfs_action_t* mfs_ptr;
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "Switch action: %d", action);))
+  DLT(DLT_DEBUG, SEND(sprintf(_xs, "Switch action: %d", action);))
 
   mfs_ptr = mfs_find(action);
   if ( (mfs_ptr != NULL) && (mfs_ptr->fcn != NULL) )
@@ -381,7 +381,7 @@ static void mfs_on (void)
 
 static void mfs_paper_feed(void)            // Feed paper so long as the switch is pressed
 {
-  DLT(DLT_INFO, SEND(sprintf(_xs, "mfs_paper_feed()");))
+  DLT(DLT_DEBUG, SEND(sprintf(_xs, "mfs_paper_feed()");))
 
 /*
  *  Advance paper using the DC motor
@@ -415,7 +415,7 @@ static void mfs_paper_feed(void)            // Feed paper so long as the switch 
 /*
  *  End of action
  */
-  DLT(DLT_INFO, SEND(sprintf(_xs, "Done");))
+  DLT(DLT_DEBUG, SEND(sprintf(_xs, "Done");))
   
   return;
 }

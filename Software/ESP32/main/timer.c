@@ -91,7 +91,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args);
 
 void freeETarget_timer_init(void)
 {
-  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "freeETarget_timer_init()");))
+  DLT(DLT_INFO, SEND(sprintf(_xs, "freeETarget_timer_init()");))
   timer_init(TIMER_GROUP_0, TIMER_1, &config);
   timer_set_counter_value(TIMER_GROUP_0, TIMER_1, 0);            // Start the timer at 0
   timer_set_alarm_value(TIMER_GROUP_0, TIMER_1, ONE_MS);         // Trigger on this value
@@ -223,7 +223,7 @@ void freeETarget_timers
 {
   unsigned int i;
 
-  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "freeETarget_timers()");))
+  DLT(DLT_INFO, SEND(sprintf(_xs, "freeETarget_timers()");))
   
 /*
  *  Decrement the timers on a 10ms (100Hz) interval
@@ -276,7 +276,7 @@ void freeETarget_synchronous
   unsigned int cycle_count = 0;
   unsigned int toggle = 0;
 
-  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "freeETarget_synchronous()");))
+  DLT(DLT_INFO, SEND(sprintf(_xs, "freeETarget_synchronous()");))
 
   while (1)
   {

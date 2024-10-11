@@ -128,10 +128,11 @@ bool check_12V(void);                                     // Check the 12 volt s
  * Tracing 
  */
 #define DLT_NONE          0                       // No DLT messages displayed
-#define DLT_CRITICAL      0x80                    // Display messages that will compromise the target
-#define DLT_APPLICATION   0x40                    // Application level messages displayed
-#define DLT_DIAG          0x20                    // Hardware diagnostics messages displayed
-#define DLT_INFO          0x08                    // Informational messages
+#define DLT_CRITICAL      0x80                    // Action failed and needs to be reported
+#define DLT_INFO          0x40                    // Information which is always displayed
+#define DLT_APPLICATION   0x20                    // Application level messages displayed (freeETarget.c compute_hit.c)
+#define DLT_COMMUNICATION 0x10                    // Communications messages (wifi.c token.c serial_io.c)
+#define DLT_DIAG          0x08                    // Hardware diagnostics messages displayed
 #define DLT_DEBUG         0x01                    // Specific debug information
 #define DLT(level, z)  if ( do_dlt(level)){z}                              
 
