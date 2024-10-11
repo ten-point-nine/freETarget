@@ -146,7 +146,7 @@ mfs_action_t mfs_action[] = {
   {
     if ( DIP_SW_A )                     // Switch A pressed
     {
-      is_trace = 10;                    // Turn on tracing
+      is_trace = 255;                   // Turn on tracing
     }
   
     if ( DIP_SW_B )                     // Switch B pressed

@@ -855,14 +855,17 @@ bool do_dlt
 { 
   char dlt_id = 'I';
 
-  if ((level & (is_trace | DLT_INFO | DLT_CRITICAL)) == 0 )
+  if ( (level & is_trace) == 0 )  //  DLT_INFO | DLT_CRITICAL are always set in is_trace
   {
-    return false;      // Send out if the trace is higher than the level 
+    return false;                 // Send out if the trace is higher than the level 
   }
 
   if ( level & DLT_CRITICAL)      { dlt_id = 'E'; }    // Red
   if ( level & DLT_INFO)          { dlt_id = 'I'; }    // Green
   if ( level & DLT_APPLICATION)   { dlt_id = 'W'; }    // Yellow
+  if ( level & DLT_DEBUG)         { dlt_id = 'D'; }    // White - Debug
+  if ( level & DLT_DIAG)          { dlt_id = 'H'; }    // White - Hardware
+  if ( level & DLT_COMMUNICATION) { dlt_id = 'C'; }    // White - Communications
 
   SEND(sprintf(_xs, "\r\n%c (%d) ", dlt_id, (int)(esp_timer_get_time()/1000) );)
 

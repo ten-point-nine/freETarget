@@ -49,7 +49,7 @@ unsigned int shot_out;                  // Index to the shot just sent to the PC
 double        s_of_sound;               // Speed of sound
 unsigned int  shot = 0;                 // Shot counter
 unsigned int  face_strike = 0;          // Miss Face Strike interrupt count
-unsigned int  is_trace = 0;             // Turn off tracing
+unsigned int  is_trace = DLT_INFO | DLT_CRITICAL; // Default tracing
 
 unsigned int  rapid_count = 0;          // Number of received shots
 unsigned int  shot_number;              // Shot Identifier (1-100)
