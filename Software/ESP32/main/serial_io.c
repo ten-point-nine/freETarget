@@ -25,7 +25,7 @@
  *  Serial IO port configuration
  */
 const int uart_console = UART_NUM_0;
-uart_config_t uart_console_config =
+const uart_config_t uart_console_config =
 {
     .baud_rate = 115200,
     .data_bits = UART_DATA_8_BITS,
@@ -39,7 +39,7 @@ const int uart_console_size = (1024 * 2);
 QueueHandle_t uart_console_queue;
 
 const int uart_aux = UART_NUM_1;
-uart_config_t uart_aux_config =
+const uart_config_t uart_aux_config =
 {
     .baud_rate = 115200,
     .data_bits = UART_DATA_8_BITS,

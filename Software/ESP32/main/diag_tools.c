@@ -318,7 +318,7 @@ void self_test
  */
     case T_CYCLE_CLOCK:
       SEND(sprintf(_xs, "\r\nCycle 10MHz Osc 2:1 duty cycle\r\n");)
-      while (serial_available(CONSOLE) == 0)
+      while (serial_available(ALL) == 0)
       {
         gpio_set_level(OSC_CONTROL, OSC_ON);       // Turn off the oscillator
         vTaskDelay(ONE_SECOND/2);                  // The oscillator should be on for 1/2 second
@@ -331,7 +331,7 @@ void self_test
  */
     case T_RUN_ALL:
       SEND(sprintf(_xs, "\r\nCycle RUN lines at 2:1 duty cycle\r\n");)
-      while (serial_available(CONSOLE) == 0)
+      while (serial_available(ALL) == 0)
       {
         gpio_set_level(STOP_N, 1);                  // Let the clock go
         gpio_set_level(CLOCK_START, 0);   
@@ -855,7 +855,7 @@ bool do_dlt
 { 
   char dlt_id = 'I';
 
-  if ( (level & is_trace) == 0 )  //  DLT_INFO | DLT_CRITICAL are always set in is_trace
+  if ( (level & (is_trace | DLT_INFO | DLT_CRITICAL)) == 0 )  //  DLT_INFO | DLT_CRITICAL are always set in is_trace
   {
     return false;                 // Send out if the trace is higher than the level 
   }

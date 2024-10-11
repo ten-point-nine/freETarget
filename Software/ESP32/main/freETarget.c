@@ -842,6 +842,7 @@ void rapid_fire_task(void)
         SEND(sprintf(_xs, "{\"RAPID_OFF\":0}\r\n");)
         set_LED_PWM_now(0);             // Turn off the LEDs
         rapid_state = RAPID_SEND;       // Ran out of time, start sending
+        set_status_LED(LED_RAPID_GREEN_OFF);
         set_status_LED(LED_RAPID_RED);
       }
       else

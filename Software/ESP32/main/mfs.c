@@ -50,7 +50,7 @@ static void mfs_pc_test(void);
  * Variables 
  */
 static unsigned int switch_state;               // What switches are pressed
-mfs_action_t mfs_action[] = {
+const mfs_action_t mfs_action[] = {
   { TARGET_ON,      mfs_on,         "TARGET_ON"      },// Take the target out of sleep
   { PAPER_FEED,     mfs_paper_feed, "PAPER FEED"     },// Feed paper until button released
   { LED_ADJUST,     mfs_led_adjust, "LED_ADJUST"     },// Adjust LED brighness

@@ -131,5 +131,5 @@ typedef struct gpio_struct  {
     void*           gpio_uses;                           // Pointer to IO specific structure
 } gpio_struct_t;
 
-extern gpio_struct_t gpio_table[];                      // List of available devices
+extern const gpio_struct_t gpio_table[];                      // List of available devices
 #endif
