@@ -229,9 +229,9 @@ void WiFi_station_init(void)
    esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFi_event_handler, NULL, &instance_any_id);
    esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &WiFi_event_handler, NULL, &instance_got_ip);
 
-   DLT(DLT_INFO, SEND(sprintf(_xs, "WiFI SSID:%s", json_wifi_ssid);))
+   DLT(DLT_INFO, SEND(sprintf(_xs, "WiFi SSID:%s", json_wifi_ssid);))
    strcpy((char*)&WiFi_config.sta.ssid, json_wifi_ssid);
-   DLT(DLT_INFO, SEND(sprintf(_xs, "WiFI password:%s", json_wifi_pwd);))
+   DLT(DLT_INFO, SEND(sprintf(_xs, "WiFi password:%s", json_wifi_pwd);))
    strcpy((char*)&WiFi_config.sta.password, json_wifi_pwd);
    if ( json_wifi_pwd[0] == 0)
    {
@@ -258,24 +258,22 @@ void WiFi_station_init(void)
 /*
  *  The target has connected to an access point
  */
-    DLT(DLT_INFO, 
+    if (bits & WIFI_CONNECTED_BIT)
     {
-        if (bits & WIFI_CONNECTED_BIT)
-        {
-            WiFi_my_IP_address(str_c);
-            SEND(sprintf( _xs, "Connected to ap SSID: %s\r\nWiFi_IP_ADDRESS: \"%s\",", json_wifi_ssid, str_c);)
-        } 
-        else if (bits & WIFI_FAIL_BIT) 
-            {
-                SEND(sprintf(_xs, "Failed to connect to SSID:%s, password:%s",
-                     json_wifi_ssid, json_wifi_pwd);)
-            }
-            else
-            {
-                SEND(sprintf(_xs, "UNEXPECTED EVENT");)
-            }
+        WiFi_my_IP_address(str_c);
+        DLT(DLT_INFO, SEND(sprintf( _xs, "Connected to AP SSID:  \"%s\"", json_wifi_ssid);))
+        DLT(DLT_INFO, SEND(sprintf( _xs, "Using WiFi_IP_ADDRESS: \"%s\"", str_c);))
+    } 
+    else if (bits & WIFI_FAIL_BIT) 
+    {
+        DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to connect to SSID:%s, password:%s",
+            json_wifi_ssid, json_wifi_pwd);))
     }
-    )
+    else
+    {
+         DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Unexpectged WiFi event");))
+    }
+
 /*
  *  All done
  */
@@ -343,7 +341,7 @@ void WiFi_event_handler
         if ( event_id == IP_EVENT_STA_GOT_IP )
         {
             ipInfo.ip = event->ip_info.ip;
-            DLT(DLT_INFO, SEND(sprintf(_xs, " Received IP:" IPSTR, IP2STR(&event->ip_info.ip));))
+            DLT(DLT_INFO, SEND(sprintf(_xs, "Received IP:" IPSTR, IP2STR(&event->ip_info.ip));))
             s_retry_num = 0;
             xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
         }

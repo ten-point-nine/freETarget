@@ -151,7 +151,7 @@ void freeETarget_init(void)
   POST_counters();                // POST counters does not return if there is an error
   if ( check_12V() == false )     // Verify the 12 volt supply
   {
-    DLT(DLT_INFO, sprintf(_xs, "12V supply not present");)
+    DLT(DLT_INFO, SEND(sprintf(_xs, "12V supply not present");))
   }
 
 /*
