@@ -235,10 +235,15 @@ void pcnt_clear(void)
  * 
  * 1 - Verify that the counters can be cleared
  * 2 - Verify that the counters can be started and stopped together 
- * 3 - Turn on the counters and verify that they increment in the right direction 
+ * 3 -void pcnt_1(pcnt_test(1);}
+ Turn on the counters and verify that they increment in the right direction 
  * 4 - Stop the timers before going into servcie
  *
  **************************************************************************/     
+void pcnt_1(void) {pcnt_test(1); return;}
+void pcnt_2(void) {pcnt_test(2); return;}
+void pcnt_3(void) {pcnt_test(3); return;}
+void pcnt_4(void) {pcnt_test(4); return;}
 
 void pcnt_test
 (

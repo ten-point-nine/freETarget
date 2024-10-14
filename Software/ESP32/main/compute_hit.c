@@ -10,7 +10,6 @@
 #include "stdio.h" 
 #include "math.h"
 #include "stdbool.h"
-#include "serial_io.h"
 
 #include "freETarget.h"
 #include "json.h"
@@ -19,6 +18,7 @@
 #include "token.h"
 #include "timer.h"
 #include "compute_hit.h"
+#include "serial_io.h"
 
 #define THRESHOLD (0.001)
 

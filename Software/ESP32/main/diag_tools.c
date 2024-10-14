@@ -39,327 +39,126 @@
 
 extern volatile unsigned long paper_time;
 
-/*******************************************************************************
- *
- * @function: void self_test
- *
- * @brief: Execute self tests based on the jumper settings
- * 
- * @return: None
- *
- *******************************************************************************
- *   
- *   This function is a large case statement with each element
- *   of the case statement 
- * 
- *   Supports a test mode (TEST:99) that emulates an old style Zapple monitor
- *   
- ******************************************************************************/
-unsigned int tick;
-void zapple(unsigned int test)
-{ 
-  int run_test;                 // Running Semephore
-  char ch;                      // Input character
 
-  run_test = 1;
+static void show_test(void);
 
-  while (run_test != 0)
-  {
-    SEND(sprintf(_xs, "\r\nTest >");)
-    test = 0;
-
-    while (1)
-    {
-      if ( serial_available(CONSOLE) != 0 )
-      {
-        ch = serial_getch(CONSOLE);
-        ch = toupper(ch);
-        SEND(sprintf(_xs, "%c", ch);)
-        if ( ch != '\r' )
-        {
-            test = ((test * 10) + (ch -'0')) % 100;
-          }
-          if ( (ch == '\r') || (ch == '\n') )
-          {
-            self_test(test);
-            break;
-          }
-          if ( ch == 'X' )
-          {
-            run_test = 0;
-            break;
-          }
-        }
-        vTaskDelay(1);
-      }
-    }
-
-/*
- *  GO back to normal operation
+/* 
+ * JSON message typedefs
  */
-  return;
-}
+typedef struct  {
+  char*             help;     // Help test ID 
+  int             test_ID;    // Test number
+  void         (*f)(void);    // Function to execut the test
+  } self_test_t;
 
+static const self_test_t test_list[] = {
+  {"Factory test",                    T_FACTORY,      &factory_test}, 
+  {"-DIGITAL", 0, 0},
+  {"Digital inputs",                  T_DIGITAL,      &digital_test},
+  {"Advance paper backer",            T_PAPER,        &paper_test},
+  {"LED brightness test",             T_LED,          &LED_test},
+  {"Status LED driver",               T_STATUS,       &status_LED_test},
+  {"Temperature and sendor test",     T_TEMPERATURE,  &analog_input_test},
+  {"DAC test",                        T_DAC,          &DAC_test},
+  {"Rapid fire LED test",             T_RAPID_LEDS,   &rapid_LED_test},
+  {"-Timer & PCNT test", 0, 0},
+  {"PCNT test all",                   T_PCNT,         &pcnt_test},
+  {"PCNT calibration",                T_PCNT,         &pcnt_cal},
+  {"Sensor POST test",                T_SENSOR,       &sensor_test},
+  {"Timers not stopping",             T_PCNT_STOP,    &pcnt_1},
+  {"Timers not running",              T_PCNT_SHORT,   &pcnt_2},
+  {"Timers start - stop together",    T_PCNT_FREE,    &pcnt_3},
+  {"Timers cleared",                  T_PCNT_CLEAR,   &pcnt_4},
+  {"Turn the oscillator on and off",  T_SENSOR,       &sensor_test},
+  {"Turn the RUN lines on and off",   T_RUN_ALL,      &timer_run_all},
+  {"Trigger NORTH from a function generator", T_RUN_NORTH, &test_north},
+  {"-Communiations Tests", 0, 0},
+  {"AUX serial port test",            T_AUX_SERIAL,   &serial_port_test},
+  {"Test WiFi as a station",          T_WIFI_STATION, &wifi_station_init},
+  {"Enable the WiFi Server",          T_WIFI_SERVER,  &wifi_server_test},
+  {"Enable the WiFi AP",              T_WIFI_AP,      &WiFi_AP_init,
+
+  {"Loopback the TCPIP data",         T_LOOPBACK,     &WiFi_loopback_test},
+  {"Loopback WiFi",                   T_LOOPBACK,     &wifi_loopback_test},
+  {"-Interrupt Tests", 0, 0},
+  {"Polled target test",              T_POLLED,       &sensor_polled_test},
+  {"Interrupt target test",           T_TARGET_2,     &sensor_polled_test},
+  {"", 0, 0}
+  };
+
+
+/*-----------------------------------------------------
+ * 
+ * @function: self_test()
+ * 
+ * @brief:    General purpose test driver
+ * 
+ * @return:   None
+ * 
+ *-----------------------------------------------------
+ *
+ * The tests are contained in a structure.  This function
+ * look into the structure to execute the appropriate test
+ * 
+ *-----------------------------------------------------*/
 
 void self_test
 (
   unsigned int test                 // What test to execute
 )
 {
-  int   i;
+  unsigned int i;
 
 /*
  *  Switch over to test mode 
  */
-  run_state |= IN_TEST;             // Show the test is running 
+  run_state |= IN_TEST;                 // Show the test is running 
   
   while ( run_state & IN_OPERATION )
   {
-    vTaskDelay(10);                 // Wait for everyone else to turn off
+    vTaskDelay(10);                     // Wait for everyone else to turn off
   }
-  freeETarget_timer_pause();        // Stop interrupts
+  freeETarget_timer_pause();            // Stop interrupts
 
 /*
  * Figure out what test to run
  */
-  switch (test)
+  i = 0;
+  while ( test_list[i].help[0] != 0 )   // Look through the list
   {
-/*
- * Test 0, Display the help
- */
-    default:                // Undefined, show the tests
-    case T_HELP:  
-      SEND(sprintf(_xs, "\r\n 1 - Factory test");)
-      SEND(sprintf(_xs, "\r\n");)
-      SEND(sprintf(_xs, "\r\n10 - Digital inputs");)
-      SEND(sprintf(_xs, "\r\n11 - Advance paper backer");)
-      SEND(sprintf(_xs, "\r\n12 - LED brightness test");)
-      SEND(sprintf(_xs, "\r\n13 - Status LED driver");)
-      SEND(sprintf(_xs, "\r\n14 - Temperature and sendor test");)
-      SEND(sprintf(_xs, "\r\n15 - DAC test");)
-      SEND(sprintf(_xs, "\r\n16 - Rapid fire LED test");)
-      SEND(sprintf(_xs, "\r\n");)
-      SEND(sprintf(_xs, "\r\n20 - PCNT Test");)
-      SEND(sprintf(_xs, "\r\n21 - pcnt(1) - Timers not running");)
-      SEND(sprintf(_xs, "\r\n22 - pcnt(2) - Timers start - stop together");)
-      SEND(sprintf(_xs, "\r\n23 - pcnt(3) - Timers free running");)
-      SEND(sprintf(_xs, "\r\n24 - pcnt(4) - Timers cleared");)
-      SEND(sprintf(_xs, "\r\n25 - Turn the oscillator on and off");)
-      SEND(sprintf(_xs, "\r\n26 - Turn the RUN lines on and off");)
-      SEND(sprintf(_xs, "\r\n27 - Trigger NORTH from a function generator");)
-      SEND(sprintf(_xs, "\r\n");)
-      SEND(sprintf(_xs, "\r\n30 - AUX Port loopback");)
-      SEND(sprintf(_xs, "\r\n31 - Test WiFi as an Access Point");)
-      SEND(sprintf(_xs, "\r\n32 - Test WiFI as a station");)
-      SEND(sprintf(_xs, "\r\n33 - Enable the WiFi Server");)
-      SEND(sprintf(_xs, "\r\n34 - Loopback the TCPIP data");)
-      SEND(sprintf(_xs, "\r\n35 - Loopback WiFi");)
-      SEND(sprintf(_xs, "\r\n");)
-      SEND(sprintf(_xs, "\r\n40 - Sensor POST test");)
-      SEND(sprintf(_xs, "\r\n41 - Polled Target Test");)
-      SEND(sprintf(_xs, "\r\n42 - Interrupt Target Test");)
-      SEND(sprintf(_xs, "\r\n");)
-      SEND(sprintf(_xs, "\r\n99 - Zapple Debug Monitor");)
-      SEND(sprintf(_xs, "\r\n");)
-    break;
-
-/*
- * Test all of the hardware
- */
-    case T_FACTORY: 
-      factory_test();
-      break;
-/*
- * Display GPIO inputs
- */
-    case T_DIGITAL: 
-      digital_test();
-      break;
-
-/*
- * Advance the paper
- */
-    case T_PAPER:
-      paper_test();
-      break;
-
-/*
- * Set the LED bightness
- */
-    case T_LED:
-      SEND(sprintf(_xs, "\r\nCycling the LED");)
-      for (i=0; i <= 100; i+= 5)
-      {
-        SEND(sprintf(_xs, "%d   ", i);)
-        pwm_set(LED_PWM, i);       
-        vTaskDelay(ONE_SECOND/10);
-      }
-      for (i=100; i >= 0; i-=5)
-      {
-        SEND(sprintf(_xs, "%d   ", i);)
-        pwm_set(LED_PWM,i);       
-        vTaskDelay(ONE_SECOND/10);
-      }
-      SEND(sprintf(_xs, "\r\nDone\r\n");)
-      break;
-
-/*
- * Set status LEDs
- */
-    case T_STATUS:
-      status_LED_test();
-      break;
-
-/*
- * Analog In
- */
-    case T_TEMPERATURE:
-      analog_input_test();
-      break;
-
-/*
- * DAC
- */
-    case T_DAC:
-      DAC_test();
-      break;
-
-/*
- * Set Rapid Fire LEDs
- */
-    case T_RAPID_LEDS:
-      rapid_LED_test();
-      break;
-
-/*
- * PCNT test
- */
-    case T_PCNT:
-      pcnt_test(1);
-      pcnt_test(2);
-      pcnt_test(3);
-      pcnt_test(4);
-      break;
-
-    case T_PCNT_CAL:
-      pcnt_cal();
-      break;
-
-/*
- *  Sensor Trigger
- */
-    case T_SENSOR:
-      POST_counters();
-      break;
-
-/*
- *  AUX Serial Port
- */
-    case T_AUX_SERIAL:
-      serial_port_test();
-      break;
-
-/*
- *  Polled Target Test
- */
-    case T_TARGET:
-      polled_target_test();
-      break;      
-/*
- *  Interrupt Target Test
- */
-    case T_TARGET_2:
-      interrupt_target_test();
-      break; 
-
-/*
- *  Start WiFi AP
- */
-    case T_WIFI_AP:
-      WiFi_AP_init();
-      break; 
-
-/*
- *  Start WiFi station
- */
-    case T_WIFI_STATION:
-      WiFi_station_init();
-      break; 
-
-/*
- *  Enable the WiFi Server
- */
-    case T_WIFI_SERVER:
-      xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",      4096, NULL, 5, NULL);
-      break; 
-
-/*
- *  Send and receive something
- */
-    case T_WIFI_STATION_LOOPBACK:
-      WiFi_station_init();
-      xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",      4096, NULL, 5, NULL);
-      xTaskCreate(tcpip_accept_poll,       "tcpip_accept_poll",    4096, NULL, 4, NULL);
-      WiFi_loopback_test();
-      break; 
-
-/*
- *  Send and receive something
- */
-    case T_WIFI_AP_LOOPBACK:
-      WiFi_AP_init();
-      xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",      4096, NULL, 5, NULL);
-      xTaskCreate(tcpip_accept_poll,       "tcpip_accept_poll",    4096, NULL, 4, NULL);
-      WiFi_loopback_test();
-      break; 
-
-/*
- *  Cycle the 10MHz clock input
- */
-    case T_CYCLE_CLOCK:
-      SEND(sprintf(_xs, "\r\nCycle 10MHz Osc 2:1 duty cycle\r\n");)
-      while (serial_available(ALL) == 0)
-      {
-        gpio_set_level(OSC_CONTROL, OSC_ON);       // Turn off the oscillator
-        vTaskDelay(ONE_SECOND/2);                  // The oscillator should be on for 1/2 second
-        gpio_set_level(OSC_CONTROL, OSC_OFF);      // Turn off the oscillator
-        vTaskDelay(ONE_SECOND/4);                  // The oscillator shold be off for 1/4 seocnd
-      }
-      break; 
-/*
- *  Turn the RUN lines on and off
- */
-    case T_RUN_ALL:
-      SEND(sprintf(_xs, "\r\nCycle RUN lines at 2:1 duty cycle\r\n");)
-      while (serial_available(ALL) == 0)
-      {
-        gpio_set_level(STOP_N, 1);                  // Let the clock go
-        gpio_set_level(CLOCK_START, 0);   
-        gpio_set_level(CLOCK_START, 1);   
-        gpio_set_level(CLOCK_START, 0);             // Strobe the RUN linwes
-        vTaskDelay(ONE_SECOND/2);                   // The RUN lines should be on for 1/2 second
-        gpio_set_level(STOP_N, 0);                  // Stop the clock
-        vTaskDelay(ONE_SECOND/4);                   // THe RUN lines shold be off for 1/4 second
-      }
-      break; 
-
-/*
- *  Single PCNT test
- */
-    case T_PCNT_STOP:
-    case T_PCNT_SHORT:
-    case T_PCNT_FREE:
-    case T_PCNT_CLEAR:
-      pcnt_test(test - (T_PCNT_STOP - 1));
-      break;
+    if ( test_list[i].test_id == test ) // Found the test
+    {
+      test_list[i].f();                 // Execute the test
+      run_state &= ~IN_TEST;            // Exit the test 
+      freeETarget_timer_start();        // Start interrupts
+      return;
+    }
   }
+
+/*
+ * Have not found the test
+ */
+  show_test();
 
  /* 
   *  All done, return;
   */
-    run_state &= ~IN_TEST;              // Exit the test 
-    freeETarget_timer_start();          // Start interrupts
-    return;
+  run_state &= ~IN_TEST;            // Exit the test 
+  freeETarget_timer_start();        // Start interrupts
+  return;
+}
+
+static void show_test(void)
+{
+  int i;
+
+  i = 0;
+  while ( test_list[i].help[0] != 0 )
+  {
+    SEND(sprintf(_xs, "\r\n%d - %c", test_list[i].test_id, test_list[i].test_help);)
+  }
+
+  return;
 }
 /*-----------------------------------------------------
  * 

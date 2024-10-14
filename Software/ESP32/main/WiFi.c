@@ -852,3 +852,37 @@ void WiFi_MAC_address
         return;
 }
 
+
+
+/*****************************************************************************
+ *
+ * @function: WiFi_tests
+ *
+ * @brief:    A varity of WiFi tests
+ * 
+ * @return:   None
+ *
+ ****************************************************************************/
+void WiFi_server_test(void)
+{
+    xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",      4096, NULL, 5, NULL);
+    return;
+}
+  
+void WiFi_station_loopback_test(void)
+{
+    WiFi_station_init();
+    xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",      4096, NULL, 5, NULL);
+    xTaskCreate(tcpip_accept_poll,       "tcpip_accept_poll",    4096, NULL, 4, NULL);
+    WiFi_loopback_test();
+    return;
+}
+
+void WiFi_AP_loopback_test(void)
+{
+    WiFi_AP_init();
+    xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",      4096, NULL, 5, NULL);
+    xTaskCreate(tcpip_accept_poll,       "tcpip_accept_poll",    4096, NULL, 4, NULL);
+    WiFi_loopback_test();
+    return;
+}

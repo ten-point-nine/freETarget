@@ -20,7 +20,6 @@ bool POST_counters(void);                                 // Verify the counter 
 void POST_trip_point(void);                               // Display the set point
 void set_trip_point(int x);                               // Calibrate the trip point
 bool do_dlt(unsigned int level);                          // Diagnostics Log and Trace
-void zapple(unsigned int test);                           // ZAPPLE console monitor
 bool factory_test(void);                                  // Test the hardware in production
 void set_diag_LED(char* new_LEDs, unsigned int duration); // Display the LED failure code
 bool check_12V(void);                                     // Check the 12 volt supply

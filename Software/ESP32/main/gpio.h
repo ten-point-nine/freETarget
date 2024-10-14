@@ -43,6 +43,7 @@ void status_LED_init(unsigned int gpio_number);           // Initialize the RMT 
 void status_LED_test(void);                               // Cycle the status LEDs
 void paper_test(void);                                    // Advance the motor
 void target_test(void);                                   // Monitor the target sensors for a shot
+void LED_test(void);                                      // Cycle the target LED
 void trigger_timers(void);                                // Trigger a self test 
 
 void multifunction_switch(void);                          // Handle the actions of the DIP Switch signal

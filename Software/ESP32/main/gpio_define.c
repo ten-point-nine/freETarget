@@ -25,15 +25,15 @@
 #include "adc_oneshot.h"
 #include "led_strip.h"
 #include "led_strip_types.h"
-#include "i2c.h"
-#include "pwm.h"
-#include "pcnt.h"
 
 #include "freETarget.h"
 #include "diag_tools.h"
 #include "analog_io.h"
 #include "gpio_define.h"
 #include "serial_io.h"
+#include "i2c.h"
+#include "pwm.h"
+#include "pcnt.h"
 
 /*
  *  Digital IO definitions

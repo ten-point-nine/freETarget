@@ -8,7 +8,6 @@
 #include "esp_timer.h"
 #include "nvs_flash.h"
 #include "nvs.h"
-#include "nonvol.h"
 
 #include "freETarget.h"
 #include "diag_tools.h"
@@ -23,6 +22,7 @@
 #include "mechanical.h"
 #include "wifi.h"
 #include "mfs.h"
+#include "nonvol.h"
 
 /*
  *  Function Prototypes
@@ -166,7 +166,6 @@ const json_message_t JSON[] = {
   {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_SECRET+PWD_SIZE, 0,       NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
   {"\"WIFI_RESET\":",     &json_wifi_reset_first,            0,                IS_INT32,  0,                NONVOL_WIFI_RESET_FIRST, 1 },    // Reset everything on the first WiFI connection
   {"\"WIFI_SSID\":",      (int*)&json_wifi_ssid,             0,                IS_TEXT+SSID_SIZE,  0,       NONVOL_WIFI_SSID,        0 },    // Name of SSID to attach to 
-  {"\"ZAPPLE\":",         0,                                 0,                IS_VOID,   &zapple,          0,                       0 },    // Start a ZAPPLE console monitor
   {"\"Z_OFFSET\":",       &json_z_offset,                    0,                IS_INT32,  0,                NONVOL_Z_OFFSET,        13 },    // Distance from paper to sensor plane (mm)
   {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT32,  0,                NONVOL_NORTH_X,          0 },    //
   {"\"NORTH_Y\":",        &json_north_y,                     0,                IS_INT32,  0,                NONVOL_NORTH_Y,          0 },    //

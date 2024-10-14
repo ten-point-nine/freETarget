@@ -25,6 +25,7 @@
 #include "mfs.h"
 #include "dac.h"
 #include "analog_io.h"
+#include "pwm.h" 
 
 #include "../managed_components/espressif__led_strip/src/led_strip_rmt_encoder.h"
 
@@ -1031,3 +1032,88 @@ void paper_test(void)
 
   return;
 }
+
+/*----------------------------------------------------------------
+ * 
+ * @function: LED_test
+ * 
+ * @brief:    Cycle the LED brightness
+ * 
+ * @return:   Nothing
+ * 
+ *----------------------------------------------------------------
+ *
+ *  Drive the LEDs in 5% increments evart 100ms.
+ * 
+ *--------------------------------------------------------------*/
+void LED_test(void)
+{
+  int i;
+  
+  SEND(sprintf(_xs, "\r\nCycling the LED");)
+
+  for (i=0; i <= 100; i+= 5)
+  {
+    SEND(sprintf(_xs, "%d   ", i);)
+    pwm_set(LED_PWM, i);       
+    vTaskDelay(ONE_SECOND/10);
+  }
+
+  for (i=100; i >= 0; i-=5)
+  {
+    SEND(sprintf(_xs, "%d   ", i);)
+    pwm_set(LED_PWM,i);       
+    vTaskDelay(ONE_SECOND/10);
+  }
+      
+  SEND(sprintf(_xs, "\r\nDone\r\n");)
+  return;
+}
+
+/*----------------------------------------------------------------
+ * 
+ * @function: timer_control_tests
+ * 
+ * @brief:    A collection of tests to exercise the timers
+ * 
+ * @return:   Nothing
+ * 
+ *----------------------------------------------------------------
+ *
+ *  timer_run_all - Trigger the clock start and observe the output 
+ *                  on an oscilloscope.
+ * 
+ *  timer_cycle_oscillator - Turn the 10MHz clock off and on
+ * 
+ *--------------------------------------------------------------*/
+void timer_run_all(void)
+{
+  SEND(sprintf(_xs, "\r\nCycle RUN lines at 2:1 duty cycle\r\n");)
+  while (serial_available(ALL) == 0)
+  {
+    gpio_set_level(STOP_N, 1);                  // Let the clock go
+    gpio_set_level(CLOCK_START, 0);   
+    gpio_set_level(CLOCK_START, 1);   
+    gpio_set_level(CLOCK_START, 0);             // Strobe the RUN linwes
+    vTaskDelay(ONE_SECOND/2);                   // The RUN lines should be on for 1/2 second
+    gpio_set_level(STOP_N, 0);                  // Stop the clock
+    vTaskDelay(ONE_SECOND/4);                   // THe RUN lines shold be off for 1/4 second
+  }
+  
+  return;
+}
+
+void timer_cycle_oscillator(void)
+{
+  SEND(sprintf(_xs, "\r\nCycle 10MHz Osc 2:1 duty cycle\r\n");)
+  while (serial_available(ALL) == 0)
+  {
+    gpio_set_level(OSC_CONTROL, OSC_ON);       // Turn off the oscillator
+    vTaskDelay(ONE_SECOND/2);                  // The oscillator should be on for 1/2 second
+    gpio_set_level(OSC_CONTROL, OSC_OFF);      // Turn off the oscillator
+    vTaskDelay(ONE_SECOND/4);                  // The oscillator shold be off for 1/4 seocnd
+  }
+  return;
+}
+ 
+

@@ -25,6 +25,10 @@ void tcpip_socket_poll_1(void* parameters);   // Listen to TCPIP recv calls
 void tcpip_socket_poll_2(void* parameters);   // Listen to TCPIP recv calls
 void tcpip_socket_poll_3(void* parameters);   // Listen to TCPIP recv calls
 
+void WiFi_server_test(void);                  // Server test for diag.c
+void WiFi_station_loopback_test(void);        // Station test for diag.c
+void WiFi_AP_loopback_test(void);             // Access point test for diag.c
+
 /*
  * #defines
  */
