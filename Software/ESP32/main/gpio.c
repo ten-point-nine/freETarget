@@ -47,7 +47,6 @@ typedef struct status_struct {
  * Variables
  */
 status_struct_t status[3] = {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
-status_struct_t push[3]   = {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
 int paper_state;                    // Drive is ON or OFF
 volatile unsigned long paper_time;  // How long the paper will be on for
 volatile unsigned int  step_count;  // How many step counts do we need?
@@ -1116,4 +1115,3 @@ void timer_cycle_oscillator(void)
   return;
 }
  
-

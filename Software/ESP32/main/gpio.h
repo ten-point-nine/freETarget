@@ -16,8 +16,6 @@ void arm_timers(void);                                    // Make the board read
 void clear_running(void);                                 // Clear the run flip flop 
 unsigned int is_running(void);                            // Return a bit mask of running sensors 
 void set_status_LED(char new_state[]);                    // Manage the LEDs
-void push_status_LED(void);                               // Preserve the current state
-void pop_status_LED(void);                                // Bring back the old state 
 void commit_status_LEDs(unsigned int blink_state);        // Write the LED control to the hardware
 unsigned int read_DIP(void);                              // Read the DIP switch register
 unsigned int read_counter(unsigned int direction);
@@ -45,6 +43,9 @@ void paper_test(void);                                    // Advance the motor
 void target_test(void);                                   // Monitor the target sensors for a shot
 void LED_test(void);                                      // Cycle the target LED
 void trigger_timers(void);                                // Trigger a self test 
+void timer_run_all(void);                                 // Run all fo the timers at once
+void timer_cycle_oscillator(void);                        // Turn the oscillator on and off
+
 
 void multifunction_switch(void);                          // Handle the actions of the DIP Switch signal
 void multifuction_display(void);                          // Display the MFS settings

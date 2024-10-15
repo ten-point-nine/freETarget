@@ -52,7 +52,7 @@ typedef struct  {
 
 static const self_test_t test_list[] = {
   {"Factory test",                    &factory_test}, 
-  {"-DIGITAL", 0, 0},
+  {"-DIGITAL", 0},
   {"Digital inputs",                  &digital_test},
   {"Advance paper backer",            &paper_test},
   {"LED brightness test",             &LED_test},
@@ -60,28 +60,27 @@ static const self_test_t test_list[] = {
   {"Temperature and sendor test",     &analog_input_test},
   {"DAC test",                        &DAC_test},
   {"Rapid fire LED test",             &rapid_LED_test},
-  {"-Timer & PCNT test", 0, 0},
-  {"PCNT test all",                   &pcnt_test},
+  {"-Timer & PCNT test", 0},
+  {"PCNT test all",                   &pcnt_all},
   {"PCNT calibration",                &pcnt_cal},
   {"Sensor POST test",                &POST_counters},
   {"Timers not stopping",             &pcnt_1},
   {"Timers not running",              &pcnt_2},
   {"Timers start - stop together",    &pcnt_3},
   {"Timers cleared",                  &pcnt_4},
-  {"Turn the oscillator on and off",  &sensor_test},
+  {"Turn the oscillator on and off",  &timer_cycle_oscillator},
   {"Turn the RUN lines on and off",   &timer_run_all},
-  {"Trigger NORTH from a function generator", &test_north},
-  {"-Communiations Tests", 0, 0},
+  {"-Communiations Tests", 0},
   {"AUX serial port test",            &serial_port_test},
-  {"Test WiFi as a station",          &wifi_station_init},
-  {"Enable the WiFi Server",          &wifi_server_test},
+  {"Test WiFi as a station",          &WiFi_station_init},
+  {"Enable the WiFi Server",          &WiFi_server_test},
   {"Enable the WiFi AP",              &WiFi_AP_init},
   {"Loopback the TCPIP data",         &WiFi_loopback_test},
-  {"Loopback WiFi",                   &wifi_loopback_test},
-  {"-Interrupt Tests", 0, 0},
-  {"Polled target test",              &sensor_polled_test},
-  {"Interrupt target test",           &sensor_polled_test},
-  {"", 0, 0}
+  {"Loopback WiFi",                   &WiFi_loopback_test},
+  {"-Interrupt Tests", 0},
+  {"Polled target test",              &polled_target_test},
+  {"Interrupt target test",           &interrupt_target_test},
+  {"", 0}
   };
 
 
@@ -138,6 +137,7 @@ void self_test
     }
     if ( test_ID == test )              // Found the test
     {
+      SEND(sprintf(_xs, "%d-%s", test_ID, test_list[i].help);)
       test_list[i].f();                 // Execute the test
       run_state &= ~IN_TEST;            // Exit the test 
       freeETarget_timer_start();        // Start interrupts

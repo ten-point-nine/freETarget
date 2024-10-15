@@ -240,6 +240,7 @@ void pcnt_clear(void)
  * 4 - Stop the timers before going into servcie
  *
  **************************************************************************/     
+void pcnt_all(void) { pcnt_test(1); pcnt_test(2); pcnt_test(3); pcnt_test(4);}
 void pcnt_1(void) {pcnt_test(1); return;}
 void pcnt_2(void) {pcnt_test(2); return;}
 void pcnt_3(void) {pcnt_test(3); return;}
