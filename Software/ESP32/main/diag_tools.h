@@ -27,36 +27,6 @@ bool check_12V(void);                                     // Check the 12 volt s
 /* 
  *  Definitions
  */
-#define T_HELP           0        // Help test
-#define T_FACTORY        1        // Factory Test
-
-#define T_DIGITAL       10        // Digital test
-#define T_PAPER         11        // Advance paper backer
-#define T_LED           12        // Test the LED PWM
-#define T_STATUS        13        // Send colours across the status LEDs
-#define T_TEMPERATURE   14        // Read the temperature and humidity
-#define T_DAC           15        // Ramp the DAC outputs 
-#define T_RAPID_LEDS    16        // Test the Rapid Fire LEDs
-
-#define T_PCNT          20        // PCNT register test
-#define T_PCNT_STOP     21        // PCNT timers stopped
-#define T_PCNT_SHORT    22        // PCNT timers start-stop  
-#define T_PCNT_FREE     23        // PCNT timers free running
-#define T_PCNT_CLEAR    24        // PCNT timers cleared after running
-#define T_CYCLE_CLOCK   25        // Turn the clock on and off
-#define T_RUN_ALL       26        // Toggle the RUN lines on and off 
-#define T_PCNT_CAL      27        // Trigger PCNT via a triangle wave and watch the outcome
-
-#define T_AUX_SERIAL    30        // AUX Serial Port loopback
-#define T_WIFI_AP       31        // Test WiFi as an Access Point
-#define T_WIFI_STATION  32        // Test WiFI as a station 
-#define T_WIFI_SERVER   33        // Enable the WiFI Server
-#define T_WIFI_STATION_LOOPBACK 34 // Send an receive over the WiFi conduit
-#define T_WIFI_AP_LOOPBACK 35     // Send an receive over the WiFi conduit
-
-#define T_SENSOR        40        // Sensor POST test
-#define T_TARGET        41        // Polled target sensor test
-#define T_TARGET_2      42        // Interrupt target test
 
 /*
  * LED status messages

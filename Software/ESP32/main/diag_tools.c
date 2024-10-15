@@ -47,42 +47,40 @@ static void show_test(void);
  */
 typedef struct  {
   char*             help;     // Help test ID 
-  int             test_ID;    // Test number
   void         (*f)(void);    // Function to execut the test
   } self_test_t;
 
 static const self_test_t test_list[] = {
-  {"Factory test",                    T_FACTORY,      &factory_test}, 
+  {"Factory test",                    &factory_test}, 
   {"-DIGITAL", 0, 0},
-  {"Digital inputs",                  T_DIGITAL,      &digital_test},
-  {"Advance paper backer",            T_PAPER,        &paper_test},
-  {"LED brightness test",             T_LED,          &LED_test},
-  {"Status LED driver",               T_STATUS,       &status_LED_test},
-  {"Temperature and sendor test",     T_TEMPERATURE,  &analog_input_test},
-  {"DAC test",                        T_DAC,          &DAC_test},
-  {"Rapid fire LED test",             T_RAPID_LEDS,   &rapid_LED_test},
+  {"Digital inputs",                  &digital_test},
+  {"Advance paper backer",            &paper_test},
+  {"LED brightness test",             &LED_test},
+  {"Status LED driver",               &status_LED_test},
+  {"Temperature and sendor test",     &analog_input_test},
+  {"DAC test",                        &DAC_test},
+  {"Rapid fire LED test",             &rapid_LED_test},
   {"-Timer & PCNT test", 0, 0},
-  {"PCNT test all",                   T_PCNT,         &pcnt_test},
-  {"PCNT calibration",                T_PCNT,         &pcnt_cal},
-  {"Sensor POST test",                T_SENSOR,       &sensor_test},
-  {"Timers not stopping",             T_PCNT_STOP,    &pcnt_1},
-  {"Timers not running",              T_PCNT_SHORT,   &pcnt_2},
-  {"Timers start - stop together",    T_PCNT_FREE,    &pcnt_3},
-  {"Timers cleared",                  T_PCNT_CLEAR,   &pcnt_4},
-  {"Turn the oscillator on and off",  T_SENSOR,       &sensor_test},
-  {"Turn the RUN lines on and off",   T_RUN_ALL,      &timer_run_all},
-  {"Trigger NORTH from a function generator", T_RUN_NORTH, &test_north},
+  {"PCNT test all",                   &pcnt_test},
+  {"PCNT calibration",                &pcnt_cal},
+  {"Sensor POST test",                &POST_counters},
+  {"Timers not stopping",             &pcnt_1},
+  {"Timers not running",              &pcnt_2},
+  {"Timers start - stop together",    &pcnt_3},
+  {"Timers cleared",                  &pcnt_4},
+  {"Turn the oscillator on and off",  &sensor_test},
+  {"Turn the RUN lines on and off",   &timer_run_all},
+  {"Trigger NORTH from a function generator", &test_north},
   {"-Communiations Tests", 0, 0},
-  {"AUX serial port test",            T_AUX_SERIAL,   &serial_port_test},
-  {"Test WiFi as a station",          T_WIFI_STATION, &wifi_station_init},
-  {"Enable the WiFi Server",          T_WIFI_SERVER,  &wifi_server_test},
-  {"Enable the WiFi AP",              T_WIFI_AP,      &WiFi_AP_init,
-
-  {"Loopback the TCPIP data",         T_LOOPBACK,     &WiFi_loopback_test},
-  {"Loopback WiFi",                   T_LOOPBACK,     &wifi_loopback_test},
+  {"AUX serial port test",            &serial_port_test},
+  {"Test WiFi as a station",          &wifi_station_init},
+  {"Enable the WiFi Server",          &wifi_server_test},
+  {"Enable the WiFi AP",              &WiFi_AP_init},
+  {"Loopback the TCPIP data",         &WiFi_loopback_test},
+  {"Loopback WiFi",                   &wifi_loopback_test},
   {"-Interrupt Tests", 0, 0},
-  {"Polled target test",              T_POLLED,       &sensor_polled_test},
-  {"Interrupt target test",           T_TARGET_2,     &sensor_polled_test},
+  {"Polled target test",              &sensor_polled_test},
+  {"Interrupt target test",           &sensor_polled_test},
   {"", 0, 0}
   };
 
@@ -108,6 +106,7 @@ void self_test
 )
 {
   unsigned int i;
+  unsigned int test_ID;                 // Computed test ID
 
 /*
  *  Switch over to test mode 
@@ -124,9 +123,20 @@ void self_test
  * Figure out what test to run
  */
   i = 0;
+  test_ID = 0;
+
   while ( test_list[i].help[0] != 0 )   // Look through the list
   {
-    if ( test_list[i].test_id == test ) // Found the test
+    if ( test_list[i].help[0] == '-' )
+    {
+      test_ID += 20;                    // Go to the next second decade
+      test_ID -= test_ID % 10;          // Round down to the zero
+    }
+    else
+    {
+      test_ID++;
+    }
+    if ( test_ID == test )              // Found the test
     {
       test_list[i].f();                 // Execute the test
       run_state &= ~IN_TEST;            // Exit the test 
@@ -150,12 +160,25 @@ void self_test
 
 static void show_test(void)
 {
-  int i;
+  unsigned int i;
+  unsigned int test_ID;
 
   i = 0;
+  test_ID = 0;
   while ( test_list[i].help[0] != 0 )
   {
-    SEND(sprintf(_xs, "\r\n%d - %c", test_list[i].test_id, test_list[i].test_help);)
+    if ( test_list[i].help[0] == '-' )  // Sction break
+    {
+      test_ID += 20;                    // Go to the next second decade
+      test_ID-= test_ID % 10;          // Round down to the zero
+      SEND(sprintf(_xs, "\r\n\n%s", test_list[i].help);)
+    }
+    else
+    {
+      test_ID++;
+      SEND(sprintf(_xs, "\r\n%d - %s", test_ID, test_list[i].help);)
+    }
+
   }
 
   return;
