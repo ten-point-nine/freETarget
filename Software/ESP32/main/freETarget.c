@@ -396,7 +396,6 @@ unsigned int wait(void)
   return WAIT;
 }
 
-
 /*----------------------------------------------------------------
  * 
  * @function: reduce()
@@ -748,7 +747,6 @@ void tabata_task(void)
  * enabled, and there is time on the clock.
  * 
  *--------------------------------------------------------------*/
-
 static bool discard_shot(void)
 {
 
@@ -1041,7 +1039,6 @@ void send_keep_alive(void)
   int i;
   int running;                          // Copy of the is_running state
 
-  SEND(sprintf(_xs, "\r\nPolled target shot test\r\n");)
   freeETarget_timer_pause();             // Kill the background timer interrupt
 
 /*
@@ -1099,7 +1096,7 @@ extern int isr_state;
 
   int i;
 
-  SEND(sprintf(_xs, "\r\nInterrupt target shot test: this: %d last %d\r\n", shot_in, shot_out);)
+  SEND(sprintf(_xs, "\r\nInterrupt target shot test: shot_in: %d   shot_out: %d\r\n", shot_in, shot_out);)
 
 /*
  * Stay here watching the counters

@@ -132,7 +132,6 @@ void DAC_test(void)
   float volts[4];
   int i;
 
-  SEND(sprintf(_xs, "\r\nDAC Test");)
   SEND(sprintf(_xs, "\r\nDAC 0 Up ramp");)
   SEND(sprintf(_xs, "\r\nDAC 1 Down ramp");)
 

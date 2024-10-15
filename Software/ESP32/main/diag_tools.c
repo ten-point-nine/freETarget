@@ -16,6 +16,7 @@
 #include "gpio_types.h"
 #include "driver\gpio.h"
 #include "ctype.h"
+#include "esp_timer.h"
 
 #include "freETarget.h"
 #include "gpio.h"
@@ -23,7 +24,6 @@
 #include "analog_io.h"
 #include "json.h"
 #include "timer.h"
-#include "esp_timer.h"
 #include "dac.h"
 #include "pwm.h"
 #include "pcnt.h"
@@ -32,22 +32,16 @@
 #include "WiFi.h"
 #include "compute_hit.h"
 
-#define TICK(x) (((x) / 0.33) * OSCILLATOR_MHZ)   // Distance in clock ticks
-#define RX(Z,X,Y) (16000 - (sqrt(sq(TICK(x)-s[(Z)].x) + sq(TICK(y)-s[(Z)].y))))
-#define GRID_SIDE 25                              // Should be an odd number
-#define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
-
 extern volatile unsigned long paper_time;
 
-
-static void show_test(void);
+static void show_test_help(void);
 
 /* 
  * JSON message typedefs
  */
 typedef struct  {
-  char*             help;     // Help test ID 
-  void         (*f)(void);    // Function to execut the test
+  char*             help;     // Help text
+  void         (*f)(void);    // Function to execute the test
   } self_test_t;
 
 static const self_test_t test_list[] = {
@@ -57,9 +51,9 @@ static const self_test_t test_list[] = {
   {"Advance paper backer",            &paper_test},
   {"LED brightness test",             &LED_test},
   {"Status LED driver",               &status_LED_test},
-  {"Temperature and sendor test",     &analog_input_test},
-  {"DAC test",                        &DAC_test},
   {"Rapid fire LED test",             &rapid_LED_test},
+  {"Analog input test",               &analog_input_test},
+  {"DAC test",                        &DAC_test},
   {"-Timer & PCNT test", 0},
   {"PCNT test all",                   &pcnt_all},
   {"PCNT calibration",                &pcnt_cal},
@@ -99,6 +93,21 @@ static const self_test_t test_list[] = {
  * 
  *-----------------------------------------------------*/
 
+unsigned int next_test (char ch, unsigned int test_ID)
+{
+  if ( ch == '-' )  // Test separator?
+  {
+    test_ID += 20;                    // Go to the next second decade
+    test_ID -= test_ID % 10;          // Round down to the zero
+  }
+  else
+  {
+    test_ID++;
+  }
+
+  return test_ID;
+}
+
 void self_test
 (
   unsigned int test                 // What test to execute
@@ -126,18 +135,10 @@ void self_test
 
   while ( test_list[i].help[0] != 0 )   // Look through the list
   {
-    if ( test_list[i].help[0] == '-' )
-    {
-      test_ID += 20;                    // Go to the next second decade
-      test_ID -= test_ID % 10;          // Round down to the zero
-    }
-    else
-    {
-      test_ID++;
-    }
+    test_ID = next_test(test_list[i].help[0], test_ID);
     if ( test_ID == test )              // Found the test
     {
-      SEND(sprintf(_xs, "%d-%s", test_ID, test_list[i].help);)
+      SEND(sprintf(_xs, "\r\n%d - %s", test_ID, test_list[i].help);)
       test_list[i].f();                 // Execute the test
       run_state &= ~IN_TEST;            // Exit the test 
       freeETarget_timer_start();        // Start interrupts
@@ -148,7 +149,7 @@ void self_test
 /*
  * Have not found the test
  */
-  show_test();
+  show_test_help();
 
  /* 
   *  All done, return;
@@ -158,7 +159,10 @@ void self_test
   return;
 }
 
-static void show_test(void)
+/*---------------------------------------------------------------------
+ * Print out the help text
+ *-------------------------------------------------------------------*/
+static void show_test_help(void)
 {
   unsigned int i;
   unsigned int test_ID;
@@ -167,18 +171,8 @@ static void show_test(void)
   test_ID = 0;
   while ( test_list[i].help[0] != 0 )
   {
-    if ( test_list[i].help[0] == '-' )  // Sction break
-    {
-      test_ID += 20;                    // Go to the next second decade
-      test_ID-= test_ID % 10;          // Round down to the zero
-      SEND(sprintf(_xs, "\r\n\n%s", test_list[i].help);)
-    }
-    else
-    {
-      test_ID++;
-      SEND(sprintf(_xs, "\r\n%d - %s", test_ID, test_list[i].help);)
-    }
-
+    test_ID = next_test(test_list[i].help[0], test_ID);
+    SEND(sprintf(_xs, "\r\n%d - %s", test_ID, test_list[i].help);)
   }
 
   return;
@@ -232,7 +226,6 @@ bool factory_test(void)
 /*
  * Ready to start the test
  */
-  SEND(sprintf(_xs, "\r\nFactory Test");)
   SEND(sprintf(_xs, "\r\nFirmware version: %s   Board version: %d",SOFTWARE_VERSION, revision());)
   SEND(sprintf(_xs, "\r\n");)
   SEND(sprintf(_xs, "\r\nHas the tape seal been removed from the temperature sensor?");)

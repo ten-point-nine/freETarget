@@ -783,7 +783,6 @@ void WiFi_loopback_task(void* parameters);
 
 void WiFi_loopback_test(void)
 {
-    SEND(sprintf(_xs, "WiFi_loopback\r\n");)
     xTaskCreate(WiFi_loopback_task,    "WiFi_loopback_task",          4096, NULL, 5, NULL);
     return;
 }

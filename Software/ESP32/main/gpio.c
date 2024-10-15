@@ -886,8 +886,6 @@ void rapid_green
  *-----------------------------------------------------*/
 void digital_test(void)
 {
-  SEND(sprintf(_xs, "\r\nDigital test");)
-
 /*
  * Read in the fixed digital inputs
  */
@@ -911,7 +909,6 @@ void digital_test(void)
  *--------------------------------------------------------------*/
 void status_LED_test(void)
 {
-  SEND(sprintf(_xs, "\r\nStatus LED test");)
   timer_delay(2*ONE_SECOND);
   set_status_LED("RRR");
   timer_delay(ONE_SECOND);
@@ -945,7 +942,6 @@ void rapid_LED_test(void)
 {
   unsigned int i;
 
-  SEND(sprintf(_xs, "\r\nRapid LED test\r\n");)
   gpio_set_direction(HOLD_C_GPIO,  GPIO_MODE_OUTPUT);
   gpio_set_pull_mode(HOLD_C_GPIO,  GPIO_PULLUP_PULLDOWN);
   gpio_set_direction(HOLD_D_GPIO,  GPIO_MODE_OUTPUT);
