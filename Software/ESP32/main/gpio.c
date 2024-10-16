@@ -65,11 +65,11 @@ volatile unsigned int  step_time;   // Interval to next step
  * Read in the running registers, and return a 1 for every
  * register that is running.
  * 
- *-----------------------------------------------------*/
-static unsigned int clock[] = { RUN_NORTH_LO, RUN_EAST_LO, RUN_SOUTH_LO, RUN_WEST_LO, 
-                                RUN_NORTH_HI, RUN_EAST_HI, RUN_SOUTH_HI, RUN_WEST_HI  };
-static unsigned int run_mask[] = {BIT_NORTH_LO, BIT_EAST_LO, BIT_SOUTH_LO, BIT_WEST_LO,
-                                  BIT_NORTH_HI, BIT_EAST_HI, BIT_SOUTH_HI, BIT_WEST_HI};
+ *----------------------------------- ------------------*/
+static const unsigned int clock[]    = { RUN_NORTH_LO, RUN_EAST_LO, RUN_SOUTH_LO, RUN_WEST_LO, 
+                                         RUN_NORTH_HI, RUN_EAST_HI, RUN_SOUTH_HI, RUN_WEST_HI };
+static const unsigned int run_mask[] = { BIT_NORTH_LO, BIT_EAST_LO, BIT_SOUTH_LO, BIT_WEST_LO,
+                                         BIT_NORTH_HI, BIT_EAST_HI, BIT_SOUTH_HI, BIT_WEST_HI };
 
 unsigned int is_running (void)
 {
@@ -909,73 +909,29 @@ void digital_test(void)
  *--------------------------------------------------------------*/
 void status_LED_test(void)
 {
-  timer_delay(2*ONE_SECOND);
-  set_status_LED("RRR");
-  timer_delay(ONE_SECOND);
-  set_status_LED("GGG");
-  timer_delay(ONE_SECOND);
-  set_status_LED("BBB");
-  timer_delay(ONE_SECOND);
-  set_status_LED("WWW");
-  timer_delay(ONE_SECOND);
-  set_status_LED("RGB");
-  timer_delay(ONE_SECOND);
-  set_status_LED("rgb");
-  timer_delay(5*ONE_SECOND);         // Blink for 5 seconds
-  set_status_LED(LED_READY);
-  SEND(sprintf(_xs, "\r\nDone\r\n");)
-  return;
-}
-
-/*----------------------------------------------------------------
- * 
- * @function: rapid_LED_test()
- * 
- * @brief:    Cycle the status LEDs
- * 
- * @return:   Nothing
- * 
- *----------------------------------------------------------------
- *
- *--------------------------------------------------------------*/
-void rapid_LED_test(void)
-{
-  unsigned int i;
-
-  gpio_set_direction(HOLD_C_GPIO,  GPIO_MODE_OUTPUT);
-  gpio_set_pull_mode(HOLD_C_GPIO,  GPIO_PULLUP_PULLDOWN);
-  gpio_set_direction(HOLD_D_GPIO,  GPIO_MODE_OUTPUT);
-  gpio_set_pull_mode(HOLD_D_GPIO,  GPIO_PULLUP_PULLDOWN);
-
-  json_mfs_hold_d = RAPID_RED;          // Hold D
-  json_mfs_hold_c = RAPID_GREEN;        // Hold C
-  json_mfs_select_cd = RAPID_HIGH;      // Select C and D operation
-  
-  for (i=0; i != 10; i++)
+  if ( ((json_mfs_hold_c != RAPID_RED) 
+        && (json_mfs_hold_c != RAPID_GREEN ) )
+        || ( (json_mfs_hold_d != RAPID_RED)  
+          && (json_mfs_hold_d != RAPID_GREEN) )
+       )
   {
-    set_status_LED(LED_RAPID_RED_WARN); 
-    set_status_LED(LED_RAPID_GREEN_WARN); 
-    timer_delay(3*ONE_SECOND);
-
-    set_status_LED(LED_RAPID_RED);        // Both
-    set_status_LED(LED_RAPID_GREEN);     
-    timer_delay(ONE_SECOND);
-
-    set_status_LED(LED_RAPID_RED);        // Red
-    set_status_LED(LED_RAPID_GREEN_OFF); 
-    timer_delay(ONE_SECOND);
-
-    set_status_LED(LED_RAPID_RED_OFF); 
-    set_status_LED(LED_RAPID_GREEN);      // Green
-    timer_delay(ONE_SECOND);
-
-    set_status_LED(LED_RAPID_RED_OFF); 
-    set_status_LED(LED_RAPID_GREEN_OFF);  // Off
-    timer_delay(ONE_SECOND);
-
-    SEND(sprintf(_xs, "%d ", i);)
+    SEND(sprintf(_xs, "MFS_C or MFS_D not configured for output");)
   }
 
+  timer_delay(2*ONE_SECOND);
+  set_status_LED("RRRRR");
+  timer_delay(2*ONE_SECOND);
+  set_status_LED("GGGGG");
+  timer_delay(ONE_SECOND);
+  set_status_LED("BBBRG");
+  timer_delay(ONE_SECOND);
+  set_status_LED("WWWGR");
+  timer_delay(ONE_SECOND);
+  set_status_LED("RGBRG");
+  timer_delay(ONE_SECOND);
+  set_status_LED("rgbrg");
+  timer_delay(5*ONE_SECOND);         // Blink for 5 seconds
+  set_status_LED(LED_READY);
   SEND(sprintf(_xs, "\r\nDone\r\n");)
   return;
 }

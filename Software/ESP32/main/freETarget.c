@@ -81,9 +81,11 @@ static enum
 static enum {
   RAPID_OFF = 0,          // 0 No rapid fire cycles at all
   RAPID_WAIT,             // 1 Rapid fire is doing nothing (typically 60 seconds)
-  RAPID_ON,               // 2 Time the RAPID lED is on (typically 5 seconds)
+  RAPID_ON,               // 2 Time the RAPID lED is on ( 5 seconds)
   RAPID_SEND              // 3 The event is over, send the results
 } rapid_state;            // Rapid fire state
+
+extern int isr_state;
 
 volatile unsigned int run_state = 0;              // Current operating state 
 
@@ -1090,7 +1092,6 @@ void send_keep_alive(void)
  * This function polls the sensors to make sure that the 
  * 
  *--------------------------------------------------------------*/
-extern int isr_state;
  void interrupt_target_test(void)
  {
 
