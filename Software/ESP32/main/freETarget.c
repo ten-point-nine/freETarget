@@ -144,7 +144,7 @@ void freeETarget_init(void)
  *  Set up the long running timers
  */
   timer_new(&keep_alive,    (unsigned long)json_keep_alive * ONE_SECOND * 60l); // Keep alive timer
-  timer_new(&in_shot_timer, FULL_SCALE);                                  // Time inside of the shot window
+  timer_new(&in_shot_timer, FULL_SCALE);                                        // Time inside of the shot window
   timer_new(&power_save,    (unsigned long)(json_power_save) * (long)ONE_SECOND * 60L);// Power save timer
 
 /*
@@ -298,7 +298,7 @@ void freeETarget_target_loop(void* arg)
   }
 
 /*
- * Proceed to the ARM state
+ * Proceed to the WAITing state
  */
   return WAIT;                      // Carry on to the target
  }

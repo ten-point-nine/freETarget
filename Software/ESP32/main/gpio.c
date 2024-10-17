@@ -915,7 +915,7 @@ void status_LED_test(void)
           && (json_mfs_hold_d != RAPID_GREEN) )
        )
   {
-    SEND(sprintf(_xs, "MFS_C or MFS_D not configured for output");)
+    SEND(sprintf(_xs, "MFS_C or MFS_D not configured for output\r\n");)
   }
 
   timer_delay(2*ONE_SECOND);

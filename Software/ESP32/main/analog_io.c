@@ -27,6 +27,9 @@
 #include "timer.h"
 #include "serial_io.h"
 
+/*
+ * Function prototypes
+ */
 void set_vset_PWM(unsigned int pwm);
                     
 
