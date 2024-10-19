@@ -206,25 +206,22 @@ unsigned int compute_hit(
   }
 
   /*
-   * Find the smallest non-zero value, this is the sensor furthest away from the sensor
-   */
-  smallest = s[N].count;
-  location = N;
-  for (i = E; i <= W; i++)
-  {
-    if (s[i].count < smallest)
-    {
-      location = i;
-      smallest = s[i].count;
-    }
-  }
-
-  /*
    *  Loop and calculate the unknown radius (estimate) for each of the possible 4 sets
    */
   for (set = 0; set != 4; set++)
   {
-    estimate = s[N].count - smallest + 1.0d;
+    smallest = s[three_set[set][0]].count;
+    location = N;
+    for (i = 0; i <= 3; i++)
+    {
+      if (s[three_set[set][i]].count < smallest)
+      {
+        location = three_set[set][i];
+        smallest = s[location].count;
+      }
+    }
+
+    estimate = s[three_set[set][0]].count - smallest + 1.0d;
 
     DLT(DLT_APPLICATION, SEND(sprintf(_xs, "estimate: %4.2f", estimate);))
     error = 999999; // Start with a big error
@@ -243,8 +240,8 @@ unsigned int compute_hit(
       {
         if (find_xy_3D(&s[three_set[set][i]], estimate, z_offset_clock))
         {
-          x_avg += s[i].xs; // Keep the running average
-          y_avg += s[i].ys;
+          x_avg += s[three_set[set][i]].xs; // Keep the running average
+          y_avg += s[three_set[set][i]].ys;
         }
         else // The calculation failed
         {
