@@ -111,8 +111,21 @@ void init_sensors(void)
  * See freETarget documentaton for algorithm
  *
  *--------------------------------------------------------------*/
+#define USE_4 4
+#define USE_3 3
+#define USE_2 2
 
-static int three_set[4][3] = {{N, E, S}, {E, S, W}, {S, W, N}, {W, N, E}};
+#define USE USE_4
+
+#if USE == USE_4
+static int use_set[][4] = {{N, E, S, W}};
+#endif
+#if USE == USE_3
+static int use_set[][3] = {{N, E, S}, {E, S, W}, {S, W, N}, {W, N, E}};
+#endif
+#if USE == USE_2
+static int two_set[][2] = {{N, E}, {N, S}, {N, E}, {N, W}, {E, S}, {E, W}, {S, W}};
+#endif
 
 unsigned int compute_hit(
     shot_record_t *shot // Storing the results
@@ -158,151 +171,155 @@ unsigned int compute_hit(
   /*
    * Determine the location of the reference counter (longest time)
    */
-  reference = shot->timer_count[N];
-  location = N;
-  for (i = N; i <= W; i++)
+  for (set = 0; set != (4 - USE) + 1; set++)
   {
-    if (shot->timer_count[i] > reference)
+    location = use_set[set][0];
+    reference = shot->timer_count[location];
+
+    for (i = 0; i <= USE; i++)
     {
-      reference = shot->timer_count[i];
-      location = i;
-    }
-  }
-
-  DLT(DLT_APPLICATION, SEND(sprintf(_xs, "Reference: %4.2f   location: %s", reference, find_sensor(1 << location)->long_name);))
-
-  /*
-   * Correct the time to remove the shortest distance
-   */
-  for (i = N; i <= W; i++)
-  {
-    s[i].count = reference - shot->timer_count[i];
-    s[i].is_valid = true;
-    if (shot->timer_count[i] == 0)
-    {
-      s[i].is_valid = false;
-    }
-  }
-
-  DLT(DLT_APPLICATION,
+      if (shot->timer_count[use_set[set][i]] > reference)
       {
-        SEND(sprintf(_xs, "\r\nMicroseconds ");)
-        for (i = 0; i < 8; i++)
-          SEND(sprintf(_xs, "%s: %4.2f ", find_sensor(1 << i)->long_name, (double)s[i].count / ((double)OSCILLATOR_MHZ));)
-      })
-
-  /*
-   * Fill up the structure with the counter geometry
-   */
-  for (i = N; i <= W; i++)
-  {
-    s[i].b = s[i].count;
-    s[i].c = sqrt(sq(s[(i) % 4].x - s[(i + 1) % 4].x) + sq(s[(i) % 4].y - s[(i + 1) % 4].y));
-  }
-
-  for (i = N; i <= W; i++)
-  {
-    s[i].a = s[(i + 1) % 4].b;
-  }
-
-  /*
-   *  Loop and calculate the unknown radius (estimate) for each of the possible 4 sets
-   */
-  for (set = 0; set != 4; set++)
-  {
-    smallest = s[three_set[set][0]].count;
-    location = N;
-    for (i = 0; i <= 3; i++)
-    {
-      if (s[three_set[set][i]].count < smallest)
-      {
-        location = three_set[set][i];
-        smallest = s[location].count;
+        location = use_set[set][i];
+        reference = shot->timer_count[location];
       }
     }
 
-    estimate = s[three_set[set][0]].count - smallest + 1.0d;
-
-    DLT(DLT_APPLICATION, SEND(sprintf(_xs, "estimate: %4.2f", estimate);))
-    error = 999999; // Start with a big error
-    count = 0;
+    DLT(DLT_APPLICATION, SEND(sprintf(_xs, "Reference: %4.2f   location: %s", reference, find_sensor(1 << location)->long_name);))
 
     /*
-     * Iterate to minimize the error
+     * Correct the time to remove the shortest distance
      */
-    while (error > THRESHOLD)
+    for (i = 0; i <= USE; i++)
     {
-      x_avg = 0; // Zero out the average values
-      y_avg = 0;
-      last_estimate = estimate;
-
-      for (i = 0; i <= 3; i++) // Calculate X/Y for each sensor in the set
+      s[use_set[set][i]].count = reference - shot->timer_count[use_set[set][i]];
+      s[use_set[set][i]].is_valid = true;
+      if (shot->timer_count[use_set[set][i]] == 0)
       {
-        if (find_xy_3D(&s[three_set[set][i]], estimate, z_offset_clock))
+        s[use_set[set][i]].is_valid = false;
+      }
+    }
+
+    DLT(DLT_APPLICATION,
         {
-          x_avg += s[three_set[set][i]].xs; // Keep the running average
-          y_avg += s[three_set[set][i]].ys;
-        }
-        else // The calculation failed
+          SEND(sprintf(_xs, "\r\nMicroseconds ");)
+          for (i = 0; i < 8; i++)
+            SEND(sprintf(_xs, "%s: %4.2f ", find_sensor(1 << i)->long_name, (double)s[i].count / ((double)OSCILLATOR_MHZ));)
+        })
+
+    /*
+     * Fill up the structure with the counter geometry
+     */
+    for (i = 0; i <= USE; i++)
+    {
+      s[use_set[set][i]].b = s[i].count;
+      s[use_set[set][i]].c = sqrt(sq(s[(use_set[set][i]) % USE].x - s[(i + 1) % use_set[set][i]].x) + sq(s[(i) % use_set[set][i]].y - s[(i + 1) % 4].y));
+    }
+
+    for (i = 0; i <= USE; i++)
+    {
+      s[use_set[set][i]].a = s[use_set[set][(i + 1) % USE]].b;
+    }
+
+    /*
+     *  Loop and calculate the unknown radius (estimate) for each of the possible 4 sets
+     */
+    for (set = 0; set != USE; set++)
+    {
+      location = use_set[set][0];
+      smallest = s[location].count;
+      for (i = 0; i < USE; i++)
+      {
+        if (s[use_set[set][i]].count < smallest)
         {
-          DLT(DLT_APPLICATION, SEND(sprintf(_xs, "Calculations failed");))
-          return MISS; // Abort
+          location = use_set[set][i];
+          smallest = s[location].count;
         }
       }
 
-      x_avg /= 3.0d;
-      y_avg /= 3.0d;
+      estimate = s[use_set[set][0]].count - smallest + 1.0d;
 
-      estimate = sqrt(sq(s[location].x - x_avg) + sq(s[location].y - y_avg));
-      error = fabs(last_estimate - estimate);
+      DLT(DLT_APPLICATION, SEND(sprintf(_xs, "estimate: %4.2f", estimate);))
+      error = 999999; // Start with a big error
+      count = 0;
 
-      DLT(DLT_APPLICATION, SEND(sprintf(_xs, "x_avg: %4.2f  y_avg: %4.2f estimate: %4.2f error: %4.2f", x_avg, y_avg, estimate, error);))
-
-      count++;
-      if (count > 20)
+      /*
+       * Iterate to minimize the error
+       */
+      while (error > THRESHOLD)
       {
-        break;
+        x_avg = 0; // Zero out the average values
+        y_avg = 0;
+        last_estimate = estimate;
+
+        for (i = 0; i <= USE; i++) // Calculate X/Y for each sensor in the set
+        {
+          if (find_xy_3D(&s[use_set[set][i]], estimate, z_offset_clock))
+          {
+            x_avg += s[use_set[set][i]].xs; // Keep the running average
+            y_avg += s[use_set[set][i]].ys;
+          }
+          else // The calculation failed
+          {
+            DLT(DLT_APPLICATION, SEND(sprintf(_xs, "Calculations failed");))
+            return MISS; // Abort
+          }
+        }
+
+        x_avg /= 3.0d;
+        y_avg /= 3.0d;
+
+        estimate = sqrt(sq(s[location].x - x_avg) + sq(s[location].y - y_avg));
+        error = fabs(last_estimate - estimate);
+
+        DLT(DLT_APPLICATION, SEND(sprintf(_xs, "x_avg: %4.2f  y_avg: %4.2f estimate: %4.2f error: %4.2f", x_avg, y_avg, estimate, error);))
+
+        count++;
+        if (count > 20)
+        {
+          break;
+        }
+      }
+      x_set[set] = x_avg;
+      y_set[set] = y_avg;
+    }
+
+    /*
+     * Remove the furthest value of X and Y
+     */
+    x_avg = 0.0;
+    y_avg = 0.0;
+    for (i = 0; i != USE; i++)
+    {
+      x_avg += x_set[i]; // Find the average of all all of the sets
+      y_avg += y_set[i];
+    }
+
+    distance_max = 0.0;
+    for (i = 0; set != USE; set++) // Comput the distance from the average
+    {
+      distance[set] = sqrt(sq(x_avg - x_set[i]) + sq(y_avg - y_set[i]));
+      if (distance[set] > distance_max)
+      {
+        location = set;
+        distance_max = distance[set];
       }
     }
-    x_set[set] = x_avg;
-    y_set[set] = y_avg;
-  }
 
-  /*
-   * Remove the furthest value of X and Y
-   */
-  x_avg = 0.0;
-  y_avg = 0.0;
-  for (set = 0; set != 4; set++)
-  {
-    x_avg += x_set[set]; // Find the average of all all of the sets
-    y_avg += y_set[set];
-  }
-
-  distance_max = 0.0;
-  for (set = 0; set != 4; set++) // Comput the distance from the average
-  {
-    distance[set] = sqrt(sq(x_avg - x_set[set]) + sq(y_avg - y_set[set]));
-    if (distance[set] > distance_max)
+    x_avg = 0.0;
+    y_avg = 0.0;
+    for (i = 0; i != USE; i++) // Compute the distace less the maximum
     {
-      location = set;
-      distance_max = distance[set];
+      if (set != location)
+      {
+        x_avg += x_set[i]; // Find the average of all all of the sets
+        y_avg += y_set[i];
+      }
     }
   }
 
-  x_avg = 0.0;
-  y_avg = 0.0;
-  for (set = 0; set != 4; set++) // Compute the distace less the maximum
-  {
-    if (set != location)
-    {
-      x_avg += x_set[set]; // Find the average of all all of the sets
-      y_avg += y_set[set];
-    }
-  }
-
-  x_avg /= 3.0;
-  y_avg /= 3.0;
+  x_avg /= (USE - 1);
+  y_avg /= (USE - 1);
 
   /*
    * All done return
