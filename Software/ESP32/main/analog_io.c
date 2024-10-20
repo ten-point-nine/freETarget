@@ -166,7 +166,7 @@ void set_LED_PWM_now(
     return;
   }
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);))
+  DLT(DLT_DIAG, SEND(sprintf(_xs, "new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);))
 
   pwm_set(LED_PWM, new_LED_percent); // Write the value out
 
@@ -328,7 +328,7 @@ void set_VREF(void)
 {
   float volts[4];
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "Set VREF: %4.2f %4.2f", json_vref_lo, json_vref_hi);))
+  DLT(DLT_DIAG, SEND(sprintf(_xs, "Set VREF: %4.2f %4.2f", json_vref_lo, json_vref_hi);))
 
   if ((json_vref_lo == 0) // Check for an uninitialized VREF
       || (json_vref_hi == 0))
@@ -365,11 +365,10 @@ void set_VREF(void)
  *--------------------------------------------------------------*/
 void analog_input_test(void)
 {
-  SEND(sprintf(_xs, "\r\nAnalog Input ");)
   SEND(sprintf(_xs, "\r\n12V %5.3f", v12_supply());)
   SEND(sprintf(_xs, "\r\nBoard Rev %d", revision());)
-  SEND(sprintf(_xs, "\r\nTemperature: %f", temperature_C());)
-  SEND(sprintf(_xs, "\r\nHumidity: %f\r\n", humidity_RH());)
+  SEND(sprintf(_xs, "\r\nTemperature: %4.2f", temperature_C());)
+  SEND(sprintf(_xs, "\r\nHumidity: %4.2f", humidity_RH());)
   SEND(sprintf(_xs, "\r\nSpeed of Sound: %4.2fmm/us", speed_of_sound(temperature_C(), humidity_RH()));)
   SEND(sprintf(_xs, "\r\nDone\r\n");)
   return;
