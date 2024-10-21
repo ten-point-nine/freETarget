@@ -162,7 +162,7 @@ void multifunction_init(void)
     if (DIP_SW_A) // Switch A pressed
     {
       is_trace = DLT_CRITICAL | DLT_INFO | DLT_APPLICATION | DLT_COMMUNICATION | DLT_DIAG | DLT_DEBUG;
-      DLT(DLT_CRITICAL, SEND(sprintf(_xs, "\r\nAll tracing enabled");))
+      DLT(DLT_INFO, SEND(sprintf(_xs, "\r\nAll tracing enabled");))
     }
 
     if (DIP_SW_B) // Switch B pressed
