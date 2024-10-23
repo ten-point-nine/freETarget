@@ -24,38 +24,34 @@
 /*
  *  Serial IO port configuration
  */
-const int uart_console = UART_NUM_0;
-const uart_config_t uart_console_config =
-    {
-        .baud_rate = 115200,
-        .data_bits = UART_DATA_8_BITS,
-        .parity = UART_PARITY_DISABLE,
-        .stop_bits = UART_STOP_BITS_1,
-        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
-        .rx_flow_ctrl_thresh = 122,
-        .source_clk = UART_SCLK_DEFAULT};
-const int uart_console_size = (1024 * 2);
-QueueHandle_t uart_console_queue;
+const int           uart_console        = UART_NUM_0;
+const uart_config_t uart_console_config = {.baud_rate           = 115200,
+                                           .data_bits           = UART_DATA_8_BITS,
+                                           .parity              = UART_PARITY_DISABLE,
+                                           .stop_bits           = UART_STOP_BITS_1,
+                                           .flow_ctrl           = UART_HW_FLOWCTRL_DISABLE,
+                                           .rx_flow_ctrl_thresh = 122,
+                                           .source_clk          = UART_SCLK_DEFAULT};
+const int           uart_console_size   = (1024 * 2);
+QueueHandle_t       uart_console_queue;
 
-const int uart_aux = UART_NUM_1;
-const uart_config_t uart_aux_config =
-    {
-        .baud_rate = 115200,
-        .data_bits = UART_DATA_8_BITS,
-        .parity = UART_PARITY_DISABLE,
-        .stop_bits = UART_STOP_BITS_1,
-        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
-        .rx_flow_ctrl_thresh = 122,
-        .source_clk = UART_SCLK_DEFAULT};
+const int           uart_aux        = UART_NUM_1;
+const uart_config_t uart_aux_config = {.baud_rate           = 115200,
+                                       .data_bits           = UART_DATA_8_BITS,
+                                       .parity              = UART_PARITY_DISABLE,
+                                       .stop_bits           = UART_STOP_BITS_1,
+                                       .flow_ctrl           = UART_HW_FLOWCTRL_DISABLE,
+                                       .rx_flow_ctrl_thresh = 122,
+                                       .source_clk          = UART_SCLK_DEFAULT};
 
-const int uart_aux_size = (1024 * 2);
+const int     uart_aux_size = (1024 * 2);
 QueueHandle_t uart_aux_queue;
 
 typedef struct queue_struct
 {
   char queue[1024]; // Holding queue
-  int in;           // Index of input characters
-  int out;          // Index of output characters
+  int  in;          // Index of input characters
+  int  out;         // Index of output characters
 } queue_struct_t;
 
 static queue_struct_t in_buffer;  // TCPIP input buffer
@@ -93,9 +89,9 @@ void serial_io_init(void)
   /*
    *  Prepare the TCPIP queues
    */
-  in_buffer.in = 0; // Queue pointers
-  in_buffer.out = 0;
-  out_buffer.in = 0; // Queue pointers
+  in_buffer.in   = 0; // Queue pointers
+  in_buffer.out  = 0;
+  out_buffer.in  = 0; // Queue pointers
   out_buffer.out = 0;
 
   /*
@@ -106,7 +102,7 @@ void serial_io_init(void)
 
 void serial_aux_init(void)
 {
-  if (json_aux_port_enable == false)
+  if ( json_aux_port_enable == false )
   {
     return;
   }
@@ -144,8 +140,7 @@ void serial_aux_init(void)
  *
  *
  ******************************************************************************/
-int serial_available(
-    int ports // Bit mask of active ports
+int serial_available(int ports // Bit mask of active ports
 )
 {
   int n_available;
@@ -153,25 +148,25 @@ int serial_available(
 
   n_available = 0;
 
-  if (ports & CONSOLE)
+  if ( ports & CONSOLE )
   {
     uart_get_buffered_data_len(uart_console, (size_t *)&length);
     n_available += length;
   }
 
-  if ((json_aux_port_enable == true) // Is there hardware on the Aux port?
-      && (ports & AUX))              // Are we reading the AUX port
+  if ( (json_aux_port_enable == true) // Is there hardware on the Aux port?
+       && (ports & AUX) )             // Are we reading the AUX port
   {
     uart_get_buffered_data_len(uart_aux, (size_t *)&length);
     n_available += length;
   }
 
-  if (ports & TCPIP)
+  if ( ports & TCPIP )
   {
-    if (in_buffer.in != in_buffer.out)
+    if ( in_buffer.in != in_buffer.out )
     {
       length = in_buffer.in - in_buffer.out;
-      if (length < 0)
+      if ( length < 0 )
       {
         length += sizeof(in_buffer.queue);
       }
@@ -204,18 +199,18 @@ int serial_who(void)
   int length;
 
   uart_get_buffered_data_len(uart_console, (size_t *)&length);
-  if (length != 0)
+  if ( length != 0 )
   {
     return CONSOLE;
   }
 
   uart_get_buffered_data_len(uart_aux, (size_t *)&length);
-  if (length != 0)
+  if ( length != 0 )
   {
     return AUX;
   }
 
-  if (in_buffer.in != in_buffer.out)
+  if ( in_buffer.in != in_buffer.out )
   {
     return TCPIP;
   }
@@ -235,24 +230,23 @@ int serial_who(void)
  *
  *
  ********************************************************************************/
-void serial_flush(
-    int ports // active port list
+void serial_flush(int ports // active port list
 )
 {
-  if (ports & CONSOLE)
+  if ( ports & CONSOLE )
   {
     uart_flush(uart_console);
   }
 
-  if ((json_aux_port_enable == true) // Is there hardware on the Aux port?
-      && (ports & AUX))              // Are we reading the AUX port
+  if ( (json_aux_port_enable == true) // Is there hardware on the Aux port?
+       && (ports & AUX) )             // Are we reading the AUX port
   {
     uart_flush(uart_aux);
   }
 
-  if (ports & TCPIP)
+  if ( ports & TCPIP )
   {
-    in_buffer.in = 0;
+    in_buffer.in  = 0;
     in_buffer.out = 0;
   }
   return;
@@ -270,8 +264,7 @@ void serial_flush(
  *
  *
  *******************************************************************************-*/
-char serial_getch(
-    int ports // Bit mask of active ports
+char serial_getch(int ports // Bit mask of active ports
 )
 {
   char ch;
@@ -279,9 +272,9 @@ char serial_getch(
   /*
    * Bring in the console bytes
    */
-  if (ports & CONSOLE)
+  if ( ports & CONSOLE )
   {
-    if (uart_read_bytes(uart_console, &ch, 1, 0) > 0)
+    if ( uart_read_bytes(uart_console, &ch, 1, 0) > 0 )
     {
       return ch;
     }
@@ -290,10 +283,10 @@ char serial_getch(
   /*
    *  Bring in the AUX bytes
    */
-  if ((json_aux_port_enable == true) // Is there hardware on the Aux port?
-      && (ports & AUX))              // Are we reading the AUX port
+  if ( (json_aux_port_enable == true) // Is there hardware on the Aux port?
+       && (ports & AUX) )             // Are we reading the AUX port
   {
-    if (uart_read_bytes(uart_aux, &ch, 1, 0) > 0)
+    if ( uart_read_bytes(uart_aux, &ch, 1, 0) > 0 )
     {
       return ch;
     }
@@ -302,9 +295,9 @@ char serial_getch(
   /*
    *  Bring in the TCPIP bytes
    */
-  if (ports & TCPIP)
+  if ( ports & TCPIP )
   {
-    if (tcpip_queue_2_app(&ch, 1) > 0)
+    if ( tcpip_queue_2_app(&ch, 1) > 0 )
     {
       return ch;
     }
@@ -330,27 +323,26 @@ char serial_getch(
  * in use.
  *
  ******************************************************************************/
-void serial_putch(
-    char ch,
-    int ports // Bitmask of active ports
+void serial_putch(char ch,
+                  int  ports // Bitmask of active ports
 )
 {
 
   /*
    * Output to the devices
    */
-  if (ports & CONSOLE)
+  if ( ports & CONSOLE )
   {
     printf("%c", ch); // Must be printf
   }
 
-  if ((json_aux_port_enable == true) // Is there hardware on the Aux port?
-      && (ports & AUX))              // Are we reading the AUX port
+  if ( (json_aux_port_enable == true) // Is there hardware on the Aux port?
+       && (ports & AUX) )             // Are we reading the AUX port
   {
     uart_write_bytes(uart_aux, (const char *)&ch, 1);
   }
 
-  if (ports & TCPIP)
+  if ( ports & TCPIP )
   {
     tcpip_app_2_queue(&ch, 1);
   }
@@ -361,9 +353,8 @@ void serial_putch(
   return;
 }
 
-void serial_to_all(
-    char *str, // String to output
-    int ports  // List of active ports
+void serial_to_all(char *str,  // String to output
+                   int   ports // List of active ports
 )
 {
   unsigned int length;
@@ -372,7 +363,7 @@ void serial_to_all(
    *  Figure out the string length
    */
   length = 0;
-  while (str[length])
+  while ( str[length] )
   {
     length++;
   }
@@ -380,18 +371,18 @@ void serial_to_all(
   /*
    * Output to the devices
    */
-  if (ports & CONSOLE)
+  if ( ports & CONSOLE )
   {
     printf("%s", str); // Must be printf
   }
 
-  if ((json_aux_port_enable == true) // Is there hardware on the Aux port?
-      && (ports & AUX))              // Are we reading the AUX port
+  if ( (json_aux_port_enable == true) // Is there hardware on the Aux port?
+       && (ports & AUX) )             // Are we reading the AUX port
   {
     uart_write_bytes(uart_aux, (const char *)str, length);
   }
 
-  if (ports & TCPIP)
+  if ( ports & TCPIP )
   {
     tcpip_app_2_queue(str, length);
   }
@@ -416,15 +407,14 @@ void serial_to_all(
  * TCPIP queue for later output onto the TCPIP channel
  *
  ******************************************************************************/
-int tcpip_app_2_queue(
-    char *buffer, // Where to return the bytes
-    int length    // Maximum transfer size
+int tcpip_app_2_queue(char *buffer, // Where to return the bytes
+                      int   length  // Maximum transfer size
 )
 {
   int bytes_moved; // Number of bytes written
 
   bytes_moved = 0;
-  while (length != 0)
+  while ( length != 0 )
   {
     out_buffer.queue[out_buffer.in] = *buffer;
     buffer++;
@@ -453,28 +443,27 @@ int tcpip_app_2_queue(
  * the data out to the socket
  *
  ******************************************************************************/
-int tcpip_queue_2_socket(
-    char *buffer, // Place to put data
-    int length    // Number of bytes to read
+int tcpip_queue_2_socket(char *buffer, // Place to put data
+                         int   length  // Number of bytes to read
 )
 {
   int bytes_moved; // Number of bytes read from queue
 
-  if (out_buffer.out == out_buffer.in)
+  if ( out_buffer.out == out_buffer.in )
   {
     return 0; // Nothing to say
   }
 
   bytes_moved = 0;
 
-  while (length != 0)
+  while ( length != 0 )
   {
     *buffer = out_buffer.queue[out_buffer.out];
     buffer++;
     length--;
     bytes_moved++;
     out_buffer.out = (out_buffer.out + 1) % sizeof(out_buffer.queue);
-    if (out_buffer.out == out_buffer.in)
+    if ( out_buffer.out == out_buffer.in )
     {
       break; // RUn out of things to read
     }
@@ -499,27 +488,26 @@ int tcpip_queue_2_socket(
  * Characters from the TCPIP input queue are returned to the application
  *
  ******************************************************************************/
-int tcpip_queue_2_app(
-    char *buffer, // Where to return the bytes
-    int length    // Maximum transfer size
+int tcpip_queue_2_app(char *buffer, // Where to return the bytes
+                      int   length  // Maximum transfer size
 )
 {
   int bytes_moved;
 
   bytes_moved = 0;
-  if (in_buffer.out == in_buffer.in)
+  if ( in_buffer.out == in_buffer.in )
   {
     return 0; // Nothing waiting for us
   }
 
-  while (length)
+  while ( length )
   {
     *buffer = in_buffer.queue[in_buffer.out];
     buffer++;
     length--;
     bytes_moved++;
     in_buffer.out = (in_buffer.out + 1) % sizeof(in_buffer.queue);
-    if (in_buffer.out == in_buffer.in)
+    if ( in_buffer.out == in_buffer.in )
     {
       break; // Reached the end
     }
@@ -541,22 +529,21 @@ int tcpip_queue_2_app(
  * Characters from the TCPIP input queue are returned to the application
  *
  ******************************************************************************/
-int tcpip_socket_2_queue(
-    char *buffer, // Where to return the bytes
-    int length    // Maximum transfer size
+int tcpip_socket_2_queue(char *buffer, // Where to return the bytes
+                         int   length  // Maximum transfer size
 )
 {
   int bytes_moved;
 
   bytes_moved = 0;
-  while (length)
+  while ( length )
   {
     in_buffer.queue[in_buffer.in] = *buffer;
     buffer++;
     length--;
     bytes_moved++;
     in_buffer.in = (in_buffer.in + 1) % sizeof(in_buffer.queue);
-    if (in_buffer.out == in_buffer.in)
+    if ( in_buffer.out == in_buffer.in )
     {
       DLT(DLT_CRITICAL, SEND(sprintf(_xs, "TCPIP input queue overrun\r\n");)) // Reached the end
       break;
@@ -581,49 +568,47 @@ int tcpip_socket_2_queue(
  * has been received.
  *
  ******************************************************************************/
-bool get_string(
-    char destination[],
-    int size)
+bool get_string(char destination[], int size)
 {
   int ch; // Input character
   int i;  // Input index
 
-  i = 0;
+  i              = 0;
   destination[0] = 0;
-  while (1)
+  while ( 1 )
   {
-    if (serial_available(ALL) != 0)
+    if ( serial_available(ALL) != 0 )
     {
       ch = serial_getch(ALL);
       SEND(sprintf(_xs, "%c", ch);)
 
-      switch (ch)
+      switch ( ch )
       {
-      case 8: // Backspace
-        i--;
-        if (i < 0)
-        {
-          i = 0;
-        }
-        destination[i] = 0;
-        break;
+        case 8: // Backspace
+          i--;
+          if ( i < 0 )
+          {
+            i = 0;
+          }
+          destination[i] = 0;
+          break;
 
-      case '\r': // Enter
-      case '\n': // newline
-        return 1;
+        case '\r': // Enter
+        case '\n': // newline
+          return 1;
 
-      case 'C' & 0x1F: // Control C, exit
-      case 0x1B:       // Escape
-        return 0;
+        case 'C' & 0x1F: // Control C, exit
+        case 0x1B:       // Escape
+          return 0;
 
-      default:
-        destination[i] = ch;
-        if (i < size)
-        {
-          i++;
-        }
-        destination[i] = 0;
-        break;
+        default:
+          destination[i] = ch;
+          if ( i < size )
+          {
+            i++;
+          }
+          destination[i] = 0;
+          break;
       }
     }
     vTaskDelay(10);
@@ -645,9 +630,9 @@ bool get_string(
  ******************************************************************************/
 void serial_port_test(void)
 {
-  unsigned char test[] = "PASS - This is the loopback test";
-  unsigned int i;
-  unsigned char ch;
+  unsigned char          test[] = "PASS - This is the loopback test";
+  unsigned int           i;
+  unsigned char          ch;
   volatile unsigned long test_time;
 
   timer_new(&test_time, ONE_SECOND * 10);
@@ -655,7 +640,7 @@ void serial_port_test(void)
   /*
    * Abort the test if the AUX port is not available
    */
-  if (json_aux_port_enable == false)
+  if ( json_aux_port_enable == false )
   {
     SEND(sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_PORTS_ENABLE\": 1} to enable");)
     SEND(sprintf(_xs, _DONE_);)
@@ -666,14 +651,14 @@ void serial_port_test(void)
    * Send out the AUX port, back in, and then to the console
    */
   SEND(sprintf(_xs, "\r\nAUX Serial Port Loopback.  Make sure AUX port is looped back");)
-  for (i = 0; i != sizeof(test); i++)
+  for ( i = 0; i != sizeof(test); i++ )
   {
     serial_putch(test[i], AUX); // Output to the AUX Port
 
-    while (serial_available(AUX) == 0)
+    while ( serial_available(AUX) == 0 )
     {
       timer_delay(1); // Wait for it to come back
-      if (test_time == 0)
+      if ( test_time == 0 )
       {
         SEND(sprintf(_xs, "\r\nTest failed, no input from AUX\r\n");)
         return;

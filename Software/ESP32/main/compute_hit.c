@@ -29,12 +29,13 @@
  */
 sensor_t s[4] = {
     {0, {'n', "NORTH_LO", LED_NORTH_FAILED, 0x80}, {'N', "NORTH_HI", LED_NORTH_FAILED, 0x08}},
-    {1, {'e', "EAST_LO", LED_EAST_FAILED, 0x40}, {'E', "EAST_HI", LED_EAST_FAILED, 0x04}},
+    {1, {'e', "EAST_LO", LED_EAST_FAILED, 0x40},   {'E', "EAST_HI", LED_EAST_FAILED, 0x04}  },
     {2, {'s', "SOUTH_LO", LED_SOUTH_FAILED, 0x20}, {'S', "SOUTH_HI", LED_SOUTH_FAILED, 0x02}},
-    {3, {'w', "WEST_LO", LED_WEST_FAILED, 0x10}, {'W', "WEST_HI", LED_WEST_FAILED, 0x01}}};
+    {3, {'w', "WEST_LO", LED_WEST_FAILED, 0x10},   {'W', "WEST_HI", LED_WEST_FAILED, 0x01}  }
+};
 
-unsigned int pellet_calibre;       // Time offset to compensate for pellet diameter
-static volatile unsigned long wdt; // Warchdog  timer
+unsigned int                  pellet_calibre; // Time offset to compensate for pellet diameter
+static volatile unsigned long wdt;            // Warchdog  timer
 
 static void remap_target(double *x, double *y); // Map a club target if used
 
@@ -69,27 +70,27 @@ void init_sensors(void)
   /*
    * Determine the speed of sound and ajust
    */
-  s_of_sound = speed_of_sound(temperature_C(), humidity_RH());
+  s_of_sound     = speed_of_sound(temperature_C(), humidity_RH());
   pellet_calibre = ((double)json_calibre_x10 / s_of_sound / 2.0d / 10.0d) * OSCILLATOR_MHZ; // Clock adjustement
 
   /*
    * Work out the geometry of the sensors
    */
   s[N].index = N;
-  s[N].x = json_north_x / s_of_sound * OSCILLATOR_MHZ;
-  s[N].y = (json_sensor_dia / 2.0d + json_north_y) / s_of_sound * OSCILLATOR_MHZ;
+  s[N].x     = json_north_x / s_of_sound * OSCILLATOR_MHZ;
+  s[N].y     = (json_sensor_dia / 2.0d + json_north_y) / s_of_sound * OSCILLATOR_MHZ;
 
   s[E].index = E;
-  s[E].x = (json_sensor_dia / 2.0d + json_east_x) / s_of_sound * OSCILLATOR_MHZ;
-  s[E].y = (0.0d + json_east_y) / s_of_sound * OSCILLATOR_MHZ;
+  s[E].x     = (json_sensor_dia / 2.0d + json_east_x) / s_of_sound * OSCILLATOR_MHZ;
+  s[E].y     = (0.0d + json_east_y) / s_of_sound * OSCILLATOR_MHZ;
 
   s[S].index = S;
-  s[S].x = 0.0d + json_south_x / s_of_sound * OSCILLATOR_MHZ;
-  s[S].y = -(json_sensor_dia / 2.0d + json_south_y) / s_of_sound * OSCILLATOR_MHZ;
+  s[S].x     = 0.0d + json_south_x / s_of_sound * OSCILLATOR_MHZ;
+  s[S].y     = -(json_sensor_dia / 2.0d + json_south_y) / s_of_sound * OSCILLATOR_MHZ;
 
   s[W].index = W;
-  s[W].x = -(json_sensor_dia / 2.0d + json_west_x) / s_of_sound * OSCILLATOR_MHZ;
-  s[W].y = json_west_y / s_of_sound * OSCILLATOR_MHZ;
+  s[W].x     = -(json_sensor_dia / 2.0d + json_west_x) / s_of_sound * OSCILLATOR_MHZ;
+  s[W].y     = json_west_y / s_of_sound * OSCILLATOR_MHZ;
 
   /*
    *  All done, return
@@ -112,13 +113,12 @@ void init_sensors(void)
  *
  *--------------------------------------------------------------*/
 
-unsigned int compute_hit(
-    shot_record_t *shot // Storing the results
+unsigned int compute_hit(shot_record_t *shot // Storing the results
 )
 {
   double reference; // Time of reference counter
-  int location;     // Sensor chosen for reference location
-  int i, count;
+  int    location;  // Sensor chosen for reference location
+  int    i, count;
   double estimate;             // Estimated position
   double last_estimate, error; // Location error
   double x_avg, y_avg;         // Running average location
@@ -135,7 +135,8 @@ unsigned int compute_hit(
   /*
    *  Check for a miss, If there is a face strike, or one of the timers did not start, it's a miss
    */
-  if ((shot->face_strike != 0) || (shot->timer_count[N] == 0) || (shot->timer_count[E] == 0) || (shot->timer_count[S] == 0) || (shot->timer_count[W] == 0))
+  if ( (shot->face_strike != 0) || (shot->timer_count[N] == 0) || (shot->timer_count[E] == 0) || (shot->timer_count[S] == 0) ||
+       (shot->timer_count[W] == 0) )
   {
     DLT(DLT_APPLICATION, SEND(sprintf(_xs, "Miss detected");))
     return MISS;
@@ -151,19 +152,19 @@ unsigned int compute_hit(
   /*
    *  Display the timer registers if in trace mode
    */
-  DLT(DLT_APPLICATION, for (i = N; i <= W_HI; i++) SEND(sprintf(_xs, "%s: %d ", find_sensor(1 << i)->long_name, shot->timer_count[i]);))
+  DLT(DLT_APPLICATION, for ( i = N; i <= W_HI; i++ ) SEND(sprintf(_xs, "%s: %d ", find_sensor(1 << i)->long_name, shot->timer_count[i]);))
 
   /*
    * Determine the location of the reference counter (longest time)
    */
   reference = shot->timer_count[N];
-  location = N;
-  for (i = N; i <= W; i++)
+  location  = N;
+  for ( i = N; i <= W; i++ )
   {
-    if (shot->timer_count[i] > reference)
+    if ( shot->timer_count[i] > reference )
     {
       reference = shot->timer_count[i];
-      location = i;
+      location  = i;
     }
   }
 
@@ -172,33 +173,32 @@ unsigned int compute_hit(
   /*
    * Correct the time to remove the shortest distance
    */
-  for (i = N; i <= W; i++)
+  for ( i = N; i <= W; i++ )
   {
-    s[i].count = reference - shot->timer_count[i];
+    s[i].count    = reference - shot->timer_count[i];
     s[i].is_valid = true;
-    if (shot->timer_count[i] == 0)
+    if ( shot->timer_count[i] == 0 )
     {
       s[i].is_valid = false;
     }
   }
 
-  DLT(DLT_APPLICATION,
-      {
-        SEND(sprintf(_xs, "\r\nMicroseconds ");)
-        for (i = 0; i < 8; i++)
-          SEND(sprintf(_xs, "%s: %4.2f ", find_sensor(1 << i)->long_name, (double)s[i].count / ((double)OSCILLATOR_MHZ));)
-      })
+  DLT(DLT_APPLICATION, {
+    SEND(sprintf(_xs, "\r\nMicroseconds ");)
+    for ( i = 0; i < 8; i++ )
+      SEND(sprintf(_xs, "%s: %4.2f ", find_sensor(1 << i)->long_name, (double)s[i].count / ((double)OSCILLATOR_MHZ));)
+  })
 
   /*
    * Fill up the structure with the counter geometry
    */
-  for (i = N; i <= W; i++)
+  for ( i = N; i <= W; i++ )
   {
     s[i].b = s[i].count;
     s[i].c = sqrt(sq(s[(i) % 4].x - s[(i + 1) % 4].x) + sq(s[(i) % 4].y - s[(i + 1) % 4].y));
   }
 
-  for (i = N; i <= W; i++)
+  for ( i = N; i <= W; i++ )
   {
     s[i].a = s[(i + 1) % 4].b;
   }
@@ -208,9 +208,9 @@ unsigned int compute_hit(
    */
   smallest = s[N].count;
   location = N;
-  for (i = E; i <= W; i++)
+  for ( i = E; i <= W; i++ )
   {
-    if (s[i].count < smallest)
+    if ( s[i].count < smallest )
     {
       location = i;
       smallest = s[i].count;
@@ -229,15 +229,15 @@ unsigned int compute_hit(
   /*
    * Iterate to minimize the error
    */
-  while (error > THRESHOLD)
+  while ( error > THRESHOLD )
   {
-    x_avg = 0; // Zero out the average values
-    y_avg = 0;
+    x_avg         = 0; // Zero out the average values
+    y_avg         = 0;
     last_estimate = estimate;
 
-    for (i = N; i <= W; i++) // Calculate X/Y for each sensor
+    for ( i = N; i <= W; i++ ) // Calculate X/Y for each sensor
     {
-      if (find_xy_3D(&s[i], estimate, z_offset_clock))
+      if ( find_xy_3D(&s[i], estimate, z_offset_clock) )
       {
         x_avg += s[i].xs; // Keep the running average
         y_avg += s[i].ys;
@@ -253,12 +253,12 @@ unsigned int compute_hit(
     y_avg /= 4.0d;
 
     estimate = sqrt(sq(s[location].x - x_avg) + sq(s[location].y - y_avg));
-    error = fabs(last_estimate - estimate);
+    error    = fabs(last_estimate - estimate);
 
     DLT(DLT_APPLICATION, SEND(sprintf(_xs, "x_avg: %4.2f  y_avg: %4.2f estimate: %4.2f error: %4.2f", x_avg, y_avg, estimate, error);))
 
     count++;
-    if (count > 20)
+    if ( count > 20 )
     {
       break;
     }
@@ -330,10 +330,9 @@ unsigned int compute_hit(
  *
  *--------------------------------------------------------------*/
 
-bool find_xy_3D(
-    sensor_t *s,          // Sensor to be operatated on
-    double estimate,      // Estimated position
-    double z_offset_clock // Time difference between paper and sensor plane
+bool find_xy_3D(sensor_t *s,             // Sensor to be operatated on
+                double    estimate,      // Estimated position
+                double    z_offset_clock // Time difference between paper and sensor plane
 )
 {
   double ae, be;   // Locations with error added
@@ -343,7 +342,7 @@ bool find_xy_3D(
   /*
    * Check to see if the sensor data is correct.  If not, return an error
    */
-  if (s->is_valid == false)
+  if ( s->is_valid == false )
   {
     DLT(DLT_APPLICATION, SEND(sprintf(_xs, "Sensor: %d no data", s->index);))
     return false; // Sensor did not trigger.
@@ -353,7 +352,7 @@ bool find_xy_3D(
    * It looks like we have valid data.  Carry on
    */
   x = sq(s->a + estimate); // - sq(z_offset_clock);
-  if (x < 0)
+  if ( x < 0 )
   {
     sq(s->a + estimate);
     DLT(DLT_APPLICATION, SEND(sprintf(_xs, "s->a is complex, truncting");))
@@ -361,14 +360,14 @@ bool find_xy_3D(
   ae = sqrt(x); // Dimenstion with error included
 
   x = sq(s->b + estimate); // - sq(z_offset_clock);
-  if (x < 0)
+  if ( x < 0 )
   {
     DLT(DLT_APPLICATION, SEND(sprintf(_xs, "s->b is complex, truncting");))
     sq(s->b + estimate);
   }
   be = sqrt(x);
 
-  if ((ae + be) < s->c) // Check for an accumulated round off error
+  if ( (ae + be) < s->c ) // Check for an accumulated round off error
   {
     s->angle_A = 0; // Yes, then force to zero.
   }
@@ -381,51 +380,50 @@ bool find_xy_3D(
    *  Compute the X,Y based on the detection sensor
    */
   rotation = 0;
-  switch (s->index)
+  switch ( s->index )
   {
-  case (N):
-    rotation = PI_ON_2 - PI_ON_4 - s->angle_A;
-    s->xs = s->x + ((be)*sin(rotation));
-    s->ys = s->y - ((be)*cos(rotation));
-    break;
+    case (N):
+      rotation = PI_ON_2 - PI_ON_4 - s->angle_A;
+      s->xs    = s->x + ((be)*sin(rotation));
+      s->ys    = s->y - ((be)*cos(rotation));
+      break;
 
-  case (E):
-    rotation = s->angle_A - PI_ON_4;
-    s->xs = s->x - ((be)*cos(rotation));
-    s->ys = s->y + ((be)*sin(rotation));
-    break;
+    case (E):
+      rotation = s->angle_A - PI_ON_4;
+      s->xs    = s->x - ((be)*cos(rotation));
+      s->ys    = s->y + ((be)*sin(rotation));
+      break;
 
-  case (S):
-    rotation = s->angle_A + PI_ON_4;
-    s->xs = s->x - ((be)*cos(rotation));
-    s->ys = s->y + ((be)*sin(rotation));
-    break;
+    case (S):
+      rotation = s->angle_A + PI_ON_4;
+      s->xs    = s->x - ((be)*cos(rotation));
+      s->ys    = s->y + ((be)*sin(rotation));
+      break;
 
-  case (W):
-    rotation = PI_ON_2 - PI_ON_4 - s->angle_A;
-    s->xs = s->x + ((be)*cos(rotation));
-    s->ys = s->y + ((be)*sin(rotation));
-    break;
+    case (W):
+      rotation = PI_ON_2 - PI_ON_4 - s->angle_A;
+      s->xs    = s->x + ((be)*cos(rotation));
+      s->ys    = s->y + ((be)*sin(rotation));
+      break;
 
-  default:
-    DLT(DLT_APPLICATION, SEND(sprintf(_xs, "\n\nUnknown Rotation:, %d", s->index);))
-    break;
+    default:
+      DLT(DLT_APPLICATION, SEND(sprintf(_xs, "\n\nUnknown Rotation:, %d", s->index);))
+      break;
   }
 
   /*
    * Debugging
    */
-  DLT(DLT_APPLICATION,
-      {
-        SEND(sprintf(_xs, "index: %d  a:%4.2f b: %4.2f ae: %4.2f  be: %4.2f c: %4.2f", s->index, s->a, s->b, ae, be, s->c);)
-        SEND(sprintf(_xs, " cos: %4.2f  sin: %4.2f  angle_A: %4.2f  x: %4.2f y: %4.2f", cos(rotation), sin(rotation), s->angle_A, s->x, s->y);)
-        SEND(sprintf(_xs, " rotation: %4.2f  xs: %4.2f  ys: %4.2f", rotation, s->xs, s->ys);)
-      })
+  DLT(DLT_APPLICATION, {
+    SEND(sprintf(_xs, "index: %d  a:%4.2f b: %4.2f ae: %4.2f  be: %4.2f c: %4.2f", s->index, s->a, s->b, ae, be, s->c);)
+    SEND(sprintf(_xs, " cos: %4.2f  sin: %4.2f  angle_A: %4.2f  x: %4.2f y: %4.2f", cos(rotation), sin(rotation), s->angle_A, s->x, s->y);)
+    SEND(sprintf(_xs, " rotation: %4.2f  xs: %4.2f  ys: %4.2f", rotation, s->xs, s->ys);)
+  })
 
   /*
    *  All done, return
    */
-  if (isnan(s->x) || isnan(s->y)) // If the computation failed,
+  if ( isnan(s->x) || isnan(s->y) ) // If the computation failed,
   {
     return false; // return an error
   }
@@ -452,9 +450,8 @@ bool find_xy_3D(
  *
  *--------------------------------------------------------------*/
 
-void send_score(
-    shot_record_t *shot,     //  record
-    unsigned int shot_number // What shot are we
+void send_score(shot_record_t *shot,       //  record
+                unsigned int   shot_number // What shot are we
 )
 {
   double x, y;           // Shot location in mm X, Y before rotation
@@ -467,14 +464,14 @@ void send_score(
   /*
    * Grab the token ring if needed
    */
-  if (json_token != TOKEN_NONE)
+  if ( json_token != TOKEN_NONE )
   {
-    while (my_ring != whos_ring)
+    while ( my_ring != whos_ring )
     {
       token_take(); // Grab the token ring
       timer_new(&wdt, 2 * ONE_SECOND);
-      while ((wdt != 0)                 // Wait up to 2 seconds
-             && (whos_ring != my_ring)) // Or we own the ring
+      while ( (wdt != 0)                  // Wait up to 2 seconds
+              && (whos_ring != my_ring) ) // Or we own the ring
       {
         token_poll();
       }
@@ -484,22 +481,22 @@ void send_score(
   /*
    *  Work out the hole in perfect coordinates
    */
-  x = shot->x * s_of_sound * CLOCK_PERIOD; // Distance in mm
-  y = shot->y * s_of_sound * CLOCK_PERIOD; // Distance in mm
+  x      = shot->x * s_of_sound * CLOCK_PERIOD; // Distance in mm
+  y      = shot->y * s_of_sound * CLOCK_PERIOD; // Distance in mm
   radius = sqrt(sq(x) + sq(y));
-  angle = atan2(shot->y, shot->x) / PI * 180.0d;
+  angle  = atan2(shot->y, shot->x) / PI * 180.0d;
 
   /*
    * Rotate the result based on the construction, and recompute the hit
    */
   angle += json_sensor_angle;
-  x = radius * cos(PI * angle / 180.0d); // Rotate onto the target face
-  y = radius * sin(PI * angle / 180.0d);
+  x      = radius * cos(PI * angle / 180.0d); // Rotate onto the target face
+  y      = radius * sin(PI * angle / 180.0d);
   real_x = x;
   real_y = y;           // Remember the original target value
   remap_target(&x, &y); // Change the target if needed
-  shot->xs = x;
-  shot->ys = y;
+  shot->xs       = x;
+  shot->ys       = y;
   shot->is_valid = true;
 
   /*
@@ -507,8 +504,8 @@ void send_score(
    */
   SEND(sprintf(_xs, "\r\n{");)
 
-#if (S_SHOT)
-  if ((json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF))
+#if ( S_SHOT )
+  if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF) )
   {
     SEND(sprintf(_xs, "\"shot\":%d, \"miss\":0, \"name\":\"%s\"", shot_number + 1, names[json_name_id]);)
   }
@@ -519,36 +516,37 @@ void send_score(
   SEND(sprintf(_xs, ", \"time\":%4.2f ", (float)shot->shot_time / (float)(ONE_SECOND));)
 #endif
 
-#if (S_XY)
+#if ( S_XY )
   SEND(sprintf(_xs, ",\"x\":%4.2f, \"y\":%4.2f ", shot->xs, shot->ys);)
 
-  if (json_target_type > 1)
+  if ( json_target_type > 1 )
   {
     SEND(sprintf(_xs, ",\"real_x\":%4.2f, \"real_y\":%4.2f ", real_x, real_y);)
   }
 #endif
 
-#if (S_POLAR)
-  if (json_token == TOKEN_NONE)
+#if ( S_POLAR )
+  if ( json_token == TOKEN_NONE )
   {
     SEND(sprintf(_xs, ", \"r\":%4.2f,  \"a\":%s, ", radius, angle``);)
   }
 #endif
 
-#if (S_TIMERS)
-  if (json_token == TOKEN_NONE)
+#if ( S_TIMERS )
+  if ( json_token == TOKEN_NONE )
   {
     SEND(sprintf(_xs, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d ", (int)s[N].count, (int)s[E].count, (int)s[S].count, (int)s[W].count);)
-    SEND(sprintf(_xs, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)shot->timer_count[N + 4], (int)shot->timer_count[E + 4], (int)shot->timer_count[S + 4], (int)shot->timer_count[W + 4]);)
+    SEND(sprintf(_xs, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)shot->timer_count[N + 4], (int)shot->timer_count[E + 4],
+                 (int)shot->timer_count[S + 4], (int)shot->timer_count[W + 4]);)
   }
 #endif
 
-  if (HOLD_C(json_multifunction2) == TARGET_TYPE)
+  if ( HOLD_C(json_multifunction2) == TARGET_TYPE )
   {
     SEND(sprintf(_xs, ", \"target_type\":%d ", DIP_C););
   }
 
-  if (HOLD_D(json_multifunction2) == TARGET_TYPE)
+  if ( HOLD_D(json_multifunction2) == TARGET_TYPE )
   {
     SEND(sprintf(_xs, ", \"target_type\":%d ", DIP_D););
   }
@@ -558,7 +556,7 @@ void send_score(
   /*
    * All done, return
    */
-  if (json_token != TOKEN_NONE)
+  if ( json_token != TOKEN_NONE )
   {
     token_give(); // Give up the token ring
     set_status_LED(LED_READY);
@@ -586,11 +584,10 @@ void send_score(
  *
  *--------------------------------------------------------------*/
 
-void send_replay(
-    shot_record_t *shot, //  record
-    unsigned int shot_number)
+void send_replay(shot_record_t *shot, //  record
+                 unsigned int   shot_number)
 {
-  if (shot->is_valid == true)
+  if ( shot->is_valid == true )
   {
     sprintf(_xs, "\r\n{\"shot\":%d, \"x\":%4.2f, \"y\":%4.2f}\r\n", shot_number + 1, shot->xs, shot->ys);
   }
@@ -619,11 +616,10 @@ void send_replay(
  *
  *--------------------------------------------------------------*/
 
-void send_miss(
-    shot_record_t *shot, // record record
-    unsigned int shot_number)
+void send_miss(shot_record_t *shot, // record record
+               unsigned int   shot_number)
 {
-  if (json_send_miss == 0) // If send_miss not enabled
+  if ( json_send_miss == 0 ) // If send_miss not enabled
   {
     return; // Do nothing
   }
@@ -631,13 +627,13 @@ void send_miss(
   /*
    * Grab the token ring if needed
    */
-  if (json_token != TOKEN_NONE)
+  if ( json_token != TOKEN_NONE )
   {
-    while (my_ring != whos_ring)
+    while ( my_ring != whos_ring )
     {
       token_take(); // Grab the token ring
       timer_new(&wdt, ONE_SECOND);
-      while ((wdt != 0) && (my_ring == whos_ring))
+      while ( (wdt != 0) && (my_ring == whos_ring) )
       {
         token_poll();
       }
@@ -649,8 +645,8 @@ void send_miss(
    */
   SEND(sprintf(_xs, "\r\n{");)
 
-#if (S_SHOT)
-  if ((json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF))
+#if ( S_SHOT )
+  if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF) )
   {
     SEND(sprintf(_xs, "\"shot\":%d, \"miss\":1, \"name\":\"%s\"", shot_number, names[json_name_id]);)
   }
@@ -661,17 +657,18 @@ void send_miss(
   SEND(sprintf(_xs, ", \"time\":%4.2f ", (float)shot->shot_time / (float)(ONE_SECOND));)
 #endif
 
-#if (S_XY)
-  if (json_token == TOKEN_NONE)
+#if ( S_XY )
+  if ( json_token == TOKEN_NONE )
   {
     SEND(sprintf(_xs, ", \"x\":0, \"y\":0 ");)
   }
 #endif
 
-#if (S_TIMERS)
-  if (json_token == TOKEN_NONE)
+#if ( S_TIMERS )
+  if ( json_token == TOKEN_NONE )
   {
-    SEND(sprintf(_xs, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d ", (int)shot->timer_count[N], (int)shot->timer_count[E], (int)shot->timer_count[S], (int)shot->timer_count[W]);)
+    SEND(sprintf(_xs, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d ", (int)shot->timer_count[N], (int)shot->timer_count[E],
+                 (int)shot->timer_count[S], (int)shot->timer_count[W]);)
     SEND(sprintf(_xs, ", \"face\":%d ", shot->face_strike);)
   }
 #endif
@@ -716,37 +713,79 @@ typedef struct
 } new_target_t;
 
 #define LAST_BULL (-1000.0)
-#define D5_74 (74 / 2) // Five bull air rifle is 74mm centre-centre
-new_target_t five_bull_air_rifle_74mm[] = {{-D5_74, D5_74}, {D5_74, D5_74}, {0, 0}, {-D5_74, -D5_74}, {D5_74, -D5_74}, {LAST_BULL, LAST_BULL}};
+#define D5_74     (74 / 2) // Five bull air rifle is 74mm centre-centre
+new_target_t five_bull_air_rifle_74mm[] = {
+    {-D5_74,    D5_74    },
+    {D5_74,     D5_74    },
+    {0,         0        },
+    {-D5_74,    -D5_74   },
+    {D5_74,     -D5_74   },
+    {LAST_BULL, LAST_BULL}
+};
 
 #define D5_79 (79 / 2) // Five bull air rifle is 79mm centre-centre
-new_target_t five_bull_air_rifle_79mm[] = {{-D5_79, D5_79}, {D5_79, D5_79}, {0, 0}, {-D5_79, -D5_79}, {D5_79, -D5_79}, {LAST_BULL, LAST_BULL}};
+new_target_t five_bull_air_rifle_79mm[] = {
+    {-D5_79,    D5_79    },
+    {D5_79,     D5_79    },
+    {0,         0        },
+    {-D5_79,    -D5_79   },
+    {D5_79,     -D5_79   },
+    {LAST_BULL, LAST_BULL}
+};
 
 #define D12_H (191.0 / 2.0) // Twelve bull air rifle 95mm Horizontal
 #define D12_V (195.0 / 3.0) // Twelve bull air rifle 84mm Vertical
-new_target_t twelve_bull_air_rifle[] = {{-D12_H, D12_V + D12_V / 2}, {0, D12_V + D12_V / 2}, {D12_H, D12_V + D12_V / 2}, {-D12_H, D12_V / 2}, {0, D12_V / 2}, {D12_H, D12_V / 2}, {-D12_H, -D12_V / 2}, {0, -D12_V / 2}, {D12_H, -D12_V / 2}, {-D12_H, -(D12_V + D12_V / 2)}, {0, -(D12_V + D12_V / 2)}, {D12_H, -(D12_V + D12_V / 2)}, {LAST_BULL, LAST_BULL}};
+new_target_t twelve_bull_air_rifle[] = {
+    {-D12_H,    D12_V + D12_V / 2   },
+    {0,         D12_V + D12_V / 2   },
+    {D12_H,     D12_V + D12_V / 2   },
+    {-D12_H,    D12_V / 2           },
+    {0,         D12_V / 2           },
+    {D12_H,     D12_V / 2           },
+    {-D12_H,    -D12_V / 2          },
+    {0,         -D12_V / 2          },
+    {D12_H,     -D12_V / 2          },
+    {-D12_H,    -(D12_V + D12_V / 2)},
+    {0,         -(D12_V + D12_V / 2)},
+    {D12_H,     -(D12_V + D12_V / 2)},
+    {LAST_BULL, LAST_BULL           }
+};
 
 #define O12_H (144.0 / 2.0) // Twelve bull air rifle Orion
 #define O12_V (190.0 / 3.0) // Twelve bull air rifle Orion
-new_target_t orion_bull_air_rifle[] = {{-O12_H, O12_V + O12_V / 2}, {0, O12_V + O12_V / 2}, {O12_H, O12_V + O12_V / 2}, {-O12_H, O12_V / 2}, {0, O12_V / 2}, {O12_H, O12_V / 2}, {-O12_H, -O12_V / 2}, {0, -O12_V / 2}, {O12_H, -O12_V / 2}, {-O12_H, -(O12_V + O12_V / 2)}, {0, -(O12_V + O12_V / 2)}, {O12_H, -(O12_V + O12_V / 2)}, {LAST_BULL, LAST_BULL}};
+new_target_t orion_bull_air_rifle[] = {
+    {-O12_H,    O12_V + O12_V / 2   },
+    {0,         O12_V + O12_V / 2   },
+    {O12_H,     O12_V + O12_V / 2   },
+    {-O12_H,    O12_V / 2           },
+    {0,         O12_V / 2           },
+    {O12_H,     O12_V / 2           },
+    {-O12_H,    -O12_V / 2          },
+    {0,         -O12_V / 2          },
+    {O12_H,     -O12_V / 2          },
+    {-O12_H,    -(O12_V + O12_V / 2)},
+    {0,         -(O12_V + O12_V / 2)},
+    {O12_H,     -(O12_V + O12_V / 2)},
+    {LAST_BULL, LAST_BULL           }
+};
 
-//                           0  1  2  3              4                        5              6  7  8  9  10           11                     12
-new_target_t *ptr_list[] = {0, 0, 0, 0, five_bull_air_rifle_74mm, five_bull_air_rifle_79mm, 0, 0, 0, 0, 0, orion_bull_air_rifle, twelve_bull_air_rifle};
+//                           0  1  2  3              4                        5              6  7  8  9  10           11 12
+new_target_t *ptr_list[] = {0, 0, 0, 0, five_bull_air_rifle_74mm, five_bull_air_rifle_79mm, 0,
+                            0, 0, 0, 0, orion_bull_air_rifle,     twelve_bull_air_rifle};
 
-static void remap_target(
-    double *x, // Computed X location of shot (returned)
-    double *y  // Computed Y location of shot (returned)
+static void remap_target(double *x, // Computed X location of shot (returned)
+                         double *y  // Computed Y location of shot (returned)
 )
 {
   double distance, closest; // Distance to bull in clock ticks
   double dx, dy;            // Best fitting bullseye
-  int i;
+  int    i;
   dx = 0.0;
   dy = 0.0;
 
   new_target_t *ptr; // Bull pointer
 
-  if ((json_target_type <= 1) || (json_target_type > sizeof(ptr_list) / sizeof(new_target_t *)))
+  if ( (json_target_type <= 1) || (json_target_type > sizeof(ptr_list) / sizeof(new_target_t *)) )
   {
     return; // Check for limits
   }
@@ -757,7 +796,7 @@ static void remap_target(
   DLT(DLT_APPLICATION, SEND(sprintf(_xs, "remap_target x: %4.2fmm  y: %4.2fmm", *x, *y);))
 
   ptr = ptr_list[json_target_type];
-  if (ptr == 0) // Check for unassigned targets
+  if ( ptr == 0 ) // Check for unassigned targets
   {
     return;
   }
@@ -767,15 +806,15 @@ static void remap_target(
    * Loop and find the closest target
    */
   i = 0;
-  while (ptr->x != LAST_BULL)
+  while ( ptr->x != LAST_BULL )
   {
     distance = sqrt(sq(ptr->x - *x) + sq(ptr->y - *y));
     DLT(DLT_APPLICATION, SEND(sprintf(_xs, " distance: %4.2f", distance);))
-    if (distance < closest) // Found a closer one?
+    if ( distance < closest ) // Found a closer one?
     {
       closest = distance; // Remember it
-      dx = ptr->x;
-      dy = ptr->y; // Remember the closest bull
+      dx      = ptr->x;
+      dy      = ptr->y; // Remember the closest bull
       DLT(DLT_APPLICATION, SEND(sprintf(_xs, "Target: %d   dx: %4.2f   dy: %4.2f", i, dx, dy);))
     }
     ptr++;
@@ -795,4 +834,7 @@ static void remap_target(
   return;
 }
 
-double sq(double x) { return x * x; }
+double sq(double x)
+{
+  return x * x;
+}

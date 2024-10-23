@@ -2,31 +2,28 @@
 Language: Cpp
 # BasedOnStyle: LLVM
 
+#
+# See https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+#
+
 # Indentation
 IndentWidth: 2
 TabWidth: 2
+IndentCaseLabels: true
+IndentPPDirectives: None
 UseTab: Never
-ColumnLimit: 10
+ColumnLimit: 140
 
 # Alignment
 AlignAfterOpenBracket: Align
-AlignConsecutiveMacros: AcrossEmptyLines
+AlignConsecutiveMacros: true
 AlignConsecutiveAssignments: true
 AlignConsecutiveDeclarations: true
 AlignEscapedNewlines: Right
 AlignOperands: true
-AlignTrailingComments: 
-  Kind: Always
-  OverEmptyLines: 2
+AlignTrailingComments: true
 
-# Add space before and inside parentheses in control statements
-# Example:
-# if ( condition )
-# while ( condition )
-SpaceBeforeParens: ControlStatements
-SpaceInEmptyParentheses: false
-SpacesInParentheses: false
-SpacesInConditionalStatement: true
+
 
 # Align members of array of structures to the left
 # Example:
@@ -50,22 +47,34 @@ AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: true
 BinPackParameters: true
 BreakBeforeBinaryOperators: None
-BreakBeforeBraces: Attach
+BreakBeforeBraces: Allman
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializersBeforeComma: false
 BreakStringLiterals: true
+BraceWrapping:
+    AfterFunction: true
+    AfterControlStatement: Always
+    AfterStruct: true
 
 # Spaces
 SpaceAfterCStyleCast: false
 SpaceAfterTemplateKeyword: true
 SpaceBeforeAssignmentOperators: true
+
+
+# Add space before and inside parentheses in control statements
+# Example:
+# if ( condition )
+# while ( condition )
 SpaceBeforeParens: ControlStatements
+
 SpaceInEmptyParentheses: false
+SpacesInParentheses: false
+SpacesInConditionalStatement: true
 SpacesBeforeTrailingComments: 1
 SpacesInAngles: false
 SpacesInContainerLiterals: true
 SpacesInCStyleCastParentheses: false
-SpacesInParentheses: false
 SpacesInSquareBrackets: false
 
 # Other
@@ -73,4 +82,4 @@ KeepEmptyLinesAtTheStartOfBlocks: true
 MaxEmptyLinesToKeep: 1
 PointerAlignment: Right
 ReflowComments: true
-SortIncludes: true
+SortIncludes: false

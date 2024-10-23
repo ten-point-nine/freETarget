@@ -24,15 +24,15 @@
 /*
  *  Definitions
  */
-#define LONG_PRESS (ONE_SECOND)
+#define LONG_PRESS    (ONE_SECOND)
 #define TAP_1_PENDING 0x01
 #define TAP_2_PENDING 0x02
-#define TAP_MASK_1 0x04
-#define TAP_MASK_2 0x08
-#define HOLD_MASK_1 0x10
-#define HOLD_MASK_2 0x20
-#define HOLD_MASK_12 (HOLD_MASK_1 | HOLD_MASK_2)
-#define SWITCH_VALID 0x80
+#define TAP_MASK_1    0x04
+#define TAP_MASK_2    0x08
+#define HOLD_MASK_1   0x10
+#define HOLD_MASK_2   0x20
+#define HOLD_MASK_12  (HOLD_MASK_1 | HOLD_MASK_2)
+#define SWITCH_VALID  0x80
 
 /*
  * Function Prototypes
@@ -50,26 +50,28 @@ static void mfs_pc_test(void);
  * Variables
  */
 static unsigned int switch_state; // What switches are pressed
-const mfs_action_t mfs_action[] = {
-    {TARGET_ON, mfs_on, "TARGET_ON"},           // Take the target out of sleep
-    {PAPER_FEED, mfs_paper_feed, "PAPER FEED"}, // Feed paper until button released
-    {LED_ADJUST, mfs_led_adjust, "LED_ADJUST"}, // Adjust LED brighness
-    {PAPER_SHOT, mfs_paper_shot, "PAPER SHOT"}, // Advance paper the distance of one shot
-    {PC_TEST, mfs_pc_test, "PC TEST"},          // Send a test shot to the PC
-    {TARGET_OFF, mfs_off, "TARGET OFF"},        // Turn the target on or off
-    {NO_ACTION, NULL, "NO ACTION"},             // No action on C & D inputs
-    {TARGET_TYPE, NULL, "TARGET TYPE"},         // Put the target type into the send score
-    {RAPID_RED, NULL, "RAPID RED"},             // The output is used to drive the RED rapid fire LED
-    {RAPID_GREEN, NULL, "RAPID_GREEN"},         // The output is used to drive the GREEN rapid fire LED
-    {RAPID_LOW, NULL, "RAPID LOW"},             // The output is active low
-    {RAPID_HIGH, NULL, "RAPID HIGH"},           // The output is active high
-    {STEPPER_DRIVE, NULL, "STEPPER_DRIVE"},     // The output is used to drive stepper motor
-    {STEPPER_ENABLE, NULL, "STEPPER_ENABLE"},   // The output is used to drive stepper motor enable
-    {0, 0, 0}};
+const mfs_action_t  mfs_action[] = {
+    {TARGET_ON,      mfs_on,         "TARGET_ON"     }, // Take the target out of sleep
+    {PAPER_FEED,     mfs_paper_feed, "PAPER FEED"    }, // Feed paper until button released
+    {LED_ADJUST,     mfs_led_adjust, "LED_ADJUST"    }, // Adjust LED brighness
+    {PAPER_SHOT,     mfs_paper_shot, "PAPER SHOT"    }, // Advance paper the distance of one shot
+    {PC_TEST,        mfs_pc_test,    "PC TEST"       }, // Send a test shot to the PC
+    {TARGET_OFF,     mfs_off,        "TARGET OFF"    }, // Turn the target on or off
+    {NO_ACTION,      NULL,           "NO ACTION"     }, // No action on C & D inputs
+    {TARGET_TYPE,    NULL,           "TARGET TYPE"   }, // Put the target type into the send score
+    {RAPID_RED,      NULL,           "RAPID RED"     }, // The output is used to drive the RED rapid fire LED
+    {RAPID_GREEN,    NULL,           "RAPID_GREEN"   }, // The output is used to drive the GREEN rapid fire LED
+    {RAPID_LOW,      NULL,           "RAPID LOW"     }, // The output is active low
+    {RAPID_HIGH,     NULL,           "RAPID HIGH"    }, // The output is active high
+    {STEPPER_DRIVE,  NULL,           "STEPPER_DRIVE" }, // The output is used to drive stepper motor
+    {STEPPER_ENABLE, NULL,           "STEPPER_ENABLE"}, // The output is used to drive stepper motor enable
+    {0,              0,              0               }
+};
 
 /*
  * Test Vectors
-  {"MFS_HOLD_12":2, "MFS_TAP_2": 0, "MFS_TAP_1":3 , "MFS_HOLD_2": 5, "MFS_HOLD_1":1, "MFS_HOLD_D":9, "MFS_HOLD_C":9, "MFS_SELECT_CD":9, "ECHO":0}
+  {"MFS_HOLD_12":2, "MFS_TAP_2": 0, "MFS_TAP_1":3 , "MFS_HOLD_2": 5, "MFS_HOLD_1":1, "MFS_HOLD_D":9, "MFS_HOLD_C":9, "MFS_SELECT_CD":9,
+ "ECHO":0}
   {"MFS_HOLD_12":2}
   {"MFS_TAP_2":0}
   {"MFS_TAP_1":4}
@@ -107,65 +109,65 @@ void multifunction_init(void)
   /*
    * Check to see if the DIP switch has been overwritten
    */
-  if (json_mfs_hold_c >= RAPID_RED)
+  if ( json_mfs_hold_c >= RAPID_RED )
   {
     gpio_set_direction(HOLD_C_GPIO, GPIO_MODE_OUTPUT);
     gpio_set_pull_mode(HOLD_C_GPIO, GPIO_PULLUP_PULLDOWN);
-    switch (json_mfs_hold_c)
+    switch ( json_mfs_hold_c )
     {
-    case RAPID_RED:
-      rapid_red(0);
-      break;
-    case RAPID_GREEN:
-      rapid_green(0);
-      break;
-    case STEPPER_DRIVE:
-      gpio_set_level(HOLD_C_GPIO, 0);
-      break;
-    case STEPPER_ENABLE:
-      gpio_set_level(HOLD_C_GPIO, 0);
-      break;
+      case RAPID_RED:
+        rapid_red(0);
+        break;
+      case RAPID_GREEN:
+        rapid_green(0);
+        break;
+      case STEPPER_DRIVE:
+        gpio_set_level(HOLD_C_GPIO, 0);
+        break;
+      case STEPPER_ENABLE:
+        gpio_set_level(HOLD_C_GPIO, 0);
+        break;
     }
   }
 
-  if (json_mfs_hold_d >= RAPID_RED)
+  if ( json_mfs_hold_d >= RAPID_RED )
   {
     gpio_set_direction(HOLD_D_GPIO, GPIO_MODE_OUTPUT);
     gpio_set_pull_mode(HOLD_D_GPIO, GPIO_PULLUP_PULLDOWN);
-    switch (json_mfs_hold_d)
+    switch ( json_mfs_hold_d )
     {
-    case RAPID_RED:
-      rapid_red(0);
-      break;
-    case RAPID_GREEN:
-      rapid_green(0);
-      break;
-    case STEPPER_DRIVE:
-      gpio_set_level(HOLD_D_GPIO, 0);
-      break;
-    case STEPPER_ENABLE:
-      gpio_set_level(HOLD_D_GPIO, 0);
-      break;
+      case RAPID_RED:
+        rapid_red(0);
+        break;
+      case RAPID_GREEN:
+        rapid_green(0);
+        break;
+      case STEPPER_DRIVE:
+        gpio_set_level(HOLD_D_GPIO, 0);
+        break;
+      case STEPPER_ENABLE:
+        gpio_set_level(HOLD_D_GPIO, 0);
+        break;
     }
   }
 
   /*
    * Continue to read the DIP switch
    */
-  if (DIP_SW_A && DIP_SW_B) // Both switches closed?
+  if ( DIP_SW_A && DIP_SW_B ) // Both switches closed?
   {
     factory_nonvol(false); // Initalize the nonvol but do not calibrate
   }
 
   else
   {
-    if (DIP_SW_A) // Switch A pressed
+    if ( DIP_SW_A ) // Switch A pressed
     {
       is_trace = DLT_CRITICAL | DLT_INFO | DLT_APPLICATION | DLT_COMMUNICATION | DLT_DIAG | DLT_DEBUG;
       DLT(DLT_INFO, SEND(sprintf(_xs, "\r\nAll tracing enabled");))
     }
 
-    if (DIP_SW_B) // Switch B pressed
+    if ( DIP_SW_B ) // Switch B pressed
     {
     }
   }
@@ -201,7 +203,7 @@ void multifunction_switch_tick(void)
   IF_NOT(IN_OPERATION)
   return;
 
-  if (switch_state & SWITCH_VALID)
+  if ( switch_state & SWITCH_VALID )
   {
     return; // Stop checking once we have a valid switch
   }
@@ -209,10 +211,10 @@ void multifunction_switch_tick(void)
   /*
    * Figure out what switches are pressed
    */
-  if (DIP_SW_A)
+  if ( DIP_SW_A )
   {
     switch_A_count++;
-    if (switch_A_count < LONG_PRESS)
+    if ( switch_A_count < LONG_PRESS )
     {
       switch_state |= TAP_1_PENDING;
     }
@@ -225,7 +227,7 @@ void multifunction_switch_tick(void)
   }
   else // Released the switch,  See if it was a tap
   {
-    if (switch_state & TAP_1_PENDING)
+    if ( switch_state & TAP_1_PENDING )
     {
       switch_state |= TAP_MASK_1 | SWITCH_VALID;
       switch_state &= ~TAP_1_PENDING;
@@ -233,10 +235,10 @@ void multifunction_switch_tick(void)
     switch_A_count = 0;
   }
 
-  if (DIP_SW_B)
+  if ( DIP_SW_B )
   {
     switch_B_count++;
-    if (switch_B_count < LONG_PRESS)
+    if ( switch_B_count < LONG_PRESS )
     {
       switch_state |= TAP_2_PENDING;
     }
@@ -249,7 +251,7 @@ void multifunction_switch_tick(void)
   }
   else // Released the switch, seeif it was a tap
   {
-    if (switch_state & TAP_2_PENDING)
+    if ( switch_state & TAP_2_PENDING )
     {
       switch_state |= TAP_MASK_2 | SWITCH_VALID;
       switch_state &= ~TAP_2_PENDING;
@@ -261,7 +263,7 @@ void multifunction_switch_tick(void)
    *  Look for the special case where there is HOLD_12, but
    *  there is some kind of bounce
    */
-  if ((switch_state & (HOLD_MASK_1 | HOLD_MASK_2)) && (switch_state & (TAP_MASK_1 | TAP_MASK_2)))
+  if ( (switch_state & (HOLD_MASK_1 | HOLD_MASK_2)) && (switch_state & (TAP_MASK_1 | TAP_MASK_2)) )
   {
     switch_state |= (HOLD_MASK_1 | HOLD_MASK_2);
     switch_state &= ~(TAP_MASK_1 | TAP_MASK_2);
@@ -303,7 +305,7 @@ void multifunction_switch(void)
   IF_NOT(IN_OPERATION)
   return;
 
-  if ((switch_state & SWITCH_VALID) == 0) // Invalid switch state
+  if ( (switch_state & SWITCH_VALID) == 0 ) // Invalid switch state
   {
     return;
   }
@@ -316,30 +318,30 @@ void multifunction_switch(void)
   /*
    * Carry out the switch action
    */
-  switch (action)
+  switch ( action )
   {
-  case TAP_MASK_1:
-    sw_state(json_mfs_tap_1);
-    break;
+    case TAP_MASK_1:
+      sw_state(json_mfs_tap_1);
+      break;
 
-  case TAP_MASK_2:
-    sw_state(json_mfs_tap_2);
-    break;
+    case TAP_MASK_2:
+      sw_state(json_mfs_tap_2);
+      break;
 
-  case HOLD_MASK_1:
-    sw_state(json_mfs_hold_1);
-    break;
+    case HOLD_MASK_1:
+      sw_state(json_mfs_hold_1);
+      break;
 
-  case HOLD_MASK_2:
-    sw_state(json_mfs_hold_2);
-    break;
+    case HOLD_MASK_2:
+      sw_state(json_mfs_hold_2);
+      break;
 
-  case HOLD_MASK_12:
-    sw_state(json_mfs_hold_12);
-    break;
+    case HOLD_MASK_12:
+      sw_state(json_mfs_hold_12);
+      break;
 
-  default:
-    break;
+    default:
+      break;
   }
 
   /*
@@ -363,15 +365,14 @@ void multifunction_switch(void)
  * MFS switch
  *
  *-----------------------------------------------------*/
-static void sw_state(
-    unsigned int action)
+static void sw_state(unsigned int action)
 {
   mfs_action_t *mfs_ptr;
 
   DLT(DLT_DEBUG, SEND(sprintf(_xs, "Switch action: %d", action);))
 
   mfs_ptr = mfs_find(action);
-  if ((mfs_ptr != NULL) && (mfs_ptr->fcn != NULL))
+  if ( (mfs_ptr != NULL) && (mfs_ptr->fcn != NULL) )
   {
     (mfs_ptr->fcn)();
   }
@@ -382,8 +383,8 @@ static void sw_state(
 static void mfs_on(void)
 {
   set_LED_PWM_now(json_LED_PWM); // Yes, a quick press to turn the LED on
-  vTaskDelay(ONE_SECOND / 2),
-      set_LED_PWM_now(0); // Blink
+  vTaskDelay(ONE_SECOND / 2);
+  set_LED_PWM_now(0); // Blink
   vTaskDelay(ONE_SECOND / 2);
   set_LED_PWM_now(json_LED_PWM);                               // and leave it on
   power_save = (long)json_power_save * 60L * (long)ONE_SECOND; // and resets the power save time
@@ -399,10 +400,10 @@ static void mfs_paper_feed(void) // Feed paper so long as the switch is pressed
   /*
    *  Advance paper using the DC motor
    */
-  if (IS_DC_WITNESS)
+  if ( IS_DC_WITNESS )
   {
     paper_start();
-    while (DIP_SW_A || DIP_SW_B) // and loop until the switches are
+    while ( DIP_SW_A || DIP_SW_B ) // and loop until the switches are
     {
       vTaskDelay(1); // released
     }
@@ -412,10 +413,10 @@ static void mfs_paper_feed(void) // Feed paper so long as the switch is pressed
   /*
    *  Advance the paper using the stepper motor
    */
-  if (IS_STEPPER_WITNESS)
+  if ( IS_STEPPER_WITNESS )
   {
     paper_start();
-    while (DIP_SW_A || DIP_SW_B) // and loop until the switches are
+    while ( DIP_SW_A || DIP_SW_B ) // and loop until the switches are
     {
       paper_drive_tick(); // Fake a timer tick since mfs_paper_feed() is blocking
       vTaskDelay(1);      // released
@@ -435,10 +436,10 @@ static void mfs_paper_feed(void) // Feed paper so long as the switch is pressed
 static void mfs_paper_shot(void)
 {
   paper_start();
-  while (1)
+  while ( 1 )
   {
     vTaskDelay(10);
-    if (is_paper_on() == 0)
+    if ( is_paper_on() == 0 )
     {
       break;
     }
@@ -451,15 +452,15 @@ static void mfs_paper_shot(void)
 static void mfs_pc_test(void)
 {
   static unsigned int test_shot = 0;
-  int temp, sign;
+  int                 temp, sign;
 
-  temp = esp_random() % (SCALE);
-  sign = ((esp_random() & 1) == 0) ? 1 : -1;
+  temp                = esp_random() % (SCALE);
+  sign                = ((esp_random() & 1) == 0) ? 1 : -1;
   record[test_shot].x = (float)(sign * temp);
-  temp = esp_random() % (SCALE);
-  sign = ((esp_random() & 1) == 0) ? 1 : -1;
+  temp                = esp_random() % (SCALE);
+  sign                = ((esp_random() & 1) == 0) ? 1 : -1;
   record[test_shot].y = (float)(sign * temp);
-  s_of_sound = speed_of_sound(temperature_C(), humidity_RH());
+  s_of_sound          = speed_of_sound(temperature_C(), humidity_RH());
   send_score(&record[test_shot], test_shot);
   test_shot++;
 
@@ -479,7 +480,7 @@ static void mfs_led_adjust(void)
   led_step = 5;
 
   json_LED_PWM += led_step; // Bump up the LED by 5%
-  if (json_LED_PWM > 100)
+  if ( json_LED_PWM > 100 )
   {
     json_LED_PWM = 0;
   }
@@ -507,16 +508,15 @@ static void mfs_led_adjust(void)
  *
  *-----------------------------------------------------*/
 
-mfs_action_t *mfs_find(
-    unsigned int action // Switch to be displayed
+mfs_action_t *mfs_find(unsigned int action // Switch to be displayed
 )
 {
   unsigned int i;
 
   i = 0;
-  while (mfs_action[i].text != NULL)
+  while ( mfs_action[i].text != NULL )
   {
-    if (mfs_action[i].index == action)
+    if ( mfs_action[i].index == action )
     {
       return &mfs_action[i];
     }
@@ -546,7 +546,7 @@ void mfs_show(void)
   unsigned int i;
 
   i = 0;
-  while (mfs_action[i].text != NULL)
+  while ( mfs_action[i].text != NULL )
   {
     SEND(sprintf(_xs, "\r\n%d: %s", mfs_action[i].index, mfs_action[i].text);)
     i++;

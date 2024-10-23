@@ -48,30 +48,29 @@ void set_vset_PWM(unsigned int pwm);
  *
  *--------------------------------------------------------------*/
 
-void adc_init(
-    unsigned int adc_channel,    // What ADC channel are we accessing
-    unsigned int adc_attenuation // What is the channel attenuation
+void adc_init(unsigned int adc_channel,    // What ADC channel are we accessing
+              unsigned int adc_attenuation // What is the channel attenuation
 )
 {
   unsigned int adc;     // Which ADC (1/2)
   unsigned int channel; // Which channel attached to the ADC (0-10)
 
-  adc = ADC_ADC(adc_channel); // What ADC are we on
+  adc     = ADC_ADC(adc_channel); // What ADC are we on
   channel = ADC_CHANNEL(adc_channel);
 
   /*
    * Setup the channel
    */
   ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_DEFAULT));
-  switch (adc)
+  switch ( adc )
   {
-  case 1:
-    ESP_ERROR_CHECK(adc1_config_channel_atten(channel, adc_attenuation));
-    break;
+    case 1:
+      ESP_ERROR_CHECK(adc1_config_channel_atten(channel, adc_attenuation));
+      break;
 
-  case 2:
-    ESP_ERROR_CHECK(adc2_config_channel_atten(channel, adc_attenuation));
-    break;
+    case 2:
+      ESP_ERROR_CHECK(adc2_config_channel_atten(channel, adc_attenuation));
+      break;
   }
 
   /*
@@ -95,29 +94,28 @@ void adc_init(
  * https://docs.espressif.com/projects/esp-idf/en/v4.4/esp32/api-reference/peripherals/adc.html
  *
  *--------------------------------------------------------------*/
-unsigned int adc_read(
-    unsigned int adc_channel // What input are we reading?
+unsigned int adc_read(unsigned int adc_channel // What input are we reading?
 )
 {
   unsigned int adc;     // Which ADC (1/2)
   unsigned int channel; // Which channel attached to the ADC (0-10)
-  int raw;              // Raw value from the ADC
+  int          raw;     // Raw value from the ADC
 
-  adc = ADC_ADC(adc_channel);         // What ADC are we on
+  adc     = ADC_ADC(adc_channel);     // What ADC are we on
   channel = ADC_CHANNEL(adc_channel); // What channel are we using
 
   /*
    *  Read the appropriate channel
    */
-  switch (adc)
+  switch ( adc )
   {
-  case 1:
-    raw = adc1_get_raw(channel);
-    break;
+    case 1:
+      raw = adc1_get_raw(channel);
+      break;
 
-  case 2:
-    adc2_get_raw(channel, ADC_WIDTH_BIT_DEFAULT, &raw);
-    break;
+    case 2:
+      adc2_get_raw(channel, ADC_WIDTH_BIT_DEFAULT, &raw);
+      break;
   }
 
   /*
@@ -126,10 +124,10 @@ unsigned int adc_read(
   return raw;
 }
 
-#define V12_RESISITOR ((40.2 + 5.0) / 5.0) // Resistor divider
-#define V12_ATTENUATION 3.548              // 11 DB
-#define V12_REF 1.1                        // ESP32 VREF
-#define V12_CAL 0.88
+#define V12_RESISITOR   ((40.2 + 5.0) / 5.0) // Resistor divider
+#define V12_ATTENUATION 3.548                // 11 DB
+#define V12_REF         1.1                  // ESP32 VREF
+#define V12_CAL         0.88
 float v12_supply(void)
 {
   float raw; // Raw voltage from ADC
@@ -157,11 +155,10 @@ float v12_supply(void)
  *--------------------------------------------------------------*/
 static unsigned int old_LED_percent = 0;
 
-void set_LED_PWM_now(
-    int new_LED_percent // Desired LED level (0-100%)
+void set_LED_PWM_now(int new_LED_percent // Desired LED level (0-100%)
 )
 {
-  if (new_LED_percent == old_LED_percent)
+  if ( new_LED_percent == old_LED_percent )
   {
     return;
   }
@@ -175,12 +172,11 @@ void set_LED_PWM_now(
   return;
 }
 
-void set_LED_PWM // Theatre lighting
-    (
-        int new_LED_percent // Desired LED level (0-100%)
+void set_LED_PWM         // Theatre lighting
+    (int new_LED_percent // Desired LED level (0-100%)
     )
 {
-  if (new_LED_percent == old_LED_percent)
+  if ( new_LED_percent == old_LED_percent )
   {
     return;
   }
@@ -190,10 +186,10 @@ void set_LED_PWM // Theatre lighting
   /*
    * Loop and ramp the LED  PWM up or down slowly
    */
-  while (new_LED_percent != old_LED_percent) // Change in the brightness level?
+  while ( new_LED_percent != old_LED_percent ) // Change in the brightness level?
   {
 
-    if (new_LED_percent < old_LED_percent)
+    if ( new_LED_percent < old_LED_percent )
     {
       old_LED_percent--; // Ramp the value down
     }
@@ -269,7 +265,7 @@ static float rh;  // Humidity from sensor
 double temperature_C(void)
 {
   unsigned char temp_buffer[6];
-  int raw;
+  int           raw;
 
   /*
    * Read in the temperature and humidity together
@@ -285,7 +281,7 @@ double temperature_C(void)
   raw = (temp_buffer[0] << 8) + temp_buffer[1];
   t_c = -45.0 + (175.0 * (float)raw / 65535.0);
   raw = (temp_buffer[3] << 8) + temp_buffer[4];
-  rh = 100.0 * (float)raw / 65535.0;
+  rh  = 100.0 * (float)raw / 65535.0;
 
   return t_c;
 }
@@ -330,14 +326,14 @@ void set_VREF(void)
 
   DLT(DLT_DIAG, SEND(sprintf(_xs, "Set VREF: %4.2f %4.2f", json_vref_lo, json_vref_hi);))
 
-  if ((json_vref_lo == 0) // Check for an uninitialized VREF
-      || (json_vref_hi == 0))
+  if ( (json_vref_lo == 0) // Check for an uninitialized VREF
+       || (json_vref_hi == 0) )
   {
     json_vref_lo = 1.25; // and force to something other than 0
     json_vref_hi = 2.00; // Otherwise the sensors continioustly interrupt
   }
 
-  if (json_vref_lo >= json_vref_hi)
+  if ( json_vref_lo >= json_vref_hi )
   {
     DLT(DLT_CRITICAL, SEND(sprintf(_xs, "ERROR: json_vref_lo or json_vref_hi are out of order.");))
   }

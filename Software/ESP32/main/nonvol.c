@@ -9,15 +9,15 @@
  * See https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/nvs_flash.html
  *
  * ----------------------------------------------------*/
-#include "nvs_flash.h"
 #include "nvs.h"
+#include "nvs_flash.h"
 
 #include "freETarget.h"
 #include "diag_tools.h"
 #include "json.h"
-#include "serial_io.h"
-#include "nonvol.h"
 #include "mfs.h"
+#include "nonvol.h"
+#include "serial_io.h"
 #include "string.h"
 
 /*
@@ -43,11 +43,11 @@ nvs_handle_t my_handle; // Handle to NVS space
  *------------------------------------------------------------*/
 void read_nonvol(void)
 {
-  long nonvol_init;
-  unsigned int i; // Iteration Counter
-  long x;         // 32 bit number
-  size_t length;  // Length of input string
-  esp_err_t err;  // ESP32 error type
+  long         nonvol_init;
+  unsigned int i;      // Iteration Counter
+  long         x;      // 32 bit number
+  size_t       length; // Length of input string
+  esp_err_t    err;    // ESP32 error type
 
   DLT(DLT_INFO, SEND(sprintf(_xs, "read_nonvol()");))
 
@@ -55,7 +55,7 @@ void read_nonvol(void)
    * Initialize NVS
    */
   err = nvs_flash_init();
-  if (err != 0)
+  if ( err != 0 )
   {
     DLT(DLT_CRITICAL, SEND(sprintf(_xs, "read_nonvol(): Failed to initialize NVM");))
     ESP_ERROR_CHECK(nvs_flash_erase()); // NVS partition was truncated and needs to be erased
@@ -66,27 +66,27 @@ void read_nonvol(void)
    * Read the nonvol marker and if uninitialized then set up values
    */
 
-  if (nvs_open(NAME_SPACE, NVS_READWRITE, &my_handle) != ESP_OK)
+  if ( nvs_open(NAME_SPACE, NVS_READWRITE, &my_handle) != ESP_OK )
   {
     DLT(DLT_CRITICAL, SEND(sprintf(_xs, "read_nonvol(): Failed to open NVM");))
   }
 
   nvs_get_i32(my_handle, "NONVOL_INIT", &nonvol_init);
 
-  if (nonvol_init != INIT_DONE) // EEPROM never programmed
+  if ( nonvol_init != INIT_DONE ) // EEPROM never programmed
   {
     factory_nonvol(true); // Force in good values
   }
 
   nvs_get_i32(my_handle, "NVM_SERIAL_NO", &nonvol_init);
 
-  if (nonvol_init == (-1)) // Serial Number never programmed
+  if ( nonvol_init == (-1) ) // Serial Number never programmed
   {
     factory_nonvol(true); // Force in good values
   }
 
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &nonvol_init);
-  if (nonvol_init != PS_VERSION) // persistent storage version
+  if ( nonvol_init != PS_VERSION ) // persistent storage version
   {
     update_nonvol(nonvol_init);
   }
@@ -95,49 +95,49 @@ void read_nonvol(void)
    * Use the JSON table to initialize the local variables
    */
   i = 0;
-  while (JSON[i].token != 0)
+  while ( JSON[i].token != 0 )
   {
-    if ((JSON[i].value != 0) || (JSON[i].d_value != 0)) // There is a value stored in memory
+    if ( (JSON[i].value != 0) || (JSON[i].d_value != 0) ) // There is a value stored in memory
     {
-      switch (JSON[i].convert & IS_MASK)
+      switch ( JSON[i].convert & IS_MASK )
       {
-      case IS_VOID:
-        break;
+        case IS_VOID:
+          break;
 
-      case IS_TEXT:
-      case IS_SECRET:
-        if (JSON[i].non_vol != 0) // Is persistent storage enabled?
-        {
-          length = JSON[i].convert & FLOAT_MASK;
-          nvs_get_str(my_handle, JSON[i].non_vol, (char *)JSON[i].value, &length);
-        }
-        break;
+        case IS_TEXT:
+        case IS_SECRET:
+          if ( JSON[i].non_vol != 0 ) // Is persistent storage enabled?
+          {
+            length = JSON[i].convert & FLOAT_MASK;
+            nvs_get_str(my_handle, JSON[i].non_vol, (char *)JSON[i].value, &length);
+          }
+          break;
 
-      case IS_INT32:
-      case IS_FIXED:
-      case IS_MFS:
-        if (JSON[i].non_vol != 0) // Is persistent storage enabled?
-        {
-          nvs_get_i32(my_handle, JSON[i].non_vol, &x); // Read in the value
-          *JSON[i].value = x;
-        }
-        else
-        {
-          *JSON[i].value = JSON[i].init_value; // Persistent storage is not enabled, force a known value
-        }
-        break;
+        case IS_INT32:
+        case IS_FIXED:
+        case IS_MFS:
+          if ( JSON[i].non_vol != 0 ) // Is persistent storage enabled?
+          {
+            nvs_get_i32(my_handle, JSON[i].non_vol, &x); // Read in the value
+            *JSON[i].value = x;
+          }
+          else
+          {
+            *JSON[i].value = JSON[i].init_value; // Persistent storage is not enabled, force a known value
+          }
+          break;
 
-      case IS_FLOAT:
-        if (JSON[i].non_vol != 0)
-        {
-          nvs_get_i32(my_handle, JSON[i].non_vol, &x); // Read in the value as an integer
-          *JSON[i].d_value = (float)x / 1000.0;
-        }
-        else
-        {
-          *JSON[i].d_value = (double)JSON[i].init_value / 1000.0;
-        }
-        break;
+        case IS_FLOAT:
+          if ( JSON[i].non_vol != 0 )
+          {
+            nvs_get_i32(my_handle, JSON[i].non_vol, &x); // Read in the value as an integer
+            *JSON[i].d_value = (float)x / 1000.0;
+          }
+          else
+          {
+            *JSON[i].d_value = (double)JSON[i].init_value / 1000.0;
+          }
+          break;
       }
     }
     i++;
@@ -166,21 +166,20 @@ void read_nonvol(void)
  * memory.
  *
  *------------------------------------------------------------*/
-void factory_nonvol(
-    bool new_serial_number // TRUE if prompting for a new S/N
+void factory_nonvol(bool new_serial_number // TRUE if prompting for a new S/N
 )
 {
   unsigned int serial_number; // Board serial number
-  char ch, s[32];
+  char         ch, s[32];
   unsigned int x; // Temporary Value
   unsigned int i; // Iteration Counter
 
   DLT(DLT_INFO, SEND(sprintf(_xs, "factory_nonvol(%d)\r\n", new_serial_number);))
 
   serial_number = 0;
-  x = 0;
+  x             = 0;
   nvs_set_u32(my_handle, "NONVOL_V_SET", 0);
-  if (new_serial_number == false)
+  if ( new_serial_number == false )
   {
     nvs_set_u32(my_handle, "NONVOL_V_SET", serial_number);
   }
@@ -189,39 +188,39 @@ void factory_nonvol(
    * Use the JSON table to initialize the local variables
    */
   i = 0;
-  while (JSON[i].token != 0)
+  while ( JSON[i].token != 0 )
   {
-    switch (JSON[i].convert & IS_MASK)
+    switch ( JSON[i].convert & IS_MASK )
     {
-    case IS_VOID:  // Variable does not contain anything
-    case IS_FIXED: // Variable cannot be overwritten                                    // MFS initialized from MFS entry
-      break;
+      case IS_VOID:  // Variable does not contain anything
+      case IS_FIXED: // Variable cannot be overwritten                                    // MFS initialized from MFS entry
+        break;
 
-    case IS_TEXT:
-    case IS_SECRET:
-      if (JSON[i].non_vol != 0)
-      {
-        s[0] = 0;
-        nvs_set_str(my_handle, JSON[i].non_vol, s); // Zero out the text
-      }
-      break;
+      case IS_TEXT:
+      case IS_SECRET:
+        if ( JSON[i].non_vol != 0 )
+        {
+          s[0] = 0;
+          nvs_set_str(my_handle, JSON[i].non_vol, s); // Zero out the text
+        }
+        break;
 
-    case IS_MFS:
-    case IS_INT32:
-      x = JSON[i].init_value; // Read in the value
-      if (JSON[i].non_vol != 0)
-      {
-        nvs_set_i32(my_handle, JSON[i].non_vol, x); // Read in the value
-      }
-      break;
+      case IS_MFS:
+      case IS_INT32:
+        x = JSON[i].init_value; // Read in the value
+        if ( JSON[i].non_vol != 0 )
+        {
+          nvs_set_i32(my_handle, JSON[i].non_vol, x); // Read in the value
+        }
+        break;
 
-    case IS_FLOAT:
-      x = JSON[i].init_value; // Read in the value
-      if (JSON[i].non_vol != 0)
-      {
-        nvs_set_i32(my_handle, JSON[i].non_vol, x); // Read in the value
-      }
-      break;
+      case IS_FLOAT:
+        x = JSON[i].init_value; // Read in the value
+        if ( JSON[i].non_vol != 0 )
+        {
+          nvs_set_i32(my_handle, JSON[i].non_vol, x); // Read in the value
+        }
+        break;
     }
     i++;
   }
@@ -229,9 +228,9 @@ void factory_nonvol(
   /*
    *     Test the board only if it is a factor init
    */
-  if (new_serial_number)
+  if ( new_serial_number )
   {
-    if (factory_test() == false)
+    if ( factory_test() == false )
     {
       SEND(sprintf(_xs, "\r\nFactory test did not pass.");)
       SEND(sprintf(_xs, "\r\nFactory Test will not be recorded");)
@@ -240,47 +239,47 @@ void factory_nonvol(
     /*
      * Ask for the serial number.  Exit when you get !
      */
-    ch = 0;
+    ch            = 0;
     serial_number = 0;
     serial_flush(ALL);
 
     SEND(sprintf(_xs, "\r\nSerial Number? (ex 223! or X to cancel))");)
 
-    while (1)
+    while ( 1 )
     {
-      if (serial_available(CONSOLE) != 0)
+      if ( serial_available(CONSOLE) != 0 )
       {
         ch = serial_getch(CONSOLE);
         serial_putch(ch, CONSOLE);
 
-        switch (ch)
+        switch ( ch )
         {
-        case '!':
-          nvs_set_i32(my_handle, NONVOL_SERIAL_NO, serial_number);
-          SEND(sprintf(_xs, "\r\nSetting Serial Number to: %d", serial_number);)
-          break;
+          case '!':
+            nvs_set_i32(my_handle, NONVOL_SERIAL_NO, serial_number);
+            SEND(sprintf(_xs, "\r\nSetting Serial Number to: %d", serial_number);)
+            break;
 
-        case 0x08: // Backspace
-          serial_number /= 10;
-          break;
+          case 0x08: // Backspace
+            serial_number /= 10;
+            break;
 
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-          serial_number *= 10;
-          serial_number += ch - '0';
-          break;
+          case '0':
+          case '1':
+          case '2':
+          case '3':
+          case '4':
+          case '5':
+          case '6':
+          case '7':
+          case '8':
+          case '9':
+            serial_number *= 10;
+            serial_number += ch - '0';
+            break;
         }
       }
       vTaskDelay(10);
-      if ((ch == 'x') || (ch == 'X') || (ch == '!'))
+      if ( (ch == 'x') || (ch == 'X') || (ch == '!') )
       {
         break;
       }
@@ -292,7 +291,7 @@ void factory_nonvol(
    */
   nvs_set_i32(my_handle, NONVOL_PS_VERSION, PS_VERSION); // Write in the version number
   nvs_set_i32(my_handle, NONVOL_INIT, INIT_DONE);
-  if (nvs_commit(my_handle))
+  if ( nvs_commit(my_handle) )
   {
     DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to write factory defaults to NONVOL");))
   }
@@ -320,14 +319,13 @@ void factory_nonvol(
  *------------------------------------------------------------*/
 #define INIT_ALLOWED 1234 // Number user must enter to allow initialization
 
-void init_nonvol(
-    int verify // Verification code entered by user
+void init_nonvol(int verify // Verification code entered by user
 )
 {
   /*
    * Ensure that the user wants to init the unit
    */
-  if (verify != INIT_ALLOWED)
+  if ( verify != INIT_ALLOWED )
   {
     SEND(sprintf(_xs, "\r\nUse {\"INIT\":1234} Initialize memory\r\n");)
     return;
@@ -356,35 +354,34 @@ void init_nonvol(
  *
  *------------------------------------------------------------*/
 
-void update_nonvol(
-    unsigned int current_version // Version present in persistent storage
+void update_nonvol(unsigned int current_version // Version present in persistent storage
 )
 {
-  unsigned int i; // Iteration counter
-  long ps_value;  // Value read from persistent storage
+  unsigned int i;        // Iteration counter
+  long         ps_value; // Value read from persistent storage
 
   DLT(DLT_INFO, SEND(sprintf(_xs, "update_nonvol(%d)\r\n", current_version);))
 
   /*
    * Check to see if this persistent storage has never had a version number
    */
-  if (PS_UNINIT(current_version))
+  if ( PS_UNINIT(current_version) )
   {
     i = 0;
-    while (JSON[i].token != 0)
+    while ( JSON[i].token != 0 )
     {
-      switch (JSON[i].convert & IS_MASK)
+      switch ( JSON[i].convert & IS_MASK )
       {
-      case IS_INT32:
-        nvs_get_i32(my_handle, JSON[i].non_vol, &ps_value); // Pull up the value from memory
-        if (PS_UNINIT(ps_value))                            // Uninitilazed?
-        {
-          nvs_set_i32(my_handle, JSON[i].non_vol, JSON[i].init_value); // Initalize it from the table
-        }
-        break;
+        case IS_INT32:
+          nvs_get_i32(my_handle, JSON[i].non_vol, &ps_value); // Pull up the value from memory
+          if ( PS_UNINIT(ps_value) )                          // Uninitilazed?
+          {
+            nvs_set_i32(my_handle, JSON[i].non_vol, JSON[i].init_value); // Initalize it from the table
+          }
+          break;
 
-      default:
-        break;
+        default:
+          break;
       }
       i++;
     }
@@ -396,7 +393,7 @@ void update_nonvol(
   /*
    * Version 0 -> 1 Set WiFi Hidden to 0
    */
-  if (current_version == 0)
+  if ( current_version == 0 )
   {
     DLT(DLT_INFO, SEND(sprintf(_xs, "Updating PS0 to PS1");))
 
@@ -409,7 +406,7 @@ void update_nonvol(
   /*
    * Version 1 -> 2 Fixup MFS variables
    */
-  if (current_version == 1)
+  if ( current_version == 1 )
   {
     DLT(DLT_INFO, SEND(sprintf(_xs, "Updating PS1 to PS2");))
 
@@ -444,7 +441,7 @@ void update_nonvol(
   /*
    * Version 2 -> 3 Fixup WiFi IP address and first connect
    */
-  if (current_version == 2)
+  if ( current_version == 2 )
   {
     DLT(DLT_INFO, SEND(sprintf(_xs, "Updating PS2 to PS3");))
 
@@ -459,7 +456,7 @@ void update_nonvol(
   /*
    * Version 3 -> 4  Add in new parameters for stepper motor
    */
-  if (current_version == 3)
+  if ( current_version == 3 )
   {
     DLT(DLT_INFO, SEND(sprintf(_xs, "Updating PS3 to PS4");))
 
@@ -474,7 +471,7 @@ void update_nonvol(
   /*
    * Version 4 -> 5  Add in new parameters advancing paper after json_paper_shot conts
    */
-  if (current_version == 4)
+  if ( current_version == 4 )
   {
     DLT(DLT_INFO, SEND(sprintf(_xs, "Updating PS4 to PS5");))
 
@@ -487,7 +484,7 @@ void update_nonvol(
   /*
    * Version 5 -> 6  Disable the AUX port
    */
-  if (current_version == 5)
+  if ( current_version == 5 )
   {
     DLT(DLT_INFO, SEND(sprintf(_xs, "Updating PS5 to PS6");))
 
