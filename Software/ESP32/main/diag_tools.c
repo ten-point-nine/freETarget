@@ -95,7 +95,7 @@ static const self_test_t test_list[] = {
 
 unsigned int next_test(char ch, unsigned int test_ID)
 {
-  if ( ch == '-' ) // Test separator?
+  if ( ch == '-' )           // Test separator?
   {
     test_ID += 20;           // Go to the next second decade
     test_ID -= test_ID % 10; // Round down to the zero
@@ -113,16 +113,16 @@ void self_test(unsigned int test // What test to execute
 )
 {
   unsigned int i;
-  unsigned int test_ID; // Computed test ID
+  unsigned int test_ID;          // Computed test ID
 
   /*
    *  Switch over to test mode
    */
-  run_state |= IN_TEST; // Show the test is running
+  run_state |= IN_TEST;      // Show the test is running
 
   while ( run_state & IN_OPERATION )
   {
-    vTaskDelay(10); // Wait for everyone else to turn off
+    vTaskDelay(10);          // Wait for everyone else to turn off
   }
   freeETarget_timer_pause(); // Stop interrupts
 
@@ -131,14 +131,14 @@ void self_test(unsigned int test // What test to execute
    */
   i       = 0;
   test_ID = 0;
-  while ( test_list[i].help[0] != 0 ) // Look through the list
+  while ( test_list[i].help[0] != 0 )                         // Look through the list
   {
     if ( (test_ID == test) && (test_list[i].help[0] != '-') ) // Found the test
     {
       SEND(sprintf(_xs, "\r\n\n%2d - %s", test_ID, test_list[i].help);)
-      test_list[i].f();          // Execute the test
-      run_state &= ~IN_TEST;     // Exit the test
-      freeETarget_timer_start(); // Start interrupts
+      test_list[i].f();                                       // Execute the test
+      run_state &= ~IN_TEST;                                  // Exit the test
+      freeETarget_timer_start();                              // Start interrupts
       return;
     }
     i++;
@@ -210,14 +210,14 @@ static void show_test_help(void)
 bool factory_test(void)
 {
   int   i, percent;
-  int   running; // Bit mask from run flip flops
-  int   dip;     // Input from DIP input
+  int   running;         // Bit mask from run flip flops
+  int   dip;             // Input from DIP input
   char  ch;
   char  ABCD[] = "DCBA"; // DIP switch order
   int   pass;            // Pass YES/NO
   bool  passed_once;     // Passed all of the tests at least once
   float volts[4];
-  int   motor_toggle; // Toggle motor on an off
+  int   motor_toggle;    // Toggle motor on an off
 
   /*
    *  Force the refernce voltages - Incase the board has been uninitialized
@@ -375,13 +375,13 @@ bool factory_test(void)
       switch ( ch )
       {
         default:
-        case 'R': // Reset the test
+        case 'R':   // Reset the test
         case 'r':
           pass = 0; // Reset the pass/fail
           arm_timers();
           break;
 
-        case 'X': // Exit
+        case 'X':   // Exit
         case 'x':
         case '!':
           DCmotor_on_off(false, 0);
@@ -462,9 +462,9 @@ bool POST_counters(void)
    *  Test 1, Make sure we can turn off the reference clock
    */
   count = 0;
-  gpio_set_level(OSC_CONTROL, OSC_OFF); // Turn off the oscillator
+  gpio_set_level(OSC_CONTROL, OSC_OFF);            // Turn off the oscillator
   toggle = gpio_get_level(REF_CLK);
-  for ( i = 0; i != 1000; i++ ) // Try 1000 times
+  for ( i = 0; i != 1000; i++ )                    // Try 1000 times
   {
     if ( (gpio_get_level(REF_CLK) ^ toggle) != 0 ) // Look for a change
     {
@@ -485,7 +485,7 @@ bool POST_counters(void)
   count = 0;
   gpio_set_level(OSC_CONTROL, OSC_ON);
   toggle = gpio_get_level(REF_CLK);
-  for ( i = 0; i != 1000; i++ ) // Try 1000 times
+  for ( i = 0; i != 1000; i++ )                    // Try 1000 times
   {
     if ( (gpio_get_level(REF_CLK) ^ toggle) != 0 ) // Look for a change
     {
@@ -526,7 +526,7 @@ bool POST_counters(void)
   /*
    * Test 4, Trigger the timers
    */
-  gpio_set_level(STOP_N, 0); // Clear the latch
+  gpio_set_level(STOP_N, 0);      // Clear the latch
   gpio_set_level(STOP_N, 1);
   gpio_set_level(CLOCK_START, 1); // Triger the run latch
   gpio_set_level(CLOCK_START, 0);
@@ -674,35 +674,35 @@ bool do_dlt(unsigned int level)
 
   if ( (level & (is_trace | DLT_CRITICAL | DLT_INFO)) == 0 ) // DLT_CRITICAL are always set in is_trace
   {
-    return false; // Send out if the trace is higher than the level
+    return false;                                            // Send out if the trace is higher than the level
   }
 
   if ( level & DLT_CRITICAL )
   {
-    dlt_id = 'E'; // Red
+    dlt_id = 'E';                                            // Red
   }
 
   if ( level & DLT_INFO )
   {
-    dlt_id = 'I'; // Green
+    dlt_id = 'I';                                            // Green
   }
 
   if ( level & DLT_APPLICATION )
   {
-    dlt_id = 'W'; // Yellow
+    dlt_id = 'W';                                            // Yellow
   }
 
   if ( level & DLT_DEBUG )
   {
-    dlt_id = 'D'; // White - Debug
+    dlt_id = 'D';                                            // White - Debug
   }
 
   if ( level & DLT_DIAG )
   {
-    dlt_id = 'H'; // White - Hardware
+    dlt_id = 'H';                                            // White - Hardware
   }
 
-  if ( level & DLT_COMMUNICATION ) // White - Communications
+  if ( level & DLT_COMMUNICATION )                           // White - Communications
   {
     dlt_id = 'C';
   }
@@ -825,7 +825,7 @@ bool check_12V(void)
     return false;
   }
 
-  if ( fault_V12 != V12OK ) // Did we have an error last time?
+  if ( fault_V12 != V12OK )     // Did we have an error last time?
   {
     set_status_LED(LED_OK_12V); // Gone, clear the error
     fault_V12 = V12OK;

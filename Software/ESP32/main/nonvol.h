@@ -13,7 +13,7 @@
 
 #define NAME_SPACE "freETarget"
 
-extern nvs_handle_t my_handle; // Handle to NVS space
+extern nvs_handle_t my_handle;                            // Handle to NVS space
 
 /*
  * @function prototypes
@@ -28,17 +28,17 @@ void restore_nonvol(void);                        // Copyt the nonvol back
  * NON Vol Storage
  */
 
-#define NONVOL_INIT             "NONVOL_INIT"  // Show when the INIT is done
-#define NONVOL_CALIBRE_X10      "CALIBRE_X10"  // Pellet Calibre
-#define NONVOL_SENSOR_DIA       "SENSOR_DIA"   // Sensor diameter
-#define NONVOL_SENSOR_ANGLE     "SENSOR_ANGLE" // Angular displacement of sensors
-#define NONVOL_NORTH_X          "NORTH_X"      // Offset applied to North sensor
+#define NONVOL_INIT             "NONVOL_INIT"     // Show when the INIT is done
+#define NONVOL_CALIBRE_X10      "CALIBRE_X10"     // Pellet Calibre
+#define NONVOL_SENSOR_DIA       "SENSOR_DIA"      // Sensor diameter
+#define NONVOL_SENSOR_ANGLE     "SENSOR_ANGLE"    // Angular displacement of sensors
+#define NONVOL_NORTH_X          "NORTH_X"         // Offset applied to North sensor
 #define NONVOL_NORTH_Y          "NORTH_Y"
-#define NONVOL_EAST_X           "EAST_X" // Offset applied to East sensor
+#define NONVOL_EAST_X           "EAST_X"          // Offset applied to East sensor
 #define NONVOL_EAST_Y           "EAST_Y"
-#define NONVOL_SOUTH_X          "SOUTH_X" // Offset applied to South sensor
+#define NONVOL_SOUTH_X          "SOUTH_X"         // Offset applied to South sensor
 #define NONVOL_SOUTH_Y          "SOUTH_Y"
-#define NONVOL_WEST_X           "WEST_X" // Offset applied to West sensor
+#define NONVOL_WEST_X           "WEST_X"          // Offset applied to West sensor
 #define NONVOL_WEST_Y           "WEST_Y"
 #define NONVOL_POWER_SAVE       "POWER_SAVE"      // Power saver time
 #define NONVOL_NAME_ID          "NAME_ID"         // Name Identifier

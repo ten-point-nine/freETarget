@@ -18,8 +18,8 @@ int  token_available(void); // TRUE if the token ring can be taken
 void token_poll(void);      // Poll the token ring
 void token_cycle(void);     // Token ring cyclic monitor
 
-extern int my_ring;   // My token ring node ID
-extern int whos_ring; // WHo owns the token ring
+extern int my_ring;         // My token ring node ID
+extern int whos_ring;       // WHo owns the token ring
 
 /*
  *  State Definitions
@@ -33,13 +33,13 @@ extern int whos_ring; // WHo owns the token ring
 #define TOKEN_RELEASE         (5 << 3) // Release the token ring
 #define TOKEN_CONTROL         (TOKEN_ENUM_REQUEST | TOKEN_ENUM | TOKEN_TAKE_REQUEST | TOKEN_TAKE | TOKEN_RELEASE_REQUEST | TOKEN_RELEASE)
 
-#define TOKEN_RING   0x07 // Which token ring location
-#define TOKEN_NONE   0x00 // No token ring installed
-#define TOKEN_MASTER 0x01 // I am the token ring master
-#define TOKEN_SLAVE  0x02 // I am a token ring slave
+#define TOKEN_RING   0x07              // Which token ring location
+#define TOKEN_NONE   0x00              // No token ring installed
+#define TOKEN_MASTER 0x01              // I am the token ring master
+#define TOKEN_SLAVE  0x02              // I am a token ring slave
 
-#define TOKEN_UNDEF -1 // The token state is undefined
-#define TOKEN_OWN   1  // The token is owmed by me
+#define TOKEN_UNDEF -1                 // The token state is undefined
+#define TOKEN_OWN   1                  // The token is owmed by me
 
 /*
  * #defines

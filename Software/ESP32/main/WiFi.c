@@ -304,7 +304,7 @@ void WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id
    */
   if ( event_base == WIFI_EVENT )
   {
-    if ( event_id == WIFI_EVENT_STA_START ) // Begin a connection to the SSID
+    if ( event_id == WIFI_EVENT_STA_START )        // Begin a connection to the SSID
     {
       esp_wifi_connect();
     }
@@ -458,13 +458,13 @@ static void tcpip_server_io(void)
       }
     }
 
-    if ( i == MAX_SOCKETS ) // All of them are closed?
+    if ( i == MAX_SOCKETS )         // All of them are closed?
     {
       if ( json_wifi_ssid[0] != 0 ) //  I'm a station
       {
         set_status_LED(LED_WIFI_STATION);
       }
-      else // I'm an access point
+      else                          // I'm an access point
       {
         set_status_LED(LED_WIFI_ACCESS);
       }
@@ -710,7 +710,7 @@ static void WiFi_start_new_connection(int sock // Socket token to use
   /*
    *  See if this is the first connection on a WiFi socket
    */
-  if ( json_wifi_reset_first != 0 ) // Reset on first connection?
+  if ( json_wifi_reset_first != 0 )      // Reset on first connection?
   {
     j = 0;
     for ( i = 0; i != MAX_SOCKETS; i++ ) // How many connections do we have?

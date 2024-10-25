@@ -24,14 +24,14 @@
 /*
  * Definitions
  */
-#define FREQUENCY          1000ul // 1000 Hz
-#define N_TIMERS           32     // Keep space for 32 timers
-#define PORT_STATE_IDLE    0      // There are no sensor inputs
-#define PORT_STATE_WAIT    1      // Some sensor inputs are present
-#define PORT_STATE_TIMEOUT 2      // Wait for the ringing to stop
+#define FREQUENCY          1000ul     // 1000 Hz
+#define N_TIMERS           32         // Keep space for 32 timers
+#define PORT_STATE_IDLE    0          // There are no sensor inputs
+#define PORT_STATE_WAIT    1          // Some sensor inputs are present
+#define PORT_STATE_TIMEOUT 2          // Wait for the ringing to stop
 
-#define MAX_WAIT_TIME 10 // Wait up to 10 ms for the input to arrive
-#define MAX_RING_TIME 50 // Wait 50 ms for the ringing to stop
+#define MAX_WAIT_TIME 10              // Wait up to 10 ms for the input to arrive
+#define MAX_RING_TIME 50              // Wait 50 ms for the ringing to stop
 
 #define TICK_10ms   1                 // vTaskDelay in 10 ms
 #define BAND_100ms  (TICK_10ms * 10)  // vTaskDelay in 100 ms
@@ -98,8 +98,8 @@ void freeETarget_timer_init(void)
   timer_enable_intr(TIMER_GROUP_0, TIMER_1);             // Interrupt associated with this interrupt
   timer_isr_callback_add(TIMER_GROUP_0, TIMER_1, freeETarget_timer_isr_callback, NULL, 0);
   timer_start(TIMER_GROUP_0, TIMER_1);
-  timer_new(&ring_timer, 0); // Let the pellet trap stop ringing
-  timer_new(&shot_timer, 0); // Let the sound propagate to the sensors
+  timer_new(&ring_timer, 0);                             // Let the pellet trap stop ringing
+  timer_new(&shot_timer, 0);                             // Let the sound propagate to the sensors
   shot_in  = 0;
   shot_out = 0;
 
@@ -152,7 +152,7 @@ void freeETarget_timer_start(void) // Start the timer
 static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
 {
   BaseType_t   high_task_awoken = pdFALSE;
-  unsigned int pin; // Value read from the port
+  unsigned int pin;                                       // Value read from the port
 
   IF_NOT(IN_OPERATION) return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISR
 
@@ -166,17 +166,17 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
    */
   switch ( isr_state )
   {
-    case PORT_STATE_IDLE: // Idle, Wait for something to show up
-      if ( pin != 0 )     // Something has triggered
+    case PORT_STATE_IDLE:                                    // Idle, Wait for something to show up
+      if ( pin != 0 )                                        // Something has triggered
       {
-        shot_timer = MAX_WAIT_TIME;   // Start the wait timer
-        isr_state  = PORT_STATE_WAIT; // Got something wait for all of the sensors tro trigger
+        shot_timer = MAX_WAIT_TIME;                          // Start the wait timer
+        isr_state  = PORT_STATE_WAIT;                        // Got something wait for all of the sensors tro trigger
       }
       break;
 
-    case PORT_STATE_WAIT:         // Something is present, wait for all of the inputs
-      if ( (pin == RUN_MASK)      // We have all of the inputs
-           || (shot_timer == 0) ) // or ran out of time.  Read the timers and restart
+    case PORT_STATE_WAIT:                                    // Something is present, wait for all of the inputs
+      if ( (pin == RUN_MASK)                                 // We have all of the inputs
+           || (shot_timer == 0) )                            // or ran out of time.  Read the timers and restart
       {
         aquire();                                            // Read the counters
         ring_timer = json_min_ring_time * ONE_SECOND / 1000; // Reset the ring timer
@@ -184,11 +184,11 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
       }
       break;
 
-    case PORT_STATE_TIMEOUT: // Wait for the ringing to stop
+    case PORT_STATE_TIMEOUT:                                 // Wait for the ringing to stop
       if ( ring_timer == 0 )
       {
-        stop_timers();               // Clear the flipflops
-        isr_state = PORT_STATE_IDLE; // The ringing has stopped
+        stop_timers();                                       // Clear the flipflops
+        isr_state = PORT_STATE_IDLE;                         // The ringing has stopped
       }
       break;
   }
@@ -230,7 +230,7 @@ void freeETarget_timers(void *pvParameters)
     {
       if ( (timers[i] != 0) && (*timers[i] != 0) )
       {
-        (*timers[i])--; // Decriment the timer
+        (*timers[i])--;               // Decriment the timer
       }
     }
     vTaskDelay(TICK_10ms);
@@ -362,12 +362,12 @@ int timer_new(volatile unsigned long *new_timer, // Pointer to new down counter
     return 0;
   }
 
-  for ( i = 0; i != N_TIMERS; i++ ) // Look through the space
+  for ( i = 0; i != N_TIMERS; i++ )    // Look through the space
   {
     if ( (timers[i] == 0)              // Got an empty timer slot
          || (timers[i] == new_timer) ) // or it already exists
     {
-      timers[i]  = new_timer; // Add it in
+      timers[i]  = new_timer;          // Add it in
       *new_timer = duration;
       return 1;
     }
@@ -387,13 +387,13 @@ int timer_delete(volatile unsigned long *old_timer // Pointer to new down counte
     return 0;
   }
 
-  *old_timer = 0; // Set the timer to zero
+  *old_timer = 0;                   // Set the timer to zero
 
   for ( i = 0; i != N_TIMERS; i++ ) // Look through the space
   {
-    if ( timers[i] == old_timer ) // Found the existing timer
+    if ( timers[i] == old_timer )   // Found the existing timer
     {
-      timers[i] = 0; // Remove the pointer
+      timers[i] = 0;                // Remove the pointer
       return 1;
     }
   }

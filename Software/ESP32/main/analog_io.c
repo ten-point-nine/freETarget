@@ -52,10 +52,10 @@ void adc_init(unsigned int adc_channel,    // What ADC channel are we accessing
               unsigned int adc_attenuation // What is the channel attenuation
 )
 {
-  unsigned int adc;     // Which ADC (1/2)
-  unsigned int channel; // Which channel attached to the ADC (0-10)
+  unsigned int adc;                        // Which ADC (1/2)
+  unsigned int channel;                    // Which channel attached to the ADC (0-10)
 
-  adc     = ADC_ADC(adc_channel); // What ADC are we on
+  adc     = ADC_ADC(adc_channel);          // What ADC are we on
   channel = ADC_CHANNEL(adc_channel);
 
   /*
@@ -97,12 +97,12 @@ void adc_init(unsigned int adc_channel,    // What ADC channel are we accessing
 unsigned int adc_read(unsigned int adc_channel // What input are we reading?
 )
 {
-  unsigned int adc;     // Which ADC (1/2)
-  unsigned int channel; // Which channel attached to the ADC (0-10)
-  int          raw;     // Raw value from the ADC
+  unsigned int adc;                            // Which ADC (1/2)
+  unsigned int channel;                        // Which channel attached to the ADC (0-10)
+  int          raw;                            // Raw value from the ADC
 
-  adc     = ADC_ADC(adc_channel);     // What ADC are we on
-  channel = ADC_CHANNEL(adc_channel); // What channel are we using
+  adc     = ADC_ADC(adc_channel);              // What ADC are we on
+  channel = ADC_CHANNEL(adc_channel);          // What channel are we using
 
   /*
    *  Read the appropriate channel
@@ -130,7 +130,7 @@ unsigned int adc_read(unsigned int adc_channel // What input are we reading?
 #define V12_CAL         0.88
 float v12_supply(void)
 {
-  float raw; // Raw voltage from ADC
+  float raw;                                 // Raw voltage from ADC
 
   raw = (float)adc_read(V_12_LED);
 
@@ -186,16 +186,16 @@ void set_LED_PWM         // Theatre lighting
   /*
    * Loop and ramp the LED  PWM up or down slowly
    */
-  while ( new_LED_percent != old_LED_percent ) // Change in the brightness level?
+  while ( new_LED_percent != old_LED_percent )   // Change in the brightness level?
   {
 
     if ( new_LED_percent < old_LED_percent )
     {
-      old_LED_percent--; // Ramp the value down
+      old_LED_percent--;                         // Ramp the value down
     }
     else
     {
-      old_LED_percent++; // Ramp the value up
+      old_LED_percent++;                         // Ramp the value up
     }
     pwm_set(LED_PWM, old_LED_percent);           // Write the value out
     timer_delay((unsigned long)ONE_SECOND / 50); // Worst case, take 2 seconds to get there
@@ -329,8 +329,8 @@ void set_VREF(void)
   if ( (json_vref_lo == 0) // Check for an uninitialized VREF
        || (json_vref_hi == 0) )
   {
-    json_vref_lo = 1.25; // and force to something other than 0
-    json_vref_hi = 2.00; // Otherwise the sensors continioustly interrupt
+    json_vref_lo = 1.25;   // and force to something other than 0
+    json_vref_hi = 2.00;   // Otherwise the sensors continioustly interrupt
   }
 
   if ( json_vref_lo >= json_vref_hi )

@@ -49,7 +49,7 @@ static void mfs_pc_test(void);
 /*
  * Variables
  */
-static unsigned int switch_state; // What switches are pressed
+static unsigned int switch_state;                // What switches are pressed
 const mfs_action_t  mfs_action[] = {
     {TARGET_ON,      mfs_on,         "TARGET_ON"     }, // Take the target out of sleep
     {PAPER_FEED,     mfs_paper_feed, "PAPER FEED"    }, // Feed paper until button released
@@ -156,18 +156,18 @@ void multifunction_init(void)
    */
   if ( DIP_SW_A && DIP_SW_B ) // Both switches closed?
   {
-    factory_nonvol(false); // Initalize the nonvol but do not calibrate
+    factory_nonvol(false);    // Initalize the nonvol but do not calibrate
   }
 
   else
   {
-    if ( DIP_SW_A ) // Switch A pressed
+    if ( DIP_SW_A )           // Switch A pressed
     {
       is_trace = DLT_CRITICAL | DLT_INFO | DLT_APPLICATION | DLT_COMMUNICATION | DLT_DIAG | DLT_DEBUG;
       DLT(DLT_INFO, SEND(sprintf(_xs, "\r\nAll tracing enabled");))
     }
 
-    if ( DIP_SW_B ) // Switch B pressed
+    if ( DIP_SW_B )           // Switch B pressed
     {
     }
   }
@@ -300,7 +300,7 @@ void multifunction_switch_tick(void)
 
 void multifunction_switch(void)
 {
-  unsigned int action; // Action to happen
+  unsigned int action;                      // Action to happen
 
   IF_NOT(IN_OPERATION)
   return;
@@ -382,9 +382,9 @@ static void sw_state(unsigned int action)
 
 static void mfs_on(void)
 {
-  set_LED_PWM_now(json_LED_PWM); // Yes, a quick press to turn the LED on
+  set_LED_PWM_now(json_LED_PWM);                               // Yes, a quick press to turn the LED on
   vTaskDelay(ONE_SECOND / 2);
-  set_LED_PWM_now(0); // Blink
+  set_LED_PWM_now(0);                                          // Blink
   vTaskDelay(ONE_SECOND / 2);
   set_LED_PWM_now(json_LED_PWM);                               // and leave it on
   power_save = (long)json_power_save * 60L * (long)ONE_SECOND; // and resets the power save time
@@ -393,7 +393,7 @@ static void mfs_on(void)
   return;
 }
 
-static void mfs_paper_feed(void) // Feed paper so long as the switch is pressed
+static void mfs_paper_feed(void)                               // Feed paper so long as the switch is pressed
 {
   DLT(DLT_DEBUG, SEND(sprintf(_xs, "mfs_paper_feed()");))
 
@@ -405,7 +405,7 @@ static void mfs_paper_feed(void) // Feed paper so long as the switch is pressed
     paper_start();
     while ( DIP_SW_A || DIP_SW_B ) // and loop until the switches are
     {
-      vTaskDelay(1); // released
+      vTaskDelay(1);               // released
     }
     paper_stop();
   }
@@ -418,9 +418,9 @@ static void mfs_paper_feed(void) // Feed paper so long as the switch is pressed
     paper_start();
     while ( DIP_SW_A || DIP_SW_B ) // and loop until the switches are
     {
-      paper_drive_tick(); // Fake a timer tick since mfs_paper_feed() is blocking
-      vTaskDelay(1);      // released
-      step_count = 1000;  // Keep the motor moving
+      paper_drive_tick();          // Fake a timer tick since mfs_paper_feed() is blocking
+      vTaskDelay(1);               // released
+      step_count = 1000;           // Keep the motor moving
     }
     paper_stop();
   }
@@ -479,7 +479,7 @@ static void mfs_led_adjust(void)
 
   led_step = 5;
 
-  json_LED_PWM += led_step; // Bump up the LED by 5%
+  json_LED_PWM += led_step;      // Bump up the LED by 5%
   if ( json_LED_PWM > 100 )
   {
     json_LED_PWM = 0;

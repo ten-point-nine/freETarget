@@ -34,8 +34,8 @@ sensor_t s[4] = {
     {3, {'w', "WEST_LO", LED_WEST_FAILED, 0x10},   {'W', "WEST_HI", LED_WEST_FAILED, 0x01}  }
 };
 
-unsigned int                  pellet_calibre; // Time offset to compensate for pellet diameter
-static volatile unsigned long wdt;            // Warchdog  timer
+unsigned int                  pellet_calibre;   // Time offset to compensate for pellet diameter
+static volatile unsigned long wdt;              // Warchdog  timer
 
 static void remap_target(double *x, double *y); // Map a club target if used
 
@@ -116,14 +116,14 @@ void init_sensors(void)
 unsigned int compute_hit(shot_record_t *shot // Storing the results
 )
 {
-  double reference; // Time of reference counter
-  int    location;  // Sensor chosen for reference location
+  double reference;                          // Time of reference counter
+  int    location;                           // Sensor chosen for reference location
   int    i, count;
-  double estimate;             // Estimated position
-  double last_estimate, error; // Location error
-  double x_avg, y_avg;         // Running average location
-  double smallest;             // Smallest non-zero value measured
-  double z_offset_clock;       // Time offset between paper and sensor plane
+  double estimate;                           // Estimated position
+  double last_estimate, error;               // Location error
+  double x_avg, y_avg;                       // Running average location
+  double smallest;                           // Smallest non-zero value measured
+  double z_offset_clock;                     // Time offset between paper and sensor plane
 
   x_avg = 0;
   y_avg = 0;
@@ -231,7 +231,7 @@ unsigned int compute_hit(shot_record_t *shot // Storing the results
    */
   while ( error > THRESHOLD )
   {
-    x_avg         = 0; // Zero out the average values
+    x_avg         = 0;         // Zero out the average values
     y_avg         = 0;
     last_estimate = estimate;
 
@@ -239,13 +239,13 @@ unsigned int compute_hit(shot_record_t *shot // Storing the results
     {
       if ( find_xy_3D(&s[i], estimate, z_offset_clock) )
       {
-        x_avg += s[i].xs; // Keep the running average
+        x_avg += s[i].xs;      // Keep the running average
         y_avg += s[i].ys;
       }
-      else // The calculation failed
+      else                     // The calculation failed
       {
         DLT(DLT_APPLICATION, SEND(sprintf(_xs, "Calculations failed");))
-        return MISS; // Abort
+        return MISS;           // Abort
       }
     }
 
@@ -335,9 +335,9 @@ bool find_xy_3D(sensor_t *s,             // Sensor to be operatated on
                 double    z_offset_clock // Time difference between paper and sensor plane
 )
 {
-  double ae, be;   // Locations with error added
-  double rotation; // Angle shot is rotated through
-  double x;        // Temporary value
+  double ae, be;                         // Locations with error added
+  double rotation;                       // Angle shot is rotated through
+  double x;                              // Temporary value
 
   /*
    * Check to see if the sensor data is correct.  If not, return an error
@@ -357,7 +357,7 @@ bool find_xy_3D(sensor_t *s,             // Sensor to be operatated on
     sq(s->a + estimate);
     DLT(DLT_APPLICATION, SEND(sprintf(_xs, "s->a is complex, truncting");))
   }
-  ae = sqrt(x); // Dimenstion with error included
+  ae = sqrt(x);            // Dimenstion with error included
 
   x = sq(s->b + estimate); // - sq(z_offset_clock);
   if ( x < 0 )
@@ -369,7 +369,7 @@ bool find_xy_3D(sensor_t *s,             // Sensor to be operatated on
 
   if ( (ae + be) < s->c ) // Check for an accumulated round off error
   {
-    s->angle_A = 0; // Yes, then force to zero.
+    s->angle_A = 0;       // Yes, then force to zero.
   }
   else
   {
@@ -425,7 +425,7 @@ bool find_xy_3D(sensor_t *s,             // Sensor to be operatated on
    */
   if ( isnan(s->x) || isnan(s->y) ) // If the computation failed,
   {
-    return false; // return an error
+    return false;                   // return an error
   }
 
   return true;
@@ -454,8 +454,8 @@ void send_score(shot_record_t *shot,       //  record
                 unsigned int   shot_number // What shot are we
 )
 {
-  double x, y;           // Shot location in mm X, Y before rotation
-  double real_x, real_y; // Shot location in mm X, Y before remap
+  double x, y;                             // Shot location in mm X, Y before rotation
+  double real_x, real_y;                   // Shot location in mm X, Y before remap
   double radius;
   double angle;
 
@@ -468,7 +468,7 @@ void send_score(shot_record_t *shot,       //  record
   {
     while ( my_ring != whos_ring )
     {
-      token_take(); // Grab the token ring
+      token_take();                       // Grab the token ring
       timer_new(&wdt, 2 * ONE_SECOND);
       while ( (wdt != 0)                  // Wait up to 2 seconds
               && (whos_ring != my_ring) ) // Or we own the ring
@@ -493,8 +493,8 @@ void send_score(shot_record_t *shot,       //  record
   x      = radius * cos(PI * angle / 180.0d); // Rotate onto the target face
   y      = radius * sin(PI * angle / 180.0d);
   real_x = x;
-  real_y = y;           // Remember the original target value
-  remap_target(&x, &y); // Change the target if needed
+  real_y = y;                                 // Remember the original target value
+  remap_target(&x, &y);                       // Change the target if needed
   shot->xs       = x;
   shot->ys       = y;
   shot->is_valid = true;
@@ -619,9 +619,9 @@ void send_replay(shot_record_t *shot, //  record
 void send_miss(shot_record_t *shot, // record record
                unsigned int   shot_number)
 {
-  if ( json_send_miss == 0 ) // If send_miss not enabled
+  if ( json_send_miss == 0 )        // If send_miss not enabled
   {
-    return; // Do nothing
+    return;                         // Do nothing
   }
 
   /*
@@ -708,12 +708,12 @@ void send_miss(shot_record_t *shot, // record record
  *--------------------------------------------------------------*/
 typedef struct
 {
-  double x; // X location of Bull
-  double y; // Y location of Bull
+  double x;                 // X location of Bull
+  double y;                 // Y location of Bull
 } new_target_t;
 
 #define LAST_BULL (-1000.0)
-#define D5_74     (74 / 2) // Five bull air rifle is 74mm centre-centre
+#define D5_74     (74 / 2)  // Five bull air rifle is 74mm centre-centre
 new_target_t five_bull_air_rifle_74mm[] = {
     {-D5_74,    D5_74    },
     {D5_74,     D5_74    },
@@ -723,7 +723,7 @@ new_target_t five_bull_air_rifle_74mm[] = {
     {LAST_BULL, LAST_BULL}
 };
 
-#define D5_79 (79 / 2) // Five bull air rifle is 79mm centre-centre
+#define D5_79 (79 / 2)      // Five bull air rifle is 79mm centre-centre
 new_target_t five_bull_air_rifle_79mm[] = {
     {-D5_79,    D5_79    },
     {D5_79,     D5_79    },
@@ -777,17 +777,17 @@ static void remap_target(double *x, // Computed X location of shot (returned)
                          double *y  // Computed Y location of shot (returned)
 )
 {
-  double distance, closest; // Distance to bull in clock ticks
-  double dx, dy;            // Best fitting bullseye
+  double distance, closest;         // Distance to bull in clock ticks
+  double dx, dy;                    // Best fitting bullseye
   int    i;
   dx = 0.0;
   dy = 0.0;
 
-  new_target_t *ptr; // Bull pointer
+  new_target_t *ptr;                // Bull pointer
 
   if ( (json_target_type <= 1) || (json_target_type > sizeof(ptr_list) / sizeof(new_target_t *)) )
   {
-    return; // Check for limits
+    return;                         // Check for limits
   }
 
   /*
@@ -796,7 +796,7 @@ static void remap_target(double *x, // Computed X location of shot (returned)
   DLT(DLT_APPLICATION, SEND(sprintf(_xs, "remap_target x: %4.2fmm  y: %4.2fmm", *x, *y);))
 
   ptr = ptr_list[json_target_type];
-  if ( ptr == 0 ) // Check for unassigned targets
+  if ( ptr == 0 )     // Check for unassigned targets
   {
     return;
   }
@@ -812,9 +812,9 @@ static void remap_target(double *x, // Computed X location of shot (returned)
     DLT(DLT_APPLICATION, SEND(sprintf(_xs, " distance: %4.2f", distance);))
     if ( distance < closest ) // Found a closer one?
     {
-      closest = distance; // Remember it
+      closest = distance;     // Remember it
       dx      = ptr->x;
-      dy      = ptr->y; // Remember the closest bull
+      dy      = ptr->y;       // Remember the closest bull
       DLT(DLT_APPLICATION, SEND(sprintf(_xs, "Target: %d   dx: %4.2f   dy: %4.2f", i, dx, dy);))
     }
     ptr++;

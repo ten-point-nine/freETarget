@@ -676,10 +676,9 @@ void paper_stop(void)
  * DCmotor_on_off(false, 0)
  *
  *-----------------------------------------------------*/
-void DCmotor_on_off         // Function to turn the motor on and off
-    (bool          on,      // on == true, turn on motor drive
-     unsigned long duration // How long will it be on for in ms?
-    )
+void DCmotor_on_off(bool          on,      // on == true, turn on motor drive
+                    unsigned long duration // How long will it be on for in ms?
+)
 {
   /*
    *  We have a supply, continue

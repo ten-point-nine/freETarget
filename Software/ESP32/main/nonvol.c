@@ -73,16 +73,16 @@ void read_nonvol(void)
 
   nvs_get_i32(my_handle, "NONVOL_INIT", &nonvol_init);
 
-  if ( nonvol_init != INIT_DONE ) // EEPROM never programmed
+  if ( nonvol_init != INIT_DONE )  // EEPROM never programmed
   {
-    factory_nonvol(true); // Force in good values
+    factory_nonvol(true);          // Force in good values
   }
 
   nvs_get_i32(my_handle, "NVM_SERIAL_NO", &nonvol_init);
 
-  if ( nonvol_init == (-1) ) // Serial Number never programmed
+  if ( nonvol_init == (-1) )       // Serial Number never programmed
   {
-    factory_nonvol(true); // Force in good values
+    factory_nonvol(true);          // Force in good values
   }
 
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &nonvol_init);
@@ -116,14 +116,14 @@ void read_nonvol(void)
         case IS_INT32:
         case IS_FIXED:
         case IS_MFS:
-          if ( JSON[i].non_vol != 0 ) // Is persistent storage enabled?
+          if ( JSON[i].non_vol != 0 )                    // Is persistent storage enabled?
           {
             nvs_get_i32(my_handle, JSON[i].non_vol, &x); // Read in the value
             *JSON[i].value = x;
           }
           else
           {
-            *JSON[i].value = JSON[i].init_value; // Persistent storage is not enabled, force a known value
+            *JSON[i].value = JSON[i].init_value;         // Persistent storage is not enabled, force a known value
           }
           break;
 
@@ -169,10 +169,10 @@ void read_nonvol(void)
 void factory_nonvol(bool new_serial_number // TRUE if prompting for a new S/N
 )
 {
-  unsigned int serial_number; // Board serial number
+  unsigned int serial_number;              // Board serial number
   char         ch, s[32];
-  unsigned int x; // Temporary Value
-  unsigned int i; // Iteration Counter
+  unsigned int x;                          // Temporary Value
+  unsigned int i;                          // Iteration Counter
 
   DLT(DLT_INFO, SEND(sprintf(_xs, "factory_nonvol(%d)\r\n", new_serial_number);))
 
@@ -207,7 +207,7 @@ void factory_nonvol(bool new_serial_number // TRUE if prompting for a new S/N
 
       case IS_MFS:
       case IS_INT32:
-        x = JSON[i].init_value; // Read in the value
+        x = JSON[i].init_value;                       // Read in the value
         if ( JSON[i].non_vol != 0 )
         {
           nvs_set_i32(my_handle, JSON[i].non_vol, x); // Read in the value
@@ -215,7 +215,7 @@ void factory_nonvol(bool new_serial_number // TRUE if prompting for a new S/N
         break;
 
       case IS_FLOAT:
-        x = JSON[i].init_value; // Read in the value
+        x = JSON[i].init_value;                       // Read in the value
         if ( JSON[i].non_vol != 0 )
         {
           nvs_set_i32(my_handle, JSON[i].non_vol, x); // Read in the value
@@ -317,7 +317,7 @@ void factory_nonvol(bool new_serial_number // TRUE if prompting for a new S/N
  * It will reset the NONVOL as a factory nonvol.
  *
  *------------------------------------------------------------*/
-#define INIT_ALLOWED 1234 // Number user must enter to allow initialization
+#define INIT_ALLOWED 1234   // Number user must enter to allow initialization
 
 void init_nonvol(int verify // Verification code entered by user
 )
@@ -357,8 +357,8 @@ void init_nonvol(int verify // Verification code entered by user
 void update_nonvol(unsigned int current_version // Version present in persistent storage
 )
 {
-  unsigned int i;        // Iteration counter
-  long         ps_value; // Value read from persistent storage
+  unsigned int i;                               // Iteration counter
+  long         ps_value;                        // Value read from persistent storage
 
   DLT(DLT_INFO, SEND(sprintf(_xs, "update_nonvol(%d)\r\n", current_version);))
 
@@ -373,8 +373,8 @@ void update_nonvol(unsigned int current_version // Version present in persistent
       switch ( JSON[i].convert & IS_MASK )
       {
         case IS_INT32:
-          nvs_get_i32(my_handle, JSON[i].non_vol, &ps_value); // Pull up the value from memory
-          if ( PS_UNINIT(ps_value) )                          // Uninitilazed?
+          nvs_get_i32(my_handle, JSON[i].non_vol, &ps_value);            // Pull up the value from memory
+          if ( PS_UNINIT(ps_value) )                                     // Uninitilazed?
           {
             nvs_set_i32(my_handle, JSON[i].non_vol, JSON[i].init_value); // Initalize it from the table
           }

@@ -49,9 +49,9 @@ QueueHandle_t uart_aux_queue;
 
 typedef struct queue_struct
 {
-  char queue[1024]; // Holding queue
-  int  in;          // Index of input characters
-  int  out;         // Index of output characters
+  char queue[1024];               // Holding queue
+  int  in;                        // Index of input characters
+  int  out;                       // Index of output characters
 } queue_struct_t;
 
 static queue_struct_t in_buffer;  // TCPIP input buffer
@@ -333,7 +333,7 @@ void serial_putch(char ch,
    */
   if ( ports & CONSOLE )
   {
-    printf("%c", ch); // Must be printf
+    printf("%c", ch);                 // Must be printf
   }
 
   if ( (json_aux_port_enable == true) // Is there hardware on the Aux port?
@@ -373,7 +373,7 @@ void serial_to_all(char *str,  // String to output
    */
   if ( ports & CONSOLE )
   {
-    printf("%s", str); // Must be printf
+    printf("%s", str);                // Must be printf
   }
 
   if ( (json_aux_port_enable == true) // Is there hardware on the Aux port?
@@ -411,7 +411,7 @@ int tcpip_app_2_queue(char *buffer, // Where to return the bytes
                       int   length  // Maximum transfer size
 )
 {
-  int bytes_moved; // Number of bytes written
+  int bytes_moved;                  // Number of bytes written
 
   bytes_moved = 0;
   while ( length != 0 )
@@ -447,11 +447,11 @@ int tcpip_queue_2_socket(char *buffer, // Place to put data
                          int   length  // Number of bytes to read
 )
 {
-  int bytes_moved; // Number of bytes read from queue
+  int bytes_moved;                     // Number of bytes read from queue
 
   if ( out_buffer.out == out_buffer.in )
   {
-    return 0; // Nothing to say
+    return 0;                          // Nothing to say
   }
 
   bytes_moved = 0;
@@ -593,8 +593,8 @@ bool get_string(char destination[], int size)
           destination[i] = 0;
           break;
 
-        case '\r': // Enter
-        case '\n': // newline
+        case '\r':       // Enter
+        case '\n':       // newline
           return 1;
 
         case 'C' & 0x1F: // Control C, exit
@@ -657,7 +657,7 @@ void serial_port_test(void)
 
     while ( serial_available(AUX) == 0 )
     {
-      timer_delay(1); // Wait for it to come back
+      timer_delay(1);           // Wait for it to come back
       if ( test_time == 0 )
       {
         SEND(sprintf(_xs, "\r\nTest failed, no input from AUX\r\n");)

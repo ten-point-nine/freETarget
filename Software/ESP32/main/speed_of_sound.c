@@ -65,23 +65,23 @@
  *
  *--------------------------------------------------------------*/
 
-#define TO_MM 1000.0d    // Convert Meters to MM
-#define TO_US 1000000.0d // Convert seconds to microseconds
+#define TO_MM 1000.0d                          // Convert Meters to MM
+#define TO_US 1000000.0d                       // Convert seconds to microseconds
 
 double speed_of_sound(double temperature,      // Current temperature in degrees C
                       double relative_humidity // RH, 0-100%
 )
 {
-  double speed_MPS;   // Speed Metres per second
-  double speed_mmPuS; // Speed in mm per microsecond
+  double speed_MPS;                            // Speed Metres per second
+  double speed_mmPuS;                          // Speed in mm per microsecond
 
-  double y;                   // Ratio of Specific Heats
-  double TK;                  // Temperature in degrees Kelvin
-  double vapor_pressure;      //
-  double mole_fraction;       //
-  double specific_heat_ratio; // Specific heat ratio of air @ relative_humidity
-  double mean_molar_weight;   // Mean Molar Weight of Air @ relative_humidity
-  double change_in_speed;     // % Change in speed due to humidity, relative to Speed of Sound in Dry Air at 0 degrees C.
+  double y;                                    // Ratio of Specific Heats
+  double TK;                                   // Temperature in degrees Kelvin
+  double vapor_pressure;                       //
+  double mole_fraction;                        //
+  double specific_heat_ratio;                  // Specific heat ratio of air @ relative_humidity
+  double mean_molar_weight;                    // Mean Molar Weight of Air @ relative_humidity
+  double change_in_speed;                      // % Change in speed due to humidity, relative to Speed of Sound in Dry Air at 0 degrees C.
 
   //********************************************************************************************************************************************************************************
   // The following can be implemented to calculate a more accurate value for M defined above as 28.9660 if the YEAR is known.
@@ -113,7 +113,7 @@ double speed_of_sound(double temperature,      // Current temperature in degrees
 
   specific_heat_ratio = (7.0d + mole_fraction) / (5.0d + mole_fraction); // Calculate Specific Heat Ratio of air @ relative_humidity
 
-  mean_molar_weight = (M - (M - 18.01528d) * mole_fraction); // Mean Molar Weight of Air @ relative_humidity
+  mean_molar_weight = (M - (M - 18.01528d) * mole_fraction);             // Mean Molar Weight of Air @ relative_humidity
 
   change_in_speed = (1.0d / sqrt(1.4d / M) * 100.0d) * sqrt(specific_heat_ratio / mean_molar_weight) - 100.0d;
   // % Change in speed due to humidity, relative to Speed of Sound in Dry Air at 0 degrees C.
@@ -121,10 +121,10 @@ double speed_of_sound(double temperature,      // Current temperature in degrees
   y = 1.40092d - (0.0000196395d * temperature) - (0.000000162593d * sq(temperature));
   // Algorithm for Ratio of Speific Heats of Air (Cp/Cv) relative to temperature in degrees C.
 
-  speed_MPS = sqrt((y * R * TK) / M) // Speed, in Metres per second, of Sound in Dry Air at (temperature) degrees C.
+  speed_MPS = sqrt((y * R * TK) / M)       // Speed, in Metres per second, of Sound in Dry Air at (temperature) degrees C.
 
               + ((speed_MPSTo / 100.0d) *
-                 change_in_speed); //% Change in speed due to humidity, relative to Speed of Sound in Dry Air at 0 degrees C.
+                 change_in_speed);         //% Change in speed due to humidity, relative to Speed of Sound in Dry Air at 0 degrees C.
 
   speed_mmPuS = speed_MPS * TO_MM / TO_US; // Convert down to mm/us
 

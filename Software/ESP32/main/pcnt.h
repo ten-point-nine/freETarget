@@ -17,10 +17,10 @@ void pcnt_clear(void);                             // Clear the timer contents
 void pcnt_test(int which_test);                    // Trigger the counters and verify operation
 void pcnt_cal(void);                               // Trigger the counters print the time delay
 void pcnt_all(void);
-void pcnt_1(void); // Counters cleared and not running
-void pcnt_2(void); // Start / Stop counters
-void pcnt_3(void); // Start counters but to not stop
-void pcnt_4(void); // Turn off all timers
+void pcnt_1(void);                                 // Counters cleared and not running
+void pcnt_2(void);                                 // Start / Stop counters
+void pcnt_3(void);                                 // Start counters but to not stop
+void pcnt_4(void);                                 // Turn off all timers
 
 /*
  * Typedefs

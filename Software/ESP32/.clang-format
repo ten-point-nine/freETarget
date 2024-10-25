@@ -21,9 +21,9 @@ AlignConsecutiveAssignments: true
 AlignConsecutiveDeclarations: true
 AlignEscapedNewlines: Right
 AlignOperands: true
-AlignTrailingComments: true
-
-
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 5
 
 # Align members of array of structures to the left
 # Example:

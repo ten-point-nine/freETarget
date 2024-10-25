@@ -17,7 +17,7 @@
 #define SOFTWARE_VERSION "\"5.2.12 October 20, 2024\""
 #define _DONE_           "\r\nDone\r\n"
 
-#define REV_500   500 // ESP32
+#define REV_500   500    // ESP32
 #define REV_510   510
 #define REV_520   520
 #define BUILD_REV REV_520
@@ -29,10 +29,10 @@
 #endif
 #define CLOCK_TEST false
 
-#define IN_STARTUP   0x0001 // The software is in initialization
-#define IN_OPERATION 0x0002 // The software is operational
-#define IN_TEST      0x0004 // A self test has been selected (Suspend operation)
-#define IN_SLEEP     0x0008 // The unit has powered down
+#define IN_STARTUP   0x0001                       // The software is in initialization
+#define IN_OPERATION 0x0002                       // The software is operational
+#define IN_TEST      0x0004                       // A self test has been selected (Suspend operation)
+#define IN_SLEEP     0x0008                       // The unit has powered down
 #define IF_NOT(x)    if ( (run_state & (x)) == 0 )
 #define IF_IN(x)     if ( (run_state & (x)) != 0 )
 
@@ -50,34 +50,34 @@
 /*
  * Oscillator Features
  */
-#define OSCILLATOR_MHZ 10.0                      // 10,000 cycles in 1 ms
-#define CLOCK_PERIOD   (1.0 / OSCILLATOR_MHZ)    // Seconds per bit
-#define ONE_SECOND     (100)                     // 10 ms delay per LSB
-#define MIN_DELAY      (1)                       // Minimum timeout 10ms
-#define FULL_SCALE     0xffffffff                // Full scale timer
-#define MS_TO_TICKS(x) (ONE_SECOND * (x) / 1000) // Convert from time in ms to time ticks
+#define OSCILLATOR_MHZ 10.0                        // 10,000 cycles in 1 ms
+#define CLOCK_PERIOD   (1.0 / OSCILLATOR_MHZ)      // Seconds per bit
+#define ONE_SECOND     (100)                       // 10 ms delay per LSB
+#define MIN_DELAY      (1)                         // Minimum timeout 10ms
+#define FULL_SCALE     0xffffffff                  // Full scale timer
+#define MS_TO_TICKS(x) (ONE_SECOND * (x) / 1000)   // Convert from time in ms to time ticks
 
 #define SHOT_TIME  ((int)(json_sensor_dia / 0.33)) // Worst case delay (microseconds) = sensor diameter / speed of sound)
 #define SHOT_SPACE 100                             // 40 Sighters + 60 on Score
 
-#define HI(x)    (((x) >> 8) & 0x00ff) // High nibble
-#define LO(x)    ((x) & 0x00ff)        // Low nibble
-#define HHH10(x) (((x) / 10000) % 10)  // Highest digit    2xxxx
-#define HHI10(x) (((x) / 1000) % 10)   // High High digit  x2xxx
-#define HLO10(x) (((x) / 100) % 10)    // High Low digit   xx2xx
-#define HI10(x)  (((x) / 10) % 10)     // High digit       xxx2x
-#define LO10(x)  ((x) % 10)            // Low digit        xxxx2
+#define HI(x)    (((x) >> 8) & 0x00ff)             // High nibble
+#define LO(x)    ((x) & 0x00ff)                    // Low nibble
+#define HHH10(x) (((x) / 10000) % 10)              // Highest digit    2xxxx
+#define HHI10(x) (((x) / 1000) % 10)               // High High digit  x2xxx
+#define HLO10(x) (((x) / 100) % 10)                // High Low digit   xx2xx
+#define HI10(x)  (((x) / 10) % 10)                 // High digit       xxx2x
+#define LO10(x)  ((x) % 10)                        // Low digit        xxxx2
 
-#define N    0 // Index to North Timer
-#define E    1 // Index to East Timer
-#define S    2 // Index to South Timer
-#define W    3 // Index to West Timer
+#define N    0                                     // Index to North Timer
+#define E    1                                     // Index to East Timer
+#define S    2                                     // Index to South Timer
+#define W    3                                     // Index to West Timer
 #define N_HI 4
 #define E_HI 5
 #define S_HI 6
 #define W_HI 7
 
-#define MISS 9 // Timer was a miss
+#define MISS 9                                     // Timer was a miss
 
 #define PI      3.14159269
 #define PI_ON_4 (PI / 4.0d)
@@ -98,35 +98,35 @@ typedef struct sensor_ID sensor_ID_t;
 
 struct sensor
 {
-  unsigned int index;      // Which sensor is this one
-  sensor_ID_t  low_sense;  // Information about the low trip point
-  sensor_ID_t  high_sense; // Information about the high trip point
-  bool         is_valid;   // TRUE if the sensor contains a valid time
-  double       angle_A;    // Angle to be computed
-  double       diagonal;   // Diagonal angle to next sensor (45')
-  double       x;          // Sensor Location (X us)
-  double       y;          // Sensor Location (Y us)
-  double       count;      // Working timer value
-  double       a, b, c;    // Working dimensions
-  double       xs;         // Computed X shot value
-  double       ys;         // Computed Y shot value
+  unsigned int index;                     // Which sensor is this one
+  sensor_ID_t  low_sense;                 // Information about the low trip point
+  sensor_ID_t  high_sense;                // Information about the high trip point
+  bool         is_valid;                  // TRUE if the sensor contains a valid time
+  double       angle_A;                   // Angle to be computed
+  double       diagonal;                  // Diagonal angle to next sensor (45')
+  double       x;                         // Sensor Location (X us)
+  double       y;                         // Sensor Location (Y us)
+  double       count;                     // Working timer value
+  double       a, b, c;                   // Working dimensions
+  double       xs;                        // Computed X shot value
+  double       ys;                        // Computed Y shot value
 };
 
-typedef struct sensor sensor_t; // Sensor information
+typedef struct sensor sensor_t;           // Sensor information
 
 typedef unsigned char byte_t;
 
 struct shot_r
 {
-  bool          is_valid;       // This record contains valid information
-  double        x;              // X location of shot as computed
-  double        y;              // Y location of shot
-  double        xs;             // X location of shot as scored
-  double        ys;             // Y location of shot
-  int           timer_count[8]; // Array of timer values 4 in hardware and 4 in software
-  unsigned int  face_strike;    // Recording of face strike
-  unsigned int  sensor_status;  // Triggering register
-  unsigned long shot_time;      // Shot time since start of after tabata start
+  bool          is_valid;                 // This record contains valid information
+  double        x;                        // X location of shot as computed
+  double        y;                        // Y location of shot
+  double        xs;                       // X location of shot as scored
+  double        ys;                       // Y location of shot
+  int           timer_count[8];           // Array of timer values 4 in hardware and 4 in software
+  unsigned int  face_strike;              // Recording of face strike
+  unsigned int  sensor_status;            // Triggering register
+  unsigned long shot_time;                // Shot time since start of after tabata start
 };
 
 typedef struct shot_r shot_record_t;
@@ -139,9 +139,9 @@ extern double                 s_of_sound;
 extern const char            *names[];
 extern const char             to_hex[];
 extern unsigned int           face_strike;
-extern unsigned int           is_trace; // Tracing level(s)
-extern unsigned int           shot_in;  // Index into the shot array (The shot that has JUST arrived)
-extern unsigned int           shot_out; // Index into the shot array (Last shot processed)
+extern unsigned int           is_trace;   // Tracing level(s)
+extern unsigned int           shot_in;    // Index into the shot array (The shot that has JUST arrived)
+extern unsigned int           shot_out;   // Index into the shot array (Last shot processed)
 extern unsigned int           shot_number;
 extern volatile unsigned long power_save; // Power down timer
 extern volatile unsigned int  run_state;  // IPC states

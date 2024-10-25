@@ -34,14 +34,14 @@
 /*
  *  Working variables
  */
-static pcnt_unit_config_t          unit_config[SOC_PCNT_UNITS_PER_GROUP]; // Single unit configuration
+static pcnt_unit_config_t          unit_config[SOC_PCNT_UNITS_PER_GROUP];   // Single unit configuration
 static pcnt_unit_handle_t          pcnt_unit[SOC_PCNT_UNITS_PER_GROUP];
 static pcnt_glitch_filter_config_t filter_config[SOC_PCNT_UNITS_PER_GROUP]; // Glitch Filter
 
-static pcnt_chan_config_t    chan_a_config[SOC_PCNT_UNITS_PER_GROUP]; // Counter Configuration A
+static pcnt_chan_config_t    chan_a_config[SOC_PCNT_UNITS_PER_GROUP];       // Counter Configuration A
 static pcnt_channel_handle_t pcnt_chan_a[SOC_PCNT_UNITS_PER_GROUP];
 
-static pcnt_chan_config_t    chan_b_config[SOC_PCNT_UNITS_PER_GROUP]; // Counter Configuration B
+static pcnt_chan_config_t    chan_b_config[SOC_PCNT_UNITS_PER_GROUP];       // Counter Configuration B
 static pcnt_channel_handle_t pcnt_chan_b[SOC_PCNT_UNITS_PER_GROUP];
 
 static int north_pcnt_hi, east_pcnt_hi, south_pcnt_hi, west_pcnt_hi;
@@ -73,9 +73,9 @@ static bool west_hi_pcnt_isr_callback(void *args);
  * Channel B Control disabled
  *
  **************************************************************************/
-void pcnt_init(int unit, // What unit to use
-               int run,  // GPIO associated with PCNT control
-               int clock // GPIO associated with PCNT signal
+void pcnt_init(int unit,    // What unit to use
+               int run,     // GPIO associated with PCNT control
+               int clock    // GPIO associated with PCNT signal
 )
 {
   static bool is_first = 1; // Set to 0 on subsequent passes
@@ -129,9 +129,9 @@ void pcnt_init(int unit, // What unit to use
    */
   if ( is_first )
   {
-    gpio_install_isr_service(0);                         // Per GPIO interrupt handler
-    gpio_set_intr_type(RUN_NORTH_HI, GPIO_INTR_POSEDGE); // RUN_XXX_HI interrupt on
-    gpio_set_intr_type(RUN_EAST_HI, GPIO_INTR_POSEDGE);  // rising edge
+    gpio_install_isr_service(0);                                          // Per GPIO interrupt handler
+    gpio_set_intr_type(RUN_NORTH_HI, GPIO_INTR_POSEDGE);                  // RUN_XXX_HI interrupt on
+    gpio_set_intr_type(RUN_EAST_HI, GPIO_INTR_POSEDGE);                   // rising edge
     gpio_set_intr_type(RUN_SOUTH_HI, GPIO_INTR_POSEDGE);
     gpio_set_intr_type(RUN_WEST_HI, GPIO_INTR_POSEDGE);
     gpio_isr_handler_add(RUN_NORTH_HI, north_hi_pcnt_isr_callback, NULL); // Collect PCNT for North trigger
@@ -165,7 +165,7 @@ void pcnt_init(int unit, // What unit to use
  **************************************************************************/
 #define PCNT_BASE 0x60017000 + 0x00030 // Pointer to start of PCNT registers
 
-int pcnt_read(unsigned int unit // What timer to read
+int pcnt_read(unsigned int unit        // What timer to read
 )
 {
   int value;
@@ -416,9 +416,9 @@ void pcnt_test(int which_test)
 
 void pcnt_cal(void)
 {
-  int   north_min, north_max;    // Running statistics
-  int   north_hi, north_average; // Read from counters
-  int   count;                   // Number of samples in average
+  int   north_min, north_max;           // Running statistics
+  int   north_hi, north_average;        // Read from counters
+  int   count;                          // Number of samples in average
   char  ch;
   float value[] = {2.0, 2.0, 0.0, 0.0}; // Set both trip points to 2 volts
 
@@ -434,8 +434,8 @@ void pcnt_cal(void)
   /*
    *  Setup the hardware
    */
-  gpio_set_level(CLOCK_START, 0); // Turn off the test start
-  gpio_intr_enable(RUN_NORTH_HI); // Turn on the interrupts
+  gpio_set_level(CLOCK_START, 0);      // Turn off the test start
+  gpio_intr_enable(RUN_NORTH_HI);      // Turn on the interrupts
   gpio_intr_enable(RUN_EAST_HI);
   gpio_intr_enable(RUN_SOUTH_HI);
   gpio_intr_enable(RUN_WEST_HI);
@@ -453,11 +453,11 @@ void pcnt_cal(void)
                                                              */
     while ( (is_running() & NORTH_HI_DIP) != NORTH_HI_DIP ) // Should trigger almost instantly
     {
-      if ( serial_available(CONSOLE) != 0 ) // See if there is any console iput
+      if ( serial_available(CONSOLE) != 0 )                 // See if there is any console iput
       {
 
         ch = serial_getch(CONSOLE);
-        if ( ch == '!' ) // Exit
+        if ( ch == '!' )                                    // Exit
         {
           SEND(sprintf(_xs, "\r\nSave this correction (y/n)?");)
           while ( serial_available(CONSOLE) == 0 )

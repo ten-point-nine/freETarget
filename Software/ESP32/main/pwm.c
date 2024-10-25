@@ -25,7 +25,7 @@
 #define PWM_DUTY_100  ((1 << PWM_DUTY_RES) - 1) // 100% duty cycle
 #define PWM_FREQUENCY (5000)                    // Frequency in Hertz. Set frequency at 5 kHz
 
-static int pwm_ready = 0; // Set to 1 when the hardware is programmed
+static int pwm_ready = 0;                       // Set to 1 when the hardware is programmed
 
 ledc_channel_config_t ledc_channel[4];
 
@@ -51,8 +51,8 @@ ledc_timer_config_t ledc_timer = {
     .clk_cfg         = LEDC_AUTO_CLK,       // Auto select the source clock
 };
 
-void pwm_init(unsigned int pwm_channel, // PWM channel we are using
-              unsigned int pwm_gpio     // What GPIO is it assigned to?
+void pwm_init(unsigned int pwm_channel,     // PWM channel we are using
+              unsigned int pwm_gpio         // What GPIO is it assigned to?
 )
 {
   /*

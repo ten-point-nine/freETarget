@@ -38,18 +38,18 @@ bool check_12V(void);                                     // Check the 12 volt s
 //                              C           // Optional C output
 //                               D          // Optional D ouput
 
-#define LED_OFF         "     " // Turn off all of the LEDs
-#define LED_HELLO_WORLD "RWB--" // Hello World
-#define LED_GOOD        "G----" // The software has started but not in shot mode
-#define LED_READY       "g----" // The shot is ready to go.  Blink to show we are alive
-#define LED_BYE         "B----" // Go to sleep
-#define LED_READY_OFF   " ----" // Turn off the READY light
+#define LED_OFF         "     "      // Turn off all of the LEDs
+#define LED_HELLO_WORLD "RWB--"      // Hello World
+#define LED_GOOD        "G----"      // The software has started but not in shot mode
+#define LED_READY       "g----"      // The shot is ready to go.  Blink to show we are alive
+#define LED_BYE         "B----"      // Go to sleep
+#define LED_READY_OFF   " ----"      // Turn off the READY light
 
-#define LED_WIFI_OFF        "- ---" // The WiFi is not operational
-#define LED_WIFI_STATION    "-g---" // The WiFi is in station mode but not connected
-#define LED_WIFI_STATION_CN "-G---" // The WiFI is in station mode and connected
-#define LED_WIFI_ACCESS     "-b---" // The WiFi is in access mode and not connected
-#define LED_WIFI_ACCESS_CN  "-B---" // The WiFI is in access mode and connected
+#define LED_WIFI_OFF        "- ---"  // The WiFi is not operational
+#define LED_WIFI_STATION    "-g---"  // The WiFi is in station mode but not connected
+#define LED_WIFI_STATION_CN "-G---"  // The WiFI is in station mode and connected
+#define LED_WIFI_ACCESS     "-b---"  // The WiFi is in access mode and not connected
+#define LED_WIFI_ACCESS_CN  "-B---"  // The WiFI is in access mode and connected
 
 #define LED_NO_12V           "--R--" // The 12 Volt supply is not present
 #define LED_LOW_12V          "--Y--" // 12 Volt supply out of spec

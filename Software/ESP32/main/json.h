@@ -35,15 +35,15 @@ extern const json_message_t JSON[];
 /*
  * Definitioins
  */
-#define IS_VOID    (7 << 8) // Value is a void
-#define IS_MFS     (6 << 8) // Value is a multifunction switch
-#define IS_TEXT    (5 << 8) // Value is a string
-#define IS_SECRET  (4 << 8) // Value is a string but hidden
-#define IS_INT32   (3 << 8) // Value is a 64 bit int
-#define IS_FLOAT   (2 << 8) // Value is a floating point number
-#define IS_FIXED   (1 << 8) // The value cannot be changed
+#define IS_VOID    (7 << 8)                 // Value is a void
+#define IS_MFS     (6 << 8)                 // Value is a multifunction switch
+#define IS_TEXT    (5 << 8)                 // Value is a string
+#define IS_SECRET  (4 << 8)                 // Value is a string but hidden
+#define IS_INT32   (3 << 8)                 // Value is a 64 bit int
+#define IS_FLOAT   (2 << 8)                 // Value is a floating point number
+#define IS_FIXED   (1 << 8)                 // The value cannot be changed
 #define IS_MASK    (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED | IS_MFS)
-#define FLOAT_MASK ((~IS_MASK) & 0xFF) // Scaling factor 8 bits
+#define FLOAT_MASK ((~IS_MASK) & 0xFF)      // Scaling factor 8 bits
 
 #define SSID_SIZE 31                        // Reserve 30+1 bytes for SSID
 #define PWD_SIZE  31                        // Reserve 30+1 bytes for Password
@@ -52,19 +52,19 @@ extern const json_message_t JSON[];
 /*
  * Global JSON variables and settings
  */
-extern int    json_dip_switch;   // DIP switch overwritten by JSON message
-extern double json_sensor_dia;   // Sensor radius overwitten by JSON message
-extern int    json_sensor_angle; // Angle sensors are rotated through
-extern int    json_paper_time;   // Time to turn on paper backer motor
-extern int    json_echo;         // Value to ech
-extern int    json_calibre_x10;  // Pellet Calibre
-extern int    json_north_x;      // North Adjustment
+extern int    json_dip_switch;              // DIP switch overwritten by JSON message
+extern double json_sensor_dia;              // Sensor radius overwitten by JSON message
+extern int    json_sensor_angle;            // Angle sensors are rotated through
+extern int    json_paper_time;              // Time to turn on paper backer motor
+extern int    json_echo;                    // Value to ech
+extern int    json_calibre_x10;             // Pellet Calibre
+extern int    json_north_x;                 // North Adjustment
 extern int    json_north_y;
-extern int    json_east_x; // East Adjustment
+extern int    json_east_x;                  // East Adjustment
 extern int    json_east_y;
-extern int    json_south_x; // South Adjustment
+extern int    json_south_x;                 // South Adjustment
 extern int    json_south_y;
-extern int    json_west_x; // WestAdjustment
+extern int    json_west_x;                  // WestAdjustment
 extern int    json_west_y;
 extern int    json_spare_1;                 // Not used
 extern int    json_name_id;                 // Name Identifier
