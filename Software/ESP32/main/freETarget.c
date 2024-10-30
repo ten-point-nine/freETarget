@@ -565,7 +565,7 @@ void start_new_session(void)
       {
         case 'y':
         case 'Y':
-          SEND(sprintf(_xs, "Resetting board");)
+          SEND(sprintf(_xs, "\n\rResetting board\r\n");)
           assert(0);
 
         case 'n':
