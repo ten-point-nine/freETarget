@@ -12,6 +12,7 @@
 #include "math.h"
 #include "nvs.h"
 #include "mpu_wrappers.h"
+#include "assert.h"
 
 #include "freETarget.h"
 #include "gpio.h"
@@ -539,31 +540,47 @@ unsigned int reduce(void)
  * The target can be commanded to start a new session by receiving
  * the command {"START"}
  *
- * This function resets the various counters and pointers back
- * to the beginning
+ * This function deliberatly forces an assert that reboots the
+ * processor from the beginning.
+ *
+ * if connected by WiFi, the TCPIP connection must be
+ * disconnected and connected again.
  *
  *--------------------------------------------------------------*/
 void start_new_session(void)
 {
-  unsigned int i;
+  unsigned char ch;
 
-  DLT(DLT_APPLICATION, SEND(sprintf(_xs, "start_new_session()");))
+  SEND(sprintf(_xs, "\r\nThis will reset the board. Confirm Y/N?");)
+
   /*
-   *  Clear the shot information
+   * Loop and wait for a confirmation
    */
-  shot_out = 0;
-  shot_in  = 0;
-
-  for ( i = 0; i != SHOT_SPACE; i++ )
+  while ( 1 )
   {
-    record[i].is_valid = false;
-  }
+    if ( serial_available(ALL) != 0 )
+    {
+      ch = serial_getch(ALL);
+      switch ( ch )
+      {
+        case 'y':
+        case 'Y':
+          SEND(sprintf(_xs, "Resetting board");)
+          assert(0);
 
-  /*
-   *  All done, return
-   */
-  return;
+        case 'n':
+        case 'N':
+          SEND(sprintf(_xs, "\r\nRestart cancelled\r\n");)
+          return;
+
+        default:
+          break;
+      }
+      vTaskDelay(ONE_SECOND / 10);
+    }
+  }
 }
+
 /*----------------------------------------------------------------
  *
  * @function: tabata_enable

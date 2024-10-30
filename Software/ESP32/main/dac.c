@@ -41,13 +41,21 @@
  *
  *----------------------------------------------------------------
  *
- *   This function sets the DACs to the desired value
+ * This function sets the DACs to the desired value.
+ *
+ * The DAC has two modes of operation:
+ *  * Internal from the precision 2.048 reference
+ *  * External from the VCC supply (3.3 or 5.0V)
+ *
+ * The function looks as the selected voltage and determines
+ * if it can be done by the internal reference or the external
+ * one and selects the source automatically.
  *
  *--------------------------------------------------------------*/
 #define V_INTERNAL 0x80
 #define V_REF_INT  2.048
 #define V_EXTERNAL 0x00
-#define V_REF_EXT  3.30
+#define V_REF_EXT  5.0
 
 #define DAC_FS (0xfff)              // 12 bit DAC
 
@@ -129,8 +137,8 @@ void DAC_test(void)
   float volts[4];
   int   i;
 
-  SEND(sprintf(_xs, "\r\nDAC 0 Up ramp");)
-  SEND(sprintf(_xs, "\r\nDAC 1 Down ramp");)
+  SEND(sprintf(_xs, "\r\nDAC 0 Up ramp 0-5V");)
+  SEND(sprintf(_xs, "\r\nDAC 1 Down ramp 5-0V");)
   SEND(sprintf(_xs, "\r\nPress ! to end test\r\n");)
 
   i = 0;
@@ -143,8 +151,8 @@ void DAC_test(void)
         break;
       }
     }
-    volts[VREF_LO] = 2.048 * (float)(i % 100) / 100.0;
-    volts[VREF_HI] = 2.048 - volts[VREF_LO];
+    volts[VREF_LO] = V_REF_EXT * (float)(i % 100) / 100.0;
+    volts[VREF_HI] = V_REF_EXT - volts[VREF_LO];
     DAC_write(volts);
     vTaskDelay(5);
     i++;

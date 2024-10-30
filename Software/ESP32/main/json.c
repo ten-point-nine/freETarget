@@ -433,7 +433,7 @@ static void handle_json(void)
    */
   if ( not_found == true )
   {
-    SEND(sprintf(_xs, "\r\n\r\nCannot decode: {%s}", input_JSON);)
+    SEND(sprintf(_xs, "\r\n\r\nCannot decode: {%s}\r\n", input_JSON);)
   }
 
   /*
