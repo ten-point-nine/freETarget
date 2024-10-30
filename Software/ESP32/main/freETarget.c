@@ -84,6 +84,11 @@ static enum {
   RAPID_SEND                                        // 3 The event is over, send the results
 } rapid_state;                                      // Rapid fire state
 
+static enum bye_state {
+  BYE_BYE = 0,                                      // Wait for the timer to run out
+  BYE_HOLD,                                         // Wait for the MFS to be pressed
+  BYE_START                                         // Go back into service
+};
 extern int isr_state;
 
 volatile unsigned int run_state = 0;                // Current operating state
@@ -551,34 +556,16 @@ void start_new_session(void)
 {
   unsigned char ch;
 
-  SEND(sprintf(_xs, "\r\nThis will reset the board. Confirm Y/N?");)
+  SEND(sprintf(_xs, "\r\nThis will reset the board\r\n");)
 
-  /*
-   * Loop and wait for a confirmation
-   */
-  while ( 1 )
+  if ( prompt_for_confirm() == true )
   {
-    if ( serial_available(ALL) != 0 )
-    {
-      ch = serial_getch(ALL);
-      switch ( ch )
-      {
-        case 'y':
-        case 'Y':
-          SEND(sprintf(_xs, "\n\rResetting board\r\n");)
-          assert(0);
-
-        case 'n':
-        case 'N':
-          SEND(sprintf(_xs, "\r\nRestart cancelled\r\n");)
-          return;
-
-        default:
-          break;
-      }
-      vTaskDelay(ONE_SECOND / 10);
-    }
+    SEND(sprintf(_xs, "\n\rResetting board\r\n");)
+    assert(0);
   }
+
+  SEND(sprintf(_xs, "\r\nRestart cancelled\r\n");)
+  return;
 }
 
 /*----------------------------------------------------------------
@@ -904,11 +891,6 @@ void rapid_fire_task(void)
  * This is called every second from the synchronous scheduler
  *
  *--------------------------------------------------------------*/
-static enum bye_state {
-  BYE_BYE = 0,                  // Wait for the timer to run out
-  BYE_HOLD,                     // Wait for the MFS to be pressed
-  BYE_START                     // Go back into service
-};
 
 void bye(unsigned int force_bye // Set to true to force a shutdown
 )
@@ -1170,4 +1152,49 @@ sensor_ID_t *find_sensor(unsigned int run_mask // Run mask to look for a match
    * Not found, return null
    */
   return LED_READY;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: prompt_for_confirm
+ *
+ * @brief:    Display a propt and wait for a return
+ *
+ * @return:   TRUE if the confirmation is Yes
+ *
+ *----------------------------------------------------------------
+ *
+ *
+ *--------------------------------------------------------------*/
+
+bool prompt_for_confirm(void)
+{
+  unsigned char ch;
+
+  SEND(sprintf(_xs, "\r\nConfirm Y/N?");)
+
+  /*
+   * Loop and wait for a confirmation
+   */
+  while ( 1 )
+  {
+    if ( serial_available(ALL) != 0 )
+    {
+      ch = serial_getch(ALL);
+      switch ( ch )
+      {
+        case 'y':
+        case 'Y':
+          return true;
+
+        case 'n':
+        case 'N':
+          return false;
+
+        default:
+          break;
+      }
+      vTaskDelay(ONE_SECOND / 10);
+    }
+  }
 }

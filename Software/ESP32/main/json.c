@@ -115,7 +115,7 @@ const json_message_t JSON[] = {
     {"\"ECHO\":",            0,                      0,                IS_VOID,              &show_echo,         0,                       0         }, // Echo test
     {"\"FACE_STRIKE\":",     &json_face_strike,      0,                IS_INT32,             0,                  NONVOL_FACE_STRIKE,      0         }, // Face Strike Count
     {"\"FOLLOW_THROUGH\":",  &json_follow_through,   0,                IS_INT32,             0,                  NONVOL_FOLLOW_THROUGH,   0         }, // Three second follow through
-    {"\"INIT\":",            0,                      0,                IS_INT32,             &init_nonvol,       NONVOL_INIT,             0         }, // Initialize the NONVOL memory
+    {"\"INIT\"",             0,                      0,                IS_VOID,              &init_nonvol,       0,                       0         }, // Initialize the NONVOL memory
     {"\"KEEP_ALIVE\":",      &json_keep_alive,       0,                IS_INT32,             0,                  NONVOL_KEEP_ALIVE,       120       }, // TCPIP Keep alive period (in seconds)
     {"\"LED_BRIGHT\":",      &json_LED_PWM,          0,                IS_INT32,             &set_LED_PWM_now,   NONVOL_LED_PWM,          50        }, // Set the LED brightness
     {"\"MFS?",               0,                      0,                IS_VOID,              &mfs_show,          0,                       0         }, // Display the MFS settings

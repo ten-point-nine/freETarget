@@ -57,18 +57,17 @@
 #define V_EXTERNAL 0x00
 #define V_REF_EXT  5.0
 
-#define DAC_FS (0xfff)              // 12 bit DAC
+#define DAC_FS (0xfff)                 // 12 bit DAC
 
-static int   v_source = V_INTERNAL; // Default to internal reference
-static float v_ref    = V_REF_INT;  // Default to 2.048 volts
-
-void DAC_write(float volts[4]       // What value are we setting it to
+void DAC_write(float volts[4]          // What value are we setting it to
 )
 {
-  unsigned char data[3 * 4];        // Bytes to send to the I2C
-  unsigned int  scaled_value;       // Value (12 bits) to the DAC
+  unsigned char data[3 * 4];           // Bytes to send to the I2C
+  unsigned int  scaled_value;          // Value (12 bits) to the DAC
   int           i;
-  int           max;
+  float         max;
+  int           v_source = V_INTERNAL; // Default to internal reference
+  float         v_ref    = V_REF_INT;  // Default to 2.048 volts
 
   /*
    *  Step 1, figure out what VREF should be
@@ -151,10 +150,10 @@ void DAC_test(void)
         break;
       }
     }
-    volts[VREF_LO] = V_REF_EXT * (float)(i % 100) / 100.0;
-    volts[VREF_HI] = V_REF_EXT - volts[VREF_LO];
+    volts[VREF_LO] = V_REF_EXT * ((float)(i % 200) / 200.0); // Ramp Up
+    volts[VREF_HI] = V_REF_EXT - volts[VREF_LO];             // Ramp Down
     DAC_write(volts);
-    vTaskDelay(5);
+    vTaskDelay(1);
     i++;
   }
 

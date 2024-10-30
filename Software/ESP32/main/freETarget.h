@@ -163,5 +163,6 @@ void         tabata_task(void);                  // Run the TABATA timersArm the
 void         rapid_fire_task(void);              // Run the Rapid Fire state machine
 sensor_ID_t *find_sensor(unsigned int run_mask); // Locate the sensor settings for the run_latch
 void         start_new_session(void);            // Start a new shooting session
+bool         prompt_for_confirm(void);           // Prompt for a confirmation
 
 #endif

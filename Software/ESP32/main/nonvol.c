@@ -325,9 +325,9 @@ void init_nonvol(int verify // Verification code entered by user
   /*
    * Ensure that the user wants to init the unit
    */
-  if ( verify != INIT_ALLOWED )
+  if ( prompt_for_confirm() == false )
   {
-    SEND(sprintf(_xs, "\r\nUse {\"INIT\":1234} Initialize memory\r\n");)
+    SEND(sprintf(_xs, "\r\nInitialization cancelled\r\n");)
     return;
   }
 
