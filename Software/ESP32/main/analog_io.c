@@ -340,6 +340,8 @@ void set_VREF(void)
 
   volts[VREF_LO] = json_vref_lo;
   volts[VREF_HI] = json_vref_hi;
+  volts[VREF_2]  = 0.0;
+  volts[VREF_3]  = 0.0;
   DAC_write(volts);
 
   /*
