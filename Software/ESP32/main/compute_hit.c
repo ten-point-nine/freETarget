@@ -704,7 +704,7 @@ void send_miss(shot_record_t *shot, // record record
  *
  * The function send_score locates the pellet onto the paper
  * This function finds the closest bull and then maps the pellet
- * onto the centre one.
+ * onto the centre one.t->shot_time
  *--------------------------------------------------------------*/
 typedef struct
 {

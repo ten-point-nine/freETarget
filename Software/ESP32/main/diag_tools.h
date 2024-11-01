@@ -62,12 +62,12 @@ bool check_12V(void);                                     // Check the 12 volt s
 #define LED_D_BLINK          "----r" // LED D is blinking
 #define LED_D_ON             "----R" // LED D is ON
 #define LED_RAPID_OFF        "---  " // Rapid fire LEDs are OFF
-#define LED_RAPID_RED        "----R" // Rapid fire RED is ON
-#define LED_RAPID_RED_WARN   "----r" // Rapid fire RED is BLINKING
+#define LED_RAPID_RED        "--- R" // Rapid fire RED is ON
+#define LED_RAPID_RED_WARN   "--- r" // Rapid fire RED is BLINKING
 #define LED_RAPID_RED_OFF    "---- " // Rapid fire RED is OFF
-#define LED_RAPID_GREEN      "---G-" // Rapid fire GREEN is ON
+#define LED_RAPID_GREEN      "---G " // Rapid fire GREEN is ON
 #define LED_RAPID_GREEN_OFF  "--- -" // Rapid fire GREEN is OFF
-#define LED_RAPID_GREEN_WARN "---g-" // Rapid fire GREEN is BLINKING
+#define LED_RAPID_GREEN_WARN "---g " // Rapid fire GREEN is BLINKING
 #define LED_TABATA_OFF       "----R" // TABATA LEDs are OFF
 #define LED_TABATA_WARN      "---g-" // TABATA LEDS are blinking
 #define LED_TABATA_ON        "---G-" // TABATA LEDs are ON

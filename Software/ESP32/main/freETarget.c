@@ -65,8 +65,7 @@ volatile unsigned long        LED_timer;            // Timer to reset LED status
 static enum {
   START = 0,                                        // 0 et the operating mode
   WAIT,                                             // 1 ARM the circuit and wait for a shot
-  REDUCE,                                           // 2 Reduce the data and send the score
-  DARK                                              // 3 Go dark for a while
+  REDUCE                                            // 2 Reduce the data and send the score
 } state;
 
 static enum {
@@ -76,13 +75,6 @@ static enum {
   TABATA_DARK,                                      // 3 Time the warning LED is off before the shot (typically 2 seconds)
   TABATA_ON                                         // 4 Time the TABATA lED is on (typically 5 seconds)
 } tabata_state;
-
-static enum {
-  RAPID_OFF = 0,                                    // 0 No rapid fire cycles at all
-  RAPID_WAIT,                                       // 1 Rapid fire is doing nothing (typically 60 seconds)
-  RAPID_ON,                                         // 2 Time the RAPID lED is on ( 5 seconds)
-  RAPID_SEND                                        // 3 The event is over, send the results
-} rapid_state;                                      // Rapid fire state
 
 static enum bye_state {
   BYE_BYE = 0,                                      // Wait for the timer to run out
@@ -234,26 +226,7 @@ void freeETarget_target_loop(void *arg)
       case REDUCE:
         DLT(DLT_APPLICATION, SEND(sprintf(_xs, "state: REDUCE");))
         reduce();
-        state = DARK;
-        if ( json_rapid_enable == true ) //
-        {
-          timer_new(&rapid_timer, ONE_SECOND * 10);
-          state = DARK;
-          DLT(DLT_APPLICATION, SEND(printf(_xs, "state: DARK");))
-        }
-        else
-        {
-          state = START;
-        }
-        break;
-
-      case DARK:                         // Ghost state to say dark for 10 seconds
-        if ( rapid_timer == 0 )
-        {
-          state             = START;
-          rapid_state       = RAPID_OFF; // No longer in rapid fire
-          json_rapid_enable = false;     // No longer enabled
-        }
+        state = START;
         break;
     }
     /*
@@ -289,12 +262,12 @@ unsigned int set_mode(void)
 
   for ( i = 0; i != SHOT_SPACE; i++ )
   {
-    record[i].face_strike = 100;                 // Disable the shot record
+    record[i].face_strike = 100; // Disable the shot record
   }
 
-  if ( json_tabata_enable || json_rapid_enable ) // If the Tabata or rapid fire is enabled,
+  if ( json_tabata_enable )      // If the Tabata or rapid fire is enabled,
   {
-    set_LED_PWM_now(0);                          // Turn off the LEDs
+    set_LED_PWM_now(0);          // Turn off the LEDs
   } // Until the session starts
   else
   {
@@ -374,23 +347,10 @@ unsigned int arm(void)
  *--------------------------------------------------------------*/
 unsigned int wait(void)
 {
-
-  /*
-   * Check to see if the time has run out if there is a rapid fire event in progress
-   */
-  if ( json_rapid_enable == true )
-  {
-    if ( rapid_state == RAPID_SEND )
-    {
-      DLT(DLT_APPLICATION, SEND(sprintf(_xs, "Rapid fire complete");))
-      return REDUCE; // Finish this rapid fire cycle
-    }
-    return WAIT;
-  }
-
   /*
    * See if any shots have arrived
    */
+
   if ( shot_in != shot_out )
   {
     return REDUCE;
@@ -458,59 +418,35 @@ unsigned int reduce(void)
     /*
      *  Delay for a follow through
      */
-    if ( location != MISS )                                               // Was it a miss or face strike?
+    if ( location != MISS ) // Was it a miss or face strike?
     {
-      if ( (json_rapid_enable == false) && (json_tabata_enable = false) ) // If in a regular session, hold off for the follow through time
-      {
-        vTaskDelay(ONE_SECOND * json_follow_through);
-      }
       send_score(&record[shot_out], shot_out);
 
       /*
        *  Advance the paper
        */
-      if ( IS_DC_WITNESS || IS_STEPPER_WITNESS ) // Has the witness paper been enabled?
+      if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )                                                     // Has the witness paper been enabled?
       {
-        DLT(DLT_DEBUG, SEND(sprintf(_xs, "paper_shot: %d,  json_paper_shot:%d, rapid_count:%d, rapid_state: %d", paper_shot,
-                                    json_paper_shot, rapid_count, rapid_state);))
-        DLT(DLT_DEBUG, SEND(sprintf(_xs, "shot_xs:    %4.2f,  shot_ys:%4.2f, paper_eco:%d", record[shot_out].xs, record[shot_out].ys,
-                                    json_paper_eco);))
-
         if ( ((json_paper_eco == 0)                                                                  // PAPER_ECO turned off
               || (sqrt(sq(record[shot_out].xs) + sq(record[shot_out].ys)) < (json_paper_eco / 2))) ) // Inside the black (radius)
         {
           paper_shot++;
           DLT(DLT_DEBUG, SEND(sprintf(_xs, "Good shot: %d/%d", paper_shot, json_paper_shot);))
-          if ( ((json_paper_shot == 0) && (rapid_state == RAPID_OFF))         // Paper not limited, and not a rapid sequnce
-               || ((json_paper_shot != 0) && (paper_shot >= json_paper_shot)) // Or we have reached the required number opf hits?
-               || ((json_rapid_count != 0) && (paper_shot >= rapid_count)) )  // Or rapid fire has finished
+          if ( (json_paper_shot != 0) && (paper_shot >= json_paper_shot) ) // Or we have reached the required number opf hits?
           {
-            paper_start();                                                    // Roll the paper
-            paper_shot = 0;                                                   // And start over
+            paper_start();                                                 // Roll the paper
+            paper_shot = 0;                                                // And start over
           }
         }
       }
     }
-    else
+    else                                                                   // We have a miss
     {
       DLT(DLT_APPLICATION, SEND(sprintf(_xs, "Shot miss...\r\n");))
       set_status_LED(LED_MISS);
-      send_miss(&record[shot_out], shot_out); // Show a miss
+      send_miss(&record[shot_out], shot_out);                              // Show a miss
     }
-    shot_out = (shot_out + 1) % SHOT_SPACE;   // Increment to the next shot
-  }
-
-  /*
-   *  Take care of the special case where the actual shots are LESS than programmed for rapid fire
-   */
-  if ( json_rapid_enable == true )
-  {
-    while ( rapid_count != json_rapid_count ) // And shots were incomplete
-    {
-      send_miss(&record[shot_out], shot_out);
-      shot_out = (shot_out + 1) % SHOT_SPACE;
-      rapid_count++;
-    }
+    shot_out = (shot_out + 1) % SHOT_SPACE;                                // Increment to the next shot
   }
 
   /*
@@ -775,22 +711,38 @@ static bool discard_shot(void)
  * This is a state machine to control the LEDs and timers for
  * the rapid fire event.
  *
- * At the end of the cycle, the state RAPID_SEND is used top send
- * a message to the wait loop to begin processing the shots
- *
  * Test Message
  * {"RAPID_TIME":20, "RAPID_COUNT":10, "RAPID_WAIT":5, "RAPID_ENABLE":1}
  * {"RAPID_TIME":10, "RAPID_COUNT":10, "RAPID_WAIT":0,  "RAPID_ENABLE":1}
  * {"RAPID_TIME":20, "RAPID_COUNT":5,  "RAPID_WAIT":0,  "RAPID_ENABLE":1}
  * {"RAPID_TIME":30, "RAPID_COUNT":5,  "RAPID_WAIT":5,  "RAPID_ENABLE":1}
- * {"MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":22, "RAPID_TIME":60, "RAPID_COUNT":5,  "RAPID_WAIT":0,  "RAPID_ENABLE":1}
+ * {"MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":22, "RAPID_TIME":15, "RAPID_COUNT":5,  "RAPID_WAIT":5,  "RAPID_ENABLE":1}
  *
- *--------------------------------------------------------------*/
-#define RANDOM_INTERVAL 100 // 100 signals random time, %10 is the duration
+ *--------------------------------------------------------------*/                                       // 100 signals random time, %10 is the duration
+typedef struct
+{
+  int                    *enable;     // Signal used to initate a state transition
+  volatile unsigned long *timer;      // Timer used to control state length
+  char                   *status_LED; // Status LED output
+  bool                    LED_bright; // Brightness of target LED
+  char                   *message;    // Message to be sent to PC
+} rapid_state_t;
+
+unsigned long go_dark     = 10;       // Go dark for 10 seconds
+int           always_true = true;
+
+const rapid_state_t rapid_state[] = {
+    //  State transition     Time in state     Status LEDs      target LED  Message
+    {&json_rapid_enable, &json_rapid_wait, LED_RAPID_GREEN_WARN, 0, "{\"RAPID_WAIT\"}"}, // Wait for json_rapid_enable
+    {&always_true,       &json_rapid_time, LED_RAPID_GREEN,      1, "{\"RAPID_ON\"}"  }, // Go dark and wait for timer to run out
+    {&always_true,       &go_dark,         LED_RAPID_RED,        0, "{\"RAPID_OFF\"}" }, // Turn on the rapid green LED
+    {0,                  0,                0,                    0, 0                 }
+};
 
 void rapid_fire_task(void)
 {
-  static int new_shot = 0;  // A new shot has arrived
+  static unsigned int state_machine = 0;                                                 // State machine index
+  unsigned int        i;
 
   IF_NOT(IN_OPERATION) return;
 
@@ -799,74 +751,40 @@ void rapid_fire_task(void)
    */
   if ( json_rapid_enable == false ) // Reset the state machine
   {
-    rapid_state = RAPID_OFF;
+    state_machine = 0;
     return;
   }
 
-  /*
-   * Take care of the rapid fire state
-   */
-  DLT(DLT_APPLICATION,
-      SEND(sprintf(_xs, "Rapid State: %d,  rapid_timer: %ld,  shot_in: %d,  shot_out: %d", rapid_state, rapid_timer, shot_in, shot_out);))
-
-  switch ( rapid_state )
+  if ( *rapid_state[state_machine].enable != 0 )
   {
-    case (RAPID_OFF):                            // Rapid fire is not enabled
-      set_status_LED(LED_RAPID_OFF);
-      if ( json_rapid_enable != false )          // Just switched to enable.
-      {
-        timer_new(&rapid_timer, json_rapid_wait * ONE_SECOND);
-        set_LED_PWM_now(0);                      // Turn off the lights
-        set_status_LED(LED_RAPID_GREEN_WARN);
-        SEND(sprintf(_xs, "{\"RAPID_WAIT\":%d}\r\n", (int)json_rapid_wait);)
-        rapid_state = RAPID_WAIT;
-        rapid_count = 0;                         // No shots received yet
-      }
-      break;
+    if ( rapid_timer == 0 )
+    {
+      timer_new(&rapid_timer, *rapid_state[state_machine].timer * ONE_SECOND);
+      SEND(sprintf(_xs, "%s", rapid_state[state_machine].message);)
+      set_status_LED(rapid_state[state_machine].status_LED);
+      set_LED_PWM_now(rapid_state[state_machine].LED_bright * json_LED_PWM); // Turn off the lights
+      state_machine++;
 
-    case (RAPID_WAIT):                           // Keep the LEDs on for the rapid fire time time
-      if ( rapid_timer == 0 )                    // Don't do anything unless the time expires
+      if ( rapid_state[state_machine].enable == 0 )                          // Reached the end of the state machine
       {
-        timer_new(&rapid_timer, json_rapid_time * ONE_SECOND);
-        SEND(sprintf(_xs, "{\"RAPID_ON\":%d}\r\n", (int)json_rapid_time);)
-        set_LED_PWM_now(json_LED_PWM);           // Turn on the LEDs
-        set_status_LED(LED_RAPID_GREEN);
-        rapid_state = RAPID_ON;
-      }
-      break;
+        set_status_LED(LED_RAPID_OFF);                                       // Turn off the Lights
+        set_LED_PWM_now(json_LED_PWM);                                       // Turn off the lights
 
-    case (RAPID_ON):                             // Keep the LEDs on for the rapid fire time
-      if ( rapid_timer == 0 )                    // Don't do anything unless the time expires
-      {
-        SEND(sprintf(_xs, "{\"RAPID_OFF\":0}\r\n");)
-        set_LED_PWM_now(0);                      // Turn off the LEDs
-        rapid_state = RAPID_SEND;                // Ran out of time, start sending
-        set_status_LED(LED_RAPID_GREEN_OFF);
-        set_status_LED(LED_RAPID_RED);
-      }
-      else
-      {
-        if ( new_shot != shot_in )               // Has a shot arrived?
+        i = shot_out;
+        while ( rapid_count != json_rapid_count )                            // Send incomplete as misses
         {
-          stop_timers();                         // Reset thet timers
-          arm_timers();                          // and start over
-          DLT(DLT_DEBUG, SEND(sprintf(_xs, "Bang!");))
-          new_shot = shot_in;
+          record[i].shot_time = 0;                                           // Fake the time
+          send_miss(&record[i], i);
+          i = (i + 1) % SHOT_SPACE;
           rapid_count++;
-          if ( rapid_count == json_rapid_count ) // Ran out of shots,
-          {
-            rapid_timer = 0;                     // shut down and
-            rapid_state = RAPID_SEND;            // send
-            SEND(sprintf(_xs, "{\"RAPID_OFF\":0}\r\n");)
-            set_LED_PWM_now(0);                  // Turn off the LEDs
-            set_status_LED(LED_RAPID_RED);
-          }
         }
-      }
-      break;
 
-    case (RAPID_SEND): // Compute the score and send it
-      break;
+        state_machine     = 0;                                               // Go back to the beginning
+        rapid_timer       = 0;                                               // Reset the timer
+        json_rapid_enable = 0;                                               // Turn off the rapid cycle
+        json_rapid_count  = 0;                                               // No more shots expected
+      }
+    }
   }
 
   /*
