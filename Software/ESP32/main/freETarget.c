@@ -716,7 +716,7 @@ static bool discard_shot(void)
  * {"RAPID_TIME":10, "RAPID_COUNT":10, "RAPID_WAIT":0,  "RAPID_ENABLE":1}
  * {"RAPID_TIME":20, "RAPID_COUNT":5,  "RAPID_WAIT":0,  "RAPID_ENABLE":1}
  * {"RAPID_TIME":30, "RAPID_COUNT":5,  "RAPID_WAIT":5,  "RAPID_ENABLE":1}
- * {"MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":22, "RAPID_TIME":15, "RAPID_COUNT":5,  "RAPID_WAIT":5,  "RAPID_ENABLE":1}
+ * {"MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":22, "RAPID_TIME":10, "RAPID_COUNT":5,  "RAPID_WAIT":5,  "RAPID_ENABLE":1}
  *
  *--------------------------------------------------------------*/                                       // 100 signals random time, %10 is the duration
 typedef struct
@@ -724,7 +724,7 @@ typedef struct
   int                    *enable;     // Signal used to initate a state transition
   volatile unsigned long *timer;      // Timer used to control state length
   char                   *status_LED; // Status LED output
-  bool                    LED_bright; // Brightness of target LED
+  int                     LED_bright; // Brightness of target LED
   char                   *message;    // Message to be sent to PC
 } rapid_state_t;
 
@@ -734,8 +734,8 @@ int           always_true = true;
 const rapid_state_t rapid_state[] = {
     //  State transition     Time in state     Status LEDs      target LED  Message
     {&json_rapid_enable, &json_rapid_wait, LED_RAPID_GREEN_WARN, 0, "{\"RAPID_WAIT\"}"}, // Wait for json_rapid_enable
-    {&always_true,       &json_rapid_time, LED_RAPID_GREEN,      1, "{\"RAPID_ON\"}"  }, // Go dark and wait for timer to run out
-    {&always_true,       &go_dark,         LED_RAPID_RED,        0, "{\"RAPID_OFF\"}" }, // Turn on the rapid green LED
+    {&always_true,       &json_rapid_time, LED_RAPID_GREEN,      1, "{\"RAPID_ON\"}"  }, // Turn the timer on for the event
+    {&always_true,       &go_dark,         LED_RAPID_RED,        0, "{\"RAPID_OFF\"}" }, // Event finished, turn off
     {0,                  0,                0,                    0, 0                 }
 };
 
