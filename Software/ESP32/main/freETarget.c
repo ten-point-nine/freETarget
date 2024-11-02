@@ -571,7 +571,6 @@ void tabata_task(void)
     if ( tabata_timer == 0 )                                                  // Time to go to the next state?
     {
       state_machine++;                                                        // Next state
-      printf(" %d ", state_machine);
       SEND(sprintf(_xs, "{\"%s\": %ld}", tabata_state[state_machine].message, *tabata_state[state_machine].timer);)
 
       if ( *tabata_state[state_machine].timer == 0 )                          // Reached the end of the state machine
@@ -718,7 +717,7 @@ void rapid_fire_task(void)
    * Remember if we are in a shot or not
    */
   run_state &= ~IN_SHOT;
-  if ( tabata_state[state_machine].in_shot != 0 )
+  if ( rapid_state[state_machine].in_shot != 0 )
   {
     run_state |= IN_SHOT; // See if we are expecting a shot
   }
