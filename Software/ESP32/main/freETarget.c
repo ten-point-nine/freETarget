@@ -30,15 +30,6 @@
 #include "WiFi.h"
 #include "diag_tools.h"
 #include "mfs.h"
-/*
- *  Function Prototypes
- */
-static unsigned int set_mode(void);     // Set the target running mode
-static unsigned int arm(void);          // Arm the circuit for a shot
-static unsigned int wait(void);         // Wait for the shot to arrive
-static unsigned int reduce(void);       // Reduce the shot data
-static bool         discard_shot(void); // In TabataThrow away the shot
-extern void         gpio_init(void);
 
 /*
  *  Variables
@@ -61,6 +52,9 @@ static volatile unsigned long tabata_timer;         // Free running state timer
 volatile unsigned long        power_save;           // Power save timer
 static volatile unsigned long rapid_timer;          // Timer used for rapid fire ecents
 volatile unsigned long        LED_timer;            // Timer to reset LED status
+unsigned long                 go_dark     = 10l;    // Go dark for 10 seconds
+unsigned long                 all_done    = 0l;     // All finished
+int                           always_true = true;
 
 static enum {
   START = 0,                                        // 0 et the operating mode
@@ -68,19 +62,22 @@ static enum {
   REDUCE                                            // 2 Reduce the data and send the score
 } state;
 
-static enum {
-  TABATA_OFF = 0,                                   // 0 No tabata cycles at all
-  TABATA_REST,                                      // 1 Tabata is doing nothing (typically 60 seconds)
-  TABATA_WARNING,                                   // 2 Time the warning LED is on (typically 2 seconds)
-  TABATA_DARK,                                      // 3 Time the warning LED is off before the shot (typically 2 seconds)
-  TABATA_ON                                         // 4 Time the TABATA lED is on (typically 5 seconds)
-} tabata_state;
-
 static enum bye_state {
   BYE_BYE = 0,                                      // Wait for the timer to run out
   BYE_HOLD,                                         // Wait for the MFS to be pressed
   BYE_START                                         // Go back into service
 };
+
+typedef struct
+{
+  int                    *enable;                   // Signal used to initate a state transition
+  volatile unsigned long *timer;                    // Timer used to control state length
+  char                   *status_LED;               // Status LED output
+  int                     LED_bright;               // Brightness of target LED
+  char                   *message;                  // Message to be sent to PC
+  bool                    in_shot;                  // In as shot cycle
+} rapid_state_t;
+
 extern int isr_state;
 
 volatile unsigned int run_state = 0;                // Current operating state
@@ -96,6 +93,15 @@ const char to_hex[] = "0123456789ABCDEF"; // Quick Hex to ASCII
 
 char _xs[512];                            // Holding buffer for sprintf
 
+/*
+ *  Function Prototypes
+ */
+static unsigned int set_mode(void);     // Set the target running mode
+static unsigned int arm(void);          // Arm the circuit for a shot
+static unsigned int wait(void);         // Wait for the shot to arrive
+static unsigned int reduce(void);       // Reduce the shot data
+static bool         discard_shot(void); // In TabataThrow away the shot
+extern void         gpio_init(void);
 /*----------------------------------------------------------------
  *
  * @function: freeETarget_init()
@@ -506,58 +512,7 @@ void start_new_session(void)
 
 /*----------------------------------------------------------------
  *
- * @function: tabata_enable
- *
- * @brief:    Start or stop a tabata session
- *
- * @return:   Nothing
- *
- *----------------------------------------------------------------
- *
- * {"TABATA_WARN_ON": 1, "TABATA_WARN_OFF":5, "TABATA_ON":7, "TABATA_REST":30, "TABATA_ENABLE":1}
- * {"TABATA_WARN_ON": 5, "TABATA_WARN_OFF":2, "TABATA_ON":7, "TABATA_REST":45, "TABATA_ENABLE":1}
- * {"TABATA_ENABLE":0}
- *
- *--------------------------------------------------------------*/
-
-void tabata_enable(int enable // Rapid fire enable state
-)
-{
-  /*
-   * If enabled, set up the timers
-   */
-  if ( enable != 0 )
-  {
-    set_LED_PWM_now(0);            // Turn off the LEDs (maybe turn them on later)
-  }
-  else
-  {
-    set_LED_PWM_now(json_LED_PWM); // Turn on the LED to start the cycle
-  }
-
-  tabata_state       = TABATA_OFF; // Reset back to the beginning
-  json_tabata_enable = enable;     // And enable
-
-  DLT(DLT_APPLICATION, {
-    if ( enable )
-    {
-      SEND(sprintf(_xs, "Starting Tabata.  Time: %d", json_tabata_on);)
-    }
-    else
-    {
-      SEND(sprintf(_xs, "Tabata disabled");)
-    }
-  })
-
-  /*
-   * All done, return
-   */
-  return;
-}
-
-/*----------------------------------------------------------------
- *
- * @function: tabata
+ * @function: tabata_task
  *
  * @brief:   Implement a Tabata timer for training
  *
@@ -575,98 +530,71 @@ void tabata_enable(int enable // Rapid fire enable state
  *
  * OFF - 2 Second Warning - 2 Second Off - ON
  *
+ * Tabata differs from Rapid Fire in that Tabata will run
+ * indefinitly
+ *
  * Test JSON
  * {"TABATA_WARN_ON": 1, "TABATA_WARN_OFF":5, "TABATA_ON":7, "TABATA_REST":30, "TABATA_ENABLE":1}
- * {"TABATA_WARN_ON": 2, "TABATA_WARN_OFF":2, "TABATA_ON":7, "TABATA_REST":45, "TABATA_ENABLE":1}
+ * {"TABATA_WARN_ON": 5, "TABATA_WARN_OFF":2, "TABATA_ON":7, "TABATA_REST":30, "TABATA_ENABLE":1}
  * {"MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":22}
  *
  *-------------------------------------------------------------*/
+const rapid_state_t tabata_state[] = {
+    //  State transition     Time in state     Status LEDs      target LED  Message
+    {&json_tabata_enable, &json_tabata_warn_on,  LED_RAPID_GREEN_WARN, 0, "TABATA_WARN",     0}, // Wait for json_tabata_enable
+    {&always_true,        &json_tabata_warn_off, LED_RAPID_OFF,        0, "TABATA_WARN_OFF", 0}, // Turn the timer on for the event
+    {&always_true,        &json_tabata_on,       LED_RAPID_GREEN,      1, "TABATA_ON",       1}, // Wait for json_tabata_enable
+    {&always_true,        &json_tabata_rest,     LED_RAPID_RED,        0, "TABATA_REST",     0}, // Turn the timer on for the event
+    {&always_true,        &all_done,             LED_RAPID_OFF,        0, "TABATA_START",    0}  // End of state machine
+};
+
 void tabata_task(void)
 {
+  static unsigned int state_machine = 0;                                                    // State machine index
+
   IF_NOT(IN_OPERATION) return;
 
   /*
-   * Exit if rapid fire has not been enabled
+   * Exit if Rapid fire has not been enabled
    */
-  if ( json_tabata_enable == 0 ) // Reset the timer
+  if ( json_tabata_enable == false ) // Reset the state machine
   {
-    timer_delete(&tabata_timer);
-    tabata_state = TABATA_OFF;
+    state_machine = 0;
     return;
   }
 
   /*
-   *  Execute the Tabata state machine
+   *  Execute the state machine
    */
-  switch ( tabata_state )
+  if ( *tabata_state[state_machine].enable != 0 )                             // Is the transistion to the next state available?
   {
-    case (TABATA_OFF):                 // First time through after enable
-      timer_new(&tabata_timer, json_tabata_on * ONE_SECOND);
-      set_LED_PWM_now(0);              // Turn off the lights
-      set_status_LED(LED_TABATA_OFF);
-      SEND(sprintf(_xs, "{\"TABATA_REST\":%d}\r\n", json_tabata_on);)
-      tabata_state = TABATA_REST;
-      break;
+    if ( tabata_timer == 0 )                                                  // Time to go to the next state?
+    {
+      state_machine++;                                                        // Next state
+      printf(" %d ", state_machine);
+      SEND(sprintf(_xs, "{\"%s\": %ld}", tabata_state[state_machine].message, *tabata_state[state_machine].timer);)
 
-    case (TABATA_REST):                // OFF, wait for the time to expire
-      if ( tabata_timer == 0 )         // Don't do anything unless the time expires
+      if ( *tabata_state[state_machine].timer == 0 )                          // Reached the end of the state machine
       {
-        timer_new(&tabata_timer, json_tabata_warn_on * ONE_SECOND);
-        set_LED_PWM_now(json_LED_PWM); //     Turn on the lights
-        set_status_LED(LED_TABATA_WARN);
-        SEND(sprintf(_xs, "{\"TABATA_WARNING\":%d}\r\n", json_tabata_warn_on);)
-        tabata_state = TABATA_WARNING;
+        state_machine = 0;                                                    // Go back to the beginning
       }
-      break;
-
-    case (TABATA_WARNING):            // Warning time in seconds
-      if ( (tabata_timer % 50) == 0 ) // Blink the LEDs during the warning
-      {
-        if ( ((tabata_timer / 50) & 1) == 0 )
-        {
-          set_LED_PWM_now(0);
-        }
-        else
-        {
-          set_LED_PWM_now(json_LED_PWM);
-        }
-      }
-      if ( tabata_timer == 0 ) // Don't do anything unless the time expires
-      {
-        timer_new(&tabata_timer, json_tabata_warn_off * ONE_SECOND);
-        set_LED_PWM_now(0);    // Turn off the lights
-        set_status_LED(LED_TABATA_OFF);
-        SEND(sprintf(_xs, "{\"TABATA_DARK\":%d}\r\n", json_tabata_warn_off);)
-        tabata_state = TABATA_DARK;
-      }
-      break;
-
-    case (TABATA_DARK):                // Dark time in seconds
-      if ( tabata_timer == 0 )         // Don't do anything unless the time expires
-      {
-        in_shot_timer = FULL_SCALE;    // Set the timer on
-        timer_new(&tabata_timer, json_tabata_on * ONE_SECOND);
-        set_LED_PWM_now(json_LED_PWM); // Turn on the lights
-        set_status_LED(LED_TABATA_ON);
-        SEND(sprintf(_xs, "{\"TABATA_ON\":%d}\r\n", json_tabata_on);)
-        tabata_state = TABATA_ON;
-      }
-      break;
-
-    case (TABATA_ON):          // Keep the LEDs on for the tabata time
-      if ( tabata_timer == 0 ) // Don't do anything unless the time expires
-      {
-        timer_new(&tabata_timer, (long)(json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off) * ONE_SECOND);
-        SEND(sprintf(_xs, "{\"TABATA_OFF\":%d}\r\n", (json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off));)
-        set_LED_PWM_now(0);    // Turn off the LEDs
-        set_status_LED(LED_TABATA_OFF);
-        tabata_state = TABATA_REST;
-      }
-      break;
+      timer_new(&tabata_timer, (*tabata_state[state_machine].timer) * ONE_SECOND);
+      set_status_LED(tabata_state[state_machine].status_LED);
+      set_LED_PWM_now(tabata_state[state_machine].LED_bright * json_LED_PWM); // Turn off the lights // TRUE if the lights are on
+    }
   }
 
   /*
-   * All done.  Return the current time if in the TABATA_ON state
+   * Remember if we are in a shot or not
+   */
+  run_state &= ~IN_SHOT;
+  if ( tabata_state[state_machine].in_shot != 0 )
+  {
+    run_state |= IN_SHOT; // See if we are expecting a shot
+  }
+
+  /*
+   * All done.
    */
   return;
 }
@@ -681,21 +609,24 @@ void tabata_task(void)
  *
  *----------------------------------------------------------------
  *
- * In rapid fire or Tabata, a shot is only valid if the feature is
- * enabled, and there is time on the clock.
+ * If the target is not in rapid or tabata mode, it is always enabled
+ * and shots are not discarded
  *
  *--------------------------------------------------------------*/
 static bool discard_shot(void)
 {
 
-  if ( (json_tabata_enable != 0)        // Tabata cycle
-       && (tabata_state != TABATA_ON) ) // Lights not on
+  if ( (json_tabata_enable == 0) && (json_rapid_enable == 0) )
   {
-    shot_out = shot_in;                 // Discard new shots
-    return true;
+    return false;
   }
 
-  return false;
+  if ( (run_state & IN_SHOT) != 0 ) // In the middle of a shot
+  {
+    return false;
+  }
+
+  return true;                      //  Not in a shot cycle, discard everything
 }
 
 /*----------------------------------------------------------------
@@ -719,29 +650,18 @@ static bool discard_shot(void)
  * {"MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":22, "RAPID_TIME":10, "RAPID_COUNT":5,  "RAPID_WAIT":5,  "RAPID_ENABLE":1}
  *
  *--------------------------------------------------------------*/                                       // 100 signals random time, %10 is the duration
-typedef struct
-{
-  int                    *enable;     // Signal used to initate a state transition
-  volatile unsigned long *timer;      // Timer used to control state length
-  char                   *status_LED; // Status LED output
-  int                     LED_bright; // Brightness of target LED
-  char                   *message;    // Message to be sent to PC
-} rapid_state_t;
-
-unsigned long go_dark     = 10;       // Go dark for 10 seconds
-int           always_true = true;
 
 const rapid_state_t rapid_state[] = {
     //  State transition     Time in state     Status LEDs      target LED  Message
-    {&json_rapid_enable, &json_rapid_wait, LED_RAPID_GREEN_WARN, 0, "{\"RAPID_WAIT\"}"}, // Wait for json_rapid_enable
-    {&always_true,       &json_rapid_time, LED_RAPID_GREEN,      1, "{\"RAPID_ON\"}"  }, // Turn the timer on for the event
-    {&always_true,       &go_dark,         LED_RAPID_RED,        0, "{\"RAPID_OFF\"}" }, // Event finished, turn off
-    {0,                  0,                0,                    0, 0                 }
+    {&json_rapid_enable, &json_rapid_wait, LED_RAPID_GREEN_WARN, 0, "RAPID_WAIT", 0}, // Wait for json_rapid_enable
+    {&always_true,       &json_rapid_time, LED_RAPID_GREEN,      1, "RAPID_ON",   1}, // Turn the timer on for the event
+    {&always_true,       &go_dark,         LED_RAPID_RED,        0, "RAPID_OFF",  0}, // Event finished, turn off
+    {&always_true,       &all_done,        LED_RAPID_OFF,        1, "SLOW_FIRE",  0}  // End of state machine
 };
 
 void rapid_fire_task(void)
 {
-  static unsigned int state_machine = 0;                                                 // State machine index
+  static unsigned int state_machine = 0;                                              // State machine index
   unsigned int        i;
 
   IF_NOT(IN_OPERATION) return;
@@ -755,36 +675,52 @@ void rapid_fire_task(void)
     return;
   }
 
-  if ( *rapid_state[state_machine].enable != 0 )
+  /*
+   *  Execute the state machine
+   */
+  if ( *rapid_state[state_machine].enable != 0 )                               // Is the transistion to the next state available?
   {
-    if ( rapid_timer == 0 )
+    if ( rapid_timer == 0 )                                                    // Time to go to the next state?
     {
-      timer_new(&rapid_timer, *rapid_state[state_machine].timer * ONE_SECOND);
-      SEND(sprintf(_xs, "%s", rapid_state[state_machine].message);)
-      set_status_LED(rapid_state[state_machine].status_LED);
-      set_LED_PWM_now(rapid_state[state_machine].LED_bright * json_LED_PWM); // Turn off the lights
-      state_machine++;
+      state_machine++;                                                         // Next state
+      printf("  %d  ", state_machine);
+      SEND(sprintf(_xs, "{\"%s\": %ld}", rapid_state[state_machine].message, *rapid_state[state_machine].timer);)
 
-      if ( rapid_state[state_machine].enable == 0 )                          // Reached the end of the state machine
+      if ( *rapid_state[state_machine].timer == 0 )                            // Reached the end of the state machine
       {
-        set_status_LED(LED_RAPID_OFF);                                       // Turn off the Lights
-        set_LED_PWM_now(json_LED_PWM);                                       // Turn off the lights
+        set_status_LED(LED_RAPID_OFF);                                         // Turn off the Lights
+        set_LED_PWM_now(json_LED_PWM);                                         // Turn off the lights
 
         i = shot_out;
-        while ( rapid_count != json_rapid_count )                            // Send incomplete as misses
+        while ( rapid_count != json_rapid_count )                              // Send incomplete as misses
         {
-          record[i].shot_time = 0;                                           // Fake the time
+          record[i].shot_time = 0;                                             // Fake the time
           send_miss(&record[i], i);
           i = (i + 1) % SHOT_SPACE;
           rapid_count++;
         }
 
-        state_machine     = 0;                                               // Go back to the beginning
-        rapid_timer       = 0;                                               // Reset the timer
-        json_rapid_enable = 0;                                               // Turn off the rapid cycle
-        json_rapid_count  = 0;                                               // No more shots expected
+        state_machine     = 0;                                                 // Go back to the beginning
+        rapid_timer       = 0;                                                 // Reset the timer
+        json_rapid_enable = 0;                                                 // Turn off the rapid cycle
+        json_rapid_count  = 0;                                                 // No more shots expected
+      }
+      else
+      {
+        timer_new(&rapid_timer, (*rapid_state[state_machine].timer) * ONE_SECOND);
+        set_status_LED(rapid_state[state_machine].status_LED);
+        set_LED_PWM_now(rapid_state[state_machine].LED_bright * json_LED_PWM); // Turn off the lights
       }
     }
+  }
+
+  /*
+   * Remember if we are in a shot or not
+   */
+  run_state &= ~IN_SHOT;
+  if ( tabata_state[state_machine].in_shot != 0 )
+  {
+    run_state |= IN_SHOT; // See if we are expecting a shot
   }
 
   /*

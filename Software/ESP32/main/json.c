@@ -147,7 +147,7 @@ const json_message_t JSON[] = {
     {"\"STEP_RAMP\":",       &json_step_ramp,        0,                IS_INT32,             0,                  NONVOL_STEP_RAMP,        0         }, // Interval (in ms) to ramp the stepper motor
     {"\"STEP_START\":",      &json_step_start,       0,                IS_INT32,             0,                  NONVOL_STEP_START,       0         }, // Starting interval (in ms) for the stepper moro
     {"\"STEP_TIME\":",       &json_step_time,        0,                IS_INT32,             0,                  NONVOL_STEP_TIME,        0         }, // Interval (in ms) between pulses when running
-    {"\"TABATA_ENABLE\":",   &json_tabata_enable,    0,                IS_INT32,             &tabata_enable,     0,                       0         }, // Enable the tabata feature
+    {"\"TABATA_ENABLE\":",   &json_tabata_enable,    0,                IS_INT32,             0,                  0,                       0         }, // Enable the tabata feature
     {"\"TABATA_ON\":",       &json_tabata_on,        0,                IS_INT32,             0,                  0,                       0         }, // Time that the LEDs are ON for a Tabata timer (1/10 seconds)
     {"\"TABATA_REST\":",     &json_tabata_rest,      0,                IS_INT32,             0,                  0,                       0         }, // Time that the LEDs are OFF for a Tabata timer
     {"\"TABATA_WARN_OFF\":", &json_tabata_warn_off,  0,                IS_INT32,             0,                  0,                       0         }, // Time that the LEDs are ON during a warning cycle

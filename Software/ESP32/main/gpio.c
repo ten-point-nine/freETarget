@@ -38,7 +38,7 @@
  */
 typedef struct status_struct
 {
-  int blue; // Bits to send to the LED
+  int blue;  // Bits to send to the LED
   int green;
   int red;
   int blink; // TRUE if blinking enabled
@@ -122,13 +122,13 @@ void arm_timers(void)
   gpio_set_level(STOP_N, 0);            // Reset the timer
   gpio_set_level(OSC_CONTROL, OSC_OFF); // Turn off the oscillator
   pcnt_clear();
-  gpio_intr_enable(RUN_NORTH_HI); // Turn on the interrupts
+  gpio_intr_enable(RUN_NORTH_HI);       // Turn on the interrupts
   gpio_intr_enable(RUN_EAST_HI);
   gpio_intr_enable(RUN_SOUTH_HI);
   gpio_intr_enable(RUN_WEST_HI);
-  gpio_set_level(OSC_CONTROL, OSC_ON); // Turn on the oscillator
+  gpio_set_level(OSC_CONTROL, OSC_ON);  // Turn on the oscillator
 
-  gpio_set_level(STOP_N, 1); // Then enable it
+  gpio_set_level(STOP_N, 1);            // Then enable it
   return;
 }
 
@@ -201,20 +201,20 @@ unsigned int read_DIP(void)
  * transmitter supported in the ESP32
  *
  *-----------------------------------------------------*/
-#define RMT_LED_STRIP_RESOLUTION_HZ 10000000 // 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
+#define RMT_LED_STRIP_RESOLUTION_HZ 10000000  // 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
 
 rmt_channel_handle_t    led_channel    = NULL;
 rmt_tx_channel_config_t tx_chan_config = {
     .clk_src           = RMT_CLK_SRC_DEFAULT, // select source clock
     .mem_block_symbols = 64,                  // increase the block size can make the LED less flickering
     .resolution_hz     = RMT_LED_STRIP_RESOLUTION_HZ,
-    .trans_queue_depth = 1, // set the number of transactions that can be pending in the background
+    .trans_queue_depth = 1,                   // set the number of transactions that can be pending in the background
 };
 
 rmt_encoder_handle_t       led_encoder    = NULL;
 led_strip_encoder_config_t encoder_config = {.resolution = RMT_LED_STRIP_RESOLUTION_HZ};
 
-void status_LED_init(unsigned int led_gpio // What GPIO is used for output
+void status_LED_init(unsigned int led_gpio    // What GPIO is used for output
 )
 {
   tx_chan_config.gpio_num = led_gpio;
@@ -242,26 +242,26 @@ void status_LED_init(unsigned int led_gpio // What GPIO is used for output
  * '.' - Turn the LED off
  *
  *-----------------------------------------------------*/
-#define LED_ON       0x3F // Max full scale is 0xff (too bright)
+#define LED_ON       0x3F                     // Max full scale is 0xff (too bright)
 #define N_SERIAL_LED 3
-#define CEE          3 // LED C takes the fourth position
-#define DEE          4 // LED D takes the fifth position
+#define CEE          3                        // LED C takes the fourth position
+#define DEE          4                        // LED D takes the fifth position
 
 rmt_transmit_config_t tx_config = {
-    .loop_count = 0, // no transfer loop
+    .loop_count = 0,                          // no transfer loop
 };
 
 static unsigned char led_strip_pixels[3 * 3]; // 3 LEDs + 3 Bytes per LED
 static unsigned char LED_C = ' ';             // Rapid fire LED C
 static unsigned char LED_D = ' ';             // Rapid fire LED D
 
-void set_status_LED(char new_state[] // New LED colours
+void set_status_LED(char new_state[]          // New LED colours
 )
 {
   static char *old_state = "   ";
   int          i;
 
-  if ( new_state == old_state ) // Dont't do anything if the state is the same
+  if ( new_state == old_state )               // Dont't do anything if the state is the same
   {
     return;
   }
@@ -274,7 +274,7 @@ void set_status_LED(char new_state[] // New LED colours
   {
     if ( new_state[i] != '-' ) // - Leave the setting alone
     {
-      status[i].blink = 0; // Default to blink off
+      status[i].blink = 0;     // Default to blink off
       status[i].red   = 0;
       status[i].green = 0;
       status[i].blue  = 0;
@@ -300,7 +300,7 @@ void set_status_LED(char new_state[] // New LED colours
           status[i].green = LED_ON;
           break;
 
-        case 'b': // BLUE LED
+        case 'b':              // BLUE LED
           status[i].blink = 1;
         case 'B':
           status[i].blue = LED_ON;
@@ -365,11 +365,11 @@ void commit_status_LEDs(unsigned int blink_state)
    */
   for ( i = 0; i < N_SERIAL_LED; i++ )
   {
-    led_strip_pixels[i * 3 + 0] = 0; // Turn them all off
+    led_strip_pixels[i * 3 + 0] = 0;                 // Turn them all off
     led_strip_pixels[i * 3 + 2] = 0;
     led_strip_pixels[i * 3 + 1] = 0;
-    if ( (status[i].blink == 0)  // Blinking is off (ie, always on)
-         || (blink_state == 1) ) // Or, we are in a blink-on cycle
+    if ( (status[i].blink == 0)                      // Blinking is off (ie, always on)
+         || (blink_state == 1) )                     // Or, we are in a blink-on cycle
     {
       led_strip_pixels[i * 3 + 0] = status[i].green; // Set the RGB
       led_strip_pixels[i * 3 + 2] = status[i].blue;
@@ -475,10 +475,10 @@ void read_timers(int timer[])
     timer[i] = pcnt_read(i);
   }
 
-  if ( (json_pcnt_latency != 0)                 // Latecy has a valid setting
-       && ((json_vref_hi - json_vref_lo) > 0) ) // The voltage references are good
+  if ( (json_pcnt_latency != 0)                   // Latecy has a valid setting
+       && ((json_vref_hi - json_vref_lo) > 0) )   // The voltage references are good
   {
-    for ( i = N; i <= W; i++ ) // Add the rise time to the signal to get a better estimate
+    for ( i = N; i <= W; i++ )                    // Add the rise time to the signal to get a better estimate
     {
       pcnt_hi = timer[i + 4] - json_pcnt_latency; // PCNT HI   (reading - latentcy)
       if ( pcnt_hi > PCNT_NOT_TRIGGERED )         // Check to make sure the high timer was triggered by a shot
@@ -550,7 +550,7 @@ void paper_start(void)
   /*
    * Set up the stepper and trigger the first pulse
    */
-  if ( IS_STEPPER_WITNESS ) // Stepper
+  if ( IS_STEPPER_WITNESS )       // Stepper
   {
     if ( json_mfs_hold_d == STEPPER_ENABLE )
     {
@@ -596,13 +596,13 @@ void paper_drive_tick(void)
   /*
    * Drive the stepper motor
    */
-  if ( IS_STEPPER_WITNESS ) // Stepper enabled
+  if ( IS_STEPPER_WITNESS )  // Stepper enabled
   {
-    if ( step_count != 0 ) // In motion
+    if ( step_count != 0 )   // In motion
     {
       if ( paper_time == 0 ) // Timer for next pulse?
       {
-        stepper_pulse(); // Motor toggle
+        stepper_pulse();     // Motor toggle
       }
     }
     else
@@ -636,13 +636,13 @@ void paper_stop(void)
   /*
    * See what kind of drive we are using
    */
-  if ( IS_DC_WITNESS ) // DC motor - Turn the output on once
+  if ( IS_DC_WITNESS )        // DC motor - Turn the output on once
   {
     DCmotor_on_off(false, 0); // Motor OFF
     timer_delete(&paper_time);
   }
 
-  if ( IS_STEPPER_WITNESS ) // Stepper motor - Toggle the output
+  if ( IS_STEPPER_WITNESS )   // Stepper motor - Toggle the output
   {
     step_count = 0;
     if ( json_mfs_hold_d == STEPPER_ENABLE )
@@ -687,7 +687,7 @@ void DCmotor_on_off(bool          on,      // on == true, turn on motor drive
 
   if ( on == true )
   {
-    gpio_set_level(PAPER, PAPER_ON); // Turn it on
+    gpio_set_level(PAPER, PAPER_ON);  // Turn it on
     timer_new(&paper_time, MS_TO_TICKS(duration));
   }
   else
@@ -830,7 +830,7 @@ void aquire(void)
  *
  *--------------------------------------------------------------*/
 
-void rapid_red(unsigned int state // New state for the RED light
+void rapid_red(unsigned int state        // New state for the RED light
 )
 {
   if ( json_mfs_select_cd == RAPID_LOW ) // Inverted drive
@@ -849,7 +849,7 @@ void rapid_red(unsigned int state // New state for the RED light
   return;
 }
 
-void rapid_green(unsigned int state // New state for the GREEN light
+void rapid_green(unsigned int state      // New state for the GREEN light
 )
 {
   if ( json_mfs_select_cd == RAPID_LOW ) // Inverted drive
@@ -890,7 +890,7 @@ void digital_test(void)
    */
   SEND(sprintf(_xs, "\r\nTime: %4.2fs", (float)(esp_timer_get_time() / 1000000));)
   SEND(sprintf(_xs, "\r\nDIP: 0x%02X", read_DIP());)
-  SEND(sprintf(_xs, "\r\nDone\r\n");)
+  SEND(sprintf(_xs, _DONE_);)
 
   return;
 }
@@ -928,7 +928,7 @@ void status_LED_test(void)
   set_status_LED("rgbrg");
   timer_delay(5 * ONE_SECOND); // Blink for 5 seconds
   set_status_LED(LED_READY);
-  SEND(sprintf(_xs, "\r\nDone\r\n");)
+  SEND(sprintf(_xs, _DONE_);)
   return;
 }
 
@@ -975,7 +975,7 @@ void paper_test(void)
     timer_delay(ONE_SECOND / 2);
   }
 
-  SEND(sprintf(_xs, "\r\nDone\r\n");)
+  SEND(sprintf(_xs, _DONE_);)
 
   return;
 }
@@ -1013,7 +1013,7 @@ void LED_test(void)
     vTaskDelay(ONE_SECOND / 10);
   }
 
-  SEND(sprintf(_xs, "\r\nDone\r\n");)
+  SEND(sprintf(_xs, _DONE_);)
   return;
 }
 
@@ -1039,7 +1039,7 @@ void timer_run_all(void)
   SEND(sprintf(_xs, "\r\nPress any key to stop");)
   while ( serial_available(ALL) == 0 )
   {
-    gpio_set_level(STOP_N, 1); // Let the clock go
+    gpio_set_level(STOP_N, 1);      // Let the clock go
     gpio_set_level(CLOCK_START, 0);
     gpio_set_level(CLOCK_START, 1);
     gpio_set_level(CLOCK_START, 0); // Strobe the RUN linwes

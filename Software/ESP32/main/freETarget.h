@@ -14,7 +14,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"5.2.13 October 31, 2024\""
+#define SOFTWARE_VERSION "\"5.2.13 November 1, 2024\""
 #define _DONE_           "\r\nDone\r\n"
 
 #define REV_500   500    // ESP32
@@ -29,12 +29,14 @@
 #endif
 #define CLOCK_TEST false
 
-#define IN_STARTUP   0x0001                       // The software is in initialization
-#define IN_OPERATION 0x0002                       // The software is operational
-#define IN_TEST      0x0004                       // A self test has been selected (Suspend operation)
-#define IN_SLEEP     0x0008                       // The unit has powered down
-#define IF_NOT(x)    if ( (run_state & (x)) == 0 )
-#define IF_IN(x)     if ( (run_state & (x)) != 0 )
+#define IN_STARTUP   0x0001 // The software is in initialization
+#define IN_OPERATION 0x0002 // The software is operational
+#define IN_TEST      0x0004 // A self test has been selected (Suspend operation)
+#define IN_SLEEP     0x0008 // The unit has powered down
+#define IN_SHOT      0x0010 // The target is activly in a shot
+
+#define IF_NOT(x) if ( (run_state & (x)) == 0 )
+#define IF_IN(x)  if ( (run_state & (x)) != 0 )
 
 #define SEND(message) {message} serial_to_all(_xs, ALL);
 
@@ -156,7 +158,6 @@ void         freeETarget_target_loop(void *arg); // Target polling loop
 void         send_keep_alive(void);              // Send out the keep alive signal for TCPIP
 void         hello(void);                        // Say Hello World
 void         bye(unsigned int force_bye);        // Shut down and say goodbye
-void         tabata_enable(int enable);          // Arm the Tabata counters
 void         polled_target_test(void);           // Test the target aquisition software
 void         interrupt_target_test(void);        // Test the target aquisition software
 void         tabata_task(void);                  // Run the TABATA timersArm the Tabata counter

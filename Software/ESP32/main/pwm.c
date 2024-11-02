@@ -99,7 +99,9 @@ void pwm_init(unsigned int pwm_channel,     // PWM channel we are using
  *
  **************************************************************************
  *
- * The PWM registers are updated for the new duty cycle
+ * The PWM registers are updated for the new duty cycle.
+ *
+ *
  *
  ***************************************************************************/
 void pwm_set(unsigned int pwm_channel, // Channel being operated on
@@ -111,4 +113,9 @@ void pwm_set(unsigned int pwm_channel, // Channel being operated on
   scaled = (1 << 13) * percent / 100;
   ledc_set_duty(PWM_MODE, ledc_channel[pwm_channel].channel, scaled);
   ledc_update_duty(PWM_MODE, ledc_channel[pwm_channel].channel);
+
+  /*
+   * All done, return
+   */
+  return;
 }
