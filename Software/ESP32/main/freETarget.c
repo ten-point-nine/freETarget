@@ -642,7 +642,6 @@ void rapid_fire_task(void)
     if ( rapid_timer == 0 )                                                    // Time to go to the next state?
     {
       state_machine++;                                                         // Next state
-      printf("  %d  ", state_machine);
       SEND(sprintf(_xs, "{\"%s\": %ld}", rapid_state[state_machine].message, *rapid_state[state_machine].timer);)
 
       if ( rapid_state[state_machine].in_shot == true )                        // Remember the shot count when we go into
@@ -658,7 +657,7 @@ void rapid_fire_task(void)
         while ( rapid_count < json_rapid_count )                               // Send incomplete as misses
         {
           record[rapid_count].shot_time = 0;                                   // Fake the time
-          send_miss(&record[rapid_count], i);
+          send_miss(&record[rapid_count], rapid_count);
           rapid_count = (rapid_count + 1) % SHOT_SPACE;
         }
 
