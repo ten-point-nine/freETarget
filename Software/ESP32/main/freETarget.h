@@ -6,7 +6,7 @@
  *
  *----------------------------------------------------------------
  *
- *
+ *r
  */
 #ifndef _FREETARGET_H
 #define _FREETARGET_H
@@ -141,14 +141,15 @@ extern double                 s_of_sound;
 extern const char            *names[];
 extern const char             to_hex[];
 extern unsigned int           face_strike;
-extern unsigned int           is_trace;   // Tracing level(s)
-extern unsigned int           shot_in;    // Index into the shot array (The shot that has JUST arrived)
-extern unsigned int           shot_out;   // Index into the shot array (Last shot processed)
-extern unsigned int           shot_number;
-extern volatile unsigned long power_save; // Power down timer
-extern volatile unsigned int  run_state;  // IPC states
-extern volatile unsigned long LED_timer;  // Turn off the LEDs when not in use
-extern char                   _xs[512];   // General purpose string buffer
+extern unsigned int           is_trace;    // Tracing level(s)
+extern unsigned int           shot_in;     // Index into the shot array (The shot that has JUST arrived)
+extern unsigned int           shot_out;    // Index into the shot array (Last shot processed)
+extern unsigned int           shot_number; // Current shot number
+extern unsigned long          shot_start;  // Time when shot become valid
+extern volatile unsigned long power_save;  // Power down timer
+extern volatile unsigned int  run_state;   // IPC states
+extern volatile unsigned long LED_timer;   // Turn off the LEDs when not in use
+extern char                   _xs[512];    // General purpose string buffer
 
 /*
  * FreeETarget functions
