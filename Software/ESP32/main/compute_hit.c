@@ -20,7 +20,11 @@
 #include "compute_hit.h"
 #include "serial_io.h"
 
-#define THRESHOLD (0.001)
+/*
+ *  Definitions
+ */
+#define THRESHOLD  (0.001)
+#define TO_SECONDS 1000000.0
 
 #define R(x) (((x) + location) % 4) // Rotate the target by location points
 
@@ -513,7 +517,7 @@ void send_score(shot_record_t *shot,       //  record
   {
     SEND(sprintf(_xs, "\"shot\":%d, \"name\":\"%d\"", shot_number, my_ring);)
   }
-  SEND(sprintf(_xs, ", \"time\":%4.2f ", (float)shot->shot_time / (float)(ONE_SECOND));)
+  SEND(sprintf(_xs, ", \"time\":%6.2f ", ((float)shot->shot_time) / TO_SECONDS);)
 #endif
 
 #if ( S_XY )
@@ -576,7 +580,7 @@ void send_score(shot_record_t *shot,       //  record
  *
  * The score is sent as:
  *
- * {"shot":n, "x":x, "y":y,}
+ * {"shot":n, "time": time,  "x":x, "y":y,}
  *
  * Shots are stored in memory as they occur.  When a new TCPIP
  * connection is made, all of the accumulated scores are sent out
@@ -589,7 +593,8 @@ void send_replay(shot_record_t *shot, //  record
 {
   if ( shot->is_valid == true )
   {
-    sprintf(_xs, "\r\n{\"shot\":%d, \"x\":%4.2f, \"y\":%4.2f}\r\n", shot_number + 1, shot->xs, shot->ys);
+    SEND(sprintf(_xs, "\r\n{\"shot\":%d, \"time\":%6.2f, \"x\":%4.2f, \"y\":%4.2f}\r\n", shot_number + 1,
+                 (float)shot->shot_time / TO_SECONDS, shot->xs, shot->ys);)
   }
   else
   {
@@ -654,7 +659,7 @@ void send_miss(shot_record_t *shot, // record record
   {
     SEND(sprintf(_xs, "\"shot\":%d, \"miss\":1, \"name\":\"%d\"", shot_number, my_ring);)
   }
-  SEND(sprintf(_xs, ", \"time\":%4.2f ", (float)shot->shot_time / (float)(ONE_SECOND));)
+  SEND(sprintf(_xs, ", \"time\":%6.2f ", ((float)shot->shot_time) / TO_SECONDS);)
 #endif
 
 #if ( S_XY )

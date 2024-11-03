@@ -13,8 +13,11 @@
  * https://docs.espressif.com/projects/esp-idf/en/v4.3/esp32/api-reference/peripherals/timer.html
  *
  * ----------------------------------------------------*/
+
 #include "stdbool.h"
+#include "esp_timer.h"
 #include "driver\timer.h"
+
 #include "freETarget.h"
 #include "diag_tools.h"
 #include "gpio_types.h"
@@ -402,4 +405,35 @@ int timer_delete(volatile unsigned long *old_timer // Pointer to new down counte
    *  The timer doesn't exist, return an error
    */
   return 0;
+}
+/*-----------------------------------------------------
+ *
+ * @function: show_time()
+ *
+ * @brief:    Print out the current time
+ *
+ * @return:   NONE
+ *
+ *-----------------------------------------------------
+ *
+ * Demonstration function to test the esp_timer.
+ * Display the internal timer every second
+ *
+ *---------------------------------------------------*/
+void show_time(void)
+{
+  long time;
+
+  SEND(sprintf(_xs, "\r\nTime test.  Press any key to exit\r\n");)
+
+  while ( serial_available(ALL) == 0 )
+  {
+    time = esp_timer_get_time() / 1000;
+    SEND(sprintf(_xs, "\r\n%ld.%ld s", time / 1000, time % 1000);)
+    vTaskDelay(ONE_SECOND);
+  }
+
+  SEND(sprintf(_xs, _DONE_);)
+
+  return;
 }

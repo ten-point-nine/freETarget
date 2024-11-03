@@ -64,6 +64,7 @@ static const self_test_t test_list[] = {
     {"Sensor POST test",                  &POST_counters         },
     {"Turn the oscillator on and off",    &timer_cycle_oscillator},
     {"Turn the RUN lines on and off",     &timer_run_all         },
+    {"Show the current time",             &show_time             },
     {"- Communiations Tests",             0                      },
     {"AUX serial port test",              &serial_port_test      },
     {"Test WiFi as a station",            &WiFi_station_init     },

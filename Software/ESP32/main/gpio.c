@@ -806,7 +806,7 @@ void aquire(void)
   read_timers(&record[shot_in].timer_count[0]);                 // Record this count
   IF_IN(IN_SHOT)
   {
-    record[shot_in].shot_time     = 0;                          // Capture the time into the shot
+    record[shot_in].shot_time     = esp_timer_get_time();       // Capture the time into the shot
     record[shot_in].face_strike   = face_strike;                // Record if it's a face strike
     record[shot_in].sensor_status = is_running();               // Record the sensor status
     shot_in                       = (shot_in + 1) % SHOT_SPACE; // Prepare for the next shot
