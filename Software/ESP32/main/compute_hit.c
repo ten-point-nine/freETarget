@@ -23,8 +23,8 @@
 /*
  *  Definitions
  */
-#define THRESHOLD  (0.001)
-#define TO_SECONDS 1000000.0
+#define THRESHOLD               (0.001)
+#define SHOT_TIME_TO_SECONDS(x) ((float)(x)) / 1000000.0
 
 #define R(x) (((x) + location) % 4) // Rotate the target by location points
 
@@ -517,7 +517,7 @@ void send_score(shot_record_t *shot,       //  record
   {
     SEND(sprintf(_xs, "\"shot\":%d, \"name\":\"%d\"", shot_number, my_ring);)
   }
-  SEND(sprintf(_xs, ", \"time\":%6.2f ", ((float)shot->shot_time) / TO_SECONDS);)
+  SEND(sprintf(_xs, ", \"time\":%6.2f ", SHOT_TIME_TO_SECONDS(shot->shot_time));)
 #endif
 
 #if ( S_XY )
@@ -594,7 +594,7 @@ void send_replay(shot_record_t *shot, //  record
   if ( shot->is_valid == true )
   {
     SEND(sprintf(_xs, "\r\n{\"shot\":%d, \"time\":%6.2f, \"x\":%4.2f, \"y\":%4.2f}\r\n", shot_number + 1,
-                 (float)shot->shot_time / TO_SECONDS, shot->xs, shot->ys);)
+                 SHOT_TIME_TO_SECONDS(shot->shot_time), shot->xs, shot->ys);)
   }
   else
   {
@@ -659,7 +659,7 @@ void send_miss(shot_record_t *shot, // record record
   {
     SEND(sprintf(_xs, "\"shot\":%d, \"miss\":1, \"name\":\"%d\"", shot_number, my_ring);)
   }
-  SEND(sprintf(_xs, ", \"time\":%6.2f ", ((float)shot->shot_time) / TO_SECONDS);)
+  SEND(sprintf(_xs, ", \"time\":%6.2f ", SHOT_TIME_TO_SECONDS(shot->shot_time));)
 #endif
 
 #if ( S_XY )
