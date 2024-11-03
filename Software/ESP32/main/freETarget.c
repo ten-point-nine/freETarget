@@ -615,7 +615,7 @@ const rapid_state_t rapid_state[] = {
     {&json_rapid_enable, &json_rapid_wait, LED_RAPID_GREEN_WARN, 0, "RAPID_WAIT", false}, // Wait for json_rapid_enable
     {&always_true,       &json_rapid_time, LED_RAPID_GREEN,      1, "RAPID_ON",   true }, // Turn the timer on for the event
     {&always_true,       &go_dark,         LED_RAPID_RED,        0, "RAPID_OFF",  false}, // Event finished, turn off
-    {&always_true,       &all_done,        LED_RAPID_OFF,        1, "SLOW_FIRE",  false}  // End of state machine
+    {&always_true,       &all_done,        LED_RAPID_OFF,        1, "SLOW_FIRE",  true }  // End of state machine
 };
 
 void rapid_fire_task(void)
