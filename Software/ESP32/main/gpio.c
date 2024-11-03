@@ -803,7 +803,6 @@ void aquire(void)
   /*
    * Pull in the data amd save it in the record array
    */
-
   read_timers(&record[shot_in].timer_count[0]);                 // Record this count
   IF_IN(IN_SHOT)
   {

@@ -573,7 +573,7 @@ void tabata_task(void)
   /*
    * Remember if we are in a shot or not
    */
-  if ( tabata_state[state_machine].in_shot != 0 )
+  if ( tabata_state[state_machine].in_shot == true )
   {
     run_state |= IN_SHOT; // See if we are expecting a shot
   }
@@ -678,7 +678,7 @@ void rapid_fire_task(void)
   /*
    * Set the IN_SHO if the target is ready
    */
-  if ( rapid_state[state_machine].in_shot != 0 )
+  if ( rapid_state[state_machine].in_shot == true )
   {
     run_state |= IN_SHOT; // See if we are expecting a shot
   }
