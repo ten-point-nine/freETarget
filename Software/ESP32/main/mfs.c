@@ -405,7 +405,7 @@ static void mfs_paper_feed(void)                               // Feed paper so 
     paper_start();
     while ( DIP_SW_A || DIP_SW_B ) // and loop until the switches are
     {
-      vTaskDelay(1);               // released
+      vTaskDelay(TICK_10ms);       // released
     }
     paper_stop();
   }
@@ -419,7 +419,7 @@ static void mfs_paper_feed(void)                               // Feed paper so 
     while ( DIP_SW_A || DIP_SW_B ) // and loop until the switches are
     {
       paper_drive_tick();          // Fake a timer tick since mfs_paper_feed() is blocking
-      vTaskDelay(1);               // released
+      vTaskDelay(TICK_10ms);       // released
       step_count = 1000;           // Keep the motor moving
     }
     paper_stop();

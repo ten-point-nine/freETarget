@@ -321,7 +321,7 @@ void pcnt_test(int which_test)
       SEND(sprintf(_xs, "\r\n\r\n        All should be the same");)
       arm_timers();
       trigger_timers();
-      vTaskDelay(1);
+      vTaskDelay(TICK_10ms);
       SEND(sprintf(_xs, "\r\nis_running(): %02X", is_running());)
       stop_timers();
       for ( i = 0; i != 10; i++ )
@@ -440,7 +440,7 @@ void pcnt_cal(void)
   gpio_intr_enable(RUN_SOUTH_HI);
   gpio_intr_enable(RUN_WEST_HI);
   gpio_set_level(OSC_CONTROL, OSC_ON); // Turn on the oscillator
-  vTaskDelay(1);                       // Let the oscillator start up
+  vTaskDelay(TICK_10ms);               // Let the oscillator start up
 
   /*
    * Loop, arm the counters and see what comes back

@@ -236,7 +236,7 @@ void freeETarget_target_loop(void *arg)
     /*
      * End of the loop. timeout till the next time
      */
-    vTaskDelay(1);
+    vTaskDelay(TICK_10ms);
   }
 }
 
@@ -920,7 +920,7 @@ void interrupt_target_test(void)
       }
       shot_out = (shot_out + 1) % SHOT_SPACE;
     }
-    vTaskDelay(1);
+    vTaskDelay(TICK_10ms);
   }
 
   /*

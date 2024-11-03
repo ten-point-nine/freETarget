@@ -165,7 +165,7 @@ void DAC_test(void)
     volts[VREF_3]  = 0.0;
 
     DAC_write(volts);
-    vTaskDelay(1);
+    vTaskDelay(TICK_10ms);
     i++;
   }
 

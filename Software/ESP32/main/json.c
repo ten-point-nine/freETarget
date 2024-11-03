@@ -304,7 +304,7 @@ void freeETarget_json(void *pvParameters)
       } // End switch
 
     } // End if char available
-    vTaskDelay(MIN_DELAY);
+    vTaskDelay(TICK_10ms);
   }
 
   /*
