@@ -792,17 +792,26 @@ void face_ISR(void)
  *  saves them into the record structure to be reduced later
  *  on.
  *
+ *  The conditional IF_IN(IN_SHOT) is used to discard shots that
+ *  are present while the target is not available for use.  For
+ *  example IN_SHOT will be invalid while in rapid fire if the
+ *  shot falls outside of the shot time
+ *
  *--------------------------------------------------------------*/
 void aquire(void)
 {
   /*
    * Pull in the data amd save it in the record array
    */
-  read_timers(&record[shot_in].timer_count[0]);               // Record this count
-  record[shot_in].shot_time     = 0;                          // Capture the time into the shot
-  record[shot_in].face_strike   = face_strike;                // Record if it's a face strike
-  record[shot_in].sensor_status = is_running();               // Record the sensor status
-  shot_in                       = (shot_in + 1) % SHOT_SPACE; // Prepare for the next shot
+
+  read_timers(&record[shot_in].timer_count[0]);                 // Record this count
+  IF_IN(IN_SHOT)
+  {
+    record[shot_in].shot_time     = 0;                          // Capture the time into the shot
+    record[shot_in].face_strike   = face_strike;                // Record if it's a face strike
+    record[shot_in].sensor_status = is_running();               // Record the sensor status
+    shot_in                       = (shot_in + 1) % SHOT_SPACE; // Prepare for the next shot
+  }
 
   /*
    * All done for now

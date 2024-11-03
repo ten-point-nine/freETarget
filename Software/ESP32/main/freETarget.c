@@ -43,7 +43,6 @@ unsigned int shot        = 0;                       // Shot counter
 unsigned int face_strike = 0;                       // Miss Face Strike interrupt count
 unsigned int is_trace    = DLT_INFO | DLT_CRITICAL; // Default tracing
 
-unsigned int           rapid_count = 0;             // Number of received shots
 unsigned int           shot_number;                 // Shot Identifier (1-100)
 volatile unsigned long in_shot_timer;               // Time inside of the shot window
 
@@ -96,11 +95,10 @@ char _xs[512];                            // Holding buffer for sprintf
 /*
  *  Function Prototypes
  */
-static unsigned int set_mode(void);     // Set the target running mode
-static unsigned int arm(void);          // Arm the circuit for a shot
-static unsigned int wait(void);         // Wait for the shot to arrive
-static unsigned int reduce(void);       // Reduce the shot data
-static bool         discard_shot(void); // In TabataThrow away the shot
+static unsigned int set_mode(void); // Set the target running mode
+static unsigned int arm(void);      // Arm the circuit for a shot
+static unsigned int wait(void);     // Wait for the shot to arrive
+static unsigned int reduce(void);   // Reduce the shot data
 extern void         gpio_init(void);
 /*----------------------------------------------------------------
  *
@@ -310,6 +308,7 @@ unsigned int arm(void)
   face_strike = 0;              // Reset the face strike count
   stop_timers();
   arm_timers();                 // Arm the counters
+  run_state |= IN_SHOT;
 
   sensor_status = is_running(); // and immediatly read the status
   if ( sensor_status == 0 )     // After arming, the sensor status should be zero
@@ -395,19 +394,7 @@ unsigned int wait(void)
  *--------------------------------------------------------------*/
 unsigned int reduce(void)
 {
-  static unsigned int paper_shot    = 0; // Count of reduced shots
-  unsigned int        missing_shots = 0; // Rapid fire shots that were not shot
-
-  /*
-   * See if any shots are allowed to be processed
-   */
-  if ( discard_shot() ) // Tabata is on but the shot is invalid
-  {
-    DLT(DLT_APPLICATION, SEND(sprintf(_xs, "Discarding shot");))
-    shot_out = shot_in;
-    send_miss(&record[shot_out], shot_out);
-    return START;       // Throw out any shots while dark
-  }
+  static unsigned int paper_shot = 0; // Count of reduced shots
 
   /*
    * Loop and process the shots.  Possibly more than one shot
@@ -540,17 +527,17 @@ void start_new_session(void)
  *
  *-------------------------------------------------------------*/
 const rapid_state_t tabata_state[] = {
-    //  State transition     Time in state     Status LEDs      target LED  Message
-    {&json_tabata_enable, &json_tabata_warn_on,  LED_RAPID_GREEN_WARN, 0, "TABATA_WARN",     0}, // Wait for json_tabata_enable
-    {&always_true,        &json_tabata_warn_off, LED_RAPID_OFF,        0, "TABATA_WARN_OFF", 0}, // Turn the timer on for the event
-    {&always_true,        &json_tabata_on,       LED_RAPID_GREEN,      1, "TABATA_ON",       1}, // Wait for json_tabata_enable
-    {&always_true,        &json_tabata_rest,     LED_RAPID_RED,        0, "TABATA_REST",     0}, // Turn the timer on for the event
-    {&always_true,        &all_done,             LED_RAPID_OFF,        0, "TABATA_START",    0}  // End of state machine
+    //  State transition     Time in state     Status LEDs      target LED  Message       IN_SHOT
+    {&json_tabata_enable, &json_tabata_warn_on,  LED_RAPID_GREEN_WARN, 0, "TABATA_WARN",     false}, // Wait for json_tabata_enable
+    {&always_true,        &json_tabata_warn_off, LED_RAPID_OFF,        0, "TABATA_WARN_OFF", false}, // Turn the timer on for the event
+    {&always_true,        &json_tabata_on,       LED_RAPID_GREEN,      1, "TABATA_ON",       true }, // Wait for json_tabata_enable
+    {&always_true,        &json_tabata_rest,     LED_RAPID_RED,        0, "TABATA_REST",     false}, // Turn the timer on for the event
+    {&always_true,        &all_done,             LED_RAPID_OFF,        0, "TABATA_START",    false}  // End of state machine
 };
 
 void tabata_task(void)
 {
-  static unsigned int state_machine = 0;                                                    // State machine index
+  static unsigned int state_machine = 0;                                                        // State machine index
 
   IF_NOT(IN_OPERATION) return;
 
@@ -586,46 +573,19 @@ void tabata_task(void)
   /*
    * Remember if we are in a shot or not
    */
-  run_state &= ~IN_SHOT;
   if ( tabata_state[state_machine].in_shot != 0 )
   {
     run_state |= IN_SHOT; // See if we are expecting a shot
+  }
+  else
+  {
+    run_state &= ~IN_SHOT;
   }
 
   /*
    * All done.
    */
   return;
-}
-
-/*----------------------------------------------------------------
- *
- * @function: discard_shot
- *
- * @brief:    Determine if the shot is outside of the valid time
- *
- * @return:   TRUE if the shot is not allowed
- *
- *----------------------------------------------------------------
- *
- * If the target is not in rapid or tabata mode, it is always enabled
- * and shots are not discarded
- *
- *--------------------------------------------------------------*/
-static bool discard_shot(void)
-{
-
-  if ( (json_tabata_enable == 0) && (json_rapid_enable == 0) )
-  {
-    return false;
-  }
-
-  if ( (run_state & IN_SHOT) != 0 ) // In the middle of a shot
-  {
-    return false;
-  }
-
-  return true;                      //  Not in a shot cycle, discard everything
 }
 
 /*----------------------------------------------------------------
@@ -651,17 +611,17 @@ static bool discard_shot(void)
  *--------------------------------------------------------------*/                                       // 100 signals random time, %10 is the duration
 
 const rapid_state_t rapid_state[] = {
-    //  State transition     Time in state     Status LEDs      target LED  Message
-    {&json_rapid_enable, &json_rapid_wait, LED_RAPID_GREEN_WARN, 0, "RAPID_WAIT", 0}, // Wait for json_rapid_enable
-    {&always_true,       &json_rapid_time, LED_RAPID_GREEN,      1, "RAPID_ON",   1}, // Turn the timer on for the event
-    {&always_true,       &go_dark,         LED_RAPID_RED,        0, "RAPID_OFF",  0}, // Event finished, turn off
-    {&always_true,       &all_done,        LED_RAPID_OFF,        1, "SLOW_FIRE",  0}  // End of state machine
+    //  State transition     Time in state     Status LEDs    target LED  Message IN_SHOT
+    {&json_rapid_enable, &json_rapid_wait, LED_RAPID_GREEN_WARN, 0, "RAPID_WAIT", false}, // Wait for json_rapid_enable
+    {&always_true,       &json_rapid_time, LED_RAPID_GREEN,      1, "RAPID_ON",   true }, // Turn the timer on for the event
+    {&always_true,       &go_dark,         LED_RAPID_RED,        0, "RAPID_OFF",  false}, // Event finished, turn off
+    {&always_true,       &all_done,        LED_RAPID_OFF,        1, "SLOW_FIRE",  false}  // End of state machine
 };
 
 void rapid_fire_task(void)
 {
-  static unsigned int state_machine = 0;                                              // State machine index
-  unsigned int        i;
+  static unsigned int state_machine = 0;                                                  // State machine index
+  static unsigned int rapid_count;                                                        //  Number of shots received during rapid fire
 
   IF_NOT(IN_OPERATION) return;
 
@@ -685,18 +645,21 @@ void rapid_fire_task(void)
       printf("  %d  ", state_machine);
       SEND(sprintf(_xs, "{\"%s\": %ld}", rapid_state[state_machine].message, *rapid_state[state_machine].timer);)
 
+      if ( rapid_state[state_machine].in_shot == true )                        // Remember the shot count when we go into
+      {                                                                        // rapid fire
+        rapid_count = shot_in;
+      }
+
       if ( *rapid_state[state_machine].timer == 0 )                            // Reached the end of the state machine
       {
         set_status_LED(LED_RAPID_OFF);                                         // Turn off the Lights
         set_LED_PWM_now(json_LED_PWM);                                         // Turn off the lights
 
-        i = shot_out;
-        while ( rapid_count != json_rapid_count )                              // Send incomplete as misses
+        while ( rapid_count < json_rapid_count )                               // Send incomplete as misses
         {
-          record[i].shot_time = 0;                                             // Fake the time
-          send_miss(&record[i], i);
-          i = (i + 1) % SHOT_SPACE;
-          rapid_count++;
+          record[rapid_count].shot_time = 0;                                   // Fake the time
+          send_miss(&record[rapid_count], i);
+          rapid_count = (rapid_count + 1) % SHOT_SPACE;
         }
 
         state_machine     = 0;                                                 // Go back to the beginning
@@ -714,12 +677,15 @@ void rapid_fire_task(void)
   }
 
   /*
-   * Remember if we are in a shot or not
+   * Set the IN_SHO if the target is ready
    */
-  run_state &= ~IN_SHOT;
   if ( rapid_state[state_machine].in_shot != 0 )
   {
     run_state |= IN_SHOT; // See if we are expecting a shot
+  }
+  else
+  {
+    run_state &= ~IN_SHOT;
   }
 
   /*
