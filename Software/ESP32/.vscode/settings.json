@@ -31,8 +31,7 @@
     "numeric": "c",
     "string_view": "c",
     "token.h": "c",
-    "cstdlib": "c",
-    "nvs_flash.h": "c"
+    "cstdlib": "c"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM4",

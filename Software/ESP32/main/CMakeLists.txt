@@ -1,5 +1,5 @@
 idf_component_register(SRCS  "main.c" 
-                    "freetarget.c"
+                    "freETarget.c"
                     "dac.c" 
                     "pcnt.c"
                     "diag_tools.c"
