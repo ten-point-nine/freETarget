@@ -452,37 +452,74 @@ namespace freETarget {
                         Directory.CreateDirectory(exportDirectory);
                     }
                 }
+
+
+
                 string sessionfilename = "freETargetSession_" + currentSession.user + "-" + currentSession.eventType.Name + "_" + currentSession.id + ".exp";
-
                 string sesFile;
-                if (!File.Exists(exportDirectory + sessionfilename)) {
-                    FileStream log = null;
-                    try {
-                        log = File.Create(exportDirectory + sessionfilename);
-                        sesFile = exportDirectory + sessionfilename;
-                    } catch (Exception ex) {
-                        Console.WriteLine(ex.Message);
-                        sesFile = null;
-                    } finally {
-                        log.Close();
-                    }
 
-                } else {
+                FileStream log = null;
+                try {
+                    log = File.Create(exportDirectory + sessionfilename);
                     sesFile = exportDirectory + sessionfilename;
+                } catch (Exception ex) {
+                    Console.WriteLine(ex.Message);
+                    sesFile = null;
+                } finally {
+                    log.Close();
                 }
 
                 try {
                     //Opens a new file stream which allows asynchronous reading and writing
-                    using (StreamWriter sw = new StreamWriter(new FileStream(sesFile, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))) {
+                    if (sesFile != null) {
+                        using (StreamWriter sw = new StreamWriter(new FileStream(sesFile, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))) {
 
-                        sw.WriteLine(sb.ToString());
-                        mainWindow.log("Session " + currentSession.id + " exported to " + sesFile);
-                        mainWindow.displayMessage("Session " + currentSession.id + " exported to " + sesFile, false);
+                            sw.WriteLine(sb.ToString());
+                            mainWindow.log("Session " + currentSession.id + " exported to " + sesFile);
+                            mainWindow.displayMessage("Session " + currentSession.id + " exported to " + sesFile, false);
 
+                        }
                     }
                 } catch (Exception ex) {
                     //oh well...
                     mainWindow.log("Error exporting session: " + currentSession.id + Environment.NewLine + ex.Message);
+                }
+
+
+
+                // CVS export
+                StringBuilder sb2 = new StringBuilder();
+                foreach (Shot shot in currentSession.Shots) {
+                    sb2.AppendLine(shot.count + "," + shot.timestamp.ToString("yyyy-MM-dd HH:mm:ss") + "," + shot.getX().ToString(CultureInfo.InvariantCulture) + "," + shot.getY().ToString(CultureInfo.InvariantCulture) + ","+shot.decimalScore.ToString(CultureInfo.InvariantCulture));
+                }
+                string sessionfilename2 = "freETargetSession_" + currentSession.user + "-" + currentSession.eventType.Name + "_" + currentSession.id + ".csv";
+                string sesFile2;
+
+                log = null;
+                try {
+                    log = File.Create(exportDirectory + sessionfilename2);
+                    sesFile2 = exportDirectory + sessionfilename2;
+                } catch (Exception ex) {
+                    Console.WriteLine(ex.Message);
+                    sesFile2 = null;
+                } finally {
+                    log.Close();
+                }
+
+                try {
+                    if (sesFile2 != null) {
+                        //Opens a new file stream which allows asynchronous reading and writing
+                        using (StreamWriter sw = new StreamWriter(new FileStream(sesFile2, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))) {
+
+                            sw.WriteLine(sb2.ToString());
+                            mainWindow.log("Session " + currentSession.id + " CSV exported to " + sesFile2);
+                            mainWindow.displayMessage("Session" + currentSession.id + " CSV exported to " + sesFile2, false);
+
+                        }
+                    }
+                } catch (Exception ex) {
+                    //oh well...
+                    mainWindow.log("Error CSV exporting session: " + currentSession.id + Environment.NewLine + ex.Message);
                 }
             }
         }
