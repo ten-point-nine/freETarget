@@ -32,6 +32,7 @@
  *  Variables
  */
 sensor_t s[4] = {
+  // Do not make const
     {0, {'n', "NORTH_LO", LED_NORTH_FAILED, 0x80}, {'N', "NORTH_HI", LED_NORTH_FAILED, 0x08}},
     {1, {'e', "EAST_LO", LED_EAST_FAILED, 0x40},   {'E', "EAST_HI", LED_EAST_FAILED, 0x04}  },
     {2, {'s', "SOUTH_LO", LED_SOUTH_FAILED, 0x20}, {'S', "SOUTH_HI", LED_SOUTH_FAILED, 0x02}},
@@ -537,11 +538,15 @@ void send_score(shot_record_t *shot,       //  record
 #endif
 
 #if ( S_TIMERS )
-  if ( json_token == TOKEN_NONE )
+  if ( (is_trace & DLT_SCORE) != 0 )
   {
-    SEND(sprintf(_xs, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d ", (int)s[N].count, (int)s[E].count, (int)s[S].count, (int)s[W].count);)
-    SEND(sprintf(_xs, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)shot->timer_count[N + 4], (int)shot->timer_count[E + 4],
-                 (int)shot->timer_count[S + 4], (int)shot->timer_count[W + 4]);)
+    if ( json_token == TOKEN_NONE )
+    {
+      SEND(sprintf(_xs, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d ", (int)shot->timer_count[N + 0], (int)shot->timer_count[E + 0],
+                   (int)shot->timer_count[S + 0], (int)shot->timer_count[W + 0]);)
+      SEND(sprintf(_xs, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)shot->timer_count[N + 4], (int)shot->timer_count[E + 4],
+                   (int)shot->timer_count[S + 4], (int)shot->timer_count[W + 4]);)
+    }
   }
 #endif
 
@@ -719,7 +724,7 @@ typedef struct
 
 #define LAST_BULL (-1000.0)
 #define D5_74     (74 / 2)  // Five bull air rifle is 74mm centre-centre
-new_target_t five_bull_air_rifle_74mm[] = {
+const new_target_t five_bull_air_rifle_74mm[] = {
     {-D5_74,    D5_74    },
     {D5_74,     D5_74    },
     {0,         0        },
@@ -729,7 +734,7 @@ new_target_t five_bull_air_rifle_74mm[] = {
 };
 
 #define D5_79 (79 / 2)      // Five bull air rifle is 79mm centre-centre
-new_target_t five_bull_air_rifle_79mm[] = {
+const new_target_t five_bull_air_rifle_79mm[] = {
     {-D5_79,    D5_79    },
     {D5_79,     D5_79    },
     {0,         0        },
@@ -740,7 +745,7 @@ new_target_t five_bull_air_rifle_79mm[] = {
 
 #define D12_H (191.0 / 2.0) // Twelve bull air rifle 95mm Horizontal
 #define D12_V (195.0 / 3.0) // Twelve bull air rifle 84mm Vertical
-new_target_t twelve_bull_air_rifle[] = {
+const new_target_t twelve_bull_air_rifle[] = {
     {-D12_H,    D12_V + D12_V / 2   },
     {0,         D12_V + D12_V / 2   },
     {D12_H,     D12_V + D12_V / 2   },
@@ -758,7 +763,7 @@ new_target_t twelve_bull_air_rifle[] = {
 
 #define O12_H (144.0 / 2.0) // Twelve bull air rifle Orion
 #define O12_V (190.0 / 3.0) // Twelve bull air rifle Orion
-new_target_t orion_bull_air_rifle[] = {
+const new_target_t orion_bull_air_rifle[] = {
     {-O12_H,    O12_V + O12_V / 2   },
     {0,         O12_V + O12_V / 2   },
     {O12_H,     O12_V + O12_V / 2   },
@@ -774,9 +779,9 @@ new_target_t orion_bull_air_rifle[] = {
     {LAST_BULL, LAST_BULL           }
 };
 
-//                           0  1  2  3              4                        5              6  7  8  9  10           11 12
-new_target_t *ptr_list[] = {0, 0, 0, 0, five_bull_air_rifle_74mm, five_bull_air_rifle_79mm, 0,
-                            0, 0, 0, 0, orion_bull_air_rifle,     twelve_bull_air_rifle};
+//                                0  1  2  3              4                        5              6  7  8  9  10           11 12
+const new_target_t *ptr_list[] = {0, 0, 0, 0, five_bull_air_rifle_74mm, five_bull_air_rifle_79mm, 0,
+                                  0, 0, 0, 0, orion_bull_air_rifle,     twelve_bull_air_rifle};
 
 static void remap_target(double *x, // Computed X location of shot (returned)
                          double *y  // Computed Y location of shot (returned)

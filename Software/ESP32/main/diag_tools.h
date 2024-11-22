@@ -23,6 +23,7 @@ bool do_dlt(unsigned int level);                          // Diagnostics Log and
 bool factory_test(void);                                  // Test the hardware in production
 void set_diag_LED(char *new_LEDs, unsigned int duration); // Display the LED failure code
 bool check_12V(void);                                     // Check the 12 volt supply
+void heartbeat(void);                                     // Send out regular status messages
 
 /*
  *  Definitions
@@ -96,17 +97,29 @@ bool check_12V(void);                                     // Check the 12 volt s
  * Tracing
  */
 #define DLT_NONE          0    // No DLT messages displayed
-#define DLT_CRITICAL      0x80 // Action failed and needs to be reported
-#define DLT_INFO          0x40 // Information which is always displayed
-#define DLT_APPLICATION   0x20 // Application level messages displayed (freeETarget.c compute_hit.c)
-#define DLT_COMMUNICATION 0x10 // Communications messages (wifi.c token.c serial_io.c)
-#define DLT_DIAG          0x08 // Hardware diagnostics messages displayed
-#define DLT_DEBUG         0x01 // Specific debug information
+#define DLT_CRITICAL      0x01 // Action failed and needs to be reported
+#define DLT_INFO          0x02 // Information which is always displayed
+#define DLT_APPLICATION   0x04 // Application level messages displayed (freeETarget.c compute_hit.c)
+#define DLT_COMMUNICATION 0x08 // Communications messages (wifi.c token.c serial_io.c)
+#define DLT_DIAG          0x10 // Hardware diagnostics messages displayed
+#define DLT_DEBUG         0x20 // Specific debug information
+#define DLT_SCORE         0x40 // Display extended score record
+#define DLT_HEARTBEAT     0x80 // Kick out the time to see if we are alive
+
 #define DLT(level, z)                                                                                                                      \
   if ( do_dlt(level) )                                                                                                                     \
   {                                                                                                                                        \
     z                                                                                                                                      \
   }
+
+typedef struct
+{
+  unsigned int dlt_mask; // ex DLT_CRITICAL
+  char        *dlt_text; // ex "DLT_CRITICAL"
+  char         dlt_id;   // ex C
+} dlt_name_t;            // Names and masks for DLT levels
+
+extern const dlt_name_t dlt_names[];
 
 /*
  *  Variables

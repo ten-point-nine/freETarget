@@ -14,7 +14,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"5.2.14 November 5, 2024\""
+#define SOFTWARE_VERSION "\"5.2.15 November 21, 2024\""
 #define _DONE_           "\r\nDone\r\n"
 
 #define REV_500   500    // ESP32
@@ -33,7 +33,8 @@
 #define IN_OPERATION 0x0002 // The software is operational
 #define IN_TEST      0x0004 // A self test has been selected (Suspend operation)
 #define IN_SLEEP     0x0008 // The unit has powered down
-#define IN_SHOT      0x0010 // The target is activly in a shot
+#define IN_SHOT      0x0010 // The target is actively in a shot
+#define IN_REDUCTION 0x0020 // The data is being reduced
 
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
 #define IF_IN(x)  if ( (run_state & (x)) != 0 )
@@ -88,51 +89,46 @@
 /*
  *  Types
  */
-struct sensor_ID
+typedef struct sensor_ID
 {
-  char         short_name; // Short name, ex 'N'
-  char        *long_name;  // Long name, ex "NORTH_HI"
-  char        *diag_LED;   // LEDs to be set if a fault occurs
-  unsigned int run_mask;   // What bit is set in the RUN latch
-};
+  char         short_name;               // Short name, ex 'N'
+  char        *long_name;                // Long name, ex "NORTH_HI"
+  char        *diag_LED;                 // LEDs to be set if a fault occurs
+  unsigned int run_mask;                 // What bit is set in the RUN latch
+} sensor_ID_t;
 
-typedef struct sensor_ID sensor_ID_t;
-
-struct sensor
+typedef struct
 {
-  unsigned int index;                     // Which sensor is this one
-  sensor_ID_t  low_sense;                 // Information about the low trip point
-  sensor_ID_t  high_sense;                // Information about the high trip point
-  bool         is_valid;                  // TRUE if the sensor contains a valid time
-  double       angle_A;                   // Angle to be computed
-  double       diagonal;                  // Diagonal angle to next sensor (45')
-  double       x;                         // Sensor Location (X us)
-  double       y;                         // Sensor Location (Y us)
-  double       count;                     // Working timer value
-  double       a, b, c;                   // Working dimensions
-  double       xs;                        // Computed X shot value
-  double       ys;                        // Computed Y shot value
-};
+  unsigned int index;                    // Which sensor is this one
+  sensor_ID_t  low_sense;                // Information about the low trip point
+  sensor_ID_t  high_sense;               // Information about the high trip point
+  bool         is_valid;                 // TRUE if the sensor contains a valid time
+  double       angle_A;                  // Angle to be computed
+  double       diagonal;                 // Diagonal angle to next sensor (45')
+  double       x;                        // Sensor Location (X us)
+  double       y;                        // Sensor Location (Y us)
+  double       count;                    // Working timer value
+  double       a, b, c;                  // Working dimensions
+  double       xs;                       // Computed X shot value
+  double       ys;                       // Computed Y shot value
+} sensor_t;
 
-typedef struct sensor sensor_t;           // Sensor information
+typedef struct
+{
+  bool          is_valid;                // This record contains valid information
+  double        x;                       // X location of shot as computed
+  double        y;                       // Y location of shot
+  double        xs;                      // X location of shot as scored
+  double        ys;                      // Y location of shot
+  int           timer_count[8];          // Array of timer values 4 in hardware and 4 in software
+  unsigned int  face_strike;             // Recording of face strike
+  unsigned int  sensor_status;           // Triggering register
+  unsigned long shot_time;               // Shot time since start of after tabata start
+} shot_record_t;
+
+extern shot_record_t record[SHOT_SPACE]; // Array of shot records
 
 typedef unsigned char byte_t;
-
-struct shot_r
-{
-  bool          is_valid;                 // This record contains valid information
-  double        x;                        // X location of shot as computed
-  double        y;                        // Y location of shot
-  double        xs;                       // X location of shot as scored
-  double        ys;                       // Y location of shot
-  int           timer_count[8];           // Array of timer values 4 in hardware and 4 in software
-  unsigned int  face_strike;              // Recording of face strike
-  unsigned int  sensor_status;            // Triggering register
-  unsigned long shot_time;                // Shot time since start of after tabata start
-};
-
-typedef struct shot_r shot_record_t;
-extern shot_record_t  record[SHOT_SPACE]; // Array of shot records
 
 /*
  *  Global Variables

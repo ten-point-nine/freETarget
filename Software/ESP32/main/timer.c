@@ -23,32 +23,40 @@
 #include "gpio_types.h"
 #include "json.h"
 #include "serial_io.h"
+#include "mfs.h"
+#include "token.h"
+#include "timer.h"
 
 /*
  * Definitions
  */
-#define FREQUENCY          1000ul     // 1000 Hz
-#define N_TIMERS           32         // Keep space for 32 timers
-#define PORT_STATE_IDLE    0          // There are no sensor inputs
-#define PORT_STATE_WAIT    1          // Some sensor inputs are present
-#define PORT_STATE_TIMEOUT 2          // Wait for the ringing to stop
+#define FREQUENCY 1000ul                 // 1000 Hz
+#define N_TIMERS  32                     // Keep space for 32 timers
 
-#define MAX_WAIT_TIME 10              // Wait up to 10 ms for the input to arrive
-#define MAX_RING_TIME 50              // Wait 50 ms for the ringing to stop
+#define MAX_WAIT_TIME 10                 // Wait up to 10 ms for the input to arrive
+#define MAX_RING_TIME 50                 // Wait 50 ms for the ringing to stop
 
-#define TICK_10ms   1                 // vTaskDelay in 10 ms
-#define BAND_100ms  (TICK_10ms * 10)  // vTaskDelay in 100 ms
-#define BAND_250ms  (TICK_10ms * 25)  // vTaskDelay in 250 ms
-#define BAND_500ms  (TICK_10ms * 50)  // vTaskDelay in 500 ms
-#define BAND_1000ms (TICK_10ms * 100) // vTaskDelay in 1000 ms
+#define TICK_10ms   1                    // vTaskDelay in 10 ms
+#define BAND_100ms  (TICK_10ms * 10)     // vTaskDelay in 100 ms
+#define BAND_250ms  (TICK_10ms * 25)     // vTaskDelay in 250 ms
+#define BAND_500ms  (TICK_10ms * 50)     // vTaskDelay in 500 ms
+#define BAND_1000ms (TICK_10ms * 100)    // vTaskDelay in 1000 ms
+#define BAND_60s    ((BAND_1000ms) * 60) // vTaskDelay in 1 minute
 
+typedef enum
+{
+  PORT_STATE_IDLE = 0,                   // There are no sensor inputs
+  PORT_STATE_WAIT,                       // Some sensor inputs are present
+  PORT_STATE_TIMEOUT                     // Wait for the ringing to stop
+} state;
 /*
  * Local Variables
  */
 static volatile unsigned long *timers[N_TIMERS]; // Active timer list
-static unsigned int            isr_state;        // What sensor state are we in
 static volatile unsigned long  shot_timer;       // Wait for the sound to hit all sensors
 volatile unsigned long         ring_timer;       // Let the ring on the backstop end
+
+static state isr_state;                          // What sensor state are we in
 
 /*
  *  Function Prototypes
@@ -74,16 +82,11 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args);
  * system
  *
  *-----------------------------------------------------*/
-#include "freETarget.h"
-#include "timer.h"
-#include "mfs.h"
-#include "token.h"
-
 #define TIMER_DIVIDER (16)                   //  Hardware timer clock divider
 #define TIMER_SCALE   (1000 / TIMER_DIVIDER) // convert counter value to seconds
 #define ONE_MS        (80 * TIMER_SCALE)     // 1 ms timer interrupt
 
-timer_config_t config = {
+const timer_config_t config = {
     .clk_src     = RMT_CLK_SRC_APB,
     .divider     = TIMER_DIVIDER,
     .counter_dir = TIMER_COUNT_UP,
@@ -268,8 +271,9 @@ void freeETarget_timers(void *pvParameters)
  *-----------------------------------------------------*/
 void freeETarget_synchronous(void *pvParameters)
 {
-  unsigned int cycle_count = 0;
-  unsigned int toggle      = 0;
+  unsigned int        cycle_count   = 0;
+  unsigned int        toggle        = 0;
+  static unsigned int old_run_state = 0;
 
   DLT(DLT_INFO, SEND(sprintf(_xs, "freeETarget_synchronous()");))
 
@@ -318,6 +322,16 @@ void freeETarget_synchronous(void *pvParameters)
       check_12V();
       send_keep_alive();
     }
+
+    /*
+     * 60 second band
+     */
+    if ( ((cycle_count % BAND_60s) == 0)         // Sixty second timer
+         || ((run_state ^ old_run_state) != 0) ) // or state change
+    {
+      heartbeat();
+    }
+    old_run_state = run_state;                   // Remember the state
 
     /*
      * All done, prepare for the next cycle

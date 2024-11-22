@@ -565,7 +565,7 @@ void show_echo(void)
   SEND(sprintf(_xs, "\n\rStatus\r\n");)                                                                   // Blank Line
   SEND(sprintf(_xs, "\"TRACE\":             %d, \n\r", is_trace);)                                        // TRUE to if trace is enabled
   SEND(sprintf(_xs, "\"RUN_STATE\":         %d, \n\r", run_state);)                                       // TRUE to if trace is enabled
-  SEND(sprintf(_xs, "\"RUNNING_MINUTES\":  %10.6f, \n\r", esp_timer_get_time() / 1000000.0 / 60.0);)      // On Time
+  SEND(sprintf(_xs, "\"RUNNING_MINUTES\": %0.2f, \n\r", esp_timer_get_time() / 1000000.0 / 60.0);)        // On Time
   SEND(sprintf(_xs, "\"TIME_TO_SLEEP\":     %4.2f, \n\r", (float)power_save / (float)(ONE_SECOND * 60));) // How long until we sleep
   SEND(sprintf(_xs, "\"TEMPERATURE\":       %4.2f, \n\r", temperature_C());)                              // Temperature in degrees C
   SEND(sprintf(_xs, "\"RELATIVE_HUMIDITY\": %4.2f, \n\r", humidity_RH());)
@@ -590,14 +590,14 @@ void show_echo(void)
 
   if ( json_token == TOKEN_NONE )
   {
-    SEND(sprintf(_xs, "\"TOKEN_RING\":     %d, \n\r", my_ring);)                       // My token ring address
-    SEND(sprintf(_xs, "\"TOKEN_OWNER\":    %d, \n\r", whos_ring);)                     // Who owns the token ring
+    SEND(sprintf(_xs, "\"TOKEN_RING\":       %d, \n\r", my_ring);)                      // My token ring address
+    SEND(sprintf(_xs, "\"TOKEN_OWNER\":      %d, \n\r", whos_ring);)                    // Who owns the token ring
   }
 
-  SEND(sprintf(_xs, "\"VERSION\":          %s, \n\r", SOFTWARE_VERSION);)              // Current software version
+  SEND(sprintf(_xs, "\"VERSION\":          %s, \n\r", SOFTWARE_VERSION);)               // Current software version
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
-  SEND(sprintf(_xs, "\"PS_VERSION\":       %d, \n\r", j);)                             // Current persistent storage version
-  SEND(sprintf(_xs, "\"BD_REV\":           %4.2f \n\r", (float)(revision()) / 100.0);) // Current board versoin
+  SEND(sprintf(_xs, "\"PS_VERSION\":        %d, \n\r", j);)                             // Current persistent storage version
+  SEND(sprintf(_xs, "\"BD_REV\":            %4.2f \n\r", (float)(revision()) / 100.0);) // Current board versoin
   SEND(sprintf(_xs, "}\r\n");)
 
   /*
@@ -654,41 +654,37 @@ static void show_names(int v)
  *
  *-----------------------------------------------------
  *
- * Uset the trace to set the DIP switch
+ * XOR the current trace level with the new input from
+ * the user.
+ *
+ * XOR allows the user to turn settings off without
+ * affecting the other settings.
  *
  *-----------------------------------------------------*/
-static void set_trace(int trace // Trace on or off
-)
-{
-  trace |= (DLT_CRITICAL);      // Info and critical is always enabled
 
-  if ( trace & DLT_CRITICAL )
+static void set_trace(int trace)         // Trace mask on or off
+{
+  unsigned int i;
+
+  is_trace ^= trace;                     // XOR the input
+  is_trace |= (DLT_CRITICAL | DLT_INFO); // Info and critical is always enabled
+
+  i = 0;
+  while ( dlt_names[i].dlt_text != 0 )   // Print the help
   {
-    SEND(sprintf(_xs, "\r\n%03d DLT CRITICAL", DLT_CRITICAL);)
-  }
-  if ( trace & DLT_INFO )
-  {
-    SEND(sprintf(_xs, "\r\r%03d DLT INFO", DLT_INFO);)
-  }
-  if ( trace & DLT_APPLICATION )
-  {
-    SEND(sprintf(_xs, "\r\n%03d DLT APPLICATON", DLT_APPLICATION);)
-  }
-  if ( trace & DLT_COMMUNICATION )
-  {
-    SEND(sprintf(_xs, "\r\n%03d DLT COMMUNICATION", DLT_COMMUNICATION);)
-  }
-  if ( trace & DLT_DIAG )
-  {
-    SEND(sprintf(_xs, "\r\n%03d DLT DIAG", DLT_DIAG);)
-  }
-  if ( trace & DLT_DEBUG )
-  {
-    SEND(sprintf(_xs, "\r\n%03d DLT DEBUG", DLT_DEBUG);)
+    if ( (is_trace & dlt_names[i].dlt_mask) != 0 )
+    {
+      SEND(sprintf(_xs, "\r\n+ ");)
+    }
+    else
+    {
+      SEND(sprintf(_xs, "\r\n  ");)
+    }
+    SEND(sprintf(_xs, "%03d %s", dlt_names[i].dlt_mask, dlt_names[i].dlt_text);)
+    i++;
   }
 
   SEND(sprintf(_xs, "\r\n");)
 
-  is_trace = trace;
   return;
 }

@@ -1,7 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "freeETarget",
-    "project_version":    "v4.8.6-82-g72492f1-dirty",
+    "project_version":    "Version-5.2.14-Rapid-Fire-4-ge9b70ac-dirty",
     "project_path":       "C:/Users/allan/Documents/freETarget/Software/ESP32",
     "idf_path":           "C:/Users/allan/esp/v5.3.1/esp-idf",
     "build_dir":          "C:/Users/allan/Documents/freETarget/Software/ESP32/build",
@@ -11,7 +11,7 @@
     "app_elf":            "freeETarget.elf",
     "app_bin":            "freeETarget.bin",
     "build_type":         "flash_app",
-    "git_revision":       "v5.3.1",
+    "git_revision":       "v5.3.1-dirty",
     "target":             "esp32s3",
     "rev":                "",
     "min_rev":            "0",

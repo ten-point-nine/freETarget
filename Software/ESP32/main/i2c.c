@@ -27,6 +27,7 @@
  * Variables
  */
 i2c_config_t i2c_configuration = {
+    // Do not make const
     .mode             = I2C_MODE_MASTER,
     .sda_pullup_en    = GPIO_PULLUP_ENABLE,
     .scl_pullup_en    = GPIO_PULLUP_ENABLE,

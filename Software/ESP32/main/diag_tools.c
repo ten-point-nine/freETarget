@@ -17,6 +17,7 @@
 #include "serial_io.h"
 #include "stdbool.h"
 #include "stdio.h"
+#include "string.h"
 
 #include "freETarget.h"
 #include "WiFi.h"
@@ -36,7 +37,7 @@ extern volatile unsigned long paper_time;
 static void show_test_help(void);
 
 /*
- * JSON message typedefs
+ * Diagnostic typedefs
  */
 typedef struct
 {
@@ -77,7 +78,18 @@ static const self_test_t test_list[] = {
     {"Interrupt target test",             &interrupt_target_test },
     {"",                                  0                      }
 };
-// clang-format on
+
+const dlt_name_t dlt_names[] = {
+    {DLT_CRITICAL,      "DLT_CRITICAL",      'E'}, // Prevents target from working
+    {DLT_INFO,          "DLT_INFO",          'I'}, // Running information
+    {DLT_APPLICATION,   "DLT_APPLICATION",   'A'}, // FreeTarget.c and compute.c logging
+    {DLT_COMMUNICATION, "DLT_COMMUNICATION", 'C'}, // WiFi and other communications information
+    {DLT_DIAG,          "DLT_DIAG",          'H'}, // Hardware diagnostics
+    {DLT_DEBUG,         "DLT_DEBUG",         'D'}, // Software debugging information
+    {DLT_SCORE,         "DLT_SCORE",         'S'}, // Display timing in the score message
+    {DLT_HEARTBEAT,     "DLT_HEARTBEAT",     'H'}, // Heartbeat tick
+    {0,                 0,                   0  }
+};
 
 /*-----------------------------------------------------
  *
@@ -604,8 +616,13 @@ void show_sensor_status(unsigned int sensor_status)
   if ( (sensor_status & 0x0f) == 0x0f )
   {
     SEND(sprintf(_xs, " PASS");)
-    vTaskDelay(ONE_SECOND); // Wait for click to go away
   }
+  else
+  {
+    SEND(sprintf(_xs, " FAIL");)
+  }
+
+  vTaskDelay(ONE_SECOND); // Wait for click to go away
 
   /*
    * All done, return
@@ -671,46 +688,75 @@ void show_sensor_fault(unsigned int sensor_status)
  *--------------------------------------------------------------*/
 bool do_dlt(unsigned int level)
 {
-  char dlt_id = 'I';
+  char         dlt_id = 'I';
+  unsigned int i;
 
+  /*
+   * Return if the current level is not enabled in is_trace
+   */
   if ( (level & (is_trace | DLT_CRITICAL | DLT_INFO)) == 0 ) // DLT_CRITICAL are always set in is_trace
   {
     return false;                                            // Send out if the trace is higher than the level
   }
 
-  if ( level & DLT_CRITICAL )
+                                                             /*
+                                                              *  Loop through and see what trace level has been enabled
+                                                              */
+  i = 0;
+  while ( dlt_names[i].dlt_text != 0 )          // All the DLT levels
   {
-    dlt_id = 'E';                                            // Red
+    if ( (dlt_names[i].dlt_mask & level) != 0 ) // This level is active
+    {
+      dlt_id = dlt_names[i].dlt_id;             // Put the DLT_ID at the start of the message
+      break;
+    }
+    i++;
   }
 
-  if ( level & DLT_INFO )
-  {
-    dlt_id = 'I';                                            // Green
-  }
-
-  if ( level & DLT_APPLICATION )
-  {
-    dlt_id = 'W';                                            // Yellow
-  }
-
-  if ( level & DLT_DEBUG )
-  {
-    dlt_id = 'D';                                            // White - Debug
-  }
-
-  if ( level & DLT_DIAG )
-  {
-    dlt_id = 'H';                                            // White - Hardware
-  }
-
-  if ( level & DLT_COMMUNICATION )                           // White - Communications
-  {
-    dlt_id = 'C';
-  }
-
-  SEND(sprintf(_xs, "\r\n%c (%d) ", dlt_id, (int)(esp_timer_get_time() / 1000));)
+  /*
+   *   Print out the message
+   */
+  SEND(sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, ((float)(esp_timer_get_time()) / 1000000.0));)
 
   return true;
+}
+/*----------------------------------------------------------------
+ *
+ * @function: heartbeat
+ *
+ * @brief:    Periodically send out the internal status
+ *
+ * @return:   Nothing
+ *
+ *----------------------------------------------------------------
+ *
+ * This function provides a simple output to indicate the current
+ * running mode.
+ *
+ * It is turned on by enabling DLT_HEARTBEAT in the trace
+ *
+ *--------------------------------------------------------------*/
+static char *run_state_text[] = {"IN_STARTUP", "IN_OPERATION", "IN_TEST", "IN_SLEEP", "IN_SHOT", "IN_REDUCTION", 0};
+void         heartbeat(void)
+{
+  char s[128];
+  int  i;
+
+  i    = 0;
+  s[0] = 0;
+  while ( run_state_text[i] != 0 )
+  {
+    if ( (run_state & (1 << i)) != 0 )
+    {
+      strcat(s, ", ");
+      strcat(s, run_state_text[i]);
+    }
+    i++;
+  }
+
+  DLT(DLT_HEARTBEAT, SEND(sprintf(_xs, "HB 60s.  run_state: 0X%02X%s", run_state, s);))
+
+  return;
 }
 
 /*----------------------------------------------------------------

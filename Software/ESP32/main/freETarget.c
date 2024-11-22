@@ -396,7 +396,9 @@ unsigned int wait(void)
 unsigned int reduce(void)
 {
   static unsigned int paper_shot = 0; // Count of reduced shots
+  float               radius;
 
+  run_state |= IN_REDUCTION;
   /*
    * Loop and process the shots.  Possibly more than one shot
    */
@@ -419,28 +421,33 @@ unsigned int reduce(void)
       /*
        *  Advance the paper
        */
-      if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )                                                     // Has the witness paper been enabled?
+      if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )                           // Has the witness paper been enabled?
       {
-        if ( ((json_paper_eco == 0)                                                                  // PAPER_ECO turned off
-              || (sqrt(sq(record[shot_out].xs) + sq(record[shot_out].ys)) < (json_paper_eco / 2))) ) // Inside the black (radius)
+        radius = sqrt(sq(record[shot_out].xs) + sq(record[shot_out].ys));
+        if ( ((json_paper_eco == 0)                                        // PAPER_ECO turned off
+              || radius < (json_paper_eco / 2)) )                          // Inside the black (radius)
         {
           paper_shot++;
-          DLT(DLT_DEBUG, SEND(sprintf(_xs, "Good shot: %d/%d", paper_shot, json_paper_shot);))
+          DLT(DLT_DEBUG, SEND(sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", radius, json_paper_eco / 2, paper_shot, json_paper_shot);))
           if ( (json_paper_shot != 0) && (paper_shot >= json_paper_shot) ) // Or we have reached the required number opf hits?
           {
             paper_start();                                                 // Roll the paper
             paper_shot = 0;                                                // And start over
           }
         }
+        else
+        {
+          DLT(DLT_DEBUG, SEND(sprintf(_xs, "Radius: %4.2f/%d bad shot: %d/%d", radius, json_paper_eco / 2, paper_shot, json_paper_shot);))
+        }
       }
     }
-    else                                                                   // We have a miss
+    else                                      // We have a miss
     {
       DLT(DLT_APPLICATION, SEND(sprintf(_xs, "Shot miss...\r\n");))
       set_status_LED(LED_MISS);
-      send_miss(&record[shot_out], shot_out);                              // Show a miss
+      send_miss(&record[shot_out], shot_out); // Show a miss
     }
-    shot_out = (shot_out + 1) % SHOT_SPACE;                                // Increment to the next shot
+    shot_out = (shot_out + 1) % SHOT_SPACE;   // Increment to the next shot
   }
 
   /*
@@ -451,6 +458,11 @@ unsigned int reduce(void)
     DLT(DLT_DEBUG, SEND(sprintf(_xs, "ring_timer: %ld", ring_timer);))
     vTaskDelay(10);
   }
+
+                            /*
+                             * Finished reduction and going back into the shot
+                             */
+  run_state &= ~IN_REDUCTION;
 
   if ( tabata_timer == 0 )
   {
