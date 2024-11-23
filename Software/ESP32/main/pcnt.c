@@ -72,6 +72,10 @@ static bool west_hi_pcnt_isr_callback(void *args);
  * Channel B Count disabled
  * Channel B Control disabled
  *
+ * This function is called for every PCNT register used.  On the first call
+ * the function will install the interrupt handler.  Subsequent calle will
+ * will not install the handler (is_first)
+ *
  **************************************************************************/
 void pcnt_init(int unit,    // What unit to use
                int run,     // GPIO associated with PCNT control
@@ -83,9 +87,9 @@ void pcnt_init(int unit,    // What unit to use
   /*
    * Make sure everything is turned off
    */
-  gpio_set_level(STOP_N, 0);
-  gpio_set_level(STOP_N, 1);
-  gpio_set_level(CLOCK_START, 0);
+  gpio_set_level(CLOCK_START, OSC_OFF); // Turn off the oscillator
+  gpio_set_level(STOP_N, RUN_OFF);
+  gpio_set_level(STOP_N, RUN_GO);
 
   /*
    * Setup the unit
@@ -130,6 +134,10 @@ void pcnt_init(int unit,    // What unit to use
   if ( is_first )
   {
     gpio_install_isr_service(0);                                          // Per GPIO interrupt handler
+    gpio_intr_disable(RUN_NORTH_HI);                                      // Turn on the interrupts
+    gpio_intr_disable(RUN_EAST_HI);
+    gpio_intr_disable(RUN_SOUTH_HI);
+    gpio_intr_disable(RUN_WEST_HI);
     gpio_set_intr_type(RUN_NORTH_HI, GPIO_INTR_POSEDGE);                  // RUN_XXX_HI interrupt on
     gpio_set_intr_type(RUN_EAST_HI, GPIO_INTR_POSEDGE);                   // rising edge
     gpio_set_intr_type(RUN_SOUTH_HI, GPIO_INTR_POSEDGE);

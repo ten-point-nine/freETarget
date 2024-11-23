@@ -118,17 +118,14 @@ unsigned int is_running(void)
  *-----------------------------------------------------*/
 void arm_timers(void)
 {
-  gpio_set_level(CLOCK_START, 0);
-  gpio_set_level(STOP_N, 0);            // Reset the timer
-  gpio_set_level(OSC_CONTROL, OSC_OFF); // Turn off the oscillator
-  pcnt_clear();
+  gpio_set_level(CLOCK_START, RUN_OFF); // Force RUN to be OFF
   gpio_intr_enable(RUN_NORTH_HI);       // Turn on the interrupts
   gpio_intr_enable(RUN_EAST_HI);
   gpio_intr_enable(RUN_SOUTH_HI);
   gpio_intr_enable(RUN_WEST_HI);
   gpio_set_level(OSC_CONTROL, OSC_ON);  // Turn on the oscillator
 
-  gpio_set_level(STOP_N, 1);            // Then enable it
+  gpio_set_level(STOP_N, RUN_GO);       // Then enable it
   return;
 }
 
@@ -138,7 +135,7 @@ void arm_timers(void)
 void stop_timers(void)
 {
   gpio_set_level(OSC_CONTROL, OSC_OFF); // Turn off the oscillator
-  gpio_set_level(STOP_N, 0);            // Clear the flip flop
+  gpio_set_level(STOP_N, RUN_OFF);      // Clear the flip flop
   return;
 }
 
