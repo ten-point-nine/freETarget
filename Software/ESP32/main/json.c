@@ -34,78 +34,78 @@ static void handle_json(void); // Breakdown the JSON and execute it
  */
 static char input_JSON[256];
 
-int           json_calibre_x10;           // Pellet Calibre
-int           json_dip_switch;            // DIP switch overwritten by JSON message
-double        json_sensor_dia = DIAMETER; // Sensor daiamter overwitten by JSON message
-int           json_echo;                  // Test String
-double        json_d_echo;                // Test String
-int           json_north_x;               // North Adjustment
+int    json_calibre_x10;           // Pellet Calibre
+int    json_dip_switch;            // DIP switch overwritten by JSON message
+double json_sensor_dia = DIAMETER; // Sensor daiamter overwitten by JSON message
+int    json_echo;                  // Test String
+// double        json_d_echo;                // Test String
+int           json_north_x;              // North Adjustment
 int           json_north_y;
-int           json_east_x;                // East Adjustment
+int           json_east_x;               // East Adjustment
 int           json_east_y;
-int           json_south_x;               // South Adjustment
+int           json_south_x;              // South Adjustment
 int           json_south_y;
-int           json_west_x;                // WestAdjustment
+int           json_west_x;               // WestAdjustment
 int           json_west_y;
-int           json_name_id;               // Name identifier
-int           json_LED_PWM;               // LED control value
-int           json_power_save;            // Power down time
-int           json_send_miss;             // Send a miss message
-int           json_serial_number;         // Electonic serial number
-int           json_step_count;            // Number of steps ouput to motor
-int           json_step_ramp;             // Step increment when starting
-int           json_step_start;            // Value to start motor moving
-int           json_step_time;             // Duration of each step in ms
-int           json_multifunction;         // Multifunction switch operation
-int           json_multifunction2;        // Multifunction Switch 2
-int           json_z_offset;              // Distance between paper and sensor plane in 0.1mm
-int           json_paper_eco;             // Do not advance paper if outside of the black
-int           json_target_type;           // Modify target type (0 == single bull)
-int           json_tabata_enable;         // Tabata feature enabled
-int           json_tabata_on;             // Tabata ON timer
-int           json_tabata_rest;           // Tabata resting timer
-unsigned long json_rapid_on;              // Rapid Fire ON timer
-int           json_vset_PWM;              // Starting PWM value
-double        json_vset;                  // Desired VREF setting
-int           json_follow_through;        // Follow through delay
-int           json_keep_alive;            // Keep alive period
-int           json_sensor_angle;          // Angle sensors are rotated through
-int           json_paper_time = 0;        // Time paper motor is applied
-int           json_tabata_warn_on;        // Tabata warning time light on
-int           json_tabata_warn_off;       // Tabata warning time to shot
-int           json_face_strike;           // Number of cycles to accept a strike
-int           json_wifi_channel;          // Wifi channel
-int           json_rapid_count;           // Number of shots expected in string
-int           json_rapid_enable;          // Set to TRUE if the rapid fire event is enabled
-int           json_rapid_time;            // When will the rapid fire event end?
-int           json_rapid_wait;            // Delay applied to rapid start
-char          json_wifi_ssid[SSID_SIZE];  // Stored value of SSID
-char          json_wifi_pwd[PWD_SIZE];    // Stored value of password
-int           json_wifi_hidden;           // The SSID FET- is hidden
-int           json_wifi_dhcp;             // The ESP is a DHCP server
-int           json_min_ring_time;         // Time to wait for ringing to stop
-int           json_token;                 // Token ring state
-double        json_vref_lo;               // Low Voltage DAC setting
-double        json_vref_hi;               // High Voltage DAC setting
-int           json_pcnt_latency;          // pcnt interrupt latency
-int           json_mfs_hold_12;           // Hold A and B
-int           json_mfs_tap_2;             // Tap B
-int           json_mfs_tap_1;             // Tap A
-int           json_mfs_hold_2;            // Hold B
-int           json_mfs_hold_1;            // Hold A
-int           json_mfs_hold_d;            // Hold D
-int           json_mfs_hold_c;            // Hold C
-int           json_mfs_select_cd;         // Select C and D operation
-int           json_wifi_reset_first;      // Reset the target on first connection
-char          json_wifi_ip[IP_SIZE];      // User defined IP address
-int           json_paper_shot;            // How many shots before advancing paper
-int           json_aux_port_enable;       // Enable the AUX port only if there is Aux hardware installed
+int           json_name_id;              // Name identifier
+int           json_LED_PWM;              // LED control value
+int           json_power_save;           // Power down time
+int           json_send_miss;            // Send a miss message
+int           json_serial_number;        // Electonic serial number
+int           json_step_count;           // Number of steps ouput to motor
+int           json_step_ramp;            // Step increment when starting
+int           json_step_start;           // Value to start motor moving
+int           json_step_time;            // Duration of each step in ms
+int           json_multifunction;        // Multifunction switch operation
+int           json_multifunction2;       // Multifunction Switch 2
+int           json_z_offset;             // Distance between paper and sensor plane in 0.1mm
+int           json_paper_eco;            // Do not advance paper if outside of the black
+int           json_target_type;          // Modify target type (0 == single bull)
+int           json_tabata_enable;        // Tabata feature enabled
+int           json_tabata_on;            // Tabata ON timer
+int           json_tabata_rest;          // Tabata resting timer
+unsigned long json_rapid_on;             // Rapid Fire ON timer
+int           json_vset_PWM;             // Starting PWM value
+double        json_vset;                 // Desired VREF setting
+int           json_follow_through;       // Follow through delay
+int           json_keep_alive;           // Keep alive period
+int           json_sensor_angle;         // Angle sensors are rotated through
+int           json_paper_time = 0;       // Time paper motor is applied
+int           json_tabata_warn_on;       // Tabata warning time light on
+int           json_tabata_warn_off;      // Tabata warning time to shot
+int           json_face_strike;          // Number of cycles to accept a strike
+int           json_wifi_channel;         // Wifi channel
+int           json_rapid_count;          // Number of shots expected in string
+int           json_rapid_enable;         // Set to TRUE if the rapid fire event is enabled
+int           json_rapid_time;           // When will the rapid fire event end?
+int           json_rapid_wait;           // Delay applied to rapid start
+char          json_wifi_ssid[SSID_SIZE]; // Stored value of SSID
+char          json_wifi_pwd[PWD_SIZE];   // Stored value of password
+int           json_wifi_hidden;          // The SSID FET- is hidden
+int           json_wifi_dhcp;            // The ESP is a DHCP server
+int           json_min_ring_time;        // Time to wait for ringing to stop
+int           json_token;                // Token ring state
+double        json_vref_lo;              // Low Voltage DAC setting
+double        json_vref_hi;              // High Voltage DAC setting
+int           json_pcnt_latency;         // pcnt interrupt latency
+int           json_mfs_hold_12;          // Hold A and B
+int           json_mfs_tap_2;            // Tap B
+int           json_mfs_tap_1;            // Tap A
+int           json_mfs_hold_2;           // Hold B
+int           json_mfs_hold_1;           // Hold A
+int           json_mfs_hold_d;           // Hold D
+int           json_mfs_hold_c;           // Hold C
+int           json_mfs_select_cd;        // Select C and D operation
+int           json_wifi_reset_first;     // Reset the target on first connection
+char          json_wifi_ip[IP_SIZE];     // User defined IP address
+int           json_paper_shot;           // How many shots before advancing paper
+int           json_aux_port_enable;      // Enable the AUX port only if there is Aux hardware installed
 
-void        show_echo(void);              // Display the current settings
-static void show_test(int v);             // Execute the self test once
+void        show_echo(void);             // Display the current settings
+static void show_test(int v);            // Execute the self test once
 static void show_names(int v);
-static void set_trace(int v);             // Set the trace on and off
-static void diag_delay(int x);            // Insert a delay
+static void set_trace(int v);            // Set the trace on and off
+static void diag_delay(int x);           // Insert a delay
 
 const json_message_t JSON[] = {
     //    token               value stored in RAM   double stored in RAM    convert    service fcn()     NONVOL location      Initial Value
@@ -565,7 +565,7 @@ void show_echo(void)
   SEND(sprintf(_xs, "\n\rStatus\r\n");)                                                                   // Blank Line
   SEND(sprintf(_xs, "\"TRACE\":             %d, \n\r", is_trace);)                                        // TRUE to if trace is enabled
   SEND(sprintf(_xs, "\"RUN_STATE\":         %d, \n\r", run_state);)                                       // TRUE to if trace is enabled
-  SEND(sprintf(_xs, "\"RUNNING_MINUTES\": %0.2f, \n\r", esp_timer_get_time() / 1000000.0 / 60.0);)        // On Time
+  SEND(sprintf(_xs, "\"RUNNING_MINUTES\":   %0.2f, \n\r", esp_timer_get_time() / 1000000.0 / 60.0);)      // On Time
   SEND(sprintf(_xs, "\"TIME_TO_SLEEP\":     %4.2f, \n\r", (float)power_save / (float)(ONE_SECOND * 60));) // How long until we sleep
   SEND(sprintf(_xs, "\"TEMPERATURE\":       %4.2f, \n\r", temperature_C());)                              // Temperature in degrees C
   SEND(sprintf(_xs, "\"RELATIVE_HUMIDITY\": %4.2f, \n\r", humidity_RH());)
@@ -594,7 +594,7 @@ void show_echo(void)
     SEND(sprintf(_xs, "\"TOKEN_OWNER\":      %d, \n\r", whos_ring);)                    // Who owns the token ring
   }
 
-  SEND(sprintf(_xs, "\"VERSION\":          %s, \n\r", SOFTWARE_VERSION);)               // Current software version
+  SEND(sprintf(_xs, "\"VERSION\":           %s, \n\r", SOFTWARE_VERSION);)              // Current software version
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
   SEND(sprintf(_xs, "\"PS_VERSION\":        %d, \n\r", j);)                             // Current persistent storage version
   SEND(sprintf(_xs, "\"BD_REV\":            %4.2f \n\r", (float)(revision()) / 100.0);) // Current board versoin

@@ -277,11 +277,9 @@ void gpio_init(void)
           break;
 
         case PCNT:
-#if ( 1 )
           pcnt_init(((const PCNT_struct_t *)(gpio_table[i].gpio_uses))->pcnt_unit,
                     ((const PCNT_struct_t *)(gpio_table[i].gpio_uses))->pcnt_control,
                     ((const PCNT_struct_t *)(gpio_table[i].gpio_uses))->pcnt_signal);
-#endif
           break;
 
         case LED_STRIP:

@@ -144,9 +144,9 @@ void stop_timers(void)
  */
 void trigger_timers(void)
 {
-  gpio_set_level(CLOCK_START, 0);
-  gpio_set_level(CLOCK_START, 1);
-  gpio_set_level(CLOCK_START, 0);
+  gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF); // Send out a 0-1-0 to
+  gpio_set_level(CLOCK_START, CLOCK_TRIGGER_ON);  // the flip flops to
+  gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF); // clock in a 1 and start the process
 
   return;
 }

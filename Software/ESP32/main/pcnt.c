@@ -87,9 +87,29 @@ void pcnt_init(int unit,    // What unit to use
   /*
    * Make sure everything is turned off
    */
-  gpio_set_level(CLOCK_START, OSC_OFF); // Turn off the oscillator
-  gpio_set_level(STOP_N, RUN_OFF);
-  gpio_set_level(STOP_N, RUN_GO);
+  gpio_set_level(OSC_CONTROL, OSC_OFF); // Turn off the oscillator
+  gpio_set_level(STOP_N, RUN_OFF);      // Force the RUN flip flop to off
+
+  /*
+   *  Setup the GPIO interrupts for the PCNT hi counts
+   */
+  if ( is_first )
+  {
+    gpio_install_isr_service(0);                                          // Per GPIO interrupt handler
+    gpio_intr_disable(RUN_NORTH_HI);                                      // Turn on the interrupts
+    gpio_intr_disable(RUN_EAST_HI);
+    gpio_intr_disable(RUN_SOUTH_HI);
+    gpio_intr_disable(RUN_WEST_HI);
+    gpio_set_intr_type(RUN_NORTH_HI, GPIO_INTR_POSEDGE);                  // RUN_XXX_HI interrupt on
+    gpio_set_intr_type(RUN_EAST_HI, GPIO_INTR_POSEDGE);                   // rising edge
+    gpio_set_intr_type(RUN_SOUTH_HI, GPIO_INTR_POSEDGE);
+    gpio_set_intr_type(RUN_WEST_HI, GPIO_INTR_POSEDGE);
+    gpio_isr_handler_add(RUN_NORTH_HI, north_hi_pcnt_isr_callback, NULL); // Collect PCNT for North trigger
+    gpio_isr_handler_add(RUN_EAST_HI, east_hi_pcnt_isr_callback, NULL);
+    gpio_isr_handler_add(RUN_SOUTH_HI, south_hi_pcnt_isr_callback, NULL);
+    gpio_isr_handler_add(RUN_WEST_HI, west_hi_pcnt_isr_callback, NULL);
+    is_first = false;
+  }
 
   /*
    * Setup the unit
@@ -127,27 +147,6 @@ void pcnt_init(int unit,    // What unit to use
                                                                                 //                                Channel When High When Low
   ESP_ERROR_CHECK(
       pcnt_channel_set_level_action(pcnt_chan_a[unit], PCNT_CHANNEL_LEVEL_ACTION_KEEP, PCNT_CHANNEL_LEVEL_ACTION_HOLD)); // Control
-
-  /*
-   *  Setup the GPIO interrupts for the PCNT hi counts
-   */
-  if ( is_first )
-  {
-    gpio_install_isr_service(0);                                          // Per GPIO interrupt handler
-    gpio_intr_disable(RUN_NORTH_HI);                                      // Turn on the interrupts
-    gpio_intr_disable(RUN_EAST_HI);
-    gpio_intr_disable(RUN_SOUTH_HI);
-    gpio_intr_disable(RUN_WEST_HI);
-    gpio_set_intr_type(RUN_NORTH_HI, GPIO_INTR_POSEDGE);                  // RUN_XXX_HI interrupt on
-    gpio_set_intr_type(RUN_EAST_HI, GPIO_INTR_POSEDGE);                   // rising edge
-    gpio_set_intr_type(RUN_SOUTH_HI, GPIO_INTR_POSEDGE);
-    gpio_set_intr_type(RUN_WEST_HI, GPIO_INTR_POSEDGE);
-    gpio_isr_handler_add(RUN_NORTH_HI, north_hi_pcnt_isr_callback, NULL); // Collect PCNT for North trigger
-    gpio_isr_handler_add(RUN_EAST_HI, east_hi_pcnt_isr_callback, NULL);
-    gpio_isr_handler_add(RUN_SOUTH_HI, south_hi_pcnt_isr_callback, NULL);
-    gpio_isr_handler_add(RUN_WEST_HI, west_hi_pcnt_isr_callback, NULL);
-    is_first = false;
-  }
 
   /*
    *  All done, Clear the counter and return

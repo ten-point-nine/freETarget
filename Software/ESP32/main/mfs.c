@@ -158,7 +158,6 @@ void multifunction_init(void)
   {
     factory_nonvol(false);    // Initalize the nonvol but do not calibrate
   }
-
   else
   {
     if ( DIP_SW_A )           // Switch A pressed
