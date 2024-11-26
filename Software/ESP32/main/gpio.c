@@ -118,8 +118,8 @@ unsigned int is_running(void)
  *-----------------------------------------------------*/
 void arm_timers(void)
 {
-  gpio_set_level(CLOCK_START, 0);
-  gpio_set_level(STOP_N, 0);            // Reset the timer
+  gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);
+  gpio_set_level(STOP_N, RUN_OFF);            // Reset the timer
   gpio_set_level(OSC_CONTROL, OSC_OFF); // Turn off the oscillator
   pcnt_clear();
   gpio_intr_enable(RUN_NORTH_HI);       // Turn on the interrupts
@@ -128,7 +128,7 @@ void arm_timers(void)
   gpio_intr_enable(RUN_WEST_HI);
   gpio_set_level(OSC_CONTROL, OSC_ON);  // Turn on the oscillator
 
-  gpio_set_level(STOP_N, 1);            // Then enable it
+  gpio_set_level(STOP_N, RUN_GO);       // Then enable it
   return;
 }
 
@@ -138,7 +138,7 @@ void arm_timers(void)
 void stop_timers(void)
 {
   gpio_set_level(OSC_CONTROL, OSC_OFF); // Turn off the oscillator
-  gpio_set_level(STOP_N, 0);            // Clear the flip flop
+  gpio_set_level(STOP_N, RUN_OFF);      // Clear the flip flop
   return;
 }
 
@@ -147,9 +147,9 @@ void stop_timers(void)
  */
 void trigger_timers(void)
 {
-  gpio_set_level(CLOCK_START, 0);
-  gpio_set_level(CLOCK_START, 1);
-  gpio_set_level(CLOCK_START, 0);
+  gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF); // Send out a 0-1-0 to
+  gpio_set_level(CLOCK_START, CLOCK_TRIGGER_ON);  // the flip flops to
+  gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF); // clock in a 1 and start the process
 
   return;
 }

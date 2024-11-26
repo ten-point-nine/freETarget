@@ -34,12 +34,12 @@ static void handle_json(void); // Breakdown the JSON and execute it
  */
 static char input_JSON[256];
 
-int           json_calibre_x10;           // Pellet Calibre
-int           json_dip_switch;            // DIP switch overwritten by JSON message
-double        json_sensor_dia = DIAMETER; // Sensor daiamter overwitten by JSON message
-int           json_echo;                  // Test String
-double        json_d_echo;                // Test String
-int           json_north_x;               // North Adjustment
+int    json_calibre_x10;           // Pellet Calibre
+int    json_dip_switch;            // DIP switch overwritten by JSON message
+double json_sensor_dia = DIAMETER; // Sensor daiamter overwitten by JSON message
+int    json_echo;                  // Test String
+// double        json_d_echo;                // Test String
+int           json_north_x;              // North Adjustment
 int           json_north_y;
 int           json_east_x;                // East Adjustment
 int           json_east_y;

@@ -49,10 +49,6 @@ static int north_pcnt_hi, east_pcnt_hi, south_pcnt_hi, west_pcnt_hi;
 /*
  *  Function prototypes
  */
-static bool north_hi_pcnt_isr_callback(void *args);
-static bool east_hi_pcnt_isr_callback(void *args);
-static bool south_hi_pcnt_isr_callback(void *args);
-static bool west_hi_pcnt_isr_callback(void *args);
 
 /*************************************************************************
  *
@@ -72,10 +68,15 @@ static bool west_hi_pcnt_isr_callback(void *args);
  * Channel B Count disabled
  * Channel B Control disabled
  *
+ * This function is called for every PCNT register used.  On the first call
+ * the function will install the interrupt handler.  Subsequent calle will
+ * will not install the handler (is_first)
+ *
  **************************************************************************/
-void pcnt_init(int unit,    // What unit to use
-               int run,     // GPIO associated with PCNT control
-               int clock    // GPIO associated with PCNT signal
+void pcnt_init(int unit,                // What unit to use
+               int run,                 // GPIO associated with PCNT control
+               int clock,               // GPIO associated with PCNT signal
+               bool (*callback)(void *) // PCNT interrupt handler
 )
 {
   static bool is_first = 1; // Set to 0 on subsequent passes
@@ -83,9 +84,21 @@ void pcnt_init(int unit,    // What unit to use
   /*
    * Make sure everything is turned off
    */
-  gpio_set_level(STOP_N, 0);
-  gpio_set_level(STOP_N, 1);
-  gpio_set_level(CLOCK_START, 0);
+  gpio_set_level(OSC_CONTROL, OSC_OFF); // Turn off the oscillator
+  gpio_set_level(STOP_N, RUN_OFF);      // Force the RUN flip flop to off
+
+                                        /*
+                                         *  Setup the GPIO interrupts for the PCNT hi counts
+                                         */
+
+  if ( is_first )
+  {
+    gpio_install_isr_service(0);              // Per GPIO interrupt handler
+    is_first = false;
+  }
+  gpio_intr_disable(run);                     // Turn on the interrupts
+  gpio_set_intr_type(run, GPIO_INTR_POSEDGE); // RUN_XXX_HI interrupt on
+  gpio_isr_handler_add(run, callback, NULL);  // Collect PCNT for North trigger
 
   /*
    * Setup the unit
@@ -123,23 +136,6 @@ void pcnt_init(int unit,    // What unit to use
                                                                                 //                                Channel When High When Low
   ESP_ERROR_CHECK(
       pcnt_channel_set_level_action(pcnt_chan_a[unit], PCNT_CHANNEL_LEVEL_ACTION_KEEP, PCNT_CHANNEL_LEVEL_ACTION_HOLD)); // Control
-
-  /*
-   *  Setup the GPIO interrupts for the PCNT hi counts
-   */
-  if ( is_first )
-  {
-    gpio_install_isr_service(0);                                          // Per GPIO interrupt handler
-    gpio_set_intr_type(RUN_NORTH_HI, GPIO_INTR_POSEDGE);                  // RUN_XXX_HI interrupt on
-    gpio_set_intr_type(RUN_EAST_HI, GPIO_INTR_POSEDGE);                   // rising edge
-    gpio_set_intr_type(RUN_SOUTH_HI, GPIO_INTR_POSEDGE);
-    gpio_set_intr_type(RUN_WEST_HI, GPIO_INTR_POSEDGE);
-    gpio_isr_handler_add(RUN_NORTH_HI, north_hi_pcnt_isr_callback, NULL); // Collect PCNT for North trigger
-    gpio_isr_handler_add(RUN_EAST_HI, east_hi_pcnt_isr_callback, NULL);
-    gpio_isr_handler_add(RUN_SOUTH_HI, south_hi_pcnt_isr_callback, NULL);
-    gpio_isr_handler_add(RUN_WEST_HI, west_hi_pcnt_isr_callback, NULL);
-    is_first = false;
-  }
 
   /*
    *  All done, Clear the counter and return
@@ -253,21 +249,30 @@ void pcnt_all(void)
   pcnt_test(3);
   pcnt_test(4);
 }
+// Clear counters and stop
+// WEST_HI: 0   SOUTH_HI: 0   EAST_HI: 0   NORTH_HI: 0       WEST_LO: 11   SOUTH_LO: 22   EAST_LO: 33   NORTH_LO: 44
 void pcnt_1(void)
 {
   pcnt_test(1);
   return;
 }
+
+// Start and stop together
+// WEST_HI: 3388   SOUTH_HI: 3388   EAST_HI: 3388   NORTH_HI: 3388         WEST_LO: 40   SOUTH_LO: 23   EAST_LO: 28   NORTH_LO: 34
 void pcnt_2(void)
 {
   pcnt_test(2);
   return;
 }
+
+// Start and do not stop
+// WEST_HI: 15513  SOUTH_HI: 15553  EAST_HI: 15575  NORTH_HI: 15596      WEST_LO: 0  SOUTH_LO: 0  EAST_LO: 0  NORTH_LO: 0
 void pcnt_3(void)
 {
   pcnt_test(3);
   return;
 }
+
 void pcnt_4(void)
 {
   pcnt_test(4);
@@ -287,8 +292,11 @@ void pcnt_test(int which_test)
     case 1:
       SEND(sprintf(_xs, "\r\nPCNT-1  Counters cleared and not running.");)
       SEND(sprintf(_xs, "\r\n        Low counters should all be 0. High Counters 11, 22, 33, 44");)
-      SEND(sprintf(_xs, "\r\n        High Counters 11, 22, 33, 44");)
       arm_timers();                   // Arm the timers
+      north_pcnt_hi = 11;             // Give the timers an obviously
+      east_pcnt_hi  = 22;             // incorrect value
+      south_pcnt_hi = 33;
+      west_pcnt_hi  = 44;
       gpio_set_level(CLOCK_START, 0); // Do not trigger the clock
       SEND(sprintf(_xs, "\r\nis_running: %02X", is_running());)
       for ( i = 0; i != 10; i++ )
@@ -318,7 +326,6 @@ void pcnt_test(int which_test)
        */
     case 2:
       SEND(sprintf(_xs, "\r\n\r\nPCNT-2  Start/stop counters together. Should all be the same");)
-      SEND(sprintf(_xs, "\r\n\r\n        All should be the same");)
       arm_timers();
       trigger_timers();
       vTaskDelay(TICK_10ms);
@@ -539,25 +546,25 @@ void pcnt_cal(void)
 #define PCNT_SOUTH_HI (int *)(0x60017000 + 0x0038) // PCNT unit 3 count
 #define PCNT_WEST_HI  (int *)(0x60017000 + 0x003C) // PCNT unit 4 count
 
-static bool IRAM_ATTR north_hi_pcnt_isr_callback(void *args)
+bool IRAM_ATTR north_hi_pcnt_isr_callback(void *args)
 {
   north_pcnt_hi = *PCNT_NORTH_HI;
   return pdFALSE;
 }
 
-static bool IRAM_ATTR east_hi_pcnt_isr_callback(void *args)
+bool IRAM_ATTR east_hi_pcnt_isr_callback(void *args)
 {
   east_pcnt_hi = *PCNT_EAST_HI;
   return pdFALSE;
 }
 
-static bool IRAM_ATTR south_hi_pcnt_isr_callback(void *args)
+bool IRAM_ATTR south_hi_pcnt_isr_callback(void *args)
 {
   south_pcnt_hi = *PCNT_SOUTH_HI;
   return pdFALSE;
 }
 
-static bool IRAM_ATTR west_hi_pcnt_isr_callback(void *args)
+bool IRAM_ATTR west_hi_pcnt_isr_callback(void *args)
 {
   west_pcnt_hi = *PCNT_WEST_HI;
   return pdFALSE;

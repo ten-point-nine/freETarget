@@ -95,9 +95,13 @@ extern volatile unsigned int step_count; // Number of steps before stopping
 #define CLOCK_START GPIO_NUM_47 // Trigger a test cycle
 #define OSC_CONTROL GPIO_NUM_48 // Enable / kill 10MHz Oscillator
 #endif
-#define OSC_ON  1               // Enable the oscillator
-#define OSC_OFF 0               // Tristate the oscillator
-#define LDAC    GPIO_NUM_42     // No longer used
+#define OSC_ON            1           // Enable the oscillator
+#define OSC_OFF           0           // Tristate the oscillator
+#define RUN_OFF           0           // Clear the run flip flops
+#define RUN_GO            1           // Let the flip flops go
+#define CLOCK_TRIGGER_OFF 0           // The clock can be triggered by 0-1
+#define CLOCK_TRIGGER_ON  1           // The clock can be triggered by 0-1
+#define LDAC              GPIO_NUM_42 // No longer used
 
 #define DIP_0   9
 #define RED_OUT 9               // Rapid fire RED on DIP0

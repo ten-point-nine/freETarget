@@ -124,6 +124,7 @@ typedef struct PCNT_struct
   int         pcnt_unit;                             // What unit to use
   int         pcnt_control;                          // GPIO associated with PCNT control
   int         pcnt_signal;                           // GPIO associated with PCNT signal
+  bool (*pcnt_callback)(void *);                     // PCNT interrrupt handler
 } PCNT_struct_t;
 
 typedef struct LED_strip_struct

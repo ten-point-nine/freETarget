@@ -133,15 +133,19 @@ I2C_struct_t i2c = {I2C_PORT, GPIO_NUM_14, GPIO_NUM_13};
 /*
  *  PCNT.  8 for ESP32, 4 for ESP32-S3
  */
-const PCNT_struct_t pcnt0 = {.type = PCNT, .pcnt_unit = 0, .pcnt_signal = GPIO_NUM_8, .pcnt_control = GPIO_NUM_5};
-const PCNT_struct_t pcnt1 = {.type = PCNT, .pcnt_unit = 1, .pcnt_signal = GPIO_NUM_8, .pcnt_control = GPIO_NUM_6};
-const PCNT_struct_t pcnt2 = {.type = PCNT, .pcnt_unit = 2, .pcnt_signal = GPIO_NUM_8, .pcnt_control = GPIO_NUM_7};
-const PCNT_struct_t pcnt3 = {.type = PCNT, .pcnt_unit = 3, .pcnt_signal = GPIO_NUM_8, .pcnt_control = GPIO_NUM_15};
+const PCNT_struct_t pcnt0 = {
+    .type = PCNT, .pcnt_unit = 0, .pcnt_signal = GPIO_NUM_8, .pcnt_control = GPIO_NUM_5, .pcnt_callback = &north_hi_pcnt_isr_callback};
+const PCNT_struct_t pcnt1 = {
+    .type = PCNT, .pcnt_unit = 1, .pcnt_signal = GPIO_NUM_8, .pcnt_control = GPIO_NUM_6, .pcnt_callback = &east_hi_pcnt_isr_callback};
+const PCNT_struct_t pcnt2 = {
+    .type = PCNT, .pcnt_unit = 2, .pcnt_signal = GPIO_NUM_8, .pcnt_control = GPIO_NUM_7, .pcnt_callback = &south_hi_pcnt_isr_callback};
+const PCNT_struct_t pcnt3 = {
+    .type = PCNT, .pcnt_unit = 3, .pcnt_signal = GPIO_NUM_8, .pcnt_control = GPIO_NUM_15, .pcnt_callback = &west_hi_pcnt_isr_callback};
 #if ( SOC_PCNT_UNITS_PER_GROUP != 4 )
-const PCNT_struct_t pcnt4 = {.type = PCNT, .pcnt_unit = 4, .pcnt_signal = GPIO_NUM_8, .pcnt_control = GPIO_NUM_16};
-const PCNT_struct_t pcnt5 = {.type = PCNT, .pcnt_unit = 5, .pcnt_signal = GPIO_NUM_8, .pcnt_control = GPIO_NUM_9};
-const PCNT_struct_t pcnt6 = {.type = PCNT, .pcnt_unit = 6, .pcnt_signal = GPIO_NUM_8, .pcnt_control = GPIO_NUM_10};
-const PCNT_struct_t pcnt7 = {.type = PCNT, .pcnt_unit = 7, .pcnt_signal = GPIO_NUM_8, .pcnt_control = GPIO_NUM_11};
+const PCNT_struct_t pcnt4 = {.type = PCNT, .pcnt_unit = 4, .pcnt_signal = GPIO_NUM_8, .pcnt_control = GPIO_NUM_16, NULL};
+const PCNT_struct_t pcnt5 = {.type = PCNT, .pcnt_unit = 5, .pcnt_signal = GPIO_NUM_8, .pcnt_control = GPIO_NUM_9, NULL};
+const PCNT_struct_t pcnt6 = {.type = PCNT, .pcnt_unit = 6, .pcnt_signal = GPIO_NUM_8, .pcnt_control = GPIO_NUM_10, NULL};
+const PCNT_struct_t pcnt7 = {.type = PCNT, .pcnt_unit = 7, .pcnt_signal = GPIO_NUM_8, .pcnt_control = GPIO_NUM_11, NULL};
 #endif
 
 /*
@@ -160,10 +164,6 @@ const gpio_struct_t gpio_table[] = {
     //   Name      Number       Assigned
     {"EN",           GPIO_NUM_0,  NULL                     }, // RTC_GPIO0, GPIO0                       (Strapping EN)
     {"BD_REV",       GPIO_NUM_4,  (void *)&adc1_ch3        }, // BD_REV
-    {"RUN_NORTH_LO", GPIO_NUM_5,  (void *)&pcnt0           }, // RUN_NORTH_LO
-    {"RUN_EAST_LO",  GPIO_NUM_6,  (void *)&pcnt1           }, // RUN_EAST_LO
-    {"RUN_SOUTH_LO", GPIO_NUM_7,  (void *)&pcnt2           }, // RUN_SOUTH_LO
-    {"RUN_WEST_LO",  GPIO_NUM_15, (void *)&pcnt3           }, // RUN_WEST_LO
     {"RUN_NORTH_HI", GPIO_NUM_16, (void *)&dio16           }, // RUN_NORTH_HI Not used on ESP32-S3
 
     {"ATX",          GPIO_NUM_17, (void *)&dio17           }, // ATX Initailize as input
@@ -197,6 +197,11 @@ const gpio_struct_t gpio_table[] = {
     {"STOP*",        GPIO_NUM_21, (void *)&dio21           }, // Stop the RUN signals
     {"SDA",          GPIO_NUM_14, (void *)&i2c             }, // SDA
     {"SCL",          GPIO_NUM_13, NULL                     }, // SCL
+    // Move to last since it needs the hardware to be setup before we can start pcnt
+    {"RUN_NORTH_LO", GPIO_NUM_5,  (void *)&pcnt0           }, // RUN_NORTH_LO
+    {"RUN_EAST_LO",  GPIO_NUM_6,  (void *)&pcnt1           }, // RUN_EAST_LO
+    {"RUN_SOUTH_LO", GPIO_NUM_7,  (void *)&pcnt2           }, // RUN_SOUTH_LO
+    {"RUN_WEST_LO",  GPIO_NUM_15, (void *)&pcnt3           }, // RUN_WEST_LO
     {0,              0,           0                        }
 };
 
@@ -279,7 +284,8 @@ void gpio_init(void)
         case PCNT:
           pcnt_init(((const PCNT_struct_t *)(gpio_table[i].gpio_uses))->pcnt_unit,
                     ((const PCNT_struct_t *)(gpio_table[i].gpio_uses))->pcnt_control,
-                    ((const PCNT_struct_t *)(gpio_table[i].gpio_uses))->pcnt_signal);
+                    ((const PCNT_struct_t *)(gpio_table[i].gpio_uses))->pcnt_signal,
+                    ((const PCNT_struct_t *)(gpio_table[i].gpio_uses))->pcnt_callback);
           break;
 
         case LED_STRIP:
