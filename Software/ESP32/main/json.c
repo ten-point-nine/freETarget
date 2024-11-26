@@ -272,20 +272,16 @@ void freeETarget_json(void *pvParameters)
           keep_space        = 0;
           break;
 
-        case 0x08:                         // Backspace
+        case 0x08:                    // Backspace
           if ( in_JSON != 0 )
           {
             in_JSON--;
           }
-          input_JSON[in_JSON] = 0;         // Null terminate
+          input_JSON[in_JSON] = 0;    // Null terminate
           break;
 
-        case '*':                          // Force echo for PC Client
-          if ( got_left_bracket == false ) // Whenever we are not between
-          {                                // {}
-            POST_version();
-            break;
-          } // Otherwise fall through
+        case '*':                     // Substitute * for " "
+          ch = '"';                   // for European keyboards
 
         case '"':                     // Start or end of text
           keep_space = (keep_space ^ 1) & 1;
