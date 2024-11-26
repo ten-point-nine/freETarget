@@ -90,20 +90,16 @@ void pcnt_init(int unit,    // What unit to use
   gpio_set_level(OSC_CONTROL, OSC_OFF); // Turn off the oscillator
   gpio_set_level(STOP_N, RUN_OFF);      // Force the RUN flip flop to off
 
-  /*
-   *  Setup the GPIO interrupts for the PCNT hi counts
-   */
+                                        /*
+                                         *  Setup the GPIO interrupts for the PCNT hi counts
+                                         */
+
+  gpio_intr_disable(run);                                                 // Turn on the interrupts
+  gpio_set_intr_type(run, GPIO_INTR_POSEDGE);                             // RUN_XXX_HI interrupt on
+
   if ( is_first )
   {
     gpio_install_isr_service(0);                                          // Per GPIO interrupt handler
-    gpio_intr_disable(RUN_NORTH_HI);                                      // Turn on the interrupts
-    gpio_intr_disable(RUN_EAST_HI);
-    gpio_intr_disable(RUN_SOUTH_HI);
-    gpio_intr_disable(RUN_WEST_HI);
-    gpio_set_intr_type(RUN_NORTH_HI, GPIO_INTR_POSEDGE);                  // RUN_XXX_HI interrupt on
-    gpio_set_intr_type(RUN_EAST_HI, GPIO_INTR_POSEDGE);                   // rising edge
-    gpio_set_intr_type(RUN_SOUTH_HI, GPIO_INTR_POSEDGE);
-    gpio_set_intr_type(RUN_WEST_HI, GPIO_INTR_POSEDGE);
     gpio_isr_handler_add(RUN_NORTH_HI, north_hi_pcnt_isr_callback, NULL); // Collect PCNT for North trigger
     gpio_isr_handler_add(RUN_EAST_HI, east_hi_pcnt_isr_callback, NULL);
     gpio_isr_handler_add(RUN_SOUTH_HI, south_hi_pcnt_isr_callback, NULL);
@@ -141,7 +137,6 @@ void pcnt_init(int unit,    // What unit to use
   /*
    *  Setup the control.  Count only when the control is HIGH.
    */
-  //                                Channel                       Rising Edge                        Falling Edge
   ESP_ERROR_CHECK(pcnt_channel_set_edge_action(pcnt_chan_a[unit], PCNT_CHANNEL_EDGE_ACTION_INCREASE,
                                                PCNT_CHANNEL_EDGE_ACTION_HOLD)); // Counter
                                                                                 //                                Channel When High When Low

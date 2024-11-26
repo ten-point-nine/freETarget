@@ -160,11 +160,6 @@ const gpio_struct_t gpio_table[] = {
     //   Name      Number       Assigned
     {"EN",           GPIO_NUM_0,  NULL                     }, // RTC_GPIO0, GPIO0                       (Strapping EN)
     {"BD_REV",       GPIO_NUM_4,  (void *)&adc1_ch3        }, // BD_REV
-    {"RUN_NORTH_LO", GPIO_NUM_5,  (void *)&pcnt0           }, // RUN_NORTH_LO
-    {"RUN_EAST_LO",  GPIO_NUM_6,  (void *)&pcnt1           }, // RUN_EAST_LO
-    {"RUN_SOUTH_LO", GPIO_NUM_7,  (void *)&pcnt2           }, // RUN_SOUTH_LO
-    {"RUN_WEST_LO",  GPIO_NUM_15, (void *)&pcnt3           }, // RUN_WEST_LO
-    {"RUN_NORTH_HI", GPIO_NUM_16, (void *)&dio16           }, // RUN_NORTH_HI Not used on ESP32-S3
 
     {"ATX",          GPIO_NUM_17, (void *)&dio17           }, // ATX Initailize as input
     {"ARX",          GPIO_NUM_18, (void *)&dio18           }, // ARX and override later
@@ -186,7 +181,6 @@ const gpio_struct_t gpio_table[] = {
     {"FACE_HALF",    GPIO_NUM_40, (void *)&dio40           }, // FACE Interrupt
     {"SPARE1",       GPIO_NUM_39, NULL                     }, // STOP Clock
     {"A",            GPIO_NUM_38, (void *)&dio38           }, // Auxilary Input A
-
     {"B",            GPIO_NUM_37, (void *)&dio37           }, // Auxilary Input B
     {"C",            GPIO_NUM_36, (void *)&dio36           }, // Auxilary Input C
     {"D",            GPIO_NUM_35, (void *)&dio35           }, // Auxilary Input D
@@ -197,6 +191,13 @@ const gpio_struct_t gpio_table[] = {
     {"STOP*",        GPIO_NUM_21, (void *)&dio21           }, // Stop the RUN signals
     {"SDA",          GPIO_NUM_14, (void *)&i2c             }, // SDA
     {"SCL",          GPIO_NUM_13, NULL                     }, // SCL
+
+    {"RUN_NORTH_LO", GPIO_NUM_5,  (void *)&pcnt0           }, // RUN_NORTH_LO
+    {"RUN_EAST_LO",  GPIO_NUM_6,  (void *)&pcnt1           }, // RUN_EAST_LO
+    {"RUN_SOUTH_LO", GPIO_NUM_7,  (void *)&pcnt2           }, // RUN_SOUTH_LO
+    {"RUN_WEST_LO",  GPIO_NUM_15, (void *)&pcnt3           }, // RUN_WEST_LO
+    {"RUN_NORTH_HI", GPIO_NUM_16, (void *)&dio16           }, // RUN_NORTH_HI Not used on ESP32-S3
+
     {0,              0,           0                        }
 };
 
