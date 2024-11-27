@@ -56,7 +56,7 @@ bool west_hi_pcnt_isr_callback(void *args);
 
 /*************************************************************************
  *
- * @function: pcnt_init()
+ * @function: pcnt_init_FT()
  *
  * description:  Set the pulse counter control
  *
@@ -402,54 +402,48 @@ void pcnt_test(int which_test)
  *
  **************************************************************************
  *
- * The function sets the high and low trip points to the same value.  When
- * a trip occurs, the high value is read a tiny bit after the start, with
- * the time delay corresponding to the interrupt latencey. Thus the latency
- * and the time correction can be read directly as the average NORTH_HI time.
+ * The function triggers the run flip flops together.  This will put
+ * a count into pcnt_lo, and generate an interrupt on pcnt_hi.
  *
- * The NORTH sensor is driven from a triangle wave and the time delay in
- * the NORTH_HI counter is printed on the display.
+ * The fuction then reads out the value of pcnt_hi and displays it
  *
  **************************************************************************/
 #define NORTH_HI_DIP 0x80
 
 void pcnt_cal(void)
 {
-  int   north_min, north_max;           // Running statistics
-  int   north_hi, north_average;        // Read from counters
-  int   count;                          // Number of samples in average
-  char  ch;
-  float value[] = {2.0, 2.0, 0.0, 0.0}; // Set both trip points to 2 volts
+  int  north_min, north_max;    // Running statistics
+  int  north_hi, north_average; // Read from counters
+  int  count;                   // Number of samples in average
+  char ch;
 
   north_min     = 10000;
   north_max     = 0;
   north_average = 0;
   count         = 0;
 
-  DAC_write(value); // Set both trip points to the same value
-
   SEND(sprintf(_xs, "\r\n! to exit,   R to reset");)
 
   /*
    *  Setup the hardware
    */
-  gpio_set_level(CLOCK_START, 0);      // Turn off the test start
-  gpio_intr_enable(RUN_NORTH_HI);      // Turn on the interrupts
-  gpio_intr_enable(RUN_EAST_HI);
-  gpio_intr_enable(RUN_SOUTH_HI);
-  gpio_intr_enable(RUN_WEST_HI);
-  gpio_set_level(OSC_CONTROL, OSC_ON); // Turn on the oscillator
-  vTaskDelay(TICK_10ms);               // Let the oscillator start up
+  gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF); // Turn off the test start
+  gpio_set_level(STOP_N, RUN_OFF);                // Clear the run flip flops);
+  gpio_intr_enable(RUN_NORTH_HI);                 // Turn on the interrupts
+  gpio_set_level(OSC_CONTROL, OSC_ON);            // Turn on the oscillator
+  vTaskDelay(TICK_10ms);                          // Let the oscillator start up
 
   /*
    * Loop, arm the counters and see what comes back
    */
   while ( 1 )
   {
+    gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);         // Turn off the test start
+    gpio_set_level(STOP_N, RUN_OFF);                        // Turn off the test start
     pcnt_clear();                                           // and clear the counters
-                                                            /*
-                                                             * Wait for a reading to be triggered
-                                                             */
+    gpio_set_level(STOP_N, RUN_GO);                         // Turn off the test start
+    gpio_set_level(CLOCK_START, CLOCK_TRIGGER_ON);          // Turn on the test start
+    gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);         // Turn off the test start
     while ( (is_running() & NORTH_HI_DIP) != NORTH_HI_DIP ) // Should trigger almost instantly
     {
       if ( serial_available(CONSOLE) != 0 )                 // See if there is any console iput
@@ -500,8 +494,11 @@ void pcnt_cal(void)
     /*
      *  Display the results and wait before turning on the timers again
      */
-    SEND(sprintf(_xs, "\r\nnorth_hi: %d  north_avg: %d  north_min: %d   north_max: %d   north_hi-avg: %d", north_hi, north_average / count,
-                 north_min, north_max, (north_hi - (north_average / count)));)
+    SEND(sprintf(_xs, "\r\nnorth_hi: %d   east_hi: %d   south_hi: %d   west_hi: %d", pcnt_read(NORTH_HI), pcnt_read(EAST_HI),
+                 pcnt_read(SOUTH_HI), pcnt_read(WEST_HI));)
+    SEND(sprintf(_xs, "       north_avg: %d   north_min: %d   north_max: %d   north_hi-avg: %d", north_average / count, north_min,
+                 north_max, (north_hi - (north_average / count)));)
+
     vTaskDelay(ONE_SECOND / 2);
   }
 
