@@ -85,6 +85,7 @@ typedef struct DIO_struct
   gpio_type_t type;                                  // What type of structure am I
   int         mode;                                  // Mode used by the DIO
   int         initial_value;                         // Value set on initialization
+  bool (*callback)(void);                            // Pointer to callback if needed
 } DIO_struct_t;
 
 typedef struct ADC_struct
@@ -139,7 +140,6 @@ typedef struct gpio_struct
   char *gpio_name;                                   // GPIO name
   int   gpio_number;                                 // Number associated with GPIO
   void *gpio_uses;                                   // Pointer to IO specific structure
-  bool (*callback)(void);                            // Pointer to callback if needed
 } gpio_struct_t;
 
 extern const gpio_struct_t gpio_table[];             // List of available devices

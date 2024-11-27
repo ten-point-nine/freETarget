@@ -49,6 +49,10 @@ static int north_pcnt_hi, east_pcnt_hi, south_pcnt_hi, west_pcnt_hi;
 /*
  *  Function prototypes
  */
+bool north_hi_pcnt_isr_callback(void *args);
+bool east_hi_pcnt_isr_callback(void *args);
+bool south_hi_pcnt_isr_callback(void *args);
+bool west_hi_pcnt_isr_callback(void *args);
 
 /*************************************************************************
  *
@@ -68,37 +72,17 @@ static int north_pcnt_hi, east_pcnt_hi, south_pcnt_hi, west_pcnt_hi;
  * Channel B Count disabled
  * Channel B Control disabled
  *
- * This function is called for every PCNT register used.  On the first call
- * the function will install the interrupt handler.  Subsequent calle will
- * will not install the handler (is_first)
- *
  **************************************************************************/
-void pcnt_init(int unit,                // What unit to use
-               int run,                 // GPIO associated with PCNT control
-               int clock,               // GPIO associated with PCNT signal
-               bool (*callback)(void *) // PCNT interrupt handler
+void pcnt_init_FT(int unit, // What unit to use
+                  int run,  // GPIO associated with PCNT control
+                  int clock // GPIO associated with PCNT signal
 )
 {
-  static bool is_first = 1; // Set to 0 on subsequent passes
-
   /*
    * Make sure everything is turned off
    */
-  gpio_set_level(OSC_CONTROL, OSC_OFF); // Turn off the oscillator
-  gpio_set_level(STOP_N, RUN_OFF);      // Force the RUN flip flop to off
-
-                                        /*
-                                         *  Setup the GPIO interrupts for the PCNT hi counts
-                                         */
-
-  if ( is_first )
-  {
-    gpio_install_isr_service(0);              // Per GPIO interrupt handler
-    is_first = false;
-  }
-  gpio_intr_disable(run);                     // Turn on the interrupts
-  gpio_set_intr_type(run, GPIO_INTR_POSEDGE); // RUN_XXX_HI interrupt on
-  gpio_isr_handler_add(run, callback, NULL);  // Collect PCNT for North trigger
+  gpio_set_level(CLOCK_START, 0);
+  gpio_set_level(STOP_N, 0);
 
   /*
    * Setup the unit
@@ -249,30 +233,37 @@ void pcnt_all(void)
   pcnt_test(3);
   pcnt_test(4);
 }
-// Clear counters and stop
-// WEST_HI: 0   SOUTH_HI: 0   EAST_HI: 0   NORTH_HI: 0       WEST_LO: 11   SOUTH_LO: 22   EAST_LO: 33   NORTH_LO: 44
+
+//
+// Clear all counters and turn off clock
+// NORTH_LO: 0   EAST_LO: 0   SOUTH_LO: 0   WEST_LO: 0       NORTH_HI: 11   EAST_HI: 22   SOUTH_HI: 23   WEST_HI: 24
 void pcnt_1(void)
 {
   pcnt_test(1);
   return;
 }
 
-// Start and stop together
-// WEST_HI: 3388   SOUTH_HI: 3388   EAST_HI: 3388   NORTH_HI: 3388         WEST_LO: 40   SOUTH_LO: 23   EAST_LO: 28   NORTH_LO: 34
+//
+// Run the clock and stop it
+// NORTH_LO: 17332   EAST_LO: 17332   SOUTH_LO: 17332   WEST_LO: 17332         NORTH_HI: 0   EAST_HI: 23   SOUTH_HI: 28   WEST_HI: 34
 void pcnt_2(void)
 {
   pcnt_test(2);
   return;
 }
 
-// Start and do not stop
-// WEST_HI: 15513  SOUTH_HI: 15553  EAST_HI: 15575  NORTH_HI: 15596      WEST_LO: 0  SOUTH_LO: 0  EAST_LO: 0  NORTH_LO: 0
+//
+// Start counters and do not stop. Should increase left-right, top-bottom
+// NORTH_LO: 28842   EAST_LO: 28842   SOUTH_LO: 28842   WEST_LO: 28842         NORTH_HI: 39   EAST_HI: 22   SOUTH_HI: 28   WEST_HI: 34
 void pcnt_3(void)
 {
   pcnt_test(3);
   return;
 }
 
+//
+// Turn off all timers
+// is_running(): 00
 void pcnt_4(void)
 {
   pcnt_test(4);
@@ -293,10 +284,10 @@ void pcnt_test(int which_test)
       SEND(sprintf(_xs, "\r\nPCNT-1  Counters cleared and not running.");)
       SEND(sprintf(_xs, "\r\n        Low counters should all be 0. High Counters 11, 22, 33, 44");)
       arm_timers();                   // Arm the timers
-      north_pcnt_hi = 11;             // Give the timers an obviously
-      east_pcnt_hi  = 22;             // incorrect value
-      south_pcnt_hi = 33;
-      west_pcnt_hi  = 44;
+      north_pcnt_hi = 11;
+      east_pcnt_hi  = 22;
+      south_pcnt_hi = 23;
+      west_pcnt_hi  = 24;
       gpio_set_level(CLOCK_START, 0); // Do not trigger the clock
       SEND(sprintf(_xs, "\r\nis_running: %02X", is_running());)
       for ( i = 0; i != 10; i++ )
@@ -315,7 +306,7 @@ void pcnt_test(int which_test)
           {
             SEND(sprintf(_xs, "    ");)
           }
-          SEND(sprintf(_xs, "%s: %d   ", find_sensor(1 << j)->long_name, array[i][j]);)
+          SEND(sprintf(_xs, "%s: %d   ", find_sensor(1 << (7 - j))->long_name, array[i][j]);)
         }
       }
       SEND(sprintf(_xs, "\r\nis_running: %02X  ", is_running());)
@@ -326,6 +317,7 @@ void pcnt_test(int which_test)
        */
     case 2:
       SEND(sprintf(_xs, "\r\n\r\nPCNT-2  Start/stop counters together. Should all be the same");)
+      SEND(sprintf(_xs, "\r\n\r\n        All should be the same");)
       arm_timers();
       trigger_timers();
       vTaskDelay(TICK_10ms);
@@ -347,7 +339,7 @@ void pcnt_test(int which_test)
           {
             SEND(sprintf(_xs, "      ");)
           }
-          SEND(sprintf(_xs, "%s: %d   ", find_sensor(1 << j)->long_name, array[i][j]);)
+          SEND(sprintf(_xs, "%s: %d   ", find_sensor(1 << (7 - j))->long_name, array[i][j]);)
         }
       }
       SEND(sprintf(_xs, "\r\nis_running(): %02X\r\n", is_running());)
@@ -377,7 +369,7 @@ void pcnt_test(int which_test)
           {
             SEND(sprintf(_xs, "    ");)
           }
-          SEND(sprintf(_xs, "%s: %d  ", find_sensor(1 << j)->long_name, array[i][j]);)
+          SEND(sprintf(_xs, "%s: %d  ", find_sensor(1 << (7 - j))->long_name, array[i][j]);)
         }
       }
       SEND(sprintf(_xs, "\r\nis_running(): %02X  ", is_running());)
