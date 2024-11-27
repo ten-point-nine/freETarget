@@ -139,6 +139,7 @@ typedef struct gpio_struct
   char *gpio_name;                                   // GPIO name
   int   gpio_number;                                 // Number associated with GPIO
   void *gpio_uses;                                   // Pointer to IO specific structure
+  bool (*callback)(void);                            // Pointer to callback if needed
 } gpio_struct_t;
 
 extern const gpio_struct_t gpio_table[];             // List of available devices
