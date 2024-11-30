@@ -35,11 +35,12 @@
 #define IN_SLEEP     0x0008 // The unit has powered down
 #define IN_SHOT      0x0010 // The target is actively in a shot
 #define IN_REDUCTION 0x0020 // The data is being reduced
+#define IN_FATAL_ERR 0x0040 // A fatal error has occured and cannot be fixed
 
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
 #define IF_IN(x)  if ( (run_state & (x)) != 0 )
 
-#define SEND(message) {message} serial_to_all(_xs, ALL);
+#define SEND(message) {message} serial_to_all(_xs, CONSOLE);
 
 #define IS_DC_WITNESS      (json_paper_time != 0) // Determine the witness paper drive (DC Motor)
 #define IS_STEPPER_WITNESS (json_step_count != 0) // Determine the witness paper drive (stepper)

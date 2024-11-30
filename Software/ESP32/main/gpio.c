@@ -119,7 +119,7 @@ unsigned int is_running(void)
 void arm_timers(void)
 {
   gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);
-  gpio_set_level(STOP_N, RUN_OFF);            // Reset the timer
+  gpio_set_level(STOP_N, RUN_OFF);      // Reset the timer
   gpio_set_level(OSC_CONTROL, OSC_OFF); // Turn off the oscillator
   pcnt_clear();
   gpio_intr_enable(RUN_NORTH_HI);       // Turn on the interrupts
@@ -176,7 +176,7 @@ unsigned int read_DIP(void)
   unsigned int bit_mask[]   = {0x08, 0x04, 0x02, 0x01};
   unsigned int i;
 
-  for ( i = 0; i != sizeof(dips) / sizeof(unsigned int); i++ )
+  for ( i = 0; i != 4; i++ )
   {
     if ( gpio_get_level(dips[i]) != 0 )
     {

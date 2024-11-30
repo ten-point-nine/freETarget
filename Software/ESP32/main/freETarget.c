@@ -124,6 +124,7 @@ void freeETarget_init(void)
   serial_io_init();                // Setup the console for debug messages
   read_nonvol();                   // Read in the settings
   serial_aux_init();               // Update the serial port if there is a change
+
   POST_version();                  // Show the version string on all ports
   set_VREF();
   multifunction_init();            // Override the MFS if we have to
@@ -193,18 +194,19 @@ void freeETarget_target_loop(void *arg)
   DLT(DLT_INFO, SEND(sprintf(_xs, "freeETarget_target_loop()");))
   set_status_LED(LED_READY);
 
-  shot_number = 1;                // Start counting shots at 1
+  shot_number = 1;                           // Start counting shots at 1
 
   while ( 1 )
   {
-    IF_IN(IN_SLEEP | IN_TEST)     // If Not in operation,
+    IF_IN(IN_SLEEP | IN_TEST | IN_FATAL_ERR) // If Not in operation,
     {
-      run_state &= ~IN_OPERATION; // Exit operation
-      vTaskDelay(ONE_SECOND);
-      continue;
+      run_state &= ~IN_OPERATION;            // Exit operation
+      vTaskDelay(ONE_SECOND);                // This lets the JSON decoder keep
+      set_status_LED(LED_FATAL);             // but show something really wrong
+      continue;                              // working for debuggging
     }
 
-    run_state |= IN_OPERATION;    // In operation
+    run_state |= IN_OPERATION;               // In operation
 
     /*
      * Cycle through the state machine

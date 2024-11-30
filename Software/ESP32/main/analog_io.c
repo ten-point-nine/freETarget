@@ -18,7 +18,7 @@
 #include "analog_io.h"
 #include "gpio_types.h"
 #include "adc_types.h"
-#include "adc_oneshot.h"
+#include "esp_adc/adc_oneshot.h"
 #include "pwm.h"
 #include "gpio_define.h"
 #include "i2c.h"

@@ -489,7 +489,8 @@ bool POST_counters(void)
   if ( count != 0 )
   {
     DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Reference clock cannot be stopped");))
-    set_diag_LED(LED_FAIL_CLOCK_STOP, 0);
+    set_diag_LED(LED_FAIL_CLOCK_STOP, 10);
+    run_state |= IN_FATAL_ERR;
   }
 
   /*
@@ -510,7 +511,8 @@ bool POST_counters(void)
   if ( count == 0 )
   {
     DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Reference clock cannot be started");))
-    set_diag_LED(LED_FAIL_CLOCK_START, 0);
+    set_diag_LED(LED_FAIL_CLOCK_START, 10);
+    run_state |= IN_FATAL_ERR;
   }
 
   /*
@@ -526,13 +528,14 @@ bool POST_counters(void)
     {
       if ( running & s[i].low_sense.run_mask )
       {
-        set_diag_LED(s[i].low_sense.diag_LED, 0);
+        set_diag_LED(s[i].low_sense.diag_LED, 10);
       }
       if ( running & s[i].high_sense.run_mask )
       {
-        set_diag_LED(s[i].high_sense.diag_LED, 0);
+        set_diag_LED(s[i].high_sense.diag_LED, 10);
       }
     }
+    run_state |= IN_FATAL_ERR;
   }
   vTaskDelay(ONE_SECOND);
 
@@ -547,13 +550,14 @@ bool POST_counters(void)
   if ( is_running() != 0xFF )
   {
     DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to start clock in run latch: %02X", is_running());))
-    set_diag_LED(LED_FAIL_RUN_STUCK, 0);
+    set_diag_LED(LED_FAIL_RUN_STUCK, 10);
+    run_state |= IN_FATAL_ERR;
   }
 
   /*
-   * We get here only if all of the tests pass
+   * Return the err status
    */
-  return 1;
+  return ((run_state & IN_FATAL_ERR) == 0); // Return TRUE if no errors detected
 }
 
 /*----------------------------------------------------------------
@@ -686,14 +690,16 @@ void show_sensor_fault(unsigned int sensor_status)
  * W - Warning     - Yellow
  *
  *--------------------------------------------------------------*/
-bool do_dlt(unsigned int level)
+bool do_dlt(           //
+    unsigned int level // Trace logging level
+)
 {
   char         dlt_id = 'I';
   unsigned int i;
 
-  /*
-   * Return if the current level is not enabled in is_trace
-   */
+                       /*
+                        * Return if the current level is not enabled in is_trace
+                        */
   if ( (level & (is_trace | DLT_CRITICAL | DLT_INFO)) == 0 ) // DLT_CRITICAL are always set in is_trace
   {
     return false;                                            // Send out if the trace is higher than the level
@@ -781,7 +787,7 @@ void set_diag_LED(char        *new_LEDs, // NEW LED display
   set_status_LED(new_LEDs);
 
   /*
-   *  Test for infinit wait
+   *  Test for infinite wait
    */
   if ( duration == 0 ) // Wait here forever
   {
