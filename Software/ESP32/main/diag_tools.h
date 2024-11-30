@@ -107,11 +107,9 @@ void heartbeat(void);                                     // Send out regular st
 #define DLT_SCORE         0x40 // Display extended score record
 #define DLT_HEARTBEAT     0x80 // Kick out the time to see if we are alive
 
-#define DLT(level, z)                                                                                                                      \
-  if ( do_dlt(level) )                                                                                                                     \
-  {                                                                                                                                        \
-    z                                                                                                                                      \
-  }
+// clang-format off
+#define DLT(level, z) if ( do_dlt(level) )  { z }
+// clang-format on
 
 typedef struct
 {

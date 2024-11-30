@@ -81,7 +81,8 @@ unsigned int is_running(void)
   unsigned int return_value;
   unsigned int i;
 
-  return_value = 0;
+  return_value = 0; //
+
   /*
    * Read the running inputs
    */
@@ -96,7 +97,7 @@ unsigned int is_running(void)
   /*
    *  Return the run mask
    */
-  return return_value; // Return the running mask
+  return (return_value & RUN_MASK); // Return the running mask less PCNT HI
 }
 
 /*-----------------------------------------------------

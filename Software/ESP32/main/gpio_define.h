@@ -65,6 +65,7 @@
  * @function Prototypes
  */
 void gpio_init(void);
+void gpio_init_single(unsigned int type); // What type of GPIO are we programming?
 
 /*
  * Type defs
@@ -78,6 +79,7 @@ typedef enum gpio_type
   PWM_OUT,                                           // GPIO is used as a PWM port
   I2C_PORT,                                          // GPIO is used as a i2c port
   PCNT,                                              // GPIO is used as a Pulse Counter
+  PCNT_HI,                                           // GPIO associated with HI PCNT
   LED_STRIP                                          // GPIO is used to drives a LED strip (status LEDs)
 } gpio_type_t;
 

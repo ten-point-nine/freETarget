@@ -547,7 +547,7 @@ bool POST_counters(void)
   gpio_set_level(CLOCK_START, 1); // Triger the run latch
   gpio_set_level(CLOCK_START, 0);
   gpio_set_level(CLOCK_START, 1);
-  if ( is_running() != 0xFF )
+  if ( is_running() != RUN_MASK )
   {
     DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to start clock in run latch: %02X", is_running());))
     set_diag_LED(LED_FAIL_RUN_STUCK, 10);

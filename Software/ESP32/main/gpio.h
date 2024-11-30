@@ -78,22 +78,22 @@ extern volatile unsigned int step_count; // Number of steps before stopping
 #define BIT_SOUTH_LO 0x02
 #define BIT_WEST_LO  0x01
 
-#define RUN_MASK 0x00ff
+#define RUN_MASK 0x000f               // Include pcnt_lo bits and exclude pcnt_hi bits
 #define REF_CLK  GPIO_NUM_8
 
-#define PAPER     GPIO_NUM_12   // Paper advance drive active high
+#define PAPER     GPIO_NUM_12         // Paper advance drive active high
 #define PAPER_ON  1
 #define PAPER_OFF 0
 
 #if ( BUILD_REV == REV_500 )
-#define STOP_N      GPIO_NUM_47 // Stop the RUN flipflops
-#define CLOCK_START GPIO_NUM_21 // Trigger a test cycle
-#define OSC_CONTROL GPIO_NUM_48 // Enable / kill 10MHz Oscillator
+#define STOP_N      GPIO_NUM_47       // Stop the RUN flipflops
+#define CLOCK_START GPIO_NUM_21       // Trigger a test cycle
+#define OSC_CONTROL GPIO_NUM_48       // Enable / kill 10MHz Oscillator
 #endif
 #if ( (BUILD_REV == REV_510) || (BUILD_REV == REV_520) )
-#define STOP_N      GPIO_NUM_21 // Stop the RUN flipflops
-#define CLOCK_START GPIO_NUM_47 // Trigger a test cycle
-#define OSC_CONTROL GPIO_NUM_48 // Enable / kill 10MHz Oscillator
+#define STOP_N      GPIO_NUM_21       // Stop the RUN flipflops
+#define CLOCK_START GPIO_NUM_47       // Trigger a test cycle
+#define OSC_CONTROL GPIO_NUM_48       // Enable / kill 10MHz Oscillator
 #endif
 #define OSC_ON            1           // Enable the oscillator
 #define OSC_OFF           0           // Tristate the oscillator
@@ -104,13 +104,13 @@ extern volatile unsigned int step_count; // Number of steps before stopping
 #define LDAC              GPIO_NUM_42 // No longer used
 
 #define DIP_0   9
-#define RED_OUT 9               // Rapid fire RED on DIP0
+#define RED_OUT 9                     // Rapid fire RED on DIP0
 
-#define DIP_A       GPIO_NUM_38 // V
-#define DIP_B       GPIO_NUM_37 // V
-#define DIP_C       36          // V
-#define DIP_D       35          // V
-#define HOLD_C_GPIO GPIO_NUM_36 // Rapid Fire controls when enabled
+#define DIP_A       GPIO_NUM_38       // V
+#define DIP_B       GPIO_NUM_37       // V
+#define DIP_C       36                // V
+#define DIP_D       35                // V
+#define HOLD_C_GPIO GPIO_NUM_36       // Rapid Fire controls when enabled
 #define HOLD_D_GPIO GPIO_NUM_35
 
 /*

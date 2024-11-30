@@ -35,7 +35,8 @@
     "nvs_flash.h": "c",
     "variant": "c",
     "esp_timer.h": "c",
-    "err.h": "c"
+    "err.h": "c",
+    "complex": "c"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM8",
