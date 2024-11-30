@@ -121,6 +121,7 @@ void freeETarget_init(void)
    */
   json_aux_port_enable = false;    // Assume the AUX port is not used
   gpio_init();                     // Setup the hardware
+  set_status_LED(LED_HELLO_WORLD); // Hello World
   serial_io_init();                // Setup the console for debug messages
   read_nonvol();                   // Read in the settings
   serial_aux_init();               // Update the serial port if there is a change

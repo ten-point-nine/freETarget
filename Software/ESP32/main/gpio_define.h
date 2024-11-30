@@ -71,7 +71,8 @@ void gpio_init(void);
  */
 typedef enum gpio_type
 {
-  DIGITAL_IO,                                        // GPIO is used for igital IO
+  DIGITAL_IO_OUT = 1,                                // GPIO is used for digital IO
+  DIGITAL_IO_IN,                                     // GPIO is used for digital IO
   ANALOG_IO,                                         // GPIO is used for Analog IO
   SERIAL_AUX,                                        // GPIO is used as Serial auxilary port
   PWM_OUT,                                           // GPIO is used as a PWM port

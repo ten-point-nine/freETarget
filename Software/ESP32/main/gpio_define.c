@@ -38,62 +38,63 @@
 /*
  *  Digital IO definitions
  */
-const DIO_struct_t dio00 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio01 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio02 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio03 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio04 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio05 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio06 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio07 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio08 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
+const DIO_struct_t dio00 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
+const DIO_struct_t dio01 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
+const DIO_struct_t dio02 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
+const DIO_struct_t dio03 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
+const DIO_struct_t dio04 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
+const DIO_struct_t dio05 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
+const DIO_struct_t dio06 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
+const DIO_struct_t dio07 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
+const DIO_struct_t dio08 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
 const DIO_struct_t dio09 = {
-    .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0, .callback = &east_hi_pcnt_isr_callback};  // Mode and Initial Value
+    .type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0, .callback = &east_hi_pcnt_isr_callback};  // Mode and Initial Value
 const DIO_struct_t dio10 = {
-    .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0, .callback = &south_hi_pcnt_isr_callback}; // Mode and Initial Value
+    .type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0, .callback = &south_hi_pcnt_isr_callback}; // Mode and Initial Value
 const DIO_struct_t dio11 = {
-    .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0, .callback = &west_hi_pcnt_isr_callback};  // Mode and Initial Value
-const DIO_struct_t dio12 = {.type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};                 // Mode and Initial Value
-const DIO_struct_t dio13 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio14 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio15 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio16 = {
-    .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0, .callback = &north_hi_pcnt_isr_callback}; // Mode and Initial Value
-const DIO_struct_t dio17 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio18 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio19 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
+    .type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0, .callback = &west_hi_pcnt_isr_callback};  // Mode and Initial Value
+const DIO_struct_t dio12 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};                // Mode and Initial Value
+const DIO_struct_t dio13 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
+const DIO_struct_t dio14 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
+const DIO_struct_t dio15 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
+const DIO_struct_t dio16 = {.type          = DIGITAL_IO_IN,
+                            .mode          = GPIO_MODE_INPUT,
+                            .initial_value = 0}; // , .callback = &north_hi_pcnt_isr_callback}; // Mode and Initial Value
+const DIO_struct_t dio17 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio18 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio19 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 
-const DIO_struct_t dio20 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio21 = {.type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 1};                 // Mode and Initial Value
-const DIO_struct_t dio22 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio23 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio24 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio25 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio26 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio27 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio28 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio29 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
+const DIO_struct_t dio20 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio21 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 1}; // Mode and Initial Value
+const DIO_struct_t dio22 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio23 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio24 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio25 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio26 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio27 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio28 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio29 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 
-const DIO_struct_t dio30 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio31 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio32 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio33 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio34 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Can only be input
-const DIO_struct_t dio35 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Can only be input
-const DIO_struct_t dio36 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Can only be input
-const DIO_struct_t dio37 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio38 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio39 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Can only be input // AMB
+const DIO_struct_t dio30 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio31 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio32 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio33 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio34 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Can only be input
+const DIO_struct_t dio35 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Can only be input
+const DIO_struct_t dio36 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Can only be input
+const DIO_struct_t dio37 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio38 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio39 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Can only be input // AMB
 
-const DIO_struct_t dio40 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio41 = {.type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};                 // Mode and Initial Value
-const DIO_struct_t dio42 = {.type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 1};                 // Mode and Initial Value
-const DIO_struct_t dio43 = {.type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};                 // Mode and Initial Value
-const DIO_struct_t dio44 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio45 = {.type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};                 // Mode and Initial Value
-const DIO_struct_t dio46 = {.type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio47 = {.type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};                 // Mode and Initial Value
-const DIO_struct_t dio48 = {.type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 1};                 // Mode and Initial Value
+const DIO_struct_t dio40 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio41 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
+const DIO_struct_t dio42 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 1}; // Mode and Initial Value
+const DIO_struct_t dio43 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
+const DIO_struct_t dio44 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio45 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
+const DIO_struct_t dio46 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio47 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
+const DIO_struct_t dio48 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 1}; // Mode and Initial Value
 
 /*
  *  Analog IO usage
@@ -162,7 +163,6 @@ const static LED_strip_struct_t led_strip_config = {.type = LED_STRIP}; // 3 LED
 const gpio_struct_t gpio_table[] = {
     //   Name      Number       Assigned
     {"BD_REV",       GPIO_NUM_4,  (void *)&adc1_ch3        }, // BD_REV
-    //    {"RUN_NORTH_HI", GPIO_NUM_16, (void *)&dio16           }, // RUN_NORTH_HI Direct to GPIO // Fails
     {"ATX",          GPIO_NUM_17, (void *)&dio17           }, // ATX Initailize as input
     {"ARX",          GPIO_NUM_18, (void *)&dio18           }, // ARX and override later
     {"REF_CLK",      GPIO_NUM_8,  NULL                     }, // Re rence CLock Used by pcnt
@@ -170,7 +170,8 @@ const gpio_struct_t gpio_table[] = {
     {"USB_D+",       GPIO_NUM_20, NULL                     }, // JTAG USB D+
     {"USB_JTAG",     GPIO_NUM_3,  NULL                     }, // JTAG Strap to 3V3
     {"ROM_MSG",      GPIO_NUM_46, NULL                     }, // Enable ROM messages
-                                          //  {"RUN_EAST_HI",  GPIO_NUM_9,  (void *)&dio09           }, // RUN_EAST_HI Direct to GPIO
+
+    {"RUN_EAST_HI",  GPIO_NUM_9,  (void *)&dio09           }, // RUN_EAST_HI Direct to GPIO
     {"RUN_SOUTH_HI", GPIO_NUM_10, (void *)&dio10           }, // RUN_SOUTH_HI
     {"RUN_WEST_HI",  GPIO_NUM_11, (void *)&dio11           }, // RUN_WEST_HI
     {"PAPER",        GPIO_NUM_12, (void *)&dio12           }, // PAPER  Drive
@@ -183,7 +184,6 @@ const gpio_struct_t gpio_table[] = {
     {"FACE_HALF",    GPIO_NUM_40, (void *)&dio40           }, // FACE Interrupt
     {"SPARE1",       GPIO_NUM_39, (void *)&dio39           }, //
     {"A",            GPIO_NUM_38, (void *)&dio38           }, // Auxilary Input A
-
     {"B",            GPIO_NUM_37, (void *)&dio37           }, // Auxilary Input B
     {"C",            GPIO_NUM_36, (void *)&dio36           }, // Auxilary Input C
     {"D",            GPIO_NUM_35, (void *)&dio35           }, // Auxilary Input D
@@ -193,7 +193,7 @@ const gpio_struct_t gpio_table[] = {
     {"STOP*",        GPIO_NUM_21, (void *)&dio21           }, // Stop the RUN signals
     {"SDA",          GPIO_NUM_14, (void *)&i2c             }, // SDA
     {"SCL",          GPIO_NUM_13, NULL                     }, // SCL
-    // Move to last since it needs the hardware to be setup before we can start pcnt
+    //    {"RUN_NORTH_HI", GPIO_NUM_16, (void *)&dio16           }, // RUN_NORTH_HI Direct to GPIO
     {"RUN_NORTH_LO", GPIO_NUM_5,  (void *)&pcnt0           }, // RUN_NORTH_LO
     {"RUN_EAST_LO",  GPIO_NUM_6,  (void *)&pcnt1           }, // RUN_EAST_LO
     {"RUN_SOUTH_LO", GPIO_NUM_7,  (void *)&pcnt2           }, // RUN_SOUTH_LO
@@ -204,7 +204,18 @@ const gpio_struct_t gpio_table[] = {
 /*
  *  Variables
  */
-const static char *gpio_use[] = {"DIGITAL_IO", "ANALOG_IO", "SERIAL_AUX", "PWM_OUT", "I2C_PORT", "PCNT", "LED_STRIP"};
+const static gpio_type_t gpio_order[] = // Order in which to program devices
+    {
+        DIGITAL_IO_OUT,                 // GPIO is used for Digital Output
+        ANALOG_IO,                      // GPIO is used for Analog IO
+        SERIAL_AUX,                     // GPIO is used as Serial auxilary port
+        PWM_OUT,                        // GPIO is used as a PWM port
+        I2C_PORT,                       // GPIO is used as a i2c port
+        LED_STRIP,                      // GPIO is used to drives a LED strip (status LEDs)
+        PCNT,                           // GPIO is used as a Pulse Counter
+        DIGITAL_IO_IN,                  // GPIO is used for Digital Input
+        0                               // End sentinel
+};
 
 /*************************************************************************
  *
@@ -227,7 +238,7 @@ const static char *gpio_use[] = {"DIGITAL_IO", "ANALOG_IO", "SERIAL_AUX", "PWM_O
  ***************************************************************************/
 void gpio_init(void)
 {
-  int i;
+  int i, j;
 
   DLT(DLT_INFO, SEND(sprintf(_xs, "gpio_init()");))
 
@@ -236,94 +247,26 @@ void gpio_init(void)
   /*
    *  Loop and setup the GPIO outputs
    */
-  i = 0;
-  DLT(DLT_INFO, SEND(sprintf(_xs, "Setting GPIO output");))
-
-  while ( gpio_table[i].gpio_name != 0 )
+  j = 0;
+  while ( gpio_order[j] != 0 )               // Program the IO in order
   {
-    if ( gpio_table[i].gpio_uses != NULL )
+    i = 0;
+    while ( gpio_table[i].gpio_name != 0 )   // Look for the end of the table
     {
-      switch ( ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->type )
+      if ( gpio_table[i].gpio_uses != NULL ) // Is the uses defined?
       {
-        default:
-          break;
-
-        case DIGITAL_IO:
-          switch ( ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->mode )
+        if ( ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->type == gpio_order[j] )
+        {
+          switch ( ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->type )
           {
-#if ( 1 )
-            case GPIO_MODE_OUTPUT:
-            case GPIO_MODE_OUTPUT_OD:
-            case GPIO_MODE_INPUT_OUTPUT_OD:
-            case GPIO_MODE_INPUT_OUTPUT:
-              DLT(DLT_INFO, SEND(sprintf(_xs, "Digital output %s: %d", gpio_table[i].gpio_name, gpio_table[i].gpio_number);))
-              gpio_set_direction(gpio_table[i].gpio_number, ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->mode);
-              gpio_set_pull_mode(gpio_table[i].gpio_number, GPIO_PULLUP_PULLDOWN);
-              gpio_set_level(gpio_table[i].gpio_number, ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->initial_value);
-              break;
-#endif
             default:
+              printf("gpio not found %d", i);
               break;
-          }
-          break;
 
-        case ANALOG_IO:
-#if ( 1 ) // OK
-          DLT(DLT_INFO, SEND(sprintf(_xs, "Analog Input %s: %d ", gpio_table[i].gpio_name, gpio_table[i].gpio_number);))
-          adc_init(((const ADC_struct_t *)(gpio_table[i].gpio_uses))->adc_channel,
-                   ((const ADC_struct_t *)(gpio_table[i].gpio_uses))->adc_attenuation);
-#endif
-          break;
-
-        case PWM_OUT:
-#if ( 1 ) // OK
-          DLT(DLT_INFO, SEND(sprintf(_xs, "PWM output %s: %d ", gpio_table[i].gpio_name, gpio_table[i].gpio_number);))
-
-          pwm_init(((const PWM_struct_t *)(gpio_table[i].gpio_uses))->pwm_channel, gpio_table[i].gpio_number);
-#endif
-          break;
-
-        case I2C_PORT:
-#if ( 1 ) // OK
-          DLT(DLT_INFO, SEND(sprintf(_xs, "I2C %s: %d ", gpio_table[i].gpio_name, gpio_table[i].gpio_number);))
-          i2c_init(((I2C_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SDA,
-                   ((I2C_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SCL);
-#endif
-          break;
-
-        case LED_STRIP:
-#if ( 1 ) // OK
-          DLT(DLT_INFO, SEND(sprintf(_xs, "LED driver %s: %d ", gpio_table[i].gpio_name, gpio_table[i].gpio_number);))
-          status_LED_init(gpio_table[i].gpio_number);
-#endif
-          break;
-      }
-    }
-    i++;
-  }
-
-  /*
-   *  Loop and setup the GPIO inputs
-   */
-  i = 0;
-  DLT(DLT_INFO, SEND(sprintf(_xs, "\r\nSetting GPIO input");))
-  while ( gpio_table[i].gpio_name != 0 )
-  {
-    if ( gpio_table[i].gpio_uses != NULL )
-    {
-      switch ( ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->type )
-      {
-        default:
-          break;
-
-        case DIGITAL_IO:
-          switch ( ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->mode )
-          {
-#if ( 1 ) // FAILED WHEN ENABLED
-            case GPIO_MODE_INPUT:
-              DLT(DLT_INFO, SEND(sprintf(_xs, "Digital input %s: %d", gpio_table[i].gpio_name, gpio_table[i].gpio_number);))
-              gpio_set_pull_mode(gpio_table[i].gpio_number, GPIO_PULLUP_ONLY);
+            case DIGITAL_IO_IN:
+              DLT(DLT_INFO, SEND(sprintf(_xs, "Digital input: %s", gpio_table[i].gpio_name);))
               gpio_set_direction(gpio_table[i].gpio_number, GPIO_MODE_INPUT);
+              gpio_set_pull_mode(gpio_table[i].gpio_number, GPIO_PULLUP_ONLY);
 
               if ( (gpio_isr_t)((const DIO_struct_t *)(gpio_table[i].gpio_uses))->callback != NULL )
               {
@@ -334,25 +277,55 @@ void gpio_init(void)
               }
               break;
 
+            case DIGITAL_IO_OUT:
+              DLT(DLT_INFO, SEND(sprintf(_xs, "Digital output: %s", gpio_table[i].gpio_name);))
+              gpio_set_direction(gpio_table[i].gpio_number, ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->mode);
+              gpio_set_pull_mode(gpio_table[i].gpio_number, GPIO_PULLUP_PULLDOWN);
+              gpio_set_level(gpio_table[i].gpio_number, ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->initial_value);
+              break;
+
+            case PWM_OUT:
+              DLT(DLT_INFO, SEND(sprintf(_xs, "PWM output: %s", gpio_table[i].gpio_name);))
+
+              pwm_init(((const PWM_struct_t *)(gpio_table[i].gpio_uses))->pwm_channel, gpio_table[i].gpio_number);
+              break;
+
+            case I2C_PORT:
+              DLT(DLT_INFO, SEND(sprintf(_xs, "I2C: %s", gpio_table[i].gpio_name);))
+              i2c_init(((I2C_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SDA,
+                       ((I2C_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SCL);
+              break;
+
+            case LED_STRIP:
+              DLT(DLT_INFO, SEND(sprintf(_xs, "LED driver: %s", gpio_table[i].gpio_name);))
+              status_LED_init(gpio_table[i].gpio_number);
+              break;
+
             case PCNT:
-#if ( 1 )                                                                         // OK
-              DLT(DLT_INFO, SEND(sprintf(_xs, "pcnt %s: %d", gpio_table[i].gpio_name, gpio_table[i].gpio_number);))
+              DLT(DLT_INFO, SEND(sprintf(_xs, "pcnt: %s", gpio_table[i].gpio_name);))
               pcnt_init_FT(((const PCNT_struct_t *)(gpio_table[i].gpio_uses))->pcnt_unit,
                            ((const PCNT_struct_t *)(gpio_table[i].gpio_uses))->pcnt_control,
                            ((const PCNT_struct_t *)(gpio_table[i].gpio_uses))->pcnt_signal);
-#endif
               break;
-            default:
+
+            case ANALOG_IO:
+              DLT(DLT_INFO, SEND(sprintf(_xs, "Analog Input: %s", gpio_table[i].gpio_name);))
+              adc_init(((const ADC_struct_t *)(gpio_table[i].gpio_uses))->adc_channel,
+                       ((const ADC_struct_t *)(gpio_table[i].gpio_uses))->adc_attenuation);
               break;
-#endif
           }
+        }
       }
       i++;
+      vTaskDelay(10);
     }
+    j++;
   }
 
   /*
-   *  all done, return
+   *  All done, return
    */
+  DLT(DLT_INFO, SEND(sprintf(_xs, "GPIO complete");))
+
   return;
 }
