@@ -256,8 +256,8 @@ void gpio_init(void)
   /*
    *  All done, return
    */
-  DLT(DLT_INFO, SEND(sprintf(_xs, "GPIO complete");))
-
+  DLT(DLT_INFO, SEND(sprintf(_xs, "GPIO complete\r\n");))
+  vTaskDelay(10);
   return;
 }
 
