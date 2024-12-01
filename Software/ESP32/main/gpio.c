@@ -123,10 +123,13 @@ void arm_timers(void)
   gpio_set_level(STOP_N, RUN_OFF);      // Reset the timer
   gpio_set_level(OSC_CONTROL, OSC_OFF); // Turn off the oscillator
   pcnt_clear();
-  gpio_intr_enable(RUN_NORTH_HI);       // Turn on the interrupts
-  gpio_intr_enable(RUN_EAST_HI);
-  gpio_intr_enable(RUN_SOUTH_HI);
-  gpio_intr_enable(RUN_WEST_HI);
+  if ( json_pcnt_latency != 0 )
+  {
+    gpio_intr_enable(RUN_NORTH_HI);     // Turn on the interrupts
+    gpio_intr_enable(RUN_EAST_HI);
+    gpio_intr_enable(RUN_SOUTH_HI);
+    gpio_intr_enable(RUN_WEST_HI);
+  }
   gpio_set_level(OSC_CONTROL, OSC_ON);  // Turn on the oscillator
 
   gpio_set_level(STOP_N, RUN_GO);       // Then enable it

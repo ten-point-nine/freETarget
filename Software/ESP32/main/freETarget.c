@@ -16,6 +16,7 @@
 
 #include "freETarget.h"
 #include "gpio.h"
+#include "gpio_define.h"
 #include "compute_hit.h"
 #include "analog_io.h"
 #include "json.h"
@@ -125,7 +126,6 @@ void freeETarget_init(void)
   serial_io_init();                // Setup the console for debug messages
   read_nonvol();                   // Read in the settings
   serial_aux_init();               // Update the serial port if there is a change
-
   POST_version();                  // Show the version string on all ports
   set_VREF();
   multifunction_init();            // Override the MFS if we have to
@@ -152,6 +152,7 @@ void freeETarget_init(void)
   /*
    * Run the power on self test
    */
+
   POST_counters();            // POST counters does not return if there is an error
   if ( check_12V() == false ) // Verify the 12 volt supply
   {
@@ -194,6 +195,10 @@ void freeETarget_target_loop(void *arg)
 
   DLT(DLT_INFO, SEND(sprintf(_xs, "freeETarget_target_loop()");))
   set_status_LED(LED_READY);
+  if ( json_pcnt_latency != 0 )              // If the second set of timers has been enabled
+  {
+    gpio_init_single(PCNT_HI);               // Program the port
+  }
 
   shot_number = 1;                           // Start counting shots at 1
 
