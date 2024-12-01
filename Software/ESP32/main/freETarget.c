@@ -429,7 +429,7 @@ unsigned int reduce(void)
         {
           paper_shot++;
           DLT(DLT_DEBUG, SEND(sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", radius, json_paper_eco / 2, paper_shot, json_paper_shot);))
-          if ( (json_paper_shot != 0) && (paper_shot >= json_paper_shot) ) // Or we have reached the required number opf hits?
+          if ( (json_paper_shot == 0) || (paper_shot >= json_paper_shot) ) // Or we have reached the required number opf hits?
           {
             paper_start();                                                 // Roll the paper
             paper_shot = 0;                                                // And start over
