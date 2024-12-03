@@ -59,6 +59,7 @@ const mfs_action_t  mfs_action[] = {
     {TARGET_OFF,     mfs_off,        "TARGET OFF"    }, // Turn the target on or off
     {NO_ACTION,      NULL,           "NO ACTION"     }, // No action on C & D inputs
     {TARGET_TYPE,    NULL,           "TARGET TYPE"   }, // Put the target type into the send score
+    {SHOOTER_LEVEL,  NULL,           "SHOOTER_LEVEL" }, // Shooter experiance level
     {RAPID_RED,      NULL,           "RAPID RED"     }, // The output is used to drive the RED rapid fire LED
     {RAPID_GREEN,    NULL,           "RAPID_GREEN"   }, // The output is used to drive the GREEN rapid fire LED
     {RAPID_LOW,      NULL,           "RAPID LOW"     }, // The output is active low

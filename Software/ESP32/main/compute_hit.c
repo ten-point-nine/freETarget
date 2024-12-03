@@ -32,7 +32,7 @@
  *  Variables
  */
 sensor_t s[4] = {
-  // Do not make const
+    // Do not make const
     {0, {'n', "NORTH_LO", LED_NORTH_FAILED, 0x80}, {'N', "NORTH_HI", LED_NORTH_FAILED, 0x08}},
     {1, {'e', "EAST_LO", LED_EAST_FAILED, 0x40},   {'E', "EAST_HI", LED_EAST_FAILED, 0x04}  },
     {2, {'s', "SOUTH_LO", LED_SOUTH_FAILED, 0x20}, {'S', "SOUTH_HI", LED_SOUTH_FAILED, 0x02}},
@@ -550,12 +550,12 @@ void send_score(shot_record_t *shot,       //  record
   }
 #endif
 
-  if ( HOLD_C(json_multifunction2) == TARGET_TYPE )
+  if ( IS_HOLD_C(TARGET_TYPE) )
   {
     SEND(sprintf(_xs, ", \"target_type\":%d ", DIP_C););
   }
 
-  if ( HOLD_D(json_multifunction2) == TARGET_TYPE )
+  if ( IS_HOLD_D(TARGET_TYPE) )
   {
     SEND(sprintf(_xs, ", \"target_type\":%d ", DIP_D););
   }

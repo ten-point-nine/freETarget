@@ -849,11 +849,11 @@ void rapid_red(unsigned int state        // New state for the RED light
   {
     state = !state;
   }
-  if ( json_mfs_hold_c == RAPID_RED )
+  if ( IS_HOLD_C(RAPID_RED) )
   {
     gpio_set_level(DIP_C, state);
   }
-  if ( json_mfs_hold_d == RAPID_RED )
+  if ( IS_HOLD_D(RAPID_RED) )
   {
     gpio_set_level(DIP_D, state);
   }
@@ -869,11 +869,11 @@ void rapid_green(unsigned int state      // New state for the GREEN light
     state = !state;
   }
 
-  if ( json_mfs_hold_c == RAPID_GREEN )
+  if ( IS_HOLD_C(RAPID_GREEN) )
   {
     gpio_set_level(DIP_C, state);
   }
-  if ( json_mfs_hold_d == RAPID_GREEN )
+  if ( IS_HOLD_D(RAPID_GREEN) )
   {
     gpio_set_level(DIP_D, state);
   }
@@ -920,8 +920,7 @@ void digital_test(void)
  *--------------------------------------------------------------*/
 void status_LED_test(void)
 {
-  if ( ((json_mfs_hold_c != RAPID_RED) && (json_mfs_hold_c != RAPID_GREEN)) ||
-       ((json_mfs_hold_d != RAPID_RED) && (json_mfs_hold_d != RAPID_GREEN)) )
+  if ( ((IS_HOLD_C(RAPID_RED)) && (IS_HOLD_C(RAPID_GREEN))) || ((IS_HOLD_D(RAPID_RED)) && (IS_HOLD_D(RAPID_GREEN))) )
   {
     SEND(sprintf(_xs, "\r\nMFS_C or MFS_D not configured for output\r\n");)
   }
