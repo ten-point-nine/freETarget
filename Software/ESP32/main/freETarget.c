@@ -197,6 +197,7 @@ void freeETarget_target_loop(void *arg)
   set_status_LED(LED_READY);
   if ( json_pcnt_latency != 0 )              // If the second set of timers has been enabled
   {
+    DLT(DLT_INFO, SEND(sprintf(_xs, "Initializing PCNT high inputs");))
     gpio_init_single(PCNT_HI);               // Program the port
   }
 

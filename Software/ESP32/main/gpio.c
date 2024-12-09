@@ -14,6 +14,7 @@
 #include "led_strip_types.h"
 
 #include "freETarget.h"
+#include "compute_hit.h"
 #include "diag_tools.h"
 #include "gpio.h"
 #include "timer.h"
@@ -70,12 +71,10 @@ volatile unsigned int  step_time;   // Interval to next step
  * Read in the running registers, and return a 1 for every
  * register that is running.
  *
+ * It is up to the application to ignore unused RUN bits
+ * (ex RUN_NORTH_HI) is PCNT Latency has been removed
+ *
  *----------------------------------- ------------------*/
-static const unsigned int clock[]    = {RUN_NORTH_LO, RUN_EAST_LO, RUN_SOUTH_LO, RUN_WEST_LO,
-                                        RUN_NORTH_HI, RUN_EAST_HI, RUN_SOUTH_HI, RUN_WEST_HI};
-static const unsigned int run_mask[] = {BIT_NORTH_LO, BIT_EAST_LO, BIT_SOUTH_LO, BIT_WEST_LO,
-                                        BIT_NORTH_HI, BIT_EAST_HI, BIT_SOUTH_HI, BIT_WEST_HI};
-
 unsigned int is_running(void)
 {
   unsigned int return_value;
@@ -86,18 +85,22 @@ unsigned int is_running(void)
   /*
    * Read the running inputs
    */
-  for ( i = 0; i != 8; i++ )
+  for ( i = N; i <= W; i++ )
   {
-    if ( gpio_get_level(clock[i]) != 0 )
+    if ( gpio_get_level(s[i].low_sense.sensor_GPIO) != 0 )
     {
-      return_value |= run_mask[i];
+      return_value |= s[i].low_sense.run_mask;
+    }
+    if ( gpio_get_level(s[i].high_sense.sensor_GPIO) != 0 )
+    {
+      return_value |= s[i].high_sense.run_mask;
     }
   }
 
   /*
    *  Return the run mask
    */
-  return (return_value & RUN_MASK); // Return the running mask less PCNT HI
+  return (return_value); // Return the running mask INCLUDING PCNT HI
 }
 
 /*-----------------------------------------------------

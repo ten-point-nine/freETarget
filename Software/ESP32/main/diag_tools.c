@@ -212,11 +212,11 @@ static void show_test_help(void)
  *
  *-----------------------------------------------------*/
 
-#define PASS_RUNNING 0x00FF
+#define PASS_RUNNING RUN_MASK
 #define PASS_A       0x0100
 #define PASS_B       0x0200
-#define PASS_C       0X4000
-#define PASS_D       0x8000
+#define PASS_C       0X0400
+#define PASS_D       0x0800
 #define PASS_MASK    (PASS_RUNNING | PASS_A | PASS_B)
 #define PASS_TEST    (PASS_RUNNING | PASS_C)
 
@@ -231,6 +231,11 @@ bool factory_test(void)
   bool  passed_once;     // Passed all of the tests at least once
   float volts[4];
   int   motor_toggle;    // Toggle motor on an off
+
+  pass         = 0;      // Pass YES/NO
+  passed_once  = false;
+  percent      = 0;
+  motor_toggle = 0;
 
   /*
    *  Force the refernce voltages - Incase the board has been uninitialized
@@ -250,37 +255,39 @@ bool factory_test(void)
   SEND(sprintf(_xs, "\r\n");)
   SEND(sprintf(_xs, "\r\nHas the tape seal been removed from the temperature sensor?");)
   SEND(sprintf(_xs, "\r\nPress 1 & 2 or ! to continue\r\n");)
-  while ( (DIP_SW_A == 0) || (DIP_SW_B == 0) )
+
+  while ( pass != (PASS_A | PASS_B) )
   {
+    if ( DIP_SW_A != 0 )
+    {
+      pass |= PASS_A;
+    }
+    if ( DIP_SW_B != 0 )
+    {
+      pass |= PASS_B;
+    }
     if ( serial_available(ALL) )
     {
       if ( serial_getch(ALL) == '!' )
       {
-        break;
+        pass = (PASS_A | PASS_B);
       }
     }
-    continue;
   }
 
   /*
    *  Begin test
    */
   arm_timers();
-  pass         = 0;
-  passed_once  = false;
-  percent      = 0;
-  motor_toggle = 0;
+
   /*
    * Loop and poll the various inputs and output
    */
   while ( 1 )
   {
-    running = is_running();
-    if ( running == 0x00FF )
-    {
-      pass |= PASS_RUNNING;
-    }
     SEND(sprintf(_xs, "\r\nSens: ");)
+    running = is_running();
+    pass |= running & RUN_MASK;
     for ( i = 0; i != 8; i++ )
     {
       if ( i == 4 )
@@ -293,7 +300,21 @@ bool factory_test(void)
       }
       else
       {
-        SEND(sprintf(_xs, "-");)
+        if ( json_pcnt_latency != 0 ) // Is PCNT latency enabled?
+        {
+          SEND(sprintf(_xs, "-");)    // report no answer from the input
+        }
+        else                          // PCNT Latency is not enabled
+        {
+          if ( i <= 3 )
+          {
+            SEND(sprintf(_xs, "-");)
+          }
+          else
+          {
+            SEND(sprintf(_xs, ".");) // Show N/A for this iput
+          }
+        }
       }
     }
 
@@ -369,7 +390,7 @@ bool factory_test(void)
       }
     }
 
-    if ( (pass == PASS_MASK) || (pass == PASS_TEST) )
+    if ( ((pass & PASS_MASK) == PASS_MASK) )
     {
       set_status_LED(LED_GOOD);
       SEND(sprintf(_xs, "  PASS");)
@@ -547,7 +568,7 @@ bool POST_counters(void)
   gpio_set_level(CLOCK_START, 1); // Triger the run latch
   gpio_set_level(CLOCK_START, 0);
   gpio_set_level(CLOCK_START, 1);
-  if ( is_running() != RUN_MASK )
+  if ( (is_running() & RUN_MASK) != RUN_MASK )
   {
     DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to start clock in run latch: %02X", is_running());))
     set_diag_LED(LED_FAIL_RUN_STUCK, 10);

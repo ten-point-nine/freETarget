@@ -14,7 +14,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"5.2.18 December 2, 2024\""
+#define SOFTWARE_VERSION "\"5.2.18 December 9, 2024\""
 #define _DONE_           "\r\nDone\r\n"
 
 #define REV_500   500    // ESP32
@@ -95,6 +95,7 @@ typedef struct sensor_ID
   char         short_name;               // Short name, ex 'N'
   char        *long_name;                // Long name, ex "NORTH_HI"
   char        *diag_LED;                 // LEDs to be set if a fault occurs
+  unsigned int sensor_GPIO;              // What GPIO is used with this sensor
   unsigned int run_mask;                 // What bit is set in the RUN latch
 } sensor_ID_t;
 

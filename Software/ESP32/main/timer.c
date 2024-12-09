@@ -181,7 +181,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
       break;
 
     case PORT_STATE_WAIT:                                    // Something is present, wait for all of the inputs
-      if ( (pin == RUN_MASK)                                 // We have all of the inputs
+      if ( ((pin & RUN_MASK) == RUN_MASK)                    // We have all of the inputs
            || (shot_timer == 0) )                            // or ran out of time.  Read the timers and restart
       {
         aquire();                                            // Read the counters
