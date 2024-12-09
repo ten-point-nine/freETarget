@@ -40,7 +40,7 @@
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
 #define IF_IN(x)  if ( (run_state & (x)) != 0 )
 
-#define SEND(message) {message} serial_to_all(_xs, CONSOLE);
+#define SEND(message) {message} serial_to_all(_xs, ALL);
 
 #define IS_DC_WITNESS      (json_paper_time != 0) // Determine the witness paper drive (DC Motor)
 #define IS_STEPPER_WITNESS (json_step_count != 0) // Determine the witness paper drive (stepper)
