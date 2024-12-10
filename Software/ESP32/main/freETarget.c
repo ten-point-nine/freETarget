@@ -314,16 +314,16 @@ unsigned int arm(void)
 {
   DLT(DLT_APPLICATION, SEND(sprintf(_xs, "arm()");))
 
-  face_strike = 0;                   // Reset the face strike count
+  face_strike = 0;                         // Reset the face strike count
   stop_timers();
-  arm_timers();                      // Arm the counters
+  arm_timers();                            // Arm the counters
   run_state |= IN_SHOT;
-  shot_start = esp_timer_get_time(); // Remember when we started
+  shot_start = esp_timer_get_time();       // Remember when we started
 
-  sensor_status = is_running();      // and immediatly read the status
-  if ( sensor_status == 0 )          // After arming, the sensor status should be zero
+  sensor_status = is_running() & RUN_MASK; // and immediatly read the status
+  if ( sensor_status == 0 )                // After arming, the sensor status should be zero
   {
-    return WAIT;                     // Fall through to WAIT
+    return WAIT;                           // Fall through to WAIT
   }
 
   /*
@@ -430,18 +430,18 @@ unsigned int reduce(void)
       /*
        *  Advance the paper
        */
-      if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )                           // Has the witness paper been enabled?
+      if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )  // Has the witness paper been enabled?
       {
         radius = sqrt(sq(record[shot_out].xs) + sq(record[shot_out].ys));
-        if ( ((json_paper_eco == 0)                                        // PAPER_ECO turned off
-              || radius < (json_paper_eco / 2)) )                          // Inside the black (radius)
+        if ( ((json_paper_eco == 0)               // PAPER_ECO turned off
+              || radius < (json_paper_eco / 2)) ) // Inside the black (radius)
         {
           paper_shot++;
           DLT(DLT_DEBUG, SEND(sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", radius, json_paper_eco / 2, paper_shot, json_paper_shot);))
-          if ( (json_paper_shot == 0) || (paper_shot >= json_paper_shot) ) // Or we have reached the required number opf hits?
+          if ( paper_shot >= json_paper_shot )    // Or we have reached the required number opf hits?
           {
-            paper_start();                                                 // Roll the paper
-            paper_shot = 0;                                                // And start over
+            paper_start();                        // Roll the paper
+            paper_shot = 0;                       // And start over
           }
         }
         else
@@ -752,25 +752,25 @@ void bye(unsigned int force_bye // Set to true to force a shutdown
 
   switch ( bye_state )
   {
-    case BYE_BYE:                          // Say Good Night Gracie!
+    case BYE_BYE:                                // Say Good Night Gracie!
       SEND(sprintf(_xs, "{\"GOOD_BYE\":0}");)
-      json_tabata_enable = false;          // Turn off any automatic cycles
+      json_tabata_enable = false;                // Turn off any automatic cycles
       json_rapid_enable  = false;
-      set_LED_PWM(0);                      // Going to sleep
+      set_LED_PWM(0);                            // Going to sleep
       set_status_LED(LED_BYE);
-      serial_flush(ALL);                   // Purge the com port
-      run_state &= ~IN_OPERATION;          // Take the system out of operating mode
-      run_state |= IN_SLEEP;               // Put it to sleep
+      serial_flush(ALL);                         // Purge the com port
+      run_state &= ~IN_OPERATION;                // Take the system out of operating mode
+      run_state |= IN_SLEEP;                     // Put it to sleep
       bye_state = BYE_HOLD;
       break;
 
-    case BYE_HOLD:                         // Loop waiting for something to happen
-      if ( (DIP_SW_A)                      // Wait for the switch to be pressed
-           || (DIP_SW_B)                   // Or the switch to be pressed
-           || (serial_available(ALL) != 0) // Or a character to arrive
-           || (is_running() != 0) )        // Or a shot arrives
+    case BYE_HOLD:                               // Loop waiting for something to happen
+      if ( (DIP_SW_A)                            // Wait for the switch to be pressed
+           || (DIP_SW_B)                         // Or the switch to be pressed
+           || (serial_available(ALL) != 0)       // Or a character to arrive
+           || ((is_running() & RUN_MASK) != 0) ) // Or a shot arrives
       {
-        bye_state = BYE_START;             // wait for the swich to be released
+        bye_state = BYE_START;                   // wait for the swich to be released
       } // turns up
       break;
 
@@ -878,7 +878,7 @@ void polled_target_test(void)
   {
     arm_timers();
     SEND(sprintf(_xs, "\r\nArmed\r\n");)
-    while ( is_running() != 0xff )
+    while ( (is_running() & RUN_MASK) != RUN_MASK )
     {
       running = is_running();
       SEND(sprintf(_xs, "\r\nis_running: %02X", running);)

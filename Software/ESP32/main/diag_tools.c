@@ -526,8 +526,8 @@ bool POST_counters(void)
   /*
    *  Test 3, Make sure we can turn the triggers off
    */
-  gpio_set_level(STOP_N, 0); // Clear the latch
-  gpio_set_level(STOP_N, 1); // and reenable it
+  gpio_set_level(STOP_N, RUN_OFF); // Clear the latch
+  gpio_set_level(STOP_N, RUN_GO);  // and reenable it
   running = is_running();
   if ( running != 0 )
   {
@@ -550,8 +550,8 @@ bool POST_counters(void)
   /*
    * Test 4, Trigger the timers
    */
-  gpio_set_level(STOP_N, 0);                      // Clear the latch
-  gpio_set_level(STOP_N, 1);
+  gpio_set_level(STOP_N, RUN_OFF);                // Clear the latch
+  gpio_set_level(STOP_N, RUN_GO);
   gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF); // Triger the run latch
   gpio_set_level(CLOCK_START, CLOCK_TRIGGER_ON);
   gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);
