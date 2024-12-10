@@ -300,21 +300,8 @@ bool factory_test(void)
       }
       else
       {
-        if ( json_pcnt_latency != 0 ) // Is PCNT latency enabled?
-        {
-          SEND(sprintf(_xs, "-");)    // report no answer from the input
-        }
-        else                          // PCNT Latency is not enabled
-        {
-          if ( i <= 3 )
-          {
-            SEND(sprintf(_xs, "-");)
-          }
-          else
-          {
-            SEND(sprintf(_xs, ".");) // Show N/A for this iput
-          }
-        }
+
+        SEND(sprintf(_xs, ".");) // Show N/A for this iput
       }
     }
 
@@ -563,11 +550,11 @@ bool POST_counters(void)
   /*
    * Test 4, Trigger the timers
    */
-  gpio_set_level(STOP_N, 0);      // Clear the latch
+  gpio_set_level(STOP_N, 0);                      // Clear the latch
   gpio_set_level(STOP_N, 1);
-  gpio_set_level(CLOCK_START, 1); // Triger the run latch
-  gpio_set_level(CLOCK_START, 0);
-  gpio_set_level(CLOCK_START, 1);
+  gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF); // Triger the run latch
+  gpio_set_level(CLOCK_START, CLOCK_TRIGGER_ON);
+  gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);
   if ( (is_running() & RUN_MASK) != RUN_MASK )
   {
     DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to start clock in run latch: %02X", is_running());))

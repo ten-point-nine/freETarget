@@ -1053,13 +1053,13 @@ void timer_run_all(void)
   SEND(sprintf(_xs, "\r\nPress any key to stop");)
   while ( serial_available(ALL) == 0 )
   {
-    gpio_set_level(STOP_N, 1);      // Let the clock go
-    gpio_set_level(CLOCK_START, 0);
-    gpio_set_level(CLOCK_START, 1);
-    gpio_set_level(CLOCK_START, 0); // Strobe the RUN linwes
-    vTaskDelay(ONE_SECOND / 2);     // The RUN lines should be on for 1/2 second
-    gpio_set_level(STOP_N, 0);      // Stop the clock
-    vTaskDelay(ONE_SECOND / 4);     // THe RUN lines shold be off for 1/4 second
+    gpio_set_level(STOP_N, 1);                      // Let the clock go
+    gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);
+    gpio_set_level(CLOCK_START, CLOCK_TRIGGER_ON);
+    gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF); // Strobe the RUN linwes
+    vTaskDelay(ONE_SECOND / 2);                     // The RUN lines should be on for 1/2 second
+    gpio_set_level(STOP_N, 0);                      // Stop the clock
+    vTaskDelay(ONE_SECOND / 4);                     // THe RUN lines shold be off for 1/4 second
   }
 
   SEND(sprintf(_xs, _DONE_);)

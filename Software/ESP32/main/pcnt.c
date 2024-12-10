@@ -81,9 +81,7 @@ void pcnt_init_FT(int unit, // What unit to use
   /*
    * Make sure everything is turned off
    */
-  gpio_set_level(CLOCK_START, 0);
-  gpio_set_level(STOP_N, 0);
-
+  gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);
   /*
    * Setup the unit
    */
@@ -283,12 +281,12 @@ void pcnt_test(int which_test)
     case 1:
       SEND(sprintf(_xs, "\r\nPCNT-1  Counters cleared and not running.");)
       SEND(sprintf(_xs, "\r\n        Low counters should all be 0. High Counters 11, 22, 33, 44");)
-      arm_timers();                   // Arm the timers
+      arm_timers();                                   // Arm the timers
       north_pcnt_hi = 11;
       east_pcnt_hi  = 22;
       south_pcnt_hi = 23;
       west_pcnt_hi  = 24;
-      gpio_set_level(CLOCK_START, 0); // Do not trigger the clock
+      gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF); // Do not trigger the clock
       SEND(sprintf(_xs, "\r\nis_running: %02X", is_running());)
       for ( i = 0; i != 10; i++ )
       {
