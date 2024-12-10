@@ -28,6 +28,7 @@ typedef struct
   void (*f)(int x); // Function to execute with message
   char *non_vol;    // Storage in NON-VOL
   int   init_value; // Initial Value
+  int   ps_version; // What persistent storage version was this introduced
 } json_message_t;
 
 extern const json_message_t JSON[];
