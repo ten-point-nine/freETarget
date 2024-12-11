@@ -11,6 +11,6 @@
 /*
  *  Sensor Geometry.  Note, values can be scaled on output
  */
-#define DIAMETER (230.0d) // Diameter to sensors in mm
+#define DIAMETER (232.0d) // Diameter to sensors in mm
 
 #endif

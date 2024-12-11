@@ -33,11 +33,11 @@ void heartbeat(void);                                     // Send out regular st
  * LED status messages
  *
  */
-//                           R              // RDY indicates operating status
-//                            X             // X indicates communications status
-//                             Y            // Y indicates feature status
-//                              C           // Optional C output
-//                               D          // Optional D ouput
+//                       R              // RDY indicates operating status
+//                        X             // X indicates communications status
+//                         Y            // Y indicates feature status
+//                          C           // Optional C output
+//                           D          // Optional D ouput
 
 #define LED_OFF         "     "      // Turn off all of the LEDs
 #define LED_HELLO_WORLD "RWB--"      // Hello World

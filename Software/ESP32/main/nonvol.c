@@ -89,6 +89,7 @@ void read_nonvol(void)
   if ( nonvol_init != PS_VERSION ) // persistent storage version
   {
     update_nonvol(nonvol_init);
+    printf("back here");
   }
 
   /*
@@ -393,14 +394,14 @@ void update_nonvol(unsigned int current_version // Version present in persistent
                                   /*
                                    *  Loop and update each of the configurations
                                    */
-  for ( version = current_version; version != PS_VERSION; version++ ) // All possible version numbers
+  for ( version = current_version; version <= PS_VERSION; version++ ) // All possible version numbers
   {
     i = 0;
     while ( JSON[i].token != 0 )
     {
       if ( JSON[i].ps_version == version )
       {
-        DLT(DLT_INFO, SEND(sprintf(_xs, "Updating PS%d to PS%d", version, version + 1);))
+        DLT(DLT_INFO, SEND(sprintf(_xs, "Updating PS%d", version);))
         switch ( JSON[i].convert & IS_MASK )
         {
           case IS_VOID:  // Variable does not contain anything
@@ -435,17 +436,17 @@ void update_nonvol(unsigned int current_version // Version present in persistent
         {
           strcpy(json_wifi_ip, "192.168.10.9");
           nvs_set_str(my_handle, NONVOL_WIFI_IP, json_wifi_ip);
-          current_version = 3;
         }
       }
+      i++;
     }
-    i++;
   }
 
   /*
    * Up to date, return
    */
-  nvs_set_i32(my_handle, NONVOL_PS_VERSION, current_version);
+  nvs_set_i32(my_handle, NONVOL_PS_VERSION, PS_VERSION);
   nvs_commit(my_handle);
+  printf("bye bye");
   return;
 }

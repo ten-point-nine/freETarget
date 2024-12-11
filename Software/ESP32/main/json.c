@@ -58,6 +58,8 @@ int           json_step_start;           // Value to start motor moving
 int           json_step_time;            // Duration of each step in ms
 int           json_multifunction;        // Multifunction switch operation
 int           json_multifunction2;       // Multifunction Switch 2
+double        json_x_offset;             // Offset to add to correct horizontal target
+double        json_y_offset;             // Offset to add to correct vertical target
 int           json_z_offset;             // Distance between paper and sensor plane in 0.1mm
 int           json_paper_eco;            // Do not advance paper if outside of the black
 int           json_target_type;          // Modify target type (0 == single bull)
@@ -167,6 +169,8 @@ const json_message_t JSON[] = {
     {"\"WIFI_RESET\":",      &json_wifi_reset_first, 0,                IS_INT32,             0,                  NONVOL_WIFI_RESET_FIRST, 1,
      3                                                                                                                                                 }, // Reset everything on the first WiFI connection
     {"\"WIFI_SSID\":",       (int *)&json_wifi_ssid, 0,                IS_TEXT + SSID_SIZE,  0,                  NONVOL_WIFI_SSID,        0,          0}, // Name of SSID to attach to
+    {"\"X_OFFSET\":",        0,                      &json_x_offset,   IS_FLOAT,             0,                  NONVOL_X_OFFSET,         0,          7}, // Correction to add to X to align target
+    {"\"Y_OFFSET\":",        0,                      &json_y_offset,   IS_FLOAT,             0,                  NONVOL_Y_OFFSET,         0,          7}, // Correction to add to Y to align target
     {"\"Z_OFFSET\":",        &json_z_offset,         0,                IS_INT32,             0,                  NONVOL_Z_OFFSET,         13,         0}, // Distance from paper to sensor plane (mm)
     {"\"NORTH_X\":",         &json_north_x,          0,                IS_INT32,             0,                  NONVOL_NORTH_X,          0,          0}, //
     {"\"NORTH_Y\":",         &json_north_y,          0,                IS_INT32,             0,                  NONVOL_NORTH_Y,          0,          0}, //

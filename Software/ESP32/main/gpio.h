@@ -114,24 +114,12 @@ extern volatile unsigned int step_count; // Number of steps before stopping
 #define HOLD_D_GPIO GPIO_NUM_35
 
 /*
- * Multifunction Switch Use when using DIP Switch for MFS
- */
-#define HOLD_1(x)  LO10((x))  // Low digit        xxxx2
-#define HOLD_2(x)  HI10((x))  // High digit       xxx2x
-#define HOLD_C(x)  LO10((x))  // Low digit        xxxx2
-#define HOLD_D(x)  HI10((x))  // High digit       xxx2x
-#define TAP_1(x)   HLO10((x)) // High Low digit   xx2xx
-#define TAP_2(x)   HHI10((x)) // High High digit  x2xxx
-#define HOLD_12(x) HHH10((x)) // Highest digit    2xxxx
-
-/*
  * DIP Switch Use.
  */
-#define DIP_SW_A      (gpio_get_level(DIP_A) == 0) // Switch Input A
-#define DIP_SW_B      (gpio_get_level(DIP_B) == 0) // Switch Input B
-#define DIP_SW_C      (gpio_get_level(DIP_C) == 0) // Switch Input C
-#define DIP_SW_D      (gpio_get_level(DIP_D) == 0) // Switch Input D
-#define VERBOSE_TRACE (DIP_D)                      // 8 Show the verbose software trace
+#define DIP_SW_A (gpio_get_level(DIP_A) == 0) // Switch Input A
+#define DIP_SW_B (gpio_get_level(DIP_B) == 0) // Switch Input B
+#define DIP_SW_C (gpio_get_level(DIP_C) == 0) // Switch Input C
+#define DIP_SW_D (gpio_get_level(DIP_D) == 0) // Switch Input D
 
 #define FACE_SENSOR 19
 

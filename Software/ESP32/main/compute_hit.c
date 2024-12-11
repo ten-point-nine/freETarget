@@ -35,7 +35,7 @@
  *  Variables
  */
 sensor_t s[4] = {
-    // Do not make const
+    // Contains variables,do not make const
     {0, {'n', "NORTH_LO", LED_NORTH_FAILED, RUN_NORTH_LO, BIT_NORTH_LO}, {'N', "NORTH_HI", LED_NORTH_FAILED, RUN_NORTH_HI, BIT_NORTH_HI}},
     {1, {'e', "EAST_LO", LED_EAST_FAILED, RUN_EAST_LO, BIT_EAST_LO},     {'E', "EAST_HI", LED_EAST_FAILED, RUN_EAST_HI, BIT_EAST_HI}    },
     {2, {'s', "SOUTH_LO", LED_SOUTH_FAILED, RUN_SOUTH_LO, BIT_SOUTH_LO}, {'S', "SOUTH_HI", LED_SOUTH_FAILED, RUN_SOUTH_HI, BIT_SOUTH_HI}},
@@ -498,11 +498,11 @@ void send_score(shot_record_t *shot,       //  record
    * Rotate the result based on the construction, and recompute the hit
    */
   angle += json_sensor_angle;
-  x      = radius * cos(PI * angle / 180.0d); // Rotate onto the target face
-  y      = radius * sin(PI * angle / 180.0d);
+  x      = radius * cos(PI * angle / 180.0d) + json_x_offset; // Rotate onto the target face
+  y      = radius * sin(PI * angle / 180.0d) + json_y_offset; // and add in sensor correction
   real_x = x;
-  real_y = y;                                 // Remember the original target value
-  remap_target(&x, &y);                       // Change the target if needed
+  real_y = y;                                                 // Remember the original target value
+  remap_target(&x, &y);                                       // Change the target if needed
   shot->xs       = x;
   shot->ys       = y;
   shot->is_valid = true;
