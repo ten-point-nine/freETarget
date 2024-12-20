@@ -301,7 +301,15 @@ bool factory_test(void)
       else
       {
 
-        SEND(sprintf(_xs, ".");) // Show N/A for this iput
+        if ( ((find_sensor(1 << i)->short_name) == 'N') // Is this the North Sensor?
+             && (json_pcnt_latency == 0) )              // and pcnt_latency is disabled?
+        {
+          SEND(sprintf(_xs, "-");)                      // Then mark it as unused
+        }
+        else
+        {
+          SEND(sprintf(_xs, ".");)                      // Show N/A for this iput
+        }
       }
     }
 
@@ -600,41 +608,12 @@ void show_sensor_status(unsigned int sensor_status)
     }
   }
 
+  if ( (sensor_status & RUN_MASK) != RUN_MASK )
+  {
+    SEND(sprintf(_xs, " FAULT");)
+  }
+
   SEND(sprintf(_xs, "  Face Strike: %d", face_strike);)
-
-  SEND(sprintf(_xs, "  Temperature: %4.2f", temperature_C());)
-
-  SEND(sprintf(_xs, "  Switch:");)
-
-  if ( DIP_SW_A == 0 )
-  {
-    SEND(sprintf(_xs, "--");)
-  }
-  else
-  {
-    SEND(sprintf(_xs, "A1");)
-  }
-  SEND(sprintf(_xs, " ");)
-
-  if ( DIP_SW_B == 0 )
-  {
-    SEND(sprintf(_xs, "--");)
-  }
-  else
-  {
-    SEND(sprintf(_xs, "B2");)
-  }
-
-  if ( (sensor_status & 0x0f) == 0x0f )
-  {
-    SEND(sprintf(_xs, " PASS");)
-  }
-  else
-  {
-    SEND(sprintf(_xs, " FAIL");)
-  }
-
-  vTaskDelay(ONE_SECOND); // Wait for click to go away
 
   /*
    * All done, return
