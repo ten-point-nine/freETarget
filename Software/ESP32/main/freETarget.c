@@ -16,6 +16,7 @@
 
 #include "freETarget.h"
 #include "gpio.h"
+#include "gpio_define.h"
 #include "compute_hit.h"
 #include "analog_io.h"
 #include "json.h"
@@ -190,7 +191,14 @@ unsigned int location;      // Sensor location
 void freeETarget_target_loop(void *arg)
 {
   DLT(DLT_INFO, SEND(sprintf(_xs, "freeETarget_target_loop()");))
+
   set_status_LED(LED_READY);
+
+  if ( json_pcnt_latency != 0 )              // If the second set of timers has been enabled
+  {
+    DLT(DLT_INFO, SEND(sprintf(_xs, "Initializing PCNT high inputs");))
+    gpio_init_single(PCNT_HI);               // Program the port
+  }
 
   shot_number = 1;                           // Start counting shots at 1
 
@@ -199,6 +207,7 @@ void freeETarget_target_loop(void *arg)
     IF_IN(IN_SLEEP | IN_TEST | IN_FATAL_ERR) // If Not in operation,
     {
       run_state &= ~IN_OPERATION;            // Exit operation
+      set_status_LED(LED_FATAL);             // but show something really wrong
       vTaskDelay(ONE_SECOND);
       continue;
     }
