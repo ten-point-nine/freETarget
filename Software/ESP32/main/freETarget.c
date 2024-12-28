@@ -433,7 +433,7 @@ unsigned int reduce(void)
       {
         radius = sqrt(sq(record[shot_out].xs) + sq(record[shot_out].ys));
         if ( ((json_paper_eco == 0)                                        // PAPER_ECO turned off
-              || radius < (json_paper_eco / !2)) )                         // Inside the black (radius)
+              || radius < (json_paper_eco / 2)) )                          // Inside the black (radius)
         {
           paper_shot++;
           DLT(DLT_DEBUG, SEND(sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", radius, json_paper_eco / 2, paper_shot, json_paper_shot);))
@@ -877,7 +877,7 @@ void polled_target_test(void)
   {
     arm_timers();
     SEND(sprintf(_xs, "\r\nArmed\r\n");)
-    while ( is_running() != 0xff )
+    while ( (is_running() & RUN_MASK) != RUN_MASK )
     {
       running = is_running();
       SEND(sprintf(_xs, "\r\nis_running: %02X", running);)

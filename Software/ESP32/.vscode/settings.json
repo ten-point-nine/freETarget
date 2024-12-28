@@ -36,7 +36,8 @@
     "variant": "c",
     "esp_timer.h": "c",
     "err.h": "c",
-    "complex": "c"
+    "complex": "c",
+    "i2c.h": "c"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM3",
