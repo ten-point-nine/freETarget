@@ -212,11 +212,11 @@ static void show_test_help(void)
  *
  *-----------------------------------------------------*/
 
-#define PASS_RUNNING 0x00FF
+#define PASS_RUNNING RUN_MASK
 #define PASS_A       0x0100
 #define PASS_B       0x0200
-#define PASS_C       0X4000
-#define PASS_D       0x8000
+#define PASS_C       0X0400
+#define PASS_D       0x0800
 #define PASS_MASK    (PASS_RUNNING | PASS_A | PASS_B)
 #define PASS_TEST    (PASS_RUNNING | PASS_C)
 
@@ -231,6 +231,11 @@ bool factory_test(void)
   bool  passed_once;     // Passed all of the tests at least once
   float volts[4];
   int   motor_toggle;    // Toggle motor on an off
+
+  pass         = 0;      // Pass YES/NO
+  passed_once  = false;
+  percent      = 0;
+  motor_toggle = 0;
 
   /*
    *  Force the refernce voltages - Incase the board has been uninitialized
@@ -250,37 +255,39 @@ bool factory_test(void)
   SEND(sprintf(_xs, "\r\n");)
   SEND(sprintf(_xs, "\r\nHas the tape seal been removed from the temperature sensor?");)
   SEND(sprintf(_xs, "\r\nPress 1 & 2 or ! to continue\r\n");)
-  while ( (DIP_SW_A == 0) || (DIP_SW_B == 0) )
+
+  while ( pass != (PASS_A | PASS_B) )
   {
+    if ( DIP_SW_A != 0 )
+    {
+      pass |= PASS_A;
+    }
+    if ( DIP_SW_B != 0 )
+    {
+      pass |= PASS_B;
+    }
     if ( serial_available(ALL) )
     {
       if ( serial_getch(ALL) == '!' )
       {
-        break;
+        pass = (PASS_A | PASS_B);
       }
     }
-    continue;
   }
 
   /*
    *  Begin test
    */
   arm_timers();
-  pass         = 0;
-  passed_once  = false;
-  percent      = 0;
-  motor_toggle = 0;
+
   /*
    * Loop and poll the various inputs and output
    */
   while ( 1 )
   {
-    running = is_running();
-    if ( running == 0x00FF )
-    {
-      pass |= PASS_RUNNING;
-    }
     SEND(sprintf(_xs, "\r\nSens: ");)
+    running = is_running();
+    pass |= running & RUN_MASK;
     for ( i = 0; i != 8; i++ )
     {
       if ( i == 4 )
@@ -293,7 +300,16 @@ bool factory_test(void)
       }
       else
       {
-        SEND(sprintf(_xs, "-");)
+
+        if ( ((find_sensor(1 << i)->short_name) == 'N') // Is this the North Sensor?
+             && (json_pcnt_latency == 0) )              // and pcnt_latency is disabled?
+        {
+          SEND(sprintf(_xs, "-");)                      // Then mark it as unused
+        }
+        else
+        {
+          SEND(sprintf(_xs, ".");)                      // Show N/A for this iput
+        }
       }
     }
 
@@ -369,7 +385,7 @@ bool factory_test(void)
       }
     }
 
-    if ( (pass == PASS_MASK) || (pass == PASS_TEST) )
+    if ( ((pass & PASS_MASK) == PASS_MASK) )
     {
       set_status_LED(LED_GOOD);
       SEND(sprintf(_xs, "  PASS");)
@@ -489,7 +505,8 @@ bool POST_counters(void)
   if ( count != 0 )
   {
     DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Reference clock cannot be stopped");))
-    set_diag_LED(LED_FAIL_CLOCK_STOP, 0);
+    set_diag_LED(LED_FAIL_CLOCK_STOP, 10);
+    run_state |= IN_FATAL_ERR;
   }
 
   /*
@@ -510,14 +527,15 @@ bool POST_counters(void)
   if ( count == 0 )
   {
     DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Reference clock cannot be started");))
-    set_diag_LED(LED_FAIL_CLOCK_START, 0);
+    set_diag_LED(LED_FAIL_CLOCK_START, 10);
+    run_state |= IN_FATAL_ERR;
   }
 
   /*
    *  Test 3, Make sure we can turn the triggers off
    */
-  gpio_set_level(STOP_N, 0); // Clear the latch
-  gpio_set_level(STOP_N, 1); // and reenable it
+  gpio_set_level(STOP_N, RUN_OFF); // Clear the latch
+  gpio_set_level(STOP_N, RUN_GO);  // and reenable it
   running = is_running();
   if ( running != 0 )
   {
@@ -526,34 +544,36 @@ bool POST_counters(void)
     {
       if ( running & s[i].low_sense.run_mask )
       {
-        set_diag_LED(s[i].low_sense.diag_LED, 0);
+        set_diag_LED(s[i].low_sense.diag_LED, 10);
       }
       if ( running & s[i].high_sense.run_mask )
       {
-        set_diag_LED(s[i].high_sense.diag_LED, 0);
+        set_diag_LED(s[i].high_sense.diag_LED, 10);
       }
     }
+    run_state |= IN_FATAL_ERR;
   }
   vTaskDelay(ONE_SECOND);
 
   /*
    * Test 4, Trigger the timers
    */
-  gpio_set_level(STOP_N, 0);      // Clear the latch
-  gpio_set_level(STOP_N, 1);
-  gpio_set_level(CLOCK_START, 1); // Triger the run latch
-  gpio_set_level(CLOCK_START, 0);
-  gpio_set_level(CLOCK_START, 1);
-  if ( is_running() != 0xFF )
+  gpio_set_level(STOP_N, RUN_OFF);                // Clear the latch
+  gpio_set_level(STOP_N, RUN_GO);
+  gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF); // Triger the run latch
+  gpio_set_level(CLOCK_START, CLOCK_TRIGGER_ON);
+  gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);
+  if ( (is_running() & RUN_MASK) != RUN_MASK )
   {
     DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to start clock in run latch: %02X", is_running());))
-    set_diag_LED(LED_FAIL_RUN_STUCK, 0);
+    set_diag_LED(LED_FAIL_RUN_STUCK, 10);
+    run_state |= IN_FATAL_ERR;
   }
 
   /*
-   * We get here only if all of the tests pass
+   * Return the err status
    */
-  return 1;
+  return ((run_state & IN_FATAL_ERR) == 0); // Return TRUE if no errors detected
 }
 
 /*----------------------------------------------------------------
@@ -588,41 +608,12 @@ void show_sensor_status(unsigned int sensor_status)
     }
   }
 
+  if ( (sensor_status & RUN_MASK) != RUN_MASK )
+  {
+    SEND(sprintf(_xs, " FAULT");)
+  }
+
   SEND(sprintf(_xs, "  Face Strike: %d", face_strike);)
-
-  SEND(sprintf(_xs, "  Temperature: %4.2f", temperature_C());)
-
-  SEND(sprintf(_xs, "  Switch:");)
-
-  if ( DIP_SW_A == 0 )
-  {
-    SEND(sprintf(_xs, "--");)
-  }
-  else
-  {
-    SEND(sprintf(_xs, "A1");)
-  }
-  SEND(sprintf(_xs, " ");)
-
-  if ( DIP_SW_B == 0 )
-  {
-    SEND(sprintf(_xs, "--");)
-  }
-  else
-  {
-    SEND(sprintf(_xs, "B2");)
-  }
-
-  if ( (sensor_status & 0x0f) == 0x0f )
-  {
-    SEND(sprintf(_xs, " PASS");)
-  }
-  else
-  {
-    SEND(sprintf(_xs, " FAIL");)
-  }
-
-  vTaskDelay(ONE_SECOND); // Wait for click to go away
 
   /*
    * All done, return
@@ -686,14 +677,16 @@ void show_sensor_fault(unsigned int sensor_status)
  * W - Warning     - Yellow
  *
  *--------------------------------------------------------------*/
-bool do_dlt(unsigned int level)
+bool do_dlt(           //
+    unsigned int level // Trace logging level
+)
 {
   char         dlt_id = 'I';
   unsigned int i;
 
-  /*
-   * Return if the current level is not enabled in is_trace
-   */
+                       /*
+                        * Return if the current level is not enabled in is_trace
+                        */
   if ( (level & (is_trace | DLT_CRITICAL | DLT_INFO)) == 0 ) // DLT_CRITICAL are always set in is_trace
   {
     return false;                                            // Send out if the trace is higher than the level
@@ -781,7 +774,7 @@ void set_diag_LED(char        *new_LEDs, // NEW LED display
   set_status_LED(new_LEDs);
 
   /*
-   *  Test for infinit wait
+   *  Test for infinite wait
    */
   if ( duration == 0 ) // Wait here forever
   {

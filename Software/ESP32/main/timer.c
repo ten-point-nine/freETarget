@@ -165,7 +165,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
   /*
    * Decide what to do if based on what inputs are present
    */
-  pin = is_running(); // Read in the RUN bits
+  pin = is_running() & RUN_MASK; // Read in the RUN bits
 
   /*
    * Read the shot based on the ISR state

@@ -14,6 +14,7 @@
 #include "led_strip_types.h"
 
 #include "freETarget.h"
+#include "compute_hit.h"
 #include "diag_tools.h"
 #include "gpio.h"
 #include "timer.h"
@@ -70,33 +71,36 @@ volatile unsigned int  step_time;   // Interval to next step
  * Read in the running registers, and return a 1 for every
  * register that is running.
  *
+ * It is up to the application to ignore unused RUN bits
+ * (ex RUN_NORTH_HI) is PCNT Latency has been removed
+ *
  *----------------------------------- ------------------*/
-static const unsigned int clock[]    = {RUN_NORTH_LO, RUN_EAST_LO, RUN_SOUTH_LO, RUN_WEST_LO,
-                                        RUN_NORTH_HI, RUN_EAST_HI, RUN_SOUTH_HI, RUN_WEST_HI};
-static const unsigned int run_mask[] = {BIT_NORTH_LO, BIT_EAST_LO, BIT_SOUTH_LO, BIT_WEST_LO,
-                                        BIT_NORTH_HI, BIT_EAST_HI, BIT_SOUTH_HI, BIT_WEST_HI};
-
 unsigned int is_running(void)
 {
   unsigned int return_value;
   unsigned int i;
 
-  return_value = 0;
+  return_value = 0; //
+
   /*
    * Read the running inputs
    */
-  for ( i = 0; i != 8; i++ )
+  for ( i = N; i <= W; i++ )
   {
-    if ( gpio_get_level(clock[i]) != 0 )
+    if ( gpio_get_level(s[i].low_sense.sensor_GPIO) != 0 )
     {
-      return_value |= run_mask[i];
+      return_value |= s[i].low_sense.run_mask;
+    }
+    if ( gpio_get_level(s[i].high_sense.sensor_GPIO) != 0 )
+    {
+      return_value |= s[i].high_sense.run_mask;
     }
   }
 
   /*
    *  Return the run mask
    */
-  return return_value; // Return the running mask
+  return (return_value); // Return the running mask INCLUDING PCNT HI
 }
 
 /*-----------------------------------------------------
@@ -119,13 +123,16 @@ unsigned int is_running(void)
 void arm_timers(void)
 {
   gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);
-  gpio_set_level(STOP_N, RUN_OFF);            // Reset the timer
+  gpio_set_level(STOP_N, RUN_OFF);      // Reset the timer
   gpio_set_level(OSC_CONTROL, OSC_OFF); // Turn off the oscillator
   pcnt_clear();
-  gpio_intr_enable(RUN_NORTH_HI);       // Turn on the interrupts
-  gpio_intr_enable(RUN_EAST_HI);
-  gpio_intr_enable(RUN_SOUTH_HI);
-  gpio_intr_enable(RUN_WEST_HI);
+  if ( json_pcnt_latency != 0 )
+  {
+    gpio_intr_enable(RUN_NORTH_HI);     // Turn on the interrupts
+    gpio_intr_enable(RUN_EAST_HI);
+    gpio_intr_enable(RUN_SOUTH_HI);
+    gpio_intr_enable(RUN_WEST_HI);
+  }
   gpio_set_level(OSC_CONTROL, OSC_ON);  // Turn on the oscillator
 
   gpio_set_level(STOP_N, RUN_GO);       // Then enable it
@@ -176,7 +183,7 @@ unsigned int read_DIP(void)
   unsigned int bit_mask[]   = {0x08, 0x04, 0x02, 0x01};
   unsigned int i;
 
-  for ( i = 0; i != sizeof(dips) / sizeof(unsigned int); i++ )
+  for ( i = 0; i != 4; i++ )
   {
     if ( gpio_get_level(dips[i]) != 0 )
     {
@@ -845,11 +852,11 @@ void rapid_red(unsigned int state        // New state for the RED light
   {
     state = !state;
   }
-  if ( json_mfs_hold_c == RAPID_RED )
+  if ( IS_HOLD_C(RAPID_RED) )
   {
     gpio_set_level(DIP_C, state);
   }
-  if ( json_mfs_hold_d == RAPID_RED )
+  if ( IS_HOLD_D(RAPID_RED) )
   {
     gpio_set_level(DIP_D, state);
   }
@@ -865,11 +872,11 @@ void rapid_green(unsigned int state      // New state for the GREEN light
     state = !state;
   }
 
-  if ( json_mfs_hold_c == RAPID_GREEN )
+  if ( IS_HOLD_C(RAPID_GREEN) )
   {
     gpio_set_level(DIP_C, state);
   }
-  if ( json_mfs_hold_d == RAPID_GREEN )
+  if ( IS_HOLD_D(RAPID_GREEN) )
   {
     gpio_set_level(DIP_D, state);
   }
@@ -916,8 +923,7 @@ void digital_test(void)
  *--------------------------------------------------------------*/
 void status_LED_test(void)
 {
-  if ( ((json_mfs_hold_c != RAPID_RED) && (json_mfs_hold_c != RAPID_GREEN)) ||
-       ((json_mfs_hold_d != RAPID_RED) && (json_mfs_hold_d != RAPID_GREEN)) )
+  if ( ((IS_HOLD_C(RAPID_RED)) && (IS_HOLD_C(RAPID_GREEN))) || ((IS_HOLD_D(RAPID_RED)) && (IS_HOLD_D(RAPID_GREEN))) )
   {
     SEND(sprintf(_xs, "\r\nMFS_C or MFS_D not configured for output\r\n");)
   }
@@ -1047,13 +1053,13 @@ void timer_run_all(void)
   SEND(sprintf(_xs, "\r\nPress any key to stop");)
   while ( serial_available(ALL) == 0 )
   {
-    gpio_set_level(STOP_N, 1);      // Let the clock go
-    gpio_set_level(CLOCK_START, 0);
-    gpio_set_level(CLOCK_START, 1);
-    gpio_set_level(CLOCK_START, 0); // Strobe the RUN linwes
-    vTaskDelay(ONE_SECOND / 2);     // The RUN lines should be on for 1/2 second
-    gpio_set_level(STOP_N, 0);      // Stop the clock
-    vTaskDelay(ONE_SECOND / 4);     // THe RUN lines shold be off for 1/4 second
+    gpio_set_level(STOP_N, RUN_GO);                 // Let the clock go
+    gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);
+    gpio_set_level(CLOCK_START, CLOCK_TRIGGER_ON);
+    gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF); // Strobe the RUN linwes
+    vTaskDelay(ONE_SECOND / 2);                     // The RUN lines should be on for 1/2 second
+    gpio_set_level(STOP_N, RUN_OFF);                // Stop the clock
+    vTaskDelay(ONE_SECOND / 4);                     // THe RUN lines shold be off for 1/4 second
   }
 
   SEND(sprintf(_xs, _DONE_);)

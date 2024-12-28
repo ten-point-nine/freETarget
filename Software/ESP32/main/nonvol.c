@@ -89,6 +89,7 @@ void read_nonvol(void)
   if ( nonvol_init != PS_VERSION ) // persistent storage version
   {
     update_nonvol(nonvol_init);
+    printf("back here");
   }
 
   /*
@@ -357,7 +358,7 @@ void init_nonvol(int verify // Verification code entered by user
 void update_nonvol(unsigned int current_version // Version present in persistent storage
 )
 {
-  unsigned int i;                               // Iteration counter
+  unsigned int i, version;                      // Iteration counter
   long         ps_value;                        // Value read from persistent storage
 
   DLT(DLT_INFO, SEND(sprintf(_xs, "update_nonvol(%d)\r\n", current_version);))
@@ -390,113 +391,62 @@ void update_nonvol(unsigned int current_version // Version present in persistent
     nvs_commit(my_handle);
   }
 
-  /*
-   * Version 0 -> 1 Set WiFi Hidden to 0
-   */
-  if ( current_version == 0 )
+                                  /*
+                                   *  Loop and update each of the configurations
+                                   */
+  for ( version = current_version; version <= PS_VERSION; version++ ) // All possible version numbers
   {
-    DLT(DLT_INFO, SEND(sprintf(_xs, "Updating PS0 to PS1");))
+    i = 0;
+    while ( JSON[i].token != 0 )
+    {
+      if ( JSON[i].ps_version == version )
+      {
+        DLT(DLT_INFO, SEND(sprintf(_xs, "Updating PS%d", version);))
+        switch ( JSON[i].convert & IS_MASK )
+        {
+          case IS_VOID:  // Variable does not contain anything
+          case IS_FIXED: // Variable cannot be overwritten                                    // MFS initialized from MFS entry
+            break;
 
-    nvs_set_i32(my_handle, NONVOL_WIFI_HIDDEN, 0);
-    nvs_set_i32(my_handle, NONVOL_PCNT_LATENCY, 0);
-    nvs_set_i32(my_handle, NONVOL_SENSOR_DIA, 232000);
-    current_version = 1;
+          case IS_TEXT:
+          case IS_SECRET:
+            if ( JSON[i].non_vol != 0 )
+            {
+              _xs[0] = 0;
+              nvs_set_str(my_handle, JSON[i].non_vol, _xs); // Zero out the text
+            }
+            break;
+
+          case IS_MFS:
+          case IS_INT32:
+            if ( JSON[i].non_vol != 0 )
+            {
+              nvs_set_i32(my_handle, JSON[i].non_vol, JSON[i].init_value); // Read in the value
+            }
+            break;
+
+          case IS_FLOAT:
+            if ( JSON[i].non_vol != 0 )
+            {
+              nvs_set_i32(my_handle, JSON[i].non_vol, JSON[i].init_value); // Read in the value
+            }
+            break;
+        }
+        if ( version == 2 )
+        {
+          strcpy(json_wifi_ip, "192.168.10.9");
+          nvs_set_str(my_handle, NONVOL_WIFI_IP, json_wifi_ip);
+        }
+      }
+      i++;
+    }
   }
 
-  /*
-   * Version 1 -> 2 Fixup MFS variables
-   */
-  if ( current_version == 1 )
-  {
-    DLT(DLT_INFO, SEND(sprintf(_xs, "Updating PS1 to PS2");))
-
-    nvs_set_i32(my_handle, NONVOL_WIFI_HIDDEN, 0);
-
-    json_multifunction = 20351;
-
-    json_mfs_tap_1 = TAP_1(json_multifunction);
-    nvs_set_i32(my_handle, NONVOL_MFS_TAP_A, json_mfs_tap_1);
-
-    json_mfs_tap_2 = TAP_2(json_multifunction);
-    nvs_set_i32(my_handle, NONVOL_MFS_TAP_B, json_mfs_tap_2);
-
-    json_mfs_hold_1 = HOLD_1(json_multifunction);
-    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_A, json_mfs_hold_1);
-
-    json_mfs_hold_2 = HOLD_2(json_multifunction);
-    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_B, json_mfs_hold_2);
-
-    json_mfs_hold_c = 0;
-    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_C, json_mfs_hold_c);
-
-    json_mfs_hold_d = 0;
-    nvs_set_i32(my_handle, NONVOL_MFS_HOLD_D, json_mfs_hold_d);
-
-    json_mfs_select_cd = 0;
-    nvs_set_i32(my_handle, NONVOL_MFS_SELECT_CD, json_mfs_select_cd);
-
-    current_version = 2;
-  }
-
-  /*
-   * Version 2 -> 3 Fixup WiFi IP address and first connect
-   */
-  if ( current_version == 2 )
-  {
-    DLT(DLT_INFO, SEND(sprintf(_xs, "Updating PS2 to PS3");))
-
-    json_wifi_reset_first = 0;
-    nvs_set_i32(my_handle, NONVOL_WIFI_RESET_FIRST, 0);
-
-    strcpy(json_wifi_ip, "192.168.10.9");
-    nvs_set_str(my_handle, NONVOL_WIFI_IP, json_wifi_ip);
-    current_version = 3;
-  }
-
-  /*
-   * Version 3 -> 4  Add in new parameters for stepper motor
-   */
-  if ( current_version == 3 )
-  {
-    DLT(DLT_INFO, SEND(sprintf(_xs, "Updating PS3 to PS4");))
-
-    json_step_ramp = 0;
-    nvs_set_i32(my_handle, NONVOL_STEP_RAMP, 0);
-
-    json_step_start = 0;
-    nvs_set_i32(my_handle, NONVOL_STEP_START, 0);
-    current_version = 4;
-  }
-
-  /*
-   * Version 4 -> 5  Add in new parameters advancing paper after json_paper_shot conts
-   */
-  if ( current_version == 4 )
-  {
-    DLT(DLT_INFO, SEND(sprintf(_xs, "Updating PS4 to PS5");))
-
-    json_paper_shot = 0;
-    nvs_set_i32(my_handle, NONVOL_PAPER_SHOT, 0);
-
-    current_version = 5;
-  }
-
-  /*
-   * Version 5 -> 6  Disable the AUX port
-   */
-  if ( current_version == 5 )
-  {
-    DLT(DLT_INFO, SEND(sprintf(_xs, "Updating PS5 to PS6");))
-
-    json_aux_port_enable = 0;
-    nvs_set_i32(my_handle, NONVOL_AUX_PORT_ENABLE, json_aux_port_enable);
-
-    current_version = 6;
-  }
   /*
    * Up to date, return
    */
-  nvs_set_i32(my_handle, NONVOL_PS_VERSION, current_version);
+  nvs_set_i32(my_handle, NONVOL_PS_VERSION, PS_VERSION);
   nvs_commit(my_handle);
+  printf("bye bye");
   return;
 }

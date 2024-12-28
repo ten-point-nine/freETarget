@@ -78,60 +78,48 @@ extern volatile unsigned int step_count; // Number of steps before stopping
 #define BIT_SOUTH_LO 0x02
 #define BIT_WEST_LO  0x01
 
-#define RUN_MASK 0x00ff
+#define RUN_MASK (BIT_NORTH_LO | BIT_EAST_LO | BIT_SOUTH_LO | BIT_WEST_LO) // Include pcnt_lo bits and exclude pcnt_hi bits
 #define REF_CLK  GPIO_NUM_8
 
-#define PAPER     GPIO_NUM_12   // Paper advance drive active high
+#define PAPER     GPIO_NUM_12                                              // Paper advance drive active high
 #define PAPER_ON  1
 #define PAPER_OFF 0
 
 #if ( BUILD_REV == REV_500 )
-#define STOP_N      GPIO_NUM_47 // Stop the RUN flipflops
-#define CLOCK_START GPIO_NUM_21 // Trigger a test cycle
-#define OSC_CONTROL GPIO_NUM_48 // Enable / kill 10MHz Oscillator
+#define STOP_N      GPIO_NUM_47                                            // Stop the RUN flipflops
+#define CLOCK_START GPIO_NUM_21                                            // Trigger a test cycle
+#define OSC_CONTROL GPIO_NUM_48                                            // Enable / kill 10MHz Oscillator
 #endif
 #if ( (BUILD_REV == REV_510) || (BUILD_REV == REV_520) )
-#define STOP_N      GPIO_NUM_21 // Stop the RUN flipflops
-#define CLOCK_START GPIO_NUM_47 // Trigger a test cycle
-#define OSC_CONTROL GPIO_NUM_48 // Enable / kill 10MHz Oscillator
+#define STOP_N      GPIO_NUM_21                                            // Stop the RUN flipflops
+#define CLOCK_START GPIO_NUM_47                                            // Trigger a test cycle
+#define OSC_CONTROL GPIO_NUM_48                                            // Enable / kill 10MHz Oscillator
 #endif
-#define OSC_ON            1           // Enable the oscillator
-#define OSC_OFF           0           // Tristate the oscillator
-#define RUN_OFF           0           // Clear the run flip flops
-#define RUN_GO            1           // Let the flip flops go
-#define CLOCK_TRIGGER_OFF 0           // The clock can be triggered by 0-1
-#define CLOCK_TRIGGER_ON  1           // The clock can be triggered by 0-1
-#define LDAC              GPIO_NUM_42 // No longer used
+#define OSC_ON            1                                                // Enable the oscillator
+#define OSC_OFF           0                                                // Tristate the oscillator
+#define RUN_OFF           0                                                // Clear the run flip flops
+#define RUN_GO            1                                                // Let the flip flops go
+#define CLOCK_TRIGGER_OFF 0                                                // The clock can be triggered by 0-1
+#define CLOCK_TRIGGER_ON  1                                                // The clock can be triggered by 0-1
+#define LDAC              GPIO_NUM_42                                      // No longer used
 
 #define DIP_0   9
-#define RED_OUT 9               // Rapid fire RED on DIP0
+#define RED_OUT 9                                                          // Rapid fire RED on DIP0
 
-#define DIP_A       GPIO_NUM_38 // V
-#define DIP_B       GPIO_NUM_37 // V
-#define DIP_C       36          // V
-#define DIP_D       35          // V
-#define HOLD_C_GPIO GPIO_NUM_36 // Rapid Fire controls when enabled
+#define DIP_A       GPIO_NUM_38                                            // V
+#define DIP_B       GPIO_NUM_37                                            // V
+#define DIP_C       36                                                     // V
+#define DIP_D       35                                                     // V
+#define HOLD_C_GPIO GPIO_NUM_36                                            // Rapid Fire controls when enabled
 #define HOLD_D_GPIO GPIO_NUM_35
-
-/*
- * Multifunction Switch Use when using DIP Switch for MFS
- */
-#define HOLD_1(x)  LO10((x))  // Low digit        xxxx2
-#define HOLD_2(x)  HI10((x))  // High digit       xxx2x
-#define HOLD_C(x)  LO10((x))  // Low digit        xxxx2
-#define HOLD_D(x)  HI10((x))  // High digit       xxx2x
-#define TAP_1(x)   HLO10((x)) // High Low digit   xx2xx
-#define TAP_2(x)   HHI10((x)) // High High digit  x2xxx
-#define HOLD_12(x) HHH10((x)) // Highest digit    2xxxx
 
 /*
  * DIP Switch Use.
  */
-#define DIP_SW_A      (gpio_get_level(DIP_A) == 0) // Switch Input A
-#define DIP_SW_B      (gpio_get_level(DIP_B) == 0) // Switch Input B
-#define DIP_SW_C      (gpio_get_level(DIP_C) == 0) // Switch Input C
-#define DIP_SW_D      (gpio_get_level(DIP_D) == 0) // Switch Input D
-#define VERBOSE_TRACE (DIP_D)                      // 8 Show the verbose software trace
+#define DIP_SW_A (gpio_get_level(DIP_A) == 0) // Switch Input A
+#define DIP_SW_B (gpio_get_level(DIP_B) == 0) // Switch Input B
+#define DIP_SW_C (gpio_get_level(DIP_C) == 0) // Switch Input C
+#define DIP_SW_D (gpio_get_level(DIP_D) == 0) // Switch Input D
 
 #define FACE_SENSOR 19
 
