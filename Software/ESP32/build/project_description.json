@@ -1,11 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "freeETarget",
-<<<<<<< HEAD
-    "project_version":    "Version-5.2.15-DTL-updates-3-g262d84e-dirty",
-=======
-    "project_version":    "Version-5.2.15-DTL-updates-23-g1de3d37-dirty",
->>>>>>> ESP_5_2_17
+    "project_version":    "Version-5.2.15-DTL-updates-9-g212210f-dirty",
     "project_path":       "C:/Users/allan/Documents/freETarget/Software/ESP32",
     "idf_path":           "C:/Users/allan/esp/v5.3.1/esp-idf",
     "build_dir":          "C:/Users/allan/Documents/freETarget/Software/ESP32/build",
