@@ -16,6 +16,7 @@
 
 #include "freETarget.h"
 #include "gpio.h"
+#include "gpio_define.h"
 #include "compute_hit.h"
 #include "analog_io.h"
 #include "json.h"
@@ -189,22 +190,29 @@ unsigned int location;      // Sensor location
 
 void freeETarget_target_loop(void *arg)
 {
-
   DLT(DLT_INFO, SEND(sprintf(_xs, "freeETarget_target_loop()");))
+
   set_status_LED(LED_READY);
 
-  shot_number = 1;                // Start counting shots at 1
+  if ( json_pcnt_latency != 0 )              // If the second set of timers has been enabled
+  {
+    DLT(DLT_INFO, SEND(sprintf(_xs, "Initializing PCNT high inputs");))
+    gpio_init_single(PCNT_HI);               // Program the port
+  }
+
+  shot_number = 1;                           // Start counting shots at 1
 
   while ( 1 )
   {
-    IF_IN(IN_SLEEP | IN_TEST)     // If Not in operation,
+    IF_IN(IN_SLEEP | IN_TEST | IN_FATAL_ERR) // If Not in operation,
     {
-      run_state &= ~IN_OPERATION; // Exit operation
+      run_state &= ~IN_OPERATION;            // Exit operation
+      set_status_LED(LED_FATAL);             // but show something really wrong
       vTaskDelay(ONE_SECOND);
       continue;
     }
 
-    run_state |= IN_OPERATION;    // In operation
+    run_state |= IN_OPERATION;               // In operation
 
     /*
      * Cycle through the state machine
@@ -443,7 +451,7 @@ unsigned int reduce(void)
     }
     else                                      // We have a miss
     {
-      DLT(DLT_APPLICATION, SEND(sprintf(_xs, "Shot miss...\r\n");))
+      DLT(DLT_INFO, show_sensor_status(record[shot_out].sensor_status);)
       set_status_LED(LED_MISS);
       send_miss(&record[shot_out], shot_out); // Show a miss
     }
@@ -869,7 +877,7 @@ void polled_target_test(void)
   {
     arm_timers();
     SEND(sprintf(_xs, "\r\nArmed\r\n");)
-    while ( is_running() != 0xff )
+    while ( (is_running() & RUN_MASK) != RUN_MASK )
     {
       running = is_running();
       SEND(sprintf(_xs, "\r\nis_running: %02X", running);)

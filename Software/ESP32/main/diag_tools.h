@@ -33,15 +33,16 @@ void heartbeat(void);                                     // Send out regular st
  * LED status messages
  *
  */
-//                           R              // RDY indicates operating status
-//                            X             // X indicates communications status
-//                             Y            // Y indicates feature status
-//                              C           // Optional C output
-//                               D          // Optional D ouput
+//                       R              // RDY indicates operating status
+//                        X             // X indicates communications status
+//                         Y            // Y indicates feature status
+//                          C           // Optional C output
+//                           D          // Optional D ouput
 
 #define LED_OFF         "     "      // Turn off all of the LEDs
 #define LED_HELLO_WORLD "RWB--"      // Hello World
 #define LED_GOOD        "G----"      // The software has started but not in shot mode
+#define LED_FATAL       "RRR--"      // A fatal error prevents operation
 #define LED_READY       "g----"      // The shot is ready to go.  Blink to show we are alive
 #define LED_BYE         "B----"      // Go to sleep
 #define LED_READY_OFF   " ----"      // Turn off the READY light
@@ -106,11 +107,9 @@ void heartbeat(void);                                     // Send out regular st
 #define DLT_SCORE         0x40 // Display extended score record
 #define DLT_HEARTBEAT     0x80 // Kick out the time to see if we are alive
 
-#define DLT(level, z)                                                                                                                      \
-  if ( do_dlt(level) )                                                                                                                     \
-  {                                                                                                                                        \
-    z                                                                                                                                      \
-  }
+// clang-format off
+#define DLT(level, z) if ( do_dlt(level) )  { z }
+// clang-format on
 
 typedef struct
 {

@@ -61,22 +61,26 @@
 #define GPIO_NUM_39 39
 #define GPIO_NUM_40 40
 #endif
+
 /*
- * @function Prototypes
+ * function Prototypes
  */
 void gpio_init(void);
+void gpio_init_single(unsigned int type); // What type of GPIO are we programming?
 
 /*
  * Type defs
  */
 typedef enum gpio_type
 {
-  DIGITAL_IO,                                        // GPIO is used for igital IO
+  DIGITAL_IO_OUT = 1,                                // GPIO is used for digital IO
+  DIGITAL_IO_IN,                                     // GPIO is used for digital IO
   ANALOG_IO,                                         // GPIO is used for Analog IO
   SERIAL_AUX,                                        // GPIO is used as Serial auxilary port
   PWM_OUT,                                           // GPIO is used as a PWM port
   I2C_PORT,                                          // GPIO is used as a i2c port
   PCNT,                                              // GPIO is used as a Pulse Counter
+  PCNT_HI,                                           // GPIO associated with HI PCNT
   LED_STRIP                                          // GPIO is used to drives a LED strip (status LEDs)
 } gpio_type_t;
 
@@ -85,6 +89,7 @@ typedef struct DIO_struct
   gpio_type_t type;                                  // What type of structure am I
   int         mode;                                  // Mode used by the DIO
   int         initial_value;                         // Value set on initialization
+  bool (*callback)(void);                            // Pointer to callback if needed
 } DIO_struct_t;
 
 typedef struct ADC_struct
@@ -124,7 +129,7 @@ typedef struct PCNT_struct
   int         pcnt_unit;                             // What unit to use
   int         pcnt_control;                          // GPIO associated with PCNT control
   int         pcnt_signal;                           // GPIO associated with PCNT signal
-  bool (*pcnt_callback)(void *);                     // PCNT interrrupt handler
+  bool (*callback)(void *);                          // PCNT interrrupt handler
 } PCNT_struct_t;
 
 typedef struct LED_strip_struct

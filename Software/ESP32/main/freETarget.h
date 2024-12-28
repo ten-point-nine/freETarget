@@ -14,7 +14,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"5.2.17 December 1, 2024\""
+#define SOFTWARE_VERSION "\"5.2.19 December 28, 2024\""
 #define _DONE_           "\r\nDone\r\n"
 
 #define REV_500   500    // ESP32
@@ -35,6 +35,7 @@
 #define IN_SLEEP     0x0008 // The unit has powered down
 #define IN_SHOT      0x0010 // The target is actively in a shot
 #define IN_REDUCTION 0x0020 // The data is being reduced
+#define IN_FATAL_ERR 0x0040 // A fatal error has occured and cannot be fixed
 
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
 #define IF_IN(x)  if ( (run_state & (x)) != 0 )
@@ -94,6 +95,7 @@ typedef struct sensor_ID
   char         short_name;               // Short name, ex 'N'
   char        *long_name;                // Long name, ex "NORTH_HI"
   char        *diag_LED;                 // LEDs to be set if a fault occurs
+  unsigned int sensor_GPIO;              // What GPIO is used with this sensor
   unsigned int run_mask;                 // What bit is set in the RUN latch
 } sensor_ID_t;
 

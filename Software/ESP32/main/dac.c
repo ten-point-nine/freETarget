@@ -13,7 +13,7 @@
 #include "stdio.h"
 #include "driver\gpio.h"
 #include "adc_types.h"
-#include "adc_oneshot.h"
+#include "esp_adc/adc_oneshot.h"
 #include "i2c.h"
 #include "math.h"
 

@@ -28,6 +28,7 @@ typedef struct
   void (*f)(int x); // Function to execute with message
   char *non_vol;    // Storage in NON-VOL
   int   init_value; // Initial Value
+  int   ps_version; // What persistent storage version was this introduced
 } json_message_t;
 
 extern const json_message_t JSON[];
@@ -35,19 +36,20 @@ extern const json_message_t JSON[];
 /*
  * Definitioins
  */
-#define IS_VOID    (7 << 8)                 // Value is a void
-#define IS_MFS     (6 << 8)                 // Value is a multifunction switch
-#define IS_TEXT    (5 << 8)                 // Value is a string
-#define IS_SECRET  (4 << 8)                 // Value is a string but hidden
-#define IS_INT32   (3 << 8)                 // Value is a 64 bit int
-#define IS_FLOAT   (2 << 8)                 // Value is a floating point number
-#define IS_FIXED   (1 << 8)                 // The value cannot be changed
-#define IS_MASK    (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED | IS_MFS)
-#define FLOAT_MASK ((~IS_MASK) & 0xFF)      // Scaling factor 8 bits
+#define IS_FIXED  (1 << 8)                    // The value cannot be changed
+#define IS_FLOAT  (2 << 8)                    // Value is a floating point number
+#define IS_INT32  (3 << 8)                    // Value is a 64 bit int
+#define IS_SECRET (4 << 8)                    // Value is a string but hidden
+#define IS_TEXT   (5 << 8)                    // Value is a string
+#define IS_MFS    (6 << 8)                    // Value is a multifunction switch
+#define IS_VOID   (7 << 8)                    // Value is a void
 
-#define SSID_SIZE 31                        // Reserve 30+1 bytes for SSID
-#define PWD_SIZE  31                        // Reserve 30+1 bytes for Password
-#define IP_SIZE   sizeof("192.168.100.100") // Reserved space of IP address
+#define IS_MASK    (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED | IS_MFS)
+#define FLOAT_MASK ((~IS_MASK) & 0xFF)        // Scaling factor 8 bits
+
+#define SSID_SIZE 31                          // Reserve 30+1 bytes for SSID
+#define PWD_SIZE  31                          // Reserve 30+1 bytes for Password
+#define IP_SIZE   sizeof("192.168.100.100\0") // Reserved space of IP address
 
 /*
  * Global JSON variables and settings
@@ -77,6 +79,8 @@ extern int    json_step_ramp;               // Time interval between ramp cycles
 extern int    json_step_start;              // Starting ramp inteval
 extern int    json_step_time;               // Duration of step pulse
 extern int    json_multifunction;           // Multifunction switch operation
+extern double json_x_offset;                // Offset added to horizontal to centre target in sensors
+extern double json_y_offset;                // Offset added to vertical to centre targetin sensors
 extern int    json_z_offset;                // Distance between paper and sensor plane (1mm / LSB)
 extern int    json_paper_eco;               // Do not advance witness paper if shot is greater than json_paper_eco
 extern int    json_target_type;             // Modify the location based on a target type (0 == regular 1 bull target)

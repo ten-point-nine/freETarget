@@ -30,22 +30,19 @@ void          mfs_show(void);                  // Show the available settings
 
 /*
  * Multifunction Switch Use when using DIP Switch for MFS
+ * Do not delete, keep for original software
  */
 #define HOLD_1(x)    LO10((x))  // Low digit        xxxx2
-#define _HOLD_1      1
 #define HOLD_2(x)    HI10((x))  // High digit       xxx2x
-#define _HOLD_2      2
 #define TAP_1(x)     HLO10((x)) // High Low digit   xx2xx
-#define _TAP_1       3
 #define TAP_2(x)     HHI10((x)) // High High digit  x2xxx
-#define _TAP_2       4
 #define HOLD_12(x)   HHH10((x)) // Highest digit    2xxxx
-#define _HOLD_12     5
 #define HOLD_C(x)    LO10((x))  // Low digit        xxxx2
-#define _HOLD_C      6
 #define HOLD_D(x)    HI10((x))  // High digit       xxx2x
-#define _HOLD_D      7
 #define SELECT_CD(x) HLO10(x)   // High Low digit   xx2xx
+
+#define IS_HOLD_C(function) (json_mfs_hold_c == (function))
+#define IS_HOLD_D(function) (json_mfs_hold_d == (function))
 
 /*
  *  MFS Use
@@ -58,9 +55,10 @@ void          mfs_show(void);                  // Show the available settings
 #define TARGET_OFF 5      // DIP A/B used to turn the target OFF
 
 #define NO_ACTION      9  // DIP usual function
-#define TARGET_TYPE    10 // Input outputs target type with score
-#define MFS2_NU_2      12
-#define MFS2_NU_3      14
+#define TARGET_TYPE    10 // Input outputs target type with score (Uses DIP_C or DIP_D state)
+#define SHOOTER_LEVEL  11 // Shooter experiance level (Uses DIP_C or DIP_D state)
+#define MFS2_NU_2      14
+#define MFS2_NU_3      15
 #define MFS2_DIP       16 // C and D are DIPs
 #define RAPID_RED      18 // Rapid Fire Red Output
 #define RAPID_GREEN    20 // Rapid Fire Green Output
