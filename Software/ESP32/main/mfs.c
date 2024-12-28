@@ -480,16 +480,19 @@ static void mfs_led_adjust(void)
 
   led_step = 5;
 
-  json_LED_PWM += led_step;      // Bump up the LED by 5%
+  json_LED_PWM += led_step; // Bump up the LED by 5%
+
   if ( json_LED_PWM > 100 )
   {
     json_LED_PWM = 0;
   }
-  set_LED_PWM_now(json_LED_PWM); // Set the brightness
-  vTaskDelay(ONE_SECOND / 4);
 
+  DLT(DLT_DEBUG, SEND(sprintf(_xs, "mfs_led_adjust: %d%%", json_LED_PWM);))
+  set_LED_PWM_now(json_LED_PWM); // Set the brightness
   nvs_set_i32(my_handle, NONVOL_LED_PWM, json_LED_PWM);
   nvs_commit(my_handle);
+
+  vTaskDelay(ONE_SECOND);        // Give it time for the LEDs to stabilize
 
   return;
 }
