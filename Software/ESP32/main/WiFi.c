@@ -45,7 +45,6 @@
 #include "nonvol.h"
 #include "serial_io.h"
 
-
 #define DEFAULT_IP 192, 168, 10, 9
 #define PORT 1090
 #define KEEPALIVE_IDLE true

@@ -13,6 +13,7 @@ IndentCaseLabels: true
 IndentPPDirectives: None
 UseTab: Never
 ColumnLimit: 140
+BracesIndentStyle: Whitesmith
 
 # Alignment
 AlignAfterOpenBracket: Align
