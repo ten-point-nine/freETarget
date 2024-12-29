@@ -69,7 +69,7 @@ static const self_test_t test_list[] = {
     {"- Communiations Tests",             0                      },
     {"AUX serial port test",              &serial_port_test      },
     {"Test WiFi as a station",            &WiFi_station_init     },
-    {"Enable the WiFi Server",            &WiFi_server_test      },
+    //   {"Enable the WiFi Server",            &WiFi_server_test      },
     {"Enable the WiFi AP",                &WiFi_AP_init          },
     {"Loopback the TCPIP data",           &WiFi_loopback_test    },
     {"Loopback WiFi",                     &WiFi_loopback_test    },

@@ -20,30 +20,30 @@
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/lwip.html
  *
  * *****************************************************************************/
-#include <string.h>
 #include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 #include "freertos/event_groups.h"
+#include "freertos/task.h"
+#include <string.h>
 
-#include "esp_system.h"
-#include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
+#include "esp_system.h"
 #include "esp_timer.h"
+#include "esp_wifi.h"
 #include "nvs_flash.h"
 
 #include "lwip/err.h"
-#include "lwip/sys.h"
-#include "lwip/sockets.h"
 #include "lwip/netdb.h"
+#include "lwip/sockets.h"
+#include "lwip/sys.h"
 
 #include "freETarget.h"
-#include "compute_hit.h"
-#include "serial_io.h"
-#include "json.h"
-#include "diag_tools.h"
 #include "WiFi.h"
+#include "compute_hit.h"
+#include "diag_tools.h"
+#include "json.h"
 #include "nonvol.h"
+#include "serial_io.h"
 
 #define DEFAULT_IP         192, 168, 10, 9
 #define PORT               1090
@@ -73,19 +73,19 @@ static int                          s_retry_num = 0;
 static int                          socket_list[MAX_SOCKETS];            // Space to remember four sockets
 static esp_netif_ip_info_t          ipInfo;                              // IP Address of the access point
 static void                         WiFi_start_new_connection(int sock); // Socket token to use
-static int dns_valid;                       // We have a valid IP address for the URL
-static ip_addr_t url_ip_address;            // Address of the server
+static int                          dns_valid;                           // We have a valid IP address for the URL
+static ip_addr_t                    url_ip_address;                      // Address of the server
 
 /*
  * Private Functions
  */
-void WiFi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
-static void tcpip_server_io(void);        // Manage TCPIP traffic
-static void dns_found_cb ( const char* name, const ip_addr_t* ip_addr, void* callback_arg);
-esp_err_t esp_base_mac_addr_get(uint8_t *mac);
+void        WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
+static void tcpip_server_io(void); // Manage TCPIP traffic
+static void dns_found_cb(const char *name, const ip_addr_t *ip_addr, void *callback_arg);
+esp_err_t   esp_base_mac_addr_get(uint8_t *mac);
 
 /*
- * Definitions 
+ * Definitions
  */
 #define TO_IP(x) ((int)x) & 0xff, ((int)x >> 8) & 0xff, ((int)x >> 16) & 0xff, ((int)x >> 24) & 0xff
 
@@ -102,7 +102,8 @@ esp_err_t esp_base_mac_addr_get(uint8_t *mac);
  * The initialization determines if the target is a station
  * or an access point (AP) that provides the SSID to connect to.
  *
- * Once that is done the appropriate configuration is made and the target enabled.
+ * Once that is done the appropriate configuration is made and the target
+ *enabled.
  *
  *******************************************************************************/
 void WiFi_init(void)
@@ -161,7 +162,8 @@ void WiFi_AP_init(void)
    */
   wifiAP = esp_netif_create_default_wifi_ap();
   IP4_ADDR(&ipInfo.ip, 192, 168, 10, 9);       // Setup the base IP address
-  IP4_ADDR(&ipInfo.gw, 192, 168, 10, 9);       // Setup the gateway (not used but needed)
+  IP4_ADDR(&ipInfo.gw, 192, 168, 10,
+           9);                                 // Setup the gateway (not used but needed)
   IP4_ADDR(&ipInfo.netmask, 255, 255, 255, 0); // Setup the subnet mask
   esp_netif_dhcps_stop(wifiAP);                // Remove the old value
   esp_netif_set_ip_info(wifiAP, &ipInfo);      // Put in the one
@@ -174,7 +176,8 @@ void WiFi_AP_init(void)
 
   esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFi_event_handler, NULL, NULL);
 
-  sprintf((char *)&WiFi_config.ap.ssid, "FET-%s", names[json_name_id]); // SSID Name ->FET-name
+  sprintf((char *)&WiFi_config.ap.ssid, "FET-%s",
+          names[json_name_id]); // SSID Name ->FET-name
   WiFi_config.ap.ssid_len = strlen(json_wifi_ssid);
   WiFi_config.ap.channel  = json_wifi_channel;
   strcpy((char *)&WiFi_config.ap.password, json_wifi_pwd);
@@ -214,7 +217,8 @@ void WiFi_AP_init(void)
  * The target connects to an SSID and lets clients connect to it. For example
  * SSID = myHomeInternet
  *
- * See: https://github.com/espressif/esp-idf/blob/v4.3/examples/wifi/getting_started/station/main/station_example_main.c
+ * See:
+ *https://github.com/espressif/esp-idf/blob/v4.3/examples/wifi/getting_started/station/main/station_example_main.c
  *
  *******************************************************************************/
 void WiFi_station_init(void)
@@ -287,66 +291,62 @@ void WiFi_station_init(void)
  * @function: WiFi_get_remote_IP()
  *
  * @brief:    Find the address of the remote IP
- * 
+ *
  * @return:   TRUE if the dns has been found
  *
  ****************************************************************************
  *
  * This function calls the DNS server to obtain the IP address of a URL.
- * 
+ *
  * Example "google.com" is 142.250.190.14
- * 
+ *
  * See https://gist.github.com/MakerAsia/37d2659310484bdbba9d38558e2c3cdb
  * for programming example
- * 
+ *
  * See https://www.nongnu.org/lwip/2_0_x/group__infrastructure__errors.html
  * for LWIP errors
- * 
+ *
  ****************************************************************************/
-bool WiFi_get_remote_IP
-(
-    char* remote_url             // Text string of the remote URL 
+bool WiFi_get_remote_IP(char *remote_url // Text string of the remote URL
 )
 {
-    int i;
-/*
- * Prepare the callback for the result 
- */
-    if ( dns_gethostbyname(remote_url, &url_ip_address, dns_found_cb, NULL) == 0 )
-    {
-        dns_valid = 1;              // IP was cached and available
-    }
-    else
-    {
-        dns_valid = 0;              // IP is not currently valid
-    }
+  int i;
+  /*
+   * Prepare the callback for the result
+   */
+  if ( gethostbyname(remote_url, &url_ip_address, dns_found_cb) == 0 )
+  {
+    dns_valid = 1; // IP was cached and available
+  }
+  else
+  {
+    dns_valid = 0; // IP is not currently valid
+  }
 
-/*
- * Wait here for the DNS to come back
- */
-    i = 10;
-    while ( (dns_valid == 0) || ( i != 0) )
-    {
-        vTaskDelay(ONE_SECOND);
-    }
+  /*
+   * Wait here for the DNS to come back
+   */
+  i = 10;
+  while ( (dns_valid == 0) || (i != 0) )
+  {
+    vTaskDelay(ONE_SECOND);
+  }
 
-/*
- *  Return if the DNS is valid
- */
-    return dns_valid;
+  /*
+   *  Return if the DNS is valid
+   */
+  return dns_valid;
 }
 
-static void dns_found_cb
-(
-    const char* name,           // Name of dns search
-    const ip_addr_t* ip_addr,   // IP address of the URL
-    void* callback_arg          // Not used 
+static void dns_found_cb(const char      *name,        // Name of dns search
+                         const ip_addr_t *ip_addr,     // IP address of the URL
+                         void            *callback_arg // Not used
 )
 {
-    url_ip_address = *ip_addr;
-    dns_valid = true;
+  url_ip_address = *ip_addr;
+  dns_valid      = true;
 
-    return;
+  return;
 }
 
 /*****************************************************************************
@@ -362,7 +362,8 @@ static void dns_found_cb
  * The initialization determines if the target is a station
  * or an access point (AP) that provides the SSID to connect to.
  *
- * Once that is done the appropriate configuration is made and the target enabled.
+ * Once that is done the appropriate configuration is made and the target
+ *enabled.
  *
  * IMPORTANT
  *
@@ -876,63 +877,63 @@ void WiFi_loopback_task(void *parameters)
  * @function: WiFi_DNS_test
  *
  * @brief:    Use the DNS sofware to find an IP address
- * 
+ *
  * @return:   Nothing
  *
  ******************************************************************************
  *
  * A waiting task is started.
- * 
- * The waiting task copies the input to the output of the synchronous IO 
- * 
+ *
+ * The waiting task copies the input to the output of the synchronous IO
+ *
  *******************************************************************************/
 static char test_URL[] = "google.com";
 
 void WiFi_DNS_test(void)
 {
-    int i;
-    char str_c[16];
+  int  i;
+  char str_c[16];
 
-    DLT(DLT_CRITICAL, printf("WiFi_DNS_test()\r\n");)
+  DLT(DLT_CRITICAL, printf("WiFi_DNS_test()\r\n");)
 
-/*
- * Make sure we ares setup correctly
- */
-    if ( json_wifi_ssid[0] == 0 )
-    {
-        DLT(DLT_CRITICAL, printf("\r\nWiFi must be attached to gateway");)
-        return;
-    }
-
-/*
- *  Go look for the remote address
- */
-    WiFi_get_remote_IP(test_URL);
-
-    i = 0;
-    while ( (dns_valid == 0) && ( i != 10) )
-    {
-        printf("%d ", i);
-        vTaskDelay(ONE_SECOND);
-        i++;
-    }
-
-/*
- *  Got it
- */
-    if ( i == 10 )
-    {
-        DLT(DLT_CRITICAL, printf("DNS lookup failed");)
-    }
-    else
-    {
-        WiFi_remote_IP_address(str_c);
-        printf("\r\nThe IP address of %s is %s\r\n", test_URL, str_c);
-    }
-    
+  /*
+   * Make sure we ares setup correctly
+   */
+  if ( json_wifi_ssid[0] == 0 )
+  {
+    DLT(DLT_CRITICAL, printf("\r\nWiFi must be attached to gateway");)
     return;
+  }
+
+  /*
+   *  Go look for the remote address
+   */
+  WiFi_get_remote_IP(test_URL);
+
+  i = 0;
+  while ( (dns_valid == 0) && (i != 10) )
+  {
+    printf("%d ", i);
+    vTaskDelay(ONE_SECOND);
+    i++;
+  }
+
+  /*
+   *  Got it
+   */
+  if ( i == 10 )
+  {
+    DLT(DLT_CRITICAL, printf("DNS lookup failed");)
+  }
+  else
+  {
+    WiFi_remote_IP_address(str_c);
+    printf("\r\nThe IP address of %s is %s\r\n", test_URL, str_c);
+  }
+
+  return;
 }
-#endif 
+#endif
 
 /*****************************************************************************
  *
@@ -943,9 +944,7 @@ void WiFi_DNS_test(void)
  * @return:   None
  *
  ****************************************************************************/
-void WiFi_my_IP_address
-(
-    char* s             // Where to return the string
+void WiFi_my_IP_address(char *s // Where to return the string
 )
 {
   sprintf(s, "%d.%d.%d.%d", TO_IP(ipInfo.ip.addr));
@@ -953,15 +952,13 @@ void WiFi_my_IP_address
 }
 
 #if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE )
-void WiFi_remote_IP_address
-(
-    char* s             // Where to return the string
+void WiFi_remote_IP_address(char *s // Where to return the string
 )
 {
-    sprintf(s, "%d.%d.%d.%d", TO_IP(url_ip_address.u_addr.ip4.addr));
-    return;
+  sprintf(s, "%d.%d.%d.%d", TO_IP(url_ip_address.u_addr.ip4.addr));
+  return;
 }
-#endif 
+#endif
 
 /*****************************************************************************
  *
