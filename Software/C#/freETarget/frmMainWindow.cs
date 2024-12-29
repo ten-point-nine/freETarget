@@ -402,7 +402,7 @@ namespace freETarget {
 
                         //if target has OFFSET values, override local calibration -> set it to 0
                         if (lastEcho != null) {
-                            if (lastEcho.X_OFFSET != decimal.Zero && lastEcho.Y_OFFSET != decimal.Zero) {
+                            if (lastEcho.X_OFFSET != decimal.Zero || lastEcho.Y_OFFSET != decimal.Zero) {
                                 this.calibrationX = 0;
                                 this.calibrationY = 0;
                                 btnCalibration.BackColor = this.BackColor;
