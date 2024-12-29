@@ -3,413 +3,244 @@
  *
  * diag_tools.c
  *
- * Debug and test tools 
- * 
+ * Debug and test tools
+ *
  * See
  * https://www.espressif.com/sites/default/files/documentation/esp32-s3_technical_reference_manual_en.pdf
  *
  ******************************************************************************/
 
+#include "ctype.h"
+#include "driver\gpio.h"
+#include "esp_timer.h"
+#include "gpio_types.h"
+#include "serial_io.h"
 #include "stdbool.h"
 #include "stdio.h"
-#include "serial_io.h"
-#include "gpio_types.h"
-#include "driver\gpio.h"
-#include "ctype.h"
+#include "string.h"
 
 #include "freETarget.h"
-#include "gpio.h"
-#include "diag_tools.h"
-#include "analog_io.h"
-#include "json.h"
-#include "timer.h"
-#include "esp_timer.h"
-#include "dac.h"
-#include "pwm.h"
-#include "pcnt.h"
-#include "analog_io.h"
-#include "gpio_define.h"
 #include "WiFi.h"
-
-const char* which_one[] = {"North_lo", "East_lo ", "South_lo", "West_lo ", "North_hi", "East_hi ", "South_hi", "West_hi "};
-
-#define TICK(x) (((x) / 0.33) * OSCILLATOR_MHZ)   // Distance in clock ticks
-#define RX(Z,X,Y) (16000 - (sqrt(sq(TICK(x)-s[(Z)].x) + sq(TICK(y)-s[(Z)].y))))
-#define GRID_SIDE 25                              // Should be an odd number
-#define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
+#include "analog_io.h"
+#include "compute_hit.h"
+#include "dac.h"
+#include "diag_tools.h"
+#include "gpio.h"
+#include "gpio_define.h"
+#include "json.h"
+#include "pcnt.h"
+#include "pwm.h"
+#include "timer.h"
 
 extern volatile unsigned long paper_time;
 
-/*******************************************************************************
- *
- * @function: void self_test
- *
- * @brief: Execute self tests based on the jumper settings
- * 
- * @return: None
- *
- *******************************************************************************
- *   
- *   This function is a large case statement with each element
- *   of the case statement 
- * 
- *   Supports a test mode (TEST:99) that emulates an old style Zapple monitor
- *   
- ******************************************************************************/
-unsigned int tick;
-void zapple(unsigned int test)
-{ 
-  int run_test;                 // Running Semephore
-  char ch;                      // Input character
-
-  run_test = 1;
-
-  while (run_test != 0)
-  {
-    printf("\r\nTest >");
-    test = 0;
-
-    while (1)
-    {
-      if ( serial_available(CONSOLE) != 0 )
-      {
-        ch = serial_getch(CONSOLE);
-        ch = toupper(ch);
-        printf("%c", ch);
-        if ( ch != '\r' )
-        {
-            test = ((test * 10) + (ch -'0')) % 100;
-          }
-          if ( (ch == '\r') || (ch == '\n') )
-          {
-            self_test(test);
-            break;
-          }
-          if ( ch == 'X' )
-          {
-            run_test = 0;
-            break;
-          }
-        }
-        vTaskDelay(1);
-      }
-    }
+static void show_test_help(void);
 
 /*
- *  GO back to normal operation
+ * Diagnostic typedefs
  */
+typedef struct
+{
+  char *help;      // Help text
+  void (*f)(void); // Function to execute the test
+} self_test_t;
+
+static const self_test_t test_list[] = {
+    {"Help",                              &show_test_help        },
+    {"Factory test",                      &factory_test          },
+    {"- DIGITAL",                         0                      },
+    {"Digital inputs",                    &digital_test          },
+    {"Advance paper backer",              &paper_test            },
+    {"LED brightness test",               &LED_test              },
+    {"Status LED driver",                 &status_LED_test       },
+    {"Analog input test",                 &analog_input_test     },
+    {"DAC test",                          &DAC_test              },
+    {"- Timer & PCNT test",               0                      },
+    {"PCNT timers not stopping",          &pcnt_1                },
+    {"PCNT timers not running",           &pcnt_2                },
+    {"PCNT timers start - stop together", &pcnt_3                },
+    {"PCNT Timers cleared",               &pcnt_4                },
+    {"PCNT test all",                     &pcnt_all              },
+    {"PCNT calibration",                  &pcnt_cal              },
+    {"Sensor POST test",                  &POST_counters         },
+    {"Turn the oscillator on and off",    &timer_cycle_oscillator},
+    {"Turn the RUN lines on and off",     &timer_run_all         },
+    {"Show the current time",             &show_time             },
+    {"- Communiations Tests",             0                      },
+    {"AUX serial port test",              &serial_port_test      },
+    {"Test WiFi as a station",            &WiFi_station_init     },
+    {"Enable the WiFi Server",            &WiFi_server_test      },
+    {"Enable the WiFi AP",                &WiFi_AP_init          },
+    {"Loopback the TCPIP data",           &WiFi_loopback_test    },
+    {"Loopback WiFi",                     &WiFi_loopback_test    },
+    {"-Interrupt Tests",                  0                      },
+    {"Polled target test",                &polled_target_test    },
+    {"Interrupt target test",             &interrupt_target_test },
+    {"",                                  0                      }
+};
+
+const dlt_name_t dlt_names[] = {
+    {DLT_CRITICAL,      "DLT_CRITICAL",      'E'}, // Prevents target from working
+    {DLT_INFO,          "DLT_INFO",          'I'}, // Running information
+    {DLT_APPLICATION,   "DLT_APPLICATION",   'A'}, // FreeTarget.c and compute.c logging
+    {DLT_COMMUNICATION, "DLT_COMMUNICATION", 'C'}, // WiFi and other communications information
+    {DLT_DIAG,          "DLT_DIAG",          'H'}, // Hardware diagnostics
+    {DLT_DEBUG,         "DLT_DEBUG",         'D'}, // Software debugging information
+    {DLT_SCORE,         "DLT_SCORE",         'S'}, // Display timing in the score message
+    {DLT_HEARTBEAT,     "DLT_HEARTBEAT",     'H'}, // Heartbeat tick
+    {0,                 0,                   0  }
+};
+
+/*-----------------------------------------------------
+ *
+ * @function: self_test()
+ *
+ * @brief:    General purpose test driver
+ *
+ * @return:   None
+ *
+ *-----------------------------------------------------
+ *
+ * The tests are contained in a structure.  This function
+ * look into the structure to execute the appropriate test
+ *
+ *-----------------------------------------------------*/
+
+unsigned int next_test(char ch, unsigned int test_ID)
+{
+  if ( ch == '-' )           // Test separator?
+  {
+    test_ID += 20;           // Go to the next second decade
+    test_ID -= test_ID % 10; // Round down to the zero
+    test_ID--;
+  }
+  else
+  {
+    test_ID++;
+  }
+
+  return test_ID;
+}
+
+void self_test(unsigned int test // What test to execute
+)
+{
+  unsigned int i;
+  unsigned int test_ID;          // Computed test ID
+
+  /*
+   *  Switch over to test mode
+   */
+  run_state |= IN_TEST;      // Show the test is running
+
+  while ( run_state & IN_OPERATION )
+  {
+    vTaskDelay(10);          // Wait for everyone else to turn off
+  }
+  freeETarget_timer_pause(); // Stop interrupts
+
+  /*
+   * Figure out what test to run
+   */
+  i       = 0;
+  test_ID = 0;
+  while ( test_list[i].help[0] != 0 )                         // Look through the list
+  {
+    if ( (test_ID == test) && (test_list[i].help[0] != '-') ) // Found the test
+    {
+      SEND(sprintf(_xs, "\r\n\n%2d - %s", test_ID, test_list[i].help);)
+      test_list[i].f();                                       // Execute the test
+      run_state &= ~IN_TEST;                                  // Exit the test
+      freeETarget_timer_start();                              // Start interrupts
+      return;
+    }
+    i++;
+    test_ID = next_test(test_list[i].help[0], test_ID);
+  }
+
+  /*
+   * Have not found the test
+   */
+  show_test_help();
+
+  /*
+   *  All done, return;
+   */
+  run_state &= ~IN_TEST;     // Exit the test
+  freeETarget_timer_start(); // Start interrupts
   return;
 }
 
-
-void self_test
-(
-  unsigned int test                 // What test to execute
-)
+/*---------------------------------------------------------------------
+ * Print out the help text
+ *-------------------------------------------------------------------*/
+static void show_test_help(void)
 {
-  int   i;
+  unsigned int i;
+  unsigned int test_ID;
 
-/*
- *  Switch over to test mode 
- */
-  run_state |= IN_TEST;             // Show the test is running 
-  
-  while ( run_state & IN_OPERATION )
+  i       = 0;
+  test_ID = 0;
+  while ( test_list[i].help[0] != 0 )
   {
-    vTaskDelay(10);                 // Wait for everyone else to turn off
+    if ( test_list[i].help[0] != '-' )
+    {
+      SEND(sprintf(_xs, "\r\n%2d - %s", test_ID, test_list[i].help);)
+    }
+    else
+    {
+      SEND(sprintf(_xs, "\r\n\n%s", test_list[i].help);)
+    }
+    i++;
+    test_ID = next_test(test_list[i].help[0], test_ID);
   }
-  freeETarget_timer_pause();        // Stop interrupts
-
-/*
- * Figure out what test to run
- */
-  switch (test)
-  {
-/*
- * Test 0, Display the help
- */
-    default:                // Undefined, show the tests
-    case T_HELP:  
-      printf("\r\n 1 - Factory test");
-      printf("\r\n");              
-      printf("\r\n10 - Digital inputs");
-      printf("\r\n11 - Advance paper backer");
-      printf("\r\n12 - LED brightness test");
-      printf("\r\n13 - Status LED driver");
-      printf("\r\n14 - Temperature and sendor test");
-      printf("\r\n15 - DAC test");
-      printf("\r\n16 - Rapid fire LED test");
-      printf("\r\n"); 
-      printf("\r\n20 - PCNT Test");
-      printf("\r\n21 - pcnt(1) - Timers not running"); 
-      printf("\r\n22 - pcnt(2) - Timers start - stop together"); 
-      printf("\r\n23 - pcnt(3) - Timers free running"); 
-      printf("\r\n24 - pcnt(4) - Timers cleared"); 
-      printf("\r\n25 - Turn the oscillator on and off");
-      printf("\r\n26 - Turn the RUN lines on and off");
-      printf("\r\n27 - Trigger NORTH from a function generator");
-      printf("\r\n"); 
-      printf("\r\n30 - AUX Port loopback");
-      printf("\r\n31 - Test WiFi as an Access Point");
-      printf("\r\n32 - Test WiFI as a station"); 
-      printf("\r\n33 - Enable the WiFi Server");
-      printf("\r\n34 - Loopback the TCPIP data");
-      printf("\r\n35 - Loopback WiFi");
-      printf("\r\n36 - DNS lookup test");
-      printf("\r\n");
-      printf("\r\n40 - Sensor POST test");
-      printf("\r\n41 - Polled Target Test");
-      printf("\r\n42 - Interrupt Target Test");
-      printf("\r\n");
-      printf("\r\n99 - Zapple Debug Monitor");
-      printf("\r\n");
-    break;
-
-/*
- * Test all of the hardware
- */
-    case T_FACTORY: 
-      factory_test();
-      break;
-/*
- * Display GPIO inputs
- */
-    case T_DIGITAL: 
-      digital_test();
-      break;
-
-/*
- * Advance the paper
- */
-    case T_PAPER:
-      paper_test();
-      break;
-
-/*
- * Set the LED bightness
- */
-    case T_LED:
-      printf("\r\nCycling the LED");
-      for (i=0; i <= 100; i+= 5)
-      {
-        printf("%d   ", i);
-        pwm_set(LED_PWM, i);       
-        vTaskDelay(ONE_SECOND/10);
-      }
-      for (i=100; i >= 0; i-=5)
-      {
-        printf("%d   ", i);
-        pwm_set(LED_PWM,i);       
-        vTaskDelay(ONE_SECOND/10);
-      }
-      printf("\r\nDone\r\n");
-      break;
-
-/*
- * Set status LEDs
- */
-    case T_STATUS:
-      status_LED_test();
-      break;
-
-/*
- * Analog In
- */
-    case T_TEMPERATURE:
-      analog_input_test();
-      break;
-
-/*
- * DAC
- */
-    case T_DAC:
-      DAC_test();
-      break;
-
-/*
- * Set Rapid Fire LEDs
- */
-    case T_RAPID_LEDS:
-      rapid_LED_test();
-      break;
-
-/*
- * PCNT test
- */
-    case T_PCNT:
-      pcnt_test(1);
-      pcnt_test(2);
-      pcnt_test(3);
-      pcnt_test(4);
-      break;
-
-    case T_PCNT_CAL:
-      pcnt_cal();
-      break;
-
-/*
- *  Sensor Trigger
- */
-    case T_SENSOR:
-      POST_counters();
-      break;
-
-/*
- *  AUX Serial Port
- */
-    case T_AUX_SERIAL:
-      serial_port_test();
-      break;
-
-/*
- *  Polled Target Test
- */
-    case T_TARGET:
-      polled_target_test();
-      break;      
-/*
- *  Interrupt Target Test
- */
-    case T_TARGET_2:
-      interrupt_target_test();
-      break; 
-
-/*
- *  Start WiFi AP
- */
-    case T_WIFI_AP:
-      WiFi_AP_init();
-      break; 
-
-/*
- *  Start WiFi station
- */
-    case T_WIFI_STATION:
-      WiFi_station_init();
-      break; 
-
-/*
- *  Enable the WiFi Server
- */
-    case T_WIFI_SERVER:
-      xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",      4096, NULL, 5, NULL);
-      break; 
-
-/*
- *  Send and receive something
- */
-    case T_WIFI_STATION_LOOPBACK:
-      WiFi_station_init();
-      xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",      4096, NULL, 5, NULL);
-      xTaskCreate(tcpip_accept_poll,       "tcpip_accept_poll",    4096, NULL, 4, NULL);
-      WiFi_loopback_test();
-      break; 
-
-/*
- *  Send and receive something
- */
-    case T_WIFI_AP_LOOPBACK:
-      WiFi_AP_init();
-      xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",      4096, NULL, 5, NULL);
-      xTaskCreate(tcpip_accept_poll,       "tcpip_accept_poll",    4096, NULL, 4, NULL);
-      WiFi_loopback_test();
-      break; 
-
-#if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE )
-/*
- *  DNS lookup test
- */
-    case T_WIFI_DNS_LOOKUP:
-      WiFi_DNS_test();
-      break;
-#endif 
-
-/*
- *  Cycle the 10MHz clock input
- */
-    case T_CYCLE_CLOCK:
-      printf("\r\nCycle 10MHz Osc 2:1 duty cycle\r\n");
-      while (serial_available(CONSOLE) == 0)
-      {
-        gpio_set_level(OSC_CONTROL, OSC_ON);       // Turn off the oscillator
-        vTaskDelay(ONE_SECOND/2);                  // The oscillator should be on for 1/2 second
-        gpio_set_level(OSC_CONTROL, OSC_OFF);      // Turn off the oscillator
-        vTaskDelay(ONE_SECOND/4);                  // The oscillator shold be off for 1/4 seocnd
-      }
-      break; 
-/*
- *  Turn the RUN lines on and off
- */
-    case T_RUN_ALL:
-      printf("\r\nCycle RUN lines at 2:1 duty cycle\r\n");
-      while (serial_available(CONSOLE) == 0)
-      {
-        gpio_set_level(STOP_N, 1);                  // Let the clock go
-        gpio_set_level(CLOCK_START, 0);   
-        gpio_set_level(CLOCK_START, 1);   
-        gpio_set_level(CLOCK_START, 0);             // Strobe the RUN linwes
-        vTaskDelay(ONE_SECOND/2);                   // The RUN lines should be on for 1/2 second
-        gpio_set_level(STOP_N, 0);                  // Stop the clock
-        vTaskDelay(ONE_SECOND/4);                   // THe RUN lines shold be off for 1/4 second
-      }
-      break; 
-
-/*
- *  Single PCNT test
- */
-    case T_PCNT_STOP:
-    case T_PCNT_SHORT:
-    case T_PCNT_FREE:
-    case T_PCNT_CLEAR:
-      pcnt_test(test - (T_PCNT_STOP - 1));
-      break;
-  }
-
- /* 
-  *  All done, return;
-  */
-    run_state &= ~IN_TEST;              // Exit the test 
-    freeETarget_timer_start();          // Start interrupts
-    return;
+  SEND(sprintf(_xs, "\r\n\n");)
+  return;
 }
 /*-----------------------------------------------------
- * 
+ *
  * @function: factory_test()
- * 
+ *
  * @brief:    Test all the things we can test
- * 
+ *
  * @return:   None
- * 
+ *
  *-----------------------------------------------------
  *
- * This is the factory test to test all of the circuit 
+ * This is the factory test to test all of the circuit
  * elements.
- * 
+ *
  *-----------------------------------------------------*/
 
-#define PASS_RUNNING 0x00FF
+#define PASS_RUNNING RUN_MASK
 #define PASS_A       0x0100
 #define PASS_B       0x0200
-#define PASS_C       0X4000
-#define PASS_D       0x8000
+#define PASS_C       0X0400
+#define PASS_D       0x0800
 #define PASS_MASK    (PASS_RUNNING | PASS_A | PASS_B)
 #define PASS_TEST    (PASS_RUNNING | PASS_C)
 
-void factory_test(void)
+bool factory_test(void)
 {
-  int i, percent;
-  int running;            // Bit mask from run flip flops
-  int dip;                // Input from DIP input
-  char ch;
-  char ABCD[] = "DCBA";   // DIP switch order
-  int  pass;              // Pass YES/NO
+  int   i, percent;
+  int   running;         // Bit mask from run flip flops
+  int   dip;             // Input from DIP input
+  char  ch;
+  char  ABCD[] = "DCBA"; // DIP switch order
+  int   pass;            // Pass YES/NO
+  bool  passed_once;     // Passed all of the tests at least once
   float volts[4];
-  int  motor_toggle;      // Toggle motor on an off
+  int   motor_toggle;    // Toggle motor on an off
 
-/*
- *  Force the refernce voltages - Incase the board has been uninitialized
- */
-  if ( (json_vref_lo == 0) || (json_vref_hi == 0))
+  pass         = 0;      // Pass YES/NO
+  passed_once  = false;
+  percent      = 0;
+  motor_toggle = 0;
+
+  /*
+   *  Force the refernce voltages - Incase the board has been uninitialized
+   */
+  if ( (json_vref_lo == 0) || (json_vref_hi == 0) )
   {
     volts[VREF_LO] = 1.25;
     volts[VREF_HI] = 2.00;
@@ -417,53 +248,73 @@ void factory_test(void)
     volts[VREF_3]  = 0.00;
     DAC_write(volts);
   }
-/*
- * Ready to start the test
- */
-  printf("\r\nFactory Test");
-  printf("\r\nHas the tape seal been removed from the temperature sensor?");
-  printf("\r\nPress 1 & 2 to continue\r\n");
-  while ( (DIP_SW_A == 0) || (DIP_SW_B == 0) )
+  /*
+   * Ready to start the test
+   */
+  SEND(sprintf(_xs, "\r\nFirmware version: %s   Board version: %d", SOFTWARE_VERSION, revision());)
+  SEND(sprintf(_xs, "\r\n");)
+  SEND(sprintf(_xs, "\r\nHas the tape seal been removed from the temperature sensor?");)
+  SEND(sprintf(_xs, "\r\nPress 1 & 2 or ! to continue\r\n");)
+
+  while ( pass != (PASS_A | PASS_B) )
   {
-    continue;
+    if ( DIP_SW_A != 0 )
+    {
+      pass |= PASS_A;
+    }
+    if ( DIP_SW_B != 0 )
+    {
+      pass |= PASS_B;
+    }
+    if ( serial_available(ALL) )
+    {
+      if ( serial_getch(ALL) == '!' )
+      {
+        pass = (PASS_A | PASS_B);
+      }
+    }
   }
 
-/*
- *  Begin test
- */
+  /*
+   *  Begin test
+   */
   arm_timers();
-  pass = 0;
-  percent = 0;
-  motor_toggle = 0;
-/*
- * Loop and poll the various inputs and output
- */
-  while (1)
+
+  /*
+   * Loop and poll the various inputs and output
+   */
+  while ( 1 )
   {
+    SEND(sprintf(_xs, "\r\nSens: ");)
     running = is_running();
-    if ( running == 0x00FF )
-    {
-      pass |= PASS_RUNNING;
-    }
-    printf("\r\nSens: ");
-    for (i=0; i != 8; i++)
+    pass |= running & RUN_MASK;
+    for ( i = 0; i != 8; i++ )
     {
       if ( i == 4 )
       {
-        printf(" ");
+        SEND(sprintf(_xs, " ");)
       }
-      if (running & (1<<i))
+      if ( running & (1 << i) )
       {
-        printf("%c", nesw[i] );
+        SEND(sprintf(_xs, "%c", find_sensor(1 << i)->short_name);)
       }
       else
       {
-        printf("-");
+
+        if ( ((find_sensor(1 << i)->short_name) == 'N') // Is this the North Sensor?
+             && (json_pcnt_latency == 0) )              // and pcnt_latency is disabled?
+        {
+          SEND(sprintf(_xs, "-");)                      // Then mark it as unused
+        }
+        else
+        {
+          SEND(sprintf(_xs, ".");)                      // Show N/A for this iput
+        }
       }
     }
 
     dip = read_DIP();
-    printf("  DIP: "); 
+    SEND(sprintf(_xs, "  DIP: ");)
     if ( DIP_SW_A )
     {
       set_status_LED("-W-");
@@ -494,263 +345,235 @@ void factory_test(void)
       pass |= PASS_D;
     }
 
-    for (i=3; i >= 0; i--)
+    for ( i = 3; i >= 0; i-- )
     {
-      if ((dip & (1<<i)) == 0)
+      if ( (dip & (1 << i)) == 0 )
       {
-        printf("%c", ABCD[i] );
+        SEND(sprintf(_xs, "%c", ABCD[i]);)
       }
       else
       {
-        printf("-");
+        SEND(sprintf(_xs, "-");)
       }
     }
 
-    printf("  12V: %4.2fV", v12_supply());
-    printf("  Rev: %d", revision());
-    printf("  Temp: %4.2fC", temperature_C());
-    printf("  Humd: %4.2f%%", humidity_RH());
+    SEND(sprintf(_xs, "  12V: %4.2fV", v12_supply());)
+    SEND(sprintf(_xs, "  Temp: %4.2fC", temperature_C());)
+    SEND(sprintf(_xs, "  Humidiity: %4.2f%%", humidity_RH());)
 
-    printf("  M");
-    if ( motor_toggle )
+    if ( v12_supply() >= V12_WORKING ) // Skip the motor and LED test if 12 volts not used
     {
-      printf("+");
-      paper_on_off(true, ONE_SECOND);
-    }
-    else
-    {
-      printf("-");
-      paper_on_off(false, 0);
-    }
-    motor_toggle ^= 1;
-    
-    set_LED_PWM_now(percent);
-    printf("  LED: %3d%% ", percent);
-    percent = percent + 25;
-    if ( percent > 100 )
-    {
-      percent = 0;
+      SEND(sprintf(_xs, "  M");)
+      if ( motor_toggle )
+      {
+        SEND(sprintf(_xs, "+");)
+        DCmotor_on_off(true, ONE_SECOND);
+      }
+      else
+      {
+        SEND(sprintf(_xs, "-");)
+        DCmotor_on_off(false, 0);
+      }
+      motor_toggle ^= 1;
+
+      set_LED_PWM_now(percent);
+      SEND(sprintf(_xs, "  LED: %3d%% ", percent);)
+      percent = percent + 25;
+      if ( percent > 100 )
+      {
+        percent = 0;
+      }
     }
 
-    printf("V:%s:",SOFTWARE_VERSION);
-
-    if ( (pass == PASS_MASK) || (pass == PASS_TEST) ) 
+    if ( ((pass & PASS_MASK) == PASS_MASK) )
     {
-      printf("  PASS");
+      set_status_LED(LED_GOOD);
+      SEND(sprintf(_xs, "  PASS");)
       vTaskDelay(ONE_SECOND);
       arm_timers();
-      pass = 0;
+      pass        = 0;
+      passed_once = true;
     }
 
-/*
- *  See if there is any user controls 
- */
-    if ( serial_available(CONSOLE) )
+    /*
+     *  See if there is any user controls
+     */
+    if ( serial_available(ALL) )
     {
-      ch = serial_getch(CONSOLE);
-      switch (ch)
+      ch = serial_getch(ALL);
+      switch ( ch )
       {
         default:
-        case 'R':               // Reset the test
+        case 'R':   // Reset the test
         case 'r':
-          pass = 0;             // Reset the pass/fail
+          pass = 0; // Reset the pass/fail
           arm_timers();
           break;
 
-        case 'X':               // Exit
+        case 'X':   // Exit
         case 'x':
         case '!':
-          paper_on_off(false, 0);
-          printf("\r\nDone");
-          return;
+          DCmotor_on_off(false, 0);
+          if ( passed_once == true )
+          {
+            SEND(sprintf(_xs, "\r\nTest completed successfully\r\n");)
+          }
+          else
+          {
+            SEND(sprintf(_xs, "\r\nTest finished without PASS\r\n");)
+          }
+          return passed_once;
       }
     }
 
     vTaskDelay(ONE_SECOND / 2);
-
   }
 
-/*
- *  The test has been terminated
- */
-
+  /*
+   *  The test has been terminated
+   */
+  return passed_once;
 }
 
 /*******************************************************************************
- * 
+ *
  * @function: POST_version()
- * 
+ *
  * @brief: Show the Version String
- * 
+ *
  * @return: None
- * 
+ *
  *******************************************************************************
  *
  *  Common function to show the version. Routed to the selected
  *  port(s)
- *  
+ *
  *******************************************************************************/
- void POST_version(void)
- {
-  SEND(sprintf(_xs, "\r\nfreETarget %s\r\n", SOFTWARE_VERSION);)
+void POST_version(void)
+{
+  SEND(sprintf(_xs, "\r\n{\"VERSION\": %s}\r\n", SOFTWARE_VERSION);)
 
-/*
- * All done, return
- */
+  /*
+   * All done, return
+   */
   return;
 }
- 
+
 /*----------------------------------------------------------------
- * 
+ *
  * @function: void POST_counters()
- * 
+ *
  * @brief: Verify the counter circuit operation
- * 
- * @return: None
- * 
+ *
+ * @return: TRUE if the tests pass
+ *          Never if the tests fail
+ *
  *----------------------------------------------------------------
  *
- *  Trigger the counters from inside the circuit board and 
+ *  Trigger the counters from inside the circuit board and
  *  read back the results and look for an expected value.
- *  
- *  Return TRUE if the complete circuit is working
- *  
+ *
+ *  Return only if all of the tests pass
+ *
  *  Test 1, Make sure the 10MHz clock is running
  *  Test 2, Clear the flip flops and make sure the run latches are clear
- *  Test 3, Trigger the flip flops and make sure the run latche are set
- *  
+ *  Test 3, Trigger the flip flops and make sure that no run latche are set
+ *  Test 4, Trigger a run and verify that the counters change
+ *
  *--------------------------------------------------------------*/
 bool POST_counters(void)
 {
-  unsigned int i;                          // Iteration counter
-  bool         test1, test2, test3, test4; // Record if the test failed
-  unsigned int count, toggle;              // Cycle counter
+  unsigned int i;                      // Iteration counter
+  unsigned int count, toggle, running; // Cycle counter
+  DLT(DLT_INFO, SEND(sprintf(_xs, "POST_counters()");))
 
-  DLT(DLT_CRITICAL, printf("POST_counters()");)
-  set_status_LED(LED_OFF);                 // Turn them all off
-  
-  return 1;
-  
-/*
- *  Test 1, Make sure we can turn off the reference clock
- */
-  test1 = true;                           // Start of assuming it passes
+  /*
+   *  Test 1, Make sure we can turn off the reference clock
+   */
   count = 0;
-  DLT(DLT_CRITICAL, printf("Turn Clock OFF");)
-  gpio_set_level(OSC_CONTROL, OSC_OFF);   // Turn off the oscillator
-  set_status_LED("W--");
+  gpio_set_level(OSC_CONTROL, OSC_OFF);            // Turn off the oscillator
   toggle = gpio_get_level(REF_CLK);
-  for  (i=0; i != 1000; i++)               // Try 1000 times
+  for ( i = 0; i != 1000; i++ )                    // Try 1000 times
   {
-    if ( (gpio_get_level(REF_CLK) ^ toggle) != 0 )  // Look for a change
+    if ( (gpio_get_level(REF_CLK) ^ toggle) != 0 ) // Look for a change
     {
       count++;
       toggle = gpio_get_level(REF_CLK);
     }
   }
-  
+
   if ( count != 0 )
   {
-    set_status_LED("R--");
-    test1 = false;
-    DLT(DLT_CRITICAL, printf("Reference clock cannot be stopped");)
-    vTaskDelay(5*ONE_SECOND);
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Reference clock cannot be stopped");))
+    set_diag_LED(LED_FAIL_CLOCK_STOP, 10);
+    run_state |= IN_FATAL_ERR;
   }
-  else
-  {
-    set_status_LED("Y--");
-  }
-  vTaskDelay(ONE_SECOND);
 
-/*
- *  Test 2, Make sure we can turn the reference clock on
- */
-  test2 = false;
+  /*
+   *  Test 2, Make sure we can turn the reference clock on
+   */
   count = 0;
-  DLT(DLT_CRITICAL, printf("Turn Clock ON");)
   gpio_set_level(OSC_CONTROL, OSC_ON);
   toggle = gpio_get_level(REF_CLK);
-  for  (i=0; i != 1000; i++)               // Try 1000 times
+  for ( i = 0; i != 1000; i++ )                    // Try 1000 times
   {
-    if ( (gpio_get_level(REF_CLK) ^ toggle) != 0 )  // Look for a change
+    if ( (gpio_get_level(REF_CLK) ^ toggle) != 0 ) // Look for a change
     {
       count++;
-      test2 = true;
       toggle = gpio_get_level(REF_CLK);
     }
   }
 
-  if ( count == 0  )
+  if ( count == 0 )
   {
-    set_status_LED("R--");
-    DLT(DLT_CRITICAL, printf("Reference clock cannot be started");)
-    vTaskDelay(5*ONE_SECOND);
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Reference clock cannot be started");))
+    set_diag_LED(LED_FAIL_CLOCK_START, 10);
+    run_state |= IN_FATAL_ERR;
   }
-  else
-  {
-    set_status_LED("G--");
-  }
-  vTaskDelay(ONE_SECOND);
 
-/*
- *  Test 3, Make sure we can turn the triggers off
- */
-  test3 = false;
-  DLT(DLT_CRITICAL, printf("Sensor trigger test OFF");)
-  gpio_set_level(STOP_N, 0);        // Clear the latch
-  gpio_set_level(STOP_N, 1);        // and reenable it
-  set_status_LED("-Y-");
-  if ( is_running() == 0  )
+  /*
+   *  Test 3, Make sure we can turn the triggers off
+   */
+  gpio_set_level(STOP_N, RUN_OFF); // Clear the latch
+  gpio_set_level(STOP_N, RUN_GO);  // and reenable it
+  running = is_running();
+  if ( running != 0 )
   {
-    test3 = true;
-    set_status_LED("-G-");
-  }    
-  if ( test3 == false )
-  {
-      set_status_LED("-R-");
-      DLT(DLT_CRITICAL, printf("Stuck bit in run latch: ");)
-      count = is_running();
-      for (i=0; i != 8; i++)
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Stuck bit in run latch: ");))
+    for ( i = N; i <= W; i++ )
+    {
+      if ( running & s[i].low_sense.run_mask )
       {
-        if ( count & 0x80 )
-        {
-          printf("%s  ", which_one[i]);
-        }
-
-        count <<= 1;
+        set_diag_LED(s[i].low_sense.diag_LED, 10);
       }
-      vTaskDelay(5*ONE_SECOND);
-  }      
-  vTaskDelay(ONE_SECOND);
-
-/*
- * Test 4, trigger the timers
- */
-  test4 = false;
-  DLT(DLT_CRITICAL, printf("Sensor trigger test ON");)
-  set_status_LED("--Y");
-  gpio_set_level(STOP_N, 0);          // Clear the latch
-  gpio_set_level(STOP_N, 1);
-  gpio_set_level(CLOCK_START, 1);     // Triger the run latch
-  gpio_set_level(CLOCK_START, 0);
-  gpio_set_level(CLOCK_START, 1);
-  if ( is_running() == 0xFF  )
-  {
-    set_status_LED("--G");
-    test4 = true;
-  }
-  else
-  {
-    set_status_LED("--R");
-    DLT(DLT_CRITICAL, printf("Failed to start clock in run latch: %02X", is_running());)
-    vTaskDelay(5*ONE_SECOND);
+      if ( running & s[i].high_sense.run_mask )
+      {
+        set_diag_LED(s[i].high_sense.diag_LED, 10);
+      }
+    }
+    run_state |= IN_FATAL_ERR;
   }
   vTaskDelay(ONE_SECOND);
 
-/*
- * We get here regardless of whether or not the test failed
- */
-  return test1 && test2 && test3 && test4;
+  /*
+   * Test 4, Trigger the timers
+   */
+  gpio_set_level(STOP_N, RUN_OFF);                // Clear the latch
+  gpio_set_level(STOP_N, RUN_GO);
+  gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF); // Triger the run latch
+  gpio_set_level(CLOCK_START, CLOCK_TRIGGER_ON);
+  gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);
+  if ( (is_running() & RUN_MASK) != RUN_MASK )
+  {
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to start clock in run latch: %02X", is_running());))
+    set_diag_LED(LED_FAIL_RUN_STUCK, 10);
+    run_state |= IN_FATAL_ERR;
+  }
+
+  /*
+   * Return the err status
+   */
+  return ((run_state & IN_FATAL_ERR) == 0); // Return TRUE if no errors detected
 }
 
 /*----------------------------------------------------------------
@@ -760,61 +583,74 @@ bool POST_counters(void)
  * @brief:    Show which sensor flip flops were latched
  *
  * @return:   Nothing
- * 
+ *
  *----------------------------------------------------------------
- * 
+ *
  * The sensor state NESW or .... is shown for each latch
  * The clock values are also printed
- *   
+ *
  *--------------------------------------------------------------*/
-void show_sensor_status
-  (
-  unsigned int   sensor_status
-  )
+void show_sensor_status(unsigned int sensor_status)
 {
   unsigned int i;
-  
-  printf(" Latch:");
 
-  for (i=N; i<=W; i++)
-  {
-    if ( sensor_status & (1<<i) )   printf("%c", nesw[i]);
-    else                            printf(".");
-  }
+  SEND(sprintf(_xs, " Latch:");)
 
-  printf("  Face Strike: %d", face_strike);
-  
-  printf("  Temperature: %4.2f", temperature_C());
-  
-  printf("  Switch:");
-  
-  if ( DIP_SW_A == 0 )
+  for ( i = N; i <= W; i++ )
   {
-    printf("--");
-  }
-  else
-  {
-    printf("A1");
-  }
-  printf(" ");
-  if ( DIP_SW_B == 0 )
-  {
-    printf("--");
-  }
-  else
-  {
-    printf("B2");
+    if ( sensor_status & (1 << i) )
+    {
+      SEND(sprintf(_xs, "%c", find_sensor(1 << i)->short_name);)
+    }
+    else
+    {
+      SEND(sprintf(_xs, ".");)
+    }
   }
 
-  if (( sensor_status & 0x0f) == 0x0f)
+  if ( (sensor_status & RUN_MASK) != RUN_MASK )
   {
-    printf(" PASS");
-    vTaskDelay(ONE_SECOND);                // Wait for click to go away
-  }    
+    SEND(sprintf(_xs, " FAULT");)
+  }
 
-/*
- * All done, return
- */
+  SEND(sprintf(_xs, "  Face Strike: %d", face_strike);)
+
+  /*
+   * All done, return
+   */
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: show_sensor_fault()
+ *
+ * @brief:    Use the LEDs to show if a sensor failed
+ *
+ * @return:   Nothing
+ *
+ *----------------------------------------------------------------
+ *
+ * This function is intended as a diagnostic to show if a sensor
+ * failed to detect a show
+ *
+ *--------------------------------------------------------------*/
+void show_sensor_fault(unsigned int sensor_status)
+{
+  unsigned int i;
+
+  for ( i = N; i <= W_HI; i++ )
+  {
+    if ( (sensor_status & (1 << i)) == 0 )
+    {
+      set_diag_LED(find_sensor(1 << i)->diag_LED, 2);
+      return;
+    }
+  }
+
+  /*
+   * All done, return
+   */
   return;
 }
 
@@ -825,27 +661,215 @@ void show_sensor_status
  * @brief:    Check for a DLT log and print the time
  *
  * @return:   TRUE if the DLT should be printed
- * 
+ *
  *----------------------------------------------------------------
- * 
+ *
  * is_trace is compared to the log level and if valid the
  * current time stamp is printed
- * 
- * DLT_CRItiCAL levels are always printed
- *   
+ *
+ * DLT_INFO level is  always printed
+ * DLT_CRITICAL level is printed with an error
+ *
+ * Console colours
+ *
+ * E - Error       - Red
+ * I - Information - Green
+ * W - Warning     - Yellow
+ *
  *--------------------------------------------------------------*/
-bool do_dlt
-  (
-  unsigned int level
-  )
-{ 
-  if ((level & (is_trace | DLT_CRITICAL)) == 0 )
+bool do_dlt(           //
+    unsigned int level // Trace logging level
+)
+{
+  char         dlt_id = 'I';
+  unsigned int i;
+
+                       /*
+                        * Return if the current level is not enabled in is_trace
+                        */
+  if ( (level & (is_trace | DLT_CRITICAL | DLT_INFO)) == 0 ) // DLT_CRITICAL are always set in is_trace
   {
-    return false;      // Send out if the trace is higher than the level 
+    return false;                                            // Send out if the trace is higher than the level
   }
 
-  printf("\r\nI (%d) ", (int)(esp_timer_get_time()/1000) );
+                                                             /*
+                                                              *  Loop through and see what trace level has been enabled
+                                                              */
+  i = 0;
+  while ( dlt_names[i].dlt_text != 0 )          // All the DLT levels
+  {
+    if ( (dlt_names[i].dlt_mask & level) != 0 ) // This level is active
+    {
+      dlt_id = dlt_names[i].dlt_id;             // Put the DLT_ID at the start of the message
+      break;
+    }
+    i++;
+  }
+
+  /*
+   *   Print out the message
+   */
+  SEND(sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, ((float)(esp_timer_get_time()) / 1000000.0));)
 
   return true;
 }
+/*----------------------------------------------------------------
+ *
+ * @function: heartbeat
+ *
+ * @brief:    Periodically send out the internal status
+ *
+ * @return:   Nothing
+ *
+ *----------------------------------------------------------------
+ *
+ * This function provides a simple output to indicate the current
+ * running mode.
+ *
+ * It is turned on by enabling DLT_HEARTBEAT in the trace
+ *
+ *--------------------------------------------------------------*/
+static char *run_state_text[] = {"IN_STARTUP", "IN_OPERATION", "IN_TEST", "IN_SLEEP", "IN_SHOT", "IN_REDUCTION", 0};
+void         heartbeat(void)
+{
+  char s[128];
+  int  i;
 
+  i    = 0;
+  s[0] = 0;
+  while ( run_state_text[i] != 0 )
+  {
+    if ( (run_state & (1 << i)) != 0 )
+    {
+      strcat(s, ", ");
+      strcat(s, run_state_text[i]);
+    }
+    i++;
+  }
+
+  DLT(DLT_HEARTBEAT, SEND(sprintf(_xs, "HB 60s.  run_state: 0X%02X%s", run_state, s);))
+
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: set_diag_LED
+ *
+ * @brief:    Set the state of the diagnostics LED
+ *
+ * @return:   Nothing
+ *
+ *----------------------------------------------------------------
+ *
+ * This function is similar to set_status_LED() except that the
+ * duration of the LED is configurable
+ *
+ *--------------------------------------------------------------*/
+void set_diag_LED(char        *new_LEDs, // NEW LED display
+                  unsigned int duration  // How long the display is present for in seconds
+)
+
+{
+  set_status_LED(new_LEDs);
+
+  /*
+   *  Test for infinite wait
+   */
+  if ( duration == 0 ) // Wait here forever
+  {
+    while ( 1 )
+    {
+      vTaskDelay(ONE_SECOND);
+    }
+  }
+
+  /*
+   *  The fault is displayed for a short time
+   */
+  vTaskDelay(ONE_SECOND * duration);
+
+  /*
+   *  All done, return
+   */
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: check_12V
+ *
+ * @brief:    Make sure the 12 Volt supply is within limits
+ *
+ * @return:   TRUE if the 12V is within spec
+ *
+ *----------------------------------------------------------------
+ *
+ * The 12V supply is read and compared against limits.
+ *
+ * V >= 10 V  Green LED          Working
+ * 5 < V <=   10 Yellow LED      Caution
+ * V <= 5     Red LED            Disabld
+ *
+ * Return TRUE if the motor can be driven
+ *
+ * The LEDs are only set on a change from (say) working to caution
+ * this is done to prevent the LEDs from flickering.
+ *
+ * For targets that don't use witness paper, the status LED can be
+ * turned off to indicate that that part has been disabled.
+ *
+ *--------------------------------------------------------------*/
+#define NONE    0
+#define SOME    1
+#define V12OK   2
+#define UNKNOWN 99
+
+bool check_12V(void)
+{
+  static unsigned int fault_V12 = UNKNOWN;
+  float               v12;
+
+  /*
+   *  Check to see that the witness paper is enabled
+   */
+  if ( json_paper_time == 0 ) // The witness paper is not used
+  {
+    set_status_LED(LED_12V_NOT_USED);
+    fault_V12 = NONE;
+    return false;
+  }
+
+  /*
+   * Continue on to check the voltage
+   */
+  v12 = v12_supply();
+
+  if ( v12 <= V12_CAUTION )
+  {
+    if ( fault_V12 != NONE )
+    {
+      set_status_LED(LED_NO_12V);
+      fault_V12 = NONE;
+    }
+    return false;
+  }
+
+  if ( v12 <= V12_WORKING )
+  {
+    if ( fault_V12 != SOME )
+    {
+      set_status_LED(LED_LOW_12V);
+      fault_V12 = SOME;
+    }
+    return false;
+  }
+
+  if ( fault_V12 != V12OK )     // Did we have an error last time?
+  {
+    set_status_LED(LED_OK_12V); // Gone, clear the error
+    fault_V12 = V12OK;
+  }
+
+  return true;
+}

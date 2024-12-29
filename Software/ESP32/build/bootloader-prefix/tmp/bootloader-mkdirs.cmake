@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 file(MAKE_DIRECTORY
-  "C:/Users/allan/esp/esp-idf/esp-idf/components/bootloader/subproject"
+  "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader/subproject"
   "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader"
   "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader-prefix"
   "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader-prefix/tmp"

@@ -1,15 +1,17 @@
 dependencies:
-  espressif__led_strip:
-    component_hash: null
+  espressif/led_strip:
+    dependencies: []
     source:
       path: C:\Users\allan\Documents\freETarget\Software\ESP32\components\espressif__led_strip
       type: local
     version: 2.4.1
   idf:
-    component_hash: null
     source:
       type: idf
-    version: 5.0.0
-manifest_hash: d715625c55316e1fd2a0fc978e9fd8f0cfbe76d0f1c278254e4516fe1042c4f9
+    version: 5.3.1
+direct_dependencies:
+- espressif/led_strip
+- idf
+manifest_hash: 6a59b5f872de27124e9d4583618cd76d05ab2cacb57778a2a4c96a74c5bf1efc
 target: esp32s3
-version: 1.0.0
+version: 2.0.0
