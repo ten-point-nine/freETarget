@@ -82,6 +82,8 @@ int           json_rapid_time;           // When will the rapid fire event end?
 int           json_rapid_wait;           // Delay applied to rapid start
 char          json_wifi_ssid[SSID_SIZE]; // Stored value of SSID
 char          json_wifi_pwd[PWD_SIZE];   // Stored value of password
+char          json_remote_url[URL_SIZE]; // Stored value of remote server
+int           json_remote_active;        // Set to TRUE if there is a remote to search for
 int           json_wifi_hidden;          // The SSID FET- is hidden
 int           json_wifi_dhcp;            // The ESP is a DHCP server
 int           json_wifi_reset_first;     // Reset the score table on first WiFi connection
@@ -102,7 +104,7 @@ int           json_paper_shot;           // How many shots before advancing pape
 int           json_aux_port_enable;      // Enable comms from the AUX port
 
 #if ( BUIILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE )
-char json_remote_url[URL_SIZE];          // URL of calling server
+char json_remote_url[SERVER_URL_SIZE];   // URL of remote server
 int  json_remote_active;                 // Set to 1 to send score to a remote server
 char json_athlete[SMALL_STRING];         // Shooter name
 char json_event[SMALL_STRING];           // Shooting event
@@ -195,7 +197,6 @@ const json_message_t JSON[] = {
     {"\"TARGET_NAME\":", 0, 0, IS_VOID, 0, 0, 0, 0}, // Target name for online version
     {0, 0, 0, 0, 0, 0, 0, 0}, //
 };
-// clang-format on
 
 int instr(char *s1, char *s2);
 

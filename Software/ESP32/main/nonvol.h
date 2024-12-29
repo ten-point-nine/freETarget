@@ -83,5 +83,8 @@ void restore_nonvol(void);                        // Copyt the nonvol back
 #define NONVOL_MFS_SELECT_CD    "MFS_SELECT_CD"   // Hardware attached to CD
 #define NONVOL_WIFI_HIDDEN      "WIFI_HIDDEN"     // Hide the SSID if set to 1
 #define NONVOL_AUX_PORT_ENABLE  "AUX_PORT_ENABLE" // Enable comms throught the AUX port
-#define NONVOL_NAME_TEXT        "NAME_TEXT"       // User supplied name for the target
+#define NONVOL_NAME_TEXT                                                                                                                   \
+  "NAME_TEXT" // User supplied name for the target#define NONVOL_REMOTE_ACTIVE    "REMOTE_ACTIVE"   // Send score to a remote server
+#define NONVOL_REMOTE_URL "REMOTE_URL" // URL of the remote server
+
 #endif
