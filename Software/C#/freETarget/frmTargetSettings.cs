@@ -130,6 +130,8 @@ namespace freETarget {
             txtSouthY.Text = echo.SOUTH_Y.ToString(CultureInfo.InvariantCulture);
             txtEastX.Text = echo.EAST_X.ToString(CultureInfo.InvariantCulture);
             txtEastY.Text = echo.EAST_Y.ToString(CultureInfo.InvariantCulture);
+            txtXoffset.Text = echo.X_OFFSET.ToString(CultureInfo.InvariantCulture);
+            txtYoffset.Text = echo.Y_OFFSET.ToString(CultureInfo.InvariantCulture);
         }
 
         private bool validNumber(String text) {
@@ -185,6 +187,18 @@ namespace freETarget {
             //zoffset
             if (!validNumber(txtZOffset.Text)) {
                 MessageBox.Show("Z offset is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+            //xoffset
+            if (!validDecimal(txtXoffset.Text)) {
+                MessageBox.Show("X offset is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+            //yoffset
+            if (!validDecimal(txtYoffset.Text)) {
+                MessageBox.Show("Y offset is not a number", "Validation error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return false;
             }
 
@@ -279,6 +293,8 @@ namespace freETarget {
                 //send sensor and hardware parameters to target
 
                 sb.Append("\"SENSOR\":" + txtSensorDiameter.Text + ", ");
+                sb.Append("\"X_OFFSET\":" + txtXoffset.Text + ", ");
+                sb.Append("\"Y_OFFSET\":" + txtYoffset.Text + ", ");
                 sb.Append("\"Z_OFFSET\":" + txtZOffset.Text + ", ");
 
 

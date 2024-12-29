@@ -36,6 +36,10 @@
             this.txtAngle = new System.Windows.Forms.TextBox();
             this.btnClockwise = new System.Windows.Forms.Button();
             this.btnAntiClockwise = new System.Windows.Forms.Button();
+            this.txtXoffset = new System.Windows.Forms.TextBox();
+            this.txtYoffset = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btnLeft
@@ -80,7 +84,8 @@
             // 
             // btnReset
             // 
-            this.btnReset.Location = new System.Drawing.Point(126, 12);
+            this.btnReset.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnReset.Location = new System.Drawing.Point(132, 142);
             this.btnReset.Name = "btnReset";
             this.btnReset.Size = new System.Drawing.Size(75, 23);
             this.btnReset.TabIndex = 4;
@@ -92,7 +97,7 @@
             // btnClose
             // 
             this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnClose.Location = new System.Drawing.Point(104, 88);
+            this.btnClose.Location = new System.Drawing.Point(213, 142);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(97, 23);
             this.btnClose.TabIndex = 5;
@@ -116,7 +121,7 @@
             // 
             // txtAngle
             // 
-            this.txtAngle.Location = new System.Drawing.Point(50, 136);
+            this.txtAngle.Location = new System.Drawing.Point(52, 220);
             this.txtAngle.Name = "txtAngle";
             this.txtAngle.Size = new System.Drawing.Size(26, 20);
             this.txtAngle.TabIndex = 9;
@@ -127,7 +132,7 @@
             // btnClockwise
             // 
             this.btnClockwise.Image = ((System.Drawing.Image)(resources.GetObject("btnClockwise.Image")));
-            this.btnClockwise.Location = new System.Drawing.Point(12, 130);
+            this.btnClockwise.Location = new System.Drawing.Point(12, 214);
             this.btnClockwise.Name = "btnClockwise";
             this.btnClockwise.Size = new System.Drawing.Size(30, 30);
             this.btnClockwise.TabIndex = 7;
@@ -137,18 +142,58 @@
             // btnAntiClockwise
             // 
             this.btnAntiClockwise.Image = ((System.Drawing.Image)(resources.GetObject("btnAntiClockwise.Image")));
-            this.btnAntiClockwise.Location = new System.Drawing.Point(83, 130);
+            this.btnAntiClockwise.Location = new System.Drawing.Point(83, 213);
             this.btnAntiClockwise.Name = "btnAntiClockwise";
             this.btnAntiClockwise.Size = new System.Drawing.Size(30, 30);
             this.btnAntiClockwise.TabIndex = 8;
             this.btnAntiClockwise.UseVisualStyleBackColor = true;
             this.btnAntiClockwise.Click += new System.EventHandler(this.btnAntiClockwise_Click);
             // 
+            // txtXoffset
+            // 
+            this.txtXoffset.Location = new System.Drawing.Point(208, 21);
+            this.txtXoffset.Name = "txtXoffset";
+            this.txtXoffset.ReadOnly = true;
+            this.txtXoffset.Size = new System.Drawing.Size(100, 20);
+            this.txtXoffset.TabIndex = 10;
+            this.txtXoffset.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
+            // txtYoffset
+            // 
+            this.txtYoffset.Location = new System.Drawing.Point(208, 93);
+            this.txtYoffset.Name = "txtYoffset";
+            this.txtYoffset.ReadOnly = true;
+            this.txtYoffset.Size = new System.Drawing.Size(100, 20);
+            this.txtYoffset.TabIndex = 11;
+            this.txtYoffset.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(141, 24);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(61, 13);
+            this.label1.TabIndex = 12;
+            this.label1.Text = "X_OFFSET";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(141, 96);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(61, 13);
+            this.label2.TabIndex = 13;
+            this.label2.Text = "Y_OFFSET";
+            // 
             // frmCalibration
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(213, 123);
+            this.ClientSize = new System.Drawing.Size(322, 177);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.txtYoffset);
+            this.Controls.Add(this.txtXoffset);
             this.Controls.Add(this.txtAngle);
             this.Controls.Add(this.btnAntiClockwise);
             this.Controls.Add(this.btnClockwise);
@@ -185,5 +230,9 @@
         private System.Windows.Forms.Button btnClockwise;
         private System.Windows.Forms.Button btnAntiClockwise;
         private System.Windows.Forms.TextBox txtAngle;
+        private System.Windows.Forms.TextBox txtXoffset;
+        private System.Windows.Forms.TextBox txtYoffset;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label2;
     }
 }

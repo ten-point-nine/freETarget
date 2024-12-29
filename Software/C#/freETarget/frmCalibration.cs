@@ -18,6 +18,8 @@ namespace freETarget {
         private frmCalibration(frmMainWindow mainWin) {
             InitializeComponent();
             this.mainWindow = mainWin;
+            txtXoffset.Text = mainWindow.calibrationX.ToString(CultureInfo.InvariantCulture);
+            txtYoffset.Text = mainWindow.calibrationY.ToString(CultureInfo.InvariantCulture);
         }
 
         public static frmCalibration getInstance(frmMainWindow mainWin) {
@@ -31,22 +33,32 @@ namespace freETarget {
 
         private void btnUp_Click(object sender, EventArgs e) {
             mainWindow.calibrateY(getIncrement());
+            txtXoffset.Text = mainWindow.calibrationX.ToString(CultureInfo.InvariantCulture);
+            txtYoffset.Text = mainWindow.calibrationY.ToString(CultureInfo.InvariantCulture);
         }
 
         private void btnDown_Click(object sender, EventArgs e) {
             mainWindow.calibrateY(-getIncrement());
+            txtXoffset.Text = mainWindow.calibrationX.ToString(CultureInfo.InvariantCulture);
+            txtYoffset.Text = mainWindow.calibrationY.ToString(CultureInfo.InvariantCulture);
         }
 
         private void btnLeft_Click(object sender, EventArgs e) {
             mainWindow.calibrateX(-getIncrement());
+            txtXoffset.Text = mainWindow.calibrationX.ToString(CultureInfo.InvariantCulture);
+            txtYoffset.Text = mainWindow.calibrationY.ToString(CultureInfo.InvariantCulture);
         }
 
         private void btnRight_Click(object sender, EventArgs e) {
             mainWindow.calibrateX(getIncrement());
+            txtXoffset.Text = mainWindow.calibrationX.ToString(CultureInfo.InvariantCulture);
+            txtYoffset.Text = mainWindow.calibrationY.ToString(CultureInfo.InvariantCulture);
         }
 
         private void btnReset_Click(object sender, EventArgs e) {
             mainWindow.resetCalibration();
+            txtXoffset.Text = mainWindow.calibrationX.ToString(CultureInfo.InvariantCulture);
+            txtYoffset.Text = mainWindow.calibrationY.ToString(CultureInfo.InvariantCulture);
         }
 
         private void btnClose_Click(object sender, EventArgs e) {

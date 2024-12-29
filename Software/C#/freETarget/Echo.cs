@@ -11,7 +11,6 @@ namespace freETarget {
         public string NAME;
         public int ANGLE;
         public int CALIBREx10;
-        public int DIP;
         public int LED_BRIGHT;
         public string MFS;
         public int NAME_ID;
@@ -26,6 +25,8 @@ namespace freETarget {
         public int TARGET_TYPE;
         public int TEST;
         public int TRGT_1_RINGx10;
+        public decimal X_OFFSET=0;
+        public decimal Y_OFFSET=0;
         public int Z_OFFSET;
         public int NORTH_X;
         public int NORTH_Y;
@@ -65,9 +66,6 @@ namespace freETarget {
                                 break;
                             case "\"CALIBREx10\"":
                                 ret.CALIBREx10 = int.Parse(t4[1], CultureInfo.InvariantCulture);
-                                break;
-                            case "\"DIP\"":
-                                ret.DIP = int.Parse(t4[1], CultureInfo.InvariantCulture);
                                 break;
                             case "\"LED_BRIGHT\"":
                                 ret.LED_BRIGHT = int.Parse(t4[1], CultureInfo.InvariantCulture);
@@ -110,6 +108,12 @@ namespace freETarget {
                                 break;
                             case "\"TRGT_1_RINGx10\"":
                                 ret.TRGT_1_RINGx10 = int.Parse(t4[1], CultureInfo.InvariantCulture);
+                                break;
+                            case "\"X_OFFSET\"":
+                                ret.X_OFFSET = decimal.Parse(t4[1], CultureInfo.InvariantCulture);
+                                break;
+                            case "\"Y_OFFSET\"":
+                                ret.Y_OFFSET = decimal.Parse(t4[1], CultureInfo.InvariantCulture);
                                 break;
                             case "\"Z_OFFSET\"":
                                 ret.Z_OFFSET = int.Parse(t4[1], CultureInfo.InvariantCulture);

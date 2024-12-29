@@ -400,6 +400,16 @@ namespace freETarget {
                         lastEcho = Echo.parseJson(message);
                         log("Echo received =   " + (lastEcho != null ? lastEcho.ToString() : "null"));
 
+                        //if target has OFFSET values, override local calibration -> set it to 0
+                        if (lastEcho != null) {
+                            if (lastEcho.X_OFFSET != decimal.Zero && lastEcho.Y_OFFSET != decimal.Zero) {
+                                this.calibrationX = 0;
+                                this.calibrationY = 0;
+                                btnCalibration.BackColor = this.BackColor;
+                                log("ECHO returned non-zero OFFSETS  X:" + lastEcho.X_OFFSET + " Y:" + lastEcho.Y_OFFSET + ". Reseting local calibration to zero... ");
+                            }
+                        }
+
                         if (incomingJSON.IndexOf("}") != -1) {
 
                             comms.CommEventArgs e2 = new comms.CommEventArgs("");
@@ -564,7 +574,6 @@ namespace freETarget {
                 recoverySessionName = "";
                 recoverySessionTime = "";
             }
-
         }
 
         //output messages
@@ -1529,6 +1538,8 @@ namespace freETarget {
             ard.Hide();
 
             SetThreadExecutionState(ES_CONTINUOUS); //reenable screensaver
+
+            lastEcho = null;
         }
 
         private void showJournalForm() {

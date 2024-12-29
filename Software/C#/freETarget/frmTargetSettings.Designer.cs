@@ -60,6 +60,11 @@ namespace freETarget {
             this.btnClose = new System.Windows.Forms.Button();
             this.pnlWait = new System.Windows.Forms.Panel();
             this.label1 = new System.Windows.Forms.Label();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.txtXoffset = new System.Windows.Forms.TextBox();
+            this.txtYoffset = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
             this.tabControl.SuspendLayout();
             this.tabPageHardware.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -67,6 +72,7 @@ namespace freETarget {
             this.tabPageSensors.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picTarget)).BeginInit();
             this.pnlWait.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl
@@ -82,6 +88,7 @@ namespace freETarget {
             // 
             // tabPageHardware
             // 
+            this.tabPageHardware.Controls.Add(this.groupBox1);
             this.tabPageHardware.Controls.Add(this.cmbName);
             this.tabPageHardware.Controls.Add(this.groupBox2);
             this.tabPageHardware.Controls.Add(this.lblLED);
@@ -208,7 +215,7 @@ namespace freETarget {
             // lblLED
             // 
             this.lblLED.AutoSize = true;
-            this.lblLED.Location = new System.Drawing.Point(10, 150);
+            this.lblLED.Location = new System.Drawing.Point(10, 249);
             this.lblLED.Name = "lblLED";
             this.lblLED.Size = new System.Drawing.Size(74, 13);
             this.lblLED.TabIndex = 20;
@@ -225,10 +232,10 @@ namespace freETarget {
             // 
             // trkLEDbright
             // 
-            this.trkLEDbright.BackColor = System.Drawing.SystemColors.Window;
+            this.trkLEDbright.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(250)))), ((int)(((byte)(250)))));
             this.helpProvider.SetHelpString(this.trkLEDbright, "External LED brigtness control (percent)");
             this.trkLEDbright.LargeChange = 10;
-            this.trkLEDbright.Location = new System.Drawing.Point(106, 144);
+            this.trkLEDbright.Location = new System.Drawing.Point(106, 243);
             this.trkLEDbright.Maximum = 99;
             this.trkLEDbright.Name = "trkLEDbright";
             this.helpProvider.SetShowHelp(this.trkLEDbright, true);
@@ -442,6 +449,51 @@ namespace freETarget {
             this.label1.TabIndex = 0;
             this.label1.Text = "Please wait while retriving target settings...";
             // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.label3);
+            this.groupBox1.Controls.Add(this.label2);
+            this.groupBox1.Controls.Add(this.txtYoffset);
+            this.groupBox1.Controls.Add(this.txtXoffset);
+            this.groupBox1.Location = new System.Drawing.Point(13, 144);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(283, 79);
+            this.groupBox1.TabIndex = 24;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Calibration offset";
+            // 
+            // txtXoffset
+            // 
+            this.txtXoffset.Location = new System.Drawing.Point(93, 20);
+            this.txtXoffset.Name = "txtXoffset";
+            this.txtXoffset.Size = new System.Drawing.Size(184, 20);
+            this.txtXoffset.TabIndex = 0;
+            // 
+            // txtYoffset
+            // 
+            this.txtYoffset.Location = new System.Drawing.Point(93, 46);
+            this.txtYoffset.Name = "txtYoffset";
+            this.txtYoffset.Size = new System.Drawing.Size(184, 20);
+            this.txtYoffset.TabIndex = 1;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(6, 23);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(61, 13);
+            this.label2.TabIndex = 2;
+            this.label2.Text = "X_OFFSET";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(6, 49);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(61, 13);
+            this.label3.TabIndex = 3;
+            this.label3.Text = "Y_OFFSET";
+            // 
             // frmTargetSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -473,6 +525,8 @@ namespace freETarget {
             ((System.ComponentModel.ISupportInitialize)(this.picTarget)).EndInit();
             this.pnlWait.ResumeLayout(false);
             this.pnlWait.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -515,5 +569,10 @@ namespace freETarget {
         private System.Windows.Forms.Button btnClose;
         private System.Windows.Forms.Panel pnlWait;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox txtYoffset;
+        private System.Windows.Forms.TextBox txtXoffset;
     }
 }
