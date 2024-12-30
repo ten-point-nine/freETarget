@@ -39,7 +39,7 @@
 #define METHOD_DELETE 4 // enum used to identify a delete method
 #define METHOD_HEAD   5 // enum used to identify a head method
 
-#define DNS_TRIES 10    // Try for 10 seconds to get a DNS
+#define DNS_TRIES 100   // Try for 10 seconds to get a DNS
 
 /* Root cert for howsmyssl.com, taken from howsmyssl_com_root_cert.pem
 

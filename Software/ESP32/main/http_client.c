@@ -36,6 +36,8 @@
 
 #include "esp_http_client.h"
 
+#include "serial_io.h"
+#include "freETarget.h"
 #include "http_client.h"
 #include "diag_tools.h"
 #include "json.h"
@@ -257,12 +259,12 @@ void http_rest_with_url(char *url,    // URL being accessed
       esp_err_t err = esp_http_client_perform(client);
       if ( err == ESP_OK )
       {
-        ESP_LOGI(TAG, "HTTP GET Status = %d, content_length = %" PRId64, esp_http_client_get_status_code(client),
-                 esp_http_client_get_content_length(client));
+        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "HTTP GET Status = %d, content_length = %lld", esp_http_client_get_status_code(client),
+                                            esp_http_client_get_content_length(client));))
       }
       else
       {
-        DLT(DLT_CRITICAL, printf("HTTP GET request failed %s", url);)
+        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "HTTP GET request failed %s", url);))
       }
       break;
 #endif
@@ -293,8 +295,8 @@ void http_rest_with_url(char *url,    // URL being accessed
       err = esp_http_client_perform(client);
       if ( err == ESP_OK )
       {
-        ESP_LOGI(TAG, "HTTP PUT Status = %d, content_length = %" PRId64, esp_http_client_get_status_code(client),
-                 esp_http_client_get_content_length(client));
+        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "HTTP PUT Status = %d, content_length = %lld", esp_http_client_get_status_code(client),
+                                            esp_http_client_get_content_length(client));))
       }
       else
       {
@@ -467,7 +469,9 @@ void http_perform_as_stream_reader(char *url, // URL to read from
   esp_http_client_cleanup(client);
   free(buffer);
 }
+#endif
 
+#if ( BUILD_HTTPS )
 void https_async(char *url,    // URL to connect to
                  char *payload // Messages to send
 )

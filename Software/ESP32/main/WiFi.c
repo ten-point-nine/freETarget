@@ -349,9 +349,9 @@ bool WiFi_get_remote_IP(char *remote_url // Text string of the remote URL
    * Wait here for the DNS to come back
    */
   i = DNS_TRIES;
-  while ( (dns_valid == 0) || (i != 0) )
+  while ( (dns_valid == 0) && (i != 0) )
   {
-    vTaskDelay(ONE_SECOND);
+    vTaskDelay(0.1 * ONE_SECOND);
     i--;
   }
 
@@ -897,60 +897,6 @@ void WiFi_loopback_task(void *parameters)
    *  Never get here
    */
 }
-
-#if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE )
-/*****************************************************************************
- *
- * @function: http_DNS_test
- *
- * @brief:    Use the DNS sofware to find an IP address
- *
- * @return:   Nothing
- *
- ******************************************************************************
- *
- * A waiting task is started.
- *
- * The waiting task copies the input to the output of the synchronous IO
- *
- *******************************************************************************/
-static char test_URL[] = "google.com";
-
-void http_DNS_test(void)
-{
-  char str_c[32];
-
-  SEND(sprintf(_xs, "http_DNS_test(%s)\r\n", test_URL);)
-
-  /*
-   * Make sure we ares setup correctly
-   */
-  if ( json_wifi_ssid[0] == 0 )
-  {
-    SEND(sprintf(_xs, "\r\nWiFi must be attached to gateway");)
-    return;
-  }
-
-  /*
-   *  Go look for the remote address
-   */
-  if ( WiFi_get_remote_IP(test_URL) == 0 )
-  {
-    SEND(sprintf(_xs, "DNS lookup failed");)
-  }
-  else
-  {
-    WiFi_remote_IP_address(&str_c);
-    SEND(sprintf(_xs, "\r\nThe IP address of %s is %s\r\n", test_URL, str_c);)
-  }
-
-  /*
-   * Exit the test
-   */
-  SEND(sprintf(_xs, _DONE_);)
-  return;
-}
-#endif
 
 /*****************************************************************************
  *
