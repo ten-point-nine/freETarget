@@ -102,6 +102,63 @@ int           json_mfs_hold_c;           // Hold C
 int           json_mfs_select_cd;        // Select C and D
 int           json_paper_shot;           // How many shots before advancing paper
 int           json_aux_port_enable;      // Enable comms from the AUX port
+int           json_name_id;              // Name identifier
+int           json_LED_PWM;              // LED control value
+int           json_power_save;           // Power down time
+int           json_send_miss;            // Send a miss message
+int           json_serial_number;        // Electonic serial number
+int           json_step_count;           // Number of steps ouput to motor
+int           json_step_ramp;            // Step increment when starting
+int           json_step_start;           // Value to start motor moving
+int           json_step_time;            // Duration of each step in ms
+int           json_multifunction;        // Multifunction switch operation
+int           json_multifunction2;       // Multifunction Switch 2
+double        json_x_offset;             // Offset to add to correct horizontal target
+double        json_y_offset;             // Offset to add to correct vertical target
+int           json_z_offset;             // Distance between paper and sensor plane in 0.1mm
+int           json_paper_eco;            // Do not advance paper if outside of the black
+int           json_target_type;          // Modify target type (0 == single bull)
+int           json_tabata_enable;        // Tabata feature enabled
+int           json_tabata_on;            // Tabata ON timer
+int           json_tabata_rest;          // Tabata resting timer
+unsigned long json_rapid_on;             // Rapid Fire ON timer
+int           json_vset_PWM;             // Starting PWM value
+double        json_vset;                 // Desired VREF setting
+int           json_follow_through;       // Follow through delay
+int           json_keep_alive;           // Keep alive period
+int           json_sensor_angle;         // Angle sensors are rotated through
+int           json_paper_time = 0;       // Time paper motor is applied
+int           json_tabata_warn_on;       // Tabata warning time light on
+int           json_tabata_warn_off;      // Tabata warning time to shot
+int           json_face_strike;          // Number of cycles to accept a strike
+int           json_wifi_channel;         // Wifi channel
+int           json_rapid_count;          // Number of shots expected in string
+int           json_rapid_enable;         // Set to TRUE if the rapid fire event is enabled
+int           json_rapid_time;           // When will the rapid fire event end?
+int           json_rapid_wait;           // Delay applied to rapid start
+char          json_wifi_ssid[SSID_SIZE]; // Stored value of SSID
+char          json_wifi_pwd[PWD_SIZE];   // Stored value of password
+char          json_remote_url[URL_SIZE]; // Stored value of remote server
+char          json_remote_key[KEY_SIZE]; // Key for remote server
+int           json_remote_active;        // Set to TRUE if there is a remote to search for
+int           json_wifi_hidden;          // The SSID FET- is hidden
+int           json_wifi_dhcp;            // The ESP is a DHCP server
+int           json_wifi_reset_first;     // Reset the score table on first WiFi connection
+int           json_min_ring_time;        // Time to wait for ringing to stop
+int           json_token;                // Token ring state
+double        json_vref_lo;              // Low Voltage DAC setting
+double        json_vref_hi;              // High Voltage DAC setting
+int           json_pcnt_latency;         // pcnt interrupt latency
+int           json_mfs_hold_12;          // Hold A and B
+int           json_mfs_tap_2;            // Tap B
+int           json_mfs_tap_1;            // Tap A
+int           json_mfs_hold_2;           // Hold B
+int           json_mfs_hold_1;           // Hold A
+int           json_mfs_hold_d;           // Hold D
+int           json_mfs_hold_c;           // Hold C
+int           json_mfs_select_cd;        // Select C and D
+int           json_paper_shot;           // How many shots before advancing paper
+int           json_aux_port_enable;      // Enable comms from the AUX port
 
 #if ( BUIILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE )
 char json_remote_url[SERVER_URL_SIZE];   // URL of remote server
@@ -146,10 +203,8 @@ const json_message_t JSON[] = {
     {"\"PAPER_TIME\":", &json_paper_time, 0, IS_INT32, 0, NONVOL_PAPER_TIME, 500, 0}, // Set the paper advance time
     {"\"PCNT_LATENCY\":", &json_pcnt_latency, 0, IS_INT32, 0, NONVOL_PCNT_LATENCY, 0, 1}, // Interrupt latency for PCNT adjustment
     {"\"POWER_SAVE\":", &json_power_save, 0, IS_INT32, 0, NONVOL_POWER_SAVE, 0, 0}, // Set the power saver time
-#if ( BUIILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE )
-    {EN, "\"REMOTE_ACTIVE\":", &json_remote_active, 0, IS_INT32, 0, NONVOL_REMOTE_ACTIVE, 0}, // Send score to a remote server
-    {EN, "\"REMOTE_URL\":", (int *)&json_remote_url, 0, IS_TEXT + URL_SIZE, 0, NONVOL_REMOTE_URL, 0}, // Reserve space for remote URL
-#endif
+    {"\"REMOTE_ACTIVE\":", &json_remote_active, 0, IS_INT32, 0, NONVOL_REMOTE_ACTIVE, 8}, // Send score to a remote server
+    {"\"REMOTE_URL\":", (int *)&json_remote_url, 0, IS_TEXT + URL_SIZE, 0, NONVOL_REMOTE_URL, 8}, // Reserve space for remote URL
     {"\"RAPID_COUNT\":", &json_rapid_count, 0, IS_INT32, 0, 0, 0, 0}, // Number of shots expected in series
     {"\"RAPID_ENABLE\":", &json_rapid_enable, 0, IS_INT32, 0, 0, 0, 0}, // Enable the rapid fire fieature
     {"\"RAPID_TIME\":", &json_rapid_time, 0, IS_INT32, 0, 0, 0, 0}, // Set the duration of the rapid fire event and start

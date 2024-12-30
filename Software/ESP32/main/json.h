@@ -49,6 +49,7 @@ extern const json_message_t JSON[];
 #define SSID_SIZE 31                          // Reserve 30+1 bytes for SSID
 #define PWD_SIZE  31                          // Reserve 30+1 bytes for Password
 #define URL_SIZE  128                         // Reserve 129 bytes for server URL
+#define KEY_SIZE  31 // Key size for remote access
 #define IP_SIZE   sizeof("192.168.100.100\0") // Reserved space of IP address
 
 /*
@@ -107,6 +108,7 @@ extern int           json_wifi_dhcp;         // TRUE if the DHCP server is enabl
 extern char          json_wifi_ssid[];       // Text of WiFI SSID
 extern char          json_wifi_pwd[];        // Text of WiFI password
 extern char          json_wifi_server_url[]; // Remote Server URL
+extern char          json_wifi_server_key[]; // Remote Server key
 extern int           json_wifi_hidden;       // Hide the SSID if enabled
 extern int           json_min_ring_time;     // Time to wait for ringing to stop
 extern int           json_token;             // Token ring setting

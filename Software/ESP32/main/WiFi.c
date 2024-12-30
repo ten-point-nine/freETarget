@@ -40,6 +40,7 @@
 #include "lwip/sys.h"
 
 #include "freETarget.h"
+#include "http_client.h"
 #include "WiFi.h"
 #include "compute_hit.h"
 #include "diag_tools.h"
@@ -347,15 +348,20 @@ bool WiFi_get_remote_IP(char *remote_url // Text string of the remote URL
   /*
    * Wait here for the DNS to come back
    */
-  i = 10;
+  i = DNS_TRIES;
   while ( (dns_valid == 0) || (i != 0) )
   {
     vTaskDelay(ONE_SECOND);
+    i--;
   }
 
   /*
-   *  Return if the DNS is valid
+   *  Return the DNS state
    */
+  if ( dns_valid == 0 )
+  {
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "URL %s not found", remote_url);))
+  }
   return dns_valid;
 }
 
@@ -895,7 +901,7 @@ void WiFi_loopback_task(void *parameters)
 #if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE )
 /*****************************************************************************
  *
- * @function: WiFi_DNS_test
+ * @function: http_DNS_test
  *
  * @brief:    Use the DNS sofware to find an IP address
  *
@@ -910,48 +916,38 @@ void WiFi_loopback_task(void *parameters)
  *******************************************************************************/
 static char test_URL[] = "google.com";
 
-void WiFi_DNS_test(void)
+void http_DNS_test(void)
 {
-  int  i;
-  char str_c[16];
+  char str_c[32];
 
-  DLT(DLT_CRITICAL, printf("WiFi_DNS_test()\r\n");)
+  SEND(sprintf(_xs, "http_DNS_test(%s)\r\n", test_URL);)
 
   /*
    * Make sure we ares setup correctly
    */
   if ( json_wifi_ssid[0] == 0 )
   {
-    DLT(DLT_CRITICAL, printf("\r\nWiFi must be attached to gateway");)
+    SEND(sprintf(_xs, "\r\nWiFi must be attached to gateway");)
     return;
   }
 
   /*
    *  Go look for the remote address
    */
-  WiFi_get_remote_IP(test_URL);
-
-  i = 0;
-  while ( (dns_valid == 0) && (i != 10) )
+  if ( WiFi_get_remote_IP(test_URL) == 0 )
   {
-    printf("%d ", i);
-    vTaskDelay(ONE_SECOND);
-    i++;
-  }
-
-  /*
-   *  Got it
-   */
-  if ( i == 10 )
-  {
-    DLT(DLT_CRITICAL, printf("DNS lookup failed");)
+    SEND(sprintf(_xs, "DNS lookup failed");)
   }
   else
   {
-    WiFi_remote_IP_address(str_c);
-    printf("\r\nThe IP address of %s is %s\r\n", test_URL, str_c);
+    WiFi_remote_IP_address(&str_c);
+    SEND(sprintf(_xs, "\r\nThe IP address of %s is %s\r\n", test_URL, str_c);)
   }
 
+  /*
+   * Exit the test
+   */
+  SEND(sprintf(_xs, _DONE_);)
   return;
 }
 #endif

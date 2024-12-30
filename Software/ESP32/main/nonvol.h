@@ -86,5 +86,5 @@ void restore_nonvol(void);                        // Copyt the nonvol back
 #define NONVOL_NAME_TEXT                                                                                                                   \
   "NAME_TEXT" // User supplied name for the target#define NONVOL_REMOTE_ACTIVE    "REMOTE_ACTIVE"   // Send score to a remote server
 #define NONVOL_REMOTE_URL "REMOTE_URL" // URL of the remote server
-
+#define NONVOL_REMOTE_KEY "REMOTE_KEY" // Remote server access key
 #endif

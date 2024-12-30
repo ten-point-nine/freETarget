@@ -8,7 +8,7 @@ BasedOnStyle: LLVM
 
 # Indentation
 IndentWidth: 2
-TabWidth: 6
+TabWidth: 2
 IndentCaseLabels: true
 IndentPPDirectives: None
 UseTab: Never

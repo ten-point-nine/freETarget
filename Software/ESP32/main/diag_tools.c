@@ -20,6 +20,7 @@
 #include "string.h"
 
 #include "freETarget.h"
+#include "http_client.h"
 #include "WiFi.h"
 #include "analog_io.h"
 #include "compute_hit.h"
@@ -73,6 +74,7 @@ static const self_test_t test_list[] = {
     {"Enable the WiFi AP",                &WiFi_AP_init          },
     {"Loopback the TCPIP data",           &WiFi_loopback_test    },
     {"Loopback WiFi",                     &WiFi_loopback_test    },
+    {"DNS Lookup testt",                  &http_DNS_test         },
     {"-Interrupt Tests",                  0                      },
     {"Polled target test",                &polled_target_test    },
     {"Interrupt target test",             &interrupt_target_test },
@@ -148,7 +150,7 @@ void self_test(unsigned int test // What test to execute
   {
     if ( (test_ID == test) && (test_list[i].help[0] != '-') ) // Found the test
     {
-      SEND(sprintf(_xs, "\r\n\n%2d - %s", test_ID, test_list[i].help);)
+      SEND(sprintf(_xs, "\r\nTest Number %2d - %s", test_ID, test_list[i].help);)
       test_list[i].f();                                       // Execute the test
       run_state &= ~IN_TEST;                                  // Exit the test
       freeETarget_timer_start();                              // Start interrupts

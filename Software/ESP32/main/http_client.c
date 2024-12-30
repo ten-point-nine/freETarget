@@ -111,23 +111,23 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt // Event being proces
   switch ( evt->event_id )
   {
     case HTTP_EVENT_ERROR:
-      DLT(DLT_DIAG, printf("HTTP_EVENT_ERROR");)
+      DLT(DLT_COMMUNICATION, printf("HTTP_EVENT_ERROR");)
       break;
 
     case HTTP_EVENT_ON_CONNECTED:
-      DLT(DLT_DIAG, printf("HTTP_EVENT_ON_CONNECTED");)
+      DLT(DLT_COMMUNICATION, printf("HTTP_EVENT_ON_CONNECTED");)
       break;
 
     case HTTP_EVENT_HEADER_SENT:
-      DLT(DLT_DIAG, printf("HTTP_EVENT_HEADER_SENT");)
+      DLT(DLT_COMMUNICATION, printf("HTTP_EVENT_HEADER_SENT");)
       break;
 
     case HTTP_EVENT_ON_HEADER:
-      DLT(DLT_DIAG, printf("HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);)
+      DLT(DLT_COMMUNICATION, printf("HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);)
       break;
 
     case HTTP_EVENT_ON_DATA:
-      DLT(DLT_DIAG, printf("HTTP_EVENT_ON_DATA, len=%d", evt->data_len);)
+      DLT(DLT_COMMUNICATION, printf("HTTP_EVENT_ON_DATA, len=%d", evt->data_len);)
       // Clean the buffer in case of a new request
       if ( output_len == 0 && evt->user_data )
       {
@@ -161,7 +161,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt // Event being proces
             output_len    = 0;
             if ( output_buffer == NULL )
             {
-              DLT(DLT_DIAG, printf("Failed to allocate memory for output buffer");)
+              DLT(DLT_COMMUNICATION, printf("Failed to allocate memory for output buffer");)
               return ESP_FAIL;
             }
           }
@@ -177,7 +177,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt // Event being proces
       break;
 
     case HTTP_EVENT_ON_FINISH:
-      DLT(DLT_DIAG, printf("HTTP_EVENT_ON_FINISH");)
+      DLT(DLT_COMMUNICATION, printf("HTTP_EVENT_ON_FINISH");)
       if ( output_buffer != NULL )
       {
         free(output_buffer);
@@ -187,13 +187,13 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt // Event being proces
       break;
 
     case HTTP_EVENT_DISCONNECTED:
-      DLT(DLT_DIAG, printf("HTTP_EVENT_DISCONNECTED");)
+      DLT(DLT_COMMUNICATION, printf("HTTP_EVENT_DISCONNECTED");)
       int       mbedtls_err = 0;
       esp_err_t err         = esp_tls_get_and_clear_last_error((esp_tls_error_handle_t)evt->data, &mbedtls_err, NULL);
       if ( err != 0 )
       {
-        DLT(DLT_DIAG, printf("Last esp error code: 0x%x", err);)
-        DLT(DLT_DIAG, printf("Last mbedtls failure: 0x%x", mbedtls_err);)
+        DLT(DLT_COMMUNICATION, printf("Last esp error code: 0x%x", err);)
+        DLT(DLT_COMMUNICATION, printf("Last mbedtls failure: 0x%x", mbedtls_err);)
       }
       if ( output_buffer != NULL )
       {
@@ -204,7 +204,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt // Event being proces
       break;
 
     case HTTP_EVENT_REDIRECT:
-      DLT(DLT_DIAG, printf("HTTP_EVENT_REDIRECT");)
+      DLT(DLT_COMMUNICATION, printf("HTTP_EVENT_REDIRECT");)
       esp_http_client_set_header(evt->client, "From", "user@example.com");
       esp_http_client_set_header(evt->client, "Accept", "text/html");
       esp_http_client_set_redirection(evt->client);
@@ -276,8 +276,8 @@ void http_rest_with_url(char *url,    // URL being accessed
       err = esp_http_client_perform(client);
       if ( err == ESP_OK )
       {
-        DLT(DLT_DIAG, printf("HTTP POST Status = %d, content_length = %" PRId64, esp_http_client_get_status_code(client),
-                             esp_http_client_get_content_length(client));)
+        DLT(DLT_COMMUNICATION, printf("HTTP POST Status = %d, content_length = %" PRId64, esp_http_client_get_status_code(client),
+                                      esp_http_client_get_content_length(client));)
       }
       else
       {
@@ -419,12 +419,12 @@ void http_download_chunk(char *url, // URL to read
 
   if ( err == ESP_OK )
   {
-    DLT(DLT_DIAG, printf("HTTP chunk encoding Status = %d, content_length = %" PRId64, esp_http_client_get_status_code(client),
-                         esp_http_client_get_content_length(client));)
+    DLT(DLT_COMMUNICATION, printf("HTTP chunk encoding Status = %d, content_length = %" PRId64, esp_http_client_get_status_code(client),
+                                  esp_http_client_get_content_length(client));)
   }
   else
   {
-    DLT(DLT_DIAG, printf("Error perform http request %s", esp_err_to_name(err));)
+    DLT(DLT_COMMUNICATION, printf("Error perform http request %s", esp_err_to_name(err));)
   }
   esp_http_client_cleanup(client);
 }
@@ -435,7 +435,7 @@ void http_perform_as_stream_reader(char *url, // URL to read from
   char *buffer = malloc(MAX_HTTP_RECV_BUFFER + 1);
   if ( buffer == NULL )
   {
-    DLT(DLT_DIAG, printf("Cannot malloc http receive buffer");)
+    DLT(DLT_COMMUNICATION, printf("Cannot malloc http receive buffer");)
     return;
   }
   esp_http_client_config_t config = {
@@ -445,7 +445,7 @@ void http_perform_as_stream_reader(char *url, // URL to read from
   esp_err_t                err;
   if ( (err = esp_http_client_open(client, 0)) != ESP_OK )
   {
-    DLT(DLT_DIAG, printf("Failed to open HTTP connection: %s", esp_err_to_name(err));)
+    DLT(DLT_COMMUNICATION, printf("Failed to open HTTP connection: %s", esp_err_to_name(err));)
     free(buffer);
     return;
   }
@@ -456,13 +456,13 @@ void http_perform_as_stream_reader(char *url, // URL to read from
     read_len = esp_http_client_read(client, buffer, content_length);
     if ( read_len <= 0 )
     {
-      DLT(DLT_DIAG, printf("Error read data");)
+      DLT(DLT_COMMUNICATION, printf("Error read data");)
     }
     buffer[read_len] = 0;
-    DLT(DLT_DIAG, printf("read_len = %d", read_len);)
+    DLT(DLT_COMMUNICATION, printf("read_len = %d", read_len);)
   }
-  DLT(DLT_DIAG, printf("HTTP Stream reader Status = %d, content_length = %" PRId64, esp_http_client_get_status_code(client),
-                       esp_http_client_get_content_length(client));)
+  DLT(DLT_COMMUNICATION, printf("HTTP Stream reader Status = %d, content_length = %" PRId64, esp_http_client_get_status_code(client),
+                                esp_http_client_get_content_length(client));)
   esp_http_client_close(client);
   esp_http_client_cleanup(client);
   free(buffer);
@@ -493,12 +493,12 @@ void https_async(char *url,    // URL to connect to
   }
   if ( err == ESP_OK )
   {
-    DLT(DLT_DIAG, printf("HTTPS Status = %d, content_length = %" PRId64, esp_http_client_get_status_code(client),
-                         esp_http_client_get_content_length(client));)
+    DLT(DLT_COMMUNICATION, printf("HTTPS Status = %d, content_length = %" PRId64, esp_http_client_get_status_code(client),
+                                  esp_http_client_get_content_length(client));)
   }
   else
   {
-    DLT(DLT_DIAG, printf("Error perform http request %s", esp_err_to_name(err));)
+    DLT(DLT_COMMUNICATION, printf("Error perform http request %s", esp_err_to_name(err));)
   }
   esp_http_client_cleanup(client);
 
@@ -522,12 +522,12 @@ void https_async(char *url,    // URL to connect to
   }
   if ( err == ESP_OK )
   {
-    DLT(DLT_DIAG, printf("HTTPS Status = %d, content_length = %" PRId64, esp_http_client_get_status_code(client),
-                         esp_http_client_get_content_length(client));)
+    DLT(DLT_COMMUNICATION, printf("HTTPS Status = %d, content_length = %" PRId64, esp_http_client_get_status_code(client),
+                                  esp_http_client_get_content_length(client));)
   }
   else
   {
-    DLT(DLT_DIAG, printf("Error perform http request %s", esp_err_to_name(err));)
+    DLT(DLT_COMMUNICATION, printf("Error perform http request %s", esp_err_to_name(err));)
   }
   esp_http_client_cleanup(client);
 }
@@ -587,7 +587,7 @@ void http_native_request(char *server_url,    // URL to be accessed
         content_length = esp_http_client_fetch_headers(client);
         if ( content_length < 0 )
         {
-          DLT(DLT_DIAG, printf("HTTP client fetch headers failed");)
+          DLT(DLT_COMMUNICATION, printf("HTTP client fetch headers failed");)
         }
       }
       else
@@ -601,7 +601,7 @@ void http_native_request(char *server_url,    // URL to be accessed
         }
         else
         {
-          DLT(DLT_DIAG, printf() "Failed to read response from %s", url);)
+          DLT(DLT_COMMUNICATION, printf() "Failed to read response from %s", url);)
         }
       }
       esp_http_client_close(client);
@@ -627,11 +627,11 @@ void http_native_request(char *server_url,    // URL to be accessed
       {
         if ( esp_http_client_write(client, payload, strlen(payload)) < 0 )
         {
-          DLT(DLT_DIAG, printf("HTTP Write failed %s", server_url);)
+          DLT(DLT_COMMUNICATION, printf("HTTP Write failed %s", server_url);)
         }
         if ( esp_http_client_fetch_headers(client) < 0 )
         {
-          DLT(DLT_DIAG, printf("HTTP client fetch headers failed");)
+          DLT(DLT_COMMUNICATION, printf("HTTP client fetch headers failed");)
         }
         else
         {
@@ -647,7 +647,7 @@ void http_native_request(char *server_url,    // URL to be accessed
           }
           else
           {
-            DLT(DLT_DIAG, printf("Failed to read response");)
+            DLT(DLT_COMMUNICATION, printf("Failed to read response");)
           }
         }
       }
@@ -693,12 +693,12 @@ void http_partial_download(char *url,         // URL to access
   esp_http_client_set_header(client, "Range", range_string);
   if ( esp_http_client_perform(client) == ESP_OK )
   {
-    DLT(DLT_DIAG, printf("HTTP Status = %d, content_length = %" PRId64, esp_http_client_get_status_code(client),
-                         esp_http_client_get_content_length(client));)
+    DLT(DLT_COMMUNICATION, printf("HTTP Status = %d, content_length = %" PRId64, esp_http_client_get_status_code(client),
+                                  esp_http_client_get_content_length(client));)
   }
   else
   {
-    DLT(DLT_DIAG, printf("HTTP request failed");)
+    DLT(DLT_COMMUNICATION, printf("HTTP request failed");)
   }
   esp_http_client_cleanup(client);
 }
