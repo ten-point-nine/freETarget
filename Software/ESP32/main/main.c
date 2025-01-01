@@ -74,7 +74,7 @@ void app_main(void)
   xTaskCreate(tcpip_socket_poll_3, "tcpip_socket_poll_3", 4096, NULL, POLLING, NULL);
   vTaskDelay(TICK_10ms);
 
-  http_client_init();
+  // http_client_init();
   vTaskDelay(TICK_10ms);
 
   freeETarget_timer_init();
