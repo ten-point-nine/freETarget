@@ -13,6 +13,7 @@
 #include "freertos/event_groups.h"
 #include "freertos/task.h"
 #include <string.h>
+#include "esp_http_server.h"
 
 #include "esp_event.h"
 #include "esp_log.h"
@@ -35,6 +36,7 @@
 #include "compute_hit.h"
 #include "diag_tools.h"
 #include "http_client.h"
+#include "http_server.h"
 #include "json.h"
 #include "nonvol.h"
 
@@ -155,6 +157,46 @@ void http_send_to_server_test(void)
    */
   DLT(DLT_INFO, SEND(sprintf(_xs, _DONE_);))
   return;
+}
+
+/*****************************************************************************
+ *
+ * @function: http_server_test
+ *
+ * @brief:    Turn on the server and wait for requests
+ *
+ * @return:   Nothing
+ *
+ ******************************************************************************
+ *
+ * Initialize the server and then wait for stuff to come in
+ *
+ *******************************************************************************/
+void http_server_test(void)
+{
+  static void *server = NULL;
+
+  /**/
+#if BRIAN
+  ESP_ERROR_CHECK(nvs_flash_init());
+  ESP_ERROR_CHECK(esp_netif_init());
+#endif
+  ESP_ERROR_CHECK(esp_event_loop_create_default());
+  ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &server));
+  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
+
+  /*
+   * Start the server for the first time
+   */
+  server = start_webserver();
+
+  /*
+   * Stay here until someone removes the server
+   */
+  while ( server )
+  {
+    vTaskDelay(ONE_SECOND / 4);
+  }
 }
 
 #endif

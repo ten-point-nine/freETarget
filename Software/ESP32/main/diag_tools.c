@@ -78,6 +78,7 @@ static const self_test_t test_list[] = {
     {"- HTTP tests",                      0                        },
     {"DNS Lookup test",                   &http_DNS_test           },
     {"Send to server test",               &http_send_to_server_test},
+    {"Start web server",                  &http_server_test        },
     {"-Interrupt Tests",                  0                        },
     {"Polled target test",                &polled_target_test      },
     {"Interrupt target test",             &interrupt_target_test   },
@@ -93,6 +94,7 @@ const dlt_name_t dlt_names[] = {
     {DLT_DEBUG,         "DLT_DEBUG",         'D'}, // Software debugging information
     {DLT_SCORE,         "DLT_SCORE",         'S'}, // Display timing in the score message
     {DLT_HEARTBEAT,     "DLT_HEARTBEAT",     'H'}, // Heartbeat tick
+    {DLT_HTTP,          "DLT_HTTP",          'H'}, // Log HTTP events
     {0,                 0,                   0  }
 };
 
