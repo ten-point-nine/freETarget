@@ -117,5 +117,9 @@ namespace freETarget {
         private void btnAntiClockwise_Click(object sender, EventArgs e) {
             mainWindow.calibrateAngle(getAngle());
         }
+
+        private void btnCopy_Click(object sender, EventArgs e) {
+            System.Windows.Forms.Clipboard.SetText("{\"X_OFFSET\":" + txtXoffset.Text + ", \"Y_OFFSET\":" + txtYoffset.Text + "}");
+        }
     }
 }

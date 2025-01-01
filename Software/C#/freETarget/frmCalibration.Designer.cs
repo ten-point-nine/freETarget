@@ -40,6 +40,7 @@
             this.txtYoffset = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
+            this.btnCopy = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnLeft
@@ -185,11 +186,23 @@
             this.label2.TabIndex = 13;
             this.label2.Text = "Y_OFFSET";
             // 
+            // btnCopy
+            // 
+            this.btnCopy.Image = ((System.Drawing.Image)(resources.GetObject("btnCopy.Image")));
+            this.btnCopy.Location = new System.Drawing.Point(270, 47);
+            this.btnCopy.Name = "btnCopy";
+            this.btnCopy.Size = new System.Drawing.Size(38, 40);
+            this.btnCopy.TabIndex = 14;
+            this.toolTip.SetToolTip(this.btnCopy, "Copy offset values to clipboard");
+            this.btnCopy.UseVisualStyleBackColor = true;
+            this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
+            // 
             // frmCalibration
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(322, 177);
+            this.Controls.Add(this.btnCopy);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.txtYoffset);
@@ -234,5 +247,6 @@
         private System.Windows.Forms.TextBox txtYoffset;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button btnCopy;
     }
 }

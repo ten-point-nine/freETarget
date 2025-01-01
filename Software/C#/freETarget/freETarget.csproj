@@ -244,6 +244,7 @@
     </Content>
     <None Include="resume.png" />
     <None Include="esp32.ico" />
+    <None Include="copy.png" />
     <Content Include="Storage.db">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
