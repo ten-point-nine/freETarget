@@ -20,6 +20,5 @@ void connect_handler(void *arg, esp_event_base_t event_base, int32_t event_id, v
 /*
  * #defines
  */
-#define BUILD_BASIC_AUTHORIZATION (0 == 1) // Include if we need authrization
-#define DEFAULT_SERVER_PORT       80       // Use the stanard port 80 for HTTP requests
+#define DEFAULT_SERVER_PORT 80 // Use the stanard port 80 for HTTP requests
 #endif

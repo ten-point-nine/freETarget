@@ -23,9 +23,9 @@
 #define BUILD_SIMPLE 0    // Build for simple HTTP transfers
 #define BUILD_HTTPS  0    // BUild HTTPS transfers
 
-#define INCLUDE_GET     1 // Include GET methods
+#define INCLUDE_GET     0 // Include GET methods
 #define INCLUDE_POST    1 // Include POST methods
-#define INCLUDE_PUT     1 // Include PUT methods
+#define INCLUDE_PUT     0 // Include PUT methods
 #define INCLUDE_PATCH   0 // Include PATCH methods
 #define INCLUDE_DELETE  0 // Include DELETE methods
 #define INCLUDE_HEAD    0 // Include HEAD methods

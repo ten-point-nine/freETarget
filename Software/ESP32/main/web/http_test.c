@@ -134,8 +134,6 @@ static char test_payload[] = "Hello World";
 
 void http_send_to_server_test(void)
 {
-  char str_c[32];
-
   DLT(DLT_INFO, SEND(sprintf(_xs, " http_send_to_server_test(%s)", test_payload);))
 
   /*
@@ -149,7 +147,6 @@ void http_send_to_server_test(void)
   /*
    *  Send the payload
    */
-  strcpy(json_remote_url, "http://192.168.86.82:80");
   http_rest_with_url(json_remote_url, METHOD_PUT, test_payload);
 
   /*

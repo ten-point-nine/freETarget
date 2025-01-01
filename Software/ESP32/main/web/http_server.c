@@ -56,25 +56,10 @@ static esp_err_t hello_get_handler(httpd_req_t *req);
 /*
  * Typedefs
  */
-#if ( BUILD_BASIC_AUTHORIZATION )
-typedef struct
-{
-  char *username;
-  char *password;
-} basic_auth_info_t;
-#endif
 
 /*
  *  Variables
  */
-#if ( BUILD_BASIC_AUTHORIZATION )
-#define HTTPD_401 "401 UNAUTHORIZED" /*!< HTTP Response 401 */
-static httpd_uri_t basic_auth = {
-    .uri     = "/basic_auth",
-    .method  = HTTP_GET,
-    .handler = basic_auth_get_handler,
-};
-#endif
 
 /*
  * Local functions
@@ -119,9 +104,7 @@ httpd_handle_t start_webserver(void)
   {
     DLT(DLT_HTTP, SEND(sprintf(_xs, "Registering URI handlers");))
     httpd_register_uri_handler(server, &url_hello);
-#if BUILD_BASIC_AUTHORIZATION
-    httpd_register_basic_auth(server);
-#endif
+
     return server;
   }
 
@@ -330,179 +313,3 @@ esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
   httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "Some 404 error message");
   return ESP_FAIL;
 }
-
-#if ( BUILD_BASIC_AUTHORIZATION )
-static char *http_auth_basic(const char *username, const char *password)
-{
-  size_t out;
-  char  *user_info = NULL;
-  char  *digest    = NULL;
-  size_t n         = 0;
-  int    rc        = asprintf(&user_info, "%s:%s", username, password);
-  if ( rc < 0 )
-  {
-    ESP_LOGE(TAG, "asprintf() returned: %d", rc);
-    return NULL;
-  }
-
-  if ( !user_info )
-  {
-    ESP_LOGE(TAG, "No enough memory for user information");
-    return NULL;
-  }
-  esp_crypto_base64_encode(NULL, 0, &n, (const unsigned char *)user_info, strlen(user_info));
-
-  /* 6: The length of the "Basic " string
-   * n: Number of bytes for a base64 encode format
-   * 1: Number of bytes for a reserved which be used to fill zero
-   */
-  digest = calloc(1, 6 + n + 1);
-  if ( digest )
-  {
-    strcpy(digest, "Basic ");
-    esp_crypto_base64_encode((unsigned char *)digest + 6, n, &out, (const unsigned char *)user_info, strlen(user_info));
-  }
-  free(user_info);
-  return digest;
-}
-#endif
-
-#if ( BUILD_BASIC_AUTHORIZATION )
-/*----------------------------------------------------------------
- *
- * @function: basic_auth_get_handler
- *
- * @brief:    Manages an HTTP GET request
- *
- * @return:   esp_err_t, error type
- *
- *---------------------------------------------------------------
- *
- * Read the nonvol into RAM.
- *
- * If the results is uninitalized then force the factory default.
- * Then check for out of bounds and reset those values
- *
- *------------------------------------------------------------*/
-static esp_err_t basic_auth_get_handler(httpd_req_t *req // Pointer to received request
-)
-{
-  char              *buf             = NULL;
-  size_t             buf_len         = 0;
-  basic_auth_info_t *basic_auth_info = req->user_ctx;
-
-  /*
-   *  Check to see if the request is authorized
-   */
-  buf_len = httpd_req_get_hdr_value_len(req, "Authorization") + 1; // Find out how long the request is
-  if ( buf_len > 1 )                                               // Got something legitimate?
-  {
-    buf = calloc(1, buf_len);                                      // Allocate memory
-    if ( !buf )                                                    // No memory
-    {
-      ESP_LOGE(TAG, "No enough memory for basic authorization");
-      return ESP_ERR_NO_MEM;
-    }
-
-                                                                   /*
-                                                                    *   Pull in the header and look for "AUthorization" as a field
-                                                                    */
-    if ( httpd_req_get_hdr_value_str(req, "Authorization", buf, buf_len) == ESP_OK )
-    {
-      ESP_LOGI(TAG, "Found header => Authorization: %s", buf);
-    }
-    else
-    {
-      ESP_LOGE(TAG, "No auth value received");
-    }
-
-    /*
-     * See if out authorization matches
-     */
-    char *auth_credentials = http_auth_basic(basic_auth_info->username, basic_auth_info->password);
-    if ( !auth_credentials )
-    {
-      ESP_LOGE(TAG, "No enough memory for basic authorization credentials");
-      free(buf);
-      return ESP_ERR_NO_MEM;
-    }
-
-    if ( strncmp(auth_credentials, buf, buf_len) )
-    {
-      ESP_LOGE(TAG, "Not authenticated");
-      httpd_resp_set_status(req, HTTPD_401);
-      httpd_resp_set_type(req, "application/json");
-      httpd_resp_set_hdr(req, "Connection", "keep-alive");
-      httpd_resp_set_hdr(req, "WWW-Authenticate", "Basic realm=\"Hello\"");
-      httpd_resp_send(req, NULL, 0);
-    }
-    else
-    {
-      ESP_LOGI(TAG, "Authenticated!");
-      char *basic_auth_resp = NULL;
-      httpd_resp_set_status(req, HTTPD_200);
-      httpd_resp_set_type(req, "application/json");
-      httpd_resp_set_hdr(req, "Connection", "keep-alive");
-      int rc = asprintf(&basic_auth_resp, "{\"authenticated\": true,\"user\": \"%s\"}", basic_auth_info->username);
-      if ( rc < 0 )
-      {
-        ESP_LOGE(TAG, "asprintf() returned: %d", rc);
-        free(auth_credentials);
-        return ESP_FAIL;
-      }
-      if ( !basic_auth_resp )
-      {
-        ESP_LOGE(TAG, "No enough memory for basic authorization response");
-        free(auth_credentials);
-        free(buf);
-        return ESP_ERR_NO_MEM;
-      }
-      httpd_resp_send(req, basic_auth_resp, strlen(basic_auth_resp));
-      free(basic_auth_resp);
-    }
-    free(auth_credentials);
-    free(buf);
-  }
-  else
-  {
-    ESP_LOGE(TAG, "No auth header received");
-    httpd_resp_set_status(req, HTTPD_401);
-    httpd_resp_set_type(req, "application/json");
-    httpd_resp_set_hdr(req, "Connection", "keep-alive");
-    httpd_resp_set_hdr(req, "WWW-Authenticate", "Basic realm=\"Hello\"");
-    httpd_resp_send(req, NULL, 0);
-  }
-
-  return ESP_OK;
-}
-#endif
-#if ( BUILD_BASIC_AUTHORIZATION )
-/*----------------------------------------------------------------
- *
- * @function: httpd_register_basic_auth
- *
- * @brief:    Save the authorization parameters for later if used
- *
- * @return:   esp_err_t, error type
- *
- *---------------------------------------------------------------
- *
- * Read the nonvol into RAM.
- *
- * If the results is uninitalized then force the factory default.
- * Then check for out of bounds and reset those values
- *
- *------------------------------------------------------------*/
-static void httpd_register_basic_auth(httpd_handle_t server)
-{
-  basic_auth_info_t *basic_auth_info = calloc(1, sizeof(basic_auth_info_t));
-  if ( basic_auth_info )
-  {
-    basic_auth_info->username = CONFIG_EXAMPLE_BASIC_AUTH_USERNAME;
-    basic_auth_info->password = CONFIG_EXAMPLE_BASIC_AUTH_PASSWORD;
-
-    basic_auth.user_ctx = basic_auth_info;
-    httpd_register_uri_handler(server, &basic_auth);
-  }
-}
-#endif
