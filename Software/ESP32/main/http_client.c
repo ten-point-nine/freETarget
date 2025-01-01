@@ -256,8 +256,8 @@ void http_rest_with_url(char *url,    // URL being accessed
   {
 #if ( INCLUDE_GET )
     case METHOD_GET:
-      esp_err_t err = esp_http_client_perform(client);
-      if ( err == ESP_OK )
+      esp_http_client_set_method(client, HTTP_METHOD_GET);
+      if ( esp_http_client_perform(client) == ESP_OK )
       {
         DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "HTTP GET Status = %d, content_length = %lld", esp_http_client_get_status_code(client),
                                             esp_http_client_get_content_length(client));))
@@ -275,15 +275,14 @@ void http_rest_with_url(char *url,    // URL being accessed
       esp_http_client_set_method(client, HTTP_METHOD_POST);
       esp_http_client_set_header(client, "Content-Type", "application/json");
       esp_http_client_set_post_field(client, payload, strlen(payload));
-      err = esp_http_client_perform(client);
-      if ( err == ESP_OK )
+      if ( esp_http_client_perform(client) == ESP_OK )
       {
-        DLT(DLT_COMMUNICATION, printf("HTTP POST Status = %d, content_length = %" PRId64, esp_http_client_get_status_code(client),
-                                      esp_http_client_get_content_length(client));)
+        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "HTTP POST Status = %d, content_length = %" PRId64,
+                                            esp_http_client_get_status_code(client), esp_http_client_get_content_length(client));))
       }
       else
       {
-        DLT(DLT_CRITICAL, printf("HTTP POST request failed: %s", esp_err_to_name(err));)
+        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "HTTP POST request failed:");))
       }
       break;
 #endif
@@ -300,7 +299,7 @@ void http_rest_with_url(char *url,    // URL being accessed
       }
       else
       {
-        DLT(DLT_CRITICAL, printf("HTTP PUT request failed: %s", esp_err_to_name(err));)
+        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "HTTP PUT request failed:");))
       }
       break;
 #endif
@@ -620,9 +619,9 @@ void http_native_request(char *server_url,    // URL to be accessed
 #if ( INCLUDE_API_KEY )
       esp_http_client_set_header(client, "X-API-KEY", API_KEY);
 #endif
-      DLT(DLT_APPLICATION, printf("POST");)
-      DLT(DLT_APPLICATION, printf("URL:%s", server_url);)
-      DLT(DLT_APPLICATION, printf("Payload: %s", payload);)
+      DLT(DLT_COMMUNICATION, printf("POST");)
+      DLT(DLT_COMMUNICATION, printf("URL:%s", server_url);)
+      DLT(DLT_COMMUNICATION, printf("Payload: %s", payload);)
       if ( esp_http_client_open(client, strlen(payload)) != ESP_OK )
       {
         DLT(DLT_CRITICAL, printf("Failed to open HTTP connection: %s", server_url);)
@@ -639,14 +638,14 @@ void http_native_request(char *server_url,    // URL to be accessed
         }
         else
         {
-          //                   DLT(DLT_APPLICATION, for(i=0; i != payload_length; i++){payload[i] = 0;})
+          //                   DLT(DLT_COMMUNICATION, for(i=0; i != payload_length; i++){payload[i] = 0;})
           if ( esp_http_client_read_response(client, payload, payload_length) >= 0 )
           {
             if ( esp_http_client_get_status_code(client) != 200 )
             {
               DLT(DLT_CRITICAL, printf("HTTP POST Status = %d, content_length = %" PRId64, esp_http_client_get_status_code(client),
                                        esp_http_client_get_content_length(client));)
-              DLT(DLT_APPLICATION, printf("\r\npayload:%s\r\n", payload);)
+              DLT(DLT_COMMUNICATION, printf("\r\npayload:%s\r\n", payload);)
             }
           }
           else
@@ -707,42 +706,4 @@ void http_partial_download(char *url,         // URL to access
   esp_http_client_cleanup(client);
 }
 #endif // CONFIG_MBEDTLS_CERTIFICATE_BUNDLE
-#endif
-
-#if ( 0 )
-static void http_test_task(void *pvParameters)
-{
-  http_rest_with_url();
-  http_rest_with_hostname_path();
-#if CONFIG_ESP_HTTP_CLIENT_ENABLE_BASIC_AUTH
-  http_auth_basic();
-  http_auth_basic_redirect();
-#endif
-#if CONFIG_ESP_HTTP_CLIENT_ENABLE_DIGEST_AUTH
-  http_auth_digest_md5();
-  http_auth_digest_sha256();
-#endif
-  http_encoded_query();
-  http_relative_redirect();
-  http_absolute_redirect();
-  http_absolute_redirect_manual();
-#if CONFIG_MBEDTLS_CERTIFICATE_BUNDLE
-  https_with_url();
-#endif
-  https_with_hostname_path();
-  http_redirect_to_https();
-  http_download_chunk();
-  http_perform_as_stream_reader();
-  https_async();
-  https_with_invalid_url();
-  http_native_request();
-#if CONFIG_MBEDTLS_CERTIFICATE_BUNDLE
-  http_partial_download();
-#endif
-
-  ESP_LOGI(TAG, "Finish http example");
-#if !CONFIG_IDF_TARGET_LINUX
-  vTaskDelete(NULL);
-#endif
-}
 #endif

@@ -32,14 +32,18 @@
 #define INCLUDE_API_KEY 1 // Include an API key
 // #define API_KEY         "cpe-1704-tks"
 
-#define METHOD_GET    0 // enum used to identify a get method
-#define METHOD_POST   1 // enum used to identify a post method
-#define METHOD_PUT    2 // enum used to identify a put method
-#define METHOD_PATCH  3 // enum used to identify a patch method
-#define METHOD_DELETE 4 // enum used to identify a delete method
-#define METHOD_HEAD   5 // enum used to identify a head method
+#define METHOD_GET    0       // enum used to identify a get method
+#define METHOD_POST   1       // enum used to identify a post method
+#define METHOD_PUT    2       // enum used to identify a put method
+#define METHOD_PATCH  3       // enum used to identify a patch method
+#define METHOD_DELETE 4       // enum used to identify a delete method
+#define METHOD_HEAD   5       // enum used to identify a head method
 
-#define DNS_TRIES 100   // Try for 10 seconds to get a DNS
+#define DNS_TRIES 100         // Try for 10 seconds to get a DNS
+
+#define REMOTE_MODE_NONE    0 // No remote mode supported
+#define REMOTE_MODE_WEBPAGE 1 // The target sends a web page
+#define REMOTE_MODE_CLIENT  2 // The target sends JSON to a server
 
 /* Root cert for howsmyssl.com, taken from howsmyssl_com_root_cert.pem
 

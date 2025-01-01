@@ -1,0 +1,218 @@
+<!-- HTML and CSS to draw a target for ISSF P10 discipline.
+Auth: Giuseppe Magnani 
+Fell free to improve -->
+
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Target ISSF P10</title>
+
+    <style>
+        .ISSF {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .bersaglio {
+            position: relative;
+            width: 17cm;
+            height: 17cm;
+            background-color: #ffe7a3;
+            border: 2px solid black;
+            margin: 20px auto;
+        }
+
+        .cerchio {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid black;
+            background-color: transparent;
+        }
+
+        .centro {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid #ffe7a3;
+            background-color: black;
+        }
+
+        .numero {
+            position: absolute;
+            color: black;
+            font-size: 12px;
+        }
+
+        .numeroCentro {
+            position: absolute;
+            color: white;
+            font-size: 12px;
+        }
+
+        .ore-3 {
+            top: 50%;
+            right: 10px;
+        }
+
+        .ore-6 {
+            bottom: 10px;
+            left: 50%;
+        }
+
+        .ore-9 {
+            top: 50%;
+            left: 10px;
+        }
+
+        .ore-12 {
+            top: 10px;
+            left: 50%;
+        }
+
+        .centro-1 {
+            width: 0.5cm;
+            height: 0.5cm;
+            top: calc(50% - 0.25cm);
+            left: calc(50% - 0.25cm);
+        }
+
+        .centro-2 {
+            width: 1.15cm;
+            height: 1.15cm;
+            top: calc(50% - 0.575cm);
+            left: calc(50% - 0.575cm);
+        }
+
+        .centro-3 {
+            width: 2.7cm;
+            height: 2.7cm;
+            top: calc(50% - 1.35cm);
+            left: calc(50% - 1.35cm);
+        }
+
+        .centro-4 {
+            width: 4.3cm;
+            height: 4.3cm;
+            top: calc(50% - 2.15cm);
+            left: calc(50% - 2.15cm);
+        }
+
+        .centro-5 {
+            width: 5.9cm;
+            height: 5.9cm;
+            top: calc(50% - 2.95cm);
+            left: calc(50% - 2.95cm);
+        }
+
+        .cerchio-1 {
+            width: 7.5cm;
+            height: 7.5cm;
+            top: calc(50% - 3.75cm);
+            left: calc(50% - 3.75cm);
+        }
+
+        .cerchio-2 {
+            width: 9.1cm;
+            height: 9.1cm;
+            top: calc(50% - 4.55cm);
+            left: calc(50% - 4.55cm);
+        }
+
+        .cerchio-3 {
+            width: 10.7cm;
+            height: 10.7cm;
+            top: calc(50% - 5.35cm);
+            left: calc(50% - 5.35cm);
+        }
+
+        .cerchio-4 {
+            width: 12.3cm;
+            height: 12.3cm;
+            top: calc(50% - 6.15cm);
+            left: calc(50% - 6.15cm);
+        }
+
+        .cerchio-5 {
+            width: 13.9cm;
+            height: 13.9cm;
+            top: calc(50% - 6.95cm);
+            left: calc(50% - 6.95cm);
+        }
+
+        .cerchio-6 {
+            width: 15.5cm;
+            height: 15.5cm;
+            top: calc(50% - 7.75cm);
+            left: calc(50% - 7.75cm);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bersaglio">
+        <div class="centro centro-5">
+            <div class="numeroCentro ore-3">7</div>
+            <div class="numeroCentro ore-6">7</div>
+            <div class="numeroCentro ore-9">7</div>
+            <div class="numeroCentro ore-12">7</div>
+        </div>
+        <div class="centro centro-4">
+            <div class="numeroCentro ore-3">8</div>
+            <div class="numeroCentro ore-6">8</div>
+            <div class="numeroCentro ore-9">8</div>
+            <div class="numeroCentro ore-12">8</div>
+        </div>
+        <div class="centro centro-3">
+            <div class="numeroCentro ore-3">9</div>
+            <div class="numeroCentro ore-6">9</div>
+            <div class="numeroCentro ore-9">9</div>
+            <div class="numeroCentro ore-12">9</div>
+        </div>
+        <div class="centro centro-2"></div>
+        <div class="centro centro-1">
+
+        </div>
+        <div class="cerchio cerchio-6">
+            <div class="numero ore-3">1</div>
+            <div class="numero ore-6">1</div>
+            <div class="numero ore-9">1</div>
+            <div class="numero ore-12">1</div>
+        </div>
+        <div class="cerchio cerchio-5">
+            <div class="numero ore-3">2</div>
+            <div class="numero ore-6">2</div>
+            <div class="numero ore-9">2</div>
+            <div class="numero ore-12">2</div>
+        </div>
+        <div class="cerchio cerchio-4">
+            <div class="numero ore-3">3</div>
+            <div class="numero ore-6">3</div>
+            <div class="numero ore-9">3</div>
+            <div class="numero ore-12">3</div>
+        </div>
+        <div class="cerchio cerchio-3">
+            <div class="numero ore-3">4</div>
+            <div class="numero ore-6">4</div>
+            <div class="numero ore-9">4</div>
+            <div class="numero ore-12">4</div>
+        </div>
+        <div class="cerchio cerchio-2">
+            <div class="numero ore-3">5</div>
+            <div class="numero ore-6">5</div>
+            <div class="numero ore-9">5</div>
+            <div class="numero ore-12">5</div>
+        </div>
+        <div class="cerchio cerchio-1">
+            <div class="numero ore-3">6</div>
+            <div class="numero ore-6">6</div>
+            <div class="numero ore-9">6</div>
+            <div class="numero ore-12">6</div>
+        </div>
+        <img src="issf.png" height='50px' class="ISSF">
+    </div>
+</body>
+
+</html>

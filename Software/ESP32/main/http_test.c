@@ -61,11 +61,21 @@
  * This issues a DNS request for google.com and prints the reply
  *
  *******************************************************************************/
-static char test_URL[] = "google.com";
+static char test_URL[128];
 
 void http_DNS_test(void)
 {
-  char str_c[32];
+  char str_c[128];
+
+  printf("%s ", json_remote_url);
+  if ( json_remote_url[0] != 0 )
+  {
+    strcpy(test_URL, json_remote_url);
+  }
+  else
+  {
+    strcpy(test_URL, "google.com");
+  }
 
   DLT(DLT_INFO, SEND(sprintf(_xs, "http_DNS_test(%s)", test_URL);))
 
@@ -74,7 +84,7 @@ void http_DNS_test(void)
    */
   if ( json_wifi_ssid[0] == 0 )
   {
-    SEND(sprintf(_xs, "\r\nWiFi must be attached to gateway");)
+    DLT(DLT_INFO, SEND(sprintf(_xs, "\r\nWiFi must be attached to gateway");))
     return;
   }
 
@@ -94,7 +104,57 @@ void http_DNS_test(void)
   /*
    * Exit the test
    */
+  SEND(sprintf(_xs, _DONE_);)
+  return;
+}
+
+/*****************************************************************************
+ *
+ * @function: http_send_to_server_test
+ *
+ * @brief:    Send a payload to a server
+ *
+ * @return:   Nothing
+ *
+ ******************************************************************************
+ *
+ * This sends a payload to the remote server
+ *
+ * Test Vectors
+ *
+ * {"REMOTE_URL":"http://freetarget:80"}
+ * {"REMOTE_URL":"http://192.168.86.82"}
+ * {"REMOTE_URL":"http://google.com"}
+ * {"REMOTE_URL":"google.com"}
+ *
+ *******************************************************************************/
+static char test_payload[] = "Hello World";
+
+void http_send_to_server_test(void)
+{
+  char str_c[32];
+
+  DLT(DLT_INFO, SEND(sprintf(_xs, " http_send_to_server_test(%s)", test_payload);))
+
+  /*
+   * Make sure we ares setup correctly
+   */
+  if ( json_wifi_ssid[0] == 0 )
+  {
+    DLT(DLT_INFO, SEND(sprintf(_xs, "\r\nWiFi should be attached to gateway");))
+  }
+
+  /*
+   *  Send the payload
+   */
+  strcpy(json_remote_url, "http://192.168.86.82:80");
+  http_rest_with_url(json_remote_url, METHOD_PUT, test_payload);
+
+  /*
+   * Exit the test
+   */
   DLT(DLT_INFO, SEND(sprintf(_xs, _DONE_);))
   return;
 }
+
 #endif

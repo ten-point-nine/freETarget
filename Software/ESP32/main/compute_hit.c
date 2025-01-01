@@ -585,6 +585,26 @@ void send_score(shot_record_t *shot,        //  record
 
   SEND(sprintf(_xs, "}\r\n");)
 
+/*
+ * Send to the server if needed
+ */
+#if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE ) // Include only if remote server is needed
+  if ( (json_remote_modes & REMOTE_MODE_CLIENT) != 0 )
+  {
+    if ( (json_athlete[0] != 0) && (json_event[0] != 0) && (json_target_name[0] != 0) )
+    {
+      sprintf(_xs, "\r\n{\"shotnumber\":%d, \"athlete\":\"%s\", \"event\": \"%s\", \"target_name\":\"%s\", \"x\":%4.2f, \"y\":%4.2f} ",
+              shot->shot_number, json_athlete, json_event, json_target_name, x, y);
+
+      http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
+    }
+    else
+    {
+      DLT(DLT_INFO, printf("Missing arguement for remote payload"););
+    }
+  }
+#endif
+
   /*
    * All done, return
    */

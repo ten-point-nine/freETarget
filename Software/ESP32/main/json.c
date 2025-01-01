@@ -27,6 +27,10 @@
  *  Function Prototypes
  */
 static void handle_json(void); // Breakdown the JSON and execute it
+int         instr(char *s1, char *s2);
+void        show_echo(void);   // Display the current settings
+static void show_names(int v);
+static void set_trace(int v);  // Set the trace on and off
 
 /*
  *  Variables
@@ -46,62 +50,6 @@ int           json_south_x;              // South Adjustment
 int           json_south_y;
 int           json_west_x;               // WestAdjustment
 int           json_west_y;
-int           json_name_id;              // Name identifier
-int           json_LED_PWM;              // LED control value
-int           json_power_save;           // Power down time
-int           json_send_miss;            // Send a miss message
-int           json_serial_number;        // Electonic serial number
-int           json_step_count;           // Number of steps ouput to motor
-int           json_step_ramp;            // Step increment when starting
-int           json_step_start;           // Value to start motor moving
-int           json_step_time;            // Duration of each step in ms
-int           json_multifunction;        // Multifunction switch operation
-int           json_multifunction2;       // Multifunction Switch 2
-double        json_x_offset;             // Offset to add to correct horizontal target
-double        json_y_offset;             // Offset to add to correct vertical target
-int           json_z_offset;             // Distance between paper and sensor plane in 0.1mm
-int           json_paper_eco;            // Do not advance paper if outside of the black
-int           json_target_type;          // Modify target type (0 == single bull)
-int           json_tabata_enable;        // Tabata feature enabled
-int           json_tabata_on;            // Tabata ON timer
-int           json_tabata_rest;          // Tabata resting timer
-unsigned long json_rapid_on;             // Rapid Fire ON timer
-int           json_vset_PWM;             // Starting PWM value
-double        json_vset;                 // Desired VREF setting
-int           json_follow_through;       // Follow through delay
-int           json_keep_alive;           // Keep alive period
-int           json_sensor_angle;         // Angle sensors are rotated through
-int           json_paper_time = 0;       // Time paper motor is applied
-int           json_tabata_warn_on;       // Tabata warning time light on
-int           json_tabata_warn_off;      // Tabata warning time to shot
-int           json_face_strike;          // Number of cycles to accept a strike
-int           json_wifi_channel;         // Wifi channel
-int           json_rapid_count;          // Number of shots expected in string
-int           json_rapid_enable;         // Set to TRUE if the rapid fire event is enabled
-int           json_rapid_time;           // When will the rapid fire event end?
-int           json_rapid_wait;           // Delay applied to rapid start
-char          json_wifi_ssid[SSID_SIZE]; // Stored value of SSID
-char          json_wifi_pwd[PWD_SIZE];   // Stored value of password
-char          json_remote_url[URL_SIZE]; // Stored value of remote server
-int           json_remote_active;        // Set to TRUE if there is a remote to search for
-int           json_wifi_hidden;          // The SSID FET- is hidden
-int           json_wifi_dhcp;            // The ESP is a DHCP server
-int           json_wifi_reset_first;     // Reset the score table on first WiFi connection
-int           json_min_ring_time;        // Time to wait for ringing to stop
-int           json_token;                // Token ring state
-double        json_vref_lo;              // Low Voltage DAC setting
-double        json_vref_hi;              // High Voltage DAC setting
-int           json_pcnt_latency;         // pcnt interrupt latency
-int           json_mfs_hold_12;          // Hold A and B
-int           json_mfs_tap_2;            // Tap B
-int           json_mfs_tap_1;            // Tap A
-int           json_mfs_hold_2;           // Hold B
-int           json_mfs_hold_1;           // Hold A
-int           json_mfs_hold_d;           // Hold D
-int           json_mfs_hold_c;           // Hold C
-int           json_mfs_select_cd;        // Select C and D
-int           json_paper_shot;           // How many shots before advancing paper
-int           json_aux_port_enable;      // Enable comms from the AUX port
 int           json_name_id;              // Name identifier
 int           json_LED_PWM;              // LED control value
 int           json_power_save;           // Power down time
@@ -169,10 +117,8 @@ char json_target_name[SMALL_STRING];     // Target name
 #endif
 
 void        show_echo(void);             // Display the current settings
-static void show_test(int v);            // Execute the self test once
 static void show_names(int v);
 static void set_trace(int v);            // Set the trace on and off
-static void diag_delay(int x);           // Insert a delay
 
 const json_message_t JSON[] = {
     //    token               value stored in RAM   double stored in RAM convert
@@ -204,6 +150,7 @@ const json_message_t JSON[] = {
     {"\"PCNT_LATENCY\":", &json_pcnt_latency, 0, IS_INT32, 0, NONVOL_PCNT_LATENCY, 0, 1}, // Interrupt latency for PCNT adjustment
     {"\"POWER_SAVE\":", &json_power_save, 0, IS_INT32, 0, NONVOL_POWER_SAVE, 0, 0}, // Set the power saver time
     {"\"REMOTE_ACTIVE\":", &json_remote_active, 0, IS_INT32, 0, NONVOL_REMOTE_ACTIVE, 8}, // Send score to a remote server
+    {"\"REMOTE_KEY\":", &json_remote_key, 0, IS_TEXT + KEY_SIZE, 0, NONVOL_REMOTE_KEY, 8}, // Remote access key
     {"\"REMOTE_URL\":", (int *)&json_remote_url, 0, IS_TEXT + URL_SIZE, 0, NONVOL_REMOTE_URL, 8}, // Reserve space for remote URL
     {"\"RAPID_COUNT\":", &json_rapid_count, 0, IS_INT32, 0, 0, 0, 0}, // Number of shots expected in series
     {"\"RAPID_ENABLE\":", &json_rapid_enable, 0, IS_INT32, 0, 0, 0, 0}, // Enable the rapid fire fieature
@@ -247,13 +194,11 @@ const json_message_t JSON[] = {
     {"\"SOUTH_Y\":", &json_south_y, 0, IS_INT32, 0, NONVOL_SOUTH_Y, 0, 0}, //
     {"\"WEST_X\":", &json_west_x, 0, IS_INT32, 0, NONVOL_WEST_X, 0, 0}, //
     {"\"WEST_Y\":", &json_west_y, 0, IS_INT32, 0, NONVOL_WEST_Y, 0, 0}, //
-    {"\"ATHLETE\":", 0, 0, IS_VOID, 0, 0, 0, 0}, // Athlete name for online version
-    {"\"EVENT\":", 0, 0, IS_VOID, 0, 0, 0, 0}, // Shooting event for online version
-    {"\"TARGET_NAME\":", 0, 0, IS_VOID, 0, 0, 0, 0}, // Target name for online version
+    {"\"ATHLETE\":", (int *)&json_athlete, 0, IS_TEXT + SMALL_STRING, 0, 0, 0, 0}, // Athlete name for online version
+    {"\"EVENT\":", (int *)&json_event, 0, IS_VOID, 0, 0, 0, 0}, // Shooting event for online version
+    {"\"TARGET_NAME\":", (int *)json_target_name, 0, IS_VOID, 0, 0, 0, 0}, // Target name for online version
     {0, 0, 0, 0, 0, 0, 0, 0}, //
 };
-
-int instr(char *s1, char *s2);
 
 /*-----------------------------------------------------
  *

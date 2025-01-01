@@ -11,9 +11,9 @@
 /*
  * Global functions
  */
-#if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE )
-void http_DNS_test(void); // Exercise the DNS lookup
-#endif
+
+void http_DNS_test(void);            // Exercise the DNS lookup
+void http_send_to_server_test(void); // Exercise the DNS lookup
 
 /*
  * #defines
