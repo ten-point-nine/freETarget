@@ -51,7 +51,7 @@ static char _xs[512];
 #define DLT()
 #endif
 
-static esp_err_t hello_get_handler(httpd_req_t *req);
+static esp_err_t target_get_handler(httpd_req_t *req);
 
 /*
  * Typedefs
@@ -69,7 +69,7 @@ static esp_err_t stop_webserver(httpd_handle_t server);
 /*
  *  URL handlers
  */
-static const httpd_uri_t url_hello = {.uri = "/hello", .method = HTTP_GET, .handler = hello_get_handler, .user_ctx = "Hello World!"};
+static const httpd_uri_t url_target = {.uri = "/target", .method = HTTP_GET, .handler = target_get_handler, .user_ctx = "Hello World!"};
 
 /*----------------------------------------------------------------
  *
@@ -103,7 +103,7 @@ httpd_handle_t start_webserver(void)
   if ( httpd_start(&server, &config) == ESP_OK ) // Create the server
   {
     DLT(DLT_HTTP, SEND(sprintf(_xs, "Registering URI handlers");))
-    httpd_register_uri_handler(server, &url_hello);
+    httpd_register_uri_handler(server, &url_target);
 
     return server;
   }
@@ -195,7 +195,7 @@ static esp_err_t stop_webserver(httpd_handle_t server)
 
 /*----------------------------------------------------------------
  *
- * @function: hello_get_handler
+ * @function: target_get_handler
  *
  * @brief:    Entry point to handle a GET request
  *
@@ -210,7 +210,7 @@ static esp_err_t stop_webserver(httpd_handle_t server)
  *
  *------------------------------------------------------------*/
 
-static esp_err_t hello_get_handler(httpd_req_t *req)
+static esp_err_t target_get_handler(httpd_req_t *req)
 {
   char  *buf;
   size_t buf_len;
@@ -231,9 +231,12 @@ static esp_err_t hello_get_handler(httpd_req_t *req)
   httpd_resp_set_hdr(req, "Custom-Header-1", "Custom-Value-1");
   httpd_resp_set_hdr(req, "Custom-Header-2", "Custom-Value-2");
 
+  extern char ts[];
+
   /* Send response with custom headers and body set as the
    * string passed in user context*/
-  const char *resp_str = (const char *)req->user_ctx;
+  const char *resp_str = (const char *)&ts;
+  printf(ts);
   httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
 
   /* After sending the HTTP response the old HTTP request
