@@ -53,6 +53,7 @@ static char _xs[512];
 #endif
 
 static esp_err_t target_get_handler(httpd_req_t *req);                           // Respond to a request for a target display
+static esp_err_t sample_post_handler(httpd_req_t *req);                          // Sample POST handler
 esp_err_t        http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Create a URL not found handler
 
 /*
@@ -73,6 +74,7 @@ static esp_err_t stop_webserver(httpd_handle_t server);
  *  URL handlers
  */
 static const httpd_uri_t url_target = {.uri = "/target", .method = HTTP_GET, .handler = target_get_handler, .user_ctx = "Target not found"};
+static const httpd_uri_t url_sample_post_handler = {.uri = "/echo", .method = HTTP_POST, .handler = sample_post_handler, .user_ctx = NULL};
 
 /*----------------------------------------------------------------
  *
@@ -115,6 +117,7 @@ httpd_handle_t start_webserver(void)
   {
     DLT(DLT_HTTP, SEND(sprintf(_xs, "Registering URI handlers");))
     httpd_register_uri_handler(server, &url_target);
+    httpd_register_uri_handler(server, &url_sample_post_handler);
     httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
 
     return server;
@@ -233,56 +236,60 @@ static esp_err_t target_get_handler(httpd_req_t *req)
   return ESP_OK;
 }
 
-#if ( 0 )
 /*----------------------------------------------------------------
  *
- * @function: hello_post_handler
+ * @function: sample_post_handler
  *
- * @brief:    Entry point to handle a GET request
+ * @brief:    Entry point to handle a POST request
  *
  * @return:   esp_err_t, error type
  *
  *---------------------------------------------------------------
  *
- * Read the nonvol into RAM.
+ * The REST client has issued a POST request to the server (me)
  *
- * If the results is uninitalized then force the factory default.
- * Then check for out of bounds and reset those values
+ * This function copies the contents of the transfer to a buffer
+ * for later use by the application
  *
  *------------------------------------------------------------*/
-static esp_err_t echo_post_handler(httpd_req_t *req)
+static esp_err_t sample_post_handler(httpd_req_t *req)
 {
-  char buf[100];
-  int  ret, remaining = req->content_len;
+  int ret;                      // Number of bytes remaining to be proceesed
+  int remaining;                // Bytes remaining to be processed
 
+  remaining = req->content_len; // Find out how long the transfer is
+
+                                /*
+                                 *  Loop and find out how long the transfer is
+                                 */
   while ( remaining > 0 )
   {
-    /* Read the data for the request */
-    if ( (ret = httpd_req_recv(req, buf, MIN(remaining, sizeof(buf)))) <= 0 )
+    if ( (ret = httpd_req_recv(req, _xs, MIN(remaining, sizeof(_xs)))) <= 0 )
     {
       if ( ret == HTTPD_SOCK_ERR_TIMEOUT )
       {
         /* Retry receiving if timeout occurred */
         continue;
       }
-      return ESP_FAIL;
+      return ESP_FAIL; // Ran out of time waiting
     }
 
-    /* Send back the same data */
-    httpd_resp_send_chunk(req, buf, ret);
-    remaining -= ret;
+                       /*
+                        *  The buffer _xs contains (at most) sizeof(_xs) bytes
+                        *  Do womething with it
+                        */
 
-    /* Log data received */
-    ESP_LOGI(TAG, "=========== RECEIVED DATA ==========");
-    ESP_LOGI(TAG, "%.*s", ret, buf);
-    ESP_LOGI(TAG, "====================================");
+    printf("\r\n=========== RECEIVED DATA ==========\r\n");
+    printf("%.*s", ret, _xs);
+    printf("\r\n====================================\r\n");
   }
 
-  // End response
+  /*
+   *  All done, end the respone and return
+   */
   httpd_resp_send_chunk(req, NULL, 0);
   return ESP_OK;
 }
-#endif
 
 /*----------------------------------------------------------------
  *
