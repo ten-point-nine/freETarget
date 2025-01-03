@@ -227,20 +227,6 @@ static esp_err_t target_get_handler(httpd_req_t *req)
   size_t      buf_len;
   const char *resp_str = (const char *)req->user_ctx;
 
-  /* Get header value string length and allocate memory for length + 1,
-   * extra byte for null termination */
-  buf_len = httpd_req_get_hdr_value_len(req, "Host") + 1;
-  printf("\r\nbuflen %d\r\n", buf_len);
-  if ( buf_len <= sizeof(_xs) )
-  {
-    buf = &_xs;
-    if ( httpd_req_get_hdr_value_str(req, "Host", buf, buf_len) == ESP_OK )
-    {
-      printf("\r\nheader: %s\r\n", buf);
-      //      DLT(DLT_HTTP, SEND(sprintf(_xs, "Found header => Host: %s", buf);))
-    }
-  }
-
   /*
    * Send response with custom headers and body set as the
    * string passed in user context
