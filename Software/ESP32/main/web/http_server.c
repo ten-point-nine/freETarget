@@ -42,6 +42,7 @@
 #include "freETarget.h"
 #include "http_server.h"
 #include "diag_tools.h"
+#include "json.h"
 #endif
 
 #define EXAMPLE_HTTP_QUERY_KEY_MAX_LEN (64)
@@ -61,6 +62,7 @@ esp_err_t        http_404_error_handler(httpd_req_t *req, httpd_err_code_t err);
 /*
  *  Variables
  */
+extern char ts[]; // Pointer to target HTML
 
 /*
  * Local functions
@@ -219,43 +221,15 @@ static esp_err_t stop_webserver(httpd_handle_t server)
  * Then check for out of bounds and reset those values
  *
  *------------------------------------------------------------*/
-extern char ts[]; // Fake HTTP page in C Code space
-
 static esp_err_t target_get_handler(httpd_req_t *req)
 {
-  char  *buf;
-  size_t buf_len;
+  const char *resp_str;         // Reply to server
 
-  /* Get header value string length and allocate memory for length + 1,
-   * extra byte for null termination */
-  buf_len = httpd_req_get_hdr_value_len(req, "Host") + 1;
-  if ( buf_len <= sizeof(_xs) )
-  {
-    buf = &_xs;
-    if ( httpd_req_get_hdr_value_str(req, "Host", buf, buf_len) == ESP_OK )
-    {
-      //      DLT(DLT_HTTP, SEND(sprintf(_xs, "Found header => Host: %s", buf);))
-    }
-  }
+  resp_str = (const char *)&ts; // point to the target HTML file
 
-  /* Set some custom headers */
-  httpd_resp_set_hdr(req, "Custom-Header-1", "Custom-Value-1");
-  httpd_resp_set_hdr(req, "Custom-Header-2", "Custom-Value-2");
-
-  extern char ts[];
-
-  /* Send response with custom headers and body set as the
-   * string passed in user context*/
-  const char *resp_str = (const char *)&ts;
-  printf(ts);
+  httpd_resp_set_hdr(req, "FreeETarget", names[json_name_id]);
   httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
 
-  /* After sending the HTTP response the old HTTP request
-   * headers are lost. Check if HTTP request headers can be read now. */
-  if ( httpd_req_get_hdr_value_len(req, "Host") == 0 )
-  {
-    DLT(DLT_HTTP, SEND(sprintf(_xs, "Request headers lost");))
-  }
   return ESP_OK;
 }
 
