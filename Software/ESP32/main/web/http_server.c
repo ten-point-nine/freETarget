@@ -10,7 +10,7 @@
  * This is a generic HTTP web server
  *
  * The softwareis based on
- * https://github.com/espressif/esp-idf/blob/8760e6d2a7e19913bc40675dd71f374bcd51b0ae/examples/protocols/http_server/simple/main.c
+ * https://github.com/espressif/esp-idf/blob/8760e6d2a7e19913bc40675dd71f374bcd51b0ae/examples/protocols/http_server/simple/main/main.c
  *
  *
  * See http_server.h for the various compilation options
@@ -33,7 +33,7 @@
 #include "esp_tls.h"
 // #include "esp_check.h"
 
-// #include <esp_wifi.h>
+#include <esp_wifi.h>
 // #include <esp_system.h>
 // #include "nvs_flash.h"
 //  #include "esp_eth.h"
@@ -51,7 +51,8 @@ static char _xs[512];
 #define DLT()
 #endif
 
-static esp_err_t target_get_handler(httpd_req_t *req);
+static esp_err_t target_get_handler(httpd_req_t *req);                           // Respond to a request for a target display
+esp_err_t        http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Create a URL not found handler
 
 /*
  * Typedefs
@@ -69,7 +70,7 @@ static esp_err_t stop_webserver(httpd_handle_t server);
 /*
  *  URL handlers
  */
-static const httpd_uri_t url_target = {.uri = "/target", .method = HTTP_GET, .handler = target_get_handler, .user_ctx = "Hello World!"};
+static const httpd_uri_t url_target = {.uri = "/target", .method = HTTP_GET, .handler = target_get_handler, .user_ctx = "Target not found"};
 
 /*----------------------------------------------------------------
  *
@@ -85,6 +86,8 @@ static const httpd_uri_t url_target = {.uri = "/target", .method = HTTP_GET, .ha
  *
  * Initialization is done in three steps
  *  1 - Create a web socket (in this case port 80)
+ *  2 - Register the URL handlers
+ *  3 - Register a 404 (URL not found) handler
  *
  *------------------------------------------------------------*/
 httpd_handle_t start_webserver(void)
@@ -95,15 +98,22 @@ httpd_handle_t start_webserver(void)
   config.server_port      = DEFAULT_SERVER_PORT;
   config.lru_purge_enable = true;
 
+  DLT(DLT_INFO, SEND(sprintf(_xs, "start_webserver(port: %d)", config.server_port);))
+
+  /*
+   *  Create event loops
+   */
+  ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &server));
+  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
+
   /*
    * Start the web server
    */
-  DLT(DLT_HTTP, SEND(sprintf(_xs, "Starting server on port: '%d'", config.server_port);))
-
   if ( httpd_start(&server, &config) == ESP_OK ) // Create the server
   {
-    DLT(DLT_HTTP, SEND(sprintf(_xs, "Registering URI handlers");))
+    DLT(DLT_HTTP, SEND(sprintf(_xs, "Registering URL handlers");))
     httpd_register_uri_handler(server, &url_target);
+    httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
 
     return server;
   }
@@ -119,7 +129,7 @@ httpd_handle_t start_webserver(void)
  *
  * @function: disconnect_handler
  *
- * @brief:    Entry point to handle a GET request
+ * @brief:    Entry point to handle disconnections
  *
  * @return:   None
  *
@@ -197,7 +207,7 @@ static esp_err_t stop_webserver(httpd_handle_t server)
  *
  * @function: target_get_handler
  *
- * @brief:    Entry point to handle a GET request
+ * @brief:    Display a target on the page
  *
  * @return:   esp_err_t, error type
  *
@@ -209,35 +219,35 @@ static esp_err_t stop_webserver(httpd_handle_t server)
  * Then check for out of bounds and reset those values
  *
  *------------------------------------------------------------*/
+extern char ts[]; // Fake HTTP page in C Code space
 
 static esp_err_t target_get_handler(httpd_req_t *req)
 {
-  char  *buf;
-  size_t buf_len;
+  char       *buf;
+  size_t      buf_len;
+  const char *resp_str = (const char *)req->user_ctx;
 
   /* Get header value string length and allocate memory for length + 1,
    * extra byte for null termination */
   buf_len = httpd_req_get_hdr_value_len(req, "Host") + 1;
+  printf("\r\nbuflen %d\r\n", buf_len);
   if ( buf_len <= sizeof(_xs) )
   {
     buf = &_xs;
     if ( httpd_req_get_hdr_value_str(req, "Host", buf, buf_len) == ESP_OK )
     {
+      printf("\r\nheader: %s\r\n", buf);
       //      DLT(DLT_HTTP, SEND(sprintf(_xs, "Found header => Host: %s", buf);))
     }
   }
 
-  /* Set some custom headers */
-  httpd_resp_set_hdr(req, "Custom-Header-1", "Custom-Value-1");
-  httpd_resp_set_hdr(req, "Custom-Header-2", "Custom-Value-2");
+  /*
+   * Send response with custom headers and body set as the
+   * string passed in user context
+   *
+   * */
 
-  extern char ts[];
-
-  /* Send response with custom headers and body set as the
-   * string passed in user context*/
-  const char *resp_str = (const char *)&ts;
-  printf(ts);
-  httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+  httpd_resp_send((const char *)&ts, resp_str, HTTPD_RESP_USE_STRLEN);
 
   /* After sending the HTTP response the old HTTP request
    * headers are lost. Check if HTTP request headers can be read now. */
@@ -299,20 +309,29 @@ static esp_err_t echo_post_handler(httpd_req_t *req)
 }
 #endif
 
-/* This handler allows the custom error handling functionality to be
- * tested from client side. For that, when a PUT request 0 is sent to
- * URI /ctrl, the /hello and /echo URIs are unregistered and following
- * custom error handler http_404_error_handler() is registered.
- * Afterwards, when /hello or /echo is requested, this custom error
- * handler is invoked which, after sending an error message to client,
- * either closes the underlying socket (when requested URI is /echo)
- * or keeps it open (when requested URI is /hello). This allows the
- * client to infer if the custom error handler is functioning as expected
- * by observing the socket state.
- */
+/*----------------------------------------------------------------
+ *
+ * @function: http_404_error_handler
+ *
+ * @brief:    Report a 404 error to the target
+ *
+ * @return:   None
+ *
+ *---------------------------------------------------------------
+ *
+ * The user has asked for a URL that doesn't exist.
+ *
+ * This function just reports the url back to the user for
+ * correction
+ *
+ *------------------------------------------------------------*/
 esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
 {
-  /* For any other URI send 404 and close socket */
-  httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "Some 404 error message");
+  char temp[64];
+
+  strncpy(temp, req->uri, sizeof(temp));                 // Copy part of the URL for display
+  temp[63] = 0;
+  sprintf(_xs, "Error 404. Service %s not found", temp); // Error reported to the user
+  httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, _xs);
   return ESP_FAIL;
 }
