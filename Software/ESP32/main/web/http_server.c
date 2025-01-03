@@ -111,7 +111,7 @@ httpd_handle_t start_webserver(void)
    */
   if ( httpd_start(&server, &config) == ESP_OK ) // Create the server
   {
-    DLT(DLT_HTTP, SEND(sprintf(_xs, "Registering URL handlers");))
+    DLT(DLT_HTTP, SEND(sprintf(_xs, "Registering URI handlers");))
     httpd_register_uri_handler(server, &url_target);
     httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
 
@@ -223,17 +223,32 @@ extern char ts[]; // Fake HTTP page in C Code space
 
 static esp_err_t target_get_handler(httpd_req_t *req)
 {
-  char       *buf;
-  size_t      buf_len;
-  const char *resp_str = (const char *)req->user_ctx;
+  char  *buf;
+  size_t buf_len;
 
-  /*
-   * Send response with custom headers and body set as the
-   * string passed in user context
-   *
-   * */
+  /* Get header value string length and allocate memory for length + 1,
+   * extra byte for null termination */
+  buf_len = httpd_req_get_hdr_value_len(req, "Host") + 1;
+  if ( buf_len <= sizeof(_xs) )
+  {
+    buf = &_xs;
+    if ( httpd_req_get_hdr_value_str(req, "Host", buf, buf_len) == ESP_OK )
+    {
+      //      DLT(DLT_HTTP, SEND(sprintf(_xs, "Found header => Host: %s", buf);))
+    }
+  }
 
-  httpd_resp_send((const char *)&ts, resp_str, HTTPD_RESP_USE_STRLEN);
+  /* Set some custom headers */
+  httpd_resp_set_hdr(req, "Custom-Header-1", "Custom-Value-1");
+  httpd_resp_set_hdr(req, "Custom-Header-2", "Custom-Value-2");
+
+  extern char ts[];
+
+  /* Send response with custom headers and body set as the
+   * string passed in user context*/
+  const char *resp_str = (const char *)&ts;
+  printf(ts);
+  httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
 
   /* After sending the HTTP response the old HTTP request
    * headers are lost. Check if HTTP request headers can be read now. */
