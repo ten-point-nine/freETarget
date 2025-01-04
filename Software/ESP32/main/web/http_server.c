@@ -52,8 +52,12 @@ static char _xs[512];
 #define DLT()
 #endif
 
-static esp_err_t target_get_handler(httpd_req_t *req);                           // Respond to a request for a target display
-static esp_err_t sample_post_handler(httpd_req_t *req);                          // Sample POST handler
+static esp_err_t service_get_target(httpd_req_t *req);                           // Respond to a request for a target display
+static esp_err_t service_get_issf_png(httpd_req_t *req);                         // Respond to a request for a target display
+static esp_err_t service_get_post(httpd_req_t *req);
+static esp_err_t service_post_post(httpd_req_t *req);                            // Sample POST handler
+static esp_err_t service_get_post2(httpd_req_t *req);
+static esp_err_t service_post_post2(httpd_req_t *req);                           // Sample POST handler
 esp_err_t        http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Create a URL not found handler
 
 /*
@@ -63,8 +67,12 @@ esp_err_t        http_404_error_handler(httpd_req_t *req, httpd_err_code_t err);
 /*
  *  Variables
  */
-extern char ts[]; // Pointer to target HTML
-
+extern char pistol_10_html[]; // Pointer to target HTML
+extern char post_test_html[];
+extern char post_test_2_html[];
+extern char issf_png[];
+extern int  sizeof_issf_png;
+;
 /*
  * Local functions
  */
@@ -73,9 +81,16 @@ static esp_err_t stop_webserver(httpd_handle_t server);
 /*
  *  URL handlers
  */
-static const httpd_uri_t url_target = {.uri = "/target", .method = HTTP_GET, .handler = target_get_handler, .user_ctx = "Target not found"};
-static const httpd_uri_t url_sample_post_handler = {.uri = "/echo", .method = HTTP_POST, .handler = sample_post_handler, .user_ctx = NULL};
+static const httpd_uri_t url_get_target = {
+    .uri = "/target", .method = HTTP_GET, .handler = service_get_target, .user_ctx = "Target not found"};
+static const httpd_uri_t url_get_issf_png = {
+    .uri = "/issf.png", .method = HTTP_GET, .handler = service_get_issf_png, .user_ctx = "Target not found"};
 
+static const httpd_uri_t url_get_post  = {.uri = "/post", .method = HTTP_GET, .handler = service_get_post, .user_ctx = NULL};
+static const httpd_uri_t url_post_post = {.uri = "/post", .method = HTTP_POST, .handler = service_post_post, .user_ctx = NULL};
+
+static const httpd_uri_t url_get_post2  = {.uri = "/post2", .method = HTTP_GET, .handler = service_get_post2, .user_ctx = NULL};
+static const httpd_uri_t url_post_post2 = {.uri = "/post2", .method = HTTP_POST, .handler = service_post_post2, .user_ctx = NULL};
 /*----------------------------------------------------------------
  *
  * @function: start_webserver(void)
@@ -116,8 +131,15 @@ httpd_handle_t start_webserver(void)
   if ( httpd_start(&server, &config) == ESP_OK ) // Create the server
   {
     DLT(DLT_HTTP, SEND(sprintf(_xs, "Registering URI handlers");))
-    httpd_register_uri_handler(server, &url_target);
-    httpd_register_uri_handler(server, &url_sample_post_handler);
+    httpd_register_uri_handler(server, &url_get_target);
+    httpd_register_uri_handler(server, &url_get_issf_png);
+
+    httpd_register_uri_handler(server, &url_get_post);
+    httpd_register_uri_handler(server, &url_post_post);
+
+    httpd_register_uri_handler(server, &url_get_post2);
+    httpd_register_uri_handler(server, &url_post_post2);
+
     httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
 
     return server;
@@ -224,11 +246,11 @@ static esp_err_t stop_webserver(httpd_handle_t server)
  * Then check for out of bounds and reset those values
  *
  *------------------------------------------------------------*/
-static esp_err_t target_get_handler(httpd_req_t *req)
+static esp_err_t service_get_target(httpd_req_t *req)
 {
-  const char *resp_str;         // Reply to server
+  const char *resp_str;                     // Reply to server
 
-  resp_str = (const char *)&ts; // point to the target HTML file
+  resp_str = (const char *)&pistol_10_html; // point to the target HTML file
 
   httpd_resp_set_hdr(req, "FreeETarget", names[json_name_id]);
   httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
@@ -238,7 +260,63 @@ static esp_err_t target_get_handler(httpd_req_t *req)
 
 /*----------------------------------------------------------------
  *
- * @function: sample_post_handler
+ * @function: target_get_handler
+ *
+ * @brief:    Display a target on the page
+ *
+ * @return:   esp_err_t, error type
+ *
+ *---------------------------------------------------------------
+ *
+ * Read the nonvol into RAM.
+ *
+ * If the results is uninitalized then force the factory default.
+ * Then check for out of bounds and reset those values
+ *
+ *------------------------------------------------------------*/
+static esp_err_t service_get_issf_png(httpd_req_t *req)
+{
+  const char *resp_str;               // Reply to server
+
+  resp_str = (const char *)&issf_png; // point to the target HTML file
+
+  httpd_resp_set_hdr(req, "FreeETarget", names[json_name_id]);
+  httpd_resp_send(req, resp_str, sizeof_issf_png);
+
+  return ESP_OK;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: sample_post_get_handler
+ *
+ * @brief:    Use a GET to post a POST page
+ *
+ * @return:   esp_err_t, error type
+ *
+ *---------------------------------------------------------------
+ *
+ * Read the nonvol into RAM.
+ *
+ * If the results is uninitalized then force the factory default.
+ * Then check for out of bounds and reset those values
+ *
+ *------------------------------------------------------------*/
+static esp_err_t service_get_post(httpd_req_t *req)
+{
+  const char *resp_str;                     // Reply to server
+
+  resp_str = (const char *)&post_test_html; // point to the target HTML file
+
+  httpd_resp_set_hdr(req, "FreeETarget", names[json_name_id]);
+  httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+
+  return ESP_OK;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: sample_post_post_handler
  *
  * @brief:    Entry point to handle a POST request
  *
@@ -252,7 +330,90 @@ static esp_err_t target_get_handler(httpd_req_t *req)
  * for later use by the application
  *
  *------------------------------------------------------------*/
-static esp_err_t sample_post_handler(httpd_req_t *req)
+static esp_err_t service_post_post(httpd_req_t *req)
+{
+  int ret;                      // Number of bytes remaining to be proceesed
+  int remaining;                // Bytes remaining to be processed
+
+  remaining = req->content_len; // Find out how long the transfer is
+
+                                /*
+                                 *  Loop and find out how long the transfer is
+                                 */
+  while ( remaining > 0 )
+  {
+    if ( (ret = httpd_req_recv(req, _xs, MIN(remaining, sizeof(_xs)))) <= 0 )
+    {
+      if ( ret == HTTPD_SOCK_ERR_TIMEOUT )
+      {
+        /* Retry receiving if timeout occurred */
+        continue;
+      }
+      return ESP_FAIL; // Ran out of time waiting
+    }
+
+                       /*
+                        *  The buffer _xs contains (at most) sizeof(_xs) bytes
+                        *  Do womething with it
+                        */
+
+    printf("\r\n=========== RECEIVED DATA ==========\r\n");
+    printf("%.*s", ret, _xs);
+    printf("\r\n====================================\r\n");
+  }
+
+  /*
+   *  All done, end the respone and return
+   */
+  httpd_resp_send_chunk(req, NULL, 0);
+  return ESP_OK;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: sample_post_get_handler
+ *
+ * @brief:    Use a GET to post a POST page
+ *
+ * @return:   esp_err_t, error type
+ *
+ *---------------------------------------------------------------
+ *
+ * Read the nonvol into RAM.
+ *
+ * If the results is uninitalized then force the factory default.
+ * Then check for out of bounds and reset those values
+ *
+ *------------------------------------------------------------*/
+static esp_err_t service_get_post2(httpd_req_t *req)
+{
+  const char *resp_str;                       // Reply to server
+
+  resp_str = (const char *)&post_test_2_html; // point to the target HTML file
+
+  httpd_resp_set_hdr(req, "FreeETarget", names[json_name_id]);
+  httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+
+  return ESP_OK;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: sample_post_post_handler
+ *
+ * @brief:    Entry point to handle a POST request
+ *
+ * @return:   esp_err_t, error type
+ *
+ *---------------------------------------------------------------
+ *
+ * The REST client has issued a POST request to the server (me)
+ *
+ * This function copies the contents of the transfer to a buffer
+ * for later use by the application
+ *
+ *------------------------------------------------------------*/
+static esp_err_t service_post_post2(httpd_req_t *req)
 {
   int ret;                      // Number of bytes remaining to be proceesed
   int remaining;                // Bytes remaining to be processed

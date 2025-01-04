@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "toNumbers": {
+      "commandName": "Project",
+      "commandLineArgs": "e:/issf.png e:/issf.c"
+    }
+  }
+}

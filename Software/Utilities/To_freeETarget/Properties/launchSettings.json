@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "To_freeETarget": {
+      "commandName": "Project",
+      "commandLineArgs": "e:/Pistol_10.html e:/Pistol_10.c "
+    }
+  }
+}
