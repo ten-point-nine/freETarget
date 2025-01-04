@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------
  *
- * http_test.h
+ * http_server.h
  *
- * Header file for HTTP test functions
+ * Header file for http server function
  *
  *---------------------------------------------------------------*/
-#ifndef _HTTP_TEST_H_
-#define _HTTP_TEST_H_
+#ifndef _HTTP_SERVER_H_
+#define _HTTP_SERVEr_H_
 
 /*
  * Global functions
