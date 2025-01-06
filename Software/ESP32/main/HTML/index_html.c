@@ -1,4 +1,4 @@
-char index_html[] =
+const char index_html[] =
     "<!DOCTYPE html>"
     "<html>"
     "<head>"
@@ -30,8 +30,9 @@ char index_html[] =
     "prototype.addText=function(t,e,n,o,g,l){var a=new "
     "r.SvgElement;a.elementType=i.SvgElementType.Text,a.x=t,a.y=e,a.text=n,a.fontSize=o,l&&(a.fontWeight=l),g&&(a.fill=g),this.elements."
     "push(a)},t.prototype.toString=function(){var t='<svg viewBox=\"0 0 '.concat(this.width,\" \").concat(this.height,'\" "
-    "xmlns=\"http://www.w3.org/2000/svg\">');this.textFont&&(t+=\"<style>\n            text {\n                font-family: "
-    "\".concat(this.textFont,\";\n            }\n            </style>\"));for(var e=0,n=this.elements;e<n.length;e++){var "
+    "xmlns=\"http://www.w3.org/2000/svg\">');"
+    "this.textFont&&(t+=\"<style>\\n  text { font-family: \".concat(this.textFont,\";}\\n</style>\")"
+    ");for(var e=0,n=this.elements;e<n.length;e++){var "
     "r=n[e];switch(r.elementType){case i.SvgElementType.Rectangle:t+='<rect x=\"'.concat(r.x,'\" y=\"').concat(r.y,'\" "
     "width=\"').concat(r.width,'\" height=\"').concat(r.height,'\"'),r.fill&&(t+=' fill=\"'.concat(r.fill,'\"')),t+=\" />\";break;case "
     "i.SvgElementType.Circle:t+='<circle cx=\"'.concat(r.x,'\" cy=\"').concat(r.y,'\" r=\"').concat(r.r,'\"'),r.fill&&(t+=' "

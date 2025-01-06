@@ -63,13 +63,14 @@ esp_err_t        http_404_error_handler(httpd_req_t *req, httpd_err_code_t err);
 /*
  *  Variables
  */
-extern char index_html[];     // Pointer to target HTML
-extern char pistol_10_html[]; // Pointer to target HTML
-extern char post_test_html[];
-extern char post_test_2_html[];
-extern char issf_png[];
-extern int  sizeof_issf_png;
-;
+extern const char index_html[];     // Pointer to target HTML
+extern const char pistol_10_html[]; // Pointer to target HTML
+extern const char post_test_html[];
+extern const char post_test_2_html[];
+extern const char issf_png[];
+extern const int  sizeof_issf_png;
+extern const int  sizeof_index_html;
+
 /*
  * Local functions
  */
