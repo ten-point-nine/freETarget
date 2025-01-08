@@ -51,6 +51,7 @@ extern const json_message_t JSON[];
 #define URL_SIZE     128                         // Reserve 129 bytes for server URL
 #define KEY_SIZE     31                          // Key size for remote access
 #define SMALL_STRING 32                          // Small strings are 32 bytes long
+#define LARGE_STRING 128                         // Large strings are 128 bytes long
 #define IP_SIZE      sizeof("192.168.100.100\0") // Reserved space of IP address
 
 /*

@@ -107,9 +107,7 @@ httpd_handle_t start_webserver(void)
   {
     DLT(DLT_HTTP, SEND(sprintf(_xs, "Registering URI handlers");))
     register_services(server);
-
     httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
-
     return server;
   }
 
@@ -217,10 +215,99 @@ static esp_err_t stop_webserver(httpd_handle_t server)
 esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
 {
   char temp[64];
+  int  i;
 
-  strncpy(temp, req->uri, sizeof(temp));                 // Copy part of the URL for display
-  temp[63] = 0;
-  sprintf(_xs, "Error 404. Service %s not found", temp); // Error reported to the user
+  strncpy(temp, req->uri, sizeof(temp));                          // Copy part of the URL for display
+  sprintf(_xs, "Error 404. Service %s not found", temp);          // Error reported to the user
+  strncat(_xs, "<br>Valid URLs<br/>", sizeof(_xs) - strlen(_xs)); // Error reported to the user
+  i = 0;
+  while ( url_list[i] != 0 )
+  {
+    strncat(_xs, "<br>", sizeof(_xs) - strlen(_xs));
+    strncat(_xs, url_list[i]->uri, sizeof(_xs) - strlen(_xs));
+    i++;
+  }
   httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, _xs);
   return ESP_FAIL;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: get_url_arg
+ *
+ * @brief:    Extract the arguements from the URL
+ *
+ * @return:   Number of characters extracted
+ *
+ *---------------------------------------------------------------
+ *
+ * The URL arrives at the target like
+ *
+ * /target?sch,i.html?_from=R40&_trksid=p4432023.m570.l1313&_nkw=bob&_sacat=0
+ *
+ * This function takes the URL apart starting at the ? and
+ * returns the rest of the string
+ *
+ *------------------------------------------------------------*/
+int get_url_arg(char *req_url,     // URL and arguements as from web page
+                char *reply,       // Whare to put the reply
+                int   sizeof_reply // How much space do we have );
+)
+{
+  int  i;                          // Iteration counter
+  char ch;                         // Working character
+  char temp[5];                    // Place to put working number
+
+  /*
+   *  Find out where the arguements start (just after the ?)
+   */
+  i = 0;
+  while ( *req_url != 0 )
+  {
+    if ( *req_url == '?' ) // Found the ?
+    {
+      break;               // Yes, bail
+    }
+    req_url++;             // No, keep looking
+    i++;
+    if ( i >= sizeof_reply )
+    {
+      return -1;           // Ran out of space
+    }
+  }
+  req_url++;               // Move past the?
+
+                           /*
+                            * Copy over the results
+                            */
+  while ( *req_url != 0 )
+  {
+    ch = *req_url;   // Pick up the next character
+    if ( ch == '%' ) // Is it an escape?
+    {
+      temp[0] = '0';
+      temp[1] = 'X';
+      req_url++;     // Go to the next character
+      temp[2] = *req_url;
+      req_url++;
+      temp[3] = *req_url;
+      req_url++;
+      temp[4] = 0;
+      ch      = strtol(temp, NULL, 16);
+    }
+    req_url++;
+    *reply = ch;
+    reply++;
+    i++;
+    if ( i >= sizeof_reply )
+    {
+      return -1;
+    }
+  }
+
+  /*
+   *   We have moved the string
+   */
+  *reply = 0;
+  return i;
 }

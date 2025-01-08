@@ -16,6 +16,7 @@ void           disconnect_handler(void *arg, esp_event_base_t event_base, int32_
                                   void *event_data);                                              // What to do when the server disconnects
 
 void connect_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data); // What to do when a connection arrives
+int  get_url_arg(char *req_url, char *reply, int sizeof_reply);
 
 /*
  * #defines

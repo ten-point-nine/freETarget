@@ -48,6 +48,7 @@
 #define EXAMPLE_HTTP_QUERY_KEY_MAX_LEN (64)
 
 static esp_err_t service_get_index(httpd_req_t *req);                            // Standard HTML Index
+static esp_err_t service_get_who(httpd_req_t *req);                              // Display target information
 static esp_err_t service_get_target(httpd_req_t *req);                           // Respond to a request for a target display
 static esp_err_t service_get_issf_png(httpd_req_t *req);                         // Respond to a request for a target display
 static esp_err_t service_get_post(httpd_req_t *req);
@@ -80,18 +81,10 @@ static esp_err_t stop_webserver(httpd_handle_t server);
  *  URL handlers
  */
 static const httpd_uri_t url_get_index = {.uri = "/index", .method = HTTP_GET, .handler = service_get_index, .user_ctx = "Index not found"};
+static const httpd_uri_t url_get_who   = {.uri = "/who", .method = HTTP_GET, .handler = service_get_who, .user_ctx = "Timelord"};
+static const httpd_uri_t url_get_favicon = {.uri = "/favicon.ico", .method = HTTP_GET, .handler = service_get_issf_png, .user_ctx = NULL};
 
-static const httpd_uri_t url_get_target = {
-    .uri = "/target", .method = HTTP_GET, .handler = service_get_target, .user_ctx = "Target not found"};
-static const httpd_uri_t url_get_favicon  = {.uri = "/favicon.ico", .method = HTTP_GET, .handler = service_get_issf_png, .user_ctx = NULL};
-static const httpd_uri_t url_get_issf_png = {
-    .uri = "/issf.png", .method = HTTP_GET, .handler = service_get_issf_png, .user_ctx = "Target not found"};
-
-static const httpd_uri_t url_get_post  = {.uri = "/post", .method = HTTP_GET, .handler = service_get_post, .user_ctx = NULL};
-static const httpd_uri_t url_post_post = {.uri = "/post", .method = HTTP_POST, .handler = service_post_post, .user_ctx = NULL};
-
-static const httpd_uri_t url_get_post2  = {.uri = "/post2", .method = HTTP_GET, .handler = service_get_post2, .user_ctx = NULL};
-static const httpd_uri_t url_post_post2 = {.uri = "/post2", .method = HTTP_POST, .handler = service_post_post2, .user_ctx = NULL};
+const httpd_uri_t *url_list[] = {&url_get_index, &url_get_who, &url_get_favicon, 0};
 
 /*----------------------------------------------------------------
  *
@@ -112,17 +105,14 @@ static const httpd_uri_t url_post_post2 = {.uri = "/post2", .method = HTTP_POST,
 void register_services(httpd_handle_t server // Pointer to active server
 )
 {
-  httpd_register_uri_handler(server, &url_get_index);
+  int i;
 
-  httpd_register_uri_handler(server, &url_get_target);
-  httpd_register_uri_handler(server, &url_get_favicon);
-  httpd_register_uri_handler(server, &url_get_issf_png);
-
-  httpd_register_uri_handler(server, &url_get_post);
-  httpd_register_uri_handler(server, &url_post_post);
-
-  httpd_register_uri_handler(server, &url_get_post2);
-  httpd_register_uri_handler(server, &url_post_post2);
+  i = 0;
+  while ( url_list[i] != 0 )
+  {
+    httpd_register_uri_handler(server, url_list[i]);
+    i++;
+  }
   return;
 }
 
@@ -147,7 +137,6 @@ static esp_err_t service_get_index(httpd_req_t *req)
   const char *resp_str;                 // Reply to server
 
   resp_str = (const char *)&index_html; // point to the target HTML file
-
   httpd_resp_set_hdr(req, "index", names[json_name_id]);
   httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
 
@@ -170,9 +159,9 @@ static esp_err_t service_get_index(httpd_req_t *req)
 static esp_err_t service_get_target(httpd_req_t *req)
 {
   const char *resp_str;                     // Reply to server
+  char        reply[LARGE_STRING];
 
   resp_str = (const char *)&pistol_10_html; // point to the target HTML file
-
   httpd_resp_set_hdr(req, "FreeETarget", names[json_name_id]);
   httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
 
@@ -361,5 +350,27 @@ static esp_err_t service_post_post2(httpd_req_t *req)
    *  All done, end the respone and return
    */
   httpd_resp_send_chunk(req, NULL, 0);
+  return ESP_OK;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: service_get_who
+ *
+ * @brief:    Display the target information
+ *
+ * @return:   esp_err_t, error type
+ *
+ *---------------------------------------------------------------
+ *
+ * Return the target name and other information
+ *
+ *------------------------------------------------------------*/
+static esp_err_t service_get_who(httpd_req_t *req)
+{
+  httpd_resp_set_hdr(req, "FreeETarget", names[json_name_id]);
+
+  sprintf(_xs, "Target ID: %s<br>Verson: %s", names[json_name_id], SOFTWARE_VERSION); // Fill in the target name
+  httpd_resp_send(req, _xs, HTTPD_RESP_USE_STRLEN);
   return ESP_OK;
 }
