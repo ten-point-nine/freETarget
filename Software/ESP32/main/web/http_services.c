@@ -20,30 +20,17 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-// #include <esp_log.h>
-//  #include <nvs_flash.h>
 #include <sys/param.h>
-// #include "esp_netif.h"
-// #include "protocol_examples_common.h"
-// #include "protocol_examples_utils.h"
-// #include "esp_tls_crypto.h"
 #include "esp_http_server.h"
 #include "esp_event.h"
 #include "esp_netif.h"
 #include "esp_tls.h"
-// #include "esp_check.h"
-
 #include <esp_wifi.h>
-// #include <esp_system.h>
-// #include "nvs_flash.h"
-//  #include "esp_eth.h"
 
-#if ( !BRIAN )
 #include "freETarget.h"
 #include "http_server.h"
 #include "diag_tools.h"
 #include "json.h"
-#endif
 
 #define EXAMPLE_HTTP_QUERY_KEY_MAX_LEN (64)
 
@@ -370,7 +357,13 @@ static esp_err_t service_get_who(httpd_req_t *req)
 {
   httpd_resp_set_hdr(req, "FreeETarget", names[json_name_id]);
 
-  sprintf(_xs, "Target ID: %s<br>Verson: %s", names[json_name_id], SOFTWARE_VERSION); // Fill in the target name
+  sprintf(_xs,
+          "Target ID: %s"
+          "<br>Verson: %s"
+          "<br>Athelete: %s"
+          "<br>Target: %s"
+          "<br>Event: %s",
+          names[json_name_id], SOFTWARE_VERSION, json_athlete, json_target_name, json_event); // Fill in the target name
   httpd_resp_send(req, _xs, HTTPD_RESP_USE_STRLEN);
   return ESP_OK;
 }
