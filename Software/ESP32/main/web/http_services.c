@@ -358,12 +358,13 @@ static esp_err_t service_get_who(httpd_req_t *req)
   httpd_resp_set_hdr(req, "FreeETarget", names[json_name_id]);
 
   sprintf(_xs,
-          "Target ID: %s"
+          "Serial Number: %d"
+          "<br>Target ID: %s"
           "<br>Verson: %s"
           "<br>Athelete: %s"
           "<br>Target: %s"
           "<br>Event: %s",
-          names[json_name_id], SOFTWARE_VERSION, json_athlete, json_target_name, json_event); // Fill in the target name
+          json_serial_number, names[json_name_id], SOFTWARE_VERSION, json_athlete, json_target_name, json_event); // Fill in the target name
   httpd_resp_send(req, _xs, HTTPD_RESP_USE_STRLEN);
   return ESP_OK;
 }
