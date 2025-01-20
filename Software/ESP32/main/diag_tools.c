@@ -278,6 +278,7 @@ bool factory_test(void)
   /*
    *  Begin test
    */
+  run_state = IN_TEST;
   arm_timers();
 
   /*

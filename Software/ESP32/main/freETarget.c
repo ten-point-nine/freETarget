@@ -424,7 +424,7 @@ unsigned int reduce(void)
      */
     if ( location != MISS ) // Was it a miss or face strike?
     {
-      send_score(&record[shot_out], shot_out);
+      send_score(&record[shot_out], shot_out, NOT_MISSED_SHOT);
 
       /*
        *  Advance the paper
@@ -449,13 +449,13 @@ unsigned int reduce(void)
         }
       }
     }
-    else                                      // We have a miss
+    else                                                    // We have a miss
     {
       DLT(DLT_INFO, show_sensor_status(record[shot_out].sensor_status);)
       set_status_LED(LED_MISS);
-      send_miss(&record[shot_out], shot_out); // Show a miss
+      send_score(&record[shot_out], shot_out, MISSED_SHOT); // Show a miss
     }
-    shot_out = (shot_out + 1) % SHOT_SPACE;   // Increment to the next shot
+    shot_out = (shot_out + 1) % SHOT_SPACE;                 // Increment to the next shot
   }
 
   /*
@@ -674,7 +674,7 @@ void rapid_fire_task(void)
         while ( rapid_count < json_rapid_count )                               // Send incomplete as misses
         {
           record[rapid_count].shot_time = 0;                                   // Fake the time
-          send_miss(&record[rapid_count], rapid_count);
+          send_score(&record[rapid_count], rapid_count, MISSED_SHOT);          // and show as a miss
           rapid_count = (rapid_count + 1) % SHOT_SPACE;
         }
 
