@@ -135,6 +135,8 @@ void WiFi_init(void)
  * The target broadcasts an SSID and lets clients connect to it.  For example
  * FET-TARGET
  *
+ * {"NAME_ID":99, "NAME_TEXT":"MyTarget"}
+ *
  *******************************************************************************/
 void WiFi_AP_init(void)
 {

@@ -514,7 +514,11 @@ void send_score(shot_record_t *shot,        //  record
   SEND(sprintf(_xs, "\r\n{");)
 
 #if ( S_SHOT )
-  SEND(sprintf(_xs, "\"shot\":%d, \"miss\":%d", shot_number, miss);)
+  SEND(sprintf(_xs, "\"shot\":%d", shot_number);)
+  if ( miss == MISSED_SHOT )
+  {
+    SEND(sprintf(_xs, ", \"miss\":1");)
+  }
   if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF) )
   {
     if ( json_name_id != JSON_NAME_TEXT )
