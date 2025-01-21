@@ -692,6 +692,10 @@ static void set_trace(int trace)         // Trace mask on or off
 {
   unsigned int i;
 
+  if ( trace == 0 )                      // Used to turn off tracing
+  {
+    is_trace = 0;
+  }
   is_trace ^= trace;                     // XOR the input
   is_trace |= (DLT_CRITICAL | DLT_INFO); // Info and critical is always enabled
 

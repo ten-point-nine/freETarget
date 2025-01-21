@@ -538,6 +538,9 @@ void read_timers(int timer[])
  * Step Start = Starting number of pulses
  * Step Ramp =  Time period to reduce each cycle while starting
  * Step Time =  Period on/off of each pulse (50% duty cycle)
+ * MFS_HOLD_C = STEPPER_DRIVE  26 // The output drives a stepper motor
+ * MFS_HOLD_D = STEPPER_ENABLE 28 // The output enables the stepper motor
+ *
  * Paper Time = 0
  * {"MFS_HOLD_C":26, "MFS_HOLD_D":28, "STEP_START":200, "STEP_RAMP": 5, "STEP_TIME":30, "STEP_COUNT": 200, "PAPER_TIME":0}
  *
@@ -733,7 +736,7 @@ int is_paper_on(void) // Return true if there is still time
 
 void stepper_pulse(void)
 {
-  gpio_set_level(HOLD_C_GPIO, STEP_ON);
+  gpio_set_level(HOLD_C_GPIO, STEP_ON); // Pulse the stepper drive
   gpio_set_level(HOLD_C_GPIO, STEP_OFF);
 
   step_time = step_time - json_step_ramp;
@@ -743,7 +746,7 @@ void stepper_pulse(void)
     step_time = json_step_time;
   }
 
-  DLT(DLT_DIAG, SEND(sprintf(_xs, "step_time %d", step_time);))
+  DLT(DLT_DIAG, SEND(sprintf(_xs, "step_time %d   step_count: %d", step_time, step_count);))
   timer_new(&paper_time, MS_TO_TICKS(step_time));
 
   if ( step_count != 0 )
