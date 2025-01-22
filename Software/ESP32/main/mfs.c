@@ -462,7 +462,7 @@ static void mfs_pc_test(void)
   sign                = ((esp_random() & 1) == 0) ? 1 : -1;
   record[test_shot].y = (float)(sign * temp);
   s_of_sound          = speed_of_sound(temperature_C(), humidity_RH());
-  send_score(&record[test_shot], test_shot);
+  send_score(&record[test_shot], test_shot, NOT_MISSED_SHOT);
   test_shot++;
 
   return;

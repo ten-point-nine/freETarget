@@ -135,6 +135,8 @@ void WiFi_init(void)
  * The target broadcasts an SSID and lets clients connect to it.  For example
  * FET-TARGET
  *
+ * {"NAME_ID":99, "NAME_TEXT":"MyTarget"}
+ *
  *******************************************************************************/
 void WiFi_AP_init(void)
 {
@@ -167,7 +169,21 @@ void WiFi_AP_init(void)
 
   esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFi_event_handler, NULL, NULL);
 
-  sprintf((char *)&WiFi_config.ap.ssid, "FET-%s", names[json_name_id]); // SSID Name ->FET-name
+  if ( json_name_id != JSON_NAME_TEXT )
+  {
+    sprintf((char *)&WiFi_config.ap.ssid, "FET-%s", names[json_name_id]); // SSID Name ->FET-name
+  }
+  else
+  {
+    if ( json_name_text[0] != 0 )
+    {
+      sprintf((char *)&WiFi_config.ap.ssid, "FET-%s", json_name_text);    // SSID Name ->FET-user-defined-name
+    }
+    else
+    {
+      sprintf((char *)&WiFi_config.ap.ssid, "FET-UDEFINED");              // SSID Name ->FET-UNDEFINED
+    }
+  }
   WiFi_config.ap.ssid_len = strlen(json_wifi_ssid);
   WiFi_config.ap.channel  = json_wifi_channel;
   strcpy((char *)&WiFi_config.ap.password, json_wifi_pwd);

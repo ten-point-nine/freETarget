@@ -8,6 +8,7 @@
 #include "esp_timer.h"
 #include "nvs_flash.h"
 #include "nvs.h"
+#include "string.h"
 
 #include "freETarget.h"
 #include "diag_tools.h"
@@ -102,6 +103,7 @@ int           json_wifi_reset_first;     // Reset the target on first connection
 char          json_wifi_ip[IP_SIZE];     // User defined IP address
 int           json_paper_shot;           // How many shots before advancing paper
 int           json_aux_port_enable;      // Enable the AUX port only if there is Aux hardware installed
+char          json_name_text[SSID_SIZE]; // User defined target name
 
 void        show_echo(void);             // Display the current settings
 static void show_test(int v);            // Execute the self test once
@@ -132,6 +134,7 @@ const json_message_t JSON[] = {
 
     {"\"MIN_RING_TIME\":",   &json_min_ring_time,    0,                IS_INT32,             0,                  NONVOL_MIN_RING_TIME,    500,        0}, // Minimum time for ringing to stop (ms)
     {"\"NAME_ID\":",         &json_name_id,          0,                IS_INT32,             &show_names,        NONVOL_NAME_ID,          0,          0}, // Give the board a name
+    {"\"NAME_TEXT\":",       (int *)&json_name_text, 0,                IS_TEXT + SSID_SIZE,  &show_names,        NONVOL_NAME_TEXT,        0,          8}, // Override the fixed nameIDs
     {"\"PAPER_ECO\":",       &json_paper_eco,        0,                IS_INT32,             0,                  NONVOL_PAPER_ECO,        0,          0}, // Ony advance the paper is in the black
     {"\"PAPER_SHOT\":",      &json_paper_shot,       0,                IS_INT32,             0,                  NONVOL_PAPER_SHOT,       0,          5}, // How many shots before advancing paper
     {"\"PAPER_TIME\":",      &json_paper_time,       0,                IS_INT32,             0,                  NONVOL_PAPER_TIME,       500,        0}, // Set the paper advance time
@@ -498,11 +501,18 @@ void show_echo(void)
 
   if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF) )
   {
-    SEND(sprintf(_xs, "\r\n{\r\n\"NAME\":\"%s\", \r\n", names[json_name_id]);)
+    if ( json_name_id != JSON_NAME_TEXT )
+    {
+      SEND(sprintf(_xs, "\r\n{\r\n\"NAME\":           \"%s\", \r\n", names[json_name_id]);)
+    }
+    else
+    {
+      SEND(sprintf(_xs, "\r\n{\r\n\"NAME\":           \"%s\", \r\n", json_name_text);)
+    }
   }
   else
   {
-    SEND(sprintf(_xs, "\r\n{\r\n\"NAME\":\"%s\", \r\n", names[json_name_id + my_ring]);)
+    SEND(sprintf(_xs, "\r\n{\r\n\"NAME\":           \"%s\", \r\n", names[json_name_id + my_ring]);)
   }
 
   /*
@@ -521,21 +531,13 @@ void show_echo(void)
 
         case IS_TEXT:
         case IS_SECRET:
-          j = 0;
-          while ( *((char *)(JSON[i].value) + j) != 0 )
+          strcpy(str_c, (char *)(JSON[i].value));
+          if ( (JSON[i].convert & IS_MASK) == IS_SECRET )
           {
-            if ( (JSON[i].convert & IS_MASK) == IS_SECRET )
-            {
-              str_c[j] = '*';
-            }
-            else
-            {
-              str_c[j] = *((char *)(JSON[i].value) + j);
-            }
-            j++;
+            strncpy(str_c, "*************************************************", strlen(str_c));
           }
-          str_c[j] = 0;
-          SEND(sprintf(_xs, "%s \"%s\", \r\n", JSON[i].token, str_c);)
+
+          SEND(sprintf(_xs, "%-18s \"%s\", \r\n", JSON[i].token, str_c);)
           break;
 
         case IS_MFS: // Covert to a switch ID
@@ -644,13 +646,22 @@ static void show_names(int v)
     return;
   }
 
-  SEND(sprintf(_xs, "\r\nNames\r\n");)
+  SEND(sprintf(_xs, "\r\nTarget Names\r\n");)
 
   i = 0;
   while ( names[i] != 0 )
   {
     SEND(sprintf(_xs, "%d: \"%s\", \r\n", i, names[i]);)
     i++;
+  }
+
+  if ( json_name_text[0] != 0 )
+  {
+    SEND(sprintf(_xs, "%d: \"%s\", \r\n", JSON_NAME_TEXT, json_name_text);) // Look for a user defined name
+  }
+  else
+  {
+    SEND(sprintf(_xs, "%d: \"uassigned\", \r\n", JSON_NAME_TEXT);)          // Look for a user defined name
   }
 
   /*
@@ -681,6 +692,10 @@ static void set_trace(int trace)         // Trace mask on or off
 {
   unsigned int i;
 
+  if ( trace == 0 )                      // Used to turn off tracing
+  {
+    is_trace = 0;
+  }
   is_trace ^= trace;                     // XOR the input
   is_trace |= (DLT_CRITICAL | DLT_INFO); // Info and critical is always enabled
 

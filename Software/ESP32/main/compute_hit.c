@@ -458,12 +458,13 @@ bool find_xy_3D(sensor_t *s,             // Sensor to be operatated on
  *
  *--------------------------------------------------------------*/
 
-void send_score(shot_record_t *shot,       //  record
-                unsigned int   shot_number // What shot are we
+void send_score(shot_record_t *shot,        //  record
+                unsigned int   shot_number, // What shot are we
+                bool           miss         // TRUE if the shot was a miss
 )
 {
-  double x, y;                             // Shot location in mm X, Y before rotation
-  double real_x, real_y;                   // Shot location in mm X, Y before remap
+  double x, y;                              // Shot location in mm X, Y before rotation
+  double real_x, real_y;                    // Shot location in mm X, Y before remap
   double radius;
   double angle;
 
@@ -513,13 +514,32 @@ void send_score(shot_record_t *shot,       //  record
   SEND(sprintf(_xs, "\r\n{");)
 
 #if ( S_SHOT )
+  SEND(sprintf(_xs, "\"shot\":%d", shot_number);)
+  if ( miss == MISSED_SHOT )
+  {
+    SEND(sprintf(_xs, ", \"miss\":1");)
+  }
   if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF) )
   {
-    SEND(sprintf(_xs, "\"shot\":%d, \"miss\":0, \"name\":\"%s\"", shot_number + 1, names[json_name_id]);)
+    if ( json_name_id != JSON_NAME_TEXT )
+    {
+      SEND(sprintf(_xs, ", \"name\":\"%s\"", names[json_name_id]);)
+    }
+    else
+    {
+      if ( json_name_text[0] != 0 )
+      {
+        SEND(sprintf(_xs, ", \"name\":\"%s\"", json_name_text);)
+      }
+      else
+      {
+        SEND(sprintf(_xs, ", \"name\":\"UNDEFINED_NAME\"");)
+      }
+    }
   }
   else
   {
-    SEND(sprintf(_xs, "\"shot\":%d, \"name\":\"%d\"", shot_number, my_ring);)
+    SEND(sprintf(_xs, ", \"name\":\"%d\"", my_ring);)
   }
   SEND(sprintf(_xs, ", \"time\":%6.2f ", SHOT_TIME_TO_SECONDS(shot->shot_time));)
 #endif
@@ -612,87 +632,6 @@ void send_replay(shot_record_t *shot, //  record
   /*
    * All done, return
    */
-  return;
-}
-
-/*----------------------------------------------------------------
- *
- * @function: send_miss
- *
- * @brief: Send out a miss message
- *
- * @return: None
- *
- *----------------------------------------------------------------
- *
- * This is an abbreviated score message to show a miss
- *
- *--------------------------------------------------------------*/
-
-void send_miss(shot_record_t *shot, // record record
-               unsigned int   shot_number)
-{
-  if ( json_send_miss == 0 )        // If send_miss not enabled
-  {
-    return;                         // Do nothing
-  }
-
-  /*
-   * Grab the token ring if needed
-   */
-  if ( json_token != TOKEN_NONE )
-  {
-    while ( my_ring != whos_ring )
-    {
-      token_take(); // Grab the token ring
-      timer_new(&wdt, ONE_SECOND);
-      while ( (wdt != 0) && (my_ring == whos_ring) )
-      {
-        token_poll();
-      }
-    }
-  }
-
-  /*
-   *  Display the results
-   */
-  SEND(sprintf(_xs, "\r\n{");)
-
-#if ( S_SHOT )
-  if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF) )
-  {
-    SEND(sprintf(_xs, "\"shot\":%d, \"miss\":1, \"name\":\"%s\"", shot_number, names[json_name_id]);)
-  }
-  else
-  {
-    SEND(sprintf(_xs, "\"shot\":%d, \"miss\":1, \"name\":\"%d\"", shot_number, my_ring);)
-  }
-  SEND(sprintf(_xs, ", \"time\":%6.2f ", SHOT_TIME_TO_SECONDS(shot->shot_time));)
-#endif
-
-#if ( S_XY )
-  if ( json_token == TOKEN_NONE )
-  {
-    SEND(sprintf(_xs, ", \"x\":0, \"y\":0 ");)
-  }
-#endif
-
-#if ( S_TIMERS )
-  if ( json_token == TOKEN_NONE )
-  {
-    SEND(sprintf(_xs, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d ", (int)shot->timer_count[N], (int)shot->timer_count[E],
-                 (int)shot->timer_count[S], (int)shot->timer_count[W]);)
-    SEND(sprintf(_xs, ", \"face\":%d ", shot->face_strike);)
-  }
-#endif
-
-  SEND(sprintf(_xs, "}\n\r");)
-
-  /*
-   * All done, go home
-   */
-  token_give();
-  set_status_LED(LED_READY);
   return;
 }
 
