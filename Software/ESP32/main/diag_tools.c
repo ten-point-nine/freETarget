@@ -640,7 +640,9 @@ void show_sensor_fault(unsigned int sensor_status)
 {
   unsigned int i;
 
-  for ( i = N; i <= W_HI; i++ )
+  DLT(DLT_DEBUG, SEND(sprintf(_xs, "show_sensor_fault()");))
+
+  for ( i = N; i <= W; i++ )
   {
     if ( (sensor_status & (1 << i)) == 0 )
     {
@@ -748,7 +750,7 @@ void         heartbeat(void)
     i++;
   }
 
-  DLT(DLT_HEARTBEAT, SEND(sprintf(_xs, "HB 60s.  run_state: 0X%02X%s", run_state, s);))
+  DLT(DLT_HEARTBEAT, SEND(sprintf(_xs, "Heartbeat: 60s  run_state: 0X%02X%s", run_state, s);))
 
   return;
 }
