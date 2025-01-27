@@ -98,7 +98,7 @@ void read_nonvol(void)
   i = 0;
   while ( JSON[i].token != 0 )
   {
-    if ( (JSON[i].value != 0) || (JSON[i].d_value != 0) ) // There is a value stored in memory
+    if ( JSON[i].value != 0 ) // There is a value stored in memory
     {
       switch ( JSON[i].convert & IS_MASK )
       {
@@ -132,11 +132,11 @@ void read_nonvol(void)
           if ( JSON[i].non_vol != 0 )
           {
             nvs_get_i32(my_handle, JSON[i].non_vol, &x); // Read in the value as an integer
-            *JSON[i].d_value = (float)x / 1000.0;
+            *(double *)(JSON[i].value) = (float)x / 1000.0;
           }
           else
           {
-            *JSON[i].d_value = (double)JSON[i].init_value / 1000.0;
+            *(double *)(JSON[i].value) = (double)JSON[i].init_value / 1000.0;
           }
           break;
       }

@@ -14,7 +14,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"5.2.21 January 24, 2025\""
+#define SOFTWARE_VERSION "\"5.2.22 January 27, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 
 #define REV_500   500    // ESP32
@@ -50,6 +50,10 @@
  */
 #define SAMPLE_CALCULATIONS  (1 == 0) // Trace the COUNTER values
 #define COMPENSATE_RISE_TIME (1 == 1) // Use PCNT4-7 to compensate for rise time
+#define LONG_TEXT            512      // Long text strings arfe 512 long
+#define MEDIUM_TEXT          256      // Medimum length strings are 256 long
+#define SHORT_TEXT           128      // Short text strings are 128 long
+#define TINY_TEXT            64       // Tiny text strings are 64 long
 
 /*
  * Oscillator Features

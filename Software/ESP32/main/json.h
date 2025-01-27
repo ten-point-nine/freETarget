@@ -21,10 +21,9 @@ void show_echo(void);          // Display the settings
  */
 typedef struct
 {
-  char   *token;    // JSON token string, ex "RADIUS":
-  int    *value;    // Where value is stored
-  double *d_value;  // Where value is stored
-  int     convert;  // Conversion type
+  char *token;      // JSON token string, ex "RADIUS":
+  int  *value;      // Where value is stored (cast to (float*) if needed)
+  int   convert;    // Conversion type
   void (*f)(int x); // Function to execute with message
   char *non_vol;    // Storage in NON-VOL
   int   init_value; // Initial Value

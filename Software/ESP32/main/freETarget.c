@@ -92,7 +92,7 @@ const char *names[] = {"TARGET",                    //  0
 
 const char to_hex[] = "0123456789ABCDEF"; // Quick Hex to ASCII
 
-char _xs[512];                            // Holding buffer for sprintf
+char _xs[LONG_TEXT];                      // Holding buffer for sprintf
 
 /*
  *  Function Prototypes

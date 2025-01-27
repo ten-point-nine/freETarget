@@ -12,6 +12,7 @@
 
 #include "stdbool.h"
 #include "stdio.h"
+#include "string.h"
 #include "driver/uart.h"
 #include "driver/gpio.h"
 
@@ -327,6 +328,10 @@ void serial_putch(char ch,
                   int  ports // Bitmask of active ports
 )
 {
+  if ( (ports == EVEN_ODD_BEGIN) || (ports == EVEN_ODD_END) )
+  {
+    return;                  // Return if it's a control message
+  }
 
   /*
    * Output to the devices
@@ -353,20 +358,64 @@ void serial_putch(char ch,
   return;
 }
 
-void serial_to_all(char *str,  // String to output
-                   int   ports // List of active ports
+void serial_to_all(char *str,         // String to output
+                   int   ports        // List of ports to output to
 )
 {
+  static bool  even_odd_mode = 0;     // Are we concatinating output?
+  static bool  even_odd      = false; // Set the even odd flag to odd (fiest half)
   unsigned int length;
+  static char  e_o_line[SHORT_TEXT];  // Place to store even odd srring
+
+  /*
+   * Check to see if we have a control message coming
+   */
+  if ( ports == EVEN_ODD_BEGIN ) // Begin concatination
+  {
+    even_odd_mode = true;
+    even_odd      = false;
+    e_o_line[0]   = 0;
+    return;
+  }
+
+  if ( ports == EVEN_ODD_END ) // End concatination
+  {
+    even_odd_mode = false;
+    return;
+  }
+
+  /*
+   *See if we need to concatinate alternate calls
+   */
+  if ( even_odd_mode == true ) // Concatination mode
+  {
+    if ( even_odd == false )
+    {
+      strcpy(e_o_line, str);
+      strncat(e_o_line, "                                                                              ", 50 - strlen(e_o_line));
+      even_odd = true;
+      return; // Remember the first half of the line and return
+    }
+    strcat(e_o_line, str);
+    strcpy(str, e_o_line);
+    strcat(str, "\r\n");
+    even_odd = false;
+  }
+  else                          // Normal mode
+  {
+    if ( even_odd == true )     // Is half a message waiting to come from last time?
+    {
+      strcat(e_o_line, "\r\n"); // Yes, put in a new line
+      strcat(e_o_line, str);    // Add the new to the old
+      strcpy(str, e_o_line);    // Put it back into the calling line
+      even_odd = false;
+    }
+  }
 
   /*
    *  Figure out the string length
    */
-  length = 0;
-  while ( str[length] )
-  {
-    length++;
-  }
+  length = strlen(str);
 
   /*
    * Output to the devices
