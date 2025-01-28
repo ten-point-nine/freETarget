@@ -133,4 +133,5 @@ extern char          json_remote_url[];      // Where are the messages going?
 extern char          json_athlete[];         // Athelete shooting
 extern char          json_event[];           // Event being shot
 extern char          json_target_name[];     // Target being shot at
+extern char          json_name_text[];       // Target name, ex (Target 54))
 #endif
