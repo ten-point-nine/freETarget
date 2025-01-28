@@ -23,6 +23,7 @@
 #include "serial_io.h"
 #include "gpio.h"
 #include "http_client.h"
+#include "json.h"
 
 /*
  *  Definitions

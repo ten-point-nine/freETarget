@@ -111,13 +111,11 @@ int           json_aux_port_enable;         // Enable comms from the AUX port
 char          json_name_text[SMALL_STRING]; // Target name, ex (Target 54))
 int           json_remote_modes;            // What modes are available to talk to a remote server
 
-#if ( BUIILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE )
 char json_remote_url[URL_SIZE];             // URL of remote server
 int  json_remote_active;                    // Set to 1 to send score to a remote server
 char json_athlete[SMALL_STRING];            // Shooter name (ex Allan Brown)
 char json_event[SMALL_STRING];              // Shooting event (ex Practice)
 char json_target_name[SMALL_STRING];        // Target name (ex Pistol)
-#endif
 
 void        show_echo(void);                // Display the current settings
 static void show_test(int v);               // Execute the self test once

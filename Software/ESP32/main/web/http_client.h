@@ -19,18 +19,18 @@
 /*
  *  Definitions
  */
-#define BUILD_HTTP   1    // Build HTTP transfers
-#define BUILD_SIMPLE 1    // Build for simple HTTP transfers
-#define BUILD_HTTPS  0    // BUild HTTPS transfers
+#define BUILD_HTTP   1        // Build HTTP transfers
+#define BUILD_SIMPLE 1        // Build for simple HTTP transfers
+#define BUILD_HTTPS  0        // BUild HTTPS transfers
 
-#define INCLUDE_GET     0 // Include GET methods
-#define INCLUDE_POST    1 // Include POST methods
-#define INCLUDE_PUT     0 // Include PUT methods
-#define INCLUDE_PATCH   0 // Include PATCH methods
-#define INCLUDE_DELETE  0 // Include DELETE methods
-#define INCLUDE_HEAD    0 // Include HEAD methods
-#define INCLUDE_API_KEY 1 // Include an API key
-// #define API_KEY         "cpe-1704-tks"
+#define INCLUDE_GET     0     // Include GET methods
+#define INCLUDE_POST    1     // Include POST methods
+#define INCLUDE_PUT     0     // Include PUT methods
+#define INCLUDE_PATCH   0     // Include PATCH methods
+#define INCLUDE_DELETE  0     // Include DELETE methods
+#define INCLUDE_HEAD    0     // Include HEAD methods
+#define INCLUDE_API_KEY 1     // Include an API key
+#define API_KEY         "cpe-1704-tks"
 
 #define METHOD_GET    0       // enum used to identify a get method
 #define METHOD_POST   1       // enum used to identify a post method

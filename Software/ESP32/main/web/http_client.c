@@ -547,10 +547,10 @@ void https_async(char *url,    // URL to connect to
  *
  *---------------------------------------------------------------
  *
- * http_native_request() demonstrates use of low level APIs to connect to a server,
- * make a http request and read response. Event handler is not used in this case.
- * Note: This approach should only be used in case use of low level APIs is required.
- * The easiest way is to use esp_http_perform()
+ * http_native_request() demonstrates use of low level APIs to connect to a
+ *server, make a http request and read response. Event handler is not used in
+ *this case. Note: This approach should only be used in case use of low level
+ *APIs is required. The easiest way is to use esp_http_perform()
  *
  * The url is of the form http://my_url.com/option/option...
  *
@@ -569,12 +569,10 @@ void http_native_request(char *server_url,    // URL to be accessed
 #endif
   unsigned int i;
 
-  esp_http_client_config_t config;
+  esp_http_client_config_t config = {.url = "http://joshua.10nine.co/api/shots"};
   esp_http_client_handle_t client = esp_http_client_init(&config);
 
-  strncpy(config.url, json_remote_url, URL_SIZE),
-
-      switch ( method )
+  switch ( method )
   {
 #if ( INCLUDE_GET )
     case METHOD_GET:
@@ -590,7 +588,7 @@ void http_native_request(char *server_url,    // URL to be accessed
         content_length = esp_http_client_fetch_headers(client);
         if ( content_length < 0 )
         {
-          DLT(DLT_COMMUNICATION, printf("HTTP client fetch headers failed");)
+          DLT(DLT_DIAG, printf("HTTP client fetch headers failed");)
         }
       }
       else
@@ -604,7 +602,7 @@ void http_native_request(char *server_url,    // URL to be accessed
         }
         else
         {
-          DLT(DLT_COMMUNICATION, printf() "Failed to read response from %s", url);)
+          DLT(DLT_DIAG, printf() "Failed to read response from %s", url);)
         }
       }
       esp_http_client_close(client);
@@ -619,9 +617,9 @@ void http_native_request(char *server_url,    // URL to be accessed
 #if ( INCLUDE_API_KEY )
       esp_http_client_set_header(client, "X-API-KEY", API_KEY);
 #endif
-      DLT(DLT_COMMUNICATION, printf("POST");)
-      DLT(DLT_COMMUNICATION, printf("URL:%s", server_url);)
-      DLT(DLT_COMMUNICATION, printf("Payload: %s", payload);)
+      DLT(DLT_APPLICATION, printf("POST");)
+      DLT(DLT_APPLICATION, printf("URL:%s", server_url);)
+      DLT(DLT_APPLICATION, printf("Payload: %s", payload);)
       if ( esp_http_client_open(client, strlen(payload)) != ESP_OK )
       {
         DLT(DLT_CRITICAL, printf("Failed to open HTTP connection: %s", server_url);)
@@ -630,27 +628,28 @@ void http_native_request(char *server_url,    // URL to be accessed
       {
         if ( esp_http_client_write(client, payload, strlen(payload)) < 0 )
         {
-          DLT(DLT_COMMUNICATION, printf("HTTP Write failed %s", server_url);)
+          DLT(DLT_DIAG, printf("HTTP Write failed %s", server_url);)
         }
         if ( esp_http_client_fetch_headers(client) < 0 )
         {
-          DLT(DLT_COMMUNICATION, printf("HTTP client fetch headers failed");)
+          DLT(DLT_DIAG, printf("HTTP client fetch headers failed");)
         }
         else
         {
-          //                   DLT(DLT_COMMUNICATION, for(i=0; i != payload_length; i++){payload[i] = 0;})
+          //                   DLT(DLT_APPLICATION, for(i=0; i != payload_length;
+          //                   i++){payload[i] = 0;})
           if ( esp_http_client_read_response(client, payload, payload_length) >= 0 )
           {
             if ( esp_http_client_get_status_code(client) != 200 )
             {
               DLT(DLT_CRITICAL, printf("HTTP POST Status = %d, content_length = %" PRId64, esp_http_client_get_status_code(client),
                                        esp_http_client_get_content_length(client));)
-              DLT(DLT_COMMUNICATION, printf("\r\npayload:%s\r\n", payload);)
+              DLT(DLT_APPLICATION, printf("\r\npayload:%s\r\n", payload);)
             }
           }
           else
           {
-            DLT(DLT_COMMUNICATION, printf("Failed to read response");)
+            DLT(DLT_DIAG, printf("Failed to read response");)
           }
         }
       }

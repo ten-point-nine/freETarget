@@ -15,7 +15,7 @@
 #include "freertos/task.h"
 #include "serial_io.h"
 
-#define SOFTWARE_VERSION "\"6.0.0 January 8, 2025\""
+#define SOFTWARE_VERSION "\"6.0.0 January 28, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 
 #define REV_500   500    // ESP32
