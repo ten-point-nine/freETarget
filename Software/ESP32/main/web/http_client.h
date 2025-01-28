@@ -20,7 +20,7 @@
  *  Definitions
  */
 #define BUILD_HTTP   1    // Build HTTP transfers
-#define BUILD_SIMPLE 0    // Build for simple HTTP transfers
+#define BUILD_SIMPLE 1    // Build for simple HTTP transfers
 #define BUILD_HTTPS  0    // BUild HTTPS transfers
 
 #define INCLUDE_GET     0 // Include GET methods

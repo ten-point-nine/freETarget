@@ -22,6 +22,7 @@
 #include "compute_hit.h"
 #include "serial_io.h"
 #include "gpio.h"
+#include "http_client.h"
 
 /*
  *  Definitions
@@ -594,7 +595,7 @@ void send_score(shot_record_t *shot,        //  record
     if ( (json_athlete[0] != 0) && (json_event[0] != 0) && (json_target_name[0] != 0) )
     {
       sprintf(_xs, "\r\n{\"shotnumber\":%d, \"athlete\":\"%s\", \"event\": \"%s\", \"target_name\":\"%s\", \"x\":%4.2f, \"y\":%4.2f} ",
-              shot->shot_number, json_athlete, json_event, json_target_name, x, y);
+              shot_number, json_athlete, json_event, json_target_name, x, y);
 
       http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
     }
