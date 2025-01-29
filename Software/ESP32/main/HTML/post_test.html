@@ -4,15 +4,30 @@
 <head>
     <script>
         function onButtonClick() {
-            let txt = document.getElementById("testInput").value;
-            alert(txt);
+            let url = document.getElementById("url").value;
+            let data = document.getElementById("jsonData").value;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: data
+            })
+                .then(response => alert("return status: " + response.status))
+                .catch(error => alert("error : " + error));
         }
     </script>
 </head>
 
 <body>
-    <input type="text" id="testInput" />
-    <button onclick="onButtonClick()">Show Message</button>
+    Url:<br />
+    <input type="text" id="url" size="50" value="http://192.168.1.120/something" /><br />
+    <br />
+    JSON data:<br />
+    <textarea id="jsonData" rows="10" cols="50">{"name":"Ole"}</textarea><br />
+    <br />
+    <button onclick="onButtonClick()">POST Json data to url</button>
 </body>
 
 </html>

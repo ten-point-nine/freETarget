@@ -8354,7 +8354,10 @@
                                                 "help": "Maximum GATT Server Profiles Count",
                                                 "id": "BT_GATT_MAX_SR_PROFILES",
                                                 "name": "BT_GATT_MAX_SR_PROFILES",
-                                                "range": null,
+                                                "range": [
+                                                    1,
+                                                    32
+                                                ],
                                                 "title": "Max GATT Server Profiles",
                                                 "type": "int"
                                             },
@@ -8364,7 +8367,10 @@
                                                 "help": "Maximum GATT Service Attributes Count",
                                                 "id": "BT_GATT_MAX_SR_ATTRIBUTES",
                                                 "name": "BT_GATT_MAX_SR_ATTRIBUTES",
-                                                "range": null,
+                                                "range": [
+                                                    1,
+                                                    500
+                                                ],
                                                 "title": "Max GATT Service Attributes",
                                                 "type": "int"
                                             },
@@ -8455,7 +8461,10 @@
                                                 "help": "Maximum GATTC cache characteristic count",
                                                 "id": "BT_GATTC_MAX_CACHE_CHAR",
                                                 "name": "BT_GATTC_MAX_CACHE_CHAR",
-                                                "range": null,
+                                                "range": [
+                                                    1,
+                                                    500
+                                                ],
                                                 "title": "Max gattc cache characteristic for discover",
                                                 "type": "int"
                                             },
@@ -8465,7 +8474,10 @@
                                                 "help": "Maximum GATTC notify(indication) register number",
                                                 "id": "BT_GATTC_NOTIF_REG_MAX",
                                                 "name": "BT_GATTC_NOTIF_REG_MAX",
-                                                "range": null,
+                                                "range": [
+                                                    1,
+                                                    64
+                                                ],
                                                 "title": "Max gattc notify(indication) register number",
                                                 "type": "int"
                                             },
@@ -8485,7 +8497,10 @@
                                                 "help": "The number of attempts to reconnect if the connection establishment failed",
                                                 "id": "BT_GATTC_CONNECT_RETRY_COUNT",
                                                 "name": "BT_GATTC_CONNECT_RETRY_COUNT",
-                                                "range": null,
+                                                "range": [
+                                                    0,
+                                                    255
+                                                ],
                                                 "title": "The number of attempts to reconnect if the connection establishment failed",
                                                 "type": "int"
                                             }
@@ -10452,7 +10467,10 @@
                                 "help": "Maximum BT/BLE connection count. The ESP32-C3/S3 chip supports a maximum of 10 instances,\nincluding ADV, SCAN and connections. The ESP32-C3/S3 chip can connect up to 9 devices if\nADV or SCAN uses only one. If ADV and SCAN are both used, The ESP32-C3/S3 chip is connected\nto a maximum of 8 devices. Because Bluetooth cannot reclaim used instances once ADV or SCAN\nis used.",
                                 "id": "BT_ACL_CONNECTIONS",
                                 "name": "BT_ACL_CONNECTIONS",
-                                "range": null,
+                                "range": [
+                                    1,
+                                    9
+                                ],
                                 "title": "BT/BLE MAX ACL CONNECTIONS(1~9)",
                                 "type": "int"
                             },
@@ -10512,7 +10530,10 @@
                                 "help": "The number of security records for peer devices.",
                                 "id": "BT_SMP_MAX_BONDS",
                                 "name": "BT_SMP_MAX_BONDS",
-                                "range": null,
+                                "range": [
+                                    1,
+                                    32
+                                ],
                                 "title": "BT/BLE maximum bond device count",
                                 "type": "int"
                             },
@@ -10532,7 +10553,10 @@
                                 "help": "Bluetooth Connection establishment maximum time, if connection time exceeds this value, the connection\nestablishment fails, ESP_GATTC_OPEN_EVT or ESP_GATTS_OPEN_EVT is triggered.",
                                 "id": "BT_BLE_ESTAB_LINK_CONN_TOUT",
                                 "name": "BT_BLE_ESTAB_LINK_CONN_TOUT",
-                                "range": null,
+                                "range": [
+                                    1,
+                                    60
+                                ],
                                 "title": "Timeout of BLE connection establishment",
                                 "type": "int"
                             },
@@ -10542,7 +10566,10 @@
                                 "help": "Bluetooth Device name length shall be no larger than 248 octets, If the broadcast data cannot contain\nthe complete device name, then only the shortname will be displayed, the rest parts that can't fit in\nwill be truncated.",
                                 "id": "BT_MAX_DEVICE_NAME_LEN",
                                 "name": "BT_MAX_DEVICE_NAME_LEN",
-                                "range": null,
+                                "range": [
+                                    32,
+                                    248
+                                ],
                                 "title": "length of bluetooth device name",
                                 "type": "int"
                             },
@@ -10562,7 +10589,10 @@
                                 "help": "This set RPA timeout of Controller and Host.\nDefault is 900 s (15 minutes). Range is 1 s to 1 hour (3600 s).",
                                 "id": "BT_BLE_RPA_TIMEOUT",
                                 "name": "BT_BLE_RPA_TIMEOUT",
-                                "range": null,
+                                "range": [
+                                    1,
+                                    3600
+                                ],
                                 "title": "Timeout of resolvable private address",
                                 "type": "int"
                             },
@@ -12256,7 +12286,10 @@
                                 "help": "BLE maximum activities of bluetooth controller\uff0cboth of connections,\nscan , sync and adv(periodic adv, multi-adv). Each instance needs to\nconsume 828 bytes, you can save RAM by modifying the instance value\naccording to actual needs.",
                                 "id": "BT_CTRL_BLE_MAX_ACT",
                                 "name": "BT_CTRL_BLE_MAX_ACT",
-                                "range": null,
+                                "range": [
+                                    1,
+                                    10
+                                ],
                                 "title": "BLE Max Instances",
                                 "type": "int"
                             },
@@ -12276,7 +12309,10 @@
                                 "help": "BLE ACL buffer have two methods to be allocated. One is persistent allocating\n(allocate when controller initialise, never free until controller de-initialise)\nanother is dynamically allocating (allocate before TX and free after TX).",
                                 "id": "BT_CTRL_BLE_STATIC_ACL_TX_BUF_NB",
                                 "name": "BT_CTRL_BLE_STATIC_ACL_TX_BUF_NB",
-                                "range": null,
+                                "range": [
+                                    0,
+                                    12
+                                ],
                                 "title": "BLE static ACL TX buffer numbers",
                                 "type": "int"
                             },
@@ -12366,7 +12402,10 @@
                                 "help": "The maximum number of suplicate scan filter",
                                 "id": "BT_CTRL_ADV_DUP_FILT_MAX",
                                 "name": "BT_CTRL_ADV_DUP_FILT_MAX",
-                                "range": null,
+                                "range": [
+                                    1,
+                                    500
+                                ],
                                 "title": "The maximum number of 5.0 extend duplicate scan filter",
                                 "type": "int"
                             },
@@ -12426,7 +12465,10 @@
                                 "help": "It is the threshold value of HW CCA, if the value is 30, it means CCA threshold is -30 dBm.",
                                 "id": "BT_CTRL_HW_CCA_VAL",
                                 "name": "BT_CTRL_HW_CCA_VAL",
-                                "range": null,
+                                "range": [
+                                    20,
+                                    100
+                                ],
                                 "title": "CCA threshold value",
                                 "type": "int"
                             },
@@ -12758,7 +12800,10 @@
                                         "help": "The number of unprocessed advertising report that bluetooth host can save.If you set\n`BT_CTRL_BLE_ADV_REPORT_FLOW_CTRL_NUM` to a small value, this may cause adv packets lost.\nIf you set `BT_CTRL_BLE_ADV_REPORT_FLOW_CTRL_NUM` to a large value, bluetooth host may cache a\nlot of adv packets and this may cause system memory run out. For example, if you set\nit to 50, the maximum memory consumed by host is 35 * 50 bytes. Please set\n`BT_CTRL_BLE_ADV_REPORT_FLOW_CTRL_NUM` according to your system free memory and handle adv\npackets as fast as possible, otherwise it will cause adv packets lost.",
                                         "id": "BT_CTRL_BLE_ADV_REPORT_FLOW_CTRL_NUM",
                                         "name": "BT_CTRL_BLE_ADV_REPORT_FLOW_CTRL_NUM",
-                                        "range": null,
+                                        "range": [
+                                            50,
+                                            1000
+                                        ],
                                         "title": "BLE adv report flow control number",
                                         "type": "int"
                                     },
@@ -12768,7 +12813,10 @@
                                         "help": "When adv report flow control is enabled, The ADV lost event will be generated when the number\nof ADV packets lost in the controller reaches this threshold. It is better to set a larger value.\nIf you set `BT_CTRL_BLE_ADV_REPORT_DISCARD_THRSHOLD` to a small value or printf every adv lost event, it\nmay cause adv packets lost more.",
                                         "id": "BT_CTRL_BLE_ADV_REPORT_DISCARD_THRSHOLD",
                                         "name": "BT_CTRL_BLE_ADV_REPORT_DISCARD_THRSHOLD",
-                                        "range": null,
+                                        "range": [
+                                            1,
+                                            1000
+                                        ],
                                         "title": "BLE adv lost event threshold value",
                                         "type": "int"
                                     }
@@ -12839,7 +12887,10 @@
                                         "help": "Maximum number of devices which can be recorded in scan duplicate filter.\nWhen the maximum amount of device in the filter is reached, the cache will be refreshed.",
                                         "id": "BT_CTRL_SCAN_DUPL_CACHE_SIZE",
                                         "name": "BT_CTRL_SCAN_DUPL_CACHE_SIZE",
-                                        "range": null,
+                                        "range": [
+                                            10,
+                                            1000
+                                        ],
                                         "title": "Maximum number of devices in scan duplicate filter",
                                         "type": "int"
                                     },
@@ -12849,7 +12900,10 @@
                                         "help": "If the period value is non-zero, the controller will periodically clear the device information\nstored in the scan duuplicate filter. If it is 0, the scan duuplicate filter will not be cleared\nuntil the scanning is disabled. Duplicate advertisements for this period should not be sent to the\nHost in advertising report events.\nThere are two scenarios where the ADV packet will be repeatedly reported:\n1. The duplicate scan cache is full, the controller will delete the oldest device information and\nadd new device information.\n2. When the refresh period is up, the controller will clear all device information and start filtering\nagain.",
                                         "id": "BT_CTRL_DUPL_SCAN_CACHE_REFRESH_PERIOD",
                                         "name": "BT_CTRL_DUPL_SCAN_CACHE_REFRESH_PERIOD",
-                                        "range": null,
+                                        "range": [
+                                            0,
+                                            1000
+                                        ],
                                         "title": "Duplicate scan list refresh period (seconds)",
                                         "type": "int"
                                     },
