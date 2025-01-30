@@ -143,7 +143,7 @@ void freeETarget_init(void)
   set_status_LED(LED_RAPID_OFF);   // Off
 
   WiFi_init();
-  BlueTooth_init();
+  BlueTooth_SPP_init();
 
   /*
    *  Set up the long running timers

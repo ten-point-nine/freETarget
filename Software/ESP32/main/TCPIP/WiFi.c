@@ -40,6 +40,7 @@
 #include "lwip/sys.h"
 
 #include "freETarget.h"
+#include "helpers.h"
 #include "http_client.h"
 #include "WiFi.h"
 #include "compute_hit.h"
@@ -182,24 +183,7 @@ void WiFi_AP_init(void)
 
   esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFi_event_handler, NULL, NULL);
 
-  if ( json_name_id != JSON_NAME_TEXT )
-  {
-    sprintf((char *)&WiFi_config.ap.ssid, "FET-%s",
-            names[json_name_id]); // SSID Name ->FET-name
-  }
-  else
-  {
-    if ( json_name_text[0] != 0 )
-    {
-      sprintf((char *)&WiFi_config.ap.ssid, "FET-%s",
-              json_name_text); // SSID Name ->FET-user-defined-name
-    }
-    else
-    {
-      sprintf((char *)&WiFi_config.ap.ssid,
-              "FET-UDEFINED"); // SSID Name ->FET-UNDEFINED
-    }
-  }
+  target_name((char *)WiFi_config.ap.ssid);
   WiFi_config.ap.ssid_len = strlen(json_wifi_ssid);
   WiFi_config.ap.channel  = json_wifi_channel;
   strcpy((char *)&WiFi_config.ap.password, json_wifi_pwd);

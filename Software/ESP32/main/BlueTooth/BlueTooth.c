@@ -127,17 +127,14 @@ void BlueTooth_init(void)
    */
   DLT(DLT_INFO, SEND(sprintf(_xs, "BlueTooth status: %s", esp_status[esp_bt_controller_get_status()]);))
 
-#if ( 0 )
   uhci_uart_install();
-
-#endif
 
   /*
    *  All done
    */
   return;
 }
-
+#if ( 0 )
 struct uart_env_tag
 {
   struct uart_txrxchannel tx;
@@ -145,7 +142,7 @@ struct uart_env_tag
 };
 
 struct uart_env_tag uart_env;
-
+#endif
 static volatile uhci_dev_t  *s_uhci_hw = &UHCI0;
 static gdma_channel_handle_t s_rx_channel;
 static gdma_channel_handle_t s_tx_channel;
@@ -179,89 +176,49 @@ static void hci_uart_tl_deinit(void)
 {
 }
 
+/*
+ * ._recv
+ */
 static IRAM_ATTR void hci_uart_tl_recv_async(uint8_t *buf, uint32_t size, esp_bt_hci_tl_callback_t callback, void *arg)
 {
-  assert(buf != NULL);
-  assert(size != 0);
-  assert(callback != NULL);
-  uart_env.rx.callback = callback;
-  uart_env.rx.arg      = arg;
-
-  memset(&uart_env.rx.link, 0, sizeof(lldesc_t));
-  uart_env.rx.link.buf  = buf;
-  uart_env.rx.link.size = size;
-
-  s_uhci_hw->pkt_thres.thrs = size;
-
-  gdma_start(s_rx_channel, (intptr_t)(&uart_env.rx.link));
 }
 
+/*
+ * ._send
+ */
 static IRAM_ATTR void hci_uart_tl_send_async(uint8_t *buf, uint32_t size, esp_bt_hci_tl_callback_t callback, void *arg)
 {
-  assert(buf != NULL);
-  assert(size != 0);
-  assert(callback != NULL);
-
-  uart_env.tx.callback = callback;
-  uart_env.tx.arg      = arg;
-
-  memset(&uart_env.tx.link, 0, sizeof(lldesc_t));
-  uart_env.tx.link.length = size;
-  uart_env.tx.link.buf    = buf;
-  uart_env.tx.link.eof    = 1;
-
-  gdma_start(s_tx_channel, (intptr_t)(&uart_env.tx.link));
 }
 
+/*
+ * ._flow_on
+ */
 static void hci_uart_tl_flow_on(void)
 {
 }
 
+/*
+ * ._flow_off
+ */
 static bool hci_uart_tl_flow_off(void)
 {
   return true;
 }
-
+/*
+ * ._finish_transfers
+ */
 static void hci_uart_tl_finish_transfers(void)
 {
 }
 
 static IRAM_ATTR bool hci_uart_tl_rx_eof_callback(gdma_channel_handle_t dma_chan, gdma_event_data_t *event_data, void *user_data)
 {
-  assert(dma_chan == s_rx_channel);
-  assert(uart_env.rx.callback != NULL);
-  esp_bt_hci_tl_callback_t callback = uart_env.rx.callback;
-  void                    *arg      = uart_env.rx.arg;
-
-  // clear callback pointer
-  uart_env.rx.callback = NULL;
-  uart_env.rx.arg      = NULL;
-
-  // call handler
-  callback(arg, ESP_BT_HCI_TL_STATUS_OK);
-
-  // send notification to Bluetooth Controller task
-  esp_bt_h4tl_eif_io_event_notify(1);
 
   return true;
 }
 
 static IRAM_ATTR bool hci_uart_tl_tx_eof_callback(gdma_channel_handle_t dma_chan, gdma_event_data_t *event_data, void *user_data)
 {
-  assert(dma_chan == s_tx_channel);
-  assert(uart_env.tx.callback != NULL);
-  esp_bt_hci_tl_callback_t callback = uart_env.tx.callback;
-  void                    *arg      = uart_env.tx.arg;
-
-  // clear callback pointer
-  uart_env.tx.callback = NULL;
-  uart_env.tx.arg      = NULL;
-
-  // call handler
-  callback(arg, ESP_BT_HCI_TL_STATUS_OK);
-
-  // send notification to Bluetooth Controller task
-  esp_bt_h4tl_eif_io_event_notify(1);
 
   return true;
 }
@@ -274,34 +231,12 @@ void uhci_uart_install(void)
   periph_module_enable(PERIPH_UART1_MODULE);
   periph_module_reset(PERIPH_UART1_MODULE);
 
-  // install DMA driver
-  gdma_channel_alloc_config_t tx_channel_config = {
-      .flags.reserve_sibling = 1,
-      .direction             = GDMA_CHANNEL_DIRECTION_TX,
-  };
-  ESP_ERROR_CHECK(gdma_new_ahb_channel(&tx_channel_config, &s_tx_channel));
-  gdma_channel_alloc_config_t rx_channel_config = {
-      .direction    = GDMA_CHANNEL_DIRECTION_RX,
-      .sibling_chan = s_tx_channel,
-  };
-  ESP_ERROR_CHECK(gdma_new_ahb_channel(&rx_channel_config, &s_rx_channel));
-
-  gdma_connect(s_tx_channel, GDMA_MAKE_TRIGGER(GDMA_TRIG_PERIPH_UHCI, 0));
-  gdma_connect(s_rx_channel, GDMA_MAKE_TRIGGER(GDMA_TRIG_PERIPH_UHCI, 0));
-
-  gdma_strategy_config_t strategy_config = {.auto_update_desc = false, .owner_check = false};
-  gdma_apply_strategy(s_tx_channel, &strategy_config);
-  gdma_apply_strategy(s_rx_channel, &strategy_config);
-
-  gdma_rx_event_callbacks_t rx_cbs = {.on_recv_eof = hci_uart_tl_rx_eof_callback};
-  gdma_register_rx_event_callbacks(s_rx_channel, &rx_cbs, NULL);
-
-  gdma_tx_event_callbacks_t tx_cbs = {.on_trans_eof = hci_uart_tl_tx_eof_callback};
-  gdma_register_tx_event_callbacks(s_tx_channel, &tx_cbs, NULL);
-
   // configure UHCI
   uhci_ll_init(s_uhci_hw);
   uhci_ll_set_eof_mode(s_uhci_hw, UHCI_RX_LEN_EOF);
+  // disable software flow control
+  s_uhci_hw->escape_conf.val = 0;
+  uhci_ll_attach_uart_port(s_uhci_hw, 1);
 }
 /*****************************************************************************
  *

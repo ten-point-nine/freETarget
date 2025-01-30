@@ -2,6 +2,7 @@ idf_component_register(
     SRCS  
     "main.c" 
     "freetarget.c"
+    "helpers.c"
     "drivers/dac.c" 
     "drivers/pcnt.c"
     "diag_tools.c"
@@ -24,7 +25,7 @@ idf_component_register(
     "TCPIP/http_test.c"
     "TCPIP/http_server.c"
     "TCPIP/http_services.c"
-    "BlueTooth/BlueTooth.c"
+    "BlueTooth/BlueTooth_spp_init.c"
     
     INCLUDE_DIRS
     "." 
