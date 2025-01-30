@@ -12,6 +12,7 @@
  * Global functions
  */
 void BlueTooth_init(void); // Initialize the BlueTooth
+void BlueTooth_send_test_message(void);
 
 /*
  * #defines

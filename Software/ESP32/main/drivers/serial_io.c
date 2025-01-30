@@ -175,6 +175,10 @@ int serial_available(int ports // Bit mask of active ports
     }
   }
 
+  if ( ports & BLUETOOTH )
+  {
+  }
+
   /*
    * Return the number of characters waiting
    */
@@ -250,6 +254,11 @@ void serial_flush(int ports // active port list
     in_buffer.in  = 0;
     in_buffer.out = 0;
   }
+
+  if ( ports & BLUETOOTH )
+  {
+  }
+
   return;
 }
 
@@ -305,6 +314,13 @@ char serial_getch(int ports // Bit mask of active ports
   }
 
   /*
+   *  Bring in the  BLUETOOTH bytes
+   */
+  if ( ports & BLUETOOTH )
+  {
+  }
+
+  /*
    * Got nothing
    */
   return 0;
@@ -348,6 +364,11 @@ void serial_putch(char ch,
   }
 
   if ( ports & TCPIP )
+  {
+    tcpip_app_2_queue(&ch, 1);
+  }
+
+  if ( ports & BLUETOOTH )
   {
     tcpip_app_2_queue(&ch, 1);
   }
@@ -432,6 +453,11 @@ void serial_to_all(char *str,         // String to output
   }
 
   if ( ports & TCPIP )
+  {
+    tcpip_app_2_queue(str, length);
+  }
+
+  if ( ports & BLUETOOTH )
   {
     tcpip_app_2_queue(str, length);
   }

@@ -8,6 +8,7 @@
 #ifndef _DIAG_TOOLS_H_
 #define _DIAG_TOOLS_H_
 #include "gpio.h"
+
 /*
  * @function Prototypes
  */

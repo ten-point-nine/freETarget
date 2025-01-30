@@ -39,7 +39,9 @@
     "complex": "c",
     "i2c.h": "c",
     "string.h": "c",
-    "stdlib.h": "c"
+    "stdlib.h": "c",
+    "esp_log.h": "c",
+    "gdma.h": "c"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM5",
