@@ -1,7 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "freeETarget",
-    "project_version":    "BlueTooth-6-g7f9fe8d-dirty",
+    "project_version":    "BlueTooth-7-g361ed23-dirty",
     "project_path":       "C:/Users/allan/Documents/freETarget/Software/ESP32",
     "idf_path":           "C:/Users/allan/esp/v5.3.1/esp-idf",
     "build_dir":          "C:/Users/allan/Documents/freETarget/Software/ESP32/build",

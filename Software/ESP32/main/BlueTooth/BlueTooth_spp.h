@@ -29,6 +29,8 @@ typedef struct
   void         *param; /*!< parameter area needs to be last */
 } spp_task_msg_t;
 
+void BlueTooth_SPP_init(void);
+
 /**
  * @brief     parameter deep-copy function to be customized
  */

@@ -71,6 +71,7 @@ static void  esp_spp_stack_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *para
 static void  spp_read_handle(void *param);
 static void  esp_spp_cb(uint16_t e, void *p);
 static void  esp_spp_stack_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param);
+void         esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param);
 
 /*****************************************************************************
  *
@@ -133,7 +134,7 @@ void BlueTooth_SPP_init(void)
     return;
   }
 
-  if ( (ret = esp_bt_gap_register_callback(esp_bt_gap_cb)) != ESP_OK )
+  if ( esp_bt_gap_register_callback(esp_bt_gap_cb) != ESP_OK )
   {
     DLT(DLT_CRITICAL, SEND(sprintf(_xs, "gap register failed");))
     return;
