@@ -1,17 +1,17 @@
-/*
- * SPDX-FileCopyrightText: 2021 Espressif Systems (Shanghai) CO LTD
+/*----------------------------------------------------------------
  *
- * SPDX-License-Identifier: Unlicense OR CC0-1.0
- */
+ * BlueTooth_SPP.h
+ *
+ * BlueTooth Serial Port Protocol Header
+ *
+ *---------------------------------------------------------------*/
 
-#ifndef __SPP_TASK_H__
-#define __SPP_TASK_H__
+#ifndef __BLUETOOTH_SPP_H__
+#define __BLUETOOTH_SPP_H__
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
-
-#define SPP_TASK_TAG "SPP_TASK"
 
 #define SPP_TASK_SIG_WORK_DISPATCH (0x01)
 

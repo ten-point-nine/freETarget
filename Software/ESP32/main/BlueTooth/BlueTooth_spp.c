@@ -25,7 +25,12 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include "esp_log.h"
-#include "spp_task.h"
+#include "C:\Users\allan\esp\v5.3.1\esp-idf\components\bt\host\bluedroid\api\include\api\esp_spp_api.h"
+// #include "spp_task.h"
+
+#include "freETarget.h"
+#include "BlueTooth_spp.h"
+#include "diag_tools.h"
 
 static void spp_task_task_handler(void *arg);
 static bool spp_task_send_msg(spp_task_msg_t *msg);
@@ -36,7 +41,7 @@ static TaskHandle_t  spp_task_task_handle = NULL;
 
 bool spp_task_work_dispatch(spp_task_cb_t p_cback, uint16_t event, void *p_params, int param_len, spp_task_copy_cb_t p_copy_cback)
 {
-  ESP_LOGD(SPP_TASK_TAG, "%s event 0x%x, param len %d", __func__, event, param_len);
+  DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "%s event 0x%x, param len %d", __func__, event, param_len);))
 
   spp_task_msg_t msg;
   memset(&msg, 0, sizeof(spp_task_msg_t));
@@ -75,7 +80,7 @@ static bool spp_task_send_msg(spp_task_msg_t *msg)
 
   if ( xQueueSend(spp_task_task_queue, msg, 10 / portTICK_PERIOD_MS) != pdTRUE )
   {
-    ESP_LOGE(SPP_TASK_TAG, "%s xQueue send failed", __func__);
+    DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "%s xQueue send failed", __func__);))
     return false;
   }
   return true;
@@ -96,14 +101,14 @@ static void spp_task_task_handler(void *arg)
   {
     if ( pdTRUE == xQueueReceive(spp_task_task_queue, &msg, (TickType_t)portMAX_DELAY) )
     {
-      ESP_LOGD(SPP_TASK_TAG, "%s, sig 0x%x, 0x%x", __func__, msg.sig, msg.event);
+
       switch ( msg.sig )
       {
         case SPP_TASK_SIG_WORK_DISPATCH:
           spp_task_work_dispatched(&msg);
           break;
         default:
-          ESP_LOGW(SPP_TASK_TAG, "%s, unhandled sig: %d", __func__, msg.sig);
+          DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "%s, unhandled sig: %d", __func__, msg.sig);))
           break;
       }
 
@@ -140,6 +145,7 @@ void spp_wr_task_start_up(spp_wr_task_cb_t p_cback, int fd)
 {
   xTaskCreate(p_cback, "write_read", 4096, (void *)fd, 5, NULL);
 }
+
 void spp_wr_task_shut_down(void)
 {
   vTaskDelete(NULL);

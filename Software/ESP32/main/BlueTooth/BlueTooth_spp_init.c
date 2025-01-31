@@ -37,26 +37,59 @@
 #include "nvs_flash.h"
 #include "esp_bt.h"
 #include "esp_log.h"
+#include "C:\Users\allan\esp\v5.3.1\esp-idf\components\bt\host\bluedroid\api\include\api\esp_spp_api.h"
+#include "C:\Users\allan\esp\v5.3.1\esp-idf\components\bt\host\bluedroid\api\include\api\esp_bt_main.h"
+#include "C:\Users\allan\esp\v5.3.1\esp-idf\components\bt\host\bluedroid\api\include\api\esp_gap_bt_api.h"
+#include "C:\Users\allan\esp\v5.3.1\esp-idf\components\bt\host\bluedroid\api\include\api\esp_bt_device.h"
+#include "C:\Users\allan\esp\v5.3.1\esp-idf\components\bt\host\bluedroid\api\include\api\esp_gap_bt_api.h"
+
+#include "BlueTooth_spp.h"
 
 #include "freETarget.h"
 #include "diag_tools.h"
 #include "json.h"
 #include "nonvol.h"
 #include "serial_io.h"
+#include "helpers.h"
 
 #include "esp_vfs.h"
 #include "sys/unistd.h"
 
 #define SPP_SERVER_NAME "SPP_SERVER"
 
-static const char           local_device_name[] = CONFIG_EXAMPLE_LOCAL_DEVICE_NAME;
-static const esp_spp_sec_t  sec_mask            = ESP_SPP_SEC_AUTHENTICATE;
-static const esp_spp_role_t role_slave          = ESP_SPP_ROLE_SLAVE;
+static char                 local_device_name[SMALL_STRING];
+static const esp_spp_sec_t  sec_mask   = ESP_SPP_SEC_AUTHENTICATE;
+static const esp_spp_role_t role_slave = ESP_SPP_ROLE_SLAVE;
 
 #define SPP_DATA_LEN 100
+
+/*
+ *  Local Functions
+ */
+static char *bda2str(uint8_t *bda, char *str, size_t size); // Bluetooth Device Address to String
+static void  esp_spp_stack_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param);
+static void  spp_read_handle(void *param);
+static void  esp_spp_cb(uint16_t e, void *p);
+static void  esp_spp_stack_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param);
+
+/*****************************************************************************
+ *
+ * @function: BlueTooth_SPP_init()
+ *
+ * @brief:    Initialize the BlueTooth Interface
+ *
+ * @return:   None
+ *
+ ******************************************************************************
+ *
+
+ *
+ *******************************************************************************/
 void BlueTooth_SPP_init(void)
 {
-  char bda_str[18] = {0};
+  char      bda_str[18] = {0};
+  esp_err_t ret;
+  target_name(local_device_name);
 
 #if ( 0 )
   esp_err_t ret = nvs_flash_init();
@@ -159,7 +192,7 @@ static void spp_read_handle(void *param)
   spp_data = malloc(SPP_DATA_LEN);
   if ( !spp_data )
   {
-    ESP_LOGE(SPP_TAG, "malloc spp_data failed, fd:%d", fd);
+    DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "malloc spp_data failed, fd:%d", fd);))
     goto done;
   }
 
@@ -178,8 +211,7 @@ static void spp_read_handle(void *param)
     }
     else
     {
-      ESP_LOGI(SPP_TAG, "fd = %d data_len = %d", fd, size);
-      ESP_LOG_BUFFER_HEX(SPP_TAG, spp_data, size);
+      DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "fd = %d data_len = %d", fd, size);))
       /* To avoid task watchdog */
       vTaskDelay(10 / portTICK_PERIOD_MS);
     }
@@ -203,44 +235,45 @@ static void esp_spp_cb(uint16_t e, void *p)
     case ESP_SPP_INIT_EVT:
       if ( param->init.status == ESP_SPP_SUCCESS )
       {
-        ESP_LOGI(SPP_TAG, "ESP_SPP_INIT_EVT");
+        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "ESP_SPP_INIT_EVT");))
         /* Enable SPP VFS mode */
         esp_spp_vfs_register();
       }
       else
       {
-        ESP_LOGE(SPP_TAG, "ESP_SPP_INIT_EVT status:%d", param->init.status);
+        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "ESP_SPP_INIT_EVT status:%d", param->init.status);))
       }
       break;
     case ESP_SPP_DISCOVERY_COMP_EVT:
-      ESP_LOGI(SPP_TAG, "ESP_SPP_DISCOVERY_COMP_EVT");
+      DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "ESP_SPP_DISCOVERY_COMP_EVT");))
       break;
     case ESP_SPP_OPEN_EVT:
-      ESP_LOGI(SPP_TAG, "ESP_SPP_OPEN_EVT");
+      DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "ESP_SPP_OPEN_EVT");))
       break;
     case ESP_SPP_CLOSE_EVT:
-      ESP_LOGI(SPP_TAG, "ESP_SPP_CLOSE_EVT status:%d handle:%" PRIu32 " close_by_remote:%d", param->close.status, param->close.handle,
-               param->close.async);
+      DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "ESP_SPP_CLOSE_EVT status:%d handle:%" PRIu32 " close_by_remote:%d", param->close.status,
+                                          param->close.handle, param->close.async);))
+
       break;
     case ESP_SPP_START_EVT:
       if ( param->start.status == ESP_SPP_SUCCESS )
       {
-        ESP_LOGI(SPP_TAG, "ESP_SPP_START_EVT handle:%" PRIu32 " sec_id:%d scn:%d", param->start.handle, param->start.sec_id,
-                 param->start.scn);
+        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "ESP_SPP_START_EVT handle:%" PRIu32 " sec_id:%d scn:%d", param->start.handle,
+                                            param->start.sec_id, param->start.scn);))
         esp_bt_gap_set_device_name(local_device_name);
         esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
       }
       else
       {
-        ESP_LOGE(SPP_TAG, "ESP_SPP_START_EVT status:%d", param->start.status);
+        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "ESP_SPP_START_EVT status:%d", param->start.status);))
       }
       break;
     case ESP_SPP_CL_INIT_EVT:
-      ESP_LOGI(SPP_TAG, "ESP_SPP_CL_INIT_EVT");
+      DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "ESP_SPP_CL_INIT_EVT");))
       break;
     case ESP_SPP_SRV_OPEN_EVT:
-      ESP_LOGI(SPP_TAG, "ESP_SPP_SRV_OPEN_EVT status:%d handle:%" PRIu32 ", rem_bda:[%s]", param->srv_open.status, param->srv_open.handle,
-               bda2str(param->srv_open.rem_bda, bda_str, sizeof(bda_str)));
+      DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "ESP_SPP_SRV_OPEN_EVT status:%d handle:%" PRIu32 ", rem_bda:[%s]", param->srv_open.status,
+                                          param->srv_open.handle, bda2str(param->srv_open.rem_bda, bda_str, sizeof(bda_str)));))
       if ( param->srv_open.status == ESP_SPP_SUCCESS )
       {
         spp_wr_task_start_up(spp_read_handle, param->srv_open.fd);
@@ -249,12 +282,12 @@ static void esp_spp_cb(uint16_t e, void *p)
     case ESP_SPP_VFS_REGISTER_EVT:
       if ( param->vfs_register.status == ESP_SPP_SUCCESS )
       {
-        ESP_LOGI(SPP_TAG, "ESP_SPP_VFS_REGISTER_EVT");
+        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "ESP_SPP_VFS_REGISTER_EVT");))
         esp_spp_start_srv(sec_mask, role_slave, 0, SPP_SERVER_NAME);
       }
       else
       {
-        ESP_LOGE(SPP_TAG, "ESP_SPP_VFS_REGISTER_EVT status:%d", param->vfs_register.status);
+        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "ESP_SPP_VFS_REGISTER_EVT status:%d", param->vfs_register.status);))
       }
       break;
     default:
@@ -276,27 +309,26 @@ void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
     {
       if ( param->auth_cmpl.stat == ESP_BT_STATUS_SUCCESS )
       {
-        ESP_LOGI(SPP_TAG, "authentication success: %s", param->auth_cmpl.device_name);
-        ESP_LOG_BUFFER_HEX(SPP_TAG, param->auth_cmpl.bda, ESP_BD_ADDR_LEN);
+        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "authentication success: %s", param->auth_cmpl.device_name);))
       }
       else
       {
-        ESP_LOGE(SPP_TAG, "authentication failed, status:%d", param->auth_cmpl.stat);
+        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "authentication failed, status:%d", param->auth_cmpl.stat);))
       }
       break;
     }
     case ESP_BT_GAP_PIN_REQ_EVT:
     {
-      ESP_LOGI(SPP_TAG, "ESP_BT_GAP_PIN_REQ_EVT min_16_digit:%d", param->pin_req.min_16_digit);
+      DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "ESP_BT_GAP_PIN_REQ_EVT min_16_digit:%d", param->pin_req.min_16_digit);))
       if ( param->pin_req.min_16_digit )
       {
-        ESP_LOGI(SPP_TAG, "Input pin code: 0000 0000 0000 0000");
+        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "Input pin code: 0000 0000 0000 0000");))
         esp_bt_pin_code_t pin_code = {0};
         esp_bt_gap_pin_reply(param->pin_req.bda, true, 16, pin_code);
       }
       else
       {
-        ESP_LOGI(SPP_TAG, "Input pin code: 1234");
+        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "Input pin code: 1234");))
         esp_bt_pin_code_t pin_code;
         pin_code[0] = '1';
         pin_code[1] = '2';
@@ -309,24 +341,24 @@ void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
 
 #if ( CONFIG_EXAMPLE_SSP_ENABLED == true )
     case ESP_BT_GAP_CFM_REQ_EVT:
-      ESP_LOGI(SPP_TAG, "ESP_BT_GAP_CFM_REQ_EVT Please compare the numeric value: %" PRIu32, param->cfm_req.num_val);
-      esp_bt_gap_ssp_confirm_reply(param->cfm_req.bda, true);
+      DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "ESP_BT_GAP_CFM_REQ_EVT Please compare the numeric value: %" PRIu32, param->cfm_req.num_val);
+                                  esp_bt_gap_ssp_confirm_reply(param->cfm_req.bda, true);))
       break;
     case ESP_BT_GAP_KEY_NOTIF_EVT:
-      ESP_LOGI(SPP_TAG, "ESP_BT_GAP_KEY_NOTIF_EVT passkey:%" PRIu32, param->key_notif.passkey);
+      DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "ESP_BT_GAP_KEY_NOTIF_EVT passkey:%" PRIu32, param->key_notif.passkey);))
       break;
     case ESP_BT_GAP_KEY_REQ_EVT:
-      ESP_LOGI(SPP_TAG, "ESP_BT_GAP_KEY_REQ_EVT Please enter passkey!");
+      DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "ESP_BT_GAP_KEY_REQ_EVT Please enter passkey!");))
       break;
 #endif
 
     case ESP_BT_GAP_MODE_CHG_EVT:
-      ESP_LOGI(SPP_TAG, "ESP_BT_GAP_MODE_CHG_EVT mode:%d", param->mode_chg.mode);
+      DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "ESP_BT_GAP_MODE_CHG_EVT mode:%d", param->mode_chg.mode);))
       break;
 
     default:
     {
-      ESP_LOGI(SPP_TAG, "event: %d", event);
+      DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "event: %d", event);))
       break;
     }
   }
