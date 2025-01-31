@@ -25,7 +25,7 @@ idf_component_register(
     "TCPIP/http_test.c"
     "TCPIP/http_server.c"
     "TCPIP/http_services.c"
-    
+    "BlueTooth/BlueTooth_spp_init.c"
     
     INCLUDE_DIRS
     "." 
