@@ -14,7 +14,6 @@
 #include "ctype.h"
 #include "diag_tools.h"
 #include "freETarget.h"
-#include "helpers.h"
 #include "json.h"
 #include "mechanical.h"
 #include "mfs.h"
@@ -508,8 +507,21 @@ void show_echo(void)
   unsigned int  dip;
   char          ABCD[] = "ABCD";
 
-  target_name(str_c);
-  SEND(sprintf(_xs, "\r\n{\r\n\"NAME\":           \"%s\", \r\n", str_c);)
+  if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF) )
+  {
+    if ( json_name_id != JSON_NAME_TEXT )
+    {
+      SEND(sprintf(_xs, "\r\n{\r\n\"NAME\":           \"%s\", \r\n", names[json_name_id]);)
+    }
+    else
+    {
+      SEND(sprintf(_xs, "\r\n{\r\n\"NAME\":           \"%s\", \r\n", json_name_text);)
+    }
+  }
+  else
+  {
+    SEND(sprintf(_xs, "\r\n{\r\n\"NAME\":           \"%s\", \r\n", names[json_name_id + my_ring]);)
+  }
 
   /*
    * Loop through all of the JSON tokens
