@@ -28,6 +28,7 @@ idf_component_register(
     "BlueTooth/BlueTooth_spp_init.c"
     "BlueTooth/BlueTooth_spp.c"
     "C:/Users/allan/esp/v5.3.1/esp-idf/components/bt/host/bluedroid/api/esp_spp_api.c"
+    "C:/Users/allan/esp/v5.3.1/esp-idf/components/bt/host/bluedroid/api/esp_gap_bt_api.c"
 
     INCLUDE_DIRS
     "." 
@@ -43,7 +44,17 @@ idf_component_register(
     "C:/Users/allan/esp/v5.3.1/esp-idf/components/bt/common/btc/include"
     "C:/Users/allan/esp/v5.3.1/esp-idf/components/bt/common/btc/include/btc"
     "C:/Users/allan/esp/v5.3.1/esp-idf/components/bt/host/bluedroid/btc/include/btc"
-    
+    "C:/Users/allan/esp/v5.3.1/esp-idf/components/bt/common/btc/include/btc"
+    "C:/Users/allan/esp/v5.3.1/esp-idf/components/bt/common/include"
+    "C:/Users/allan/esp/v5.3.1/esp-idf/components/bt/host/bluedroid/common/include/common"
+    "C:/Users/allan/esp/v5.3.1/esp-idf/components/bt/host/bluedroid/common/include/"
+    "C:/Users/allan/esp/v5.3.1/esp-idf/components/bt/host/bluedroid/stack/include"
+    "C:/Users/allan/esp/v5.3.1/esp-idf/components/bt/host/bluedroid/btc/profile/std/include"
+    "C:/Users/allan/esp/v5.3.1/esp-idf/components/bt/host/bluedroid/bta/include"
+    "C:/Users/allan/esp/v5.3.1/esp-idf/components/bt/host/bluedroid/btc/include"
+    "C:/Users/allan/esp/esp-idf/components/bt/host/bluedroid/btc/include/btc"
+    "C:/Users/allan/esp/esp-idf/components/bt/host/bluedroid/config/include"
+
     EMBED_FILES 
     "html/index.html"
     "html/issf.png"
