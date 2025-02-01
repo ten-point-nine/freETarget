@@ -41,7 +41,6 @@
 #include "C:\Users\allan\esp\v5.3.1\esp-idf\components\bt\host\bluedroid\api\include\api\esp_bt_main.h"
 #include "C:\Users\allan\esp\v5.3.1\esp-idf\components\bt\host\bluedroid\api\include\api\esp_gap_bt_api.h"
 #include "C:\Users\allan\esp\v5.3.1\esp-idf\components\bt\host\bluedroid\api\include\api\esp_bt_device.h"
-#include "C:\Users\allan\esp\v5.3.1\esp-idf\components\bt\host\bluedroid\api\include\api\esp_gap_bt_api.h"
 
 #include "BlueTooth_spp.h"
 
@@ -134,17 +133,21 @@ void BlueTooth_SPP_init(void)
     return;
   }
 
+#if ( BTC_GAP_BT_INCLUDED == TRUE )
   if ( esp_bt_gap_register_callback(esp_bt_gap_cb) != ESP_OK )
   {
     DLT(DLT_CRITICAL, SEND(sprintf(_xs, "gap register failed");))
     return;
   }
+#endif
 
+#if ( UC_BT_SPP_ENABLED == TRUE )
   if ( esp_spp_register_callback(esp_spp_stack_cb) != ESP_OK )
   {
     DLT(DLT_CRITICAL, SEND(sprintf(_xs, "SPP register failed");))
     return;
   }
+#endif
 
   spp_task_task_start_up();
 
@@ -237,8 +240,7 @@ static void esp_spp_cb(uint16_t e, void *p)
       if ( param->init.status == ESP_SPP_SUCCESS )
       {
         DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "ESP_SPP_INIT_EVT");))
-        /* Enable SPP VFS mode */
-        esp_spp_vfs_register();
+        esp_spp_vfs_register(); /* Enable SPP VFS mode */
       }
       else
       {

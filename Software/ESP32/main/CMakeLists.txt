@@ -27,6 +27,7 @@ idf_component_register(
     "TCPIP/http_services.c"
     "BlueTooth/BlueTooth_spp_init.c"
     "BlueTooth/BlueTooth_spp.c"
+    "C:/Users/allan/esp/v5.3.1/esp-idf/components/bt/host/bluedroid/api/esp_spp_api.c"
 
     INCLUDE_DIRS
     "." 
@@ -39,7 +40,10 @@ idf_component_register(
     "C:/Users/allan/esp/esp-idf/esp-idf/components/hal/include/hal"
     "C:/Users/allan/esp/esp-idf/esp-idf/components/esp_adc/include/esp_adc"
     "C:/Users/allan/esp/esp-idf/esp-idf/components/esp_http_server/include"
-                    
+    "C:/Users/allan/esp/v5.3.1/esp-idf/components/bt/common/btc/include"
+    "C:/Users/allan/esp/v5.3.1/esp-idf/components/bt/common/btc/include/btc"
+    "C:/Users/allan/esp/v5.3.1/esp-idf/components/bt/host/bluedroid/btc/include/btc"
+    
     EMBED_FILES 
     "html/index.html"
     "html/issf.png"

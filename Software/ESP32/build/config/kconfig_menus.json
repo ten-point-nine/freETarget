@@ -10530,7 +10530,10 @@
                                 "help": "The number of security records for peer devices.",
                                 "id": "BT_SMP_MAX_BONDS",
                                 "name": "BT_SMP_MAX_BONDS",
-                                "range": null,
+                                "range": [
+                                    1,
+                                    32
+                                ],
                                 "title": "BT/BLE maximum bond device count",
                                 "type": "int"
                             },
