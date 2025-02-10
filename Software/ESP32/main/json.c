@@ -156,7 +156,7 @@ const json_message_t JSON[] = {
     {"\"TABATA_ON\":",       &json_tabata_on,         IS_INT32,             0,                  0,                       0,          0}, // Time that the LEDs are ON for a Tabata timer (1/10 seconds)
     {"\"TABATA_REST\":",     &json_tabata_rest,       IS_INT32,             0,                  0,                       0,          0}, // Time that the LEDs are OFF for a Tabata timer
     {"\"TABATA_WARN_OFF\":", &json_tabata_warn_off,   IS_INT32,             0,                  0,                       0,          0}, // Time that the LEDs are ON during a warning cycle
-    {"\"TABATA_WARN_ON\":",  &json_tabata_warn_on,    IS_INT32,             0,                  0,                       200,        0}, // Time that the LEDs are OFF during a warning cycle
+    {"\"TABATA_WARN_ON\":",  &json_tabata_warn_on,    IS_INT32,             0,                  0,                       0,          0}, // Time that the LEDs are OFF during a warning cycle
     {"\"TARGET_TYPE\":",     &json_target_type,       IS_INT32,             0,                  NONVOL_TARGET_TYPE,      0,          0}, // Marify shot location (0 == Single Bull)
     {"\"TEST\":",            0,                       IS_INT32,             &self_test,         0,                       0,          0}, // Execute a self test
     {"\"TOKEN\":",           &json_token,             IS_INT32,             0,                  NONVOL_TOKEN,            0,          0}, // Token ring state
