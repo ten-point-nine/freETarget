@@ -110,9 +110,12 @@ static void show_test(int v);            // Execute the self test once
 static void show_names(int v);
 static void set_trace(int v);            // Set the trace on and off
 static void diag_delay(int x);           // Insert a delay
+static void set_50m(int x);              // Configure for 50m pistol
 
 const json_message_t JSON[] = {
-    //    token               value stored in RAM   double stored in RAM    convert    service fcn()     NONVOL location      Initial Value
+    //    token               value stored in RAM    convert    service fcn()     NONVOL location      Initial Value
+
+    {"\"50M\":",             0,                       IS_VOID,              &set_50m,           0,                       0,          0}, // Locate the sensor angles
     {"\"ANGLE\":",           &json_sensor_angle,      IS_INT32,             0,                  NONVOL_SENSOR_ANGLE,     45,         0}, // Locate the sensor angles
     {"\"AUX_PORT_ENABLE\":", &json_aux_port_enable,   IS_INT32,             0,                  NONVOL_AUX_PORT_ENABLE,  0,          6}, // Enable the AUX Port
     {"\"BYE\":",             0,                       IS_INT32,             &bye,               0,                       0,          0}, // Shut down the target
@@ -723,5 +726,50 @@ static void set_trace(int trace)         // Trace mask on or off
 
   SEND(sprintf(_xs, "\r\n");)
 
+  return;
+}
+
+/*-----------------------------------------------------
+ *
+ * @function: set_50m
+ *
+ * @brief:    Configure for 50m Pistol Target
+ *
+ * @return: None
+ *
+ *-----------------------------------------------------
+ *
+ * Change the settings for 50m target
+ *
+ *-----------------------------------------------------*/
+static void set_50m(int x)
+{
+  json_paper_time = 0;
+  nvs_set_i32(my_handle, NONVOL_PAPER_TIME, json_paper_time);
+
+  json_sensor_dia = 707 * 1000;
+  nvs_set_i32(my_handle, NONVOL_SENSOR_DIA, json_sensor_dia);
+
+  json_step_count = 0;
+  nvs_set_i32(my_handle, NONVOL_STEP_COUNT, json_step_count);
+
+  json_z_offset = 18;
+  nvs_set_i32(my_handle, NONVOL_Z_OFFSET, json_z_offset);
+
+  /*
+   *  Save the changes
+   */
+  if ( nvs_commit(my_handle) == ESP_OK )
+  {
+    SEND(sprintf(_xs, "\r\nTarget updated for 50m rifle");)
+  }
+  else
+  {
+    SEND(sprintf(_xs, "\r\nUpdate for 50m rifle failed");)
+  }
+
+  /*
+   *  All done, return
+   */
   return;
 }
