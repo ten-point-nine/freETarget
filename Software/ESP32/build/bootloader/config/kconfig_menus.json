@@ -4398,7 +4398,10 @@
                         "help": "Verify that this parameter is correct and more then the execution time.\nPay attention to options such as reset to factory, trigger test partition and encryption on boot\n- these options can increase the execution time.\nNote: RTC_WDT will reset while encryption operations will be performed.",
                         "id": "BOOTLOADER_WDT_TIME_MS",
                         "name": "BOOTLOADER_WDT_TIME_MS",
-                        "range": null,
+                        "range": [
+                            0,
+                            120000
+                        ],
                         "title": "Timeout for RTC watchdog (ms)",
                         "type": "int"
                     }
@@ -8480,7 +8483,10 @@
                                 "help": "The timeout of the watchdog, in milliseconds. Make this higher than the FreeRTOS tick rate.",
                                 "id": "ESP_INT_WDT_TIMEOUT_MS",
                                 "name": "ESP_INT_WDT_TIMEOUT_MS",
-                                "range": null,
+                                "range": [
+                                    10,
+                                    10000
+                                ],
                                 "title": "Interrupt watchdog timeout (ms)",
                                 "type": "int"
                             },
@@ -8533,7 +8539,10 @@
                                         "help": "Timeout period configuration for the Task Watchdog Timer in seconds.\nThis is also configurable at run time (see Task Watchdog Timer API Reference)",
                                         "id": "ESP_TASK_WDT_TIMEOUT_S",
                                         "name": "ESP_TASK_WDT_TIMEOUT_S",
-                                        "range": null,
+                                        "range": [
+                                            1,
+                                            60
+                                        ],
                                         "title": "Task Watchdog timeout period (seconds)",
                                         "type": "int"
                                     },

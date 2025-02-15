@@ -29,7 +29,7 @@ idf_component_register(
     "BlueTooth/BlueTooth_spp.c"
     "C:/Users/allan/esp/v5.3.1/esp-idf/components/bt/host/bluedroid/api/esp_spp_api.c"
     "C:/Users/allan/esp/v5.3.1/esp-idf/components/bt/host/bluedroid/api/esp_gap_bt_api.c"
-
+    
     INCLUDE_DIRS
     "." 
     "./TCPIP" 

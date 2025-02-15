@@ -244,7 +244,7 @@ void gpio_init(void)
   gpio_install_isr_service(0); // Install the ISR service for later
 
   /*
-   *  Loop and setup the GPIO outputs
+   *  Loop and setup the GPIOs
    */
   i = 0;
   while ( gpio_order[i] != 0 )       // Program the IO in order

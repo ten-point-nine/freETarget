@@ -27,6 +27,7 @@
 #include "esp_timer.h"
 #include "esp_wifi.h"
 #include "nvs_flash.h"
+#include "BlueTooth_spp.h"
 
 #include "esp_private/periph_ctrl.h" // for enabling UHCI module, remove it after UHCI driver is released
 #include "driver/gpio.h"
@@ -41,8 +42,6 @@
 #include "C:\Users\allan\esp\v5.3.1\esp-idf\components\bt\host\bluedroid\api\include\api\esp_bt_main.h"
 #include "C:\Users\allan\esp\v5.3.1\esp-idf\components\bt\host\bluedroid\api\include\api\esp_gap_bt_api.h"
 #include "C:\Users\allan\esp\v5.3.1\esp-idf\components\bt\host\bluedroid\api\include\api\esp_bt_device.h"
-
-#include "BlueTooth_spp.h"
 
 #include "freETarget.h"
 #include "diag_tools.h"
@@ -90,6 +89,9 @@ void BlueTooth_SPP_init(void)
   char      bda_str[18] = {0};
   esp_err_t ret;
   target_name(local_device_name);
+
+#if ( CONFIG_BT_SPP_ENABLED == n )
+#endif
 
 #if ( 0 )
   esp_err_t ret = nvs_flash_init();
