@@ -23,7 +23,6 @@
 #include "http_client.h"
 #include "http_test.h"
 #include "WiFi.h"
-#include "BlueTooth.h"
 #include "analog_io.h"
 #include "compute_hit.h"
 #include "dac.h"

@@ -24,7 +24,6 @@
 #include "diag_tools.h"
 #include "http_client.h"
 #include "http_server.h"
-#include "BLueTooth.h"
 
 /*-----------------------------------------------------
  *
