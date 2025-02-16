@@ -409,7 +409,7 @@ void WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id
       set_status_LED(LED_WIFI_STATION);
     }
   }
-
+  return;
   if ( event_base == IP_EVENT )
   {
     if ( event_id == IP_EVENT_STA_GOT_IP )
@@ -420,6 +420,7 @@ void WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id
       xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     }
   }
+  return;
   /*
    * I am an access point
    */

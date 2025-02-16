@@ -230,20 +230,6 @@ static bool         not_found;
 static bool         keep_space;       // Set to 1 if keeping spaces
 static bool         got_left_bracket; // Set to 1 if we have a bracket
 
-static int to_int(char h)
-{
-  h = toupper(h);
-
-  if ( h > '9' )
-  {
-    return 10 + (h - 'A');
-  }
-  else
-  {
-    return h - '0';
-  }
-}
-
 void freeETarget_json(void *pvParameters)
 {
   char ch;
@@ -457,35 +443,6 @@ static void handle_json(void)
   got_left_bracket    = false;
   input_JSON[in_JSON] = 0; // Clear the input
   return;
-}
-
-// Compare two strings.  Return -1 if not equal, length of string if equal
-// S1 Long String, S2 Short String . if ( instr("CAT Sam", "CAT") == 3)
-int instr(char *s1, char *s2)
-{
-  int i;
-
-  i = 0;
-  while ( (*s1 != 0) && (*s2 != 0) )
-  {
-    if ( *s1 != *s2 )
-    {
-      return -1;
-    }
-    s1++;
-    s2++;
-    i++;
-  }
-
-  /*
-   * Reached the end of the comparison string. Check that we arrived at a NULL
-   */
-  if ( *s2 == 0 ) // Both strings are the same
-  {
-    return i;
-  }
-
-  return -1;      // The strings are different
 }
 
 /*-----------------------------------------------------
