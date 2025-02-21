@@ -108,6 +108,8 @@ extern int           json_rapid_time;        // When will the rapid fire event e
 extern int           json_wifi_channel;      // Channel assigned to this SSID
 extern int           json_rapid_wait;        // Delay applied to rapid fire
 extern int           json_wifi_dhcp;         // TRUE if the DHCP server is enabled
+extern char          json_wifi_static_ip[];  // Static IP assigned to the target
+extern char          json_wifi_gateway[];    // Text of WiFI gateway mask
 extern char          json_wifi_ssid[];       // Text of WiFI SSID
 extern char          json_wifi_pwd[];        // Text of WiFI password
 extern char          json_wifi_server_url[]; // Remote Server URL

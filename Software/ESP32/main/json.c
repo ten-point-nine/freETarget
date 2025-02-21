@@ -85,6 +85,8 @@ int           json_rapid_count;             // Number of shots expected in strin
 int           json_rapid_enable;            // Set to TRUE if the rapid fire event is enabled
 int           json_rapid_time;              // When will the rapid fire event end?
 int           json_rapid_wait;              // Delay applied to rapid start
+char          json_wifi_gateway[IP_SIZE];   // Gateway IP address
+char          json_wifi_static_ip[IP_SIZE]; // Static IP if used
 char          json_wifi_ssid[SSID_SIZE];    // Stored value of SSID
 char          json_wifi_pwd[PWD_SIZE];      // Stored value of password
 char          json_remote_url[URL_SIZE];    // Stored value of remote server
@@ -183,11 +185,11 @@ const json_message_t JSON[] = {
     {"\"VREF_LO\":", (int *)&json_vref_lo, IS_FLOAT, &set_VREF, NONVOL_VREF_LO, 1250, 0}, // Low trip point value (Volts)
     {"\"VREF_HI\":", (int *)&json_vref_hi, IS_FLOAT, &set_VREF, NONVOL_VREF_HI, 2000, 0}, // High trip point value (Volts)
     {"\"WIFI_CHANNEL\":", &json_wifi_channel, IS_INT32, 0, NONVOL_WIFI_CHANNEL, 6, 0}, // Set the wifi channel
+    {"\"WIFI_GATEWAY\":", (int *)&json_wifi_gateway, IS_TEXT + IP_SIZE, 0, NONVOL_WIFI_GATEWAY, 0, 9}, // Gateway IP address
     {"\"WIFI_HIDDEN\":", &json_wifi_hidden, IS_INT32, 0, NONVOL_WIFI_HIDDEN, 0, 1}, // Hide the SSID
-    //{"\"WIFI_IP\":", (int *)&json_wifi_ip, IS_TEXT + IP_SIZE, 0, NONVOL_WIFI_IP, 0}, // Static IP address
+    {"\"WIFI_IP\":", (int *)&json_wifi_static_ip, IS_TEXT + IP_SIZE, 0, NONVOL_WIFI_IP, 0, 9}, // Static IP address
     {"\"WIFI_PWD\":", (int *)&json_wifi_pwd, IS_SECRET + PWD_SIZE, 0, NONVOL_WIFI_PWD, 0, 0}, // Password of SSID to attach to
-    {"\"WIFI_RESET\":", &json_wifi_reset_first, 0, IS_INT32, 0, NONVOL_WIFI_RESET_FIRST, 1,
-     3}, // Reset everything on the first WiFI connection
+    {"\"WIFI_RESET\":", &json_wifi_reset_first, 0, IS_INT32, 0, NONVOL_WIFI_RESET_FIRST, 1, 3},
     {"\"WIFI_SSID\":", (int *)&json_wifi_ssid, IS_TEXT + SSID_SIZE, 0, NONVOL_WIFI_SSID, 0, 0}, // Name of SSID to attach to
     {"\"X_OFFSET\":", (int *)&json_x_offset, IS_FLOAT, 0, NONVOL_X_OFFSET, 0, 7}, // Correction to add to X to align target
     {"\"Y_OFFSET\":", (int *)&json_y_offset, IS_FLOAT, 0, NONVOL_Y_OFFSET, 0, 7}, // Correction to add to Y to align target

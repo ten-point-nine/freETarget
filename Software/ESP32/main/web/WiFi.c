@@ -78,15 +78,17 @@ static int                          socket_list[MAX_SOCKETS]; // Space to rememb
 static esp_netif_ip_info_t          ipInfo;                   // IP Address of the access point
 static int                          dns_valid;                // We have a valid IP address for the URL
 static ip_addr_t                    url_ip_address;           // Address of the server
+static esp_netif_t                 *sta_netif;                // Station configuration
 
 /*
  * Private Functions
  */
 void        WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
-static void tcpip_server_io(void);               // Manage TCPIP traffic
+static void tcpip_server_io(void);                  // Manage TCPIP traffic
 static void dns_found_cb(const char *name, const ip_addr_t *ip_addr, void *callback_arg);
 esp_err_t   esp_base_mac_addr_get(uint8_t *mac);
-static void WiFi_start_new_connection(int sock); // Socket token to use
+static void WiFi_start_new_connection(int sock);    // Socket token to use
+static void wifi_set_static_ip(esp_netif_t *netif); // Override the IP address
 
 /*
  * Definitions
@@ -255,10 +257,10 @@ void WiFi_station_init(void)
   esp_netif_init();
 
   esp_event_loop_create_default();
-  esp_netif_create_default_wifi_sta();
+  sta_netif = esp_netif_create_default_wifi_sta();
 
   esp_wifi_init(&WiFi_init_config); // Initialize the configuration
-  esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFi_event_handler, NULL, &instance_any_id);
+  esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFi_event_handler, sta_netif, &instance_any_id);
   esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &WiFi_event_handler, NULL, &instance_got_ip);
 
   DLT(DLT_INFO, SEND(sprintf(_xs, "WiFi SSID:%s", json_wifi_ssid);))
@@ -273,10 +275,12 @@ void WiFi_station_init(void)
   {
     WiFi_config.sta.threshold.authmode = WIFI_AUTH_WEP;
   }
+
   WiFi_config.sta.pmf_cfg.capable  = true;
   WiFi_config.sta.pmf_cfg.required = false;
   esp_wifi_set_mode(WIFI_MODE_STA);
   esp_wifi_set_config(WIFI_IF_STA, &WiFi_config);
+
   esp_wifi_start(); // Start the WiFi
 
   /*
@@ -401,16 +405,20 @@ void WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id
 {
   ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
 
+  printf("\r\narg: %ld \r\n", (long)arg);
   /*
    * I am a station
    */
   if ( event_base == WIFI_EVENT )
   {
-    if ( event_id == WIFI_EVENT_STA_START )        // Begin a connection to the SSID
+    if ( event_id == WIFI_EVENT_STA_START ) // Begin a connection to the SSID
     {
       esp_wifi_connect();
     }
-
+    if ( event_id == WIFI_EVENT_STA_CONNECTED )
+    {
+      wifi_set_static_ip(arg);
+    }
     if ( event_id == WIFI_EVENT_STA_DISCONNECTED ) // End a connection to the SSID
     {
       if ( s_retry_num < WIFI_MAX_RETRY )
@@ -451,6 +459,61 @@ void WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id
 
   /*
    * All done, return
+   */
+  return;
+}
+
+/*****************************************************************************
+ *
+ * @function:wifi_set_static_ip
+ *
+ * @brief:   Replace the DNS IP address with a static IP
+ *
+ * @return:   None
+ *
+ ******************************************************************************
+ *
+ * This function is provided to users who override the dynamic IP address
+ * assigned by the router.
+ *
+ *******************************************************************************/
+static void wifi_set_static_ip(esp_netif_t *netif)
+{
+  esp_netif_ip_info_t ip; // New IP address
+
+  /*
+   * Check to see if a static IP has been assigned
+   */
+  if ( json_wifi_static_ip[0] == 0 )
+  {
+    return;
+  }
+
+  /*
+   *  Yes, stop the current IP address from the DCHP server
+   */
+  if ( esp_netif_dhcpc_stop(netif) != ESP_OK )
+  {
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to stop dhcp client");))
+    return;
+  }
+
+  /*
+   *  Write out a new one from the JSON configuration
+   */
+  memset(&ip, 0, sizeof(esp_netif_ip_info_t));
+  ip.ip.addr      = ipaddr_addr(json_wifi_static_ip);
+  ip.netmask.addr = ipaddr_addr("255.255.255.0");
+  ip.gw.addr      = ipaddr_addr(json_wifi_gateway);
+
+  if ( esp_netif_set_ip_info(netif, &ip) != ESP_OK )
+  {
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to change IP address");))
+    return;
+  }
+
+  /*
+   *   Finished, return
    */
   return;
 }

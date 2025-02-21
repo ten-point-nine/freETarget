@@ -8,7 +8,7 @@
 #ifndef _NONVOL_H
 #define _NONVOL_H
 
-#define PS_VERSION   8                                    // Persistent storage version
+#define PS_VERSION   9                                    // Persistent storage version
 #define PS_UNINIT(x) (((x) == 0xABAB) || ((x) == 0xFFFF)) // Uninitilized value
 
 #define NAME_SPACE "freETarget"
@@ -69,6 +69,7 @@ void restore_nonvol(void);                        // Copyt the nonvol back
 #define NONVOL_WIFI_SSID        "WIFI_SSID"       // Storage for SSID
 #define NONVOL_WIFI_PWD         "WIFI_PWD"        // Storage for SSID Password
 #define NONVOL_WIFI_IP          "WIFI_IP"         // Storage forIP Address
+#define NONVOL_WIFI_GATEWAY     "WIFI_GATEWAY"    // Storage for Gateway mask
 #define NONVOL_WIFI_RESET_FIRST "WIFI_RESET"      // Reset the target on the first WiFi connction
 #define NONVOL_X_OFFSET         "X_OFFSET"        // Offset added to sensors to adjust centre horizontally
 #define NONVOL_Y_OFFSET         "Y_OFFSET"        // Offset added to sensors to adjust centre vertically
