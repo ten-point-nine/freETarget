@@ -38,8 +38,8 @@ bool get_string(char destination[], int size);       // Collect a string from th
 #define TCPIP          (TCPIP_0 + TCPIP_1 + TCPIP_2 + TCPIP_3)
 #define CONSOLE        0x10
 #define AUX            0x20
-#define EVEN_ODD_BEGIN 0x41 // Remember to output in even_odd mode
-#define EVEN_ODD_END   0x40 // Exit even odd mode
+#define EVEN_ODD_BEGIN 0x40 // Remember to output in even_odd mode
+#define EVEN_ODD_END   0x80 // Exit even odd mode
 
 #define ALL (CONSOLE + AUX + TCPIP)
 

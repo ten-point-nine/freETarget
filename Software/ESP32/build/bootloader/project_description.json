@@ -4,8 +4,8 @@
     "project_version":    "v5.3.1-dirty",
     "project_path":       "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader/subproject",
     "idf_path":           "C:/Users/allan/esp/v5.3.1/esp-idf",
-    "build_dir":          "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader",
-    "config_file":        "C:/Users/allan/Documents/freETarget/Software/ESP32/sdkconfig",
+    "build_dir":          "C:/Users/allan/Downloads/ESP32/build/bootloader",
+    "config_file":        "C:/Users/allan/Downloads/ESP32/sdkconfig",
     "config_defaults":    "",
     "bootloader_elf":     "",
     "app_elf":            "bootloader.elf",
@@ -54,7 +54,7 @@
             "priv_reqs": [ "micro-ecc", "spi_flash", "efuse", "esp_bootloader_format", "esp_app_format", "hal" ],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "file": "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader/esp-idf/bootloader_support/libbootloader_support.a",
+            "file": "C:/Users/allan/Downloads/ESP32/build/bootloader/esp-idf/bootloader_support/libbootloader_support.a",
             "sources": [ "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/bootloader_common.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/bootloader_common_loader.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/bootloader_clock_init.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/bootloader_mem.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/bootloader_random.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/bootloader_efuse.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/flash_encrypt.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/secure_boot.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/bootloader_random_esp32s3.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/bootloader_flash/src/bootloader_flash.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/bootloader_flash/src/flash_qio_mode.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/bootloader_flash/src/bootloader_flash_config_esp32s3.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/bootloader_utility.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/flash_partitions.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/esp_image_format.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/bootloader_init.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/bootloader_clock_loader.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/bootloader_console.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/bootloader_console_loader.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/esp32s3/bootloader_sha.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/esp32s3/bootloader_soc.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/esp32s3/bootloader_esp32s3.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader_support/src/bootloader_panic.c" ],
             "include_dirs": [ "include", "bootloader_flash/include", "private_include" ]
         },
@@ -69,7 +69,7 @@
             "priv_reqs": [ "bootloader_support", "soc", "spi_flash" ],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "file": "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader/esp-idf/efuse/libefuse.a",
+            "file": "C:/Users/allan/Downloads/ESP32/build/bootloader/esp-idf/efuse/libefuse.a",
             "sources": [ "C:/Users/allan/esp/v5.3.1/esp-idf/components/efuse/esp32s3/esp_efuse_table.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/efuse/esp32s3/esp_efuse_fields.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/efuse/esp32s3/esp_efuse_rtc_calib.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/efuse/esp32s3/esp_efuse_utility.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/efuse/src/esp_efuse_api.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/efuse/src/esp_efuse_fields.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/efuse/src/esp_efuse_utility.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/efuse/src/efuse_controller/keys/with_key_purposes/esp_efuse_api_key.c" ],
             "include_dirs": [ "include", "esp32s3/include" ]
         },
@@ -99,7 +99,7 @@
             "priv_reqs": [],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "file": "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader/esp-idf/esp_bootloader_format/libesp_bootloader_format.a",
+            "file": "C:/Users/allan/Downloads/ESP32/build/bootloader/esp-idf/esp_bootloader_format/libesp_bootloader_format.a",
             "sources": [ "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_bootloader_format/esp_bootloader_desc.c" ],
             "include_dirs": [ "include" ]
         },
@@ -114,7 +114,7 @@
             "priv_reqs": [],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "file": "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader/esp-idf/esp_common/libesp_common.a",
+            "file": "C:/Users/allan/Downloads/ESP32/build/bootloader/esp-idf/esp_common/libesp_common.a",
             "sources": [ "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_common/src/esp_err_to_name.c" ],
             "include_dirs": [ "include" ]
         },
@@ -129,7 +129,7 @@
             "priv_reqs": [ "efuse", "spi_flash", "bootloader_support", "esp_system" ],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "file": "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader/esp-idf/esp_hw_support/libesp_hw_support.a",
+            "file": "C:/Users/allan/Downloads/ESP32/build/bootloader/esp-idf/esp_hw_support/libesp_hw_support.a",
             "sources": [ "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_hw_support/cpu.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_hw_support/port/esp32s3/esp_cpu_intr.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_hw_support/esp_memory_utils.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_hw_support/port/esp32s3/cpu_region_protect.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_hw_support/port/esp32s3/rtc_clk.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_hw_support/port/esp32s3/rtc_clk_init.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_hw_support/port/esp32s3/rtc_init.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_hw_support/port/esp32s3/rtc_sleep.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_hw_support/port/esp32s3/rtc_time.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_hw_support/port/esp32s3/chip_info.c" ],
             "include_dirs": [ "include", "include/soc", "include/soc/esp32s3", "dma/include", "ldo/include" ]
         },
@@ -144,7 +144,7 @@
             "priv_reqs": [ "soc", "hal" ],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "file": "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader/esp-idf/esp_rom/libesp_rom.a",
+            "file": "C:/Users/allan/Downloads/ESP32/build/bootloader/esp-idf/esp_rom/libesp_rom.a",
             "sources": [ "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_rom/patches/esp_rom_crc.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_rom/patches/esp_rom_sys.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_rom/patches/esp_rom_uart.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_rom/patches/esp_rom_spiflash.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_rom/patches/esp_rom_efuse.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_rom/patches/esp_rom_longjmp.S", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_rom/patches/esp_rom_systimer.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_rom/patches/esp_rom_wdt.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_rom/patches/esp_rom_cache_esp32s2_esp32s3.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_rom/patches/esp_rom_cache_writeback_esp32s3.S" ],
             "include_dirs": [ "include", "include/esp32s3", "esp32s3" ]
         },
@@ -159,7 +159,7 @@
             "priv_reqs": [],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "file": "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader/esp-idf/esp_system/libesp_system.a",
+            "file": "C:/Users/allan/Downloads/ESP32/build/bootloader/esp-idf/esp_system/libesp_system.a",
             "sources": [ "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_system/esp_err.c" ],
             "include_dirs": []
         },
@@ -204,7 +204,7 @@
             "priv_reqs": [],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "file": "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader/esp-idf/hal/libhal.a",
+            "file": "C:/Users/allan/Downloads/ESP32/build/bootloader/esp-idf/hal/libhal.a",
             "sources": [ "C:/Users/allan/esp/v5.3.1/esp-idf/components/hal/hal_utils.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/hal/mpu_hal.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/hal/efuse_hal.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/hal/esp32s3/efuse_hal.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/hal/mmu_hal.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/hal/cache_hal.c" ],
             "include_dirs": [ "platform_port/include", "esp32s3/include", "include" ]
         },
@@ -219,7 +219,7 @@
             "priv_reqs": [ "soc", "hal", "esp_hw_support" ],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "file": "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader/esp-idf/log/liblog.a",
+            "file": "C:/Users/allan/Downloads/ESP32/build/bootloader/esp-idf/log/liblog.a",
             "sources": [ "C:/Users/allan/esp/v5.3.1/esp-idf/components/log/log.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/log/log_buffers.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/log/log_noos.c" ],
             "include_dirs": [ "include" ]
         },
@@ -234,7 +234,7 @@
             "priv_reqs": [],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "file": "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader/esp-idf/main/libmain.a",
+            "file": "C:/Users/allan/Downloads/ESP32/build/bootloader/esp-idf/main/libmain.a",
             "sources": [ "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader/subproject/main/bootloader_start.c" ],
             "include_dirs": []
         },
@@ -249,7 +249,7 @@
             "priv_reqs": [],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "file": "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader/esp-idf/micro-ecc/libmicro-ecc.a",
+            "file": "C:/Users/allan/Downloads/ESP32/build/bootloader/esp-idf/micro-ecc/libmicro-ecc.a",
             "sources": [ "C:/Users/allan/esp/v5.3.1/esp-idf/components/bootloader/subproject/components/micro-ecc/uECC_verify_antifault.c" ],
             "include_dirs": [ ".", "micro-ecc" ]
         },
@@ -294,7 +294,7 @@
             "priv_reqs": [],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "file": "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader/esp-idf/soc/libsoc.a",
+            "file": "C:/Users/allan/Downloads/ESP32/build/bootloader/esp-idf/soc/libsoc.a",
             "sources": [ "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/lldesc.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/dport_access_common.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/interrupts.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/gpio_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/uart_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/adc_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/dedic_gpio_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/gdma_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/spi_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/ledc_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/pcnt_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/rmt_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/sdm_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/i2s_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/i2c_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/temperature_sensor_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/timer_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/lcd_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/mcpwm_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/mpi_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/sdmmc_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/touch_sensor_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/twai_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/usb_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/usb_dwc_periph.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/soc/esp32s3/rtc_io_periph.c" ],
             "include_dirs": [ "include", "esp32s3", "esp32s3/include" ]
         },
@@ -309,7 +309,7 @@
             "priv_reqs": [ "bootloader_support", "soc" ],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "file": "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader/esp-idf/spi_flash/libspi_flash.a",
+            "file": "C:/Users/allan/Downloads/ESP32/build/bootloader/esp-idf/spi_flash/libspi_flash.a",
             "sources": [ "C:/Users/allan/esp/v5.3.1/esp-idf/components/spi_flash/spi_flash_wrap.c" ],
             "include_dirs": [ "include" ]
         },
@@ -324,7 +324,7 @@
             "priv_reqs": [],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "file": "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader/esp-idf/xtensa/libxtensa.a",
+            "file": "C:/Users/allan/Downloads/ESP32/build/bootloader/esp-idf/xtensa/libxtensa.a",
             "sources": [ "C:/Users/allan/esp/v5.3.1/esp-idf/components/xtensa/eri.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/xtensa/xt_trax.c" ],
             "include_dirs": [ "esp32s3/include", "include", "deprecated_include" ]
         }
@@ -412,7 +412,7 @@
             "priv_reqs": [ "esp_driver_uart", "esp_driver_usb_serial_jtag" ],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "include_dirs": [ "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader" ]
+            "include_dirs": [ "C:/Users/allan/Downloads/ESP32/build/bootloader" ]
         },
         "cxx": {
             "alias": "idf::cxx",
@@ -460,7 +460,7 @@
             "priv_reqs": [ "http_parser", "esp_timer", "lwip" ],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "include_dirs": [ "C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader", "esp-tls-crypto" ]
+            "include_dirs": [ "C:/Users/allan/Downloads/ESP32/build/bootloader", "esp-tls-crypto" ]
         },
         "esp_adc": {
             "alias": "idf::esp_adc",

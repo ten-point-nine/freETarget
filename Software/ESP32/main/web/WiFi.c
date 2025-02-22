@@ -405,7 +405,6 @@ void WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id
 {
   ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
 
-  printf("\r\narg: %ld \r\n", (long)arg);
   /*
    * I am a station
    */

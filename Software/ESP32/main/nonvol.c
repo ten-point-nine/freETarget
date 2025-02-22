@@ -432,11 +432,6 @@ void update_nonvol(unsigned int current_version // Version present in persistent
             }
             break;
         }
-        if ( version == 2 )
-        {
-          strcpy(json_wifi_ip, "192.168.10.9");
-          nvs_set_str(my_handle, NONVOL_WIFI_IP, json_wifi_ip);
-        }
       }
       i++;
     }

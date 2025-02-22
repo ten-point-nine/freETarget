@@ -1837,7 +1837,7 @@ rule C_STATIC_LIBRARY_LINKER____idf_protocol_examples_common_
 # Rule for re-running cmake.
 
 rule RERUN_CMAKE
-  command = C:\Users\allan\.espressif\tools\cmake\3.24.0\bin\cmake.exe --regenerate-during-build -SC:\Users\allan\Documents\freETarget\Software\ESP32 -BC:\Users\allan\Documents\freETarget\Software\ESP32\build
+  command = C:\Users\allan\.espressif\tools\cmake\3.24.0\bin\cmake.exe --regenerate-during-build -SC:\Users\allan\Downloads\ESP32 -BC:\Users\allan\Downloads\ESP32\build
   description = Re-running CMake...
   generator = 1
 

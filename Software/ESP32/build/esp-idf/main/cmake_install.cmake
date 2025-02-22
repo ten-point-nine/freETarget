@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/allan/Documents/freETarget/Software/ESP32/main
+# Install script for directory: C:/Users/allan/Downloads/ESP32/main
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

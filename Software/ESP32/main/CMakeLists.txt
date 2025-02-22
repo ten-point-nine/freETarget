@@ -1,5 +1,7 @@
-idf_component_register(SRCS  "main.c" 
+idf_component_register(SRCS  
+                    "main.c" 
                     "freetarget.c"
+                    "helpers.c"
                     "drivers/dac.c" 
                     "drivers/pcnt.c"
                     "diag_tools.c"

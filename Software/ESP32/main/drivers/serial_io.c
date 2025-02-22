@@ -364,21 +364,23 @@ void serial_to_all(char *str,         // String to output
 {
   static bool  even_odd_mode = 0;     // Are we concatinating output?
   static bool  even_odd      = false; // Set the even odd flag to odd (fiest half)
+  static int   line_count    = 0;     // How many lines have we output
   unsigned int length;
   static char  e_o_line[SHORT_TEXT];  // Place to store even odd srring
 
   /*
    * Check to see if we have a control message coming
    */
-  if ( ports == EVEN_ODD_BEGIN ) // Begin concatination
+  if ( (ports & EVEN_ODD_BEGIN) != 0 ) // Begin concatination
   {
     even_odd_mode = true;
     even_odd      = false;
     e_o_line[0]   = 0;
+    line_count    = 0;
     return;
   }
 
-  if ( ports == EVEN_ODD_END ) // End concatination
+  if ( (ports & EVEN_ODD_END) != 0 ) // End concatination
   {
     even_odd_mode = false;
     return;
@@ -399,6 +401,11 @@ void serial_to_all(char *str,         // String to output
     strcat(e_o_line, str);
     strcpy(str, e_o_line);
     strcat(str, "\r\n");
+    line_count++;
+    if ( (line_count % 4) == 0 )
+    {
+      strcat(str, "\r\n");
+    }
     even_odd = false;
   }
   else                          // Normal mode

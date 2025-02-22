@@ -39,6 +39,6 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/esp_system/port/cmake_install.cmake")
+  include("C:/Users/allan/Downloads/ESP32/build/esp-idf/esp_system/port/cmake_install.cmake")
 endif()
 

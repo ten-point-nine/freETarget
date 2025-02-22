@@ -1,16 +1,15 @@
-char e:/post_test.html.c[]=
-"<!DOCTYPE html>"\
-"<html>"\
-"<head>"\
-"<script>"\
-"function onButtonClick() {"\
-"let txt = document.getElementById("testInput").value;"\
-"alert(txt);"\
-"}"\
-"</script>"\
-"</head>"\
-"<body>"\
-"<input type="text" id="testInput" />"\
-"<button onclick="onButtonClick()">Show Message</button>"\
-"</body>"\
-"</html>"\
+char e : / post_test.html.c[] = "<!DOCTYPE html>"
+                                "<html>"
+                                "<head>"
+                                "<script>"
+                                "function onButtonClick() {"
+                                "let txt = document.getElementById(" testInput ").value;"
+                                "alert(txt);"
+                                "}"
+                                "</script>"
+                                "</head>"
+                                "<body>"
+                                "<input type=" text " id=" testInput " />"
+                                "<button onclick=" onButtonClick() ">Show Message</button>"
+                                                                   "</body>"
+                                                                   "</html>"\
