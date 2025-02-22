@@ -48,6 +48,10 @@ extern const json_message_t JSON[];
 
 #define SSID_SIZE      31                          // Reserve 30+1 bytes for SSID
 #define PWD_SIZE       31                          // Reserve 30+1 bytes for Password
+#define URL_SIZE       128                         // Reserve 129 bytes for server URL
+#define KEY_SIZE       31                          // Key size for remote access
+#define SMALL_STRING   32                          // Small strings are 32 bytes long
+#define LARGE_STRING   128                         // Large strings are 128 bytes long
 #define IP_SIZE        sizeof("192.168.100.100\0") // Reserved space of IP address
 #define JSON_NAME_TEXT 99                          // Name ID = User defined
 
@@ -104,9 +108,12 @@ extern int           json_rapid_time;       // When will the rapid fire event en
 extern int           json_wifi_channel;     // Channel assigned to this SSID
 extern int           json_rapid_wait;       // Delay applied to rapid fire
 extern int           json_wifi_dhcp;        // TRUE if the DHCP server is enabled
-extern char          json_wifi_ssid[];      // Text of WiFI SSID
-extern char          json_wifi_pwd[];       // Text of WiFI password
-extern char          json_wifi_ip[];        // Text of IP address
+extern char          json_wifi_static_ip[];  // Static IP assigned to the target
+extern char          json_wifi_gateway[];    // Text of WiFI gateway mask
+extern char          json_wifi_ssid[];       // Text of WiFI SSID
+extern char          json_wifi_pwd[];        // Text of WiFI password
+extern char          json_wifi_server_url[]; // Remote Server URL
+extern char          json_wifi_server_key[]; // Remote Server key
 extern int           json_wifi_hidden;      // Hide the SSID if enabled
 extern int           json_min_ring_time;    // Time to wait for ringing to stop
 extern int           json_token;            // Token ring setting
@@ -125,5 +132,10 @@ extern int           json_mfs_select_cd;    // Select C and D operation
 extern int           json_wifi_reset_first; // Reset the target on first WiFi connection
 extern int           json_paper_shot;       // How many shots before advancing paper
 extern int           json_aux_port_enable;  // Enable comms from the AUX port
-extern char          json_name_text[];      // User supplied target name
+extern char          json_remote_url[];      // Where are the messages going?
+extern char          json_athlete[];         // Athelete shooting
+extern char          json_event[];           // Event being shot
+extern char          json_target_name[];     // Target being shot at
+extern char          json_name_text[];       // Target name, ex (Target 54))
+extern int           json_remote_modes;      // What modes are available to talk to a remote server
 #endif

@@ -29,6 +29,10 @@
  *  Function Prototypes
  */
 static void handle_json(void); // Breakdown the JSON and execute it
+int         instr(char *s1, char *s2);
+void        show_echo(void);   // Display the current settings
+static void show_names(int v);
+static void set_trace(int v);  // Set the trace on and off
 
 /*
  *  Variables
@@ -82,10 +86,16 @@ int           json_rapid_count;          // Number of shots expected in string
 int           json_rapid_enable;         // Set to TRUE if the rapid fire event is enabled
 int           json_rapid_time;           // When will the rapid fire event end?
 int           json_rapid_wait;           // Delay applied to rapid start
+char          json_wifi_gateway[IP_SIZE];   // Gateway IP address
+char          json_wifi_static_ip[IP_SIZE]; // Static IP if used
 char          json_wifi_ssid[SSID_SIZE]; // Stored value of SSID
 char          json_wifi_pwd[PWD_SIZE];   // Stored value of password
+char          json_remote_url[URL_SIZE];    // Stored value of remote server
+char          json_remote_key[KEY_SIZE];    // Key for remote server
+int           json_remote_active;           // Set to TRUE if there is a remote to search for
 int           json_wifi_hidden;          // The SSID FET- is hidden
 int           json_wifi_dhcp;            // The ESP is a DHCP server
+int           json_wifi_reset_first;        // Reset the score table on first WiFi connection
 int           json_min_ring_time;        // Time to wait for ringing to stop
 int           json_token;                // Token ring state
 double        json_vref_lo;              // Low Voltage DAC setting
@@ -104,9 +114,16 @@ char          json_wifi_ip[IP_SIZE];     // User defined IP address
 int           json_paper_shot;           // How many shots before advancing paper
 int           json_aux_port_enable;      // Enable the AUX port only if there is Aux hardware installed
 char          json_name_text[SSID_SIZE]; // User defined target name
+int           json_remote_modes;            // What modes are available to talk to a remote server
 
-void        show_echo(void);             // Display the current settings
-static void show_test(int v);            // Execute the self test once
+char json_remote_url[URL_SIZE];             // URL of remote server
+int  json_remote_active;                    // Set to 1 to send score to a remote server
+char json_athlete[SMALL_STRING];            // Shooter name (ex Allan Brown)
+char json_event[SMALL_STRING];              // Shooting event (ex Practice)
+char json_target_name[SMALL_STRING];        // Target name (ex Pistol)
+
+void        show_echo(void);                // Display the current settings
+static void show_test(int v);               // Execute the self test once
 static void show_names(int v);
 static void set_trace(int v);            // Set the trace on and off
 static void diag_delay(int x);           // Insert a delay
@@ -143,6 +160,9 @@ const json_message_t JSON[] = {
     {"\"PAPER_TIME\":",      &json_paper_time,        IS_INT32,             0,                  NONVOL_PAPER_TIME,       500,        0}, // Set the paper advance time
     {"\"PCNT_LATENCY\":",    &json_pcnt_latency,      IS_INT32,             0,                  NONVOL_PCNT_LATENCY,     0,          1}, // Interrupt latency for PCNT adjustment
     {"\"POWER_SAVE\":",      &json_power_save,        IS_INT32,             0,                  NONVOL_POWER_SAVE,       0,          0}, // Set the power saver time
+    {"\"REMOTE_ACTIVE\":", &json_remote_active, IS_INT32, 0, NONVOL_REMOTE_ACTIVE, 8}, // Send score to a remote server
+    {"\"REMOTE_KEY\":", &json_remote_key, IS_TEXT + KEY_SIZE, 0, NONVOL_REMOTE_KEY, 8}, // Remote access key
+    {"\"REMOTE_URL\":", (int *)&json_remote_url, IS_TEXT + URL_SIZE, 0, NONVOL_REMOTE_URL, 8}, // Reserve space for remote URL
     {"\"RAPID_COUNT\":",     &json_rapid_count,       IS_INT32,             0,                  0,                       0,          0}, // Number of shots expected in series
     {"\"RAPID_ENABLE\":",    &json_rapid_enable,      IS_INT32,             0,                  0,                       0,          0}, // Enable the rapid fire fieature
     {"\"RAPID_TIME\":",      &json_rapid_time,        IS_INT32,             0,                  0,                       0,          0}, // Set the duration of the rapid fire event and start
@@ -168,11 +188,12 @@ const json_message_t JSON[] = {
     {"\"VREF_LO\":",         (int *)&json_vref_lo,    IS_FLOAT,             &set_VREF,          NONVOL_VREF_LO,          1250,       0}, // Low trip point value (Volts)
     {"\"VREF_HI\":",         (int *)&json_vref_hi,    IS_FLOAT,             &set_VREF,          NONVOL_VREF_HI,          2000,       0}, // High trip point value (Volts)
     {"\"WIFI_CHANNEL\":",    &json_wifi_channel,      IS_INT32,             0,                  NONVOL_WIFI_CHANNEL,     6,          0}, // Set the wifi channel
+    {"\"WIFI_GATEWAY\":", (int *)&json_wifi_gateway, IS_TEXT + IP_SIZE, 0, NONVOL_WIFI_GATEWAY, 0, 9}, // Gateway IP address
     {"\"WIFI_HIDDEN\":",     &json_wifi_hidden,       IS_INT32,             0,                  NONVOL_WIFI_HIDDEN,      0,          1}, // Hide the SSID
-    // {"\"WIFI_IP\":",        (int*)&json_wifi_ip,               0,                IS_TEXT+IP_SIZE, 0,          NONVOL_WIFI_IP,          0
+    {"\"WIFI_IP\":", (int *)&json_wifi_static_ip, IS_TEXT + IP_SIZE, 0, NONVOL_WIFI_IP, 0, 9}, // Static IP address
     // },    // Static IP address
     {"\"WIFI_PWD\":",        (int *)&json_wifi_pwd,   IS_SECRET + PWD_SIZE, 0,                  NONVOL_WIFI_PWD,         0,          0}, // Password of SSID to attach to
-    {"\"WIFI_RESET\":",      &json_wifi_reset_first,  IS_INT32,             0,                  NONVOL_WIFI_RESET_FIRST, 1,
+    {"\"WIFI_RESET\":", &json_wifi_reset_first, 0, IS_INT32, 0, NONVOL_WIFI_RESET_FIRST, 1, 3},
      3                                                                                                                                }, // Reset everything on the first WiFI connection
     {"\"WIFI_SSID\":",       (int *)&json_wifi_ssid,  IS_TEXT + SSID_SIZE,  0,                  NONVOL_WIFI_SSID,        0,          0}, // Name of SSID to attach to
     {"\"X_OFFSET\":",        (int *)&json_x_offset,   IS_FLOAT,             0,                  NONVOL_X_OFFSET,         0,          7}, // Correction to add to X to align target
@@ -186,14 +207,11 @@ const json_message_t JSON[] = {
     {"\"SOUTH_Y\":",         &json_south_y,           IS_INT32,             0,                  NONVOL_SOUTH_Y,          0,          0}, //
     {"\"WEST_X\":",          &json_west_x,            IS_INT32,             0,                  NONVOL_WEST_X,           0,          0}, //
     {"\"WEST_Y\":",          &json_west_y,            IS_INT32,             0,                  NONVOL_WEST_Y,           0,          0}, //
-    {"\"ATHLETE\":",         0,                       IS_VOID,              0,                  0,                       0,          0}, // Athlete name for online version
-    {"\"EVENT\":",           0,                       IS_VOID,              0,                  0,                       0,          0}, // Shooting event for online version
-    {"\"TARGET_NAME\":",     0,                       IS_VOID,              0,                  0,                       0,          0}, // Target name for online version
+    {"\"ATHLETE\":", (int *)&json_athlete, IS_TEXT + SMALL_STRING, 0, 0, 0, 0}, // Athlete name for online version
+    {"\"EVENT\":", (int *)&json_event, IS_VOID, 0, 0, 0, 0}, // Shooting event for online version
+    {"\"TARGET_NAME\":", (int *)json_target_name, IS_VOID, 0, 0, 0, 0}, // Target name for online version
     {0,                      0,                       0,                    0,                  0,                       0,          0}, //
 };
-// clang-format on
-
-int instr(char *s1, char *s2);
 
 /*-----------------------------------------------------
  *
@@ -354,7 +372,8 @@ static void handle_json(void)
       x = 0;
       if ( JSON[j].token != 0 )
       {
-        k = instr(&input_JSON[i], JSON[j].token);           // Compare the input against the list of JSON tags
+        k = instr(&input_JSON[i],
+                  JSON[j].token);                           // Compare the input against the list of JSON tags
         if ( k > 0 )                                        // Non zero, found something
         {
           not_found = false;                                // Read and convert the JSON value
@@ -418,7 +437,8 @@ static void handle_json(void)
               }
               if ( JSON[j].non_vol != 0 )
               {
-                nvs_set_i32(my_handle, JSON[j].non_vol, x); // Store into NON-VOL as an integer * 1000
+                nvs_set_i32(my_handle, JSON[j].non_vol,
+                            x);               // Store into NON-VOL as an integer * 1000
               }
               break;
           }

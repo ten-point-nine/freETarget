@@ -31,6 +31,7 @@
 #include "WiFi.h"
 #include "diag_tools.h"
 #include "mfs.h"
+#include "http_client.h"
 
 /*
  *  Variables

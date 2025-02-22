@@ -20,6 +20,8 @@
 #include "string.h"
 
 #include "freETarget.h"
+#include "http_client.h"
+#include "http_test.h"
 #include "WiFi.h"
 #include "analog_io.h"
 #include "compute_hit.h"
@@ -73,6 +75,10 @@ static const self_test_t test_list[] = {
     {"Enable the WiFi AP",                &WiFi_AP_init          },
     {"Loopback the TCPIP data",           &WiFi_loopback_test    },
     {"Loopback WiFi",                     &WiFi_loopback_test    },
+    {"- HTTP tests",                      0                        },
+    {"DNS Lookup test",                   &http_DNS_test           },
+    {"Send to server test",               &http_send_to_server_test},
+    {"Start web server",                  &http_server_test        },
     {"-Interrupt Tests",                  0                      },
     {"Polled target test",                &polled_target_test    },
     {"Interrupt target test",             &interrupt_target_test },
@@ -88,6 +94,7 @@ const dlt_name_t dlt_names[] = {
     {DLT_DEBUG,         "DLT_DEBUG",         'D'}, // Software debugging information
     {DLT_SCORE,         "DLT_SCORE",         'S'}, // Display timing in the score message
     {DLT_HEARTBEAT,     "DLT_HEARTBEAT",     'H'}, // Heartbeat tick
+    {DLT_HTTP,          "DLT_HTTP",          'H'}, // Log HTTP events
     {0,                 0,                   0  }
 };
 
@@ -148,7 +155,7 @@ void self_test(unsigned int test // What test to execute
   {
     if ( (test_ID == test) && (test_list[i].help[0] != '-') ) // Found the test
     {
-      SEND(sprintf(_xs, "\r\n\n%2d - %s", test_ID, test_list[i].help);)
+      SEND(sprintf(_xs, "\r\nTest Number %2d - %s\r\n", test_ID, test_list[i].help);)
       test_list[i].f();                                       // Execute the test
       run_state &= ~IN_TEST;                                  // Exit the test
       freeETarget_timer_start();                              // Start interrupts

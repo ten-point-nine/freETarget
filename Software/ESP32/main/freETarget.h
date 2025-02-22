@@ -13,8 +13,9 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "serial_io.h"
 
-#define SOFTWARE_VERSION "\"5.2.24 February 13, 2025\""
+#define SOFTWARE_VERSION "\"6.0.0 January 28, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 
 #define REV_500   500    // ESP32
@@ -44,6 +45,8 @@
 
 #define IS_DC_WITNESS      (json_paper_time != 0) // Determine the witness paper drive (DC Motor)
 #define IS_STEPPER_WITNESS (json_step_count != 0) // Determine the witness paper drive (stepper)
+
+#define JSON_NAME_TEXT 99                         // Use 99 to identify a user named target
 
 /*
  * Options
