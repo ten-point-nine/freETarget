@@ -40,6 +40,7 @@
 #include "lwip/sys.h"
 
 #include "freETarget.h"
+#include "helpers.h"
 #include "http_client.h"
 #include "WiFi.h"
 #include "compute_hit.h"
@@ -223,6 +224,7 @@ void WiFi_AP_init(void)
    * Ready to go
    */
   set_status_LED(LED_WIFI_ACCESS); // I am an access point
+
   return;
 }
 
@@ -295,6 +297,7 @@ void WiFi_station_init(void)
     WiFi_my_IP_address(str_c);
     DLT(DLT_INFO, SEND(sprintf(_xs, "Connected to AP SSID:  \"%s\"", json_wifi_ssid);))
     DLT(DLT_INFO, SEND(sprintf(_xs, "Using WiFi_IP_ADDRESS: \"%s\"", str_c);))
+    set_status_LED(LED_WIFI_STATION);
   }
   else if ( bits & WIFI_FAIL_BIT )
   {
@@ -308,7 +311,7 @@ void WiFi_station_init(void)
   /*
    *  All done
    */
-  set_status_LED(LED_WIFI_STATION);
+
   return;
 }
 
@@ -417,6 +420,7 @@ void WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id
     if ( event_id == WIFI_EVENT_STA_CONNECTED )
     {
       wifi_set_static_ip(arg);
+      set_status_LED(LED_WIFI_STATION);
     }
     if ( event_id == WIFI_EVENT_STA_DISCONNECTED ) // End a connection to the SSID
     {
@@ -429,7 +433,6 @@ void WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id
       {
         xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
       }
-      set_status_LED(LED_WIFI_STATION);
     }
   }
 

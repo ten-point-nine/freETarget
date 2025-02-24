@@ -12,8 +12,7 @@
 #include "stdbool.h"
 #include "gpio_types.h"
 #include "driver\gpio.h"
-
-#include "freETarget.h"
+#include "helpers.h"
 #include "json.h"
 #include "mfs.h"
 #include "diag_tools.h"
@@ -469,6 +468,7 @@ void send_score(shot_record_t *shot,        //  record
   double real_x, real_y;                    // Shot location in mm X, Y before remap
   double radius;
   double angle;
+  char   str_c[SHORT_TEXT];                 // String holding buffers
 
   DLT(DLT_APPLICATION, SEND(sprintf(_xs, "Sending the score");))
 
@@ -521,28 +521,8 @@ void send_score(shot_record_t *shot,        //  record
   {
     SEND(sprintf(_xs, ", \"miss\":1");)
   }
-  if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF) )
-  {
-    if ( json_name_id != JSON_NAME_TEXT )
-    {
-      SEND(sprintf(_xs, ", \"name\":\"%s\"", names[json_name_id]);)
-    }
-    else
-    {
-      if ( json_name_text[0] != 0 )
-      {
-        SEND(sprintf(_xs, ", \"name\":\"%s\"", json_name_text);)
-      }
-      else
-      {
-        SEND(sprintf(_xs, ", \"name\":\"UNDEFINED_NAME\"");)
-      }
-    }
-  }
-  else
-  {
-    SEND(sprintf(_xs, ", \"name\":\"%d\"", my_ring);)
-  }
+  target_name(str_c);
+  SEND(sprintf(_xs, ", \"name\":\"%s\"", str_c);)
   SEND(sprintf(_xs, ", \"time\":%6.2f ", SHOT_TIME_TO_SECONDS(shot->shot_time));)
 #endif
 
@@ -585,7 +565,7 @@ void send_score(shot_record_t *shot,        //  record
     SEND(sprintf(_xs, ", \"target_type\":%d ", DIP_D););
   }
 
-  SEND(sprintf(_xs, "}\r\n");)
+  SEND(sprintf(_xs, "}");)
 
 /*
  * Send to the server if needed

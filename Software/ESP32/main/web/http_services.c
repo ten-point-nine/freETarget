@@ -16,7 +16,6 @@
  * See http_server.h for the various compilation options
  *
  *-----------------------------------------------------*/
-#define BRIAN (0 == 1)
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -28,6 +27,7 @@
 #include <esp_wifi.h>
 
 #include "freETarget.h"
+#include "helpers.h"
 #include "http_server.h"
 #include "diag_tools.h"
 #include "json.h"

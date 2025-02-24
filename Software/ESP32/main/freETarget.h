@@ -15,7 +15,7 @@
 #include "freertos/task.h"
 #include "serial_io.h"
 
-#define SOFTWARE_VERSION "\"6.0.0 February 23, 2025\""
+#define SOFTWARE_VERSION "\"6.0.0 February 24, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 
 #define REV_500   500    // ESP32
@@ -143,7 +143,6 @@ typedef unsigned char byte_t;
  *  Global Variables
  */
 extern double                 s_of_sound;
-extern const char            *names[];
 extern const char             to_hex[];
 extern unsigned int           face_strike;
 extern unsigned int           is_trace;    // Tracing level(s)

@@ -84,16 +84,9 @@ extern int isr_state;
 
 volatile unsigned int run_state = 0;                // Current operating state
 
-const char *names[] = {"TARGET",                    //  0
-                       "1",      "2",      "3",       "4",      "5",       "6",       "7",      "8",     "9",      "10", //  1
-                       "DOC",    "DOPEY",  "HAPPY",   "GRUMPY", "BASHFUL", "SNEEZEY", "SLEEPY",                          // 11
-                       "RUDOLF", "DONNER", "BLITZEN", "DASHER", "PRANCER", "VIXEN",   "COMET",  "CUPID", "DUNDER",       // 18
-                       "ODIN",   "WODEN",  "THOR",    "BALDAR",                                                          // 26
-                       0};
+const char to_hex[] = "0123456789ABCDEF";           // Quick Hex to ASCII
 
-const char to_hex[] = "0123456789ABCDEF"; // Quick Hex to ASCII
-
-char _xs[LONG_TEXT];                      // Holding buffer for sprintf
+char _xs[LONG_TEXT];                                // Holding buffer for sprintf
 
 /*
  *  Function Prototypes
@@ -128,7 +121,6 @@ void freeETarget_init(void)
   serial_aux_init();            // Update the serial port if there is a change
   set_VREF();
   multifunction_init();         // Override the MFS if we have to
-  WiFi_init();
 
   /*
    * Put up a self test
@@ -143,6 +135,8 @@ void freeETarget_init(void)
   timer_delay(ONE_SECOND);
   set_status_LED(LED_OFF);
   set_status_LED(LED_RAPID_OFF);   // Off
+
+  WiFi_init();
 
   /*
    *  Set up the long running timers
@@ -315,16 +309,21 @@ unsigned int arm(void)
 {
   DLT(DLT_APPLICATION, SEND(sprintf(_xs, "arm()");))
 
-  face_strike = 0;                   // Reset the face strike count
+  face_strike = 0;                                                       // Reset the face strike count
   stop_timers();
-  arm_timers();                      // Arm the counters
+  arm_timers();                                                          // Arm the counters
   run_state |= IN_SHOT;
-  shot_start = esp_timer_get_time(); // Remember when we started
+  shot_start = esp_timer_get_time();                                     // Remember when we started
 
-  sensor_status = is_running();      // and immediatly read the status
-  if ( sensor_status == 0 )          // After arming, the sensor status should be zero
+  sensor_status = is_running();                                          // and immediatly read the status
+  if ( sensor_status == 0 )                                              // After arming, the sensor status should be zero
   {
-    return WAIT;                     // Fall through to WAIT
+    if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
+    {
+      set_status_LED(LED_RAPID_GREEN);                                   // Show that we are ready
+    }
+
+    return WAIT;                                                         // Fall through to WAIT
   }
 
   /*
@@ -431,18 +430,22 @@ unsigned int reduce(void)
       /*
        *  Advance the paper
        */
-      if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )                           // Has the witness paper been enabled?
+      if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )                                 // Has the witness paper been enabled?
       {
         radius = sqrt(sq(record[shot_out].xs) + sq(record[shot_out].ys));
-        if ( ((json_paper_eco == 0)                                        // PAPER_ECO turned off
-              || radius < (json_paper_eco / 2)) )                          // Inside the black (radius)
+        if ( ((json_paper_eco == 0)                                              // PAPER_ECO turned off
+              || radius < (json_paper_eco / 2)) )                                // Inside the black (radius)
         {
           paper_shot++;
           DLT(DLT_DEBUG, SEND(sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", radius, json_paper_eco / 2, paper_shot, json_paper_shot);))
-          if ( (json_paper_shot == 0) || (paper_shot >= json_paper_shot) ) // Or we have reached the required number opf hits?
+          if ( (json_paper_shot == 0) || (paper_shot >= json_paper_shot) )       // Or we have reached the required number opf hits?
           {
-            paper_start();                                                 // Roll the paper
-            paper_shot = 0;                                                // And start over
+            if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
+            {
+              set_status_LED(LED_RAPID_RED);                                     // Show that we are ready
+            }
+            paper_start();                                                       // Roll the paper
+            paper_shot = 0;                                                      // And start over
           }
         }
         else
@@ -451,13 +454,16 @@ unsigned int reduce(void)
         }
       }
     }
-    else                                                    // We have a miss
+    else                                                      // We have a miss
     {
       DLT(DLT_INFO, show_sensor_status(record[shot_out].sensor_status);)
       set_status_LED(LED_MISS);
-      send_score(&record[shot_out], shot_out, MISSED_SHOT); // Show a miss
+      if ( json_send_miss != 0 )
+      {
+        send_score(&record[shot_out], shot_out, MISSED_SHOT); // Show a miss
+      }
     }
-    shot_out = (shot_out + 1) % SHOT_SPACE;                 // Increment to the next shot
+    shot_out = (shot_out + 1) % SHOT_SPACE;                   // Increment to the next shot
   }
 
   /*

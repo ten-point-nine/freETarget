@@ -38,10 +38,11 @@ static void set_trace(int v);  // Set the trace on and off
  */
 static char input_JSON[256];
 
-int    json_calibre_x10;           // Pellet Calibre
-int    json_dip_switch;            // DIP switch overwritten by JSON message
-double json_sensor_dia = DIAMETER; // Sensor daiamter overwitten by JSON message
-int    json_echo;                  // Test String
+int json_aux_port_enable; // Enable comms from the AUX port
+int json_calibre_x10;     // Pellet Calibre
+int json_dip_switch;      // DIP switch overwritten by JSON message
+
+int json_echo;            // Test String
 // double        json_d_echo;                // Test String
 int           json_north_x;                 // North Adjustment
 int           json_north_y;
@@ -62,6 +63,14 @@ int           json_step_start;              // Value to start motor moving
 int           json_step_time;               // Duration of each step in ms
 int           json_multifunction;           // Multifunction switch operation
 int           json_multifunction2;          // Multifunction Switch 2
+int           json_mfs_hold_12;             // Hold A and B
+int           json_mfs_tap_2;               // Tap B
+int           json_mfs_tap_1;               // Tap A
+int           json_mfs_hold_2;              // Hold B
+int           json_mfs_hold_1;              // Hold A
+int           json_mfs_hold_d;              // Hold D
+int           json_mfs_hold_c;              // Hold C
+int           json_mfs_select_cd;           // Select C and D
 double        json_x_offset;                // Offset to add to correct horizontal target
 double        json_y_offset;                // Offset to add to correct vertical target
 int           json_z_offset;                // Distance between paper and sensor plane in 0.1mm
@@ -80,38 +89,33 @@ int           json_paper_time = 0;          // Time paper motor is applied
 int           json_tabata_warn_on;          // Tabata warning time light on
 int           json_tabata_warn_off;         // Tabata warning time to shot
 int           json_face_strike;             // Number of cycles to accept a strike
-int           json_wifi_channel;            // Wifi channel
 int           json_rapid_count;             // Number of shots expected in string
 int           json_rapid_enable;            // Set to TRUE if the rapid fire event is enabled
 int           json_rapid_time;              // When will the rapid fire event end?
 int           json_rapid_wait;              // Delay applied to rapid start
-char          json_wifi_gateway[IP_SIZE];   // Gateway IP address
-char          json_wifi_static_ip[IP_SIZE]; // Static IP if used
-char          json_wifi_ssid[SSID_SIZE];    // Stored value of SSID
-char          json_wifi_pwd[PWD_SIZE];      // Stored value of password
-char          json_remote_url[URL_SIZE];    // Stored value of remote server
-char          json_remote_key[KEY_SIZE];    // Key for remote server
 int           json_remote_active;           // Set to TRUE if there is a remote to search for
+char          json_remote_key[KEY_SIZE];    // Key for remote server
+char          json_remote_url[URL_SIZE];    // Stored value of remote server
+double        json_sensor_dia = DIAMETER;   // Sensor daiamter overwitten by JSON message
+double        json_vref_lo;                 // Low Voltage DAC setting
+double        json_vref_hi;                 // High Voltage DAC setting
+int           json_wifi_channel;            // Wifi channel
+char          json_wifi_gateway[IP_SIZE];   // Gateway IP address
+char          json_wifi_pwd[PWD_SIZE];      // Stored value of password
+char          json_wifi_ssid[SSID_SIZE];    // Stored value of SSID
+char          json_wifi_static_ip[IP_SIZE]; // Static IP if used
 int           json_wifi_hidden;             // The SSID FET- is hidden
 int           json_wifi_dhcp;               // The ESP is a DHCP server
 int           json_wifi_reset_first;        // Reset the score table on first WiFi connection
 int           json_min_ring_time;           // Time to wait for ringing to stop
 int           json_token;                   // Token ring state
-double        json_vref_lo;                 // Low Voltage DAC setting
-double        json_vref_hi;                 // High Voltage DAC setting
-int           json_pcnt_latency;            // pcnt interrupt latency
-int           json_mfs_hold_12;             // Hold A and B
-int           json_mfs_tap_2;               // Tap B
-int           json_mfs_tap_1;               // Tap A
-int           json_mfs_hold_2;              // Hold B
-int           json_mfs_hold_1;              // Hold A
-int           json_mfs_hold_d;              // Hold D
-int           json_mfs_hold_c;              // Hold C
-int           json_mfs_select_cd;           // Select C and D
-int           json_paper_shot;              // How many shots before advancing paper
-int           json_aux_port_enable;         // Enable comms from the AUX port
-char          json_name_text[SMALL_STRING]; // Target name, ex (Target 54))
-int           json_remote_modes;            // What modes are available to talk to a remote server
+
+int json_pcnt_latency;                      // pcnt interrupt latency
+
+int json_paper_shot;                        // How many shots before advancing paper
+
+char json_name_text[SMALL_STRING];          // Target name, ex (Target 54))
+int  json_remote_modes;                     // What modes are available to talk to a remote server
 
 char json_remote_url[URL_SIZE];             // URL of remote server
 int  json_remote_active;                    // Set to 1 to send score to a remote server
@@ -120,10 +124,8 @@ char json_event[SMALL_STRING];              // Shooting event (ex Practice)
 char json_target_name[SMALL_STRING];        // Target name (ex Pistol)
 
 void        show_echo(void);                // Display the current settings
-static void show_test(int v);               // Execute the self test once
 static void show_names(int v);
 static void set_trace(int v);               // Set the trace on and off
-static void diag_delay(int x);              // Insert a delay
 static void set_50m(int x);                 // Configure for 50m pistol
 
 const json_message_t JSON[] = {
@@ -472,7 +474,7 @@ void show_echo(void)
   char          str_c[32]; // String holding buffers
   mfs_action_t *mfs_ptr;
   unsigned int  dip;
-  char          ABCD[] = "ABCD";
+  char         *ABCD[] = {"A", "B", "C", "D"};
 
   /*
    * Loop through all of the JSON tokens
@@ -526,25 +528,11 @@ void show_echo(void)
   /*
    * Finish up with the special cases
    */
-  serial_to_all(NULL, EVEN_ODD_END);   // End the even odd line
+  serial_to_all(NULL, EVEN_ODD_END);                                                                 // End the even odd line
   SEND(sprintf(_xs, "\n\r*** STATUS ***\r\n");)
-  serial_to_all(NULL, EVEN_ODD_BEGIN); // Start over again
-  if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF) )
-  {
-    if ( json_name_id != JSON_NAME_TEXT )
-    {
-      SEND(sprintf(_xs, "\"NAME\":           \"%s\",", names[json_name_id]);)
-    }
-    else
-    {
-      SEND(sprintf(_xs, "\r\n{\r\n\"NAME\":           \"%s\",", json_name_text);)
-    }
-  }
-  else
-  {
-    SEND(sprintf(_xs, "\r\n{\r\n\"NAME\":           \"%s\",", names[json_name_id + my_ring]);)
-  }
-
+  serial_to_all(NULL, EVEN_ODD_BEGIN);                                                               // Start over again
+  target_name(str_c);
+  SEND(sprintf(_xs, "\"NAME\":           \"%s\",", str_c);)
   SEND(sprintf(_xs, "\"TRACE\":             %d,", is_trace);)                                        // TRUE to if trace is enabled
   SEND(sprintf(_xs, "\"RUN_STATE\":         %d,", run_state);)                                       // TRUE to if trace is enabled
   SEND(sprintf(_xs, "\"RUNNING_MINUTES\":   %0.2f,", esp_timer_get_time() / 1000000.0 / 60.0);)      // On Time
@@ -561,9 +549,10 @@ void show_echo(void)
   WiFi_my_IP_address(str_c);
   SEND(sprintf(_xs, "\"WiFi_IP_ADDRESS\":   \"%s\",", str_c);)
 
-  if ( json_wifi_ssid[0] == 0 )                                                                  // The SSID is undefined
+  if ( json_wifi_ssid[0] == 0 )                                                    // The SSID is undefined
   {
-    SEND(sprintf(_xs, "\"WiFi_MODE\":         \"Access Point: FET-%s\",", names[json_name_id]);) // Print out the IP address
+    target_name(str_c);
+    SEND(sprintf(_xs, "\"WiFi_MODE\":         \"Access Point: FET-%s\",", str_c);) // Print out the IP address
   }
   else
   {
