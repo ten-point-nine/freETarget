@@ -328,7 +328,7 @@ void serial_putch(char ch,
                   int  ports // Bitmask of active ports
 )
 {
-  if ( (ports == EVEN_ODD_BEGIN) || (ports == EVEN_ODD_END) )
+  if ( ports & (EVEN_ODD_BEGIN | EVEN_ODD_END) )
   {
     return;                  // Return if it's a control message
   }
@@ -394,27 +394,29 @@ void serial_to_all(char *str,         // String to output
     if ( even_odd == false )
     {
       strcpy(e_o_line, str);
-      strncat(e_o_line, "                                                                              ", 50 - strlen(e_o_line));
-      even_odd = true;
+      strncat(e_o_line, "                                                                            ", SHORT_TEXT - strlen(e_o_line));
+      e_o_line[50] = 0;
+      even_odd     = true;
       return; // Remember the first half of the line and return
     }
+
     strcat(e_o_line, str);
+    strcat(e_o_line, "\r\n");
     strcpy(str, e_o_line);
-    strcat(str, "\r\n");
     line_count++;
-    if ( (line_count % 4) == 0 )
+    if ( (line_count % 4) == 0 ) // Split up every 4 lines of output
     {
       strcat(str, "\r\n");
     }
     even_odd = false;
   }
-  else                          // Normal mode
+  else                           // Normal mode
   {
-    if ( even_odd == true )     // Is half a message waiting to come from last time?
+    if ( even_odd == true )      // Is half a message waiting to come from last time?
     {
-      strcat(e_o_line, "\r\n"); // Yes, put in a new line
-      strcat(e_o_line, str);    // Add the new to the old
-      strcpy(str, e_o_line);    // Put it back into the calling line
+      strcat(e_o_line, "\r\n");  // Yes, put in a new line
+      strcat(e_o_line, str);     // Add the new to the old
+      strcpy(str, e_o_line);     // Put it back into the calling line
       even_odd = false;
     }
   }

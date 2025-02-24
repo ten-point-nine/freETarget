@@ -474,25 +474,10 @@ void show_echo(void)
   unsigned int  dip;
   char          ABCD[] = "ABCD";
 
-  if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF) )
-  {
-    if ( json_name_id != JSON_NAME_TEXT )
-    {
-      SEND(sprintf(_xs, "\r\n{\r\n\"NAME\":           \"%s\", \r\n", names[json_name_id]);)
-    }
-    else
-    {
-      SEND(sprintf(_xs, "\r\n{\r\n\"NAME\":           \"%s\", \r\n", json_name_text);)
-    }
-  }
-  else
-  {
-    SEND(sprintf(_xs, "\r\n{\r\n\"NAME\":           \"%s\", \r\n", names[json_name_id + my_ring]);)
-  }
-
   /*
    * Loop through all of the JSON tokens
    */
+  SEND(sprintf(_xs, "\r\n{\r\n");)
   serial_to_all(NULL, EVEN_ODD_BEGIN);
   i = 0;
   while ( JSON[i].token != 0 )             // Still more to go?
@@ -541,9 +526,25 @@ void show_echo(void)
   /*
    * Finish up with the special cases
    */
-  serial_to_all(NULL, EVEN_ODD_END);                                                                 // End the even odd line
+  serial_to_all(NULL, EVEN_ODD_END);   // End the even odd line
   SEND(sprintf(_xs, "\n\r*** STATUS ***\r\n");)
-  serial_to_all(NULL, EVEN_ODD_BEGIN);                                                               // Start over again
+  serial_to_all(NULL, EVEN_ODD_BEGIN); // Start over again
+  if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF) )
+  {
+    if ( json_name_id != JSON_NAME_TEXT )
+    {
+      SEND(sprintf(_xs, "\"NAME\":           \"%s\",", names[json_name_id]);)
+    }
+    else
+    {
+      SEND(sprintf(_xs, "\r\n{\r\n\"NAME\":           \"%s\",", json_name_text);)
+    }
+  }
+  else
+  {
+    SEND(sprintf(_xs, "\r\n{\r\n\"NAME\":           \"%s\",", names[json_name_id + my_ring]);)
+  }
+
   SEND(sprintf(_xs, "\"TRACE\":             %d,", is_trace);)                                        // TRUE to if trace is enabled
   SEND(sprintf(_xs, "\"RUN_STATE\":         %d,", run_state);)                                       // TRUE to if trace is enabled
   SEND(sprintf(_xs, "\"RUNNING_MINUTES\":   %0.2f,", esp_timer_get_time() / 1000000.0 / 60.0);)      // On Time
@@ -566,7 +567,7 @@ void show_echo(void)
   }
   else
   {
-    SEND(sprintf(_xs, "\"WiFi_MODE\":         \"Station connected to SSID %s\",", (char *)&json_wifi_ssid);)
+    SEND(sprintf(_xs, "\"WiFi_MODE\":         \"Connected to %s\",", (char *)&json_wifi_ssid);)
   }
 
   if ( json_token == TOKEN_NONE )

@@ -121,15 +121,18 @@ void freeETarget_init(void)
   /*
    *  Setup the hardware
    */
-  json_aux_port_enable = false;    // Assume the AUX port is not used
-  gpio_init();                     // Setup the hardware
-  serial_io_init();                // Setup the console for debug messages
-  read_nonvol();                   // Read in the settings
-  serial_aux_init();               // Update the serial port if there is a change
-  POST_version();                  // Show the version string on all ports
+  json_aux_port_enable = false; // Assume the AUX port is not used
+  gpio_init();                  // Setup the hardware
+  serial_io_init();             // Setup the console for debug messages
+  read_nonvol();                // Read in the settings
+  serial_aux_init();            // Update the serial port if there is a change
   set_VREF();
-  multifunction_init();            // Override the MFS if we have to
+  multifunction_init();         // Override the MFS if we have to
+  WiFi_init();
 
+  /*
+   * Put up a self test
+   */
   set_status_LED(LED_RAPID_RED_OFF);
   set_status_LED(LED_RAPID_GREEN_OFF);
   set_status_LED(LED_HELLO_WORLD); // Hello World
@@ -140,8 +143,6 @@ void freeETarget_init(void)
   timer_delay(ONE_SECOND);
   set_status_LED(LED_OFF);
   set_status_LED(LED_RAPID_OFF);   // Off
-
-  WiFi_init();
 
   /*
    *  Set up the long running timers
