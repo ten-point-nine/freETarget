@@ -501,7 +501,7 @@ void show_echo(void)
   char          str_c[32]; // String holding buffers
   mfs_action_t *mfs_ptr;
   unsigned int  dip;
-  char          ABCD[] = "ABCD";
+  char         *ABCD[] = {"A", "B", "C", "D"};
 
   if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF) )
   {
@@ -573,7 +573,7 @@ void show_echo(void)
   serial_to_all(NULL, EVEN_ODD_END);                                                                 // End the even odd line
   SEND(sprintf(_xs, "\n\r*** STATUS ***\r\n");)
   serial_to_all(NULL, EVEN_ODD_BEGIN);                                                               // Start over again
-  SEND(sprintf(_xs, "\"TRACE\":             %d,", is_trace);)                                        // TRUE to if trace is enabled
+  SEND(sprintf(_xs, "\"TRACE\":             %d,", is_trace);)                                        // TRUE if trace is enabled
   SEND(sprintf(_xs, "\"RUN_STATE\":         %d,", run_state);)                                       // TRUE to if trace is enabled
   SEND(sprintf(_xs, "\"RUNNING_MINUTES\":   %0.2f,", esp_timer_get_time() / 1000000.0 / 60.0);)      // On Time
   SEND(sprintf(_xs, "\"TIME_TO_SLEEP\":     %4.2f,", (float)power_save / (float)(ONE_SECOND * 60));) // How long until we sleep

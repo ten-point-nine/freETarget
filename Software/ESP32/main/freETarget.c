@@ -207,7 +207,10 @@ void freeETarget_target_loop(void *arg)
     IF_IN(IN_SLEEP | IN_TEST | IN_FATAL_ERR) // If Not in operation,
     {
       run_state &= ~IN_OPERATION;            // Exit operation
-      set_status_LED(LED_FATAL);             // but show something really wrong
+      IF_IN(IN_FATAL_ERR)
+      {
+        set_status_LED(LED_FATAL);           // but show something really wrong
+      }
       vTaskDelay(ONE_SECOND);
       continue;
     }

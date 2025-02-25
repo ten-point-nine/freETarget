@@ -388,11 +388,11 @@ bool factory_test(void)
 
     if ( ((pass & PASS_MASK) == PASS_MASK) )
     {
-      set_status_LED(LED_GOOD);
+      set_status_LED(LED_PASS);
       SEND(sprintf(_xs, "  PASS");)
       vTaskDelay(ONE_SECOND);
       arm_timers();
-      pass        = 0;
+      pass        = PASS_A | PASS_B;
       passed_once = true;
     }
 
@@ -405,13 +405,13 @@ bool factory_test(void)
       switch ( ch )
       {
         default:
-        case 'R':   // Reset the test
+        case 'R':                 // Reset the test
         case 'r':
-          pass = 0; // Reset the pass/fail
+          pass = PASS_A | PASS_B; // Reset the pass/fail
           arm_timers();
           break;
 
-        case 'X':   // Exit
+        case 'X':                 // Exit
         case 'x':
         case '!':
           DCmotor_on_off(false, 0);

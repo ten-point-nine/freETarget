@@ -42,6 +42,7 @@ void heartbeat(void);                                     // Send out regular st
 #define LED_OFF         "     "      // Turn off all of the LEDs
 #define LED_HELLO_WORLD "RWB--"      // Hello World
 #define LED_GOOD        "G----"      // The software has started but not in shot mode
+#define LED_PASS        "GGG---"     //
 #define LED_FATAL       "RRR--"      // A fatal error prevents operation
 #define LED_READY       "g----"      // The shot is ready to go.  Blink to show we are alive
 #define LED_BYE         "B----"      // Go to sleep
