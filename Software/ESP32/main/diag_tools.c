@@ -399,7 +399,7 @@ bool factory_test(void)
       SEND(sprintf(_xs, "  PASS");)
       vTaskDelay(ONE_SECOND);
       arm_timers();
-      pass        = 0;
+      pass        = PASS_A | PASS_B;
       passed_once = true;
     }
 
@@ -414,7 +414,7 @@ bool factory_test(void)
         default:
         case 'R':   // Reset the test
         case 'r':
-          pass = 0; // Reset the pass/fail
+          pass = PASS_A | PASS_B; // Reset the pass/fail
           arm_timers();
           break;
 

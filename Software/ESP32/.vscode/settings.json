@@ -40,7 +40,8 @@
     "i2c.h": "c",
     "string.h": "c",
     "stdlib.h": "c",
-    "analog_io.h": "c"
+    "analog_io.h": "c",
+    "nvs.h": "c"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM3",

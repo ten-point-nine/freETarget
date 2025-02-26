@@ -533,6 +533,7 @@ void show_echo(void)
   serial_to_all(NULL, EVEN_ODD_BEGIN);                                                               // Start over again
   target_name(str_c);
   SEND(sprintf(_xs, "\"NAME\":           \"%s\",", str_c);)
+  SEND(sprintf(_xs, "\"SN\":                %d", json_serial_number);)
   SEND(sprintf(_xs, "\"TRACE\":             %d,", is_trace);)                                        // TRUE to if trace is enabled
   SEND(sprintf(_xs, "\"RUN_STATE\":         %d,", run_state);)                                       // TRUE to if trace is enabled
   SEND(sprintf(_xs, "\"RUNNING_MINUTES\":   %0.2f,", esp_timer_get_time() / 1000000.0 / 60.0);)      // On Time

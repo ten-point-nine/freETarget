@@ -64,12 +64,6 @@ static enum {
   REDUCE                                            // 2 Reduce the data and send the score
 } state;
 
-static enum bye_state {
-  BYE_BYE = 0,                                      // Wait for the timer to run out
-  BYE_HOLD,                                         // Wait for the MFS to be pressed
-  BYE_START                                         // Go back into service
-};
-
 typedef struct
 {
   int                    *enable;                   // Signal used to initate a state transition
@@ -404,7 +398,8 @@ unsigned int wait(void)
  *--------------------------------------------------------------*/
 unsigned int reduce(void)
 {
-  static unsigned int paper_shot = 0; // Count of reduced shots
+  static unsigned int paper_shot      = 0; // Count of reduced shots
+  static unsigned int paper_shot_miss = 0; // Count of missed shots
   float               radius;
 
   run_state |= IN_REDUCTION;
@@ -434,36 +429,40 @@ unsigned int reduce(void)
       {
         radius = sqrt(sq(record[shot_out].xs) + sq(record[shot_out].ys));
         if ( ((json_paper_eco == 0)                                              // PAPER_ECO turned off
-              || radius < (json_paper_eco / 2)) )                                // Inside the black (radius)
+              || radius < (json_paper_eco / 2))                                  // Inside the black (radius)
+             || (paper_shot_miss >= (json_paper_shot * 3)) )                     // Too many misses
         {
           paper_shot++;
           DLT(DLT_DEBUG, SEND(sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", radius, json_paper_eco / 2, paper_shot, json_paper_shot);))
-          if ( (json_paper_shot == 0) || (paper_shot >= json_paper_shot) )       // Or we have reached the required number opf hits?
+          if ( (paper_shot >= json_paper_shot) ||
+               (paper_shot_miss >= (json_paper_shot * 3)) )                      // Or we have reached the required number opf hits?
           {
             if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
             {
               set_status_LED(LED_RAPID_RED);                                     // Show that we are ready
             }
             paper_start();                                                       // Roll the paper
-            paper_shot = 0;                                                      // And start over
+            paper_shot      = 0;                                                 // And start over
+            paper_shot_miss = 0;                                                 // Reset the outside shots
           }
         }
         else
         {
+          paper_shot_miss++;                                                     // Outside of the desired radius, keep track of the misses
           DLT(DLT_DEBUG, SEND(sprintf(_xs, "Radius: %4.2f/%d bad shot: %d/%d", radius, json_paper_eco / 2, paper_shot, json_paper_shot);))
         }
       }
     }
-    else                                                      // We have a miss
+    else                                                                         // We have a miss
     {
       DLT(DLT_INFO, show_sensor_status(record[shot_out].sensor_status);)
       set_status_LED(LED_MISS);
       if ( json_send_miss != 0 )
       {
-        send_score(&record[shot_out], shot_out, MISSED_SHOT); // Show a miss
+        send_score(&record[shot_out], shot_out, MISSED_SHOT);                    // Show a miss
       }
     }
-    shot_out = (shot_out + 1) % SHOT_SPACE;                   // Increment to the next shot
+    shot_out = (shot_out + 1) % SHOT_SPACE;                                      // Increment to the next shot
   }
 
   /*
@@ -723,138 +722,6 @@ void rapid_fire_task(void)
 
 /*----------------------------------------------------------------
  *
- * @function: bye
- *
- * @brief:    Go into power saver
- *
- * @return:   Nothing
- *
- *----------------------------------------------------------------
- *
- * This function allows the user to remotly shut down the unit
- * when not in use.
- *
- * This is called every second from the synchronous scheduler
- *
- *--------------------------------------------------------------*/
-
-void bye(unsigned int force_bye // Set to true to force a shutdown
-)
-{
-  static int bye_state = BYE_BYE;
-
-  /*
-   * The BYE function does not work if we are a token ring.
-   */
-  if ( force_bye == 0 )             // Regular
-  {
-    if ( (json_token != TOKEN_NONE) // Skip if token ring enabled
-         || (json_power_save == 0)  // Power down has not been enabled
-         || (power_save != 0) )     // Power down has not run out
-    {
-      bye_state = BYE_BYE;
-      return;
-    }
-  }
-
-  switch ( bye_state )
-  {
-    case BYE_BYE:                          // Say Good Night Gracie!
-      SEND(sprintf(_xs, "{\"GOOD_BYE\":0}");)
-      json_tabata_enable = false;          // Turn off any automatic cycles
-      json_rapid_enable  = false;
-      set_LED_PWM(0);                      // Going to sleep
-      set_status_LED(LED_BYE);
-      serial_flush(ALL);                   // Purge the com port
-      run_state &= ~IN_OPERATION;          // Take the system out of operating mode
-      run_state |= IN_SLEEP;               // Put it to sleep
-      bye_state = BYE_HOLD;
-      break;
-
-    case BYE_HOLD:                         // Loop waiting for something to happen
-      if ( (DIP_SW_A)                      // Wait for the switch to be pressed
-           || (DIP_SW_B)                   // Or the switch to be pressed
-           || (serial_available(ALL) != 0) // Or a character to arrive
-           || (is_running() != 0) )        // Or a shot arrives
-      {
-        bye_state = BYE_START;             // wait for the swich to be released
-      } // turns up
-      break;
-
-    case BYE_START:
-      if ( !(DIP_SW_A) // Wait here for both switches to be released
-           && !(DIP_SW_B) )
-      {
-        hello();
-        bye_state = BYE_BYE;
-      }
-      break;
-  }
-
-  /*
-   * Loop for the next time
-   */
-  return;
-}
-
-/*----------------------------------------------------------------
- *
- * @function: hello
- *
- * @brief:    Come out of power saver
- *
- * @return:   Nothing
- *
- *----------------------------------------------------------------
- *
- * This function Puts the system back in service
- *
- *--------------------------------------------------------------*/
-void hello(void)
-{
-  /*
-   * Woken up again.  Turn things back on
-   */
-  SEND(sprintf(_xs, "{\"Hello_World\":0}");)
-  set_status_LED(LED_READY);
-  set_LED_PWM_now(json_LED_PWM);
-  timer_new(&power_save, json_power_save * (unsigned long)ONE_SECOND * 60L);
-  run_state &= ~IN_SLEEP; // Out of sleep and back in operation
-  run_state |= IN_OPERATION;
-  return;
-}
-
-/*----------------------------------------------------------------
- *
- * @function: send_keep_alive
- *
- * @brief:    Send a keep alive over the TCPIP
- *
- * @return:   Nothing
- *
- *----------------------------------------------------------------
- *
- * This is called every second to send out the keep alive to the
- * TCPIP server
- *
- *--------------------------------------------------------------*/
-void send_keep_alive(void)
-{
-  static int keep_alive_count = 0;
-  static int keep_alive       = 0;
-
-  if ( (json_keep_alive != 0) && (keep_alive == 0) ) // Time in seconds
-  {
-    sprintf(_xs, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);
-    serial_to_all(_xs, TCPIP);
-    timer_new(&keep_alive, (unsigned long)json_keep_alive * ONE_SECOND);
-  }
-
-  return;
-}
-
-/*----------------------------------------------------------------
- *
  * @function: polled_target_test
  *
  * @brief:    Abbreviated state machine to test the target aquisition
@@ -998,49 +865,4 @@ sensor_ID_t *find_sensor(unsigned int run_mask // Run mask to look for a match
    * Not found, return null
    */
   return LED_READY;
-}
-
-/*----------------------------------------------------------------
- *
- * @function: prompt_for_confirm
- *
- * @brief:    Display a propt and wait for a return
- *
- * @return:   TRUE if the confirmation is Yes
- *
- *----------------------------------------------------------------
- *
- *
- *--------------------------------------------------------------*/
-
-bool prompt_for_confirm(void)
-{
-  unsigned char ch;
-
-  SEND(sprintf(_xs, "\r\nConfirm Y/N?");)
-
-  /*
-   * Loop and wait for a confirmation
-   */
-  while ( 1 )
-  {
-    if ( serial_available(ALL) != 0 )
-    {
-      ch = serial_getch(ALL);
-      switch ( ch )
-      {
-        case 'y':
-        case 'Y':
-          return true;
-
-        case 'n':
-        case 'N':
-          return false;
-
-        default:
-          break;
-      }
-      vTaskDelay(ONE_SECOND / 10);
-    }
-  }
 }
