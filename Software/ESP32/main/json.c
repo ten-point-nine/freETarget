@@ -122,10 +122,10 @@ const json_message_t JSON[] = {
     {"\"ECHO\":",            0,                       IS_VOID,              &show_echo,         0,                       0,          0}, // Echo test
     {"\"FACE_STRIKE\":",     &json_face_strike,       IS_INT32,             0,                  NONVOL_FACE_STRIKE,      0,          0}, // Face Strike Count
     {"\"FOLLOW_THROUGH\":",  &json_follow_through,    IS_INT32,             0,                  NONVOL_FOLLOW_THROUGH,   0,          0}, // Three second follow through
-    {"\"INIT\"",             0,                       0,                    IS_VOID,            &init_nonvol,            0,          0}, // Initialize the NONVOL memory
+    {"\"INIT\"",             0,                       IS_VOID,              &init_nonvol,       0,                       0,          0}, // Initialize the NONVOL memory
     {"\"KEEP_ALIVE\":",      &json_keep_alive,        IS_INT32,             0,                  NONVOL_KEEP_ALIVE,       120,        0}, // TCPIP Keep alive period (in seconds)
     {"\"LED_BRIGHT\":",      &json_LED_PWM,           IS_INT32,             &set_LED_PWM_now,   NONVOL_LED_PWM,          50,         0}, // Set the LED brightness
-    {"\"MFS?",               0,                       0,                    IS_VOID,            &mfs_show,               0,          0}, // Display the MFS settings
+    {"\"MFS?",               0,                       IS_VOID,              &mfs_show,          0,                       0,          0}, // Display the MFS settings
     {"\"MFS_TAP_1\":",       &json_mfs_tap_1,         IS_MFS,               0,                  NONVOL_MFS_TAP_A,        PAPER_SHOT, 2},
     {"\"MFS_TAP_2\":",       &json_mfs_tap_2,         IS_MFS,               0,                  NONVOL_MFS_TAP_B,        TARGET_ON,  2},
     {"\"MFS_HOLD_1\":",      &json_mfs_hold_1,        IS_MFS,               0,                  NONVOL_MFS_HOLD_A,       PAPER_FEED, 2},

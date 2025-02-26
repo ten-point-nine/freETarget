@@ -318,8 +318,6 @@ void factory_nonvol(bool new_serial_number // TRUE if prompting for a new S/N
  * It will reset the NONVOL as a factory nonvol.
  *
  *------------------------------------------------------------*/
-#define INIT_ALLOWED 1234   // Number user must enter to allow initialization
-
 void init_nonvol(int verify // Verification code entered by user
 )
 {
