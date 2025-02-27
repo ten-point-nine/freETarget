@@ -584,12 +584,12 @@ void show_echo(void)
   SEND(sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);)               // Current software version
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
   SEND(sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                              // Current persistent storage version
-  SEND(sprintf(_xs, "\"BD_REV\":            %4.2f ", (float)(revision()) / 100.0);) // Current board versoin
-  SEND(sprintf(_xs, "\r\n}\r\n");)
-
-                                                                                    /*
-                                                                                     *  All done, return
-                                                                                     */
+  SEND(sprintf(_xs, "\"BD_REV\":            %4.2f ", (float)(revision()) / 100.0);) // Current board version
+  SEND(sprintf(_xs, "\"SN\":                %d", json_serial_number);)              // Board serial number
+  SEND(sprintf(_xs, "}\r\n");)
+  /*
+   *  All done, return
+   */
   serial_to_all(NULL, EVEN_ODD_END); // End the even odd line
 
   return;
