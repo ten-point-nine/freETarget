@@ -197,7 +197,10 @@ void freeETarget_target_loop(void *arg)
     IF_IN(IN_SLEEP | IN_TEST | IN_FATAL_ERR) // If Not in operation,
     {
       run_state &= ~IN_OPERATION;            // Exit operation
-      set_status_LED(LED_FATAL);             // but show something really wrong
+      IF_IN(IN_FATAL_ERR)                    // Have we deteted a fatal error?
+      {
+        set_status_LED(LED_FATAL);           // but show something really wrong
+      }
       vTaskDelay(ONE_SECOND);
       continue;
     }
@@ -396,10 +399,12 @@ unsigned int wait(void)
  * {"PAPER_ECO":10, "PAPER_SHOT": 5}
  *
  *--------------------------------------------------------------*/
+#define FORCE_PAPER_MOVE 10                // Force a paper move if we get 10 misses
+
 unsigned int reduce(void)
 {
   static unsigned int paper_shot      = 0; // Count of reduced shots
-  static unsigned int paper_shot_miss = 0; // Count of missed shots
+  static unsigned int paper_shot_out = 0; // Count of missed shots
   float               radius;
 
   run_state |= IN_REDUCTION;
@@ -430,12 +435,12 @@ unsigned int reduce(void)
         radius = sqrt(sq(record[shot_out].xs) + sq(record[shot_out].ys));
         if ( ((json_paper_eco == 0)                                              // PAPER_ECO turned off
               || radius < (json_paper_eco / 2))                                  // Inside the black (radius)
-             || (paper_shot_miss >= (json_paper_shot * 3)) )                     // Too many misses
+             || (paper_shot_out > FORCE_PAPER_MOVE) )                           // Too many misses
         {
           paper_shot++;
           DLT(DLT_DEBUG, SEND(sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", radius, json_paper_eco / 2, paper_shot, json_paper_shot);))
-          if ( (paper_shot >= json_paper_shot) ||
-               (paper_shot_miss >= (json_paper_shot * 3)) )                      // Or we have reached the required number opf hits?
+          if ( (paper_shot >= json_paper_shot)                                   // Have met the number of good shots?
+               || (paper_shot_out >= FORCE_PAPER_MOVE) )                        // Or we just shot too many bad ones?
           {
             if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
             {
@@ -443,12 +448,12 @@ unsigned int reduce(void)
             }
             paper_start();                                                       // Roll the paper
             paper_shot      = 0;                                                 // And start over
-            paper_shot_miss = 0;                                                 // Reset the outside shots
+            paper_shot_out = 0;                                                 // Reset the outside shots
           }
         }
         else
         {
-          paper_shot_miss++;                                                     // Outside of the desired radius, keep track of the misses
+          paper_shot_out++;                                                     // Outside of the desired radius, keep track of the misses
           DLT(DLT_DEBUG, SEND(sprintf(_xs, "Radius: %4.2f/%d bad shot: %d/%d", radius, json_paper_eco / 2, paper_shot, json_paper_shot);))
         }
       }
