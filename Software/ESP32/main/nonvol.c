@@ -167,13 +167,12 @@ void read_nonvol(void)
  * memory.
  *
  *------------------------------------------------------------*/
-void factory_nonvol(bool new_serial_number // TRUE if prompting for a new S/N
-)
+void factory_nonvol(bool new_serial_number) // TRUE if prompting for a new S/N
 {
-  unsigned int serial_number;              // Board serial number
+  unsigned int serial_number;               // Board serial number
   char         ch, s[32];
-  unsigned int x;                          // Temporary Value
-  unsigned int i;                          // Iteration Counter
+  unsigned int x;                           // Temporary Value
+  unsigned int i;                           // Iteration Counter
 
   DLT(DLT_INFO, SEND(sprintf(_xs, "factory_nonvol(%d)\r\n", new_serial_number);))
 
@@ -318,10 +317,9 @@ void factory_nonvol(bool new_serial_number // TRUE if prompting for a new S/N
  * It will reset the NONVOL as a factory nonvol.
  *
  *------------------------------------------------------------*/
-#define INIT_ALLOWED 1234   // Number user must enter to allow initialization
+#define INIT_ALLOWED 1234    // Number user must enter to allow initialization
 
-void init_nonvol(int verify // Verification code entered by user
-)
+void init_nonvol(int verify) // Verification code entered by user
 {
   /*
    * Ensure that the user wants to init the unit
@@ -355,11 +353,10 @@ void init_nonvol(int verify // Verification code entered by user
  *
  *------------------------------------------------------------*/
 
-void update_nonvol(unsigned int current_version // Version present in persistent storage
-)
+void update_nonvol(unsigned int current_version) // Version present in persistent storage
 {
-  unsigned int i, version;                      // Iteration counter
-  long         ps_value;                        // Value read from persistent storage
+  unsigned int i, version;                       // Iteration counter
+  long         ps_value;                         // Value read from persistent storage
 
   DLT(DLT_INFO, SEND(sprintf(_xs, "update_nonvol(%d)\r\n", current_version);))
 

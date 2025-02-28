@@ -87,7 +87,6 @@ static volatile unsigned long token_tick;              // Token ring watchdog
  * @return and wait for someone else to trigger the
  * enumeration
  *-----------------------------------------------------*/
-
 void token_init(void)
 {
 

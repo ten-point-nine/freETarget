@@ -399,11 +399,11 @@ unsigned int wait(void)
  * {"PAPER_ECO":10, "PAPER_SHOT": 5}
  *
  *--------------------------------------------------------------*/
-#define FORCE_PAPER_MOVE 10                // Force a paper move if we get 10 misses
+#define FORCE_PAPER_MOVE 10               // Force a paper move if we get 10 misses
 
 unsigned int reduce(void)
 {
-  static unsigned int paper_shot      = 0; // Count of reduced shots
+  static unsigned int paper_shot     = 0; // Count of reduced shots
   static unsigned int paper_shot_out = 0; // Count of missed shots
   float               radius;
 
@@ -435,25 +435,25 @@ unsigned int reduce(void)
         radius = sqrt(sq(record[shot_out].xs) + sq(record[shot_out].ys));
         if ( ((json_paper_eco == 0)                                              // PAPER_ECO turned off
               || radius < (json_paper_eco / 2))                                  // Inside the black (radius)
-             || (paper_shot_out > FORCE_PAPER_MOVE) )                           // Too many misses
+             || (paper_shot_out > FORCE_PAPER_MOVE) )                            // Too many misses
         {
           paper_shot++;
           DLT(DLT_DEBUG, SEND(sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", radius, json_paper_eco / 2, paper_shot, json_paper_shot);))
           if ( (paper_shot >= json_paper_shot)                                   // Have met the number of good shots?
-               || (paper_shot_out >= FORCE_PAPER_MOVE) )                        // Or we just shot too many bad ones?
+               || (paper_shot_out >= FORCE_PAPER_MOVE) )                         // Or we just shot too many bad ones?
           {
             if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
             {
               set_status_LED(LED_RAPID_RED);                                     // Show that we are ready
             }
             paper_start();                                                       // Roll the paper
-            paper_shot      = 0;                                                 // And start over
-            paper_shot_out = 0;                                                 // Reset the outside shots
+            paper_shot     = 0;                                                  // And start over
+            paper_shot_out = 0;                                                  // Reset the outside shots
           }
         }
         else
         {
-          paper_shot_out++;                                                     // Outside of the desired radius, keep track of the misses
+          paper_shot_out++;                                                      // Outside of the desired radius, keep track of the misses
           DLT(DLT_DEBUG, SEND(sprintf(_xs, "Radius: %4.2f/%d bad shot: %d/%d", radius, json_paper_eco / 2, paper_shot, json_paper_shot);))
         }
       }
@@ -831,18 +831,16 @@ void interrupt_target_test(void)
 
 /*----------------------------------------------------------------
  *
- * @function: diag_LED
+ * @function: find_sensor()
  *
- * @brief:    Return the diagnostics LED belonging to the running bit
+ * @brief:    Point to the sensor structure belonging to the run mask
  *
- * @return:   diag_LED
+ * @return:   pointer to the sensor structure
  *
  *----------------------------------------------------------------
  *
- * Information about a sensor is saved in the structure s[].
- *
- * This function inspects the structure looking for the bit
- * corresponding to the bit set in the run latch
+ * Scan throught the sensor structure looking for the match to
+ * the run mask.
  *
  *--------------------------------------------------------------*/
 sensor_ID_t *find_sensor(unsigned int run_mask // Run mask to look for a match
