@@ -132,31 +132,6 @@ static esp_err_t service_get_index(httpd_req_t *req)
 
 /*----------------------------------------------------------------
  *
- * @function: service_get_target
- *
- * @brief:    Display a target on the page
- *
- * @return:   esp_err_t, error type
- *
- *---------------------------------------------------------------
- *
- * Return a pointer to the target HTML
- *
- *------------------------------------------------------------*/
-static esp_err_t service_get_target(httpd_req_t *req)
-{
-  const char *resp_str;                     // Reply to server
-  char        reply[LARGE_STRING];
-
-  resp_str = (const char *)&pistol_10_html; // point to the target HTML file
-  httpd_resp_set_hdr(req, "FreeETarget", names[json_name_id]);
-  httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
-
-  return ESP_OK;
-}
-
-/*----------------------------------------------------------------
- *
  * @function: service_get_issf_png
  *
  * @brief:    Return a .PNG file to the client

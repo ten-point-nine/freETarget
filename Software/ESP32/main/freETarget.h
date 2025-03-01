@@ -143,7 +143,6 @@ typedef unsigned char byte_t;
  *  Global Variables
  */
 extern double                 s_of_sound;
-extern const char             to_hex[];
 extern unsigned int           face_strike;
 extern unsigned int           is_trace;    // Tracing level(s)
 extern unsigned int           shot_in;     // Index into the shot array (The shot that has JUST arrived)

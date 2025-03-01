@@ -78,8 +78,6 @@ extern int isr_state;
 
 volatile unsigned int run_state = 0;                // Current operating state
 
-const char to_hex[] = "0123456789ABCDEF";           // Quick Hex to ASCII
-
 char _xs[LONG_TEXT];                                // Holding buffer for sprintf
 
 /*

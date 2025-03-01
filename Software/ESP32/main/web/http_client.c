@@ -235,8 +235,6 @@ void http_rest_with_url(char *url,    // URL being accessed
                         char *payload // Payload being transferred
 )
 {
-  int err;
-
   esp_http_client_config_t config = {
       .host  = url,
       .path  = "/get",
@@ -567,7 +565,6 @@ void http_native_request(char *server_url,    // URL to be accessed
   int content_length;                         // Size of internal transfer
   int data_read;                              // Size of data read on header
 #endif
-  unsigned int i;
 
   esp_http_client_config_t config = {.url = "http://joshua.10nine.co/api/shots"};
   esp_http_client_handle_t client = esp_http_client_init(&config);
