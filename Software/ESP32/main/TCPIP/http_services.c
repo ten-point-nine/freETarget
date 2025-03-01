@@ -16,7 +16,6 @@
  * See http_server.h for the various compilation options
  *
  *-----------------------------------------------------*/
-#define BRIAN (0 == 1)
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -28,6 +27,7 @@
 #include <esp_wifi.h>
 
 #include "freETarget.h"
+#include "helpers.h"
 #include "http_server.h"
 #include "diag_tools.h"
 #include "json.h"
@@ -110,9 +110,12 @@ void register_services(httpd_handle_t server // Pointer to active server
 static esp_err_t service_get_index(httpd_req_t *req)
 {
   const char *resp_str;                 // Reply to server
+  char        str[SHORT_TEXT];          // Temporary string
+
+  target_name(str);                     // Get the target name
 
   resp_str = (const char *)&index_html; // point to the target HTML file
-  httpd_resp_set_hdr(req, "index", names[json_name_id]);
+  httpd_resp_set_hdr(req, "index", str);
   httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
 
   return ESP_OK;
@@ -211,10 +214,13 @@ static esp_err_t service_post_post(httpd_req_t *req)
 static esp_err_t service_get_post2(httpd_req_t *req)
 {
   const char *resp_str;                     // Reply to server
+  char        name[SHORT_TEXT];
+
+  target_name(name);                        // Get the target name
 
   resp_str = (const char *)&post_test_html; // point to the target HTML file
 
-  httpd_resp_set_hdr(req, "FreeETarget", names[json_name_id]);
+  httpd_resp_set_hdr(req, "FreeETarget", name);
   httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
 
   return ESP_OK;
@@ -235,7 +241,10 @@ static esp_err_t service_get_post2(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_who(httpd_req_t *req)
 {
-  httpd_resp_set_hdr(req, "FreeETarget", names[json_name_id]);
+  char name[SHORT_TEXT];
+
+  target_name(name); // Get the target name
+  httpd_resp_set_hdr(req, "FreeETarget", name);
 
   sprintf(_xs,
           "Serial Number: %d"
@@ -244,7 +253,7 @@ static esp_err_t service_get_who(httpd_req_t *req)
           "<br>Athelete: %s"
           "<br>Target: %s"
           "<br>Event: %s",
-          json_serial_number, names[json_name_id], SOFTWARE_VERSION, json_athlete, json_target_name, json_event); // Fill in the target name
+          json_serial_number, name, SOFTWARE_VERSION, json_athlete, json_target_name, json_event); // Fill in the target name
   httpd_resp_send(req, _xs, HTTPD_RESP_USE_STRLEN);
   return ESP_OK;
 }

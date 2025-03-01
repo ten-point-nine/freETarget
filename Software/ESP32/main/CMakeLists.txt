@@ -25,8 +25,9 @@ idf_component_register(SRCS
                     "tcpip/http_server.c"
                     "tcpip/http_services.c"
 
-                    INCLUDE_DIRS "." 
-                    "./web" 
+                    INCLUDE_DIRS 
+                    "." 
+                    "./tcpip" 
                     "./drivers"
                     "./html"
                     "C:/Users/allan/esp/esp-idf/esp-idf/components/freertos/FreeRTOS-Kernel/include/freertos"
