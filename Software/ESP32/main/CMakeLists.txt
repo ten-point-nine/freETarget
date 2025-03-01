@@ -24,16 +24,19 @@ idf_component_register(SRCS
                     "web/http_test.c"
                     "web/http_server.c"
                     "web/http_services.c"
-                    "html/index_html.c"
-                    "html/pistol_10.html.c"
-                     "html/issf.png.c"
-                    "html/post_test.html.c"
-                    "html/post_test_2.html.c"
+
                     INCLUDE_DIRS "." 
                     "./web" 
                     "./drivers"
+                    "./html"
                     "C:/Users/allan/esp/esp-idf/esp-idf/components/freertos/FreeRTOS-Kernel/include/freertos"
                     "C:/Users/allan/esp/esp-idf/esp-idf/components/hal/include/hal"
                     "C:/Users/allan/esp/esp-idf/esp-idf/components/esp_adc/include/esp_adc"
                     "C:/Users/allan/esp/esp-idf/esp-idf/components/esp_http_server/include"
+                    
+                    EMBED_FILES 
+                    "html/index.html"
+                    "html/issf.png"
+                    "html/post_test.html"
+                
                     )

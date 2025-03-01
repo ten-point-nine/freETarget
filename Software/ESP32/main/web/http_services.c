@@ -16,6 +16,7 @@
  * See http_server.h for the various compilation options
  *
  *-----------------------------------------------------*/
+#define BRIAN (0 == 1)
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -27,21 +28,19 @@
 #include <esp_wifi.h>
 
 #include "freETarget.h"
-#include "helpers.h"
 #include "http_server.h"
 #include "diag_tools.h"
 #include "json.h"
 
+#include "html.h"
+
 #define EXAMPLE_HTTP_QUERY_KEY_MAX_LEN (64)
 
 static esp_err_t service_get_index(httpd_req_t *req);                            // Standard HTML Index
+static esp_err_t service_get_issf_png(httpd_req_t *req);                         // Demonstration binary file
 static esp_err_t service_get_who(httpd_req_t *req);                              // Display target information
-static esp_err_t service_get_target(httpd_req_t *req);                           // Respond to a request for a target display
-static esp_err_t service_get_issf_png(httpd_req_t *req);                         // Respond to a request for a target display
-static esp_err_t service_get_post(httpd_req_t *req);
 static esp_err_t service_post_post(httpd_req_t *req);                            // Sample POST handler
 static esp_err_t service_get_post2(httpd_req_t *req);
-static esp_err_t service_post_post2(httpd_req_t *req);                           // Sample POST handler
 esp_err_t        http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Create a URL not found handler
 
 /*
@@ -51,13 +50,6 @@ esp_err_t        http_404_error_handler(httpd_req_t *req, httpd_err_code_t err);
 /*
  *  Variables
  */
-extern const char index_html[];     // Pointer to target HTML
-extern const char pistol_10_html[]; // Pointer to target HTML
-extern const char post_test_html[];
-extern const char post_test_2_html[];
-extern const char issf_png[];
-extern const int  sizeof_issf_png;
-extern const int  sizeof_index_html;
 
 /*
  * Local functions
@@ -113,10 +105,6 @@ void register_services(httpd_handle_t server // Pointer to active server
  *
  *---------------------------------------------------------------
  *
- * Read the nonvol into RAM.
- *
- * If the results is uninitalized then force the factory default.
- * Then check for out of bounds and reset those values
  *
  *------------------------------------------------------------*/
 static esp_err_t service_get_index(httpd_req_t *req)
@@ -129,18 +117,16 @@ static esp_err_t service_get_index(httpd_req_t *req)
 
   return ESP_OK;
 }
-
 /*----------------------------------------------------------------
  *
- * @function: service_get_issf_png
+ * @function: service_get_icon
  *
- * @brief:    Return a .PNG file to the client
+ * @brief:    Return an icon file
  *
  * @return:   esp_err_t, error type
  *
  *---------------------------------------------------------------
- *
- * Return a pointer to the target HTML
+ *s
  *
  *------------------------------------------------------------*/
 static esp_err_t service_get_issf_png(httpd_req_t *req)
@@ -148,34 +134,8 @@ static esp_err_t service_get_issf_png(httpd_req_t *req)
   const char *resp_str;               // Reply to server
 
   resp_str = (const char *)&issf_png; // point to the target HTML file
-
-  httpd_resp_set_hdr(req, "FreeETarget", names[json_name_id]);
-  httpd_resp_send(req, resp_str, sizeof_issf_png);
-
-  return ESP_OK;
-}
-
-/*----------------------------------------------------------------
- *
- * @function: sample_post_get_handler
- *
- * @brief:    Use a GET to post a POST page
- *
- * @return:   esp_err_t, error type
- *
- *---------------------------------------------------------------
- *
- * Test POST hanbdler.  This uploads the GET page
- *
- *------------------------------------------------------------*/
-static esp_err_t service_get_post(httpd_req_t *req)
-{
-  const char *resp_str;                     // Reply to server
-
-  resp_str = (const char *)&post_test_html; // point to the target HTML file
-
-  httpd_resp_set_hdr(req, "FreeETarget", names[json_name_id]);
-  httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+  httpd_resp_set_hdr(req, "index", names[json_name_id]);
+  httpd_resp_send(req, resp_str, SIZEOF_ISSF_PNG);
 
   return ESP_OK;
 }
@@ -250,68 +210,13 @@ static esp_err_t service_post_post(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_post2(httpd_req_t *req)
 {
-  const char *resp_str;                       // Reply to server
+  const char *resp_str;                     // Reply to server
 
-  resp_str = (const char *)&post_test_2_html; // point to the target HTML file
+  resp_str = (const char *)&post_test_html; // point to the target HTML file
 
   httpd_resp_set_hdr(req, "FreeETarget", names[json_name_id]);
   httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
 
-  return ESP_OK;
-}
-
-/*----------------------------------------------------------------
- *
- * @function: sample_post_post_handler
- *
- * @brief:    Entry point to handle a POST request
- *
- * @return:   esp_err_t, error type
- *
- *---------------------------------------------------------------
- *
- * The REST client has issued a POST request to the server (me)
- *
- * This function copies the contents of the transfer to a buffer
- * for later use by the application
- *
- *------------------------------------------------------------*/
-static esp_err_t service_post_post2(httpd_req_t *req)
-{
-  int ret;                      // Number of bytes remaining to be proceesed
-  int remaining;                // Bytes remaining to be processed
-
-  remaining = req->content_len; // Find out how long the transfer is
-
-                                /*
-                                 *  Loop and find out how long the transfer is
-                                 */
-  while ( remaining > 0 )
-  {
-    if ( (ret = httpd_req_recv(req, _xs, MIN(remaining, sizeof(_xs)))) <= 0 )
-    {
-      if ( ret == HTTPD_SOCK_ERR_TIMEOUT )
-      {
-        /* Retry receiving if timeout occurred */
-        continue;
-      }
-      return ESP_FAIL; // Ran out of time waiting
-    }
-
-                       /*
-                        *  The buffer _xs contains (at most) sizeof(_xs) bytes
-                        *  Do womething with it
-                        */
-
-    printf("\r\n=========== RECEIVED DATA ==========\r\n");
-    printf("%.*s", ret, _xs);
-    printf("\r\n====================================\r\n");
-  }
-
-  /*
-   *  All done, end the respone and return
-   */
-  httpd_resp_send_chunk(req, NULL, 0);
   return ESP_OK;
 }
 
