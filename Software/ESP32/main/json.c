@@ -532,7 +532,7 @@ void show_echo(void)
   SEND(sprintf(_xs, "\n\r*** STATUS ***\r\n");)
   serial_to_all(NULL, EVEN_ODD_BEGIN);                                                               // Start over again
   target_name(str_c);
-  SEND(sprintf(_xs, "\"NAME\":           \"%s\",", str_c);)
+  SEND(sprintf(_xs, "\"NAME\":              \"%s\",", str_c);)
   SEND(sprintf(_xs, "\"SN\":                %d", json_serial_number);)
   SEND(sprintf(_xs, "\"TRACE\":             %d,", is_trace);)                                        // TRUE to if trace is enabled
   SEND(sprintf(_xs, "\"RUN_STATE\":         %d,", run_state);)                                       // TRUE to if trace is enabled
@@ -550,10 +550,10 @@ void show_echo(void)
   WiFi_my_IP_address(str_c);
   SEND(sprintf(_xs, "\"WiFi_IP_ADDRESS\":   \"%s\",", str_c);)
 
-  if ( json_wifi_ssid[0] == 0 )                                                    // The SSID is undefined
+  if ( json_wifi_ssid[0] == 0 )                                                // The SSID is undefined
   {
     target_name(str_c);
-    SEND(sprintf(_xs, "\"WiFi_MODE\":         \"Access Point: FET-%s\",", str_c);) // Print out the IP address
+    SEND(sprintf(_xs, "\"WiFi_MODE\":         \"Access Point: %s\",", str_c);) // Print out the IP address
   }
   else
   {
@@ -585,7 +585,6 @@ void show_echo(void)
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
   SEND(sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                              // Current persistent storage version
   SEND(sprintf(_xs, "\"BD_REV\":            %4.2f ", (float)(revision()) / 100.0);) // Current board version
-  SEND(sprintf(_xs, "\"SN\":                %d", json_serial_number);)              // Board serial number
   SEND(sprintf(_xs, "}\r\n");)
   /*
    *  All done, return
