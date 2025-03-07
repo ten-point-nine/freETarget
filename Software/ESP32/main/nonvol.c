@@ -75,14 +75,14 @@ void read_nonvol(void)
 
   if ( nonvol_init != INIT_DONE )  // EEPROM never programmed
   {
-    factory_nonvol(true);          // Force in good values
+    factory_nonvol(true);          // Force in good values and test the board
   }
 
   nvs_get_i32(my_handle, "NVM_SERIAL_NO", &nonvol_init);
 
   if ( nonvol_init == (-1) )       // Serial Number never programmed
   {
-    factory_nonvol(true);          // Force in good values
+    factory_nonvol(true);          // Force in good values and test the board
   }
 
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &nonvol_init);
@@ -167,14 +167,14 @@ void read_nonvol(void)
  * memory.
  *
  *------------------------------------------------------------*/
-void factory_nonvol(bool new_serial_number) // TRUE if prompting for a new S/N
+void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calibration
 {
-  unsigned int serial_number;               // Board serial number
+  unsigned int serial_number;            // Board serial number
   char         ch, s[TINY_TEXT];
-  unsigned int x;                           // Temporary Value
-  unsigned int i;                           // Iteration Counter
+  unsigned int x;                        // Temporary Value
+  unsigned int i;                        // Iteration Counter
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "factory_nonvol(%d)\r\n", new_serial_number);))
+  DLT(DLT_INFO, SEND(sprintf(_xs, "factory_nonvol(%d)\r\n", do_calibration);))
 
   /*
    * Use the JSON table to initialize the local variables
@@ -220,7 +220,7 @@ void factory_nonvol(bool new_serial_number) // TRUE if prompting for a new S/N
   /*
    *     Test the board only if it is a factor init
    */
-  if ( new_serial_number )
+  if ( do_calibration ) // Was this started from the command line?
   {
     if ( factory_test() == false )
     {
@@ -306,7 +306,8 @@ void factory_nonvol(bool new_serial_number) // TRUE if prompting for a new S/N
  *---------------------------------------------------------------
  *
  * init_nonvol is called from the command line by {"INIT":0}
- * It will reset the NONVOL as a factory nonvol.
+ * It will prompt the user for a confirmation, and if Y is
+ * replied, then the initialization will take place.
  *
  *------------------------------------------------------------*/
 void init_nonvol(int verify) // Verification code entered by user
@@ -320,7 +321,7 @@ void init_nonvol(int verify) // Verification code entered by user
     return;
   }
 
-  factory_nonvol(true); // Reset to facgtory defaults and prompt for serial number
+  factory_nonvol(false); // Reset to facgtory defaults and prompt for serial number
 
   /*
    * All done, return
