@@ -36,6 +36,12 @@
  * Depending on the settings, determine the target name
  * and return it to the caller
  *
+ * To set the target name, the following rules apply:
+ *
+ * {"NAME_ID":0-20} Pre defined names
+ * {"NAME_ID":99, "NAME_TEXT":"myTargetName"}
+ *
+ *
  *-----------------------------------------------------*/
 const char *names[] = {"TARGET",                                                                                         //  0
                        "1",      "2",      "3",       "4",      "5",       "6",       "7",      "8",     "9",      "10", //  1
@@ -158,11 +164,7 @@ int instr(char *s1, // Source string
  *
  * @return:   TRUE if the confirmation is Yes
  *
- *----------------------------------------------------------------
- *
- *
  *--------------------------------------------------------------*/
-
 bool prompt_for_confirm(void)
 {
   unsigned char ch;

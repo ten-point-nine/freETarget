@@ -811,15 +811,15 @@ void BlueTooth_configuration(void)
    * Set the baud rate to the correct value and program
    */
   uart_param_config(uart_aux, &uart_BT_INIT_config);
-  serial_to_all("AT\r\n", AUX | BLUETOOTH);   // Flush out any junk
+  serial_to_all("AT\r\n", AUX | BLUETOOTH); // Flush out any junk
   vTaskDelay(ONE_SECOND);
 
   target_name(str_c);
-  sprintf(str_x, "AT+NAME=%s\r\n  ", str_c);  // Set in the name
+  sprintf(str_x, "AT+NAME=%s\r\n", str_c);  // Set in the name
   serial_to_all(str_x, AUX | BLUETOOTH);
   vTaskDelay(ONE_SECOND);
 
-  sprintf(str_x, "AT+UART=115200,1,0\r\n  "); // Set in the baud rate, stop, parity
+  sprintf(str_x, "AT+UART=115200,1,0\r\n"); // Set in the baud rate, stop, parity
   serial_to_all(str_x, AUX | BLUETOOTH);
   vTaskDelay(ONE_SECOND);
 
