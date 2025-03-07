@@ -15,12 +15,15 @@
 #include "string.h"
 #include "driver/uart.h"
 #include "driver/gpio.h"
+#include "nvs.h"
 
 #include "freETarget.h"
+#include "helpers.h"
 #include "diag_tools.h"
 #include "serial_io.h"
 #include "timer.h"
 #include "json.h"
+#include "nonvol.h"
 
 /*
  *  Serial IO port configuration
@@ -44,6 +47,22 @@ const uart_config_t uart_aux_config = {.baud_rate           = 115200,
                                        .flow_ctrl           = UART_HW_FLOWCTRL_DISABLE,
                                        .rx_flow_ctrl_thresh = 122,
                                        .source_clk          = UART_SCLK_DEFAULT};
+
+const uart_config_t uart_BT_config = {.baud_rate           = 115200,
+                                      .data_bits           = UART_DATA_8_BITS,
+                                      .parity              = UART_PARITY_DISABLE,
+                                      .stop_bits           = UART_STOP_BITS_1,
+                                      .flow_ctrl           = UART_HW_FLOWCTRL_DISABLE,
+                                      .rx_flow_ctrl_thresh = 122,
+                                      .source_clk          = UART_SCLK_DEFAULT};
+
+const uart_config_t uart_BT_INIT_config = {.baud_rate           = 38400,
+                                           .data_bits           = UART_DATA_8_BITS,
+                                           .parity              = UART_PARITY_DISABLE,
+                                           .stop_bits           = UART_STOP_BITS_1,
+                                           .flow_ctrl           = UART_HW_FLOWCTRL_DISABLE,
+                                           .rx_flow_ctrl_thresh = 122,
+                                           .source_clk          = UART_SCLK_DEFAULT};
 
 const int     uart_aux_size = (1024 * 2);
 QueueHandle_t uart_aux_queue;
@@ -72,7 +91,6 @@ static queue_struct_t out_buffer; // TCPIP input buffer
  * driver assigned
  *
  ******************************************************************************/
-
 void serial_io_init(void)
 {
 
@@ -103,7 +121,7 @@ void serial_io_init(void)
 
 void serial_aux_init(void)
 {
-  if ( json_aux_port_enable == false )
+  if ( json_aux_mode == 0 )
   {
     return;
   }
@@ -116,7 +134,14 @@ void serial_aux_init(void)
   /*
    *  Setup the communications parameters
    */
-  uart_param_config(uart_aux, &uart_aux_config);
+  if ( (json_aux_mode & AUX) == AUX )
+  {
+    uart_param_config(uart_aux, &uart_aux_config);
+  }
+  else
+  {
+    uart_param_config(uart_aux, &uart_BT_config);
+  }
 
   /*
    *  Set UART pins(TX: IO4, RX: IO5, RTS: IO18, CTS: IO19)
@@ -155,8 +180,7 @@ int serial_available(int ports // Bit mask of active ports
     n_available += length;
   }
 
-  if ( (json_aux_port_enable == true) // Is there hardware on the Aux port?
-       && (ports & AUX) )             // Are we reading the AUX port
+  if ( ((ports & json_aux_mode) & (AUX | BLUETOOTH)) != 0 ) // Is there hardware on the Aux port?
   {
     uart_get_buffered_data_len(uart_aux, (size_t *)&length);
     n_available += length;
@@ -239,8 +263,7 @@ void serial_flush(int ports // active port list
     uart_flush(uart_console);
   }
 
-  if ( (json_aux_port_enable == true) // Is there hardware on the Aux port?
-       && (ports & AUX) )             // Are we reading the AUX port
+  if ( ((ports & json_aux_mode) & (AUX | BLUETOOTH)) != 0 ) // Is there hardware on the Aux port?
   {
     uart_flush(uart_aux);
   }
@@ -284,8 +307,7 @@ char serial_getch(int ports // Bit mask of active ports
   /*
    *  Bring in the AUX bytes
    */
-  if ( (json_aux_port_enable == true) // Is there hardware on the Aux port?
-       && (ports & AUX) )             // Are we reading the AUX port
+  if ( ((ports & json_aux_mode) & (AUX | BLUETOOTH)) != 0 ) // Is there hardware on the Aux port?
   {
     if ( uart_read_bytes(uart_aux, &ch, 1, 0) > 0 )
     {
@@ -338,11 +360,10 @@ void serial_putch(char ch,
    */
   if ( ports & CONSOLE )
   {
-    printf("%c", ch);                 // Must be printf
+    printf("%c", ch);                                       // Must be printf
   }
 
-  if ( (json_aux_port_enable == true) // Is there hardware on the Aux port?
-       && (ports & AUX) )             // Are we reading the AUX port
+  if ( ((ports & json_aux_mode) & (AUX | BLUETOOTH)) != 0 ) // Is there hardware on the Aux port?
   {
     uart_write_bytes(uart_aux, (const char *)&ch, 1);
   }
@@ -431,11 +452,10 @@ void serial_to_all(char *str,         // String to output
    */
   if ( ports & CONSOLE )
   {
-    printf("%s", str);                // Must be printf
+    printf("%s", str);                                      // Must be printf
   }
 
-  if ( (json_aux_port_enable == true) // Is there hardware on the Aux port?
-       && (ports & AUX) )             // Are we reading the AUX port
+  if ( ((ports & json_aux_mode) & (AUX | BLUETOOTH)) != 0 ) // Is there hardware on the Aux port?
   {
     uart_write_bytes(uart_aux, (const char *)str, length);
   }
@@ -693,22 +713,27 @@ void serial_port_test(void)
   unsigned char          ch;
   volatile unsigned long test_time;
 
-  timer_new(&test_time, ONE_SECOND * 10);
-
   /*
    * Abort the test if the AUX port is not available
    */
-  if ( json_aux_port_enable == false )
+  if ( (json_aux_mode & (AUX | BLUETOOTH)) == 0 )
   {
     SEND(sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_PORTS_ENABLE\": 1} to enable");)
     SEND(sprintf(_xs, _DONE_);)
     return;
   }
 
+  SEND(sprintf(_xs, "\r\nAUX Serial Port Loopback.  Make sure AUX port is looped back");)
+  if ( prompt_for_confirm() == false )
+  {
+    SEND(sprintf(_xs, "\r\nAborting configuration");)
+    return;
+  }
+
   /*
    * Send out the AUX port, back in, and then to the console
    */
-  SEND(sprintf(_xs, "\r\nAUX Serial Port Loopback.  Make sure AUX port is looped back");)
+  timer_new(&test_time, ONE_SECOND * 10);
   for ( i = 0; i != sizeof(test); i++ )
   {
     serial_putch(test[i], AUX); // Output to the AUX Port
@@ -731,6 +756,86 @@ void serial_port_test(void)
    *  The test is over
    */
   timer_delete(&test_time);
+  SEND(sprintf(_xs, _DONE_);)
+  return;
+}
+
+/*******************************************************************************
+ *
+ * @function: BlueTooth_configuration
+ *
+ * @brief:    Program the bluetooth module
+ *
+ * @return:   None
+ *
+ *******************************************************************************
+ *
+ * The factory condition for the bluetooth module is to have
+ *
+ * baud rate = 9600
+ * name = some manufacturer name
+ *
+ * This function programs the bluetooth module to the desired settings
+ *
+ * baud rate = 115200
+ * name = target_name
+ *
+ * See https://components101.com/sites/default/files/component_datasheet/HC-05%20Datasheet.pdf
+ *
+ ******************************************************************************/
+void BlueTooth_configuration(void)
+{
+  char str_c[TINY_TEXT]; // Place to store the name{""}
+  char str_x[SHORT_TEXT];
+
+  /*
+   * Abort the test if the AUX port is not available
+   */
+  if ( json_aux_mode == 0 )
+  {
+    SEND(sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_PORT_MODE\": 2} to enable");)
+    SEND(sprintf(_xs, _DONE_);)
+    return;
+  }
+
+  /*
+   * Make sure the module is ready
+   */
+  SEND(sprintf(_xs, "\r\nBluetooth configuration.  Make sure the EN switch is pressed when powering up.");)
+  if ( prompt_for_confirm() == false )
+  {
+    SEND(sprintf(_xs, "\r\nAborting configuration");)
+  }
+
+  /*
+   * Set the baud rate to the correct value and program
+   */
+  uart_param_config(uart_aux, &uart_BT_INIT_config);
+  serial_to_all("AT\r\n", AUX | BLUETOOTH);   // Flush out any junk
+  vTaskDelay(ONE_SECOND);
+
+  target_name(str_c);
+  sprintf(str_x, "AT+NAME=%s\r\n  ", str_c);  // Set in the name
+  serial_to_all(str_x, AUX | BLUETOOTH);
+  vTaskDelay(ONE_SECOND);
+
+  sprintf(str_x, "AT+UART=115200,1,0\r\n  "); // Set in the baud rate, stop, parity
+  serial_to_all(str_x, AUX | BLUETOOTH);
+  vTaskDelay(ONE_SECOND);
+
+  /*
+   * Mark that the module is ready
+   */
+  json_aux_mode = BLUETOOTH;
+  nonvol_write_i32(NONVOL_AUX_PORT_ENABLE, json_aux_mode); // Remember that BT is enabled
+
+  SEND(sprintf(_xs, "\r\nRelease switch, cycle power to module.");)
+  prompt_for_confirm();
+
+  /*
+   *  Programmed
+   */
+  uart_param_config(uart_aux, &uart_BT_config);
   SEND(sprintf(_xs, _DONE_);)
   return;
 }

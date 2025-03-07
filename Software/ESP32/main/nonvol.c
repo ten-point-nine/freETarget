@@ -170,19 +170,11 @@ void read_nonvol(void)
 void factory_nonvol(bool new_serial_number) // TRUE if prompting for a new S/N
 {
   unsigned int serial_number;               // Board serial number
-  char         ch, s[32];
+  char         ch, s[TINY_TEXT];
   unsigned int x;                           // Temporary Value
   unsigned int i;                           // Iteration Counter
 
   DLT(DLT_INFO, SEND(sprintf(_xs, "factory_nonvol(%d)\r\n", new_serial_number);))
-
-  serial_number = 0;
-  x             = 0;
-  nvs_set_u32(my_handle, "NONVOL_V_SET", 0);
-  if ( new_serial_number == false )
-  {
-    nvs_set_u32(my_handle, "NONVOL_V_SET", serial_number);
-  }
 
   /*
    * Use the JSON table to initialize the local variables
@@ -313,12 +305,10 @@ void factory_nonvol(bool new_serial_number) // TRUE if prompting for a new S/N
  * @return: None
  *---------------------------------------------------------------
  *
- * init_nonvol is called from the command line by {"INIT":1234}
+ * init_nonvol is called from the command line by {"INIT":0}
  * It will reset the NONVOL as a factory nonvol.
  *
  *------------------------------------------------------------*/
-#define INIT_ALLOWED 1234    // Number user must enter to allow initialization
-
 void init_nonvol(int verify) // Verification code entered by user
 {
   /*
@@ -440,5 +430,34 @@ void update_nonvol(unsigned int current_version) // Version present in persisten
   nvs_set_i32(my_handle, NONVOL_PS_VERSION, PS_VERSION);
   nvs_commit(my_handle);
   printf("bye bye");
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: nonvol_write
+ *
+ * @brief:  Write a single value to the nonvol
+ *
+ * @return: None
+ *---------------------------------------------------------------
+ *
+ * Check the stored nonvol value against the current persistent
+ * storage version and update if needed.
+ *
+ *------------------------------------------------------------*/
+void nonvol_write_i32(char *name, int *value) // Name of the value to write
+{
+  DLT(DLT_DEBUG, SEND(sprintf(_xs, "nonvol_write(%s)\r\n", name);))
+
+  if ( nvs_set_i32(my_handle, name, value) != ESP_OK )
+  {
+    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to write %s to NONVOL", name);))
+  }
+
+  /*
+   * All done, return
+   */
+  nvs_commit(my_handle);
   return;
 }

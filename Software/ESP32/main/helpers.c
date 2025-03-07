@@ -329,3 +329,40 @@ void bye(unsigned int force_bye // Set to true to force a shutdown
    */
   return;
 }
+/*----------------------------------------------------------------
+ *
+ * @function: echo_serial
+ *
+ * @brief:    Echo what comes back from the serial port for TBD duration
+ *
+ * @return:   Nothing
+ *
+ *----------------------------------------------------------------
+ *
+ * This function allows the user to remotly shut down the unit
+ * when not in use.
+ *
+ * This is called every second from the synchronous scheduler
+ *
+ *--------------------------------------------------------------*/
+void echo_serial(int duration) // Duration in clock ticks
+{
+  unsigned char ch;
+  unsigned long test_time;
+
+  timer_new(&test_time, (unsigned long)duration);
+
+  /*
+   * Loop and echo the characters
+   */
+  while ( test_time != 0 )
+  {
+    if ( serial_available(ALL) != 0 )
+    {
+      ch = serial_getch(ALL);
+      serial_putch(ALL, ch);
+    }
+  }
+
+  return;
+}

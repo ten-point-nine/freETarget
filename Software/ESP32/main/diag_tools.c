@@ -70,6 +70,7 @@ static const self_test_t test_list[] = {
     {"Show the current time",             &show_time               },
     {"- Communiations Tests",             0                        },
     {"AUX serial port test",              &serial_port_test        },
+    {"BlueTooth configuration",           &BlueTooth_configuration },
     {"Test WiFi as a station",            &WiFi_station_init       },
     {"Enable the WiFi Server",            &WiFi_server_test        },
     {"Enable the WiFi AP",                &WiFi_AP_init            },
@@ -112,7 +113,6 @@ const dlt_name_t dlt_names[] = {
  * look into the structure to execute the appropriate test
  *
  *-----------------------------------------------------*/
-
 unsigned int next_test(char ch, unsigned int test_ID)
 {
   if ( ch == '-' )           // Test separator?
@@ -129,11 +129,10 @@ unsigned int next_test(char ch, unsigned int test_ID)
   return test_ID;
 }
 
-void self_test(unsigned int test // What test to execute
-)
+void self_test(unsigned int test) // What test to execute
 {
   unsigned int i;
-  unsigned int test_ID;          // Computed test ID
+  unsigned int test_ID;           // Computed test ID
 
   /*
    *  Switch over to test mode
@@ -412,13 +411,13 @@ bool factory_test(void)
       switch ( ch )
       {
         default:
-        case 'R':   // Reset the test
+        case 'R':                 // Reset the test
         case 'r':
           pass = PASS_A | PASS_B; // Reset the pass/fail
           arm_timers();
           break;
 
-        case 'X':   // Exit
+        case 'X':                 // Exit
         case 'x':
         case '!':
           DCmotor_on_off(false, 0);

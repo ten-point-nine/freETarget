@@ -26,21 +26,23 @@ int  tcpip_socket_2_queue(char *buffer, int length); // Take from socket and que
 int  tcpip_queue_2_app(char *buffer, int length);    // Take from queue and return to application
 void serial_port_test(void);                         // Loopback the AUX port
 bool get_string(char destination[], int size);       // Collect a string from the input ports
+void BlueTooth_configuration(void);                  // Configure the BlueTooth module
 
 /*
  *  Definitions
  *              CONSOLE   AUX    TCPIP
  */
-#define TCPIP_0        0x01
-#define TCPIP_1        0x02
-#define TCPIP_2        0x04
-#define TCPIP_3        0x08
+#define CONSOLE        0x0001
+#define AUX            0x0002
+#define BLUETOOTH      0x0004
+#define TCPIP_0        0x0008
+#define TCPIP_1        0x0010
+#define TCPIP_2        0x0020
+#define TCPIP_3        0x0040
 #define TCPIP          (TCPIP_0 | TCPIP_1 | TCPIP_2 | TCPIP_3)
-#define CONSOLE        0x10
-#define AUX            0x20
-#define EVEN_ODD_BEGIN 0x40 // Remember to output in even_odd mode
-#define EVEN_ODD_END   0x80 // Exit even odd mode
+#define EVEN_ODD_BEGIN 0x0080 // Remember to output in even_odd mode
+#define EVEN_ODD_END   0x0100 // Exit even odd mode
 
-#define ALL (CONSOLE | AUX | TCPIP)
+#define ALL (CONSOLE | AUX | BLUETOOTH | TCPIP)
 
 #endif

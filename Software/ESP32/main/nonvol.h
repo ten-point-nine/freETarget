@@ -23,6 +23,7 @@ void init_nonvol(int v);                          // Reset to defaults
 void read_nonvol(void);                           // Read in the locations
 void update_nonvol(unsigned int current_version); // Update the database if needed
 void restore_nonvol(void);                        // Copyt the nonvol back
+void nonvol_write_i32(char *name, int *value);    // Write a value to nonvol
 
 /*
  * NON Vol Storage

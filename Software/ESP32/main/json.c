@@ -38,11 +38,11 @@ static void set_trace(int v);  // Set the trace on and off
  */
 static char input_JSON[256];
 
-int json_aux_port_enable; // Enable comms from the AUX port
-int json_calibre_x10;     // Pellet Calibre
-int json_dip_switch;      // DIP switch overwritten by JSON message
+int json_aux_mode;    // Enable comms from the AUX port
+int json_calibre_x10; // Pellet Calibre
+int json_dip_switch;  // DIP switch overwritten by JSON message
 
-int json_echo;            // Test String
+int json_echo;        // Test String
 // double        json_d_echo;                // Test String
 int           json_north_x;                 // North Adjustment
 int           json_north_y;
@@ -132,7 +132,7 @@ const json_message_t JSON[] = {
     //    token          value stored in RAM             convert                 service fcn()     NONVOL location      Initial Value
     {"\"50M\":",             0,                           IS_VOID,                &set_50m,           0,                       0,          0},
     {"\"ANGLE\":",           &json_sensor_angle,          IS_INT32,               0,                  NONVOL_SENSOR_ANGLE,     45,         0},
-    {"\"AUX_PORT_ENABLE\":", &json_aux_port_enable,       IS_INT32,               0,                  NONVOL_AUX_PORT_ENABLE,  0,          6},
+    {"\"AUX_MODE\":",        &json_aux_mode,              IS_INT32,               0,                  NONVOL_AUX_PORT_ENABLE,  0,          6},
     {"\"BYE\":",             0,                           IS_INT32,               &bye,               0,                       0,          0},
     {"\"ECHO\":",            0,                           IS_VOID,                &show_echo,         0,                       0,          0},
     {"\"FACE_STRIKE\":",     &json_face_strike,           IS_INT32,               0,                  NONVOL_FACE_STRIKE,      0,          0},
