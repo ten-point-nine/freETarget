@@ -289,7 +289,10 @@ void freeETarget_json(void *pvParameters)
           input_JSON[in_JSON] = 0;    // Null terminate
           break;
 
-        case '*':                     // Special case for European keyboards which have a different "*" key
+        case '*':                     // Connected to PC over BT or Wifi
+          POST_version();
+
+        case '^':                     // Special case for European keyboards which have a different "*" key
           ch = '"';                   // Convert and fall through
 
         case '"':                     // Start or end of text
