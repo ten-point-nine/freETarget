@@ -115,7 +115,7 @@ static void wifi_set_static_ip(esp_netif_t *netif); // Override the IP address
  *******************************************************************************/
 void WiFi_init(void)
 {
-  DLT(DLT_INFO, SEND(sprintf(_xs, "WiFi_init()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi_init()");))
 
   /*
    * Initialize the WiFI
@@ -158,7 +158,7 @@ void WiFi_AP_init(void)
   esp_netif_t       *wifiAP;
   wifi_init_config_t WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "WiFi_AP_init()\r\n");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi_AP_init()\r\n");))
 
   /*
    * Create the network interface
@@ -235,7 +235,7 @@ void WiFi_station_init(void)
 
   wifi_init_config_t WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "WiFi_station_init()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi_station_init()");))
 
   s_wifi_event_group = xEventGroupCreate();
   esp_netif_init();
@@ -247,9 +247,9 @@ void WiFi_station_init(void)
   esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFi_event_handler, sta_netif, &instance_any_id);
   esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &WiFi_event_handler, NULL, &instance_got_ip);
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "WiFi SSID:%s", json_wifi_ssid);))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi SSID:%s", json_wifi_ssid);))
   strcpy((char *)&WiFi_config.sta.ssid, json_wifi_ssid);
-  DLT(DLT_INFO, SEND(sprintf(_xs, "WiFi password:%s", json_wifi_pwd);))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi password:%s", json_wifi_pwd);))
   strcpy((char *)&WiFi_config.sta.password, json_wifi_pwd);
   if ( json_wifi_pwd[0] == 0 )
   {
@@ -277,16 +277,16 @@ void WiFi_station_init(void)
   if ( bits & WIFI_CONNECTED_BIT )
   {
     WiFi_my_IP_address(str_c);
-    DLT(DLT_INFO, SEND(sprintf(_xs, "Connected to AP SSID:  \"%s\"", json_wifi_ssid);))
-    DLT(DLT_INFO, SEND(sprintf(_xs, "Using WiFi_IP_ADDRESS: \"%s\"", str_c);))
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Connected to AP SSID:  \"%s\"", json_wifi_ssid);))
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Using WiFi_IP_ADDRESS: \"%s\"", str_c);))
   }
   else if ( bits & WIFI_FAIL_BIT )
   {
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to connect to SSID:%s, password:%s", json_wifi_ssid, json_wifi_pwd);))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to connect to SSID:%s, password:%s", json_wifi_ssid, json_wifi_pwd);))
   }
   else
   {
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Unexpectged WiFi event");))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Unexpectged WiFi event");))
   }
 
   /*
@@ -348,7 +348,7 @@ bool WiFi_get_remote_IP(char *remote_url // Text string of the remote URL
    */
   if ( dns_valid == 0 )
   {
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "URL %s not found", remote_url);))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "URL %s not found", remote_url);))
   }
   return dns_valid;
 }
@@ -422,7 +422,7 @@ void WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id
     if ( event_id == IP_EVENT_STA_GOT_IP )
     {
       ipInfo.ip = event->ip_info.ip;
-      DLT(DLT_INFO, SEND(sprintf(_xs, "Received IP:" IPSTR, IP2STR(&event->ip_info.ip));))
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Received IP:" IPSTR, IP2STR(&event->ip_info.ip));))
       s_retry_num = 0;
       xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     }
@@ -432,12 +432,12 @@ void WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id
    */
   if ( event_id == WIFI_EVENT_AP_STACONNECTED )
   {
-    DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "AP connected");))
+    DLT(DLT_COMMUNICATION, SEND(ALL, sprintf(_xs, "AP connected");))
   }
 
   if ( event_id == WIFI_EVENT_AP_STADISCONNECTED )
   {
-    DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "AP disconnected");))
+    DLT(DLT_COMMUNICATION, SEND(ALL, sprintf(_xs, "AP disconnected");))
   }
 
   /*
@@ -477,7 +477,7 @@ static void wifi_set_static_ip(esp_netif_t *netif)
    */
   if ( esp_netif_dhcpc_stop(netif) != ESP_OK )
   {
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to stop dhcp client");))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to stop dhcp client");))
     return;
   }
 
@@ -491,7 +491,7 @@ static void wifi_set_static_ip(esp_netif_t *netif)
 
   if ( esp_netif_set_ip_info(netif, &ip) != ESP_OK )
   {
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to change IP address");))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to change IP address");))
     return;
   }
 
@@ -521,7 +521,7 @@ static void wifi_set_static_ip(esp_netif_t *netif)
 
 void WiFi_tcp_server_task(void *pvParameters)
 {
-  DLT(DLT_INFO, SEND(sprintf(_xs, "WiFi_tcp_server_task()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi_tcp_server_task()");))
 
   /*
    *  Move data in and out of the TCP queues
@@ -551,7 +551,7 @@ void WiFi_tcp_server_task(void *pvParameters)
  * out to the client.
  *
  * When trying to send to a previously active socket which is now closed, the
- * send() function will return a -1 to indicate that no information was sent.
+ * SEND(ALL,) function will return a -1 to indicate that no information was sent.
  * This is the signal that the connection has been dropped.  At the end of the
  * loop, if all of the sockets have been closed the connection indication is
  * updated.
@@ -652,7 +652,7 @@ void tcpip_socket_poll_0(void *parameters)
   int  length;
   char rx_buffer[256];
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "tcp_socket_poll_0()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "tcp_socket_poll_0()");))
 
   while ( 1 )
   {
@@ -673,7 +673,7 @@ void tcpip_socket_poll_1(void *parameters)
   int  length;
   char rx_buffer[256];
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "tcp_socket_poll_1()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "tcp_socket_poll_1()");))
 
   while ( 1 )
   {
@@ -694,7 +694,7 @@ void tcpip_socket_poll_2(void *parameters)
   int  length;
   char rx_buffer[256];
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "tcp_socket_poll_2()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "tcp_socket_poll_2()");))
 
   while ( 1 )
   {
@@ -715,7 +715,7 @@ void tcpip_socket_poll_3(void *parameters)
   int  length;
   char rx_buffer[256];
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "tcp_socket_poll_3()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "tcp_socket_poll_3()");))
 
   while ( 1 )
   {
@@ -765,7 +765,7 @@ void tcpip_accept_poll(void *parameters)
   int                     sock;
   int                     i;
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "tcp_accept_poll()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "tcp_accept_poll()");))
 
   /*
    * Start the server
@@ -784,7 +784,7 @@ void tcpip_accept_poll(void *parameters)
   listen_sock = socket(AF_INET, SOCK_STREAM, ip_protocol);
   if ( listen_sock < 0 )
   {
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Unable to create socket: errno %d\r\n", errno);))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Unable to create socket: errno %d\r\n", errno);))
     vTaskDelete(NULL);
     return;
   }
@@ -819,7 +819,7 @@ void tcpip_accept_poll(void *parameters)
 
       DLT(DLT_INFO, {
         inet_ntoa_r(((struct sockaddr_in *)&source_addr)->sin_addr, addr_str, sizeof(addr_str) - 1);
-        SEND(sprintf(_xs, "Socket accepted ip address: %s\r\n", addr_str);)
+        SEND(ALL, sprintf(_xs, "Socket accepted ip address: %s\r\n", addr_str);)
       })
       set_status_LED(LED_WIFI_STATION_CN);
     }

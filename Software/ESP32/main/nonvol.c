@@ -49,7 +49,7 @@ void read_nonvol(void)
   size_t       length; // Length of input string
   esp_err_t    err;    // ESP32 error type
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "read_nonvol()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "read_nonvol()");))
 
   /*
    * Initialize NVS
@@ -57,7 +57,7 @@ void read_nonvol(void)
   err = nvs_flash_init();
   if ( err != 0 )
   {
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "read_nonvol(): Failed to initialize NVM");))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "read_nonvol(): Failed to initialize NVM");))
     ESP_ERROR_CHECK(nvs_flash_erase()); // NVS partition was truncated and needs to be erased
     err = nvs_flash_init();
   }
@@ -68,7 +68,7 @@ void read_nonvol(void)
 
   if ( nvs_open(NAME_SPACE, NVS_READWRITE, &my_handle) != ESP_OK )
   {
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "read_nonvol(): Failed to open NVM");))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "read_nonvol(): Failed to open NVM");))
   }
 
   nvs_get_i32(my_handle, "NONVOL_INIT", &nonvol_init);
@@ -174,7 +174,7 @@ void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calib
   unsigned int x;                        // Temporary Value
   unsigned int i;                        // Iteration Counter
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "factory_nonvol(%d)\r\n", do_calibration);))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "factory_nonvol(%d)\r\n", do_calibration);))
 
   /*
    * Use the JSON table to initialize the local variables
@@ -224,8 +224,8 @@ void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calib
   {
     if ( factory_test() == false )
     {
-      SEND(sprintf(_xs, "\r\nFactory test did not pass.");)
-      SEND(sprintf(_xs, "\r\nFactory Test will not be recorded");)
+      SEND(ALL, sprintf(_xs, "\r\nFactory test did not pass.");)
+      SEND(ALL, sprintf(_xs, "\r\nFactory Test will not be recorded");)
     }
 
     /*
@@ -235,7 +235,7 @@ void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calib
     serial_number = 0;
     serial_flush(ALL);
 
-    SEND(sprintf(_xs, "\r\nSerial Number? (ex 223! or X to cancel))");)
+    SEND(ALL, sprintf(_xs, "\r\nSerial Number? (ex 223! or X to cancel))");)
 
     while ( 1 )
     {
@@ -248,7 +248,7 @@ void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calib
         {
           case '!':
             nvs_set_i32(my_handle, NONVOL_SERIAL_NO, serial_number);
-            SEND(sprintf(_xs, "\r\nSetting Serial Number to: %d", serial_number);)
+            SEND(ALL, sprintf(_xs, "\r\nSetting Serial Number to: %d", serial_number);)
             break;
 
           case 0x08: // Backspace
@@ -285,14 +285,14 @@ void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calib
   nvs_set_i32(my_handle, NONVOL_INIT, INIT_DONE);
   if ( nvs_commit(my_handle) )
   {
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to write factory defaults to NONVOL");))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to write factory defaults to NONVOL");))
   }
 
   /*
    * All done, return
    */
   read_nonvol(); // Put the NONVOL into the working JSON variables
-  DLT(DLT_INFO, SEND(sprintf(_xs, "Factory Init complete\r\n");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Factory Init complete\r\n");))
   return;
 }
 
@@ -317,7 +317,7 @@ void init_nonvol(int verify) // Verification code entered by user
    */
   if ( prompt_for_confirm() == false )
   {
-    SEND(sprintf(_xs, "\r\nInitialization cancelled\r\n");)
+    SEND(ALL, sprintf(_xs, "\r\nInitialization cancelled\r\n");)
     return;
   }
 
@@ -349,7 +349,7 @@ void update_nonvol(unsigned int current_version) // Version present in persisten
   unsigned int i, version;                       // Iteration counter
   long         ps_value;                         // Value read from persistent storage
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "update_nonvol(%d)\r\n", current_version);))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "update_nonvol(%d)\r\n", current_version);))
 
   /*
    * Check to see if this persistent storage has never had a version number
@@ -389,7 +389,7 @@ void update_nonvol(unsigned int current_version) // Version present in persisten
     {
       if ( JSON[i].ps_version == version )
       {
-        DLT(DLT_INFO, SEND(sprintf(_xs, "Updating PS%d", version);))
+        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Updating PS%d", version);))
         switch ( JSON[i].convert & IS_MASK )
         {
           case IS_VOID:  // Variable does not contain anything
@@ -449,11 +449,11 @@ void update_nonvol(unsigned int current_version) // Version present in persisten
  *------------------------------------------------------------*/
 void nonvol_write_i32(char *name, int *value) // Name of the value to write
 {
-  DLT(DLT_DEBUG, SEND(sprintf(_xs, "nonvol_write(%s)\r\n", name);))
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "nonvol_write(%s)\r\n", name);))
 
   if ( nvs_set_i32(my_handle, name, value) != ESP_OK )
   {
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to write %s to NONVOL", name);))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to write %s to NONVOL", name);))
   }
 
   /*

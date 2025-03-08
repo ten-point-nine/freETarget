@@ -92,7 +92,7 @@ httpd_handle_t start_webserver(void)
   config.server_port      = DEFAULT_SERVER_PORT;
   config.lru_purge_enable = true;
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "start_webserver(port: %d)", config.server_port);))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "start_webserver(port: %d)", config.server_port);))
 
   /*
    *  Create event loops
@@ -105,7 +105,7 @@ httpd_handle_t start_webserver(void)
    */
   if ( httpd_start(&server, &config) == ESP_OK ) // Create the server
   {
-    DLT(DLT_HTTP, SEND(sprintf(_xs, "Registering URI handlers");))
+    DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Registering URI handlers");))
     register_services(server);
     httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
     return server;
@@ -114,7 +114,7 @@ httpd_handle_t start_webserver(void)
   /*
    *  Got here because we could not start the server
    */
-  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Error starting server!");))
+  DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Error starting server!");))
   return NULL;
 }
 
@@ -144,11 +144,11 @@ void disconnect_handler(void            *arg,        // Arguments that we got
     if ( stop_webserver(*server) == ESP_OK )
     {
       *server = NULL;
-      DLT(DLT_HTTP, SEND(sprintf(_xs, "Web server stopped");))
+      DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Web server stopped");))
     }
     else
     {
-      DLT(DLT_HTTP, SEND(sprintf(_xs, "Web server failed to stop");))
+      DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Web server failed to stop");))
     }
   }
 }
@@ -176,12 +176,12 @@ void connect_handler(void            *arg,        //
   httpd_handle_t *server = (httpd_handle_t *)arg;
   if ( *server == NULL )
   {
-    DLT(DLT_HTTP, SEND(sprintf(_xs, "Starting webserver");))
+    DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Starting webserver");))
     *server = start_webserver();
   }
   else
   {
-    DLT(DLT_HTTP, SEND(sprintf(_xs, "Could not start webserver");))
+    DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Could not start webserver");))
   }
 
   /*

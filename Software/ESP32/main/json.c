@@ -242,7 +242,7 @@ void freeETarget_json(void *pvParameters)
 {
   char ch;
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "freeETarget_json()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "freeETarget_json()");))
 
   while ( 1 )
   {
@@ -440,7 +440,7 @@ static void handle_json(void)
    */
   if ( not_found == true )
   {
-    SEND(sprintf(_xs, "\r\n\r\nCannot decode: {%s}\r\n", input_JSON);)
+    SEND(ALL, sprintf(_xs, "\r\n\r\nCannot decode: {%s}\r\n", input_JSON);)
   }
 
   /*
@@ -478,7 +478,7 @@ void show_echo(void)
   /*
    * Loop through all of the JSON tokens
    */
-  SEND(sprintf(_xs, "\r\n{\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\n{\r\n");)
   serial_to_all(NULL, EVEN_ODD_BEGIN);
   i = 0;
   while ( JSON[i].token != 0 )             // Still more to go?
@@ -499,24 +499,24 @@ void show_echo(void)
             strncpy(str_c, "*************************************************", strlen(str_c));
           }
 
-          SEND(sprintf(_xs, "%-18s \"%s\", ", JSON[i].token, str_c);)
+          SEND(ALL, sprintf(_xs, "%-18s \"%s\", ", JSON[i].token, str_c);)
           break;
 
         case IS_MFS: // Covert to a switch ID
           mfs_ptr = mfs_find(*JSON[i].value);
           if ( mfs_ptr != NULL )
           {
-            SEND(sprintf(_xs, "%-18s \"(%d) - %s\", ", JSON[i].token, *JSON[i].value, mfs_ptr->text);)
+            SEND(ALL, sprintf(_xs, "%-18s \"(%d) - %s\", ", JSON[i].token, *JSON[i].value, mfs_ptr->text);)
           }
           break;
 
         case IS_INT32:
         case IS_FIXED:
-          SEND(sprintf(_xs, "%-18s %d, ", JSON[i].token, *JSON[i].value);)
+          SEND(ALL, sprintf(_xs, "%-18s %d, ", JSON[i].token, *JSON[i].value);)
           break;
 
         case IS_FLOAT:
-          SEND(sprintf(_xs, "%-18s %6.2f, ", JSON[i].token, *(double *)JSON[i].value);)
+          SEND(ALL, sprintf(_xs, "%-18s %6.2f, ", JSON[i].token, *(double *)JSON[i].value);)
           break;
       }
       vTaskDelay(10);
@@ -527,45 +527,45 @@ void show_echo(void)
   /*
    * Finish up with the special cases
    */
-  serial_to_all(NULL, EVEN_ODD_END);                                                                 // End the even odd line
-  SEND(sprintf(_xs, "\n\r*** STATUS ***\r\n");)
-  serial_to_all(NULL, EVEN_ODD_BEGIN);                                                               // Start over again
+  serial_to_all(NULL, EVEN_ODD_END);                                                                      // End the even odd line
+  SEND(ALL, sprintf(_xs, "\r\n*** STATUS ***\r\n");)
+  serial_to_all(NULL, EVEN_ODD_BEGIN);                                                                    // Start over again
   target_name(str_c);
-  SEND(sprintf(_xs, "\"NAME\":              \"%s\",", str_c);)
-  SEND(sprintf(_xs, "\"SN\":                %d", json_serial_number);)
-  SEND(sprintf(_xs, "\"TRACE\":             %d,", is_trace);)                                        // TRUE to if trace is enabled
-  SEND(sprintf(_xs, "\"RUN_STATE\":         %d,", run_state);)                                       // TRUE to if trace is enabled
-  SEND(sprintf(_xs, "\"RUNNING_MINUTES\":   %0.2f,", esp_timer_get_time() / 1000000.0 / 60.0);)      // On Time
-  SEND(sprintf(_xs, "\"TIME_TO_SLEEP\":     %4.2f,", (float)power_save / (float)(ONE_SECOND * 60));) // How long until we sleep
-  SEND(sprintf(_xs, "\"TEMPERATURE\":       %4.2f,", temperature_C());)                              // Temperature in degrees C
-  SEND(sprintf(_xs, "\"RELATIVE_HUMIDITY\": %4.2f,", humidity_RH());)
-  SEND(sprintf(_xs, "\"SPEED_OF_SOUND\":    %4.2f,", speed_of_sound(temperature_C(), humidity_RH()));)
-  SEND(sprintf(_xs, "\"TIMER_COUNT\":       %d,",
-               (int)(SHOT_TIME * OSCILLATOR_MHZ));)                  // Maximum number of clock cycles to record shot (target dependent)
-  SEND(sprintf(_xs, "\"V12\":               %4.2f,", v12_supply());) // 12 Volt LED supply
+  SEND(ALL, sprintf(_xs, "\"NAME\":              \"%s\",", str_c);)
+  SEND(ALL, sprintf(_xs, "\"SN\":                %d", json_serial_number);)
+  SEND(ALL, sprintf(_xs, "\"TRACE\":             %d,", is_trace);)                                        // TRUE to if trace is enabled
+  SEND(ALL, sprintf(_xs, "\"RUN_STATE\":         %d,", run_state);)                                       // TRUE to if trace is enabled
+  SEND(ALL, sprintf(_xs, "\"RUNNING_MINUTES\":   %0.2f,", esp_timer_get_time() / 1000000.0 / 60.0);)      // On Time
+  SEND(ALL, sprintf(_xs, "\"TIME_TO_SLEEP\":     %4.2f,", (float)power_save / (float)(ONE_SECOND * 60));) // How long until we sleep
+  SEND(ALL, sprintf(_xs, "\"TEMPERATURE\":       %4.2f,", temperature_C());)                              // Temperature in degrees C
+  SEND(ALL, sprintf(_xs, "\"RELATIVE_HUMIDITY\": %4.2f,", humidity_RH());)
+  SEND(ALL, sprintf(_xs, "\"SPEED_OF_SOUND\":    %4.2f,", speed_of_sound(temperature_C(), humidity_RH()));)
+  SEND(ALL, sprintf(_xs, "\"TIMER_COUNT\":       %d,",
+                    (int)(SHOT_TIME * OSCILLATOR_MHZ));) // Maximum number of clock cycles to record shot (target dependent)
+  SEND(ALL, sprintf(_xs, "\"V12\":               %4.2f,", v12_supply());) // 12 Volt LED supply
   WiFi_MAC_address(str_c);
-  SEND(sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\",", str_c[0], str_c[1], str_c[2], str_c[3], str_c[4],
-               str_c[5]);)
+  SEND(ALL, sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\",", str_c[0], str_c[1], str_c[2], str_c[3], str_c[4],
+                    str_c[5]);)
   WiFi_my_IP_address(str_c);
-  SEND(sprintf(_xs, "\"WiFi_IP_ADDRESS\":   \"%s\",", str_c);)
+  SEND(ALL, sprintf(_xs, "\"WiFi_IP_ADDRESS\":   \"%s\",", str_c);)
 
-  if ( json_wifi_ssid[0] == 0 )                                                // The SSID is undefined
+  if ( json_wifi_ssid[0] == 0 )                                                     // The SSID is undefined
   {
     target_name(str_c);
-    SEND(sprintf(_xs, "\"WiFi_MODE\":         \"Access Point: %s\",", str_c);) // Print out the IP address
+    SEND(ALL, sprintf(_xs, "\"WiFi_MODE\":         \"Access Point: %s\",", str_c);) // Print out the IP address
   }
   else
   {
-    SEND(sprintf(_xs, "\"WiFi_MODE\":         \"Connected to %s\",", (char *)&json_wifi_ssid);)
+    SEND(ALL, sprintf(_xs, "\"WiFi_MODE\":         \"Connected to %s\",", (char *)&json_wifi_ssid);)
   }
 
   if ( json_token == TOKEN_NONE )
   {
-    SEND(sprintf(_xs, "\"TOKEN_RING\":       %d,", my_ring);) // My token ring address
+    SEND(ALL, sprintf(_xs, "\"TOKEN_RING\":       %d,", my_ring);) // My token ring address
   }
 
   dip = read_DIP();
-  strcpy(_xs, "\"DIP\":              \"");                    // Display the digital input
+  strcpy(_xs, "\"DIP\":              \"");                         // Display the digital input
   for ( i = 0; i != 4; i++ )
   {
     if ( (dip & (1 << (3 - i))) == 0 )
@@ -580,11 +580,11 @@ void show_echo(void)
   strcat(_xs, "\"");
   serial_to_all(_xs, ALL);
 
-  SEND(sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);)               // Current software version
+  SEND(ALL, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);)               // Current software version
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
-  SEND(sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                              // Current persistent storage version
-  SEND(sprintf(_xs, "\"BD_REV\":            %4.2f ", (float)(revision()) / 100.0);) // Current board version
-  SEND(sprintf(_xs, "}\r\n");)
+  SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                              // Current persistent storage version
+  SEND(ALL, sprintf(_xs, "\"BD_REV\":            %4.2f ", (float)(revision()) / 100.0);) // Current board version
+  SEND(ALL, sprintf(_xs, "}\r\n");)
   /*
    *  All done, return
    */
@@ -616,22 +616,22 @@ static void show_names(int v)
     return;
   }
 
-  SEND(sprintf(_xs, "\r\nTarget Names\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\nTarget Names\r\n");)
 
   i = 0;
   while ( names[i] != 0 )
   {
-    SEND(sprintf(_xs, "%d: \"%s\", \r\n", i, names[i]);)
+    SEND(ALL, sprintf(_xs, "%d: \"%s\", \r\n", i, names[i]);)
     i++;
   }
 
   if ( json_name_text[0] != 0 )
   {
-    SEND(sprintf(_xs, "%d: \"%s\", \r\n", JSON_NAME_TEXT, json_name_text);) // Look for a user defined name
+    SEND(ALL, sprintf(_xs, "%d: \"%s\", \r\n", JSON_NAME_TEXT, json_name_text);) // Look for a user defined name
   }
   else
   {
-    SEND(sprintf(_xs, "%d: \"uassigned\", \r\n", JSON_NAME_TEXT);)          // Look for a user defined name
+    SEND(ALL, sprintf(_xs, "%d: \"uassigned\", \r\n", JSON_NAME_TEXT);)          // Look for a user defined name
   }
 
   /*
@@ -674,17 +674,17 @@ static void set_trace(int trace)         // Trace mask on or off
   {
     if ( (is_trace & dlt_names[i].dlt_mask) != 0 )
     {
-      SEND(sprintf(_xs, "\r\n+ ");)
+      SEND(ALL, sprintf(_xs, "\r\n+ ");)
     }
     else
     {
-      SEND(sprintf(_xs, "\r\n  ");)
+      SEND(ALL, sprintf(_xs, "\r\n  ");)
     }
-    SEND(sprintf(_xs, "%03d %s", dlt_names[i].dlt_mask, dlt_names[i].dlt_text);)
+    SEND(ALL, sprintf(_xs, "%03d %s", dlt_names[i].dlt_mask, dlt_names[i].dlt_text);)
     i++;
   }
 
-  SEND(sprintf(_xs, "\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\n");)
 
   return;
 }
@@ -721,11 +721,11 @@ static void set_50m(int x)
    */
   if ( nvs_commit(my_handle) == ESP_OK )
   {
-    SEND(sprintf(_xs, "\r\nTarget updated for 50m rifle");)
+    SEND(ALL, sprintf(_xs, "\r\nTarget updated for 50m rifle");)
   }
   else
   {
-    SEND(sprintf(_xs, "\r\nUpdate for 50m rifle failed");)
+    SEND(ALL, sprintf(_xs, "\r\nUpdate for 50m rifle failed");)
   }
 
   /*

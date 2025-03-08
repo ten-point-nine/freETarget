@@ -154,7 +154,7 @@ void self_test(unsigned int test) // What test to execute
   {
     if ( (test_ID == test) && (test_list[i].help[0] != '-') ) // Found the test
     {
-      SEND(sprintf(_xs, "\r\nTest Number %2d - %s\r\n", test_ID, test_list[i].help);)
+      SEND(ALL, sprintf(_xs, "\r\nTest Number %2d - %s\r\n", test_ID, test_list[i].help);)
       test_list[i].f();                                       // Execute the test
       run_state &= ~IN_TEST;                                  // Exit the test
       freeETarget_timer_start();                              // Start interrupts
@@ -191,16 +191,16 @@ static void show_test_help(void)
   {
     if ( test_list[i].help[0] != '-' )
     {
-      SEND(sprintf(_xs, "\r\n%2d - %s", test_ID, test_list[i].help);)
+      SEND(ALL, sprintf(_xs, "\r\n%2d - %s", test_ID, test_list[i].help);)
     }
     else
     {
-      SEND(sprintf(_xs, "\r\n\n%s", test_list[i].help);)
+      SEND(ALL, sprintf(_xs, "\r\n\n%s", test_list[i].help);)
     }
     i++;
     test_ID = next_test(test_list[i].help[0], test_ID);
   }
-  SEND(sprintf(_xs, "\r\n\n");)
+  SEND(ALL, sprintf(_xs, "\r\n\n");)
   return;
 }
 /*-----------------------------------------------------
@@ -257,10 +257,10 @@ bool factory_test(void)
   /*
    * Ready to start the test
    */
-  SEND(sprintf(_xs, "\r\nFirmware version: %s   Board version: %d", SOFTWARE_VERSION, revision());)
-  SEND(sprintf(_xs, "\r\n");)
-  SEND(sprintf(_xs, "\r\nHas the tape seal been removed from the temperature sensor?");)
-  SEND(sprintf(_xs, "\r\nPress 1 & 2 or ! to continue\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\nFirmware version: %s   Board version: %d", SOFTWARE_VERSION, revision());)
+  SEND(ALL, sprintf(_xs, "\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\nHas the tape seal been removed from the temperature sensor?");)
+  SEND(ALL, sprintf(_xs, "\r\nPress 1 & 2 or ! to continue\r\n");)
 
   while ( pass != (PASS_A | PASS_B) )
   {
@@ -292,18 +292,18 @@ bool factory_test(void)
    */
   while ( 1 )
   {
-    SEND(sprintf(_xs, "\r\nSens: ");)
+    SEND(ALL, sprintf(_xs, "\r\nSens: ");)
     running = is_running();
     pass |= running & RUN_MASK;
     for ( i = 0; i != 8; i++ )
     {
       if ( i == 4 )
       {
-        SEND(sprintf(_xs, " ");)
+        SEND(ALL, sprintf(_xs, " ");)
       }
       if ( running & (1 << i) )
       {
-        SEND(sprintf(_xs, "%c", find_sensor(1 << i)->short_name);)
+        SEND(ALL, sprintf(_xs, "%c", find_sensor(1 << i)->short_name);)
       }
       else
       {
@@ -311,17 +311,17 @@ bool factory_test(void)
         if ( ((find_sensor(1 << i)->short_name) == 'N') // Is this the North Sensor?
              && (json_pcnt_latency == 0) )              // and pcnt_latency is disabled?
         {
-          SEND(sprintf(_xs, "-");)                      // Then mark it as unused
+          SEND(ALL, sprintf(_xs, "-");)                 // Then mark it as unused
         }
         else
         {
-          SEND(sprintf(_xs, ".");)                      // Show N/A for this iput
+          SEND(ALL, sprintf(_xs, ".");)                 // Show N/A for this iput
         }
       }
     }
 
     dip = read_DIP();
-    SEND(sprintf(_xs, "  DIP: ");)
+    SEND(ALL, sprintf(_xs, "  DIP: ");)
     if ( DIP_SW_A )
     {
       set_status_LED("-W-");
@@ -356,35 +356,35 @@ bool factory_test(void)
     {
       if ( (dip & (1 << i)) == 0 )
       {
-        SEND(sprintf(_xs, "%c", ABCD[i]);)
+        SEND(ALL, sprintf(_xs, "%c", ABCD[i]);)
       }
       else
       {
-        SEND(sprintf(_xs, "-");)
+        SEND(ALL, sprintf(_xs, "-");)
       }
     }
 
-    SEND(sprintf(_xs, "  12V: %4.2fV", v12_supply());)
-    SEND(sprintf(_xs, "  Temp: %4.2fC", temperature_C());)
-    SEND(sprintf(_xs, "  Humidiity: %4.2f%%", humidity_RH());)
+    SEND(ALL, sprintf(_xs, "  12V: %4.2fV", v12_supply());)
+    SEND(ALL, sprintf(_xs, "  Temp: %4.2fC", temperature_C());)
+    SEND(ALL, sprintf(_xs, "  Humidiity: %4.2f%%", humidity_RH());)
 
     if ( v12_supply() >= V12_WORKING ) // Skip the motor and LED test if 12 volts not used
     {
-      SEND(sprintf(_xs, "  M");)
+      SEND(ALL, sprintf(_xs, "  M");)
       if ( motor_toggle )
       {
-        SEND(sprintf(_xs, "+");)
+        SEND(ALL, sprintf(_xs, "+");)
         DCmotor_on_off(true, ONE_SECOND);
       }
       else
       {
-        SEND(sprintf(_xs, "-");)
+        SEND(ALL, sprintf(_xs, "-");)
         DCmotor_on_off(false, 0);
       }
       motor_toggle ^= 1;
 
       set_LED_PWM_now(percent);
-      SEND(sprintf(_xs, "  LED: %3d%% ", percent);)
+      SEND(ALL, sprintf(_xs, "  LED: %3d%% ", percent);)
       percent = percent + 25;
       if ( percent > 100 )
       {
@@ -395,7 +395,7 @@ bool factory_test(void)
     if ( ((pass & PASS_MASK) == PASS_MASK) )
     {
       set_status_LED(LED_GOOD);
-      SEND(sprintf(_xs, "  PASS");)
+      SEND(ALL, sprintf(_xs, "  PASS");)
       vTaskDelay(ONE_SECOND);
       arm_timers();
       pass        = PASS_A | PASS_B;
@@ -423,11 +423,11 @@ bool factory_test(void)
           DCmotor_on_off(false, 0);
           if ( passed_once == true )
           {
-            SEND(sprintf(_xs, "\r\nTest completed successfully\r\n");)
+            SEND(ALL, sprintf(_xs, "\r\nTest completed successfully\r\n");)
           }
           else
           {
-            SEND(sprintf(_xs, "\r\nTest finished without PASS\r\n");)
+            SEND(ALL, sprintf(_xs, "\r\nTest finished without PASS\r\n");)
           }
           return passed_once;
       }
@@ -458,7 +458,7 @@ bool factory_test(void)
  *******************************************************************************/
 void POST_version(void)
 {
-  SEND(sprintf(_xs, "\r\n{\"VERSION\": %s}\r\n", SOFTWARE_VERSION);)
+  SEND(ALL, sprintf(_xs, "\r\n{\"VERSION\": %s}\r\n", SOFTWARE_VERSION);)
 
   /*
    * All done, return
@@ -492,7 +492,7 @@ bool POST_counters(void)
 {
   unsigned int i;                      // Iteration counter
   unsigned int count, toggle, running; // Cycle counter
-  DLT(DLT_INFO, SEND(sprintf(_xs, "POST_counters()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "POST_counters()");))
 
   /*
    *  Test 1, Make sure we can turn off the reference clock
@@ -511,7 +511,7 @@ bool POST_counters(void)
 
   if ( count != 0 )
   {
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Reference clock cannot be stopped");))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Reference clock cannot be stopped");))
     set_diag_LED(LED_FAIL_CLOCK_STOP, 10);
     run_state |= IN_FATAL_ERR;
   }
@@ -533,7 +533,7 @@ bool POST_counters(void)
 
   if ( count == 0 )
   {
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Reference clock cannot be started");))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Reference clock cannot be started");))
     set_diag_LED(LED_FAIL_CLOCK_START, 10);
     run_state |= IN_FATAL_ERR;
   }
@@ -546,7 +546,7 @@ bool POST_counters(void)
   running = is_running();
   if ( running != 0 )
   {
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Stuck bit in run latch: ");))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Stuck bit in run latch: ");))
     for ( i = N; i <= W; i++ )
     {
       if ( running & s[i].low_sense.run_mask )
@@ -572,7 +572,7 @@ bool POST_counters(void)
   gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);
   if ( (is_running() & RUN_MASK) != RUN_MASK )
   {
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to start clock in run latch: %02X", is_running());))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to start clock in run latch: %02X", is_running());))
     set_diag_LED(LED_FAIL_RUN_STUCK, 10);
     run_state |= IN_FATAL_ERR;
   }
@@ -601,26 +601,26 @@ void show_sensor_status(unsigned int sensor_status)
 {
   unsigned int i;
 
-  SEND(sprintf(_xs, " Latch:");)
+  SEND(ALL, sprintf(_xs, " Latch:");)
 
   for ( i = N; i <= W; i++ )
   {
     if ( sensor_status & (1 << i) )
     {
-      SEND(sprintf(_xs, "%c", find_sensor(1 << i)->short_name);)
+      SEND(ALL, sprintf(_xs, "%c", find_sensor(1 << i)->short_name);)
     }
     else
     {
-      SEND(sprintf(_xs, ".");)
+      SEND(ALL, sprintf(_xs, ".");)
     }
   }
 
   if ( (sensor_status & RUN_MASK) != RUN_MASK )
   {
-    SEND(sprintf(_xs, " FAULT");)
+    SEND(ALL, sprintf(_xs, " FAULT");)
   }
 
-  SEND(sprintf(_xs, "  Face Strike: %d", face_strike);)
+  SEND(ALL, sprintf(_xs, "  Face Strike: %d", face_strike);)
 
   /*
    * All done, return
@@ -646,7 +646,7 @@ void show_sensor_fault(unsigned int sensor_status)
 {
   unsigned int i;
 
-  DLT(DLT_DEBUG, SEND(sprintf(_xs, "show_sensor_fault()");))
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "show_sensor_fault()");))
 
   for ( i = N; i <= W; i++ )
   {
@@ -718,7 +718,7 @@ bool do_dlt(           //
   /*
    *   Print out the message
    */
-  SEND(sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, ((float)(esp_timer_get_time()) / 1000000.0));)
+  SEND(ALL, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, ((float)(esp_timer_get_time()) / 1000000.0));)
 
   return true;
 }
@@ -756,7 +756,7 @@ void         heartbeat(void)
     i++;
   }
 
-  DLT(DLT_HEARTBEAT, SEND(sprintf(_xs, "Heartbeat: 60s  run_state: 0X%02X%s", run_state, s);))
+  DLT(DLT_HEARTBEAT, SEND(ALL, sprintf(_xs, "Heartbeat: 60s  run_state: 0X%02X%s", run_state, s);))
 
   return;
 }

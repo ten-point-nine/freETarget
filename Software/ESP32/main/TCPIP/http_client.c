@@ -257,12 +257,12 @@ void http_rest_with_url(char *url,    // URL being accessed
       esp_http_client_set_method(client, HTTP_METHOD_GET);
       if ( esp_http_client_perform(client) == ESP_OK )
       {
-        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "HTTP GET Status = %d, content_length = %lld", esp_http_client_get_status_code(client),
-                                            esp_http_client_get_content_length(client));))
+        DLT(DLT_COMMUNICATION, SEND(ALL, sprintf(_xs, "HTTP GET Status = %d, content_length = %lld",
+                                                 esp_http_client_get_status_code(client), esp_http_client_get_content_length(client));))
       }
       else
       {
-        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "HTTP GET request failed %s", url);))
+        DLT(DLT_COMMUNICATION, SEND(ALL, sprintf(_xs, "HTTP GET request failed %s", url);))
       }
       break;
 #endif
@@ -275,12 +275,12 @@ void http_rest_with_url(char *url,    // URL being accessed
       esp_http_client_set_post_field(client, payload, strlen(payload));
       if ( esp_http_client_perform(client) == ESP_OK )
       {
-        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "HTTP POST Status = %d, content_length = %" PRId64,
-                                            esp_http_client_get_status_code(client), esp_http_client_get_content_length(client));))
+        DLT(DLT_COMMUNICATION, SEND(ALL, sprintf(_xs, "HTTP POST Status = %d, content_length = %" PRId64,
+                                                 esp_http_client_get_status_code(client), esp_http_client_get_content_length(client));))
       }
       else
       {
-        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "HTTP POST request failed:");))
+        DLT(DLT_COMMUNICATION, SEND(ALL, sprintf(_xs, "HTTP POST request failed:");))
       }
       break;
 #endif
@@ -292,12 +292,12 @@ void http_rest_with_url(char *url,    // URL being accessed
       err = esp_http_client_perform(client);
       if ( err == ESP_OK )
       {
-        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "HTTP PUT Status = %d, content_length = %lld", esp_http_client_get_status_code(client),
-                                            esp_http_client_get_content_length(client));))
+        DLT(DLT_COMMUNICATION, SEND(ALL, sprintf(_xs, "HTTP PUT Status = %d, content_length = %lld",
+                                                 esp_http_client_get_status_code(client), esp_http_client_get_content_length(client));))
       }
       else
       {
-        DLT(DLT_COMMUNICATION, SEND(sprintf(_xs, "HTTP PUT request failed:");))
+        DLT(DLT_COMMUNICATION, SEND(ALL, sprintf(_xs, "HTTP PUT request failed:");))
       }
       break;
 #endif

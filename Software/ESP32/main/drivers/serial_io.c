@@ -379,15 +379,14 @@ void serial_putch(char ch,
   return;
 }
 
-void serial_to_all(char *str,         // String to output
-                   int   ports        // List of ports to output to
+void serial_to_all(char *str,        // String to output
+                   int   ports       // List of ports to output to
 )
 {
-  static bool  even_odd_mode = 0;     // Are we concatinating output?
-  static bool  even_odd      = false; // Set the even odd flag to odd (fiest half)
-  static int   line_count    = 0;     // How many lines have we output
-  unsigned int length;
-  static char  e_o_line[SHORT_TEXT];  // Place to store even odd srring
+  static bool even_odd_mode = 0;     // Are we concatinating output?
+  static bool even_odd      = false; // Set the even odd flag to odd (fiest half)
+  static int  line_count    = 0;     // How many lines have we output
+  static char e_o_line[SHORT_TEXT];  // Place to store even odd srring
 
   /*
    * Check to see if we have a control message coming
@@ -443,11 +442,6 @@ void serial_to_all(char *str,         // String to output
   }
 
   /*
-   *  Figure out the string length
-   */
-  length = strlen(str);
-
-  /*
    * Output to the devices
    */
   if ( ports & CONSOLE )
@@ -457,12 +451,12 @@ void serial_to_all(char *str,         // String to output
 
   if ( ((ports & json_aux_mode) & (AUX | BLUETOOTH)) != 0 ) // Is there hardware on the Aux port?
   {
-    uart_write_bytes(uart_aux, (const char *)str, length);
+    uart_write_bytes(uart_aux, (const char *)str, strlen(str));
   }
 
   if ( ports & TCPIP )
   {
-    tcpip_app_2_queue(str, length);
+    tcpip_app_2_queue(str, strlen(str));
   }
 
   /*
@@ -623,7 +617,7 @@ int tcpip_socket_2_queue(char *buffer, // Where to return the bytes
     in_buffer.in = (in_buffer.in + 1) % sizeof(in_buffer.queue);
     if ( in_buffer.out == in_buffer.in )
     {
-      DLT(DLT_CRITICAL, SEND(sprintf(_xs, "TCPIP input queue overrun\r\n");)) // Reached the end
+      DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "TCPIP input queue overrun\r\n");)) // Reached the end
       break;
     }
   }
@@ -658,7 +652,7 @@ bool get_string(char destination[], int size)
     if ( serial_available(ALL) != 0 )
     {
       ch = serial_getch(ALL);
-      SEND(sprintf(_xs, "%c", ch);)
+      SEND(ALL, sprintf(_xs, "%c", ch);)
 
       switch ( ch )
       {
@@ -718,15 +712,15 @@ void serial_port_test(void)
    */
   if ( (json_aux_mode & (AUX | BLUETOOTH)) == 0 )
   {
-    SEND(sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_PORTS_ENABLE\": 1} to enable");)
-    SEND(sprintf(_xs, _DONE_);)
+    SEND(ALL, sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_PORTS_ENABLE\": 1} to enable");)
+    SEND(ALL, sprintf(_xs, _DONE_);)
     return;
   }
 
-  SEND(sprintf(_xs, "\r\nAUX Serial Port Loopback.  Make sure AUX port is looped back");)
+  SEND(ALL, sprintf(_xs, "\r\nAUX Serial Port Loopback.  Make sure AUX port is looped back");)
   if ( prompt_for_confirm() == false )
   {
-    SEND(sprintf(_xs, "\r\nAborting configuration");)
+    SEND(ALL, sprintf(_xs, "\r\nAborting configuration");)
     return;
   }
 
@@ -743,7 +737,7 @@ void serial_port_test(void)
       timer_delay(1);           // Wait for it to come back
       if ( test_time == 0 )
       {
-        SEND(sprintf(_xs, "\r\nTest failed, no input from AUX\r\n");)
+        SEND(ALL, sprintf(_xs, "\r\nTest failed, no input from AUX\r\n");)
         return;
       }
     }
@@ -756,7 +750,7 @@ void serial_port_test(void)
    *  The test is over
    */
   timer_delete(&test_time);
-  SEND(sprintf(_xs, _DONE_);)
+  SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }
 
@@ -793,35 +787,39 @@ void BlueTooth_configuration(void)
    */
   if ( json_aux_mode == 0 )
   {
-    SEND(sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_MODE\": 2} to enable");)
-    SEND(sprintf(_xs, _DONE_);)
+    SEND(ALL, sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_MODE\": 2} to enable");)
+    SEND(ALL, sprintf(_xs, _DONE_);)
     return;
   }
 
   /*
    * Make sure the module is ready
    */
-  SEND(sprintf(_xs, "\r\nBluetooth configuration.  Make sure the EN switch is pressed when powering up.");)
+  SEND(SOME, sprintf(_xs, "\r\nBluetooth configuration.  Make sure the EN switch is pressed when powering up.");)
   if ( prompt_for_confirm() == false )
   {
-    SEND(sprintf(_xs, "\r\nAborting configuration");)
+    SEND(SOME, sprintf(_xs, "\r\nAborting configuration");)
   }
+  SEND(SOME, sprintf(_xs, "\r\n");)
 
   /*
    * Set the baud rate to the correct value and program
    */
   uart_param_config(uart_aux, &uart_BT_INIT_config);
-  serial_to_all("AT\r\n", AUX | BLUETOOTH); // Flush out any junk
-  vTaskDelay(ONE_SECOND);
+  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
+
+  SEND(ALL, sprintf(_xs, "\r\nAT\r\n");)             // Flush out any junk
+  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
 
   target_name(str_c);
-  sprintf(str_x, "AT+NAME=%s\r\n", str_c);  // Set in the name
-  serial_to_all(str_x, AUX | BLUETOOTH);
-  vTaskDelay(ONE_SECOND);
+  SEND(ALL, sprintf(_xs, "AT+NAME=%s\r\n", str_c);)  // Set in the name
+  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
 
-  sprintf(str_x, "AT+UART=115200,1,0\r\n"); // Set in the baud rate, stop, parity
-  serial_to_all(str_x, AUX | BLUETOOTH);
-  vTaskDelay(ONE_SECOND);
+  SEND(ALL, sprintf(_xs, "AT+UART=115200,1,0\r\n");) // Set in the baud rate, stop, parity
+  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
+
+  SEND(ALL, sprintf(_xs, "AT+PSWD=1090\r\n");)       // Set in the baud rate, stop, parity
+  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
 
   /*
    * Mark that the module is ready
@@ -829,13 +827,12 @@ void BlueTooth_configuration(void)
   json_aux_mode = BLUETOOTH;
   nonvol_write_i32(NONVOL_AUX_PORT_ENABLE, json_aux_mode); // Remember that BT is enabled
 
-  SEND(sprintf(_xs, "\r\nRelease switch, cycle power to module.");)
-  prompt_for_confirm();
+  SEND(SOME, sprintf(_xs, "\r\nRelease switch, cycle power to module.");)
 
   /*
    *  Programmed
    */
   uart_param_config(uart_aux, &uart_BT_config);
-  SEND(sprintf(_xs, _DONE_);)
+  SEND(SOME, sprintf(_xs, _DONE_);)
   return;
 }

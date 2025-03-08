@@ -169,7 +169,7 @@ bool prompt_for_confirm(void)
 {
   unsigned char ch;
 
-  SEND(sprintf(_xs, "\r\nConfirm Y/N?");)
+  SEND(ALL, sprintf(_xs, "\r\nConfirm Y/N?");)
 
   /*
    * Loop and wait for a confirmation
@@ -214,7 +214,7 @@ void hello(void)
   /*
    * Woken up again.  Turn things back on
    */
-  SEND(sprintf(_xs, "{\"Hello_World\":0}");)
+  SEND(ALL, sprintf(_xs, "{\"Hello_World\":0}");)
   set_status_LED(LED_READY);
   set_LED_PWM_now(json_LED_PWM);
   timer_new(&power_save, json_power_save * (unsigned long)ONE_SECOND * 60L);
@@ -295,7 +295,7 @@ void bye(unsigned int force_bye // Set to true to force a shutdown
   switch ( bye_state )
   {
     case BYE_BYE:                          // Say Good Night Gracie!
-      SEND(sprintf(_xs, "{\"GOOD_BYE\":0}");)
+      SEND(ALL, sprintf(_xs, "{\"GOOD_BYE\":0}");)
       json_tabata_enable = false;          // Turn off any automatic cycles
       json_rapid_enable  = false;
       set_LED_PWM(0);                      // Going to sleep
@@ -347,10 +347,13 @@ void bye(unsigned int force_bye // Set to true to force a shutdown
  * This is called every second from the synchronous scheduler
  *
  *--------------------------------------------------------------*/
-void echo_serial(int duration) // Duration in clock ticks
+void echo_serial(int duration, // Duration in clock ticks
+                 int in_ports, // Where to read from
+                 int out_ports // Where to ouput to
+)
 {
-  unsigned char ch;
-  unsigned long test_time;
+  unsigned char          ch;
+  volatile unsigned long test_time;
 
   timer_new(&test_time, (unsigned long)duration);
 
@@ -359,12 +362,16 @@ void echo_serial(int duration) // Duration in clock ticks
    */
   while ( test_time != 0 )
   {
-    if ( serial_available(ALL) != 0 )
+    if ( serial_available(in_ports) != 0 )
     {
-      ch = serial_getch(ALL);
-      serial_putch(ALL, ch);
+      ch = serial_getch(in_ports);
+      serial_putch(ch, out_ports);
     }
   }
 
+  /*
+   * Finished, clean up
+   */
+  timer_delete(&test_time);
   return;
 }

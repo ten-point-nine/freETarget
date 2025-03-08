@@ -97,7 +97,7 @@ const timer_config_t config = {
 
 void freeETarget_timer_init(void)
 {
-  DLT(DLT_INFO, SEND(sprintf(_xs, "freeETarget_timer_init()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "freeETarget_timer_init()");))
   timer_init(TIMER_GROUP_0, TIMER_1, &config);
   timer_set_counter_value(TIMER_GROUP_0, TIMER_1, 0);    // Start the timer at 0
   timer_set_alarm_value(TIMER_GROUP_0, TIMER_1, ONE_MS); // Trigger on this value
@@ -225,7 +225,7 @@ void freeETarget_timers(void *pvParameters)
 {
   unsigned int i;
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "freeETarget_timers()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "freeETarget_timers()");))
 
   /*
    *  Decrement the timers on a 10ms (100Hz) interval
@@ -275,7 +275,7 @@ void freeETarget_synchronous(void *pvParameters)
   unsigned int        toggle        = 0;
   static unsigned int old_run_state = 0;
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "freeETarget_synchronous()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "freeETarget_synchronous()");))
 
   while ( 1 )
   {
@@ -388,7 +388,7 @@ int timer_new(volatile unsigned long *new_timer, // Pointer to new down counter
       return 1;
     }
   }
-  DLT(DLT_CRITICAL, SEND(sprintf(_xs, "No space for new timer");))
+  DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "No space for new timer");))
 
   return 0;
 }
@@ -436,16 +436,16 @@ void show_time(void)
 {
   long time;
 
-  SEND(sprintf(_xs, "\r\nTime test.  Press any key to exit\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\nTime test.  Press any key to exit\r\n");)
 
   while ( serial_available(ALL) == 0 )
   {
     time = esp_timer_get_time() / 1000;
-    SEND(sprintf(_xs, "\r\n%ld.%ld s", time / 1000, time % 1000);)
+    SEND(ALL, sprintf(_xs, "\r\n%ld.%ld s", time / 1000, time % 1000);)
     vTaskDelay(ONE_SECOND);
   }
 
-  SEND(sprintf(_xs, _DONE_);)
+  SEND(ALL, sprintf(_xs, _DONE_);)
 
   return;
 }

@@ -89,7 +89,7 @@ void DAC_write(float volts[4]          // What value are we setting it to
     v_source = V_EXTERNAL; // Otherwise
     v_ref    = VREF_EXT;   // Default to 5.0 volts
   }
-  DLT(DLT_DIAG, SEND(sprintf(_xs, "DAC v_source:%d  v_ref:%4.2f)", v_source, v_ref);))
+  DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "DAC v_source:%d  v_ref:%4.2f)", v_source, v_ref);))
 
   /*
    *  Fill up the I2C buffer
@@ -97,7 +97,7 @@ void DAC_write(float volts[4]          // What value are we setting it to
   for ( i = 0; i != 4; i++ )
   {
     scaled_value = ((int)(volts[i] / v_ref * DAC_FS)) & 0xfff; // Figure the bits to send
-    DLT(DLT_DIAG, SEND(sprintf(_xs, "DAC_write(channel:%d Volts:%4.2f scale:%d)", i + 1, volts[i], scaled_value);))
+    DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "DAC_write(channel:%d Volts:%4.2f scale:%d)", i + 1, volts[i], scaled_value);))
     data[(i * 3) + 0] = DAC_WRITE                              // Write
                         + ((i & 0x3) << 1)                     // Channel
                         + 1;                                   // UDAC = 1  update automatically
@@ -145,9 +145,9 @@ void DAC_test(void)
   float volts[4];
   int   i;
 
-  SEND(sprintf(_xs, "\r\nDAC 0 Up ramp 0-5V");)
-  SEND(sprintf(_xs, "\r\nDAC 1 Up ramp delayed");)
-  SEND(sprintf(_xs, "\r\nPress ! to end test\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\nDAC 0 Up ramp 0-5V");)
+  SEND(ALL, sprintf(_xs, "\r\nDAC 1 Up ramp delayed");)
+  SEND(ALL, sprintf(_xs, "\r\nPress ! to end test\r\n");)
 
   i = 100;
   while ( 1 )
@@ -173,6 +173,6 @@ void DAC_test(void)
    *  Test Complete
    */
   set_VREF();
-  SEND(sprintf(_xs, "\r\nDone\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\nDone\r\n");)
   return;
 }

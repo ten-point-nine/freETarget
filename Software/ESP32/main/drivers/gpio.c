@@ -553,7 +553,7 @@ void paper_start(void)
    */
   if ( IS_DC_WITNESS ) // DC motor,
   {
-    DLT(DLT_DIAG, SEND(sprintf(_xs, "DC motor start: %d ms", json_paper_time);))
+    DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "DC motor start: %d ms", json_paper_time);))
     DCmotor_on_off(true, json_paper_time);
   }
 
@@ -746,7 +746,7 @@ void stepper_pulse(void)
     step_time = json_step_time;
   }
 
-  DLT(DLT_DIAG, SEND(sprintf(_xs, "step_time %d   step_count: %d", step_time, step_count);))
+  DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "step_time %d   step_count: %d", step_time, step_count);))
   timer_new(&paper_time, MS_TO_TICKS(step_time));
 
   if ( step_count != 0 )
@@ -783,7 +783,7 @@ void face_ISR(void)
 {
   face_strike++; // Got a face strike
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "\r\nface_ISR(): %d", face_strike);))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "\r\nface_ISR(): %d", face_strike);))
 
   return;
 }
@@ -906,9 +906,9 @@ void digital_test(void)
   /*
    * Read in the fixed digital inputs
    */
-  SEND(sprintf(_xs, "\r\nTime: %4.2fs", (float)(esp_timer_get_time() / 1000000));)
-  SEND(sprintf(_xs, "\r\nDIP: 0x%02X", read_DIP());)
-  SEND(sprintf(_xs, _DONE_);)
+  SEND(ALL, sprintf(_xs, "\r\nTime: %4.2fs", (float)(esp_timer_get_time() / 1000000));)
+  SEND(ALL, sprintf(_xs, "\r\nDIP: 0x%02X", read_DIP());)
+  SEND(ALL, sprintf(_xs, _DONE_);)
 
   return;
 }
@@ -928,7 +928,7 @@ void status_LED_test(void)
 {
   if ( ((IS_HOLD_C(RAPID_RED)) && (IS_HOLD_C(RAPID_GREEN))) || ((IS_HOLD_D(RAPID_RED)) && (IS_HOLD_D(RAPID_GREEN))) )
   {
-    SEND(sprintf(_xs, "\r\nMFS_C or MFS_D not configured for output\r\n");)
+    SEND(ALL, sprintf(_xs, "\r\nMFS_C or MFS_D not configured for output\r\n");)
   }
 
   timer_delay(2 * ONE_SECOND);
@@ -945,7 +945,7 @@ void status_LED_test(void)
   set_status_LED("rgbrg");
   timer_delay(5 * ONE_SECOND); // Blink for 5 seconds
   set_status_LED(LED_READY);
-  SEND(sprintf(_xs, _DONE_);)
+  SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }
 
@@ -974,25 +974,25 @@ void paper_test(void)
    */
   if ( check_12V() == false )
   {
-    SEND(sprintf(_xs, "\r\nTest failed, no 12V supply");)
+    SEND(ALL, sprintf(_xs, "\r\nTest failed, no 12V supply");)
     return;
   }
 
   /*
    * Try running the test
    */
-  SEND(sprintf(_xs, "\r\nAdvancing paper: 500 ms 10x");)
+  SEND(ALL, sprintf(_xs, "\r\nAdvancing paper: 500 ms 10x");)
   for ( i = 0; i != 10; i++ )
   {
-    SEND(sprintf(_xs, "  %d+", (i + 1));)
+    SEND(ALL, sprintf(_xs, "  %d+", (i + 1));)
     DCmotor_on_off(true, ONE_SECOND / 2);
     timer_delay(ONE_SECOND / 2);
-    SEND(sprintf(_xs, "-");)
+    SEND(ALL, sprintf(_xs, "-");)
     DCmotor_on_off(false, 0);
     timer_delay(ONE_SECOND / 2);
   }
 
-  SEND(sprintf(_xs, _DONE_);)
+  SEND(ALL, sprintf(_xs, _DONE_);)
 
   return;
 }
@@ -1014,23 +1014,23 @@ void LED_test(void)
 {
   int i;
 
-  SEND(sprintf(_xs, "\r\nCycling the LED");)
+  SEND(ALL, sprintf(_xs, "\r\nCycling the LED");)
 
   for ( i = 0; i <= 100; i += 5 )
   {
-    SEND(sprintf(_xs, "%d   ", i);)
+    SEND(ALL, sprintf(_xs, "%d   ", i);)
     pwm_set(LED_PWM, i);
     vTaskDelay(ONE_SECOND / 10);
   }
 
   for ( i = 100; i >= 0; i -= 5 )
   {
-    SEND(sprintf(_xs, "%d   ", i);)
+    SEND(ALL, sprintf(_xs, "%d   ", i);)
     pwm_set(LED_PWM, i);
     vTaskDelay(ONE_SECOND / 10);
   }
 
-  SEND(sprintf(_xs, _DONE_);)
+  SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }
 
@@ -1052,8 +1052,8 @@ void LED_test(void)
  *--------------------------------------------------------------*/
 void timer_run_all(void)
 {
-  SEND(sprintf(_xs, "\r\nCycle RUN lines at 2:1 duty cycle");)
-  SEND(sprintf(_xs, "\r\nPress any key to stop");)
+  SEND(ALL, sprintf(_xs, "\r\nCycle RUN lines at 2:1 duty cycle");)
+  SEND(ALL, sprintf(_xs, "\r\nPress any key to stop");)
   while ( serial_available(ALL) == 0 )
   {
     gpio_set_level(STOP_N, RUN_GO);                 // Let the clock go
@@ -1065,14 +1065,14 @@ void timer_run_all(void)
     vTaskDelay(ONE_SECOND / 4);                     // THe RUN lines shold be off for 1/4 second
   }
 
-  SEND(sprintf(_xs, _DONE_);)
+  SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }
 
 void timer_cycle_oscillator(void)
 {
-  SEND(sprintf(_xs, "\r\nCycle 10MHz Osc 2:1 duty cycle\r\n");)
-  SEND(sprintf(_xs, "\r\nPress any key to stop.");)
+  SEND(ALL, sprintf(_xs, "\r\nCycle 10MHz Osc 2:1 duty cycle\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\nPress any key to stop.");)
   while ( serial_available(ALL) == 0 )
   {
     gpio_set_level(OSC_CONTROL, OSC_ON);  // Turn off the oscillator
@@ -1080,6 +1080,6 @@ void timer_cycle_oscillator(void)
     gpio_set_level(OSC_CONTROL, OSC_OFF); // Turn off the oscillator
     vTaskDelay(ONE_SECOND / 4);           // The oscillator shold be off for 1/4 seocnd
   }
-  SEND(sprintf(_xs, _DONE_);)
+  SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }

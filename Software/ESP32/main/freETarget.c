@@ -142,7 +142,7 @@ void freeETarget_init(void)
   POST_counters();            // POST counters does not return if there is an error
   if ( check_12V() == false ) // Verify the 12 volt supply
   {
-    DLT(DLT_INFO, SEND(sprintf(_xs, "12V supply not present");))
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "12V supply not present");))
   }
 
   /*
@@ -153,7 +153,7 @@ void freeETarget_init(void)
   serial_flush(ALL); // Get rid of everything
   shot_in  = 0;      // Clear out any junk
   shot_out = 0;
-  DLT(DLT_INFO, SEND(sprintf(_xs, "Initialization complete");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initialization complete");))
 
   /*
    * Start the tasks running
@@ -178,13 +178,13 @@ unsigned int location;      // Sensor location
 
 void freeETarget_target_loop(void *arg)
 {
-  DLT(DLT_INFO, SEND(sprintf(_xs, "freeETarget_target_loop()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "freeETarget_target_loop()");))
 
   set_status_LED(LED_READY);
 
   if ( json_pcnt_latency != 0 )              // If the second set of timers has been enabled
   {
-    DLT(DLT_INFO, SEND(sprintf(_xs, "Initializing PCNT high inputs");))
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initializing PCNT high inputs");))
     gpio_init_single(PCNT_HI);               // Program the port
   }
 
@@ -212,14 +212,14 @@ void freeETarget_target_loop(void *arg)
     {
       default:
       case START:                                                                      // Start of the loop
-        DLT(DLT_APPLICATION, SEND(sprintf(_xs, "state: START");))
+        DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "state: START");))
         power_save = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L; //  Reset the timer
         set_mode();
         arm();
         set_status_LED(LED_READY);
         state            = WAIT;
         json_rapid_count = 0;
-        DLT(DLT_APPLICATION, SEND(sprintf(_xs, "state: WAIT");))
+        DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "state: WAIT");))
         break;
 
       case WAIT:
@@ -227,7 +227,7 @@ void freeETarget_target_loop(void *arg)
         break;
 
       case REDUCE:
-        DLT(DLT_APPLICATION, SEND(sprintf(_xs, "state: REDUCE");))
+        DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "state: REDUCE");))
         reduce();
         state = START;
         break;
@@ -261,7 +261,7 @@ unsigned int set_mode(void)
 {
   unsigned int i;
 
-  DLT(DLT_APPLICATION, SEND(sprintf(_xs, "set_mode()");))
+  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "set_mode()");))
 
   for ( i = 0; i != SHOT_SPACE; i++ )
   {
@@ -302,7 +302,7 @@ unsigned int set_mode(void)
  *--------------------------------------------------------------*/
 unsigned int arm(void)
 {
-  DLT(DLT_APPLICATION, SEND(sprintf(_xs, "arm()");))
+  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "arm()");))
 
   face_strike = 0;                                                       // Reset the face strike count
   stop_timers();
@@ -411,7 +411,7 @@ unsigned int reduce(void)
    */
   while ( shot_out != shot_in ) // Process the shots on the queue
   {
-    DLT(DLT_DEBUG, SEND(sprintf(_xs, "shot_in: %d,  shot_out:%d", shot_in, shot_out);))
+    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "shot_in: %d,  shot_out:%d", shot_in, shot_out);))
     DLT(DLT_DEBUG, show_sensor_status(record[shot_out].sensor_status);)
 
     show_sensor_fault(record[shot_out].sensor_status);
@@ -436,7 +436,8 @@ unsigned int reduce(void)
              || (paper_shot_out > FORCE_PAPER_MOVE) )                            // Too many misses
         {
           paper_shot++;
-          DLT(DLT_DEBUG, SEND(sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", radius, json_paper_eco / 2, paper_shot, json_paper_shot);))
+          DLT(DLT_DEBUG,
+              SEND(ALL, sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", radius, json_paper_eco / 2, paper_shot, json_paper_shot);))
           if ( (paper_shot >= json_paper_shot)                                   // Have met the number of good shots?
                || (paper_shot_out >= FORCE_PAPER_MOVE) )                         // Or we just shot too many bad ones?
           {
@@ -452,7 +453,8 @@ unsigned int reduce(void)
         else
         {
           paper_shot_out++;                                                      // Outside of the desired radius, keep track of the misses
-          DLT(DLT_DEBUG, SEND(sprintf(_xs, "Radius: %4.2f/%d bad shot: %d/%d", radius, json_paper_eco / 2, paper_shot, json_paper_shot);))
+          DLT(DLT_DEBUG,
+              SEND(ALL, sprintf(_xs, "Radius: %4.2f/%d bad shot: %d/%d", radius, json_paper_eco / 2, paper_shot, json_paper_shot);))
         }
       }
     }
@@ -473,7 +475,7 @@ unsigned int reduce(void)
    */
   while ( ring_timer != 0 ) // Wait here to make sure the ringing has stopped
   {
-    DLT(DLT_DEBUG, SEND(sprintf(_xs, "ring_timer: %ld", ring_timer);))
+    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "ring_timer: %ld", ring_timer);))
     vTaskDelay(10);
   }
 
@@ -516,15 +518,15 @@ void start_new_session(void)
 {
   unsigned char ch;
 
-  SEND(sprintf(_xs, "\r\nThis will reset the board\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\nThis will reset the board\r\n");)
 
   if ( prompt_for_confirm() == true )
   {
-    SEND(sprintf(_xs, "\n\rResetting board\r\n");)
+    SEND(ALL, sprintf(_xs, "\r\nResetting board\r\n");)
     assert(0);
   }
 
-  SEND(sprintf(_xs, "\r\nRestart cancelled\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\nRestart cancelled\r\n");)
   return;
 }
 
@@ -589,7 +591,7 @@ void tabata_task(void)
     if ( tabata_timer == 0 )                                                  // Time to go to the next state?
     {
       state_machine++;                                                        // Next state
-      SEND(sprintf(_xs, "{\"%s\": %ld}", tabata_state[state_machine].message, *tabata_state[state_machine].timer);)
+      SEND(ALL, sprintf(_xs, "{\"%s\": %ld}", tabata_state[state_machine].message, *tabata_state[state_machine].timer);)
 
       if ( *tabata_state[state_machine].timer == 0 )                          // Reached the end of the state machine
       {
@@ -674,7 +676,7 @@ void rapid_fire_task(void)
     if ( rapid_timer == 0 )                                                    // Time to go to the next state?
     {
       state_machine++;                                                         // Next state
-      SEND(sprintf(_xs, "{\"%s\": %ld}", rapid_state[state_machine].message, *rapid_state[state_machine].timer);)
+      SEND(ALL, sprintf(_xs, "{\"%s\": %ld}", rapid_state[state_machine].message, *rapid_state[state_machine].timer);)
 
       if ( *rapid_state[state_machine].timer == 0 )                            // Reached the end of the state machine
       {
@@ -754,17 +756,17 @@ void polled_target_test(void)
   while ( 1 )
   {
     arm_timers();
-    SEND(sprintf(_xs, "\r\nArmed\r\n");)
+    SEND(ALL, sprintf(_xs, "\r\nArmed\r\n");)
     while ( (is_running() & RUN_MASK) != RUN_MASK )
     {
       running = is_running();
-      SEND(sprintf(_xs, "\r\nis_running: %02X", running);)
+      SEND(ALL, sprintf(_xs, "\r\nis_running: %02X", running);)
 
       for ( i = 0; i != 8; i++ )
       {
         if ( running & (1 << i) )
         {
-          SEND(sprintf(_xs, " %s ", find_sensor(1 << i)->long_name);)
+          SEND(ALL, sprintf(_xs, " %s ", find_sensor(1 << i)->long_name);)
         }
       }
     }
@@ -802,7 +804,7 @@ void interrupt_target_test(void)
 
   int i;
 
-  SEND(sprintf(_xs, "\r\nInterrupt target shot test: shot_in: %d   shot_out: %d\r\n", shot_in, shot_out);)
+  SEND(ALL, sprintf(_xs, "\r\nInterrupt target shot test: shot_in: %d   shot_out: %d\r\n", shot_in, shot_out);)
 
   /*
    * Stay here watching the counters
@@ -811,10 +813,10 @@ void interrupt_target_test(void)
   {
     while ( shot_in != shot_out ) // While we have a queue o shots
     {
-      SEND(sprintf(_xs, "\r\n");)
+      SEND(ALL, sprintf(_xs, "\r\n");)
       for ( i = 0; i != 8; i++ )
       {
-        SEND(sprintf(_xs, "%s:%5d  ", find_sensor(1 << i)->long_name, record[shot_out].timer_count[i]);)
+        SEND(ALL, sprintf(_xs, "%s:%5d  ", find_sensor(1 << i)->long_name, record[shot_out].timer_count[i]);)
       }
       shot_out = (shot_out + 1) % SHOT_SPACE;
     }
