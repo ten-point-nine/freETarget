@@ -33,6 +33,7 @@
 #include "pcnt.h"
 #include "pwm.h"
 #include "timer.h"
+#include "bluetooth.h"
 
 extern volatile unsigned long paper_time;
 

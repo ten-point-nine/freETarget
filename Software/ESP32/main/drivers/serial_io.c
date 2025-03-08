@@ -154,6 +154,42 @@ void serial_aux_init(void)
   return;
 }
 
+void serial_bt_init_config(void) // Program port for Bluetooth initialization
+{
+  if ( json_aux_mode == 0 )
+  {
+    return;
+  }
+
+  /*
+   *  Setup the communications parameters
+   */
+  uart_param_config(uart_aux, &uart_BT_INIT_config);
+
+  /*
+   * All done, return
+   */
+  return;
+}
+
+void serial_bt_config(void) // Setup the aux port for normal Bluetooth operation
+{
+  if ( json_aux_mode == 0 )
+  {
+    return;
+  }
+
+  /*
+   *  Setup the communications parameters
+   */
+  uart_param_config(uart_aux, &uart_BT_config);
+
+  /*
+   * All done, return
+   */
+  return;
+}
+
 /*******************************************************************************
  *
  * @function: serial_available
@@ -751,88 +787,5 @@ void serial_port_test(void)
    */
   timer_delete(&test_time);
   SEND(ALL, sprintf(_xs, _DONE_);)
-  return;
-}
-
-/*******************************************************************************
- *
- * @function: BlueTooth_configuration
- *
- * @brief:    Program the bluetooth module
- *
- * @return:   None
- *
- *******************************************************************************
- *
- * The factory condition for the bluetooth module is to have
- *
- * baud rate = 9600
- * name = some manufacturer name
- *
- * This function programs the bluetooth module to the desired settings
- *
- * baud rate = 115200
- * name = target_name
- *
- * See https://components101.com/sites/default/files/component_datasheet/HC-05%20Datasheet.pdf
- *
- ******************************************************************************/
-void BlueTooth_configuration(void)
-{
-  char str_c[TINY_TEXT]; // Place to store the name{""}
-  char str_x[SHORT_TEXT];
-
-  /*
-   * Abort the test if the AUX port is not available
-   */
-  if ( json_aux_mode == 0 )
-  {
-    SEND(ALL, sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_MODE\": 2} to enable");)
-    SEND(ALL, sprintf(_xs, _DONE_);)
-    return;
-  }
-
-  /*
-   * Make sure the module is ready
-   */
-  SEND(SOME, sprintf(_xs, "\r\nBluetooth configuration.  Make sure the EN switch is pressed when powering up.");)
-  if ( prompt_for_confirm() == false )
-  {
-    SEND(SOME, sprintf(_xs, "\r\nAborting configuration");)
-  }
-  SEND(SOME, sprintf(_xs, "\r\n");)
-
-  /*
-   * Set the baud rate to the correct value and program
-   */
-  uart_param_config(uart_aux, &uart_BT_INIT_config);
-  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
-
-  SEND(ALL, sprintf(_xs, "\r\nAT\r\n");)             // Flush out any junk
-  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
-
-  target_name(str_c);
-  SEND(ALL, sprintf(_xs, "AT+NAME=%s\r\n", str_c);)  // Set in the name
-  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
-
-  SEND(ALL, sprintf(_xs, "AT+UART=115200,1,0\r\n");) // Set in the baud rate, stop, parity
-  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
-
-  SEND(ALL, sprintf(_xs, "AT+PSWD=1090\r\n");)       // Set in the baud rate, stop, parity
-  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
-
-  /*
-   * Mark that the module is ready
-   */
-  json_aux_mode = BLUETOOTH;
-  nonvol_write_i32(NONVOL_AUX_PORT_ENABLE, json_aux_mode); // Remember that BT is enabled
-
-  SEND(SOME, sprintf(_xs, "\r\nRelease switch, cycle power to module.");)
-
-  /*
-   *  Programmed
-   */
-  uart_param_config(uart_aux, &uart_BT_config);
-  SEND(SOME, sprintf(_xs, _DONE_);)
   return;
 }

@@ -24,6 +24,7 @@
 #include "token.h"
 #include "serial_io.h"
 #include "wifi.h"
+#include "bluetooth.h"
 
 /*
  *  Function Prototypes
@@ -235,8 +236,9 @@ const json_message_t JSON[] = {
 static unsigned int in_JSON           = 0;
 static unsigned int got_right_bracket = 0;
 static bool         not_found;
-static bool         keep_space;       // Set to 1 if keeping spaces
-static bool         got_left_bracket; // Set to 1 if we have a bracket
+static bool         keep_space;         // Set to 1 if keeping spaces
+static bool         got_left_bracket;   // Set to 1 if we have a bracket
+unsigned int        from_BlueTooth = 0; // Count of characters from the BlueTooth port
 
 void freeETarget_json(void *pvParameters)
 {
@@ -255,9 +257,10 @@ void freeETarget_json(void *pvParameters)
     /*
      * See if anything is waiting and if so, add it in
      */
-    while ( serial_available(ALL) != 0 )
+    while ( (serial_available(ALL) != 0) )                // Something waiting for us?
     {
-      ch = serial_getch(ALL);
+      from_BlueTooth = serial_available(BLUETOOTH | AUX); // How much from the BlueTooth port?
+      ch             = serial_getch(ALL);
       serial_putch(ch, ALL);
 
       /*
@@ -281,16 +284,20 @@ void freeETarget_json(void *pvParameters)
           keep_space        = 0;
           break;
 
-        case 0x08:                    // Backspace
+        case 0x08:                 // Backspace
           if ( in_JSON != 0 )
           {
             in_JSON--;
           }
-          input_JSON[in_JSON] = 0;    // Null terminate
+          input_JSON[in_JSON] = 0; // Null terminate
           break;
 
-        case '*':                     // Connected to PC over BT or Wifi
+        case '*':                  // Connected to PC over BT or Wifi
           POST_version();
+          if ( from_BlueTooth != 0 )
+          {
+            Bluetooth_start_new_connection();
+          }
 
         case '^':                     // Special case for European keyboards which have a different "*" key
           ch = '"';                   // Convert and fall through

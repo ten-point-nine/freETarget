@@ -17,13 +17,14 @@
 
 #define SOFTWARE_VERSION "\"6.0.0 March 8, 2025\""
 #define _DONE_           "\r\nDone\r\n"
+#define _GREETING_       "CONNECTED" // Message to send on connection
 
-#define REV_500   500    // ESP32
+#define REV_500   500                // ESP32
 #define REV_510   510
 #define REV_520   520
 #define BUILD_REV REV_520
 
-#define INIT_DONE 0xabcd // NON-VOL Initialization complete signature
+#define INIT_DONE 0xabcd             // NON-VOL Initialization complete signature
 #ifndef true
 #define true  (1 == 1)
 #define false (0 == 1)

@@ -55,9 +55,8 @@
 #define KEEPALIVE_IDLE     true
 #define KEEPALIVE_INTERVAL 100
 #define KEEPALIVE_COUNT    50
-#define MAX_SOCKETS        4           // Allow for four sockets
-#define AVAILABLE_SOCKET   -1          // The socket is unused
-#define GREETING           "CONNECTED" // Message to send on connection
+#define MAX_SOCKETS        4  // Allow for four sockets
+#define AVAILABLE_SOCKET   -1 // The socket is unused
 
 /*
  * Macros
@@ -850,8 +849,7 @@ void tcpip_accept_poll(void *parameters)
  * scores.
  *
  *******************************************************************************/
-static void WiFi_start_new_connection(int sock // Socket token to use
-)
+static void WiFi_start_new_connection(int sock) // Socket token to use
 {
   int i, j;
 
@@ -878,7 +876,7 @@ static void WiFi_start_new_connection(int sock // Socket token to use
   /*
    *  Inform the PC what is going on
    */
-  sprintf(_xs, "{\"%s\":%10.6f}", GREETING, esp_timer_get_time() / 100000.0 / 60.0);
+  sprintf(_xs, "{\"%s\":%10.6f}", _GREETING_, esp_timer_get_time() / 100000.0 / 60.0);
   send(sock, _xs, strlen(_xs), 0); // Only send to the most recent connection
 
   for ( i = 0; i != SHOT_SPACE; i++ )

@@ -41,7 +41,8 @@
     "string.h": "c",
     "stdlib.h": "c",
     "analog_io.h": "c",
-    "nvs.h": "c"
+    "nvs.h": "c",
+    "task.h": "c"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM3",

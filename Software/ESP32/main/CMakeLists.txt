@@ -15,6 +15,7 @@ idf_component_register(SRCS
                     "drivers/pcnt.c"
                     "drivers/serial_io.c"
                     "drivers/token.c"
+                    "drivers/bluetooth.c"
                     "mfs.c"
                     "compute_hit.c"
                     "speed_of_sound.c"
@@ -24,6 +25,7 @@ idf_component_register(SRCS
                     "tcpip/http_test.c"
                     "tcpip/http_server.c"
                     "tcpip/http_services.c"
+
 
                     INCLUDE_DIRS 
                     "." 
