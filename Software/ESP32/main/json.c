@@ -169,7 +169,7 @@ const json_message_t JSON[] = {
     {"\"SEND_MISS\":",       &json_send_miss,             IS_INT32,               0,                  NONVOL_SEND_MISS,        0,          0},
     {"\"SENSOR\":",          (int *)&json_sensor_dia,     IS_FLOAT,               0,                  NONVOL_SENSOR_DIA,       232000,     0},
     {"\"SN\":",              &json_serial_number,         IS_FIXED,               0,                  NONVOL_SERIAL_NO,        0xffff,     0},
-    {"\"SESSION\"",          &json_session_type,          IS_INT32,               &start_new_session, 0,                       0,          0},
+    {"\"SESSION\":",         &json_session_type,          IS_INT32,               &start_new_session, 0,                       0,          0},
     {"\"STEP_COUNT\":",      &json_step_count,            IS_INT32,               0,                  NONVOL_STEP_COUNT,       0,          0},
     {"\"STEP_RAMP\":",       &json_step_ramp,             IS_INT32,               0,                  NONVOL_STEP_RAMP,        0,          4},
     {"\"STEP_START\":",      &json_step_start,            IS_INT32,               0,                  NONVOL_STEP_START,       0,          4},
@@ -408,7 +408,7 @@ static void handle_json(void)
               }
               else
               {
-                x = atoi(&input_JSON[i + k + 1]);
+                x = atoi(&input_JSON[i + k]);
               }
               if ( JSON[j].value != 0 )
               {
@@ -421,7 +421,7 @@ static void handle_json(void)
               break;
 
             case IS_FLOAT:                                  // Convert a floating point number
-              f = atof(&input_JSON[i + k + 1]);             // Float
+              f = atof(&input_JSON[i + k]);                 // Float
               x = f * 1000;                                 // Integer
               if ( JSON[j].value != 0 )
               {
@@ -437,7 +437,6 @@ static void handle_json(void)
 
           if ( JSON[j].f != 0 )                             // Call the handler if it is available
           {
-            printf("  %d  ", x);
             JSON[j].f(x);
           }
         }
