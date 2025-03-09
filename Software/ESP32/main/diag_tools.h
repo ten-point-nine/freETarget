@@ -105,8 +105,8 @@ void heartbeat(void);                                     // Send out regular st
 #define DLT_DIAG          0x0010 // Hardware diagnostics messages displayed
 #define DLT_DEBUG         0x0020 // Specific debug information
 #define DLT_SCORE         0x0040 // Display extended score record
-#define DLT_HEARTBEAT     0x0080 // Kick out the time to see if we are alive
-#define DLT_HTTP          0x0100 // Log HTTP requests
+#define DLT_HTTP          0x0080 // Log HTTP requests
+#define DLT_HEARTBEAT     0x0100 // Kick out the time to see if we are alive
 
 // clang-format off
 #define DLT(level, z) if ( do_dlt(level) )  { z }

@@ -138,7 +138,7 @@ void Bluetooth_start_new_connection(void) // Socket token to use
 
   for ( i = 0; i != SHOT_SPACE; i++ )
   {
-    if ( record[i].is_valid == true )
+    if ( (record[i].session_type & SESSION_VALID) != 0 )
     {
       send_replay(&record[i], i);
       serial_to_all(_xs, BLUETOOTH);

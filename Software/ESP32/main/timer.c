@@ -125,6 +125,8 @@ void freeETarget_timer_init(void)
   timer_enable_intr(TIMER_GROUP_0, TIMER_1);             // Interrupt associated with this interrupt
   timer_isr_callback_add(TIMER_GROUP_0, TIMER_1, freeETarget_timer_isr_callback, NULL, 0);
   timer_start(TIMER_GROUP_0, TIMER_1);
+  timer_new(&shot_timer, MAX_WAIT_TIME);                 // Wait for the shot to arrive
+  timer_new(&ring_timer, MAX_RING_TIME);                 // Wait for the ringing to stop
   shot_in  = 0;
   shot_out = 0;
 
@@ -251,14 +253,13 @@ void freeETarget_timers(void *pvParameters)
    */
   while ( 1 )
   {
-
-    if ( (run_state & IN_STARTUP) == 0 ) // Dont run the timers if we are in startup
+    IF_NOT(IN_STARTUP)                  // Dont run the timers if we are in startup
     {
-      for ( i = 0; i != N_TIMERS; i++ )  // Refresh the timers.  Decriment in 10ms increments
+      for ( i = 0; i != N_TIMERS; i++ ) // Refresh the timers.  Decriment in 10ms increments
       {
         if ( (timers[i] != 0) && (*timers[i] != 0) )
         {
-          (*timers[i])--;                // Decriment the timer
+          (*timers[i])--;               // Decriment the timer
         }
       }
     }

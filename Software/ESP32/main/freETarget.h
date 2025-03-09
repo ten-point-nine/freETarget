@@ -15,7 +15,7 @@
 #include "freertos/task.h"
 #include "serial_io.h"
 
-#define SOFTWARE_VERSION "\"6.0.0 March 8, 2025\""
+#define SOFTWARE_VERSION "\"6.0.0 March 9, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED" // Message to send on connection
 
@@ -95,6 +95,11 @@
 #define PI_ON_4 (PI / 4.0d)
 #define PI_ON_2 (PI / 2.0d)
 
+#define SESSION_EMPTY 0                            // No session data
+#define SESSION_VALID 1                            // Session is valid but undefined
+#define SESSION_SIGHT 2                            // Session is a sighter
+#define SESSION_SCORE 4                            // Session is a score
+
 /*
  *  Types
  */
@@ -125,7 +130,7 @@ typedef struct
 
 typedef struct
 {
-  bool          is_valid;                // This record contains valid information
+  unsigned int  session_type;            // What kind of information is contained in the score
   double        x;                       // X location of shot as computed
   double        y;                       // Y location of shot
   double        xs;                      // X location of shot as scored
@@ -158,17 +163,17 @@ extern char                   _xs[512];    // General purpose string buffer
 /*
  * FreeETarget functions
  */
-void         freeETarget_init(void);             // Get the target software ready
-void         freeETarget_target_loop(void *arg); // Target polling loop
-void         send_keep_alive(void);              // Send out the keep alive signal for TCPIP
-void         hello(void);                        // Say Hello World
-void         bye(unsigned int force_bye);        // Shut down and say goodbye
-void         polled_target_test(void);           // Test the target aquisition software
-void         interrupt_target_test(void);        // Test the target aquisition software
-void         tabata_task(void);                  // Run the TABATA timersArm the Tabata counter
-void         rapid_fire_task(void);              // Run the Rapid Fire state machine
-sensor_ID_t *find_sensor(unsigned int run_mask); // Locate the sensor settings for the run_latch
-void         start_new_session(void);            // Start a new shooting session
-bool         prompt_for_confirm(void);           // Prompt for a confirmation
+void         freeETarget_init(void);              // Get the target software ready
+void         freeETarget_target_loop(void *arg);  // Target polling loop
+void         send_keep_alive(void);               // Send out the keep alive signal for TCPIP
+void         hello(void);                         // Say Hello World
+void         bye(unsigned int force_bye);         // Shut down and say goodbye
+void         polled_target_test(void);            // Test the target aquisition software
+void         interrupt_target_test(void);         // Test the target aquisition software
+void         tabata_task(void);                   // Run the TABATA timersArm the Tabata counter
+void         rapid_fire_task(void);               // Run the Rapid Fire state machine
+sensor_ID_t *find_sensor(unsigned int run_mask);  // Locate the sensor settings for the run_latch
+void         start_new_session(int session_type); // Start a new shooting session
+bool         prompt_for_confirm(void);            // Prompt for a confirmation
 
 #endif

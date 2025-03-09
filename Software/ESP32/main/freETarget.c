@@ -188,6 +188,7 @@ void freeETarget_target_loop(void *arg)
     gpio_init_single(PCNT_HI);               // Program the port
   }
 
+  start_new_session(0);
   shot_number = 1;                           // Start counting shots at 1
 
   while ( 1 )
@@ -435,7 +436,7 @@ unsigned int reduce(void)
               || radius < (json_paper_eco / 2))                                  // Inside the black (radius)
              || (paper_shot_out > FORCE_PAPER_MOVE) )                            // Too many misses
         {
-          paper_shot++;
+          paper_shot++;                                                          //
           DLT(DLT_DEBUG,
               SEND(ALL, sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", radius, json_paper_eco / 2, paper_shot, json_paper_shot);))
           if ( (paper_shot >= json_paper_shot)                                   // Have met the number of good shots?
@@ -505,28 +506,59 @@ unsigned int reduce(void)
  *----------------------------------------------------------------
  *
  * The target can be commanded to start a new session by receiving
- * the command {"START"}
+ * the command {"SESSION": type}
  *
- * This function deliberatly forces an assert that reboots the
- * processor from the beginning.
- *
- * if connected by WiFi, the TCPIP connection must be
- * disconnected and connected again.
+ * Session types are
+ *  0 - Clear all existing sessions
+ *  1 - Sighters
+ *  2 - Score
+ *  10 - Display all shots
+ *  11 - Display sighters
+ *  12 - Display score
  *
  *--------------------------------------------------------------*/
-void start_new_session(void)
+#define SESSION_PRINT 10                 // Display the session
+
+void start_new_session(int session_type) //
 {
-  unsigned char ch;
+  unsigned int i;
 
-  SEND(ALL, sprintf(_xs, "\r\nThis will reset the board\r\n");)
+  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "start_new_session(%d)", session_type);))
 
-  if ( prompt_for_confirm() == true )
+  /*
+   * Reset the sessions ?
+   */
+  if ( session_type == 0 ) // Reset the session
   {
-    SEND(ALL, sprintf(_xs, "\r\nResetting board\r\n");)
-    assert(0);
+    for ( i = 0; i != SHOT_SPACE; i++ )
+    {
+      record[i].session_type = 0;
+    }
+    return;
   }
 
-  SEND(ALL, sprintf(_xs, "\r\nRestart cancelled\r\n");)
+  /*
+   * Are we setting or displaying the shots
+   */
+  if ( (session_type / SESSION_PRINT) == 0 ) // Setting only
+  {
+    start_new_session(0);
+    return;
+  }
+
+                                             /*
+                                              * Printing out a session
+                                              */
+
+  for ( i = 0; i != SHOT_SPACE; i++ )
+  {
+    if ( (record[i].session_type != 0) // The session has valid data
+         && (record[i].session_type & (SESSION_SIGHT | SESSION_SCORE)) == (session_type % SESSION_PRINT) )
+    {
+      send_score(&record[i], i, NOT_MISSED_SHOT);
+    }
+  }
+
   return;
 }
 

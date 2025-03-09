@@ -869,7 +869,7 @@ static void WiFi_start_new_connection(int sock) // Socket token to use
 
     if ( j == 1 ) // This is the first, start new
     {
-      start_new_session();
+      start_new_session(0);
     }
   }
 
@@ -881,7 +881,7 @@ static void WiFi_start_new_connection(int sock) // Socket token to use
 
   for ( i = 0; i != SHOT_SPACE; i++ )
   {
-    if ( record[i].is_valid == true )
+    if ( (record[i].session_type & SESSION_VALID) != 0 )
     {
       send_replay(&record[i], i);
       send(sock, _xs, strlen(_xs), 0);

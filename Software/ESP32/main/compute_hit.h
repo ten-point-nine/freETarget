@@ -7,12 +7,13 @@
 /*
  * What score items will be included in the JSON
  */
-#define S_SHOT   true     // Include the shot number
-#define S_XY     true     // Include X-Y coordinates
-#define S_POLAR  false    // Include polar coordinates
-#define S_TIMERS true     // Include counter values
-#define S_MISC   true     // Include miscelaneous diagnotics
-#define S_SCORE  false    // Include estimated score
+#define S_SHOT    true    // Include the shot number
+#define S_SESSION true    // Include the session type
+#define S_XY      true    // Include X-Y coordinates
+#define S_POLAR   false   // Include polar coordinates
+#define S_TIMERS  true    // Include counter values
+#define S_MISC    true    // Include miscelaneous diagnotics
+#define S_SCORE   false   // Include estimated score
 
 #define NOT_MISSED_SHOT 0 // Record the shot as good (is not a miss)
 #define MISSED_SHOT     1 // Record the shot as a miss

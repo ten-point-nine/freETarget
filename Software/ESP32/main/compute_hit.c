@@ -12,6 +12,8 @@
 #include "stdbool.h"
 #include "gpio_types.h"
 #include "driver\gpio.h"
+
+#include "freETarget.h"
 #include "helpers.h"
 #include "json.h"
 #include "mfs.h"
@@ -189,7 +191,7 @@ unsigned int compute_hit(shot_record_t *shot // Storing the results
     s[i].is_valid = true;
     if ( shot->timer_count[i] == 0 )
     {
-      s[i].is_valid = false;
+      shot->session_type = SESSION_VALID | json_session_type;
     }
   }
 
@@ -508,9 +510,9 @@ void send_score(shot_record_t *shot,        //  record
   real_x = x;
   real_y = y;                                                 // Remember the original target value
   remap_target(&x, &y);                                       // Change the target if needed
-  shot->xs       = x;
-  shot->ys       = y;
-  shot->is_valid = true;
+  shot->xs           = x;
+  shot->ys           = y;
+  shot->session_type = SESSION_VALID | json_session_type;
 
   /*
    *  Display the results
@@ -523,9 +525,14 @@ void send_score(shot_record_t *shot,        //  record
   {
     SEND(ALL, sprintf(_xs, ", \"miss\":1");)
   }
-  target_name(str_c);
-  SEND(ALL, sprintf(_xs, ", \"name\":\"%s\"", str_c);)
   SEND(ALL, sprintf(_xs, ", \"time\":%6.2f ", SHOT_TIME_TO_SECONDS(shot->shot_time));)
+#endif
+
+#if ( S_SESSION )
+  if ( (shot->session_type & (SESSION_SIGHT | SESSION_SCORE)) != 0 )
+  {
+    sprintf(_xs, ", \"session_type\": %d ", shot->session_type);
+  }
 #endif
 
 #if ( S_XY )
@@ -577,8 +584,10 @@ void send_score(shot_record_t *shot,        //  record
   {
     if ( (json_athlete[0] != 0) && (json_event[0] != 0) && (json_target_name[0] != 0) )
     {
-      sprintf(_xs, "\r\n{\"shotnumber\":%d, \"athlete\":\"%s\", \"event\": \"%s\", \"target_name\":\"%s\", \"x\":%4.2f, \"y\":%4.2f} ",
-              shot_number, json_athlete, json_event, json_target_name, x, y);
+      sprintf(
+          _xs,
+          "\r\n{\"shot\":%d, \"session\":%d,  \"athlete\":\"%s\", \"event\": \"%s\", \"target_name\":\"%s\", \"x\":%4.2f, \"y\":%4.2f} ",
+          shot_number, json_session_type, json_athlete, json_event, json_target_name, x, y);
 
       http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
     }
@@ -623,10 +632,20 @@ void send_score(shot_record_t *shot,        //  record
 void send_replay(shot_record_t *shot, //  record
                  unsigned int   shot_number)
 {
-  if ( shot->is_valid == true )
+
+  if ( (shot->session_type & SESSION_VALID) != 0 )
   {
-    SEND(ALL, sprintf(_xs, "\r\n{\"shot\":%d, \"time\":%6.2f, \"x\":%4.2f, \"y\":%4.2f}\r\n", shot_number + 1,
-                      SHOT_TIME_TO_SECONDS(shot->shot_time), shot->xs, shot->ys);)
+
+    if ( (shot->session_type & (SESSION_SIGHT | SESSION_SCORE)) != 0 )
+    {
+      sprintf(_xs, "\r\n{\"shot\":%d, \"time\":%6.2f, \"session_type\": %d, \"x\":%4.2f, \"y\":%4.2f}\r\n", shot_number + 1,
+              SHOT_TIME_TO_SECONDS(shot->shot_time), shot->session_type, shot->xs, shot->ys);
+    }
+    else
+    {
+      sprintf(_xs, "\r\n{\"shot\":%d, \"time\":%6.2f,  \"x\":%4.2f, \"y\":%4.2f}\r\n", shot_number + 1,
+              SHOT_TIME_TO_SECONDS(shot->shot_time), shot->xs, shot->ys);
+    }
   }
   else
   {
