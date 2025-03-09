@@ -48,15 +48,15 @@ unsigned int is_trace    = DLT_INFO | DLT_CRITICAL; // Default tracing
 unsigned int  shot_number;                          // Shot Identifier (1-100)
 unsigned long shot_start;                           // Time when target was ready for shots
 
-static volatile unsigned long keep_alive;           // Keep alive timer
-static volatile unsigned long tabata_timer;         // Free running state timer
-volatile unsigned long        power_save;           // Power save timer
-static volatile unsigned long rapid_timer;          // Timer used for rapid fire ecents
-volatile unsigned long        LED_timer;            // Timer to reset LED status
-unsigned long                 go_dark     = 10l;    // Go dark for 10 seconds
-unsigned long                 go_wait     = 3l;     // Wait for the PC to catchup
-unsigned long                 all_done    = 0l;     // All finished
-int                           always_true = true;
+volatile unsigned long keep_alive;                  // Keep alive timer
+volatile unsigned long tabata_timer;                // Free running state timer
+volatile unsigned long power_save;                  // Power save timer
+volatile unsigned long rapid_timer;                 // Timer used for rapid fire ecents
+volatile unsigned long LED_timer;                   // Timer to reset LED status
+unsigned long          go_dark     = 10l;           // Go dark for 10 seconds
+unsigned long          go_wait     = 3l;            // Wait for the PC to catchup
+unsigned long          all_done    = 0l;            // All finished
+int                    always_true = true;
 
 static enum {
   START = 0,                                        // 0 et the operating mode

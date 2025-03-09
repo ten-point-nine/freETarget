@@ -19,6 +19,7 @@
 #include "driver\timer.h"
 
 #include "freETarget.h"
+#include "helpers.h"
 #include "diag_tools.h"
 #include "gpio_types.h"
 #include "json.h"
@@ -36,7 +37,7 @@
 #define MAX_WAIT_TIME 10                 // Wait up to 10 ms for the input to arrive
 #define MAX_RING_TIME 50                 // Wait 50 ms for the ringing to stop
 
-#define TICK_10ms   1                    // vTaskDelay in 10 ms
+#define BAND_10ms   1                    // vTaskDelay in 10 ms
 #define BAND_100ms  (TICK_10ms * 10)     // vTaskDelay in 100 ms
 #define BAND_250ms  (TICK_10ms * 25)     // vTaskDelay in 250 ms
 #define BAND_500ms  (TICK_10ms * 50)     // vTaskDelay in 500 ms
@@ -49,14 +50,34 @@ typedef enum
   PORT_STATE_WAIT,                       // Some sensor inputs are present
   PORT_STATE_TIMEOUT                     // Wait for the ringing to stop
 } state;
+
+typedef struct
+{
+  int cycle_time;                        // How long between calls
+  void (*f)(void);                       // Function to execute at the cycle time
+} synchronous_task_t;
+
 /*
  * Local Variables
  */
 static volatile unsigned long *timers[N_TIMERS]; // Active timer list
-static volatile unsigned long  shot_timer;       // Wait for the sound to hit all sensors
+volatile unsigned long         shot_timer;       // Wait for the sound to hit all sensors
 volatile unsigned long         ring_timer;       // Let the ring on the backstop end
+static state                   isr_state;        // What sensor state are we in
 
-static state isr_state;                          // What sensor state are we in
+static synchronous_task_t task_list[] = {
+    {BAND_10ms,   token_cycle              },
+    {BAND_10ms,   multifunction_switch_tick},
+    {BAND_10ms,   multifunction_switch     },
+    {BAND_10ms,   paper_drive_tick         },
+    {BAND_500ms,  toggle_status_LEDs       },
+    {BAND_500ms,  tabata_task              },
+    {BAND_500ms,  rapid_fire_task          },
+    {BAND_1000ms, bye_tick                 },
+    {BAND_1000ms, check_12V                },
+    {BAND_1000ms, send_keep_alive          },
+    {0,           0                        }
+};
 
 /*
  *  Function Prototypes
@@ -104,8 +125,6 @@ void freeETarget_timer_init(void)
   timer_enable_intr(TIMER_GROUP_0, TIMER_1);             // Interrupt associated with this interrupt
   timer_isr_callback_add(TIMER_GROUP_0, TIMER_1, freeETarget_timer_isr_callback, NULL, 0);
   timer_start(TIMER_GROUP_0, TIMER_1);
-  timer_new(&ring_timer, 0);                             // Let the pellet trap stop ringing
-  timer_new(&shot_timer, 0);                             // Let the sound propagate to the sensors
   shot_in  = 0;
   shot_out = 0;
 
@@ -232,11 +251,15 @@ void freeETarget_timers(void *pvParameters)
    */
   while ( 1 )
   {
-    for ( i = 0; i != N_TIMERS; i++ ) // Refresh the timers.  Decriment in 10ms increments
+
+    if ( (run_state & IN_STARTUP) == 0 ) // Dont run the timers if we are in startup
     {
-      if ( (timers[i] != 0) && (*timers[i] != 0) )
+      for ( i = 0; i != N_TIMERS; i++ )  // Refresh the timers.  Decriment in 10ms increments
       {
-        (*timers[i])--;               // Decriment the timer
+        if ( (timers[i] != 0) && (*timers[i] != 0) )
+        {
+          (*timers[i])--;                // Decriment the timer
+        }
       }
     }
     vTaskDelay(TICK_10ms);
@@ -259,68 +282,29 @@ void freeETarget_timers(void *pvParameters)
  *
  * This task runs every 10ms.
  *
- * Synchronous tasks are called on a 10ms time band
- *
- * Unless you don't care about the time, always use
- * timer_new(&timer, ONE_SECOND * duration).
- *
- * IMPORTANT
- *
- * timers are NOT deleted when they expire.
+ * When called, the task list is polled and when the
+ * time is a multiple of the cycle time, the function
+ * is called,
  *
  *-----------------------------------------------------*/
 void freeETarget_synchronous(void *pvParameters)
 {
-  unsigned int        cycle_count   = 0;
-  unsigned int        toggle        = 0;
-  static unsigned int old_run_state = 0;
+  unsigned int cycle_count   = 0;
+  unsigned int old_run_state = 0;
+  unsigned int i; // Index into the task list
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "freeETarget_synchronous()");))
 
   while ( 1 )
   {
-
-    /*
-     *  10 ms band
-     */
-    token_cycle();
-    multifunction_switch_tick();
-    multifunction_switch();
-    paper_drive_tick();
-
-    /*
-     *  100 ms band
-     */
-    if ( (cycle_count % BAND_100ms) == 0 )
+    i = 0;
+    while ( task_list[i].cycle_time != 0 ) // Cycle through the task list
     {
-    }
-
-    /*
-     *  250 ms band
-     */
-    if ( (cycle_count % BAND_250ms) == 0 )
-    {
-    }
-
-    /*
-     *  500 ms band
-     */
-    if ( (cycle_count % BAND_500ms) == 0 )
-    {
-      toggle ^= 1;
-      commit_status_LEDs(toggle);
-      tabata_task();
-      rapid_fire_task();
-    }
-
-    /*
-     * 1000 ms band
-     */
-    if ( (cycle_count % BAND_1000ms) == 0 )
-    {
-      bye(false); // Dim the lights
-      check_12V();
-      send_keep_alive();
+      if ( (cycle_count % task_list[i].cycle_time) == 0 )
+      {
+        task_list[i].f();                  // Call the function
+      }
+      i++;
     }
 
     /*

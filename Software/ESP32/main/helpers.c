@@ -268,13 +268,16 @@ void send_keep_alive(void)
  *
  *--------------------------------------------------------------*/
 static enum bye_state {
-  BYE_BYE = 0,                  // Wait for the timer to run out
-  BYE_HOLD,                     // Wait for the MFS to be pressed
-  BYE_START                     // Go back into service
+  BYE_BYE = 0, // Wait for the timer to run out
+  BYE_HOLD,    // Wait for the MFS to be pressed
+  BYE_START    // Go back into service
 };
 
-void bye(unsigned int force_bye // Set to true to force a shutdown
-)
+void bye_tick(void)
+{
+  bye(0);
+}
+void bye(unsigned int force_bye) // Set to true to force a shutdown
 {
   static int bye_state = BYE_BYE;
 

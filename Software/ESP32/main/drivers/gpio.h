@@ -17,6 +17,7 @@ void         clear_running(void);                          // Clear the run flip
 unsigned int is_running(void);                             // Return a bit mask of running sensors
 void         set_status_LED(char new_state[]);             // Manage the LEDs
 void         commit_status_LEDs(unsigned int blink_state); // Write the LED control to the hardware
+void         toggle_status_LEDs(void);                     // Toggle the status LEDs on every pass
 unsigned int read_DIP(void);                               // Read the DIP switch register
 unsigned int read_counter(unsigned int direction);
 void         stop_timers(void);                            // Turn off the counter registers

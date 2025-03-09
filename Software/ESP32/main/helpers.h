@@ -17,6 +17,7 @@ int  instr(char *s1, char *s2);                                  // Compare two 
 bool prompt_for_confirm(void);                                   // Prompt for confirmation
 void send_keep_alive(void);                                      // Send a keep alive message
 void bye(unsigned int force_bye);                                // Set to true to force a shutdown
+void bye_tick(void);                                             // Tick for the bye state machine
 void echo_serial(unsigned int delay, int in_port, int out_port); // Echo the serial port
 
 /*

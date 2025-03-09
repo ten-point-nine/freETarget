@@ -1,12 +1,13 @@
-idf_component_register(SRCS  
+idf_component_register(
+    SRCS  
                     "main.c" 
                     "freetarget.c"
                     "helpers.c"
-                    "drivers/dac.c" 
-                    "drivers/pcnt.c"
                     "diag_tools.c"
                     "nonvol.c"
                     "json.c"
+                    "drivers/dac.c" 
+                    "drivers/pcnt.c"
                     "drivers/analog_io.c"
                     "drivers/gpio.c"
                     "drivers/gpio_define.c"
@@ -25,7 +26,6 @@ idf_component_register(SRCS
                     "tcpip/http_test.c"
                     "tcpip/http_server.c"
                     "tcpip/http_services.c"
-
 
                     INCLUDE_DIRS 
                     "." 

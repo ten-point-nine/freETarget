@@ -363,6 +363,16 @@ void set_status_LED(char new_state[]          // New LED colours
  * blink = 0 -> turn off the LED
  *
  *-----------------------------------------------------*/
+void toggle_status_LEDs(void)
+{
+  static unsigned int blink_state = 0;
+
+  commit_status_LEDs(blink_state);
+  blink_state ^= 1;
+
+  return;
+}
+
 void commit_status_LEDs(unsigned int blink_state)
 {
   unsigned int i;
