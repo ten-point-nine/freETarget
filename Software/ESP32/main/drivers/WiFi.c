@@ -227,6 +227,11 @@ void WiFi_AP_init(void)
  * See:
  *https://github.com/espressif/esp-idf/blob/v4.3/examples/wifi/getting_started/station/main/station_example_main.c
  *
+ * Test
+ *
+ * {"WIFI_SSID":"DEBASMITA_5G", "WIFI_PWD":"98311371538207264885"}
+ *
+ *
  *******************************************************************************/
 void WiFi_station_init(void)
 {

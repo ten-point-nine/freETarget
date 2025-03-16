@@ -15,7 +15,7 @@
 #include "freertos/task.h"
 #include "serial_io.h"
 
-#define SOFTWARE_VERSION "\"6.0.0 March 9, 2025\""
+#define SOFTWARE_VERSION "\"6.0.0 March 16, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED" // Message to send on connection
 
@@ -53,7 +53,7 @@
  * Options
  */
 #define SAMPLE_CALCULATIONS  (1 == 0) // Trace the COUNTER values
-#define COMPENSATE_RISE_TIME (1 == 1) // Use PCNT4-7 to compensate for rise time
+#define COMPENSATE_RISE_TIME (1 == 0) // Use PCNT4-7 to compensate for rise time
 #define LONG_TEXT            512      // Long text strings arfe 512 long
 #define MEDIUM_TEXT          256      // Medimum length strings are 256 long
 #define SHORT_TEXT           128      // Short text strings are 128 long

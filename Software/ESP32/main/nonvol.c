@@ -43,11 +43,11 @@ nvs_handle_t my_handle; // Handle to NVS space
  *------------------------------------------------------------*/
 void read_nonvol(void)
 {
-  long         nonvol_init;
-  unsigned int i;      // Iteration Counter
-  long         x;      // 32 bit number
-  size_t       length; // Length of input string
-  esp_err_t    err;    // ESP32 error type
+  long         nonvol_temp; // Temporary value
+  unsigned int i;           // Iteration Counter
+  long         x;           // 32 bit number
+  size_t       length;      // Length of input string
+  esp_err_t    err;         // ESP32 error type
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "read_nonvol()");))
 
@@ -71,25 +71,24 @@ void read_nonvol(void)
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "read_nonvol(): Failed to open NVM");))
   }
 
-  nvs_get_i32(my_handle, "NONVOL_INIT", &nonvol_init);
+  nvs_get_i32(my_handle, "NONVOL_INIT", &nonvol_temp);
 
-  if ( nonvol_init != INIT_DONE )  // EEPROM never programmed
+  if ( nonvol_temp != INIT_DONE )  // EEPROM never programmed
   {
     factory_nonvol(true);          // Force in good values and test the board
   }
 
-  nvs_get_i32(my_handle, "NVM_SERIAL_NO", &nonvol_init);
+  nvs_get_i32(my_handle, "NVM_SERIAL_NO", &nonvol_temp);
 
-  if ( nonvol_init == (-1) )       // Serial Number never programmed
+  if ( nonvol_temp == (-1) )       // Serial Number never programmed
   {
     factory_nonvol(true);          // Force in good values and test the board
   }
 
-  nvs_get_i32(my_handle, NONVOL_PS_VERSION, &nonvol_init);
-  if ( nonvol_init != PS_VERSION ) // persistent storage version
+  nvs_get_i32(my_handle, NONVOL_PS_VERSION, &nonvol_temp);
+  if ( nonvol_temp != PS_VERSION ) // The nonvol version is not the same as the current version
   {
-    update_nonvol(nonvol_init);
-    printf("back here");
+    update_nonvol(nonvol_temp);    // Put in the updates
   }
 
   /*
@@ -351,37 +350,19 @@ void update_nonvol(unsigned int current_version) // Version present in persisten
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "update_nonvol(%d)\r\n", current_version);))
 
-  /*
-   * Check to see if this persistent storage has never had a version number
-   */
-  if ( PS_UNINIT(current_version) )
-  {
-    i = 0;
-    while ( JSON[i].token != 0 )
-    {
-      switch ( JSON[i].convert & IS_MASK )
-      {
-        case IS_INT32:
-          nvs_get_i32(my_handle, JSON[i].non_vol, &ps_value);            // Pull up the value from memory
-          if ( PS_UNINIT(ps_value) )                                     // Uninitilazed?
-          {
-            nvs_set_i32(my_handle, JSON[i].non_vol, JSON[i].init_value); // Initalize it from the table
-          }
-          break;
+                                                 /*
+                                                  * If we are up-to-date do nothing
+                                                  */
 
-        default:
-          break;
-      }
-      i++;
-    }
-    current_version = PS_VERSION; // Initialized, force in the current version
-    nvs_set_i32(my_handle, NONVOL_PS_VERSION, current_version);
-    nvs_commit(my_handle);
+  nvs_get_i32(my_handle, NONVOL_PS_VERSION, &ps_value);
+  if ( current_version == ps_value )
+  {
+    return;
   }
 
-                                  /*
-                                   *  Loop and update each of the configurations
-                                   */
+  /*
+   *  Loop and update each of the configurations
+   */
   for ( version = current_version; version <= PS_VERSION; version++ ) // All possible version numbers
   {
     i = 0;
@@ -430,7 +411,6 @@ void update_nonvol(unsigned int current_version) // Version present in persisten
    */
   nvs_set_i32(my_handle, NONVOL_PS_VERSION, PS_VERSION);
   nvs_commit(my_handle);
-  printf("bye bye");
   return;
 }
 

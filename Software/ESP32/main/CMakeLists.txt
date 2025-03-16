@@ -17,11 +17,12 @@ idf_component_register(
                     "drivers/serial_io.c"
                     "drivers/token.c"
                     "drivers/bluetooth.c"
+                    "drivers/wifi.c"
                     "mfs.c"
                     "compute_hit.c"
                     "speed_of_sound.c"
                     "timer.c"
-                    "tcpip/wifi.c"
+ 
                     "tcpip/http_client.c"
                     "tcpip/http_test.c"
                     "tcpip/http_server.c"
