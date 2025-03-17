@@ -26,8 +26,7 @@ int  tcpip_socket_2_queue(char *buffer, int length); // Take from socket and que
 int  tcpip_queue_2_app(char *buffer, int length);    // Take from queue and return to application
 void serial_port_test(void);                         // Loopback the AUX port
 bool get_string(char destination[], int size);       // Collect a string from the input ports
-void serial_bt_init_config(void);                    // Initialize the Bluetooth port for initial configuration
-void serial_bt_config(void);                         // Initialize the Bluetooth port for operational configuration
+void serial_bt_config(unsigned int baud_rate);       // Initialize the Bluetooth port for operational configuration
 
 /*
  *  Definitions

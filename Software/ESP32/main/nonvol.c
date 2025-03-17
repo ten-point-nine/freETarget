@@ -78,13 +78,6 @@ void read_nonvol(void)
     factory_nonvol(true);          // Force in good values and test the board
   }
 
-  nvs_get_i32(my_handle, "NVM_SERIAL_NO", &nonvol_temp);
-
-  if ( nonvol_temp == (-1) )       // Serial Number never programmed
-  {
-    factory_nonvol(true);          // Force in good values and test the board
-  }
-
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &nonvol_temp);
   if ( nonvol_temp != PS_VERSION ) // The nonvol version is not the same as the current version
   {
@@ -346,19 +339,8 @@ void init_nonvol(int verify) // Verification code entered by user
 void update_nonvol(unsigned int current_version) // Version present in persistent storage
 {
   unsigned int i, version;                       // Iteration counter
-  long         ps_value;                         // Value read from persistent storage
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "update_nonvol(%d)\r\n", current_version);))
-
-                                                 /*
-                                                  * If we are up-to-date do nothing
-                                                  */
-
-  nvs_get_i32(my_handle, NONVOL_PS_VERSION, &ps_value);
-  if ( current_version == ps_value )
-  {
-    return;
-  }
 
   /*
    *  Loop and update each of the configurations

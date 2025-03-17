@@ -55,31 +55,48 @@ void BlueTooth_configuration(void)
 {
   char str_c[TINY_TEXT]; // Place to store the name{""}
   char str_x[SHORT_TEXT];
+  int  i;
 
   /*
    * Abort the test if the AUX port is not available
    */
   if ( json_aux_mode == 0 )
   {
-    SEND(ALL, sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_MODE\": 2} to enable");)
-    SEND(ALL, sprintf(_xs, _DONE_);)
+    SEND(SOME, sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_MODE\": 1} to enable");)
+    SEND(SOME, sprintf(_xs, _DONE_);)
     return;
   }
 
   /*
-   * Make sure the module is ready
-   */
-  SEND(SOME, sprintf(_xs, "\r\nBluetooth configuration.  Make sure the EN switch is pressed when powering up.");)
-  if ( prompt_for_confirm() == false )
-  {
-    SEND(SOME, sprintf(_xs, "\r\nAborting configuration");)
-  }
-  SEND(SOME, sprintf(_xs, "\r\n");)
-
-  /*
    * Set the baud rate to the correct value and program
    */
-  serial_bt_init_config();                           // Setup the baud rate
+  i = 0;
+  while ( 1 )
+  {
+    switch ( i )
+    {
+      case 0:
+        serial_bt_config(9600);
+        break;
+
+      case 1:
+        serial_bt_config(38400);
+        break;
+
+      case 2:
+        serial_bt_config(115200);
+        break;
+
+      default:
+        SEND(ALL, sprintf(_xs, "Bluetooth configuration failed");)
+        i = 0;
+        break;
+    }
+    vTaskDelay(1);
+    serial_to_all("AT\r\n", ALL);                    // Flush out any junk
+                                                     //    echo_serial(ONE_SECOND, BLUETOOTH, SOME);        // Echo the serial port
+    i++;
+  }
 
   SEND(ALL, sprintf(_xs, "AT\r\n");)                 // Flush out any junk
   echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
@@ -103,12 +120,10 @@ void BlueTooth_configuration(void)
   json_aux_mode = BLUETOOTH;
   nonvol_write_i32(NONVOL_AUX_PORT_ENABLE, json_aux_mode); // Remember that BT is enabled
 
-  SEND(SOME, sprintf(_xs, "\r\nRelease switch, cycle power to module.");)
-
   /*
    *  Programmed
    */
-  serial_bt_config(); // Setup the baud rate
+  serial_bt_config(0); // Setup the baud rate to the default
   SEND(SOME, sprintf(_xs, _DONE_);)
   return;
 }

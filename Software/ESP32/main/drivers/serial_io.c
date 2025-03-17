@@ -56,13 +56,21 @@ const uart_config_t uart_BT_config = {.baud_rate           = 115200,
                                       .rx_flow_ctrl_thresh = 122,
                                       .source_clk          = UART_SCLK_DEFAULT};
 
-const uart_config_t uart_BT_INIT_config = {.baud_rate           = 38400,
-                                           .data_bits           = UART_DATA_8_BITS,
-                                           .parity              = UART_PARITY_DISABLE,
-                                           .stop_bits           = UART_STOP_BITS_1,
-                                           .flow_ctrl           = UART_HW_FLOWCTRL_DISABLE,
-                                           .rx_flow_ctrl_thresh = 122,
-                                           .source_clk          = UART_SCLK_DEFAULT};
+const uart_config_t uart_BT_INIT_38400_config = {.baud_rate           = 38400,
+                                                 .data_bits           = UART_DATA_8_BITS,
+                                                 .parity              = UART_PARITY_DISABLE,
+                                                 .stop_bits           = UART_STOP_BITS_1,
+                                                 .flow_ctrl           = UART_HW_FLOWCTRL_DISABLE,
+                                                 .rx_flow_ctrl_thresh = 122,
+                                                 .source_clk          = UART_SCLK_DEFAULT};
+
+const uart_config_t uart_BT_INIT_9600_config = {.baud_rate           = 9600,
+                                                .data_bits           = UART_DATA_8_BITS,
+                                                .parity              = UART_PARITY_DISABLE,
+                                                .stop_bits           = UART_STOP_BITS_1,
+                                                .flow_ctrl           = UART_HW_FLOWCTRL_DISABLE,
+                                                .rx_flow_ctrl_thresh = 122,
+                                                .source_clk          = UART_SCLK_DEFAULT};
 
 const int     uart_aux_size = (1024 * 2);
 QueueHandle_t uart_aux_queue;
@@ -154,35 +162,30 @@ void serial_aux_init(void)
   return;
 }
 
-void serial_bt_init_config(void) // Program port for Bluetooth initialization
+void serial_bt_config(unsigned int baud_rate) // Program port for Bluetooth initialization
 {
   if ( json_aux_mode == 0 )
   {
     return;
   }
 
+  DLT(DLT_COMMUNICATION, SEND(SOME, sprintf(_xs, "serial_bt_config(%d)\r\n", baud_rate);))
+
   /*
    *  Setup the communications parameters
    */
-  uart_param_config(uart_aux, &uart_BT_INIT_config);
-
-  /*
-   * All done, return
-   */
-  return;
-}
-
-void serial_bt_config(void) // Setup the aux port for normal Bluetooth operation
-{
-  if ( json_aux_mode == 0 )
+  switch ( baud_rate )
   {
-    return;
+    case 38400:
+      uart_param_config(uart_aux, &uart_BT_INIT_38400_config);
+      break;
+    case 9600:
+      uart_param_config(uart_aux, &uart_BT_INIT_9600_config);
+      break;
+    default:
+      uart_param_config(uart_aux, &uart_BT_config);
+      break;
   }
-
-  /*
-   *  Setup the communications parameters
-   */
-  uart_param_config(uart_aux, &uart_BT_config);
 
   /*
    * All done, return
