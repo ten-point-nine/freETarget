@@ -164,24 +164,29 @@ static void send_AT(void)
  */
 #if ( BUILD_HC_06 )
   SEND(SOME, sprintf(_xs, "\r\n");)
-  SEND(ALL, sprintf(_xs, "AT");)                // Flush out any junk
-  echo_serial(2 * ONE_SECOND, BLUETOOTH, SOME); // Echo the serial port
+  SEND(ALL, sprintf(_xs, "AT");)                                           // Flush out any junk
+  echo_serial(2 * ONE_SECOND, BLUETOOTH, SOME);                            // Echo the serial port
 
   SEND(SOME, sprintf(_xs, "\r\n");)
-  SEND(ALL, sprintf(_xs, "AT+NAME%s", str_c);)  // Set in the name
-  echo_serial(2 * ONE_SECOND, BLUETOOTH, SOME); // Echo the serial port
+  if ( strlen(str_c) > 12 )
+  {
+    SEND(SOME, sprintf(_xs, "\r\n%s name too long. Stopping\r\n", str_c);) // Limit the name to 10 characters
+    return;
+  }
+  SEND(ALL, sprintf(_xs, "AT+NAME%s", str_c);)                             // Set in the name
+  echo_serial(2 * ONE_SECOND, BLUETOOTH, SOME);                            // Echo the serial port
 
   SEND(SOME, sprintf(_xs, "\r\n");)
-  SEND(ALL, sprintf(_xs, "AT+PN");)             // Set to No parity
-  echo_serial(2 * ONE_SECOND, BLUETOOTH, SOME); // Echo the serial port
+  SEND(ALL, sprintf(_xs, "AT+PN");)                                        // Set to No parity
+  echo_serial(2 * ONE_SECOND, BLUETOOTH, SOME);                            // Echo the serial port
 
   SEND(SOME, sprintf(_xs, "\r\n");)
-  SEND(ALL, sprintf(_xs, "AT+PIN1090");)        // Set in the baud rate, stop, parity
-  echo_serial(2 * ONE_SECOND, BLUETOOTH, SOME); // Echo the serial port
+  SEND(ALL, sprintf(_xs, "AT+PIN1090");)                                   // Set in the baud rate, stop, parity
+  echo_serial(2 * ONE_SECOND, BLUETOOTH, SOME);                            // Echo the serial port
 
   SEND(SOME, sprintf(_xs, "\r\n");)
-  SEND(ALL, sprintf(_xs, "AT+BAUD8");)          // Set in the baud rate to 115200
-  echo_serial(2 * ONE_SECOND, BLUETOOTH, SOME); // Echo the serial port
+  SEND(ALL, sprintf(_xs, "AT+BAUD8");)                                     // Set in the baud rate to 115200
+  echo_serial(2 * ONE_SECOND, BLUETOOTH, SOME);                            // Echo the serial port
 #endif
 
   return;
