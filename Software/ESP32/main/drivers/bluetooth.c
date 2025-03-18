@@ -28,6 +28,11 @@
 #include "json.h"
 #include "nonvol.h"
 
+/*
+ *  Local functions
+ */
+static void send_AT(void); // Send out the AT commands to the BT module
+
 /*******************************************************************************
  *
  * @function: BlueTooth_configuration
@@ -51,68 +56,36 @@
  * See https://components101.com/sites/default/files/component_datasheet/HC-05%20Datasheet.pdf
  *
  ******************************************************************************/
+
 void BlueTooth_configuration(void)
 {
-  char str_c[TINY_TEXT]; // Place to store the name{""}
-  char str_x[SHORT_TEXT];
-  int  i;
-
   /*
    * Abort the test if the AUX port is not available
    */
   if ( json_aux_mode == 0 )
   {
-    SEND(SOME, sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_MODE\": 1} to enable");)
+    SEND(SOME, sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_MODE\": 2} to enable");)
     SEND(SOME, sprintf(_xs, _DONE_);)
     return;
   }
 
+  SEND(SOME, sprintf(_xs, "\r\nMake sure that the target BlueTooth is not connected to anything ");)
+
   /*
    * Set the baud rate to the correct value and program
    */
-  i = 0;
-  while ( 1 )
-  {
-    switch ( i )
-    {
-      case 0:
-        serial_bt_config(9600);
-        break;
 
-      case 1:
-        serial_bt_config(38400);
-        break;
+  serial_bt_config(9600);
+  vTaskDelay(TICK_10ms); // Wait for the port to settle
+  send_AT();
 
-      case 2:
-        serial_bt_config(115200);
-        break;
+  serial_bt_config(38400);
+  vTaskDelay(TICK_10ms); // Wait for the port to settle
+  send_AT();
 
-      default:
-        SEND(ALL, sprintf(_xs, "Bluetooth configuration failed");)
-        i = 0;
-        break;
-    }
-    vTaskDelay(1);
-    serial_to_all("AT\r\n", ALL);                    // Flush out any junk
-                                                     //    echo_serial(ONE_SECOND, BLUETOOTH, SOME);        // Echo the serial port
-    i++;
-  }
-
-  SEND(ALL, sprintf(_xs, "AT\r\n");)                 // Flush out any junk
-  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
-
-  SEND(ALL, sprintf(_xs, "\r\nAT\r\n");)             // Flush out any junk
-  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
-
-  target_name(str_c);
-  SEND(ALL, sprintf(_xs, "AT+NAME=%s\r\n", str_c);)  // Set in the name
-  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
-
-  SEND(ALL, sprintf(_xs, "AT+UART=115200,1,0\r\n");) // Set in the baud rate, stop, parity
-  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
-
-  SEND(ALL, sprintf(_xs, "AT+PSWD=1090\r\n");)       // Set in the baud rate, stop, parity
-  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
+  serial_bt_config(115200);
+  vTaskDelay(TICK_10ms); // Wait for the port to settle
+  send_AT();
 
   /*
    * Mark that the module is ready
@@ -125,6 +98,92 @@ void BlueTooth_configuration(void)
    */
   serial_bt_config(0); // Setup the baud rate to the default
   SEND(SOME, sprintf(_xs, _DONE_);)
+  return;
+}
+
+/*******************************************************************************
+ *
+ * @function: send_AT
+ *
+ * @brief:    Send the AT command sequence for the BT module
+ *
+ * @return:   None
+ *
+ *******************************************************************************
+ *
+ * This function is made to support both the HC-05 and HC-06 modules.
+ *
+ * The HC-05 requires that the MASTER mode be programmed using th push button switch
+ * The HC-06 is always in slave mode and will accept an AT command any time
+ * that it is not connected to a master.
+ *
+ * LOL
+ *
+ * The two modules have differet AT commands.
+ * The HC-05 requires that the AT command be terminated with a CR LF
+ * The HC-06 requires that the AT command be terminated with two second delay
+ *
+ ******************************************************************************/
+static void send_AT(void)
+{
+  char str_c[TINY_TEXT]; // Place to store the name{""}
+
+  target_name(str_c);
+
+#if ( BUILD_HC_05 && BUILD_HC_06 )
+#error "Both HC-05 and HC-06 are defined"
+#endif
+
+  /*
+   * Build for HC-05
+   */
+#if ( BUILD_HC_05 )
+  SEND(SOME, sprintf(_xs, "\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\nAT\r\n");)             // Flush out any junk
+  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
+
+  SEND(SOME, sprintf(_xs, "\r\n");)
+  SEND(ALL, sprintf(_xs, "AT+NAME=%s\r\n", str_c);)  // Set in the name
+  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
+
+  SEND(SOME, sprintf(_xs, "\r\n");)
+  SEND(ALL, sprintf(_xs, "AT+UART=115200,1,0\r\n");) // Set in the baud rate, stop, parity
+  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
+
+  SEND(SOME, sprintf(_xs, "\r\n");)
+  SEND(ALL, sprintf(_xs, "AT+PSWD=1090\r\n");)       // Set in the baud rate, stop, parity
+  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
+
+  SEND(SOME, sprintf(_xs, "\r\n");)
+  SEND(ALL, sprintf(_xs, "AT+NAME=%s\r\n", str_c);)  // Set in the name
+  echo_serial(ONE_SECOND, BLUETOOTH, SOME);          // Echo the serial port
+#endif
+
+/*
+ * Build for HC-06
+ */
+#if ( BUILD_HC_06 )
+  SEND(SOME, sprintf(_xs, "\r\n");)
+  SEND(ALL, sprintf(_xs, "AT");)                // Flush out any junk
+  echo_serial(2 * ONE_SECOND, BLUETOOTH, SOME); // Echo the serial port
+
+  SEND(SOME, sprintf(_xs, "\r\n");)
+  SEND(ALL, sprintf(_xs, "AT+NAME%s", str_c);)  // Set in the name
+  echo_serial(2 * ONE_SECOND, BLUETOOTH, SOME); // Echo the serial port
+
+  SEND(SOME, sprintf(_xs, "\r\n");)
+  SEND(ALL, sprintf(_xs, "AT+PN");)             // Set to No parity
+  echo_serial(2 * ONE_SECOND, BLUETOOTH, SOME); // Echo the serial port
+
+  SEND(SOME, sprintf(_xs, "\r\n");)
+  SEND(ALL, sprintf(_xs, "AT+PIN1090");)        // Set in the baud rate, stop, parity
+  echo_serial(2 * ONE_SECOND, BLUETOOTH, SOME); // Echo the serial port
+
+  SEND(SOME, sprintf(_xs, "\r\n");)
+  SEND(ALL, sprintf(_xs, "AT+BAUD8");)          // Set in the baud rate to 115200
+  echo_serial(2 * ONE_SECOND, BLUETOOTH, SOME); // Echo the serial port
+#endif
+
   return;
 }
 
@@ -144,7 +203,7 @@ void BlueTooth_configuration(void)
  *******************************************************************************/
 void Bluetooth_start_new_connection(void) // Socket token to use
 {
-  int i, j;
+  int i;
 
   /*
    *  Inform the PC what is going on

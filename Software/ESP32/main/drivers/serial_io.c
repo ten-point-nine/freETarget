@@ -169,20 +169,19 @@ void serial_bt_config(unsigned int baud_rate) // Program port for Bluetooth init
     return;
   }
 
-  DLT(DLT_COMMUNICATION, SEND(SOME, sprintf(_xs, "serial_bt_config(%d)\r\n", baud_rate);))
-
   /*
    *  Setup the communications parameters
    */
   switch ( baud_rate )
   {
-    case 38400:
-      uart_param_config(uart_aux, &uart_BT_INIT_38400_config);
-      break;
     case 9600:
       uart_param_config(uart_aux, &uart_BT_INIT_9600_config);
       break;
+    case 38400:
+      uart_param_config(uart_aux, &uart_BT_INIT_38400_config);
+      break;
     default:
+    case 115200:
       uart_param_config(uart_aux, &uart_BT_config);
       break;
   }
@@ -190,6 +189,7 @@ void serial_bt_config(unsigned int baud_rate) // Program port for Bluetooth init
   /*
    * All done, return
    */
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "serial_bt_config(%d)\r\n", baud_rate);))
   return;
 }
 
