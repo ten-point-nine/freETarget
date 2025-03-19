@@ -1,34 +1,6 @@
-idf_component_register(
-    SRCS  
-                    "main.c" 
-                    "freetarget.c"
-                    "helpers.c"
-                    "diag_tools.c"
-                    "nonvol.c"
-                    "json.c"
-                    "drivers/dac.c" 
-                    "drivers/pcnt.c"
-                    "drivers/analog_io.c"
-                    "drivers/gpio.c"
-                    "drivers/gpio_define.c"
-                    "drivers/i2c.c"
-                    "drivers/pwm.c"
-                    "drivers/pcnt.c"
-                    "drivers/serial_io.c"
-                    "drivers/token.c"
-                    "drivers/bluetooth.c"
-                    "drivers/wifi.c"
-                    "mfs.c"
-                    "compute_hit.c"
-                    "speed_of_sound.c"
-                    "timer.c"
- 
-                    "tcpip/http_client.c"
-                    "tcpip/http_test.c"
-                    "tcpip/http_server.c"
-                    "tcpip/http_services.c"
-
-                    INCLUDE_DIRS 
+file(GLOB_RECURSE app_sources ${CMAKE_SOURCE_DIR}/main/*.*)
+idf_component_register(SRCS ${app_sources} 
+                    INCLUDE_DIRS "."
                     "." 
                     "./tcpip" 
                     "./drivers"
@@ -44,3 +16,4 @@ idf_component_register(
                     "html/post_test.html"
                 
                     )
+

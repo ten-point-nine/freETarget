@@ -31,12 +31,8 @@
 #include "esp_event.h"
 #include "esp_netif.h"
 #include "esp_tls.h"
-// #include "esp_check.h"
 
 #include <esp_wifi.h>
-// #include <esp_system.h>
-// #include "nvs_flash.h"
-//  #include "esp_eth.h"
 
 #include "freETarget.h"
 #include "http_server.h"
@@ -46,10 +42,9 @@
 
 #define EXAMPLE_HTTP_QUERY_KEY_MAX_LEN (64)
 
-#if BRIAN
-static char _xs[512];
-#define DLT()
-#endif
+/*
+ *  Local functions
+ */
 
 esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Create a URL not found handler
 

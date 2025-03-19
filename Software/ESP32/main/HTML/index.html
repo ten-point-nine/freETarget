@@ -1,23 +1,981 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <meta charset="utf-8" />
-	
-</head>
-
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ </head>
 <body>
-    <p>
-        AirRifle<br />
-        <div class="svg airRifle" style="width: 500px;"></div>
-    </p>
-    <p>
-        Rifle50m<br />
-        <div class="svg rifle50m" style="width: 500px;"></div>
-    </p>
-    <script>
-(()=>{"use strict";var t,e,n,r={227:(t,e)=>{Object.defineProperty(e,"__esModule",{value:!0}),e.Settings=void 0;e.Settings=function(){this.svgImageBackgroundColor="#FFE4B5",this.svgImageForegroundColor="#000000",this.svgImageTextFont="Arial"}},835:(t,e)=>{Object.defineProperty(e,"__esModule",{value:!0}),e.SvgElement=void 0;e.SvgElement=function(){}},339:(t,e)=>{var n;Object.defineProperty(e,"__esModule",{value:!0}),e.SvgElementType=void 0,function(t){t[t.Rectangle=0]="Rectangle",t[t.Circle=1]="Circle",t[t.Text=2]="Text",t[t.Line=3]="Line"}(n||(e.SvgElementType=n={}))},290:(t,e,n)=>{Object.defineProperty(e,"__esModule",{value:!0}),e.SvgImage=void 0;var r=n(835),i=n(339),o=function(){function t(t,e){this.width=t,this.height=e,this.elements=[]}return t.prototype.addCircle=function(t,e,n,o,g,l){var a=new r.SvgElement;a.elementType=i.SvgElementType.Circle,a.x=t,a.y=e,a.r=n,o&&(a.fill=o),g&&(a.stroke=g),l&&(a.strokeWidth=l),this.elements.push(a)},t.prototype.addLine=function(t,e,n,o,g,l,a){var c=new r.SvgElement;c.elementType=i.SvgElementType.Line,c.x=t,c.y=e,c.x2=n,c.y2=o,g&&(c.fill=g),l&&(c.stroke=l),a&&(c.strokeWidth=a),this.elements.push(c)},t.prototype.addRectangle=function(t,e,n,o,g){var l=new r.SvgElement;l.elementType=i.SvgElementType.Rectangle,l.x=t,l.y=e,l.width=n,l.height=o,g&&(l.fill=g),this.elements.push(l)},t.prototype.addText=function(t,e,n,o,g,l){var a=new r.SvgElement;a.elementType=i.SvgElementType.Text,a.x=t,a.y=e,a.text=n,a.fontSize=o,l&&(a.fontWeight=l),g&&(a.fill=g),this.elements.push(a)},t.prototype.toString=function(){var t='<svg viewBox="0 0 '.concat(this.width," ").concat(this.height,'" xmlns="http://www.w3.org/2000/svg">');this.textFont&&(t+="<style>\n            text {\n                font-family: ".concat(this.textFont,";\n            }\n            </style>"));for(var e=0,n=this.elements;e<n.length;e++){var r=n[e];switch(r.elementType){case i.SvgElementType.Rectangle:t+='<rect x="'.concat(r.x,'" y="').concat(r.y,'" width="').concat(r.width,'" height="').concat(r.height,'"'),r.fill&&(t+=' fill="'.concat(r.fill,'"')),t+=" />";break;case i.SvgElementType.Circle:t+='<circle cx="'.concat(r.x,'" cy="').concat(r.y,'" r="').concat(r.r,'"'),r.fill&&(t+=' fill="'.concat(r.fill,'"')),r.stroke&&(t+=' stroke="'.concat(r.stroke,'"')),r.strokeWidth&&(t+=' stroke-width="'.concat(r.strokeWidth,'"')),t+=" />";break;case i.SvgElementType.Text:t+='<text x="'.concat(r.x,'" y="').concat(r.y,'" font-family="').concat(this.textFont,'" '),r.fill&&(t+=' fill="'.concat(r.fill,'"')),r.fontWeight&&(t+=' font-weight="'.concat(r.fontWeight,'"')),r.fontSize&&(t+=' font-size="'.concat(r.fontSize,'"')),t+=">".concat(r.text,"</text> />");break;case i.SvgElementType.Line:t+='<line x1="'.concat(r.x,'" y1="').concat(r.y,'" x2="').concat(r.x2,'" y2="').concat(r.y2,'"'),r.fill&&(t+=' fill="'.concat(r.fill,'"')),r.stroke&&(t+=' stroke="'.concat(r.stroke,'"')),r.strokeWidth&&(t+=' stroke-width="'.concat(r.strokeWidth,'"')),t+=" />"}}return t+"</svg>"},t}();e.SvgImage=o},275:function(t,e,n){var r,i=this&&this.__extends||(r=function(t,e){return r=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&(t[n]=e[n])},r(t,e)},function(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Class extends value "+String(e)+" is not a constructor or null");function n(){this.constructor=t}r(t,e),t.prototype=null===e?Object.create(e):(n.prototype=e.prototype,new n)});Object.defineProperty(e,"__esModule",{value:!0}),e.AirRifle=void 0;var o=n(303),g=n(932),l=function(t){function e(e){var n=t.call(this,e)||this;return n.targetSize=80,n.rifleBlackRings=4,n.solidInnerTenRing=!0,n.outterRing=45.5,n.ring2=40.5,n.ring3=35.5,n.ring4=30.5,n.ring5=25.5,n.ring6=20.5,n.ring7=15.5,n.ring8=10.5,n.ring9=5.5,n.ring10=.5,n.ringsRifle=[n.outterRing,n.ring2,n.ring3,n.ring4,n.ring5,n.ring6,n.ring7,n.ring8,n.ring9,n.ring10],n.pelletCaliber=e,n.innerTenRadiusRifle=n.pelletCaliber/2-n.ring10/2,n}return i(e,t),e.prototype.getTargetType=function(){return g.TargetType.AirRifle},e.prototype.getProjectileCaliber=function(){return this.pelletCaliber},e.prototype.getSize=function(){return this.targetSize},e.prototype.getRings=function(){return this.ringsRifle},e.prototype.getOutterRing=function(){return this.outterRing},e.prototype.getOutterRadius=function(){return this.getOutterRing()/2+this.pelletCaliber/2},e.prototype.get10Radius=function(){return this.ring10/2+this.pelletCaliber/2},e.prototype.getInnerTenRadius=function(){return this.innerTenRadiusRifle},e.prototype.getBlackRings=function(){return this.rifleBlackRings},e.prototype.getBlackDiameter=function(){return this.ring4},e.prototype.isSolidInner=function(){return this.solidInnerTenRing},e.prototype.getRingTextCutoff=function(){return 8},e.prototype.getTextOffset=function(t,e){return 0},e.prototype.getTextRotation=function(){return 0},e.prototype.getFirstRing=function(){return 1},e.prototype.drawEastText=function(){return!0},e.prototype.drawNorthText=function(){return!0},e.prototype.drawSouthText=function(){return!0},e.prototype.drawWestText=function(){return!0},e.prototype.getFontSize=function(t){return t/8},e}(o.aTarget);e.AirRifle=l},775:function(t,e,n){var r,i=this&&this.__extends||(r=function(t,e){return r=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&(t[n]=e[n])},r(t,e)},function(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Class extends value "+String(e)+" is not a constructor or null");function n(){this.constructor=t}r(t,e),t.prototype=null===e?Object.create(e):(n.prototype=e.prototype,new n)});Object.defineProperty(e,"__esModule",{value:!0}),e.Rifle50m=void 0;var o=n(303),g=n(932),l=function(t){function e(e){var n=t.call(this,e)||this;return n.targetSize=250,n.rifleBlackRings=4,n.solidInnerTenRing=!1,n.outterRing=154.4,n.ring2=138.4,n.ring3=122.4,n.ring4=106.4,n.ring5=90.4,n.ring6=74.4,n.ring7=58.4,n.ring8=42.4,n.ring9=26.4,n.ring10=10.4,n.innerRing=5,n.blackCircle=112.4,n.ringsRifle=[n.outterRing,n.ring2,n.ring3,n.ring4,n.ring5,n.ring6,n.ring7,n.ring8,n.ring9,n.ring10,n.innerRing],n.pelletCaliber=e,n.innerTenRadiusRifle=n.innerRing/2+n.pelletCaliber/2,n}return i(e,t),e.prototype.getBlackRings=function(){return this.rifleBlackRings},e.prototype.getInnerTenRadius=function(){return this.innerTenRadiusRifle},e.prototype.getOutterRadius=function(){return this.getOutterRing()/2+this.pelletCaliber/2},e.prototype.get10Radius=function(){return this.ring10/2+this.pelletCaliber/2},e.prototype.getTargetType=function(){return g.TargetType.Rifle50m},e.prototype.getOutterRing=function(){return this.outterRing},e.prototype.getProjectileCaliber=function(){return this.pelletCaliber},e.prototype.getRings=function(){return this.ringsRifle},e.prototype.getSize=function(){return this.targetSize},e.prototype.isSolidInner=function(){return this.solidInnerTenRing},e.prototype.getFontSize=function(t){return t/6},e.prototype.getBlackDiameter=function(){return this.blackCircle},e.prototype.getRingTextCutoff=function(){return 8},e.prototype.getTextOffset=function(t,e){return 3!=e?0:t/12},e.prototype.getTextRotation=function(){return 0},e.prototype.getFirstRing=function(){return 1},e.prototype.drawEastText=function(){return!0},e.prototype.drawNorthText=function(){return!0},e.prototype.drawSouthText=function(){return!0},e.prototype.drawWestText=function(){return!0},e}(o.aTarget);e.Rifle50m=l},932:(t,e)=>{var n;Object.defineProperty(e,"__esModule",{value:!0}),e.TargetType=void 0,function(t){t[t.AirRifle=0]="AirRifle",t[t.Rifle50m=1]="Rifle50m"}(n||(e.TargetType=n={}))},303:(t,e,n)=>{Object.defineProperty(e,"__esModule",{value:!0}),e.aTarget=void 0;var r=n(290),i=n(227),o=n(932),g=function(){function t(t){this.caliber=t,this.textAngles=[]}return t.prototype.getName=function(){return o.TargetType[this.getTargetType()]},t.prototype.getScore=function(t){return 11-t/this.get10Radius()},t.prototype.paintTarget=function(){this.isSolidInner(),this.getBlackRings();var t,e,n=this.getRings();this.drawEastText()&&this.textAngles.push(0),this.drawNorthText()&&this.textAngles.push(Math.PI/2),this.drawWestText()&&this.textAngles.push(Math.PI),this.drawSouthText()&&this.textAngles.push(3*Math.PI/2);var o=new i.Settings;t=10*this.getSize(),e=t/2;var g=new r.SvgImage(t,t);g.textFont=o.svgImageTextFont,g.addRectangle(0,0,t,t,o.svgImageBackgroundColor);for(var l=this.getFirstRing(),a=function(t){var r,i=void 0,a=c.getBlackDiameter();t>0&&n[t-1]>a&&n[t]<a&&g.addCircle(e,e,10*a/2,o.svgImageForegroundColor);var s=n[t];s>a?(r=o.svgImageBackgroundColor,i=o.svgImageForegroundColor):(r=o.svgImageForegroundColor,i=o.svgImageBackgroundColor);var u=s/2;if(g.addCircle(e,e,10*u,r,i,2),l<=c.getRingTextCutoff()){var p=l.toString();if(l<=10)if(t+1==n.length);else{var f=s-n[t+1],h=18*c.getFontSize(f),y=10*c.getBlackDiameter()/2;c.textAngles.forEach((function(t){var n=10*(u-f/4.5),i=Math.cos(t)*n-h/4,l=Math.sin(t)*n+h/2.5;r=n>y?o.svgImageForegroundColor:o.svgImageBackgroundColor,g.addText(e+i,e+l,p,h,r,"bold")}))}}l++},c=this,s=0;s<n.length;s++)a(s);return g.toString()},t}();e.aTarget=g}},i={};function o(t){var e=i[t];if(void 0!==e)return e.exports;var n=i[t]={exports:{}};return r[t].call(n.exports,n,n.exports,o),n.exports}e=o(275),n=o(775),o(290),t=new e.AirRifle(4.5).paintTarget(),document.querySelector("div.svg.airRifle").innerHTML=t,t=new n.Rifle50m(5.6).paintTarget(),document.querySelector("div.svg.rifle50m").innerHTML=t})();
-	</script>
-</body>
 
+<canvas id ='etargetCanvas' width = '1183' height='767' style='border:1px solid #000000;' >Sorry, your browser does not support canvas.</canvas>
+
+<script>
+  //
+  //  E-Target Display 
+  //  By Stephen Carrington
+  //
+  //  The drawTarget function will draw any target with 10 equally spaced scoring rings
+  //  using simple target defination data.
+  //
+  //  Target is cleared every 10 shots on target.
+  //
+  //  Shot data is passed via a JSON String.
+  //  Create a jsonString  containing shot data. Example given below:
+  //  jsonString  = {"shot":1, "x":9.5, "y":5.8, "r":11.13, "a":31.41,"target":110}; 
+  //  
+  //  The first JSON String sent to a new target should be as follows:
+  //  jsonString  = {"shot":0, "x":0, "y":0, "r":0, "a":0,"target":xxx}; // xxx should be a valid Target Identifaction Number.
+  //  Without a valid Target Identifaction Number being sent the default display is ISSF 10 meter Air Rifle.
+  //
+  //  Target Defination Data
+  //  *************************************************************************************************
+  //  Scale of Target:
+  //  Choose a (number) such that the target (diameter(mm) * (number)) ~ 540 < result < 680 pixels
+  //  tscale = 4 for 10m Air Pistol & 50m .22lr Rifle.
+  //  tscale = 12 for 10m Air Rifle.
+  //  tccale = 1.24 for 50m Pistol. 
+  // 
+  //    Example 50 metre 0.22-lr rifle.
+  //
+  //  tscale = 4;       //Scale of Target             
+  //  ord = 154.4;      // Outer Ring Diameter (mm)
+  //  aimMark = 112.4;  // Aiming Mark (mm)
+  //  ringSpacing = 8;  // Ring Spacing 8 (mm)
+  //  nbr = 3;          // Number of Black Rings
+  //  nwr = 7;          // Number of White Rings
+  //  itr = 5;          // Inner Ten Ring (mm). If no inner 10 Ring, Then 10 Ring Dims.
+  //  cor = 0;          // cor = 1 If Aiming Mark ends on a Ring. 
+  //                       cor = 0 if Aiming Mark ends between Rings.
+  //  tenRing = ord - 9*ringSpacing*2;  // Calculated from above data.
+  //  cal = 5.6;
+  //  drawTarget(tscale, ord, aimMark, ringSpacing, nbr, nwr, itr, cor, cal)
+  //  drawTarget(4, 154.4, 112.4, 8, 3, 7, 5, 0, 5.6); // ISSF 50 Metre Rifle
+  //
+  //  Other examples:
+  //  drawTarget(4, 155.5, 59.5, 8, 6, 3, 5, 1, 4.5);  // ISSF 10 Metre Air Pistol
+  //  drawTarget(1.24, 500, 200, 25, 6, 3, 25, 1, 5.6); // ISSF 50 Metre .22 Pisto
+  //  drawTarget(12, 45.5, 30.5, 2.5, 3, 6, 0.25, 1, 4.5);   // ISSF 10 Metre Air Rifle 
+  //  *************************************************************************************************
+  //
+  //  Target Identifaction Number:
+  //  110   ISSF 10 Metre Air Rifle
+  //  111   ISSF 10 Metre Air Rifle Practice
+  //  100   ISSF 10 Metre Air Pistol
+  //  101   ISSF 10 Metre Air Pistol Practice
+  //  510   ISSF 50 Metre Rifle
+  //  511   ISSF 50 Metre Rifle Practice
+  //  500   ISSF 50 Metre .22 Pistol
+  //  501   ISSF 50 Metre .22 Pistol Practice
+  //
+  const canvas = document.getElementById('etargetCanvas');
+  const ctx = canvas.getContext('2d');
+
+  
+    globalVariables();  //  Delare global variables
+  
+    targetCanvas();     //  Fill and outline entire canvas.
+  
+    leftScoreBox();     //  Create and outline Left Score Box
+  
+    rightScoreBox();    //  Create and outline Right Score Box
+  
+      countDown = 90*60*1000;   //  Start Count Down Timer
+      d = new Date();
+      correct = d.getTime();
+      countDownTimer();
+      
+    //  Draw any target to get started. 
+    drawTarget(12, 45.5, 30.5, 2.5, 3, 6, 0.25, 1, 4.5);   // ISSF 10 Metre Air Rifle default.
+    
+    //  Load the E-Target Display and get available shot data and display.
+    window.addEventListener('load', getshotData);
+
+    setInterval(getshotData,20000);  // Get shot data every 20 seconds.
+  
+  
+  function getshotData(){            // Function to get current readings.
+  var xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      var myObj = JSON.parse(this.responseText);
+      console.log(myObj);
+      var ss = myObj.shot;
+      var xx = myObj.x;
+      var yy = myObj.y;
+      var rr = myObj.r;
+      var aa = myObj.a;
+      targetType = myObj.target;
+      
+      sx = xx;
+      sy = yy;
+      sr = rr;  
+      sa = aa;
+      sn = ss;
+      
+  plotShot();   // Plot Shot Location
+ }
+}; 
+  xhr.open("GET", "/shotData", true);
+  xhr.send();
+}
+
+ /* if (!!window.EventSource) {
+  var source = new EventSource('/events');
+  
+  source.addEventListener('open', function(e) {
+    console.log("Events Connected");
+  }, false);
+
+  source.addEventListener('error', function(e) {
+    if (e.target.readyState != EventSource.OPEN) {
+      console.log("Events Disconnected");
+    }
+  }, false);
+  
+  source.addEventListener('message', function(e) {
+    console.log("message", e.data);
+  }, false);
+  
+  source.addEventListener('new_shotData', function(e) {
+    console.log("new_shotData", e.data);
+    var myObj = JSON.parse(e.data);
+    console.log(myObj);
+      var ss = myObj.shot;
+      var xx = myObj.x;
+      var yy = myObj.y;
+      var rr = myObj.r;
+      var aa = myObj.a;
+      targetType = myObj.target;
+      
+      sx = xx;
+      sy = yy;
+      sr = rr;
+      sn = ss;
+      sa = aa;
+
+     plotShot();
+  }, false); 
+  }
+  */
+  //  
+  //  functions 
+  //
+    function globalVariables() {
+      // Delare global variables    
+      sn = 0;       // Shot No.
+      sx = 0;       // x axis value.
+      sy = 0;       // y axis value.
+      sr = 0;       // shot position radius
+      sa = 0;       // shot position angle
+      xPrev = 0;    // Previous x axis value.
+      yPrev = 0;    // Previous y axis value.
+      sPrev = 0;    // Previous shot Number
+      score = 0;    // Score
+      tscale = 0;   // Used to scale the target
+      tenRing = 0;  // Used to calculate 10 Ring
+      index = 0;    // counter variable in drawing target.
+      refPos = 0;   // A reference position variable for ploting Ring Numbers.
+      cal = 0;      // Caliber of bullet (mm)    
+      ord = 0;      // Outer Ring Diameter (mm)
+      aimMark = 0;  // Aiming Mark (mm)
+      ringSpacing = 0;  // Ring Spacing (mm)
+      nbr = 0;      // Number of Black Rings
+      nwr = 0;      // Number of White Rings
+      itr = 0;      // Inner 10 Ring (mm). If no inner 10 Ring, Then 10 Ring Dims.
+      cor = 0;      // cor = 1 If Aiming Mark ends on a Ring. 
+                    // cor = 0 if Aiming Mark ends between Rings.
+      tds = 0;      // total digital score for left score box
+      tis = 0;      // total interger score for left score box
+      rbtis = 0;    // right box total interger score
+      nos = 0;      // number of shots detected       
+      sumX = 0;     // sum of x positions
+      sumY = 0;     // sum of y positions
+      sumR = 0;     // sum of shot Radii
+      windage = 0;
+      elevation = 0;
+      linen = 0;
+      plinen = 0;
+      countDown = 0;
+      d = 0;
+    }
+  // End function globalVariables
+  // 
+     function countDownTimer() {
+      d = new Date();
+      var now = d.getTime() - correct;
+      var stopWatch = countDown - now;
+        
+      // Calculate Hours, Minutes, Seconds
+      var hours = Math.floor(stopWatch/(1000*60*60));
+      var minutes = Math.floor((stopWatch % (1000*60*60))/(1000*60));
+      var seconds = Math.floor((stopWatch % (1000*60))/1000);
+
+      if (stopWatch > 0) {
+      ctx.beginPath();
+      ctx.rect(977,723,194,32);
+      ctx.fillStyle = '#FE5BAC';
+      ctx.fill();
+      ctx.fillStyle = "#000000";  
+      ctx.textBaseline = "middle";
+      ctx.font = "30px arial bold";    
+      ctx.fillText(hours,1022,740);
+      ctx.fillText(":",1042,740);
+      ctx.fillText(minutes,1052,740);
+      ctx.fillText(":",1090,740);
+      ctx.fillText(seconds,1100,740);
+ 
+      } else if (stopWatch < 0) {
+        ctx.beginPath();
+        ctx.rect(977,723,194,32);
+        ctx.fillStyle = '#FE5BAC';
+        ctx.fill();
+        ctx.fillStyle = "#000000";  
+        ctx.font = "30px arial bold"; 
+        ctx.fillText("00:00:00",1022,740);
+        //ctx.fillText("EXPIRED",1022,740);
+      } 
+      ctx.textBaseline = "alphabetic"; 
+     }
+  // End function countDownTimer
+  //
+  function targetCanvas() {
+  ctx.beginPath();
+  ctx.rect(1,1,1182,766);
+  ctx.fillStyle = '#EDEADE';
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "#000000";
+  ctx.stroke();
+  } 
+  // End function targetCanvas
+  //
+  function leftScoreBox() {
+  ctx.beginPath();
+  ctx.rect(8,8,200,596); 
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "#000000";
+  ctx.stroke();
+  
+  // Place Headings
+  ctx.fillStyle = "#000000";
+  ctx.font = "10px arial";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillText("Dir",24, 22);
+  ctx.fillText("Nr",75, 22);
+  ctx.fillText("Score",119, 22);
+  ctx.fillText("Decimal",162, 22);
+  ctx.font = "10px georgia";
+  ctx.fillText("Last Shot",9, 630);
+  ctx.fillText("Total",9, 665);
+  ctx.fillText("Windage",9, 695);
+  ctx.fillText("Max Spread",115,695);
+  ctx.fillText("Elevation",9, 720);
+  ctx.fillText("Mean Radius", 110, 720);
+  ctx.fillText("NAME:",9 , 752);
+  
+  // Last Shot Box
+  ctx.beginPath();
+  ctx.moveTo(58,645);
+  ctx.lineTo(158,645); 
+  ctx.lineWidth = 2; 
+  ctx.strokeStyle = "gray";
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(158,645);
+  ctx.lineTo(158,610);  
+  ctx.lineWidth = 2; 
+  ctx.strokeStyle = "gray";
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(58,645);
+  ctx.lineTo(58,610);  
+  ctx.lineWidth = 1; 
+  ctx.strokeStyle = "white";
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(58,610);
+  ctx.lineTo(158,610);  
+  ctx.lineWidth = 1; 
+  ctx.strokeStyle = "white";
+  ctx.stroke();
+  //
+  // Create and outline Direction Box
+  //
+  ctx.beginPath();
+  ctx.rect(173,610,35,35);
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "#000000";
+  ctx.stroke();
+  
+  // Total Box
+  ctx.beginPath();
+  ctx.moveTo(45,672);
+  ctx.lineTo(208,672);
+  ctx.lineWidth = 2; 
+  ctx.strokeStyle = "gray";
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(208,672);
+  ctx.lineTo(208,650); 
+  ctx.lineWidth = 2; 
+  ctx.strokeStyle = "gray";
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(45,672);
+  ctx.lineTo(45,650); 
+  ctx.lineWidth = 1; 
+  ctx.strokeStyle = "white";
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(45,650);
+  ctx.lineTo(208,650);
+  ctx.lineWidth = 1; 
+  ctx.strokeStyle = "white";
+  ctx.stroke();
+
+  // Windage Box
+  ctx.beginPath();
+  ctx.moveTo(58,698);
+  ctx.lineTo(88,698);  
+  ctx.lineWidth = 2; 
+  ctx.strokeStyle = "gray";
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(88,698);
+  ctx.lineTo(88,682); 
+  ctx.lineWidth = 2; 
+  ctx.strokeStyle = "gray";
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(58,698);
+  ctx.lineTo(58,682);  
+  ctx.lineWidth = 1; 
+  ctx.strokeStyle = "white";
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(58,682);
+  ctx.lineTo(88,682); 
+  ctx.lineWidth = 1; 
+  ctx.strokeStyle = "white";
+  ctx.stroke();
+
+  // Max Spread Box
+  ctx.beginPath();
+  ctx.moveTo(176,698);
+  ctx.lineTo(208,698);  
+  ctx.lineWidth = 2; 
+  ctx.strokeStyle = "gray";
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(208,698);
+  ctx.lineTo(208,682);  
+  ctx.lineWidth = 2; 
+  ctx.strokeStyle = "gray";
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(176,698);
+  ctx.lineTo(176,682); 
+  ctx.lineWidth = 1; 
+  ctx.strokeStyle = "white";
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(176,682);
+  ctx.lineTo(208,682);  
+  ctx.lineWidth = 1; 
+  ctx.strokeStyle = "white";
+  ctx.stroke();
+
+  // Elevation Box
+  ctx.beginPath();
+  ctx.moveTo(58,723);
+  ctx.lineTo(88,723); 
+  ctx.lineWidth = 2; 
+  ctx.strokeStyle = "gray";
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(88,723);
+  ctx.lineTo(88,707);  
+  ctx.lineWidth = 2; 
+  ctx.strokeStyle = "gray";
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(58,723);
+  ctx.lineTo(58,707);  
+  ctx.lineWidth = 1; 
+  ctx.strokeStyle = "white";
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(58,707);
+  ctx.lineTo(88,707);  
+  ctx.lineWidth = 1; 
+  ctx.strokeStyle = "white";
+  ctx.stroke();
+
+  // Mean Radius Box
+  ctx.beginPath();
+  ctx.moveTo(176,723);
+  ctx.lineTo(208,723); 
+  ctx.lineWidth = 2; 
+  ctx.strokeStyle = "gray";
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(208,723);
+  ctx.lineTo(208,707); 
+  ctx.lineWidth = 2; 
+  ctx.strokeStyle = "gray";
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(176,723);
+  ctx.lineTo(176,707);  
+  ctx.lineWidth = 1; 
+  ctx.strokeStyle = "white";
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(176,707);
+  ctx.lineTo(208,707); 
+  ctx.lineWidth = 1; 
+  ctx.strokeStyle = "white";
+  ctx.stroke();
+
+  // Name: Box
+  ctx.beginPath();
+  ctx.moveTo(45,758);
+  ctx.lineTo(208,758); 
+  ctx.lineWidth = 2; 
+  ctx.strokeStyle = "gray";
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(208,758);
+  ctx.lineTo(208,738); 
+  ctx.lineWidth = 2; 
+  ctx.strokeStyle = "gray";
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(45,758);
+  ctx.lineTo(45,738); 
+  ctx.lineWidth = 1; 
+  ctx.strokeStyle = "white";
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(45,738);
+  ctx.lineTo(208,738);
+  ctx.lineWidth = 1; 
+  ctx.strokeStyle = "white";
+  ctx.stroke();
+
+  // Draw Vertical Divisions Bold
+  ctx.lineWidth = 2; 
+  ctx.strokeStyle = "#EDEADE";
+  for (let i = 0; i < 3; i++){
+  ctx.beginPath();
+  ctx.moveTo(58 + (i*50) ,9);
+  ctx.lineTo(58 + (i*50),603); 
+  ctx.stroke();
+  }
+  // Draw Horizontal Divisions Bold
+  ctx.lineWidth = 2; 
+  ctx.strokeStyle = "#EDEADE";
+  for (let i = 0; i < 11; i++){
+  ctx.beginPath();
+  ctx.moveTo(9,(62 +(i*54)));
+  ctx.lineTo(207,(62 + (i*54)));
+  ctx.stroke();
+  }
+  // Draw Horizontal Divisions Light
+  ctx.lineWidth = 1; 
+  ctx.strokeStyle = "#EDEADE";
+  for (let i = 0; i < 33; i++){
+  ctx.beginPath();
+  ctx.moveTo(9,(26 +(i*18)));
+  ctx.lineTo(207,(26 + (i*18)));
+  ctx.stroke();
+   }
+  } 
+  // End function leftScoreBox
+  //
+  function rightScoreBox() {
+  ctx.beginPath();
+  ctx.rect(974,8,200,148); 
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "#000000";
+  ctx.stroke();
+  
+  // Draw Vertical Divisions
+  ctx.lineWidth = 1; 
+  ctx.strokeStyle = "#EDEADE";
+  ctx.beginPath();
+  ctx.moveTo(1000,9);
+  ctx.lineTo(1000,155); 
+  ctx.stroke();
+  ctx.lineWidth = 1; 
+  ctx.strokeStyle = "#EDEADE";
+  for (let i = 0; i < 11; i++){
+  ctx.beginPath();
+  ctx.moveTo((1000 + (i*15)),9);
+  ctx.lineTo((1000 + (i*15)),155);
+  ctx.stroke();
+  }
+  // Draw Horizontal Divisions Bold
+  ctx.lineWidth = 2; 
+  ctx.strokeStyle = "#EDEADE";
+  for (let i = 0; i < 2; i++){ 
+  ctx.beginPath();
+  ctx.moveTo(975,(59 +(i*48)));
+  ctx.lineTo(1173,(59 + (i*48)));
+  ctx.stroke();
+  }
+  // Draw Horizontal Divisions Light
+  ctx.lineWidth = 1; 
+  ctx.strokeStyle = "#EDEADE";
+  for (let i = 0; i < 9; i++){  
+  ctx.beginPath();
+  ctx.moveTo(975,(26 +(i*16)));
+  ctx.lineTo(1173,(26 + (i*16)));
+  ctx.stroke();
+  }
+  // Place Headings
+  ctx.fillStyle = "#000000";
+  ctx.font = "10px arial";
+  ctx.textBaseline = "alphabetic";
+  for (let i = 0; i < 9; i++) {
+  ctx.fillText(i+1,(1004 +(i*15)), 22);
+  }
+  ctx.fillText("10",1136, 22);
+  ctx.fillText("Total",1150, 22); 
+ 
+  // Draw rightSoreBoxBottom
+  ctx.beginPath();
+  ctx.rect(974,164,200,594); 
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "#000000";
+  ctx.stroke();
+ 
+  // Draw Vertical Divisions Bold
+  ctx.lineWidth = 2; 
+  ctx.strokeStyle = "#EDEADE";
+  for (let i = 0; i < 3; i++){
+  ctx.beginPath();
+  ctx.moveTo((1025 + (i*50)),165);
+  ctx.lineTo((1025 + (i*50)),757);
+  ctx.stroke();
+  }
+  // Draw Horizontal Divisions Bold
+  ctx.lineWidth = 2; 
+  ctx.strokeStyle = "#EDEADE";
+  for (let i = 0; i < 12; i++){
+  ctx.beginPath();
+  ctx.moveTo(975,(180 +(i*54)));
+  ctx.lineTo(1173,(180 + (i*54)));
+  ctx.stroke();
+  }
+  // Draw Horizontal Divisions Light
+  ctx.lineWidth = 1; 
+  ctx.strokeStyle = "#EDEADE";
+  for (let i = 0; i < 32; i++){
+  ctx.beginPath();
+  ctx.moveTo(975,(180 +(i*18)));
+  ctx.lineTo(1173,(180 + (i*18)));
+  ctx.stroke();
+  }
+  // Place Headings
+  ctx.fillStyle = "#000000";
+  ctx.font = "10px arial";
+  ctx.fillText("Dir",992, 176);
+  ctx.fillText("Nr",1042, 176);
+  ctx.fillText("Score",1086, 176);
+  ctx.fillText("Decimal",1129, 176);
+ 
+  // Count Down Timer Box
+    ctx.beginPath();
+    ctx.moveTo(976,756);
+    ctx.lineTo(1172,756); 
+    ctx.lineWidth = 2; 
+    ctx.strokeStyle = "blue";
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(1172,757);
+    ctx.lineTo(1172,721);  
+    ctx.lineWidth = 2; 
+    ctx.strokeStyle = "blue";
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(976,757);
+    ctx.lineTo(976,721);  
+    ctx.lineWidth = 2; 
+    ctx.strokeStyle = "blue";
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(976,722);
+    ctx.lineTo(1172,722);  
+    ctx.lineWidth = 2; 
+    ctx.strokeStyle = "blue";
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.rect(977,723,194,32);
+    ctx.fillStyle = '#FE5BAC';
+    ctx.fill();
+  }
+  // end funtion rightScoreBox
+  //
+  function targetCard() {
+  ctx.beginPath();
+  ctx.rect(216,08,750,750);
+  ctx.fillStyle = "#FFDEAD";
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "#000000";
+  ctx.stroke();
+  } 
+  // End function targetCard
+  //
+  function drawTriangle() {
+    ctx.beginPath();
+    ctx.moveTo(841, 8);
+    ctx.lineTo(966, 8);
+    ctx.lineTo(966, 133);
+    ctx.lineTo(841, 8);
+    ctx.fillStyle = "blue";
+    ctx.fill();
+    ctx.strokeStyle = "blue";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }  
+  // End function drawTriangle
+  //
+  function drawTarget(ztscale, zord, zaimMark, zringSpacing, znbr, znwr, zitr, zcor, zcal) {
+    
+    tscale = ztscale;
+    ord = zord;
+    aimMark = zaimMark;
+    ringSpacing = zringSpacing;
+    nbr = znbr;
+    nwr = znwr;
+    itr = zitr;
+    cor = zcor;
+    cal = zcal;
+    tenRing = ord - 9*ringSpacing*2;
+  //
+  //  Clear and define Target Card
+  targetCard();
+  //
+  // Aiming Mark
+  ctx.beginPath();
+  ctx.arc(591, 383, (aimMark/2)*tscale, 0, 2*Math.PI); 
+  ctx.fillStyle = "#000000";
+  ctx.fill();
+  //
+  // Draw Black Rings
+  for (let i = 0; i < nbr; i++) {
+  ctx.beginPath();
+  ctx.arc(591, 383, ((ord/2)*tscale -(i*ringSpacing*tscale)), 0, 2*Math.PI);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = 'black';
+  ctx.stroke();
+  }
+  //
+  //  Draw White Rings
+  for (let i = 0; i < nwr; i++) {
+  ctx.beginPath();
+  ctx.arc(591, 383, (((ord/2)*tscale -((nbr+cor)*ringSpacing*tscale)) - (i*ringSpacing*tscale)), 0, 2*Math.PI);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = 'white';
+  ctx.stroke();
+  }
+  //
+  // Draw Inner 10 Ring
+  ctx.beginPath();
+  ctx.arc(591, 383, ((itr/2)*tscale), 0, 2*Math.PI);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = 'white';
+  ctx.stroke();
+  //
+  // Plot Ring numbers
+  ctx.font = "10px Arial";
+  ctx.textBaseline = "middle";
+  refPos = ((ord*tscale/2)-tscale*ringSpacing/2);
+  index = 1;
+  for (let i = 0; i < 8; i++) {
+  ctx.fillStyle = "black";
+  if (index > nbr) {
+   ctx.fillStyle = "white"; 
+  }
+  ctx.fillText(i+1,588-refPos, 383);
+  ctx.fillText(i+1,588+refPos, 383);
+  ctx.fillText(i+1,588, 383-refPos);
+  ctx.fillText(i+1,588, 383+refPos);
+  index = index + 1;
+  if (index > nbr) {
+   ctx.fillStyle = "white"; 
+  }
+  refPos = refPos - tscale*ringSpacing;
+  }
+  return tenRing;
+  }  
+  // End function drawTarget
+  //
+  function plotActiveTarget() {
+
+      if (targetType == 510 || targetType == 511) {
+      drawTarget(4, 154.4, 112.4, 8, 3, 7, 5, 0, 5.6); // ISSF 50 Metre Rifle
+      } else if (targetType == 100 || targetType == 101) {
+      drawTarget(4, 155.5, 59.5, 8, 6, 3, 5, 1, 4.5);  // ISSF 10 Metre Air Pistol
+      } else if (targetType == 110 || targetType == 111) {
+      drawTarget(12, 45.5, 30.5, 2.5, 3, 6, 0.25, 1, 4.5);   // ISSF 10 Metre Air Rifle
+      } else if (targetType == 500 || targetType == 501) {
+      drawTarget(1.24, 500, 200, 25, 6, 3, 25, 1, 5.6); // ISSF 50 Metre .22 Pistol
+      }
+      // Check for Practice Target
+      if (targetType == 101 || targetType == 111 || targetType == 501 || targetType == 511) {
+      drawTriangle(); 
+      countDown = 15*60*1000;
+      }
+      if (targetType == 100) {
+        countDown = 60*60*1000;
+      } else if (targetType == 110) {
+        countDown = 75*60*1000;
+      } else if (targetType == 500) {
+        countDown = 90*60*1000;
+      } else if (targetType == 510) {
+        countDown = 90*60*1000;
+      }
+      countDownTimer(); 
+  } // End function plotActiveTarget
+  //
+  function plotShot(){
+    if (sn < 61) {
+    if (nos > 0) {
+    if (targetType != p_targetType) {
+        startOver();
+      }
+   }
+  if(sn < 1) {
+    plotActiveTarget();
+    p_targetType = targetType;
+  }
+   
+  if(sn > 0){
+  if(nos < 1){
+    plotActiveTarget();
+    p_targetType = targetType;
+  }
+  if(nos > 0) {
+    countDownTimer(); 
+    ctx.beginPath();
+    ctx.arc((591 + xPrev*tscale), (383 - yPrev*tscale), cal*tscale/2, 0, 2*Math.PI); // Shot Position
+    ctx.fillStyle = 'rgb(0 150 255)';
+    ctx.fill();
+    ctx.font = "10px Arial";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "white";
+    ctx.fillText(Math.trunc(sn-1), 591-5 + xPrev*tscale, 383 - yPrev*tscale);
+   }   
+    countDownTimer(); 
+    ctx.beginPath();
+    ctx.arc((591 + sx*tscale), (383 - sy*tscale), cal*tscale/2, 0, 2*Math.PI); // Shot Position
+    ctx.fillStyle = 'red';
+    ctx.fill();
+    ctx.font = "10px Arial";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "black";
+    ctx.fillText(Math.trunc(sn), 591-5 + sx*tscale, 383 - sy*tscale);
+
+  xPrev = sx;
+  yPrev = sy;
+  sPrev = sn;
+
+  updateTables();
+    }
+   }
+  } 
+  //  End Function plotShot  
+  //
+  function updateTables() {
+    
+    srr = cal/2;
+    if (targetType == 100 || targetType == 101 || targetType == 110 || targetType == 111 || targetType == 510 || targetType == 511) {
+    srr = 0;
+    }
+    score = 11 - ((sr-srr)*18/(ord-tenRing));
+    if (score < 1) {
+      score = 0;
+    }
+    if (score > 10.9) {
+      score = 10.9;
+    }  
+    nos = nos + 1;
+    tis = tis + Math.trunc(score);        // Total interger score
+    tds = tds + Math.trunc(score*10)/10;  // Total digital score
+    // Update Left Sore Box
+    ctx.fillStyle = "#000000";
+    // If shot # > 30 place score in right shot box. Else place score in left shot box.
+    if (sn > 30) {
+      ctx.font = "10px Arial";
+      ctx.fillText(Math.trunc(sn),1040, (173+ (18*(sn-30)))); 
+      ctx.font = "14px Arial, bold";
+    ctx.fillText(Math.trunc(score),1089,(173+(18*(sn-30))));
+    ctx.fillText(Math.trunc(score*10)/10,1137,(173+(18*(sn-30))));
+    }else if (sn < 31) {
+    ctx.font = "10px Arial";
+    ctx.fillText(Math.trunc(sn),75, (18+ (18*sn))); 
+    ctx.font = "14px Arial, bold";
+    ctx.fillText(Math.trunc(score),124,(18+(18*sn)));
+    ctx.fillText(Math.trunc(score*10)/10,172,(18+(18*sn)));
+    }
+    // Update Right Target Score Box
+    ctx.font = "10px Arial";
+    linen = Math.trunc(((parseFloat(sn)-1)/10));
+    
+    ctx.fillText(Math.trunc(score),987+((sn-linen*10)*15),(35+(linen*16)));
+    ctx.beginPath();
+    ctx.rect(975,(27+(linen*16)),20,14);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fill();
+    ctx.fillStyle = '#000000';
+    ctx.fillText("T",983,(35+(linen*16)));
+    ctx.fillText(Math.trunc(linen+1), 989, (35+(linen*16)));
+    // Redraw Target after every tenth shot on target.
+     if (linen - plinen > 0) {
+       rbtis = 0;
+      if (targetType == 510 || targetType == 511) {
+      drawTarget(4, 154.4, 112.4, 8, 3, 7, 5, 0, 5.6); // ISSF 50 Metre Rifle
+      } else if (targetType == 100 || targetType == 101) {
+      drawTarget(4, 155.5, 59.5, 8, 6, 3, 5, 1, 4.5);  // ISSF 10 Metre Air Pistol
+      } else if (targetType == 110 || targetType == 111) {
+      drawTarget(12, 45.5, 30.5, 2.5, 3, 6, 0.25, 1, 4.5);   // ISSF 10 Metre Air Rifle
+      } else if (targetType == 500 || targetType == 501) {
+      drawTarget(1.24, 500, 200, 25, 6, 3, 25, 1, 5.6); // ISSF 50 Metre .22 Pistol
+      }
+      // Check for Practice Target
+      if (targetType == 101 || targetType == 111 || targetType == 501 || targetType == 511) {
+      drawTriangle(); 
+      }
+  
+       ctx.beginPath();
+       ctx.arc((591 + sx*tscale), (383 - sy*tscale), cal*tscale/2, 0, 2*Math.PI); // Shot Position
+       ctx.fillStyle = 'red';
+       ctx.fill();
+       ctx.font = "10px Arial";
+       ctx.textBaseline = "middle";
+       ctx.fillStyle = "black";
+       ctx.fillText(Math.trunc(sn), 591-5 + sx*tscale, 383 - sy*tscale);
+
+  xPrev = sx;
+  yPrev = sy;
+  sPrev = sn;
+     }
+    rbtis = rbtis + Math.trunc(score);
+    ctx.beginPath();
+    ctx.rect(1152,(27+(linen*16)),20,14);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fill();
+    ctx.fillStyle = '#000000';
+    ctx.fillText(rbtis,1153,(35+(linen*16)));
+    plinen = linen;
+    
+
+    // Update Last Shot Box
+    ctx.beginPath();
+    ctx.rect(60,612,96,30);
+    ctx.fillStyle = '#EDEADE';
+    ctx.fill();
+    
+    ctx.font = "26px Arial, bold";
+    ctx.fillStyle = "#000000";
+    ctx.fillText(Math.trunc(score*10)/10,90, 628);
+
+    // Update Total Box
+    ctx.beginPath();
+    ctx.rect(47,652,159,18);
+    ctx.fillStyle = '#EDEADE';
+    ctx.fill();
+
+    ctx.font = "16px Arial, bold";
+    ctx.fillStyle = "#000000";
+    ctx.fillText(nos,52,661);
+    ctx.fillText(tis,80,661);
+    ctx.fillText("(",115,661);
+    ctx.fillText(Math.trunc(tds*10)/10,120,661);
+    ctx.fillText(") -",165,661);
+    // ctx.fillText("20x",180,661);
+
+    // Update Windage Box
+    sumX  = +sumX +parseFloat(sx);
+    windage = +sumX/nos;
+    windage = Math.trunc(windage*10)/10;
+    ctx.beginPath();
+    ctx.rect(59,680,28,14);
+    ctx.fillStyle = '#EDEADE';
+    ctx.fill();
+
+    ctx.font = "12px Arial, bold";
+    ctx.fillStyle = "#000000";
+    ctx.fillText(windage,60,690);
+
+    // Update Elevation Box
+    sumY  = +sumY +parseFloat(sy);
+    elevation = +sumY/nos;
+    elevation = Math.trunc(elevation*10)/10;
+    ctx.beginPath();
+    ctx.rect(59,705,28,14);
+    ctx.fillStyle = '#EDEADE';
+    ctx.fill();
+
+    ctx.font = "12px Arial, bold";
+    ctx.fillStyle = "#000000";
+    ctx.fillText(elevation,60,715);
+    
+    // Update Radius Box
+    sumR  = +sumR +parseFloat(sr);
+    mradius = +sumR/nos;
+    mradius = Math.trunc(mradius*10)/10;
+    ctx.beginPath();
+    ctx.rect(178,705,28,14);
+    ctx.fillStyle = '#EDEADE';
+    ctx.fill();
+
+    ctx.font = "12px Arial, bold";
+    ctx.fillStyle = "#000000";
+    ctx.fillText(mradius,180,715);  
+  }
+  // End Function updateTables
+  //
+  function startOver() {
+  // Delare global variables
+    globalVariables(); 
+  // Fill and outline entire canvas.
+    targetCanvas();
+  // Create and outline Left Score Box
+    leftScoreBox();
+  // Create and outline Right Score Box
+    rightScoreBox();
+  //
+  // Start Count Down Timer
+  //
+     countDown = 90*60*1000;
+     d = new Date();
+     correct = d.getTime();
+     countDownTimer();
+  //  Draw any target to get started.
+  
+  drawTarget(12, 45.5, 30.5, 2.5, 3, 6, 0.25, 1, 4.5);   // ISSF 10 Metre Air Rifle
+  }
+
+  
+</script>
+</body>
 </html>

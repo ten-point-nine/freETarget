@@ -27,6 +27,7 @@
 #include <esp_wifi.h>
 
 #include "freETarget.h"
+#include "compute_hit.h"
 #include "helpers.h"
 #include "http_server.h"
 #include "diag_tools.h"
@@ -35,13 +36,6 @@
 #include "html.h"
 
 #define EXAMPLE_HTTP_QUERY_KEY_MAX_LEN (64)
-
-static esp_err_t service_get_index(httpd_req_t *req);                            // Standard HTML Index
-static esp_err_t service_get_issf_png(httpd_req_t *req);                         // Demonstration binary file
-static esp_err_t service_get_who(httpd_req_t *req);                              // Display target information
-static esp_err_t service_post_post(httpd_req_t *req);                            // Sample POST handler
-static esp_err_t service_get_post2(httpd_req_t *req);
-esp_err_t        http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Create a URL not found handler
 
 /*
  * Typedefs
@@ -55,15 +49,22 @@ esp_err_t        http_404_error_handler(httpd_req_t *req, httpd_err_code_t err);
  * Local functions
  */
 static esp_err_t stop_webserver(httpd_handle_t server);
+static esp_err_t service_get_index(httpd_req_t *req);
+static esp_err_t service_get_who(httpd_req_t *req);
+static esp_err_t service_get_shotData(httpd_req_t *req);
+static esp_err_t service_get_issf_png(httpd_req_t *req);
+static esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Create a URL not found handler
 
 /*
  *  URL handlers
  */
-static const httpd_uri_t url_get_index = {.uri = "/index", .method = HTTP_GET, .handler = service_get_index, .user_ctx = "Index not found"};
-static const httpd_uri_t url_get_who   = {.uri = "/who", .method = HTTP_GET, .handler = service_get_who, .user_ctx = "Timelord"};
-static const httpd_uri_t url_get_favicon = {.uri = "/favicon.ico", .method = HTTP_GET, .handler = service_get_issf_png, .user_ctx = NULL};
-
-const httpd_uri_t *url_list[] = {&url_get_index, &url_get_who, &url_get_favicon, 0};
+const httpd_uri_t url_list[] = {
+    {.uri = "/index", .method = HTTP_GET, .handler = service_get_index, .user_ctx = "Index not found"},
+    {.uri = "/who", .method = HTTP_GET, .handler = service_get_who, .user_ctx = "Timelord"},
+    {.uri = "/shotData", .method = HTTP_GET, .handler = service_get_shotData, .user_ctx = "Shot Data"},
+    {.uri = "/favicon.ico", .method = HTTP_GET, .handler = service_get_issf_png, .user_ctx = NULL},
+    {}
+};
 
 /*----------------------------------------------------------------
  *
@@ -87,9 +88,9 @@ void register_services(httpd_handle_t server // Pointer to active server
   int i;
 
   i = 0;
-  while ( url_list[i] != 0 )
+  while ( url_list[i].uri != 0 )
   {
-    httpd_register_uri_handler(server, url_list[i]);
+    httpd_register_uri_handler(server, &url_list[i]);
     i++;
   }
   return;
@@ -120,11 +121,43 @@ static esp_err_t service_get_index(httpd_req_t *req)
 
   return ESP_OK;
 }
+
 /*----------------------------------------------------------------
  *
- * @function: service_get_icon
+ * @function: service_get_shotData
  *
- * @brief:    Return an icon file
+ * @brief:    Send the shot data to the client
+ *
+ * @return:   esp_err_t, error type
+ *
+ *---------------------------------------------------------------
+ *s
+ *
+ *------------------------------------------------------------*/
+static esp_err_t service_get_shotData(httpd_req_t *req)
+{
+  const char *resp_str;            // Reply to server
+  char        my_name[SHORT_TEXT]; // Target name
+  static int  last = 0;            // Last shot
+
+  target_name(&my_name);           // Get the target name
+
+  send_replay(&record[last], 1);
+  last = (last + 1) % SHOT_SPACE;
+  printf("Here %s", _xs);
+
+  resp_str = (const char *)_xs;    // point to the target json file
+  httpd_resp_set_hdr(req, "index", my_name);
+  httpd_resp_send(req, resp_str, strlen(resp_str));
+
+  return ESP_OK;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: service_get_issf_png
+ *
+ * @brief:    Send an icon to the client
  *
  * @return:   esp_err_t, error type
  *
@@ -134,9 +167,9 @@ static esp_err_t service_get_index(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_issf_png(httpd_req_t *req)
 {
-  const char *resp_str;               // Reply to server
+  const char *resp_str;              // Reply to server
 
-  resp_str = (const char *)&issf_png; // point to the target HTML file
+  resp_str = (const char *)issf_png; // point to the target json file
   httpd_resp_set_hdr(req, "index", names[json_name_id]);
   httpd_resp_send(req, resp_str, SIZEOF_ISSF_PNG);
 
