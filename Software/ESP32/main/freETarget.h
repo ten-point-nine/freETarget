@@ -100,6 +100,12 @@
 #define SESSION_SIGHT 2                            // Session is a sighter
 #define SESSION_SCORE 4                            // Session is a score
 
+#define SCORE_ALL       "sm?tXPHO"                 // shot / miss / target / time / x-y / radius-angle / North-East-South-West / target type
+#define SCORE_USB       "sm?tXPHO"                 // USB score elements
+#define SCORE_TCPIP     "sm?X"                     // TCP score elements
+#define SCORE_BLUETOOTH "sm?tX"                    // Bluetooth score elements
+#define SCORE_HTTP      "sm?tXPO"                  // HTTP score elements
+
 /*
  *  Types
  */
@@ -135,6 +141,8 @@ typedef struct
   double        y;                       // Y location of shot
   double        xs;                      // X location of shot as scored
   double        ys;                      // Y location of shot
+  double        radius;                  // Radius of shot from the center of the target
+  double        angle;                   // Angle of shot from the center of the target
   int           timer_count[8];          // Array of timer values 4 in hardware and 4 in software
   unsigned int  face_strike;             // Recording of face strike
   unsigned int  sensor_status;           // Triggering register

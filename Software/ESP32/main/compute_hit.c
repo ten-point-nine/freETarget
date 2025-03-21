@@ -29,8 +29,7 @@
 /*
  *  Definitions
  */
-#define THRESHOLD               (0.001)
-#define SHOT_TIME_TO_SECONDS(x) ((float)(x)) / 1000000.0
+#define THRESHOLD (0.001)
 
 #define R(x) (((x) + location) % 4) // Rotate the target by location points
 
@@ -45,10 +44,10 @@ sensor_t s[4] = {
     {3, {'w', "WEST_LO", LED_WEST_FAILED, RUN_WEST_LO, BIT_WEST_LO},     {'W', "WEST_HI", LED_WEST_FAILED, RUN_WEST_HI, BIT_WEST_HI}    }
 };
 
-unsigned int                  pellet_calibre;   // Time offset to compensate for pellet diameter
-static volatile unsigned long wdt;              // Warchdog  timer
+unsigned int                  pellet_calibre; // Time offset to compensate for pellet diameter
+static volatile unsigned long wdt;            // Warchdog  timer
 
-static void remap_target(double *x, double *y); // Map a club target if used
+static void remap_target(shot_record_t *s);   // Map a club target if used
 
 /*----------------------------------------------------------------
  *
@@ -470,9 +469,7 @@ void send_score(shot_record_t *shot,        //  record
 {
   double x, y;                              // Shot location in mm X, Y before rotation
   double real_x, real_y;                    // Shot location in mm X, Y before remap
-  double radius;
-  double angle;
-  char   str_c[SHORT_TEXT];                 // String holding buffers
+                                            //  char   str_c[SHORT_TEXT];                 // String holding buffers
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "Sending the score");))
 
@@ -496,85 +493,25 @@ void send_score(shot_record_t *shot,        //  record
   /*
    *  Work out the hole in perfect coordinates
    */
-  x      = shot->x * s_of_sound * CLOCK_PERIOD; // Distance in mm
-  y      = shot->y * s_of_sound * CLOCK_PERIOD; // Distance in mm
-  radius = sqrt(sq(x) + sq(y));
-  angle  = atan2(shot->y, shot->x) / PI * 180.0d;
+  x            = shot->x * s_of_sound * CLOCK_PERIOD; // Distance in mm
+  y            = shot->y * s_of_sound * CLOCK_PERIOD; // Distance in mm
+  shot->radius = sqrt(sq(x) + sq(y));
+  shot->angle  = atan2(shot->y, shot->x) / PI * 180.0d;
 
   /*
    * Rotate the result based on the construction, and recompute the hit
    */
-  angle += json_sensor_angle;
-  x      = radius * cos(PI * angle / 180.0d) + json_x_offset; // Rotate onto the target face
-  y      = radius * sin(PI * angle / 180.0d) + json_y_offset; // and add in sensor correction
-  real_x = x;
-  real_y = y;                                                 // Remember the original target value
-  remap_target(&x, &y);                                       // Change the target if needed
-  shot->xs           = x;
-  shot->ys           = y;
+  shot->angle += json_sensor_angle;
+  shot->x = shot->radius * cos(PI * shot->angle / 180.0d) + json_x_offset; // Rotate onto the target face
+  shot->y = shot->radius * sin(PI * shot->angle / 180.0d) + json_y_offset; // and add in sensor correction
+  remap_target(shot);                                                      // Change the target if needed
   shot->session_type = SESSION_VALID | json_session_type;
 
   /*
    *  Display the results
    */
-  SEND(ALL, sprintf(_xs, "\r\n{");)
-
-#if ( S_SHOT )
-  SEND(ALL, sprintf(_xs, "\"shot\":%d", shot_number);)
-  if ( miss == MISSED_SHOT )
-  {
-    SEND(ALL, sprintf(_xs, ", \"miss\":1");)
-  }
-  SEND(ALL, sprintf(_xs, ", \"time\":%6.2f ", SHOT_TIME_TO_SECONDS(shot->shot_time));)
-#endif
-
-#if ( S_SESSION )
-  if ( (shot->session_type & (SESSION_SIGHT | SESSION_SCORE)) != 0 )
-  {
-    sprintf(_xs, ", \"session_type\": %d ", shot->session_type);
-  }
-#endif
-
-#if ( S_XY )
-  SEND(ALL, sprintf(_xs, ",\"x\":%4.2f, \"y\":%4.2f ", shot->xs, shot->ys);)
-
-  if ( json_target_type > 1 )
-  {
-    SEND(ALL, sprintf(_xs, ",\"real_x\":%4.2f, \"real_y\":%4.2f ", real_x, real_y);)
-  }
-#endif
-
-#if ( S_POLAR )
-  if ( json_token == TOKEN_NONE )
-  {
-    SEND(ALL, sprintf(_xs, ", \"r\":%4.2f,  \"a\":%s, ", radius, angle``);)
-  }
-#endif
-
-#if ( S_TIMERS )
-  if ( (is_trace & DLT_SCORE) != 0 )
-  {
-    if ( json_token == TOKEN_NONE )
-    {
-      SEND(ALL, sprintf(_xs, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d ", (int)shot->timer_count[N + 0], (int)shot->timer_count[E + 0],
-                        (int)shot->timer_count[S + 0], (int)shot->timer_count[W + 0]);)
-      SEND(ALL, sprintf(_xs, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)shot->timer_count[N + 4], (int)shot->timer_count[E + 4],
-                        (int)shot->timer_count[S + 4], (int)shot->timer_count[W + 4]);)
-    }
-  }
-#endif
-
-  if ( IS_HOLD_C(TARGET_TYPE) )
-  {
-    SEND(ALL, sprintf(_xs, ", \"target_type\":%d ", DIP_C););
-  }
-
-  if ( IS_HOLD_D(TARGET_TYPE) )
-  {
-    SEND(ALL, sprintf(_xs, ", \"target_type\":%d ", DIP_D););
-  }
-
-  SEND(ALL, sprintf(_xs, "}");)
+  build_json_score(shot, SCORE_USB);
+  serial_to_all(_xs, ALL);
 
 /*
  * Send to the server if needed
@@ -584,11 +521,7 @@ void send_score(shot_record_t *shot,        //  record
   {
     if ( (json_athlete[0] != 0) && (json_event[0] != 0) && (json_target_name[0] != 0) )
     {
-      sprintf(
-          _xs,
-          "\r\n{\"shot\":%d, \"session\":%d,  \"athlete\":\"%s\", \"event\": \"%s\", \"target_name\":\"%s\", \"x\":%4.2f, \"y\":%4.2f} ",
-          shot_number, json_session_type, json_athlete, json_event, json_target_name, x, y);
-
+      build_json_score(shot, SCORE_TCPIP);
       http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
     }
     else
@@ -629,25 +562,23 @@ void send_score(shot_record_t *shot,        //  record
  *
  *--------------------------------------------------------------*/
 
-void send_replay(shot_record_t *shot, //  record
+void send_replay(shot_record_t *shot,                                  //  record
                  unsigned int   shot_number)
 {
 
-  if ( (shot->session_type & SESSION_VALID) != 0 )
+  if ( (shot->session_type & SESSION_VALID) != 0 )                     // Do we have a shot record?
   {
 
-    if ( (shot->session_type & (SESSION_SIGHT | SESSION_SCORE)) != 0 )
+    if ( (shot->session_type & (SESSION_SIGHT | SESSION_SCORE)) != 0 ) // Has it been tagged as sighters or score?
     {
-      sprintf(_xs, "\r\n{\"shot\":%d, \"time\":%6.2f, \"session_type\": %d, \"x\":%4.2f, \"y\":%4.2f}\r\n", shot_number + 1,
-              SHOT_TIME_TO_SECONDS(shot->shot_time), shot->session_type, shot->xs, shot->ys);
+      build_json_score(shot, "st");
     }
-    else
+    else                                                               // nO, undefined session type
     {
-      sprintf(_xs, "\r\n{\"shot\":%d, \"time\":%6.2f,  \"x\":%4.2f, \"y\":%4.2f}\r\n", shot_number + 1,
-              SHOT_TIME_TO_SECONDS(shot->shot_time), shot->xs, shot->ys);
+      build_json_score(shot, "st");
     }
   }
-  else
+  else                                                                 // No shot record
   {
     _xs[0] = 0;
   }
@@ -748,27 +679,25 @@ const new_target_t orion_bull_air_rifle[] = {
 const new_target_t *ptr_list[] = {0, 0, 0, 0, five_bull_air_rifle_74mm, five_bull_air_rifle_79mm, 0,
                                   0, 0, 0, 0, orion_bull_air_rifle,     twelve_bull_air_rifle};
 
-static void remap_target(double *x, // Computed X location of shot (returned)
-                         double *y  // Computed Y location of shot (returned)
-)
+static void remap_target(shot_record_t *shot)
 {
-  double distance, closest;         // Distance to bull in clock ticks
-  double dx, dy;                    // Best fitting bullseye
+  double distance, closest; // Distance to bull in clock ticks
+  double dx, dy;            // Best fitting bullseye
   int    i;
   dx = 0.0;
   dy = 0.0;
 
-  new_target_t *ptr;                // Bull pointer
+  new_target_t *ptr;        // Bull pointer
 
   if ( (json_target_type <= 1) || (json_target_type > sizeof(ptr_list) / sizeof(new_target_t *)) )
   {
-    return;                         // Check for limits
+    return;                 // Check for limits
   }
 
   /*
    * Find the closest bull
    */
-  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "remap_target x: %4.2fmm  y: %4.2fmm", *x, *y);))
+  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "remap_target x: %4.2fmm  y: %4.2fmm", shot->x, shot->y);))
 
   ptr = ptr_list[json_target_type];
   if ( ptr == 0 )     // Check for unassigned targets
@@ -783,7 +712,7 @@ static void remap_target(double *x, // Computed X location of shot (returned)
   i = 0;
   while ( ptr->x != LAST_BULL )
   {
-    distance = sqrt(sq(ptr->x - *x) + sq(ptr->y - *y));
+    distance = sqrt(sq(ptr->x - shot->x) + sq(ptr->y - shot->y));
     DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, " distance: %4.2f", distance);))
     if ( distance < closest ) // Found a closer one?
     {
@@ -799,9 +728,9 @@ static void remap_target(double *x, // Computed X location of shot (returned)
   /*
    * Remap the pellet to the centre one
    */
-  *x = *x - dx;
-  *y = *y - dy;
-  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "x: %4.2f , y: %4.2f ", *x, *y);))
+  shot->xs = shot->x - dx;
+  shot->ys = shot->y - dy;
+  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "x: %4.2f , y: %4.2f ", shot->x, shot->y);))
 
   /*
    *  All done, return

@@ -23,6 +23,8 @@
 #include "diag_tools.h"
 #include "analog_io.h"
 
+#define SHOT_TIME_TO_SECONDS(x) ((float)(x)) / 1000000.0
+
 /*-----------------------------------------------------
  *
  * @function: target_name
@@ -376,5 +378,218 @@ void echo_serial(int duration, // Duration in clock ticks
    * Finished, clean up
    */
   timer_delete(&test_time);
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: build_json_score
+ *
+ * @brief:    Assemble the score as a JSON string based on the format
+ *
+ * @return:   _xs contains the JSON string
+ *
+ *----------------------------------------------------------------
+ *
+ * This function allows the user to remotly shut down the unit
+ * when not in use.
+ *
+ * This is called every second from the synchronous scheduler
+ *
+ *--------------------------------------------------------------*/
+
+void build_json_score(shot_record_t *shot, // Pointer to shot record
+                      const char    *format)
+{
+  char str[SHORT_TEXT];                    // String holding buffers
+  bool add_comma = false;                  // Add a comma to the string
+
+  strcpy(_xs, "{");                        // Start the opening bracket
+
+  /*
+   *  Loop and build up the payload
+   */
+  while ( *format != 0 )
+  {
+
+    if ( add_comma )
+    {
+      strcat(_xs, ",");
+    }
+    add_comma = true;
+    switch ( *format )
+    {
+      case 's': // Shot number
+        sprintf(str, "\"shot\":%d", shot_number);
+        break;
+
+      case 'm': // Miss
+        sprintf(str, ", \"miss\":1");
+        break;
+
+      case '?': // Session type
+        sprintf(str, ", \"session_type\": %d ", shot->session_type);
+        break;
+
+      case 't': // Time
+        sprintf(str, "\"time\":%6.2f ", SHOT_TIME_TO_SECONDS(shot->shot_time));
+        break;
+
+      case 'X': // X
+        sprintf(str, "\"x\":%4.2f,\"y\":%4.2f", shot->xs, shot->ys);
+        break;
+
+      case 'P': // Polar
+        sprintf(str, "\"r\":%4.2f,  \"a\":%4.2f", shot->radius, shot->angle);
+        break;
+        break;
+
+      case 'H': // Hardware
+        sprintf(str, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d", (int)shot->timer_count[N + 0], (int)shot->timer_count[E + 0],
+                (int)shot->timer_count[S + 0], (int)shot->timer_count[W + 0]);
+        break;
+
+      case 'O': // Target type
+        sprintf(str, ", \"target_type\":%d", DIP_D);
+
+        if ( json_target_type > 1 )
+        {
+          sprintf(str, ",\"real_x\":%4.2f, \"real_y\":%4.2f ", shot->xs, shot->xs);
+        }
+        break;
+
+      default:
+        break;
+    }
+    format++;
+    strcat(_xs, str);
+  }
+
+  /*
+   * Put in the closing } and return
+   */
+  strcat(_xs, "}");
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: http_target_type
+ *
+ * @brief:    Figure out the target type for
+ *
+ * @return:   target type number
+ *
+ *----------------------------------------------------------------
+ *
+ * The HTTP application uses a number to identify the target.
+ *
+ * This function matches up the target name from the PC client to
+ * the number used by HTTP.
+ *
+ *  110   ISSF 10 Metre Air Rifle
+ *  111   ISSF 10 Metre Air Rifle Practice
+ *  100   ISSF 10 Metre Air Pistol
+ *  101   ISSF 10 Metre Air Pistol Practice
+ *  510   ISSF 50 Metre Rifle
+ *  511   ISSF 50 Metre Rifle Practice
+ *  500   ISSF 50 Metre .22 Pistol
+ *  501   ISSF 50 Metre .22 Pistol Practice
+ *
+ *--------------------------------------------------------------*/
+int http_target_type(void)
+{
+  int target_code = 0;
+
+  /*
+   * Practice or event
+   */
+  if ( instr("Practice", json_event) != -1 )
+  {
+    target_code += 1;
+  }
+
+  /*
+   * Rifle or pistol
+   */
+  if ( instr("rifle", json_target_name) != -1 )
+  {
+    target_code += 10;
+  }
+
+  /*
+   * 50m
+   */
+  if ( instr("50m", json_target_name) != -1 )
+  {
+    target_code += 500;
+  }
+  else
+  {
+    target_code += 100;
+  }
+
+  return target_code;
+}
+/*----------------------------------------------------------------
+ *
+ * @function: squish
+ *
+ * @brief:    Reduce the uri to an argument
+ *
+ * @return:   Nothing
+ *
+ *----------------------------------------------------------------
+ *
+ * A uri with arguments looks like
+ *
+ * /json?{%22ECHO%22:0}
+ *
+ * The function parses along until it finds the ? and then
+ * reduces the rest of the sthring to an argument
+ *
+ *--------------------------------------------------------------*/
+void squish(char *uri,      // URI to squish
+            char *argument) // Argument to return
+{
+  unsigned char ch;
+
+                            /*
+                             * Find the ?
+                             */
+  while ( *uri != 0 )
+  {
+    if ( *uri == '?' )
+    {
+      uri++;
+      break;
+    }
+    uri++;
+  }
+
+  /*
+   * Copy the rest of the string and remove the %s
+   */
+  while ( *uri != 0 )
+  {
+    if ( *uri == '%' )
+    {
+      uri++;
+      ch = to_int(*uri) * 16;
+      uri++;
+      ch          = ch + to_int(*uri);
+      *argument++ = ch;
+      uri++;
+    }
+    else
+    {
+      *argument++ = *uri++;
+    }
+  }
+
+  /*
+   * Terminate the string
+   */
+  *argument = 0;
   return;
 }

@@ -219,7 +219,7 @@ void Bluetooth_start_new_connection(void) // Socket token to use
   {
     if ( (record[i].session_type & SESSION_VALID) != 0 )
     {
-      send_replay(&record[i], i);
+      build_json_score(&record[i], SCORE_BLUETOOTH);
       serial_to_all(_xs, BLUETOOTH);
     }
   }
