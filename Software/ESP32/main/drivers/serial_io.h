@@ -39,6 +39,7 @@ void serial_bt_config(unsigned int baud_rate);       // Initialize the Bluetooth
 #define TCPIP_1        0x0010
 #define TCPIP_2        0x0020
 #define TCPIP_3        0x0040
+#define HTTP_JSON      0x0080
 #define TCPIP          (TCPIP_0 | TCPIP_1 | TCPIP_2 | TCPIP_3)
 #define EVEN_ODD_BEGIN 0x0080 // Remember to output in even_odd mode
 #define EVEN_ODD_END   0x0100 // Exit even odd mode

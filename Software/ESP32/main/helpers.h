@@ -21,7 +21,7 @@ void bye_tick(void);                                             // Tick for the
 void echo_serial(unsigned int delay, int in_port, int out_port); // Echo the serial port
 void build_json_score(shot_record_t *shot, const char *format);  // Create the JSON score string
 int  http_target_type(void);                                     // Cnovert the target type to a number
-void squish(char *s);                                            // Convert the uri into an arguement
+void squish(char *source, char *destination);                    // Convert the uri into an arguement
 
 /*
  * Global helper variables

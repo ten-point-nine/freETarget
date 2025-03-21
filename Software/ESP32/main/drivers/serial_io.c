@@ -633,11 +633,13 @@ int tcpip_queue_2_app(char *buffer, // Where to return the bytes
  *
  * @brief:    Put fresh TCPIP data into the queue for later
  *
- * @return:   Buffer updated
+ * @return:   Input queue updated
  *
  *******************************************************************************
  *
- * Characters from the TCPIP input queue are returned to the application
+ * Fresh characters from the TCPIP socket are placed into the input queue
+ *
+ * Used also by HTTP to put client data into the queue
  *
  ******************************************************************************/
 int tcpip_socket_2_queue(char *buffer, // Where to return the bytes

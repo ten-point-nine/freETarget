@@ -187,21 +187,32 @@ static esp_err_t service_get_shotData(httpd_req_t *req)
  *
  *---------------------------------------------------------------
  *
+ * The input from the client is of the form:
+ *
+ * json?{"ECHO":1}
+ *
+ * The function extracts the {"ECHO":1} and puts it into the
+ * TCPIP queue.  Executing the vTaskDelay function transfers
+ * control to json.c where the data is processed.
  *
  *------------------------------------------------------------*/
 static esp_err_t service_get_json(httpd_req_t *req)
 {
-  const char *resp_str;            // Reply to server
-  char        my_name[SHORT_TEXT]; // Target name
+  const char *resp_str;                   // Reply to server
+  char        my_name[SHORT_TEXT];        // Target name
 
-  target_name(&my_name);           // Get the target name
+  squish(req->uri, _xs);                  // Go through the uri and keep the argument portion
+  tcpip_socket_2_queue(_xs, strlen(_xs)); // Put the data into the TCPIP queue
+  vTaskDelay(ONE_SECOND);                 // Give up time for the data to be processed
 
-  squish(req->uri, _xs);           // Go through the uri and keep the argument portion
-
-  resp_str = "bob";
-  httpd_resp_set_hdr(req, "index", my_name);
+  resp_str = _xs;                         // Send back a reply if there is one
+  target_name(&my_name);                  // Get the target name
+  httpd_resp_set_hdr(req, "json", my_name);
   httpd_resp_send(req, resp_str, strlen(resp_str));
 
+  /*
+   * All done, return
+   */
   return ESP_OK;
 }
 
