@@ -472,6 +472,9 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
   return;
 }
 
+/*
+ *  Generate a known score message
+ */
 void test_build_json_score(void)
 {
   char str[MEDIUM_TEXT];
@@ -481,12 +484,12 @@ void test_build_json_score(void)
   record[0].shot           = 1;
   record[0].session_type   = SESSION_SIGHT;
   record[0].miss           = 9;
-  record[0].x              = 1.0;
-  record[0].y              = 2.0;
-  record[0].xs             = 3.0;
-  record[0].ys             = 4.0;
-  record[0].radius         = 5.0;
-  record[0].angle          = 6.0;
+  record[0].x              = 101.0;
+  record[0].y              = 102.0;
+  record[0].xs             = 103.0;
+  record[0].ys             = 104.0;
+  record[0].radius         = 105.0;
+  record[0].angle          = 106.0;
   record[0].timer_count[0] = 1;
   record[0].timer_count[1] = 2;
   record[0].timer_count[2] = 3;
@@ -497,11 +500,15 @@ void test_build_json_score(void)
   record[0].timer_count[7] = 8;
   record[0].face_strike    = 9;
   record[0].sensor_status  = 10;
-  record[0].shot_time      = 7.0;
+  record[0].shot_time      = 7.0 * 1000000.0;
 
   strcpy(json_event, "Practice");
   strcpy(json_target_name, "Rifle");
   strcpy(json_athlete, "Target Test");
+
+  build_json_score(&record[0], SCORE_ALL);
+  strncpy(str, _xs, sizeof(str));
+  SEND(ALL, sprintf(_xs, "\r\nALL:       %s", str);)
 
   build_json_score(&record[0], SCORE_USB);
   strncpy(str, _xs, sizeof(str));

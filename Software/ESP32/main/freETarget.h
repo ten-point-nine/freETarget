@@ -111,8 +111,8 @@
 #define SCORE_EVENT    'E'                         // Include the athelte name
 
 #define SCORE_ALL       "S?TXPHO"                  // shot / miss / target / time / x-y / radius-angle / North-East-South-West / target type
-#define SCORE_USB       "S?TXPHO"                  // USB score elements
-#define SCORE_TCPIP     "S?XE"                     // TCP score elements
+#define SCORE_USB       "S?TX"                     // USB score elements
+#define SCORE_TCPIP     "S?TXE"                    // TCP score elements
 #define SCORE_BLUETOOTH "S?TX"                     // Bluetooth score elements
 #define SCORE_HTTP      "S?TXPO"                   // HTTP score elements
 
