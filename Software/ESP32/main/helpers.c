@@ -15,6 +15,7 @@
 #include "driver\gpio.h"
 
 #include "freETarget.h"
+#include "helpers.h"
 #include "json.h"
 #include "token.h"
 #include "timer.h"
@@ -414,48 +415,47 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
 
     if ( add_comma )
     {
-      strcat(_xs, ",");
+      strcat(_xs, ", ");
     }
     add_comma = true;
     switch ( *format )
     {
-      case 's': // Shot number
-        sprintf(str, "\"shot\":%d", shot_number);
+      case SCORE_SHOT:     // Shot number
+        sprintf(str, "\"shot\":%d", shot->shot);
         break;
 
-      case 'm': // Miss
-        sprintf(str, ", \"miss\":1");
+      case SCORE_MISS:     // Miss
+        sprintf(str, "\"miss\":%d", shot->miss);
         break;
 
-      case '?': // Session type
-        sprintf(str, ", \"session_type\": %d ", shot->session_type);
+      case SCORE_SESSION:  // Session type
+        sprintf(str, "\"session_type\":%d", shot->session_type);
         break;
 
-      case 't': // Time
-        sprintf(str, "\"time\":%6.2f ", SHOT_TIME_TO_SECONDS(shot->shot_time));
+      case SCORE_TIME:     // Time
+        sprintf(str, "\"time\":%6.2f", SHOT_TIME_TO_SECONDS(shot->shot_time));
         break;
 
-      case 'X': // X
-        sprintf(str, "\"x\":%4.2f,\"y\":%4.2f", shot->xs, shot->ys);
+      case SCORE_XY:       // X
+        sprintf(str, "\"x\":%4.2f, \"y\":%4.2f", shot->xs, shot->ys);
         break;
 
-      case 'P': // Polar
-        sprintf(str, "\"r\":%4.2f,  \"a\":%4.2f", shot->radius, shot->angle);
+      case SCORE_POLAR:    // Polar
+        sprintf(str, "\"r\":%4.2f, \"a\":%4.2f", shot->radius, shot->angle);
         break;
         break;
 
-      case 'H': // Hardware
-        sprintf(str, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d", (int)shot->timer_count[N + 0], (int)shot->timer_count[E + 0],
+      case SCORE_HARDWARE: // Hardware
+        sprintf(str, "\"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d", (int)shot->timer_count[N + 0], (int)shot->timer_count[E + 0],
                 (int)shot->timer_count[S + 0], (int)shot->timer_count[W + 0]);
         break;
 
-      case 'O': // Target type
-        sprintf(str, ", \"target_type\":%d", DIP_D);
+      case SCORE_TARGET:   // Target type
+        sprintf(str, "\"target\":%d ", http_target_type());
+        break;
 
-        if ( json_target_type > 1 )
-        {
-          sprintf(str, ",\"real_x\":%4.2f, \"real_y\":%4.2f ", shot->xs, shot->xs);
-        }
+      case SCORE_EVENT:    // Event data
+        sprintf(str, "\"athelete\":\"%s\", \"event\":\"%s\", \"target_name\":\"%s\"", json_athlete, json_event, json_target_name);
         break;
 
       default:
@@ -469,6 +469,58 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
    * Put in the closing } and return
    */
   strcat(_xs, "}");
+  return;
+}
+
+void test_build_json_score(void)
+{
+  char str[MEDIUM_TEXT];
+
+  SEND(ALL, sprintf(_xs, "\r\ntest_build_json_score()");)
+
+  record[0].shot           = 1;
+  record[0].session_type   = SESSION_SIGHT;
+  record[0].miss           = 9;
+  record[0].x              = 1.0;
+  record[0].y              = 2.0;
+  record[0].xs             = 3.0;
+  record[0].ys             = 4.0;
+  record[0].radius         = 5.0;
+  record[0].angle          = 6.0;
+  record[0].timer_count[0] = 1;
+  record[0].timer_count[1] = 2;
+  record[0].timer_count[2] = 3;
+  record[0].timer_count[3] = 4;
+  record[0].timer_count[4] = 5;
+  record[0].timer_count[5] = 6;
+  record[0].timer_count[6] = 7;
+  record[0].timer_count[7] = 8;
+  record[0].face_strike    = 9;
+  record[0].sensor_status  = 10;
+  record[0].shot_time      = 7.0;
+
+  strcpy(json_event, "Practice");
+  strcpy(json_target_name, "Rifle");
+  strcpy(json_athlete, "Target Test");
+
+  build_json_score(&record[0], SCORE_USB);
+  strncpy(str, _xs, sizeof(str));
+  SEND(ALL, sprintf(_xs, "\r\nUSB:       %s", str);)
+
+  build_json_score(&record[0], SCORE_TCPIP);
+  strncpy(str, _xs, sizeof(str));
+  SEND(ALL, sprintf(_xs, "\r\nTCPIP:     %s", str);)
+
+  build_json_score(&record[0], SCORE_BLUETOOTH);
+  strncpy(str, _xs, sizeof(str));
+  SEND(ALL, sprintf(_xs, "\r\nBLUETOOTH: %s", str);)
+
+  build_json_score(&record[0], SCORE_HTTP);
+  strncpy(str, _xs, sizeof(str));
+  SEND(ALL, sprintf(_xs, "\r\nHTTP:      %s", str);)
+
+  SEND(ALL, sprintf(_xs, "%s", _DONE_);)
+
   return;
 }
 
@@ -504,7 +556,7 @@ int http_target_type(void)
   /*
    * Practice or event
    */
-  if ( instr("Practice", json_event) != -1 )
+  if ( instr(json_event, "Practice") != -1 )
   {
     target_code += 1;
   }
@@ -512,7 +564,7 @@ int http_target_type(void)
   /*
    * Rifle or pistol
    */
-  if ( instr("rifle", json_target_name) != -1 )
+  if ( instr(json_target_name, "Rifle") != -1 )
   {
     target_code += 10;
   }
@@ -520,7 +572,7 @@ int http_target_type(void)
   /*
    * 50m
    */
-  if ( instr("50m", json_target_name) != -1 )
+  if ( instr(json_target_name, "50m") != -1 )
   {
     target_code += 500;
   }

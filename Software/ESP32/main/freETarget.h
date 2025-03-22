@@ -100,11 +100,21 @@
 #define SESSION_SIGHT 2                            // Session is a sighter
 #define SESSION_SCORE 4                            // Session is a score
 
-#define SCORE_ALL       "sm?tXPHO"                 // shot / miss / target / time / x-y / radius-angle / North-East-South-West / target type
-#define SCORE_USB       "sm?tXPHO"                 // USB score elements
-#define SCORE_TCPIP     "sm?X"                     // TCP score elements
-#define SCORE_BLUETOOTH "sm?tX"                    // Bluetooth score elements
-#define SCORE_HTTP      "sm?tXPO"                  // HTTP score elements
+#define SCORE_SHOT     'S'                         // Include shot number
+#define SCORE_MISS     'M'                         // Include miss status
+#define SCORE_SESSION  '?'                         // Include session type
+#define SCORE_TIME     'T'                         // Include time stamp
+#define SCORE_XY       'X'                         // Include X-Y coordinates
+#define SCORE_POLAR    'P'                         // Include polar coordinates
+#define SCORE_HARDWARE 'H'                         // Include hardware values
+#define SCORE_TARGET   'O'                         // Include target name
+#define SCORE_EVENT    'E'                         // Include the athelte name
+
+#define SCORE_ALL       "S?TXPHO"                  // shot / miss / target / time / x-y / radius-angle / North-East-South-West / target type
+#define SCORE_USB       "S?TXPHO"                  // USB score elements
+#define SCORE_TCPIP     "S?XE"                     // TCP score elements
+#define SCORE_BLUETOOTH "S?TX"                     // Bluetooth score elements
+#define SCORE_HTTP      "S?TXPO"                   // HTTP score elements
 
 /*
  *  Types
@@ -136,6 +146,8 @@ typedef struct
 
 typedef struct
 {
+  unsigned int  shot;                    // Shot number associated with this record, may not be 1:1
+  unsigned int  miss;
   unsigned int  session_type;            // What kind of information is contained in the score
   double        x;                       // X location of shot as computed
   double        y;                       // Y location of shot

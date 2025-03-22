@@ -20,6 +20,7 @@
 #include "string.h"
 
 #include "freETarget.h"
+#include "helpers.h"
 #include "http_client.h"
 #include "http_test.h"
 #include "WiFi.h"
@@ -84,6 +85,9 @@ static const self_test_t test_list[] = {
     {"-Interrupt Tests",                  0                        },
     {"Polled target test",                &polled_target_test      },
     {"Interrupt target test",             &interrupt_target_test   },
+    {"- Miscelaneous tests",              0                        },
+    {"build_json_score",                  &test_build_json_score   },
+
     {"",                                  0                        }
 };
 

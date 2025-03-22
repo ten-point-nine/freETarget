@@ -490,6 +490,8 @@ void send_score(shot_record_t *shot,        //  record
     }
   }
 
+  shot->shot = shot_number;
+
   /*
    *  Work out the hole in perfect coordinates
    */
@@ -571,11 +573,11 @@ void send_replay(shot_record_t *shot,                                  //  recor
 
     if ( (shot->session_type & (SESSION_SIGHT | SESSION_SCORE)) != 0 ) // Has it been tagged as sighters or score?
     {
-      build_json_score(shot, "st");
+      build_json_score(shot, SCORE_TCPIP);
     }
-    else                                                               // nO, undefined session type
+    else                                                               // No, undefined session type
     {
-      build_json_score(shot, "st");
+      build_json_score(shot, SCORE_TCPIP);
     }
   }
   else                                                                 // No shot record
