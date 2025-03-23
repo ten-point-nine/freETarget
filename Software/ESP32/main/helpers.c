@@ -13,6 +13,7 @@
 #include "string.h"
 #include "ctype.h"
 #include "driver\gpio.h"
+#include "math.h"
 
 #include "freETarget.h"
 #include "helpers.h"
@@ -25,6 +26,11 @@
 #include "analog_io.h"
 
 #define SHOT_TIME_TO_SECONDS(x) ((float)(x)) / 1000000.0
+
+double sq(double x)
+{
+  return x * x;
+}
 
 /*-----------------------------------------------------
  *
@@ -412,7 +418,6 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
    */
   while ( *format != 0 )
   {
-
     if ( add_comma )
     {
       strcat(_xs, ", ");
@@ -420,41 +425,44 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
     add_comma = true;
     switch ( *format )
     {
-      case SCORE_SHOT:     // Shot number
-        sprintf(str, "\"shot\":%d", shot->shot);
+      case SCORE_PRIME:                              // Prime for HTTP
+        sprintf(str, "\"shot\":0, \"x\":0, \"y\":0, \"r\":0, \"a\":0,\"target\":%d", http_target_type());
         break;
 
-      case SCORE_MISS:     // Miss
+      case SCORE_SHOT:                               // Shot number
+        sprintf(str, "\"shot\":%d", shot->shot + 1); // The client wants shots to start at 1
+        break;
+
+      case SCORE_MISS:                               // Miss
         sprintf(str, "\"miss\":%d", shot->miss);
         break;
 
-      case SCORE_SESSION:  // Session type
+      case SCORE_SESSION:                            // Session type
         sprintf(str, "\"session_type\":%d", shot->session_type);
         break;
 
-      case SCORE_TIME:     // Time
+      case SCORE_TIME:                               // Time
         sprintf(str, "\"time\":%6.2f", SHOT_TIME_TO_SECONDS(shot->shot_time));
         break;
 
-      case SCORE_XY:       // X
-        sprintf(str, "\"x\":%4.2f, \"y\":%4.2f", shot->xs, shot->ys);
+      case SCORE_XY:                                 // X
+        sprintf(str, "\"x\":%4.2f, \"y\":%4.2f", shot->x_mm, shot->y_mm);
         break;
 
-      case SCORE_POLAR:    // Polar
-        sprintf(str, "\"r\":%4.2f, \"a\":%4.2f", shot->radius, shot->angle);
-        break;
+      case SCORE_POLAR:                              // Polar
+        sprintf(str, "\"r\":%6.2f, \"a\":%6.2f", shot->radius, shot->angle);
         break;
 
-      case SCORE_HARDWARE: // Hardware
+      case SCORE_HARDWARE:                           // Hardware
         sprintf(str, "\"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d", (int)shot->timer_count[N + 0], (int)shot->timer_count[E + 0],
                 (int)shot->timer_count[S + 0], (int)shot->timer_count[W + 0]);
         break;
 
-      case SCORE_TARGET:   // Target type
+      case SCORE_TARGET:                             // Target type
         sprintf(str, "\"target\":%d ", http_target_type());
         break;
 
-      case SCORE_EVENT:    // Event data
+      case SCORE_EVENT:                              // Event data
         sprintf(str, "\"athelete\":\"%s\", \"event\":\"%s\", \"target_name\":\"%s\"", json_athlete, json_event, json_target_name);
         break;
 
@@ -480,27 +488,6 @@ void test_build_json_score(void)
   char str[MEDIUM_TEXT];
 
   SEND(ALL, sprintf(_xs, "\r\ntest_build_json_score()");)
-
-  record[0].shot           = 1;
-  record[0].session_type   = SESSION_SIGHT;
-  record[0].miss           = 9;
-  record[0].x              = 101.0;
-  record[0].y              = 102.0;
-  record[0].xs             = 103.0;
-  record[0].ys             = 104.0;
-  record[0].radius         = 105.0;
-  record[0].angle          = 106.0;
-  record[0].timer_count[0] = 1;
-  record[0].timer_count[1] = 2;
-  record[0].timer_count[2] = 3;
-  record[0].timer_count[3] = 4;
-  record[0].timer_count[4] = 5;
-  record[0].timer_count[5] = 6;
-  record[0].timer_count[6] = 7;
-  record[0].timer_count[7] = 8;
-  record[0].face_strike    = 9;
-  record[0].sensor_status  = 10;
-  record[0].shot_time      = 7.0 * 1000000.0;
 
   strcpy(json_event, "Practice");
   strcpy(json_target_name, "Rifle");

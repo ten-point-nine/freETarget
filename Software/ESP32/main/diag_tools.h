@@ -24,6 +24,7 @@ bool factory_test(void);                                  // Test the hardware i
 void set_diag_LED(char *new_LEDs, unsigned int duration); // Display the LED failure code
 bool check_12V(void);                                     // Check the 12 volt supply
 void heartbeat(void);                                     // Send out regular status messages
+void test_build_fake_shots(void);                         // Generate a list of shots
 
 /*
  *  Definitions

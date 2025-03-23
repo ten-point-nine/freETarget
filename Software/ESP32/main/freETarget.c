@@ -402,7 +402,6 @@ unsigned int reduce(void)
 {
   static unsigned int paper_shot     = 0; // Count of reduced shots
   static unsigned int paper_shot_out = 0; // Count of missed shots
-  float               radius;
 
   run_state |= IN_REDUCTION;
   /*
@@ -429,14 +428,13 @@ unsigned int reduce(void)
        */
       if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )                                 // Has the witness paper been enabled?
       {
-        radius = sqrt(sq(record[shot_out].xs) + sq(record[shot_out].ys));
-        if ( ((json_paper_eco == 0)                                              // PAPER_ECO turned off
-              || radius < (json_paper_eco / 2))                                  // Inside the black (radius)
+        if ( (json_paper_eco == 0)                                               // PAPER_ECO turned off
+             || (record[shot_out].radius < (json_paper_eco / 2))                 // Inside the black (radius)
              || (paper_shot_out > FORCE_PAPER_MOVE) )                            // Too many misses
         {
           paper_shot++;                                                          //
-          DLT(DLT_DEBUG,
-              SEND(ALL, sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", radius, json_paper_eco / 2, paper_shot, json_paper_shot);))
+          DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", record[shot_out].radius, json_paper_eco / 2,
+                                           paper_shot, json_paper_shot);))
           if ( (paper_shot >= json_paper_shot)                                   // Have met the number of good shots?
                || (paper_shot_out >= FORCE_PAPER_MOVE) )                         // Or we just shot too many bad ones?
           {
@@ -452,8 +450,8 @@ unsigned int reduce(void)
         else
         {
           paper_shot_out++;                                                      // Outside of the desired radius, keep track of the misses
-          DLT(DLT_DEBUG,
-              SEND(ALL, sprintf(_xs, "Radius: %4.2f/%d bad shot: %d/%d", radius, json_paper_eco / 2, paper_shot, json_paper_shot);))
+          DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Radius: %4.2f/%d bad shot: %d/%d", record[shot_out].radius, json_paper_eco / 2, paper_shot,
+                                           json_paper_shot);))
         }
       }
     }

@@ -15,7 +15,7 @@
 #include "freertos/task.h"
 #include "serial_io.h"
 
-#define SOFTWARE_VERSION "\"6.0.0 March 17, 2025\""
+#define SOFTWARE_VERSION "\"6.0.0 March 22, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED" // Message to send on connection
 
@@ -100,6 +100,7 @@
 #define SESSION_SIGHT 2                            // Session is a sighter
 #define SESSION_SCORE 4                            // Session is a score
 
+#define SCORE_PRIME    '#'                         // Prime a reply to the client
 #define SCORE_SHOT     'S'                         // Include shot number
 #define SCORE_MISS     'M'                         // Include miss status
 #define SCORE_SESSION  '?'                         // Include session type
@@ -110,11 +111,12 @@
 #define SCORE_TARGET   'O'                         // Include target name
 #define SCORE_EVENT    'E'                         // Include the athelte name
 
-#define SCORE_ALL       "S?TXPHO"                  // shot / miss / target / time / x-y / radius-angle / North-East-South-West / target type
-#define SCORE_USB       "S?TX"                     // USB score elements
-#define SCORE_TCPIP     "S?TXE"                    // TCP score elements
-#define SCORE_BLUETOOTH "S?TX"                     // Bluetooth score elements
-#define SCORE_HTTP      "S?TXPO"                   // HTTP score elements
+#define SCORE_ALL        "S?TXPHO"                 // shot / miss / target / time / x-y / radius-angle / North-East-South-West / target type
+#define SCORE_USB        "S?TX"                    // USB score elements
+#define SCORE_TCPIP      "S?TXE"                   // TCP score elements
+#define SCORE_BLUETOOTH  "S?TX"                    // Bluetooth score elements
+#define SCORE_HTTP       "S?TXPO"                  // HTTP score elements
+#define SCORE_HTTP_PRIME "#"                       // HTTP Prime the client
 
 /*
  *  Types
@@ -149,10 +151,12 @@ typedef struct
   unsigned int  shot;                    // Shot number associated with this record, may not be 1:1
   unsigned int  miss;
   unsigned int  session_type;            // What kind of information is contained in the score
-  double        x;                       // X location of shot as computed
-  double        y;                       // Y location of shot
-  double        xs;                      // X location of shot as scored
-  double        ys;                      // Y location of shot
+  double        x;                       // X location of shot as computed in clock cycles
+  double        y;                       // Y location of shot as computed in clock cycles
+  double        xs;                      // X location of shot rotated onto target in clock cycles
+  double        ys;                      // Y location of shot rotated onto target in clock cycles
+  double        x_mm;                    // Computed location in mm
+  double        y_mm;                    // Computed location in mm
   double        radius;                  // Radius of shot from the center of the target
   double        angle;                   // Angle of shot from the center of the target
   int           timer_count[8];          // Array of timer values 4 in hardware and 4 in software

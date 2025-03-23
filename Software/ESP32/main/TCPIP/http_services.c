@@ -45,7 +45,7 @@
 /*
  *  Variables
  */
-static unsigned int http_shot; // What shot numbumber have we sent?
+static int http_shot = -1; // What shot number have we sent?
 
 /*
  * Local functions
@@ -120,14 +120,14 @@ static esp_err_t service_get_index(httpd_req_t *req)
   /*
    * Do the things we need to do to start a session
    */
-  http_shot = 0; // Reset the shot counter
+  http_shot = -1; // Reset the shot counter
 
   /*
    *  Send the reply to the client
    */
   target_name(my_name);                 // Get the target name
   resp_str = (const char *)&index_html; // point to the target HTML file
-  httpd_resp_set_hdr(req, "index", my_name);
+  httpd_resp_set_hdr(req, "get_index", my_name);
   httpd_resp_send(req, resp_str, strlen(resp_str));
 
   return ESP_OK;
@@ -152,28 +152,48 @@ static esp_err_t service_get_index(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_shotData(httpd_req_t *req)
 {
-  const char *resp_str;                                                        // Reply to server
-  char        my_name[SHORT_TEXT];                                             // Target name
-  static int  last = 0;                                                        // Last shot
+  const char *resp_str;            // Reply to server
+  char        my_name[SHORT_TEXT]; // Target name
 
-  target_name(&my_name);                                                       // Get the target name
-
-  if ( (last != shot_in) && (record[last].session_type & SESSION_VALID) != 0 ) // Do we have a shot record?
+  /*
+   *  First time through, prime the client
+   */
+  if ( http_shot < 0 )
   {
-    build_json_score(&record[last], SCORE_HTTP);
-  }
-  else                                                                         // No shot record
-  {
-    _xs[0] = 0;
+    build_json_score(&record[0], SCORE_HTTP_PRIME);
+    http_shot = 0;
   }
 
-  last = (last + 1) % SHOT_SPACE;
-  printf("Here %s", _xs);
+  /*
+   *  If there is a new shot, build the json, otherwise empty
+   */
+  else
+  {
+    if ( (http_shot != shot_in)                                                                         // Shot ready to send
+         && ((record[http_shot].session_type & (SESSION_VALID | SESSION_SIGHT | SESSION_SCORE)) != 0) ) // Do we have a shot record?
+    {
+      build_json_score(&record[http_shot], SCORE_HTTP);
+      http_shot = (http_shot + 1) % SHOT_SPACE;
+    }
+    else                                                                                                // No shot record
+    {
+      _xs[0] = 0;
+    }
+  }
 
+  /*
+   *  Populate the reply
+   */
   resp_str = (const char *)_xs; // point to the target json file
-  httpd_resp_set_hdr(req, "index", my_name);
+  target_name(&my_name);        // Get the target name
+  httpd_resp_set_hdr(req, "get_ShotData", my_name);
   httpd_resp_send(req, resp_str, strlen(resp_str));
 
+  /*
+   * All done
+   */
+  strcpy(my_name, _xs);
+  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_shotData: %s", my_name);)) // Send out the result for debugging
   return ESP_OK;
 }
 
@@ -207,7 +227,7 @@ static esp_err_t service_get_json(httpd_req_t *req)
 
   resp_str = _xs;                         // Send back a reply if there is one
   target_name(&my_name);                  // Get the target name
-  httpd_resp_set_hdr(req, "json", my_name);
+  httpd_resp_set_hdr(req, "get_json", my_name);
   httpd_resp_send(req, resp_str, strlen(resp_str));
 
   /*
@@ -230,12 +250,15 @@ static esp_err_t service_get_json(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_issf_png(httpd_req_t *req)
 {
-  const char *resp_str; // Reply to server
+  const char *resp_str;            // Reply to server
+  char        my_name[SHORT_TEXT]; // Target name
 
-                        // DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_json(%s)", req);))
+  target_name(my_name);
+
+                                   // DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_json(%s)", req);))
 
   resp_str = (const char *)issf_png; // point to the target json file
-  httpd_resp_set_hdr(req, "index", names[json_name_id]);
+  httpd_resp_set_hdr(req, "get_issf_png", my_name);
   httpd_resp_send(req, resp_str, SIZEOF_ISSF_PNG);
 
   return ESP_OK;
@@ -341,7 +364,7 @@ static esp_err_t service_get_who(httpd_req_t *req)
   char name[SHORT_TEXT];
 
   target_name(name); // Get the target name
-  httpd_resp_set_hdr(req, "FreeETarget", name);
+  httpd_resp_set_hdr(req, "get_who", name);
 
   sprintf(_xs,
           "Serial Number: %d"

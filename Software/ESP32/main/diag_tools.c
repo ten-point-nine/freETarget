@@ -18,6 +18,7 @@
 #include "stdbool.h"
 #include "stdio.h"
 #include "string.h"
+#include "math.h"
 
 #include "freETarget.h"
 #include "helpers.h"
@@ -85,9 +86,9 @@ static const self_test_t test_list[] = {
     {"-Interrupt Tests",                  0                        },
     {"Polled target test",                &polled_target_test      },
     {"Interrupt target test",             &interrupt_target_test   },
-    {"- Miscelaneous tests",              0                        },
+    {"- Software tests",                  0                        },
     {"build_json_score",                  &test_build_json_score   },
-
+    {"build_fake_shots",                  &test_build_fake_shots   },
     {"",                                  0                        }
 };
 
@@ -886,4 +887,54 @@ bool check_12V(void)
   }
 
   return true;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: test_build_fake_shots
+ *
+ * @brief:    Create fake shot data
+ *
+ * @return:   None
+ *
+ *----------------------------------------------------------------
+ *
+ * Fill up 10 shots with random data
+ *
+ *--------------------------------------------------------------*/
+
+void test_build_fake_shots(void)
+{
+
+  unsigned int i;
+
+  for ( i = 0; i != 10; i++ )
+  {
+    record[i].shot           = i;
+    record[i].session_type   = SESSION_VALID | SESSION_SIGHT;
+    record[i].miss           = 0;
+    record[i].x              = 2 * i + 0;
+    record[i].y              = 2 * i + 1;
+    record[i].xs             = 2 * i + 2;
+    record[i].ys             = 2 * i + 3;
+    record[i].radius         = sqrt(sq(record[i].x) + sq(record[i].y));
+    record[i].angle          = 180.0 * atan2(record[i].y, record[i].x) / PI;
+    record[i].timer_count[0] = 1;
+    record[i].timer_count[1] = 2;
+    record[i].timer_count[2] = 3;
+    record[i].timer_count[3] = 4;
+    record[i].timer_count[4] = 5;
+    record[i].timer_count[5] = 6;
+    record[i].timer_count[6] = 7;
+    record[i].timer_count[7] = 8;
+    record[i].face_strike    = 0;
+    record[i].sensor_status  = 4;
+    record[i].shot_time      = i * 7.0 * 1000000.0;
+  }
+
+  /*
+   *  Finished
+   */
+  shot_in = i;
+  return;
 }

@@ -368,7 +368,7 @@ bool find_xy_3D(sensor_t *s,             // Sensor to be operatated on
     sq(s->a + estimate);
     DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "s->a is complex, truncting");))
   }
-  ae = sqrt(x);            // Dimenstion with error included
+  ae = sqrt(x);            // Dimension with error included
 
   x = sq(s->b + estimate); // - sq(z_offset_clock);
   if ( x < 0 )
@@ -495,18 +495,18 @@ void send_score(shot_record_t *shot,        //  record
   /*
    *  Work out the hole in perfect coordinates
    */
-  x            = shot->x * s_of_sound * CLOCK_PERIOD; // Distance in mm
-  y            = shot->y * s_of_sound * CLOCK_PERIOD; // Distance in mm
-  shot->radius = sqrt(sq(x) + sq(y));
-  shot->angle  = atan2(shot->y, shot->x) / PI * 180.0d;
+  x            = shot->x * s_of_sound * CLOCK_PERIOD;   // Distance in mm
+  y            = shot->y * s_of_sound * CLOCK_PERIOD;   // Distance in mm
+  shot->radius = sqrt(sq(x) + sq(y));                   // radius in mm
+  shot->angle  = atan2(shot->y, shot->x) / PI * 180.0d; // Angle in degrees
 
   /*
    * Rotate the result based on the construction, and recompute the hit
    */
   shot->angle += json_sensor_angle;
-  shot->x = shot->radius * cos(PI * shot->angle / 180.0d) + json_x_offset; // Rotate onto the target face
-  shot->y = shot->radius * sin(PI * shot->angle / 180.0d) + json_y_offset; // and add in sensor correction
-  remap_target(shot);                                                      // Change the target if needed
+  shot->x_mm = shot->radius * cos(PI * shot->angle / 180.0d) + json_x_offset; // Rotate onto the target face
+  shot->y_mm = shot->radius * sin(PI * shot->angle / 180.0d) + json_y_offset; // and add in sensor correction
+  remap_target(shot);                                                         // Change the target if needed
   shot->session_type = SESSION_VALID | json_session_type;
 
   /*
@@ -521,15 +521,8 @@ void send_score(shot_record_t *shot,        //  record
 #if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE ) // Include only if remote server is needed
   if ( (json_remote_modes & REMOTE_MODE_CLIENT) != 0 )
   {
-    if ( (json_athlete[0] != 0) && (json_event[0] != 0) && (json_target_name[0] != 0) )
-    {
-      build_json_score(shot, SCORE_TCPIP);
-      http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
-    }
-    else
-    {
-      DLT(DLT_INFO, printf("Missing arguement for remote payload"););
-    }
+    build_json_score(shot, SCORE_TCPIP);
+    http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
   }
 #endif
 
@@ -539,8 +532,8 @@ void send_score(shot_record_t *shot,        //  record
   if ( json_token != TOKEN_NONE )
   {
     token_give(); // Give up the token ring
-    set_status_LED(LED_READY);
   }
+  set_status_LED(LED_READY);
   return;
 }
 
@@ -699,7 +692,7 @@ static void remap_target(shot_record_t *shot)
   /*
    * Find the closest bull
    */
-  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "remap_target x: %4.2fmm  y: %4.2fmm", shot->x, shot->y);))
+  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "remap_target x: %4.2fmm  y: %4.2fmm", shot->x_mm, shot->y_mm);))
 
   ptr = ptr_list[json_target_type];
   if ( ptr == 0 )     // Check for unassigned targets
@@ -714,7 +707,7 @@ static void remap_target(shot_record_t *shot)
   i = 0;
   while ( ptr->x != LAST_BULL )
   {
-    distance = sqrt(sq(ptr->x - shot->x) + sq(ptr->y - shot->y));
+    distance = sqrt(sq(ptr->x - shot->x_mm) + sq(ptr->y - shot->y_mm));
     DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, " distance: %4.2f", distance);))
     if ( distance < closest ) // Found a closer one?
     {
@@ -730,17 +723,12 @@ static void remap_target(shot_record_t *shot)
   /*
    * Remap the pellet to the centre one
    */
-  shot->xs = shot->x - dx;
-  shot->ys = shot->y - dy;
-  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "x: %4.2f , y: %4.2f ", shot->x, shot->y);))
+  shot->x_mm -= dx;
+  shot->y_mm -= dy;
+  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "x: %4.2f , y: %4.2f ", shot->x_mm, shot->y_mm);))
 
   /*
    *  All done, return
    */
   return;
-}
-
-double sq(double x)
-{
-  return x * x;
 }
