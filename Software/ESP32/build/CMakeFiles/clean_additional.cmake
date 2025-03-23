@@ -20,7 +20,6 @@ if("${CONFIG}" STREQUAL "" OR "${CONFIG}" STREQUAL "")
   "issf.png.S"
   "ldgen_libraries"
   "ldgen_libraries.in"
-  "post_test.html.S"
   "project_elf_src_esp32s3.c"
   "x509_crt_bundle.S"
   )
