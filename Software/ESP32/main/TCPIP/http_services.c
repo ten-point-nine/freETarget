@@ -56,6 +56,7 @@ static esp_err_t service_get_who(httpd_req_t *req);
 static esp_err_t service_get_shotData(httpd_req_t *req);
 static esp_err_t service_get_issf_png(httpd_req_t *req);
 static esp_err_t service_get_json(httpd_req_t *req);
+static esp_err_t service_get_event(httpd_req_t *req);
 static esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Create a URL not found handler
 
 /*
@@ -66,6 +67,7 @@ const httpd_uri_t url_list[] = {
     {.uri = "/who", .method = HTTP_GET, .handler = service_get_who, .user_ctx = "Timelord"},
     {.uri = "/shotData", .method = HTTP_GET, .handler = service_get_shotData, .user_ctx = "Shot Data"},
     {.uri = "/json", .method = HTTP_GET, .handler = service_get_json, .user_ctx = "json"},
+    {.uri = "/event", .method = HTTP_GET, .handler = service_get_event, .user_ctx = "event"},
     {.uri = "/favicon.ico", .method = HTTP_GET, .handler = service_get_issf_png, .user_ctx = NULL},
     {}
 };
@@ -98,6 +100,57 @@ void register_services(httpd_handle_t server // Pointer to active server
     i++;
   }
   return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: service_get_evet
+ *
+ * @brief:    Return events to the client
+ *
+ * @return:   esp_err_t, error type
+ *
+ *---------------------------------------------------------------
+ *
+ *
+ *------------------------------------------------------------*/
+static esp_err_t service_get_event(httpd_req_t *req)
+{
+  const char *resp_str;                                                        // Reply to server
+  char        my_name[SHORT_TEXT];                                             // Temporary string
+
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "service_get_shotData: %s", my_name);)) // Send out the result for debugging
+
+  while ( 1 )
+  {
+    /*
+     *  First time through, prime the client
+     */
+    if ( http_shot < 0 )
+    {
+      build_json_score(&record[0], SCORE_HTTP_PRIME);
+      http_shot = 0;
+    }
+
+    /*
+     *  If there is a new shot, build the json and send it back
+     */
+    else
+    {
+      if ( (http_shot != shot_in)                                                                         // Shot ready to send
+           && ((record[http_shot].session_type & (SESSION_VALID | SESSION_SIGHT | SESSION_SCORE)) != 0) ) // Do we have a shot record?
+      {
+        build_json_score(&record[http_shot], SCORE_HTTP);
+        http_shot = (http_shot + 1) % SHOT_SPACE;
+        resp_str  = (const char *)_xs;                                                                    // point to the target json file
+        target_name(&my_name);                                                                            // Get the target name
+        httpd_resp_set_hdr(req, "get_ShotData", my_name);
+        httpd_resp_send(req, resp_str, strlen(resp_str));
+      }
+    }
+    vTaskDelay(ONE_SECOND);
+  }
+  return ESP_OK;
 }
 
 /*----------------------------------------------------------------
@@ -315,6 +368,7 @@ static esp_err_t service_post_post(httpd_req_t *req)
   return ESP_OK;
 }
 
+#if ( 0 )
 /*----------------------------------------------------------------
  *
  * @function: sample_post_get_handler
@@ -345,6 +399,7 @@ static esp_err_t service_get_post2(httpd_req_t *req)
 
   return ESP_OK;
 }
+#endif
 
 /*----------------------------------------------------------------
  *
