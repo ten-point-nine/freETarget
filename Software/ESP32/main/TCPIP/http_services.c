@@ -114,74 +114,62 @@ void register_services(httpd_handle_t server // Pointer to active server
  *
  * This function is called once when the /events URL arrives.
  *
- * It outputs an empty shot record to prime the client's target
- * and the returns control back to the web page server.
+ * On the first call it outputs an empty shot record to prime
+ * the client's target and the returns control back to the web
+ * page server.
  *
  * Periodically, as scores arrive, the new score is posted to
  * the client in a separate function
  *
  *------------------------------------------------------------*/
-static httpd_req_t event_req;                 // Memory of the response request
-static bool        event_ready = false;       // Set to true when connected to a client
 
 static esp_err_t service_get_events(httpd_req_t *req)
 {
-  const char *resp_str;                       // Reply to server
-  char        str[SHORT_TEXT];                // Temporary
+  const char *resp_str;                           // Reply to server
+  char        str[MEDIUM_TEXT];                   // Temporary
 
-  printf("service_get_events(%s)", req->uri); // Send out the result for debugging
+  printf("\r\nservice_get_events(%s)", req->uri); // Send out the result for debugging
 
-  /*
-   * Remember the request for next time
-   */
-  memcpy(&event_req, req, sizeof(httpd_req_t));
-
-  /*
-   * Make up an empty score and send it
-   */
-  build_json_score(&record[0], SCORE_HTTP_PRIME);
-  strcpy(str, "new_shotData: ");
-  strcat(str, _xs);
-  resp_str = (const char *)str;
-  httpd_resp_set_hdr(req, "application/json", "new_shotData");
-  httpd_resp_set_type(req, "text/event-data");
-  httpd_resp_send(req, resp_str, strlen(resp_str));
-
-  http_shot   = 0;
-  event_ready = true;
-
-  return ESP_OK;
-}
-
-void service_post_events(void)
-{
-  const char *resp_str;        // Reply to server
-  char        str[SHORT_TEXT]; // Temporary
-
-  if ( event_ready == false )  // Only do something if connected to a client
+  if ( http_shot < 0 )                            // First time through
   {
-    return;
-  }
-
-  /*
-   * Output a shot if there is one ready
-   */
-  if ( (http_shot != shot_in)                                                                         // Shot ready to send
-       && ((record[http_shot].session_type & (SESSION_VALID | SESSION_SIGHT | SESSION_SCORE)) != 0) ) // Do we have a shot record?
-  {
-    build_json_score(&record[http_shot], SCORE_HTTP);
-    strcpy(str, "new_shotData: ");
+    strcpy(str, "event:new_shotData\nid:\ndata: ");
+    build_json_score(&record[0], SCORE_HTTP_PRIME);
     strcat(str, _xs);
-    resp_str  = (const char *)str;
-    http_shot = (http_shot + 1) % SHOT_SPACE;
-    resp_str  = (const char *)_xs; // point to the target json file
-    httpd_resp_send(&event_req, resp_str, strlen(resp_str));
+    strcat(str, "\n\n");
+    resp_str = (const char *)str;
+    httpd_resp_set_hdr(req, "application/json", "new_shotData");
+    httpd_resp_set_type(req, "text/event-stream");
+    httpd_resp_send(req, resp_str, strlen(resp_str));
+
+    http_shot = 0;
+  }
+  else
+  {
+    /*
+     * Output a shot when there is one ready
+     */
+    while ( http_shot == shot_in )
+    {
+      vTaskDelay(ONE_SECOND);                                                                      // Wait here for a shot to arrive
+    }
+    if ( (record[http_shot].session_type & (SESSION_VALID | SESSION_SIGHT | SESSION_SCORE)) != 0 ) // Do we have a shot record?
+    {
+      strcpy(str, "event:new_shotData\nid:\ndata: ");                                              // Yes, prepare it and send it on
+      build_json_score(&record[http_shot], SCORE_HTTP);
+      strcat(str, _xs);
+      strcat(str, "\n\n");
+      resp_str = (const char *)str;
+      httpd_resp_set_hdr(req, "application/json", "new_shotData");
+      httpd_resp_set_type(req, "text/event-stream");
+      httpd_resp_send(req, resp_str, strlen(resp_str));
+    }
+    http_shot = (http_shot + 1) % SHOT_SPACE; // Point to the next shot
   }
 
   /*
    * Go and wait for the next shot
    */
-  return;
+  return ESP_OK;
 }
 
 /*----------------------------------------------------------------

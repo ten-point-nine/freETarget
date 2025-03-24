@@ -768,7 +768,7 @@ void serial_port_test(void)
   /*
    * Send out the AUX port, back in, and then to the console
    */
-  timer_new(&test_time, ONE_SECOND * 10);
+  ft_timer_new(&test_time, ONE_SECOND * 10);
   for ( i = 0; i != sizeof(test); i++ )
   {
     serial_putch(test[i], AUX); // Output to the AUX Port
@@ -790,7 +790,7 @@ void serial_port_test(void)
   /*
    *  The test is over
    */
-  timer_delete(&test_time);
+  ft_timer_delete(&test_time);
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }

@@ -15,7 +15,7 @@
 #include "freertos/task.h"
 #include "serial_io.h"
 
-#define SOFTWARE_VERSION "\"6.0.0 March 23, 2025\""
+#define SOFTWARE_VERSION "\"6.0.0 March 24, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED" // Message to send on connection
 
@@ -118,8 +118,8 @@
 #define SCORE_USB        "{S?TX}"                  // USB score elements
 #define SCORE_TCPIP      "{S?TXE}"                 // TCP score elements
 #define SCORE_BLUETOOTH  "{S?TX}"                  // Bluetooth score elements
-#define SCORE_HTTP       "{S?TXPO}n"               // HTTP score elements
-#define SCORE_HTTP_PRIME "{#}n"                    // HTTP Prime the client
+#define SCORE_HTTP       "{S?TXPO}"                // HTTP score elements
+#define SCORE_HTTP_PRIME "{#}"                     // HTTP Prime the client
 
 /*
  *  Types

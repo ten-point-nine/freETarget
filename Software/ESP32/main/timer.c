@@ -125,8 +125,8 @@ void freeETarget_timer_init(void)
   timer_enable_intr(TIMER_GROUP_0, TIMER_1);             // Interrupt associated with this interrupt
   timer_isr_callback_add(TIMER_GROUP_0, TIMER_1, freeETarget_timer_isr_callback, NULL, 0);
   timer_start(TIMER_GROUP_0, TIMER_1);
-  timer_new(&shot_timer, MAX_WAIT_TIME);                 // Wait for the shot to arrive
-  timer_new(&ring_timer, MAX_RING_TIME);                 // Wait for the ringing to stop
+  ft_timer_new(&shot_timer, MAX_WAIT_TIME);              // Wait for the shot to arrive
+  ft_timer_new(&ring_timer, MAX_RING_TIME);              // Wait for the ringing to stop
   shot_in  = 0;
   shot_out = 0;
 
@@ -328,8 +328,8 @@ void freeETarget_synchronous(void *pvParameters)
 
 /*-----------------------------------------------------
  *
- * @function: timer_new()
- *            timer_delete()
+ * @function: ft_timer_new()
+ *            ft_timer_delete()
  *
  * @brief:    Add or remove timers
  *
@@ -353,8 +353,8 @@ void freeETarget_synchronous(void *pvParameters)
  * same timer addess without creating a problem
  *
  *-----------------------------------------------------*/
-int timer_new(time_count_t *new_timer, // Pointer to new down counter
-              unsigned long duration)  // Duration of the timer
+int ft_timer_new(time_count_t *new_timer, // Pointer to new down counter
+                 unsigned long duration)  // Duration of the timer
 {
   unsigned int i;
 
@@ -378,7 +378,7 @@ int timer_new(time_count_t *new_timer, // Pointer to new down counter
   return 0;
 }
 
-int timer_delete(time_count_t *old_timer) // Pointer to new down counter
+int ft_timer_delete(time_count_t *old_timer) // Pointer to new down counter
 {
   unsigned int i;
 

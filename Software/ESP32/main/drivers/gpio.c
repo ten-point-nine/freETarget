@@ -659,7 +659,7 @@ void paper_stop(void)
   if ( IS_DC_WITNESS )        // DC motor - Turn the output on once
   {
     DCmotor_on_off(false, 0); // Motor OFF
-    timer_delete(&paper_time);
+    ft_timer_delete(&paper_time);
   }
 
   if ( IS_STEPPER_WITNESS )   // Stepper motor - Toggle the output
@@ -669,7 +669,7 @@ void paper_stop(void)
     {
       gpio_set_level(HOLD_D_GPIO, STEP_DISABLE);
     }
-    timer_delete(&paper_time);
+    ft_timer_delete(&paper_time);
   }
 
   /*
@@ -708,12 +708,12 @@ void DCmotor_on_off(bool          on,      // on == true, turn on motor drive
   if ( on == true )
   {
     gpio_set_level(PAPER, PAPER_ON);  // Turn it on
-    timer_new(&paper_time, MS_TO_TICKS(duration));
+    ft_timer_new(&paper_time, MS_TO_TICKS(duration));
   }
   else
   {
     gpio_set_level(PAPER, PAPER_OFF); // Turn it off
-    timer_delete(&paper_time);
+    ft_timer_delete(&paper_time);
   }
 
   /*
@@ -757,7 +757,7 @@ void stepper_pulse(void)
   }
 
   DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "step_time %d   step_count: %d", step_time, step_count);))
-  timer_new(&paper_time, MS_TO_TICKS(step_time));
+  ft_timer_new(&paper_time, MS_TO_TICKS(step_time));
 
   if ( step_count != 0 )
   {

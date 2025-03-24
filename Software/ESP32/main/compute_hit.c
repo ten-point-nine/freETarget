@@ -138,7 +138,7 @@ unsigned int compute_hit(shot_record_t *shot // Storing the results
   x_avg = 0;
   y_avg = 0;
 
-  timer_new(&wdt, 20);
+  ft_timer_new(&wdt, 20);
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "compute_hit()");))
 
@@ -481,7 +481,7 @@ void prepare_score(shot_record_t *shot,        //  record
     while ( my_ring != whos_ring )
     {
       token_take();                       // Grab the token ring
-      timer_new(&wdt, 2 * ONE_SECOND);
+      ft_timer_new(&wdt, 2 * ONE_SECOND);
       while ( (wdt != 0)                  // Wait up to 2 seconds
               && (whos_ring != my_ring) ) // Or we own the ring
       {
