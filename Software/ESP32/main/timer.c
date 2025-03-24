@@ -353,8 +353,8 @@ void freeETarget_synchronous(void *pvParameters)
  * same timer addess without creating a problem
  *
  *-----------------------------------------------------*/
-int timer_new(volatile unsigned long *new_timer, // Pointer to new down counter
-              unsigned long           duration)            // Duration of the timer
+int timer_new(time_count_t *new_timer, // Pointer to new down counter
+              unsigned long duration)  // Duration of the timer
 {
   unsigned int i;
 
@@ -378,7 +378,7 @@ int timer_new(volatile unsigned long *new_timer, // Pointer to new down counter
   return 0;
 }
 
-int timer_delete(volatile unsigned long *old_timer) // Pointer to new down counter
+int timer_delete(time_count_t *old_timer) // Pointer to new down counter
 {
   unsigned int i;
 

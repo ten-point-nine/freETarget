@@ -743,10 +743,10 @@ bool get_string(char destination[], int size)
  ******************************************************************************/
 void serial_port_test(void)
 {
-  unsigned char          test[] = "PASS - This is the loopback test";
-  unsigned int           i;
-  unsigned char          ch;
-  volatile unsigned long test_time;
+  unsigned char test[] = "PASS - This is the loopback test";
+  unsigned int  i;
+  unsigned char ch;
+  time_count_t  test_time;
 
   /*
    * Abort the test if the AUX port is not available

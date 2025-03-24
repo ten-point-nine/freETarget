@@ -54,7 +54,7 @@
  */
 #define SAMPLE_CALCULATIONS  (1 == 0) // Trace the COUNTER values
 #define COMPENSATE_RISE_TIME (1 == 0) // Use PCNT4-7 to compensate for rise time
-#define LONG_TEXT            512      // Long text strings arfe 512 long
+#define LONG_TEXT            512      // Long text strings are 512 long
 #define MEDIUM_TEXT          256      // Medimum length strings are 256 long
 #define SHORT_TEXT           128      // Short text strings are 128 long
 #define TINY_TEXT            64       // Tiny text strings are 64 long
@@ -100,23 +100,26 @@
 #define SESSION_SIGHT 2                            // Session is a sighter
 #define SESSION_SCORE 4                            // Session is a score
 
-#define SCORE_PRIME    '#'                         // Prime a reply to the client
-#define SCORE_SHOT     'S'                         // Include shot number
-#define SCORE_MISS     'M'                         // Include miss status
-#define SCORE_SESSION  '?'                         // Include session type
-#define SCORE_TIME     'T'                         // Include time stamp
-#define SCORE_XY       'X'                         // Include X-Y coordinates
-#define SCORE_POLAR    'P'                         // Include polar coordinates
-#define SCORE_HARDWARE 'H'                         // Include hardware values
-#define SCORE_TARGET   'O'                         // Include target name
-#define SCORE_EVENT    'E'                         // Include the athelte name
+#define SCORE_LEFT_BRACE  '{'                      // Opening JSON string
+#define SCORE_RIGHT_BRACE '}'                      // Closing JSON string
+#define SCORE_NEW_LINE    'n'                      // Add a newline
+#define SCORE_PRIME       '#'                      // Prime a reply to the client
+#define SCORE_SHOT        'S'                      // Include shot number
+#define SCORE_MISS        'M'                      // Include miss status
+#define SCORE_SESSION     '?'                      // Include session type
+#define SCORE_TIME        'T'                      // Include time stamp
+#define SCORE_XY          'X'                      // Include X-Y coordinates
+#define SCORE_POLAR       'P'                      // Include polar coordinates
+#define SCORE_HARDWARE    'H'                      // Include hardware values
+#define SCORE_TARGET      'O'                      // Include target name
+#define SCORE_EVENT       'E'                      // Include the athelte name
 
-#define SCORE_ALL        "S?TXPHO"                 // shot / miss / target / time / x-y / radius-angle / North-East-South-West / target type
-#define SCORE_USB        "S?TX"                    // USB score elements
-#define SCORE_TCPIP      "S?TXE"                   // TCP score elements
-#define SCORE_BLUETOOTH  "S?TX"                    // Bluetooth score elements
-#define SCORE_HTTP       "S?TXPO"                  // HTTP score elements
-#define SCORE_HTTP_PRIME "#"                       // HTTP Prime the client
+#define SCORE_ALL        "{S?TXPHO}"               // shot / miss / target / time / x-y / radius-angle / North-East-South-West / target type
+#define SCORE_USB        "{S?TX}"                  // USB score elements
+#define SCORE_TCPIP      "{S?TXE}"                 // TCP score elements
+#define SCORE_BLUETOOTH  "{S?TX}"                  // Bluetooth score elements
+#define SCORE_HTTP       "{S?TXPO}n"               // HTTP score elements
+#define SCORE_HTTP_PRIME "{#}n"                    // HTTP Prime the client
 
 /*
  *  Types
@@ -167,7 +170,8 @@ typedef struct
 
 extern shot_record_t record[SHOT_SPACE]; // Array of shot records
 
-typedef unsigned char byte_t;
+typedef unsigned char          byte_t;
+typedef volatile unsigned long time_count_t;
 
 /*
  *  Global Variables

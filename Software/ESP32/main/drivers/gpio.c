@@ -53,10 +53,10 @@ status_struct_t status[3] = {
     {0, 0, 0, 0},
     {0, 0, 0, 0}
 };
-int                    paper_state; // Drive is ON or OFF
-volatile unsigned long paper_time;  // How long the paper will be on for
-volatile unsigned int  step_count;  // How many step counts do we need?
-volatile unsigned int  step_time;   // Interval to next step
+int                   paper_state; // Drive is ON or OFF
+time_count_t          paper_time;  // How long the paper will be on for
+volatile unsigned int step_count;  // How many step counts do we need?
+volatile unsigned int step_time;   // Interval to next step
 
 /*-----------------------------------------------------
  *

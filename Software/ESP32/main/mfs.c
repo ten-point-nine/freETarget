@@ -216,11 +216,10 @@ void multifunction_switch_tick(void)
    */
   if ( DIP_SW_A )
   {
-    switch_A_count++; // One more tick
+    switch_A_count++;                  // One more tick
     if ( switch_A_count < LONG_PRESS ) // Still not long enought for a hold
     {
-      switch_state |= TAP_1_PENDING; // It must be pending
-      
+      switch_state |= TAP_1_PENDING;   // It must be pending
     }
     else
     {
@@ -465,7 +464,7 @@ static void mfs_pc_test(void)
   sign                = ((esp_random() & 1) == 0) ? 1 : -1;
   record[test_shot].y = (float)(sign * temp);
   s_of_sound          = speed_of_sound(temperature_C(), humidity_RH());
-  send_score(&record[test_shot], test_shot, NOT_MISSED_SHOT);
+  prepare_score(&record[test_shot], test_shot, NOT_MISSED_SHOT);
   test_shot++;
 
   return;

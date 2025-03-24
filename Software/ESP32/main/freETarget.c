@@ -13,8 +13,14 @@
 #include "nvs.h"
 #include "mpu_wrappers.h"
 #include "assert.h"
+#include "esp_http_server.h"
+#include "esp_event.h"
+#include "esp_netif.h"
+#include "esp_tls.h"
+#include <esp_wifi.h>
 
 #include "freETarget.h"
+#include "helpers.h"
 #include "gpio.h"
 #include "gpio_define.h"
 #include "compute_hit.h"
@@ -32,6 +38,7 @@
 #include "diag_tools.h"
 #include "mfs.h"
 #include "http_client.h"
+#include "http_services.h"
 
 /*
  *  Variables
@@ -48,15 +55,15 @@ unsigned int is_trace    = DLT_INFO | DLT_CRITICAL; // Default tracing
 unsigned int  shot_number;                          // Shot Identifier (1-100)
 unsigned long shot_start;                           // Time when target was ready for shots
 
-volatile unsigned long keep_alive;                  // Keep alive timer
-volatile unsigned long tabata_timer;                // Free running state timer
-volatile unsigned long power_save;                  // Power save timer
-volatile unsigned long rapid_timer;                 // Timer used for rapid fire ecents
-volatile unsigned long LED_timer;                   // Timer to reset LED status
-unsigned long          go_dark     = 10l;           // Go dark for 10 seconds
-unsigned long          go_wait     = 3l;            // Wait for the PC to catchup
-unsigned long          all_done    = 0l;            // All finished
-int                    always_true = true;
+time_count_t  keep_alive;                           // Keep alive timer
+time_count_t  tabata_timer;                         // Free running state timer
+time_count_t  power_save;                           // Power save timer
+time_count_t  rapid_timer;                          // Timer used for rapid fire ecents
+time_count_t  LED_timer;                            // Timer to reset LED status
+unsigned long go_dark     = 10l;                    // Go dark for 10 seconds
+unsigned long go_wait     = 3l;                     // Wait for the PC to catchup
+unsigned long all_done    = 0l;                     // All finished
+int           always_true = true;
 
 static enum {
   START = 0,                                        // 0 et the operating mode
@@ -87,6 +94,7 @@ static unsigned int arm(void);      // Arm the circuit for a shot
 static unsigned int wait(void);     // Wait for the shot to arrive
 static unsigned int reduce(void);   // Reduce the shot data
 extern void         gpio_init(void);
+
 /*----------------------------------------------------------------
  *
  * @function: freeETarget_init()
@@ -421,7 +429,23 @@ unsigned int reduce(void)
      */
     if ( location != MISS ) // Was it a miss or face strike?
     {
-      send_score(&record[shot_out], shot_out, NOT_MISSED_SHOT);
+      prepare_score(&record[shot_out], shot_out, NOT_MISSED_SHOT);
+      /*
+       *  Display the results
+       */
+      build_json_score(&record[shot_out], SCORE_USB);
+      serial_to_all(_xs, ALL);
+
+      build_json_score(&record[shot_out], SCORE_HTTP);
+      service_post_events();
+
+#if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE ) // Include only if remote server is needed
+      if ( (json_remote_modes & REMOTE_MODE_CLIENT) != 0 )
+      {
+        build_json_score(&record[shot_out], SCORE_TCPIP);
+        http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
+      }
+#endif
 
       /*
        *  Advance the paper
@@ -461,7 +485,7 @@ unsigned int reduce(void)
       set_status_LED(LED_MISS);
       if ( json_send_miss != 0 )
       {
-        send_score(&record[shot_out], shot_out, MISSED_SHOT);                    // Show a miss
+        prepare_score(&record[shot_out], shot_out, MISSED_SHOT);                 // Show a miss
       }
     }
     shot_out = (shot_out + 1) % SHOT_SPACE;                                      // Increment to the next shot
@@ -551,7 +575,7 @@ void start_new_session(int session_type) //
     if ( (record[i].session_type != 0) // The session has valid data
          && (record[i].session_type & (SESSION_SIGHT | SESSION_SCORE)) == (session_type % SESSION_PRINT) )
     {
-      send_score(&record[i], i, NOT_MISSED_SHOT);
+      prepare_score(&record[i], i, NOT_MISSED_SHOT);
     }
   }
 
@@ -746,7 +770,7 @@ void rapid_fire_task(void)
       while ( rapid_count < json_rapid_count )                                     // Send incomplete as misses
       {
         record[rapid_count].shot_time = 0;                                         // Fake the time
-        send_score(&record[rapid_count], rapid_count, MISSED_SHOT);                // and show as a miss
+        prepare_score(&record[rapid_count], rapid_count, MISSED_SHOT);             // and show as a miss
         rapid_count = (rapid_count + 1) % SHOT_SPACE;
       }
 

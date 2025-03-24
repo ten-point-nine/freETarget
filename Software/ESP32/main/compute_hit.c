@@ -445,7 +445,7 @@ bool find_xy_3D(sensor_t *s,             // Sensor to be operatated on
 
 /*----------------------------------------------------------------
  *
- * @function: send_score
+ * @function: prepare_score
  *
  * @brief: Send the score out over the serial port
  *
@@ -462,16 +462,16 @@ bool find_xy_3D(sensor_t *s,             // Sensor to be operatated on
  *
  *--------------------------------------------------------------*/
 
-void send_score(shot_record_t *shot,        //  record
-                unsigned int   shot_number, // What shot are we
-                bool           miss         // TRUE if the shot was a miss
+void prepare_score(shot_record_t *shot,        //  record
+                   unsigned int   shot_number, // What shot are we
+                   bool           miss         // TRUE if the shot was a miss
 )
 {
-  double x, y;                              // Shot location in mm X, Y before rotation
-  double real_x, real_y;                    // Shot location in mm X, Y before remap
-                                            //  char   str_c[SHORT_TEXT];                 // String holding buffers
+  double x, y;                                 // Shot location in mm X, Y before rotation
+  double real_x, real_y;                       // Shot location in mm X, Y before remap
+                                               //  char   str_c[SHORT_TEXT];                 // String holding buffers
 
-  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "Sending the score");))
+  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "prepare_score(%d)", shot_number);))
 
   /*
    * Grab the token ring if needed
@@ -508,23 +508,6 @@ void send_score(shot_record_t *shot,        //  record
   shot->y_mm = shot->radius * sin(PI * shot->angle / 180.0d) + json_y_offset; // and add in sensor correction
   remap_target(shot);                                                         // Change the target if needed
   shot->session_type = SESSION_VALID | json_session_type;
-
-  /*
-   *  Display the results
-   */
-  build_json_score(shot, SCORE_USB);
-  serial_to_all(_xs, ALL);
-
-/*
- * Send to the server if needed
- */
-#if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE ) // Include only if remote server is needed
-  if ( (json_remote_modes & REMOTE_MODE_CLIENT) != 0 )
-  {
-    build_json_score(shot, SCORE_TCPIP);
-    http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
-  }
-#endif
 
   /*
    * All done, return
@@ -603,7 +586,7 @@ void send_replay(shot_record_t *shot,                                  //  recor
  *     **        **
  *     **        **
  *
- * The function send_score locates the pellet onto the paper
+ * The function prepare_score locates the pellet onto the paper
  * This function finds the closest bull and then maps the pellet
  * onto the centre one.t->shot_time
  *--------------------------------------------------------------*/

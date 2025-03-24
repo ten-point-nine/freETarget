@@ -56,7 +56,7 @@ static esp_err_t service_get_who(httpd_req_t *req);
 static esp_err_t service_get_shotData(httpd_req_t *req);
 static esp_err_t service_get_issf_png(httpd_req_t *req);
 static esp_err_t service_get_json(httpd_req_t *req);
-static esp_err_t service_get_event(httpd_req_t *req);
+static esp_err_t service_get_events(httpd_req_t *req);
 static esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Create a URL not found handler
 
 /*
@@ -67,7 +67,7 @@ const httpd_uri_t url_list[] = {
     {.uri = "/who", .method = HTTP_GET, .handler = service_get_who, .user_ctx = "Timelord"},
     {.uri = "/shotData", .method = HTTP_GET, .handler = service_get_shotData, .user_ctx = "Shot Data"},
     {.uri = "/json", .method = HTTP_GET, .handler = service_get_json, .user_ctx = "json"},
-    {.uri = "/event", .method = HTTP_GET, .handler = service_get_event, .user_ctx = "event"},
+    {.uri = "/events", .method = HTTP_GET, .handler = service_get_events, .user_ctx = "events"},
     {.uri = "/favicon.ico", .method = HTTP_GET, .handler = service_get_issf_png, .user_ctx = NULL},
     {}
 };
@@ -104,7 +104,7 @@ void register_services(httpd_handle_t server // Pointer to active server
 
 /*----------------------------------------------------------------
  *
- * @function: service_get_evet
+ * @function: service_get_events
  *
  * @brief:    Return events to the client
  *
@@ -112,45 +112,76 @@ void register_services(httpd_handle_t server // Pointer to active server
  *
  *---------------------------------------------------------------
  *
+ * This function is called once when the /events URL arrives.
+ *
+ * It outputs an empty shot record to prime the client's target
+ * and the returns control back to the web page server.
+ *
+ * Periodically, as scores arrive, the new score is posted to
+ * the client in a separate function
  *
  *------------------------------------------------------------*/
-static esp_err_t service_get_event(httpd_req_t *req)
+static httpd_req_t event_req;                 // Memory of the response request
+static bool        event_ready = false;       // Set to true when connected to a client
+
+static esp_err_t service_get_events(httpd_req_t *req)
 {
-  const char *resp_str;                                                        // Reply to server
-  char        my_name[SHORT_TEXT];                                             // Temporary string
+  const char *resp_str;                       // Reply to server
+  char        str[SHORT_TEXT];                // Temporary
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "service_get_shotData: %s", my_name);)) // Send out the result for debugging
+  printf("service_get_events(%s)", req->uri); // Send out the result for debugging
 
-  while ( 1 )
-  {
-    /*
-     *  First time through, prime the client
-     */
-    if ( http_shot < 0 )
-    {
-      build_json_score(&record[0], SCORE_HTTP_PRIME);
-      http_shot = 0;
-    }
+  /*
+   * Remember the request for next time
+   */
+  memcpy(&event_req, req, sizeof(httpd_req_t));
 
-    /*
-     *  If there is a new shot, build the json and send it back
-     */
-    else
-    {
-      if ( (http_shot != shot_in)                                                                         // Shot ready to send
-           && ((record[http_shot].session_type & (SESSION_VALID | SESSION_SIGHT | SESSION_SCORE)) != 0) ) // Do we have a shot record?
-      {
-        build_json_score(&record[http_shot], SCORE_HTTP);
-        http_shot = (http_shot + 1) % SHOT_SPACE;
-        resp_str  = (const char *)_xs;                                                                    // point to the target json file
-        target_name(&my_name);                                                                            // Get the target name
-        httpd_resp_set_hdr(req, "get_ShotData", my_name);
-        httpd_resp_send(req, resp_str, strlen(resp_str));
-      }
-    }
-    vTaskDelay(ONE_SECOND);
-  }
+  /*
+   * Make up an empty score and send it
+   */
+  build_json_score(&record[0], SCORE_HTTP_PRIME);
+  strcpy(str, "new_shotData: ");
+  strcat(str, _xs);
+  resp_str = (const char *)str;
+  httpd_resp_set_hdr(req, "application/json", "new_shotData");
+  httpd_resp_set_type(req, "text/event-data");
+  httpd_resp_send(req, resp_str, strlen(resp_str));
+
+  http_shot   = 0;
+  event_ready = true;
+
   return ESP_OK;
+}
+
+void service_post_events(void)
+{
+  const char *resp_str;        // Reply to server
+  char        str[SHORT_TEXT]; // Temporary
+
+  if ( event_ready == false )  // Only do something if connected to a client
+  {
+    return;
+  }
+
+  /*
+   * Output a shot if there is one ready
+   */
+  if ( (http_shot != shot_in)                                                                         // Shot ready to send
+       && ((record[http_shot].session_type & (SESSION_VALID | SESSION_SIGHT | SESSION_SCORE)) != 0) ) // Do we have a shot record?
+  {
+    build_json_score(&record[http_shot], SCORE_HTTP);
+    strcpy(str, "new_shotData: ");
+    strcat(str, _xs);
+    resp_str  = (const char *)str;
+    http_shot = (http_shot + 1) % SHOT_SPACE;
+    resp_str  = (const char *)_xs; // point to the target json file
+    httpd_resp_send(&event_req, resp_str, strlen(resp_str));
+  }
+
+  /*
+   * Go and wait for the next shot
+   */
+  return;
 }
 
 /*----------------------------------------------------------------
@@ -167,8 +198,10 @@ static esp_err_t service_get_event(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_index(httpd_req_t *req)
 {
-  const char *resp_str;            // Reply to server
-  char        my_name[SHORT_TEXT]; // Temporary string
+  const char *resp_str;                       // Reply to server
+  char        my_name[SHORT_TEXT];            // Temporary string
+
+  printf("service_get_index:(%s)", req->uri); // Send out the result for debugging
 
   /*
    * Do the things we need to do to start a session
@@ -205,8 +238,10 @@ static esp_err_t service_get_index(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_shotData(httpd_req_t *req)
 {
-  const char *resp_str;            // Reply to server
-  char        my_name[SHORT_TEXT]; // Target name
+  const char *resp_str;                          // Reply to server
+  char        my_name[SHORT_TEXT];               // Target name
+
+  printf("service_get_shotData:(%s)", req->uri); // Send out the result for debugging
 
   /*
    *  First time through, prime the client
@@ -271,15 +306,17 @@ static esp_err_t service_get_shotData(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_json(httpd_req_t *req)
 {
-  const char *resp_str;                   // Reply to server
-  char        my_name[SHORT_TEXT];        // Target name
+  const char *resp_str;                     // Reply to server
+  char        my_name[SHORT_TEXT];          // Target name
 
-  squish(req->uri, _xs);                  // Go through the uri and keep the argument portion
-  tcpip_socket_2_queue(_xs, strlen(_xs)); // Put the data into the TCPIP queue
-  vTaskDelay(ONE_SECOND);                 // Give up time for the data to be processed
+  printf("service_get_json(%s)", req->uri); // Send out the result for debugging
 
-  resp_str = _xs;                         // Send back a reply if there is one
-  target_name(&my_name);                  // Get the target name
+  squish(req->uri, _xs);                    // Go through the uri and keep the argument portion
+  tcpip_socket_2_queue(_xs, strlen(_xs));   // Put the data into the TCPIP queue
+  vTaskDelay(ONE_SECOND);                   // Give up time for the data to be processed
+
+  resp_str = _xs;                           // Send back a reply if there is one
+  target_name(&my_name);                    // Get the target name
   httpd_resp_set_hdr(req, "get_json", my_name);
   httpd_resp_send(req, resp_str, strlen(resp_str));
 
@@ -303,12 +340,14 @@ static esp_err_t service_get_json(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_issf_png(httpd_req_t *req)
 {
-  const char *resp_str;            // Reply to server
-  char        my_name[SHORT_TEXT]; // Target name
+  const char *resp_str;                         // Reply to server
+  char        my_name[SHORT_TEXT];              // Target name
+
+  printf("service_get_issf_jpg(%s)", req->uri); // Send out the result for debugging
 
   target_name(my_name);
 
-                                   // DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_json(%s)", req);))
+  // DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_json(%s)", req);))
 
   resp_str = (const char *)issf_png; // point to the target json file
   httpd_resp_set_hdr(req, "get_issf_png", my_name);

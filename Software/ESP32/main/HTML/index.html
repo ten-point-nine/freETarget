@@ -87,77 +87,78 @@
 
     //  Draw any target to get started. 
     drawTarget(12, 45.5, 30.5, 2.5, 3, 6, 0.25, 1, 4.5);   // ISSF 10 Metre Air Rifle default.
-
-    //  Load the E-Target Display and get available shot data and display.
-    window.addEventListener('load', getshotData);
-
-    setInterval(getshotData, 20000);  // Get shot data every 20 seconds.
-
-
-    function getshotData() {            // Function to get current readings.
-      var xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-          var myObj = JSON.parse(this.responseText);
-          console.log(myObj);
-          var ss = myObj.shot;
-          var xx = myObj.x;
-          var yy = myObj.y;
-          var rr = myObj.r;
-          var aa = myObj.a;
-          targetType = myObj.target;
-
-          sx = xx;
-          sy = yy;
-          sr = rr;
-          sa = aa;
-          sn = ss;
-
-          plotShot();   // Plot Shot Location
+    /*
+        //  Load the E-Target Display and get available shot data and display.
+        window.addEventListener('load', getshotData);
+    
+        setInterval(getshotData, 20000);  // Get shot data every 20 seconds.
+    
+    
+        function getshotData() {            // Function to get current readings.
+          var xhr = new XMLHttpRequest();
+          xhr.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+              var myObj = JSON.parse(this.responseText);
+              console.log(myObj);
+              var ss = myObj.shot;
+              var xx = myObj.x;
+              var yy = myObj.y;
+              var rr = myObj.r;
+              var aa = myObj.a;
+              targetType = myObj.target;
+    
+              sx = xx;
+              sy = yy;
+              sr = rr;
+              sa = aa;
+              sn = ss;
+    
+              plotShot();   // Plot Shot Location
+            }
+          };
+          xhr.open("GET", "/shotData", true);
+          xhr.send();
         }
-      };
-      xhr.open("GET", "/shotData", true);
-      xhr.send();
+    */
+
+    if (!!window.EventSource) {
+      var source = new EventSource('/events');
+
+      source.addEventListener('open', function (e) {
+        console.log("Events Connected");
+      }, false);
+
+      source.addEventListener('error', function (e) {
+        if (e.target.readyState != EventSource.OPEN) {
+          console.log("Events Disconnected");
+        }
+      }, false);
+
+      source.addEventListener('message', function (e) {
+        console.log("message", e.data);
+      }, false);
+
+      source.addEventListener('new_shotData', function (e) {
+        console.log("new_shotData", e.data);
+        var myObj = JSON.parse(e.data);
+        console.log(myObj);
+        var ss = myObj.shot;
+        var xx = myObj.x;
+        var yy = myObj.y;
+        var rr = myObj.r;
+        var aa = myObj.a;
+        targetType = myObj.target;
+
+        sx = xx;
+        sy = yy;
+        sr = rr;
+        sn = ss;
+        sa = aa;
+
+        plotShot();
+      }, false);
     }
 
-    /* if (!!window.EventSource) {
-     var source = new EventSource('/events');
-     
-     source.addEventListener('open', function(e) {
-       console.log("Events Connected");
-     }, false);
-   
-     source.addEventListener('error', function(e) {
-       if (e.target.readyState != EventSource.OPEN) {
-         console.log("Events Disconnected");
-       }
-     }, false);
-     
-     source.addEventListener('message', function(e) {
-       console.log("message", e.data);
-     }, false);
-     
-     source.addEventListener('new_shotData', function(e) {
-       console.log("new_shotData", e.data);
-       var myObj = JSON.parse(e.data);
-       console.log(myObj);
-         var ss = myObj.shot;
-         var xx = myObj.x;
-         var yy = myObj.y;
-         var rr = myObj.r;
-         var aa = myObj.a;
-         targetType = myObj.target;
-         
-         sx = xx;
-         sy = yy;
-         sr = rr;
-         sn = ss;
-         sa = aa;
-   
-        plotShot();
-     }, false); 
-     }
-     */
     //  
     //  functions 
     //

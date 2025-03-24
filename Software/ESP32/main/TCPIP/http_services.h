@@ -13,6 +13,7 @@
  */
 void                      register_services(httpd_handle_t server); // Pointer to active server
 extern const httpd_uri_t *url_list[];                               // List of active URLs
+esp_err_t                 service_post_events(void);                // Send  shot record to the web browser client
 
 /*
  * #defines

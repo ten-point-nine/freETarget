@@ -398,33 +398,45 @@ void echo_serial(int duration, // Duration in clock ticks
  *
  *----------------------------------------------------------------
  *
- * This function allows the user to remotly shut down the unit
- * when not in use.
+ * Build up a JSON string for the score.
  *
- * This is called every second from the synchronous scheduler
+ * The function is called with the shot record to be reported and
+ * a pointer to a string of fields used to build up the JSON
+ * output.
+ *
+ * IMPORTANT
+ *
+ * Each field is preceeded with a comma (,) except for "shot"
+ * which must be the first field printed.
  *
  *--------------------------------------------------------------*/
 
 void build_json_score(shot_record_t *shot, // Pointer to shot record
-                      const char    *format)
+                      const char    *fields)
 {
   char str[SHORT_TEXT];                    // String holding buffers
-  bool add_comma = false;                  // Add a comma to the string
 
-  strcpy(_xs, "{");                        // Start the opening bracket
+  _xs[0] = 0;
 
   /*
    *  Loop and build up the payload
    */
-  while ( *format != 0 )
+  while ( *fields != 0 )
   {
-    if ( add_comma )
+    switch ( *fields )
     {
-      strcat(_xs, ", ");
-    }
-    add_comma = true;
-    switch ( *format )
-    {
+      case SCORE_LEFT_BRACE:
+        sprintf(str, "{");                           // Start the opening bracket
+        break;
+
+      case SCORE_RIGHT_BRACE:
+        sprintf(str, "}");                           // End the closing bracket
+        break;
+
+      case SCORE_NEW_LINE:                           // Add a newline
+        sprintf(str, "\n");
+        break;
+
       case SCORE_PRIME:                              // Prime for HTTP
         sprintf(str, "\"shot\":0, \"x\":0, \"y\":0, \"r\":0, \"a\":0,\"target\":%d", http_target_type());
         break;
@@ -434,49 +446,48 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
         break;
 
       case SCORE_MISS:                               // Miss
-        sprintf(str, "\"miss\":%d", shot->miss);
+        sprintf(str, ", \"miss\":%d", shot->miss);
         break;
 
       case SCORE_SESSION:                            // Session type
-        sprintf(str, "\"session_type\":%d", shot->session_type);
+        sprintf(str, ", \"session_type\":%d", shot->session_type);
         break;
 
       case SCORE_TIME:                               // Time
-        sprintf(str, "\"time\":%6.2f", SHOT_TIME_TO_SECONDS(shot->shot_time));
+        sprintf(str, ", \"time\":%6.2f", SHOT_TIME_TO_SECONDS(shot->shot_time));
         break;
 
       case SCORE_XY:                                 // X
-        sprintf(str, "\"x\":%4.2f, \"y\":%4.2f", shot->x_mm, shot->y_mm);
+        sprintf(str, ", \"x\":%4.2f, \"y\":%4.2f", shot->x_mm, shot->y_mm);
         break;
 
       case SCORE_POLAR:                              // Polar
-        sprintf(str, "\"r\":%6.2f, \"a\":%6.2f", shot->radius, shot->angle);
+        sprintf(str, ", \"r\":%6.2f, \"a\":%6.2f", shot->radius, shot->angle);
         break;
 
       case SCORE_HARDWARE:                           // Hardware
-        sprintf(str, "\"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d", (int)shot->timer_count[N + 0], (int)shot->timer_count[E + 0],
+        sprintf(str, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d", (int)shot->timer_count[N + 0], (int)shot->timer_count[E + 0],
                 (int)shot->timer_count[S + 0], (int)shot->timer_count[W + 0]);
         break;
 
       case SCORE_TARGET:                             // Target type
-        sprintf(str, "\"target\":%d ", http_target_type());
+        sprintf(str, ", \"target\":%d ", http_target_type());
         break;
 
       case SCORE_EVENT:                              // Event data
-        sprintf(str, "\"athelete\":\"%s\", \"event\":\"%s\", \"target_name\":\"%s\"", json_athlete, json_event, json_target_name);
+        sprintf(str, ", \"athelete\":\"%s\", \"event\":\"%s\", \"target_name\":\"%s\"", json_athlete, json_event, json_target_name);
         break;
 
       default:
         break;
     }
-    format++;
+    fields++;
     strcat(_xs, str);
   }
 
   /*
    * Put in the closing } and return
    */
-  strcat(_xs, "}");
   return;
 }
 
@@ -488,10 +499,6 @@ void test_build_json_score(void)
   char str[MEDIUM_TEXT];
 
   SEND(ALL, sprintf(_xs, "\r\ntest_build_json_score()");)
-
-  strcpy(json_event, "Practice");
-  strcpy(json_target_name, "Rifle");
-  strcpy(json_athlete, "Target Test");
 
   build_json_score(&record[0], SCORE_ALL);
   strncpy(str, _xs, sizeof(str));
