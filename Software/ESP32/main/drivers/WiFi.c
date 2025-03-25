@@ -49,6 +49,7 @@
 #include "json.h"
 #include "nonvol.h"
 #include "serial_io.h"
+#include "timer.h"
 
 #define DEFAULT_IP         192, 168, 10, 9
 #define PORT               1090
@@ -870,7 +871,7 @@ static void WiFi_start_new_connection(int sock) // Socket token to use
   /*
    *  Inform the PC what is going on
    */
-  sprintf(_xs, "{\"%s\":%10.6f}", _GREETING_, esp_timer_get_time() / 100000.0 / 60.0);
+  sprintf(_xs, "{\"%s\":%lds}", _GREETING_, run_time_seconds());
   send(sock, _xs, strlen(_xs), 0); // Only send to the most recent connection
 
   for ( i = 0; i != SHOT_SPACE; i++ )

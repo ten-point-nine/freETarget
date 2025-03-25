@@ -724,7 +724,7 @@ bool do_dlt(           //
   /*
    *   Print out the message
    */
-  SEND(ALL, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, ((float)(esp_timer_get_time()) / 1000000.0));)
+  SEND(ALL, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, run_time_ms() / 1000.);)
 
   return true;
 }
@@ -929,7 +929,7 @@ void test_build_fake_shots(void)
     record[i].timer_count[7] = 8;
     record[i].face_strike    = 0;
     record[i].sensor_status  = 4;
-    record[i].shot_time      = i * 7.0 * 1000000.0;
+    record[i].shot_time      = run_time_ms();
   }
 
   /*

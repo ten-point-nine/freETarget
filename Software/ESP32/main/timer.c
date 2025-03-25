@@ -64,6 +64,7 @@ static volatile unsigned long *timers[N_TIMERS]; // Active timer list
 volatile unsigned long         shot_timer;       // Wait for the sound to hit all sensors
 volatile unsigned long         ring_timer;       // Let the ring on the backstop end
 static state                   isr_state;        // What sensor state are we in
+static unsigned long           base_time = 0;    // Base time to show elapsed time
 
 static synchronous_task_t task_list[] = {
     {BAND_10ms,   token_cycle              },
@@ -404,6 +405,7 @@ int ft_timer_delete(time_count_t *old_timer) // Pointer to new down counter
    */
   return 0;
 }
+
 /*-----------------------------------------------------
  *
  * @function: show_time()
@@ -426,12 +428,43 @@ void show_time(void)
 
   while ( serial_available(ALL) == 0 )
   {
-    time = esp_timer_get_time() / 1000;
+    time = run_time_seconds();
     SEND(ALL, sprintf(_xs, "\r\n%ld.%ld s", time / 1000, time % 1000);)
     vTaskDelay(ONE_SECOND);
   }
 
   SEND(ALL, sprintf(_xs, _DONE_);)
 
+  return;
+}
+
+/*-----------------------------------------------------
+ *
+ * @function: run_time_seconds()
+ *            reset_run_time()
+ *
+ * @brief:    Return the run time in seconds
+ *            Reset the timer to now
+ *
+ * @return:   time in seconds since reset
+ *
+ *-----------------------------------------------------
+ *
+ * Common timer function
+ *
+ *---------------------------------------------------*/
+unsigned long run_time_seconds(void)
+{
+  return (esp_timer_get_time() - base_time) / 1000000;
+}
+
+unsigned long run_time_ms(void)
+{
+  return (esp_timer_get_time() - base_time) / 1000;
+}
+
+void reset_run_time(void)
+{
+  base_time = 0;
   return;
 }

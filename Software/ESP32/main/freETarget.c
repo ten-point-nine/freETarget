@@ -84,7 +84,6 @@ typedef struct
 extern int isr_state;
 
 volatile unsigned int run_state = 0;                // Current operating state
-unsigned long         base_time = 0;                // Base time to show elapsed time
 
 char _xs[LONG_TEXT];                                // Holding buffer for sprintf
 
@@ -158,11 +157,11 @@ void freeETarget_init(void)
    */
   show_echo();
   set_LED_PWM(json_LED_PWM);
-  serial_flush(ALL);                      // Get rid of everything
-  shot_in         = 0;                    // Clear out any junk
+  serial_flush(ALL);   // Get rid of everything
+  shot_in         = 0; // Clear out any junk
   shot_out        = 0;
-  connection_list = 0;                    // Nobody is connected yet
-  base_time       = esp_timer_get_time(); // Reset the time of day
+  connection_list = 0; // Nobody is connected yet
+  reset_run_time();    // Reset the time of day
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initialization complete");))
 
@@ -320,7 +319,7 @@ unsigned int arm(void)
   stop_timers();
   arm_timers();                                                          // Arm the counters
   run_state |= IN_SHOT;
-  shot_start = esp_timer_get_time();                                     // Remember when we started
+  shot_start = run_time_ms();                                            // Remember when we started
 
   sensor_status = is_running();                                          // and immediatly read the status
   if ( sensor_status == 0 )                                              // After arming, the sensor status should be zero
@@ -555,14 +554,14 @@ void start_new_session(int session_type) //
       {
         record[i].session_type = SESSION_EMPTY;
       }
-      shot_in   = 0;
-      shot_out  = 0;
-      base_time = esp_timer_get_time();
+      shot_in  = 0;
+      shot_out = 0;
+      reset_run_time();
       break;
 
     case SESSION_SIGHT: // Nothing to do
     case SESSION_SCORE:
-      base_time = esp_timer_get_time();
+      reset_run_time();
       break;
 
     case SESSION_PRINT + SESSION_EMPTY:
@@ -681,7 +680,7 @@ void tabata_task(void)
     if ( tabata_state[tabata_state_machine].in_shot == true )                        // Is the target ready to accept a shot?
     {
       run_state |= IN_SHOT;                                                          // Yes, set it so
-      shot_start = esp_timer_get_time();                                             // and remember this time
+      shot_start = run_time_ms();                                                    // and remember this time
     }
     else
     {
@@ -798,7 +797,7 @@ void rapid_fire_task(void)
       {                                                                            // rapid fire so that we can detect misses
         rapid_count = shot_in;
         run_state |= IN_SHOT;                                                      // See if we are expecting a shot
-        shot_start = esp_timer_get_time();                                         // and remember this time
+        shot_start = run_time_ms();                                                // and remember this time
       }
       else
       {

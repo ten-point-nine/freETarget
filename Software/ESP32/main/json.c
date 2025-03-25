@@ -25,6 +25,7 @@
 #include "serial_io.h"
 #include "wifi.h"
 #include "bluetooth.h"
+#include "timer.h"
 
 /*
  *  Function Prototypes
@@ -538,15 +539,15 @@ void show_echo(void)
   /*
    * Finish up with the special cases
    */
-  serial_to_all(NULL, EVEN_ODD_END);                                // End the even odd line
+  serial_to_all(NULL, EVEN_ODD_END);                                                                      // End the even odd line
   SEND(ALL, sprintf(_xs, "\r\n*** STATUS ***\r\n");)
-  serial_to_all(NULL, EVEN_ODD_BEGIN);                              // Start over again
+  serial_to_all(NULL, EVEN_ODD_BEGIN);                                                                    // Start over again
   target_name(str_c);
   SEND(ALL, sprintf(_xs, "\"NAME\":              \"%s\",", str_c);)
   SEND(ALL, sprintf(_xs, "\"SN\":                %d", json_serial_number);)
-  SEND(ALL, sprintf(_xs, "\"TRACE\":             %d,", is_trace);)  // TRUE to if trace is enabled
-  SEND(ALL, sprintf(_xs, "\"RUN_STATE\":         %d,", run_state);) // TRUE to if trace is enabled
-  SEND(ALL, sprintf(_xs, "\"RUNNING_MINUTES\":   %0.2f,", (esp_timer_get_time() - base_time) / 1000000.0 / 60.0);) // On Time
+  SEND(ALL, sprintf(_xs, "\"TRACE\":             %d,", is_trace);)                                        // TRUE to if trace is enabled
+  SEND(ALL, sprintf(_xs, "\"RUN_STATE\":         %d,", run_state);)                                       // TRUE to if trace is enabled
+  SEND(ALL, sprintf(_xs, "\"RUNNING_MINUTES\":   %0.2f,", run_time_seconds() / 60.0);)                    // On Time
   SEND(ALL, sprintf(_xs, "\"TIME_TO_SLEEP\":     %4.2f,", (float)power_save / (float)(ONE_SECOND * 60));) // How long until we sleep
   SEND(ALL, sprintf(_xs, "\"TEMPERATURE\":       %4.2f,", temperature_C());)                              // Temperature in degrees C
   SEND(ALL, sprintf(_xs, "\"RELATIVE_HUMIDITY\": %4.2f,", humidity_RH());)

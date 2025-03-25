@@ -856,7 +856,7 @@ void check_new_connection(void)
   json_session_type = SESSION_EMPTY;
   shot_in           = 0;
   shot_out          = 0;
-  base_time         = esp_timer_get_time();
+  reset_run_time();
 
   /*
    *  All done, return

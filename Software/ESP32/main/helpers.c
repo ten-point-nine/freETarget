@@ -459,7 +459,7 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
         break;
 
       case SCORE_ELAPSED:                            // Time since shooting began
-        sprintf(str, ", \"elapsed_time\":%6.2f", SHOT_TIME_TO_SECONDS(esp_timer_get_time() - base_time));
+        sprintf(str, ", \"elapsed_time\":%lds", run_time_seconds());
         break;
 
       case SCORE_XY:                                 // X

@@ -213,7 +213,7 @@ void Bluetooth_start_new_connection(void) // Socket token to use
   /*
    *  Inform the PC what is going on
    */
-  SEND(BLUETOOTH, sprintf(_xs, "{\"%s\":%10.6f}", _GREETING_, esp_timer_get_time() / 100000.0 / 60.0);)
+  SEND(BLUETOOTH, sprintf(_xs, "{\"%s\":%ld}", _GREETING_, run_time_seconds());)
 
   for ( i = 0; i != SHOT_SPACE; i++ )
   {

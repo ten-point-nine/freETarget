@@ -823,13 +823,13 @@ void aquire(void)
   /*
    * Pull in the data amd save it in the record array
    */
-  read_timers(&record[shot_in].timer_count[0]);                        // Record this count
+  read_timers(&record[shot_in].timer_count[0]);                 // Record this count
   IF_IN(IN_SHOT)
   {
-    record[shot_in].shot_time     = esp_timer_get_time() - shot_start; // Capture the time into the shot
-    record[shot_in].face_strike   = face_strike;                       // Record if it's a face strike
-    record[shot_in].sensor_status = is_running();                      // Record the sensor status
-    shot_in                       = (shot_in + 1) % SHOT_SPACE;        // Prepare for the next shot
+    record[shot_in].shot_time     = run_time_ms() - shot_start; // Capture the time into the shot
+    record[shot_in].face_strike   = face_strike;                // Record if it's a face strike
+    record[shot_in].sensor_status = is_running();               // Record the sensor status
+    shot_in                       = (shot_in + 1) % SHOT_SPACE; // Prepare for the next shot
   }
 
   /*
@@ -916,7 +916,7 @@ void digital_test(void)
   /*
    * Read in the fixed digital inputs
    */
-  SEND(ALL, sprintf(_xs, "\r\nTime: %4.2fs", (float)(esp_timer_get_time() / 1000000));)
+  SEND(ALL, sprintf(_xs, "\r\nTime: %lds", run_time_seconds());)
   SEND(ALL, sprintf(_xs, "\r\nDIP: 0x%02X", read_DIP());)
   SEND(ALL, sprintf(_xs, _DONE_);)
 

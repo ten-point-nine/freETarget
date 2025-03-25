@@ -15,7 +15,7 @@
 #include "freertos/task.h"
 #include "serial_io.h"
 
-#define SOFTWARE_VERSION "\"6.0.0 March 24, 2025\""
+#define SOFTWARE_VERSION "\"6.0.0 March 25, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED" // Message to send on connection
 
@@ -189,7 +189,6 @@ extern volatile unsigned long power_save;  // Power down timer
 extern volatile unsigned int  run_state;   // IPC states
 extern volatile unsigned long LED_timer;   // Turn off the LEDs when not in use
 extern char                   _xs[512];    // General purpose string buffer
-extern unsigned long          base_time;   // Time that the target was internally reset
 
 /*
  * FreeETarget functions
