@@ -76,6 +76,7 @@ static synchronous_task_t task_list[] = {
     {BAND_1000ms, bye_tick                 },
     {BAND_1000ms, check_12V                },
     {BAND_1000ms, send_keep_alive          },
+    {BAND_1000ms, check_new_connection     },
     {0,           0                        }
 };
 

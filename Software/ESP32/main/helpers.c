@@ -14,6 +14,7 @@
 #include "ctype.h"
 #include "driver\gpio.h"
 #include "math.h"
+#include "esp_timer.h"
 
 #include "freETarget.h"
 #include "helpers.h"
@@ -455,6 +456,10 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
 
       case SCORE_TIME:                               // Time
         sprintf(str, ", \"time\":%6.2f", SHOT_TIME_TO_SECONDS(shot->shot_time));
+        break;
+
+      case SCORE_ELAPSED:                            // Time since shooting began
+        sprintf(str, ", \"elapsed_time\":%6.2f", SHOT_TIME_TO_SECONDS(esp_timer_get_time() - base_time));
         break;
 
       case SCORE_XY:                                 // X

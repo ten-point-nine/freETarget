@@ -16,6 +16,7 @@
 #include "driver/uart.h"
 #include "driver/gpio.h"
 #include "nvs.h"
+#include "esp_timer.h"
 
 #include "freETarget.h"
 #include "helpers.h"
@@ -77,13 +78,14 @@ QueueHandle_t uart_aux_queue;
 
 typedef struct queue_struct
 {
-  char queue[1024];               // Holding queue
-  int  in;                        // Index of input characters
-  int  out;                       // Index of output characters
+  char queue[1024];                    // Holding queue
+  int  in;                             // Index of input characters
+  int  out;                            // Index of output characters
 } queue_struct_t;
 
-static queue_struct_t in_buffer;  // TCPIP input buffer
-static queue_struct_t out_buffer; // TCPIP input buffer
+static queue_struct_t in_buffer;       // TCPIP input buffer
+static queue_struct_t out_buffer;      // TCPIP input buffer
+unsigned int          connection_list; // Bitmask of existing connections
 
 /******************************************************************************
  *
@@ -325,6 +327,9 @@ void serial_flush(int ports // active port list
  *
  *******************************************************************************
  *
+ * Poll the incoming queues and return the next character.
+ *
+ * If there is a character present, update the connection mask
  *
  *******************************************************************************-*/
 char serial_getch(int ports // Bit mask of active ports
@@ -339,6 +344,7 @@ char serial_getch(int ports // Bit mask of active ports
   {
     if ( uart_read_bytes(uart_console, &ch, 1, 0) > 0 )
     {
+      connection_list |= CONSOLE;
       return ch;
     }
   }
@@ -350,6 +356,7 @@ char serial_getch(int ports // Bit mask of active ports
   {
     if ( uart_read_bytes(uart_aux, &ch, 1, 0) > 0 )
     {
+      connection_list |= AUX;
       return ch;
     }
   }
@@ -792,5 +799,67 @@ void serial_port_test(void)
    */
   ft_timer_delete(&test_time);
   SEND(ALL, sprintf(_xs, _DONE_);)
+  return;
+}
+
+/*******************************************************************************
+ *
+ * @function: check_new_connection
+ *
+ * @brief:    Look to see if anybody new has connected
+ *
+ * @return:   None
+ *
+ *******************************************************************************
+ *
+ * Check to see if there is a new connection, and if so, check to see if the
+ * variables need to be cleared
+ *
+ ******************************************************************************/
+static unsigned int old_connection_list = 0; // Previous connection mask
+
+void check_new_connection(void)
+{
+  int          i, count;
+  unsigned int bit_mask[] = {CONSOLE, AUX, TCPIP_0, TCPIP_1, TCPIP_2, TCPIP_3, HTTP_CONNECTED};
+
+  if ( old_connection_list == connection_list ) // Has anything changed?
+  {
+    return;                                     // No, do nothing
+  }
+  old_connection_list = connection_list;
+
+  /*
+   *  Count up the number of connections
+   */
+  count = 0;
+  for ( i = 0; i != sizeof(bit_mask) / sizeof(unsigned int); i++ )
+  {
+    if ( (connection_list & bit_mask[i]) != 0 )
+    {
+      count++;
+    }
+  }
+
+  if ( count > 1 ) // Do we have more than one connection?
+  {
+    return;        // Yes, then return
+  }
+
+                   /*
+                    * This is our first connection, reset back to zero
+                    */
+  for ( i = 0; i != SHOT_SPACE; i++ )
+  {
+    record[i].session_type = SESSION_EMPTY;
+  }
+  json_session_type = SESSION_EMPTY;
+  shot_in           = 0;
+  shot_out          = 0;
+  base_time         = esp_timer_get_time();
+
+  /*
+   *  All done, return
+   */
   return;
 }

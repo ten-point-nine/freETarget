@@ -54,6 +54,7 @@ unsigned int is_trace    = DLT_INFO | DLT_CRITICAL; // Default tracing
 
 unsigned int  shot_number;                          // Shot Identifier (1-100)
 unsigned long shot_start;                           // Time when target was ready for shots
+unsigned int  number_of_connections = 0;            // How many people are connected to me?
 
 time_count_t  keep_alive;                           // Keep alive timer
 time_count_t  tabata_timer;                         // Free running state timer
@@ -83,6 +84,7 @@ typedef struct
 extern int isr_state;
 
 volatile unsigned int run_state = 0;                // Current operating state
+unsigned long         base_time = 0;                // Base time to show elapsed time
 
 char _xs[LONG_TEXT];                                // Holding buffer for sprintf
 
@@ -156,9 +158,12 @@ void freeETarget_init(void)
    */
   show_echo();
   set_LED_PWM(json_LED_PWM);
-  serial_flush(ALL); // Get rid of everything
-  shot_in  = 0;      // Clear out any junk
-  shot_out = 0;
+  serial_flush(ALL);                      // Get rid of everything
+  shot_in         = 0;                    // Clear out any junk
+  shot_out        = 0;
+  connection_list = 0;                    // Nobody is connected yet
+  base_time       = esp_timer_get_time(); // Reset the time of day
+
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initialization complete");))
 
   /*
@@ -430,11 +435,12 @@ unsigned int reduce(void)
     if ( location != MISS ) // Was it a miss or face strike?
     {
       prepare_score(&record[shot_out], shot_out, NOT_MISSED_SHOT);
-      /*
-       *  Display the results
-       */
+
       build_json_score(&record[shot_out], SCORE_USB);
-      serial_to_all(_xs, ALL);
+      serial_to_all(_xs, CONSOLE);
+
+      build_json_score(&record[shot_out], SCORE_TCPIP);
+      serial_to_all(_xs, TCPIP);
 
 #if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE ) // Include only if remote server is needed
       if ( (json_remote_modes & REMOTE_MODE_CLIENT) != 0 )
@@ -527,11 +533,11 @@ unsigned int reduce(void)
  *
  * Session types are
  *  0 - Clear all existing sessions
- *  1 - Sighters
- *  2 - Score
+ *  2 - Sighters
+ *  4 - Score
  *  10 - Display all shots
- *  11 - Display sighters
- *  12 - Display score
+ *  12 - Display sighters
+ *  14 - Display score
  *
  *--------------------------------------------------------------*/
 #define SESSION_PRINT 10                 // Display the session
@@ -542,38 +548,44 @@ void start_new_session(int session_type) //
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "start_new_session(%d)", session_type);))
 
-  /*
-   * Reset the sessions ?
-   */
-  if ( session_type == 0 ) // Reset the session
+  switch ( session_type )
   {
-    for ( i = 0; i != SHOT_SPACE; i++ )
-    {
-      record[i].session_type = 0;
-    }
-    return;
-  }
+    case SESSION_EMPTY:
+      for ( i = 0; i != SHOT_SPACE; i++ )
+      {
+        record[i].session_type = SESSION_EMPTY;
+      }
+      shot_in   = 0;
+      shot_out  = 0;
+      base_time = esp_timer_get_time();
+      break;
 
-  /*
-   * Are we setting or displaying the shots
-   */
-  if ( (session_type / SESSION_PRINT) == 0 ) // Setting only
-  {
-    start_new_session(0);
-    return;
-  }
+    case SESSION_SIGHT: // Nothing to do
+    case SESSION_SCORE:
+      base_time = esp_timer_get_time();
+      break;
 
-                                             /*
-                                              * Printing out a session
-                                              */
+    case SESSION_PRINT + SESSION_EMPTY:
+    case SESSION_PRINT + SESSION_SIGHT:
+    case SESSION_PRINT + SESSION_SCORE:
+      for ( i = 0; i != shot_out; i++ )
+      {
+        if ( ((record[i].session_type & SESSION_VALID) != 0)   // The session has valid data
+             && (record[i].session_type & (SESSION_SIGHT | SESSION_SCORE)) == (session_type % SESSION_PRINT) )
+        {
+          build_json_score(&record[i], SCORE_USB);             // Send out to the USB
+          serial_to_all(_xs, ALL);
 
-  for ( i = 0; i != SHOT_SPACE; i++ )
-  {
-    if ( (record[i].session_type != 0) // The session has valid data
-         && (record[i].session_type & (SESSION_SIGHT | SESSION_SCORE)) == (session_type % SESSION_PRINT) )
-    {
-      prepare_score(&record[i], i, NOT_MISSED_SHOT);
-    }
+          if ( (json_remote_modes & REMOTE_MODE_CLIENT) != 0 ) // Send out to the server
+          {
+            build_json_score(&record[i], SCORE_TCPIP);
+            http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
+          }
+
+          http_shot = 0;
+        }
+      }
+      break;
   }
 
   return;

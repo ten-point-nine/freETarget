@@ -847,34 +847,23 @@ void tcpip_accept_poll(void *parameters)
  *
  * A new socket connection has been made.
  *
- * This function checks to see if it is the first connection, and if so
- * reset everything
- *
  * Once that has been done, then update the PC client with all of  the pending
  * scores.
  *
  *******************************************************************************/
 static void WiFi_start_new_connection(int sock) // Socket token to use
 {
-  int i, j;
+  int i;
 
   /*
-   *  See if this is the first connection on a WiFi socket
+   *  Build up a mask of existing WiFi connections
    */
-  if ( json_wifi_reset_first != 0 )      // Reset on first connection?
+  connection_list &= ~(TCPIP);
+  for ( i = 0; i != MAX_SOCKETS; i++ ) // How many connections do we have?
   {
-    j = 0;
-    for ( i = 0; i != MAX_SOCKETS; i++ ) // How many connections do we have?
+    if ( socket_list[i] != AVAILABLE_SOCKET )
     {
-      if ( socket_list[i] == AVAILABLE_SOCKET )
-      {
-        j++;
-      }
-    }
-
-    if ( j == 1 ) // This is the first, start new
-    {
-      start_new_session(0);
+      connection_list = (TCPIP_0) << i;
     }
   }
 

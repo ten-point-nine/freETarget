@@ -27,6 +27,7 @@ int  tcpip_queue_2_app(char *buffer, int length);    // Take from queue and retu
 void serial_port_test(void);                         // Loopback the AUX port
 bool get_string(char destination[], int size);       // Collect a string from the input ports
 void serial_bt_config(unsigned int baud_rate);       // Initialize the Bluetooth port for operational configuration
+void check_new_connection(void);                     // Check to see if a new connection has been made
 
 /*
  *  Definitions
@@ -39,12 +40,17 @@ void serial_bt_config(unsigned int baud_rate);       // Initialize the Bluetooth
 #define TCPIP_1        0x0010
 #define TCPIP_2        0x0020
 #define TCPIP_3        0x0040
-#define HTTP_JSON      0x0080
+#define HTTP_CONNECTED 0x0080
 #define TCPIP          (TCPIP_0 | TCPIP_1 | TCPIP_2 | TCPIP_3)
 #define EVEN_ODD_BEGIN 0x0080 // Remember to output in even_odd mode
 #define EVEN_ODD_END   0x0100 // Exit even odd mode
 
 #define ALL  (CONSOLE | AUX | BLUETOOTH | TCPIP)
 #define SOME (CONSOLE | TCPIP)
+
+/*
+ *  Global Variables
+ */
+extern unsigned int connection_list;
 
 #endif

@@ -45,7 +45,7 @@
 /*
  *  Variables
  */
-static int http_shot = -1; // What shot number have we sent?
+int http_shot = -1; // What shot number have we sent?
 
 /*
  * Local functions
@@ -122,15 +122,12 @@ void register_services(httpd_handle_t server // Pointer to active server
  * the client in a separate function
  *
  *------------------------------------------------------------*/
-
 static esp_err_t service_get_events(httpd_req_t *req)
 {
-  const char *resp_str;                           // Reply to server
-  char        str[MEDIUM_TEXT];                   // Temporary
+  const char *resp_str;         // Reply to server
+  char        str[MEDIUM_TEXT]; // Temporary
 
-  printf("\r\nservice_get_events(%s)", req->uri); // Send out the result for debugging
-
-  if ( http_shot < 0 )                            // First time through
+  if ( http_shot < 0 )          // First time through
   {
     strcpy(str, "event:new_shotData\nid:\ndata: ");
     build_json_score(&record[0], SCORE_HTTP_PRIME);
@@ -195,6 +192,7 @@ static esp_err_t service_get_index(httpd_req_t *req)
    * Do the things we need to do to start a session
    */
   http_shot = -1; // Reset the shot counter
+  connection_list |= HTTP_CONNECTED;
 
   /*
    *  Send the reply to the client

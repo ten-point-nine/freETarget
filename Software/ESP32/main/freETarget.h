@@ -99,6 +99,7 @@
 #define SESSION_VALID 1                            // Session is valid but undefined
 #define SESSION_SIGHT 2                            // Session is a sighter
 #define SESSION_SCORE 4                            // Session is a score
+#define SESSION_PRINT 10                           // Print out the session
 
 #define SCORE_LEFT_BRACE  '{'                      // Opening JSON string
 #define SCORE_RIGHT_BRACE '}'                      // Closing JSON string
@@ -108,6 +109,7 @@
 #define SCORE_MISS        'M'                      // Include miss status
 #define SCORE_SESSION     '?'                      // Include session type
 #define SCORE_TIME        'T'                      // Include time stamp
+#define SCORE_ELAPSED     'D'                      // Include elapsed time
 #define SCORE_XY          'X'                      // Include X-Y coordinates
 #define SCORE_POLAR       'P'                      // Include polar coordinates
 #define SCORE_HARDWARE    'H'                      // Include hardware values
@@ -118,7 +120,7 @@
 #define SCORE_USB        "{S?TX}"                  // USB score elements
 #define SCORE_TCPIP      "{S?TXE}"                 // TCP score elements
 #define SCORE_BLUETOOTH  "{S?TX}"                  // Bluetooth score elements
-#define SCORE_HTTP       "{S?TXPO}"                // HTTP score elements
+#define SCORE_HTTP       "{S?TXPOE}"               // HTTP score elements
 #define SCORE_HTTP_PRIME "{#}"                     // HTTP Prime the client
 
 /*
@@ -187,6 +189,7 @@ extern volatile unsigned long power_save;  // Power down timer
 extern volatile unsigned int  run_state;   // IPC states
 extern volatile unsigned long LED_timer;   // Turn off the LEDs when not in use
 extern char                   _xs[512];    // General purpose string buffer
+extern unsigned long          base_time;   // Time that the target was internally reset
 
 /*
  * FreeETarget functions
