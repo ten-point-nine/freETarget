@@ -455,7 +455,7 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
         break;
 
       case SCORE_TIME:                               // Time
-        sprintf(str, ", \"time\":%6.2f", SHOT_TIME_TO_SECONDS(shot->shot_time));
+        sprintf(str, ", \"time\":%ld", shot->shot_time);
         break;
 
       case SCORE_ELAPSED:                            // Time since shooting began
@@ -650,4 +650,31 @@ void squish(char *uri,      // URI to squish
    */
   *argument = 0;
   return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: hamming_weight
+ *
+ * @brief:    Count the number of bits in a word
+ *
+ * @return:   Number of bits in the word
+ *
+ *----------------------------------------------------------------
+ *
+ * Count up the bits in the word
+ *
+ *--------------------------------------------------------------*/
+unsigned int hamming_weight(unsigned int word)
+{
+  unsigned int weight;
+
+  weight = 0;
+  while ( word != 0 )
+  {
+    weight += word & 1;
+    word >>= 1;
+  }
+
+  return weight;
 }

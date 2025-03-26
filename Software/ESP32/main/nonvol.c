@@ -13,6 +13,7 @@
 #include "nvs_flash.h"
 
 #include "freETarget.h"
+#include "helpers.h"
 #include "diag_tools.h"
 #include "json.h"
 #include "mfs.h"
@@ -97,6 +98,11 @@ void read_nonvol(void)
         case IS_VOID:
           break;
 
+        case IS_TEXT_1:
+          if ( hamming_weight(connection_list) > 1 )
+          {
+            break;
+          }
         case IS_TEXT:
         case IS_SECRET:
           if ( JSON[i].non_vol != 0 ) // Is persistent storage enabled?
@@ -176,10 +182,15 @@ void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calib
   {
     switch ( JSON[i].convert & IS_MASK )
     {
-      case IS_VOID:  // Variable does not contain anything
-      case IS_FIXED: // Variable cannot be overwritten                                    // MFS initialized from MFS entry
+      case IS_VOID:   // Variable does not contain anything
+      case IS_FIXED:  // Variable cannot be overwritten                                    // MFS initialized from MFS entry
         break;
 
+      case IS_TEXT_1: // Skip if we have more than one connection
+        if ( hamming_weight(connection_list) > 1 )
+        {
+          break;
+        }
       case IS_TEXT:
       case IS_SECRET:
         if ( JSON[i].non_vol != 0 )
@@ -355,9 +366,15 @@ void update_nonvol(unsigned int current_version) // Version present in persisten
         DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Updating PS%d", version);))
         switch ( JSON[i].convert & IS_MASK )
         {
-          case IS_VOID:  // Variable does not contain anything
-          case IS_FIXED: // Variable cannot be overwritten                                    // MFS initialized from MFS entry
+          case IS_VOID:   // Variable does not contain anything
+          case IS_FIXED:  // Variable cannot be overwritten                                    // MFS initialized from MFS entry
             break;
+
+          case IS_TEXT_1: // Skip if we have more than one connection
+            if ( hamming_weight(connection_list) > 1 )
+            {
+              break;
+            }
 
           case IS_TEXT:
           case IS_SECRET:

@@ -959,7 +959,7 @@ void test_build_fake_shots(void)
 static void test_display_all_scores(void)
 {
   unsigned int i;
-  char         str[LONG_TEXT];
+  char         str[MEDIUM_TEXT];
 
   for ( i = 0; i != SHOT_SPACE; i++ )
   {
@@ -967,7 +967,7 @@ static void test_display_all_scores(void)
     {
       build_json_score(&record[i], SCORE_ALL);
       strcpy(str, _xs);
-      SEND(ALL, sprintf(_xs, "%s", str);)
+      SEND(ALL, sprintf(_xs, "\r\n%s", str);)
     }
   }
   /*

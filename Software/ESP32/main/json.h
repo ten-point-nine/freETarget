@@ -41,7 +41,8 @@ extern const json_message_t JSON[];
 #define IS_SECRET (4 << 8)                         // Value is a string but hidden
 #define IS_TEXT   (5 << 8)                         // Value is a string
 #define IS_MFS    (6 << 8)                         // Value is a multifunction switch
-#define IS_VOID   (7 << 8)                         // Value is a void
+#define IS_TEXT_1 (7 << 8)                         // Used only on first connection
+#define IS_VOID   (8 << 8)                         // Value is a void
 
 #define IS_MASK    (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED | IS_MFS)
 #define FLOAT_MASK ((~IS_MASK) & 0xFF)             // Scaling factor 8 bits

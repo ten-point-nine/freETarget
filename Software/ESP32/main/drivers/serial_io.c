@@ -817,11 +817,11 @@ void serial_port_test(void)
  *
  ******************************************************************************/
 static unsigned int old_connection_list = 0; // Previous connection mask
+static unsigned int connection_mask[]   = {CONSOLE, AUX, TCPIP_0, TCPIP_1, TCPIP_2, TCPIP_3, HTTP_CONNECTED};
 
 void check_new_connection(void)
 {
-  int          i, count;
-  unsigned int bit_mask[] = {CONSOLE, AUX, TCPIP_0, TCPIP_1, TCPIP_2, TCPIP_3, HTTP_CONNECTED};
+  int i, count;
 
   if ( old_connection_list == connection_list ) // Has anything changed?
   {
@@ -832,23 +832,14 @@ void check_new_connection(void)
   /*
    *  Count up the number of connections
    */
-  count = 0;
-  for ( i = 0; i != sizeof(bit_mask) / sizeof(unsigned int); i++ )
+  if ( hamming_weight(connection_list) > 1 ) // Do we have more than one connection?
   {
-    if ( (connection_list & bit_mask[i]) != 0 )
-    {
-      count++;
-    }
+    return;                                  // Yes, then return
   }
 
-  if ( count > 1 ) // Do we have more than one connection?
-  {
-    return;        // Yes, then return
-  }
-
-                   /*
-                    * This is our first connection, reset back to zero
-                    */
+                                             /*
+                                              * This is our first connection, reset back to zero
+                                              */
   for ( i = 0; i != SHOT_SPACE; i++ )
   {
     record[i].session_type = SESSION_EMPTY;

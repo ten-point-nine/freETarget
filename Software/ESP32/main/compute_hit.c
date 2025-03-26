@@ -461,7 +461,6 @@ bool find_xy_3D(sensor_t *s,             // Sensor to be operatated on
  * into a meaningful score relative to the target.
  *
  *--------------------------------------------------------------*/
-
 void prepare_score(shot_record_t *shot,        //  record
                    unsigned int   shot_number, // What shot are we
                    bool           miss         // TRUE if the shot was a miss
