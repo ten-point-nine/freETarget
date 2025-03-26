@@ -183,10 +183,8 @@ static esp_err_t service_get_events(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_index(httpd_req_t *req)
 {
-  const char *resp_str;                       // Reply to server
-  char        my_name[SHORT_TEXT];            // Temporary string
-
-  printf("service_get_index:(%s)", req->uri); // Send out the result for debugging
+  const char *resp_str;            // Reply to server
+  char        my_name[SHORT_TEXT]; // Temporary string
 
   /*
    * Do the things we need to do to start a session
@@ -224,10 +222,8 @@ static esp_err_t service_get_index(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_shotData(httpd_req_t *req)
 {
-  const char *resp_str;                          // Reply to server
-  char        my_name[SHORT_TEXT];               // Target name
-
-  printf("service_get_shotData:(%s)", req->uri); // Send out the result for debugging
+  const char *resp_str;            // Reply to server
+  char        my_name[SHORT_TEXT]; // Target name
 
   /*
    *  First time through, prime the client
@@ -292,17 +288,15 @@ static esp_err_t service_get_shotData(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_json(httpd_req_t *req)
 {
-  const char *resp_str;                     // Reply to server
-  char        my_name[SHORT_TEXT];          // Target name
+  const char *resp_str;                   // Reply to server
+  char        my_name[SHORT_TEXT];        // Target name
 
-  printf("service_get_json(%s)", req->uri); // Send out the result for debugging
+  squish(req->uri, _xs);                  // Go through the uri and keep the argument portion
+  tcpip_socket_2_queue(_xs, strlen(_xs)); // Put the data into the TCPIP queue
+  vTaskDelay(ONE_SECOND);                 // Give up time for the data to be processed
 
-  squish(req->uri, _xs);                    // Go through the uri and keep the argument portion
-  tcpip_socket_2_queue(_xs, strlen(_xs));   // Put the data into the TCPIP queue
-  vTaskDelay(ONE_SECOND);                   // Give up time for the data to be processed
-
-  resp_str = _xs;                           // Send back a reply if there is one
-  target_name(&my_name);                    // Get the target name
+  resp_str = _xs;                         // Send back a reply if there is one
+  target_name(&my_name);                  // Get the target name
   httpd_resp_set_hdr(req, "get_json", my_name);
   httpd_resp_send(req, resp_str, strlen(resp_str));
 
@@ -326,15 +320,10 @@ static esp_err_t service_get_json(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_issf_png(httpd_req_t *req)
 {
-  const char *resp_str;                         // Reply to server
-  char        my_name[SHORT_TEXT];              // Target name
-
-  printf("service_get_issf_jpg(%s)", req->uri); // Send out the result for debugging
+  const char *resp_str;              // Reply to server
+  char        my_name[SHORT_TEXT];   // Target name
 
   target_name(my_name);
-
-  // DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_json(%s)", req);))
-
   resp_str = (const char *)issf_png; // point to the target json file
   httpd_resp_set_hdr(req, "get_issf_png", my_name);
   httpd_resp_send(req, resp_str, SIZEOF_ISSF_PNG);

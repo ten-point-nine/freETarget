@@ -40,6 +40,7 @@
 extern volatile unsigned long paper_time;
 
 static void show_test_help(void);
+static void test_display_all_scores(void);
 
 /*
  * Diagnostic typedefs
@@ -89,6 +90,7 @@ static const self_test_t test_list[] = {
     {"- Software tests",                  0                        },
     {"build_json_score",                  &test_build_json_score   },
     {"build_fake_shots",                  &test_build_fake_shots   },
+    {"display_all_scores",                &test_display_all_scores },
     {"",                                  0                        }
 };
 
@@ -936,5 +938,41 @@ void test_build_fake_shots(void)
    *  Finished
    */
   shot_in = i;
+  SEND(ALL, sprintf(_xs, _DONE_);)
+
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: test_display_all_scores
+ *
+ * @brief:    Print out the log of scores
+ *
+ * @return:   None
+ *
+ *----------------------------------------------------------------
+ *
+ * Fill up 10 shots with random data
+ *
+ *--------------------------------------------------------------*/
+static void test_display_all_scores(void)
+{
+  unsigned int i;
+  char         str[LONG_TEXT];
+
+  for ( i = 0; i != SHOT_SPACE; i++ )
+  {
+    if ( record[i].session_type & SESSION_VALID )
+    {
+      build_json_score(&record[i], SCORE_ALL);
+      strcpy(str, _xs);
+      SEND(ALL, sprintf(_xs, "%s", str);)
+    }
+  }
+  /*
+   *  Finished
+   */
+  SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }
