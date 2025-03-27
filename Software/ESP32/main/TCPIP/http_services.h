@@ -13,6 +13,7 @@
  */
 void                      register_services(httpd_handle_t server); // Pointer to active server
 extern const httpd_uri_t *url_list[];                               // List of active URLs
+void                      service_send_events(void *pvParameters);  // Wait on a shot and send that event
 
 /*
  * Global Variables

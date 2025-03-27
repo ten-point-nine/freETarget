@@ -65,7 +65,6 @@ static esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err);
 const httpd_uri_t url_list[] = {
     {.uri = "/index", .method = HTTP_GET, .handler = service_get_index, .user_ctx = "Index not found"},
     {.uri = "/who", .method = HTTP_GET, .handler = service_get_who, .user_ctx = "Timelord"},
-    {.uri = "/shotData", .method = HTTP_GET, .handler = service_get_shotData, .user_ctx = "Shot Data"},
     {.uri = "/json", .method = HTTP_GET, .handler = service_get_json, .user_ctx = "json"},
     {.uri = "/events", .method = HTTP_GET, .handler = service_get_events, .user_ctx = "events"},
     {.uri = "/favicon.ico", .method = HTTP_GET, .handler = service_get_issf_png, .user_ctx = NULL},
@@ -122,51 +121,68 @@ void register_services(httpd_handle_t server // Pointer to active server
  * the client in a separate function
  *
  *------------------------------------------------------------*/
+static httpd_req_t event_req; // Settings that got us here
+
 static esp_err_t service_get_events(httpd_req_t *req)
 {
-  const char *resp_str;         // Reply to server
-  char        str[MEDIUM_TEXT]; // Temporary
+  char str[MEDIUM_TEXT];      // Temporary
 
-  if ( http_shot < 0 )          // First time through
+                              /*
+                               * On the first time through, make up a score record to
+                               * prime the target size on the client browser
+                               *
+                               */
+  if ( http_shot < 0 ) // First time through
   {
     strcpy(str, "event:new_shotData\nid:\ndata: ");
     build_json_score(&record[0], SCORE_HTTP_PRIME);
     strcat(str, _xs);
     strcat(str, "\n\n");
-    resp_str = (const char *)str;
     httpd_resp_set_hdr(req, "application/json", "new_shotData");
     httpd_resp_set_type(req, "text/event-stream");
-    httpd_resp_send(req, resp_str, strlen(resp_str));
-
+    httpd_resp_send(req, str, strlen(str));
     http_shot = 0;
-  }
-  else
-  {
-    /*
-     * Output a shot when there is one ready
-     */
-    while ( http_shot == shot_in )
-    {
-      vTaskDelay(ONE_SECOND);                                                                      // Wait here for a shot to arrive
-    }
-    if ( (record[http_shot].session_type & (SESSION_VALID | SESSION_SIGHT | SESSION_SCORE)) != 0 ) // Do we have a shot record?
-    {
-      strcpy(str, "event:new_shotData\nid:\ndata: ");                                              // Yes, prepare it and send it on
-      build_json_score(&record[http_shot], SCORE_HTTP);
-      strcat(str, _xs);
-      strcat(str, "\n\n");
-      resp_str = (const char *)str;
-      httpd_resp_set_hdr(req, "application/json", "new_shotData");
-      httpd_resp_set_type(req, "text/event-stream");
-      httpd_resp_send(req, resp_str, strlen(resp_str));
-    }
-    http_shot = (http_shot + 1) % SHOT_SPACE; // Point to the next shot
+    return ESP_OK;
   }
 
   /*
-   * Go and wait for the next shot
+   * Record the request that got us here
+   */
+  memcpy(&event_req, req, sizeof(httpd_req_t));
+
+  /*
+   *  All done, return
    */
   return ESP_OK;
+}
+
+void service_send_events(void *pvParameters)
+{
+  char str[MEDIUM_TEXT];                             // Temporary
+
+  while ( 1 )
+  {
+    if ( (http_shot > 0) && (http_shot != shot_in) ) // Have we been initialized and is there something to go?
+    {
+      /*
+       *  A shot has come along
+       */
+      if ( (record[http_shot].session_type & (SESSION_VALID | SESSION_SIGHT | SESSION_SCORE)) != 0 ) // Do we have a shot record?
+      {
+        strcpy(str, "event:new_shotData\nid:\ndata: ");                                              // Yes, prepare it and send it on
+        build_json_score(&record[http_shot], SCORE_HTTP);
+        strcat(str, _xs);
+        strcat(str, "\n\n");
+        httpd_resp_set_hdr(&event_req, "application/json", "new_shotData");
+        httpd_resp_set_type(&event_req, "text/event-stream");
+        httpd_resp_send(&event_req, str, strlen(str));
+      }
+      http_shot = (http_shot + 1) % SHOT_SPACE; // Point to the next shot
+    }
+    vTaskDelay(ONE_SECOND);
+  }
+
+  return;
 }
 
 /*----------------------------------------------------------------
@@ -200,70 +216,6 @@ static esp_err_t service_get_index(httpd_req_t *req)
   httpd_resp_set_hdr(req, "get_index", my_name);
   httpd_resp_send(req, resp_str, strlen(resp_str));
 
-  return ESP_OK;
-}
-
-/*----------------------------------------------------------------
- *
- * @function: service_get_shotData
- *
- * @brief:    Send the shot data to the client
- *
- * @return:   esp_err_t, error type
- *
- *---------------------------------------------------------------
- *
- * The function goes through each shot record and if it is valid
- * sends it to the server as a JSON string.
- *
- * If all of the records are sent, then the function returns an
- * empty string to the client.
- *
- *------------------------------------------------------------*/
-static esp_err_t service_get_shotData(httpd_req_t *req)
-{
-  const char *resp_str;            // Reply to server
-  char        my_name[SHORT_TEXT]; // Target name
-
-  /*
-   *  First time through, prime the client
-   */
-  if ( http_shot < 0 )
-  {
-    build_json_score(&record[0], SCORE_HTTP_PRIME);
-    http_shot = 0;
-  }
-
-  /*
-   *  If there is a new shot, build the json, otherwise empty
-   */
-  else
-  {
-    if ( (http_shot != shot_in)                                                                         // Shot ready to send
-         && ((record[http_shot].session_type & (SESSION_VALID | SESSION_SIGHT | SESSION_SCORE)) != 0) ) // Do we have a shot record?
-    {
-      build_json_score(&record[http_shot], SCORE_HTTP);
-      http_shot = (http_shot + 1) % SHOT_SPACE;
-    }
-    else                                                                                                // No shot record
-    {
-      _xs[0] = 0;
-    }
-  }
-
-  /*
-   *  Populate the reply
-   */
-  resp_str = (const char *)_xs; // point to the target json file
-  target_name(&my_name);        // Get the target name
-  httpd_resp_set_hdr(req, "get_ShotData", my_name);
-  httpd_resp_send(req, resp_str, strlen(resp_str));
-
-  /*
-   * All done
-   */
-  strcpy(my_name, _xs);
-  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_shotData: %s", my_name);)) // Send out the result for debugging
   return ESP_OK;
 }
 

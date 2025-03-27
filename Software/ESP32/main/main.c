@@ -25,6 +25,7 @@
 #include "diag_tools.h"
 #include "http_client.h"
 #include "http_server.h"
+#include "http_services.h"
 
 /*
  * Task Priorities
@@ -78,6 +79,9 @@ void app_main(void)
   vTaskDelay(TICK_10ms);
 
   start_webserver();
+  xTaskCreate(service_send_events, "service_send_events", 4096, NULL, MUST_RUN, NULL);
+  vTaskDelay(TICK_10ms);
+
   vTaskDelay(TICK_10ms);
 
   freeETarget_timer_init();
