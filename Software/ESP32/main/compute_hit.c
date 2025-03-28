@@ -546,7 +546,7 @@ void send_replay(shot_record_t *shot,                                  //  recor
   if ( (shot->session_type & SESSION_VALID) != 0 )                     // Do we have a shot record?
   {
 
-    if ( (shot->session_type & (SESSION_SIGHT | SESSION_SCORE)) != 0 ) // Has it been tagged as sighters or score?
+    if ( (shot->session_type & (SESSION_SIGHT | SESSION_MATCH)) != 0 ) // Has it been tagged as sighters or score?
     {
       build_json_score(shot, SCORE_TCPIP);
     }

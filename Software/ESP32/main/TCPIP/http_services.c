@@ -178,6 +178,17 @@ static esp_err_t service_get_index(httpd_req_t *req)
   const char *resp_str;            // Reply to server
   char        my_name[SHORT_TEXT]; // Temporary string
 
+  printf("  %s  ", req->uri);
+
+  if ( (instr(req->uri, "MATCH") != 0) || (instr(req->uri, "match") != 0) )
+  {
+    start_new_session(SESSION_MATCH);
+  }
+
+  if ( (instr(req->uri, "SIGHT") != 0) || (instr(req->uri, "SIGHT") != 0) )
+  {
+    start_new_session(SESSION_SIGHT);
+  }
   /*
    * Do the things we need to do to start a session
    */

@@ -816,16 +816,15 @@ void serial_port_test(void)
  * variables need to be cleared
  *
  ******************************************************************************/
-static unsigned int old_connection_list = 0; // Previous connection mask
-static unsigned int connection_mask[]   = {CONSOLE, AUX, TCPIP_0, TCPIP_1, TCPIP_2, TCPIP_3, HTTP_CONNECTED};
+static unsigned int old_connection_list = 0;        // Previous connection mask
 
 void check_new_connection(void)
 {
-  int i, count;
+  int i,
 
-  if ( old_connection_list == connection_list ) // Has anything changed?
+      if ( old_connection_list == connection_list ) // Has anything changed?
   {
-    return;                                     // No, do nothing
+    return;                                         // No, do nothing
   }
   old_connection_list = connection_list;
 
@@ -837,17 +836,7 @@ void check_new_connection(void)
     return;                                  // Yes, then return
   }
 
-                                             /*
-                                              * This is our first connection, reset back to zero
-                                              */
-  for ( i = 0; i != SHOT_SPACE; i++ )
-  {
-    record[i].session_type = SESSION_EMPTY;
-  }
-  json_session_type = SESSION_EMPTY;
-  shot_in           = 0;
-  shot_out          = 0;
-  reset_run_time();
+  start_new_session();
 
   /*
    *  All done, return

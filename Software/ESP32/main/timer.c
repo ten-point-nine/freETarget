@@ -65,6 +65,7 @@ volatile unsigned long         shot_timer;       // Wait for the sound to hit al
 volatile unsigned long         ring_timer;       // Let the ring on the backstop end
 static state                   isr_state;        // What sensor state are we in
 static unsigned long           base_time = 0;    // Base time to show elapsed time
+time_count_t                   time_to_go;       // Time remaining in event in seconds
 
 static synchronous_task_t task_list[] = {
     {BAND_10ms,   token_cycle              },

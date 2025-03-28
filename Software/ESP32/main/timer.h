@@ -11,7 +11,8 @@
 /*
  * Variables
  */
-extern volatile unsigned long ring_timer; // Let the ring on the backstop end
+extern time_count_t ring_timer; // Let the ring on the backstop end
+extern time_count_t time_to_go; // Time remaining in event in seconds
 
 /*
  * function Prototypes

@@ -68,7 +68,7 @@ void test_build_fake_shots(void);                         // Generate a list of 
 #define LED_RAPID_RED        "--- R" // Rapid fire RED is ON
 #define LED_RAPID_RED_WARN   "--- r" // Rapid fire RED is BLINKING
 #define LED_RAPID_RED_OFF    "---- " // Rapid fire RED is OFF
-#define LED_RAPID_GREEN      "---G-" // Rapid fire GREEN is ON
+#define LED_RAPID_GREEN      "---G " // Rapid fire GREEN is ON
 #define LED_RAPID_GREEN_OFF  "--- -" // Rapid fire GREEN is OFF
 #define LED_RAPID_GREEN_WARN "---gr" // Rapid fire GREEN is BLINKING
 #define LED_TABATA_OFF       "-----" // TABATA LEDs are OFF

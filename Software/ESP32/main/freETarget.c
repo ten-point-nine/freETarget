@@ -43,49 +43,51 @@
 /*
  *  Variables
  */
-shot_record_t record[SHOT_SPACE];                   // Array of shot records
-unsigned int  shot_in;                              // Index to the shot just received
-unsigned int  shot_out;                             // Index to the shot just sent to the PC (shot_out <= shot_in)
+shot_record_t record[SHOT_SPACE];                            // Array of shot records
+unsigned int  shot_in;                                       // Index to the shot just received
+unsigned int  shot_out;                                      // Index to the shot just sent to the PC (shot_out <= shot_in)
 
-double       s_of_sound;                            // Speed of sound
-unsigned int shot        = 0;                       // Shot counter
-unsigned int face_strike = 0;                       // Miss Face Strike interrupt count
-unsigned int is_trace    = DLT_INFO | DLT_CRITICAL; // Default tracing
+double       s_of_sound;                                     // Speed of sound
+unsigned int shot        = 0;                                // Shot counter
+unsigned int face_strike = 0;                                // Miss Face Strike interrupt count
+unsigned int is_trace    = DLT_INFO | DLT_CRITICAL;          // Default tracing
 
-unsigned int  shot_number;                          // Shot Identifier (1-100)
-unsigned long shot_start;                           // Time when target was ready for shots
-unsigned int  number_of_connections = 0;            // How many people are connected to me?
+unsigned int  shot_number;                                   // Shot Identifier (1-100)
+unsigned long shot_start;                                    // Time when target was ready for shots
+unsigned int  number_of_connections = 0;                     // How many people are connected to me?
 
-time_count_t  keep_alive;                           // Keep alive timer
-time_count_t  tabata_timer;                         // Free running state timer
-time_count_t  power_save;                           // Power save timer
-time_count_t  rapid_timer;                          // Timer used for rapid fire ecents
-time_count_t  LED_timer;                            // Timer to reset LED status
-unsigned long go_dark     = 10l;                    // Go dark for 10 seconds
-unsigned long go_wait     = 3l;                     // Wait for the PC to catchup
-unsigned long all_done    = 0l;                     // All finished
+time_count_t keep_alive;                                     // Keep alive timer
+time_count_t tabata_timer;                                   // Free running state timer
+time_count_t power_save;                                     // Power save timer
+time_count_t rapid_timer;                                    // Timer used for rapid fire ecents
+time_count_t LED_timer;                                      // Timer to reset LED status
+time_count_t session_time[] = {1000 * 60, 15 * 60, 75 * 60}; // Time in each session EMPTY, SIGHT, SCORE
+
+unsigned long go_dark     = 10l;                             // Go dark for 10 seconds
+unsigned long go_wait     = 3l;                              // Wait for the PC to catchup
+unsigned long all_done    = 0l;                              // All finished
 int           always_true = true;
 
 static enum {
-  START = 0,                                        // 0 et the operating mode
-  WAIT,                                             // 1 ARM the circuit and wait for a shot
-  REDUCE                                            // 2 Reduce the data and send the score
+  START = 0,                                                 // 0 et the operating mode
+  WAIT,                                                      // 1 ARM the circuit and wait for a shot
+  REDUCE                                                     // 2 Reduce the data and send the score
 } freETarget_state;
 
 typedef struct
 {
-  volatile unsigned long *timer;                    // Timer used to control state length
-  char                   *status_LED;               // Status LED output
-  float                   LED_bright;               // Brightness of target LED
-  char                   *message;                  // Message to be sent to PC
-  bool                    in_shot;                  // In as shot cycle
+  volatile unsigned long *timer;                             // Timer used to control state length
+  char                   *status_LED;                        // Status LED output
+  float                   LED_bright;                        // Brightness of target LED
+  char                   *message;                           // Message to be sent to PC
+  bool                    in_shot;                           // In as shot cycle
 } rapid_state_t;
 
 extern int isr_state;
 
-volatile unsigned int run_state = 0;                // Current operating state
+volatile unsigned int run_state = 0;                         // Current operating state
 
-char _xs[LONG_TEXT];                                // Holding buffer for sprintf
+char _xs[LONG_TEXT];                                         // Holding buffer for sprintf
 
 /*
  *  Function Prototypes
@@ -157,11 +159,12 @@ void freeETarget_init(void)
    */
   show_echo();
   set_LED_PWM(json_LED_PWM);
-  serial_flush(ALL);   // Get rid of everything
-  shot_in         = 0; // Clear out any junk
+  serial_flush(ALL);              // Get rid of everything
+  shot_in         = 0;            // Clear out any junk
   shot_out        = 0;
-  connection_list = 0; // Nobody is connected yet
-  reset_run_time();    // Reset the time of day
+  connection_list = 0;            // Nobody is connected yet
+  reset_run_time();               // Reset the time of day
+  time_to_go = 1000 * ONE_SECOND; // Infinite amount of time to start
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initialization complete");))
 
@@ -228,6 +231,10 @@ void freeETarget_target_loop(void *arg)
         set_mode();
         arm();
         set_status_LED(LED_READY);
+        if ( (json_rapid_enable == false) && (json_tabata_enable == false) )           // If rapid fire is not enabled
+        {
+          set_status_LED(LED_RAPID_GREEN);                                             // Show that the target cannot be used
+        }
         freETarget_state = WAIT;
         json_rapid_count = 0;
         DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "state: WAIT");))
@@ -441,13 +448,11 @@ unsigned int reduce(void)
       build_json_score(&record[shot_out], SCORE_TCPIP);
       serial_to_all(_xs, TCPIP);
 
-#if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE ) // Include only if remote server is needed
       if ( (json_remote_modes & REMOTE_MODE_CLIENT) != 0 )
       {
         build_json_score(&record[shot_out], SCORE_TCPIP);
         http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
       }
-#endif
 
       /*
        *  Advance the paper
@@ -466,7 +471,7 @@ unsigned int reduce(void)
           {
             if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
             {
-              set_status_LED(LED_RAPID_RED);                                     // Show that we are ready
+              set_status_LED(LED_RAPID_RED);                                     // Show that the target cannot be used
             }
             paper_start();                                                       // Roll the paper
             paper_shot     = 0;                                                  // And start over
@@ -547,8 +552,9 @@ void start_new_session(int session_type) //
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "start_new_session(%d)", session_type);))
 
-  switch ( session_type )
+  switch ( session_type & (~SESSION_VALID) )
   {
+    default:
     case SESSION_EMPTY:
       for ( i = 0; i != SHOT_SPACE; i++ )
       {
@@ -557,16 +563,22 @@ void start_new_session(int session_type) //
       shot_in  = 0;
       shot_out = 0;
       reset_run_time();
+      time_to_go = 1000;
       break;
 
-    case SESSION_SIGHT: // Nothing to do
-    case SESSION_SCORE:
+    case SESSION_SIGHT:     // Nothing to do
+      time_to_go = 15 * 60; // 15 minute sighting timer
+      reset_run_time();
+      break;
+
+    case SESSION_MATCH:
+      time_to_go = 75 * 60;
       reset_run_time();
       break;
 
     case SESSION_PRINT + SESSION_EMPTY:
     case SESSION_PRINT + SESSION_SIGHT:
-    case SESSION_PRINT + SESSION_SCORE:
+    case SESSION_PRINT + SESSION_MATCH:
       for ( i = 0; i != shot_out; i++ )
       {
         if ( ((record[i].session_type & SESSION_VALID) != 0)   // The session has valid data

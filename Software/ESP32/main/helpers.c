@@ -285,6 +285,10 @@ static enum bye_state {
 
 void bye_tick(void)
 {
+  if ( time_to_go > 0 )
+  {
+    time_to_go--;                // Decriment the time left in the session
+  }
   bye(0);
 }
 void bye(unsigned int force_bye) // Set to true to force a shutdown
@@ -439,7 +443,7 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
         break;
 
       case SCORE_PRIME:                              // Prime for HTTP
-        sprintf(str, "\"shot\":0, \"x\":0, \"y\":0, \"r\":0, \"a\":0,\"target\":%d", http_target_type());
+        sprintf(str, "\"shot\":0, \"session\":-1, \"x\":0, \"y\":0, \"r\":0, \"a\":0,\"target\":%d", http_target_type());
         break;
 
       case SCORE_SHOT:                               // Shot number
@@ -455,7 +459,7 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
         break;
 
       case SCORE_TIME:                               // Time
-        sprintf(str, ", \"time\":%ld", shot->shot_time);
+        sprintf(str, ", \"time\":%ld, \"time_to_go\":%ld", shot->shot_time, time_to_go);
         break;
 
       case SCORE_ELAPSED:                            // Time since shooting began

@@ -15,7 +15,7 @@
 #include "freertos/task.h"
 #include "serial_io.h"
 
-#define SOFTWARE_VERSION "\"6.0.0 March 25, 2025\""
+#define SOFTWARE_VERSION "\"6.0.0 March 28, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED" // Message to send on connection
 
@@ -98,7 +98,7 @@
 #define SESSION_EMPTY 0                            // No session data
 #define SESSION_VALID 1                            // Session is valid but undefined
 #define SESSION_SIGHT 2                            // Session is a sighter
-#define SESSION_SCORE 4                            // Session is a score
+#define SESSION_MATCH 4                            // Session is a match
 #define SESSION_PRINT 10                           // Print out the session
 
 #define SCORE_LEFT_BRACE  '{'                      // Opening JSON string
@@ -128,49 +128,47 @@
  */
 typedef struct sensor_ID
 {
-  char         short_name;               // Short name, ex 'N'
-  char        *long_name;                // Long name, ex "NORTH_HI"
-  char        *diag_LED;                 // LEDs to be set if a fault occurs
-  unsigned int sensor_GPIO;              // What GPIO is used with this sensor
-  unsigned int run_mask;                 // What bit is set in the RUN latch
+  char         short_name;      // Short name, ex 'N'
+  char        *long_name;       // Long name, ex "NORTH_HI"
+  char        *diag_LED;        // LEDs to be set if a fault occurs
+  unsigned int sensor_GPIO;     // What GPIO is used with this sensor
+  unsigned int run_mask;        // What bit is set in the RUN latch
 } sensor_ID_t;
 
 typedef struct
 {
-  unsigned int index;                    // Which sensor is this one
-  sensor_ID_t  low_sense;                // Information about the low trip point
-  sensor_ID_t  high_sense;               // Information about the high trip point
-  bool         is_valid;                 // TRUE if the sensor contains a valid time
-  double       angle_A;                  // Angle to be computed
-  double       diagonal;                 // Diagonal angle to next sensor (45')
-  double       x;                        // Sensor Location (X us)
-  double       y;                        // Sensor Location (Y us)
-  double       count;                    // Working timer value
-  double       a, b, c;                  // Working dimensions
-  double       xs;                       // Computed X shot value
-  double       ys;                       // Computed Y shot value
+  unsigned int index;           // Which sensor is this one
+  sensor_ID_t  low_sense;       // Information about the low trip point
+  sensor_ID_t  high_sense;      // Information about the high trip point
+  bool         is_valid;        // TRUE if the sensor contains a valid time
+  double       angle_A;         // Angle to be computed
+  double       diagonal;        // Diagonal angle to next sensor (45')
+  double       x;               // Sensor Location (X us)
+  double       y;               // Sensor Location (Y us)
+  double       count;           // Working timer value
+  double       a, b, c;         // Working dimensions
+  double       xs;              // Computed X shot value
+  double       ys;              // Computed Y shot value
 } sensor_t;
 
 typedef struct
 {
-  unsigned int  shot;                    // Shot number associated with this record, may not be 1:1
+  unsigned int  shot;           // Shot number associated with this record, may not be 1:1
   unsigned int  miss;
-  unsigned int  session_type;            // What kind of information is contained in the score
-  double        x;                       // X location of shot as computed in clock cycles
-  double        y;                       // Y location of shot as computed in clock cycles
-  double        xs;                      // X location of shot rotated onto target in clock cycles
-  double        ys;                      // Y location of shot rotated onto target in clock cycles
-  double        x_mm;                    // Computed location in mm
-  double        y_mm;                    // Computed location in mm
-  double        radius;                  // Radius of shot from the center of the target
-  double        angle;                   // Angle of shot from the center of the target
-  int           timer_count[8];          // Array of timer values 4 in hardware and 4 in software
-  unsigned int  face_strike;             // Recording of face strike
-  unsigned int  sensor_status;           // Triggering register
-  unsigned long shot_time;               // Shot time since start of after tabata start
+  unsigned int  session_type;   // What kind of information is contained in the score
+  double        x;              // X location of shot as computed in clock cycles
+  double        y;              // Y location of shot as computed in clock cycles
+  double        xs;             // X location of shot rotated onto target in clock cycles
+  double        ys;             // Y location of shot rotated onto target in clock cycles
+  double        x_mm;           // Computed location in mm
+  double        y_mm;           // Computed location in mm
+  double        radius;         // Radius of shot from the center of the target
+  double        angle;          // Angle of shot from the center of the target
+  int           timer_count[8]; // Array of timer values 4 in hardware and 4 in software
+  unsigned int  face_strike;    // Recording of face strike
+  unsigned int  sensor_status;  // Triggering register
+  unsigned long shot_time;      // Shot time since start of after tabata start
 } shot_record_t;
-
-extern shot_record_t record[SHOT_SPACE]; // Array of shot records
 
 typedef unsigned char          byte_t;
 typedef volatile unsigned long time_count_t;
@@ -178,17 +176,19 @@ typedef volatile unsigned long time_count_t;
 /*
  *  Global Variables
  */
-extern double                 s_of_sound;
-extern unsigned int           face_strike;
-extern unsigned int           is_trace;    // Tracing level(s)
-extern unsigned int           shot_in;     // Index into the shot array (The shot that has JUST arrived)
-extern unsigned int           shot_out;    // Index into the shot array (Last shot processed)
-extern unsigned int           shot_number; // Current shot number
-extern unsigned long          shot_start;  // Time when shot become valid
-extern volatile unsigned long power_save;  // Power down timer
-extern volatile unsigned int  run_state;   // IPC states
-extern volatile unsigned long LED_timer;   // Turn off the LEDs when not in use
-extern char                   _xs[512];    // General purpose string buffer
+extern double                s_of_sound;
+extern unsigned int          face_strike;
+extern unsigned int          is_trace;           // Tracing level(s)
+extern unsigned int          shot_in;            // Index into the shot array (The shot that has JUST arrived)
+extern unsigned int          shot_out;           // Index into the shot array (Last shot processed)
+extern unsigned int          shot_number;        // Current shot number
+extern unsigned long         shot_start;         // Time when shot become valid
+extern time_count_t          power_save;         // Power down timer
+extern volatile unsigned int run_state;          // IPC states
+extern time_count_t          LED_timer;          // Turn off the LEDs when not in use
+extern char                  _xs[512];           // General purpose string buffer
+extern shot_record_t         record[SHOT_SPACE]; // Array of shot records
+extern time_count_t          session_time[];     // Time in each session
 
 /*
  * FreeETarget functions
