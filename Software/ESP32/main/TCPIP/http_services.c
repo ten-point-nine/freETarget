@@ -62,7 +62,7 @@ static esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err);
 /*
  *  URL handlers
  */
-const httpd_uri_t url_list[] = {
+const httpd_uri_t uri_list[] = {
     {.uri = "/index", .method = HTTP_GET, .handler = service_get_index, .user_ctx = "Index not found"},
     {.uri = "/who", .method = HTTP_GET, .handler = service_get_who, .user_ctx = "Timelord"},
     {.uri = "/json", .method = HTTP_GET, .handler = service_get_json, .user_ctx = "json"},
@@ -93,9 +93,9 @@ void register_services(httpd_handle_t server // Pointer to active server
   int i;
 
   i = 0;
-  while ( url_list[i].uri != 0 )
+  while ( uri_list[i].uri != 0 )
   {
-    httpd_register_uri_handler(server, &url_list[i]);
+    httpd_register_uri_handler(server, &uri_list[i]);
     i++;
   }
   return;

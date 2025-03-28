@@ -209,17 +209,15 @@ static esp_err_t stop_webserver(httpd_handle_t server)
  *------------------------------------------------------------*/
 esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
 {
-  char temp[64];
-  int  i;
+  int i;
 
-  strncpy(temp, req->uri, sizeof(temp));                          // Copy part of the URL for display
-  sprintf(_xs, "Error 404. Service %s not found", temp);          // Error reported to the user
-  strncat(_xs, "<br>Valid URLs<br/>", sizeof(_xs) - strlen(_xs)); // Error reported to the user
+  sprintf(_xs, "Error 404. Service not found"); // Error reported to the user
+  strcat(_xs, "<br>Valid URLs<br/>");           // Error reported to the user
   i = 0;
-  while ( url_list[i] != 0 )
+  while ( uri_list[i].uri != 0 )
   {
-    strncat(_xs, "<br>", sizeof(_xs) - strlen(_xs));
-    strncat(_xs, url_list[i]->uri, sizeof(_xs) - strlen(_xs));
+    strcat(_xs, "<br>");
+    strcat(_xs, uri_list[i].uri);
     i++;
   }
   httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, _xs);
