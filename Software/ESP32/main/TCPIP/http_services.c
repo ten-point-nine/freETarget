@@ -111,78 +111,54 @@ void register_services(httpd_handle_t server // Pointer to active server
  *
  *---------------------------------------------------------------
  *
- * This function is called once when the /events URL arrives.
- *
  * On the first call it outputs an empty shot record to prime
  * the client's target and the returns control back to the web
  * page server.
  *
- * Periodically, as scores arrive, the new score is posted to
- * the client in a separate function
+ * On subsequent calls, the function will wait here until a new
+ * shot is availabe and that is sent.
  *
  *------------------------------------------------------------*/
-static httpd_req_t event_req; // Settings that got us here
-
 static esp_err_t service_get_events(httpd_req_t *req)
 {
-  char str[MEDIUM_TEXT];      // Temporary
+  char str[MEDIUM_TEXT]; // Temporary
 
-                              /*
-                               * On the first time through, make up a score record to
-                               * prime the target size on the client browser
-                               *
-                               */
-  if ( http_shot < 0 ) // First time through
+  /*
+   *  First time through, send an empty score
+   */
+  if ( http_shot < 0 )                              // First time through
   {
-    strcpy(str, "event:new_shotData\nid:\ndata: ");
-    build_json_score(&record[0], SCORE_HTTP_PRIME);
-    strcat(str, _xs);
-    strcat(str, "\n\n");
-    httpd_resp_set_hdr(req, "application/json", "new_shotData");
-    httpd_resp_set_type(req, "text/event-stream");
-    httpd_resp_send(req, str, strlen(str));
-    http_shot = 0;
-    return ESP_OK;
+    build_json_score(&record[0], SCORE_HTTP_PRIME); // Use a fixed reply to set the target type
+    http_shot = 0;                                  // Next time reply with the first shot
   }
 
   /*
-   * Record the request that got us here
+   * Second time trought Send the next score
    */
-  memcpy(&event_req, req, sizeof(httpd_req_t));
+  else
+  {
+    while ( http_shot == shot_in )                    // Wait here until something shows up
+    {
+      vTaskDelay(ONE_SECOND);
+    }
+    build_json_score(&record[http_shot], SCORE_HTTP); // Send the new shot
+    http_shot = (http_shot + 1) % SHOT_SPACE;         // and bump up next one
+  }
+  //
+  /*
+   * Prepare and send the payload
+   */
+  strcpy(str, "event:new_shotData\nid:\ndata: ");
+  strcat(str, _xs);
+  strcat(str, "\n\n");
+  httpd_resp_set_hdr(req, "application/json", "new_shotData");
+  httpd_resp_set_type(req, "text/event-stream");
+  httpd_resp_send(req, str, strlen(str));
 
   /*
    *  All done, return
    */
   return ESP_OK;
-}
-
-void service_send_events(void *pvParameters)
-{
-  char str[MEDIUM_TEXT];                             // Temporary
-
-  while ( 1 )
-  {
-    if ( (http_shot > 0) && (http_shot != shot_in) ) // Have we been initialized and is there something to go?
-    {
-      /*
-       *  A shot has come along
-       */
-      if ( (record[http_shot].session_type & (SESSION_VALID | SESSION_SIGHT | SESSION_SCORE)) != 0 ) // Do we have a shot record?
-      {
-        strcpy(str, "event:new_shotData\nid:\ndata: ");                                              // Yes, prepare it and send it on
-        build_json_score(&record[http_shot], SCORE_HTTP);
-        strcat(str, _xs);
-        strcat(str, "\n\n");
-        httpd_resp_set_hdr(&event_req, "application/json", "new_shotData");
-        httpd_resp_set_type(&event_req, "text/event-stream");
-        httpd_resp_send(&event_req, str, strlen(str));
-      }
-      http_shot = (http_shot + 1) % SHOT_SPACE; // Point to the next shot
-    }
-    vTaskDelay(ONE_SECOND);
-  }
-
-  return;
 }
 
 /*----------------------------------------------------------------
