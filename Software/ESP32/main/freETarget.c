@@ -582,7 +582,7 @@ void start_new_session(int session_type) //
       for ( i = 0; i != shot_out; i++ )
       {
         if ( ((record[i].session_type & SESSION_VALID) != 0)   // The session has valid data
-             && (record[i].session_type & (SESSION_SIGHT | SESSION_SCORE)) == (session_type % SESSION_PRINT) )
+             && (record[i].session_type % SESSION_PRINT) == (session_type % SESSION_PRINT) )
         {
           build_json_score(&record[i], SCORE_USB);             // Send out to the USB
           serial_to_all(_xs, ALL);
@@ -592,8 +592,6 @@ void start_new_session(int session_type) //
             build_json_score(&record[i], SCORE_TCPIP);
             http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
           }
-
-          http_shot = 0;
         }
       }
       break;

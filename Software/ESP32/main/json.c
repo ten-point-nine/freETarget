@@ -603,6 +603,9 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                              // Current persistent storage version
   SEND(ALL, sprintf(_xs, "\"BD_REV\":            %4.2f ", (float)(revision()) / 100.0);) // Current board version
   SEND(ALL, sprintf(_xs, "}\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\n");)                                                       // Flush out junk
+
   /*
    *  All done, return
    */

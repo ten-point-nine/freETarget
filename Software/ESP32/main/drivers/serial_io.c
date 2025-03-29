@@ -816,15 +816,14 @@ void serial_port_test(void)
  * variables need to be cleared
  *
  ******************************************************************************/
-static unsigned int old_connection_list = 0;        // Previous connection mask
+static unsigned int old_connection_list = 0;    // Previous connection mask
 
 void check_new_connection(void)
 {
-  int i,
 
-      if ( old_connection_list == connection_list ) // Has anything changed?
+  if ( old_connection_list == connection_list ) // Has anything changed?
   {
-    return;                                         // No, do nothing
+    return;                                     // No, do nothing
   }
   old_connection_list = connection_list;
 
@@ -836,7 +835,7 @@ void check_new_connection(void)
     return;                                  // Yes, then return
   }
 
-  start_new_session();
+  start_new_session(json_session_type);
 
   /*
    *  All done, return

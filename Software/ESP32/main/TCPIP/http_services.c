@@ -63,10 +63,10 @@ static esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err);
  *  URL handlers
  */
 const httpd_uri_t uri_list[] = {
-    {.uri = "/index", .method = HTTP_GET, .handler = service_get_index, .user_ctx = "Index not found"},
-    {.uri = "/who", .method = HTTP_GET, .handler = service_get_who, .user_ctx = "Timelord"},
-    {.uri = "/json", .method = HTTP_GET, .handler = service_get_json, .user_ctx = "json"},
-    {.uri = "/events", .method = HTTP_GET, .handler = service_get_events, .user_ctx = "events"},
+    {.uri = "/index", .method = HTTP_GET, .handler = service_get_index, .user_ctx = NULL},
+    {.uri = "/who", .method = HTTP_GET, .handler = service_get_who, .user_ctx = NULL},
+    {.uri = "/json", .method = HTTP_GET, .handler = service_get_json, .user_ctx = NULL},
+    {.uri = "/events", .method = HTTP_GET, .handler = service_get_events, .user_ctx = NULL},
     {.uri = "/favicon.ico", .method = HTTP_GET, .handler = service_get_issf_png, .user_ctx = NULL},
     {}
 };
@@ -178,17 +178,16 @@ static esp_err_t service_get_index(httpd_req_t *req)
   const char *resp_str;            // Reply to server
   char        my_name[SHORT_TEXT]; // Temporary string
 
-  printf("  %s  ", req->uri);
-
   if ( (instr(req->uri, "MATCH") != 0) || (instr(req->uri, "match") != 0) )
   {
     start_new_session(SESSION_MATCH);
   }
 
-  if ( (instr(req->uri, "SIGHT") != 0) || (instr(req->uri, "SIGHT") != 0) )
+  if ( (instr(req->uri, "SIGHT") != 0) || (instr(req->uri, "sight") != 0) )
   {
     start_new_session(SESSION_SIGHT);
   }
+
   /*
    * Do the things we need to do to start a session
    */
