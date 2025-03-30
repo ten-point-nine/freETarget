@@ -15,9 +15,10 @@
 #include "freertos/task.h"
 #include "serial_io.h"
 
-#define SOFTWARE_VERSION "\"6.0.0 March 28, 2025\""
+#define SOFTWARE_VERSION "\"6.0.1 March 30, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED" // Message to send on connection
+#define OTA_URL          "http://free-e-target.com/fiermware"
 
 #define REV_500   500                // ESP32
 #define REV_510   510
