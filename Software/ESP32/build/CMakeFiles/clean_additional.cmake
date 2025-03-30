@@ -16,6 +16,8 @@ if("${CONFIG}" STREQUAL "" OR "${CONFIG}" STREQUAL "")
   "flasher_args.json"
   "freeETarget.bin"
   "freeETarget.map"
+  "index.html.S"
+  "issf.png.S"
   "ldgen_libraries"
   "ldgen_libraries.in"
   "project_elf_src_esp32s3.c"

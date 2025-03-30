@@ -1796,6 +1796,16 @@ rule C_STATIC_LIBRARY_LINKER____idf_espressif__led_strip_
 
 
 #############################################
+# Rule for compiling ASM files.
+
+rule ASM_COMPILER____idf_main_
+  depfile = $DEP_FILE
+  deps = gcc
+  command = C:\Users\allan\.espressif\tools\xtensa-esp-elf\esp-13.2.0_20240530\xtensa-esp-elf\bin\xtensa-esp32s3-elf-gcc.exe $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
+  description = Building ASM object $out
+
+
+#############################################
 # Rule for compiling C files.
 
 rule C_COMPILER____idf_main_

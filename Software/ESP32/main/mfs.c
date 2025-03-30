@@ -105,7 +105,7 @@ const mfs_action_t  mfs_action[] = {
 void multifunction_init(void)
 {
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "Multifunction_init()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Multifunction_init()");))
 
   /*
    * Check to see if the DIP switch has been overwritten
@@ -165,7 +165,7 @@ void multifunction_init(void)
     if ( DIP_SW_A )           // Switch A pressed
     {
       is_trace = DLT_CRITICAL | DLT_INFO | DLT_APPLICATION | DLT_COMMUNICATION | DLT_DIAG | DLT_DEBUG;
-      DLT(DLT_INFO, SEND(sprintf(_xs, "\r\nAll tracing enabled");))
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "\r\nAll tracing enabled");))
     }
 
     if ( DIP_SW_B )           // Switch B pressed
@@ -189,11 +189,13 @@ void multifunction_init(void)
  *
  *-----------------------------------------------------
  *
- * The function polls the switches and keeps track of
- * how long the switch has been closed for.
+ * This is called every 100 ms to monitor the action of
+ * the multifunction switches.
  *
- * Turn on the coloured LEDs based on how long the switch
- * has been closed for.
+ * Possible outcomes are:
+ *  PENDING - The switch has been pressed, but the outcome is unknown
+ *  TAP - The switch has been released within ONE_SECOND and is a tap
+ *  HOLD - The switch has been held for more than ONE_SECOND
  *
  *-----------------------------------------------------*/
 void multifunction_switch_tick(void)
@@ -214,10 +216,10 @@ void multifunction_switch_tick(void)
    */
   if ( DIP_SW_A )
   {
-    switch_A_count++;
-    if ( switch_A_count < LONG_PRESS )
+    switch_A_count++;                  // One more tick
+    if ( switch_A_count < LONG_PRESS ) // Still not long enought for a hold
     {
-      switch_state |= TAP_1_PENDING;
+      switch_state |= TAP_1_PENDING;   // It must be pending
     }
     else
     {
@@ -230,8 +232,8 @@ void multifunction_switch_tick(void)
   {
     if ( switch_state & TAP_1_PENDING )
     {
-      switch_state |= TAP_MASK_1 | SWITCH_VALID;
       switch_state &= ~TAP_1_PENDING;
+      switch_state |= TAP_MASK_1 | SWITCH_VALID;
     }
     switch_A_count = 0;
   }
@@ -254,8 +256,8 @@ void multifunction_switch_tick(void)
   {
     if ( switch_state & TAP_2_PENDING )
     {
-      switch_state |= TAP_MASK_2 | SWITCH_VALID;
       switch_state &= ~TAP_2_PENDING;
+      switch_state |= TAP_MASK_2 | SWITCH_VALID;
     }
     switch_B_count = 0;
   }
@@ -288,15 +290,15 @@ void multifunction_switch_tick(void)
  * The actions of the DIP switch will change depending on the
  * mode that is programmed into it.
  *
- * For some of the DIP switches, tapping the switch
+ * For example  some of the DIP switches, tapping the switch
  * turns the LEDs on, and holding it will carry out
  * the alternate activity.
  *
- * MFS_TAP_A\": \"%s\",\n\r\"MFS_TAP_B\": \"%s\",\n\r\"MFS_HOLD_A\": \"%s\",\n\r\"MFS_HOLD_B\": \"%s\",\n\r\"MFS_HOLD_AB\": \"%s\",\n\r",
- * Special Cases
+ * The variable switch state is a bit mask of the current
+ * switch state, for example SWITCH 1 has been tapped.
  *
- * Both switches pressed, Toggle the Tabata State
- * Either switch set for target type switch
+ * Switch state is computed in
+ *
  *-----------------------------------------------------*/
 
 void multifunction_switch(void)
@@ -362,15 +364,15 @@ void multifunction_switch(void)
  *
  *-----------------------------------------------------
  *
- * This function executes the function defined by the
- * MFS switch
+ * The switch action is pressing or tapping a particular
+ * switch,
  *
  *-----------------------------------------------------*/
 static void sw_state(unsigned int action)
 {
   mfs_action_t *mfs_ptr;
 
-  DLT(DLT_DEBUG, SEND(sprintf(_xs, "Switch action: %d", action);))
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Switch action: %d", action);))
 
   mfs_ptr = mfs_find(action);
   if ( (mfs_ptr != NULL) && (mfs_ptr->fcn != NULL) )
@@ -396,7 +398,7 @@ static void mfs_on(void)
 
 static void mfs_paper_feed(void)                               // Feed paper so long as the switch is pressed
 {
-  DLT(DLT_DEBUG, SEND(sprintf(_xs, "mfs_paper_feed()");))
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "mfs_paper_feed()");))
 
   /*
    *  Advance paper using the DC motor
@@ -429,7 +431,7 @@ static void mfs_paper_feed(void)                               // Feed paper so 
   /*
    *  End of action
    */
-  DLT(DLT_DEBUG, SEND(sprintf(_xs, _DONE_);))
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, _DONE_);))
 
   return;
 }
@@ -445,7 +447,7 @@ static void mfs_paper_shot(void)
       break;
     }
   }
-  SEND(sprintf(_xs, "\r\nDone\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\nDone\r\n");)
   return;
 }
 
@@ -462,7 +464,7 @@ static void mfs_pc_test(void)
   sign                = ((esp_random() & 1) == 0) ? 1 : -1;
   record[test_shot].y = (float)(sign * temp);
   s_of_sound          = speed_of_sound(temperature_C(), humidity_RH());
-  send_score(&record[test_shot], test_shot, NOT_MISSED_SHOT);
+  prepare_score(&record[test_shot], test_shot, NOT_MISSED_SHOT);
   test_shot++;
 
   return;
@@ -487,7 +489,7 @@ static void mfs_led_adjust(void)
     json_LED_PWM = 0;
   }
 
-  DLT(DLT_DEBUG, SEND(sprintf(_xs, "mfs_led_adjust: %d%%", json_LED_PWM);))
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "mfs_led_adjust: %d%%", json_LED_PWM);))
   set_LED_PWM_now(json_LED_PWM); // Set the brightness
   nvs_set_i32(my_handle, NONVOL_LED_PWM, json_LED_PWM);
   nvs_commit(my_handle);
@@ -552,10 +554,10 @@ void mfs_show(void)
   i = 0;
   while ( mfs_action[i].text != NULL )
   {
-    SEND(sprintf(_xs, "\r\n%d: %s", mfs_action[i].index, mfs_action[i].text);)
+    SEND(ALL, sprintf(_xs, "\r\n%d: %s", mfs_action[i].index, mfs_action[i].text);)
     i++;
   }
 
-  SEND(sprintf(_xs, "\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\n");)
   return;
 }

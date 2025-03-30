@@ -37,9 +37,14 @@
     "esp_timer.h": "c",
     "err.h": "c",
     "complex": "c",
-    "i2c.h": "c"
+    "i2c.h": "c",
+    "string.h": "c",
+    "stdlib.h": "c",
+    "analog_io.h": "c",
+    "nvs.h": "c",
+    "task.h": "c"
   },
   "idf.flashType": "UART",
-  "idf.portWin": "COM14",
+  "idf.portWin": "COM3",
   "C_Cpp.default.compilerPath": "c:\\Users\\allan\\esp\\esp-idf\\tools\\tools\\xtensa-esp32s3-elf\\esp-2022r1-11.2.0\\xtensa-esp32s3-elf\\bin\\xtensa-esp32s3-elf-gcc.exe"
 }

@@ -14,6 +14,8 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_http_server.h"
+#include "esp_event.h"
 
 #include "freETarget.h"
 #include "json.h"
@@ -21,6 +23,9 @@
 #include "serial_io.h"
 #include "wifi.h"
 #include "diag_tools.h"
+#include "http_client.h"
+#include "http_server.h"
+#include "http_services.h"
 
 /*
  * Task Priorities
@@ -73,7 +78,10 @@ void app_main(void)
   xTaskCreate(tcpip_socket_poll_3, "tcpip_socket_poll_3", 4096, NULL, POLLING, NULL);
   vTaskDelay(TICK_10ms);
 
+  start_webserver();
+  vTaskDelay(TICK_10ms);
+
   freeETarget_timer_init();
 
-  DLT(DLT_INFO, SEND(sprintf(_xs, "Running\r\n");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Running\r\n");))
 }

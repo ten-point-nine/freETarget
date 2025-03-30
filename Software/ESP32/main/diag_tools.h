@@ -24,6 +24,7 @@ bool factory_test(void);                                  // Test the hardware i
 void set_diag_LED(char *new_LEDs, unsigned int duration); // Display the LED failure code
 bool check_12V(void);                                     // Check the 12 volt supply
 void heartbeat(void);                                     // Send out regular status messages
+void test_build_fake_shots(void);                         // Generate a list of shots
 
 /*
  *  Definitions
@@ -70,8 +71,8 @@ void heartbeat(void);                                     // Send out regular st
 #define LED_RAPID_RED_OFF    "---- " // Rapid fire RED is OFF
 #define LED_RAPID_GREEN      "---G " // Rapid fire GREEN is ON
 #define LED_RAPID_GREEN_OFF  "--- -" // Rapid fire GREEN is OFF
-#define LED_RAPID_GREEN_WARN "---g " // Rapid fire GREEN is BLINKING
-#define LED_TABATA_OFF       "----R" // TABATA LEDs are OFF
+#define LED_RAPID_GREEN_WARN "---gr" // Rapid fire GREEN is BLINKING
+#define LED_TABATA_OFF       "-----" // TABATA LEDs are OFF
 #define LED_TABATA_WARN      "---g-" // TABATA LEDS are blinking
 #define LED_TABATA_ON        "---G-" // TABATA LEDs are ON
 
@@ -98,15 +99,16 @@ void heartbeat(void);                                     // Send out regular st
 /*
  * Tracing
  */
-#define DLT_NONE          0    // No DLT messages displayed
-#define DLT_CRITICAL      0x01 // Action failed and needs to be reported
-#define DLT_INFO          0x02 // Information which is always displayed
-#define DLT_APPLICATION   0x04 // Application level messages displayed (freeETarget.c compute_hit.c)
-#define DLT_COMMUNICATION 0x08 // Communications messages (wifi.c token.c serial_io.c)
-#define DLT_DIAG          0x10 // Hardware diagnostics messages displayed (Device drivers)
-#define DLT_DEBUG         0x20 // Specific debug information (general software operation)
-#define DLT_SCORE         0x40 // Display extended score record
-#define DLT_HEARTBEAT     0x80 // Kick out the time to see if we are alive
+#define DLT_NONE          0      // No DLT messages displayed
+#define DLT_CRITICAL      0x0001 // Action failed and needs to be reported
+#define DLT_INFO          0x0002 // Information which is always displayed
+#define DLT_APPLICATION   0x0004 // Application level messages displayed (freeETarget.c compute_hit.c)
+#define DLT_COMMUNICATION 0x0008 // Communications messages (wifi.c token.c serial_io.c)
+#define DLT_DIAG          0x0010 // Hardware diagnostics messages displayed
+#define DLT_DEBUG         0x0020 // Specific debug information
+#define DLT_SCORE         0x0040 // Display extended score record
+#define DLT_HTTP          0x0080 // Log HTTP requests
+#define DLT_HEARTBEAT     0x0100 // Kick out the time to see if we are alive
 
 // clang-format off
 #define DLT(level, z) if ( do_dlt(level) )  { z }

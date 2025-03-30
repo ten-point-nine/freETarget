@@ -18,8 +18,12 @@
 #include "stdbool.h"
 #include "stdio.h"
 #include "string.h"
+#include "math.h"
 
 #include "freETarget.h"
+#include "helpers.h"
+#include "http_client.h"
+#include "http_test.h"
 #include "WiFi.h"
 #include "analog_io.h"
 #include "compute_hit.h"
@@ -31,10 +35,12 @@
 #include "pcnt.h"
 #include "pwm.h"
 #include "timer.h"
+#include "bluetooth.h"
 
 extern volatile unsigned long paper_time;
 
 static void show_test_help(void);
+static void test_display_all_scores(void);
 
 /*
  * Diagnostic typedefs
@@ -46,37 +52,46 @@ typedef struct
 } self_test_t;
 
 static const self_test_t test_list[] = {
-    {"Help",                              &show_test_help        },
-    {"Factory test",                      &factory_test          },
-    {"- DIGITAL",                         0                      },
-    {"Digital inputs",                    &digital_test          },
-    {"Advance paper backer",              &paper_test            },
-    {"LED brightness test",               &LED_test              },
-    {"Status LED driver",                 &status_LED_test       },
-    {"Analog input test",                 &analog_input_test     },
-    {"DAC test",                          &DAC_test              },
-    {"- Timer & PCNT test",               0                      },
-    {"PCNT timers not stopping",          &pcnt_1                },
-    {"PCNT timers not running",           &pcnt_2                },
-    {"PCNT timers start - stop together", &pcnt_3                },
-    {"PCNT Timers cleared",               &pcnt_4                },
-    {"PCNT test all",                     &pcnt_all              },
-    {"PCNT calibration",                  &pcnt_cal              },
-    {"Sensor POST test",                  &POST_counters         },
-    {"Turn the oscillator on and off",    &timer_cycle_oscillator},
-    {"Turn the RUN lines on and off",     &timer_run_all         },
-    {"Show the current time",             &show_time             },
-    {"- Communiations Tests",             0                      },
-    {"AUX serial port test",              &serial_port_test      },
-    {"Test WiFi as a station",            &WiFi_station_init     },
-    {"Enable the WiFi Server",            &WiFi_server_test      },
-    {"Enable the WiFi AP",                &WiFi_AP_init          },
-    {"Loopback the TCPIP data",           &WiFi_loopback_test    },
-    {"Loopback WiFi",                     &WiFi_loopback_test    },
-    {"-Interrupt Tests",                  0                      },
-    {"Polled target test",                &polled_target_test    },
-    {"Interrupt target test",             &interrupt_target_test },
-    {"",                                  0                      }
+    {"Help",                              &show_test_help          },
+    {"Factory test",                      &factory_test            },
+    {"- DIGITAL",                         0                        },
+    {"Digital inputs",                    &digital_test            },
+    {"Advance paper backer",              &paper_test              },
+    {"LED brightness test",               &LED_test                },
+    {"Status LED driver",                 &status_LED_test         },
+    {"Analog input test",                 &analog_input_test       },
+    {"DAC test",                          &DAC_test                },
+    {"- Timer & PCNT test",               0                        },
+    {"PCNT timers not stopping",          &pcnt_1                  },
+    {"PCNT timers not running",           &pcnt_2                  },
+    {"PCNT timers start - stop together", &pcnt_3                  },
+    {"PCNT Timers cleared",               &pcnt_4                  },
+    {"PCNT test all",                     &pcnt_all                },
+    {"PCNT calibration",                  &pcnt_cal                },
+    {"Sensor POST test",                  &POST_counters           },
+    {"Turn the oscillator on and off",    &timer_cycle_oscillator  },
+    {"Turn the RUN lines on and off",     &timer_run_all           },
+    {"Show the current time",             &show_time               },
+    {"- Communiations Tests",             0                        },
+    {"AUX serial port test",              &serial_port_test        },
+    {"BlueTooth configuration",           &BlueTooth_configuration },
+    {"Test WiFi as a station",            &WiFi_station_init       },
+    {"Enable the WiFi Server",            &WiFi_server_test        },
+    {"Enable the WiFi AP",                &WiFi_AP_init            },
+    {"Loopback the TCPIP data",           &WiFi_loopback_test      },
+    {"Loopback WiFi",                     &WiFi_loopback_test      },
+    {"- HTTP tests",                      0                        },
+    {"DNS Lookup test",                   &http_DNS_test           },
+    {"Send to server test",               &http_send_to_server_test},
+    {"Start web server",                  &http_server_test        },
+    {"-Interrupt Tests",                  0                        },
+    {"Polled target test",                &polled_target_test      },
+    {"Interrupt target test",             &interrupt_target_test   },
+    {"- Software tests",                  0                        },
+    {"build_json_score",                  &test_build_json_score   },
+    {"build_fake_shots",                  &test_build_fake_shots   },
+    {"display_all_scores",                &test_display_all_scores },
+    {"",                                  0                        }
 };
 
 const dlt_name_t dlt_names[] = {
@@ -87,6 +102,7 @@ const dlt_name_t dlt_names[] = {
     {DLT_DIAG,          "DLT_DIAG",          'H'}, // Hardware diagnostics
     {DLT_DEBUG,         "DLT_DEBUG",         'D'}, // Software debugging information
     {DLT_SCORE,         "DLT_SCORE",         'S'}, // Display timing in the score message
+    {DLT_HTTP,          "DLT_HTTP",          'H'}, // Log HTTP events
     {DLT_HEARTBEAT,     "DLT_HEARTBEAT",     'H'}, // Heartbeat tick
     {0,                 0,                   0  }
 };
@@ -105,7 +121,6 @@ const dlt_name_t dlt_names[] = {
  * look into the structure to execute the appropriate test
  *
  *-----------------------------------------------------*/
-
 unsigned int next_test(char ch, unsigned int test_ID)
 {
   if ( ch == '-' )           // Test separator?
@@ -122,11 +137,10 @@ unsigned int next_test(char ch, unsigned int test_ID)
   return test_ID;
 }
 
-void self_test(unsigned int test // What test to execute
-)
+void self_test(unsigned int test) // What test to execute
 {
   unsigned int i;
-  unsigned int test_ID;          // Computed test ID
+  unsigned int test_ID;           // Computed test ID
 
   /*
    *  Switch over to test mode
@@ -148,7 +162,7 @@ void self_test(unsigned int test // What test to execute
   {
     if ( (test_ID == test) && (test_list[i].help[0] != '-') ) // Found the test
     {
-      SEND(sprintf(_xs, "\r\n\n%2d - %s", test_ID, test_list[i].help);)
+      SEND(ALL, sprintf(_xs, "\r\nTest Number %2d - %s\r\n", test_ID, test_list[i].help);)
       test_list[i].f();                                       // Execute the test
       run_state &= ~IN_TEST;                                  // Exit the test
       freeETarget_timer_start();                              // Start interrupts
@@ -185,16 +199,16 @@ static void show_test_help(void)
   {
     if ( test_list[i].help[0] != '-' )
     {
-      SEND(sprintf(_xs, "\r\n%2d - %s", test_ID, test_list[i].help);)
+      SEND(ALL, sprintf(_xs, "\r\n%2d - %s", test_ID, test_list[i].help);)
     }
     else
     {
-      SEND(sprintf(_xs, "\r\n\n%s", test_list[i].help);)
+      SEND(ALL, sprintf(_xs, "\r\n\n%s", test_list[i].help);)
     }
     i++;
     test_ID = next_test(test_list[i].help[0], test_ID);
   }
-  SEND(sprintf(_xs, "\r\n\n");)
+  SEND(ALL, sprintf(_xs, "\r\n\n");)
   return;
 }
 /*-----------------------------------------------------
@@ -251,10 +265,10 @@ bool factory_test(void)
   /*
    * Ready to start the test
    */
-  SEND(sprintf(_xs, "\r\nFirmware version: %s   Board version: %d", SOFTWARE_VERSION, revision());)
-  SEND(sprintf(_xs, "\r\n");)
-  SEND(sprintf(_xs, "\r\nHas the tape seal been removed from the temperature sensor?");)
-  SEND(sprintf(_xs, "\r\nPress 1 & 2 or ! to continue\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\nFirmware version: %s   Board version: %d", SOFTWARE_VERSION, revision());)
+  SEND(ALL, sprintf(_xs, "\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\nHas the tape seal been removed from the temperature sensor?");)
+  SEND(ALL, sprintf(_xs, "\r\nPress 1 & 2 or ! to continue\r\n");)
 
   while ( pass != (PASS_A | PASS_B) )
   {
@@ -286,18 +300,18 @@ bool factory_test(void)
    */
   while ( 1 )
   {
-    SEND(sprintf(_xs, "\r\nSens: ");)
+    SEND(ALL, sprintf(_xs, "\r\nSens: ");)
     running = is_running();
     pass |= running & RUN_MASK;
     for ( i = 0; i != 8; i++ )
     {
       if ( i == 4 )
       {
-        SEND(sprintf(_xs, " ");)
+        SEND(ALL, sprintf(_xs, " ");)
       }
       if ( running & (1 << i) )
       {
-        SEND(sprintf(_xs, "%c", find_sensor(1 << i)->short_name);)
+        SEND(ALL, sprintf(_xs, "%c", find_sensor(1 << i)->short_name);)
       }
       else
       {
@@ -305,17 +319,17 @@ bool factory_test(void)
         if ( ((find_sensor(1 << i)->short_name) == 'N') // Is this the North Sensor?
              && (json_pcnt_latency == 0) )              // and pcnt_latency is disabled?
         {
-          SEND(sprintf(_xs, "-");)                      // Then mark it as unused
+          SEND(ALL, sprintf(_xs, "-");)                 // Then mark it as unused
         }
         else
         {
-          SEND(sprintf(_xs, ".");)                      // Show N/A for this iput
+          SEND(ALL, sprintf(_xs, ".");)                 // Show N/A for this iput
         }
       }
     }
 
     dip = read_DIP();
-    SEND(sprintf(_xs, "  DIP: ");)
+    SEND(ALL, sprintf(_xs, "  DIP: ");)
     if ( DIP_SW_A )
     {
       set_status_LED("-W-");
@@ -350,35 +364,35 @@ bool factory_test(void)
     {
       if ( (dip & (1 << i)) == 0 )
       {
-        SEND(sprintf(_xs, "%c", ABCD[i]);)
+        SEND(ALL, sprintf(_xs, "%c", ABCD[i]);)
       }
       else
       {
-        SEND(sprintf(_xs, "-");)
+        SEND(ALL, sprintf(_xs, "-");)
       }
     }
 
-    SEND(sprintf(_xs, "  12V: %4.2fV", v12_supply());)
-    SEND(sprintf(_xs, "  Temp: %4.2fC", temperature_C());)
-    SEND(sprintf(_xs, "  Humidiity: %4.2f%%", humidity_RH());)
+    SEND(ALL, sprintf(_xs, "  12V: %4.2fV", v12_supply());)
+    SEND(ALL, sprintf(_xs, "  Temp: %4.2fC", temperature_C());)
+    SEND(ALL, sprintf(_xs, "  Humidiity: %4.2f%%", humidity_RH());)
 
     if ( v12_supply() >= V12_WORKING ) // Skip the motor and LED test if 12 volts not used
     {
-      SEND(sprintf(_xs, "  M");)
+      SEND(ALL, sprintf(_xs, "  M");)
       if ( motor_toggle )
       {
-        SEND(sprintf(_xs, "+");)
+        SEND(ALL, sprintf(_xs, "+");)
         DCmotor_on_off(true, ONE_SECOND);
       }
       else
       {
-        SEND(sprintf(_xs, "-");)
+        SEND(ALL, sprintf(_xs, "-");)
         DCmotor_on_off(false, 0);
       }
       motor_toggle ^= 1;
 
       set_LED_PWM_now(percent);
-      SEND(sprintf(_xs, "  LED: %3d%% ", percent);)
+      SEND(ALL, sprintf(_xs, "  LED: %3d%% ", percent);)
       percent = percent + 25;
       if ( percent > 100 )
       {
@@ -388,8 +402,8 @@ bool factory_test(void)
 
     if ( ((pass & PASS_MASK) == PASS_MASK) )
     {
-      set_status_LED(LED_PASS);
-      SEND(sprintf(_xs, "  PASS");)
+      set_status_LED(LED_GOOD);
+      SEND(ALL, sprintf(_xs, "  PASS");)
       vTaskDelay(ONE_SECOND);
       arm_timers();
       pass        = PASS_A | PASS_B;
@@ -417,11 +431,11 @@ bool factory_test(void)
           DCmotor_on_off(false, 0);
           if ( passed_once == true )
           {
-            SEND(sprintf(_xs, "\r\nTest completed successfully\r\n");)
+            SEND(ALL, sprintf(_xs, "\r\nTest completed successfully\r\n");)
           }
           else
           {
-            SEND(sprintf(_xs, "\r\nTest finished without PASS\r\n");)
+            SEND(ALL, sprintf(_xs, "\r\nTest finished without PASS\r\n");)
           }
           return passed_once;
       }
@@ -452,7 +466,7 @@ bool factory_test(void)
  *******************************************************************************/
 void POST_version(void)
 {
-  SEND(sprintf(_xs, "\r\n{\"VERSION\": %s}\r\n", SOFTWARE_VERSION);)
+  SEND(ALL, sprintf(_xs, "\r\n{\"VERSION\": %s}\r\n", SOFTWARE_VERSION);)
 
   /*
    * All done, return
@@ -486,7 +500,7 @@ bool POST_counters(void)
 {
   unsigned int i;                      // Iteration counter
   unsigned int count, toggle, running; // Cycle counter
-  DLT(DLT_INFO, SEND(sprintf(_xs, "POST_counters()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "POST_counters()");))
 
   /*
    *  Test 1, Make sure we can turn off the reference clock
@@ -505,7 +519,7 @@ bool POST_counters(void)
 
   if ( count != 0 )
   {
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Reference clock cannot be stopped");))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Reference clock cannot be stopped");))
     set_diag_LED(LED_FAIL_CLOCK_STOP, 10);
     run_state |= IN_FATAL_ERR;
   }
@@ -527,7 +541,7 @@ bool POST_counters(void)
 
   if ( count == 0 )
   {
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Reference clock cannot be started");))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Reference clock cannot be started");))
     set_diag_LED(LED_FAIL_CLOCK_START, 10);
     run_state |= IN_FATAL_ERR;
   }
@@ -540,7 +554,7 @@ bool POST_counters(void)
   running = is_running();
   if ( running != 0 )
   {
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Stuck bit in run latch: ");))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Stuck bit in run latch: ");))
     for ( i = N; i <= W; i++ )
     {
       if ( running & s[i].low_sense.run_mask )
@@ -566,7 +580,7 @@ bool POST_counters(void)
   gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);
   if ( (is_running() & RUN_MASK) != RUN_MASK )
   {
-    DLT(DLT_CRITICAL, SEND(sprintf(_xs, "Failed to start clock in run latch: %02X", is_running());))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to start clock in run latch: %02X", is_running());))
     set_diag_LED(LED_FAIL_RUN_STUCK, 10);
     run_state |= IN_FATAL_ERR;
   }
@@ -595,26 +609,26 @@ void show_sensor_status(unsigned int sensor_status)
 {
   unsigned int i;
 
-  SEND(sprintf(_xs, " Latch:");)
+  SEND(ALL, sprintf(_xs, " Latch:");)
 
   for ( i = N; i <= W; i++ )
   {
     if ( sensor_status & (1 << i) )
     {
-      SEND(sprintf(_xs, "%c", find_sensor(1 << i)->short_name);)
+      SEND(ALL, sprintf(_xs, "%c", find_sensor(1 << i)->short_name);)
     }
     else
     {
-      SEND(sprintf(_xs, ".");)
+      SEND(ALL, sprintf(_xs, ".");)
     }
   }
 
   if ( (sensor_status & RUN_MASK) != RUN_MASK )
   {
-    SEND(sprintf(_xs, " FAULT");)
+    SEND(ALL, sprintf(_xs, " FAULT");)
   }
 
-  SEND(sprintf(_xs, "  Face Strike: %d", face_strike);)
+  SEND(ALL, sprintf(_xs, "  Face Strike: %d", face_strike);)
 
   /*
    * All done, return
@@ -640,7 +654,7 @@ void show_sensor_fault(unsigned int sensor_status)
 {
   unsigned int i;
 
-  DLT(DLT_DEBUG, SEND(sprintf(_xs, "show_sensor_fault()");))
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "show_sensor_fault()");))
 
   for ( i = N; i <= W; i++ )
   {
@@ -712,7 +726,7 @@ bool do_dlt(           //
   /*
    *   Print out the message
    */
-  SEND(sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, ((float)(esp_timer_get_time()) / 1000000.0));)
+  SEND(ALL, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, run_time_ms() / 1000.);)
 
   return true;
 }
@@ -750,7 +764,7 @@ void         heartbeat(void)
     i++;
   }
 
-  DLT(DLT_HEARTBEAT, SEND(sprintf(_xs, "Heartbeat: 60s  run_state: 0X%02X%s", run_state, s);))
+  DLT(DLT_HEARTBEAT, SEND(ALL, sprintf(_xs, "Heartbeat: 60s  run_state: 0X%02X%s", run_state, s);))
 
   return;
 }
@@ -875,4 +889,90 @@ bool check_12V(void)
   }
 
   return true;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: test_build_fake_shots
+ *
+ * @brief:    Create fake shot data
+ *
+ * @return:   None
+ *
+ *----------------------------------------------------------------
+ *
+ * Fill up 10 shots with random data
+ *
+ *--------------------------------------------------------------*/
+
+void test_build_fake_shots(void)
+{
+
+  unsigned int i;
+
+  for ( i = 0; i != 10; i++ )
+  {
+    record[i].shot           = i;
+    record[i].session_type   = SESSION_VALID | SESSION_SIGHT;
+    record[i].miss           = 0;
+    record[i].x              = 2 * i + 0;
+    record[i].y              = 2 * i + 1;
+    record[i].xs             = 2 * i + 2;
+    record[i].ys             = 2 * i + 3;
+    record[i].radius         = sqrt(sq(record[i].x) + sq(record[i].y));
+    record[i].angle          = 180.0 * atan2(record[i].y, record[i].x) / PI;
+    record[i].timer_count[0] = 1;
+    record[i].timer_count[1] = 2;
+    record[i].timer_count[2] = 3;
+    record[i].timer_count[3] = 4;
+    record[i].timer_count[4] = 5;
+    record[i].timer_count[5] = 6;
+    record[i].timer_count[6] = 7;
+    record[i].timer_count[7] = 8;
+    record[i].face_strike    = 0;
+    record[i].sensor_status  = 4;
+    record[i].shot_time      = run_time_ms();
+  }
+
+  /*
+   *  Finished
+   */
+  shot_in = i;
+  SEND(ALL, sprintf(_xs, _DONE_);)
+
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: test_display_all_scores
+ *
+ * @brief:    Print out the log of scores
+ *
+ * @return:   None
+ *
+ *----------------------------------------------------------------
+ *
+ * Fill up 10 shots with random data
+ *
+ *--------------------------------------------------------------*/
+static void test_display_all_scores(void)
+{
+  unsigned int i;
+  char         str[MEDIUM_TEXT];
+
+  for ( i = 0; i != SHOT_SPACE; i++ )
+  {
+    if ( record[i].session_type & SESSION_VALID )
+    {
+      build_json_score(&record[i], SCORE_ALL);
+      strcpy(str, _xs);
+      SEND(ALL, sprintf(_xs, "\r\n%s", str);)
+    }
+  }
+  /*
+   *  Finished
+   */
+  SEND(ALL, sprintf(_xs, _DONE_);)
+  return;
 }
