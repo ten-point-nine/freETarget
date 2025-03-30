@@ -6,7 +6,7 @@
  *
  *-------------------------------------------------------
  *
- * Ovr the air update
+ * Over the air update
  *
  * See:https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/ota.html
  *
@@ -49,7 +49,11 @@ static void __attribute__((noreturn)) task_fatal_error(void);
 static void                           print_sha256(const uint8_t *image_hash, const char *label);
 static bool                           diagnostic(void);
 static void                           OTA_task(void *pvParameter);
-#define TAG "bob"
+void                                  infinite_loop()
+{
+  while ( 1 )
+    continue;
+}
 
 /*----------------------------------------------------------------
  *
@@ -64,7 +68,7 @@ static void                           OTA_task(void *pvParameter);
  * storage version and update if needed.
  *
  *------------------------------------------------------------*/
-void ota(void)
+void OTA(void)
 {
   uint8_t         sha_256[HASH_LEN] = {0};
   esp_partition_t partition;
@@ -106,12 +110,12 @@ void ota(void)
       bool diagnostic_is_ok = diagnostic();
       if ( diagnostic_is_ok )
       {
-        ESP_LOGI(TAG, "Diagnostics completed successfully! Continuing execution ...");
+        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Diagnostics completed successfully! Continuing execution ...");))
         esp_ota_mark_app_valid_cancel_rollback();
       }
       else
       {
-        ESP_LOGE(TAG, "Diagnostics failed! Start rollback to the previous version ...");
+        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Diagnostics failed! Start rollback to the previous version ...");))
         esp_ota_mark_app_invalid_rollback_and_reboot();
       }
     }
@@ -144,37 +148,51 @@ void ota(void)
   xTaskCreate(&OTA_task, "OTA_task", 8192, NULL, 5, NULL);
 }
 
-static void infinite_loop(void)
+/*----------------------------------------------------------------
+ *
+ * @function: ota_loop()
+ *
+ * @brief:    Over The Air Update
+ *
+ * @return: None
+ *---------------------------------------------------------------
+ *
+ * Check the stored nonvol value against the current persistent
+ * storage version and update if needed.
+ *
+ *------------------------------------------------------------*/
+static void ota_loop(void)
 {
   int i = 0;
-  ESP_LOGI(TAG, "When a new firmware is available on the server, press the reset button to download it");
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "When a new firmware is available on the server, press the reset button to download it");))
   while ( 1 )
   {
-    ESP_LOGI(TAG, "Waiting for a new firmware ... %d", ++i);
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Waiting for a new firmware ... %d", ++i);))
     vTaskDelay(2000 / portTICK_PERIOD_MS);
   }
 }
 
+/*----------------------------------------------------------------
+ *
+ * @function: ota_task()
+ *
+ * @brief:    Task to download new softwrae OTA
+ *
+ * @return: None
+ *---------------------------------------------------------------
+ *
+ * Check the stored nonvol value against the current persistent
+ * storage version and update if needed.
+ *
+ *------------------------------------------------------------*/
 static void OTA_task(void *pvParameter)
 {
   esp_err_t err;
   /* update handle : set by esp_ota_begin(), must be freed via esp_ota_end() */
   esp_ota_handle_t       update_handle    = 0;
-  const esp_partition_t *update_partition = NULL;
-
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "OTA_task()");))
-
-  const esp_partition_t *configured = esp_ota_get_boot_partition();
-  const esp_partition_t *running    = esp_ota_get_running_partition();
-
-  if ( configured != running )
-  {
-    ESP_LOGW(TAG, "Configured OTA boot partition at offset 0x%08" PRIx32 ", but running from offset 0x%08" PRIx32, configured->address,
-             running->address);
-    ESP_LOGW(TAG, "(This can happen if either the OTA boot data or preferred boot image become corrupted somehow.)");
-  }
-
-  ESP_LOGI(TAG, "Running partition type %d subtype %d (offset 0x%08" PRIx32 ")", running->type, running->subtype, running->address);
+  const esp_partition_t *update_partition = NULL; // What partition are we updating?
+  const esp_partition_t *configured       = esp_ota_get_boot_partition();
+  const esp_partition_t *running          = esp_ota_get_running_partition();
 
   esp_http_client_config_t config = {
       .url               = OTA_URL,
@@ -183,42 +201,71 @@ static void OTA_task(void *pvParameter)
       .keep_alive_enable = true,
   };
 
+  esp_http_client_handle_t client;
+  int                      binary_file_length = 0;
+  /*deal with all receive packet*/
+  bool image_header_was_checked = false;
+  int  data_read;
+
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "OTA_task()");))
+
+  /*
+   *  Check to find out what partition we are running from
+   */
+  if ( configured != running )
+  {
+    DLT(DLT_CRITICAL,
+        SEND(ALL, sprintf(_xs, "Configured OTA boot partition at offset 0x%08" PRIx32 ", but running from offset 0x%08" PRIx32,
+                          configured->address, running->address);))
+    DLT(DLT_CRITICAL,
+        SEND(ALL, sprintf(_xs, "(This can happen if either the OTA boot data or preferred boot image become corrupted somehow.)");))
+  }
+
+  DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Running partition type %d subtype %d (offset 0x%08" PRIx32 ")", running->type, running->subtype,
+                                      running->address);))
+
 #ifdef CONFIG_EXAMPLE_SKIP_COMMON_NAME_CHECK
   config.skip_cert_common_name_check = true;
 #endif
 
-  esp_http_client_handle_t client = esp_http_client_init(&config);
+  /*
+   * Open the HTTP connection to the OTA server
+   */
+  client = esp_http_client_init(&config);
   if ( client == NULL )
   {
-    ESP_LOGE(TAG, "Failed to initialise HTTP connection");
-    task_fatal_error();
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to initialise HTTP connection");))
+    return;
   }
+
   err = esp_http_client_open(client, 0);
   if ( err != ESP_OK )
   {
-    ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to open HTTP connection: %s", esp_err_to_name(err));))
     esp_http_client_cleanup(client);
-    task_fatal_error();
+    return;
   }
-  esp_http_client_fetch_headers(client);
+
+  esp_http_client_fetch_headers(client); // We have a connection
 
   update_partition = esp_ota_get_next_update_partition(NULL);
   assert(update_partition != NULL);
-  ESP_LOGI(TAG, "Writing to partition subtype %d at offset 0x%" PRIx32, update_partition->subtype, update_partition->address);
+  DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Writing to partition subtype %d at offset 0x%" PRIx32, update_partition->subtype,
+                                      update_partition->address);))
 
-  int binary_file_length = 0;
-  /*deal with all receive packet*/
-  bool image_header_was_checked = false;
+  /*
+   *  Stay here to read in the file and place it in memory
+   */
   while ( 1 )
   {
-    int data_read = esp_http_client_read(client, ota_write_data, BUFFSIZE);
-    if ( data_read < 0 )
+    data_read = esp_http_client_read(client, ota_write_data, BUFFSIZE); // Pull in the .bin record
+    if ( data_read < 0 )                                                // Error in read, abort thw transfr
     {
-      ESP_LOGE(TAG, "Error: SSL data read error");
+      DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Error: SSL data read error");))
       http_cleanup(client);
       task_fatal_error();
     }
-    else if ( data_read > 0 )
+    else if ( data_read > 0 )                                           // Got data to read
     {
       if ( image_header_was_checked == false )
       {
@@ -227,7 +274,7 @@ static void OTA_task(void *pvParameter)
         {
           // check current version with downloading
           memcpy(&new_app_info, &ota_write_data[sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t)], sizeof(esp_app_desc_t));
-          ESP_LOGI(TAG, "New firmware version: %s", new_app_info.version);
+          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "New firmware version: %s", new_app_info.version);))
 
           esp_app_desc_t running_app_info;
           if ( esp_ota_get_partition_description(running, &running_app_info) == ESP_OK )
@@ -239,7 +286,7 @@ static void OTA_task(void *pvParameter)
           esp_app_desc_t         invalid_app_info;
           if ( esp_ota_get_partition_description(last_invalid_app, &invalid_app_info) == ESP_OK )
           {
-            ESP_LOGI(TAG, "Running firmware version: %s", running_app_info.version);
+            DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Running firmware version: %s", running_app_info.version);))
           }
 
           // check current version with last invalid partition
@@ -247,10 +294,11 @@ static void OTA_task(void *pvParameter)
           {
             if ( memcmp(invalid_app_info.version, new_app_info.version, sizeof(new_app_info.version)) == 0 )
             {
-              ESP_LOGW(TAG, "New version is the same as invalid version.");
-              ESP_LOGW(TAG, "Previously, there was an attempt to launch the firmware with %s version, but it failed.",
-                       invalid_app_info.version);
-              ESP_LOGW(TAG, "The firmware has been rolled back to the previous version.");
+              DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "New version is the same as invalid version.");))
+              DLT(DLT_INFO,
+                  SEND(ALL, sprintf(_xs, "Previously, there was an attempt to launch the firmware with %s version, but it failed.",
+                                    invalid_app_info.version);))
+              DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "The firmware has been rolled back to the previous version.");))
               http_cleanup(client);
               infinite_loop();
             }
@@ -258,7 +306,7 @@ static void OTA_task(void *pvParameter)
 #ifndef CONFIG_EXAMPLE_SKIP_VERSION_CHECK
           if ( memcmp(new_app_info.version, running_app_info.version, sizeof(new_app_info.version)) == 0 )
           {
-            ESP_LOGW(TAG, "Current running version is the same as a new. We will not continue the update.");
+            DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Current running version is the same as a new. We will not continue the update.");))
             http_cleanup(client);
             infinite_loop();
           }
@@ -269,16 +317,16 @@ static void OTA_task(void *pvParameter)
           err = esp_ota_begin(update_partition, OTA_WITH_SEQUENTIAL_WRITES, &update_handle);
           if ( err != ESP_OK )
           {
-            ESP_LOGE(TAG, "esp_ota_begin failed (%s)", esp_err_to_name(err));
+            DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "esp_ota_begin failed (%s)", esp_err_to_name(err));))
             http_cleanup(client);
             esp_ota_abort(update_handle);
             task_fatal_error();
           }
-          ESP_LOGI(TAG, "esp_ota_begin succeeded");
+          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "esp_ota_begin succeeded");))
         }
         else
         {
-          ESP_LOGE(TAG, "received package is not fit len");
+          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "received package is not fit len");))
           http_cleanup(client);
           esp_ota_abort(update_handle);
           task_fatal_error();
@@ -292,9 +340,10 @@ static void OTA_task(void *pvParameter)
         task_fatal_error();
       }
       binary_file_length += data_read;
-      ESP_LOGD(TAG, "Written image length %d", binary_file_length);
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Written image length %d", binary_file_length);))
     }
-    else if ( data_read == 0 )
+
+    else if ( data_read == 0 ) // No data came back. Find out why
     {
       /*
        * As esp_http_client_read never returns negative error code, we rely on
@@ -302,19 +351,19 @@ static void OTA_task(void *pvParameter)
        */
       if ( errno == ECONNRESET || errno == ENOTCONN )
       {
-        ESP_LOGE(TAG, "Connection closed, errno = %d", errno);
+        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Connection closed, errno = %d", errno);))
         break;
       }
       if ( esp_http_client_is_complete_data_received(client) == true )
       {
-        ESP_LOGI(TAG, "Connection closed");
+        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Connection closed");))
       }
     }
   }
-  ESP_LOGI(TAG, "Total Write binary data length: %d", binary_file_length);
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Total Write binary data length: %d", binary_file_length);))
   if ( esp_http_client_is_complete_data_received(client) != true )
   {
-    ESP_LOGE(TAG, "Error in receiving complete file");
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Error in receiving complete file");))
     http_cleanup(client);
     esp_ota_abort(update_handle);
     task_fatal_error();
@@ -325,11 +374,11 @@ static void OTA_task(void *pvParameter)
   {
     if ( err == ESP_ERR_OTA_VALIDATE_FAILED )
     {
-      ESP_LOGE(TAG, "Image validation failed, image is corrupted");
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Image validation failed, image is corrupted");))
     }
     else
     {
-      ESP_LOGE(TAG, "esp_ota_end failed (%s)!", esp_err_to_name(err));
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "esp_ota_end failed (%s)!", esp_err_to_name(err));))
     }
     http_cleanup(client);
     task_fatal_error();
@@ -338,18 +387,18 @@ static void OTA_task(void *pvParameter)
   err = esp_ota_set_boot_partition(update_partition);
   if ( err != ESP_OK )
   {
-    ESP_LOGE(TAG, "esp_ota_set_boot_partition failed (%s)!", esp_err_to_name(err));
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "esp_ota_set_boot_partition failed (%s)!", esp_err_to_name(err));))
     http_cleanup(client);
     task_fatal_error();
   }
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Pre()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Restarting)");))
   esp_restart();
   return;
 }
 
 /*----------------------------------------------------------------
  *
- * @function: rollbacd()
+ * @function: rollback()
  *
  * @brief:  Detect to see if we should roll back a version
  *
@@ -373,21 +422,46 @@ static void http_cleanup(esp_http_client_handle_t client)
 
 static void __attribute__((noreturn)) task_fatal_error(void)
 {
-  ESP_LOGE(TAG, "Exiting task due to fatal error...");
+  DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Exiting OTA task due to fatal error...");))
   (void)vTaskDelete(NULL);
 
   while ( 1 )
   {
-    ;
+    continue;
   }
 }
 
-static void print_sha256(const uint8_t *image_hash, const char *label)
+/*----------------------------------------------------------------
+ *
+ * @function: print_sha256()
+ *
+ * @brief:  Display the 256 bit sha for the memory
+ *
+ * @return: None
+ *---------------------------------------------------------------
+ *
+ * Convert the hash into a text string and print the resuls
+ *
+ *------------------------------------------------------------*/
+static void print_sha256(const uint8_t *image_hash, // Pointer to the hash
+                         const char    *lable       // Lable to describe the hash
+)
 {
+  int  i;
   char hash_print[HASH_LEN * 2 + 1];
-  hash_print[HASH_LEN * 2] = 0;
-  for ( int i = 0; i < HASH_LEN; ++i )
+  /*
+   *  Loop and convert the has to text
+   */
+  for ( i = 0; i < HASH_LEN; ++i )
   {
     sprintf(&hash_print[i * 2], "%02x", image_hash[i]);
   }
+  hash_print[HASH_LEN * 2] = 0; // Null terminate
+
+  /*
+   * Print the results and return
+   */
+  DLT(DLT_HTTP, SEND(ALL, sprintf("SHA256 %s:%s", hash_print, lable);))
+
+  return;
 }
