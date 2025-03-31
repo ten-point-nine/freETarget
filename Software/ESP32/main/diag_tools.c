@@ -36,6 +36,7 @@
 #include "pwm.h"
 #include "timer.h"
 #include "bluetooth.h"
+#include "ota.h"
 
 extern volatile unsigned long paper_time;
 
@@ -84,6 +85,8 @@ static const self_test_t test_list[] = {
     {"DNS Lookup test",                   &http_DNS_test           },
     {"Send to server test",               &http_send_to_server_test},
     {"Start web server",                  &http_server_test        },
+    {"OTA load",                          &OTA_load                },
+    {"OTA rollback",                      &OTA_rollback            },
     {"-Interrupt Tests",                  0                        },
     {"Polled target test",                &polled_target_test      },
     {"Interrupt target test",             &interrupt_target_test   },

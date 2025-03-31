@@ -38,9 +38,9 @@
 #define HASH_LEN 32 /* SHA-256 digest length */
 
 /*an ota data write buffer ready to write to the flash*/
-static char          ota_write_data[BUFFSIZE + 1] = {0};
-extern const uint8_t server_cert_pem_start[] asm("_binary_ca_cert_pem_start");
-extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_pem_end");
+static char ota_write_data[BUFFSIZE + 1] = {0};
+// extern const uint8_t server_cert_pem_start[] asm("_binary_ca_cert_pem_start");
+// extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_pem_end");
 
 #define OTA_URL_SIZE 256
 
@@ -49,17 +49,13 @@ static void __attribute__((noreturn)) task_fatal_error(void);
 static void                           print_sha256(const uint8_t *image_hash, const char *label);
 static bool                           diagnostic(void);
 static void                           OTA_task(void *pvParameter);
-void                                  infinite_loop()
-{
-  while ( 1 )
-    continue;
-}
+void                                  OTA_halt(char *LED_status);
 
 /*----------------------------------------------------------------
  *
- * @function: ota()
+ * @function: ota_rollback()
  *
- * @brief:    Over The Air Update
+ * @brief:    Undo the current partition and go back to the last
  *
  * @return: None
  *---------------------------------------------------------------
@@ -68,12 +64,49 @@ void                                  infinite_loop()
  * storage version and update if needed.
  *
  *------------------------------------------------------------*/
-void OTA(void)
+void OTA_rollback(void)
+{
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Start rollback to the previous version ...");))
+  esp_ota_mark_app_invalid_rollback_and_reboot();
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: OTA_load()
+ *
+ * @brief:    Over The Air Update
+ *
+ * @return: None
+ *---------------------------------------------------------------
+ *
+
+ *
+ *------------------------------------------------------------*/
+void OTA_load(void)
 {
   uint8_t         sha_256[HASH_LEN] = {0};
   esp_partition_t partition;
+  esp_err_t       err;
+  /* update handle : set by esp_ota_begin(), must be freed via esp_ota_end() */
+  esp_ota_handle_t       update_handle    = 0;
+  const esp_partition_t *update_partition = NULL; // What partition are we updating?
+  const esp_partition_t *configured       = esp_ota_get_boot_partition();
+  const esp_partition_t *running          = esp_ota_get_running_partition();
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "OTA()");))
+  esp_http_client_config_t config = {
+      .url = OTA_URL,
+      //    .cert_pem          = (char *)server_cert_pem_start,
+      .timeout_ms        = 30 * 1000,
+      .keep_alive_enable = true,
+  };
+
+  esp_http_client_handle_t client;
+  int                      binary_file_length = 0;
+  /*deal with all receive packet*/
+  bool image_header_was_checked = false;
+  int  data_read;
+
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "OTA_load()");))
 
   /*
    * get sha256 digest for the partition table
@@ -99,9 +132,10 @@ void OTA(void)
   esp_partition_get_sha256(esp_ota_get_running_partition(), sha_256);
   print_sha256(sha_256, "SHA-256 for current firmware: ");
 
-  const esp_partition_t *running = esp_ota_get_running_partition();
+  const esp_partition_t *running_partition = esp_ota_get_running_partition();
   esp_ota_img_states_t   ota_state;
 
+#if ( 0 )
   if ( esp_ota_get_state_partition(running, &ota_state) == ESP_OK )
   {
     if ( ota_state == ESP_OTA_IMG_PENDING_VERIFY )
@@ -120,6 +154,7 @@ void OTA(void)
       }
     }
   }
+#endif
 
 #if ( 0 )
   // Initialize NVS.
@@ -145,72 +180,8 @@ void OTA(void)
 #endif
   esp_wifi_set_ps(WIFI_PS_NONE);
 
-  xTaskCreate(&OTA_task, "OTA_task", 8192, NULL, 5, NULL);
-}
-
-/*----------------------------------------------------------------
- *
- * @function: ota_loop()
- *
- * @brief:    Over The Air Update
- *
- * @return: None
- *---------------------------------------------------------------
- *
- * Check the stored nonvol value against the current persistent
- * storage version and update if needed.
- *
- *------------------------------------------------------------*/
-static void ota_loop(void)
-{
-  int i = 0;
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "When a new firmware is available on the server, press the reset button to download it");))
-  while ( 1 )
-  {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Waiting for a new firmware ... %d", ++i);))
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-  }
-}
-
-/*----------------------------------------------------------------
- *
- * @function: ota_task()
- *
- * @brief:    Task to download new softwrae OTA
- *
- * @return: None
- *---------------------------------------------------------------
- *
- * Check the stored nonvol value against the current persistent
- * storage version and update if needed.
- *
- *------------------------------------------------------------*/
-static void OTA_task(void *pvParameter)
-{
-  esp_err_t err;
-  /* update handle : set by esp_ota_begin(), must be freed via esp_ota_end() */
-  esp_ota_handle_t       update_handle    = 0;
-  const esp_partition_t *update_partition = NULL; // What partition are we updating?
-  const esp_partition_t *configured       = esp_ota_get_boot_partition();
-  const esp_partition_t *running          = esp_ota_get_running_partition();
-
-  esp_http_client_config_t config = {
-      .url               = OTA_URL,
-      .cert_pem          = (char *)server_cert_pem_start,
-      .timeout_ms        = 30 * 1000,
-      .keep_alive_enable = true,
-  };
-
-  esp_http_client_handle_t client;
-  int                      binary_file_length = 0;
-  /*deal with all receive packet*/
-  bool image_header_was_checked = false;
-  int  data_read;
-
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "OTA_task()");))
-
   /*
-   *  Check to find out what partition we are running from
+   * Begin the OTA update
    */
   if ( configured != running )
   {
@@ -231,11 +202,12 @@ static void OTA_task(void *pvParameter)
   /*
    * Open the HTTP connection to the OTA server
    */
+  set_status_LED(LED_OTA_WAITING);
   client = esp_http_client_init(&config);
   if ( client == NULL )
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to initialise HTTP connection");))
-    return;
+    OTA_halt(LED_OTA_FAILED_CONNECT);
   }
 
   err = esp_http_client_open(client, 0);
@@ -243,9 +215,12 @@ static void OTA_task(void *pvParameter)
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to open HTTP connection: %s", esp_err_to_name(err));))
     esp_http_client_cleanup(client);
-    return;
+    OTA_halt(LED_OTA_FAILED_CONNECT);
   }
 
+  /*
+   *  Connected to the server, get the file
+   */
   esp_http_client_fetch_headers(client); // We have a connection
 
   update_partition = esp_ota_get_next_update_partition(NULL);
@@ -256,16 +231,17 @@ static void OTA_task(void *pvParameter)
   /*
    *  Stay here to read in the file and place it in memory
    */
-  while ( 1 )
+  while ( 1 )                                                           // Loop and bring in the file
   {
     data_read = esp_http_client_read(client, ota_write_data, BUFFSIZE); // Pull in the .bin record
-    if ( data_read < 0 )                                                // Error in read, abort thw transfr
+
+    if ( data_read < 0 )                                                // Error in read, abort the transfer
     {
-      DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Error: SSL data read error");))
-      http_cleanup(client);
-      task_fatal_error();
+      DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to read OTA record");))
+      OTA_halt(LED_OTA_FAILED_LOAD);
     }
-    else if ( data_read > 0 )                                           // Got data to read
+
+    if ( data_read > 0 )                                                // Got data to read
     {
       if ( image_header_was_checked == false )
       {
@@ -300,7 +276,7 @@ static void OTA_task(void *pvParameter)
                                     invalid_app_info.version);))
               DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "The firmware has been rolled back to the previous version.");))
               http_cleanup(client);
-              infinite_loop();
+              OTA_halt(LED_OTA_FAILED_CONNECT);
             }
           }
 #ifndef CONFIG_EXAMPLE_SKIP_VERSION_CHECK
@@ -308,7 +284,7 @@ static void OTA_task(void *pvParameter)
           {
             DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Current running version is the same as a new. We will not continue the update.");))
             http_cleanup(client);
-            infinite_loop();
+            OTA_halt(LED_OTA_FAILED_CONNECT);
           }
 #endif
 
@@ -343,7 +319,7 @@ static void OTA_task(void *pvParameter)
       DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Written image length %d", binary_file_length);))
     }
 
-    else if ( data_read == 0 ) // No data came back. Find out why
+    if ( data_read == 0 ) // No data came back. Find out why
     {
       /*
        * As esp_http_client_read never returns negative error code, we rely on
@@ -360,6 +336,10 @@ static void OTA_task(void *pvParameter)
       }
     }
   }
+
+  /*
+   *  Finised the download, clean up
+   */
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Total Write binary data length: %d", binary_file_length);))
   if ( esp_http_client_is_complete_data_received(client) != true )
   {
@@ -464,4 +444,14 @@ static void print_sha256(const uint8_t *image_hash, // Pointer to the hash
   DLT(DLT_HTTP, SEND(ALL, sprintf("SHA256 %s:%s", hash_print, lable);))
 
   return;
+}
+
+/*
+ *  Set the LEDs and halt
+ */
+void OTA_halt(char *LED_status)
+{
+  set_status_LED(LED_status);
+  while ( 1 )
+    continue;
 }

@@ -20,6 +20,7 @@
 #include "serial_io.h"
 #include "timer.h"
 #include "mfs.h"
+#include "ota.h"
 
 /*
  *  Definitions
@@ -164,12 +165,12 @@ void multifunction_init(void)
   {
     if ( DIP_SW_A )           // Switch A pressed
     {
-      is_trace = DLT_CRITICAL | DLT_INFO | DLT_APPLICATION | DLT_COMMUNICATION | DLT_DIAG | DLT_DEBUG;
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "\r\nAll tracing enabled");))
+      OTA_load();             // Load in a new OTA
     }
 
     if ( DIP_SW_B )           // Switch B pressed
     {
+      OTA_rollback();         // Roll back to old software
     }
   }
 
