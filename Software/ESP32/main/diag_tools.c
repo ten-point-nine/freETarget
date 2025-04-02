@@ -85,6 +85,7 @@ static const self_test_t test_list[] = {
     {"DNS Lookup test",                   &http_DNS_test           },
     {"Send to server test",               &http_send_to_server_test},
     {"Start web server",                  &http_server_test        },
+    {"OTA partitions",                    &OTA_partitions          },
     {"OTA load",                          &OTA_load                },
     {"OTA rollback",                      &OTA_rollback            },
     {"-Interrupt Tests",                  0                        },

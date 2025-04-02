@@ -12,8 +12,9 @@
  * Global functions
  */
 
-void OTA_rollback(void); // Go back to the previous version of software
-void OTA_load(void);     // Get a new version of software from the server
+void OTA_rollback(void);   // Go back to the previous version of software
+void OTA_load(void);       // Get a new version of software from the server
+void OTA_partitions(void); // Display the partition data
 
 /*
  * #defines

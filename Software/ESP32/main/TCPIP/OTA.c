@@ -455,3 +455,54 @@ void OTA_halt(char *LED_status)
   while ( 1 )
     continue;
 }
+
+/*----------------------------------------------------------------
+ *
+ * @function: ota_partitions
+ *
+ * @brief:  Show the partition data
+ *
+ * @return: None
+ *---------------------------------------------------------------
+ *
+ * Convert the hash into a text string and print the resuls
+ *
+ *------------------------------------------------------------*/
+static char *partition_type[] = {"ESP_PARTITION_TYPE_APP", "ESP_PARTITION_TYPE_DATA"};
+
+void OTA_partitions(void)
+{
+  const esp_partition_t *boot    = esp_ota_get_boot_partition();
+  const esp_partition_t *running = esp_ota_get_running_partition();
+
+  printf("\r\nBoot Partition");
+  if ( configured != NULL )
+  {
+    printf("\r\nType:%s  Subtype:%d", partition_type[configured->type], configured->subtype);
+    printf("\r\nAddress: 0X%lX  Size 0x%lX", configured->address, configured->size);
+    printf("\r\nLable: %s", configured->label);
+    printf("\r\n");
+  }
+  else
+  {
+    printf("\r\nNot available");
+    printf("\r\n");
+  }
+
+  printf("\r\nRunning Partition");
+  if ( running != NULL )
+  {
+    printf("\r\nType:%s  Subtype:%d", partition_type[running->type], running->subtype);
+    printf("\r\nAddress: 0X%lX Size :0x%lX", running->address, running->size);
+    printf("\r\nLable: %s", running->label);
+    printf("\r\n");
+  }
+  else
+  {
+    printf("\r\nNot available");
+    printf("\r\n");
+  }
+
+  printf(_DONE_);
+  return;
+}
