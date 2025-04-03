@@ -27,6 +27,11 @@ namespace freETarget {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmTargetSettings));
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabPageHardware = new System.Windows.Forms.TabPage();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.txtYoffset = new System.Windows.Forms.TextBox();
+            this.txtXoffset = new System.Windows.Forms.TextBox();
             this.cmbName = new System.Windows.Forms.ComboBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.lblStepTime = new System.Windows.Forms.Label();
@@ -60,19 +65,14 @@ namespace freETarget {
             this.btnClose = new System.Windows.Forms.Button();
             this.pnlWait = new System.Windows.Forms.Panel();
             this.label1 = new System.Windows.Forms.Label();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.txtXoffset = new System.Windows.Forms.TextBox();
-            this.txtYoffset = new System.Windows.Forms.TextBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
             this.tabControl.SuspendLayout();
             this.tabPageHardware.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trkLEDbright)).BeginInit();
             this.tabPageSensors.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picTarget)).BeginInit();
             this.pnlWait.SuspendLayout();
-            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl
@@ -100,6 +100,51 @@ namespace freETarget {
             this.tabPageHardware.TabIndex = 3;
             this.tabPageHardware.Text = "Hardware";
             this.tabPageHardware.UseVisualStyleBackColor = true;
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.label3);
+            this.groupBox1.Controls.Add(this.label2);
+            this.groupBox1.Controls.Add(this.txtYoffset);
+            this.groupBox1.Controls.Add(this.txtXoffset);
+            this.groupBox1.Location = new System.Drawing.Point(13, 144);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(283, 79);
+            this.groupBox1.TabIndex = 24;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Calibration offset";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(6, 49);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(61, 13);
+            this.label3.TabIndex = 3;
+            this.label3.Text = "Y_OFFSET";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(6, 23);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(61, 13);
+            this.label2.TabIndex = 2;
+            this.label2.Text = "X_OFFSET";
+            // 
+            // txtYoffset
+            // 
+            this.txtYoffset.Location = new System.Drawing.Point(93, 46);
+            this.txtYoffset.Name = "txtYoffset";
+            this.txtYoffset.Size = new System.Drawing.Size(184, 20);
+            this.txtYoffset.TabIndex = 1;
+            // 
+            // txtXoffset
+            // 
+            this.txtXoffset.Location = new System.Drawing.Point(93, 20);
+            this.txtXoffset.Name = "txtXoffset";
+            this.txtXoffset.Size = new System.Drawing.Size(184, 20);
+            this.txtXoffset.TabIndex = 0;
             // 
             // cmbName
             // 
@@ -405,8 +450,8 @@ namespace freETarget {
             this.lblWarning.Name = "lblWarning";
             this.lblWarning.Size = new System.Drawing.Size(304, 26);
             this.lblWarning.TabIndex = 36;
-            this.lblWarning.Text = "All modifications on this page are sent directly to the target and stored in it\'s" +
-    " internal storage";
+            this.lblWarning.Text = "All modifications on this page are sent directly to the target and stored in its " +
+    "internal storage";
             // 
             // btnApply
             // 
@@ -449,51 +494,6 @@ namespace freETarget {
             this.label1.TabIndex = 0;
             this.label1.Text = "Please wait while retriving target settings...";
             // 
-            // groupBox1
-            // 
-            this.groupBox1.Controls.Add(this.label3);
-            this.groupBox1.Controls.Add(this.label2);
-            this.groupBox1.Controls.Add(this.txtYoffset);
-            this.groupBox1.Controls.Add(this.txtXoffset);
-            this.groupBox1.Location = new System.Drawing.Point(13, 144);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(283, 79);
-            this.groupBox1.TabIndex = 24;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Calibration offset";
-            // 
-            // txtXoffset
-            // 
-            this.txtXoffset.Location = new System.Drawing.Point(93, 20);
-            this.txtXoffset.Name = "txtXoffset";
-            this.txtXoffset.Size = new System.Drawing.Size(184, 20);
-            this.txtXoffset.TabIndex = 0;
-            // 
-            // txtYoffset
-            // 
-            this.txtYoffset.Location = new System.Drawing.Point(93, 46);
-            this.txtYoffset.Name = "txtYoffset";
-            this.txtYoffset.Size = new System.Drawing.Size(184, 20);
-            this.txtYoffset.TabIndex = 1;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(6, 23);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(61, 13);
-            this.label2.TabIndex = 2;
-            this.label2.Text = "X_OFFSET";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(6, 49);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(61, 13);
-            this.label3.TabIndex = 3;
-            this.label3.Text = "Y_OFFSET";
-            // 
             // frmTargetSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -517,6 +517,8 @@ namespace freETarget {
             this.tabControl.ResumeLayout(false);
             this.tabPageHardware.ResumeLayout(false);
             this.tabPageHardware.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trkLEDbright)).EndInit();
@@ -525,8 +527,6 @@ namespace freETarget {
             ((System.ComponentModel.ISupportInitialize)(this.picTarget)).EndInit();
             this.pnlWait.ResumeLayout(false);
             this.pnlWait.PerformLayout();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
