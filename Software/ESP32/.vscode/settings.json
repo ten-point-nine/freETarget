@@ -42,7 +42,12 @@
     "stdlib.h": "c",
     "analog_io.h": "c",
     "nvs.h": "c",
-    "task.h": "c"
+    "task.h": "c",
+    "bitset": "c",
+    "format": "c",
+    "initializer_list": "c",
+    "span": "c",
+    "coroutine": "c"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM4",

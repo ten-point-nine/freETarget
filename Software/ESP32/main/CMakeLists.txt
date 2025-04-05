@@ -13,5 +13,6 @@ idf_component_register(SRCS ${app_sources}
                     EMBED_FILES 
                     "html/index.html"
                     "html/issf.png"
+                    "tcpip/ca_cert.pem"
                     )
 
