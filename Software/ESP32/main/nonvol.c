@@ -20,6 +20,7 @@
 #include "nonvol.h"
 #include "serial_io.h"
 #include "string.h"
+#include "ota.h"
 
 /*
  *  Local variables
@@ -220,6 +221,9 @@ void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calib
     i++;
   }
 
+  strcpy(json_ota_url, OTA_URL);                        // Copy the OTA URL to the nonvol
+  nvs_set_str(my_handle, NONVOL_OTA_URL, json_ota_url); // Store the URL in the nonvol
+
   /*
    *     Test the board only if it is a factor init
    */
@@ -402,6 +406,11 @@ void update_nonvol(unsigned int current_version) // Version present in persisten
         }
       }
       i++;
+    }
+    if ( version == 11 )
+    {
+      strcpy(json_ota_url, OTA_URL);                        // Copy the OTA URL to the nonvol
+      nvs_set_str(my_handle, NONVOL_OTA_URL, json_ota_url); // Store the URL in the nonvol
     }
   }
 

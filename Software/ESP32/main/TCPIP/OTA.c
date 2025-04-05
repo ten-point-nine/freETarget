@@ -34,6 +34,7 @@
 #include "helpers.h"
 #include "diag_tools.h"
 #include "ota.h"
+#include "json.h"
 
 #define BUFFSIZE 1024
 #define HASH_LEN 32 /* SHA-256 digest length */
@@ -90,7 +91,7 @@ void OTA_load(void)
   esp_ota_handle_t       update_handle    = 0;
   const esp_partition_t *update_partition = NULL;
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Starting OTA example task");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "OTA_load()");))
 
   const esp_partition_t *configured = esp_ota_get_boot_partition();
   const esp_partition_t *running    = esp_ota_get_running_partition();
@@ -106,28 +107,11 @@ void OTA_load(void)
                                   running->address);))
 
   esp_http_client_config_t config = {
-      .url               = OTA_URL,
+      .url               = &json_ota_url,
       .cert_pem          = (char *)server_cert_pem_start,
       .timeout_ms        = OTA_TIMEOUT,
       .keep_alive_enable = true,
   };
-
-#ifdef CONFIG_EXAMPLE_FIRMWARE_UPGRADE_URL_FROM_STDIN
-  char url_buf[OTA_URL_SIZE];
-  if ( strcmp(config.url, "FROM_STDIN") == 0 )
-  {
-    example_configure_stdin_stdout();
-    fgets(url_buf, OTA_URL_SIZE, stdin);
-    int len          = strlen(url_buf);
-    url_buf[len - 1] = '\0';
-    config.url       = url_buf;
-  }
-  else
-  {
-    ESP_LOGE(TAG, "Configuration mismatch: wrong firmware upgrade image url");
-    abort();
-  }
-#endif
 
 #ifdef CONFIG_EXAMPLE_SKIP_COMMON_NAME_CHECK
   config.skip_cert_common_name_check = true;
@@ -361,6 +345,7 @@ void app_main_X(void)
     }
   }
 
+#if ( 0 )
   // Initialize NVS.
   esp_err_t err = nvs_flash_init();
   if ( err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND )
@@ -388,6 +373,7 @@ void app_main_X(void)
    */
   esp_wifi_set_ps(WIFI_PS_NONE);
 #endif // CONFIG_EXAMPLE_CONNECT_WIFI
+#endif
 
        // xTaskCreate(&ota_example_task, "ota_example_task", 8192, NULL, 5, NULL);
 }
