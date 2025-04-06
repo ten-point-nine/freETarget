@@ -47,9 +47,9 @@ void test_build_fake_shots(void);                         // Generate a list of 
 #define LED_FATAL              "RRR--"  // A fatal error prevents operation
 #define LED_READY              "g----"  // The shot is ready to go.  Blink to show we are alive
 #define LED_BYE                "B----"  // Go to sleep
-#define LED_OTA_WAITING        "bbb--"  // Waiting for OTA to start
-#define LED_OTA_DOWNLOAD       "BBB--"  // The OTA is downloading
-#define LED_OTA_FAILED_CONNECT "BRR--"  // The OTA has failed to connect
+#define LED_OTA_WAITING        "b  --"  // Waiting for OTA to start
+#define LED_OTA_DOWNLOAD       "B----"  // The OTA is downloading
+#define LED_OTA_FAILED_CONNECT "BR---"  // The OTA has failed to connect
 #define LED_OTA_FAILED_LOAD    "BRR--"  // The OTA has failed to load
 
 #define LED_READY_OFF " ----"           // Turn off the READY light

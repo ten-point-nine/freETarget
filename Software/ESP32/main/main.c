@@ -39,6 +39,12 @@
 #error MUST_RUN set too high
 #endif
 
+#define K1 1024                     // Kilo Bytes
+#define K2 (K1 * 2)                 // 2 Kilo Bytes
+#define K4 (K1 * 4)                 // 4 Kilo Bytes
+#define K6 (K1 * 6)                 // 6 Kilo Bytes
+#define K8 (K1 * 8)                 // 8 Kilo Bytes
+
 /*
  * Start up the tasks
  */
@@ -53,29 +59,29 @@ void app_main(void)
   /*
    * Everything is ready, start the threads.  Low task priority number == low priority
    */
-  xTaskCreate(freeETarget_target_loop, "freeETarget_target_loop", 4096, NULL, MUST_RUN, NULL);
+  xTaskCreate(freeETarget_target_loop, "freeETarget_target_loop", K4, NULL, MUST_RUN, NULL);
   vTaskDelay(TICK_10ms);
 
-  xTaskCreate(freeETarget_timers, "freeETarget_timer", 4096, NULL, TIMED, NULL);
+  xTaskCreate(freeETarget_timers, "freeETarget_timer", K4, NULL, TIMED, NULL);
   vTaskDelay(TICK_10ms);
 
-  xTaskCreate(freeETarget_synchronous, "freeETarget_synchronous", 4096, NULL, TIMED, NULL);
+  xTaskCreate(freeETarget_synchronous, "freeETarget_synchronous", K4, NULL, TIMED, NULL);
   vTaskDelay(TICK_10ms);
 
-  xTaskCreate(freeETarget_json, "json_task", 4096, NULL, BACKGROUND, NULL);
+  xTaskCreate(freeETarget_json, "json_task", K6, NULL, BACKGROUND, NULL);
   vTaskDelay(TICK_10ms);
 
-  xTaskCreate(WiFi_tcp_server_task, "WiFi_tcp_server", 4096, NULL, NETWORK, NULL);
+  xTaskCreate(WiFi_tcp_server_task, "WiFi_tcp_server", K4, NULL, NETWORK, NULL);
   vTaskDelay(TICK_10ms);
-  xTaskCreate(tcpip_accept_poll, "tcpip_accept_poll", 4096, NULL, POLLING, NULL);
+  xTaskCreate(tcpip_accept_poll, "tcpip_accept_poll", K4, NULL, POLLING, NULL);
   vTaskDelay(TICK_10ms);
-  xTaskCreate(tcpip_socket_poll_0, "tcpip_socket_poll_0", 4096, NULL, POLLING, NULL);
+  xTaskCreate(tcpip_socket_poll_0, "tcpip_socket_poll_0", K4, NULL, POLLING, NULL);
   vTaskDelay(TICK_10ms);
-  xTaskCreate(tcpip_socket_poll_1, "tcpip_socket_poll_1", 4096, NULL, POLLING, NULL);
+  xTaskCreate(tcpip_socket_poll_1, "tcpip_socket_poll_1", K4, NULL, POLLING, NULL);
   vTaskDelay(TICK_10ms);
-  xTaskCreate(tcpip_socket_poll_2, "tcpip_socket_poll_2", 4096, NULL, POLLING, NULL);
+  xTaskCreate(tcpip_socket_poll_2, "tcpip_socket_poll_2", K4, NULL, POLLING, NULL);
   vTaskDelay(TICK_10ms);
-  xTaskCreate(tcpip_socket_poll_3, "tcpip_socket_poll_3", 4096, NULL, POLLING, NULL);
+  xTaskCreate(tcpip_socket_poll_3, "tcpip_socket_poll_3", K4, NULL, POLLING, NULL);
   vTaskDelay(TICK_10ms);
 
   start_webserver();

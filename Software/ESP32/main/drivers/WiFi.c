@@ -230,8 +230,6 @@ void WiFi_AP_init(void)
  *
  * Test
  *
- * {"WIFI_SSID":"DEBASMITA_5G", "WIFI_PWD":"98311371538207264885"}
- *
  *
  *******************************************************************************/
 void WiFi_station_init(void)

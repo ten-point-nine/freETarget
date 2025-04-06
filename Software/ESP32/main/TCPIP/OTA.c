@@ -82,20 +82,32 @@ void OTA_rollback(void)
 
  *
  *------------------------------------------------------------*/
+char download_url[OTA_URL_SIZE];
+
 void OTA_load(void)
 {
   esp_err_t err;
   /* update handle : set by esp_ota_begin(), must be freed via esp_ota_end() */
-  esp_ota_handle_t       update_handle    = 0;
-  const esp_partition_t *update_partition = NULL;
+  esp_ota_handle_t       update_handle     = 0;
+  const esp_partition_t *update_partition  = esp_ota_get_next_update_partition(NULL);
+  const esp_partition_t *boot_partition    = esp_ota_get_boot_partition();
+  const esp_partition_t *running_partition = esp_ota_get_running_partition();
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "OTA_load()");))
   set_status_LED(LED_OTA_DOWNLOAD);
 
-  const esp_partition_t *configured = esp_ota_get_boot_partition();
-  const esp_partition_t *running    = esp_ota_get_running_partition();
+  if ( boot_partition == NULL )
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Boot partition not available");))
+  }
 
-  if ( configured != running )
+  if ( running_partition == NULL )
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Running partition not available");))
+  }
+
+#if ( 0 )
+  if ( boot_partition != running_partition )
   {
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Configured OTA boot partition at offset 0x%08" PRIx32 ", but running from offset 0x%08" PRIx32,
                                     configured->address, running->address);))
@@ -104,9 +116,14 @@ void OTA_load(void)
   }
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Running partition type %d subtype %d (offset 0x%08" PRIx32 ")", running->type, running->subtype,
                                   running->address);))
+#endif
+
+  sprintf(download_url, "http://%s/freeETarget.bin", json_ota_url);
+
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "OTA download URL: %s", download_url);))
 
   esp_http_client_config_t config = {
-      .url               = &json_ota_url,
+      .url               = download_url,
       .cert_pem          = (char *)server_cert_pem_start,
       .timeout_ms        = OTA_TIMEOUT,
       .keep_alive_enable = true,
@@ -132,25 +149,32 @@ void OTA_load(void)
     }
     esp_http_client_fetch_headers(client);
 
-    update_partition = esp_ota_get_next_update_partition(NULL);
     assert(update_partition != NULL);
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Writing to partition subtype %d at offset 0x%" PRIx32, update_partition->subtype,
                                     update_partition->address);))
 
     int binary_file_length = 0;
+
+    /*
+     * Loop here and bring in the file
+     */
     /*deal with all receive packet*/
     bool image_header_was_checked = false;
     while ( 1 )
     {
       int data_read = esp_http_client_read(client, ota_write_data, BUFFSIZE);
-      if ( data_read < 0 )
+
+      if ( data_read < 0 ) // Error getting data
       {
         DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Error: SSL data read error");))
-        http_cleanup(client);
+        esp_http_client_close(client);
+        esp_http_client_cleanup(client);
         OTA_fatal_error(LED_OTA_FAILED_CONNECT);
       }
-      else if ( data_read > 0 )
+
+      else if ( data_read > 0 ) // Have a payload to process
       {
+        printf("\r\nData %d %s", data_read, ota_write_data);
         if ( image_header_was_checked == false )
         {
           esp_app_desc_t new_app_info;
@@ -161,7 +185,7 @@ void OTA_load(void)
             DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "New firmware version: %s", new_app_info.version);))
 
             esp_app_desc_t running_app_info;
-            if ( esp_ota_get_partition_description(running, &running_app_info) == ESP_OK )
+            if ( esp_ota_get_partition_description(running_partition, &running_app_info) == ESP_OK )
             {
               DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Running firmware version: %s", running_app_info.version);))
             }
@@ -193,8 +217,7 @@ void OTA_load(void)
             {
               DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Current running version is the same as a new. We will not continue the update.");))
               http_cleanup(client);
-              while ( 1 )
-                continue;
+              OTA_fatal_error(LED_OTA_FAILED_LOAD);
             }
 #endif
 
@@ -218,6 +241,9 @@ void OTA_load(void)
             OTA_fatal_error(LED_OTA_FAILED_CONNECT);
           }
         }
+        /*
+         * flash the received data
+         */
         err = esp_ota_write(update_handle, (const void *)ota_write_data, data_read);
         if ( err != ESP_OK )
         {
@@ -228,6 +254,7 @@ void OTA_load(void)
         binary_file_length += data_read;
         DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Written image length %d", binary_file_length);))
       }
+
       else if ( data_read == 0 )
       {
         /*
@@ -246,6 +273,10 @@ void OTA_load(void)
         }
       }
     }
+
+    /*
+     *  The download is complete, make sure we have the complete file
+     */
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Total Write binary data length: %d", binary_file_length);))
     if ( esp_http_client_is_complete_data_received(client) != true )
     {
@@ -270,6 +301,10 @@ void OTA_load(void)
       OTA_fatal_error(LED_OTA_FAILED_CONNECT);
     }
 
+/*
+ * Looks good, setup the registers
+ */
+#if ( 0 )
     err = esp_ota_set_boot_partition(update_partition);
     if ( err != ESP_OK )
     {
@@ -277,6 +312,10 @@ void OTA_load(void)
       http_cleanup(client);
       OTA_fatal_error(LED_OTA_FAILED_CONNECT);
     }
+#endif
+    /*
+     *  All done, reboot
+     */
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Prepare to restart system!");))
     esp_restart();
     return;
@@ -303,7 +342,7 @@ void OTA_start(void)
   uint8_t                sha_256[HASH_LEN] = {0};
   esp_partition_t        partition;
   const esp_partition_t *running = esp_ota_get_running_partition();
-
+#if ( 0 )
   // get sha256 digest for the partition table
   partition.address = ESP_PARTITION_TABLE_OFFSET;
   partition.size    = ESP_PARTITION_TABLE_MAX_LEN;
@@ -319,8 +358,13 @@ void OTA_start(void)
   print_sha256(sha_256, "SHA-256 for bootloader: ");
 
   // get sha256 digest for running partition
-  esp_partition_get_sha256(esp_ota_get_running_partition(), sha_256);
-  print_sha256(sha_256, "SHA-256 for current firmware: ");
+  if ( running != NULL )
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Running partition not available");))
+    esp_partition_get_sha256(esp_ota_get_running_partition(), sha_256);
+    print_sha256(sha_256, "SHA-256 for current firmware: ");
+  }
+#endif
 
   esp_ota_img_states_t ota_state;
   if ( esp_ota_get_state_partition(running, &ota_state) == ESP_OK )
@@ -448,7 +492,22 @@ void OTA_halt(char *LED_status)
  * @return: None
  *---------------------------------------------------------------
  *
- * Convert the hash into a text string and print the resuls
+ * Display the partition data for the ESP32
+ *
+ * After a download the partitions are:
+ *
+ * Boot Partition
+ * Not available
+ *
+ * Running Partition
+ * Type:ESP_PARTITION_TYPE_APP  Subtype:0
+ * Address: 0X10000 Size :0x200000
+ * Lable: factory
+ *
+ * Update Partition
+ * Type:ESP_PARTITION_TYPE_APP  Subtype:16
+ * Address: 0X210000  Size 0x200000
+ * Lable: ota_0
  *
  *------------------------------------------------------------*/
 static char *partition_type[] = {"ESP_PARTITION_TYPE_APP", "ESP_PARTITION_TYPE_DATA"};
