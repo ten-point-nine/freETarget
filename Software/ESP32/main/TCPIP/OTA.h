@@ -12,10 +12,8 @@
  * Global functions
  */
 void OTA_rollback(void);   // Go back to the previous version of software
-void OTA_load(void);       // Get a new version of software from the server
-void OTA_start(void);      // Start loading but check the status first
+void OTA_load(void);       // Perform the OTA update
 void OTA_partitions(void); // Display the partition data
-void OTA_init(void);       // Initialize the OTA process
 
 /*
  * #defines

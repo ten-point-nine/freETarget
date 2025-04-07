@@ -159,19 +159,7 @@ void multifunction_init(void)
   if ( DIP_SW_A && DIP_SW_B ) // Both switches closed?
   {
     factory_nonvol(false);    // Initalize the nonvol but do not calibrate
-  }
-
-  else
-  {
-    if ( DIP_SW_A )           // Switch A pressed
-    {
-      OTA_load();             // Load in a new OTA
-    }
-
-    if ( DIP_SW_B )           // Switch B pressed
-    {
-      OTA_rollback();         // Roll back to old software
-    }
+    esp_restart();
   }
 
   /*

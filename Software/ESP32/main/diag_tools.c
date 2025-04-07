@@ -86,7 +86,7 @@ static const self_test_t test_list[] = {
     {"Send to server test",               &http_send_to_server_test},
     {"Start web server",                  &http_server_test        },
     {"OTA partitions",                    &OTA_partitions          },
-    {"OTA start",                         &OTA_start               },
+    {"OTA load",                          &OTA_load                },
     {"OTA rollback",                      &OTA_rollback            },
     {"-Interrupt Tests",                  0                        },
     {"Polled target test",                &polled_target_test      },
