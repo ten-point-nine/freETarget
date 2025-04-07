@@ -48,11 +48,11 @@ void test_build_fake_shots(void);                         // Generate a list of 
 #define LED_READY              "g----"  // The shot is ready to go.  Blink to show we are alive
 #define LED_BYE                "B----"  // Go to sleep
 #define LED_OTA_WAITING        "b  --"  // Waiting for OTA to start
-#define LED_OTA_DOWNLOAD       "B----"  // The OTA is downloading
-#define LED_OTA_FAILED_CONNECT "BR---"  // The OTA has failed to connect
-#define LED_OTA_FAILED_LOAD    "BRR--"  // The OTA has failed to load
-
-#define LED_READY_OFF " ----"           // Turn off the READY light
+#define LED_OTA_DOWNLOAD       "B  --"  // The OTA is downloading
+#define LED_OTA_FAILED_CONNECT "BR --"  // The OTA has failed to connect (CHeck the network)
+#define LED_OTA_FAILED_LOAD    "B R--"  // The OTA has failed to load
+#define LED_OTA_FATAL          "BRR--"  // The data was OK, but the OTA should not be used
+#define LED_READY_OFF          " ----"  // Turn off the READY light
 
 #define LED_WIFI_OFF        "- ---"     // The WiFi is not operational
 #define LED_WIFI_STATION    "-g---"     // The WiFi is in station mode but not connected
