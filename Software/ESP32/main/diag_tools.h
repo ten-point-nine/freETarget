@@ -52,6 +52,7 @@ void test_build_fake_shots(void);                         // Generate a list of 
 #define LED_OTA_FAILED_CONNECT "BR --"  // The OTA has failed to connect (CHeck the network)
 #define LED_OTA_FAILED_LOAD    "B R--"  // The OTA has failed to load
 #define LED_OTA_FATAL          "BRR--"  // The data was OK, but the OTA should not be used
+#define LED_OTA_READY          "Bgg--"  // The OTA is ready to go.  Reset the board
 #define LED_READY_OFF          " ----"  // Turn off the READY light
 
 #define LED_WIFI_OFF        "- ---"     // The WiFi is not operational
@@ -113,7 +114,8 @@ void test_build_fake_shots(void);                         // Generate a list of 
 #define DLT_DEBUG         0x0020 // Specific debug information
 #define DLT_SCORE         0x0040 // Display extended score record
 #define DLT_HTTP          0x0080 // Log HTTP requests
-#define DLT_HEARTBEAT     0x0100 // Kick out the time to see if we are alive
+#define DLT_OTA           0x0100 // Log OTA requests
+#define DLT_HEARTBEAT     0x0200 // Kick out the time to see if we are alive
 
 // clang-format off
 #define DLT(level, z) if ( do_dlt(level) )  { z }

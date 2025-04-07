@@ -107,7 +107,8 @@ const dlt_name_t dlt_names[] = {
     {DLT_DEBUG,         "DLT_DEBUG",         'D'}, // Software debugging information
     {DLT_SCORE,         "DLT_SCORE",         'S'}, // Display timing in the score message
     {DLT_HTTP,          "DLT_HTTP",          'H'}, // Log HTTP events
-    {DLT_HEARTBEAT,     "DLT_HEARTBEAT",     'H'}, // Heartbeat tick
+    {DLT_OTA,           "DLT_OTA",           'O'}, // Log HTTP events
+    {DLT_HEARTBEAT,     "DLT_HEARTBEAT",     'T'}, // Heartbeat tick
     {0,                 0,                   0  }
 };
 

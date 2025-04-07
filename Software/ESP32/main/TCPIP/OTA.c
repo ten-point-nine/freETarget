@@ -70,7 +70,7 @@ static bool OTA_check_header(char                  *ota_write_data,    // Data r
  *------------------------------------------------------------*/
 void OTA_rollback(void)
 {
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Start rollback to the previous version ...");))
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Start rollback to the previous version ...");))
   esp_ota_mark_app_invalid_rollback_and_reboot();
 }
 
@@ -112,29 +112,29 @@ void OTA_load(void)
       .keep_alive_enable = true,
   };
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "OTA_load()");))
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "OTA_load()");))
   set_status_LED(LED_OTA_DOWNLOAD);
 
   if ( boot_partition == NULL )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Boot partition not available");))
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Boot partition not available");))
   }
 
   if ( running_partition == NULL )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Running partition not available");))
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Running partition not available");))
   }
 
 #if ( 0 )
   if ( boot_partition != running_partition )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Configured OTA boot partition at offset 0x%08" PRIx32 ", but running from offset 0x%08" PRIx32,
-                                    configured->address, running->address);))
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Configured OTA boot partition at offset 0x%08" PRIx32 ", but running from offset 0x%08" PRIx32,
+                                   configured->address, running->address);))
     DLT(DLT_INFO,
         SEND(ALL, sprintf(_xs, "(This can happen if either the OTA boot data or preferred boot image become corrupted somehow.)");))
   }
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Running partition type %d subtype %d (offset 0x%08" PRIx32 ")", running->type, running->subtype,
-                                  running->address);))
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Running partition type %d subtype %d (offset 0x%08" PRIx32 ")", running->type, running->subtype,
+                                 running->address);))
 #endif
 
   /*
@@ -151,21 +151,21 @@ void OTA_load(void)
   sprintf(download_url, "http://%s/freeETarget.bin", json_ota_url);
   config.url = download_url;
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "OTA download URL: %s", download_url);))
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "OTA download URL: %s", download_url);))
 
   client = esp_http_client_init(&config);
 
   if ( client == NULL )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Failed to initialise HTTP connection");))
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Failed to initialise HTTP connection");))
     OTA_fatal_error(LED_OTA_FAILED_CONNECT);
   }
+
   err = esp_http_client_open(client, 0); // Open the connection to the server
 
   if ( err != ESP_OK )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Failed to open HTTP connection: %s", esp_err_to_name(err));))
-    esp_http_client_cleanup(client);
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Failed to open HTTP connection: %s", esp_err_to_name(err));))
     OTA_fatal_error(LED_OTA_FAILED_CONNECT);
   }
 
@@ -175,8 +175,8 @@ void OTA_load(void)
   esp_http_client_fetch_headers(client);
   update_partition = esp_ota_get_next_update_partition(NULL);
   assert(update_partition != NULL);
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Writing to partition subtype %d at offset 0x%" PRIx32, update_partition->subtype,
-                                  update_partition->address);))
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Writing to partition subtype %d at offset 0x%" PRIx32, update_partition->subtype,
+                                 update_partition->address);))
 
   // esp_http_client_read(client, ota_write_data, BUFFSIZE); // Throw away the HTTP header
   /*
@@ -186,12 +186,13 @@ void OTA_load(void)
 
   if ( err != ESP_OK )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "esp_ota_begin failed (%s)", esp_err_to_name(err));))
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "esp_ota_begin failed (%s)", esp_err_to_name(err));))
     http_cleanup(client);
     esp_ota_abort(update_handle);
     OTA_fatal_error(LED_OTA_FAILED_CONNECT);
   }
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "esp_ota_begin succeeded");))
+
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "esp_ota_begin succeeded");))
 
   /*
    * Loop here and bring in the file
@@ -202,15 +203,15 @@ void OTA_load(void)
 
     if ( data_read < 0 ) // Error getting data
     {
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Error: SSL data read error");))
+      DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Error: HTTP data read error");))
       esp_http_client_close(client);
       esp_http_client_cleanup(client);
       OTA_fatal_error(LED_OTA_FAILED_CONNECT);
     }
 
-    else if ( data_read > 0 ) // Have a payload to process
+    if ( data_read > 0 )                       // Have a payload to process
     {
-      if ( image_header_was_checked == false )
+      if ( image_header_was_checked == false ) // First time through, check the header
       {
         OTA_check_header(ota_write_data, data_read, update_partition, running_partition, boot_partition);
         image_header_was_checked = true;
@@ -228,62 +229,62 @@ void OTA_load(void)
       binary_file_length += data_read;
     }
 
-    else if ( data_read == 0 )
+    if ( data_read == 0 )
     {
       /*
        * As esp_http_client_read never returns negative error code, we rely on
        * `errno` to check for underlying transport connectivity closure if any
        */
-      if ( errno == ECONNRESET || errno == ENOTCONN )
-      {
-        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Connection closed, errno = %d", errno);))
-        break;
-      }
       if ( esp_http_client_is_complete_data_received(client) == true )
       {
-        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Connection closed");))
-        break;
+        DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Connection closed normally");))
       }
+      else
+      {
+        DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Connection closed, errno = %d", errno);))
+      }
+      break; // No more data to read, exit the loop
     }
   }
 
   /*
    *  The download is complete, make sure we have the complete file
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Total Write binary data length: %d", binary_file_length);))
-  printf("A");
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Total Write binary data length: %d", binary_file_length);))
+
   if ( esp_http_client_is_complete_data_received(client) != true )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Error in receiving complete file");))
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Error in receiving complete file");))
     http_cleanup(client);
     esp_ota_abort(update_handle);
     OTA_fatal_error(LED_OTA_FAILED_CONNECT);
   }
-  printf("B");
+
   err = esp_ota_end(update_handle);
   if ( err != ESP_OK )
   {
     if ( err == ESP_ERR_OTA_VALIDATE_FAILED )
     {
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Image validation failed, image is corrupted");))
+      DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Image validation failed, image is corrupted");))
     }
     else
     {
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "esp_ota_end failed (%s)!", esp_err_to_name(err));))
+      DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "esp_ota_end failed (%s)!", esp_err_to_name(err));))
     }
     http_cleanup(client);
     OTA_fatal_error(LED_OTA_FATAL);
   }
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "esp_ota_end succesful");))
+  printf("C");
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "esp_ota_end succesful");))
 
   /*
    * Looks good, setup the registers
    */
   err = esp_ota_set_boot_partition(update_partition);
-  printf("C");
+  printf("D");
   if ( err != ESP_OK )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "esp_ota_set_boot_partition failed (%0X)!", err);))
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "esp_ota_set_boot_partition failed (%0X)!", err);))
     http_cleanup(client);
     OTA_fatal_error(LED_OTA_FATAL);
   }
@@ -291,7 +292,7 @@ void OTA_load(void)
   /*
    *  All done, reboot
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Prepare to restart system!");))
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Prepare to restart system!");))
   esp_restart();
 }
 
@@ -334,7 +335,7 @@ static bool OTA_check_header(char                  *ota_write_data,    // Data r
    */
   if ( data_read < sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t) )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "received package is not fit len");))
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "received package is not fit len");))
     OTA_fatal_error(LED_OTA_FATAL);
   }
 
@@ -342,11 +343,11 @@ static bool OTA_check_header(char                  *ota_write_data,    // Data r
    *  Extract the data and print it out
    */
   memcpy(&new_app_info, &ota_write_data[sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t)], sizeof(esp_app_desc_t));
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "New firmware version: %s", new_app_info.version);))
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "New firmware version: %s", new_app_info.version);))
 
   if ( esp_ota_get_partition_description(running_partition, &running_app_info) == ESP_OK )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Running firmware version: %s", running_app_info.version);))
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Running firmware version: %s", running_app_info.version);))
   }
 
   last_invalid_app = esp_ota_get_last_invalid_partition();
@@ -354,28 +355,29 @@ static bool OTA_check_header(char                  *ota_write_data,    // Data r
   {
     if ( esp_ota_get_partition_description(last_invalid_app, &invalid_app_info) == ESP_OK )
     {
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Last invalid firmware version: %s", invalid_app_info.version);))
+      DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Last invalid firmware version: %s", invalid_app_info.version);))
     }
 
     if ( memcmp(invalid_app_info.version, new_app_info.version, sizeof(new_app_info.version)) == 0 )
     {
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "New version is the same as invalid version.");))
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Previously, there was an attempt to launch the firmware with %s version, but it failed.",
-                                      invalid_app_info.version);))
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "The firmware has been rolled back to the previous version.");))
+      DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "New version is the same as invalid version.");))
+      DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Previously, there was an attempt to launch the firmware with %s version, but it failed.",
+                                     invalid_app_info.version);))
+      DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "The firmware has been rolled back to the previous version.");))
       OTA_fatal_error(LED_OTA_FATAL);
     }
   }
 
   if ( memcmp(new_app_info.version, running_app_info.version, sizeof(new_app_info.version)) == 0 )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Current running version is the same as a new. We will not continue the update.");))
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Current running version is the same as a new. We will not continue the update.");))
     OTA_fatal_error(LED_OTA_FATAL);
   }
 
   /*
    * Everything looks good
    */
+  OTA_fatal_error(LED_OTA_READY);
   return true;
 }
 
@@ -394,17 +396,18 @@ static bool OTA_check_header(char                  *ota_write_data,    // Data r
 
 void OTA_start(void)
 {
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "OTA_start()");))
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "OTA_start()");))
 
   uint8_t                sha_256[HASH_LEN] = {0};
   esp_partition_t        partition;
   const esp_partition_t *running;
   esp_ota_img_states_t   ota_state;
 
+  is_trace |= DLT_OTA; // Enable the OTA trace
+
   running = esp_ota_get_running_partition();
   if ( running != NULL )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Running partition not available");))
     esp_partition_get_sha256(esp_ota_get_running_partition(), sha_256);
     print_sha256(sha_256, "SHA-256 for current firmware: ");
   }
@@ -416,12 +419,12 @@ void OTA_start(void)
       bool diagnostic_is_ok = false; // Keep it happy until we find a problem
       if ( diagnostic_is_ok )
       {
-        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Diagnostics completed successfully! Continuing execution ...");))
+        DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Diagnostics completed successfully! Continuing execution ...");))
         esp_ota_mark_app_valid_cancel_rollback();
       }
       else
       {
-        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Diagnostics failed! Start rollback to the previous version ...");))
+        DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Diagnostics failed! Start rollback to the previous version ...");))
         esp_ota_mark_app_invalid_rollback_and_reboot();
       }
     }
@@ -480,7 +483,7 @@ static void print_sha256(const uint8_t *image_hash, // Pointer to the hash
   /*
    * Print the results and return
    */
-  DLT(DLT_HTTP, SEND(ALL, sprintf("SHA256 %s:%s", hash_print, lable);))
+  SEND(ALL, sprintf(_xs, "\r\n%s:%s\r\n", lable, hash_print);)
 
   return;
 }
@@ -520,51 +523,45 @@ void OTA_partitions(void)
   const esp_partition_t *running_partition = esp_ota_get_running_partition();
   const esp_partition_t *update_partition  = esp_ota_get_next_update_partition(NULL);
 
-  printf("\r\nBoot Partition");
+  SEND(ALL, sprintf(_xs, "\r\nBoot Partition");)
   if ( boot_partition != NULL )
   {
-    printf("\r\nType:%s  Subtype:%d", partition_type[boot_partition->type], boot_partition->subtype);
-    printf("\r\nAddress: 0X%lX  Size 0x%lX", boot_partition->address, boot_partition->size);
-    printf("\r\nLable: %s", boot_partition->label);
-    printf("\r\n");
+    SEND(ALL, sprintf(_xs, "\r\nType:%s  Subtype:%d", partition_type[boot_partition->type], boot_partition->subtype);)
+    SEND(ALL, sprintf(_xs, "\r\nAddress: 0X%lX  Size 0x%lX", boot_partition->address, boot_partition->size);)
+    SEND(ALL, sprintf(_xs, "\r\nLable: %s\r\n", boot_partition->label);)
   }
   else
   {
-    printf("\r\nNot available");
-    printf("\r\n");
+    SEND(ALL, sprintf(_xs, " Not available\r\n");)
   }
 
-  printf("\r\nRunning Partition");
+  SEND(ALL, sprintf(_xs, "\r\nRunning Partition");)
   if ( running_partition != NULL )
   {
-    printf("\r\nType:%s  Subtype:%d", partition_type[running_partition->type], running_partition->subtype);
-    printf("\r\nAddress: 0X%lX Size :0x%lX", running_partition->address, running_partition->size);
-    printf("\r\nLable: %s", running_partition->label);
-    printf("\r\n");
+    SEND(ALL, sprintf(_xs, "\r\nType:%s  Subtype:%d", partition_type[running_partition->type], running_partition->subtype);)
+    SEND(ALL, sprintf(_xs, "\r\nAddress: 0X%lX Size :0x%lX", running_partition->address, running_partition->size);)
+    SEND(ALL, sprintf(_xs, "\r\nLable: %s\r\n", running_partition->label);)
   }
   else
   {
-    printf("\r\nNot available");
-    printf("\r\n");
+    SEND(ALL, sprintf(_xs, " Not available"); SEND(ALL, sprintf(_xs, "\r\n");))
   }
 
-  printf("\r\nUpdate Partition");
+  SEND(ALL, sprintf(_xs, "\r\nUpdate Partition");)
   if ( update_partition != NULL )
   {
-    printf("\r\nType:%s  Subtype:%d", partition_type[update_partition->type], update_partition->subtype);
-    printf("\r\nAddress: 0X%lX  Size 0x%lX", update_partition->address, update_partition->size);
-    printf("\r\nLable: %s", update_partition->label);
-    printf("\r\n");
+    SEND(ALL, sprintf(_xs, "\r\nType:%s  Subtype:%d", partition_type[update_partition->type], update_partition->subtype);)
+    SEND(ALL, sprintf(_xs, "\r\nAddress: 0X%lX  Size 0x%lX", update_partition->address, update_partition->size);)
+    SEND(ALL, sprintf(_xs, "\r\nLable: %s\r\n", update_partition->label);)
   }
   else
   {
-    printf("\r\nNot available");
-    printf("\r\n");
+    SEND(ALL, sprintf(_xs, " Not available\r\n");)
   }
 
-  printf(_DONE_);
   return;
 }
+
 /*----------------------------------------------------------------
  *
  * @function: OTA_fatal_error()
@@ -581,7 +578,7 @@ static void OTA_fatal_error(char *LED_status)
 {
   set_status_LED(LED_OTA_FAILED_LOAD);
 
-  DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Exiting OTA task due to fatal error...");))
+  DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Halting processor due to fatal error...");))
 
   while ( 1 )
     continue;

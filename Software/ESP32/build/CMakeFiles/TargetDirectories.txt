@@ -153,6 +153,13 @@ C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/esp_bootloader_
 C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/esp_bootloader_format/CMakeFiles/install/local.dir
 C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/esp_bootloader_format/CMakeFiles/install/strip.dir
 C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/app_update/CMakeFiles/__idf_app_update.dir
+C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/app_update/CMakeFiles/blank_ota_data.dir
+C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/app_update/CMakeFiles/read-otadata.dir
+C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/app_update/CMakeFiles/read_otadata.dir
+C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/app_update/CMakeFiles/erase-otadata.dir
+C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/app_update/CMakeFiles/erase_otadata.dir
+C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/app_update/CMakeFiles/otadata-flash.dir
+C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/app_update/CMakeFiles/encrypted-otadata-flash.dir
 C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/app_update/CMakeFiles/edit_cache.dir
 C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/app_update/CMakeFiles/rebuild_cache.dir
 C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/app_update/CMakeFiles/list_install_components.dir
