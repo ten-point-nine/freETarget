@@ -93,8 +93,8 @@ void OTA_load(void)
 {
   esp_err_t err;
   /* update handle : set by esp_ota_begin(), must be freed via esp_ota_end() */
-  esp_ota_handle_t         update_handle            = 0;
-  const esp_partition_t   *update_partition         = esp_ota_get_next_update_partition(NULL);
+  esp_ota_handle_t         update_handle = 0;
+  const esp_partition_t   *update_partition;
   const esp_partition_t   *boot_partition           = esp_ota_get_boot_partition();
   const esp_partition_t   *running_partition        = esp_ota_get_running_partition();
   bool                     image_header_was_checked = false;
@@ -173,6 +173,7 @@ void OTA_load(void)
    *  Successsfully got the file
    */
   esp_http_client_fetch_headers(client);
+  update_partition = esp_ota_get_next_update_partition(NULL);
   assert(update_partition != NULL);
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Writing to partition subtype %d at offset 0x%" PRIx32, update_partition->subtype,
                                   update_partition->address);))
@@ -250,6 +251,7 @@ void OTA_load(void)
    *  The download is complete, make sure we have the complete file
    */
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Total Write binary data length: %d", binary_file_length);))
+  printf("A");
   if ( esp_http_client_is_complete_data_received(client) != true )
   {
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Error in receiving complete file");))
@@ -257,7 +259,7 @@ void OTA_load(void)
     esp_ota_abort(update_handle);
     OTA_fatal_error(LED_OTA_FAILED_CONNECT);
   }
-
+  printf("B");
   err = esp_ota_end(update_handle);
   if ( err != ESP_OK )
   {
@@ -272,19 +274,20 @@ void OTA_load(void)
     http_cleanup(client);
     OTA_fatal_error(LED_OTA_FATAL);
   }
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "esp_ota_end succesful");))
 
-/*
- * Looks good, setup the registers
- */
-#if ( 0 )
+  /*
+   * Looks good, setup the registers
+   */
   err = esp_ota_set_boot_partition(update_partition);
+  printf("C");
   if ( err != ESP_OK )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "esp_ota_set_boot_partition failed (%s)!", esp_err_to_name(err));))
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "esp_ota_set_boot_partition failed (%0X)!", err);))
     http_cleanup(client);
-    OTA_fatal_error(LED_OTA_FAILED_CONNECT);
+    OTA_fatal_error(LED_OTA_FATAL);
   }
-#endif
+
   /*
    *  All done, reboot
    */
@@ -299,6 +302,8 @@ void OTA_load(void)
  * @brief:    Check the header for the OTA image
  *
  * @return:   TRUE if the header is valid
+ *            Halt if an error is detected
+ *
  *---------------------------------------------------------------
  *
  * Check the header for the OTA image
@@ -393,32 +398,17 @@ void OTA_start(void)
 
   uint8_t                sha_256[HASH_LEN] = {0};
   esp_partition_t        partition;
-  const esp_partition_t *running = esp_ota_get_running_partition();
-#if ( 0 )
-  // get sha256 digest for the partition table
-  partition.address = ESP_PARTITION_TABLE_OFFSET;
-  partition.size    = ESP_PARTITION_TABLE_MAX_LEN;
-  partition.type    = ESP_PARTITION_TYPE_DATA;
-  esp_partition_get_sha256(&partition, sha_256);
-  print_sha256(sha_256, "SHA-256 for the partition table: ");
+  const esp_partition_t *running;
+  esp_ota_img_states_t   ota_state;
 
-  // get sha256 digest for bootloader
-  partition.address = ESP_BOOTLOADER_OFFSET;
-  partition.size    = ESP_PARTITION_TABLE_OFFSET;
-  partition.type    = ESP_PARTITION_TYPE_APP;
-  esp_partition_get_sha256(&partition, sha_256);
-  print_sha256(sha_256, "SHA-256 for bootloader: ");
-
-  // get sha256 digest for running partition
+  running = esp_ota_get_running_partition();
   if ( running != NULL )
   {
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Running partition not available");))
     esp_partition_get_sha256(esp_ota_get_running_partition(), sha_256);
     print_sha256(sha_256, "SHA-256 for current firmware: ");
   }
-#endif
 
-  esp_ota_img_states_t ota_state;
   if ( esp_ota_get_state_partition(running, &ota_state) == ESP_OK )
   {
     if ( ota_state == ESP_OTA_IMG_PENDING_VERIFY )
@@ -436,36 +426,6 @@ void OTA_start(void)
       }
     }
   }
-
-#if ( 0 )
-  // Initialize NVS.
-  esp_err_t err = nvs_flash_init();
-  if ( err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND )
-  {
-    // OTA app partition table has a smaller NVS partition size than the non-OTA
-    // partition table. This size mismatch may cause NVS initialization to fail.
-    // If this happens, we erase NVS partition and initialize NVS again.
-    ESP_ERROR_CHECK(nvs_flash_erase());
-    err = nvs_flash_init();
-  }
-  ESP_ERROR_CHECK(err);
-
-  ESP_ERROR_CHECK(esp_netif_init());
-  ESP_ERROR_CHECK(esp_event_loop_create_default());
-
-  /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
-   * Read "Establishing Wi-Fi or Ethernet Connection" section in
-   * examples/protocols/README.md for more information about this function.
-   */
-  ESP_ERROR_CHECK(example_connect());
-
-#if CONFIG_EXAMPLE_CONNECT_WIFI
-  /* Ensure to disable any WiFi power save mode, this allows best throughput
-   * and hence timings for overall OTA operation.
-   */
-  esp_wifi_set_ps(WIFI_PS_NONE);
-#endif // CONFIG_EXAMPLE_CONNECT_WIFI
-#endif
 
   OTA_load();
   return;
