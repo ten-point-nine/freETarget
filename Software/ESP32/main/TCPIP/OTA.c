@@ -15,19 +15,22 @@
 #include <inttypes.h>
 #include "esp_system.h"
 #include "esp_event.h"
-#include "esp_log.h"
 #include "esp_ota_ops.h"
 #include "esp_app_format.h"
 #include "esp_http_client.h"
 #include "esp_flash_partitions.h"
 #include "esp_partition.h"
 #include "errno.h"
+#include "gpio_types.h"
+#include "driver\gpio.h"
 
 #include "freETarget.h"
 #include "helpers.h"
 #include "diag_tools.h"
 #include "ota.h"
 #include "json.h"
+#include "gpio.h"
+#include "gpio_define.h"
 
 /*
  *  Macros
@@ -40,7 +43,7 @@
  *  Local functions
  */
 static void http_cleanup(esp_http_client_handle_t client);
-static void OTA_fatal_error(char *LED_status, char *error_message);
+static void OTA_halt_process(char *LED_status, char *error_message);
 static bool OTA_check_header(char *ota_write_data, int data_read, const esp_partition_t *update_partition,
                              const esp_partition_t *running_partition, const esp_partition_t *boot_partition);
 
@@ -137,12 +140,12 @@ void OTA_load(void)
 
   if ( client == NULL )
   {
-    OTA_fatal_error(LED_OTA_FAILED_CONNECT, "Failed to initialise HTTP connection");
+    OTA_halt_process(LED_OTA_FAILED_CONNECT, "Failed to initialise HTTP connection");
   }
 
   if ( esp_http_client_open(client, 0) != ESP_OK )
   {
-    OTA_fatal_error(LED_OTA_FAILED_CONNECT, "Failed to open HTTP connection");
+    OTA_halt_process(LED_OTA_FAILED_CONNECT, "Failed to open HTTP connection");
   }
 
   /*
@@ -166,7 +169,7 @@ void OTA_load(void)
   {
     http_cleanup(client);
     esp_ota_abort(update_handle);
-    OTA_fatal_error(LED_OTA_FAILED_CONNECT, "esp_ota_begin failed");
+    OTA_halt_process(LED_OTA_FAILED_CONNECT, "esp_ota_begin failed");
   }
 
   DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "esp_ota_begin succeeded");))
@@ -193,7 +196,7 @@ void OTA_load(void)
     {
       esp_http_client_close(client);
       esp_http_client_cleanup(client);
-      OTA_fatal_error(LED_OTA_FAILED_CONNECT, "Error: HTTP data read error");
+      OTA_halt_process(LED_OTA_FAILED_CONNECT, "Error: HTTP data read error");
     }
 
     if ( data_read > 0 )                       // Have a payload to process
@@ -210,7 +213,7 @@ void OTA_load(void)
       {
         http_cleanup(client);
         esp_ota_abort(update_handle);
-        OTA_fatal_error(LED_OTA_FAILED_CONNECT, "esp_ota_write() failed");
+        OTA_halt_process(LED_OTA_FAILED_CONNECT, "esp_ota_write() failed");
       }
       binary_file_length += data_read;
     }
@@ -230,7 +233,7 @@ void OTA_load(void)
   {
     http_cleanup(client);
     esp_ota_abort(update_handle);
-    OTA_fatal_error(LED_OTA_FAILED_CONNECT, "Error in receiving complete file");
+    OTA_halt_process(LED_OTA_FAILED_CONNECT, "Error in receiving complete file");
   }
 
   esp_http_client_cleanup(client);
@@ -240,7 +243,7 @@ void OTA_load(void)
   if ( esp_ota_end(update_handle) != ESP_OK )
   {
     http_cleanup(client);
-    OTA_fatal_error(LED_OTA_FATAL, "Failed to complete OTA update");
+    OTA_halt_process(LED_OTA_FATAL, "Failed to complete OTA update");
   }
 
   DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "esp_ota_end succesful");))
@@ -251,14 +254,14 @@ void OTA_load(void)
   if ( esp_ota_set_boot_partition(update_partition) != ESP_OK )
   {
     http_cleanup(client);
-    OTA_fatal_error(LED_OTA_FATAL, "esp_ota_set_boot_partition failed");
+    OTA_halt_process(LED_OTA_FATAL, "esp_ota_set_boot_partition failed");
   }
 
   /*
    *  All done, reboot
    */
   http_cleanup(client);
-  OTA_fatal_error(LED_OTA_READY, "Cycle power to start new firmware"); // Reboot the system
+  OTA_halt_process(LED_OTA_READY, "Cycle power to start new firmware"); // Reboot the system
   return;
 }
 
@@ -299,7 +302,7 @@ static bool OTA_check_header(char                  *ota_write_data,    // Data r
    */
   if ( data_read < sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t) )
   {
-    OTA_fatal_error(LED_OTA_FATAL, "Failed to read freeETarget.bin header");
+    OTA_halt_process(LED_OTA_FATAL, "Failed to read freeETarget.bin header");
   }
 
   /*
@@ -323,13 +326,13 @@ static bool OTA_check_header(char                  *ota_write_data,    // Data r
 
     if ( memcmp(invalid_app_info.version, new_app_info.version, sizeof(new_app_info.version)) == 0 )
     {
-      OTA_fatal_error(LED_OTA_FATAL, "New version is the same as invalid version. Rolled back to previous version.");
+      OTA_halt_process(LED_OTA_FATAL, "New version is the same as invalid version. Rolled back to previous version.");
     }
   }
 
   if ( memcmp(new_app_info.version, running_app_info.version, sizeof(new_app_info.version)) == 0 )
   {
-    OTA_fatal_error(LED_OTA_FATAL, "Current running version is the same as a new. We will not continue the update.");
+    OTA_halt_process(LED_OTA_FATAL, "Current running version is the same as a new. Abandoning the update.");
   }
 
   /*
@@ -355,10 +358,10 @@ void OTA_rollback(void)
 {
   if ( esp_ota_mark_app_invalid_rollback_and_reboot() != ESP_OK )
   {
-    OTA_fatal_error(LED_OTA_FATAL, "Rollback failed.");                         // Reboot the system
+    OTA_halt_process(LED_OTA_FATAL, "Rollback failed.");                         // Reboot the system
   }
 
-  OTA_fatal_error(LED_OTA_READY, "Start rollback to the previous version ..."); // Reboot the system
+  OTA_halt_process(LED_OTA_READY, "Start rollback to the previous version ..."); // Reboot the system
 }
 
 /*----------------------------------------------------------------
@@ -458,18 +461,20 @@ void OTA_partitions(void)
 
 /*----------------------------------------------------------------
  *
- * @function: OTA_fatal_error()
+ * @function: OTA_halt_process()
  *
- * @brief:    Manage an error we can't recover from
+ * @brief:    Manage a situation we can't recover from
  *
  * @return: None
  *---------------------------------------------------------------
  *
- * Display the error LEDs and halt the system
+ * Display the error LEDs and halt the system.
+ *
+ * Stay halted until either or the button are pressed.
  *
  *------------------------------------------------------------*/
-static void OTA_fatal_error(char *LED_status,   // Indicator sent to LEDs
-                            char *error_message // Why are we halting
+static void OTA_halt_process(char *LED_status,   // Indicator sent to LEDs
+                             char *error_message // Why are we halting
 )
 {
   set_status_LED(LED_status);
@@ -479,5 +484,9 @@ static void OTA_fatal_error(char *LED_status,   // Indicator sent to LEDs
   while ( 1 )
   {
     vTaskDelay(ONE_SECOND);
+    if ( (DIP_SW_A == 1) || (DIP_SW_B == 1) ) // If either switch is pressed
+    {
+      esp_restart();
+    }
   }
 }
