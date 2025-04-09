@@ -18,6 +18,7 @@
 #include "esp_ota_ops.h"
 #include "esp_app_format.h"
 #include "esp_http_client.h"
+
 #include "esp_flash_partitions.h"
 #include "esp_partition.h"
 #include "errno.h"
@@ -207,7 +208,7 @@ void OTA_load(void)
         image_header_was_checked = true;
       }
       /*
-       * flash the received data
+       * flash the received data into OTA memory. esp_
        */
       if ( esp_ota_write(update_handle, (const void *)ota_write_data, data_read) != ESP_OK )
       {
@@ -242,7 +243,6 @@ void OTA_load(void)
 
   if ( esp_ota_end(update_handle) != ESP_OK )
   {
-    http_cleanup(client);
     OTA_halt_process(LED_OTA_FATAL, "Failed to complete OTA update");
   }
 
@@ -253,14 +253,12 @@ void OTA_load(void)
    */
   if ( esp_ota_set_boot_partition(update_partition) != ESP_OK )
   {
-    http_cleanup(client);
     OTA_halt_process(LED_OTA_FATAL, "esp_ota_set_boot_partition failed");
   }
 
   /*
    *  All done, reboot
    */
-  http_cleanup(client);
   OTA_halt_process(LED_OTA_READY, "Cycle power to start new firmware"); // Reboot the system
   return;
 }
@@ -358,30 +356,26 @@ void OTA_rollback(void)
 {
   if ( esp_ota_mark_app_invalid_rollback_and_reboot() != ESP_OK )
   {
-    OTA_halt_process(LED_OTA_FATAL, "Rollback failed.");                         // Reboot the system
+    OTA_halt_process(LED_OTA_FATAL, "Rollback failed.");   // Reboot the system
   }
 
-  OTA_halt_process(LED_OTA_READY, "Start rollback to the previous version ..."); // Reboot the system
+  OTA_halt_process(LED_OTA_READY, "Rollbback succesful."); // Reboot the system
 }
 
 /*----------------------------------------------------------------
  *
  * @function: http_cleanup()
  *
- * @brief:  Detect to see if we should roll back a version
+ * @brief:    Clean up the HTTP client
  *
- * @return: TRUE - Rollback is required
+ * @return:   Nothing
  *---------------------------------------------------------------
- *
- * Check the stored nonvol value against the current persistent
- * storage version and update if needed.
  *
  *------------------------------------------------------------*/
 
 static void http_cleanup(esp_http_client_handle_t client)
 {
   esp_http_client_close(client);
-  esp_http_client_cleanup(client);
   return;
 }
 
@@ -398,18 +392,21 @@ static void http_cleanup(esp_http_client_handle_t client)
  *
  * After a download the partitions are:
  *
+ *
  * Boot Partition
- * Not available
- *
- * Running Partition
- * Type:ESP_PARTITION_TYPE_APP  Subtype:0
- * Address: 0X10000 Size :0x200000
- * Lable: factory
- *
- * Update Partition
  * Type:ESP_PARTITION_TYPE_APP  Subtype:16
  * Address: 0X210000  Size 0x200000
  * Lable: ota_0
+ *
+ * Running Partition
+ * Type:ESP_PARTITION_TYPE_APP  Subtype:16
+ * Address: 0X210000 Size :0x200000
+ * Lable: ota_0
+ *
+ * Update Partition
+ * Type:ESP_PARTITION_TYPE_APP  Subtype:17
+ * Address: 0X410000  Size 0x200000
+ * Lable: ota_1
  *
  *------------------------------------------------------------*/
 static char *partition_type[] = {"ESP_PARTITION_TYPE_APP", "ESP_PARTITION_TYPE_DATA"};
@@ -486,6 +483,7 @@ static void OTA_halt_process(char *LED_status,   // Indicator sent to LEDs
     vTaskDelay(ONE_SECOND);
     if ( (DIP_SW_A == 1) || (DIP_SW_B == 1) ) // If either switch is pressed
     {
+      DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Restarting target");))
       esp_restart();
     }
   }
