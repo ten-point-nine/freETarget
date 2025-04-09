@@ -61,11 +61,19 @@ extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_pem_end");
  * @return: None
  *---------------------------------------------------------------
  *
+ * An OTA update consists of the following steps:
+ *
+ * 1 - Connect to the server and begin to download the file
+ * 2 - On the first packet, verify the header against the current
+ * 3 - Line by line, write the data to the OTA partition
+ * 4 - When the file is complete, close the file
+ * 5 - Set the new partition as the boot partition
+ * 6 - Halt and wait for a power cycle to start the new firmware
+ *
  * TEST:
  *   {"OTA_URL":"targetbin.app/OTA"}
  *
  *------------------------------------------------------------*/
-
 void OTA_load(void)
 {
   esp_err_t                err;
@@ -120,10 +128,10 @@ void OTA_load(void)
   /*
    *  Prepare to open the file
    */
-  sprintf(download_url, "http://%s/freeETarget.bin", json_ota_url);
+  sprintf(download_url, "%s/freeETarget.bin", json_ota_url);
   config.url = download_url;
 
-  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "OTA download URL: %s", download_url);))
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "OTA download URL: \"%s\"", config.url);))
 
   client = esp_http_client_init(&config);
 
@@ -132,9 +140,7 @@ void OTA_load(void)
     OTA_fatal_error(LED_OTA_FAILED_CONNECT, "Failed to initialise HTTP connection");
   }
 
-  err = esp_http_client_open(client, 0); // Open the connection to the server
-
-  if ( err != ESP_OK )
+  if ( esp_http_client_open(client, 0) != ESP_OK )
   {
     OTA_fatal_error(LED_OTA_FAILED_CONNECT, "Failed to open HTTP connection");
   }
@@ -142,19 +148,21 @@ void OTA_load(void)
   /*
    *  Successsfully got the file
    */
-  esp_http_client_fetch_headers(client);
   update_partition = esp_ota_get_next_update_partition(NULL);
   assert(update_partition != NULL);
   DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Writing to partition subtype %d at offset 0x%" PRIx32, update_partition->subtype,
                                  update_partition->address);))
 
-  // esp_http_client_read(client, ota_write_data, BUFFSIZE); // Throw away the HTTP header
+  esp_http_client_fetch_headers(client);
+#if ( OTA_FETCH_HEADER == true )
+  esp_http_client_read(client, ota_write_data, BUFFSIZE); // Throw away the HTTP header
+  printf("\r\nHeader data_read: %s\n", ota_write_data);
+#endif
+
   /*
    *  Prepare for the update
    */
-  err = esp_ota_begin(update_partition, OTA_WITH_SEQUENTIAL_WRITES, &update_handle);
-
-  if ( err != ESP_OK )
+  if ( esp_ota_begin(update_partition, OTA_WITH_SEQUENTIAL_WRITES, &update_handle) != ESP_OK )
   {
     http_cleanup(client);
     esp_ota_abort(update_handle);
@@ -167,10 +175,8 @@ void OTA_load(void)
    * Loop here and bring in the file
    */
   http_count = 0;
-
   while ( 1 )
   {
-    data_read = esp_http_client_read(client, ota_write_data, BUFFSIZE);
     http_count++;
     if ( (http_count & 32) == 0 )
     {
@@ -181,7 +187,9 @@ void OTA_load(void)
       set_status_LED(LED_OTA_DOWNLOAD_T);
     }
 
-    if ( data_read < 0 ) // Error getting data
+    data_read = esp_http_client_read(client, ota_write_data, BUFFSIZE); // Read the data from the server
+
+    if ( data_read < 0 )                                                // Error getting data
     {
       esp_http_client_close(client);
       esp_http_client_cleanup(client);
@@ -198,8 +206,7 @@ void OTA_load(void)
       /*
        * flash the received data
        */
-      err = esp_ota_write(update_handle, (const void *)ota_write_data, data_read);
-      if ( err != ESP_OK )
+      if ( esp_ota_write(update_handle, (const void *)ota_write_data, data_read) != ESP_OK )
       {
         http_cleanup(client);
         esp_ota_abort(update_handle);
@@ -210,28 +217,16 @@ void OTA_load(void)
 
     if ( data_read == 0 )
     {
-      /*
-       * As esp_http_client_read never returns negative error code, we rely on
-       * `errno` to check for underlying transport connectivity closure if any
-       */
-      if ( esp_http_client_is_complete_data_received(client) == true )
-      {
-        DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Connection closed normally");))
-      }
-      else
-      {
-        DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Connection closed, errno = %d", errno);))
-      }
-      break; // No more data to read, exit the loop
+      break;
     }
   }
 
   /*
    *  The download is complete, make sure we have the complete file
    */
-  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Total Write binary data length: %d", binary_file_length);))
 
-  if ( esp_http_client_is_complete_data_received(client) != true )
+  if ( (binary_file_length == 0)                                        // Nothing was read
+       || (esp_http_client_is_complete_data_received(client) != true) ) // Not all data was received
   {
     http_cleanup(client);
     esp_ota_abort(update_handle);
@@ -239,9 +234,10 @@ void OTA_load(void)
   }
 
   esp_http_client_cleanup(client);
+  set_status_LED(LED_OTA_FINSHED); // Show we are part way done
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Total Write binary data length: %d", binary_file_length);))
 
-  err = esp_ota_end(update_handle);
-  if ( err != ESP_OK )
+  if ( esp_ota_end(update_handle) != ESP_OK )
   {
     http_cleanup(client);
     OTA_fatal_error(LED_OTA_FATAL, "Failed to complete OTA update");
@@ -252,8 +248,7 @@ void OTA_load(void)
   /*
    * Looks good, setup the registers
    */
-  err = esp_ota_set_boot_partition(update_partition);
-  if ( err != ESP_OK )
+  if ( esp_ota_set_boot_partition(update_partition) != ESP_OK )
   {
     http_cleanup(client);
     OTA_fatal_error(LED_OTA_FATAL, "esp_ota_set_boot_partition failed");
@@ -304,7 +299,7 @@ static bool OTA_check_header(char                  *ota_write_data,    // Data r
    */
   if ( data_read < sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t) )
   {
-    OTA_fatal_error(LED_OTA_FATAL, "Failed to read .bin header");
+    OTA_fatal_error(LED_OTA_FATAL, "Failed to read freeETarget.bin header");
   }
 
   /*

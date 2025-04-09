@@ -18,6 +18,10 @@ void OTA_partitions(void); // Display the partition data
 /*
  * #defines
  */
-#define OTA_URL     "targetbin.app/ota"
-#define OTA_TIMEOUT 30 * 1000
+#define OTA_URL          "free-e-target.com/htdocs/wp-content/uploads/OTA"
+#define OTA_TEST         {"OTA_URL" : "http://free-e-target.com/htdocs/wp-content/uploads/OTA"}
+#define OTA_TEST1        {"OTA_URL" : "http://targetbin.app/OTA"}
+#define OTA_TEST2        {"TRACE" : 256, "TEST" : 84}
+#define OTA_TIMEOUT      30 * 1000
+#define OTA_FETCH_HEADER false // Fetch the header data from the server
 #endif
