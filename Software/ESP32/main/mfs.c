@@ -20,6 +20,7 @@
 #include "serial_io.h"
 #include "timer.h"
 #include "mfs.h"
+#include "ota.h"
 
 /*
  *  Definitions
@@ -158,19 +159,7 @@ void multifunction_init(void)
   if ( DIP_SW_A && DIP_SW_B ) // Both switches closed?
   {
     factory_nonvol(false);    // Initalize the nonvol but do not calibrate
-  }
-
-  else
-  {
-    if ( DIP_SW_A )           // Switch A pressed
-    {
-      is_trace = DLT_CRITICAL | DLT_INFO | DLT_APPLICATION | DLT_COMMUNICATION | DLT_DIAG | DLT_DEBUG;
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "\r\nAll tracing enabled");))
-    }
-
-    if ( DIP_SW_B )           // Switch B pressed
-    {
-    }
+    esp_restart();
   }
 
   /*

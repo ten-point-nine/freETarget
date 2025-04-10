@@ -39,6 +39,7 @@
 #include "mfs.h"
 #include "http_client.h"
 #include "http_services.h"
+#include "OTA.h"
 
 /*
  *  Variables
@@ -167,6 +168,16 @@ void freeETarget_init(void)
   time_to_go = 1000 * ONE_SECOND; // Infinite amount of time to start
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initialization complete");))
+
+  if ( DIP_SW_A )                 // Switch A pressed
+  {
+    OTA_load();                   // Load in a new OTA
+  }
+
+  if ( DIP_SW_B )                 // Switch B pressed
+  {
+    OTA_rollback();               // Roll back to old software
+  }
 
   /*
    * Start the tasks running

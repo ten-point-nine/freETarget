@@ -8,7 +8,7 @@
 #ifndef _NONVOL_H
 #define _NONVOL_H
 
-#define PS_VERSION   10                                   // Persistent storage version
+#define PS_VERSION   11                                   // Persistent storage version
 #define PS_UNINIT(x) (((x) == 0xABAB) || ((x) == 0xFFFF)) // Uninitilized value
 
 #define NAME_SPACE "freETarget"
@@ -86,6 +86,7 @@ void nonvol_write_i32(char *name, int *value);    // Write a value to nonvol
 #define NONVOL_WIFI_HIDDEN      "WIFI_HIDDEN"     // Hide the SSID if set to 1
 #define NONVOL_AUX_PORT_ENABLE  "AUX_PORT_ENABLE" // Enable comms throught the AUX port
 #define NONVOL_NAME_TEXT        "NAME_TEXT"       // User supplied name for the target
+#define NONVOL_OTA_URL          "OTA_URL"         // User supplied name for the target
 #define NONVOL_REMOTE_ACTIVE    "REMOTE_ACTIVE"   // Send score to a remote server
 #define NONVOL_REMOTE_URL       "REMOTE_URL"      // URL of the remote server
 #define NONVOL_REMOTE_KEY       "REMOTE_KEY"      // Remote server access key

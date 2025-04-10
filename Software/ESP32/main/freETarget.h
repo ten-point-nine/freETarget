@@ -4,10 +4,8 @@
  *
  * Software to run the Air-Rifle / Small Bore Electronic Target
  *
- *----------------------------------------------------------------
- *
- *r
- */
+ *--------------------------------------------------------------*/
+
 #ifndef _FREETARGET_H
 #define _FREETARGET_H
 
@@ -15,7 +13,7 @@
 #include "freertos/task.h"
 #include "serial_io.h"
 
-#define SOFTWARE_VERSION "\"6.0.0 March 28, 2025\""
+#define SOFTWARE_VERSION "\"6.1.0 April 9, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED" // Message to send on connection
 

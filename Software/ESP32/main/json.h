@@ -140,5 +140,5 @@ extern char          json_target_name[];     // Target being shot at
 extern char          json_name_text[];       // Target name, ex (Target 54))
 extern int           json_remote_modes;      // What modes are available to talk to a remote server
 extern int           json_session_type;      // What kind of session is this?
-
+extern char          json_ota_url[];         // OTA URL
 #endif

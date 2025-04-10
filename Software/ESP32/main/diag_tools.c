@@ -36,6 +36,7 @@
 #include "pwm.h"
 #include "timer.h"
 #include "bluetooth.h"
+#include "ota.h"
 
 extern volatile unsigned long paper_time;
 
@@ -84,6 +85,9 @@ static const self_test_t test_list[] = {
     {"DNS Lookup test",                   &http_DNS_test           },
     {"Send to server test",               &http_send_to_server_test},
     {"Start web server",                  &http_server_test        },
+    {"OTA partitions",                    &OTA_partitions          },
+    {"OTA load",                          &OTA_load                },
+    {"OTA rollback",                      &OTA_rollback            },
     {"-Interrupt Tests",                  0                        },
     {"Polled target test",                &polled_target_test      },
     {"Interrupt target test",             &interrupt_target_test   },
@@ -103,7 +107,8 @@ const dlt_name_t dlt_names[] = {
     {DLT_DEBUG,         "DLT_DEBUG",         'D'}, // Software debugging information
     {DLT_SCORE,         "DLT_SCORE",         'S'}, // Display timing in the score message
     {DLT_HTTP,          "DLT_HTTP",          'H'}, // Log HTTP events
-    {DLT_HEARTBEAT,     "DLT_HEARTBEAT",     'H'}, // Heartbeat tick
+    {DLT_OTA,           "DLT_OTA",           'O'}, // Log HTTP events
+    {DLT_HEARTBEAT,     "DLT_HEARTBEAT",     'T'}, // Heartbeat tick
     {0,                 0,                   0  }
 };
 

@@ -230,8 +230,6 @@ void WiFi_AP_init(void)
  *
  * Test
  *
- * {"WIFI_SSID":"DEBASMITA_5G", "WIFI_PWD":"98311371538207264885"}
- *
  *
  *******************************************************************************/
 void WiFi_station_init(void)
@@ -252,9 +250,9 @@ void WiFi_station_init(void)
   esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFi_event_handler, sta_netif, &instance_any_id);
   esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &WiFi_event_handler, NULL, &instance_got_ip);
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi SSID:%s", json_wifi_ssid);))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi SSID: %s", json_wifi_ssid);))
   strcpy((char *)&WiFi_config.sta.ssid, json_wifi_ssid);
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi password:%s", json_wifi_pwd);))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi password: %s", json_wifi_pwd);))
   strcpy((char *)&WiFi_config.sta.password, json_wifi_pwd);
   if ( json_wifi_pwd[0] == 0 )
   {
@@ -427,7 +425,7 @@ void WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id
     if ( event_id == IP_EVENT_STA_GOT_IP )
     {
       ipInfo.ip = event->ip_info.ip;
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Received IP:" IPSTR, IP2STR(&event->ip_info.ip));))
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Received IP: " IPSTR, IP2STR(&event->ip_info.ip));))
       s_retry_num = 0;
       xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     }
