@@ -13,7 +13,7 @@
 #include "freertos/task.h"
 #include "serial_io.h"
 
-#define SOFTWARE_VERSION "\"6.1.0 April 9, 2025\""
+#define SOFTWARE_VERSION "\"6.1.1 April 9, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED" // Message to send on connection
 
