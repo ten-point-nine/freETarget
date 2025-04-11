@@ -153,6 +153,7 @@ const json_message_t JSON[] = {
     {"\"MIN_RING_TIME\":",   &json_min_ring_time,         IS_INT32,                 0,                  NONVOL_MIN_RING_TIME,    500,        0 },
     {"\"NAME_ID\":",         &json_name_id,               IS_INT32,                 &show_names,        NONVOL_NAME_ID,          0,          0 },
     {"\"NAME_TEXT\":",       (int *)&json_name_text,      IS_TEXT + SSID_SIZE,      &show_names,        NONVOL_NAME_TEXT,        0,          8 },
+    {"\"OTA\":",             0,                           0,                        &OTA_load_json,     0,                       0,          0 },
     {"\"OTA_URL\":",         (int *)&json_ota_url,        IS_TEXT + URL_SIZE,       0,                  NONVOL_OTA_URL,          0,          11},
     {"\"PAPER_ECO\":",       &json_paper_eco,             IS_INT32,                 0,                  NONVOL_PAPER_ECO,        0,          0 },
     {"\"PAPER_SHOT\":",      &json_paper_shot,            IS_INT32,                 0,                  NONVOL_PAPER_SHOT,       0,          5 },
@@ -601,9 +602,11 @@ void show_echo(void)
 
   SEND(ALL, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);) // Current software version
 
+#if ( INCLUDE_OTA_ECHO )
   OTA_get_versions(running_app_version, new_app_version);
   SEND(ALL, sprintf(_xs, "Running OTA:          %s", running_app_version);)
   SEND(ALL, sprintf(_xs, "New OTA:              %s", new_app_version);)
+#endif
 
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
   SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                              // Current persistent storage version

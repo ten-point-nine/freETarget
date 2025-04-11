@@ -32,6 +32,7 @@
 #include "json.h"
 #include "gpio.h"
 #include "gpio_define.h"
+#include "serial_io.h"
 
 /*
  *  Macros
@@ -256,9 +257,15 @@ void OTA_load(void)
   }
 
   /*
-   *  All done, reboot
+   *  All done, halt and wait for the user to restart
    */
   OTA_halt_process(LED_OTA_READY, "Cycle power to start new firmware"); // Reboot the system
+  return;
+}
+
+void OTA_load_json(int empty)                                           // Shim between JSON and push buttons
+{
+  OTA_load();                                                           // Load the OTA image from the server
   return;
 }
 
@@ -496,7 +503,9 @@ static void OTA_halt_process(char *LED_status,   // Indicator sent to LEDs
   while ( 1 )
   {
     vTaskDelay(ONE_SECOND);
-    if ( (DIP_SW_A == 1) || (DIP_SW_B == 1) ) // If either switch is pressed
+    if ( (DIP_SW_A == 1)                   // Switch A pressed
+         || (DIP_SW_B == 1)                // Switch B pressed
+         || (serial_available(ALL) != 0) ) // Something on the serial port
     {
       DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Restarting target");))
       esp_restart();
