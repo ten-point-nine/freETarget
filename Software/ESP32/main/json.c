@@ -26,6 +26,7 @@
 #include "wifi.h"
 #include "bluetooth.h"
 #include "timer.h"
+#include "ota.h"
 
 /*
  *  Function Prototypes
@@ -489,6 +490,7 @@ void show_echo(void)
   mfs_action_t *mfs_ptr;
   unsigned int  dip;
   char         *ABCD[] = {"A", "B", "C", "D"};
+  char          new_app_version[32], running_app_version[32];
 
   /*
    * Loop through all of the JSON tokens
@@ -597,7 +599,12 @@ void show_echo(void)
   strcat(_xs, "\"");
   serial_to_all(_xs, ALL);
 
-  SEND(ALL, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);)               // Current software version
+  SEND(ALL, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);) // Current software version
+
+  OTA_get_versions(running_app_version, new_app_version);
+  SEND(ALL, sprintf(_xs, "Running OTA:          %s", running_app_version);)
+  SEND(ALL, sprintf(_xs, "New OTA:              %s", new_app_version);)
+
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
   SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                              // Current persistent storage version
   SEND(ALL, sprintf(_xs, "\"BD_REV\":            %4.2f ", (float)(revision()) / 100.0);) // Current board version

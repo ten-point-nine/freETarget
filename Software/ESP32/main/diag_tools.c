@@ -88,6 +88,7 @@ static const self_test_t test_list[] = {
     {"OTA partitions",                    &OTA_partitions          },
     {"OTA load",                          &OTA_load                },
     {"OTA rollback",                      &OTA_rollback            },
+    {"OTA version",                       &OTA_compare_versions    },
     {"-Interrupt Tests",                  0                        },
     {"Polled target test",                &polled_target_test      },
     {"Interrupt target test",             &interrupt_target_test   },

@@ -11,9 +11,11 @@
 /*
  * Global functions
  */
-void OTA_rollback(void);   // Go back to the previous version of software
-void OTA_load(void);       // Perform the OTA update
-void OTA_partitions(void); // Display the partition data
+void OTA_rollback(void);                                                  // Go back to the previous version of software
+void OTA_load(void);                                                      // Perform the OTA update
+void OTA_partitions(void);                                                // Display the partition data
+void OTA_compare_versions(void);                                          // Compare working against OTA versions
+void OTA_get_versions(char *running_version, char *OTA_compare_versions); // Version watiting in OTA
 
 /*
  * #defines
