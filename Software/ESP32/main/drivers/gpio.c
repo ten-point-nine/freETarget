@@ -91,12 +91,14 @@ unsigned int is_running(void)
     {
       return_value |= s[i].low_sense.run_mask;
     }
-    if ( gpio_get_level(s[i].high_sense.sensor_GPIO) != 0 )
+    if ( revision() < REV_530 )
     {
-      return_value |= s[i].high_sense.run_mask;
+      if ( gpio_get_level(s[i].high_sense.sensor_GPIO) != 0 )
+      {
+        return_value |= s[i].high_sense.run_mask;
+      }
     }
   }
-
   /*
    *  Return the run mask
    */

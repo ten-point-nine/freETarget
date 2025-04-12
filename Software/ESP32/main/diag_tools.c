@@ -566,16 +566,21 @@ bool POST_counters(void)
       if ( running & s[i].low_sense.run_mask )
       {
         set_diag_LED(s[i].low_sense.diag_LED, 10);
+        SEND(ALL, sprintf(_xs, "%c", s[i].low_sense.short_name);)
       }
-      if ( running & s[i].high_sense.run_mask )
-      {
-        set_diag_LED(s[i].high_sense.diag_LED, 10);
-      }
-    }
-    run_state |= IN_FATAL_ERR;
-  }
-  vTaskDelay(ONE_SECOND);
 
+      if ( revision() < REV_530 ) // Only check the high sense if it is present
+      {
+        if ( running & s[i].high_sense.run_mask )
+        {
+          set_diag_LED(s[i].high_sense.diag_LED, 10);
+          SEND(ALL, sprintf(_xs, "%c", s[i].high_sense.short_name);)
+        }
+      }
+      run_state |= IN_FATAL_ERR;
+    }
+    vTaskDelay(ONE_SECOND);
+  }
   /*
    * Test 4, Trigger the timers
    */

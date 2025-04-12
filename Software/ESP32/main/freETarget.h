@@ -13,13 +13,14 @@
 #include "freertos/task.h"
 #include "serial_io.h"
 
-#define SOFTWARE_VERSION "\"6.1.2 April 11, 2025\""
+#define SOFTWARE_VERSION "\"India 4MB April 11, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED" // Message to send on connection
 
 #define REV_500   500                // ESP32
 #define REV_510   510
 #define REV_520   520
+#define REV_530   530                // India 4MB
 #define BUILD_REV REV_520
 
 #define INIT_DONE 0xabcd             // NON-VOL Initialization complete signature
