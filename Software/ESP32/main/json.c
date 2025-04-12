@@ -492,7 +492,7 @@ void show_echo(void)
   unsigned int  dip;
   char         *ABCD[] = {"A", "B", "C", "D"};
   char          new_app_version[32], running_app_version[32];
-  float         vmes_lo, vmes_hi;
+  float         vmes_lo;
 
   /*
    * Loop through all of the JSON tokens
@@ -566,9 +566,7 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"V12\":               %4.2f,", v12_supply());) // 12 Volt LED supply
   if ( board_revision >= REV_530 )
   {
-    vref_measure(&vmes_lo, &vmes_hi);
-    SEND(ALL, sprintf(_xs, "\"VMES_LO\":         %4.2f", vmes_lo);)
-    SEND(ALL, sprintf(_xs, "\"VMES_HI\":         %4.2f", vmes_hi);)
+    SEND(ALL, sprintf(_xs, "\"VMES_LO\":         %4.2f", vref_measure());)
   }
   WiFi_MAC_address(str_c);
   SEND(ALL, sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\",", str_c[0], str_c[1], str_c[2], str_c[3], str_c[4],

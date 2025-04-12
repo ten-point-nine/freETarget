@@ -243,20 +243,24 @@ static void show_test_help(void)
 bool factory_test(void)
 {
   int   i, percent;
-  int   running;         // Bit mask from run flip flops
-  int   dip;             // Input from DIP input
+  int   running;               // Bit mask from run flip flops
+  int   dip;                   // Input from DIP input
   char  ch;
-  char  ABCD[] = "DCBA"; // DIP switch order
-  int   pass;            // Pass YES/NO
-  bool  passed_once;     // Passed all of the tests at least once
+  char  ABCD[] = "DCBA";       // DIP switch order
+  int   pass;                  // Pass YES/NO
+  bool  passed_once;           // Passed all of the tests at least once
   float volts[4];
-  float vmes_lo, vmes_hi;
-  int   motor_toggle;    // Toggle motor on an off
+  int   motor_toggle;          // Toggle motor on an off
+  int   number_of_sensors = 8; // Number of sensors to test
 
-  pass         = 0;      // Pass YES/NO
+  pass         = 0;            // Pass YES/NO
   passed_once  = false;
   percent      = 0;
   motor_toggle = 0;
+  if ( board_revision >= REV_530 )
+  {
+    number_of_sensors = 4;     // Number of sensors to test
+  }
 
   /*
    *  Force the refernce voltages - Incase the board has been uninitialized
@@ -310,7 +314,7 @@ bool factory_test(void)
     SEND(ALL, sprintf(_xs, "\r\nSens: ");)
     running = is_running();
     pass |= running & RUN_MASK;
-    for ( i = 0; i != 8; i++ )
+    for ( i = 0; i != number_of_sensors; i++ )
     {
       if ( i == 4 )
       {
@@ -381,8 +385,7 @@ bool factory_test(void)
     SEND(ALL, sprintf(_xs, "  12V: %4.2fV", v12_supply());)
     if ( board_revision >= REV_530 )
     {
-      vref_measure(&vmes_lo, &vmes_hi);
-      SEND(ALL, sprintf(_xs, "  VMES_LO: %4.2fV  VMES_HI: %4.2f", vmes_lo, vmes_hi);)
+      SEND(ALL, sprintf(_xs, "  VMES_LO: %4.2fV", vref_measure());)
     }
     SEND(ALL, sprintf(_xs, "  Temp: %4.2fC", temperature_C());)
     SEND(ALL, sprintf(_xs, "  Humidiity: %4.2f%%", humidity_RH());)

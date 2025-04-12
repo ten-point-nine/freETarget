@@ -119,7 +119,7 @@ const ADC_struct_t adc2_ch4 = {.type = ANALOG_IO, .adc_channel = ADC(2, 4), .adc
 const ADC_struct_t adc2_ch5 = {.type = ANALOG_IO, .adc_channel = ADC(2, 5), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 2, ADC 5
 const ADC_struct_t adc2_ch6 = {.type = ANALOG_IO, .adc_channel = ADC(2, 6), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 2, ADC 6
 const ADC_struct_t adc2_ch7 = {.type = ANALOG_IO, .adc_channel = ADC(2, 7), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 2, ADC 7
-const ADC_struct_t adc2_ch8 = {.type = ANALOG_IO, .adc_channel = ADC(2, 8), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 2, ADC 8
+const ADC_struct_t adc2_ch8 = {.type = ANALOG_IO, .adc_channel = ADC(2, 8), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 2, ADC 8
 const ADC_struct_t adc2_ch9 = {.type = ANALOG_IO, .adc_channel = ADC(2, 9), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 2, ADC 9
 
 /*
