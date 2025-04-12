@@ -47,6 +47,7 @@
 shot_record_t record[SHOT_SPACE];                            // Array of shot records
 unsigned int  shot_in;                                       // Index to the shot just received
 unsigned int  shot_out;                                      // Index to the shot just sent to the PC (shot_out <= shot_in)
+unsigned int  board_revision;                                // Board revision number
 
 double       s_of_sound;                                     // Speed of sound
 unsigned int shot        = 0;                                // Shot counter

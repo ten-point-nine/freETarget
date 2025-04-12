@@ -128,6 +128,7 @@ unsigned int adc_read(unsigned int adc_channel // What input are we reading?
 #define V12_ATTENUATION 3.548                // 11 DB
 #define V12_REF         1.1                  // ESP32 VREF
 #define V12_CAL         0.88
+#define VMES_LO         0
 float v12_supply(void)
 {
   float raw;                                 // Raw voltage from ADC
@@ -243,6 +244,47 @@ unsigned int revision(void)
    * Nothing more to do, return the board revision
    */
   return revision;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: vref_measure()
+ *
+ * @brief:  Measure the reference voltage
+ *
+ * @return: VREF in volts
+ *
+ *--------------------------------------------------------------
+ *
+ *  Read the analog value from the resistor divider, keep only
+ *  the top 4 bits, and return the version number.
+ *
+ *  The analog input is a number 0-1024 which is banded and
+ *  used to look up a table of revision numbers.
+ *
+ *  To accomodate unknown hardware builds, if the revision is
+ *  undefined (< 100) then the last 'good' revision is returned
+ *
+ *--------------------------------------------------------------*/
+void vref_measure(float *vmes_lo, // Low referencd voltage
+                  float *vmes_hi  // High reference voltage
+)
+{
+  if ( board_revision >= REV_530 )
+  {
+    *vmes_lo = (float)adc_read(VMES_LO) / 4095.0;
+    *vmes_hi = (float)adc_read(VMES_HI) / 4095.0;
+  }
+  else
+  {
+    *vmes_lo = 0.0;
+    *vmes_hi = 0.0;
+  }
+
+  /*
+   * Nothing more to do, return the board revision
+   */
+  return;
 }
 
 /*----------------------------------------------------------------

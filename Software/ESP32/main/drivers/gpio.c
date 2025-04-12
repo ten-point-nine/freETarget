@@ -91,7 +91,7 @@ unsigned int is_running(void)
     {
       return_value |= s[i].low_sense.run_mask;
     }
-    if ( revision() < REV_530 )
+    if ( board_revision < REV_530 )
     {
       if ( gpio_get_level(s[i].high_sense.sensor_GPIO) != 0 )
       {
@@ -915,11 +915,25 @@ void rapid_green(unsigned int state      // New state for the GREEN light
  *-----------------------------------------------------*/
 void digital_test(void)
 {
+  SEND(ALL, sprintf(_xs, "\r\nDigital Inputs:");)
   /*
    * Read in the fixed digital inputs
    */
-  SEND(ALL, sprintf(_xs, "\r\nTime: %lds", run_time_seconds());)
-  SEND(ALL, sprintf(_xs, "\r\nDIP: 0x%02X", read_DIP());)
+  while ( 1 )
+  {
+    if ( serial_available(ALL) != 0 )
+    {
+      break;
+    }
+    timer_delay(ONE_SECOND / 10);
+
+    SEND(ALL, sprintf(_xs, "\r\nDIP_A: 0x%02X", !gpio_get_level(DIP_A));) // DIP A
+    SEND(ALL, sprintf(_xs, "   DIP_B: 0x%02X", !gpio_get_level(DIP_B));)  // DIP B
+    SEND(ALL, sprintf(_xs, "   DIP_C: 0x%02X", !gpio_get_level(DIP_C));)  // DIP C
+    SEND(ALL, sprintf(_xs, "   DIP_D: 0x%02X", !gpio_get_level(DIP_D));)  // DIP D
+    SEND(ALL, sprintf(_xs, "   Time: %lds", run_time_seconds());)
+  }
+
   SEND(ALL, sprintf(_xs, _DONE_);)
 
   return;

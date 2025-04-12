@@ -492,6 +492,7 @@ void show_echo(void)
   unsigned int  dip;
   char         *ABCD[] = {"A", "B", "C", "D"};
   char          new_app_version[32], running_app_version[32];
+  float         vmes_lo, vmes_hi;
 
   /*
    * Loop through all of the JSON tokens
@@ -563,6 +564,12 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"TIMER_COUNT\":       %d,",
                     (int)(SHOT_TIME * OSCILLATOR_MHZ));) // Maximum number of clock cycles to record shot (target dependent)
   SEND(ALL, sprintf(_xs, "\"V12\":               %4.2f,", v12_supply());) // 12 Volt LED supply
+  if ( board_revision >= REV_530 )
+  {
+    vref_measure(&vmes_lo, &vmes_hi);
+    SEND(ALL, sprintf(_xs, "\"VMES_LO\":         %4.2f", vmes_lo);)
+    SEND(ALL, sprintf(_xs, "\"VMES_HI\":         %4.2f", vmes_hi);)
+  }
   WiFi_MAC_address(str_c);
   SEND(ALL, sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\",", str_c[0], str_c[1], str_c[2], str_c[3], str_c[4],
                     str_c[5]);)
@@ -609,11 +616,11 @@ void show_echo(void)
 #endif
 
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
-  SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                              // Current persistent storage version
-  SEND(ALL, sprintf(_xs, "\"BD_REV\":            %4.2f ", (float)(revision()) / 100.0);) // Current board version
+  SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                                // Current persistent storage version
+  SEND(ALL, sprintf(_xs, "\"BD_REV\":            %4.2f ", (float)(board_revision) / 100);) // Current board version
   SEND(ALL, sprintf(_xs, "}\r\n");)
   SEND(ALL, sprintf(_xs, "\r\n");)
-  SEND(ALL, sprintf(_xs, "\r\n");)                                                       // Flush out junk
+  SEND(ALL, sprintf(_xs, "\r\n");)                                                         // Flush out junk
 
   /*
    *  All done, return

@@ -177,6 +177,7 @@ typedef volatile unsigned long time_count_t;
  */
 extern double                s_of_sound;
 extern unsigned int          face_strike;
+extern unsigned int          board_revision;     // Board hardware revision
 extern unsigned int          is_trace;           // Tracing level(s)
 extern unsigned int          shot_in;            // Index into the shot array (The shot that has JUST arrived)
 extern unsigned int          shot_out;           // Index into the shot array (Last shot processed)

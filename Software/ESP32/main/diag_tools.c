@@ -250,6 +250,7 @@ bool factory_test(void)
   int   pass;            // Pass YES/NO
   bool  passed_once;     // Passed all of the tests at least once
   float volts[4];
+  float vmes_lo, vmes_hi;
   int   motor_toggle;    // Toggle motor on an off
 
   pass         = 0;      // Pass YES/NO
@@ -321,7 +322,6 @@ bool factory_test(void)
       }
       else
       {
-
         if ( ((find_sensor(1 << i)->short_name) == 'N') // Is this the North Sensor?
              && (json_pcnt_latency == 0) )              // and pcnt_latency is disabled?
         {
@@ -379,6 +379,11 @@ bool factory_test(void)
     }
 
     SEND(ALL, sprintf(_xs, "  12V: %4.2fV", v12_supply());)
+    if ( board_revision >= REV_530 )
+    {
+      vref_measure(&vmes_lo, &vmes_hi);
+      SEND(ALL, sprintf(_xs, "  VMES_LO: %4.2fV  VMES_HI: %4.2f", vmes_lo, vmes_hi);)
+    }
     SEND(ALL, sprintf(_xs, "  Temp: %4.2fC", temperature_C());)
     SEND(ALL, sprintf(_xs, "  Humidiity: %4.2f%%", humidity_RH());)
 
@@ -569,7 +574,7 @@ bool POST_counters(void)
         SEND(ALL, sprintf(_xs, "%c", s[i].low_sense.short_name);)
       }
 
-      if ( revision() < REV_530 ) // Only check the high sense if it is present
+      if ( board_revision < REV_530 ) // Only check the high sense if it is present
       {
         if ( running & s[i].high_sense.run_mask )
         {
