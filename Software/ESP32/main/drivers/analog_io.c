@@ -351,7 +351,7 @@ void set_VREF(void)
 {
   float volts[4];
 
-  DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "Set VREF: %4.2f %4.2f", json_vref_lo, json_vref_hi);))
+  DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "Set VREF_LO: %4.2f   VREF_HI: %4.2f", json_vref_lo, json_vref_hi);))
 
   if ( (json_vref_lo == 0) // Check for an uninitialized VREF
        || (json_vref_hi == 0) )

@@ -18,6 +18,7 @@
 #include "math.h"
 
 #include "freETarget.h"
+#include "helpers.h"
 #include "diag_tools.h"
 #include "gpio.h"
 #include "analog_io.h"
@@ -29,18 +30,19 @@
  *  Definitions
  */
 #define DAC_ADDR   0x60    // DAC I2C address
-#define DAC_WRITE  0x40    // Multi Write
+#define DAC_WRITE  0x0b    // Multi Write
+#define UDAC       0x01    // Output immediatly
 #define V_INTERNAL 0x80    // Select internal refernce in DAC
 #define VREF_INT   2.048   // Internal reference set at 2.048V
 #define V_EXTERNAL 0x00    // Select exteranl referece to DAC
 #define VREF_EXT   5.0     // Exterma; referemce nominally 5V (not very regulated)
-#define DAC_FS     (0xfff) // 12 bit DAC
+#define DAC_FS     (0xfff) // 12 bit DAC{}
 
 /*----------------------------------------------------------------
  *
  * @function: DAC_write()
  *
- * @brief:    Write a value (in mV) to the DAC
+ * @brief:    Write a value (in Volts) to the DAC
  *
  * @return: None
  *
@@ -57,21 +59,40 @@
  * one and selects the source automatically.
  *
  *--------------------------------------------------------------*/
-void DAC_write(float volts[4]          // What value are we setting it to
-)
+void DAC_write(float volts[4])              // What value are we setting it to
 {
-  unsigned char data[3 * 4];           // Bytes to send to the I2C
-  unsigned int  scaled_value;          // Value (12 bits) to the DAC
+  unsigned char data[3];                    // Bytes to send to the I2C
+  unsigned int  scaled_value;               // Value (12 bits) to the DAC
   int           i;
   float         max;
-  int           v_source = V_INTERNAL; // Default to internal reference
-  float         v_ref    = VREF_INT;   // Default to 2.048 volts
+  int           v_source      = V_INTERNAL; // Default to internal reference
+  float         v_ref         = VREF_INT;   // Default to 2.048 volts
+  unsigned int  channel_count = 1;          // Program one channel
 
+  if ( board_revision < REV_530 )
+  {
+    channel_count = 2;                      // Program two channels
+  }
+
+  /*
+   *  Check for a valid voltage setting
+   */
+  for ( i = 0; i != channel_count; i++ )
+  {
+    if ( volts[i] < 0 )
+    {
+      volts[i] = 0;
+    }
+    if ( volts[i] > VREF_EXT )
+    {
+      volts[i] = VREF_EXT;
+    }
+  }
   /*
    *  Step 1, figure out what VREF should be
    */
   max = 0;
-  for ( i = 0; i != 4; i++ )
+  for ( i = 0; i != channel_count; i++ )
   {
     if ( volts[i] > max )
     {
@@ -89,26 +110,61 @@ void DAC_write(float volts[4]          // What value are we setting it to
     v_source = V_EXTERNAL; // Otherwise
     v_ref    = VREF_EXT;   // Default to 5.0 volts
   }
-  DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "DAC v_source:%d  v_ref:%4.2f)", v_source, v_ref);))
 
   /*
    *  Fill up the I2C buffer
    */
-  for ( i = 0; i != 4; i++ )
+  for ( i = 0; i != channel_count; i++ )
   {
-    scaled_value = ((int)(volts[i] / v_ref * DAC_FS)) & 0xfff; // Figure the bits to send
-    DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "DAC_write(channel:%d Volts:%4.2f scale:%d)", i + 1, volts[i], scaled_value);))
-    data[(i * 3) + 0] = DAC_WRITE                              // Write
-                        + ((i & 0x3) << 1)                     // Channel
-                        + 1;                                   // UDAC = 1  update automatically
-    data[(i * 3) + 1] = v_source                               // Internal or external VREF
-                        + 0x00                                 // Normal Power Down
-                        + 0x00                                 // Gain x 1
-                        + ((scaled_value >> 8) & 0x0f);        // Top 4 bits of the setting
-    data[(i * 3) + 2] = scaled_value & 0xff;                   // Bottom 8 bits of the setting
+    scaled_value      = ((int)(volts[i] / v_ref * DAC_FS)) & 0xfff; // Figure the bits to send
+    data[(i * 3) + 0] = (DAC_WRITE << 3)                            // Write
+                        + ((i & 0x3) << 1)                          // Channel
+                        + UDAC;                                     // UDAC = 1  update automatically
+    data[(i * 3) + 1] = v_source                                    // Internal or external VREF
+                        + 0x00                                      // Normal Power Down
+                        + 0x00                                      // Gain x 1
+                        + ((scaled_value >> 8) & 0x0f);             // Top 4 bits of the setting
+    data[(i * 3) + 2] = scaled_value & 0xff;                        // Bottom 8 bits of the setting
+    i2c_write(DAC_ADDR, data, sizeof(data));                        // Data transferred on last bit.
   }
 
-  i2c_write(DAC_ADDR, data, (4 * 3));                          // Data transferred on last bit.
+  /*
+   *  All done, return;
+   */
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: DAC_read()
+ *
+ * @brief:    Read the DAC registers
+ *
+ * @return: None
+ *
+ *----------------------------------------------------------------
+ *
+ *
+ *--------------------------------------------------------------*/
+
+void DAC_read(void)                       // What value are we setting it to
+{
+  unsigned char data[4 * 6];              // Bytes read from the I2C
+  unsigned int  i;                        // Iteration counter
+  char          str[20];                  // String hold binary number
+
+  i2c_read(DAC_ADDR, data, sizeof(data)); // Data transferred on last bit.
+
+  SEND(ALL, sprintf(_xs, "DAC_read:\r\n");)
+  for ( i = 0; i != sizeof(data); i++ )
+  {
+    to_binary(data[i], 8, str);           // Convert to binary string
+    SEND(ALL, sprintf(_xs, "0b%s ", str);)
+    if ( ((i + 1) % 6) == 0 )
+    {
+      SEND(ALL, sprintf(_xs, "\r\n");)
+    }
+  }
 
   /*
    *  All done, return;

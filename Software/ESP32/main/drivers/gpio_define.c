@@ -322,7 +322,7 @@ void gpio_init_single(unsigned int type)         // What type of GPIO are we pro
   }
   else
   {
-    gpio_table = (gpio_struct_t *)gpio_table_V6; // Use the V6 GPIO table
+    gpio_table = (gpio_struct_t *)gpio_table_V5; // Use the V6 GPIO table
   }
   /*
    *  Loop throught the table looking for a match and program that

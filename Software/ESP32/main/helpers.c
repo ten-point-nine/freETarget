@@ -682,3 +682,40 @@ unsigned int hamming_weight(unsigned int word)
 
   return weight;
 }
+
+/*----------------------------------------------------------------
+ *
+ * @function: to_binary
+ *
+ * @brief:    Convert a number to a binary string
+ *
+ * @return:   string of the number in binary
+ *
+ *----------------------------------------------------------------
+ *
+
+ *
+ *--------------------------------------------------------------*/
+void to_binary(unsigned int x, // Number to convert
+               unsigned int bits,
+               char        *s  // String to return the binary string
+)
+{
+  int i, j;
+
+  j = 0;
+  for ( i = 0; i != bits; i++ )
+  {
+    s[j++] = '0' + ((x & (1 << ((bits - i) - 1))) != 0);
+    if ( (j & 4) == 0 )
+    {
+      {
+        s[j++] = '.';
+      }
+      x <<= 1; // Shift the number to the left
+    }
+  }
+  s[j] = 0;    // Terminate the string
+
+  return;
+}

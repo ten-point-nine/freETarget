@@ -62,6 +62,7 @@ static const self_test_t test_list[] = {
     {"Status LED driver",                 &status_LED_test         },
     {"Analog input test",                 &analog_input_test       },
     {"DAC test",                          &DAC_test                },
+    {"DAC read",                          &DAC_read                },
     {"- Timer & PCNT test",               0                        },
     {"PCNT timers not stopping",          &pcnt_1                  },
     {"PCNT timers not running",           &pcnt_2                  },
@@ -237,7 +238,8 @@ static void show_test_help(void)
 #define PASS_B       0x0200
 #define PASS_C       0X0400
 #define PASS_D       0x0800
-#define PASS_MASK    (PASS_RUNNING | PASS_A | PASS_B)
+#define PASS_VREF    0x1000
+#define PASS_MASK    (PASS_RUNNING | PASS_A | PASS_B | PASS_VREF)
 #define PASS_TEST    (PASS_RUNNING | PASS_C)
 
 bool factory_test(void)
@@ -250,6 +252,7 @@ bool factory_test(void)
   int   pass;                  // Pass YES/NO
   bool  passed_once;           // Passed all of the tests at least once
   float volts[4];
+  float vmes_lo;
   int   motor_toggle;          // Toggle motor on an off
   int   number_of_sensors = 8; // Number of sensors to test
 
@@ -385,7 +388,18 @@ bool factory_test(void)
     SEND(ALL, sprintf(_xs, "  12V: %4.2fV", v12_supply());)
     if ( board_revision >= REV_530 )
     {
-      SEND(ALL, sprintf(_xs, "  VMES_LO: %4.2fV", vref_measure());)
+      vmes_lo = vref_measure();       // Read the VREF_LO voltage
+      SEND(ALL, sprintf(_xs, "  VREF_LO: %4.2fV", vmes_lo);)
+      if ( abs(vmes_lo - json_vref_lo) <= 0.1 )
+      {
+        SEND(ALL, sprintf(_xs, " ");)
+        pass |= PASS_VREF;            // Mark the test as passed
+      }
+      else
+      {
+        SEND(ALL, sprintf(_xs, "x");) // Show the voltage is out of range
+        pass &= ~PASS_VREF;
+      }
     }
     SEND(ALL, sprintf(_xs, "  Temp: %4.2fC", temperature_C());)
     SEND(ALL, sprintf(_xs, "  Humidiity: %4.2f%%", humidity_RH());)
