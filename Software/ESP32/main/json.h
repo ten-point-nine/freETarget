@@ -21,6 +21,7 @@ void show_echo(void);          // Display the settings
  */
 typedef struct
 {
+  bool  show;       // Value that is not typically changed by user
   char *token;      // JSON token string, ex "RADIUS":
   int  *value;      // Where value is stored (cast to (float*) if needed)
   int   convert;    // Conversion type
@@ -28,6 +29,7 @@ typedef struct
   char *non_vol;    // Storage in NON-VOL
   int   init_value; // Initial Value
   int   ps_version; // What persistent storage version was this introduced
+
 } json_message_t;
 
 extern const json_message_t JSON[];
