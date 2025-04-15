@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Diagnostics;
+using System.IO;
 
 namespace freETarget {
     public partial class frmUpload : Form {
@@ -82,11 +83,20 @@ namespace freETarget {
                                                     + "-v -patmega2560 -cwiring -P" + com + " -b" + baud + " -D" + " "
                                                     + "-Uflash:w:" + filePath + ":i";
                 } else {
+                    //check for 6.1+ aditional bin files
+                    string partitionBin = "./binary/partition-table.bin";
+                    string otaDataBin = "./binary/ota_data_initial.bin";
+
+                    string additionalFilesPath = "";
+                    if(File.Exists(partitionBin) && File.Exists(otaDataBin)) {
+                        additionalFilesPath = " 0x8000 " + partitionBin+" 0xd000 " + otaDataBin;
+                        mainWindow.log("found additional binary files");
+                    }
                     pProcess.StartInfo.FileName = "\"" + path  + "esptool" + "\"";
                     pProcess.StartInfo.Arguments = "-p "+com+" -b " + baud+ " " +
                         "--before default_reset " +
                         "--after hard_reset " +
-                        "--chip esp32s3 write_flash --flash_mode dio --flash_freq 80m --flash_size 8MB 0x10000 " + filePath;
+                        "--chip esp32s3 write_flash --flash_mode dio --flash_freq 80m --flash_size 8MB 0x10000 " + filePath + additionalFilesPath;
                 }
                 //pProcess.StartInfo.Arguments = "-?";
                 pProcess.StartInfo.UseShellExecute = false;
