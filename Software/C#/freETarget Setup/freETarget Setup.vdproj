@@ -117,6 +117,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_361183A4016041289CB909CEA29F7CBA"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_39002736FEFD4D78A96BB2339FA9C02B"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -964,6 +970,26 @@
             "TargetName" = "8:linino-boards_x86.cat"
             "Tag" = "8:"
             "Folder" = "8:_596F3DCDBC674A6297E381CA7EE0C033"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_361183A4016041289CB909CEA29F7CBA"
+            {
+            "SourcePath" = "8:..\\freETarget\\binary\\bootloader.bin"
+            "TargetName" = "8:bootloader.bin"
+            "Tag" = "8:"
+            "Folder" = "8:_28EC446BF10F47F094521016D364E61C"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
