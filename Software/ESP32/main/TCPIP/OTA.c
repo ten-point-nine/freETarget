@@ -500,6 +500,8 @@ static void OTA_halt_process(char *LED_status,   // Indicator sent to LEDs
 
   DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "%s", error_message);))
 
+  serial_flush(ALL);                       // Purge anthing that may be present
+
   while ( 1 )
   {
     vTaskDelay(ONE_SECOND);
