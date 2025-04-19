@@ -25,6 +25,7 @@
 #include "esp_netif.h"
 #include "esp_tls.h"
 #include <esp_wifi.h>
+#include "esp_ota_ops.h"
 
 #include "freETarget.h"
 #include "compute_hit.h"
@@ -368,7 +369,11 @@ static esp_err_t service_get_post2(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_who(httpd_req_t *req)
 {
-  char name[SHORT_TEXT];
+  char                   name[SHORT_TEXT];
+  const esp_partition_t *running_partition = esp_ota_get_running_partition();
+  esp_app_desc_t         running_app_info;
+
+  esp_ota_get_partition_description(running_partition, &running_app_info);
 
   target_name(name); // Get the target name
   httpd_resp_set_hdr(req, "get_who", name);
@@ -376,11 +381,13 @@ static esp_err_t service_get_who(httpd_req_t *req)
   sprintf(_xs,
           "Serial Number: %d"
           "<br>Target ID: %s"
-          "<br>Verson: %s"
+          "<br>Version: %s"
+          "<br>OTA Version: %s"
           "<br>Athelete: %s"
           "<br>Target: %s"
           "<br>Event: %s",
-          json_serial_number, name, SOFTWARE_VERSION, json_athlete, json_target_name, json_event); // Fill in the target name
+          json_serial_number, name, SOFTWARE_VERSION, running_app_info.version, json_athlete, json_target_name,
+          json_event); // Fill in the target name
   httpd_resp_send(req, _xs, HTTPD_RESP_USE_STRLEN);
   return ESP_OK;
 }

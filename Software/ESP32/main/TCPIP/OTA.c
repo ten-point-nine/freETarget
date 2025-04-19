@@ -32,6 +32,7 @@
 #include "json.h"
 #include "gpio.h"
 #include "gpio_define.h"
+#include "serial_io.h"
 
 /*
  *  Macros
@@ -45,7 +46,7 @@
  */
 static void http_cleanup(esp_http_client_handle_t client);
 static void OTA_halt_process(char *LED_status, char *error_message);
-static bool OTA_check_header(char *ota_write_data, int data_read, const esp_partition_t *update_partition,
+static void OTA_check_header(char *ota_write_data, int data_read, const esp_partition_t *update_partition,
                              const esp_partition_t *running_partition, const esp_partition_t *boot_partition);
 
 /*
@@ -80,18 +81,17 @@ extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_pem_end");
  *------------------------------------------------------------*/
 void OTA_load(void)
 {
-  esp_err_t                err;
-  esp_ota_handle_t         update_handle = 0;
-  const esp_partition_t   *update_partition;
-  const esp_partition_t   *boot_partition           = esp_ota_get_boot_partition();
-  const esp_partition_t   *running_partition        = esp_ota_get_running_partition();
-  bool                     image_header_was_checked = false;
-  int                      data_read;
-  int                      binary_file_length = 0;
-  esp_app_desc_t           new_app_info;
-  esp_app_desc_t           running_app_info;
-  const esp_partition_t   *last_invalid_app;
-  esp_app_desc_t           invalid_app_info;
+  esp_ota_handle_t       update_handle = 0;
+  const esp_partition_t *update_partition;
+  const esp_partition_t *boot_partition           = esp_ota_get_boot_partition();
+  const esp_partition_t *running_partition        = esp_ota_get_running_partition();
+  bool                   image_header_was_checked = false;
+  int                    data_read;
+  int                    binary_file_length = 0;
+  //  esp_app_desc_t           new_app_info;
+  //  esp_app_desc_t           running_app_info;
+  //  const esp_partition_t   *last_invalid_app;
+  //  esp_app_desc_t           invalid_app_info;
   esp_http_client_handle_t client;
   int                      http_count = 0; // How many records have we read in
 
@@ -257,9 +257,15 @@ void OTA_load(void)
   }
 
   /*
-   *  All done, reboot
+   *  All done, halt and wait for the user to restart
    */
   OTA_halt_process(LED_OTA_READY, "Cycle power to start new firmware"); // Reboot the system
+  return;
+}
+
+void OTA_load_json(int empty)                                           // Shim between JSON and push buttons
+{
+  OTA_load();                                                           // Load the OTA image from the server
   return;
 }
 
@@ -283,7 +289,7 @@ void OTA_load(void)
  * and trying to load it again will result in the same error.
  *
  *------------------------------------------------------------*/
-static bool OTA_check_header(char                  *ota_write_data,    // Data read from server
+static void OTA_check_header(char                  *ota_write_data,    // Data read from server
                              int                    data_read,         // Number of bytes in record
                              const esp_partition_t *update_partition,  // Update partition
                              const esp_partition_t *running_partition, // Running partition
@@ -294,6 +300,7 @@ static bool OTA_check_header(char                  *ota_write_data,    // Data r
   esp_app_desc_t         running_app_info;
   const esp_partition_t *last_invalid_app;
   esp_app_desc_t         invalid_app_info;
+  int                    i;
 
   /*
    *  Check that we read enough bytes
@@ -328,15 +335,27 @@ static bool OTA_check_header(char                  *ota_write_data,    // Data r
     }
   }
 
-  if ( memcmp(new_app_info.version, running_app_info.version, sizeof(new_app_info.version)) == 0 )
+  /*
+   *  Make sure the new software is NEWER than the running software
+   */
+  i = 0;
+  while ( new_app_info.version[i] != 0 )
   {
-    OTA_halt_process(LED_OTA_FATAL, "Current running version is the same as a new. Abandoning the update.");
+    if ( new_app_info.version[i] < running_app_info.version[i] )
+    {
+      OTA_halt_process(LED_OTA_FATAL, "New version is older than running version. Abandoning the update.");
+    }
+    if ( new_app_info.version[i] > running_app_info.version[i] )
+    {
+      return;
+    }
+    i++;
   }
 
   /*
-   * Everything looks good
+   *  Got to the end and identical all the way along
    */
-  return true;
+  OTA_halt_process(LED_OTA_FATAL, "New version is the same as running version. Abandoning the update.");
 }
 
 /*----------------------------------------------------------------
@@ -372,7 +391,6 @@ void OTA_rollback(void)
  *---------------------------------------------------------------
  *
  *------------------------------------------------------------*/
-
 static void http_cleanup(esp_http_client_handle_t client)
 {
   esp_http_client_close(client);
@@ -416,12 +434,16 @@ void OTA_partitions(void)
   const esp_partition_t *boot_partition    = esp_ota_get_boot_partition();
   const esp_partition_t *running_partition = esp_ota_get_running_partition();
   const esp_partition_t *update_partition  = esp_ota_get_next_update_partition(NULL);
+  esp_app_desc_t         running_app_info;
+
+  esp_ota_get_partition_description(running_partition, &running_app_info);
+  SEND(ALL, sprintf(_xs, "\r\nApplication Version: %s\r\n", running_app_info.version);)
 
   SEND(ALL, sprintf(_xs, "\r\nBoot Partition");)
   if ( boot_partition != NULL )
   {
     SEND(ALL, sprintf(_xs, "\r\nType:%s  Subtype:%d", partition_type[boot_partition->type], boot_partition->subtype);)
-    SEND(ALL, sprintf(_xs, "\r\nAddress: 0X%lX  Size 0x%lX", boot_partition->address, boot_partition->size);)
+    SEND(ALL, sprintf(_xs, "\r\nAddress: 0X%lX  Size: 0x%lX", boot_partition->address, boot_partition->size);)
     SEND(ALL, sprintf(_xs, "\r\nLable: %s\r\n", boot_partition->label);)
   }
   else
@@ -433,7 +455,7 @@ void OTA_partitions(void)
   if ( running_partition != NULL )
   {
     SEND(ALL, sprintf(_xs, "\r\nType:%s  Subtype:%d", partition_type[running_partition->type], running_partition->subtype);)
-    SEND(ALL, sprintf(_xs, "\r\nAddress: 0X%lX Size :0x%lX", running_partition->address, running_partition->size);)
+    SEND(ALL, sprintf(_xs, "\r\nAddress: 0X%lX Size: 0x%lX", running_partition->address, running_partition->size);)
     SEND(ALL, sprintf(_xs, "\r\nLable: %s\r\n", running_partition->label);)
   }
   else
@@ -445,7 +467,7 @@ void OTA_partitions(void)
   if ( update_partition != NULL )
   {
     SEND(ALL, sprintf(_xs, "\r\nType:%s  Subtype:%d", partition_type[update_partition->type], update_partition->subtype);)
-    SEND(ALL, sprintf(_xs, "\r\nAddress: 0X%lX  Size 0x%lX", update_partition->address, update_partition->size);)
+    SEND(ALL, sprintf(_xs, "\r\nAddress: 0X%lX  Size: 0x%lX", update_partition->address, update_partition->size);)
     SEND(ALL, sprintf(_xs, "\r\nLable: %s\r\n", update_partition->label);)
   }
   else
@@ -478,13 +500,98 @@ static void OTA_halt_process(char *LED_status,   // Indicator sent to LEDs
 
   DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "%s", error_message);))
 
+  serial_flush(ALL);                       // Purge anthing that may be present
+
   while ( 1 )
   {
     vTaskDelay(ONE_SECOND);
-    if ( (DIP_SW_A == 1) || (DIP_SW_B == 1) ) // If either switch is pressed
+    if ( (DIP_SW_A == 1)                   // Switch A pressed
+         || (DIP_SW_B == 1)                // Switch B pressed
+         || (serial_available(ALL) != 0) ) // Something on the serial port
     {
       DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Restarting target");))
       esp_restart();
     }
   }
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: OTA_compare_versions()
+ *
+ * @brief:    Find out the version and report if it
+ *
+ * @return:   None
+ *
+ *---------------------------------------------------------------
+ *
+ * Get the OTA version and dsplay them
+ *
+ *------------------------------------------------------------*/
+void OTA_get_versions(char *running_version, // Current running version
+                      char *OTA_version)     // Version watiting in OTA
+{
+  esp_app_desc_t           new_app_info;
+  esp_app_desc_t           running_app_info;
+  esp_http_client_handle_t client;
+
+  const esp_partition_t *running_partition;
+
+  esp_http_client_config_t config = {
+      .cert_pem          = (char *)server_cert_pem_start,
+      .timeout_ms        = OTA_TIMEOUT,
+      .keep_alive_enable = true,
+  };
+
+  /*
+   *  Go and fetch the header for the current OTA update
+   */
+  sprintf(download_url, "%s/freeETarget.bin", json_ota_url);
+  config.url = download_url;
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "\r\nOTA download URL: \"%s\"", config.url);))
+
+  client = esp_http_client_init(&config);
+  if ( client == NULL )
+  {
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Cannot start HTTP connection");))
+    return;
+  }
+  if ( esp_http_client_open(client, 0) != ESP_OK )
+  {
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Cannot start HTTP connection");))
+    return;
+  }
+
+  esp_http_client_fetch_headers(client);
+  esp_http_client_read(client, ota_write_data, BUFFSIZE); // Read the data from the server
+  memcpy(&new_app_info, &ota_write_data[sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t)], sizeof(esp_app_desc_t));
+  strcpy(OTA_version, new_app_info.version);
+
+  /*
+   *  Get the current application vesion
+   */
+  running_partition = esp_ota_get_running_partition();
+  esp_ota_get_partition_description(running_partition, &running_app_info);
+  strcpy(running_version, running_app_info.version);
+
+  http_cleanup(client);
+
+  return;
+}
+
+void OTA_compare_versions(void) // Version watiting in OTA
+{
+  char new_app_version[sizeof(esp_app_desc_t)];
+  char running_app_version[sizeof(esp_app_desc_t)];
+
+  OTA_get_versions(running_app_version, new_app_version);
+
+  SEND(ALL, sprintf(_xs, "\r\nNew firmware version: %s", new_app_version);)
+  SEND(ALL, sprintf(_xs, "\r\nRunning firmware version: %s\r\n", running_app_version);)
+  if ( strcmp(new_app_version, running_app_version) != 0 )
+  {
+    SEND(ALL, sprintf(_xs, "\r\nUpdate Available\r\n");)
+  }
+
+  return;
 }
