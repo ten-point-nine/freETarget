@@ -707,15 +707,9 @@ void to_binary(unsigned int x, // Number to convert
   for ( i = 0; i != bits; i++ )
   {
     s[j++] = '0' + ((x & (1 << ((bits - i) - 1))) != 0);
-    if ( (j & 4) == 0 )
-    {
-      {
-        s[j++] = '.';
-      }
-      x <<= 1; // Shift the number to the left
-    }
+    x <<= 1; // Shift the number to the left
   }
-  s[j] = 0;    // Terminate the string
+  s[j] = 0;  // Terminate the string
 
   return;
 }

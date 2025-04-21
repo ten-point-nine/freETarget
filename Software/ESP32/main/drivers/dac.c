@@ -191,7 +191,8 @@ static void DAC_write_MCP4725(float volts[])                        // What valu
   unsigned int  scaled_value;                                       // Value (12 bits) to the DAC
 
   scaled_value = ((int)(volts[0] / VREF_MCP4725 * DAC_FS)) & 0xfff; // Figure the bits to send
-  data[0]      = (DAC_MCP4725_WRITE << 6)                           // Write
+  printf("\r\nscaled_value: %d", scaled_value);                     // Debugging
+  data[0] = (DAC_MCP4725_WRITE << 6)                                // Write
             + (0x00 << 4)                                           // Power Down Select
             + ((scaled_value >> 8) & 0x0f);                         // Top 4 bits of the setting
   data[1] = scaled_value & 0xff;                                    // Bottom 8 bits of the setting
@@ -218,18 +219,29 @@ static void DAC_write_MCP4725(float volts[])                        // What valu
  *
  *--------------------------------------------------------------*/
 
-void DAC_read(void)                               // What value are we setting it to
+void DAC_read(void)          // What value are we setting it to
 {
-  unsigned char data[4 * 6];                      // Bytes read from the I2C
-  unsigned int  i;                                // Iteration counter
-  char          str[20];                          // String hold binary number
+  unsigned char data[4 * 6]; // Bytes read from the I2C
+  unsigned int  i;           // Iteration counter
+  char          str[20];     // String hold binary number
+  unsigned int  sizeof_data;
 
-  i2c_read(DAC_MCP4728_ADDR, data, sizeof(data)); // Data transferred on last bit.
+  SEND(ALL, sprintf(_xs, "DAC_read: ");)
 
-  SEND(ALL, sprintf(_xs, "DAC_read:\r\n");)
-  for ( i = 0; i != sizeof(data); i++ )
+  if ( MCP4728 )
   {
-    to_binary(data[i], 8, str);                   // Convert to binary string
+    sizeof_data = sizeof(data);                     // MCP4728 (4 channel`)
+    i2c_read(DAC_MCP4728_ADDR, data, sizeof(data)); // Data transferred on last bit.
+  }
+  else
+  {
+    sizeof_data = 5;                                // MCP4725 (single channel)
+    i2c_read(DAC_MCP4725_ADDR, data, sizeof_data);  // Data transferred on last bit.
+  }
+
+  for ( i = 0; i != sizeof_data; i++ )
+  {
+    to_binary(data[i], 8, str);                     // Convert to binary string
     SEND(ALL, sprintf(_xs, "0b%s ", str);)
     if ( ((i + 1) % 6) == 0 )
     {
@@ -291,12 +303,20 @@ void DAC_test(void)
         break;
       }
     }
-    volts[VREF_LO] = VREF_EXT * ((float)(i % 200) / 200.0);        // Ramp Up
-    volts[VREF_HI] = VREF_EXT * ((float)((i - 10) % 200) / 200.0); // Ramp Up delayed
-    volts[VREF_2]  = 0.0;
-    volts[VREF_3]  = 0.0;
+    if ( MCP4728 )
+    {
+      volts[VREF_LO] = VREF_EXT * ((float)(i % 200) / 200.0);        // Ramp Up
+      volts[VREF_HI] = VREF_EXT * ((float)((i - 10) % 200) / 200.0); // Ramp Up delayed
+      volts[VREF_2]  = 0.0;
+      volts[VREF_3]  = 0.0;
+    }
+    else
+    {
+      volts[VREF_LO] = VREF_EXT * ((float)(i % 200) / 200.0);        // Ramp Up
+    }
 
     DAC_write(volts);
+
     if ( MCP4725 )
     {
       printf("\r\nWrite: %4.2f  Read: %4.2f", volts[VREF_LO], vref_measure()); // Read the VREF voltage
