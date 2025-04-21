@@ -26,6 +26,7 @@
 #include "driver\gpio.h"
 
 #include "freETarget.h"
+#include "board_assembly.h"
 #include "helpers.h"
 #include "diag_tools.h"
 #include "ota.h"
@@ -88,10 +89,7 @@ void OTA_load(void)
   bool                   image_header_was_checked = false;
   int                    data_read;
   int                    binary_file_length = 0;
-  //  esp_app_desc_t           new_app_info;
-  //  esp_app_desc_t           running_app_info;
-  //  const esp_partition_t   *last_invalid_app;
-  //  esp_app_desc_t           invalid_app_info;
+
   esp_http_client_handle_t client;
   int                      http_count = 0; // How many records have we read in
 
@@ -107,14 +105,19 @@ void OTA_load(void)
   DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "OTA_load()");))
   set_status_LED(LED_OTA_DOWNLOAD);
 
+  if ( ESP32_4MB )
+  {
+    OTA_halt_process(LED_OTA_FATAL, "ESP32 too small for OTA update");
+  }
+
   if ( boot_partition == NULL )
   {
-    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Boot partition not available");))
+    OTA_halt_process(LED_OTA_FATAL, "Boot partition not available");
   }
 
   if ( running_partition == NULL )
   {
-    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Running partition not available");))
+    OTA_halt_process(LED_OTA_FATAL, "Running partition not available");
   }
 
 #if ( 0 )

@@ -27,13 +27,13 @@ extern int          board_revision; // Board revision number
 #define MASK_510 (1 << 0)  // First Test Board of V5
 #define MASK_520 (1 << 15) // First Production
 #define MASK_530 (1 << 4)  // Test Board of V6
-#define MASK_600 (1 << 9)  // Value Engineered Board
+#define MASK_600 (1 << 8)  // Value Engineered Board
 
 /*
  * Processor Variants
  */
-#define EP32_8MB  ((board_mask & (MASK_500 + MASK_510 + MASK_520 + MASK_600)) != 0) // ESP32 with 8MB of flash (Standard)
-#define ESP32_4MB ((board_mask & (MASK_530)) != 0)                                  // ESP32 with 4MB of flash (Development)
+#define EPP32_8MB ((board_mask & (MASK_500 + MASK_510 + MASK_520 + MASK_530)) != 0) // ESP32 with 8MB of flash (Standard)
+#define ESP32_4MB ((board_mask & (MASK_600)) != 0)                                  // ESP32 with 4MB of flash (Development)
 
                                                                                     /*
                                                                                      * Hardware Variants

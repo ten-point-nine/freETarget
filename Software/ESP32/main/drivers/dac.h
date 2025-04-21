@@ -14,7 +14,8 @@
 /*
  *  Definitions
  */
-#define DAC_ADDR 0x60 // DAC I2C address
+#define DAC_MCP4728ADDR  0x60 // DAC I2C address
+#define DAC_MCP4725_ADDR 0xC0 // DAC I2C address for MCP4725
 // #define DAC_WRITE 0x58 // Single write
 #define VREF_LO 0
 #define VREF_HI 1

@@ -21,8 +21,7 @@ void OTA_get_versions(char *running_version, char *OTA_compare_versions); // Ver
 /*
  * #defines
  */
-#define OTA_URL          "free-e-target.com/htdocs/wp-content/uploads/OTA"
-#define OTA_TEST         {"OTA_URL" : "http://free-e-target.com/htdocs/wp-content/uploads/OTA"}
+#define OTA_URL          "http://targetbin.app/OTA"
 #define OTA_TEST1        {"OTA_URL" : "http://targetbin.app/OTA"}
 #define OTA_TEST2        {"TRACE" : 256, "TEST" : 84}
 #define OTA_TIMEOUT      30 * 1000

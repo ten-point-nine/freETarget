@@ -258,8 +258,7 @@ unsigned int revision(void)
   board_version = version[index]; // Get the board revision number
   board_mask    = 1 << index;     // Set the mask for the board revision
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "ADC: %04X  Index: %d  Board Revision: %d  Board Mask: %04X", adc_read(BOARD_REV), index,
-                                  board_version, board_mask);))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Board Revision: %d  Board Mask: %04X", board_version, board_mask);))
 
   return revision;
 }
@@ -435,9 +434,12 @@ void set_VREF(void)
     json_vref_hi = 2.00;   // Otherwise the sensors continioustly interrupt
   }
 
-  if ( json_vref_lo >= json_vref_hi )
+  if ( MCP4728 )           // Check for four channel DAC
   {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "ERROR: json_vref_lo or json_vref_hi are out of order.");))
+    if ( json_vref_lo >= json_vref_hi )
+    {
+      DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "ERROR: json_vref_lo or json_vref_hi are out of order.");))
+    }
   }
 
   volts[VREF_LO] = json_vref_lo;
