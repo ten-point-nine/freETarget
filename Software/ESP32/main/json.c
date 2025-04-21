@@ -616,11 +616,11 @@ void show_echo(void)
 #endif
 
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
-  SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                                // Current persistent storage version
-  SEND(ALL, sprintf(_xs, "\"BD_REV\":            %4.2f ", (float)(board_revision) / 100);) // Current board version
+  SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                          // Current persistent storage version
+  SEND(ALL, sprintf(_xs, "\"BD_REV\":            %4.2f ", (float)revision() / 100);) // Current board version
   SEND(ALL, sprintf(_xs, "}\r\n");)
   SEND(ALL, sprintf(_xs, "\r\n");)
-  SEND(ALL, sprintf(_xs, "\r\n");)                                                         // Flush out junk
+  SEND(ALL, sprintf(_xs, "\r\n");)                                                   // Flush out junk
 
   /*
    *  All done, return

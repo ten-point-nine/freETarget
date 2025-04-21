@@ -255,15 +255,15 @@ bool factory_test(void)
   float volts[4];
   float vmes_lo;
   int   motor_toggle;          // Toggle motor on an off
-  int   number_of_sensors = 8; // Number of sensors to test
+  int   number_of_sensors = 4; // Number of sensors to test
 
   pass         = 0;            // Pass YES/NO
   passed_once  = false;
   percent      = 0;
   motor_toggle = 0;
-  if ( board_revision >= REV_530 )
+  if ( PCNT_HIGH_GPIO )
   {
-    number_of_sensors = 4;     // Number of sensors to test
+    number_of_sensors = 8;     // Number of sensors to test
   }
 
   /*
@@ -387,7 +387,7 @@ bool factory_test(void)
     }
 
     SEND(ALL, sprintf(_xs, "  12V: %4.2fV", v12_supply());)
-    if ( board_revision >= REV_530 )
+    if ( TMP1075D )
     {
       vmes_lo = vref_measure();       // Read the VREF_LO voltage
       SEND(ALL, sprintf(_xs, "  VREF_LO: %4.2fV", vmes_lo);)
@@ -592,7 +592,7 @@ bool POST_counters(void)
         SEND(ALL, sprintf(_xs, "%c", s[i].low_sense.short_name);)
       }
 
-      if ( board_revision < REV_530 ) // Only check the high sense if it is present
+      if ( PCNT_HIGH_GPIO ) // Only check the high sense if it is present
       {
         if ( running & s[i].high_sense.run_mask )
         {

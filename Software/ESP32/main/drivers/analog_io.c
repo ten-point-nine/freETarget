@@ -40,6 +40,8 @@ static double temperature_C_TMP1075D(void); // Temperature in degrees C
  */
 int          board_version = -1; // Board Revision number
 unsigned int board_mask    = 0;  // Mask for the board revision
+static float t_c;                // Temperature from sensor
+static float rh;                 // Humidity from sensor
 
 /*----------------------------------------------------------------
  *
@@ -237,8 +239,8 @@ void set_LED_PWM         // Theatre lighting
  *  undefined (< 100) then the last 'good' revision is returned
  *
  *--------------------------------------------------------------*/
-//                                           0      1  2  3     4     5  6  7  8  9   A   B   C   D   E   F
-const static unsigned int version[] = {REV_510, 1, 2, 3, REV_530, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, REV_520};
+//                                        0     1  2  3     4     5  6  7     8     9   A   B   C   D   E   F
+const static unsigned int version[] = {REV_510, 1, 2, 3, REV_530, 5, 6, 7, REV_600, 9, 10, 11, 12, 13, 14, REV_520};
 
 unsigned int revision(void)
 {
@@ -256,7 +258,7 @@ unsigned int revision(void)
   board_version = version[index]; // Get the board revision number
   board_mask    = 1 << index;     // Set the mask for the board revision
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "ADC: %d  Index: %d  Board Revision: %d  Board_mask: %04X", adc_read(BOARD_REV), index,
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "ADC: %04X  Index: %d  Board Revision: %d  Board Mask: %04X", adc_read(BOARD_REV), index,
                                   board_version, board_mask);))
 
   return revision;
@@ -272,13 +274,14 @@ unsigned int revision(void)
  *
  *--------------------------------------------------------------
  *
- *  Read the reference voltage from the ADC
- *  Multiply it by the voltage divider ladder
+ *  Read the VREF voltage.  Only applies on board revisions
+ *  530 and later.  The VREF is read from the ADC and converted
+ *  to a voltage
  *
  *--------------------------------------------------------------*/
 float vref_measure(void)
 {
-  if ( board_revision >= REV_530 )
+  if ( TMP1075D )
   {
     return (float)adc_read(VMES_LO) / 4095.0 * 1.1 * 2.0 * 3.175; // 4096 full scale, 1.1 VEEF 1/2 voltage divider
   }
@@ -300,7 +303,7 @@ float vref_measure(void)
  *--------------------------------------------------------------*/
 double temperature_C(void)
 {
-  if ( board_mask & HDC3022 )
+  if ( HDC3022 )
   {
     return temperature_C_HDC3022();  // TI HDC3022
   }
@@ -324,9 +327,6 @@ double temperature_C(void)
  * A simple interrogation is used.
  *
  *--------------------------------------------------------------*/
-static float t_c; // Temperature from sensor
-static float rh;  // Humidity from sensor
-
 static double temperature_C_HDC3022(void)
 {
   unsigned char temp_buffer[6];
@@ -365,6 +365,7 @@ static double temperature_C_HDC3022(void)
  * A simple interrogation is used.
  *
  *--------------------------------------------------------------*/
+#define TC_CAL (0.0625 / 16) // 'C / LSB
 static double temperature_C_TMP1075D(void)
 {
   unsigned char temp_buffer[6];
@@ -373,15 +374,15 @@ static double temperature_C_TMP1075D(void)
   /*
    * Read in the temperature and humidity together
    */
-  temp_buffer[0] = 0x00; // Trigger read on demand
-  i2c_write(TEMP_IC_TMP1075D, temp_buffer, 1);
-  i2c_read(TEMP_IC_TMP1075D, temp_buffer, 2);
+  temp_buffer[0] = 0x00;                       // Trigger read on demand
+  i2c_write(TEMP_IC_TMP1075D, temp_buffer, 1); // Send pointer to register
+  i2c_read(TEMP_IC_TMP1075D, temp_buffer, 2);  // Read 16 bit temperature
 
   /*
    *  Return the temperature in C
    */
   raw = (temp_buffer[0] << 8) + temp_buffer[1];
-  t_c = -128.0 + (256.0 * (float)raw / 65535.0);
+  t_c = ((float)raw * TC_CAL);
   rh  = 40.0;
 
   return t_c;

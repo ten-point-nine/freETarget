@@ -292,7 +292,7 @@ void gpio_init(void)
    */
   adc_init(((const ADC_struct_t *)(gpio_table_V5[BOARD_REVISION].gpio_uses))->adc_channel,
            ((const ADC_struct_t *)(gpio_table_V5[BOARD_REVISION].gpio_uses))->adc_attenuation);
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BD_REV: %4.2f", (float)revision() / 100.0);))
+  revision();
 
   /*
    *  Loop and setup the GPIO outputs
@@ -312,18 +312,12 @@ void gpio_init(void)
   return;
 }
 
-void gpio_init_single(unsigned int type)         // What type of GPIO are we programming?
+void gpio_init_single(unsigned int type)       // What type of GPIO are we programming?
 {
-  gpio_struct_t *gpio_table = NULL;              // Pointer to the GPIO table
+  gpio_struct_t *gpio_table = NULL;            // Pointer to the GPIO table
 
-  if ( board_revision < REV_530 )
-  {
-    gpio_table = (gpio_struct_t *)gpio_table_V5; // Use the V5 GPIO table
-  }
-  else
-  {
-    gpio_table = (gpio_struct_t *)gpio_table_V5; // Use the V6 GPIO table
-  }
+  gpio_table = (gpio_struct_t *)gpio_table_V5; // Use the V6 GPIO table
+
   /*
    *  Loop throught the table looking for a match and program that
    */

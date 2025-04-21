@@ -13,10 +13,10 @@
 #include "freertos/task.h"
 #include "serial_io.h"
 
-#define SOFTWARE_VERSION "\"India 4MB April 13, 2025\""
+#define SOFTWARE_VERSION "\"India 4MB April 21, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED" // Message to send on connection
-#define BUILD_REV        520         // Build for Revision 520 and higher
+#define BUILD_REV        530         // Build for Revision 530 and higher
 
 #define INIT_DONE 0xabcd             // NON-VOL Initialization complete signature
 #ifndef true
