@@ -16,12 +16,7 @@
 #define SOFTWARE_VERSION "\"India 4MB April 13, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED" // Message to send on connection
-
-#define REV_500   500                // ESP32
-#define REV_510   510
-#define REV_520   520
-#define REV_530   530                // India 4MB
-#define BUILD_REV REV_520
+#define BUILD_REV        520         // Build for Revision 520 and higher
 
 #define INIT_DONE 0xabcd             // NON-VOL Initialization complete signature
 #ifndef true
@@ -177,7 +172,6 @@ typedef volatile unsigned long time_count_t;
  */
 extern double                s_of_sound;
 extern unsigned int          face_strike;
-extern unsigned int          board_revision;     // Board hardware revision
 extern unsigned int          is_trace;           // Tracing level(s)
 extern unsigned int          shot_in;            // Index into the shot array (The shot that has JUST arrived)
 extern unsigned int          shot_out;           // Index into the shot array (Last shot processed)

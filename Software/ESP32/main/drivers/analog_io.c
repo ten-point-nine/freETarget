@@ -13,6 +13,7 @@
 #include "driver/adc.h"
 
 #include "freETarget.h"
+#include "board_assembly.h"
 #include "diag_tools.h"
 #include "gpio.h"
 #include "analog_io.h"
@@ -30,7 +31,15 @@
 /*
  * Function prototypes
  */
-void set_vset_PWM(unsigned int pwm);
+void          set_vset_PWM(unsigned int pwm);
+static double temperature_C_HDC3022(void);  // Temperature in degrees C
+static double temperature_C_TMP1075D(void); // Temperature in degrees C
+
+/*
+ *  Variables
+ */
+int          board_version = -1; // Board Revision number
+unsigned int board_mask    = 0;  // Mask for the board revision
 
 /*----------------------------------------------------------------
  *
@@ -228,21 +237,28 @@ void set_LED_PWM         // Theatre lighting
  *  undefined (< 100) then the last 'good' revision is returned
  *
  *--------------------------------------------------------------*/
-//                                       0      1  2  3     4     5  6  7  8  9   A   B   C   D   E   F
+//                                           0      1  2  3     4     5  6  7  8  9   A   B   C   D   E   F
 const static unsigned int version[] = {REV_510, 1, 2, 3, REV_530, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, REV_520};
 
 unsigned int revision(void)
 {
-  int revision;
+  int index;                // Index into the version table
+
+  if ( board_version >= 0 ) // Already read the revision?
+  {
+    return board_version;   // Return the cached value
+  }
 
   /*
    *  Read the resistors and determine the board revision
    */
-  revision = version[adc_read(BOARD_REV) >> (12 - 4)];
+  index         = adc_read(BOARD_REV) >> (12 - 4);
+  board_version = version[index]; // Get the board revision number
+  board_mask    = 1 << index;     // Set the mask for the board revision
 
-  /*
-   * Nothing more to do, return the board revision
-   */
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "ADC: %d  Index: %d  Board Revision: %d  Board_mask: %04X", adc_read(BOARD_REV), index,
+                                  board_version, board_mask);))
+
   return revision;
 }
 
@@ -280,6 +296,28 @@ float vref_measure(void)
  *
  *----------------------------------------------------------------
  *
+ *
+ *--------------------------------------------------------------*/
+double temperature_C(void)
+{
+  if ( board_mask & HDC3022 )
+  {
+    return temperature_C_HDC3022();  // TI HDC3022
+  }
+  else
+  {
+    return temperature_C_TMP1075D(); // TI TMP1075D
+  }
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: temperature_C_HDC3022()
+ *
+ * @brief: Read the temperature sensor and return temperature in degrees C
+ *
+ *----------------------------------------------------------------
+ *
  * See TI Documentation for HDC3022
  * https://www.ti.com/product/HDC3022, Page 13
  *
@@ -289,7 +327,7 @@ float vref_measure(void)
 static float t_c; // Temperature from sensor
 static float rh;  // Humidity from sensor
 
-double temperature_C(void)
+static double temperature_C_HDC3022(void)
 {
   unsigned char temp_buffer[6];
   int           raw;
@@ -309,6 +347,42 @@ double temperature_C(void)
   t_c = -45.0 + (175.0 * (float)raw / 65535.0);
   raw = (temp_buffer[3] << 8) + temp_buffer[4];
   rh  = 100.0 * (float)raw / 65535.0;
+
+  return t_c;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: temperature_C_TMP1075D()
+ *
+ * @brief: Special driver for TMP1075D temperature sensor
+ *
+ *----------------------------------------------------------------
+ *
+ * See TI Documentation for TMP1075D
+ * https://www.ti.com/lit/ds/symlink/tmp1075.pdf?ts=1745106831531&ref_url=https%253A%252F%252Fwww.ti.com%252Fproduct%252FTMP1075
+ *
+ * A simple interrogation is used.
+ *
+ *--------------------------------------------------------------*/
+static double temperature_C_TMP1075D(void)
+{
+  unsigned char temp_buffer[6];
+  int           raw;
+
+  /*
+   * Read in the temperature and humidity together
+   */
+  temp_buffer[0] = 0x00; // Trigger read on demand
+  i2c_write(TEMP_IC_TMP1075D, temp_buffer, 1);
+  i2c_read(TEMP_IC_TMP1075D, temp_buffer, 2);
+
+  /*
+   *  Return the temperature in C
+   */
+  raw = (temp_buffer[0] << 8) + temp_buffer[1];
+  t_c = -128.0 + (256.0 * (float)raw / 65535.0);
+  rh  = 40.0;
 
   return t_c;
 }

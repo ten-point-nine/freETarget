@@ -24,6 +24,6 @@
 /*
  *  Functions
  */
-void DAC_write(float value[4]);
+void DAC_write(float value[]);
 void DAC_test(void); // Ramp the DACs
 void DAC_read(void); // Read the DAC registers

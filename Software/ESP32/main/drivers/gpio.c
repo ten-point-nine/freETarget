@@ -14,6 +14,7 @@
 #include "led_strip_types.h"
 
 #include "freETarget.h"
+#include "board_assembly.h"
 #include "compute_hit.h"
 #include "diag_tools.h"
 #include "gpio.h"
@@ -91,7 +92,7 @@ unsigned int is_running(void)
     {
       return_value |= s[i].low_sense.run_mask;
     }
-    if ( board_revision < REV_530 )
+    if ( PCNT_HIGH_GPIO )
     {
       if ( gpio_get_level(s[i].high_sense.sensor_GPIO) != 0 )
       {

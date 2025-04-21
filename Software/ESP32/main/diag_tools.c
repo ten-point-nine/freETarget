@@ -21,6 +21,7 @@
 #include "math.h"
 
 #include "freETarget.h"
+#include "board_assembly.h"
 #include "helpers.h"
 #include "http_client.h"
 #include "http_test.h"

@@ -27,6 +27,7 @@
 #include "led_strip_types.h"
 
 #include "freETarget.h"
+#include "board_assembly.h"
 #include "diag_tools.h"
 #include "analog_io.h"
 #include "gpio_define.h"
@@ -291,8 +292,7 @@ void gpio_init(void)
    */
   adc_init(((const ADC_struct_t *)(gpio_table_V5[BOARD_REVISION].gpio_uses))->adc_channel,
            ((const ADC_struct_t *)(gpio_table_V5[BOARD_REVISION].gpio_uses))->adc_attenuation);
-  board_revision = revision();
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BD_REV: %4.2f", (float)board_revision / 100.0);))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BD_REV: %4.2f", (float)revision() / 100.0);))
 
   /*
    *  Loop and setup the GPIO outputs

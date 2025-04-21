@@ -24,8 +24,9 @@
 
 #define TO_VOLTS(x) (((double)(x) * 5.0) / 1024.0)
 
-#define TEMP_IC (0x44)                               // TI HDC3022
-#define DAC_IC  (0x60)                               // Microchip HCP4728
+#define TEMP_IC          (0x44)                      // TI HDC3022
+#define TEMP_IC_TMP1075D (0x48)                      // TI TMP1075D
+#define DAC_IC           (0x60)                      // Microchip HCP4728
 
 /*
  * Global functions

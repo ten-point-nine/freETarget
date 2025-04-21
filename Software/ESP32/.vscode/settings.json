@@ -48,7 +48,9 @@
     "initializer_list": "c",
     "span": "c",
     "coroutine": "c",
-    "cstdint": "c"
+    "cstdint": "c",
+    "rope": "c",
+    "ranges": "c"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM6",

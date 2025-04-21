@@ -18,6 +18,7 @@
 #include "math.h"
 
 #include "freETarget.h"
+#include "board_assembly.h"
 #include "helpers.h"
 #include "diag_tools.h"
 #include "gpio.h"
@@ -38,9 +39,43 @@
 #define VREF_EXT   5.0     // Exterma; referemce nominally 5V (not very regulated)
 #define DAC_FS     (0xfff) // 12 bit DAC{}
 
+/*
+ * Function Prototypes
+ */
+static void DAC_write_MCP4728(float volts[]); // What value are we setting it to
+static void DAC_write_MCP4725(float volts[]); // What value are we setting it to
+
 /*----------------------------------------------------------------
  *
  * @function: DAC_write()
+ *
+ * @brief:    Route the DAC request to the correct hardware
+ *
+ * @return: None
+ *
+ *----------------------------------------------------------------
+ *
+ *--------------------------------------------------------------*/
+void DAC_write(float volts[]) // What value are we setting it to
+{
+  if ( MCP4728 )
+  {
+    DAC_write_MCP4728(volts); // MCP 4728 (four channel`)
+  }
+  else
+  {
+    DAC_write_MCP4725(volts); // MCP 4725 (single channel)
+  }
+
+  /*
+   *  All done, return;
+   */
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: DAC_write_MCP4728()
  *
  * @brief:    Write a value (in Volts) to the DAC
  *
@@ -59,20 +94,106 @@
  * one and selects the source automatically.
  *
  *--------------------------------------------------------------*/
-void DAC_write(float volts[4])              // What value are we setting it to
+static void DAC_write_MCP4728(float volts[]) // What value are we setting it to
 {
-  unsigned char data[3];                    // Bytes to send to the I2C
-  unsigned int  scaled_value;               // Value (12 bits) to the DAC
+  unsigned char data[3];                     // Bytes to send to the I2C
+  unsigned int  scaled_value;                // Value (12 bits) to the DAC
   int           i;
   float         max;
-  int           v_source      = V_INTERNAL; // Default to internal reference
-  float         v_ref         = VREF_INT;   // Default to 2.048 volts
-  unsigned int  channel_count = 1;          // Program one channel
+  int           v_source      = V_INTERNAL;  // Default to internal reference
+  float         v_ref         = VREF_INT;    // Default to 2.048 volts
+  unsigned int  channel_count = 1;           // Program one channel
 
-  if ( board_revision < REV_530 )
+  /*
+   *  Check for a valid voltage setting
+   */
+  for ( i = 0; i != channel_count; i++ )
   {
-    channel_count = 2;                      // Program two channels
+    if ( volts[i] < 0 )
+    {
+      volts[i] = 0;
+    }
+    if ( volts[i] > VREF_EXT )
+    {
+      volts[i] = VREF_EXT;
+    }
   }
+  /*
+   *  Step 1, figure out what VREF should be
+   */
+  max = 0;
+  for ( i = 0; i != channel_count; i++ )
+  {
+    if ( volts[i] > max )
+    {
+      max = volts[i];
+    }
+  }
+
+  if ( max < VREF_INT )
+  {
+    v_source = V_INTERNAL; // If the max setting is less than 2.048 Volts
+    v_ref    = VREF_INT;   // Default to the internal voltage
+  }
+  else
+  {
+    v_source = V_EXTERNAL; // Otherwise
+    v_ref    = VREF_EXT;   // Default to 5.0 volts
+  }
+
+  /*
+   *  Fill up the I2C buffer
+   */
+  for ( i = 0; i != channel_count; i++ )
+  {
+    scaled_value      = ((int)(volts[i] / v_ref * DAC_FS)) & 0xfff; // Figure the bits to send
+    data[(i * 3) + 0] = (DAC_WRITE << 3)                            // Write
+                        + ((i & 0x3) << 1)                          // Channel
+                        + UDAC;                                     // UDAC = 1  update automatically
+    data[(i * 3) + 1] = v_source                                    // Internal or external VREF
+                        + 0x00                                      // Normal Power Down
+                        + 0x00                                      // Gain x 1
+                        + ((scaled_value >> 8) & 0x0f);             // Top 4 bits of the setting
+    data[(i * 3) + 2] = scaled_value & 0xff;                        // Bottom 8 bits of the setting
+    i2c_write(DAC_ADDR, data, sizeof(data));                        // Data transferred on last bit.
+  }
+
+  /*
+   *  All done, return;
+   */
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: DAC_write_MCP4725()
+ *
+ * @brief:    Write a value (in Volts) to the DAC
+ *
+ * @return: None
+ *
+ *----------------------------------------------------------------
+ *
+ * This function sets the DACs to the desired value.
+ *
+ * The DAC has two modes of operation:
+ *  * Internal from the precision 2.048 reference
+ *  * External from the VCC supply (3.3 or 5.0V)
+ *
+ * The function looks as the selected voltage and determines
+ * if it can be done by the internal reference or the external
+ * one and selects the source automatically.
+ *
+ *--------------------------------------------------------------*/
+static void DAC_write_MCP4725(float volts[]) // What value are we setting it to
+{
+  unsigned char data[3];                     // Bytes to send to the I2C
+  unsigned int  scaled_value;                // Value (12 bits) to the DAC
+  int           i;
+  float         max;
+  int           v_source      = V_INTERNAL;  // Default to internal reference
+  float         v_ref         = VREF_INT;    // Default to 2.048 volts
+  unsigned int  channel_count = 1;           // Program one channel
 
   /*
    *  Check for a valid voltage setting
