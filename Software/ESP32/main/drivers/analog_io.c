@@ -425,7 +425,14 @@ void set_VREF(void)
 {
   float volts[4];
 
-  DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "Set VREF_LO: %4.2f   VREF_HI: %4.2f", json_vref_lo, json_vref_hi);))
+  if ( MCP4728 )
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Set VREF_LO: %4.2f   VREF_HI: %4.2f", json_vref_lo, json_vref_hi);))
+  }
+  else
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Set VREF_LO: %4.2f", json_vref_lo);))
+  }
 
   if ( (json_vref_lo == 0) // Check for an uninitialized VREF
        || (json_vref_hi == 0) )
