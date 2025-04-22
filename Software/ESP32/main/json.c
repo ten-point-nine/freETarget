@@ -188,7 +188,7 @@ const json_message_t JSON[] = {
     {1, "\"TOKEN\":",           &json_token,                 IS_INT32,                 0,                  NONVOL_TOKEN,            0,          0 },
     {0, "\"TRACE\":",           0,                           IS_INT32,                 &set_trace,         0,                       0,          0 },
     {1, "\"VERSION\":",         0,                           IS_INT32,                 &POST_version,      0,                       0,          0 },
-    {0, "\"VREF_LO\":",         (int *)&json_vref_lo,        IS_FLOAT,                 &set_VREF,          NONVOL_VREF_LO,          1250,       0 },
+    {1, "\"VREF_LO\":",         (int *)&json_vref_lo,        IS_FLOAT,                 &set_VREF,          NONVOL_VREF_LO,          1250,       0 },
     {1, "\"VREF_HI\":",         (int *)&json_vref_hi,        IS_FLOAT,                 &set_VREF,          NONVOL_VREF_HI,          2000,       0 },
     {1, "\"WIFI_CHANNEL\":",    &json_wifi_channel,          IS_INT32,                 0,                  NONVOL_WIFI_CHANNEL,     6,          0 },
     {1, "\"WIFI_GATEWAY\":",    (int *)&json_wifi_gateway,   IS_TEXT + IP_SIZE,        0,                  NONVOL_WIFI_GATEWAY,     0,          9 },

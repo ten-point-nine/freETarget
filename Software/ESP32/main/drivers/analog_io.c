@@ -282,7 +282,7 @@ float vref_measure(void)
 {
   if ( TMP1075D )
   {
-    return (float)adc_read(VMES_LO) / 4095.0 * 1.1 * 2.0 * 3.175; // 4096 full scale, 1.1 VEEF 1/2 voltage divider
+    return (float)adc_read(VMES_LO) / 4095.0 * 1.1 * 2.0 * 3.3; // 4096 full scale, 1.1 VEEF 1/2 voltage divider
   }
   else
   {

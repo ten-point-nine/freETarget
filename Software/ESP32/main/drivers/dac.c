@@ -191,8 +191,7 @@ static void DAC_write_MCP4725(float volts[])                        // What valu
   unsigned int  scaled_value;                                       // Value (12 bits) to the DAC
 
   scaled_value = ((int)(volts[0] / VREF_MCP4725 * DAC_FS)) & 0xfff; // Figure the bits to send
-  printf("\r\nscaled_value: %d", scaled_value);                     // Debugging
-  data[0] = (DAC_MCP4725_WRITE << 6)                                // Write
+  data[0]      = (DAC_MCP4725_WRITE << 6)                           // Write
             + (0x00 << 4)                                           // Power Down Select
             + ((scaled_value >> 8) & 0x0f);                         // Top 4 bits of the setting
   data[1] = scaled_value & 0xff;                                    // Bottom 8 bits of the setting
@@ -218,7 +217,6 @@ static void DAC_write_MCP4725(float volts[])                        // What valu
  *
  *
  *--------------------------------------------------------------*/
-
 void DAC_read(void)          // What value are we setting it to
 {
   unsigned char data[4 * 6]; // Bytes read from the I2C
@@ -305,17 +303,18 @@ void DAC_test(void)
     }
     if ( MCP4728 )
     {
-      volts[VREF_LO] = VREF_EXT * ((float)(i % 200) / 200.0);        // Ramp Up
-      volts[VREF_HI] = VREF_EXT * ((float)((i - 10) % 200) / 200.0); // Ramp Up delayed
+      volts[VREF_LO] = VREF_EXT * ((float)(i % 200) / 200.0);                  // Ramp Up
+      volts[VREF_HI] = VREF_EXT * ((float)((i - 10) % 200) / 200.0);           // Ramp Up delayed
       volts[VREF_2]  = 0.0;
       volts[VREF_3]  = 0.0;
     }
     else
     {
-      volts[VREF_LO] = VREF_EXT * ((float)(i % 200) / 200.0);        // Ramp Up
+      volts[VREF_LO] = VREF_EXT * ((float)(i % 200) / 200.0);                  // Ramp Up
     }
 
     DAC_write(volts);
+    vTaskDelay(TICK_10ms * 100);                                               // Wait 100ms
 
     if ( MCP4725 )
     {
@@ -325,7 +324,7 @@ void DAC_test(void)
     {
       printf("\r\nWrite: %4.2f, %4.2f", volts[VREF_LO], volts[VREF_HI]);       // Read the VREF voltage
     }
-    vTaskDelay(TICK_10ms);
+
     i++;
   }
 
