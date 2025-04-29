@@ -105,7 +105,7 @@ void OTA_load(void)
   DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "OTA_load()");))
   set_status_LED(LED_OTA_DOWNLOAD);
 
-  if ( ESP32_4MB )
+  if ( ESP32_4MB & board_mask )
   {
     OTA_halt_process(LED_OTA_FATAL, "ESP32 too small for OTA update");
   }

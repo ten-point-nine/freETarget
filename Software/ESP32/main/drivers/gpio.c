@@ -92,7 +92,7 @@ unsigned int is_running(void)
     {
       return_value |= s[i].low_sense.run_mask;
     }
-    if ( PCNT_HIGH_GPIO )
+    if ( PCNT_HIGH_GPIO & board_mask )
     {
       if ( gpio_get_level(s[i].high_sense.sensor_GPIO) != 0 )
       {

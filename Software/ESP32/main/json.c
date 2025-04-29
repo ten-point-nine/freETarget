@@ -566,7 +566,7 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"TIMER_COUNT\":       %d,",
                     (int)(SHOT_TIME * OSCILLATOR_MHZ));) // Maximum number of clock cycles to record shot (target dependent)
   SEND(ALL, sprintf(_xs, "\"V12\":               %4.2f,", v12_supply());) // 12 Volt LED supply
-  if ( VREF_FB )
+  if ( VREF_FB & board_mask )
   {
     SEND(ALL, sprintf(_xs, "\"VMES_LO\":         %4.2f", vref_measure());)
   }

@@ -280,7 +280,7 @@ unsigned int revision(void)
  *--------------------------------------------------------------*/
 float vref_measure(void)
 {
-  if ( TMP1075D )
+  if ( TMP1075D & board_mask )
   {
     return (float)adc_read(VMES_LO) / 4095.0 * 1.1 * 2.0 * 3.3; // 4096 full scale, 1.1 VEEF 1/2 voltage divider
   }
@@ -302,7 +302,7 @@ float vref_measure(void)
  *--------------------------------------------------------------*/
 double temperature_C(void)
 {
-  if ( HDC3022 )
+  if ( HDC3022 & board_mask )
   {
     return temperature_C_HDC3022();  // TI HDC3022
   }
@@ -425,7 +425,7 @@ void set_VREF(void)
 {
   float volts[4];
 
-  if ( MCP4728 )
+  if ( MCP4728 & board_mask )
   {
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Set VREF_LO: %4.2f   VREF_HI: %4.2f", json_vref_lo, json_vref_hi);))
   }
@@ -434,14 +434,14 @@ void set_VREF(void)
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Set VREF_LO: %4.2f", json_vref_lo);))
   }
 
-  if ( (json_vref_lo == 0) // Check for an uninitialized VREF
+  if ( (json_vref_lo == 0)    // Check for an uninitialized VREF
        || (json_vref_hi == 0) )
   {
-    json_vref_lo = 1.25;   // and force to something other than 0
-    json_vref_hi = 2.00;   // Otherwise the sensors continioustly interrupt
+    json_vref_lo = 1.25;      // and force to something other than 0
+    json_vref_hi = 2.00;      // Otherwise the sensors continioustly interrupt
   }
 
-  if ( MCP4728 )           // Check for four channel DAC
+  if ( MCP4728 & board_mask ) // Check for four channel DAC
   {
     if ( json_vref_lo >= json_vref_hi )
     {

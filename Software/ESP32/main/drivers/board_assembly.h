@@ -32,20 +32,24 @@ extern int          board_revision; // Board revision number
 /*
  * Processor Variants
  */
-#define EPP32_8MB ((board_mask & (MASK_500 + MASK_510 + MASK_520 + MASK_530)) != 0) // ESP32 with 8MB of flash (Standard)
-#define ESP32_4MB ((board_mask & (MASK_600)) != 0)                                  // ESP32 with 4MB of flash (Development)
+#define EPP32_8MB (MASK_500 | MASK_510 | MASK_520 | MASK_530) // ESP32 with 8MB of flash (Standard)
+#define ESP32_4MB (MASK_600)                                  // ESP32 with 4MB of flash (Development)
 
-                                                                                    /*
-                                                                                     * Hardware Variants
-                                                                                     */
-#define HDC3022  ((board_mask & (MASK_500 + MASK_510 + MASK_520 + MASK_530)) != 0) // TI HDC3022 Temperature Humidity
-#define TMP1075D ((board_mask & (MASK_600)) != 0)                                  // TI TMP1075D Temperature Sensor
+                                                              /*
+                                                               * Hardware Variants
+                                                               */
+#define HDC3022  (MASK_500 | MASK_510 | MASK_520 | MASK_530)                  // TI HDC3022 Temperature Humidity
+#define TMP1075D (MASK_600)                                                   // TI TMP1075D Temperature Sensor
 
-#define PCNT_HIGH_GPIO ((board_mask & (MASK_500 + MASK_510 + MASK_520)) != 0)      // PCNT on GPIO
+#define PCNT_LOW_GPIO  (MASK_500 | MASK_510 | MASK_520 | MASK_530 | MASK_600) // PCNT  LOW on GPIO
+#define PCNT_HIGH_GPIO (MASK_500 | MASK_510 | MASK_520)                       // PCNT HIGH on GPIO
 
-#define MCP4728 ((board_mask & (MASK_500 + MASK_510 + MASK_520 + MASK_530)) != 0)  // Microchip MCP4728 4 channel Dac
-#define MCP4725 ((board_mask & (MASK_600)) != 0)                                   // Microchip MCP4725 1 channel Dac
+#define MCP4728 (MASK_500 | MASK_510 | MASK_520 | MASK_530)                   // Microchip MCP4728 4 channel Dac
+#define MCP4725 (MASK_600)                                                    // Microchip MCP4725 1 channel Dac
 
-#define VREF_FB ((board_mask & (MASK_530 + MASK_600)) != 0)                        // VREF Feedback
+#define VREF_FB        (MASK_530 | MASK_600)                                  // VREF Feedback
+#define LDAC_GPIO      (0)                                                    // LDAC Control no longer used
+#define FACE_HALF_GPIO (MASK_500 | MASK_510 | MASK_520)                       // FACE GPIO
 
+#define COMMON (MASK_500 | MASK_510 | MASK_520 | MASK_530 | MASK_600)         // Common to all boards
 #endif

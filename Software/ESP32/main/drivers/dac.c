@@ -62,7 +62,7 @@ static void DAC_write_MCP4725(float volts[]); // What value are we setting it to
  *--------------------------------------------------------------*/
 void DAC_write(float volts[]) // What value are we setting it to
 {
-  if ( MCP4728 )
+  if ( MCP4728 & board_mask )
   {
     DAC_write_MCP4728(volts); // MCP 4728 (four channel`)
   }
@@ -226,7 +226,7 @@ void DAC_read(void)          // What value are we setting it to
 
   SEND(ALL, sprintf(_xs, "DAC_read: ");)
 
-  if ( MCP4728 )
+  if ( MCP4728 & board_mask )
   {
     sizeof_data = sizeof(data);                     // MCP4728 (4 channel`)
     i2c_read(DAC_MCP4728_ADDR, data, sizeof(data)); // Data transferred on last bit.
@@ -283,7 +283,7 @@ void DAC_test(void)
   int   i;
 
   SEND(ALL, sprintf(_xs, "\r\nDAC 0 Up ramp 0-5V");)
-  if ( MCP4728 )
+  if ( MCP4728 & board_mask )
   {
     SEND(ALL, sprintf(_xs, "\r\nDAC 1 Up ramp 0-5V delayed");)
   }
@@ -301,7 +301,7 @@ void DAC_test(void)
         break;
       }
     }
-    if ( MCP4728 )
+    if ( MCP4728 & board_mask )
     {
       volts[VREF_LO] = VREF_EXT * ((float)(i % 200) / 200.0);                  // Ramp Up
       volts[VREF_HI] = VREF_EXT * ((float)((i - 10) % 200) / 200.0);           // Ramp Up delayed
@@ -316,7 +316,7 @@ void DAC_test(void)
     DAC_write(volts);
     vTaskDelay(TICK_10ms * 100);                                               // Wait 100ms
 
-    if ( MCP4725 )
+    if ( MCP4725 & board_mask )
     {
       printf("\r\nWrite: %4.2f  Read: %4.2f", volts[VREF_LO], vref_measure()); // Read the VREF voltage
     }

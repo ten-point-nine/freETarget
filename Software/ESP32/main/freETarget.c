@@ -207,29 +207,30 @@ void freeETarget_target_loop(void *arg)
 
   set_status_LED(LED_READY);
 
-  if ( (PCNT_HIGH_GPIO) && (json_pcnt_latency != 0) ) // If the second set of timers has been enabled
+  if ( (PCNT_HIGH_GPIO & board_mask)         // Are the PCNT HIGH counters provided
+       && (json_pcnt_latency != 0) )         // If the second set of timers has been enabled
   {
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initializing PCNT high inputs");))
-    gpio_init_single(PCNT_HI);                        // Program the port
+    gpio_init_single(PCNT_HI);               // Program the port
   }
 
   start_new_session(0);
-  shot_number = 1;                                    // Start counting shots at 1
+  shot_number = 1;                           // Start counting shots at 1
 
   while ( 1 )
   {
-    IF_IN(IN_SLEEP | IN_TEST | IN_FATAL_ERR)          // If Not in operation,
+    IF_IN(IN_SLEEP | IN_TEST | IN_FATAL_ERR) // If Not in operation,
     {
-      run_state &= ~IN_OPERATION;                     // Exit operation
-      IF_IN(IN_FATAL_ERR)                             // Have we deteted a fatal error?
+      run_state &= ~IN_OPERATION;            // Exit operation
+      IF_IN(IN_FATAL_ERR)                    // Have we deteted a fatal error?
       {
-        set_status_LED(LED_FATAL);                    // but show something really wrong
+        set_status_LED(LED_FATAL);           // but show something really wrong
       }
       vTaskDelay(ONE_SECOND);
       continue;
     }
 
-    run_state |= IN_OPERATION;                        // In operation
+    run_state |= IN_OPERATION;               // In operation
 
     /*
      * Cycle through the state machine
