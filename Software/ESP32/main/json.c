@@ -344,6 +344,7 @@ void freeETarget_json(void *pvParameters)
  * and the JSON[] is used to determine the action
  *
  *-----------------------------------------------------*/
+#define NOT_EMPTY ((input_JSON[i + k] != ',') && (input_JSON[i + k] != '}')) // Check for no data entered
 
 static void handle_json(void)
 {
@@ -357,105 +358,119 @@ static void handle_json(void)
    * Found out where the braces are, extract the contents.
    */
   not_found = true;
-  for ( i = 0; i != got_right_bracket; i++ ) // Go across the JSON input
-  {
-    j = 0;                                   // Index across the JSON token table
+  k         = 0;
 
-    while ( (JSON[j].token != 0) )           // Cycle through the tokens
+  for ( i = 0; i != got_right_bracket; i++ )      // Go across the JSON input
+  {
+    j = 0;                                        // Index across the JSON token table
+
+    while ( (JSON[j].token != 0) )                // Cycle through the tokens
     {
       x = 0;
       if ( JSON[j].token != 0 )
       {
-        k = instr(&input_JSON[i],
-                  JSON[j].token);            // Compare the input against the list of JSON tags
-        if ( k > 0 )                         // Non zero, found something
+        k = instr(&input_JSON[i], JSON[j].token); // Compare the input against the list of JSON tags
+        if ( k > 0 )                              // Non zero, found something
         {
-          not_found = false;                 // Read and convert the JSON value
+          not_found = false;                      // Read and convert the JSON value
           switch ( JSON[j].convert & IS_MASK )
           {
             default:
-            case IS_VOID:                    // Void, default to zero
-            case IS_FIXED:                   // Fixed cannot be changed
+            case IS_VOID:                         // Void, default to zero
+            case IS_FIXED:                        // Fixed cannot be changed
               x = 0;
               break;
+
             case IS_TEXT_1:
               if ( hamming_weight(connection_list) > 1 )
               {
                 break;
               }
-            case IS_TEXT:                                   // Convert to text
+            case IS_TEXT:                                     // Convert to text
             case IS_SECRET:
-              while ( input_JSON[i + k] != '"' )            // Skip to the opening quote
+              if ( NOT_EMPTY )
               {
-                k++;
-              }
-              k++;                                          // Advance to the text
+                while ( input_JSON[i + k] != '"' )            // Skip to the opening quote
+                {
+                  k++;
+                }
+                k++;                                          // Advance to the text
 
-              m    = 0;
-              s[0] = 0;                                     // Put in a null
-              while ( input_JSON[i + k] != '"' )            // Skip to the opening quote
-              {
-                s[m] = input_JSON[i + k];                   // Save the value
-                m++;
-                s[m] = 0;                                   // Null terminate
-                k++;
-              }
-              if ( JSON[j].non_vol != 0 )                   // Save to persistent storage if present
-              {
-                nvs_set_str(my_handle, JSON[j].non_vol, s); // Store into NON-VOL
+                m    = 0;
+                s[0] = 0;                                     // Put in a null
+                while ( input_JSON[i + k] != '"' )            // Skip to the opening quote
+                {
+                  s[m] = input_JSON[i + k];                   // Save the value
+                  m++;
+                  s[m] = 0;                                   // Null terminate
+                  k++;
+                }
+                if ( JSON[j].non_vol != 0 )                   // Save to persistent storage if present
+                {
+                  nvs_set_str(my_handle, JSON[j].non_vol, s); // Store into NON-VOL
+                }
               }
               break;
 
             case IS_MFS:
-            case IS_INT32:                                  // Convert an integer
-              if ( (input_JSON[i + k] == '0') && ((input_JSON[i + k + 1] == 'X') || (input_JSON[i + k + 1] == 'x')) ) // Is it Hex?
+            case IS_INT32:                                    // Convert an integer
+              if ( NOT_EMPTY )                                // The user entered something
               {
-                x = (to_int(input_JSON[i + k + 2]) << 4) + to_int(input_JSON[i + k + 3]);
-              }
-              else
-              {
-                x = atoi(&input_JSON[i + k]);
-              }
-              if ( JSON[j].value != 0 )
-              {
-                *JSON[j].value = x;                         // Save the value
-              }
-              if ( JSON[j].non_vol != 0 )
-              {
-                nvs_set_i32(my_handle, JSON[j].non_vol, x); // Store into NON-VOL
+                if ( (input_JSON[i + k] == '0') && ((input_JSON[i + k + 1] == 'X') || (input_JSON[i + k + 1] == 'x')) ) // Is it Hex?
+                {
+                  x = (to_int(input_JSON[i + k + 2]) << 4) + to_int(input_JSON[i + k + 3]);
+                }
+                else
+                {
+                  x = atoi(&input_JSON[i + k]);
+                }
+                if ( JSON[j].value != 0 )
+                {
+                  *JSON[j].value = x;                         // Save the value
+                }
+                if ( JSON[j].non_vol != 0 )
+                {
+                  nvs_set_i32(my_handle, JSON[j].non_vol, x); // Store into NON-VOL
+                }
               }
               break;
 
-            case IS_FLOAT:                                  // Convert a floating point number
-              f = atof(&input_JSON[i + k]);                 // Float
-              x = f * 1000;                                 // Integer
-              if ( JSON[j].value != 0 )
+            case IS_FLOAT:                                    // Convert a floating point number
+              if ( NOT_EMPTY )                                // The user entered something
               {
-                *(double *)JSON[j].value = f;               // Working Value
-              }
-              if ( JSON[j].non_vol != 0 )
-              {
-                nvs_set_i32(my_handle, JSON[j].non_vol,
-                            x);                             // Store into NON-VOL as an integer * 1000
+                f = atof(&input_JSON[i + k]);                 // Float
+                x = f * 1000;                                 // Integer
+                if ( JSON[j].value != 0 )
+                {
+                  *(double *)JSON[j].value = f;               // Working Value
+                }
+                if ( JSON[j].non_vol != 0 )
+                {
+                  nvs_set_i32(my_handle, JSON[j].non_vol,
+                              x);                             // Store into NON-VOL as an integer * 1000
+                }
               }
               break;
           }
 
-          if ( JSON[j].f != 0 )                             // Call the handler if it is available
+          if ( NOT_EMPTY )
           {
-            JSON[j].f(x);
+            if ( JSON[j].f != 0 ) // Call the handler if it is available
+            {
+              JSON[j].f(x);
+            }
           }
         }
-      }
-      j++;
-    }
-    nvs_commit(my_handle); // Save to memory
-  }
 
+        j++;
+      }
+      nvs_commit(my_handle); // Save to memory
+    }
+  }
   /*
    * Report an error if input not found
    */
-  if ( not_found == true )
+  if ( (not_found == true) || !NOT_EMPTY )
   {
     SEND(ALL, sprintf(_xs, "\r\n\r\nCannot decode: {%s}\r\n", input_JSON);)
   }
@@ -463,10 +478,10 @@ static void handle_json(void)
   /*
    * All done
    */
-  in_JSON             = 0; // Start Over
-  got_right_bracket   = 0; // Need to wait for a new Right Bracket
-  got_left_bracket    = false;
-  input_JSON[in_JSON] = 0; // Clear the input
+  in_JSON           = 0; // Start Over
+  got_right_bracket = 0; // Need to wait for a new Right Bracket
+  got_left_bracket  = false;
+  input_JSON[0]     = 0; // Clear the input
   return;
 }
 
