@@ -9,6 +9,16 @@
 #define _HELPERS_H_
 
 /*
+ * typedefs
+ */
+#define TEXT_IS_EMPTY       0x01                                                    // The text is empty (just a comma or '}')
+#define TEXT_IS_TEXT        0x02                                                    // The text is a "string"
+#define TEXT_IS_HEXADECIMAL 0x04                                                    // The text is 0x00-0xFF
+#define TEXT_IS_INTEGER     0x08                                                    // The text is -Number
+#define TEXT_IS_FLOAT       0x10                                                    /// The text is -Number.Number
+#define TEXT_IS_NUMBER      (TEXT_IS_HEXADECIMAL | TEXT_IS_INTEGER | TEXT_IS_FLOAT) // The text is a number
+#define TEXT_IS_REAL        (TEXT_IS_INTEGER | TEXT_IS_FLOAT)                       // The text is a number or a float
+/*
  * Public Functions
  */
 void         target_name(char *name_space);                             // Return target name
@@ -25,6 +35,7 @@ void         squish(char *source, char *destination);                   // Conve
 void         test_build_json_score(voids);                              // Test build_json_score
 double       sq(double x);                                              // Square (x)
 unsigned int hamming_weight(unsigned int word);                         // Add up the numbr of bits in a word
+unsigned int text_type(char *str);                                      // Determine the sting type
 
 /*
  * Global helper variables

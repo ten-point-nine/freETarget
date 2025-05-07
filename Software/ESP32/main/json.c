@@ -9,11 +9,11 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "string.h"
+// #include "ctype.h"
 
 #include "freETarget.h"
 #include "helpers.h"
 #include "analog_io.h"
-#include "ctype.h"
 #include "diag_tools.h"
 #include "json.h"
 #include "mechanical.h"
@@ -344,7 +344,6 @@ void freeETarget_json(void *pvParameters)
  * and the JSON[] is used to determine the action
  *
  *-----------------------------------------------------*/
-#define NOT_EMPTY ((input_JSON[i + k] != ',') && (input_JSON[i + k] != '}')) // Check for no data entered
 
 static void handle_json(void)
 {
@@ -372,51 +371,55 @@ static void handle_json(void)
         k = instr(&input_JSON[i], JSON[j].token); // Compare the input against the list of JSON tags
         if ( k > 0 )                              // Non zero, found something
         {
-          not_found = false;                      // Read and convert the JSON value
           switch ( JSON[j].convert & IS_MASK )
           {
             default:
             case IS_VOID:                         // Void, default to zero
             case IS_FIXED:                        // Fixed cannot be changed
-              x = 0;
+              not_found = false;                  // Found something
+              x         = 0;
               break;
 
             case IS_TEXT_1:
               if ( hamming_weight(connection_list) > 1 )
               {
+                not_found = false;                                                // Read and convert the JSON value
                 break;
               }
-            case IS_TEXT:                                     // Convert to text
+            case IS_TEXT:                                                         // Convert to text
             case IS_SECRET:
-              if ( NOT_EMPTY )
+              if ( ((text_type((unsigned)&input_JSON[i + k]) & TEXT_IS_TEXT) != 0) )
               {
-                while ( input_JSON[i + k] != '"' )            // Skip to the opening quote
+                not_found = false;                                                // Read and convert the JSON value
+
+                while ( input_JSON[i + k] != '"' )                                // Skip to the opening quote
                 {
                   k++;
                 }
-                k++;                                          // Advance to the text
+                k++;                                                              // Advance to the text
 
                 m    = 0;
-                s[0] = 0;                                     // Put in a null
-                while ( input_JSON[i + k] != '"' )            // Skip to the opening quote
+                s[0] = 0;                                                         // Put in a null
+                while ( input_JSON[i + k] != '"' )                                // Skip to the opening quote
                 {
-                  s[m] = input_JSON[i + k];                   // Save the value
+                  s[m] = input_JSON[i + k];                                       // Save the value
                   m++;
-                  s[m] = 0;                                   // Null terminate
+                  s[m] = 0;                                                       // Null terminate
                   k++;
                 }
-                if ( JSON[j].non_vol != 0 )                   // Save to persistent storage if present
+                if ( JSON[j].non_vol != 0 )                                       // Save to persistent storage if present
                 {
-                  nvs_set_str(my_handle, JSON[j].non_vol, s); // Store into NON-VOL
+                  nvs_set_str(my_handle, JSON[j].non_vol, s);                     // Store into NON-VOL
                 }
               }
               break;
 
             case IS_MFS:
-            case IS_INT32:                                    // Convert an integer
-              if ( NOT_EMPTY )                                // The user entered something
+            case IS_INT32:                                                        // Convert an integer
+              if ( (text_type(&input_JSON[i + k]) & TEXT_IS_NUMBER) != 0 )        // The user entered something
               {
-                if ( (input_JSON[i + k] == '0') && ((input_JSON[i + k + 1] == 'X') || (input_JSON[i + k + 1] == 'x')) ) // Is it Hex?
+                not_found = false;                                                // Read and convert the JSON value
+                if ( (text_type(&input_JSON[i + k]) & TEXT_IS_HEXADECIMAL) != 0 ) // Is it Hex?
                 {
                   x = (to_int(input_JSON[i + k + 2]) << 4) + to_int(input_JSON[i + k + 3]);
                 }
@@ -426,35 +429,45 @@ static void handle_json(void)
                 }
                 if ( JSON[j].value != 0 )
                 {
-                  *JSON[j].value = x;                         // Save the value
+                  *JSON[j].value = x;                                    // Save the value
                 }
                 if ( JSON[j].non_vol != 0 )
                 {
-                  nvs_set_i32(my_handle, JSON[j].non_vol, x); // Store into NON-VOL
+                  nvs_set_i32(my_handle, JSON[j].non_vol, x);            // Store into NON-VOL
                 }
               }
               break;
 
-            case IS_FLOAT:                                    // Convert a floating point number
-              if ( NOT_EMPTY )                                // The user entered something
+            case IS_FLOAT:                                               // Convert a floating point number
+              if ( (text_type(&input_JSON[i + k]) & TEXT_IS_REAL) != 0 ) // The user entered something
               {
-                f = atof(&input_JSON[i + k]);                 // Float
-                x = f * 1000;                                 // Integer
+                not_found = false;                                       // Read and convert the JSON value
+                f         = atof(&input_JSON[i + k]);                    // Float
+                x         = f * 1000;                                    // Integer
                 if ( JSON[j].value != 0 )
                 {
-                  *(double *)JSON[j].value = f;               // Working Value
+                  *(double *)JSON[j].value = f;                          // Working Value
                 }
                 if ( JSON[j].non_vol != 0 )
                 {
                   nvs_set_i32(my_handle, JSON[j].non_vol,
-                              x);                             // Store into NON-VOL as an integer * 1000
+                              x);                                        // Store into NON-VOL as an integer * 1000
                 }
               }
               break;
           }
 
-          if ( NOT_EMPTY )
+          if ( not_found == false )                                      // If we found something, call the handler
           {
+            if ( JSON[j].convert & (IS_MASK & ~IS_VOID) )
+            {
+              x = *(int *)JSON[j].value;                                 // Get the value
+            }
+            else
+            {
+              x = 0;
+            }
+
             if ( JSON[j].f != 0 ) // Call the handler if it is available
             {
               JSON[j].f(x);
@@ -470,7 +483,7 @@ static void handle_json(void)
   /*
    * Report an error if input not found
    */
-  if ( (not_found == true) || !NOT_EMPTY )
+  if ( not_found == true )
   {
     SEND(ALL, sprintf(_xs, "\r\n\r\nCannot decode: {%s}\r\n", input_JSON);)
   }
@@ -569,7 +582,7 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"SN\":                %d", json_serial_number);)
   SEND(ALL, sprintf(_xs, "\"TRACE\":             %d,", is_trace);)                     //
   SEND(ALL, sprintf(_xs, "\"RUN_STATE\":         %d,", run_state);)                    // Internal running state is enabled
-  SEND(ALL, sprintf(_xs, "\"CONNECTION_LIST\":   %02X,", connection_list);)            // Who is attached
+  SEND(ALL, sprintf(_xs, "\"CONNECTION_LIST\":   0X%02X,", connection_list);)          // Who is attached
   SEND(ALL, sprintf(_xs, "\"RUNNING_MINUTES\":   %0.2f,", run_time_seconds() / 60.0);) // On Time
   SEND(ALL, sprintf(_xs, "\"TIME_TO_SLEEP\":     %4.2f,", (float)power_save / (float)(ONE_SECOND * 60));) // How long until we sleep
   SEND(ALL, sprintf(_xs, "\"TEMPERATURE\":       %4.2f,", temperature_C());)                              // Temperature in degrees C

@@ -15,6 +15,7 @@
 #include "driver\gpio.h"
 #include "math.h"
 #include "esp_timer.h"
+#include <ctype.h>
 
 #include "freETarget.h"
 #include "helpers.h"
@@ -681,4 +682,76 @@ unsigned int hamming_weight(unsigned int word)
   }
 
   return weight;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: text_type()
+ *
+ * @brief:    Determine the type of text presented
+ *
+ * @return:   type of text
+ *
+ *----------------------------------------------------------------
+ *
+ * Look throught the string and figure out the type of text
+ *
+ * The text arrives from the JSON message "JSON":text
+ * and the portion text is passed to this function.
+ *
+ * Possible types are:
+ * , or } - No text, just a comma or end of string
+ * 0x - Hexadecimal number
+ * " - Text string
+ * - - Integer number
+ * . - Floating point number
+ *
+ *--------------------------------------------------------------*/
+unsigned int text_type(char *str)
+{
+
+  if ( (*str == 0)        // Null string
+       || (*str == ',')   // No text, just a comma to the next field
+       || (*str == '}') ) // No text, just the end of the string
+  {
+    return TEXT_IS_EMPTY;
+  }
+
+  if ( *str == '0' )      // Look for 0X to represent a hex number
+  {
+    if ( (*(str + 1) == 'X') || (*(str + 1) == 'x') )
+    {
+      return TEXT_IS_HEXADECIMAL;
+    }
+  }
+
+  if ( *str == '"' )
+  {
+    return TEXT_IS_TEXT;
+  }
+
+  /*
+   * Loop throught the remainder of the string
+   */
+  while ( (*str != 0) && (*str != '}') && (*str != ',') ) // Scan across the sting till the end
+  {
+    if ( *str != '-' )                                    // Ignore -sign
+    {
+      if ( *str == '.' )                                  // Found a decmial point?
+      {
+        return TEXT_IS_FLOAT;
+      }
+
+      if ( isdigit((unsigned char)*str) == 0 )            // Found something that isn't a number
+      {
+        return TEXT_IS_EMPTY;
+      }
+    }
+    str++;                                                // Next location
+  }
+
+  /*
+   * Reached the end and it all looks like a number
+   */
+  return TEXT_IS_INTEGER;
 }
