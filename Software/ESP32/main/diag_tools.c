@@ -580,7 +580,9 @@ bool POST_counters(void)
    */
   gpio_set_level(STOP_N, RUN_OFF); // Clear the latch
   gpio_set_level(STOP_N, RUN_GO);  // and reenable it
-  running = is_running();
+  running = is_running() & RUN_MASK;
+  printf("Running: %02X\n", running);
+
   if ( running != 0 )
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Stuck bit in run latch: ");))
@@ -588,16 +590,16 @@ bool POST_counters(void)
     {
       if ( running & s[i].low_sense.run_mask )
       {
-        set_diag_LED(s[i].low_sense.diag_LED, 10);
         SEND(ALL, sprintf(_xs, "%c", s[i].low_sense.short_name);)
+        set_diag_LED(s[i].low_sense.diag_LED, 10);
       }
 
       if ( PCNT_HIGH_GPIO & board_mask ) // Only check the high sense if it is present
       {
         if ( running & s[i].high_sense.run_mask )
         {
-          set_diag_LED(s[i].high_sense.diag_LED, 10);
           SEND(ALL, sprintf(_xs, "%c", s[i].high_sense.short_name);)
+          set_diag_LED(s[i].high_sense.diag_LED, 10);
         }
       }
       run_state |= IN_FATAL_ERR;
@@ -871,10 +873,10 @@ void set_diag_LED(char        *new_LEDs, // NEW LED display
  * turned off to indicate that that part has been disabled.
  *
  *--------------------------------------------------------------*/
-#define NONE    0
-#define SOME    1
-#define V12OK   2
-#define UNKNOWN 99
+#define NONE    0  // NO V12 supply
+#define SOME    1  // V12 has voltage but not enought to drive the motor
+#define V12OK   2  // V12 supply is OK
+#define UNKNOWN 99 // V12 supply is unknown
 
 bool check_12V(void)
 {
@@ -887,7 +889,7 @@ bool check_12V(void)
   if ( json_paper_time == 0 ) // The witness paper is not used
   {
     set_status_LED(LED_12V_NOT_USED);
-    fault_V12 = NONE;
+    fault_V12 = UNKNOWN;
     return false;
   }
 
@@ -898,7 +900,7 @@ bool check_12V(void)
 
   if ( v12 <= V12_CAUTION )
   {
-    if ( fault_V12 != NONE )
+    if ( fault_V12 != NONE ) // Don't update if the error is known.
     {
       set_status_LED(LED_NO_12V);
       fault_V12 = NONE;
