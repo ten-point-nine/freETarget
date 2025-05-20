@@ -25,6 +25,7 @@ void         squish(char *source, char *destination);                   // Conve
 void         test_build_json_score(voids);                              // Test build_json_score
 double       sq(double x);                                              // Square (x)
 unsigned int hamming_weight(unsigned int word);                         // Add up the numbr of bits in a word
+void         to_binary(unsigned int x, unsigned int bits, char *s);     // Convert a number to a binary string
 
 /*
  * Global helper variables

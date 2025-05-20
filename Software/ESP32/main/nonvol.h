@@ -8,7 +8,7 @@
 #ifndef _NONVOL_H
 #define _NONVOL_H
 
-#define PS_VERSION   11                                   // Persistent storage version
+#define PS_VERSION   12                                   // Persistent storage version
 #define PS_UNINIT(x) (((x) == 0xABAB) || ((x) == 0xFFFF)) // Uninitilized value
 
 #define NAME_SPACE "freETarget"
@@ -93,4 +93,6 @@ void nonvol_write_i32(char *name, int *value);    // Write a value to nonvol
 #define NONVOL_ATHELETE         "ATHELETE"        // Remember the athelete name
 #define NONVOL_EVENT            "EVENT"           // Remember the shooting event
 #define NONVOL_TARGET_NAME      "TARGET_NAME"     // Rememver the target name
+#define NONVOL_LOCK             "LOCK"            // Password for the target
+
 #endif

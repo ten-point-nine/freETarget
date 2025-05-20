@@ -21,6 +21,7 @@ void show_echo(void);          // Display the settings
  */
 typedef struct
 {
+  int   show;       // Display attributes
   char *token;      // JSON token string, ex "RADIUS":
   int  *value;      // Where value is stored (cast to (float*) if needed)
   int   convert;    // Conversion type
@@ -28,6 +29,7 @@ typedef struct
   char *non_vol;    // Storage in NON-VOL
   int   init_value; // Initial Value
   int   ps_version; // What persistent storage version was this introduced
+
 } json_message_t;
 
 extern const json_message_t JSON[];
@@ -35,6 +37,11 @@ extern const json_message_t JSON[];
 /*
  * Definitioins
  */
+
+#define SHOW 0x01                                  // Show the value
+#define HIDE 0x00                                  // Hide the value
+#define LOCK 0x02                                  // The value is a secret
+
 #define IS_FIXED  (1 << 8)                         // The value cannot be changed
 #define IS_FLOAT  (2 << 8)                         // Value is a floating point number
 #define IS_INT32  (3 << 8)                         // Value is a 64 bit int
@@ -141,4 +148,6 @@ extern char          json_name_text[];       // Target name, ex (Target 54))
 extern int           json_remote_modes;      // What modes are available to talk to a remote server
 extern int           json_session_type;      // What kind of session is this?
 extern char          json_ota_url[];         // OTA URL
+extern int           json_lock;              // Lock the JSON message so it cannot be changed
+extern int           json_is_locked;         // JSON lock state
 #endif
