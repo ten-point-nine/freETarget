@@ -158,7 +158,7 @@ void WiFi_AP_init(void)
   esp_netif_t       *wifiAP;
   wifi_init_config_t WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi_AP_init()\r\n");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi_AP_init()");))
 
   /*
    * Create the network interface
@@ -171,8 +171,7 @@ void WiFi_AP_init(void)
    */
   wifiAP = esp_netif_create_default_wifi_ap();
   IP4_ADDR(&ipInfo.ip, 192, 168, 10, 9);       // Setup the base IP address
-  IP4_ADDR(&ipInfo.gw, 192, 168, 10,
-           9);                                 // Setup the gateway (not used but needed)
+  IP4_ADDR(&ipInfo.gw, 192, 168, 10, 9);       // Setup the gateway (not used but needed)
   IP4_ADDR(&ipInfo.netmask, 255, 255, 255, 0); // Setup the subnet mask
   esp_netif_dhcps_stop(wifiAP);                // Remove the old value
   esp_netif_set_ip_info(wifiAP, &ipInfo);      // Put in the one
