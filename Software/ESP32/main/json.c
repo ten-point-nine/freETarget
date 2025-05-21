@@ -296,13 +296,13 @@ static void handle_json(void)
         k = instr(&input_JSON[i], JSON[j].token); // Compare the input against the list of JSON tags
         if ( k > 0 )                              // Non zero, found something
         {
+          not_found = false;                      // Read and convert the JSON value
           if ( good_input(JSON[j].convert, input_JSON[i + k], JSON[j].show) == false )
           {
-            SEND(ALL, sprintf(_xs, "\r\n\r\nInvalid input: {%s}\r\n", input_JSON);)
+            SEND(ALL, sprintf(_xs, "\r\nInvalid input or locked: {%s}\r\n", input_JSON);)
             break;                                // Invalid input
           }
 
-          not_found = false;                      // Read and convert the JSON value
           switch ( JSON[j].convert & IS_MASK )
           {
             default:
@@ -380,17 +380,6 @@ static void handle_json(void)
               break;
           }
 
-          if ( not_found == false )                         // If we found something
-          {
-            if ( JSON[j].show & SHOW )                      // Show the value
-            {
-              SEND(ALL, sprintf(_xs, "\r\n\r\n%s: %s\r\n", JSON[j].token, input_JSON);)
-            }
-            else
-            {
-              SEND(ALL, sprintf(_xs, "\r\n\r\n%s: %d\r\n", JSON[j].token, x);)
-            }
-          }
           {
             if ( JSON[j].f != 0 ) // Call the handler if it is available
             {
@@ -779,12 +768,12 @@ static void unlock_target(unsigned int password) // Password entered by the user
   if ( json_lock == password )
   {
     json_is_locked = 0; // Unlock the target
-    SEND(ALL, sprintf(_xs, "Configuration unlocked");)
+    SEND(ALL, sprintf(_xs, "Configuration unlocked\r\n");)
   }
   else
   {
     json_is_locked = 1; // Lock the target
-    SEND(ALL, sprintf(_xs, "Invalid configuration lock code");)
+    SEND(ALL, sprintf(_xs, "Invalid configuration lock code\r\n");)
   }
 
   /*
