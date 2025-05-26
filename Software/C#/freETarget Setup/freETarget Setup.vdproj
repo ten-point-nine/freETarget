@@ -51,6 +51,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_156CFD0FF25C4233A4ED41B131C72978"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_15BDB05BC3F14A0B8C77D676D0FF0540"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -106,6 +112,12 @@
         "Entry"
         {
         "MsmKey" = "8:_3056BCC0927A42AF873B9EC841B62ABF"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_361183A4016041289CB909CEA29F7CBA"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -388,6 +400,12 @@
         "Entry"
         {
         "MsmKey" = "8:_CA65122298574B269842108FC4B7F9AC"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_CC2D7CC66D4F43848A5D9F34225E5129"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -735,6 +753,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_156CFD0FF25C4233A4ED41B131C72978"
+            {
+            "SourcePath" = "8:..\\freETarget\\binary\\ota_data_initial.bin"
+            "TargetName" = "8:ota_data_initial.bin"
+            "Tag" = "8:"
+            "Folder" = "8:_28EC446BF10F47F094521016D364E61C"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_15BDB05BC3F14A0B8C77D676D0FF0540"
             {
             "SourcePath" = "8:drivers\\FTDI USB Drivers\\ftdiport.cat"
@@ -932,6 +970,26 @@
             "TargetName" = "8:linino-boards_x86.cat"
             "Tag" = "8:"
             "Folder" = "8:_596F3DCDBC674A6297E381CA7EE0C033"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_361183A4016041289CB909CEA29F7CBA"
+            {
+            "SourcePath" = "8:..\\freETarget\\binary\\bootloader.bin"
+            "TargetName" = "8:bootloader.bin"
+            "Tag" = "8:"
+            "Folder" = "8:_28EC446BF10F47F094521016D364E61C"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1910,6 +1968,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_CC2D7CC66D4F43848A5D9F34225E5129"
+            {
+            "SourcePath" = "8:..\\freETarget\\binary\\partition-table.bin"
+            "TargetName" = "8:partition-table.bin"
+            "Tag" = "8:"
+            "Folder" = "8:_28EC446BF10F47F094521016D364E61C"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_CC5C7A46E1E64A95AA1B91AECE738D51"
             {
             "SourcePath" = "8:drivers\\FTDI USB Drivers\\ftdiport.inf"
@@ -2279,6 +2357,17 @@
                         {
                         }
                     }
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_28EC446BF10F47F094521016D364E61C"
+                    {
+                    "Name" = "8:binary"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_15DFABA051014297B96A5F6D4BE1CFDD"
+                        "Folders"
+                        {
+                        }
+                    }
                     "{9EF0B969-E518-4E46-987F-47570745A589}:_596F3DCDBC674A6297E381CA7EE0C033"
                     {
                     "Name" = "8:drivers"
@@ -2528,15 +2617,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:freETarget"
-        "ProductCode" = "8:{9346CCC0-90EE-46AA-993A-2D6399E8366D}"
-        "PackageCode" = "8:{002E088A-DFF0-461C-8DD5-03AEFAA4D44C}"
+        "ProductCode" = "8:{EC8AFBA1-8F6C-49BF-822D-4994098FAC5D}"
+        "PackageCode" = "8:{7C6F8F5A-FD2E-41BC-9514-7E84E9BEC849}"
         "UpgradeCode" = "8:{E11572A0-0587-4903-AE84-9016332FEE88}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:4.10.1"
+        "ProductVersion" = "8:4.10.4"
         "Manufacturer" = "8:Azmodan"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:https://free-e-target.com/"

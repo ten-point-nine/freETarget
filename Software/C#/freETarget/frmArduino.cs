@@ -200,8 +200,13 @@ namespace freETarget {
         }
 
         private void btnSend_Click(object sender, EventArgs e) {
-            mainWindow.commModule.sendData("{\"" + cmbCommands.SelectedItem.ToString() +  "\":" + txtParameter.Text + "}");
-            mainWindow.log("Sending: " + "{\"" + cmbCommands.SelectedItem.ToString() + "\":" + txtParameter.Text + "}");
+            string param = txtParameter.Text;
+            if (param != null && param != "") {
+                mainWindow.commModule.sendData("{\"" + cmbCommands.SelectedItem.ToString() + "\":" + param + "}");
+                mainWindow.log("Sending: " + "{\"" + cmbCommands.SelectedItem.ToString() + "\":" + param + "}");
+            } else {
+                MessageBox.Show("Cannot send empty value " + param, "Empty parameter", MessageBoxButtons.OK,MessageBoxIcon.Stop);
+            }
         }
 
         private void btnSend2_Click(object sender, EventArgs e) {

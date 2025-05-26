@@ -10,6 +10,7 @@
 #include "nvs_flash.h"
 #include "string.h"
 
+#define JSON_C // This is the JSON file
 #include "freETarget.h"
 #include "board_assembly.h"
 #include "helpers.h"
@@ -32,108 +33,20 @@
 /*
  *  Function Prototypes
  */
-static void handle_json(void);                        // Breakdown the JSON and execute it
-void        show_echo(void);                          // Display the current settings
+static void handle_json(void); // Breakdown the JSON and execute it
+void        show_echo(void);   // Display the current settings
 static void show_names(int v);
-static void set_trace(int v);                         // Set the trace on and off
-static void unlock_target(unsigned int password);     // Unlock the target
-static void lock_target(unsigned int password);       // Lock the target
-static bool good_input(char next, unsigned int show); // Determine if the input is valid
+static void set_trace(int v);  // Set the trace on and off
 
 /*
  *  Variables
  */
-static char input_JSON[256]; // JSON input buffer
+static char input_JSON[256];  // JSON input buffer
 
-int json_is_locked = false;  // Set to TRUE if the JSON is locked
-int json_aux_mode;           // Enable comms from the AUX port
-int json_calibre_x10;        // Pellet Calibre
-int json_dip_switch;         // DIP switch overwritten by JSON message
-
-int json_echo;               // Test String
-// double        json_d_echo;                // Test String
-int           json_north_x;                   // North Adjustment
-int           json_north_y;
-int           json_east_x;                    // East Adjustment
-int           json_east_y;
-int           json_south_x;                   // South Adjustment
-int           json_south_y;
-int           json_west_x;                    // WestAdjustment
-int           json_west_y;
-int           json_name_id;                   // Name identifier
-int           json_LED_PWM;                   // LED control value
-int           json_power_save;                // Power down time
-int           json_send_miss;                 // Send a miss message
-int           json_serial_number;             // Electonic serial number
-int           json_step_count;                // Number of steps ouput to motor
-int           json_step_ramp;                 // Step increment when starting
-int           json_step_start;                // Value to start motor moving
-int           json_step_time;                 // Duration of each step in ms
-int           json_multifunction;             // Multifunction switch operation
-int           json_multifunction2;            // Multifunction Switch 2
-int           json_mfs_hold_12;               // Hold A and B
-int           json_mfs_tap_2;                 // Tap B
-int           json_mfs_tap_1;                 // Tap A
-int           json_mfs_hold_2;                // Hold B
-int           json_mfs_hold_1;                // Hold A
-int           json_mfs_hold_d;                // Hold D
-int           json_mfs_hold_c;                // Hold C
-int           json_mfs_select_cd;             // Select C and D
-double        json_x_offset;                  // Offset to add to correct horizontal target
-double        json_y_offset;                  // Offset to add to correct vertical target
-int           json_z_offset;                  // Distance between paper and sensor plane in 0.1mm
-int           json_paper_eco;                 // Do not advance paper if outside of the black
-int           json_target_type;               // Modify target type (0 == single bull)
-int           json_tabata_enable;             // Tabata feature enabled
-int           json_tabata_on;                 // Tabata ON timer
-int           json_tabata_rest;               // Tabata resting timer
-unsigned long json_rapid_on;                  // Rapid Fire ON timer
-int           json_vset_PWM;                  // Starting PWM value
-double        json_vset;                      // Desired VREF setting
-int           json_follow_through;            // Follow through delay
-int           json_keep_alive;                // Keep alive period
-int           json_sensor_angle;              // Angle sensors are rotated through
-int           json_paper_time = 0;            // Time paper motor is applied
-int           json_tabata_warn_on;            // Tabata warning time light on
-int           json_tabata_warn_off;           // Tabata warning time to shot
-int           json_face_strike;               // Number of cycles to accept a strike
-int           json_rapid_count;               // Number of shots expected in string
-int           json_rapid_enable;              // Set to TRUE if the rapid fire event is enabled
-int           json_rapid_time;                // When will the rapid fire event end?
-int           json_rapid_wait;                // Delay applied to rapid start
-int           json_remote_active;             // Set to TRUE if there is a remote to search for
-char          json_remote_key[KEY_SIZE];      // Key for remote server
-char          json_remote_url[URL_SIZE];      // Stored value of remote server
-double        json_sensor_dia = DIAMETER;     // Sensor daiamter overwitten by JSON message
-double        json_vref_lo;                   // Low Voltage DAC setting
-double        json_vref_hi;                   // High Voltage DAC setting
-int           json_wifi_channel;              // Wifi channel
-char          json_wifi_gateway[IP_SIZE];     // Gateway IP address
-char          json_wifi_pwd[PWD_SIZE];        // Stored value of password
-char          json_wifi_ssid[SSID_SIZE];      // Stored value of SSID
-char          json_wifi_static_ip[IP_SIZE];   // Static IP if used
-int           json_wifi_hidden;               // The SSID FET- is hidden
-int           json_wifi_dhcp;                 // The ESP is a DHCP server
-int           json_wifi_reset_first;          // Reset the score table on first WiFi connection
-int           json_min_ring_time;             // Time to wait for ringing to stop
-int           json_token;                     // Token ring state
-int           json_session_type;              // What kind of session is this?
-char          json_ota_url[URL_SIZE];         // URL of the OTA server
-int           json_pcnt_latency;              // pcnt interrupt latency
-int           json_paper_shot;                // How many shots before advancing paper
-char          json_name_text[SMALL_STRING];   // Target name, ex (Target 54))
-int           json_remote_modes;              // What modes are available to talk to a remote server
-char          json_remote_url[URL_SIZE];      // URL of remote server
-int           json_remote_active;             // Set to 1 to send score to a remote server
-char          json_athlete[SMALL_STRING];     // Shooter name (ex Allan Brown)
-char          json_event[SMALL_STRING];       // Shooting event (ex Practice)
-char          json_target_name[SMALL_STRING]; // Target name (ex Pistol)
-int           json_lock;                      // Password for the target
-
-void        show_echo(void);                  // Display the current settings
+void        show_echo(void);  // Display the current settings
 static void show_names(int v);
-static void set_trace(int v);                 // Set the trace on and off
-static void set_50m(int x);                   // Configure for 50m pistol
+static void set_trace(int v); // Set the trace on and off
+static void set_50m(int x);   // Configure for 50m pistol
 
 const json_message_t JSON[] = {
     //  show     token        value stored in RAM             convert                 service fcn()     NONVOL location      Initial Value
@@ -367,81 +280,66 @@ static void handle_json(void)
    * Found out where the braces are, extract the contents.
    */
   not_found = true;
-  k         = 0;
-
-  for ( i = 0; i != got_right_bracket; i++ )     // Go across the JSON input
+  for ( i = 0; i != got_right_bracket; i++ )      // Go across the JSON input
   {
-    j = 0;                                       // Index across the JSON token table
+    j = 0;                                        // Index across the JSON token table
 
-    while ( (JSON[j].token != 0) )               // Cycle through the tokens
+    while ( (JSON[j].token != 0) )                // Cycle through the tokens
     {
       x = 0;
-      if ( JSON[j].token != 0 )                  // The token is present
+      if ( JSON[j].token != 0 )                   // The token is present
       {
-        if ( input_JSON[i] == JSON[j].token[0] ) // Compare the first character
+        k = instr(&input_JSON[i], JSON[j].token); // Compare the input against the list of JSON tags
+        if ( k > 0 )                              // Non zero, found something
         {
-          x = 1;
-          while ( JSON[j].token[x] != 0 )        // Compare the rest of the string
+          not_found = false;                      // Read and convert the JSON value
+          if ( good_input(JSON[j].convert, input_JSON[i + k], JSON[j].show) == false )
           {
-            if ( input_JSON[i + x] != JSON[j].token[x] )
-            {
+            SEND(ALL, sprintf(_xs, "\r\nInvalid input or locked: {%s}\r\n", input_JSON);)
+            break;                                // Invalid input
+          }
+
+          switch ( JSON[j].convert & IS_MASK )
+          {
+            default:
+            case IS_VOID:                         // Void, default to zero
+            case IS_FIXED:                        // Fixed cannot be changed
               x = 0;
               break;
-            }
-            x++;
-          }
-        }
-      }
 
-      k = instr(&input_JSON[i], JSON[j].token); // Compare the input against the list of JSON tags
-      if ( k > 0 )                              // Non zero, found something
-      {
-        switch ( JSON[j].convert & IS_MASK )
-        {
-          default:
-          case IS_VOID:                         // Void, default to zero
-          case IS_FIXED:                        // Fixed cannot be changed
-            x         = 0;
-            not_found = false;                  // Decoded the command correctly
-            break;
+            case IS_TEXT_1:
+              if ( hamming_weight(connection_list) > 1 )
+              {
+                break;
+              }
+            case IS_TEXT:                                   // Convert to text
+            case IS_SECRET:
 
-          case IS_TEXT_1:
-            if ( hamming_weight(connection_list) > 1 )
-            {
-              break;
-            }
-          case IS_TEXT:                                        // Convert to text
-          case IS_SECRET:
-            if ( good_input(input_JSON[i + k], JSON[j].show) )
-            {
-              not_found = false;                               // Read and convert the JSON value
-              while ( input_JSON[i + k] != '"' )               // Skip to the opening quote
+              while ( input_JSON[i + k] != '"' )            // Skip to the opening quote
               {
                 k++;
               }
-              k++;                                             // Advance to the text
+              k++;                                          // Advance to the text
 
               m    = 0;
-              s[0] = 0;                                        // Put in a null
-              while ( input_JSON[i + k] != '"' )               // Skip to the opening quote
+              s[0] = 0;                                     // Put in a null
+              while ( input_JSON[i + k] != '"' )            // Skip to the opening quote
               {
-                s[m] = input_JSON[i + k];                      // Save the value
+                s[m] = input_JSON[i + k];                   // Save the value
                 m++;
-                s[m] = 0;                                      // Null terminate
+                s[m] = 0;                                   // Null terminate
                 k++;
               }
-              if ( JSON[j].non_vol != 0 )                      // Save to persistent storage if present
+              if ( JSON[j].non_vol != 0 )                   // Save to persistent storage if present
               {
-                nvs_set_str(my_handle, JSON[j].non_vol, s);    // Store into NON-VOL
+                nvs_set_str(my_handle, JSON[j].non_vol, s); // Store into NON-VOL
               }
-            }
-            break;
 
-          case IS_MFS:
-          case IS_INT32:                                       // Convert an integer
-            if ( good_input(input_JSON[i + k], JSON[j].show) ) // The user entered something
-            {
-              not_found = false;                               // Read and convert the JSON value
+              break;
+
+            case IS_MFS:
+            case IS_INT32:                                  // Convert an integer
+
               if ( (input_JSON[i + k] == '0') && ((input_JSON[i + k + 1] == 'X') || (input_JSON[i + k + 1] == 'x')) ) // Is it Hex?
               {
                 x = (to_int(input_JSON[i + k + 2]) << 4) + to_int(input_JSON[i + k + 3]);
@@ -452,50 +350,36 @@ static void handle_json(void)
               }
               if ( (JSON[j].value != 0) )
               {
-                *JSON[j].value = x;                            // Save the value
+                *JSON[j].value = x;                         // Save the value
               }
               if ( JSON[j].non_vol != 0 )
               {
-                nvs_set_i32(my_handle, JSON[j].non_vol, x);    // Store into NON-VOL
+                nvs_set_i32(my_handle, JSON[j].non_vol, x); // Store into NON-VOL
               }
-            }
-            break;
 
-          case IS_FLOAT:                                       // Convert a floating point number
-            if ( good_input(input_JSON[i + k], JSON[j].show) ) // The user entered something
-            {
-              not_found = false;                               // Read and convert the JSON value
-              f         = atof(&input_JSON[i + k]);            // Float
-              x         = f * 1000;                            // Integer
+              break;
+
+            case IS_FLOAT:                                  // Convert a floating point number
+
+              f = atof(&input_JSON[i + k]);                 // Float
+              x = f * 1000;                                 // Integer
               if ( JSON[j].value != 0 )
               {
-                *(double *)JSON[j].value = f;                  // Working Value
+                *(double *)JSON[j].value = f;               // Working Value
               }
               if ( JSON[j].non_vol != 0 )
               {
                 nvs_set_i32(my_handle, JSON[j].non_vol,
-                            x);                                // Store into NON-VOL as an integer * 1000
+                            x);                             // Store into NON-VOL as an integer * 1000
               }
-            }
-            break;
-        }
+              break;
+          }
 
-        if ( not_found == true )
-        {
-          SEND(ALL, sprintf(_xs, "\r\n\r\nCannot decode: {%s}\r\n", input_JSON);)
-        }
-        else
-        {
-          if ( good_input('0', JSON[j].show) )
           {
-            if ( JSON[j].f != 0 ) // Call the handler if it is available
+            if ( JSON[j].f != 0 )                           // Call the handler if it is available
             {
               JSON[j].f(x);
             }
-          }
-          else
-          {
-            SEND(ALL, sprintf(_xs, "\r\n\r\nTarget is locked.\r\n");)
           }
         }
 
@@ -504,10 +388,21 @@ static void handle_json(void)
       nvs_commit(my_handle); // Save to memory
     }
   }
+  /*
+   * Report an error if input not found
+   */
+  if ( (not_found == true) )
+  {
+    SEND(ALL, sprintf(_xs, "\r\n\r\nCannot decode: {%s}\r\n", input_JSON);)
+  }
 
   /*
    * All done
    */
+  in_JSON           = 0; // Start Over
+  got_right_bracket = 0; // Need to wait for a new Right Bracket
+  got_left_bracket  = false;
+  input_JSON[0]     = 0; // Clear the input
   in_JSON           = 0; // Start Over
   got_right_bracket = 0; // Need to wait for a new Right Bracket
   got_left_bracket  = false;
@@ -545,48 +440,50 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\r\n{\r\n");)
   serial_to_all(NULL, EVEN_ODD_BEGIN);
   i = 0;
-  while ( JSON[i].token != 0 )             // Still more to go?
+  while ( JSON[i].token != 0 )               // Still more to go?
   {
-    if ( ((JSON[i].show & SHOW) != 0)      // The entry is visible
-         && (JSON[i].value != NULL) )      // and it has a value ?
-    {
-      switch ( JSON[i].convert & IS_MASK ) // Display based on it's type
+    if ( ((JSON[i].show & SHOW) != 0)        // The entry is visible
+         && (JSON[i].value != NULL) )        // and it has a value ?
+      if ( ((JSON[i].show & SHOW) != 0)      // The entry is visible
+           && (JSON[i].value != NULL) )      // and it has a value ?
       {
-        default:
-        case IS_VOID:
-          break;
+        switch ( JSON[i].convert & IS_MASK ) // Display based on it's type
+        {
+          default:
+          case IS_VOID:
+            break;
 
-        case IS_TEXT_1:
-        case IS_TEXT:
-        case IS_SECRET:
-          strcpy(str_c, (char *)(JSON[i].value));
-          if ( (JSON[i].convert & IS_MASK) == IS_SECRET )
-          {
-            strncpy(str_c, "*************************************************", strlen(str_c));
-          }
+          case IS_TEXT_1:
+          case IS_TEXT:
+          case IS_SECRET:
+            strcpy(str_c, (char *)(JSON[i].value));
+            if ( (JSON[i].convert & IS_MASK) == IS_SECRET )
+            {
+              strncpy(str_c, "*************************************************", strlen(str_c));
+            }
 
-          SEND(ALL, sprintf(_xs, "%-18s \"%s\", ", JSON[i].token, str_c);)
-          break;
+            SEND(ALL, sprintf(_xs, "%-18s \"%s\", ", JSON[i].token, str_c);)
+            break;
 
-        case IS_MFS: // Covert to a switch ID
-          mfs_ptr = mfs_find(*JSON[i].value);
-          if ( mfs_ptr != NULL )
-          {
-            SEND(ALL, sprintf(_xs, "%-18s \"(%d) - %s\", ", JSON[i].token, *JSON[i].value, mfs_ptr->text);)
-          }
-          break;
+          case IS_MFS: // Covert to a switch ID
+            mfs_ptr = mfs_find(*JSON[i].value);
+            if ( mfs_ptr != NULL )
+            {
+              SEND(ALL, sprintf(_xs, "%-18s \"(%d) - %s\", ", JSON[i].token, *JSON[i].value, mfs_ptr->text);)
+            }
+            break;
 
-        case IS_INT32:
-        case IS_FIXED:
-          SEND(ALL, sprintf(_xs, "%-18s %d, ", JSON[i].token, *JSON[i].value);)
-          break;
+          case IS_INT32:
+          case IS_FIXED:
+            SEND(ALL, sprintf(_xs, "%-18s %d, ", JSON[i].token, *JSON[i].value);)
+            break;
 
-        case IS_FLOAT:
-          SEND(ALL, sprintf(_xs, "%-18s %6.2f, ", JSON[i].token, *(double *)JSON[i].value);)
-          break;
+          case IS_FLOAT:
+            SEND(ALL, sprintf(_xs, "%-18s %6.2f, ", JSON[i].token, *(double *)JSON[i].value);)
+            break;
+        }
+        vTaskDelay(10);
       }
-      vTaskDelay(10);
-    }
     i++;
   }
 
@@ -610,10 +507,6 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"TIMER_COUNT\":       %d,",
                     (int)(SHOT_TIME * OSCILLATOR_MHZ));) // Maximum number of clock cycles to record shot (target dependent)
   SEND(ALL, sprintf(_xs, "\"V12\":               %4.2f,", v12_supply());) // 12 Volt LED supply
-  if ( VREF_FB & board_mask )
-  {
-    SEND(ALL, sprintf(_xs, "\"VMES_LO\":         %4.2f", vref_measure());)
-  }
   WiFi_MAC_address(str_c);
   SEND(ALL, sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\",", str_c[0], str_c[1], str_c[2], str_c[3], str_c[4],
                     str_c[5]);)
@@ -651,15 +544,15 @@ void show_echo(void)
   strcat(_xs, "\"");
   serial_to_all(_xs, ALL);
 
-  SEND(ALL, sprintf(_xs, "\"VERSION\":          %show, ", SOFTWARE_VERSION);) // Current software version
+  SEND(ALL, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);) // Current software version
 
   if ( json_is_locked == 1 )
   {
-    SEND(ALL, sprintf(_xs, "\"LOCKED\":           \"YES\",");)                // The JSON is locked
+    SEND(ALL, sprintf(_xs, "\"LOCKED\":           \"YES\",");)             // The JSON is locked
   }
   else
   {
-    SEND(ALL, sprintf(_xs, "\"LOCKED\":           \"NO\",");)                 // The JSON is not locked
+    SEND(ALL, sprintf(_xs, "\"LOCKED\":           \"NO\",");)              // The JSON is not locked
   }
 
 #if ( INCLUDE_OTA_ECHO )
@@ -822,114 +715,4 @@ static void set_50m(int x)
    *  All done, return
    */
   return;
-}
-
-/*-----------------------------------------------------
- *
- * @function: lock_target
- *
- * @brief:    Lock the JSON commands
- *
- * @return: None
- *
- *-----------------------------------------------------
- *
- * If the target is unlocked, then we can set in a new
- * password and save it to non-volatile memory.
- *
- *-----------------------------------------------------*/
-static void lock_target(unsigned int password) // Password entered by the user
-{
-  /*
-   * First, test to see if there is a non-zero lock code?
-   */
-  if ( json_is_locked == 0 )
-  {
-    json_lock = password;                          // Set the lock code
-    DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "JSON lock code: %d", json_lock);))
-    nvs_set_i32(my_handle, NONVOL_LOCK, password); // Save the lock code
-    json_is_locked = 1;
-  }
-
-  /*
-   *  All done, return
-   */
-  return;
-}
-
-/*-----------------------------------------------------
- *
- * @function: unlock_target
- *
- * @brief:    Lock and unlock the JSON commands
- *
- * @return:  None
- *
- *-----------------------------------------------------
- *
- * The target will be unlocked if the user entered
- * password matches the one stored in nonvol.
- *
- *-----------------------------------------------------*/
-static void unlock_target(unsigned int password) // Password entered by the user
-{
-  /*
-   * If the password matches the programmed value, then
-   * unlock the target
-   */
-  if ( json_lock == password )
-  {
-    json_is_locked = 0; // Unlock the target
-    DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "JSON unlocked");))
-  }
-  else
-  {
-    json_is_locked = 1; // Lock the target
-    DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "Invalid JSON lock code");))
-  }
-
-  /*
-   *  All done, return
-   */
-  return;
-}
-
-/*-----------------------------------------------------
- *
- * @function: good_input
- *
- * @brief:    Determine if the input is valid and can be used
- *
- * @return:   TRUE if the input is valid
- *
- *-----------------------------------------------------
- *
- * The input is valid if
- *
- * 1 - The input text is not empty
- * 2 - The JSON is not locked
- * 3 - The JSON does not require a lock
- *
- *-----------------------------------------------------*/
-static bool good_input(char         next, // Next input character
-                       unsigned int show  // Item display status
-)
-{
-
-  if ( (next == ',') || (next == '}') )   // Empty field
-  {
-    return false;
-  }
-
-  if ( json_is_locked == 0 )              // The JSON is not locked
-  {
-    return true;
-  }
-
-  if ( (show & LOCK) == 0 )               // This item is not locked
-  {
-    return true;
-  }
-
-  return false;                           // Must be locked
 }

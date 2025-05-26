@@ -82,14 +82,18 @@ extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_pem_end");
  *------------------------------------------------------------*/
 void OTA_load(void)
 {
-  esp_ota_handle_t       update_handle = 0;
-  const esp_partition_t *update_partition;
-  const esp_partition_t *boot_partition           = esp_ota_get_boot_partition();
-  const esp_partition_t *running_partition        = esp_ota_get_running_partition();
-  bool                   image_header_was_checked = false;
-  int                    data_read;
-  int                    binary_file_length = 0;
-
+  esp_err_t                err;
+  esp_ota_handle_t         update_handle = 0;
+  const esp_partition_t   *update_partition;
+  const esp_partition_t   *boot_partition           = esp_ota_get_boot_partition();
+  const esp_partition_t   *running_partition        = esp_ota_get_running_partition();
+  bool                     image_header_was_checked = false;
+  int                      data_read;
+  int                      binary_file_length = 0;
+  esp_app_desc_t           new_app_info;
+  esp_app_desc_t           running_app_info;
+  const esp_partition_t   *last_invalid_app;
+  esp_app_desc_t           invalid_app_info;
   esp_http_client_handle_t client;
   int                      http_count = 0; // How many records have we read in
 
@@ -502,6 +506,8 @@ static void OTA_halt_process(char *LED_status,   // Indicator sent to LEDs
   set_status_LED(LED_status);
 
   DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "%s", error_message);))
+
+  serial_flush(ALL);                       // Purge anthing that may be present
 
   while ( 1 )
   {
