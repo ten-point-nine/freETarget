@@ -22,7 +22,6 @@ void show_echo(void);          // Display the settings
 typedef struct
 {
   int   show;       // Display attributes
-  int   show;       // Display attributes
   char *token;      // JSON token string, ex "RADIUS":
   int  *value;      // Where value is stored (cast to (float*) if needed)
   int   convert;    // Conversion type

@@ -59,11 +59,11 @@ esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Cre
 /*
  * Local functions
  */
-static esp_err_t stop_webserver(httpd_handle_t server);
+static esp_err_t stop_webserver_80(httpd_handle_t server);
 
 /*----------------------------------------------------------------
  *
- * @function: start_webserver(void)
+ * @function: start_webserver_80(void)
  *
  * @brief:    Start the web server
  *
@@ -79,7 +79,7 @@ static esp_err_t stop_webserver(httpd_handle_t server);
  *  3 - Register a 404 (URL not found) handler
  *
  *------------------------------------------------------------*/
-httpd_handle_t start_webserver(void)
+httpd_handle_t start_webserver_80(void)
 {
   httpd_handle_t server = NULL;
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
@@ -136,7 +136,7 @@ void disconnect_handler(void            *arg,        // Arguments that we got
   httpd_handle_t *server = (httpd_handle_t *)arg;
   if ( *server )
   {
-    if ( stop_webserver(*server) == ESP_OK )
+    if ( stop_webserver_80(*server) == ESP_OK )
     {
       *server = NULL;
       DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Web server stopped");))
@@ -172,7 +172,7 @@ void connect_handler(void            *arg,        //
   if ( *server == NULL )
   {
     DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Starting webserver");))
-    *server = start_webserver();
+    *server = start_webserver_80();
   }
   else
   {
@@ -185,7 +185,7 @@ void connect_handler(void            *arg,        //
   return;
 }
 
-static esp_err_t stop_webserver(httpd_handle_t server)
+static esp_err_t stop_webserver_80(httpd_handle_t server)
 {
   // Stop the httpd server
   return httpd_stop(server);

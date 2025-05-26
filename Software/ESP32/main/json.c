@@ -38,9 +38,27 @@ void        show_echo(void);   // Display the current settings
 static void show_names(int v);
 static void set_trace(int v);  // Set the trace on and off
 
-/*
- *  Variables
- */
+/*-----------------------------------------------------
+ *
+ * @function: lock_target
+ *
+ * @brief:    Lock the JSON commands
+ *
+ * @return: None
+ *
+ *-----------------------------------------------------
+ *
+ * If the target is unlocked, then we can set in a new
+ * password and save it to non-volatile memory.
+ *
+ *-----------------------------------------------------*/
+static void lock_target(unsigned int password);                                // Password entered by the user
+static void unlock_target(unsigned int password);                              // Password entered by the user
+static bool good_input(unsigned int conversion, char next, unsigned int show); // Item display status
+
+                                                                               /*
+                                                                                *  Variables
+                                                                                */
 static char input_JSON[256];  // JSON input buffer
 
 void        show_echo(void);  // Display the current settings
@@ -565,8 +583,6 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                          // Current persistent storage version
   SEND(ALL, sprintf(_xs, "\"BD_REV\":            %4.2f ", (float)revision() / 100);) // Current board version
   SEND(ALL, sprintf(_xs, "}\r\n");)
-  SEND(ALL, sprintf(_xs, "\r\n");)
-  SEND(ALL, sprintf(_xs, "\r\n");)                                                   // Flush out junk
 
   /*
    *  All done, return
@@ -715,4 +731,120 @@ static void set_50m(int x)
    *  All done, return
    */
   return;
+}
+
+/*-----------------------------------------------------
+ *
+ * @function: lock_target
+ *
+ * @brief:    Lock the JSON commands
+ *
+ * @return: None
+ *
+ *-----------------------------------------------------
+ *
+ * If the target is unlocked, then we can set in a new
+ * password and save it to non-volatile memory.
+ *
+ *-----------------------------------------------------*/
+static void lock_target(unsigned int password) // Password entered by the user
+{
+  /*
+   * First, test to see if there is a non-zero lock code?
+   */
+  if ( json_is_locked == 0 )
+  {
+    json_lock = password;                          // Set the lock code
+    nvs_set_i32(my_handle, NONVOL_LOCK, password); // Save the lock code
+    json_is_locked = 1;
+  }
+
+  /*
+   *  All done, return
+   */
+  return;
+}
+
+/*-----------------------------------------------------
+ *
+ * @function: unlock_target
+ *
+ * @brief:    Lock and unlock the JSON commands
+ *
+ * @return:  None
+ *
+ *-----------------------------------------------------
+ *
+ * The target will be unlocked if the user entered
+ * password matches the one stored in nonvol.
+ *
+ *-----------------------------------------------------*/
+static void unlock_target(unsigned int password) // Password entered by the user
+{
+  /*
+   * If the password matches the programmed value, then
+   * unlock the target
+   */
+  if ( json_lock == password )
+  {
+    json_is_locked = 0; // Unlock the target
+    SEND(ALL, sprintf(_xs, "Configuration unlocked\r\n");)
+  }
+  else
+  {
+    json_is_locked = 1; // Lock the target
+    SEND(ALL, sprintf(_xs, "Invalid configuration lock code\r\n");)
+  }
+
+  /*
+   *  All done, return
+   */
+  return;
+}
+
+/*-----------------------------------------------------
+ *
+ * @function: good_input
+ *
+ * @brief:    Determine if the input is valid and can be used
+ *
+ * @return:   TRUE if the input is valid
+ *
+ *-----------------------------------------------------
+ *
+ * The input is valid if
+ *
+ * 1 - No input is required
+ * 2 - The input text is not empty
+ * 3 - The JSON is not locked
+ * 4 - The JSON does not require a lock
+ *
+ *-----------------------------------------------------*/
+static bool good_input(unsigned int conversion, // What kind of input is it?
+                       char         next,       // Next input character
+                       unsigned int show        // Item display status
+)
+{
+
+  if ( (conversion == IS_VOID) || (conversion == IS_FIXED) )
+  {
+    return true;                                // No input required
+  }
+
+  if ( (next == ',') || (next == '}') )         // Empty field
+  {
+    return false;
+  }
+
+  if ( json_is_locked == 0 )                    // The JSON is not locked
+  {
+    return true;
+  }
+
+  if ( (show & LOCK) == 0 )                     // This item is not locked
+  {
+    return true;
+  }
+
+  return false;                                 // Must be locked
 }
