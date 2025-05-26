@@ -60,6 +60,7 @@ esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Cre
  * Local functions
  */
 static esp_err_t stop_webserver_80(httpd_handle_t server);
+static esp_err_t stop_webserver_81(httpd_handle_t server);
 
 /*----------------------------------------------------------------
  *
@@ -79,9 +80,11 @@ static esp_err_t stop_webserver_80(httpd_handle_t server);
  *  3 - Register a 404 (URL not found) handler
  *
  *------------------------------------------------------------*/
+static httpd_handle_t server = NULL;
+
 httpd_handle_t start_webserver_80(void)
 {
-  httpd_handle_t server = NULL;
+
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 
   config.server_port      = DEFAULT_SERVER_PORT;
@@ -109,7 +112,60 @@ httpd_handle_t start_webserver_80(void)
   /*
    *  Got here because we could not start the server
    */
-  DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Error starting server!");))
+  DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Error starting server port %d", config.server_port);))
+  return NULL;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: start_webserver_80(void)
+ *
+ * @brief:    Start the web server
+ *
+ * @return:   handle to the web server
+ *
+ *---------------------------------------------------------------
+ *
+ * This is called once to initialize the web server
+ *
+ * Initialization is done in three steps
+ *  1 - Create a web socket (in this case port 80)
+ *  2 - Register the URL handlers
+ *  3 - Register a 404 (URL not found) handler
+ *
+ *------------------------------------------------------------*/
+httpd_handle_t start_webserver_81(void)
+{
+  //  httpd_handle_t server = NULL;
+  httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+
+  config.server_port      = EVENT_SERVER_PORT;
+  config.lru_purge_enable = true;
+
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "start_webserver(port: %d)", config.server_port);))
+#if ( 0 )
+  /*
+   *  Create event loops
+   */
+  ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &server));
+  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
+#endif
+
+  /*
+   * Start the web server
+   */
+  if ( httpd_start(&server, &config) == ESP_OK ) // Create the server
+  {
+    DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Registering URI handlers");))
+    register_services(server);
+    httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
+    return server;
+  }
+
+  /*
+   *  Got here because we could not start the server
+   */
+  DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Error starting server port %d", config.server_port);))
   return NULL;
 }
 
@@ -148,6 +204,12 @@ void disconnect_handler(void            *arg,        // Arguments that we got
   }
 }
 
+static esp_err_t stop_webserver_80(httpd_handle_t server)
+{
+  // Stop the httpd server
+  return httpd_stop(server);
+}
+
 /*----------------------------------------------------------------
  *
  * @function: connect_handler
@@ -183,12 +245,6 @@ void connect_handler(void            *arg,        //
    *  All done, return
    */
   return;
-}
-
-static esp_err_t stop_webserver_80(httpd_handle_t server)
-{
-  // Stop the httpd server
-  return httpd_stop(server);
 }
 
 /*----------------------------------------------------------------

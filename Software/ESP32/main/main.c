@@ -86,6 +86,8 @@ void app_main(void)
 
   start_webserver_80();
   vTaskDelay(TICK_10ms);
+  start_webserver_81();
+  vTaskDelay(TICK_10ms);
 
   freeETarget_timer_init();
 
