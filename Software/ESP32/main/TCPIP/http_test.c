@@ -176,7 +176,7 @@ void http_server_test(void)
   /*
    * Start the server for the first time
    */
-  server = start_webserver();
+  server = start_webserver(DEFAULT_HTTP_PORT);
 
   /*
    * Stay here until someone removes the server
