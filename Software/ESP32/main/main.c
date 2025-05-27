@@ -85,6 +85,7 @@ void app_main(void)
   vTaskDelay(TICK_10ms);
 
   start_webserver(DEFAULT_HTTP_PORT); // Main port for the web server
+  vTaskDelay(TICK_10ms);
   start_webserver(EVENT_HTTP_PORT);   // Control port for the web server
   vTaskDelay(TICK_10ms);
 
