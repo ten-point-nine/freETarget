@@ -13,7 +13,7 @@
 #include "freertos/task.h"
 #include "serial_io.h"
 
-#define SOFTWARE_VERSION "\"6.1.10 May 21, 2025\""
+#define SOFTWARE_VERSION "\"6.1.11 May 27, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED" // Message to send on connection
 
@@ -187,6 +187,7 @@ extern time_count_t          LED_timer;          // Turn off the LEDs when not i
 extern char                  _xs[512];           // General purpose string buffer
 extern shot_record_t         record[SHOT_SPACE]; // Array of shot records
 extern time_count_t          session_time[];     // Time in each session
+extern char                 *yes_no[];           // Yes or No strings
 
 /*
  * FreeETarget functions

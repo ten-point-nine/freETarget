@@ -69,6 +69,8 @@ unsigned long go_wait     = 3l;                              // Wait for the PC 
 unsigned long all_done    = 0l;                              // All finished
 int           always_true = true;
 
+char *yes_no[] = {"No", "Yes"};                              // Yes or No
+
 static enum {
   START = 0,                                                 // 0 et the operating mode
   WAIT,                                                      // 1 ARM the circuit and wait for a shot

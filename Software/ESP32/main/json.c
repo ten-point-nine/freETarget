@@ -542,16 +542,8 @@ void show_echo(void)
   strcat(_xs, "\"");
   serial_to_all(_xs, ALL);
 
-  SEND(ALL, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);) // Current software version
-
-  if ( json_is_locked == 1 )
-  {
-    SEND(ALL, sprintf(_xs, "\"LOCKED\":           \"YES\",");)             // The JSON is locked
-  }
-  else
-  {
-    SEND(ALL, sprintf(_xs, "\"LOCKED\":           \"NO\",");)              // The JSON is not locked
-  }
+  SEND(ALL, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);)        // Current software version
+  SEND(ALL, sprintf(_xs, "\"LOCKED\":           %s \"", yes_no[json_is_locked]);) // The JSON is locked
 
 #if ( INCLUDE_OTA_ECHO )
   OTA_get_versions(running_app_version, new_app_version);

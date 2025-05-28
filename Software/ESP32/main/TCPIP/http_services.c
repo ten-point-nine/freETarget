@@ -46,18 +46,19 @@
 /*
  *  Variables
  */
-int http_shot = -1; // What shot number have we sent?
+int         http_shot  = -1;    // What shot number have we sent?
+static bool event_done = false; // Set to true to end the event
 
 /*
  * Local functions
  */
 static esp_err_t stop_webserver(httpd_handle_t server);
-static esp_err_t service_get_index(httpd_req_t *req);
-static esp_err_t service_get_who(httpd_req_t *req);
-static esp_err_t service_get_shotData(httpd_req_t *req);
-static esp_err_t service_get_issf_png(httpd_req_t *req);
-static esp_err_t service_get_json(httpd_req_t *req);
-static esp_err_t service_get_events(httpd_req_t *req);
+static esp_err_t service_get_index(httpd_req_t *req);                            // Main target page
+static esp_err_t service_get_stop(httpd_req_t *req);                             // Stop showing shots
+static esp_err_t service_get_who(httpd_req_t *req);                              // Target information page
+static esp_err_t service_get_issf_png(httpd_req_t *req);                         // Icon for the ISSF target
+static esp_err_t service_get_json(httpd_req_t *req);                             // Webb ased JSON interface
+static esp_err_t service_get_events(httpd_req_t *req);                           // Get shot events
 static esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Create a URL not found handler
 
 /*
@@ -65,6 +66,7 @@ static esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err);
  */
 const httpd_uri_t uri_list[] = {
     {.uri = "/index", .method = HTTP_GET, .handler = service_get_index, .user_ctx = NULL},
+    {.uri = "/stop", .method = HTTP_GET, .handler = service_get_stop, .user_ctx = NULL},
     {.uri = "/who", .method = HTTP_GET, .handler = service_get_who, .user_ctx = NULL},
     {.uri = "/json", .method = HTTP_GET, .handler = service_get_json, .user_ctx = NULL},
     {.uri = "/events", .method = HTTP_GET, .handler = service_get_events, .user_ctx = NULL},
@@ -130,7 +132,8 @@ static esp_err_t service_get_events(httpd_req_t *req)
   if ( http_shot < 0 )                              // First time through
   {
     build_json_score(&record[0], SCORE_HTTP_PRIME); // Use a fixed reply to set the target type
-    http_shot = 0;                                  // Next time reply with the first shot
+    http_shot  = 0;                                 // Next time reply with the first shot
+    event_done = false;                             // Reset the event done flag
   }
 
   /*
@@ -138,12 +141,21 @@ static esp_err_t service_get_events(httpd_req_t *req)
    */
   else
   {
-    while ( http_shot == shot_in )                    // Wait here until something shows up
+    while ( (http_shot == shot_in)                      // Wait for a shot to arrive
+            && (event_done == false) )                  // or the event has finished
     {
       vTaskDelay(ONE_SECOND);
     }
-    build_json_score(&record[http_shot], SCORE_HTTP); // Send the new shot
-    http_shot = (http_shot + 1) % SHOT_SPACE;         // and bump up next one
+
+    if ( event_done == true )                           // If the event is done
+    {
+      sprintf(_xs, "{\"event\":\"done\"}");             // Send a done message
+    }
+    else
+    {
+      build_json_score(&record[http_shot], SCORE_HTTP); // Send the new shot
+      http_shot = (http_shot + 1) % SHOT_SPACE;         // and bump up next one
+    }
   }
   //
   /*
@@ -175,6 +187,50 @@ static esp_err_t service_get_events(httpd_req_t *req)
  *
  *------------------------------------------------------------*/
 static esp_err_t service_get_index(httpd_req_t *req)
+{
+  const char *resp_str;            // Reply to server
+  char        my_name[SHORT_TEXT]; // Temporary string
+
+  if ( (instr(req->uri, "MATCH") != 0) || (instr(req->uri, "match") != 0) )
+  {
+    start_new_session(SESSION_MATCH);
+  }
+
+  if ( (instr(req->uri, "SIGHT") != 0) || (instr(req->uri, "sight") != 0) )
+  {
+    start_new_session(SESSION_SIGHT);
+  }
+
+  /*
+   * Do the things we need to do to start a session
+   */
+  http_shot = -1; // Reset the shot counter
+  connection_list |= HTTP_CONNECTED;
+
+  /*
+   *  Send the reply to the client
+   */
+  target_name(my_name);                 // Get the target name
+  resp_str = (const char *)&index_html; // point to the target HTML file
+  httpd_resp_set_hdr(req, "get_index", my_name);
+  httpd_resp_send(req, resp_str, strlen(resp_str));
+
+  return ESP_OK;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: service_get_stop
+ *
+ * @brief:    Stop the event
+ *
+ * @return:   esp_err_t, error type
+ *
+ *---------------------------------------------------------------
+ *
+ *
+ *------------------------------------------------------------*/
+static esp_err_t service_get_stop(httpd_req_t *req)
 {
   const char *resp_str;            // Reply to server
   char        my_name[SHORT_TEXT]; // Temporary string
