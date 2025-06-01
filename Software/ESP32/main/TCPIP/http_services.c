@@ -54,24 +54,25 @@ static bool event_done = false; // Set to true to end the event
  */
 static esp_err_t stop_webserver(httpd_handle_t server);
 static esp_err_t service_get_index(httpd_req_t *req);                            // Main target page
-static esp_err_t service_get_stop(httpd_req_t *req);                             // Stop showing shots
+static esp_err_t service_get_control(httpd_req_t *req);                          // Control the target
 static esp_err_t service_get_who(httpd_req_t *req);                              // Target information page
 static esp_err_t service_get_issf_png(httpd_req_t *req);                         // Icon for the ISSF target
 static esp_err_t service_get_json(httpd_req_t *req);                             // Webb ased JSON interface
 static esp_err_t service_get_events(httpd_req_t *req);                           // Get shot events
 static esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Create a URL not found handler
-
+static esp_err_t service_post_post(httpd_req_t *req);
 /*
  *  URL handlers
  */
 const httpd_uri_t uri_list[] = {
-    {.uri = "/index", .method = HTTP_GET, .handler = service_get_index, .user_ctx = NULL},
-    {.uri = "/stop", .method = HTTP_GET, .handler = service_get_stop, .user_ctx = NULL},
-    {.uri = "/who", .method = HTTP_GET, .handler = service_get_who, .user_ctx = NULL},
-    {.uri = "/json", .method = HTTP_GET, .handler = service_get_json, .user_ctx = NULL},
-    {.uri = "/events", .method = HTTP_GET, .handler = service_get_events, .user_ctx = NULL},
-    {.uri = "/favicon.ico", .method = HTTP_GET, .handler = service_get_issf_png, .user_ctx = NULL},
-    {}
+    {.uri = "/index",       .method = HTTP_GET,  .handler = service_get_index,    .user_ctx = NULL},
+    {.uri = "/control",     .method = HTTP_GET,  .handler = service_get_control,  .user_ctx = NULL},
+    {.uri = "/who",         .method = HTTP_GET,  .handler = service_get_who,      .user_ctx = NULL},
+    {.uri = "/json",        .method = HTTP_GET,  .handler = service_get_json,     .user_ctx = NULL},
+    {.uri = "/events",      .method = HTTP_GET,  .handler = service_get_events,   .user_ctx = NULL},
+    {.uri = "/favicon.ico", .method = HTTP_GET,  .handler = service_get_issf_png, .user_ctx = NULL},
+    {.uri = "/post",        .method = HTTP_POST, .handler = service_post_post,    .user_ctx = NULL},
+    {0,                     .0,                  0,                               0               }  // End
 };
 
 /*----------------------------------------------------------------
@@ -228,36 +229,45 @@ static esp_err_t service_get_index(httpd_req_t *req)
  *
  *---------------------------------------------------------------
  *
+ * The function is called when the user clicks on the STOP button
+ * or calls the URL /stop.
+ *
+ * This sets a semaphore to stop the event and send a message
+ * back to the client that the event is done.
  *
  *------------------------------------------------------------*/
-static esp_err_t service_get_stop(httpd_req_t *req)
+static esp_err_t service_get_control(httpd_req_t *req)
 {
-  const char *resp_str;            // Reply to server
-  char        my_name[SHORT_TEXT]; // Temporary string
+  char my_name[SHORT_TEXT]; // Temporary string
 
-  if ( (instr(req->uri, "MATCH") != 0) || (instr(req->uri, "match") != 0) )
+  if ( (instr(req->uri, "START") != 0) || (instr(req->uri, "start") != 0) )
   {
     start_new_session(SESSION_MATCH);
   }
 
-  if ( (instr(req->uri, "SIGHT") != 0) || (instr(req->uri, "sight") != 0) )
+  if ( (instr(req->uri, "STOP") != 0) || (instr(req->uri, "stop") != 0) )
   {
-    start_new_session(SESSION_SIGHT);
+    http_shot = -1;    // Reset the shot counter
+    connection_list &= ~HTTP_CONNECTED;
+    event_done = true; // Set the event done flag
   }
-
-  /*
-   * Do the things we need to do to start a session
-   */
-  http_shot = -1; // Reset the shot counter
-  connection_list |= HTTP_CONNECTED;
 
   /*
    *  Send the reply to the client
    */
-  target_name(my_name);                 // Get the target name
-  resp_str = (const char *)&index_html; // point to the target HTML file
-  httpd_resp_set_hdr(req, "get_index", my_name);
-  httpd_resp_send(req, resp_str, strlen(resp_str));
+  target_name(my_name); // Get the target name
+  httpd_resp_set_hdr(req, "get_control", my_name);
+
+  if ( event_done == true )
+  {
+    sprintf(_xs, "event: done");
+  }
+  else
+  {
+    sprintf(_xs, "event: starting");
+  }
+
+  httpd_resp_send(req, _xs, HTTPD_RESP_USE_STRLEN);
 
   return ESP_OK;
 }
@@ -425,14 +435,14 @@ static esp_err_t service_get_post2(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_who(httpd_req_t *req)
 {
-  char                   name[SHORT_TEXT];
+  char                   my_name[SHORT_TEXT];
   const esp_partition_t *running_partition = esp_ota_get_running_partition();
   esp_app_desc_t         running_app_info;
 
   esp_ota_get_partition_description(running_partition, &running_app_info);
 
-  target_name(name); // Get the target name
-  httpd_resp_set_hdr(req, "get_who", name);
+  target_name(my_name); // Get the target name
+  httpd_resp_set_hdr(req, "get_who", my_name);
 
   sprintf(_xs,
           "Serial Number: %d"
@@ -442,8 +452,9 @@ static esp_err_t service_get_who(httpd_req_t *req)
           "<br>Athelete: %s"
           "<br>Target: %s"
           "<br>Event: %s",
-          json_serial_number, name, SOFTWARE_VERSION, running_app_info.version, json_athlete, json_target_name,
+          json_serial_number, my_name, SOFTWARE_VERSION, running_app_info.version, json_athlete, json_target_name,
           json_event); // Fill in the target name
+
   httpd_resp_send(req, _xs, HTTPD_RESP_USE_STRLEN);
   return ESP_OK;
 }
