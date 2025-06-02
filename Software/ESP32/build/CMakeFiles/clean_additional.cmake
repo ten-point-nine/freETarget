@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 
 if("${CONFIG}" STREQUAL "" OR "${CONFIG}" STREQUAL "")
   file(REMOVE_RECURSE
+  "FreeETarget.html.S"
   "bootloader\\bootloader.bin"
   "bootloader\\bootloader.elf"
   "bootloader\\bootloader.map"
@@ -17,7 +18,7 @@ if("${CONFIG}" STREQUAL "" OR "${CONFIG}" STREQUAL "")
   "flasher_args.json"
   "freeETarget.bin"
   "freeETarget.map"
-  "index.html.S"
+  "help.html.S"
   "issf.png.S"
   "ldgen_libraries"
   "ldgen_libraries.in"

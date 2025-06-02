@@ -53,8 +53,9 @@ static bool event_done = false; // Set to true to end the event
  * Local functions
  */
 static esp_err_t stop_webserver(httpd_handle_t server);
-static esp_err_t service_get_index(httpd_req_t *req);                            // Main target page
+static esp_err_t service_get_FreeETarget(httpd_req_t *req);                      // Main target page
 static esp_err_t service_get_control(httpd_req_t *req);                          // Control the target
+static esp_err_t service_get_help(httpd_req_t *req);                             // User help page
 static esp_err_t service_get_who(httpd_req_t *req);                              // Target information page
 static esp_err_t service_get_issf_png(httpd_req_t *req);                         // Icon for the ISSF target
 static esp_err_t service_get_json(httpd_req_t *req);                             // Webb ased JSON interface
@@ -65,14 +66,14 @@ static esp_err_t service_post_post(httpd_req_t *req);
  *  URL handlers
  */
 const httpd_uri_t uri_list[] = {
-    {.uri = "/index",       .method = HTTP_GET,  .handler = service_get_index,    .user_ctx = NULL},
-    {.uri = "/control",     .method = HTTP_GET,  .handler = service_get_control,  .user_ctx = NULL},
-    {.uri = "/who",         .method = HTTP_GET,  .handler = service_get_who,      .user_ctx = NULL},
-    {.uri = "/json",        .method = HTTP_GET,  .handler = service_get_json,     .user_ctx = NULL},
-    {.uri = "/events",      .method = HTTP_GET,  .handler = service_get_events,   .user_ctx = NULL},
-    {.uri = "/favicon.ico", .method = HTTP_GET,  .handler = service_get_issf_png, .user_ctx = NULL},
-    {.uri = "/post",        .method = HTTP_POST, .handler = service_post_post,    .user_ctx = NULL},
-    {0,                     .0,                  0,                               0               }  // End
+    {.uri = "/",            .method = HTTP_GET,  .handler = service_get_help,        .user_ctx = NULL},
+    {.uri = "/target",      .method = HTTP_GET,  .handler = service_get_FreeETarget, .user_ctx = NULL},
+    {.uri = "/who",         .method = HTTP_GET,  .handler = service_get_who,         .user_ctx = NULL},
+    {.uri = "/json",        .method = HTTP_GET,  .handler = service_get_json,        .user_ctx = NULL},
+    {.uri = "/events",      .method = HTTP_GET,  .handler = service_get_events,      .user_ctx = NULL},
+    {.uri = "/favicon.ico", .method = HTTP_GET,  .handler = service_get_issf_png,    .user_ctx = NULL},
+    {.uri = "/post",        .method = HTTP_POST, .handler = service_post_post,       .user_ctx = NULL},
+    {0,                     .0,                  0,                                  0               }  // End
 };
 
 /*----------------------------------------------------------------
@@ -177,7 +178,7 @@ static esp_err_t service_get_events(httpd_req_t *req)
 
 /*----------------------------------------------------------------
  *
- * @function: service_get_index
+ * @function: service_get_FreeETarget
  *
  * @brief:    Root entry for target HTML files
  *
@@ -187,10 +188,13 @@ static esp_err_t service_get_events(httpd_req_t *req)
  *
  *
  *------------------------------------------------------------*/
-static esp_err_t service_get_index(httpd_req_t *req)
+static int       server_mode = 0;  // Server mode, 0 = Auto Refresh, 1 = Single
+static esp_err_t service_get_FreeETarget(httpd_req_t *req)
 {
   const char *resp_str;            // Reply to server
   char        my_name[SHORT_TEXT]; // Temporary string
+
+  printf("service_get_FreeETarget: %s\n", req->uri);
 
   if ( (instr(req->uri, "MATCH") != 0) || (instr(req->uri, "match") != 0) )
   {
@@ -202,6 +206,25 @@ static esp_err_t service_get_index(httpd_req_t *req)
     start_new_session(SESSION_SIGHT);
   }
 
+  if ( (instr(req->uri, "MATCH") != 0) || (instr(req->uri, "match") != 0) )
+  {
+    start_new_session(SESSION_MATCH);
+  }
+
+  if ( (instr(req->uri, "AUTO") != 0) || (instr(req->uri, "auto") != 0) )
+  {
+    server_mode = 0; // Set the server mode to auto refresh
+  }
+  else
+  {
+    server_mode = 1; // Set the server mode to single shot
+  }
+
+  if ( (instr(req->uri, "STOP") != 0) || (instr(req->uri, "stop") != 0) )
+  {
+    server_mode = 2; // Set the server mode to stop
+  }
+
   /*
    * Do the things we need to do to start a session
    */
@@ -211,9 +234,38 @@ static esp_err_t service_get_index(httpd_req_t *req)
   /*
    *  Send the reply to the client
    */
-  target_name(my_name);                 // Get the target name
-  resp_str = (const char *)&index_html; // point to the target HTML file
-  httpd_resp_set_hdr(req, "get_index", my_name);
+  target_name(my_name);                       // Get the target name
+  resp_str = (const char *)&FreeETarget_html; // point to the target HTML file
+  httpd_resp_set_hdr(req, "get_FreeETarget", my_name);
+  httpd_resp_send(req, resp_str, strlen(resp_str));
+
+  return ESP_OK;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: service_get_help
+ *
+ * @brief:    Display the help page
+ *
+ * @return:   esp_err_t, error type
+ *
+ *---------------------------------------------------------------
+ *
+ * Displays the help page to the user.
+ *
+ *------------------------------------------------------------*/
+static esp_err_t service_get_help(httpd_req_t *req)
+{
+  const char *resp_str;            // Reply to server
+  char        my_name[SHORT_TEXT]; // Temporary string
+
+  /*
+   *  Send the reply to the client
+   */
+  target_name(my_name);                // Get the target name
+  resp_str = (const char *)&help_html; // point to the target HTML file
+  httpd_resp_set_hdr(req, "get_help", my_name);
   httpd_resp_send(req, resp_str, strlen(resp_str));
 
   return ESP_OK;
