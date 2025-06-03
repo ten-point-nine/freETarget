@@ -24,6 +24,7 @@
 #include "freertos/event_groups.h"
 #include "freertos/task.h"
 #include <string.h>
+#include "mdns.h"
 
 #include "esp_event.h"
 #include "esp_log.h"
@@ -289,6 +290,21 @@ void WiFi_station_init(void)
   else
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Unexpectged WiFi event");))
+  }
+
+  /*
+   * Setup the URL for this target
+   */
+  target_name(str_c);            // Get the target name
+  mdns_hostname_set(str_c);      // Set the hostname for the target
+  mdns_instance_name_set(str_c); // Set the instance name for the target
+  if ( mdns_service_add(NULL, "_http", "_tcp", PORT, NULL, 0) != ESP_OK )
+  {
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to add mDNS service");))
+  }
+  else
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Added mDNS service for %s", str_c);))
   }
 
   /*

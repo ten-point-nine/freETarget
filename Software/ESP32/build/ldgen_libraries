@@ -82,5 +82,6 @@ C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/touch_element/l
 C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/usb/libusb.a
 C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/wifi_provisioning/libwifi_provisioning.a
 C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/espressif__led_strip/libespressif__led_strip.a
+C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/espressif__mdns/libespressif__mdns.a
 C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/main/libmain.a
 C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/protocol_examples_common/libprotocol_examples_common.a
