@@ -418,7 +418,7 @@ void echo_serial(int duration, // Duration in clock ticks
 void build_json_score(shot_record_t *shot, // Pointer to shot record
                       const char    *fields)
 {
-  char str[SHORT_TEXT];                    // String holding buffers
+  char str[MEDIUM_TEXT];                   // String holding buffers
 
   _xs[0] = 0;
 

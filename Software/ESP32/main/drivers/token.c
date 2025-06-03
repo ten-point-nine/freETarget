@@ -59,6 +59,7 @@
  *
  *******************************************************************/
 
+#define TOKEN_C
 #include "freETarget.h"
 #include "diag_tools.h"
 #include "token.h"
@@ -66,9 +67,7 @@
 #include "serial_io.h"
 #include "timer.h"
 
-int                           my_ring   = TOKEN_UNDEF; // Token ring address
-int                           whos_ring = TOKEN_UNDEF; // Who owns the ring right now?
-static volatile unsigned long token_tick;              // Token ring watchdog
+static volatile unsigned long token_tick; // Token ring watchdog
 
 /*-----------------------------------------------------
  *
