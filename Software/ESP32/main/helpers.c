@@ -65,20 +65,19 @@ void target_name(char *name_space)
 
   if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF) )
   {
-    if ( json_name_id != JSON_NAME_TEXT )
+    switch ( json_name_id )
     {
-      sprintf(name_space, "FET-%s", names[json_name_id]);
-    }
-    else
-    {
-      if ( json_name_text[0] != 0 )
-      {
-        sprintf(name_space, "FET-%s", json_name_text);
-      }
-      else
-      {
-        sprintf(name_space, "Undefined name");
-      }
+      case JSON_NAME_TEXT:
+        sprintf(name_space, "FET-%s", json_name_text);      // Name - FET-MyTargetName
+        break;
+
+      case JSON_NAME_CLIENT:
+        sprintf(name_space, "%s", json_name_text);          // Name - MyTargetName
+        break;
+
+      default:
+        sprintf(name_space, "FET-%s", names[json_name_id]); // Name - FET-TARGET, FET-2, etc.
+        break;
     }
   }
   else
