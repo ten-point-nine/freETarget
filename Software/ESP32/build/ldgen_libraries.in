@@ -82,5 +82,6 @@ $<TARGET_FILE:__idf_touch_element>
 $<TARGET_FILE:__idf_usb>
 $<TARGET_FILE:__idf_wifi_provisioning>
 $<TARGET_FILE:__idf_espressif__led_strip>
+$<TARGET_FILE:__idf_espressif__mdns>
 $<TARGET_FILE:__idf_main>
 $<TARGET_FILE:__idf_protocol_examples_common>

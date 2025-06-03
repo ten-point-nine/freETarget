@@ -835,6 +835,13 @@ C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/espressif__led_
 C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/espressif__led_strip/CMakeFiles/install.dir
 C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/espressif__led_strip/CMakeFiles/install/local.dir
 C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/espressif__led_strip/CMakeFiles/install/strip.dir
+C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/espressif__mdns/CMakeFiles/__idf_espressif__mdns.dir
+C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/espressif__mdns/CMakeFiles/edit_cache.dir
+C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/espressif__mdns/CMakeFiles/rebuild_cache.dir
+C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/espressif__mdns/CMakeFiles/list_install_components.dir
+C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/espressif__mdns/CMakeFiles/install.dir
+C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/espressif__mdns/CMakeFiles/install/local.dir
+C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/espressif__mdns/CMakeFiles/install/strip.dir
 C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/main/CMakeFiles/__idf_main.dir
 C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/main/CMakeFiles/edit_cache.dir
 C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/main/CMakeFiles/rebuild_cache.dir
