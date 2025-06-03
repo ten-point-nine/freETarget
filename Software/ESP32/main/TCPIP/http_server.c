@@ -16,12 +16,10 @@
  * See http_server.h for the various compilation options
  *
  *-----------------------------------------------------*/
-#define BRIAN (0 == 1)
+
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-// #include <esp_log.h>
-//  #include <nvs_flash.h>
 #include <sys/param.h>
 // #include "esp_netif.h"
 // #include "protocol_examples_common.h"
@@ -79,30 +77,36 @@ static esp_err_t stop_webserver(httpd_handle_t server);
  *  3 - Register a 404 (URL not found) handler
  *
  *------------------------------------------------------------*/
-httpd_handle_t start_webserver(void)
+httpd_handle_t start_webserver(unsigned int port // Port to use for the web server
+)
 {
-  httpd_handle_t server = NULL;
-  httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+  static unsigned int server_count = 0;          // Count the number of servers started
+  httpd_handle_t      server       = NULL;
+  httpd_config_t      config       = HTTPD_DEFAULT_CONFIG();
 
-  config.server_port      = DEFAULT_SERVER_PORT;
+  config.server_port      = port;
   config.lru_purge_enable = true;
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "start_webserver(port: %d)", config.server_port);))
-
-  /*
-   *  Create event loops
-   */
-  ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &server));
-  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
 
   /*
    * Start the web server
    */
   if ( httpd_start(&server, &config) == ESP_OK ) // Create the server
   {
+#if ( 0 )
+    if ( server_count == 0 )
+    {
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Registering event handlers");))
+      ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &server));
+      ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
+    }
+#endif
     DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Registering URI handlers");))
     register_services(server);
     httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
+    server_count++; // Increment the number of servers started
+
     return server;
   }
 
@@ -172,7 +176,7 @@ void connect_handler(void            *arg,        //
   if ( *server == NULL )
   {
     DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Starting webserver");))
-    *server = start_webserver();
+    *server = start_webserver(DEFAULT_HTTP_PORT);
   }
   else
   {

@@ -570,6 +570,7 @@ bool POST_counters(void)
       }
       if ( running & s[i].high_sense.run_mask )
       {
+        DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "%c", find_sensor(s[i].high_sense.run_mask)->short_name);))
         set_diag_LED(s[i].high_sense.diag_LED, 10);
       }
     }

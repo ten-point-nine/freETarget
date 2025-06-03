@@ -11,7 +11,7 @@
 /*
  * Global functions
  */
-httpd_handle_t start_webserver(void);                                                             // Turn it on and let it go
+httpd_handle_t start_webserver(unsigned int port);                                                // Turn it on and let it go
 void           disconnect_handler(void *arg, esp_event_base_t event_base, int32_t event_id,
                                   void *event_data);                                              // What to do when the server disconnects
 
@@ -21,5 +21,6 @@ int  get_url_arg(char *req_url, char *reply, int sizeof_reply);
 /*
  * #defines
  */
-#define DEFAULT_SERVER_PORT 80 // Use the stanard port 80 for HTTP requests
+#define DEFAULT_HTTP_PORT 80 // Use the stanard port 80 for HTTP requests
+#define EVENT_HTTP_PORT   81 // Use port 81 for the event server
 #endif

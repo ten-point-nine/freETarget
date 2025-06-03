@@ -11,8 +11,9 @@ idf_component_register(SRCS ${app_sources}
                     "C:/Users/allan/esp/esp-idf/esp-idf/components/esp_http_server/include"
                     
                     EMBED_FILES 
-                    "html/index.html"
+                    "html/freeEtarget.html"
                     "html/issf.png"
+                    "html/help.html"
                     "tcpip/ca_cert.pem"
                     )
 
