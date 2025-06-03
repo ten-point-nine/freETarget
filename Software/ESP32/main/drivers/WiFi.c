@@ -295,17 +295,10 @@ void WiFi_station_init(void)
   /*
    * Setup the URL for this target
    */
+  mdns_init();                   // Initialize the mDNS service
   target_name(str_c);            // Get the target name
   mdns_hostname_set(str_c);      // Set the hostname for the target
   mdns_instance_name_set(str_c); // Set the instance name for the target
-  if ( mdns_service_add(NULL, "_http", "_tcp", PORT, NULL, 0) != ESP_OK )
-  {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to add mDNS service");))
-  }
-  else
-  {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Added mDNS service for %s", str_c);))
-  }
 
   /*
    *  All done
