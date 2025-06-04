@@ -56,12 +56,12 @@
 /*
  * Options
  */
-#define SAMPLE_CALCULATIONS  (1 == 0) // Trace the COUNTER values
-#define COMPENSATE_RISE_TIME (1 == 0) // Use PCNT4-7 to compensate for rise time
-#define LONG_TEXT            (512)    // Long text strings are 512 long
-#define MEDIUM_TEXT          256      // Medimum length strings are 256 long
-#define SHORT_TEXT           128      // Short text strings are 128 long
-#define TINY_TEXT            64       // Tiny text strings are 64 long
+#define SAMPLE_CALCULATIONS  (1 == 0)    // Trace the COUNTER values
+#define COMPENSATE_RISE_TIME (1 == 0)    // Use PCNT4-7 to compensate for rise time
+#define LONG_TEXT            (512 + 256) // Long text strings are 512 long
+#define MEDIUM_TEXT          256         // Medimum length strings are 256 long
+#define SHORT_TEXT           128         // Short text strings are 128 long
+#define TINY_TEXT            64          // Tiny text strings are 64 long
 
 /*
  * Oscillator Features

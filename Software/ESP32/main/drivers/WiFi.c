@@ -19,6 +19,9 @@
  * https://medium.com/@fatehsali517/how-to-connect-esp32-to-wifi-using-esp-idf-iot-development-framework-d798dc89f0d6
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/lwip.html
  *
+ * MDNS documentation
+ * https://docs.espressif.com/projects/esp-protocols/mdns/docs/latest/en/index.html
+ *
  * *****************************************************************************/
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
@@ -293,7 +296,7 @@ void WiFi_station_init(void)
   }
 
   /*
-   * Setup the URL for this target
+   * Setup the mDNS service
    */
   mdns_init();                   // Initialize the mDNS service
   target_name(str_c);            // Get the target name
