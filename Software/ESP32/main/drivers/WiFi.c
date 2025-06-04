@@ -119,6 +119,8 @@ static void wifi_set_static_ip(esp_netif_t *netif); // Override the IP address
  *******************************************************************************/
 void WiFi_init(void)
 {
+  char str_c[SHORT_TEXT]; // Place to store the target name
+
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi_init()");))
 
   /*
@@ -131,6 +133,17 @@ void WiFi_init(void)
   else
   {
     WiFi_station_init();
+  }
+
+  /*
+   * Setup the mDNS service
+   */
+  mdns_init();                   // Initialize the mDNS service
+  target_name(str_c);            // Get the target name
+  mdns_hostname_set(str_c);      // Set the hostname for the target
+  mdns_instance_name_set(str_c); // Set the instance name for the target
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "mDNS service set up for: \"%s\"", str_c);))
   }
 
   /*
@@ -294,14 +307,6 @@ void WiFi_station_init(void)
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Unexpectged WiFi event");))
   }
-
-  /*
-   * Setup the mDNS service
-   */
-  mdns_init();                   // Initialize the mDNS service
-  target_name(str_c);            // Get the target name
-  mdns_hostname_set(str_c);      // Set the hostname for the target
-  mdns_instance_name_set(str_c); // Set the instance name for the target
 
   /*
    *  All done

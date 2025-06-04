@@ -603,6 +603,7 @@ static void show_names(int v)
   else
   {
     SEND(ALL, sprintf(_xs, "%d: \"uassigned\", \r\n", JSON_NAME_TEXT);)          // Look for a user defined name
+    SEND(ALL, sprintf(_xs, "%d: \"uassigned\", \r\n", JSON_NAME_CLIENT);)        // Look for a user defined name
   }
 
   /*
