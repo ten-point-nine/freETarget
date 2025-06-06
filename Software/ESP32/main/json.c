@@ -11,6 +11,7 @@
 #include "string.h"
 
 #define JSON_C // This is the JSON file
+#define JSON_C // This is the JSON file
 #include "freETarget.h"
 #include "board_assembly.h"
 #include "helpers.h"
@@ -33,10 +34,12 @@
 /*
  *  Function Prototypes
  */
-static void handle_json(void); // Breakdown the JSON and execute it
-void        show_echo(void);   // Display the current settings
+static void handle_json(void);                    // Breakdown the JSON and execute it
+void        show_echo(void);                      // Display the current settings
 static void show_names(int v);
-static void set_trace(int v);  // Set the trace on and off
+static void set_trace(int v);                     // Set the trace on and off
+static void lock_target(unsigned int password);   // Lock the target
+static void unlock_target(unsigned int password); // Unlock the target
 
 /*-----------------------------------------------------
  *
@@ -52,19 +55,19 @@ static void set_trace(int v);  // Set the trace on and off
  * password and save it to non-volatile memory.
  *
  *-----------------------------------------------------*/
+
+/*
+ *  Variables
+ */
+static char input_JSON[256];                                                   // JSON input buffer
+
+void        show_echo(void);                                                   // Display the current settings
+static void show_names(int v);
+static void set_trace(int v);                                                  // Set the trace on and off
+static void set_50m(int x);                                                    // Configure for 50m pistol
 static void lock_target(unsigned int password);                                // Password entered by the user
 static void unlock_target(unsigned int password);                              // Password entered by the user
 static bool good_input(unsigned int conversion, char next, unsigned int show); // Item display status
-
-                                                                               /*
-                                                                                *  Variables
-                                                                                */
-static char input_JSON[256];  // JSON input buffer
-
-void        show_echo(void);  // Display the current settings
-static void show_names(int v);
-static void set_trace(int v); // Set the trace on and off
-static void set_50m(int x);   // Configure for 50m pistol
 
 const json_message_t JSON[] = {
     //  show     token        value stored in RAM             convert                 service fcn()     NONVOL location      Initial Value
@@ -339,6 +342,26 @@ static void handle_json(void)
               }
               k++;                                          // Advance to the text
 
+              while ( input_JSON[i + k] != '"' )            // Skip to the opening quote
+              {
+                k++;
+              }
+              k++;                                          // Advance to the text
+
+              m    = 0;
+              s[0] = 0;                                     // Put in a null
+              while ( input_JSON[i + k] != '"' )            // Skip to the opening quote
+              {
+                s[m] = input_JSON[i + k];                   // Save the value
+                m++;
+                s[m] = 0;                                   // Null terminate
+                k++;
+              }
+              if ( JSON[j].non_vol != 0 )                   // Save to persistent storage if present
+              {
+                nvs_set_str(my_handle, JSON[j].non_vol, s); // Store into NON-VOL
+              }
+
               m    = 0;
               s[0] = 0;                                     // Put in a null
               while ( input_JSON[i + k] != '"' )            // Skip to the opening quote
@@ -410,9 +433,10 @@ static void handle_json(void)
    * Report an error if input not found
    */
   if ( (not_found == true) )
-  {
-    SEND(ALL, sprintf(_xs, "\r\n\r\nCannot decode: {%s}\r\n", input_JSON);)
-  }
+    if ( (not_found == true) )
+    {
+      SEND(ALL, sprintf(_xs, "\r\n\r\nCannot decode: {%s}\r\n", input_JSON);)
+    }
 
   /*
    * All done
@@ -525,6 +549,7 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"TIMER_COUNT\":       %d,",
                     (int)(SHOT_TIME * OSCILLATOR_MHZ));) // Maximum number of clock cycles to record shot (target dependent)
   SEND(ALL, sprintf(_xs, "\"V12\":               %4.2f,", v12_supply());) // 12 Volt LED supply
+
   WiFi_MAC_address(str_c);
   SEND(ALL, sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\",", str_c[0], str_c[1], str_c[2], str_c[3], str_c[4],
                     str_c[5]);)
@@ -582,6 +607,8 @@ void show_echo(void)
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
   SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                          // Current persistent storage version
   SEND(ALL, sprintf(_xs, "\"BD_REV\":            %4.2f ", (float)revision() / 100);) // Current board version
+  SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                          // Current persistent storage version
+  SEND(ALL, sprintf(_xs, "\"BD_REV\":            %4.2f ", (float)revision() / 100);) // Current board version
   SEND(ALL, sprintf(_xs, "}\r\n");)
 
   /*
@@ -631,6 +658,7 @@ static void show_names(int v)
   else
   {
     SEND(ALL, sprintf(_xs, "%d: \"uassigned\", \r\n", JSON_NAME_TEXT);)          // Look for a user defined name
+    SEND(ALL, sprintf(_xs, "%d: \"uassigned\", \r\n", JSON_NAME_CLIENT);)        // Look for a user defined name
   }
 
   /*

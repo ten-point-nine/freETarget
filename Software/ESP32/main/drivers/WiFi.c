@@ -19,11 +19,15 @@
  * https://medium.com/@fatehsali517/how-to-connect-esp32-to-wifi-using-esp-idf-iot-development-framework-d798dc89f0d6
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/lwip.html
  *
+ * MDNS documentation
+ * https://docs.espressif.com/projects/esp-protocols/mdns/docs/latest/en/index.html
+ *
  * *****************************************************************************/
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "freertos/task.h"
 #include <string.h>
+#include "mdns.h"
 
 #include "esp_event.h"
 #include "esp_log.h"
@@ -115,6 +119,8 @@ static void wifi_set_static_ip(esp_netif_t *netif); // Override the IP address
  *******************************************************************************/
 void WiFi_init(void)
 {
+  char str_c[SHORT_TEXT]; // Place to store the target name
+
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi_init()");))
 
   /*
@@ -127,6 +133,17 @@ void WiFi_init(void)
   else
   {
     WiFi_station_init();
+  }
+
+  /*
+   * Setup the mDNS service
+   */
+  mdns_init();                   // Initialize the mDNS service
+  target_name(str_c);            // Get the target name
+  mdns_hostname_set(str_c);      // Set the hostname for the target
+  mdns_instance_name_set(str_c); // Set the instance name for the target
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "mDNS service set up for: \"%s\"", str_c);))
   }
 
   /*

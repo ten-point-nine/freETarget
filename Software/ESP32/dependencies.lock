@@ -5,13 +5,24 @@ dependencies:
       path: C:\Users\allan\Documents\freETarget\Software\ESP32\components\espressif__led_strip
       type: local
     version: 2.4.1
+  espressif/mdns:
+    component_hash: 3ec0af5f6bce310512e90f482388d21cc7c0e99668172d2f895356165fc6f7c5
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=5.0'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.8.2
   idf:
     source:
       type: idf
     version: 5.3.1
 direct_dependencies:
 - espressif/led_strip
+- espressif/mdns
 - idf
-manifest_hash: 6a59b5f872de27124e9d4583618cd76d05ab2cacb57778a2a4c96a74c5bf1efc
+manifest_hash: 90ea5d3635d1795be92d96b50e771a91102f1d1204899bcd301813867e80d9a0
 target: esp32s3
 version: 2.0.0

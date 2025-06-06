@@ -84,9 +84,9 @@ void app_main(void)
   xTaskCreate(tcpip_socket_poll_3, "tcpip_socket_poll_3", K4, NULL, POLLING, NULL);
   vTaskDelay(TICK_10ms);
 
-  start_webserver_80();
+  start_webserver(DEFAULT_HTTP_PORT);
   vTaskDelay(TICK_10ms);
-  start_webserver_81();
+  start_webserver(EVENT_HTTP_PORT);
   vTaskDelay(TICK_10ms);
 
   freeETarget_timer_init();

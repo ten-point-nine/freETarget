@@ -53,6 +53,10 @@
     "ranges": "c"
   },
   "idf.flashType": "UART",
+<<<<<<< HEAD
   "idf.portWin": "COM6",
+=======
+  "idf.portWin": "COM3",
+>>>>>>> fred
   "C_Cpp.default.compilerPath": "c:\\Users\\allan\\esp\\esp-idf\\tools\\tools\\xtensa-esp32s3-elf\\esp-2022r1-11.2.0\\xtensa-esp32s3-elf\\bin\\xtensa-esp32s3-elf-gcc.exe"
 }
