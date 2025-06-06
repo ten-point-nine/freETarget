@@ -19,7 +19,7 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"6.1.11 June 4, 2025\""
+#define SOFTWARE_VERSION "\"India 4MB June 4, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED" // Message to send on connection
 #define BUILD_REV        530         // Build for Revision 530 and higher
