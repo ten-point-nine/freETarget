@@ -62,6 +62,7 @@ static event_mode_t event_mode = IDLE; // Set the server mode to auto refresh
 static esp_err_t stop_webserver(httpd_handle_t server);
 static esp_err_t service_get_FreeETarget(httpd_req_t *req);                      // Main target page
 static esp_err_t service_get_help(httpd_req_t *req);                             // User help page
+static esp_err_t service_get_control(httpd_req_t *req);                          // Control back channel
 static esp_err_t service_get_who(httpd_req_t *req);                              // Target information page
 static esp_err_t service_get_issf_png(httpd_req_t *req);                         // Icon for the ISSF target
 static esp_err_t service_get_json(httpd_req_t *req);                             // Webb ased JSON interface
@@ -72,15 +73,15 @@ static esp_err_t service_post_post(httpd_req_t *req);
  *  URL handlers
  */
 const httpd_uri_t uri_list[] = {
-    {.uri = "/",            .method = HTTP_GET,  .handler = service_get_help,        .user_ctx = NULL},
-    {.uri = "/help",        .method = HTTP_GET,  .handler = service_get_help,        .user_ctx = NULL},
-    {.uri = "/target",      .method = HTTP_GET,  .handler = service_get_FreeETarget, .user_ctx = NULL},
-    {.uri = "/who",         .method = HTTP_GET,  .handler = service_get_who,         .user_ctx = NULL},
-    {.uri = "/json",        .method = HTTP_GET,  .handler = service_get_json,        .user_ctx = NULL},
-    {.uri = "/events",      .method = HTTP_GET,  .handler = service_get_events,      .user_ctx = NULL},
-    {.uri = "/favicon.ico", .method = HTTP_GET,  .handler = service_get_issf_png,    .user_ctx = NULL},
-    {.uri = "/post",        .method = HTTP_POST, .handler = service_post_post,       .user_ctx = NULL},
-    {0,                     .0,                  0,                                  0               }  // End
+    {.uri = "/",            .method = HTTP_GET, .handler = service_get_help,        .user_ctx = NULL},
+    {.uri = "/help",        .method = HTTP_GET, .handler = service_get_help,        .user_ctx = NULL},
+    {.uri = "/target",      .method = HTTP_GET, .handler = service_get_FreeETarget, .user_ctx = NULL},
+    {.uri = "/who",         .method = HTTP_GET, .handler = service_get_who,         .user_ctx = NULL},
+    {.uri = "/json",        .method = HTTP_GET, .handler = service_get_json,        .user_ctx = NULL},
+    {.uri = "/events",      .method = HTTP_GET, .handler = service_get_events,      .user_ctx = NULL},
+    {.uri = "/favicon.ico", .method = HTTP_GET, .handler = service_get_issf_png,    .user_ctx = NULL},
+    //    {.uri = "/post",        .method = HTTP_POST, .handler = service_post_post,       .user_ctx = NULL},
+    {0,                     .0,                 0,                                  0               }  // End
 };
 
 /*----------------------------------------------------------------
@@ -259,6 +260,67 @@ static esp_err_t service_get_events(httpd_req_t *req)
   /*
    *  All done, return
    */
+  return ESP_OK;
+}
+/*----------------------------------------------------------------
+ *
+ * @function: service_get_control
+ *
+ * @brief:    Control the target over port 81
+ *
+ * @return:   esp_err_t, error type
+ *
+ *---------------------------------------------------------------
+ *
+ * This function is called in respoinse to a user starting a
+ * shooting session.a
+ *
+ * Arguements
+ *
+ * MATCH - Start a match session
+ * SIGHT - Start a sighting session
+ * AUTO  - Set the server to auto refresh
+ * SINGLE - Set the server to single shot mode
+ * STOP  - Stop the server
+ *
+ *------------------------------------------------------------*/
+static esp_err_t service_get_control(httpd_req_t *req)
+{
+  const char *resp_str;            // Reply to server
+  char        my_name[SHORT_TEXT]; // Temporary string
+
+  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_control(%s)", req->uri);))
+
+  /*
+   *  Decode the command line arguements if there are any
+   */
+  if ( (instr(req->uri, "MATCH") != 0) || (instr(req->uri, "match") != 0) )
+  {
+    start_new_session(SESSION_MATCH);
+  }
+
+  if ( (instr(req->uri, "AUTO") != 0) || (instr(req->uri, "auto") != 0) )
+  {
+    event_mode = AUTO;   // Set the server mode to auto refresh
+  }
+  else
+  {
+    event_mode = SINGLE; // Set the server mode to single shot
+  }
+
+  if ( (instr(req->uri, "STOP") != 0) || (instr(req->uri, "stop") != 0) )
+  {
+    event_mode = CLOSE;  // Set the server mode to stop
+  }
+
+  /*
+   *  Send the reply to the client
+   */
+  target_name(my_name);                       // Get the target name
+  resp_str = (const char *)&FreeETarget_html; // point to the target HTML file
+  httpd_resp_set_hdr(req, "get_FreeETarget", my_name);
+  httpd_resp_send(req, resp_str, strlen(resp_str));
+
   return ESP_OK;
 }
 
