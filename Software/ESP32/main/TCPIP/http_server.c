@@ -98,7 +98,7 @@ httpd_handle_t start_webserver(unsigned int port // Port to use for the web serv
       ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
     }
 #endif
-    DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Registering URI handlers");))
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Registering URI handlers using port %d", port);))
     register_services(server, port);
     httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
     server_count++; // Increment the number of servers started
@@ -218,10 +218,10 @@ esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
   strcat(_xs, "<br>Valid URLs<br/>");                         // Error reported to the user
 
   i = 0;
-  while ( uri_list[i].uri_struct->uri != 0 )
+  while ( uri_list[i].uri_struct.uri != 0 )
   {
     strcat(_xs, "<br>");
-    strcat(_xs, uri_list[i].uri_struct->uri);
+    strcat(_xs, uri_list[i].uri_struct.uri);
     i++;
   }
   httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, _xs);

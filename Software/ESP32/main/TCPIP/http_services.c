@@ -58,6 +58,18 @@ typedef enum // Server modes
 int                 http_shot  = -1;   // What shot number have we sent?
 static event_mode_t event_mode = IDLE; // Set the server mode to auto refresh
 
+typedef struct
+{
+  unsigned int port;
+} my_user_ctx_t;                       // Internal user context structure
+
+static const my_user_ctx_t http_freeETarget_ctx  = {DEFAULT_HTTP_PORT};
+static const my_user_ctx_t event_freeETarget_ctx = {EVENT_HTTP_PORT};
+static const my_user_ctx_t http_events_ctx       = {DEFAULT_HTTP_PORT};
+static const my_user_ctx_t event_events_ctx      = {EVENT_HTTP_PORT};
+static const my_user_ctx_t http_menu_ctx         = {DEFAULT_HTTP_PORT};
+static const my_user_ctx_t event_menu_ctx        = {EVENT_HTTP_PORT};
+
 /*
  * Local functions
  */
@@ -75,16 +87,20 @@ static esp_err_t service_post_post(httpd_req_t *req);
 /*
  *  URI handlers
  */
-const struct my_uri_t uri_list[] = {
-    {DEFAULT_HTTP_PORT, {.uri = "/", .method = HTTP_GET, .handler = service_get_help, .user_ctx = NULL}               },
-    {DEFAULT_HTTP_PORT, {.uri = "/help", .method = HTTP_GET, .handler = service_get_help, .user_ctx = NULL}           },
-    {DEFAULT_HTTP_PORT, {.uri = "/target", .method = HTTP_GET, .handler = service_get_FreeETarget, .user_ctx = NULL}  },
-    {DEFAULT_HTTP_PORT, {.uri = "/menu", .method = HTTP_GET, .handler = service_get_menu, .user_ctx = NULL}           },
-    {DEFAULT_HTTP_PORT, {.uri = "/who", .method = HTTP_GET, .handler = service_get_who, .user_ctx = NULL}             },
-    {DEFAULT_HTTP_PORT, {.uri = "/json", .method = HTTP_GET, .handler = service_get_json, .user_ctx = NULL}           },
-    {DEFAULT_HTTP_PORT, {.uri = "/events", .method = HTTP_GET, .handler = service_get_events, .user_ctx = NULL}       },
-    {DEFAULT_HTTP_PORT, {.uri = "/favicon.ico", .method = HTTP_GET, .handler = service_get_issf_png, .user_ctx = NULL}},
-    {0,                 {}                                                                                            }
+const my_uri_t uri_list[] = {
+    {DEFAULT_HTTP_PORT, {"/", HTTP_GET, service_get_menu, NULL}                                       },
+    {DEFAULT_HTTP_PORT, {"/menu", HTTP_GET, service_get_menu, (void *)&http_menu_ctx}                 },
+    {DEFAULT_HTTP_PORT, {"/help", HTTP_GET, service_get_help, NULL}                                   },
+    {DEFAULT_HTTP_PORT, {"/target", HTTP_GET, service_get_FreeETarget, (void *)&http_freeETarget_ctx} },
+    {DEFAULT_HTTP_PORT, {"/events", HTTP_GET, service_get_events, (void *)&http_events_ctx}           },
+    {DEFAULT_HTTP_PORT, {"/who", HTTP_GET, service_get_who, NULL}                                     },
+    {DEFAULT_HTTP_PORT, {"/json", HTTP_GET, service_get_json, NULL}                                   },
+    {DEFAULT_HTTP_PORT, {"/favicon.ico", HTTP_GET, service_get_issf_png, NULL}                        },
+    {EVENT_HTTP_PORT,   {"/menu", HTTP_GET, service_get_menu, (void *)&event_menu_ctx}                },
+    {EVENT_HTTP_PORT,   {"/help", HTTP_GET, service_get_help, NULL}                                   },
+    {EVENT_HTTP_PORT,   {"/target", HTTP_GET, service_get_FreeETarget, (void *)&event_freeETarget_ctx}},
+    {EVENT_HTTP_PORT,   {"/events", HTTP_GET, service_get_events, (void *)&event_events_ctx}          },
+    {0,                 {"", 0, NULL, NULL}                                                           }
 };
 
 /*----------------------------------------------------------------
@@ -113,8 +129,8 @@ void register_services(httpd_handle_t server, // Pointer to active server
   {
     if ( uri_list[i].port == port ) // Only register the services for this port
     {
-      httpd_register_uri_handler(server, &uri_list[i]);
-      DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Registering %s on port %d", uri_list[i].uri->uri, uri_list[i].port);))
+      httpd_register_uri_handler(server, &uri_list[i].uri_struct);
+      DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Registering %s on port %d", uri_list[i].uri_struct.uri, uri_list[i].port);))
     }
 
     i++;
@@ -302,31 +318,32 @@ static esp_err_t service_get_menu(httpd_req_t *req)
   /*
    *  Decode the command line arguements if there are any
    */
-  if ( (instr(req->uri, "MATCH") != 0) || (instr(req->uri, "match") != 0) )
+
+  if ( (instr(req->uri, "/menu?start") > 0) || (instr(req->uri, "/menu?start") > 0) )
   {
     start_new_session(SESSION_MATCH);
-  }
+    /*
+     * Do the things we need to do to start a session
+     */
+    http_shot = -1; // Reset the shot counter
+    connection_list |= HTTP_CONNECTED;
 
-  if ( (instr(req->uri, "AUTO") != 0) || (instr(req->uri, "auto") != 0) )
-  {
-    event_mode = AUTO;   // Set the server mode to auto refresh
-  }
-  else
-  {
-    event_mode = SINGLE; // Set the server mode to single shot
-  }
-
-  if ( (instr(req->uri, "STOP") != 0) || (instr(req->uri, "stop") != 0) )
-  {
-    event_mode = CLOSE;  // Set the server mode to stop
+    /*
+     *  Send the reply to the client
+     */
+    target_name(my_name);                       // Get the target name
+    resp_str = (const char *)&FreeETarget_html; // point to the target HTML file
+    httpd_resp_set_hdr(req, "get_menu", my_name);
+    httpd_resp_send(req, resp_str, strlen(resp_str));
+    return ESP_OK;                              // All done, return
   }
 
   /*
    *  Send the reply to the client
    */
-  target_name(my_name);                       // Get the target name
-  resp_str = (const char *)&FreeETarget_html; // point to the target HTML file
-  httpd_resp_set_hdr(req, "get_FreeETarget", my_name);
+  target_name(my_name);                // Get the target name
+  resp_str = (const char *)&menu_html; // point to the target HTML file
+  httpd_resp_set_hdr(req, "get_menu", my_name);
   httpd_resp_send(req, resp_str, strlen(resp_str));
 
   return ESP_OK;
