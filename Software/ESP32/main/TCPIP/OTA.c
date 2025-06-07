@@ -26,6 +26,7 @@
 #include "driver\gpio.h"
 
 #include "freETarget.h"
+#include "board_assembly.h"
 #include "helpers.h"
 #include "diag_tools.h"
 #include "ota.h"

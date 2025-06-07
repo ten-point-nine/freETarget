@@ -21,6 +21,7 @@
 #include "math.h"
 
 #include "freETarget.h"
+#include "board_assembly.h"
 #include "helpers.h"
 #include "http_client.h"
 #include "http_test.h"
@@ -62,6 +63,7 @@ static const self_test_t test_list[] = {
     {"Status LED driver",                 &status_LED_test         },
     {"Analog input test",                 &analog_input_test       },
     {"DAC test",                          &DAC_test                },
+    {"DAC read",                          &DAC_read                },
     {"- Timer & PCNT test",               0                        },
     {"PCNT timers not stopping",          &pcnt_1                  },
     {"PCNT timers not running",           &pcnt_2                  },
@@ -237,25 +239,32 @@ static void show_test_help(void)
 #define PASS_B       0x0200
 #define PASS_C       0X0400
 #define PASS_D       0x0800
-#define PASS_MASK    (PASS_RUNNING | PASS_A | PASS_B)
+#define PASS_VREF    0x1000
+#define PASS_MASK    (PASS_RUNNING | PASS_A | PASS_B | PASS_VREF)
 #define PASS_TEST    (PASS_RUNNING | PASS_C)
 
 bool factory_test(void)
 {
   int   i, percent;
-  int   running;         // Bit mask from run flip flops
-  int   dip;             // Input from DIP input
+  int   running;               // Bit mask from run flip flops
+  int   dip;                   // Input from DIP input
   char  ch;
-  char  ABCD[] = "DCBA"; // DIP switch order
-  int   pass;            // Pass YES/NO
-  bool  passed_once;     // Passed all of the tests at least once
+  char  ABCD[] = "DCBA";       // DIP switch order
+  int   pass;                  // Pass YES/NO
+  bool  passed_once;           // Passed all of the tests at least once
   float volts[4];
-  int   motor_toggle;    // Toggle motor on an off
+  float vmes_lo;
+  int   motor_toggle;          // Toggle motor on an off
+  int   number_of_sensors = 4; // Number of sensors to test
 
-  pass         = 0;      // Pass YES/NO
+  pass         = 0;            // Pass YES/NO
   passed_once  = false;
   percent      = 0;
   motor_toggle = 0;
+  if ( PCNT_HIGH_GPIO & board_mask )
+  {
+    number_of_sensors = 8;     // Number of sensors to test
+  }
 
   /*
    *  Force the refernce voltages - Incase the board has been uninitialized
@@ -309,7 +318,7 @@ bool factory_test(void)
     SEND(ALL, sprintf(_xs, "\r\nSens: ");)
     running = is_running();
     pass |= running & RUN_MASK;
-    for ( i = 0; i != 8; i++ )
+    for ( i = 0; i != number_of_sensors; i++ )
     {
       if ( i == 4 )
       {
@@ -379,6 +388,21 @@ bool factory_test(void)
     }
 
     SEND(ALL, sprintf(_xs, "  12V: %4.2fV", v12_supply());)
+    if ( TMP1075D & board_mask )
+    {
+      vmes_lo = vref_measure();       // Read the VREF_LO voltage
+      SEND(ALL, sprintf(_xs, "  VREF_LO: %4.2fV", vmes_lo);)
+      if ( abs(vmes_lo - json_vref_lo) <= 0.1 )
+      {
+        SEND(ALL, sprintf(_xs, " ");)
+        pass |= PASS_VREF;            // Mark the test as passed
+      }
+      else
+      {
+        SEND(ALL, sprintf(_xs, "x");) // Show the voltage is out of range
+        pass &= ~PASS_VREF;
+      }
+    }
     SEND(ALL, sprintf(_xs, "  Temp: %4.2fC", temperature_C());)
     SEND(ALL, sprintf(_xs, "  Humidiity: %4.2f%%", humidity_RH());)
 
@@ -557,7 +581,9 @@ bool POST_counters(void)
    */
   gpio_set_level(STOP_N, RUN_OFF); // Clear the latch
   gpio_set_level(STOP_N, RUN_GO);  // and reenable it
-  running = is_running();
+  running = is_running() & RUN_MASK;
+  printf("Running: %02X\n", running);
+
   if ( running != 0 )
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Stuck bit in run latch: ");))
@@ -568,16 +594,19 @@ bool POST_counters(void)
         DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "%c", find_sensor(s[i].low_sense.run_mask)->short_name);))
         set_diag_LED(s[i].low_sense.diag_LED, 10);
       }
-      if ( running & s[i].high_sense.run_mask )
-      {
-        DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "%c", find_sensor(s[i].high_sense.run_mask)->short_name);))
-        set_diag_LED(s[i].high_sense.diag_LED, 10);
-      }
-    }
-    run_state |= IN_FATAL_ERR;
-  }
-  vTaskDelay(ONE_SECOND);
 
+      if ( PCNT_HIGH_GPIO & board_mask ) // Only check the high sense if it is present
+      {
+        if ( running & s[i].high_sense.run_mask )
+        {
+          SEND(ALL, sprintf(_xs, "%c", s[i].high_sense.short_name);)
+          set_diag_LED(s[i].high_sense.diag_LED, 10);
+        }
+      }
+      run_state |= IN_FATAL_ERR;
+    }
+    vTaskDelay(ONE_SECOND);
+  }
   /*
    * Test 4, Trigger the timers
    */
@@ -861,7 +890,7 @@ bool check_12V(void)
   if ( json_paper_time == 0 ) // The witness paper is not used
   {
     set_status_LED(LED_12V_NOT_USED);
-    fault_V12 = NONE;
+    fault_V12 = UNKNOWN;
     return false;
   }
 
@@ -872,7 +901,7 @@ bool check_12V(void)
 
   if ( v12 <= V12_CAUTION )
   {
-    if ( fault_V12 != NONE )
+    if ( fault_V12 != NONE ) // Don't update if the error is known.
     {
       set_status_LED(LED_NO_12V);
       fault_V12 = NONE;

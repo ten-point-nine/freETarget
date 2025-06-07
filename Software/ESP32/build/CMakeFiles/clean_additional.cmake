@@ -10,6 +10,7 @@ if("${CONFIG}" STREQUAL "" OR "${CONFIG}" STREQUAL "")
   "ca_cert.pem.S"
   "config\\sdkconfig.cmake"
   "config\\sdkconfig.h"
+  "control_panel.html.S"
   "esp-idf\\esptool_py\\flasher_args.json.in"
   "esp-idf\\mbedtls\\x509_crt_bundle"
   "flash_app_args"

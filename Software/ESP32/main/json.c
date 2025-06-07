@@ -11,7 +11,9 @@
 #include "string.h"
 
 #define JSON_C // This is the JSON file
+#define JSON_C // This is the JSON file
 #include "freETarget.h"
+#include "board_assembly.h"
 #include "helpers.h"
 #include "analog_io.h"
 #include "ctype.h"
