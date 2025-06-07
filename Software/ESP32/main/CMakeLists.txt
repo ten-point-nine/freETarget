@@ -14,6 +14,7 @@ idf_component_register(SRCS ${app_sources}
                     "html/freeEtarget.html"
                     "html/issf.png"
                     "html/help.html"
+                    "html/control_panel.html"
                     "tcpip/ca_cert.pem"
                     )
 
