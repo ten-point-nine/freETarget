@@ -10,7 +10,6 @@ if("${CONFIG}" STREQUAL "" OR "${CONFIG}" STREQUAL "")
   "ca_cert.pem.S"
   "config\\sdkconfig.cmake"
   "config\\sdkconfig.h"
-  "control_panel.html.S"
   "esp-idf\\esptool_py\\flasher_args.json.in"
   "esp-idf\\mbedtls\\x509_crt_bundle"
   "flash_app_args"
@@ -23,6 +22,7 @@ if("${CONFIG}" STREQUAL "" OR "${CONFIG}" STREQUAL "")
   "issf.png.S"
   "ldgen_libraries"
   "ldgen_libraries.in"
+  "menu.html.S"
   "project_elf_src_esp32s3.c"
   "x509_crt_bundle.S"
   )

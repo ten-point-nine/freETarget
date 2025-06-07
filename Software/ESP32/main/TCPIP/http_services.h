@@ -9,10 +9,21 @@
 #define _HTTP_SERVICES_H_
 
 /*
+ * Typedefs
+ */
+typedef struct my_uri      // Internal URI structure
+{
+  unsigned int port;       // Port number uri is listening on
+  httpd_uri_t *uri_struct; // URI structure
+} my_uri_t;
+
+/*
  * Global functions
  */
-void                     register_services(httpd_handle_t server); // Pointer to active server
-extern const httpd_uri_t uri_list[];                               // List of active URLs
+void register_services(httpd_handle_t server, unsigned int port); // Pointer to active server
+#ifndef HTTP_SERVICES_C
+extern const struct my_uri_t uri_list[];                          // List of active URLs
+#endif
 
 /*
  * Global Variables

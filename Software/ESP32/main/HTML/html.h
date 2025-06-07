@@ -23,9 +23,9 @@ extern const unsigned char issf_end[] asm("_binary_issf_png_end");
 
 extern const unsigned char help_html[] asm("_binary_help_html_start");
 extern const unsigned char help_end[] asm("_binary_help_html_end");
-#define SIZEOF_FreeETarget_HTML (help_end - help_html)
+#define SIZEOF_HELP_HTML (help_end - help_html)
 
-extern const unsigned char control_panel_html[] asm("_binary_control_panel_html_start");
-extern const unsigned char control_panel_end[] asm("_binary_control_panel_html_end");
-#define SIZEOF_FreeETarget_HTML (help_end - help_html)
+extern const unsigned char menu_html[] asm("_binary_menu_html_start");
+extern const unsigned char menu_end[] asm("_binary_menu_html_end");
+#define SIZEOF_MENU_HTML (help_end - help_html)
 #endif

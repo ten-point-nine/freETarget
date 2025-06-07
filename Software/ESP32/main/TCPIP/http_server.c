@@ -21,10 +21,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/param.h>
-// #include "esp_netif.h"
-// #include "protocol_examples_common.h"
-// #include "protocol_examples_utils.h"
-// #include "esp_tls_crypto.h"
 #include "esp_http_server.h"
 #include "esp_event.h"
 #include "esp_netif.h"
@@ -103,7 +99,7 @@ httpd_handle_t start_webserver(unsigned int port // Port to use for the web serv
     }
 #endif
     DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Registering URI handlers");))
-    register_services(server);
+    register_services(server, port);
     httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
     server_count++; // Increment the number of servers started
 
@@ -222,10 +218,10 @@ esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
   strcat(_xs, "<br>Valid URLs<br/>");                         // Error reported to the user
 
   i = 0;
-  while ( uri_list[i].uri != 0 )
+  while ( uri_list[i].uri_struct->uri != 0 )
   {
     strcat(_xs, "<br>");
-    strcat(_xs, uri_list[i].uri);
+    strcat(_xs, uri_list[i].uri_struct->uri);
     i++;
   }
   httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, _xs);

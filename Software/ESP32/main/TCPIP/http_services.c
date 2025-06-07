@@ -27,10 +27,12 @@
 #include <esp_wifi.h>
 #include "esp_ota_ops.h"
 
+#define HTTP_SERVER_C
 #include "freETarget.h"
 #include "compute_hit.h"
 #include "helpers.h"
 #include "http_server.h"
+#include "http_services.h"
 #include "diag_tools.h"
 #include "json.h"
 #include "serial_io.h"
@@ -62,26 +64,27 @@ static event_mode_t event_mode = IDLE; // Set the server mode to auto refresh
 static esp_err_t stop_webserver(httpd_handle_t server);
 static esp_err_t service_get_FreeETarget(httpd_req_t *req);                      // Main target page
 static esp_err_t service_get_help(httpd_req_t *req);                             // User help page
-static esp_err_t service_get_control(httpd_req_t *req);                          // Control back channel
+static esp_err_t service_get_menu(httpd_req_t *req);                             // Control back channel
 static esp_err_t service_get_who(httpd_req_t *req);                              // Target information page
 static esp_err_t service_get_issf_png(httpd_req_t *req);                         // Icon for the ISSF target
 static esp_err_t service_get_json(httpd_req_t *req);                             // Webb ased JSON interface
 static esp_err_t service_get_events(httpd_req_t *req);                           // Get shot events
 static esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Create a URL not found handler
 static esp_err_t service_post_post(httpd_req_t *req);
+
 /*
- *  URL handlers
+ *  URI handlers
  */
-const httpd_uri_t uri_list[] = {
-    {.uri = "/",            .method = HTTP_GET, .handler = service_get_help,        .user_ctx = NULL},
-    {.uri = "/help",        .method = HTTP_GET, .handler = service_get_help,        .user_ctx = NULL},
-    {.uri = "/target",      .method = HTTP_GET, .handler = service_get_FreeETarget, .user_ctx = NULL},
-    {.uri = "/who",         .method = HTTP_GET, .handler = service_get_who,         .user_ctx = NULL},
-    {.uri = "/json",        .method = HTTP_GET, .handler = service_get_json,        .user_ctx = NULL},
-    {.uri = "/events",      .method = HTTP_GET, .handler = service_get_events,      .user_ctx = NULL},
-    {.uri = "/favicon.ico", .method = HTTP_GET, .handler = service_get_issf_png,    .user_ctx = NULL},
-    //    {.uri = "/post",        .method = HTTP_POST, .handler = service_post_post,       .user_ctx = NULL},
-    {0,                     .0,                 0,                                  0               }  // End
+const struct my_uri_t uri_list[] = {
+    {DEFAULT_HTTP_PORT, {.uri = "/", .method = HTTP_GET, .handler = service_get_help, .user_ctx = NULL}               },
+    {DEFAULT_HTTP_PORT, {.uri = "/help", .method = HTTP_GET, .handler = service_get_help, .user_ctx = NULL}           },
+    {DEFAULT_HTTP_PORT, {.uri = "/target", .method = HTTP_GET, .handler = service_get_FreeETarget, .user_ctx = NULL}  },
+    {DEFAULT_HTTP_PORT, {.uri = "/menu", .method = HTTP_GET, .handler = service_get_menu, .user_ctx = NULL}           },
+    {DEFAULT_HTTP_PORT, {.uri = "/who", .method = HTTP_GET, .handler = service_get_who, .user_ctx = NULL}             },
+    {DEFAULT_HTTP_PORT, {.uri = "/json", .method = HTTP_GET, .handler = service_get_json, .user_ctx = NULL}           },
+    {DEFAULT_HTTP_PORT, {.uri = "/events", .method = HTTP_GET, .handler = service_get_events, .user_ctx = NULL}       },
+    {DEFAULT_HTTP_PORT, {.uri = "/favicon.ico", .method = HTTP_GET, .handler = service_get_issf_png, .user_ctx = NULL}},
+    {0,                 {}                                                                                            }
 };
 
 /*----------------------------------------------------------------
@@ -100,15 +103,20 @@ const httpd_uri_t uri_list[] = {
  * Then check for out of bounds and reset those values
  *
  *------------------------------------------------------------*/
-void register_services(httpd_handle_t server // Pointer to active server
-)
+void register_services(httpd_handle_t server, // Pointer to active server
+                       unsigned int   port)
 {
   int i;
 
   i = 0;
-  while ( uri_list[i].uri != 0 )
+  while ( uri_list[i].port != 0 )
   {
-    httpd_register_uri_handler(server, &uri_list[i]);
+    if ( uri_list[i].port == port ) // Only register the services for this port
+    {
+      httpd_register_uri_handler(server, &uri_list[i]);
+      DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Registering %s on port %d", uri_list[i].uri->uri, uri_list[i].port);))
+    }
+
     i++;
   }
   return;
@@ -264,7 +272,7 @@ static esp_err_t service_get_events(httpd_req_t *req)
 }
 /*----------------------------------------------------------------
  *
- * @function: service_get_control
+ * @function: service_get_menu
  *
  * @brief:    Control the target over port 81
  *
@@ -284,12 +292,12 @@ static esp_err_t service_get_events(httpd_req_t *req)
  * STOP  - Stop the server
  *
  *------------------------------------------------------------*/
-static esp_err_t service_get_control(httpd_req_t *req)
+static esp_err_t service_get_menu(httpd_req_t *req)
 {
   const char *resp_str;            // Reply to server
   char        my_name[SHORT_TEXT]; // Temporary string
 
-  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_control(%s)", req->uri);))
+  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_menu(%s)", req->uri);))
 
   /*
    *  Decode the command line arguements if there are any
