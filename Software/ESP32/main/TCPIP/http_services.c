@@ -63,12 +63,10 @@ typedef struct
   unsigned int port;
 } my_user_ctx_t;                       // Internal user context structure
 
-static const my_user_ctx_t http_freeETarget_ctx  = {DEFAULT_HTTP_PORT};
-static const my_user_ctx_t event_freeETarget_ctx = {EVENT_HTTP_PORT};
-static const my_user_ctx_t http_events_ctx       = {DEFAULT_HTTP_PORT};
-static const my_user_ctx_t event_events_ctx      = {EVENT_HTTP_PORT};
-static const my_user_ctx_t http_menu_ctx         = {DEFAULT_HTTP_PORT};
-static const my_user_ctx_t event_menu_ctx        = {EVENT_HTTP_PORT};
+static const my_user_ctx_t http_freeETarget_ctx = {DEFAULT_HTTP_PORT};
+static const my_user_ctx_t http_events_ctx      = {DEFAULT_HTTP_PORT};
+static const my_user_ctx_t http_menu_ctx        = {DEFAULT_HTTP_PORT};
+static const my_user_ctx_t event_menu_ctx       = {EVENT_HTTP_PORT};
 
 /*
  * Local functions
@@ -88,19 +86,19 @@ static esp_err_t service_post_post(httpd_req_t *req);
  *  URI handlers
  */
 const my_uri_t uri_list[] = {
-    {DEFAULT_HTTP_PORT, {"/", HTTP_GET, service_get_menu, NULL}                                       },
-    {DEFAULT_HTTP_PORT, {"/menu", HTTP_GET, service_get_menu, (void *)&http_menu_ctx}                 },
-    {DEFAULT_HTTP_PORT, {"/help", HTTP_GET, service_get_help, NULL}                                   },
-    {DEFAULT_HTTP_PORT, {"/target", HTTP_GET, service_get_FreeETarget, (void *)&http_freeETarget_ctx} },
-    {DEFAULT_HTTP_PORT, {"/events", HTTP_GET, service_get_events, (void *)&http_events_ctx}           },
-    {DEFAULT_HTTP_PORT, {"/who", HTTP_GET, service_get_who, NULL}                                     },
-    {DEFAULT_HTTP_PORT, {"/json", HTTP_GET, service_get_json, NULL}                                   },
-    {DEFAULT_HTTP_PORT, {"/favicon.ico", HTTP_GET, service_get_issf_png, NULL}                        },
-    {EVENT_HTTP_PORT,   {"/menu", HTTP_GET, service_get_menu, (void *)&event_menu_ctx}                },
-    {EVENT_HTTP_PORT,   {"/help", HTTP_GET, service_get_help, NULL}                                   },
-    {EVENT_HTTP_PORT,   {"/target", HTTP_GET, service_get_FreeETarget, (void *)&event_freeETarget_ctx}},
-    {EVENT_HTTP_PORT,   {"/events", HTTP_GET, service_get_events, (void *)&event_events_ctx}          },
-    {0,                 {"", 0, NULL, NULL}                                                           }
+    {DEFAULT_HTTP_PORT, {"/", HTTP_GET, service_get_menu, NULL}                                      },
+    {DEFAULT_HTTP_PORT, {"/menu", HTTP_GET, service_get_menu, (void *)&http_menu_ctx}                },
+    {DEFAULT_HTTP_PORT, {"/help", HTTP_GET, service_get_help, NULL}                                  },
+    {DEFAULT_HTTP_PORT, {"/target", HTTP_GET, service_get_FreeETarget, (void *)&http_freeETarget_ctx}},
+    {DEFAULT_HTTP_PORT, {"/events", HTTP_GET, service_get_events, (void *)&http_events_ctx}          },
+    {DEFAULT_HTTP_PORT, {"/who", HTTP_GET, service_get_who, NULL}                                    },
+    {DEFAULT_HTTP_PORT, {"/json", HTTP_GET, service_get_json, NULL}                                  },
+    {DEFAULT_HTTP_PORT, {"/favicon.ico", HTTP_GET, service_get_issf_png, NULL}                       },
+    {EVENT_HTTP_PORT,   {"/", HTTP_GET, service_get_menu, (void *)&event_menu_ctx}                   },
+    {EVENT_HTTP_PORT,   {"/menu", HTTP_GET, service_get_menu, (void *)&event_menu_ctx}               },
+    {EVENT_HTTP_PORT,   {"/help", HTTP_GET, service_get_help, NULL}                                  },
+    {EVENT_HTTP_PORT,   {"/favicon.ico", HTTP_GET, service_get_issf_png, NULL}                       },
+    {0,                 {"", 0, NULL, NULL}                                                          }
 };
 
 /*----------------------------------------------------------------
@@ -167,28 +165,6 @@ static esp_err_t service_get_FreeETarget(httpd_req_t *req)
   char        my_name[SHORT_TEXT]; // Temporary string
 
   DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_FreeETarget(%s)", req->uri);))
-
-  /*
-   *  Decode the command line arguements if there are any
-   */
-  if ( (instr(req->uri, "MATCH") != 0) || (instr(req->uri, "match") != 0) )
-  {
-    start_new_session(SESSION_MATCH);
-  }
-
-  if ( (instr(req->uri, "AUTO") != 0) || (instr(req->uri, "auto") != 0) )
-  {
-    event_mode = AUTO;   // Set the server mode to auto refresh
-  }
-  else
-  {
-    event_mode = SINGLE; // Set the server mode to single shot
-  }
-
-  if ( (instr(req->uri, "STOP") != 0) || (instr(req->uri, "stop") != 0) )
-  {
-    event_mode = CLOSE;  // Set the server mode to stop
-  }
 
   /*
    * Do the things we need to do to start a session
@@ -319,7 +295,7 @@ static esp_err_t service_get_menu(httpd_req_t *req)
    *  Decode the command line arguements if there are any
    */
 
-  if ( (instr(req->uri, "/menu?start") > 0) || (instr(req->uri, "/menu?start") > 0) )
+  if ( contains(req->uri, "start") || contains(req->uri, "START") )
   {
     start_new_session(SESSION_MATCH);
     /*

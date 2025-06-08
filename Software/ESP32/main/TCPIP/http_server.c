@@ -209,21 +209,10 @@ static esp_err_t stop_webserver(httpd_handle_t server)
  *------------------------------------------------------------*/
 esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
 {
-  int i;
-
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "http_404_error_handler: %s", req->uri);))
 
   sprintf(_xs, "Error 404. Service not found: %s", req->uri); // Error reported to the user
 
-  strcat(_xs, "<br>Valid URLs<br/>");                         // Error reported to the user
-
-  i = 0;
-  while ( uri_list[i].uri_struct.uri != 0 )
-  {
-    strcat(_xs, "<br>");
-    strcat(_xs, uri_list[i].uri_struct.uri);
-    i++;
-  }
   httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, _xs);
   return ESP_FAIL;
 }

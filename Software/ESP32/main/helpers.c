@@ -165,6 +165,53 @@ int instr(char *s1, // Source string
 
   return -1;      // The strings are different
 }
+
+/*-----------------------------------------------------
+ *
+ * @function: contains
+ *
+ * @brief: Determine if a string contains another string
+ *
+ * @return: TRUE if string 2 is inside of string 1`
+ *
+ *-----------------------------------------------------
+ *
+ *-----------------------------------------------------*/
+
+bool contains(char *source,  // Source string
+              char *match    // Comparison string
+)
+{
+  int   i;
+  char *start;
+
+  start = match;             // Save the start of the comparison string
+
+  i = 0;
+  while ( (*source != 0) && (*match != 0) )
+  {
+    if ( *match == *source ) // Found a match
+    {
+      match++;               // Move to the next character in the comparison string
+    }
+    else
+    {
+      match = start;         // Reset the comparison string to the start
+    }
+    source++;                // Move to the next character in the source string
+  }
+
+  /*
+   * Reached the end of the comparison string. Check that we arrived at a NULL
+   */
+  if ( *match == 0 ) // Reached the end of the comparison string
+  {
+    return true;
+  }
+
+  return false;      // The strings are different
+}
+
 /*----------------------------------------------------------------
  *
  * @function: prompt_for_confirm
