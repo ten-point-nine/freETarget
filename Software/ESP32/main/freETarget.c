@@ -76,7 +76,6 @@ extern int isr_state;
 
 volatile unsigned int run_state = 0;  // Current operating state
 
-
 /*
  *  Function Prototypes
  */
@@ -100,6 +99,31 @@ void freeETarget_init(void)
 {
   run_state = IN_STARTUP;
   is_trace  = DLT_INFO | DLT_CRITICAL;
+#if TRACE_APPLICATION
+  is_trace |= DLT_APPLICATION;   // Enable application tracing
+#endif
+#if TRACE_COMMUNICATION
+  is_trace |= DLT_COMMUNICATION; // Enable application tracing
+#endif
+#if TRACE_DIAGNOSTICS
+  is_trace |= DLT_DIAG;          // Enable diagnostics tracing
+#endif
+#if TRACE_DEBUG
+  is_trace |= DLT_DEBUG;         // Enable debug tracing
+#endif
+#if TRACE_SCORE
+  is_trace |= DLT_SCORE;         // Enable score tracing
+#endif
+#if TRACE_HTTP
+  is_trace |= DLT_HTTP;          // Enable HTTP tracing
+#endif
+#if TRACE_OTA
+  is_trace |= DLT_OTA;           // Enable OTA tracing
+#endif
+#if TRACE_HEARTBEAT
+  is_trace |= DLT_HEARTBEAT;     // Enable heartbeat tracing
+#endif
+
   /*
    *  Setup the hardware
    */

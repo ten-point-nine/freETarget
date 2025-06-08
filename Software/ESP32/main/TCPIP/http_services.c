@@ -207,7 +207,7 @@ static esp_err_t service_get_events(httpd_req_t *req)
 {
   char str[MEDIUM_TEXT];
 
-  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_events(%s) event_mode %d", req->uri, event_mode);))
+  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_events(%s) event_mode: %d", req->uri, event_mode);))
 
   /*
    *  First time through, send an empty score
@@ -240,13 +240,11 @@ static esp_err_t service_get_events(httpd_req_t *req)
     {
       default:
       case IDLE:
-        event_mode = IDLE; // Set the server mode to idle just in case
-        connection_list &= ~HTTP_CONNECTED;
         break;
 
       case CLOSE:
         DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Closing target page");))
-        strcpy(str, "event:cloase\nid:\ndata: ");
+        strcpy(str, "event:close ");
         strcat(str, "\n\n");
         httpd_resp_set_hdr(req, "application/json", "close");
         httpd_resp_set_type(req, "text/event-stream");
