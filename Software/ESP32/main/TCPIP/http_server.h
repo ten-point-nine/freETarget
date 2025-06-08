@@ -21,6 +21,6 @@ int  get_url_arg(char *req_url, char *reply, int sizeof_reply);
 /*
  * #defines
  */
-#define DEFAULT_HTTP_PORT 80 // Use the stanard port 80 for HTTP requests
-#define EVENT_HTTP_PORT   81 // Use port 81 for the event server
+#define DEFAULT_HTTP_PORT 80   // Use the stanard port 80 for HTTP requests
+#define EVENT_HTTP_PORT   8080 // Use port 8080 for the event control
 #endif

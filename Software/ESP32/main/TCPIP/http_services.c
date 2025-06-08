@@ -46,10 +46,10 @@
  */
 typedef enum // Server modes
 {
-  IDLE = 0,  // Idle mode, no event
-  AUTO,      // Auto refresh mode
-  SINGLE,    // Single shot mode
-  CLOSE      // Close the event
+  IDLE = 0,  // 0 Idle mode, no event
+  AUTO,      // 1 Auto refresh mode
+  SINGLE,    // 2 Single shot mode
+  CLOSE      // 3 Close the event
 } event_mode_t;
 
 /*
@@ -86,15 +86,17 @@ static esp_err_t service_post_post(httpd_req_t *req);
  *  URI handlers
  */
 const my_uri_t uri_list[] = {
-    {DEFAULT_HTTP_PORT, {"/", HTTP_GET, service_get_menu, NULL}                                      },
-    {DEFAULT_HTTP_PORT, {"/menu", HTTP_GET, service_get_menu, (void *)&http_menu_ctx}                },
-    {DEFAULT_HTTP_PORT, {"/help", HTTP_GET, service_get_help, NULL}                                  },
+    {DEFAULT_HTTP_PORT, {"/", HTTP_GET, service_get_FreeETarget, NULL}                               }, // Main target page
     {DEFAULT_HTTP_PORT, {"/target", HTTP_GET, service_get_FreeETarget, (void *)&http_freeETarget_ctx}},
     {DEFAULT_HTTP_PORT, {"/events", HTTP_GET, service_get_events, (void *)&http_events_ctx}          },
+
+    {DEFAULT_HTTP_PORT, {"/menu", HTTP_GET, service_get_menu, (void *)&http_menu_ctx}                }, // Utilities menu
+    {DEFAULT_HTTP_PORT, {"/help", HTTP_GET, service_get_help, NULL}                                  },
     {DEFAULT_HTTP_PORT, {"/who", HTTP_GET, service_get_who, NULL}                                    },
     {DEFAULT_HTTP_PORT, {"/json", HTTP_GET, service_get_json, NULL}                                  },
     {DEFAULT_HTTP_PORT, {"/favicon.ico", HTTP_GET, service_get_issf_png, NULL}                       },
-    {EVENT_HTTP_PORT,   {"/", HTTP_GET, service_get_menu, (void *)&event_menu_ctx}                   },
+
+    {EVENT_HTTP_PORT,   {"/", HTTP_GET, service_get_menu, (void *)&event_menu_ctx}                   }, // Control back channel
     {EVENT_HTTP_PORT,   {"/menu", HTTP_GET, service_get_menu, (void *)&event_menu_ctx}               },
     {EVENT_HTTP_PORT,   {"/help", HTTP_GET, service_get_help, NULL}                                  },
     {EVENT_HTTP_PORT,   {"/favicon.ico", HTTP_GET, service_get_issf_png, NULL}                       },
@@ -169,8 +171,9 @@ static esp_err_t service_get_FreeETarget(httpd_req_t *req)
   /*
    * Do the things we need to do to start a session
    */
-  http_shot = -1; // Reset the shot counter
+  http_shot = -1;    // Reset the shot counter
   connection_list |= HTTP_CONNECTED;
+  event_mode = AUTO; // Set the server mode to auto refresh
 
   /*
    *  Send the reply to the client
@@ -202,18 +205,24 @@ static esp_err_t service_get_FreeETarget(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_events(httpd_req_t *req)
 {
-  char str[MEDIUM_TEXT]; // Temporary
+  char str[MEDIUM_TEXT];
 
-  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_events(%s)", req->uri);))
+  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_events(%s) event_mode %d", req->uri, event_mode);))
 
   /*
    *  First time through, send an empty score
    */
-  if ( http_shot < 0 )                              // First time through
+  if ( http_shot < 0 )                                      // First time through
   {
-    build_json_score(&record[0], SCORE_HTTP_PRIME); // Use a fixed reply to set the target type
-    http_shot  = 0;                                 // Next time reply with the first shot
-    event_mode = SINGLE;                            // Reset the event done flag
+    http_shot = 0;                                          // Next time reply with the first shot
+    DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Sending first shot");))
+    build_json_score(&record[http_shot], SCORE_HTTP_PRIME); // Send the new shot
+    strcpy(str, "event:new_shotData\nid:\ndata: ");
+    strcat(str, _xs);                                       // Add in the score
+    strcat(str, "\n\n");
+    httpd_resp_set_hdr(req, "application/json", "new_shotData");
+    httpd_resp_set_type(req, "text/event-stream");
+    return ESP_OK;                                          // Send the first shot and return
   }
 
   /*
@@ -230,21 +239,27 @@ static esp_err_t service_get_events(httpd_req_t *req)
     switch ( event_mode )
     {
       default:
-        event_mode = IDLE; // Set the server mode to idle just in case
       case IDLE:
+        event_mode = IDLE; // Set the server mode to idle just in case
+        connection_list &= ~HTTP_CONNECTED;
         break;
 
       case CLOSE:
+        DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Closing target page");))
         strcpy(str, "event:cloase\nid:\ndata: ");
         strcat(str, "\n\n");
         httpd_resp_set_hdr(req, "application/json", "close");
         httpd_resp_set_type(req, "text/event-stream");
         httpd_resp_send(req, str, strlen(str));
+        event_mode = IDLE; // Set the server mode to idle just in case
+        connection_list &= ~HTTP_CONNECTED;
         break;
 
       case SINGLE:
         event_mode = CLOSE;
+
       case AUTO:
+        DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Sending shot");))
         build_json_score(&record[http_shot], SCORE_HTTP); // Send the new shot
         http_shot = (http_shot + 1) % SHOT_SPACE;         // and bump up next one
         strcpy(str, "event:new_shotData\nid:\ndata: ");
@@ -288,30 +303,39 @@ static esp_err_t service_get_menu(httpd_req_t *req)
 {
   const char *resp_str;            // Reply to server
   char        my_name[SHORT_TEXT]; // Temporary string
+  char        str[MEDIUM_TEXT];    // Temporary string to hold the reply
 
   DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_menu(%s)", req->uri);))
 
   /*
    *  Decode the command line arguements if there are any
    */
-
-  if ( contains(req->uri, "start") || contains(req->uri, "START") )
+  if ( ((my_user_ctx_t *)(req->user_ctx))->port == DEFAULT_HTTP_PORT ) // Target can obly be started on port 80
   {
-    start_new_session(SESSION_MATCH);
-    /*
-     * Do the things we need to do to start a session
-     */
-    http_shot = -1; // Reset the shot counter
-    connection_list |= HTTP_CONNECTED;
+    if ( contains(req->uri, "start") || contains(req->uri, "START") )
+    {
+      start_new_session(SESSION_MATCH);
+      /*
+       * Do the things we need to do to start a session
+       */
+      http_shot = -1;    // Reset the shot counter
+      connection_list |= HTTP_CONNECTED;
+      event_mode = AUTO; // Set the server mode to auto refresh
 
-    /*
-     *  Send the reply to the client
-     */
-    target_name(my_name);                       // Get the target name
-    resp_str = (const char *)&FreeETarget_html; // point to the target HTML file
-    httpd_resp_set_hdr(req, "get_menu", my_name);
-    httpd_resp_send(req, resp_str, strlen(resp_str));
-    return ESP_OK;                              // All done, return
+      /*
+       *  Send the reply to the client
+       */
+      target_name(my_name);                       // Get the target name
+      resp_str = (const char *)&FreeETarget_html; // point to the target HTML file
+      httpd_resp_set_hdr(req, "get_menu", my_name);
+      httpd_resp_send(req, resp_str, strlen(resp_str));
+      return ESP_OK;                              // All done, return
+    }
+  }
+
+  if ( contains(req->uri, "stop") || contains(req->uri, "STOP") )
+  {
+    event_mode = CLOSE;                           // Set the server mode to close
   }
 
   /*
