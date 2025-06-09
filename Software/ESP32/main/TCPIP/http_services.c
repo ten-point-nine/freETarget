@@ -208,7 +208,8 @@ static esp_err_t service_get_events(httpd_req_t *req)
   char str[MEDIUM_TEXT];
 
   DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_events(%s) event_mode: %d", req->uri, event_mode);))
-
+  printf("\r\nservice_get_events(%s) event_mode: %d\r\n", req->uri, event_mode);
+  assert(1);
   /*
    *  First time through, send an empty score
    */
@@ -234,6 +235,7 @@ static esp_err_t service_get_events(httpd_req_t *req)
             && (event_mode != CLOSE) ) // or the session has not been closed
     {
       vTaskDelay(ONE_SECOND);
+      break;
     }
 
     switch ( event_mode )
@@ -258,10 +260,10 @@ static esp_err_t service_get_events(httpd_req_t *req)
 
       case AUTO:
         DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Sending shot");))
-        build_json_score(&record[http_shot], SCORE_HTTP); // Send the new shot
-        http_shot = (http_shot + 1) % SHOT_SPACE;         // and bump up next one
+        build_json_score(&record[http_shot], SCORE_HTTP_TEST); // Send the new shot
+        http_shot = (http_shot + 1) % SHOT_SPACE;              // and bump up next one
         strcpy(str, "event:new_shotData\nid:\ndata: ");
-        strcat(str, _xs);                                 // Add in the score
+        strcat(str, _xs);                                      // Add in the score
         strcat(str, "\n\n");
         httpd_resp_set_hdr(req, "application/json", "new_shotData");
         httpd_resp_set_type(req, "text/event-stream");

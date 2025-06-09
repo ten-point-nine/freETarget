@@ -99,28 +99,28 @@ void freeETarget_init(void)
 {
   run_state = IN_STARTUP;
   is_trace  = DLT_INFO | DLT_CRITICAL;
-#if TRACE_APPLICATION
+#ifdef TRACE_APPLICATION
   is_trace |= DLT_APPLICATION;   // Enable application tracing
 #endif
-#if TRACE_COMMUNICATION
+#ifdef TRACE_COMMUNICATION
   is_trace |= DLT_COMMUNICATION; // Enable application tracing
 #endif
-#if TRACE_DIAGNOSTICS
+#ifdef TRACE_DIAGNOSTICS
   is_trace |= DLT_DIAG;          // Enable diagnostics tracing
 #endif
-#if TRACE_DEBUG
+#ifdef TRACE_DEBUG
   is_trace |= DLT_DEBUG;         // Enable debug tracing
 #endif
-#if TRACE_SCORE
+#ifdef TRACE_SCORE
   is_trace |= DLT_SCORE;         // Enable score tracing
 #endif
-#if TRACE_HTTP
+#ifdef TRACE_HTTP
   is_trace |= DLT_HTTP;          // Enable HTTP tracing
 #endif
-#if TRACE_OTA
+#ifdef TRACE_OTA
   is_trace |= DLT_OTA;           // Enable OTA tracing
 #endif
-#if TRACE_HEARTBEAT
+#ifdef TRACE_HEARTBEAT
   is_trace |= DLT_HEARTBEAT;     // Enable heartbeat tracing
 #endif
 

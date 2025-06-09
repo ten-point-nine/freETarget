@@ -465,7 +465,8 @@ void echo_serial(int duration, // Duration in clock ticks
 void build_json_score(shot_record_t *shot, // Pointer to shot record
                       const char    *fields)
 {
-  char str[MEDIUM_TEXT];                   // String holding buffers
+  char       str[MEDIUM_TEXT];             // String holding buffers
+  static int ts, tx, ty;                   // Test Values
 
   _xs[0] = 0;
 
@@ -486,6 +487,13 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
 
       case SCORE_NEW_LINE:                           // Add a newline
         sprintf(str, "\n");
+        break;
+
+      case SCORE_TEST:                               // Prime for HTTP
+        sprintf(str, "\"shot\":%d,  \"x\":%d, \"y\":%d, \"r\":0, \"a\":0,\"target\":%d", ts, tx, ty, http_target_type());
+        ts++;
+        tx = (tx + 5) % 103;
+        ty = (ty + 7) % 103;                         // Test values to show that the function works
         break;
 
       case SCORE_PRIME:                              // Prime for HTTP

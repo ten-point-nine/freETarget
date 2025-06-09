@@ -122,14 +122,14 @@ void test_build_fake_shots(void);                         // Generate a list of 
 /*
  *  Enable compile level tracing
  */
-// #define TRACE_APPLICATION   0x0004 // Application level messages displayed (freeETarget.c compute_hit.c)
-// #define TRACE_COMMUNICATION 0x0008 // Communications messages (wifi.c token.c serial_io.c)
-// #define TRACE_DIAG          0x0010 // Hardware diagnostics messages displayed
-// #define TRACE_DEBUG         0x0020 // Specific debug information
-// #define TRACE_SCORE         0x0040 // Display extended score record
-#define TRACE_HTTP 0x0080 // Log HTTP requests
-// #define TRACE_OTA           0x0100 // Log OTA requests
-/// #define TRACE_HEARTBEAT     0x0200 // Kick out the time to see if we are alive
+// #define TRACE_APPLICATION
+// #define TRACE_COMMUNICATION
+// #define TRACE_DIAG
+// #define TRACE_DEBUG
+// #define TRACE_SCORE
+#define TRACE_HTTP
+// #define TRACE_OTA
+/// #define TRACE_HEARTBEAT
 
 // clang-format off
 #define DLT(level, z) if ( do_dlt(level) )  { z }
