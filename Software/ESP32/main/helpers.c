@@ -489,7 +489,7 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
         break;
 
       case SCORE_PRIME:                              // Prime for HTTP
-        sprintf(str, "\"shot\":0, \"session\":-1, \"x\":0, \"y\":0, \"r\":0, \"a\":0,\"target\":%d", http_target_type());
+        sprintf(str, "\"shot\":0,  \"x\":0, \"y\":0, \"r\":0, \"a\":0,\"target\":%d", http_target_type());
         break;
 
       case SCORE_SHOT:                               // Shot number
