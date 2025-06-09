@@ -213,17 +213,17 @@ static esp_err_t service_get_events(httpd_req_t *req)
   /*
    *  First time through, send an empty score
    */
-  if ( http_shot < 0 )                              // First time through
+  if ( http_shot < 0 )                        // First time through
   {
-    http_shot = 0;                                  // Next time reply with the first shot
-    build_json_score(&record[0], SCORE_HTTP_PRIME); // Send the new shot
+    http_shot = 0;                            // Next time reply with the first shot
+    build_json_score(NULL, SCORE_HTTP_PRIME); // Send the new shot
     strcpy(str, "event:new_shotData\nid:\ndata: ");
-    strcat(str, _xs);                               // Add in the score
+    strcat(str, _xs);                         // Add in the score
     strcat(str, "\n\n");
     DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Sending first shot %s", str);))
     httpd_resp_set_hdr(req, "application/json", "new_shotData");
     httpd_resp_set_type(req, "text/event-stream");
-    return ESP_OK;                                  // Send the first shot and return
+    return ESP_OK;                            // Send the first shot and return
   }
 
   /*
