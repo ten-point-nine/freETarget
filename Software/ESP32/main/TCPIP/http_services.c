@@ -253,7 +253,7 @@ static esp_err_t service_get_events(httpd_req_t *req)
         httpd_resp_send(req, str, strlen(str));
         event_mode = IDLE; // Set the server mode to idle just in case
         connection_list &= ~HTTP_CONNECTED;
-        break;
+        return ESP_OK;     // Send the close and return
 
       case SINGLE:
         event_mode = CLOSE;
@@ -267,10 +267,9 @@ static esp_err_t service_get_events(httpd_req_t *req)
         strcat(str, "\n\n");
         httpd_resp_set_hdr(req, "application/json", "new_shotData");
         httpd_resp_set_type(req, "text/event-stream");
-        break;
+        httpd_resp_send(req, str, strlen(str));
+        return ESP_OK;                                         // Send the new shot and return
     }
-
-    httpd_resp_send(req, str, strlen(str));
   }
   /*
    *  All done, return
