@@ -119,7 +119,7 @@
 #define SCORE_HARDWARE    'H'                      // Include hardware values
 #define SCORE_TARGET      'O'                      // Include target name
 #define SCORE_EVENT       'E'                      // Include the athelte name
-#define SCORE_TEST        '$'                      // Include a test value
+#define SCORE_TEST        '$'                      // Test the client with a test shot
 
 #define SCORE_ALL        "{S?TXPHOE}"              // shot / miss / target / time / x-y / radius-angle / North-East-South-West / target type
 #define SCORE_USB        "{S?TX}"                  // USB score elements
@@ -127,7 +127,8 @@
 #define SCORE_BLUETOOTH  "{S?TX}"                  // Bluetooth score elements
 #define SCORE_HTTP       "{S?TXPOE}"               // HTTP score elements
 #define SCORE_HTTP_PRIME "{#}"                     // HTTP Prime the client
-#define SCORE_HTTP_TEST  "{$}"                     // HTTP Prime the client
+#define SCORE_HTTP_TEST  "{$}"                     // HTTP Test the client
+
 /*
  *  Types
  */
