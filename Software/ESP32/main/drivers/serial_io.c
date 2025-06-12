@@ -17,6 +17,10 @@
 #include "driver/gpio.h"
 #include "nvs.h"
 #include "esp_timer.h"
+#include "esp_http_server.h"
+#include "esp_event.h"
+#include "esp_netif.h"
+#include "esp_tls.h"
 
 #include "freETarget.h"
 #include "helpers.h"
@@ -25,6 +29,7 @@
 #include "timer.h"
 #include "json.h"
 #include "nonvol.h"
+#include "http_server.h"
 
 /*
  *  Serial IO port configuration
@@ -508,6 +513,13 @@ void serial_to_all(char *str,        // String to output
   {
     tcpip_app_2_queue(str, strlen(str));
   }
+
+#if ( 0 )
+  if ( ports & HTTP_CONNECTED ) // Is there a web server connected?
+  {
+    http_send_string(str);      // Yes, send it to the web server
+  }
+#endif
 
   /*
    * All done

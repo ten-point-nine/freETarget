@@ -48,7 +48,8 @@
     "initializer_list": "c",
     "span": "c",
     "coroutine": "c",
-    "cstdint": "c"
+    "cstdint": "c",
+    "unistd.h": "c"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM7",

@@ -157,8 +157,7 @@ static esp_err_t service_get_FreeETarget(httpd_req_t *req)
   /*
    * Do the things we need to do to start a session
    */
-  http_shot = -1;    // Reset the shot counter
-  connection_list |= HTTP_CONNECTED;
+  http_shot  = -1;   // Reset the shot counter
   event_mode = AUTO; // Set the server mode to auto refresh
 
   /*
@@ -295,8 +294,7 @@ static esp_err_t service_get_menu(httpd_req_t *req)
       /*
        * Do the things we need to do to start a session
        */
-      http_shot = -1;    // Reset the shot counter
-      connection_list |= HTTP_CONNECTED;
+      http_shot  = -1;   // Reset the shot counter
       event_mode = AUTO; // Set the server mode to auto refresh
 
                          /*
@@ -383,15 +381,17 @@ static esp_err_t service_get_json(httpd_req_t *req)
   char        my_name[SHORT_TEXT];        // Target name
 
   DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_json(%s)", req->uri);))
-
   squish(req->uri, _xs);                  // Go through the uri and keep the argument portion
   tcpip_socket_2_queue(_xs, strlen(_xs)); // Put the data into the TCPIP queue
-  vTaskDelay(ONE_SECOND);                 // Give up time for the data to be processed
 
-  resp_str = _xs;                         // Send back a reply if there is one
-  target_name(&my_name);                  // Get the target name
+  /*
+   * Set the header to indicate that this is a json request
+   */
+  target_name(&my_name);       // Get the target name
   httpd_resp_set_hdr(req, "get_json", my_name);
-  httpd_resp_send(req, resp_str, strlen(resp_str));
+  http_send_string_start(req); // Start sending a string to the client
+  vTaskDelay(ONE_SECOND);      // Give up time for the data to be processed
+  http_send_string_end();      // Stop sending a string to the client
 
   /*
    * All done, return
@@ -413,13 +413,13 @@ static esp_err_t service_get_json(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_issf_png(httpd_req_t *req)
 {
-  const char *resp_str;              // Reply to server
-  char        my_name[SHORT_TEXT];   // Target name
+  const char *resp_str;                    // Reply to server
+  char        my_name[SHORT_TEXT];         // Target name
 
   DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_issf_png(%s)", req->uri);))
 
   target_name(my_name);
-  resp_str = (const char *)issf_png; // point to the target json file
+  resp_str = (const char *)issf_png_start; // point to the target json file
   httpd_resp_set_hdr(req, "get_issf_png", my_name);
   httpd_resp_send(req, resp_str, SIZEOF_ISSF_PNG);
 
