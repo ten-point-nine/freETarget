@@ -242,3 +242,10 @@
 32	139	0	C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader/esp-idf/esptool_py/CMakeFiles/bootloader_check_size	13b5e2c0ed62ad6a
 32	131	0	esp-idf/esptool_py/CMakeFiles/bootloader_check_size	13b5e2c0ed62ad6a
 32	131	0	C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader/esp-idf/esptool_py/CMakeFiles/bootloader_check_size	13b5e2c0ed62ad6a
+18	639	7715392107156343	bootloader.elf	2f7b679cbb1bb376
+639	984	7715392110828817	.bin_timestamp	7ca6264d1b6bac8
+639	984	7715392110828817	C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader/.bin_timestamp	7ca6264d1b6bac8
+984	1073	0	esp-idf/esptool_py/CMakeFiles/bootloader_check_size	13b5e2c0ed62ad6a
+984	1073	0	C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader/esp-idf/esptool_py/CMakeFiles/bootloader_check_size	13b5e2c0ed62ad6a
+31	131	0	esp-idf/esptool_py/CMakeFiles/bootloader_check_size	13b5e2c0ed62ad6a
+31	131	0	C:/Users/allan/Documents/freETarget/Software/ESP32/build/bootloader/esp-idf/esptool_py/CMakeFiles/bootloader_check_size	13b5e2c0ed62ad6a
