@@ -293,14 +293,14 @@ static esp_err_t service_get_menu(httpd_req_t *req)
                                     *  Decode the command line arguements if there are any
                                     */
 
-  if ( contains(req->uri, "start") || contains(req->uri, "START") )
+  if ( contains(req->uri, "start") )
   {
     start_new_session(SESSION_MATCH);
     http_shot  = -1;    // Reset the shot counter
     event_mode = START; // Set the server mode to auto refresh
   }
 
-  if ( contains(req->uri, "stop") || contains(req->uri, "STOP") )
+  if ( contains(req->uri, "stop") )
   {
     event_mode = CLOSE; // Set the server mode to close
   }
