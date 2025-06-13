@@ -30180,6 +30180,325 @@
                 "id": "component-config-wi-fi-provisioning-manager",
                 "title": "Wi-Fi Provisioning Manager",
                 "type": "menu"
+            },
+            {
+                "children": [
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Number of network interfaces to be served by the mDNS library.\nLowering this number helps to reduce some static RAM usage.",
+                        "id": "MDNS_MAX_INTERFACES",
+                        "name": "MDNS_MAX_INTERFACES",
+                        "range": [
+                            1,
+                            9
+                        ],
+                        "title": "Max number of interfaces",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Services take up a certain amount of memory, and allowing fewer\nservices to be open at the same time conserves memory. Specify\nthe maximum amount of services here.",
+                        "id": "MDNS_MAX_SERVICES",
+                        "name": "MDNS_MAX_SERVICES",
+                        "range": null,
+                        "title": "Max number of services",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Allows setting mDNS task priority. Please do not set the task priority\nhigher than priorities of system tasks. Compile time warning/error\nwould be emitted if the chosen task priority were too high.",
+                        "id": "MDNS_TASK_PRIORITY",
+                        "name": "MDNS_TASK_PRIORITY",
+                        "range": [
+                            1,
+                            255
+                        ],
+                        "title": "mDNS task priority",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Allows setting the length of mDNS action queue.",
+                        "id": "MDNS_ACTION_QUEUE_LEN",
+                        "name": "MDNS_ACTION_QUEUE_LEN",
+                        "range": [
+                            8,
+                            64
+                        ],
+                        "title": "Maximum actions pending to the server",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Allows setting mDNS task stacksize.",
+                        "id": "MDNS_TASK_STACK_SIZE",
+                        "name": "MDNS_TASK_STACK_SIZE",
+                        "range": null,
+                        "title": "mDNS task stack size",
+                        "type": "int"
+                    },
+                    {
+                        "children": [
+                            {
+                                "children": [],
+                                "depends_on": "<choice MDNS_TASK_AFFINITY>",
+                                "help": null,
+                                "id": "MDNS_TASK_AFFINITY_NO_AFFINITY",
+                                "name": "MDNS_TASK_AFFINITY_NO_AFFINITY",
+                                "range": null,
+                                "title": "No affinity",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "<choice MDNS_TASK_AFFINITY>",
+                                "help": null,
+                                "id": "MDNS_TASK_AFFINITY_CPU0",
+                                "name": "MDNS_TASK_AFFINITY_CPU0",
+                                "range": null,
+                                "title": "CPU0",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "!FREERTOS_UNICORE && <choice MDNS_TASK_AFFINITY>",
+                                "help": null,
+                                "id": "MDNS_TASK_AFFINITY_CPU1",
+                                "name": "MDNS_TASK_AFFINITY_CPU1",
+                                "range": null,
+                                "title": "CPU1",
+                                "type": "bool"
+                            }
+                        ],
+                        "depends_on": null,
+                        "help": "Allows setting mDNS tasks affinity, i.e. whether the task is pinned to\nCPU0, pinned to CPU1, or allowed to run on any CPU.",
+                        "id": "component-config-mdns-mdns-task-affinity",
+                        "name": "MDNS_TASK_AFFINITY",
+                        "title": "mDNS task affinity",
+                        "type": "choice"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": null,
+                        "id": "MDNS_TASK_AFFINITY",
+                        "name": "MDNS_TASK_AFFINITY",
+                        "range": null,
+                        "title": null,
+                        "type": "hex"
+                    },
+                    {
+                        "children": [
+                            {
+                                "children": [
+                                    {
+                                        "children": [],
+                                        "depends_on": "(SPIRAM_USE_CAPS_ALLOC || SPIRAM_USE_MALLOC) && <choice MDNS_TASK_MEMORY_ALLOC_FROM>",
+                                        "help": "mDNS task creates on the SPIRAM.\nThis option requires FreeRTOS component to allow creating\ntasks on the external memory.\nPlease read the documentation about FREERTOS_TASK_CREATE_ALLOW_EXT_MEM",
+                                        "id": "MDNS_TASK_CREATE_FROM_SPIRAM",
+                                        "name": "MDNS_TASK_CREATE_FROM_SPIRAM",
+                                        "range": null,
+                                        "title": "mDNS task creates on the SPIRAM (READ HELP)",
+                                        "type": "bool"
+                                    },
+                                    {
+                                        "children": [],
+                                        "depends_on": "<choice MDNS_TASK_MEMORY_ALLOC_FROM>",
+                                        "help": null,
+                                        "id": "MDNS_TASK_CREATE_FROM_INTERNAL",
+                                        "name": "MDNS_TASK_CREATE_FROM_INTERNAL",
+                                        "range": null,
+                                        "title": "mDNS task creates on the internal RAM",
+                                        "type": "bool"
+                                    }
+                                ],
+                                "depends_on": null,
+                                "help": null,
+                                "id": "component-config-mdns-mdns-memory-configuration-select-mdns-task-create-on-which-type-of-memory",
+                                "name": "MDNS_TASK_MEMORY_ALLOC_FROM",
+                                "title": "Select mDNS task create on which type of memory",
+                                "type": "choice"
+                            },
+                            {
+                                "children": [
+                                    {
+                                        "children": [],
+                                        "depends_on": "(SPIRAM_USE_CAPS_ALLOC || SPIRAM_USE_MALLOC) && <choice MDNS_MEMORY_ALLOC_FROM>",
+                                        "help": null,
+                                        "id": "MDNS_MEMORY_ALLOC_SPIRAM",
+                                        "name": "MDNS_MEMORY_ALLOC_SPIRAM",
+                                        "range": null,
+                                        "title": "Allocate mDNS memory from SPIRAM",
+                                        "type": "bool"
+                                    },
+                                    {
+                                        "children": [],
+                                        "depends_on": "<choice MDNS_MEMORY_ALLOC_FROM>",
+                                        "help": null,
+                                        "id": "MDNS_MEMORY_ALLOC_INTERNAL",
+                                        "name": "MDNS_MEMORY_ALLOC_INTERNAL",
+                                        "range": null,
+                                        "title": "Allocate mDNS memory from internal RAM",
+                                        "type": "bool"
+                                    }
+                                ],
+                                "depends_on": null,
+                                "help": null,
+                                "id": "component-config-mdns-mdns-memory-configuration-select-mdns-memory-allocation-type",
+                                "name": "MDNS_MEMORY_ALLOC_FROM",
+                                "title": "Select mDNS memory allocation type",
+                                "type": "choice"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": null,
+                                "help": "Enable to implement custom memory functions for mDNS library.\nThis option is useful when the application wants to use custom\nmemory allocation functions for mDNS library.",
+                                "id": "MDNS_MEMORY_CUSTOM_IMPL",
+                                "name": "MDNS_MEMORY_CUSTOM_IMPL",
+                                "range": null,
+                                "title": "Implement custom memory functions",
+                                "type": "bool"
+                            }
+                        ],
+                        "depends_on": null,
+                        "id": "component-config-mdns-mdns-memory-configuration",
+                        "title": "MDNS Memory Configuration",
+                        "type": "menu"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Configures timeout for adding a new mDNS service. Adding a service\nfails if could not be completed within this time.",
+                        "id": "MDNS_SERVICE_ADD_TIMEOUT_MS",
+                        "name": "MDNS_SERVICE_ADD_TIMEOUT_MS",
+                        "range": [
+                            10,
+                            30000
+                        ],
+                        "title": "mDNS adding service timeout (ms)",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Configures period of mDNS timer, which periodically transmits packets\nand schedules mDNS searches.",
+                        "id": "MDNS_TIMER_PERIOD_MS",
+                        "name": "MDNS_TIMER_PERIOD_MS",
+                        "range": [
+                            10,
+                            10000
+                        ],
+                        "title": "mDNS timer period (ms)",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Enables optional mDNS networking implementation using BSD sockets\nin UDP multicast mode.\nThis option creates a new thread to serve receiving packets (TODO).\nThis option uses additional N sockets, where N is number of interfaces.",
+                        "id": "MDNS_NETWORKING_SOCKET",
+                        "name": "MDNS_NETWORKING_SOCKET",
+                        "range": null,
+                        "title": "Use BSD sockets for mDNS networking",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Enable only if the querier and the responder share the same IP address.\nThis usually happens in test mode, where we may run multiple instances of\nresponders/queriers on the same interface.",
+                        "id": "MDNS_SKIP_SUPPRESSING_OWN_QUERIES",
+                        "name": "MDNS_SKIP_SUPPRESSING_OWN_QUERIES",
+                        "range": null,
+                        "title": "Skip suppressing our own packets",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Enable for the library to log received and sent mDNS packets to stdout.",
+                        "id": "MDNS_ENABLE_DEBUG_PRINTS",
+                        "name": "MDNS_ENABLE_DEBUG_PRINTS",
+                        "range": null,
+                        "title": "Enable debug prints of mDNS packets",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Enable for the console cli to be available on the device.",
+                        "id": "MDNS_ENABLE_CONSOLE_CLI",
+                        "name": "MDNS_ENABLE_CONSOLE_CLI",
+                        "range": null,
+                        "title": "Enable Command Line Interface on device console",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Enables support for IPv4 reverse lookup. If enabled, the mDNS library\nresponse to PTR queries of \"A.B.C.D.in-addr.arpa\" type.",
+                        "id": "MDNS_RESPOND_REVERSE_QUERIES",
+                        "name": "MDNS_RESPOND_REVERSE_QUERIES",
+                        "range": null,
+                        "title": "Enable responding to IPv4 reverse queries",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Enables adding multiple service instances under the same service type.",
+                        "id": "MDNS_MULTIPLE_INSTANCE",
+                        "name": "MDNS_MULTIPLE_INSTANCE",
+                        "range": null,
+                        "title": "Multiple instances under the same service type",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [
+                            {
+                                "children": [],
+                                "depends_on": null,
+                                "help": "Set up mDNS for the default WiFi station.\nDisable this option if you do not need mDNS on default WiFi STA.",
+                                "id": "MDNS_PREDEF_NETIF_STA",
+                                "name": "MDNS_PREDEF_NETIF_STA",
+                                "range": null,
+                                "title": "Use predefined interface for WiFi Station",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": null,
+                                "help": "Set up mDNS for the default WiFi Access Point.\nDisable this option if you do not need mDNS on default WiFi AP.",
+                                "id": "MDNS_PREDEF_NETIF_AP",
+                                "name": "MDNS_PREDEF_NETIF_AP",
+                                "range": null,
+                                "title": "Use predefined interface for WiFi Access Point",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "ETH_ENABLED",
+                                "help": "Set up mDNS for the default Ethernet interface.\nDisable this option if you do not need mDNS on default Ethernet.",
+                                "id": "MDNS_PREDEF_NETIF_ETH",
+                                "name": "MDNS_PREDEF_NETIF_ETH",
+                                "range": null,
+                                "title": "Use predefined interface for Ethernet",
+                                "type": "bool"
+                            }
+                        ],
+                        "depends_on": null,
+                        "id": "component-config-mdns-mdns-predefined-interfaces",
+                        "title": "MDNS Predefined interfaces",
+                        "type": "menu"
+                    }
+                ],
+                "depends_on": null,
+                "id": "component-config-mdns",
+                "title": "mDNS",
+                "type": "menu"
             }
         ],
         "depends_on": null,

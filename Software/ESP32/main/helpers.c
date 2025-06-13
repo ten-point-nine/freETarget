@@ -165,6 +165,53 @@ int instr(char *s1, // Source string
 
   return -1;      // The strings are different
 }
+
+/*-----------------------------------------------------
+ *
+ * @function: contains
+ *
+ * @brief: Determine if a string contains another string
+ *
+ * @return: TRUE if string 2 is inside of string 1`
+ *
+ *-----------------------------------------------------
+ *
+ *-----------------------------------------------------*/
+
+bool contains(char *source,  // Source string
+              char *match    // Comparison string
+)
+{
+  int   i;
+  char *start;
+
+  start = match;             // Save the start of the comparison string
+
+  i = 0;
+  while ( (*source != 0) && (*match != 0) )
+  {
+    if ( *match == *source ) // Found a match
+    {
+      match++;               // Move to the next character in the comparison string
+    }
+    else
+    {
+      match = start;         // Reset the comparison string to the start
+    }
+    source++;                // Move to the next character in the source string
+  }
+
+  /*
+   * Reached the end of the comparison string. Check that we arrived at a NULL
+   */
+  if ( *match == 0 ) // Reached the end of the comparison string
+  {
+    return true;
+  }
+
+  return false;      // The strings are different
+}
+
 /*----------------------------------------------------------------
  *
  * @function: prompt_for_confirm
@@ -418,7 +465,8 @@ void echo_serial(int duration, // Duration in clock ticks
 void build_json_score(shot_record_t *shot, // Pointer to shot record
                       const char    *fields)
 {
-  char str[SHORT_TEXT];                    // String holding buffers
+  char       str[MEDIUM_TEXT];             // String holding buffers
+  static int ts, tx, ty;                   // Test Values
 
   _xs[0] = 0;
 
@@ -430,59 +478,66 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
     switch ( *fields )
     {
       case SCORE_LEFT_BRACE:
-        sprintf(str, "{");                           // Start the opening bracket
+        sprintf(str, "{");                             // Start the opening bracket
         break;
 
       case SCORE_RIGHT_BRACE:
-        sprintf(str, "}");                           // End the closing bracket
+        sprintf(str, "}");                             // End the closing bracket
         break;
 
-      case SCORE_NEW_LINE:                           // Add a newline
+      case SCORE_NEW_LINE:                             // Add a newline
         sprintf(str, "\n");
         break;
 
-      case SCORE_PRIME:                              // Prime for HTTP
-        sprintf(str, "\"shot\":0, \"session\":-1, \"x\":0, \"y\":0, \"r\":0, \"a\":0,\"target\":%d", http_target_type());
+      case SCORE_TEST:                                 // Prime for HTTP
+        sprintf(str, "\"shot\":%d, \"x\":%d, \"y\":%d, \"r\":0, \"a\":0,\"target\":%d", ts, tx, ty, http_target_type());
+        ts++;
+        tx = (tx + 5) % 103;
+        ty = (ty + 7) % 103;                           // Test values to show that the function works
         break;
 
-      case SCORE_SHOT:                               // Shot number
-        sprintf(str, "\"shot\":%d", shot->shot + 1); // The client wants shots to start at 1
+      case SCORE_PRIME:                                // Prime for HTTP
+        sprintf(str, "\"shot\":0, \"x\":0, \"y\":0, \"r\":0, \"a\":0,\"target\":%d", http_target_type());
         break;
 
-      case SCORE_MISS:                               // Miss
+      case SCORE_SHOT:                                 // Shot number
+        sprintf(str, "\"shot\":%d", (shot->shot) + 1); // The client wants shots to start at 1
+        break;
+
+      case SCORE_MISS:                                 // Miss
         sprintf(str, ", \"miss\":%d", shot->miss);
         break;
 
-      case SCORE_SESSION:                            // Session type
+      case SCORE_SESSION:                              // Session type
         sprintf(str, ", \"session_type\":%d", shot->session_type);
         break;
 
-      case SCORE_TIME:                               // Time
+      case SCORE_TIME:                                 // Time
         sprintf(str, ", \"time\":%ld, \"time_to_go\":%ld", shot->shot_time, time_to_go);
         break;
 
-      case SCORE_ELAPSED:                            // Time since shooting began
+      case SCORE_ELAPSED:                              // Time since shooting began
         sprintf(str, ", \"elapsed_time\":%lds", run_time_seconds());
         break;
 
-      case SCORE_XY:                                 // X
+      case SCORE_XY:                                   // X
         sprintf(str, ", \"x\":%4.2f, \"y\":%4.2f", shot->x_mm, shot->y_mm);
         break;
 
-      case SCORE_POLAR:                              // Polar
+      case SCORE_POLAR:                                // Polar
         sprintf(str, ", \"r\":%6.2f, \"a\":%6.2f", shot->radius, shot->angle);
         break;
 
-      case SCORE_HARDWARE:                           // Hardware
+      case SCORE_HARDWARE:                             // Hardware
         sprintf(str, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d", (int)shot->timer_count[N + 0], (int)shot->timer_count[E + 0],
                 (int)shot->timer_count[S + 0], (int)shot->timer_count[W + 0]);
         break;
 
-      case SCORE_TARGET:                             // Target type
+      case SCORE_TARGET:                               // Target type
         sprintf(str, ", \"target\":%d ", http_target_type());
         break;
 
-      case SCORE_EVENT:                              // Event data
+      case SCORE_EVENT:                                // Event data
         sprintf(str, ", \"athelete\":\"%s\", \"event\":\"%s\", \"target_name\":\"%s\"", json_athlete, json_event, json_target_name);
         break;
 
@@ -680,4 +735,35 @@ unsigned int hamming_weight(unsigned int word)
   }
 
   return weight;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: to_binary
+ *
+ * @brief:    Convert a number to a binary string
+ *
+ * @return:   string of the number in binary
+ *
+ *----------------------------------------------------------------
+ *
+
+ *
+ *--------------------------------------------------------------*/
+void to_binary(unsigned int x, // Number to convert
+               unsigned int bits,
+               char        *s  // String to return the binary string
+)
+{
+  int i, j;
+
+  j = 0;
+  for ( i = 0; i != bits; i++ )
+  {
+    s[j++] = '0' + ((x & (1 << ((bits - i) - 1))) != 0);
+    x <<= 1; // Shift the number to the left
+  }
+  s[j] = 0;  // Terminate the string
+
+  return;
 }

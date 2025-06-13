@@ -13,7 +13,13 @@
 #include "freertos/task.h"
 #include "serial_io.h"
 
-#define SOFTWARE_VERSION "\"6.1.9 June 3, 2025\""
+#ifdef FREETARGET_C
+#define EXTERN
+#else
+#define EXTERN extern
+#endif
+
+#define SOFTWARE_VERSION "\"6.1.12 June 12, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED" // Message to send on connection
 
@@ -36,6 +42,7 @@
 #define IN_SHOT      0x0010 // The target is actively in a shot
 #define IN_REDUCTION 0x0020 // The data is being reduced
 #define IN_FATAL_ERR 0x0040 // A fatal error has occured and cannot be fixed
+#define IN_HTTP      0x0080 // HTTP output enabled
 
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
 #define IF_IN(x)  if ( (run_state & (x)) != 0 )
@@ -50,12 +57,12 @@
 /*
  * Options
  */
-#define SAMPLE_CALCULATIONS  (1 == 0) // Trace the COUNTER values
-#define COMPENSATE_RISE_TIME (1 == 0) // Use PCNT4-7 to compensate for rise time
-#define LONG_TEXT            512      // Long text strings are 512 long
-#define MEDIUM_TEXT          256      // Medimum length strings are 256 long
-#define SHORT_TEXT           128      // Short text strings are 128 long
-#define TINY_TEXT            64       // Tiny text strings are 64 long
+#define SAMPLE_CALCULATIONS  (1 == 0)    // Trace the COUNTER values
+#define COMPENSATE_RISE_TIME (1 == 0)    // Use PCNT4-7 to compensate for rise time
+#define LONG_TEXT            (512 + 256) // Long text strings are 512 long
+#define MEDIUM_TEXT          256         // Medimum length strings are 256 long
+#define SHORT_TEXT           128         // Short text strings are 128 long
+#define TINY_TEXT            64          // Tiny text strings are 64 long
 
 /*
  * Oscillator Features
@@ -113,6 +120,7 @@
 #define SCORE_HARDWARE    'H'                      // Include hardware values
 #define SCORE_TARGET      'O'                      // Include target name
 #define SCORE_EVENT       'E'                      // Include the athelte name
+#define SCORE_TEST        '$'                      // Test the client with a test shot
 
 #define SCORE_ALL        "{S?TXPHOE}"              // shot / miss / target / time / x-y / radius-angle / North-East-South-West / target type
 #define SCORE_USB        "{S?TX}"                  // USB score elements
@@ -120,6 +128,7 @@
 #define SCORE_BLUETOOTH  "{S?TX}"                  // Bluetooth score elements
 #define SCORE_HTTP       "{S?TXPOE}"               // HTTP score elements
 #define SCORE_HTTP_PRIME "{#}"                     // HTTP Prime the client
+#define SCORE_HTTP_TEST  "{$}"                     // HTTP Test the client
 
 /*
  *  Types
@@ -174,19 +183,28 @@ typedef volatile unsigned long time_count_t;
 /*
  *  Global Variables
  */
-extern double                s_of_sound;
-extern unsigned int          face_strike;
-extern unsigned int          is_trace;           // Tracing level(s)
-extern unsigned int          shot_in;            // Index into the shot array (The shot that has JUST arrived)
-extern unsigned int          shot_out;           // Index into the shot array (Last shot processed)
-extern unsigned int          shot_number;        // Current shot number
-extern unsigned long         shot_start;         // Time when shot become valid
-extern time_count_t          power_save;         // Power down timer
-extern volatile unsigned int run_state;          // IPC states
-extern time_count_t          LED_timer;          // Turn off the LEDs when not in use
-extern char                  _xs[512];           // General purpose string buffer
-extern shot_record_t         record[SHOT_SPACE]; // Array of shot records
-extern time_count_t          session_time[];     // Time in each session
+EXTERN char                  _xs[LONG_TEXT];                        // General purpose string buffer
+EXTERN double                s_of_sound;
+EXTERN unsigned int          face_strike;
+EXTERN unsigned int          is_trace;                              // Tracing level(s)
+EXTERN unsigned int          shot_in;                               // Index into the shot array (The shot that has JUST arrived)
+EXTERN unsigned int          shot_out;                              // Index into the shot array (Last shot processed)
+EXTERN unsigned int          shot_number;                           // Current shot number
+EXTERN unsigned long         shot_start;                            // Time when shot become valid
+EXTERN time_count_t          power_save;                            // Power down timer
+EXTERN volatile unsigned int run_state;                             // IPC states
+EXTERN time_count_t          LED_timer;                             // Turn off the LEDs when not in use
+EXTERN time_count_t          keep_alive;                            // Keep alive timer
+EXTERN time_count_t          power_save;                            // Power save timer
+EXTERN time_count_t          session_time[];                        // Time in each session
+EXTERN shot_record_t         record[SHOT_SPACE];
+#ifdef FREETARGET_C
+EXTERN char        *yes_no[]       = {"No", "Yes"};                 // Yes or No
+EXTERN time_count_t session_time[] = {1000 * 60, 15 * 60, 75 * 60}; // Time in each session EMPTY, SIGHT, SCORE // Array of shot records
+#else
+EXTERN char        *yes_no[]; // Yes or No strings
+EXTERN time_count_t session_time[];
+#endif
 
 /*
  * FreeETarget functions

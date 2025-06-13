@@ -19,6 +19,7 @@
 #include "esp_tls.h"
 #include <esp_wifi.h>
 
+#define FREETARGET_C
 #include "freETarget.h"
 #include "helpers.h"
 #include "gpio.h"
@@ -44,51 +45,35 @@
 /*
  *  Variables
  */
-shot_record_t record[SHOT_SPACE];                            // Array of shot records
-unsigned int  shot_in;                                       // Index to the shot just received
-unsigned int  shot_out;                                      // Index to the shot just sent to the PC (shot_out <= shot_in)
+unsigned int number_of_connections = 0; // How many people are connected to me?
 
-double       s_of_sound;                                     // Speed of sound
-unsigned int shot        = 0;                                // Shot counter
-unsigned int face_strike = 0;                                // Miss Face Strike interrupt count
-unsigned int is_trace    = DLT_INFO | DLT_CRITICAL;          // Default tracing
-
-unsigned int  shot_number;                                   // Shot Identifier (1-100)
-unsigned long shot_start;                                    // Time when target was ready for shots
-unsigned int  number_of_connections = 0;                     // How many people are connected to me?
-
-time_count_t keep_alive;                                     // Keep alive timer
-time_count_t tabata_timer;                                   // Free running state timer
-time_count_t power_save;                                     // Power save timer
-time_count_t rapid_timer;                                    // Timer used for rapid fire ecents
-time_count_t LED_timer;                                      // Timer to reset LED status
-time_count_t session_time[] = {1000 * 60, 15 * 60, 75 * 60}; // Time in each session EMPTY, SIGHT, SCORE
-
-unsigned long go_dark     = 10l;                             // Go dark for 10 seconds
-unsigned long go_wait     = 3l;                              // Wait for the PC to catchup
-unsigned long all_done    = 0l;                              // All finished
+                                        // Keep alive timer
+time_count_t tabata_timer;            // Free running state timer
+time_count_t rapid_timer;             // Timer used for rapid fire ecents
+                                      // Timer to reset LED status
+unsigned long go_dark     = 10l;      // Go dark for 10 seconds
+unsigned long go_wait     = 3l;       // Wait for the PC to catchup
+unsigned long all_done    = 0l;       // All finished
 int           always_true = true;
 
 static enum {
-  START = 0,                                                 // 0 et the operating mode
-  WAIT,                                                      // 1 ARM the circuit and wait for a shot
-  REDUCE                                                     // 2 Reduce the data and send the score
+  START = 0,                          // 0 et the operating mode
+  WAIT,                               // 1 ARM the circuit and wait for a shot
+  REDUCE                              // 2 Reduce the data and send the score
 } freETarget_state;
 
 typedef struct
 {
-  volatile unsigned long *timer;                             // Timer used to control state length
-  char                   *status_LED;                        // Status LED output
-  float                   LED_bright;                        // Brightness of target LED
-  char                   *message;                           // Message to be sent to PC
-  bool                    in_shot;                           // In as shot cycle
+  volatile unsigned long *timer;      // Timer used to control state length
+  char                   *status_LED; // Status LED output
+  float                   LED_bright; // Brightness of target LED
+  char                   *message;    // Message to be sent to PC
+  bool                    in_shot;    // In as shot cycle
 } rapid_state_t;
 
 extern int isr_state;
 
-volatile unsigned int run_state = 0;                         // Current operating state
-
-char _xs[LONG_TEXT];                                         // Holding buffer for sprintf
+volatile unsigned int run_state = 0;  // Current operating state
 
 /*
  *  Function Prototypes
@@ -112,6 +97,31 @@ extern void         gpio_init(void);
 void freeETarget_init(void)
 {
   run_state = IN_STARTUP;
+  is_trace  = DLT_INFO | DLT_CRITICAL;
+#ifdef TRACE_APPLICATION
+  is_trace |= DLT_APPLICATION;   // Enable application tracing
+#endif
+#ifdef TRACE_COMMUNICATION
+  is_trace |= DLT_COMMUNICATION; // Enable application tracing
+#endif
+#ifdef TRACE_DIAGNOSTICS
+  is_trace |= DLT_DIAG;          // Enable diagnostics tracing
+#endif
+#ifdef TRACE_DEBUG
+  is_trace |= DLT_DEBUG;         // Enable debug tracing
+#endif
+#ifdef TRACE_SCORE
+  is_trace |= DLT_SCORE;         // Enable score tracing
+#endif
+#ifdef TRACE_HTTP
+  is_trace |= DLT_HTTP;          // Enable HTTP tracing
+#endif
+#ifdef TRACE_OTA
+  is_trace |= DLT_OTA;           // Enable OTA tracing
+#endif
+#ifdef TRACE_HEARTBEAT
+  is_trace |= DLT_HEARTBEAT;     // Enable heartbeat tracing
+#endif
 
   /*
    *  Setup the hardware

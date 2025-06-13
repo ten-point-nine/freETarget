@@ -31,6 +31,7 @@
 #include "compute_hit.h"
 #include "helpers.h"
 #include "http_server.h"
+#include "http_services.h"
 #include "diag_tools.h"
 #include "json.h"
 #include "serial_io.h"
@@ -42,34 +43,60 @@
 /*
  * Typedefs
  */
+typedef enum // Server modes
+{
+  IDLE = 0,  // 0 Idle mode, no event
+  AUTO,      // 1 Auto refresh mode
+  SINGLE,    // 2 Single shot mode
+  CLOSE,     // 3 Close the event
+  START      // 4 Start the event
+} event_mode_t;
 
 /*
  *  Variables
  */
-int http_shot = -1; // What shot number have we sent?
+int                 http_shot  = -1;   // What shot number have we sent?
+static event_mode_t event_mode = IDLE; // Set the server mode to auto refresh
+
+typedef struct
+{
+  unsigned int port;
+} my_user_ctx_t;                       // Internal user context structure
+
+static const my_user_ctx_t http_events_ctx = {DEFAULT_HTTP_PORT};
+static const my_user_ctx_t event_menu_ctx  = {EVENT_HTTP_PORT};
 
 /*
  * Local functions
  */
 static esp_err_t stop_webserver(httpd_handle_t server);
-static esp_err_t service_get_index(httpd_req_t *req);
-static esp_err_t service_get_who(httpd_req_t *req);
-static esp_err_t service_get_shotData(httpd_req_t *req);
-static esp_err_t service_get_issf_png(httpd_req_t *req);
-static esp_err_t service_get_json(httpd_req_t *req);
-static esp_err_t service_get_events(httpd_req_t *req);
+static esp_err_t service_get_FreeETarget(httpd_req_t *req);                      // Main target page
+static esp_err_t service_get_help(httpd_req_t *req);                             // User help page
+static esp_err_t service_get_menu(httpd_req_t *req);                             // Control back channel
+static esp_err_t service_get_who(httpd_req_t *req);                              // Target information page
+static esp_err_t service_get_issf_png(httpd_req_t *req);                         // Icon for the ISSF target
+static esp_err_t service_get_json(httpd_req_t *req);                             // Webb ased JSON interface
+static esp_err_t service_get_events(httpd_req_t *req);                           // Get shot events
 static esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Create a URL not found handler
+static esp_err_t service_post_post(httpd_req_t *req);
 
 /*
- *  URL handlers
+ *  URI handlers
  */
-const httpd_uri_t uri_list[] = {
-    {.uri = "/index", .method = HTTP_GET, .handler = service_get_index, .user_ctx = NULL},
-    {.uri = "/who", .method = HTTP_GET, .handler = service_get_who, .user_ctx = NULL},
-    {.uri = "/json", .method = HTTP_GET, .handler = service_get_json, .user_ctx = NULL},
-    {.uri = "/events", .method = HTTP_GET, .handler = service_get_events, .user_ctx = NULL},
-    {.uri = "/favicon.ico", .method = HTTP_GET, .handler = service_get_issf_png, .user_ctx = NULL},
-    {}
+const my_uri_t uri_list[] = {
+    {DEFAULT_HTTP_PORT, {"/", HTTP_GET, service_get_FreeETarget, NULL}                     }, // Main target page
+    {DEFAULT_HTTP_PORT, {"/events", HTTP_GET, service_get_events, (void *)&http_events_ctx}},
+
+    {DEFAULT_HTTP_PORT, {"/help", HTTP_GET, service_get_help, NULL}                        },
+    {DEFAULT_HTTP_PORT, {"/who", HTTP_GET, service_get_who, NULL}                          },
+    {DEFAULT_HTTP_PORT, {"/json", HTTP_GET, service_get_json, NULL}                        },
+    {DEFAULT_HTTP_PORT, {"/favicon.ico", HTTP_GET, service_get_issf_png, NULL}             },
+
+    {EVENT_HTTP_PORT,   {"/", HTTP_GET, service_get_menu, (void *)&event_menu_ctx}         }, // Control back channel
+    {EVENT_HTTP_PORT,   {"/menu", HTTP_GET, service_get_menu, (void *)&event_menu_ctx}     },
+    {EVENT_HTTP_PORT,   {"/help", HTTP_GET, service_get_help, NULL}                        },
+    {EVENT_HTTP_PORT,   {"/favicon.ico", HTTP_GET, service_get_issf_png, NULL}             },
+    {0,                 {"", 0, NULL, NULL}                                                }
 };
 
 /*----------------------------------------------------------------
@@ -88,18 +115,61 @@ const httpd_uri_t uri_list[] = {
  * Then check for out of bounds and reset those values
  *
  *------------------------------------------------------------*/
-void register_services(httpd_handle_t server // Pointer to active server
-)
+void register_services(httpd_handle_t server, // Pointer to active server
+                       unsigned int   port)
 {
   int i;
 
   i = 0;
-  while ( uri_list[i].uri != 0 )
+  while ( uri_list[i].port != 0 )
   {
-    httpd_register_uri_handler(server, &uri_list[i]);
+    if ( uri_list[i].port == port ) // Only register the services for this port
+    {
+      httpd_register_uri_handler(server, &uri_list[i].uri_struct);
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Registering %s on port %d", uri_list[i].uri_struct.uri, uri_list[i].port);))
+    }
+
     i++;
   }
   return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: service_get_FreeETarget
+ *
+ * @brief:    Basic service to return the FreeETarget page
+ *
+ * @return:   esp_err_t, error type
+ *
+ *---------------------------------------------------------------
+ *
+ * This function is called in response to a user starting a
+ * shooting session.
+ *
+ *------------------------------------------------------------*/
+static esp_err_t service_get_FreeETarget(httpd_req_t *req)
+{
+  const char *resp_str;            // Reply to server
+  char        my_name[SHORT_TEXT]; // Temporary string
+
+  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_FreeETarget(%s)", req->uri);))
+
+  /*
+   * Do the things we need to do to start a session
+   */
+  http_shot  = -1;   // Reset the shot counter
+  event_mode = AUTO; // Set the server mode to auto refresh
+
+  /*
+   *  Send the reply to the client
+   */
+  target_name(my_name);                             // Get the target name
+  resp_str = (const char *)&FreeETarget_html_start; // point to the target HTML file
+  httpd_resp_set_hdr(req, "get_FreeETarget", my_name);
+  httpd_resp_send(req, resp_str, strlen(resp_str));
+
+  return ESP_OK;
 }
 
 /*----------------------------------------------------------------
@@ -124,13 +194,16 @@ static esp_err_t service_get_events(httpd_req_t *req)
 {
   char str[MEDIUM_TEXT]; // Temporary
 
+  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_events(%s) event_mode: %d", req->uri, event_mode);))
+
   /*
    *  First time through, send an empty score
    */
-  if ( http_shot < 0 )                              // First time through
+  if ( http_shot < 0 )                        // First time through
   {
-    build_json_score(&record[0], SCORE_HTTP_PRIME); // Use a fixed reply to set the target type
-    http_shot = 0;                                  // Next time reply with the first shot
+    strcpy(str, "event:new_shotData\nid:\ndata: ");
+    build_json_score(NULL, SCORE_HTTP_PRIME); // Send the new shot
+    http_shot = 0;                            // Next time reply with the first shot
   }
 
   /*
@@ -138,18 +211,44 @@ static esp_err_t service_get_events(httpd_req_t *req)
    */
   else
   {
-    while ( http_shot == shot_in )                    // Wait here until something shows up
+    while ( (http_shot == shot_in)                        // Wait for a shot to arrive
+            && (event_mode != CLOSE) )                    // or the event has finished
     {
       vTaskDelay(ONE_SECOND);
     }
-    build_json_score(&record[http_shot], SCORE_HTTP); // Send the new shot
-    http_shot = (http_shot + 1) % SHOT_SPACE;         // and bump up next one
+
+    switch ( event_mode )                                 // Check the event mode
+    {
+      default:
+      case IDLE:                                          // If the event is idle, then do nothing
+        DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Shooting event idle");))
+        strcpy(str, "event:idle\n");                      // Send an idle message
+        break;                                            // Return and wait for the next shot
+
+      case START:                                         // If the event is starting
+        DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Shooting event started");))
+        strcpy(str, "event:start\nid:\ndata: ");          // Send a start message
+        event_mode = AUTO;                                // Set the mode to auto refresh
+        break;
+
+      case CLOSE:                                         // If the event is done
+        DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Shooting event closed");))
+        strcpy(str, "event:close\nid:\ndata: ");          // Send a close message
+        break;
+
+      case SINGLE:                                        // If the event is in single shot mode
+      case AUTO:                                          // If the event is in auto mode
+        DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Shooting event auto mode");))
+        strcpy(str, "event:new_shotData\nid:\ndata: ");
+        build_json_score(&record[http_shot], SCORE_HTTP); // Send the new shot
+        http_shot = (http_shot + 1) % SHOT_SPACE;         // and bump up next one
+        break;
+    }
   }
-  //
+
   /*
    * Prepare and send the payload
    */
-  strcpy(str, "event:new_shotData\nid:\ndata: ");
   strcat(str, _xs);
   strcat(str, "\n\n");
   httpd_resp_set_hdr(req, "application/json", "new_shotData");
@@ -161,46 +260,88 @@ static esp_err_t service_get_events(httpd_req_t *req)
    */
   return ESP_OK;
 }
-
 /*----------------------------------------------------------------
  *
- * @function: service_get_index
+ * @function: service_get_menu
  *
- * @brief:    Root entry for target HTML files
+ * @brief:    Control the target over port 81
  *
  * @return:   esp_err_t, error type
  *
  *---------------------------------------------------------------
  *
+ * This function is called in respoinse to a user starting a
+ * shooting session.a
+ *
+ * Arguements
+ *
+ * MATCH - Start a match session
+ * SIGHT - Start a sighting session
+ * AUTO  - Set the server to auto refresh
+ * SINGLE - Set the server to single shot mode
+ * STOP  - Stop the server
  *
  *------------------------------------------------------------*/
-static esp_err_t service_get_index(httpd_req_t *req)
+static esp_err_t service_get_menu(httpd_req_t *req)
 {
   const char *resp_str;            // Reply to server
   char        my_name[SHORT_TEXT]; // Temporary string
 
-  if ( (instr(req->uri, "MATCH") != 0) || (instr(req->uri, "match") != 0) )
+  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_menu(%s)", req->uri);))
+
+                                   /*
+                                    *  Decode the command line arguements if there are any
+                                    */
+
+  if ( contains(req->uri, "start") || contains(req->uri, "START") )
   {
     start_new_session(SESSION_MATCH);
+    http_shot  = -1;    // Reset the shot counter
+    event_mode = START; // Set the server mode to auto refresh
   }
 
-  if ( (instr(req->uri, "SIGHT") != 0) || (instr(req->uri, "sight") != 0) )
+  if ( contains(req->uri, "stop") || contains(req->uri, "STOP") )
   {
-    start_new_session(SESSION_SIGHT);
+    event_mode = CLOSE; // Set the server mode to close
   }
-
-  /*
-   * Do the things we need to do to start a session
-   */
-  http_shot = -1; // Reset the shot counter
-  connection_list |= HTTP_CONNECTED;
 
   /*
    *  Send the reply to the client
    */
-  target_name(my_name);                 // Get the target name
-  resp_str = (const char *)&index_html; // point to the target HTML file
-  httpd_resp_set_hdr(req, "get_index", my_name);
+  target_name(my_name);                      // Get the target name
+  resp_str = (const char *)&menu_html_start; // point to the target HTML file
+  httpd_resp_set_hdr(req, "get_menu", my_name);
+  httpd_resp_send(req, resp_str, strlen(resp_str));
+
+  return ESP_OK;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: service_get_help
+ *
+ * @brief:    Display the help page
+ *
+ * @return:   esp_err_t, error type
+ *
+ *---------------------------------------------------------------
+ *
+ * Displays the help page to the user.
+ *
+ *------------------------------------------------------------*/
+static esp_err_t service_get_help(httpd_req_t *req)
+{
+  const char *resp_str;            // Reply to server
+  char        my_name[SHORT_TEXT]; // Temporary string
+
+  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_help(%s)", req->uri);))
+
+  /*
+   *  Send the reply to the client
+   */
+  target_name(my_name);                      // Get the target name
+  resp_str = (const char *)&help_html_start; // point to the target HTML file
+  httpd_resp_set_hdr(req, "get_help", my_name);
   httpd_resp_send(req, resp_str, strlen(resp_str));
 
   return ESP_OK;
@@ -230,14 +371,22 @@ static esp_err_t service_get_json(httpd_req_t *req)
   const char *resp_str;                   // Reply to server
   char        my_name[SHORT_TEXT];        // Target name
 
+  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_json(%s)", req->uri);))
   squish(req->uri, _xs);                  // Go through the uri and keep the argument portion
   tcpip_socket_2_queue(_xs, strlen(_xs)); // Put the data into the TCPIP queue
-  vTaskDelay(ONE_SECOND);                 // Give up time for the data to be processed
 
-  resp_str = _xs;                         // Send back a reply if there is one
-  target_name(&my_name);                  // Get the target name
+  /*
+   * Set the header to indicate that this is a json request, then wait till it's done
+   */
+  target_name(&my_name);       // Get the target name
   httpd_resp_set_hdr(req, "get_json", my_name);
-  httpd_resp_send(req, resp_str, strlen(resp_str));
+  http_send_string_start(req); // Start sending a string to the client
+  do
+  {
+    vTaskDelay(ONE_SECOND);    // Give up time for the data to be processed
+  } while ( (run_state & IN_HTTP) == IN_HTTP ); // Wait until the queue is not full
+
+  http_send_string_end(); // Stop sending a string to the client
 
   /*
    * All done, return
@@ -259,11 +408,13 @@ static esp_err_t service_get_json(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_issf_png(httpd_req_t *req)
 {
-  const char *resp_str;              // Reply to server
-  char        my_name[SHORT_TEXT];   // Target name
+  const char *resp_str;                    // Reply to server
+  char        my_name[SHORT_TEXT];         // Target name
+
+  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_issf_png(%s)", req->uri);))
 
   target_name(my_name);
-  resp_str = (const char *)issf_png; // point to the target json file
+  resp_str = (const char *)issf_png_start; // point to the target json file
   httpd_resp_set_hdr(req, "get_issf_png", my_name);
   httpd_resp_send(req, resp_str, SIZEOF_ISSF_PNG);
 
@@ -344,9 +495,7 @@ static esp_err_t service_get_post2(httpd_req_t *req)
   char        name[SHORT_TEXT];
 
   target_name(name);                        // Get the target name
-
   resp_str = (const char *)&post_test_html; // point to the target HTML file
-
   httpd_resp_set_hdr(req, "FreeETarget", name);
   httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
 
@@ -369,14 +518,16 @@ static esp_err_t service_get_post2(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_who(httpd_req_t *req)
 {
-  char                   name[SHORT_TEXT];
+  char                   my_name[SHORT_TEXT];
   const esp_partition_t *running_partition = esp_ota_get_running_partition();
   esp_app_desc_t         running_app_info;
 
+  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_who(%s)", req->uri);))
+
   esp_ota_get_partition_description(running_partition, &running_app_info);
 
-  target_name(name); // Get the target name
-  httpd_resp_set_hdr(req, "get_who", name);
+  target_name(my_name); // Get the target name
+  httpd_resp_set_hdr(req, "get_who", my_name);
 
   sprintf(_xs,
           "Serial Number: %d"
@@ -386,8 +537,9 @@ static esp_err_t service_get_who(httpd_req_t *req)
           "<br>Athelete: %s"
           "<br>Target: %s"
           "<br>Event: %s",
-          json_serial_number, name, SOFTWARE_VERSION, running_app_info.version, json_athlete, json_target_name,
+          json_serial_number, my_name, SOFTWARE_VERSION, running_app_info.version, json_athlete, json_target_name,
           json_event); // Fill in the target name
+
   httpd_resp_send(req, _xs, HTTPD_RESP_USE_STRLEN);
   return ESP_OK;
 }

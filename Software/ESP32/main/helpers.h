@@ -14,6 +14,7 @@
 void         target_name(char *name_space);                             // Return target name
 int          to_int(char h);                                            // Convert char to integer ('A' = 0x0A)
 int          instr(char *s1, char *s2);                                 // Compare two strings
+bool         contains(char *s1, char *s2);                              // Return true if s1 contains s2
 bool         prompt_for_confirm(void);                                  // Prompt for confirmation
 void         send_keep_alive(void);                                     // Send a keep alive message
 void         bye(unsigned int force_bye);                               // Set to true to force a shutdown
@@ -25,6 +26,7 @@ void         squish(char *source, char *destination);                   // Conve
 void         test_build_json_score(voids);                              // Test build_json_score
 double       sq(double x);                                              // Square (x)
 unsigned int hamming_weight(unsigned int word);                         // Add up the numbr of bits in a word
+void         to_binary(unsigned int x, unsigned int bits, char *s);     // Convert a number to a binary string
 
 /*
  * Global helper variables

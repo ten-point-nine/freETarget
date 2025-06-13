@@ -119,6 +119,18 @@ void test_build_fake_shots(void);                         // Generate a list of 
 #define DLT_OTA           0x0100 // Log OTA requests
 #define DLT_HEARTBEAT     0x0200 // Kick out the time to see if we are alive
 
+/*
+ *  Enable compile level tracing
+ */
+// #define TRACE_APPLICATION
+// #define TRACE_COMMUNICATION
+// #define TRACE_DIAG
+// #define TRACE_DEBUG
+// #define TRACE_SCORE
+// #define TRACE_HTTP
+// #define TRACE_OTA
+// #define TRACE_HEARTBEAT
+
 // clang-format off
 #define DLT(level, z) if ( do_dlt(level) )  { z }
 // clang-format on

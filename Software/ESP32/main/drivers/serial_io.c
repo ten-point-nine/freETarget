@@ -17,6 +17,10 @@
 #include "driver/gpio.h"
 #include "nvs.h"
 #include "esp_timer.h"
+#include "esp_http_server.h"
+#include "esp_event.h"
+#include "esp_netif.h"
+#include "esp_tls.h"
 
 #include "freETarget.h"
 #include "helpers.h"
@@ -25,6 +29,7 @@
 #include "timer.h"
 #include "json.h"
 #include "nonvol.h"
+#include "http_server.h"
 
 /*
  *  Serial IO port configuration
@@ -126,13 +131,15 @@ void serial_io_init(void)
   /*
    * All done, return
    */
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Console port initialized");))
   return;
 }
 
 void serial_aux_init(void)
 {
-  if ( json_aux_mode == 0 )
+  if ( (json_aux_mode != AUX) && (json_aux_mode != BLUETOOTH) )
   {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX Port not enabled");))
     return;
   }
 
@@ -144,13 +151,15 @@ void serial_aux_init(void)
   /*
    *  Setup the communications parameters
    */
-  if ( (json_aux_mode & AUX) == AUX )
+  if ( json_aux_mode == AUX )
   {
-    uart_param_config(uart_aux, &uart_aux_config);
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX port enabled\r\n");))
+    uart_param_config(uart_aux, &uart_aux_config); // 115200 baud rate
   }
-  else
+  if ( json_aux_mode == BLUETOOTH )
   {
-    uart_param_config(uart_aux, &uart_BT_config);
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BLUETOOTH port enabled\r\n");))
+    uart_param_config(uart_aux, &uart_BT_config);  // 115200 baud rate
   }
 
   /*
@@ -368,6 +377,7 @@ char serial_getch(int ports // Bit mask of active ports
   {
     if ( tcpip_queue_2_app(&ch, 1) > 0 )
     {
+      connection_list |= TCPIP; // Set the connection list
       return ch;
     }
   }
@@ -503,6 +513,11 @@ void serial_to_all(char *str,        // String to output
   if ( ports & TCPIP )
   {
     tcpip_app_2_queue(str, strlen(str));
+  }
+
+  if ( ports & HTTP_CONNECTED ) // Is there a web server connected?
+  {
+    http_send_string(str);      // Yes, send it to the web server
   }
 
   /*
@@ -760,7 +775,7 @@ void serial_port_test(void)
    */
   if ( (json_aux_mode & (AUX | BLUETOOTH)) == 0 )
   {
-    SEND(ALL, sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_PORTS_ENABLE\": 1} to enable");)
+    SEND(ALL, sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_MODE\": 2} to enable");)
     SEND(ALL, sprintf(_xs, _DONE_);)
     return;
   }

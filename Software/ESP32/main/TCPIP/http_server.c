@@ -16,17 +16,11 @@
  * See http_server.h for the various compilation options
  *
  *-----------------------------------------------------*/
-#define BRIAN (0 == 1)
+
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-// #include <esp_log.h>
-//  #include <nvs_flash.h>
 #include <sys/param.h>
-// #include "esp_netif.h"
-// #include "protocol_examples_common.h"
-// #include "protocol_examples_utils.h"
-// #include "esp_tls_crypto.h"
 #include "esp_http_server.h"
 #include "esp_event.h"
 #include "esp_netif.h"
@@ -55,6 +49,7 @@ esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Cre
 /*
  *  Variables
  */
+static httpd_req_t *static_req = NULL; // Request pointer used inside of this file
 
 /*
  * Local functions
@@ -79,30 +74,36 @@ static esp_err_t stop_webserver(httpd_handle_t server);
  *  3 - Register a 404 (URL not found) handler
  *
  *------------------------------------------------------------*/
-httpd_handle_t start_webserver(void)
+httpd_handle_t start_webserver(unsigned int port // Port to use for the web server
+)
 {
-  httpd_handle_t server = NULL;
-  httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+  static unsigned int server_count = 0;          // Count the number of servers started
+  httpd_handle_t      server       = NULL;
+  httpd_config_t      config       = HTTPD_DEFAULT_CONFIG();
 
-  config.server_port      = DEFAULT_SERVER_PORT;
+  config.server_port      = port;
   config.lru_purge_enable = true;
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "start_webserver(port: %d)", config.server_port);))
-
-  /*
-   *  Create event loops
-   */
-  ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &server));
-  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
 
   /*
    * Start the web server
    */
   if ( httpd_start(&server, &config) == ESP_OK ) // Create the server
   {
-    DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Registering URI handlers");))
-    register_services(server);
+#if ( 0 )
+    if ( server_count == 0 )
+    {
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Registering event handlers");))
+      ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &server));
+      ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
+    }
+#endif
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Registering URI handlers using port %d", port);))
+    register_services(server, port);
     httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
+    server_count++; // Increment the number of servers started
+
     return server;
   }
 
@@ -172,7 +173,7 @@ void connect_handler(void            *arg,        //
   if ( *server == NULL )
   {
     DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Starting webserver");))
-    *server = start_webserver();
+    *server = start_webserver(DEFAULT_HTTP_PORT);
   }
   else
   {
@@ -209,17 +210,10 @@ static esp_err_t stop_webserver(httpd_handle_t server)
  *------------------------------------------------------------*/
 esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
 {
-  int i;
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "http_404_error_handler: %s", req->uri);))
 
-  sprintf(_xs, "Error 404. Service not found"); // Error reported to the user
-  strcat(_xs, "<br>Valid URLs<br/>");           // Error reported to the user
-  i = 0;
-  while ( uri_list[i].uri != 0 )
-  {
-    strcat(_xs, "<br>");
-    strcat(_xs, uri_list[i].uri);
-    i++;
-  }
+  sprintf(_xs, "Error 404. Service not found: %s", req->uri); // Error reported to the user
+
   httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, _xs);
   return ESP_FAIL;
 }
@@ -303,4 +297,77 @@ int get_url_arg(char *req_url,     // URL and arguements as from web page
    */
   *reply = 0;
   return i;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: http_send_string
+ *
+ * @brief:    Send a chunk of text to the HTTP client
+ *
+ * @return:   none
+ *
+ *---------------------------------------------------------------
+ *
+ * This function is called in response to a user starting a
+ * shooting session.
+ *
+ *------------------------------------------------------------*/
+void http_send_string_start(httpd_req_t *req)       // Start to send a string to the client
+{
+
+  static_req = req;                                 // Remember who we are talking to
+
+  return;
+}
+
+void http_send_string(const char *str)              // String to send to the client
+{
+  char *sout;                                       // Pointer to the output string
+  int   i;
+
+  if ( static_req == NULL )                         // If the request pointer is not set
+  {
+    return;
+  }
+
+  i    = 0;
+  sout = (char *)str;                               // Point to the string to send
+  while ( *str != 0 )
+  {
+    if ( *str == '\n' )                             // If we have a new line
+    {
+      httpd_resp_send_chunk(static_req, sout, i);   // Send out what we have so far
+      httpd_resp_send_chunk(static_req, "<br>", 4); // Send a CRLF to the client
+      i = 0;                                        // Reset the counter
+      str++;                                        // Move to the next character
+      sout = (char *)str;                           // Point to the string to send
+    }
+    else
+    {
+      i++;                                          // Move to the next character
+      str++;
+    }
+  }
+
+  if ( i == 0 )                                     // If we have nothing to send
+  {
+    return;                                         // Nothing to do
+  }
+  httpd_resp_send_chunk(static_req, sout, i);
+}
+
+void http_send_string_end(httpd_req_t *req)         // Stop to send a string to the client
+{
+
+  char str[1];                                      // Temporary string
+
+  str[0] = 0;
+  if ( static_req != NULL )                         // If the request pointer is not set
+  {
+    httpd_resp_send_chunk(static_req, str, 0);      // Send the string to the client
+  }
+  static_req = NULL;                                // Erase it
+
+  return;
 }

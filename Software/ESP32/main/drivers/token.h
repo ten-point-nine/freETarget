@@ -8,6 +8,12 @@
 #ifndef _TOKEN_H_
 #define _TOKEN_H_
 
+#ifdef TOKEN_C
+#define EXTERN
+#else
+#define EXTERN extern
+#endif
+
 /*
  * Global functions
  */
@@ -17,9 +23,6 @@ int  token_give(void);      // Rease the token ring
 int  token_available(void); // TRUE if the token ring can be taken
 void token_poll(void);      // Poll the token ring
 void token_cycle(void);     // Token ring cyclic monitor
-
-extern int my_ring;         // My token ring node ID
-extern int whos_ring;       // WHo owns the token ring
 
 /*
  *  State Definitions
@@ -45,5 +48,11 @@ extern int whos_ring;       // WHo owns the token ring
  * #defines
  */
 #define TOKEN_TIME_OUT 2000 // Token timeout in ms
+
+/*
+ *  GLobal Variables
+ */
+EXTERN int my_ring   = TOKEN_UNDEF; // Token ring address
+EXTERN int whos_ring = TOKEN_UNDEF; // Who owns the ring right now?
 
 #endif
