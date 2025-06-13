@@ -206,11 +206,6 @@ static esp_err_t service_get_events(httpd_req_t *req)
     http_shot = 0;                            // Next time reply with the first shot
   }
 
-  if ( time_since_last_shot == 0 )            // Has the timer run out
-  {
-    event_mode = CLOSE;                       // Close the target
-  }
-
   /*
    * Second time trought Send the next score
    */
@@ -220,6 +215,10 @@ static esp_err_t service_get_events(httpd_req_t *req)
             && (event_mode != CLOSE) )                    // or the event has finished
     {
       vTaskDelay(ONE_SECOND);
+      if ( time_since_last_shot == 0 )                    // Has the timer run out
+      {
+        event_mode = CLOSE;                               // Close the target
+      }
     }
 
     switch ( event_mode )                                 // Check the event mode
