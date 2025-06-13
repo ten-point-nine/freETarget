@@ -385,13 +385,17 @@ static esp_err_t service_get_json(httpd_req_t *req)
   tcpip_socket_2_queue(_xs, strlen(_xs)); // Put the data into the TCPIP queue
 
   /*
-   * Set the header to indicate that this is a json request
+   * Set the header to indicate that this is a json request, then wait till it's done
    */
   target_name(&my_name);       // Get the target name
   httpd_resp_set_hdr(req, "get_json", my_name);
   http_send_string_start(req); // Start sending a string to the client
-  vTaskDelay(ONE_SECOND);      // Give up time for the data to be processed
-  http_send_string_end();      // Stop sending a string to the client
+  do
+  {
+    vTaskDelay(ONE_SECOND);    // Give up time for the data to be processed
+  } while ( (run_state & IN_JSON) == IN_JSON ); // Wait until the queue is not full
+
+  http_send_string_end(); // Stop sending a string to the client
 
   /*
    * All done, return

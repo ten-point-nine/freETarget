@@ -277,8 +277,10 @@ static void handle_json(void)
   int   x;
   float f;
   int   i, j, k;
-  char  s[64]; // Place to store a string
+  char  s[64];          // Place to store a string
   int   m;
+
+  run_state |= IN_JSON; // Parsing a JON string
 
   /*
    * Found out where the braces are, extract the contents.
@@ -406,6 +408,7 @@ static void handle_json(void)
   /*
    * All done
    */
+  run_state &= ~IN_JSON; // FInished parsing the JSON input
   in_JSON           = 0; // Start Over
   got_right_bracket = 0; // Need to wait for a new Right Bracket
   got_left_bracket  = false;

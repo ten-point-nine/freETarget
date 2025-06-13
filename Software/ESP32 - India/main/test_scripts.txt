@@ -1,1 +1,0 @@
-{"WIFI_SSID":"googlefiber", "WIFI_PWD":"kansas6108"}

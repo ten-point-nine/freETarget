@@ -42,6 +42,7 @@
 #define IN_SHOT      0x0010 // The target is actively in a shot
 #define IN_REDUCTION 0x0020 // The data is being reduced
 #define IN_FATAL_ERR 0x0040 // A fatal error has occured and cannot be fixed
+#define IN_JSON      0x0080 // The JSON data is being processed
 
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
 #define IF_IN(x)  if ( (run_state & (x)) != 0 )

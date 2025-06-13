@@ -313,36 +313,61 @@ int get_url_arg(char *req_url,     // URL and arguements as from web page
  * shooting session.
  *
  *------------------------------------------------------------*/
-void http_send_string_start(httpd_req_t *req)            // Start to send a string to the client
+void http_send_string_start(httpd_req_t *req)       // Start to send a string to the client
 {
 
-  static_req = req;                                      // Remember who we are talking to
+  static_req = req;                                 // Remember who we are talking to
 
   return;
 }
 
-void http_send_string(const char *str)                   // String to send to the client
+void http_send_string(const char *str)              // String to send to the client
 {
+  char *sout;                                       // Pointer to the output string
+  int   i;
 
-  if ( static_req != NULL )                              // If the request pointer is not set
+  if ( static_req == NULL )                         // If the request pointer is not set
   {
-    httpd_resp_send_chunk(static_req, str, strlen(str)); // Send the string to the client
+    return;
   }
 
-  return;
+  i    = 0;
+  sout = (char *)str;                               // Point to the string to send
+  while ( *str != 0 )
+  {
+    if ( *str == '\n' )                             // If we have a new line
+    {
+      httpd_resp_send_chunk(static_req, sout, i);   // Send out what we have so far
+      httpd_resp_send_chunk(static_req, "<br>", 4); // Send a CRLF to the client
+      i = 0;                                        // Reset the counter
+      str++;                                        // Move to the next character
+      sout = (char *)str;                           // Point to the string to send
+    }
+    else
+    {
+      i++;                                          // Move to the next character
+      str++;
+    }
+  }
+
+  if ( i == 0 )                                     // If we have nothing to send
+  {
+    return;                                         // Nothing to do
+  }
+  httpd_resp_send_chunk(static_req, sout, i);
 }
 
-void http_send_string_end(httpd_req_t *req)              // Stop to send a string to the client
+void http_send_string_end(httpd_req_t *req)         // Stop to send a string to the client
 {
 
-  char str[1];                                           // Temporary string
+  char str[1];                                      // Temporary string
 
   str[0] = 0;
-  if ( static_req != NULL )                              // If the request pointer is not set
+  if ( static_req != NULL )                         // If the request pointer is not set
   {
-    httpd_resp_send_chunk(static_req, str, 0);           // Send the string to the client
+    httpd_resp_send_chunk(static_req, str, 0);      // Send the string to the client
   }
-  static_req = NULL;                                     // Erase it
+  static_req = NULL;                                // Erase it
 
   return;
 }

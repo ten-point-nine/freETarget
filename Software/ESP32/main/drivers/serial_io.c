@@ -377,6 +377,7 @@ char serial_getch(int ports // Bit mask of active ports
   {
     if ( tcpip_queue_2_app(&ch, 1) > 0 )
     {
+      connection_list |= TCPIP; // Set the connection list
       return ch;
     }
   }
@@ -514,12 +515,10 @@ void serial_to_all(char *str,        // String to output
     tcpip_app_2_queue(str, strlen(str));
   }
 
-#if ( 0 )
   if ( ports & HTTP_CONNECTED ) // Is there a web server connected?
   {
     http_send_string(str);      // Yes, send it to the web server
   }
-#endif
 
   /*
    * All done
