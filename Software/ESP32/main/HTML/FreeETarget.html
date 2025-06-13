@@ -195,6 +195,11 @@
         }
       }, false);
 
+      source.addEventListener('start', function (e) {
+        console.log("New shooting event started");
+        startOver();
+      }, false);
+
       source.addEventListener('close', function (e) {
         console.log("Events closed by target");
         source.close();

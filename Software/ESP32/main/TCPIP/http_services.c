@@ -48,7 +48,8 @@ typedef enum // Server modes
   IDLE = 0,  // 0 Idle mode, no event
   AUTO,      // 1 Auto refresh mode
   SINGLE,    // 2 Single shot mode
-  CLOSE      // 3 Close the event
+  CLOSE,     // 3 Close the event
+  START      // 4 Start the event
 } event_mode_t;
 
 /*
@@ -224,6 +225,12 @@ static esp_err_t service_get_events(httpd_req_t *req)
         strcpy(str, "event:idle\n");                      // Send an idle message
         break;                                            // Return and wait for the next shot
 
+      case START:                                         // If the event is starting
+        DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Shooting event started");))
+        strcpy(str, "event:start\nid:\ndata: ");          // Send a start message
+        event_mode = AUTO;                                // Set the mode to auto refresh
+        break;
+
       case CLOSE:                                         // If the event is done
         DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Shooting event closed");))
         strcpy(str, "event:close\nid:\ndata: ");          // Send a close message
@@ -282,32 +289,16 @@ static esp_err_t service_get_menu(httpd_req_t *req)
 
   DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_menu(%s)", req->uri);))
 
-  /*
-   *  Decode the command line arguements if there are any
-   */
-#if ( 0 )
-  if ( ((my_user_ctx_t *)(req->user_ctx))->port == DEFAULT_HTTP_PORT ) // Target can obly be started on port 80
-  {
-    if ( contains(req->uri, "start") || contains(req->uri, "START") )
-    {
-      start_new_session(SESSION_MATCH);
-      /*
-       * Do the things we need to do to start a session
-       */
-      http_shot  = -1;   // Reset the shot counter
-      event_mode = AUTO; // Set the server mode to auto refresh
+                                   /*
+                                    *  Decode the command line arguements if there are any
+                                    */
 
-                         /*
-                          *  Send the reply to the client
-                          */
-      target_name(my_name);                             // Get the target name
-      resp_str = (const char *)&FreeETarget_html_start; // point to the target HTML file
-      httpd_resp_set_hdr(req, "menu", my_name);
-      httpd_resp_send(req, resp_str, strlen(resp_str));
-      return ESP_OK;                                    // All done, return
-    }
+  if ( contains(req->uri, "start") || contains(req->uri, "START") )
+  {
+    start_new_session(SESSION_MATCH);
+    http_shot  = -1;    // Reset the shot counter
+    event_mode = START; // Set the server mode to auto refresh
   }
-#endif
 
   if ( contains(req->uri, "stop") || contains(req->uri, "STOP") )
   {
