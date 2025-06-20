@@ -276,6 +276,8 @@ bool factory_test(void)
   SEND(ALL, sprintf(_xs, "\r\nHas the tape seal been removed from the temperature sensor?");)
   SEND(ALL, sprintf(_xs, "\r\nPress 1 & 2 or ! to continue\r\n");)
 
+  set_status_LED(LED_DLROW_OLLOH); // Blink Red, White, Blue
+
   while ( pass != (PASS_A | PASS_B) )
   {
     if ( DIP_SW_A != 0 )
@@ -293,6 +295,7 @@ bool factory_test(void)
         pass = (PASS_A | PASS_B);
       }
     }
+    vTaskDelay(1); // Release control to other tasks
   }
 
   /*
