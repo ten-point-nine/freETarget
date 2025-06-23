@@ -42,6 +42,7 @@ extern volatile unsigned long paper_time;
 
 static void show_test_help(void);
 static void test_display_all_scores(void);
+static void test_rapidfire(void);
 
 /*
  * Diagnostic typedefs
@@ -96,6 +97,7 @@ static const self_test_t test_list[] = {
     {"build_json_score",                  &test_build_json_score   },
     {"build_fake_shots",                  &test_build_fake_shots   },
     {"display_all_scores",                &test_display_all_scores },
+    {"Rapidfire test",                    &test_rapidfire          },
     {"",                                  0                        }
 };
 
@@ -276,6 +278,8 @@ bool factory_test(void)
   SEND(ALL, sprintf(_xs, "\r\nHas the tape seal been removed from the temperature sensor?");)
   SEND(ALL, sprintf(_xs, "\r\nPress 1 & 2 or ! to continue\r\n");)
 
+  set_status_LED(LED_DLROW_OLLOH); // Blink Red, White, Blue
+
   while ( pass != (PASS_A | PASS_B) )
   {
     if ( DIP_SW_A != 0 )
@@ -293,6 +297,7 @@ bool factory_test(void)
         pass = (PASS_A | PASS_B);
       }
     }
+    vTaskDelay(1); // Release control to other tasks
   }
 
   /*
@@ -978,6 +983,49 @@ static void test_display_all_scores(void)
       SEND(ALL, sprintf(_xs, "\r\n%s", str);)
     }
   }
+  /*
+   *  Finished
+   */
+  SEND(ALL, sprintf(_xs, _DONE_);)
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: test_rapidfire
+ *
+ * @brief:    Generate a pattern of fapid
+ *
+ * @return:   None
+ *
+ *----------------------------------------------------------------
+ *
+ * The self test circuit is triggered on a schedule to verify the
+ * operation of the target detection.
+ *
+ *--------------------------------------------------------------*/
+static float rapid_schedule[] = {2.0, 1.0, .75, .5, .25, -1};
+
+static void test_rapidfire(void)
+{
+  unsigned int i;
+
+  run_state |= IN_OPERATION;                        // Make sure the software thinks it is running
+  run_state &= ~IN_TEST;                            // and not in a test
+  freeETarget_timer_start();                        // Start interrupts (turned off in self_test())
+
+  i = 0;
+  while ( rapid_schedule[i] > 0 )
+  {
+    run_state &= ~IN_OPERATION;                     // Exit operation
+    SEND(ALL, sprintf(_xs, "\r\nRapid fire test: %.2f seconds  ", rapid_schedule[i]);)
+    gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);
+    gpio_set_level(CLOCK_START, CLOCK_TRIGGER_ON);  // Generate a 1-0-1 pulse
+    gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF); // to clock in a 1 to the run latch
+    vTaskDelay(ONE_SECOND * rapid_schedule[i]);
+    i++;
+  }
+
   /*
    *  Finished
    */

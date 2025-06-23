@@ -138,13 +138,16 @@ void WiFi_init(void)
   /*
    * Setup the mDNS service
    */
-  mdns_init();                   // Initialize the mDNS service
-  target_name(str_c);            // Get the target name
-  mdns_hostname_set(str_c);      // Set the hostname for the target
-  mdns_instance_name_set(str_c); // Set the instance name for the target
-  {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "mDNS service set up for: \"%s\"", str_c);))
-  }
+  mdns_init();                                                         // Initialize the mDNS service
+  target_name(str_c);                                                  // Get the target name
+  mdns_hostname_set(str_c);                                            // Set the hostname for the target
+  mdns_instance_name_set(str_c);                                       // Set the instance name for the target
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "mDNS service set up for: \"%s\"", str_c);))
+#if ( 0 )
+  mdns_service_add(NULL, "_http", "_tcp", DEFAULT_HTTP_PORT, NULL, 0); // Add the service to the mDNS
+  mdns_service_add(NULL, "_http", "_tcp", EVENT_HTTP_PORT, NULL, 0);   // Add the service to the mDNS
+  mdns_service_add(NULL, "_http", "_tcp", PORT, NULL, 0);              // Add the service to the mDNS
+#endif
 
   /*
    *  All done

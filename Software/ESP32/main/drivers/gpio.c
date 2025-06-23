@@ -824,7 +824,7 @@ void aquire(void)
    * Pull in the data amd save it in the record array
    */
   read_timers(&record[shot_in].timer_count[0]);                 // Record this count
-  IF_IN(IN_SHOT)
+  IF_IN(IN_SHOT)                                                // Only record the shot if we are actually expecting a shot
   {
     record[shot_in].shot_time     = run_time_ms() - shot_start; // Capture the time into the shot
     record[shot_in].face_strike   = face_strike;                // Record if it's a face strike

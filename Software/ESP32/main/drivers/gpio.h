@@ -22,36 +22,35 @@ unsigned int read_DIP(void);                               // Read the DIP switc
 unsigned int read_counter(unsigned int direction);
 void         stop_timers(void);                            // Turn off the counter registers
 void         read_timers(int *timer_count);                // Read and return the counter registers
-void paper_start(void); // Turn on the witness papervoid paper_stop(void);                                    // Turn off the paper drive if
-                        // it is running
-void paper_drive_tick(void);                          // Turn the motor off when the time runs out
-void paper_stop(void);                                // Stop the paper transport
-void aquire(void);                                    // Read the clock registers
-void enable_face_interrupt();                         // Turn on the face strike interrupt
-void disable_face_interrupt(void);                    // Turn off the face strike interrupt
-void enable_sensor_interrupt();                       // Turn on the sensor interrupt
-void disable_sensor_interrupt(void);                  // Turn off the sensor strike interrupt
+void         paper_start(void);                            // Turn on the witness paper
+void         paper_stop(void);                             // Turn off the paper drive if
+                                                           // it is running
+void paper_drive_tick(void);                               // Turn the motor off when the time runs out
+void paper_stop(void);                                     // Stop the paper transport
+void aquire(void);                                         // Read the clock registers
+void enable_face_interrupt();                              // Turn on the face strike interrupt
+void disable_face_interrupt(void);                         // Turn off the face strike interrupt
 
-void digital_test(void);                              // Execute the digital test
-void DCmotor_on_off(bool on, unsigned long duration); // Turn the motor on or off
-int  is_paper_on();                                   // Return the current running state
-void rapid_green(unsigned int state);                 // Drive the GREEN light
-void rapid_red(unsigned int state);                   // Drive the RED light
+void digital_test(void);                                   // Execute the digital test
+void DCmotor_on_off(bool on, unsigned long duration);      // Turn the motor on or off
+int  is_paper_on();                                        // Return the current running state
+void rapid_green(unsigned int state);                      // Drive the GREEN light
+void rapid_red(unsigned int state);                        // Drive the RED light
 void rapid_LED_test(void);
-void stepper_pulse(void);                             // New state for the Stepper motor output
-void status_LED_init(unsigned int gpio_number);       // Initialize the RMT driver
-void status_LED_test(void);                           // Cycle the status LEDs
-void paper_test(void);                                // Advance the motor
-void target_test(void);                               // Monitor the target sensors for a shot
-void LED_test(void);                                  // Cycle the target LED
-void trigger_timers(void);                            // Trigger a self test
-void timer_run_all(void);                             // Run all fo the timers at once
-void timer_cycle_oscillator(void);                    // Turn the oscillator on and off
+void stepper_pulse(void);                                  // New state for the Stepper motor output
+void status_LED_init(unsigned int gpio_number);            // Initialize the RMT driver
+void status_LED_test(void);                                // Cycle the status LEDs
+void paper_test(void);                                     // Advance the motor
+void target_test(void);                                    // Monitor the target sensors for a shot
+void LED_test(void);                                       // Cycle the target LED
+void trigger_timers(void);                                 // Trigger a self test
+void timer_run_all(void);                                  // Run all fo the timers at once
+void timer_cycle_oscillator(void);                         // Turn the oscillator on and off
 
-void multifunction_switch(void);                      // Handle the actions of the DIP Switch signal
-void multifuction_display(void);                      // Display the MFS settings
-void multifunction_wait_open(void);                   // Wait for both multifunction switches to be open
-void multifunction_display(void);                     // Display the MFS settings as text
+void multifunction_switch(void);                           // Handle the actions of the DIP Switch signal
+void multifuction_display(void);                           // Display the MFS settings
+void multifunction_wait_open(void);                        // Wait for both multifunction switches to be open
+void multifunction_display(void);                          // Display the MFS settings as text
 
 /*
  *  Global Variables

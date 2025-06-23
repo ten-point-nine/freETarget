@@ -52,24 +52,36 @@
 </head>
 
 <body lang=EN-US style='word-wrap:break-word'>
+
 	<div class=WordSection1>
 		<p class=MsoNormal><b><span style='font-size:14.0pt;line-height:115%'>HELP</span></b></p>
-		<p class=MsoNormal>Welcome to the FreeETarget help page.</p>
-		<p class=MsoNormal>Available target commands.</p>
-		<p class=MsoNormal><b>&lt;target-name&gt; </b></p>
-		<p class=MsoNormal>This help page</p>
-		<p class=MsoNormal><b>&lt;target-name&gt;/target</b></p>
-		<p class=MsoNormal>Launch the target page.  Runs until all of the shots have
-			been displayed.  Use REFRESH to obtain the next shots<br>
-			<br>
-			<b>&lt;target-name&gt;/target?auto</b>
+		<p class=MsoNormal>The web based FreeETarget interface is in two parts:</p>
+		<p class=MsoNormal style='margin-bottom:0in'>1 – The main target page showing
+			your shots, and;</p>
+		<p class=MsoNormal style='margin-bottom:0in'>2 – A control page to manage the
+			target remotely.</p>
+		<p class=MsoNormal style='margin-bottom:0in'>&nbsp;</p>
+		<p class=MsoNormal>You will need to know the name or IP address of your target.
 		</p>
-		<p class=MsoNormal>Launch the target page.   New shots will automatically appear. 
-			Use &lt;target-name&gt;:81/target?stop to end the session</p>
-		<p class=MsoNormal><b>&lt;target-name&gt;:81/target?stop</b></p>
-		<p class=MsoNormal>Stops a running session started with &lt;target-name&gt;/target?auto</p>
-		<p class=MsoNormal><b>&lt;target-name&gt;/who </b></p>
-		<p class=MsoNormal>Obtain the target configuration</p>
+		<p class=MsoNormal>&nbsp;</p>
+		<p class=MsoNormal><u>To start the target, enter the target URL;</u></p>
+		<p class=MsoNormal><b><i>&lt;target_name&gt;.local</i></b></p>
+		<p class=MsoNormal style='margin-bottom:10.0pt'>This starts the target and
+			records your shots. The target will automatically disconnect after 15 minutes
+			of inactivity.</p>
+		<p class=MsoNormal>&nbsp;</p>
+		<p class=MsoNormal style='margin-bottom:7.9pt'><u>To control the target, access
+				the menu port</u></p>
+		<p class=MsoNormal><b><i>&lt;target_name&gt;.local:8080</i></b></p>
+		<p class=MsoNormal>This will present the menu buttons:</p>
+		<p class=MsoNormal>START – Clear any shots and start recording</p>
+		<p class=MsoNormal>STOP – Stop recording shots and return to the HELP page</p>
+		<p class=MsoNormal>&nbsp;</p>
+		<p class=MsoNormal><u>To find out information about your target, use the WHO
+				command</u></p>
+		<p class=MsoNormal><b><i>&lt;target-name&gt;.local/who </i></b></p>
+		<p class=MsoNormal>Or</p>
+		<p class=MsoNormal><b><i>&lt;target-name&gt;.local:8080/who </i></b></p>
 	</div>
 </body>
 

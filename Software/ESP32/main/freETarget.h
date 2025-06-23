@@ -19,7 +19,7 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"6.1.12 June 12, 2025\""
+#define SOFTWARE_VERSION "\"6.1.14 June 23, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED" // Message to send on connection
 
@@ -130,6 +130,8 @@
 #define SCORE_HTTP_PRIME "{#}"                     // HTTP Prime the client
 #define SCORE_HTTP_TEST  "{$}"                     // HTTP Test the client
 
+#define HTTP_CLOSE_TIME 15l                        // Time to close the HTTP connection after the last shot
+
 /*
  *  Types
  */
@@ -196,6 +198,7 @@ EXTERN volatile unsigned int run_state;                             // IPC state
 EXTERN time_count_t          LED_timer;                             // Turn off the LEDs when not in use
 EXTERN time_count_t          keep_alive;                            // Keep alive timer
 EXTERN time_count_t          power_save;                            // Power save timer
+EXTERN time_count_t          time_since_last_shot;                  // 15 minutes since last shot
 EXTERN time_count_t          session_time[];                        // Time in each session
 EXTERN shot_record_t         record[SHOT_SPACE];
 #ifdef FREETARGET_C
