@@ -132,7 +132,6 @@ unsigned int compute_hit(shot_record_t *shot // Storing the results
   double estimate;                           // Estimated position
   double last_estimate, error;               // Location error
   double x_avg, y_avg;                       // Running average location
-  double smallest;                           // Smallest non-zero value measured
   double z_offset_clock;                     // Time offset between paper and sensor plane
 
   x_avg = 0;
@@ -215,25 +214,20 @@ unsigned int compute_hit(shot_record_t *shot // Storing the results
   }
 
   /*
-   * Find the smallest non-zero value, this is the sensor furthest away from the sensor
+   *  Loop and calculate the unknown radius (estimate)
    */
-  smallest = s[N].count;
-  location = N;
-  for ( i = E; i <= W; i++ )
+  estimate = 0;
+  for ( i = N; i <= W; i++ )
   {
-    if ( s[i].count < smallest )
-    {
-      location = i;
-      smallest = s[i].count;
-    }
+    estimate += s[i].count;
   }
+  estimate = estimate / 4.0;
+  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "estimate: %4.2f", estimate);))
 
   /*
    *  Loop and calculate the unknown radius (estimate)
    */
-  estimate = s[N].count - smallest + 1.0d;
 
-  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "estimate: %4.2f", estimate);))
   error = 999999; // Start with a big error
   count = 0;
 
