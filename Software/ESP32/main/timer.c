@@ -170,9 +170,9 @@ void freeETarget_timer_start(void) // Start the timer
  *
  * There are three data aquisition states
  *
- * IDLE    - No inputs are present
+ * IDLE    - Wait for a shot to arrive
  * WAIT    - Inputs are present, but we have to wait
- *           for all of the inputs to be present or
+ *           for all of the sensors to be present or
  *           timed out
  * TIMEOUT - We have read the counters but need to
  *           wait for the ringing to stop
@@ -199,7 +199,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
     case PORT_STATE_IDLE:                                    // Idle, Wait for something to show up
       if ( pin != 0 )                                        // Something has triggered
       {
-        shot_timer = MAX_WAIT_TIME;                          // Start the wait timer
+        shot_timer = MAX_WAIT_TIME;                          // The wait timer makes sure all sensors are triggered
         isr_state  = PORT_STATE_WAIT;                        // Got something wait for all of the sensors tro trigger
       }
       break;
