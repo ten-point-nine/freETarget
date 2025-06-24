@@ -19,7 +19,7 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"India-II June 7, 2025\""
+#define SOFTWARE_VERSION "\"India-II June 23, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED" // Message to send on connection
 
@@ -42,7 +42,7 @@
 #define IN_SHOT      0x0010 // The target is actively in a shot
 #define IN_REDUCTION 0x0020 // The data is being reduced
 #define IN_FATAL_ERR 0x0040 // A fatal error has occured and cannot be fixed
-#define IN_JSON      0x0080 // The JSON data is being processed
+#define IN_HTTP      0x0080 // The HTTP (JSON) data is being processed
 
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
 #define IF_IN(x)  if ( (run_state & (x)) != 0 )
@@ -130,6 +130,8 @@
 #define SCORE_HTTP_PRIME "{#}"                     // HTTP Prime the client
 #define SCORE_HTTP_TEST  "{$}"                     // HTTP Test the client
 
+#define HTTP_CLOSE_TIME 15l                        // Time to close the HTTP connection after the last shot
+
 /*
  *  Types
  */
@@ -196,6 +198,7 @@ EXTERN volatile unsigned int run_state;                             // IPC state
 EXTERN time_count_t          LED_timer;                             // Turn off the LEDs when not in use
 EXTERN time_count_t          keep_alive;                            // Keep alive timer
 EXTERN time_count_t          power_save;                            // Power save timer
+EXTERN time_count_t          time_since_last_shot;                  // 15 minutes since last shot
 EXTERN time_count_t          session_time[];                        // Time in each session
 EXTERN shot_record_t         record[SHOT_SPACE];
 #ifdef FREETARGET_C

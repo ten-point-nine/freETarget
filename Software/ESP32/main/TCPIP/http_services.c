@@ -215,6 +215,10 @@ static esp_err_t service_get_events(httpd_req_t *req)
             && (event_mode != CLOSE) )                    // or the event has finished
     {
       vTaskDelay(ONE_SECOND);
+      if ( time_since_last_shot == 0 )                    // Has the timer run out
+      {
+        event_mode = CLOSE;                               // Close the target
+      }
     }
 
     switch ( event_mode )                                 // Check the event mode
@@ -293,14 +297,14 @@ static esp_err_t service_get_menu(httpd_req_t *req)
                                     *  Decode the command line arguements if there are any
                                     */
 
-  if ( contains(req->uri, "start") || contains(req->uri, "START") )
+  if ( contains(req->uri, "start") )
   {
     start_new_session(SESSION_MATCH);
     http_shot  = -1;    // Reset the shot counter
     event_mode = START; // Set the server mode to auto refresh
   }
 
-  if ( contains(req->uri, "stop") || contains(req->uri, "STOP") )
+  if ( contains(req->uri, "stop") )
   {
     event_mode = CLOSE; // Set the server mode to close
   }
@@ -384,7 +388,7 @@ static esp_err_t service_get_json(httpd_req_t *req)
   do
   {
     vTaskDelay(ONE_SECOND);    // Give up time for the data to be processed
-  } while ( (run_state & IN_JSON) == IN_JSON ); // Wait until the queue is not full
+  } while ( (run_state & IN_HTTP) == IN_HTTP ); // Wait until the queue is not full
 
   http_send_string_end(); // Stop sending a string to the client
 

@@ -156,6 +156,7 @@ void freeETarget_init(void)
    */
   ft_timer_new(&keep_alive, (unsigned long)json_keep_alive * ONE_SECOND * 60l);         // Keep alive timer
   ft_timer_new(&power_save, (unsigned long)(json_power_save) * (long)ONE_SECOND * 60L); // Power save timer
+  ft_timer_new(&time_since_last_shot, HTTP_CLOSE_TIME * 60 * ONE_SECOND);               // 15 minutes since last shot
 
   /*
    * Run the power on self test
@@ -250,9 +251,10 @@ void freeETarget_target_loop(void *arg)
       default:
       case START:                                                                      // Start of the loop
         DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "state: START");))
-        power_save = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L; //  Reset the timer
-        set_mode();
-        arm();
+        power_save           = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L; //  Reset the timer
+        time_since_last_shot = HTTP_CLOSE_TIME * 60l * ONE_SECOND;                               // 15 minutes since last shot
+        set_mode(); // Set the mode for the next string of shot (ex Tabata or Rapid Fire)
+        arm();      // Arm the circuit and check for errors
         set_status_LED(LED_READY);
         if ( (json_rapid_enable == false) && (json_tabata_enable == false) )           // If rapid fire is not enabled
         {

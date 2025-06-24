@@ -170,12 +170,12 @@ void freeETarget_timer_start(void) // Start the timer
  *
  * There are three data aquisition states
  *
- * IDLE - No inputs are present
- * WAIT - Inputs are present, but we have to wait
- *        for all of the inputs to be present or
- *        timed out
- * DONE - We have read the counters but need to
- *        wait for the ringing to stop
+ * IDLE    - Wait for a shot to arrive
+ * WAIT    - Inputs are present, but we have to wait
+ *           for all of the sensors to be present or
+ *           timed out
+ * TIMEOUT - We have read the counters but need to
+ *           wait for the ringing to stop
  *
  *
  *-----------------------------------------------------*/
@@ -218,6 +218,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
       if ( ring_timer == 0 )
       {
         stop_timers();                                       // Clear the flipflops
+        arm_timers();                                        // Arm the timers for the next shot
         isr_state = PORT_STATE_IDLE;                         // The ringing has stopped
       }
       break;
