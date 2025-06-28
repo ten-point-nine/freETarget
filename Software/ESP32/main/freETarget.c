@@ -249,16 +249,16 @@ void freeETarget_target_loop(void *arg)
     switch ( freETarget_state )
     {
       default:
-      case START:                                                                      // Start of the loop
+      case START:                                                                                // Start of the loop
         DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "state: START");))
         power_save           = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L; //  Reset the timer
         time_since_last_shot = HTTP_CLOSE_TIME * 60l * ONE_SECOND;                               // 15 minutes since last shot
         set_mode(); // Set the mode for the next string of shot (ex Tabata or Rapid Fire)
         arm();      // Arm the circuit and check for errors
         set_status_LED(LED_READY);
-        if ( (json_rapid_enable == false) && (json_tabata_enable == false) )           // If rapid fire is not enabled
+        if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
         {
-          set_status_LED(LED_RAPID_GREEN);                                             // Show that the target cannot be used
+          set_status_LED(LED_RAPID_GREEN);                                   // Show that the target cannot be used
         }
         freETarget_state = WAIT;
         json_rapid_count = 0;
