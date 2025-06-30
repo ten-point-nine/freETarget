@@ -205,17 +205,8 @@
     .gwd-form-WEAPON {
       position: absolute;
       top: 300px;
-      left: 30px;
-      font-family: "Arial Black";
-      font-size: 16px;
-      height: 46px;
-    }
-
-    .gwd-form-EVENT {
-      position: absolute;
-      top: 300px;
-      left: 250px;
-      font-family: "Arial Black";
+      left: 200px;
+      font-family: "Arial";
       font-size: 16px;
       height: 46px;
     }
@@ -225,28 +216,21 @@
 <body class="htmlNoPages">
   <a href="/menu?start"><button class="gwd-button-start" onclick"href=\"/menu\">START</button></a>
   <a href="/menu?stop"><button class="gwd-button-stop" onclick"href=\"/menu\">STOP</button></a>
-
   <p class="gwd-p-WEAPON">WEAPON</p>
   <form name="WEAPON" action="/menu?weapon" onsubmit="return validateForm();displayContent();" method="get">
-    <input type="submit" class="gwd-form-WEAPON" id="submit" value="Submit">
-    <input type="radio" class="gwd-radio-AP" id="AIR PISTOL" value="Air Pistol" name="weapon" onclick"href=\"/menu?AP\""
-      checked>
+    <input type="submit" class="gwd-form-WEAPON" id="submit" value="SUBMIT">
+    <input type="radio" class="gwd-radio-AP" id="AIR PISTOL" value="AP" name="weapon" checked>
     <label for="Air Pistol" class="gwd-lable-AP">AIR PISTOL</label><br>
-    <input type="radio" class="gwd-radio-AR" id="AIR RIFLE" value="Air Rifle" name="weapon" onclick"href=\"/menu?AR\"">
+    <input type="radio" class="gwd-radio-AR" id="AIR RIFLE" value="AR" name="weapon">
     <label for="Air Rifle" class="gwd-lable-AR">AIR RIFLE</label><br>
-    <input type="radio" class="gwd-radio-22" id=".22 PISTOL" value=".22 Pistol" name="weapon"
-      onclick"href=\"/menu?22\"">
+    <input type="radio" class="gwd-radio-22" id=".22 PISTOL" value=".22P" name="weapon">
     <label for=".22 Pistol" class="gwd-lable-22">.22 PISTOL</label>
-    <input type="radio" class="gwd-radio-50m" id="50M RIFLE" value="50M RIFLE" name="weapon"
-      onclick"href=\"/menu?50M\"">
+    <input type="radio" class="gwd-radio-50m" id="50M RIFLE" value="50MR" name="weapon">
     <label for="50M RIFLE" class="gwd-lable-50m">50M RIFLE</label>
-  </form>
-  <p class="gwd-p-EVENT">EVENT</p>
-  <form name="EVENT" action="/menu?event" onsubmit="return validateForm();displayContent();" method="get">
-    <input type="submit" class="gwd-form-EVENT" id="submit" value="Submit">
-    <input type="radio" class="gwd-radio-practice" id="Practice" value="practice" name="event" checked />
+    <p class="gwd-p-EVENT">EVENT</p>
+    <input type="radio" class="gwd-radio-practice" id="Practice" value="PRACTICE" name="event" checked />
     <label for="practice" class="gwd-lable-practice">PRACTICE</label><br>
-    <input type="radio" class="gwd-radio-match" id="Match" value="Match" name="event" />
+    <input type="radio" class="gwd-radio-match" id="Match" value="MATCH" name="event" />
     <label for="match" class="gwd-lable-match">MATCH</label><br>
   </form>
 </body>

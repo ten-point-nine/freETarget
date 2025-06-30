@@ -279,13 +279,34 @@ static esp_err_t service_get_events(httpd_req_t *req)
  *
  * Arguements
  *
- * MATCH - Start a match session
- * SIGHT - Start a sighting session
- * AUTO  - Set the server to auto refresh
- * SINGLE - Set the server to single shot mode
- * STOP  - Stop the server
+ * MATCH    - Start a match session
+ * PRACTICE - Start a practice session
  *
+ * AP   - Air Pistol
+ * AR   - Air Rifle
+ * .22P - .22 Pistol
+ * 50MR - 50 M Rifle
+ *
+ *    //  110   ISSF 10 Metre Air Rifle
+    //  111   ISSF 10 Metre Air Rifle Practice
+    //  100   ISSF 10 Metre Air Pistol
+    //  101   ISSF 10 Metre Air Pistol Practice
+    //  510   ISSF 50 Metre Rifle
+    //  511   ISSF 50 Metre Rifle Practice
+    //  500   ISSF 50 Metre .22 Pistol
+    //  501   ISSF 50 Metre .22 Pistol Practice
  *------------------------------------------------------------*/
+static int session_type[] = {
+    110,                           // ISSF 10 Metre Air Rifle
+    111,                           // ISSF 10 Metre Air Rifle Practice
+    100,                           // ISSF 10 Metre Air Pistol
+    101,                           // ISSF 10 Metre Air Pistol Practice
+    510,                           // ISSF 50 Metre Rifle
+    511,                           // ISSF 50 Metre Rifle Practice
+    500,                           // ISSF 50 Metre .22 Pistol
+    501                            // ISSF 50 Metre .22 Pistol Practice
+};
+
 static esp_err_t service_get_menu(httpd_req_t *req)
 {
   const char *resp_str;            // Reply to server
