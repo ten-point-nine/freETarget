@@ -9,31 +9,37 @@
     p {
       margin: 0px;
     }
+
     h1 {
       margin: 0px;
     }
+
     h2 {
       margin: 0px;
     }
+
     h3 {
       margin: 0px;
     }
   </style>
   <style>
-    html, body {
+    html,
+    body {
       width: 100%;
       height: 100%;
       margin: 0px;
     }
+
     body {
       background-color: transparent;
       transform: perspective(1400px) matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
       transform-style: preserve-3d;
     }
+
     body * {
       transform-style: preserve-3d;
     }
-    
+
     .gwd-button-start {
       position: absolute;
       left: 450px;
@@ -41,16 +47,16 @@
       width: 100px;
       height: 24px;
     }
-    
+
     .gwd-button-start:hover {
-    background-color: pink;
+      background-color: pink;
     }
 
-   .gwd-button-start:active {
-    background-color: red;
-    transform: translateY(3px);
+    .gwd-button-start:active {
+      background-color: red;
+      transform: translateY(3px);
     }
-    
+
     .gwd-button-stop {
       position: absolute;
       left: 450px;
@@ -58,16 +64,16 @@
       width: 100px;
       height: 24px;
     }
-    
-     .gwd-button-stop:hover {
-    background-color: pink;
+
+    .gwd-button-stop:hover {
+      background-color: pink;
     }
 
-   .gwd-button-stop:active {
-    background-color: red;
-    transform: translateY(3px);
+    .gwd-button-stop:active {
+      background-color: red;
+      transform: translateY(3px);
     }
-    
+
     .gwd-radio-AP {
       position: absolute;
       left: 10px;
@@ -75,7 +81,7 @@
       width: 100px;
       height: 24px;
     }
-    
+
     .gwd-radio-AR {
       position: absolute;
       left: 10px;
@@ -83,6 +89,7 @@
       width: 100px;
       height: 24px;
     }
+
     .gwd-radio-22 {
       position: absolute;
       left: 10px;
@@ -90,7 +97,7 @@
       width: 100px;
       height: 24px;
     }
-    
+
     .gwd-radio-50m {
       position: absolute;
       left: 10px;
@@ -98,6 +105,7 @@
       width: 100px;
       height: 24px;
     }
+
     .gwd-lable-AP {
       position: absolute;
       left: 90px;
@@ -107,6 +115,7 @@
       font-family: Arial;
       font-size: 16px;
     }
+
     .gwd-lable-AR {
       position: absolute;
       left: 90px;
@@ -116,6 +125,7 @@
       font-family: Arial;
       font-size: 16px;
     }
+
     .gwd-lable-22 {
       position: absolute;
       left: 90px;
@@ -125,7 +135,7 @@
       font-family: Arial;
       font-size: 16px;
     }
-    
+
     .gwd-lable-50m {
       position: absolute;
       left: 90px;
@@ -135,7 +145,7 @@
       font-family: Arial;
       font-size: 16px;
     }
-    
+
     .gwd-radio-practice {
       position: absolute;
       left: 200px;
@@ -143,6 +153,7 @@
       height: 24px;
       top: 112px;
     }
+
     .gwd-radio-match {
       position: absolute;
       left: 200px;
@@ -150,6 +161,7 @@
       width: 100px;
       height: 24px;
     }
+
     .gwd-lable-practice {
       position: absolute;
       left: 280px;
@@ -159,6 +171,7 @@
       font-family: Arial;
       font-size: 16px;
     }
+
     .gwd-lable-match {
       position: absolute;
       left: 280px;
@@ -168,6 +181,7 @@
       font-family: Arial;
       font-size: 16px;
     }
+
     .gwd-p-WEAPON {
       position: absolute;
       top: 20px;
@@ -177,6 +191,7 @@
       height: 46px;
       width: 85px;
     }
+
     .gwd-p-EVENT {
       position: absolute;
       top: 20px;
@@ -186,29 +201,52 @@
       height: 46px;
       width: 85px;
     }
+
+    .gwd-form-WEAPON {
+      position: absolute;
+      top: 300px;
+      left: 30px;
+      font-family: "Arial Black";
+      font-size: 16px;
+      height: 46px;
+    }
+
+    .gwd-form-EVENT {
+      position: absolute;
+      top: 300px;
+      left: 250px;
+      font-family: "Arial Black";
+      font-size: 16px;
+      height: 46px;
+    }
   </style>
 </head>
 
 <body class="htmlNoPages">
-  <button id="start" class="gwd-button-start"  onclick"href=\"/menu?start\"">START</button>
-  <button id="stop" class="gwd-button-stop"  onclick"href=\"/menu?stop\"">STOP</button>
-  
+  <a href="/menu?start"><button class="gwd-button-start" onclick"href=\"/menu\">START</button></a>
+  <a href="/menu?stop"><button class="gwd-button-stop" onclick"href=\"/menu\">STOP</button></a>
+
   <p class="gwd-p-WEAPON">WEAPON</p>
-  <form>
-    <input type="radio" class="gwd-radio-AP" id="AIR PISTOL" value="Air Pistol" name="weapon" onclick"href=\"/menu?AP\"">
+  <form name="WEAPON" action="/menu?weapon" onsubmit="return validateForm();displayContent();" method="get">
+    <input type="submit" class="gwd-form-WEAPON" id="submit" value="Submit">
+    <input type="radio" class="gwd-radio-AP" id="AIR PISTOL" value="Air Pistol" name="weapon" onclick"href=\"/menu?AP\""
+      checked>
     <label for="Air Pistol" class="gwd-lable-AP">AIR PISTOL</label><br>
     <input type="radio" class="gwd-radio-AR" id="AIR RIFLE" value="Air Rifle" name="weapon" onclick"href=\"/menu?AR\"">
     <label for="Air Rifle" class="gwd-lable-AR">AIR RIFLE</label><br>
-    <input type="radio" class="gwd-radio-22" id=".22 PISTOL" value=".22 Pistol" name="weapon" onclick"href=\"/menu?22\"">
+    <input type="radio" class="gwd-radio-22" id=".22 PISTOL" value=".22 Pistol" name="weapon"
+      onclick"href=\"/menu?22\"">
     <label for=".22 Pistol" class="gwd-lable-22">.22 PISTOL</label>
-    <input type="radio" class="gwd-radio-50m" id="50M RIFLE" value="50M RIFLE" name="weapon" onclick"href=\"/menu?50M\"">
+    <input type="radio" class="gwd-radio-50m" id="50M RIFLE" value="50M RIFLE" name="weapon"
+      onclick"href=\"/menu?50M\"">
     <label for="50M RIFLE" class="gwd-lable-50m">50M RIFLE</label>
   </form>
   <p class="gwd-p-EVENT">EVENT</p>
-  <form class="gwd-form-1ogi">
-    <input type="radio" class="gwd-radio-practice" id="Practice" value="Practice" name="event" onclick"href=\"/menu?practice\"">
+  <form name="EVENT" action="/menu?event" onsubmit="return validateForm();displayContent();" method="get">
+    <input type="submit" class="gwd-form-EVENT" id="submit" value="Submit">
+    <input type="radio" class="gwd-radio-practice" id="Practice" value="practice" name="event" checked />
     <label for="practice" class="gwd-lable-practice">PRACTICE</label><br>
-    <input type="radio" class="gwd-radio-match" id="Match" value="Match" name="event" onclick"href=\"/menu?match\"">
+    <input type="radio" class="gwd-radio-match" id="Match" value="Match" name="event" />
     <label for="match" class="gwd-lable-match">MATCH</label><br>
   </form>
 </body>
