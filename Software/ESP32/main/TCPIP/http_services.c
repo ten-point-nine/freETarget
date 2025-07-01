@@ -287,37 +287,30 @@ static esp_err_t service_get_events(httpd_req_t *req)
  * .22P - .22 Pistol
  * 50MR - 50 M Rifle
  *
- *    //  110   ISSF 10 Metre Air Rifle
-    //  111   ISSF 10 Metre Air Rifle Practice
-    //  100   ISSF 10 Metre Air Pistol
-    //  101   ISSF 10 Metre Air Pistol Practice
-    //  510   ISSF 50 Metre Rifle
-    //  511   ISSF 50 Metre Rifle Practice
-    //  500   ISSF 50 Metre .22 Pistol
-    //  501   ISSF 50 Metre .22 Pistol Practice
+ *  110   ISSF 10 Metre Air Rifle
+ *  111   ISSF 10 Metre Air Rifle Practice
+ *  100   ISSF 10 Metre Air Pistol
+ *  101   ISSF 10 Metre Air Pistol Practice
+ *  510   ISSF 50 Metre Rifle
+ *  511   ISSF 50 Metre Rifle Practice
+ *  500   ISSF 50 Metre .22 Pistol
+ *  501   ISSF 50 Metre .22 Pistol Practice
  *------------------------------------------------------------*/
-static int session_type[] = {
-    110,                           // ISSF 10 Metre Air Rifle
-    111,                           // ISSF 10 Metre Air Rifle Practice
-    100,                           // ISSF 10 Metre Air Pistol
-    101,                           // ISSF 10 Metre Air Pistol Practice
-    510,                           // ISSF 50 Metre Rifle
-    511,                           // ISSF 50 Metre Rifle Practice
-    500,                           // ISSF 50 Metre .22 Pistol
-    501                            // ISSF 50 Metre .22 Pistol Practice
-};
 
 static esp_err_t service_get_menu(httpd_req_t *req)
 {
   const char *resp_str;            // Reply to server
   char        my_name[SHORT_TEXT]; // Temporary string
+  int         session_type;        // Index into the session_type array
 
   DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_menu(%s)", req->uri);))
 
                                    /*
                                     *  Decode the command line arguements if there are any
                                     */
-
+  /*
+   *  Decode the start/stop
+   */
   if ( contains(req->uri, "start") )
   {
     start_new_session(SESSION_MATCH);
@@ -331,8 +324,30 @@ static esp_err_t service_get_menu(httpd_req_t *req)
   }
 
   /*
-   *  Send the reply to the client
+   * Decode the target and event type
    */
+  session_type = 0;      // Default to an invalid target index
+  if ( contains(req->uri, "PRACTICE") )
+  {
+    session_type += 1;   // Set the session_type to practice
+  }
+  if ( contains(req->uri, "RI") )
+  {
+    session_type += 10;  // Set the session_type to rifle
+  }
+  if ( contains(req->uri, "50") )
+  {
+    session_type += 500; // Set the session_type to 50 Meter
+  }
+  if ( contains(req->uri, "AG") )
+  {
+    session_type += 100; // Set the session_type to 10 Meter
+  }
+
+                         /*
+                          *  Send the reply to the client
+                          */
+
   target_name(my_name);                      // Get the target name
   resp_str = (const char *)&menu_html_start; // point to the target HTML file
   httpd_resp_set_hdr(req, "get_menu", my_name);
