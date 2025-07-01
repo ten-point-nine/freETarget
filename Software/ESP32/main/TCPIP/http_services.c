@@ -74,7 +74,7 @@ static esp_err_t service_get_FreeETarget(httpd_req_t *req);                     
 static esp_err_t service_get_help(httpd_req_t *req);                             // User help page
 static esp_err_t service_get_menu(httpd_req_t *req);                             // Control back channel
 static esp_err_t service_get_who(httpd_req_t *req);                              // Target information page
-static esp_err_t service_get_issf_png(httpd_req_t *req);                         // Icon for the ISSF target
+static esp_err_t service_get_FreeETarget_png(httpd_req_t *req);                  // Icon for the ISSF target
 static esp_err_t service_get_json(httpd_req_t *req);                             // Webb ased JSON interface
 static esp_err_t service_get_events(httpd_req_t *req);                           // Get shot events
 static esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Create a URL not found handler
@@ -90,12 +90,12 @@ const my_uri_t uri_list[] = {
     {DEFAULT_HTTP_PORT, {"/help", HTTP_GET, service_get_help, NULL}                        },
     {DEFAULT_HTTP_PORT, {"/who", HTTP_GET, service_get_who, NULL}                          },
     {DEFAULT_HTTP_PORT, {"/json", HTTP_GET, service_get_json, NULL}                        },
-    {DEFAULT_HTTP_PORT, {"/favicon.ico", HTTP_GET, service_get_issf_png, NULL}             },
+    {DEFAULT_HTTP_PORT, {"/favicon.ico", HTTP_GET, service_get_FreeETarget_png, NULL}      },
 
     {EVENT_HTTP_PORT,   {"/", HTTP_GET, service_get_menu, (void *)&event_menu_ctx}         }, // Control back channel
     {EVENT_HTTP_PORT,   {"/menu", HTTP_GET, service_get_menu, (void *)&event_menu_ctx}     },
     {EVENT_HTTP_PORT,   {"/help", HTTP_GET, service_get_help, NULL}                        },
-    {EVENT_HTTP_PORT,   {"/favicon.ico", HTTP_GET, service_get_issf_png, NULL}             },
+    {EVENT_HTTP_PORT,   {"/favicon.ico", HTTP_GET, service_get_FreeETarget_png, NULL}      },
     {0,                 {"", 0, NULL, NULL}                                                }
 };
 
@@ -400,7 +400,7 @@ static esp_err_t service_get_json(httpd_req_t *req)
 
 /*----------------------------------------------------------------
  *
- * @function: service_get_issf_png
+ * @function: service_get_FreeETarget_png
  *
  * @brief:    Send the ISSF PNG file to the client
  *
@@ -410,17 +410,17 @@ static esp_err_t service_get_json(httpd_req_t *req)
  *
  *
  *------------------------------------------------------------*/
-static esp_err_t service_get_issf_png(httpd_req_t *req)
+static esp_err_t service_get_FreeETarget_png(httpd_req_t *req)
 {
-  const char *resp_str;                    // Reply to server
-  char        my_name[SHORT_TEXT];         // Target name
+  const char *resp_str;                           // Reply to server
+  char        my_name[SHORT_TEXT];                // Target name
 
-  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_issf_png(%s)", req->uri);))
+  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_FreeETarget_png(%s)", req->uri);))
 
   target_name(my_name);
-  resp_str = (const char *)issf_png_start; // point to the target json file
-  httpd_resp_set_hdr(req, "get_issf_png", my_name);
-  httpd_resp_send(req, resp_str, SIZEOF_ISSF_PNG);
+  resp_str = (const char *)FreeETarget_png_start; // point to the target json file
+  httpd_resp_set_hdr(req, "get_FreeETarget_png", my_name);
+  httpd_resp_send(req, resp_str, SIZEOF_FreeETarget_png);
 
   return ESP_OK;
 }
