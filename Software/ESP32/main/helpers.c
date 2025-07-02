@@ -647,6 +647,7 @@ int http_target_type(void)
 
   return target_code;
 }
+
 /*----------------------------------------------------------------
  *
  * @function: squish

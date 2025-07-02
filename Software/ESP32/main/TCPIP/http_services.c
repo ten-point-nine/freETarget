@@ -57,6 +57,7 @@ typedef enum // Server modes
  */
 int                 http_shot  = -1;   // What shot number have we sent?
 static event_mode_t event_mode = IDLE; // Set the server mode to auto refresh
+static int          check_mask;        // Bit mask of the radio buttons that are checked
 
 typedef struct
 {
@@ -79,6 +80,7 @@ static esp_err_t service_get_json(httpd_req_t *req);                            
 static esp_err_t service_get_events(httpd_req_t *req);                           // Get shot events
 static esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Create a URL not found handler
 static esp_err_t service_post_post(httpd_req_t *req);
+static void      http_printf(const char *format, httpd_req_t *req);              // Formatted print to the HTTP request
 
 /*
  *  URI handlers
@@ -99,6 +101,15 @@ const my_uri_t uri_list[] = {
     {0,                 {"", 0, NULL, NULL}                                                }
 };
 
+/*
+ *  Definitions
+ */
+#define CHECK_A 0x01 // Bit mask for Air Pistol
+#define CHECK_B 0x02 // Bit mask for Air Rifle
+#define CHECK_C 0x04 // Bit mask for .22 Pistol
+#define CHECK_D 0x08 // Bit mask for 50 M Rifle
+#define CHECK_E 0x10 // Bit mask for Practice
+#define CHECK_F 0x20 // Bit mask for Match
 /*----------------------------------------------------------------
  *
  * @function: register_services
@@ -296,7 +307,6 @@ static esp_err_t service_get_events(httpd_req_t *req)
  *  500   ISSF 50 Metre .22 Pistol
  *  501   ISSF 50 Metre .22 Pistol Practice
  *------------------------------------------------------------*/
-
 static esp_err_t service_get_menu(httpd_req_t *req)
 {
   const char *resp_str;            // Reply to server
@@ -326,32 +336,60 @@ static esp_err_t service_get_menu(httpd_req_t *req)
   /*
    * Decode the target and event type
    */
-  session_type = 0;      // Default to an invalid target index
+  session_type = 0;                   // Default to an invalid target index
+
+  check_mask = 0;                     // Set the check mask to no radio buttons checked
+  if ( !contains(req->uri, "?") )
+  {
+    session_type = 0;                 // Set the session_type to an invalid target
+    check_mask   = CHECK_A | CHECK_E; // Set the check mask to no radio buttons checked
+  }
+
   if ( contains(req->uri, "PRACTICE") )
   {
-    session_type += 1;   // Set the session_type to practice
+    session_type += 1;                // Set the session_type to practice
+    check_mask += CHECK_E;            // Set the check mask to practice
+  }
+  if ( contains(req->uri, "MATCH") )
+  {
+    session_type += 0;                // Set the session_type to practice
+    check_mask += CHECK_F;            // Set the check mask to practice
+  }
+
+  if ( contains(req->uri, "PI") )
+  {
+    session_type += 0;                // Set the session_type to Pistol
+    check_mask += CHECK_A;
   }
   if ( contains(req->uri, "RI") )
   {
-    session_type += 10;  // Set the session_type to rifle
+    session_type += 10;               // Set the session_type to rifle
+    check_mask += CHECK_B;
   }
+
   if ( contains(req->uri, "50") )
   {
-    session_type += 500; // Set the session_type to 50 Meter
+    session_type += 500;              // Set the session_type to 50 Meter
+    check_mask += CHECK_D;
   }
-  if ( contains(req->uri, "AG") )
+  if ( contains(req->uri, "10") )
   {
-    session_type += 100; // Set the session_type to 10 Meter
+    session_type += 100;              // Set the session_type to 10 Meter
+    check_mask += CHECK_E;
   }
 
-                         /*
-                          *  Send the reply to the client
-                          */
-
-  target_name(my_name);                      // Get the target name
-  resp_str = (const char *)&menu_html_start; // point to the target HTML file
+                                      /*
+                                       *  Send the reply to the client
+                                       */
+  target_name(my_name);               // Get the target name
   httpd_resp_set_hdr(req, "get_menu", my_name);
+#if ( 1 )
+  http_printf(&menu_html_start, req); // point to the target HTML file
+#else
+  resp_str = (const char *)&menu_html_start; // point to the target HTML file
+  printf("%s", resp_str);                    // Print the HTML to the console
   httpd_resp_send(req, resp_str, strlen(resp_str));
+#endif
 
   return ESP_OK;
 }
@@ -582,4 +620,130 @@ static esp_err_t service_get_who(httpd_req_t *req)
 
   httpd_resp_send(req, _xs, HTTPD_RESP_USE_STRLEN);
   return ESP_OK;
+}
+/*----------------------------------------------------------------
+ *
+ * @function: http_printf
+ *
+ * @brief:    Local version of printf to send data to the client
+ *
+ * @return:   None
+ *
+ *---------------------------------------------------------------
+ *
+ * Kluged up 'printf' to send data to an HTTP client. This allows
+ * the programmer to incorporate variable data in the reply to
+ * the client.
+ *
+ * The format string is a text string that contains formatting
+ * fields that are replaced with the data.
+ *
+ * For example: %A will be replaced with the string "CHECKED"
+ * if the radio button has been CHECKED.
+ *
+ *------------------------------------------------------------*/
+#define CHECKED                                                                                                                            \
+  strcat(_xs, "checked ");                                                                                                                 \
+  i = strlen(_xs);
+
+static void http_printf(const char  *format, // Format string
+                        httpd_req_t *req)
+{
+  int i;
+
+  _xs[0] = 0;
+  i      = 0;
+
+  /*
+   *  Loop and output the format string */
+  while ( *format != 0 )
+  {
+    if ( *format == '^' )             // Look for a format specifier
+    {
+      format++;                       // Skip the %
+
+      switch ( *format )
+      {
+        case '^':
+          strcat(_xs, "^");           // If we have a double ^ then just output a single ^
+          break;
+
+        case 'A':
+          if ( CHECK_A & check_mask ) // If the Air Pistol button is checked
+          {
+            CHECKED
+          }
+
+          break;
+
+        case 'B':
+          if ( CHECK_B & check_mask ) // If the Air Pistol button is checked
+          {
+            CHECKED
+          }
+          break;
+
+        case 'C':
+          if ( CHECK_C & check_mask ) // If the Air Pistol button is checked
+          {
+            CHECKED
+          }
+          break;
+
+        case 'D':
+          if ( CHECK_D & check_mask ) // If the Air Pistol button is checked
+          {
+            CHECKED
+          }
+          break;
+
+        case 'E':
+          if ( CHECK_E & check_mask ) // If the Air Pistol button is checked
+          {
+            CHECKED
+          }
+          break;
+
+        case 'F':
+          if ( CHECK_F & check_mask ) // If the Air Pistol button is checked
+          {
+            CHECKED
+          }
+          break;
+
+        default:                      // Unknown format
+          _xs[i++] = *format;
+          break;
+      }
+      format++;
+    }
+    else
+    {
+      _xs[i++] = *format++; // Copy the character to the buffer
+    }
+    _xs[i] = 0;             // Null terminate the string
+
+    /*
+     *  See if it is time to send out the buffer.
+     */
+    if ( i >= sizeof(_xs) - 512 ) // If we have almost filled the buffer?
+    {
+      httpd_resp_send_chunk(req, _xs, i);
+      i = 0;                      // Reset the index
+    }
+  }
+
+  /*
+   *  Finished Send out the last
+   */
+  _xs[i] = 0;                         // Null terminate the string
+  if ( i != 0 )                       // If we have something to send
+  {
+    httpd_resp_send_chunk(req, _xs, i);
+  }
+
+  _xs[0] = 0;                         // Send the last thing
+  httpd_resp_send_chunk(req, _xs, 0); // Send the string to the client
+
+  return;
 }
