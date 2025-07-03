@@ -211,6 +211,24 @@
       height: 46px;
     }
 
+    .gwd-form-Colour {
+      position: absolute;
+      top: 300px;
+      left: 400px;
+      font-family: "Arial";
+      font-size: 16px;
+      height: 46px;
+    }
+
+    .gwd-form-Colour_label {
+      position: absolute;
+      top: 300px;
+      left: 500px;
+      font-family: "Arial";
+      font-size: 16px;
+      height: 46px;
+    }
+
     .gwd-select-hdxx {
       position: absolute;
       left: 486px;
@@ -225,8 +243,8 @@
   <a href="/menu?start"><button class="gwd-button-start" onclick"href=\"/menu\">START</button></a>
   <a href="/menu?stop"><button class="gwd-button-stop" onclick"href=\"/menu\">STOP</button></a>
   <p class="gwd-p-WEAPON">WEAPON</p>
-  <form name="WEAPON" action="/menu" onsubmit="return validateForm();displayContent();" method="get">
-    <input type="submit" class="gwd-form-WEAPON" id="submit" value="SUBMIT">
+  <form name="WEAPON" action="/menu" method="get">
+    <input type="submit" class="gwd-form-WEAPON" id="OK" value="OK">
     <input type="radio" class="gwd-radio-AP" id="AIR PISTOL" value="10mPI" name="weapon" ^A>
     <label for="Air Pistol" class="gwd-lable-AP">AIR PISTOL</label>
     <input type="radio" class="gwd-radio-AR" id="AIR RIFLE" value="10mRI" name="weapon" ^B>
@@ -241,9 +259,15 @@
     <input type="radio" class="gwd-radio-match" id="Match" value="MATCH" name="event" ^F>
     <label for="match" class="gwd-lable-match">MATCH</label>
   </form>
-  <select id="Red" class="gwd-select-hdxx" data-gwd-name="Box">
-    <option value="Red" selected="">Red</option>
-    <option value="Blue">Blue</option>
+
+  <form action="/menu" method="get">
+    <select name="Colour" id="Colour" class="gwd-select-hdxx">
+      <option value="Red">Red</option>
+      <option value="Blue">Blue</option>
+    </select>
+    <input type="submit" class="gwd-form-Colour" value="Colour">
+  </form>
+
 </body>
 
 </html>
