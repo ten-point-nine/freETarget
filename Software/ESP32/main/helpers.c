@@ -190,7 +190,7 @@ bool contains(char *source,  // Source string
   i = 0;
   while ( (*source != 0) && (*match != 0) )
   {
-    if ( *match == *source ) // Found a match
+    if ( toupper(*match) == toupper(*source) ) // Found a match
     {
       match++;               // Move to the next character in the comparison string
     }

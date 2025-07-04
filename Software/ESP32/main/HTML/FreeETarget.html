@@ -26,45 +26,7 @@
   }
 
 
-  .container .sta {
-    position: absolute;
-    top: 22px;
-    left: 265px;
-    width: 28px;
-    heigth: 18px;
-    background-color: #32CD32;
-    border-radius: 3px;
-    border: 1px solid #000000;
-  }
-
-  .container .sta:hover {
-    background-color: pink;
-  }
-
-  .container .sta:active {
-    background-color: yellow;
-    transform: translateY(3px);
-  }
-
-  .container .sto {
-    position: absolute;
-    top: 22px;
-    left: 300px;
-    width: 28px;
-    heigth: 18px;
-    background-color: red;
-    border-radius: 3px;
-    border: 1px solid #000000;
-  }
-
-  .container .sto:hover {
-    background-color: pink;
-  }
-
-  .container .sto:active {
-    background-color: yellow;
-    transform: translateY(3px);
-  }
+  
 </style>
 
 <body>
@@ -75,22 +37,6 @@
         <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1" />
         <path
           d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1" />
-      </svg></button>
-  </div>
-
-  <div class="container">
-    <a href="/Menu"><button class="sta" onclick"href=\"/Menu\"><svg width="16" height="16" fill="currentColor"
-          class="bi bi-play-circle" viewBox="0 -4 17 20">
-          <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
-          <path
-            d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445" />
-        </svg></button></a>
-  </div>
-
-  <div class="container">
-    <button class="sto" onclick="source.close()"> <svg width="16px" height="16px" fill="#000000" viewBox="18 12 45 45">
-        <path
-          d="M 48.0542,39.5833L 53.0417,44.5708L 58.0291,39.5834L 60.1666,41.7209L 55.1792,46.7083L 60.1667,51.6958L 58.0292,53.8333L 53.0417,48.8458L 48.0542,53.8333L 45.9167,51.6958L 50.9042,46.7083L 45.9167,41.7208L 48.0542,39.5833 Z M 24,24L 27,24L 27,33L 24,33L 24,24 Z M 29,25L 32,25L 32,39L 29,39L 27,41L 27,51L 24,51L 24,41L 22,39L 19,39L 19,25L 22,25L 22,35L 29,35L 29,25 Z M 28,48L 28,44L 45.5,44L 48.0541,46.7083L 47,48L 40,48L 40,51L 44,51L 45,54L 31,54L 32,51L 36,51L 36,48L 28,48 Z M 49,30L 33,30L 33,26L 54,26L 54,40.75L 53.0416,41.7209L 49,37.75L 49,30 Z " />
       </svg></button>
   </div>
 
@@ -173,7 +119,7 @@
     countDown = 90 * 60 * 1000;
     d = new Date();
     correct = d.getTime();
-    countDownTimer();
+	setInterval(countDownTimer, 1000);
 
     //  Draw any target to get started. 
     drawTarget(12, 45.5, 30.5, 2.5, 3, 6, 0.25, 1, 4.5);   // ISSF 10 Metre Air Rifle default.
@@ -195,15 +141,10 @@
         }
       }, false);
 
-      source.addEventListener('start', function (e) {
-        console.log("New shooting event started");
-        startOver();
-      }, false);
-
       source.addEventListener('close', function (e) {
         console.log("Events closed by target");
         source.close();
-        window.location.href = "/help"; // Redirect to Help Page
+        window.location.href = "/help"; // Redirect to Menu
       }, false);
 
       source.addEventListener('message', function (e) {
@@ -238,15 +179,7 @@
     canvas.addEventListener("click", function (event) {
       let mx = event.offsetX;
       let my = event.offsetY;
-
-      // Close event socket.
-      /*   if (mx > 300 && mx < 328) {
-           if (my > 22 && my < 42) {
-             source.close();
-           }
-         }
-      */
-
+   
       // Check/Review Shot History
       if (mx > 975 && mx < 1172) {
         if (my > 27 && my < 41) {
@@ -360,6 +293,7 @@
         ctx.fill();
         ctx.fillStyle = "#000000";
         ctx.font = "30px arial bold";
+		ctx.textBaseline = "middle";
         ctx.fillText("00:00:00", 1022, 740);
         //ctx.fillText("EXPIRED",1022,740);
       }
@@ -888,7 +822,6 @@
           countDown = 90 * 60 * 1000;
         }
       }
-      countDownTimer();
     }
     // End function plotActiveTarget
     //
@@ -910,7 +843,6 @@
             p_targetType = targetType;
           }
           if (nos > 0) {
-            countDownTimer();
             ctx.beginPath();
             ctx.arc((591 + xPrev * tscale), (383 - yPrev * tscale), cal * tscale / 2, 0, 2 * Math.PI); // Shot Position
             ctx.fillStyle = 'rgb(0 150 255)';
@@ -926,7 +858,6 @@
             ctx.fillText(Math.trunc(sn - 1), 591 - shift + xPrev * tscale, 383 - yPrev * tscale);
             ctx.font = "10px Arial";
           }
-          countDownTimer();
           ctx.beginPath();
           ctx.arc((591 + sx * tscale), (383 - sy * tscale), cal * tscale / 2, 0, 2 * Math.PI); // Shot Position
           ctx.fillStyle = 'red';
@@ -1276,7 +1207,7 @@
       countDown = 90 * 60 * 1000;
       d = new Date();
       correct = d.getTime();
-      countDownTimer();
+	  setInterval(countDownTimer, 1000);
       //  Draw any target to get started.
 
       drawTarget(12, 45.5, 30.5, 2.5, 3, 6, 0.25, 1, 4.5);   // ISSF 10 Metre Air Rifle
@@ -1317,14 +1248,10 @@
           ctx.fillStyle = "white";
           ctx.fillText(Math.trunc(snn), 591 - shift + sxx * tscale, 383 - syy * tscale);
           ctx.font = "10px Arial";
-          // xhPrev = sxx;
-          // yhPrev = syy;
-          // shPrev = snn;
         }
       }
     }
 
-  </script>
-</body>
-
+   </script>
+ </body>
 </html>
