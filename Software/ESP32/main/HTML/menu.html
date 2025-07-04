@@ -40,7 +40,7 @@
       transform-style: preserve-3d;
     }
 
-    .gwd-button-start {
+    .gwd-form-start {
       position: absolute;
       left: 450px;
       top: 100px;
@@ -74,200 +74,63 @@
       transform: translateY(3px);
     }
 
-    .gwd-radio-AP {
+    .gwd-select-WEAPON {
       position: absolute;
-      left: 10px;
       top: 100px;
+      left: 100px;
       width: 100px;
-      height: 24px;
-    }
-
-    .gwd-radio-AR {
-      position: absolute;
-      left: 10px;
-      top: 150px;
-      width: 100px;
-      height: 24px;
-    }
-
-    .gwd-radio-22 {
-      position: absolute;
-      left: 10px;
-      top: 200px;
-      width: 100px;
-      height: 24px;
-    }
-
-    .gwd-radio-50m {
-      position: absolute;
-      left: 10px;
-      top: 250px;
-      width: 100px;
-      height: 24px;
-    }
-
-    .gwd-lable-AP {
-      position: absolute;
-      left: 90px;
-      top: 100px;
-      width: 100px;
-      height: 24px;
-      font-family: Arial;
+      font-family: "Arial";
       font-size: 16px;
-    }
-
-    .gwd-lable-AR {
-      position: absolute;
-      left: 90px;
-      top: 150px;
-      width: 100px;
-      height: 24px;
-      font-family: Arial;
-      font-size: 16px;
-    }
-
-    .gwd-lable-22 {
-      position: absolute;
-      left: 90px;
-      top: 200px;
-      width: 100px;
-      height: 24px;
-      font-family: Arial;
-      font-size: 16px;
-    }
-
-    .gwd-lable-50m {
-      position: absolute;
-      left: 90px;
-      top: 250px;
-      width: 100px;
-      height: 24px;
-      font-family: Arial;
-      font-size: 16px;
-    }
-
-    .gwd-radio-practice {
-      position: absolute;
-      left: 200px;
-      width: 100px;
-      height: 24px;
-      top: 112px;
-    }
-
-    .gwd-radio-match {
-      position: absolute;
-      left: 200px;
-      top: 160px;
-      width: 100px;
-      height: 24px;
-    }
-
-    .gwd-lable-practice {
-      position: absolute;
-      left: 280px;
-      top: 115px;
-      width: 100px;
-      height: 24px;
-      font-family: Arial;
-      font-size: 16px;
-    }
-
-    .gwd-lable-match {
-      position: absolute;
-      left: 280px;
-      top: 160px;
-      width: 200px;
-      height: 24px;
-      font-family: Arial;
-      font-size: 16px;
-    }
-
-    .gwd-p-WEAPON {
-      position: absolute;
-      top: 20px;
-      left: 30px;
-      font-family: "Arial Black";
-      font-size: 32px;
       height: 46px;
-      width: 85px;
     }
 
-    .gwd-p-EVENT {
+    .gwd-select-EVENT {
       position: absolute;
-      top: 20px;
+      top: 100px;
       left: 250px;
-      font-family: "Arial Black";
-      font-size: 32px;
-      height: 46px;
-      width: 85px;
-    }
-
-    .gwd-form-WEAPON {
-      position: absolute;
-      top: 300px;
-      left: 200px;
-      font-family: "Arial";
-      font-size: 16px;
-      height: 46px;
-    }
-
-    .gwd-form-Colour {
-      position: absolute;
-      top: 300px;
-      left: 400px;
-      font-family: "Arial";
-      font-size: 16px;
-      height: 46px;
-    }
-
-    .gwd-form-Colour_label {
-      position: absolute;
-      top: 300px;
-      left: 500px;
-      font-family: "Arial";
-      font-size: 16px;
-      height: 46px;
-    }
-
-    .gwd-select-hdxx {
-      position: absolute;
-      left: 486px;
-      top: 369px;
       width: 100px;
-      height: 24px;
+      font-family: "Arial";
+      font-size: 16px;
+      height: 46px;
+    }
+
+    .gwd-button-START {
+      position: absolute;
+      top: 100px;
+      left: 450px;
+      width: 100px;
+      font-family: "Arial";
+      font-size: 16px;
+      height: 46px;
+    }
+
+    .gwd-button-STOP {
+      position: absolute;
+      top: 200px;
+      left: 450px;
+      width: 100px;
+      font-family: "Arial";
+      font-size: 16px;
+      height: 46px;
     }
   </style>
 </head>
 
 <body class="htmlNoPages">
-  <a href="/menu?start"><button class="gwd-button-start" onclick"href=\"/menu\">START</button></a>
-  <a href="/menu?stop"><button class="gwd-button-stop" onclick"href=\"/menu\">STOP</button></a>
-  <p class="gwd-p-WEAPON">WEAPON</p>
-  <form name="WEAPON" action="/menu" method="get">
-    <input type="submit" class="gwd-form-WEAPON" id="OK" value="OK">
-    <input type="radio" class="gwd-radio-AP" id="AIR PISTOL" value="10mPI" name="weapon" ^A>
-    <label for="Air Pistol" class="gwd-lable-AP">AIR PISTOL</label>
-    <input type="radio" class="gwd-radio-AR" id="AIR RIFLE" value="10mRI" name="weapon" ^B>
-    <label for="Air Rifle" class="gwd-lable-AR">AIR RIFLE</label>
-    <input type="radio" class="gwd-radio-22" id=".22 PISTOL" value="50mPI" name="weapon" ^C>
-    <label for=".22 Pistol" class="gwd-lable-22">.22 PISTOL</label>
-    <input type="radio" class="gwd-radio-50m" id="50M RIFLE" value="50mRI" name="weapon" ^D>
-    <label for="50M RIFLE" class="gwd-lable-50m">50M RIFLE</label>
-    <p class="gwd-p-EVENT">EVENT</p>
-    <input type="radio" class="gwd-radio-practice" id="Practice" value="PRACTICE" name="event" ^E>
-    <label for="practice" class="gwd-lable-practice">PRACTICE</label>
-    <input type="radio" class="gwd-radio-match" id="Match" value="MATCH" name="event" ^F>
-    <label for="match" class="gwd-lable-match">MATCH</label>
-  </form>
-
-  <form action="/menu" method="get">
-    <select name="Colour" id="Colour" class="gwd-select-hdxx">
-      <option value="Red">Red</option>
-      <option value="Blue">Blue</option>
+  <form name="event" action="/menu" method="get">
+    <input type="submit" class="gwd-button-START" id="START" value="START">
+    <select name="Weapon" id="Weapon" class="gwd-select-WEAPON">
+      <option value="Air Pistol">Air Pistol</option>
+      <option value="Air Rifle">Air Rifle</option>
+      <option value="50m Pistol">50m Pistol</option>
+      <option value="50m Rifle">50m Rifle</option>
     </select>
-    <input type="submit" class="gwd-form-Colour" value="Colour">
+    <select name="Event" id="Event" class="gwd-select-EVENT">
+      <option value="Practice">Practice</option>
+      <option value="Match">Match</option>
+    </select>
   </form>
-
+  <a href="/menu?stop"><button class="gwd-button-STOP" onclick"href=\"/menu\">STOP</button></a>
 </body>
 
 </html>

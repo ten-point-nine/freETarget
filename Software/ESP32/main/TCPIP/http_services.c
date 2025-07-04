@@ -57,7 +57,6 @@ typedef enum // Server modes
  */
 int                 http_shot  = -1;   // What shot number have we sent?
 static event_mode_t event_mode = IDLE; // Set the server mode to auto refresh
-static int          check_mask;        // Bit mask of the radio buttons that are checked
 
 typedef struct
 {
@@ -293,19 +292,20 @@ static esp_err_t service_get_events(httpd_req_t *req)
  * MATCH    - Start a match session
  * PRACTICE - Start a practice session
  *
- * AP   - Air Pistol
- * AR   - Air Rifle
- * .22P - .22 Pistol
- * 50MR - 50 M Rifle
+ * Air Pistol   - Air Pistol
+ * air Rifle  - Air Rifle
+ * 50m Pistol - .22 Pistol
+ * 50m Rifle - 50 M Rifle
  *
  *  110   ISSF 10 Metre Air Rifle
  *  111   ISSF 10 Metre Air Rifle Practice
- *  100   ISSF 10 Metre Air Pistol
+ *  100   ISSF 10 Metre Air Pistol Match
  *  101   ISSF 10 Metre Air Pistol Practice
- *  510   ISSF 50 Metre Rifle
+ *  510   ISSF 50 Metre Rifle Match
  *  511   ISSF 50 Metre Rifle Practice
- *  500   ISSF 50 Metre .22 Pistol
+ *  500   ISSF 50 Metre .22 Pistol Match
  *  501   ISSF 50 Metre .22 Pistol Practice
+ *
  *------------------------------------------------------------*/
 static esp_err_t service_get_menu(httpd_req_t *req)
 {
@@ -319,14 +319,8 @@ static esp_err_t service_get_menu(httpd_req_t *req)
                                     *  Decode the command line arguements if there are any
                                     */
   /*
-   *  Decode the start/stop
+   *  Decode the stop
    */
-  if ( contains(req->uri, "start") )
-  {
-    start_new_session(SESSION_MATCH);
-    http_shot  = -1;    // Reset the shot counter
-    event_mode = START; // Set the server mode to auto refresh
-  }
 
   if ( contains(req->uri, "stop") )
   {
@@ -336,58 +330,68 @@ static esp_err_t service_get_menu(httpd_req_t *req)
   /*
    * Decode the target and event type
    */
-  session_type = 0;                   // Default to an invalid target index
+  session_type = 0;      // Default to an invalid target index
 
-  check_mask = 0;                     // Set the check mask to no radio buttons checked
   if ( !contains(req->uri, "?") )
   {
-    session_type = 0;                 // Set the session_type to an invalid target
-    check_mask   = CHECK_A | CHECK_E; // Set the check mask to no radio buttons checked
+    session_type = 0;    // Set the session_type to an invalid target
   }
 
   if ( contains(req->uri, "PRACTICE") )
   {
-    session_type += 1;                // Set the session_type to practice
-    check_mask += CHECK_E;            // Set the check mask to practice
+    session_type += 1;   // Set the session_type to practice
+    start_new_session(SESSION_MATCH);
+    http_shot  = -1;     // Reset the shot counter
+    event_mode = START;  // Set the server mode to auto refresh
   }
   if ( contains(req->uri, "MATCH") )
   {
-    session_type += 0;                // Set the session_type to practice
-    check_mask += CHECK_F;            // Set the check mask to practice
+    session_type += 0;   // Set the session_type to practice
+    start_new_session(SESSION_MATCH);
+    http_shot  = -1;     // Reset the shot counter
+    event_mode = START;  // Set the server mode to auto refresh
   }
 
-  if ( contains(req->uri, "PI") )
+  if ( contains(req->uri, "Air Pistol") )
   {
-    session_type += 0;                // Set the session_type to Pistol
-    check_mask += CHECK_A;
+    session_type += 0;   // Set the session_type to Pistol
+    start_new_session(SESSION_MATCH);
+    http_shot  = -1;     // Reset the shot counter
+    event_mode = START;  // Set the server mode to auto refresh
   }
-  if ( contains(req->uri, "RI") )
+  if ( contains(req->uri, "Air Rifle") )
   {
-    session_type += 10;               // Set the session_type to rifle
-    check_mask += CHECK_B;
-  }
-
-  if ( contains(req->uri, "50") )
-  {
-    session_type += 500;              // Set the session_type to 50 Meter
-    check_mask += CHECK_D;
-  }
-  if ( contains(req->uri, "10") )
-  {
-    session_type += 100;              // Set the session_type to 10 Meter
-    check_mask += CHECK_E;
+    session_type += 10;  // Set the session_type to rifle
+    start_new_session(SESSION_MATCH);
+    http_shot  = -1;     // Reset the shot counter
+    event_mode = START;  // Set the server mode to auto refresh
   }
 
-                                      /*
-                                       *  Send the reply to the client
-                                       */
+  if ( contains(req->uri, "50m Pistol") )
+  {
+    session_type += 500; // Set the session_type to 50 Meter
+    start_new_session(SESSION_MATCH);
+    http_shot  = -1;     // Reset the shot counter
+    event_mode = START;  // Set the server mode to auto refresh
+  }
+
+  if ( contains(req->uri, "50m Rifle") )
+  {
+    session_type += 100; // Set the session_type to 10 Meter
+    start_new_session(SESSION_MATCH);
+    http_shot  = -1;     // Reset the shot counter
+    event_mode = START;  // Set the server mode to auto refresh
+  }
+
+                         /*
+                          *  Send the reply to the client
+                          */
   target_name(my_name);               // Get the target name
   httpd_resp_set_hdr(req, "get_menu", my_name);
 #if ( 1 )
   http_printf(&menu_html_start, req); // point to the target HTML file
 #else
   resp_str = (const char *)&menu_html_start; // point to the target HTML file
-  printf("%s", resp_str);                    // Print the HTML to the console
   httpd_resp_send(req, resp_str, strlen(resp_str));
 #endif
 
@@ -658,60 +662,35 @@ static void http_printf(const char  *format, // Format string
    *  Loop and output the format string */
   while ( *format != 0 )
   {
-    if ( *format == '^' )             // Look for a format specifier
+    if ( *format == '^' )   // Look for a format specifier
     {
-      format++;                       // Skip the %
+      format++;             // Skip the %
 
       switch ( *format )
       {
         case '^':
-          strcat(_xs, "^");           // If we have a double ^ then just output a single ^
+          strcat(_xs, "^"); // If we have a double ^ then just output a single ^
           break;
 
         case 'A':
-          if ( CHECK_A & check_mask ) // If the Air Pistol button is checked
-          {
-            CHECKED
-          }
-
           break;
 
         case 'B':
-          if ( CHECK_B & check_mask ) // If the Air Pistol button is checked
-          {
-            CHECKED
-          }
           break;
 
         case 'C':
-          if ( CHECK_C & check_mask ) // If the Air Pistol button is checked
-          {
-            CHECKED
-          }
           break;
 
         case 'D':
-          if ( CHECK_D & check_mask ) // If the Air Pistol button is checked
-          {
-            CHECKED
-          }
           break;
 
         case 'E':
-          if ( CHECK_E & check_mask ) // If the Air Pistol button is checked
-          {
-            CHECKED
-          }
           break;
 
         case 'F':
-          if ( CHECK_F & check_mask ) // If the Air Pistol button is checked
-          {
-            CHECKED
-          }
           break;
 
-        default:                      // Unknown format
+        default: // Unknown format
           _xs[i++] = *format;
           break;
       }
