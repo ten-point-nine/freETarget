@@ -2,70 +2,135 @@
 <html>
 
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<style>
-  .container .btn1 {
-    position: absolute;
-    top: 90px;
-    left: 100px;
-    width: 100px;
-    heigth: 1000px;
-    background-color: #32CD32;
-    ;
-    border-radius: 3px;
-    border: 3px solid #000000;
-
-    .text {
-      font-weight: 600;
-      font-size: 400px;
-      width: 200px;
+  <meta charset="utf-8">
+  <title>FreeETargetMenu</title>
+  <meta name="generator" content="Google Web Designer 16.3.0.0407">
+  <style id="gwd-text-style">
+    p {
+      margin: 0px;
     }
 
-  }
+    h1 {
+      margin: 0px;
+    }
 
-  .container .btn1:hover {
-    background-color: pink;
-  }
+    h2 {
+      margin: 0px;
+    }
 
-  .container .btn1:active {
-    background-color: red;
-    transform: translateY(3px);
-  }
+    h3 {
+      margin: 0px;
+    }
+  </style>
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0px;
+    }
 
+    body {
+      background-color: transparent;
+      transform: perspective(1400px) matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      transform-style: preserve-3d;
+    }
 
-  .container .btn2 {
-    position: absolute;
-    top: 200px;
-    left: 100px;
-    width: 100px;
-    heigth: 1000px;
-    background-color: #32CD32;
-    border-radius: 3px;
-    border: 3px solid #000000;
-  }
+    body * {
+      transform-style: preserve-3d;
+    }
 
-  .container .btn2:hover {
-    background-color: pink;
-  }
+    .gwd-form-start {
+      position: absolute;
+      left: 450px;
+      top: 100px;
+      width: 100px;
+      height: 24px;
+    }
 
-  .container .btn2:active {
-    background-color: red;
-    transform: translateY(3px);
-  }
-</style>
+    .gwd-button-start:hover {
+      background-color: pink;
+    }
 
-<body>
-  <div class="container">
-    <h1>Start target session</h1>
-    <a href="/menu?start"><button class="btn1" onclick"href=\"/menu\">START</button></a>
-  </div>
+    .gwd-button-start:active {
+      background-color: red;
+      transform: translateY(3px);
+    }
 
-  <div class="container">
-    <br></br>
-    <h1>End target session</h1>
-    <a href="/menu?stop"><button class="btn2" onclick"href=\"/menu\">STOP</button></a>
-  </div>
+    .gwd-button-stop {
+      position: absolute;
+      left: 450px;
+      top: 150px;
+      width: 100px;
+      height: 24px;
+    }
+
+    .gwd-button-stop:hover {
+      background-color: pink;
+    }
+
+    .gwd-button-stop:active {
+      background-color: red;
+      transform: translateY(3px);
+    }
+
+    .gwd-select-WEAPON {
+      position: absolute;
+      top: 100px;
+      left: 100px;
+      width: 100px;
+      font-family: "Arial";
+      font-size: 16px;
+      height: 46px;
+    }
+
+    .gwd-select-EVENT {
+      position: absolute;
+      top: 100px;
+      left: 250px;
+      width: 100px;
+      font-family: "Arial";
+      font-size: 16px;
+      height: 46px;
+    }
+
+    .gwd-button-START {
+      position: absolute;
+      top: 100px;
+      left: 450px;
+      width: 100px;
+      font-family: "Arial";
+      font-size: 16px;
+      height: 46px;
+    }
+
+    .gwd-button-STOP {
+      position: absolute;
+      top: 200px;
+      left: 450px;
+      width: 100px;
+      font-family: "Arial";
+      font-size: 16px;
+      height: 46px;
+    }
+  </style>
+</head>
+
+<body class="htmlNoPages">
+  <form name="event" action="/menu" method="get">
+    <input type="submit" class="gwd-button-START" id="START" value="START">
+    <select name="Weapon" id="Weapon" class="gwd-select-WEAPON">
+      <option value="Air Pistol">Air Pistol</option>
+      <option value="Air Rifle">Air Rifle</option>
+      <option value="50m Pistol">50m Pistol</option>
+      <option value="50m Rifle">50m Rifle</option>
+    </select>
+    <select name="Event" id="Event" class="gwd-select-EVENT">
+      <option value="Practice">Practice</option>
+      <option value="Match">Match</option>
+    </select>
+  </form>
+  <a href="/menu?stop"><button class="gwd-button-STOP" onclick"href=\"/menu\">STOP</button></a>
 </body>
 
 </html>

@@ -178,27 +178,27 @@ int instr(char *s1, // Source string
  *
  *-----------------------------------------------------*/
 
-bool contains(char *source,  // Source string
-              char *match    // Comparison string
+bool contains(char *source,                    // Source string
+              char *match                      // Comparison string
 )
 {
   int   i;
   char *start;
 
-  start = match;             // Save the start of the comparison string
+  start = match;                               // Save the start of the comparison string
 
   i = 0;
   while ( (*source != 0) && (*match != 0) )
   {
-    if ( *match == *source ) // Found a match
+    if ( toupper(*match) == toupper(*source) ) // Found a match
     {
-      match++;               // Move to the next character in the comparison string
+      match++;                                 // Move to the next character in the comparison string
     }
     else
     {
-      match = start;         // Reset the comparison string to the start
+      match = start;                           // Reset the comparison string to the start
     }
-    source++;                // Move to the next character in the source string
+    source++;                                  // Move to the next character in the source string
   }
 
   /*
@@ -647,6 +647,7 @@ int http_target_type(void)
 
   return target_code;
 }
+
 /*----------------------------------------------------------------
  *
  * @function: squish

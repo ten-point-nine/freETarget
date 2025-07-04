@@ -74,11 +74,12 @@ static esp_err_t service_get_FreeETarget(httpd_req_t *req);                     
 static esp_err_t service_get_help(httpd_req_t *req);                             // User help page
 static esp_err_t service_get_menu(httpd_req_t *req);                             // Control back channel
 static esp_err_t service_get_who(httpd_req_t *req);                              // Target information page
-static esp_err_t service_get_FreeETarget_png(httpd_req_t *req);                  // Icon for the ISSF target
+static esp_err_t service_get_FreeETarget_png(httpd_req_t *req);                  // Icon for the FreeETarget page
 static esp_err_t service_get_json(httpd_req_t *req);                             // Webb ased JSON interface
 static esp_err_t service_get_events(httpd_req_t *req);                           // Get shot events
 static esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Create a URL not found handler
 static esp_err_t service_post_post(httpd_req_t *req);
+static void      http_printf(const char *format, httpd_req_t *req);              // Formatted print to the HTTP request
 
 /*
  *  URI handlers
@@ -99,6 +100,15 @@ const my_uri_t uri_list[] = {
     {0,                 {"", 0, NULL, NULL}                                                }
 };
 
+/*
+ *  Definitions
+ */
+#define CHECK_A 0x01 // Bit mask for Air Pistol
+#define CHECK_B 0x02 // Bit mask for Air Rifle
+#define CHECK_C 0x04 // Bit mask for .22 Pistol
+#define CHECK_D 0x08 // Bit mask for 50 M Rifle
+#define CHECK_E 0x10 // Bit mask for Practice
+#define CHECK_F 0x20 // Bit mask for Match
 /*----------------------------------------------------------------
  *
  * @function: register_services
@@ -279,30 +289,38 @@ static esp_err_t service_get_events(httpd_req_t *req)
  *
  * Arguements
  *
- * MATCH - Start a match session
- * SIGHT - Start a sighting session
- * AUTO  - Set the server to auto refresh
- * SINGLE - Set the server to single shot mode
- * STOP  - Stop the server
+ * MATCH    - Start a match session
+ * PRACTICE - Start a practice session
+ *
+ * Air Pistol   - Air Pistol
+ * air Rifle  - Air Rifle
+ * 50m Pistol - .22 Pistol
+ * 50m Rifle - 50 M Rifle
+ *
+ *  110   ISSF 10 Metre Air Rifle
+ *  111   ISSF 10 Metre Air Rifle Practice
+ *  100   ISSF 10 Metre Air Pistol Match
+ *  101   ISSF 10 Metre Air Pistol Practice
+ *  510   ISSF 50 Metre Rifle Match
+ *  511   ISSF 50 Metre Rifle Practice
+ *  500   ISSF 50 Metre .22 Pistol Match
+ *  501   ISSF 50 Metre .22 Pistol Practice
  *
  *------------------------------------------------------------*/
 static esp_err_t service_get_menu(httpd_req_t *req)
 {
   const char *resp_str;            // Reply to server
   char        my_name[SHORT_TEXT]; // Temporary string
+  int         session_type;        // Index into the session_type array
 
   DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_menu(%s)", req->uri);))
 
                                    /*
                                     *  Decode the command line arguements if there are any
                                     */
-
-  if ( contains(req->uri, "start") )
-  {
-    start_new_session(SESSION_MATCH);
-    http_shot  = -1;    // Reset the shot counter
-    event_mode = START; // Set the server mode to auto refresh
-  }
+  /*
+   *  Decode the stop
+   */
 
   if ( contains(req->uri, "stop") )
   {
@@ -310,12 +328,72 @@ static esp_err_t service_get_menu(httpd_req_t *req)
   }
 
   /*
-   *  Send the reply to the client
+   * Decode the target and event type
    */
-  target_name(my_name);                      // Get the target name
-  resp_str = (const char *)&menu_html_start; // point to the target HTML file
+  session_type = 0;      // Default to an invalid target index
+
+  if ( !contains(req->uri, "?") )
+  {
+    session_type = 0;    // Set the session_type to an invalid target
+  }
+
+  if ( contains(req->uri, "PRACTICE") )
+  {
+    session_type += 1;   // Set the session_type to practice
+    start_new_session(SESSION_MATCH);
+    http_shot  = -1;     // Reset the shot counter
+    event_mode = START;  // Set the server mode to auto refresh
+  }
+  if ( contains(req->uri, "MATCH") )
+  {
+    session_type += 0;   // Set the session_type to practice
+    start_new_session(SESSION_MATCH);
+    http_shot  = -1;     // Reset the shot counter
+    event_mode = START;  // Set the server mode to auto refresh
+  }
+
+  if ( contains(req->uri, "Air Pistol") )
+  {
+    session_type += 0;   // Set the session_type to Pistol
+    start_new_session(SESSION_MATCH);
+    http_shot  = -1;     // Reset the shot counter
+    event_mode = START;  // Set the server mode to auto refresh
+  }
+  if ( contains(req->uri, "Air Rifle") )
+  {
+    session_type += 10;  // Set the session_type to rifle
+    start_new_session(SESSION_MATCH);
+    http_shot  = -1;     // Reset the shot counter
+    event_mode = START;  // Set the server mode to auto refresh
+  }
+
+  if ( contains(req->uri, "50m Pistol") )
+  {
+    session_type += 500; // Set the session_type to 50 Meter
+    start_new_session(SESSION_MATCH);
+    http_shot  = -1;     // Reset the shot counter
+    event_mode = START;  // Set the server mode to auto refresh
+  }
+
+  if ( contains(req->uri, "50m Rifle") )
+  {
+    session_type += 100; // Set the session_type to 10 Meter
+    start_new_session(SESSION_MATCH);
+    http_shot  = -1;     // Reset the shot counter
+    event_mode = START;  // Set the server mode to auto refresh
+  }
+
+                         /*
+                          *  Send the reply to the client
+                          */
+  target_name(my_name);               // Get the target name
   httpd_resp_set_hdr(req, "get_menu", my_name);
+#if ( 1 )
+  http_printf(&menu_html_start, req); // point to the target HTML file
+#else
+  resp_str = (const char *)&menu_html_start; // point to the target HTML file
   httpd_resp_send(req, resp_str, strlen(resp_str));
+#endif
 
   return ESP_OK;
 }
@@ -420,7 +498,7 @@ static esp_err_t service_get_FreeETarget_png(httpd_req_t *req)
   target_name(my_name);
   resp_str = (const char *)FreeETarget_png_start; // point to the target json file
   httpd_resp_set_hdr(req, "get_FreeETarget_png", my_name);
-  httpd_resp_send(req, resp_str, SIZEOF_FreeETarget_png);
+  httpd_resp_send(req, resp_str, SIZEOF_ISSF_PNG);
 
   return ESP_OK;
 }
@@ -546,4 +624,105 @@ static esp_err_t service_get_who(httpd_req_t *req)
 
   httpd_resp_send(req, _xs, HTTPD_RESP_USE_STRLEN);
   return ESP_OK;
+}
+/*----------------------------------------------------------------
+ *
+ * @function: http_printf
+ *
+ * @brief:    Local version of printf to send data to the client
+ *
+ * @return:   None
+ *
+ *---------------------------------------------------------------
+ *
+ * Kluged up 'printf' to send data to an HTTP client. This allows
+ * the programmer to incorporate variable data in the reply to
+ * the client.
+ *
+ * The format string is a text string that contains formatting
+ * fields that are replaced with the data.
+ *
+ * For example: %A will be replaced with the string "CHECKED"
+ * if the radio button has been CHECKED.
+ *
+ *------------------------------------------------------------*/
+#define CHECKED                                                                                                                            \
+  strcat(_xs, "checked ");                                                                                                                 \
+  i = strlen(_xs);
+
+static void http_printf(const char  *format, // Format string
+                        httpd_req_t *req)
+{
+  int i;
+
+  _xs[0] = 0;
+  i      = 0;
+
+  /*
+   *  Loop and output the format string */
+  while ( *format != 0 )
+  {
+    if ( *format == '^' )   // Look for a format specifier
+    {
+      format++;             // Skip the %
+
+      switch ( *format )
+      {
+        case '^':
+          strcat(_xs, "^"); // If we have a double ^ then just output a single ^
+          break;
+
+        case 'A':
+          break;
+
+        case 'B':
+          break;
+
+        case 'C':
+          break;
+
+        case 'D':
+          break;
+
+        case 'E':
+          break;
+
+        case 'F':
+          break;
+
+        default: // Unknown format
+          _xs[i++] = *format;
+          break;
+      }
+      format++;
+    }
+    else
+    {
+      _xs[i++] = *format++; // Copy the character to the buffer
+    }
+    _xs[i] = 0;             // Null terminate the string
+
+    /*
+     *  See if it is time to send out the buffer.
+     */
+    if ( i >= sizeof(_xs) - 512 ) // If we have almost filled the buffer?
+    {
+      httpd_resp_send_chunk(req, _xs, i);
+      i = 0;                      // Reset the index
+    }
+  }
+
+  /*
+   *  Finished Send out the last
+   */
+  _xs[i] = 0;                         // Null terminate the string
+  if ( i != 0 )                       // If we have something to send
+  {
+    httpd_resp_send_chunk(req, _xs, i);
+  }
+
+  _xs[0] = 0;                         // Send the last thing
+  httpd_resp_send_chunk(req, _xs, 0); // Send the string to the client
+
+  return;
 }
