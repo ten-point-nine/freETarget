@@ -309,15 +309,14 @@ static esp_err_t service_get_events(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_menu(httpd_req_t *req)
 {
-  const char *resp_str;            // Reply to server
-  char        my_name[SHORT_TEXT]; // Temporary string
-  int         session_type;        // Index into the session_type array
+  char my_name[SHORT_TEXT]; // Temporary string
+  int  session_type;        // Index into the session_type array
 
   DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_menu(%s)", req->uri);))
 
-                                   /*
-                                    *  Decode the command line arguements if there are any
-                                    */
+                            /*
+                             *  Decode the command line arguements if there are any
+                             */
   /*
    *  Decode the stop
    */
@@ -391,7 +390,7 @@ static esp_err_t service_get_menu(httpd_req_t *req)
 #if ( 1 )
   http_printf(&menu_html_start, req); // point to the target HTML file
 #else
-  resp_str = (const char *)&menu_html_start; // point to the target HTML file
+  const char *resp_str = (const char *)&menu_html_start; // point to the target HTML file
   httpd_resp_send(req, resp_str, strlen(resp_str));
 #endif
 
@@ -480,7 +479,7 @@ static esp_err_t service_get_json(httpd_req_t *req)
  *
  * @function: service_get_FreeETarget_png
  *
- * @brief:    Send the ISSF PNG file to the client
+ * @brief:    Send the FreeETarget icon file to the client
  *
  * @return:   esp_err_t, error type
  *
@@ -498,7 +497,7 @@ static esp_err_t service_get_FreeETarget_png(httpd_req_t *req)
   target_name(my_name);
   resp_str = (const char *)FreeETarget_png_start; // point to the target json file
   httpd_resp_set_hdr(req, "get_FreeETarget_png", my_name);
-  httpd_resp_send(req, resp_str, SIZEOF_ISSF_PNG);
+  httpd_resp_send(req, resp_str, SIZEOF_FREEETARGET_PNG);
 
   return ESP_OK;
 }
