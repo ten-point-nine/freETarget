@@ -149,7 +149,7 @@ void freeETarget_init(void)
   set_status_LED(LED_OFF);
   set_status_LED(LED_RAPID_OFF);   // Off
 
-  WiFi_init();
+                                   //  WiFi_init();
 
   /*
    *  Set up the long running timers

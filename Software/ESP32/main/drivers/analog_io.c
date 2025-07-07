@@ -239,8 +239,8 @@ void set_LED_PWM         // Theatre lighting
  *  undefined (< 100) then the last 'good' revision is returned
  *
  *--------------------------------------------------------------*/
-//                                        0     1  2  3     4     5  6  7     8     9   A   B   C   D   E   F
-const static unsigned int version[] = {REV_510, 1, 2, 3, REV_530, 5, 6, 7, REV_600, 9, 10, 11, 12, 13, 14, REV_520};
+//                                        0     1  2  3     4     5     6     7  8  9   A   B   C   D   E   F
+const static unsigned int version[] = {REV_510, 1, 2, 3, REV_530, 5, REV_600, 7, 8, 9, 10, 11, 12, 13, 14, REV_520};
 
 unsigned int revision(void)
 {
