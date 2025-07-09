@@ -129,7 +129,7 @@ void freeETarget_init(void)
    */
   json_aux_mode = false; // Assume the AUX port is not used
   gpio_init();           // Setup the hardware
-  serial_io_init();      // Setup the console for debug messages
+  serial_io_init();      // Setup the console for debug message
   read_nonvol();         // Read in the settings
   serial_aux_init();     // Update the serial port if there is a change
   set_VREF();
@@ -149,7 +149,7 @@ void freeETarget_init(void)
   set_status_LED(LED_OFF);
   set_status_LED(LED_RAPID_OFF);   // Off
 
-                                   //  WiFi_init();
+  WiFi_init();
 
   /*
    *  Set up the long running timers
@@ -158,9 +158,9 @@ void freeETarget_init(void)
   ft_timer_new(&power_save, (unsigned long)(json_power_save) * (long)ONE_SECOND * 60L); // Power save timer
   ft_timer_new(&time_since_last_shot, HTTP_CLOSE_TIME * 60 * ONE_SECOND);               // 15 minutes since last shot
 
-  /*
-   * Run the power on self test
-   */
+                                                                                        /*
+                                                                                         * Run the power on self test
+                                                                                         */
   POST_counters();            // POST counters does not return if there is an error
   if ( check_12V() == false ) // Verify the 12 volt supply
   {

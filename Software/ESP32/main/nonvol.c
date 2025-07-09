@@ -67,7 +67,6 @@ void read_nonvol(void)
   /*
    * Read the nonvol marker and if uninitialized then set up values
    */
-
   if ( nvs_open(NAME_SPACE, NVS_READWRITE, &my_handle) != ESP_OK )
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "read_nonvol(): Failed to open NVM");))

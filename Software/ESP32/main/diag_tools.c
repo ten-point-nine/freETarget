@@ -392,7 +392,6 @@ bool factory_test(void)
       }
     }
 
-    SEND(ALL, sprintf(_xs, "  12V: %4.2fV", v12_supply());)
     if ( TMP1075D & board_mask )
     {
       vmes_lo = vref_measure();       // Read the VREF_LO voltage
@@ -409,8 +408,16 @@ bool factory_test(void)
       }
     }
     SEND(ALL, sprintf(_xs, "  Temp: %4.2fC", temperature_C());)
-    SEND(ALL, sprintf(_xs, "  Humidiity: %4.2f%%", humidity_RH());)
+    if ( HDC3022 & board_mask )
+    {
+      SEND(ALL, sprintf(_xs, "  Humidity: %4.2f", humidity_RH());)
+    }
+    else
+    {
+      SEND(ALL, sprintf(_xs, "  Humidity: N/A");)
+    }
 
+    SEND(ALL, sprintf(_xs, "  12V: %4.2fV", v12_supply());)
     if ( v12_supply() >= V12_WORKING ) // Skip the motor and LED test if 12 volts not used
     {
       SEND(ALL, sprintf(_xs, "  M");)
@@ -433,6 +440,10 @@ bool factory_test(void)
       {
         percent = 0;
       }
+    }
+    else
+    {
+      SEND(ALL, sprintf(_xs, "  12V supply not present");)
     }
 
     if ( ((pass & PASS_MASK) == PASS_MASK) )
@@ -587,7 +598,6 @@ bool POST_counters(void)
   gpio_set_level(STOP_N, RUN_OFF); // Clear the latch
   gpio_set_level(STOP_N, RUN_GO);  // and reenable it
   running = is_running() & RUN_MASK;
-  printf("Running: %02X\n", running);
 
   if ( running != 0 )
   {

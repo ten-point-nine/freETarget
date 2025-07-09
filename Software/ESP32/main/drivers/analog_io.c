@@ -239,8 +239,8 @@ void set_LED_PWM         // Theatre lighting
  *  undefined (< 100) then the last 'good' revision is returned
  *
  *--------------------------------------------------------------*/
-//                                        0     1  2  3     4     5     6     7  8  9   A   B   C   D   E   F
-const static unsigned int version[] = {REV_510, 1, 2, 3, REV_530, 5, REV_600, 7, 8, 9, 10, 11, 12, 13, 14, REV_520};
+//                                        0     1  2  3  4  5     6     7  8  9   A   B   C   D   E   F
+const static unsigned int version[] = {REV_510, 1, 2, 3, 4, 5, REV_600, 7, 8, 9, 10, 11, 12, 13, 14, REV_520};
 
 unsigned int revision(void)
 {
@@ -477,7 +477,14 @@ void analog_input_test(void)
   SEND(ALL, sprintf(_xs, "\r\n12V %5.3f", v12_supply());)
   SEND(ALL, sprintf(_xs, "\r\nBoard Rev %d", revision());)
   SEND(ALL, sprintf(_xs, "\r\nTemperature: %4.2f", temperature_C());)
-  SEND(ALL, sprintf(_xs, "\r\nHumidity: %4.2f", humidity_RH());)
+  if ( HDC3022 & board_mask )
+  {
+    SEND(ALL, sprintf(_xs, "\r\nHumidity: %4.2f", humidity_RH());)
+  }
+  else
+  {
+    SEND(ALL, sprintf(_xs, "\r\nHumidity: N/A");)
+  }
   SEND(ALL, sprintf(_xs, "\r\nSpeed of Sound: %4.2fmm/us", speed_of_sound(temperature_C(), humidity_RH()));)
   SEND(ALL, sprintf(_xs, "\r\nDone\r\n");)
   return;

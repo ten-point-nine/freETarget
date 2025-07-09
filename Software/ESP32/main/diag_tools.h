@@ -29,6 +29,7 @@ void test_build_fake_shots(void);                         // Generate a list of 
 /*
  *  Definitions
  */
+#define BUILD_BOARD_BRINGUP 1
 
 /*
  * LED status messages
