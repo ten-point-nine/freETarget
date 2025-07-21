@@ -273,18 +273,26 @@ bool factory_test(void)
    */
   if ( (json_vref_lo == 0) || (json_vref_hi == 0) )
   {
-    volts[VREF_LO] = 1.25;
-    volts[VREF_HI] = 2.00;
-    volts[VREF_2]  = 0.00;
-    volts[VREF_3]  = 0.00;
+    json_vref_lo   = 1.25; // Default VREF_LO
+    volts[VREF_LO] = json_vref_lo;
+
+    json_vref_hi   = 2.0;  // Default VREF_HI
+    volts[VREF_HI] = json_vref_hi;
+
+    volts[VREF_2] = 0.00;
+    volts[VREF_3] = 0.00;
     DAC_write(volts);
   }
+
   /*
    * Ready to start the test
    */
   SEND(ALL, sprintf(_xs, "\r\nFirmware version: %s   Board version: %d", SOFTWARE_VERSION, revision());)
   SEND(ALL, sprintf(_xs, "\r\n");)
-  SEND(ALL, sprintf(_xs, "\r\nHas the tape seal been removed from the temperature sensor?");)
+  if ( (board_mask & HDC3022) != 0 )
+  {
+    SEND(ALL, sprintf(_xs, "\r\nHas the tape seal been removed from the humidity sensor?");)
+  }
   SEND(ALL, sprintf(_xs, "\r\nPress 1 & 2 or ! to continue\r\n");)
 
   set_status_LED(LED_DLROW_OLLOH); // Blink Red, White, Blue
@@ -411,10 +419,6 @@ bool factory_test(void)
     if ( HDC3022 & board_mask )
     {
       SEND(ALL, sprintf(_xs, "  Humidity: %4.2f", humidity_RH());)
-    }
-    else
-    {
-      SEND(ALL, sprintf(_xs, "  Humidity: N/A");)
     }
 
     SEND(ALL, sprintf(_xs, "  12V: %4.2fV", v12_supply());)
