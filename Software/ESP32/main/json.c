@@ -634,7 +634,6 @@ static void show_names(int v)
  * affecting the other settings.
  *
  *-----------------------------------------------------*/
-
 static void set_trace(int trace)         // Trace mask on or off
 {
   unsigned int i;

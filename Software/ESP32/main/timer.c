@@ -199,7 +199,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
     case PORT_STATE_IDLE:                                    // Idle, Wait for something to show up
       if ( pin != 0 )                                        // Something has triggered
       {
-        shot_timer = MAX_WAIT_TIME;                          // Start the wait timer
+        shot_timer = MAX_WAIT_TIME;                          // The wait timer makes sure all sensors are triggered
         isr_state  = PORT_STATE_WAIT;                        // Got something wait for all of the sensors tro trigger
       }
       break;

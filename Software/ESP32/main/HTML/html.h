@@ -9,7 +9,7 @@
  * Remember to add the files to the CMakeLists.txt file
  * in the EMBED_FILES section.
  *
- */
+ *---------------------------------------------------------------*/
 #ifndef _HTML_H_
 #define _HTML_H_
 

@@ -308,7 +308,7 @@ unsigned int set_mode(void)
 
   for ( i = 0; i != SHOT_SPACE; i++ )
   {
-    record[i].face_strike = 100; // Disable the shot record
+    record[i].face_strike = 100; // Disable face strikes
   }
 
   if ( json_tabata_enable )      // If the Tabata or rapid fire is enabled,
@@ -403,7 +403,6 @@ unsigned int wait(void)
   /*
    * See if any shots have arrived
    */
-
   if ( shot_in != shot_out )
   {
     return REDUCE;

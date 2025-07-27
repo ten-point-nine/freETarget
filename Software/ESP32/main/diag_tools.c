@@ -44,6 +44,7 @@ extern volatile unsigned long paper_time;
 static void show_test_help(void);
 static void test_display_all_scores(void);
 static void test_rapidfire(void);
+static void test_rapidfire(void);
 
 /*
  * Diagnostic typedefs
@@ -99,6 +100,7 @@ static const self_test_t test_list[] = {
     {"build_json_score",                  &test_build_json_score   },
     {"build_fake_shots",                  &test_build_fake_shots   },
     {"display_all_scores",                &test_display_all_scores },
+    {"Rapidfire test",                    &test_rapidfire          },
     {"Rapidfire test",                    &test_rapidfire          },
     {"",                                  0                        }
 };
@@ -613,19 +615,15 @@ bool POST_counters(void)
         DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "%c", find_sensor(s[i].low_sense.run_mask)->short_name);))
         set_diag_LED(s[i].low_sense.diag_LED, 10);
       }
-
-      if ( PCNT_HIGH_GPIO & board_mask ) // Only check the high sense if it is present
+      if ( running & s[i].high_sense.run_mask )
       {
-        if ( running & s[i].high_sense.run_mask )
-        {
-          SEND(ALL, sprintf(_xs, "%c", s[i].high_sense.short_name);)
-          set_diag_LED(s[i].high_sense.diag_LED, 10);
-        }
+        set_diag_LED(s[i].high_sense.diag_LED, 10);
       }
-      run_state |= IN_FATAL_ERR;
     }
-    vTaskDelay(ONE_SECOND);
+    run_state |= IN_FATAL_ERR;
   }
+  vTaskDelay(ONE_SECOND);
+
   /*
    * Test 4, Trigger the timers
    */
