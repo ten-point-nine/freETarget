@@ -128,7 +128,7 @@ void test_build_fake_shots(void);                         // Generate a list of 
 // #define TRACE_DIAG
 // #define TRACE_DEBUG
 // #define TRACE_SCORE
-#define TRACE_HTTP
+// #define TRACE_HTTP
 // #define TRACE_OTA
 // #define TRACE_HEARTBEAT
 

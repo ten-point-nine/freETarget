@@ -57,6 +57,7 @@ typedef enum // Server modes
  */
 int                 http_shot  = -1;   // What shot number have we sent?
 static event_mode_t event_mode = IDLE; // Set the server mode to auto refresh
+static int          check_mask = 0;    // Mask of the checkboxes
 
 typedef struct
 {
@@ -70,16 +71,16 @@ static const my_user_ctx_t event_menu_ctx  = {EVENT_HTTP_PORT};
  * Local functions
  */
 static esp_err_t stop_webserver(httpd_handle_t server);
-static esp_err_t service_get_FreeETarget(httpd_req_t *req);                      // Main target page
-static esp_err_t service_get_help(httpd_req_t *req);                             // User help page
-static esp_err_t service_get_menu(httpd_req_t *req);                             // Control back channel
-static esp_err_t service_get_who(httpd_req_t *req);                              // Target information page
-static esp_err_t service_get_FreeETarget_png(httpd_req_t *req);                  // Icon for the FreeETarget page
-static esp_err_t service_get_json(httpd_req_t *req);                             // Webb ased JSON interface
-static esp_err_t service_get_events(httpd_req_t *req);                           // Get shot events
-static esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err); // Create a URL not found handler
+static esp_err_t service_get_FreeETarget(httpd_req_t *req);                            // Main target page
+static esp_err_t service_get_help(httpd_req_t *req);                                   // User help page
+static esp_err_t service_get_menu(httpd_req_t *req);                                   // Control back channel
+static esp_err_t service_get_who(httpd_req_t *req);                                    // Target information page
+static esp_err_t service_get_FreeETarget_png(httpd_req_t *req);                        // Icon for the FreeETarget page
+static esp_err_t service_get_json(httpd_req_t *req);                                   // Webb ased JSON interface
+static esp_err_t service_get_events(httpd_req_t *req);                                 // Get shot events
+static esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err);       // Create a URL not found handler
 static esp_err_t service_post_post(httpd_req_t *req);
-static void      http_printf(const char *format, httpd_req_t *req);              // Formatted print to the HTTP request
+static void      http_printf(const char *format, httpd_req_t *req, unsigned int size); // Formatted print to the HTTP request
 
 /*
  *  URI handlers
@@ -107,7 +108,7 @@ const my_uri_t uri_list[] = {
 #define CHECK_B 0x02 // Bit mask for Air Rifle
 #define CHECK_C 0x04 // Bit mask for .22 Pistol
 #define CHECK_D 0x08 // Bit mask for 50 M Rifle
-#define CHECK_E 0x10 // Bit mask for Practice
+#define CHECK_E 0x10 // Bit mask for SIGHT
 #define CHECK_F 0x20 // Bit mask for Match
 /*----------------------------------------------------------------
  *
@@ -290,7 +291,7 @@ static esp_err_t service_get_events(httpd_req_t *req)
  * Arguements
  *
  * MATCH    - Start a match session
- * PRACTICE - Start a practice session
+ * SIGHT - Start a SIGHT session
  *
  * Air Pistol   - Air Pistol
  * air Rifle  - Air Rifle
@@ -298,101 +299,93 @@ static esp_err_t service_get_events(httpd_req_t *req)
  * 50m Rifle - 50 M Rifle
  *
  *  110   ISSF 10 Metre Air Rifle
- *  111   ISSF 10 Metre Air Rifle Practice
+ *  111   ISSF 10 Metre Air Rifle SIGHT
  *  100   ISSF 10 Metre Air Pistol Match
- *  101   ISSF 10 Metre Air Pistol Practice
+ *  101   ISSF 10 Metre Air Pistol SIGHT
  *  510   ISSF 50 Metre Rifle Match
- *  511   ISSF 50 Metre Rifle Practice
+ *  511   ISSF 50 Metre Rifle SIGHT
  *  500   ISSF 50 Metre .22 Pistol Match
- *  501   ISSF 50 Metre .22 Pistol Practice
+ *  501   ISSF 50 Metre .22 Pistol SIGHT
  *
  *------------------------------------------------------------*/
+
+#define CHECK_A     0x01 // Bit mask for Air Pistol
+#define CHECK_B     0x02 // Bit mask for Air Rifle
+#define CHECK_C     0x04 // Bit mask for .22 Pistol
+#define CHECK_D     0x08 // Bit mask for 50 M Rifle
+#define CHECK_E     0x10 // Bit mask for SIGHT
+#define CHECK_F     0x20 // Bit mask for Match
+#define START_EVENT 0x01 // Start the event
+#define STOP_EVENT  0x02 // Stop the event
+#define SIGHT       1
+#define MATCH       0
+#define AIR_PISTOL  100
+#define AIR_RIFLE   110
+#define PISTOL_50M  500
+#define RIFLE_50M   510
+
+typedef struct
+{
+  char *uri;                                 // URI to handle
+  int   start_stop;                          // Start or stop the ev
+  int   check_mask;                          // Mask of the checkboxes
+  int   session_type;                        // Session type (110, 111, 100, 101, 510, 511, 500, 501)
+} menu_action_t;                             // Internal user context structure
+
+menu_action_t menu_actions[] = {
+    {"STOP",       STOP_EVENT,  0,       0    }, // Stop the server
+    {"SIGHT",      START_EVENT, CHECK_E, SIGHT}, // Start a SIGHT session
+    {"MATCH",      START_EVENT, CHECK_F, MATCH}, // Start a match session
+    {"Air Pistol", START_EVENT, CHECK_A, 0    }, // Air Pistol
+    {"Air Rifle",  START_EVENT, CHECK_B, 0    }, // Air Rifle
+    {"50m Pistol", START_EVENT, CHECK_C, 0    }, // 50 M Pistol
+    {"50m Rifle",  START_EVENT, CHECK_D, 0    }, // 50 M Rifle
+    {"",           0,           0,       0    }  // End of list marker
+};
+
 static esp_err_t service_get_menu(httpd_req_t *req)
 {
-  char my_name[SHORT_TEXT]; // Temporary string
-  int  session_type;        // Index into the session_type array
+  char my_name[SHORT_TEXT];                  // Temporary string
+  int  session_type;                         // Index into the session_type array
+  int  i;                                    // Loop index
 
   DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_menu(%s)", req->uri);))
 
-                            /*
-                             *  Decode the command line arguements if there are any
-                             */
-  /*
-   *  Decode the stop
-   */
+                                             /*
+                                              *  Decode the command line arguements if there are any
+                                              */
+  i            = 0;
+  check_mask   = 0;
+  session_type = 0;                                 // Default to no session type
 
-  if ( contains(req->uri, "stop") )
+  while ( menu_actions[i].uri[0] != 0 )
   {
-    event_mode = CLOSE; // Set the server mode to close
+    if ( contains(req->uri, menu_actions[i].uri) )  // If the URI contains the action
+    {
+
+      check_mask = menu_actions[i].check_mask;      // Set the check mask
+      session_type += menu_actions[i].session_type; // Set the session type
+
+      if ( menu_actions[i].start_stop == START_EVENT )
+      {
+        start_new_session(check_mask & SIGHT);      // Start a new session
+      }
+
+      DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Setting event_mode: %d check_mask: %d", event_mode, check_mask);))
+    }
+    i++;
+  }
+  if ( check_mask == 0 )
+  {
+    check_mask = CHECK_A | CHECK_E; // Default to air pistol and SIGHT
   }
 
   /*
-   * Decode the target and event type
+   *  Send the reply to the client
    */
-  session_type = 0;      // Default to an invalid target index
-
-  if ( !contains(req->uri, "?") )
-  {
-    session_type = 0;    // Set the session_type to an invalid target
-  }
-
-  if ( contains(req->uri, "PRACTICE") )
-  {
-    session_type += 1;   // Set the session_type to practice
-    start_new_session(SESSION_MATCH);
-    http_shot  = -1;     // Reset the shot counter
-    event_mode = START;  // Set the server mode to auto refresh
-  }
-  if ( contains(req->uri, "MATCH") )
-  {
-    session_type += 0;   // Set the session_type to practice
-    start_new_session(SESSION_MATCH);
-    http_shot  = -1;     // Reset the shot counter
-    event_mode = START;  // Set the server mode to auto refresh
-  }
-
-  if ( contains(req->uri, "Air Pistol") )
-  {
-    session_type += 0;   // Set the session_type to Pistol
-    start_new_session(SESSION_MATCH);
-    http_shot  = -1;     // Reset the shot counter
-    event_mode = START;  // Set the server mode to auto refresh
-  }
-  if ( contains(req->uri, "Air Rifle") )
-  {
-    session_type += 10;  // Set the session_type to rifle
-    start_new_session(SESSION_MATCH);
-    http_shot  = -1;     // Reset the shot counter
-    event_mode = START;  // Set the server mode to auto refresh
-  }
-
-  if ( contains(req->uri, "50m Pistol") )
-  {
-    session_type += 500; // Set the session_type to 50 Meter
-    start_new_session(SESSION_MATCH);
-    http_shot  = -1;     // Reset the shot counter
-    event_mode = START;  // Set the server mode to auto refresh
-  }
-
-  if ( contains(req->uri, "50m Rifle") )
-  {
-    session_type += 100; // Set the session_type to 10 Meter
-    start_new_session(SESSION_MATCH);
-    http_shot  = -1;     // Reset the shot counter
-    event_mode = START;  // Set the server mode to auto refresh
-  }
-
-                         /*
-                          *  Send the reply to the client
-                          */
-  target_name(my_name);               // Get the target name
+  target_name(my_name);                                 // Get the target name
   httpd_resp_set_hdr(req, "get_menu", my_name);
-#if ( 1 )
-  http_printf(&menu_html_start, req); // point to the target HTML file
-#else
-  const char *resp_str = (const char *)&menu_html_start; // point to the target HTML file
-  httpd_resp_send(req, resp_str, strlen(resp_str));
-#endif
+  http_printf(&menu_html_start, req, SIZEOF_menu_HTML); // point to the target HTML file
 
   return ESP_OK;
 }
@@ -650,56 +643,88 @@ static esp_err_t service_get_who(httpd_req_t *req)
   i = strlen(_xs);
 
 static void http_printf(const char  *format, // Format string
-                        httpd_req_t *req)
+                        httpd_req_t *req,    // HTTP request to return to
+                        unsigned int size    // Size of the format string
+)
 {
-  int i;
+  int          i;
+  unsigned int remainder;                    // Number of bytes remaining to be processed
 
-  _xs[0] = 0;
-  i      = 0;
-
+  _xs[0]    = 0;
+  i         = 0;
+  remainder = size;
   /*
-   *  Loop and output the format string */
-  while ( *format != 0 )
+   *  Loop and output the format string
+   */
+
+  while ( remainder != 0 )
   {
-    if ( *format == '^' )   // Look for a format specifier
+    if ( *format == '^' )             // Look for a format specifier
     {
-      format++;             // Skip the %
+      format++;                       // Skip the %
+      remainder--;                    // Decrement the number of bytes remaining
 
       switch ( *format )
       {
         case '^':
-          strcat(_xs, "^"); // If we have a double ^ then just output a single ^
+          strcat(_xs, "^");           // If we have a double ^ then just output a single ^
           break;
 
         case 'A':
+          if ( CHECK_A & check_mask ) // If the Air Pistol button is checked
+          {
+            CHECKED
+          }
+
           break;
 
         case 'B':
+          if ( CHECK_B & check_mask ) // If the Air Pistol button is checked
+          {
+            CHECKED
+          }
           break;
 
         case 'C':
+          if ( CHECK_C & check_mask ) // If the Air Pistol button is checked
+          {
+            CHECKED
+          }
           break;
 
         case 'D':
+          if ( CHECK_D & check_mask ) // If the Air Pistol button is checked
+          {
+            CHECKED
+          }
           break;
 
         case 'E':
+          if ( CHECK_E & check_mask ) // If the Air Pistol button is checked
+          {
+            CHECKED
+          }
           break;
 
         case 'F':
+          if ( CHECK_F & check_mask ) // If the Air Pistol button is checked
+          {
+            CHECKED
+          }
           break;
 
-        default: // Unknown format
-          _xs[i++] = *format;
+        default:                      // Unknown format
           break;
       }
       format++;
+      remainder--;                    // Decrement the number of bytes remaining
     }
     else
     {
-      _xs[i++] = *format++; // Copy the character to the buffer
+      _xs[i++] = *format++;           // Copy the character to the buffer
+      remainder--;                    // Decrement the number of bytes remaining
     }
-    _xs[i] = 0;             // Null terminate the string
+    _xs[i] = 0;                       // Null terminate the string
 
     /*
      *  See if it is time to send out the buffer.
@@ -707,21 +732,22 @@ static void http_printf(const char  *format, // Format string
     if ( i >= sizeof(_xs) - 512 ) // If we have almost filled the buffer?
     {
       httpd_resp_send_chunk(req, _xs, i);
-      i = 0;                      // Reset the index
+      i      = 0;                 // Reset the index
+      _xs[0] = 0;                 // Null terminate the string
     }
   }
 
   /*
    *  Finished Send out the last
    */
-  _xs[i] = 0;                         // Null terminate the string
-  if ( i != 0 )                       // If we have something to send
+  if ( i != 0 )                         // If we have something to send
   {
-    httpd_resp_send_chunk(req, _xs, i);
+    _xs[i] = 0;                         // Null terminate the string
+    httpd_resp_send_chunk(req, _xs, i); // Send the string to the client
   }
 
-  _xs[0] = 0;                         // Send the last thing
-  httpd_resp_send_chunk(req, _xs, 0); // Send the string to the client
+  _xs[0] = 0;                           // Send the last thing
+  httpd_resp_send_chunk(req, _xs, 0);   // Send the string to the client
 
   return;
 }
