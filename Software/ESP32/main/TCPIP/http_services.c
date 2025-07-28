@@ -326,34 +326,37 @@ static esp_err_t service_get_events(httpd_req_t *req)
 
 typedef struct
 {
-  char *uri;                                 // URI to handle
-  int   start_stop;                          // Start or stop the ev
-  int   check_mask;                          // Mask of the checkboxes
-  int   session_type;                        // Session type (110, 111, 100, 101, 510, 511, 500, 501)
-} menu_action_t;                             // Internal user context structure
+  char *uri;          // URI to handle
+  int   start_stop;   // Start or stop the ev
+  int   check_mask;   // Mask of the checkboxes
+  int   session_type; // Session type (110, 111, 100, 101, 510, 511, 500, 501)
+} menu_action_t;      // Internal user context structure
 
 menu_action_t menu_actions[] = {
-    {"STOP",       STOP_EVENT,  0,       0    }, // Stop the server
-    {"SIGHT",      START_EVENT, CHECK_E, SIGHT}, // Start a SIGHT session
-    {"MATCH",      START_EVENT, CHECK_F, MATCH}, // Start a match session
-    {"Air Pistol", START_EVENT, CHECK_A, 0    }, // Air Pistol
-    {"Air Rifle",  START_EVENT, CHECK_B, 0    }, // Air Rifle
-    {"50m Pistol", START_EVENT, CHECK_C, 0    }, // 50 M Pistol
-    {"50m Rifle",  START_EVENT, CHECK_D, 0    }, // 50 M Rifle
-    {"",           0,           0,       0    }  // End of list marker
+    // uri         start_stop, check_mask, session_type
+    {"START",      START_EVENT, CHECK_E, SIGHT     }, // Start a SIGHT session
+    {"STOP",       STOP_EVENT,  0,       0         }, // Stop the SIGHT session
+    {"SIGHT",      START_EVENT, CHECK_E, SIGHT     }, // Sighters
+    {"MATCH",      START_EVENT, CHECK_F, MATCH     }, // Match
+    {"Air Pistol", START_EVENT, CHECK_A, AIR_PISTOL}, // Air Pistol
+    {"Air Rifle",  START_EVENT, CHECK_B, AIR_RIFLE }, // Air Rifle
+    {"50m Pistol", START_EVENT, CHECK_C, PISTOL_50M}, // 50 M Pistol
+    {"50m Rifle",  START_EVENT, CHECK_D, RIFLE_50M }, // 50 M Rifle
+
+    {"",           0,           0,       0         }  // End of list marker
 };
 
 static esp_err_t service_get_menu(httpd_req_t *req)
 {
-  char my_name[SHORT_TEXT];                  // Temporary string
-  int  session_type;                         // Index into the session_type array
-  int  i;                                    // Loop index
+  char my_name[SHORT_TEXT];                           // Temporary string
+  int  session_type;                                  // Index into the session_type array
+  int  i;                                             // Loop index
 
   DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_menu(%s)", req->uri);))
 
-                                             /*
-                                              *  Decode the command line arguements if there are any
-                                              */
+                                                      /*
+                                                       *  Decode the command line arguements if there are any
+                                                       */
   i            = 0;
   check_mask   = 0;
   session_type = 0;                                 // Default to no session type
@@ -442,8 +445,7 @@ static esp_err_t service_get_help(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_json(httpd_req_t *req)
 {
-  const char *resp_str;                   // Reply to server
-  char        my_name[SHORT_TEXT];        // Target name
+  char my_name[SHORT_TEXT];               // Target name
 
   DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_json(%s)", req->uri);))
   squish(req->uri, _xs);                  // Go through the uri and keep the argument portion
