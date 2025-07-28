@@ -337,10 +337,10 @@ menu_action_t menu_actions[] = {
     {"STOP",       STOP_EVENT,  0,       0         }, // Stop the SIGHT session
     {"SIGHT",      START_EVENT, CHECK_E, SIGHT     }, // Sighters
     {"MATCH",      START_EVENT, CHECK_F, MATCH     }, // Match
-    {"Air Pistol", START_EVENT, CHECK_A, AIR_PISTOL}, // Air Pistol
-    {"Air Rifle",  START_EVENT, CHECK_B, AIR_RIFLE }, // Air Rifle
-    {"50m Pistol", START_EVENT, CHECK_C, PISTOL_50M}, // 50 M Pistol
-    {"50m Rifle",  START_EVENT, CHECK_D, RIFLE_50M }, // 50 M Rifle
+    {"Air+Pistol", START_EVENT, CHECK_A, AIR_PISTOL}, // Air Pistol
+    {"Air+Rifle",  START_EVENT, CHECK_B, AIR_RIFLE }, // Air Rifle
+    {"50m+Pistol", START_EVENT, CHECK_C, PISTOL_50M}, // 50 M Pistol
+    {"50m+Rifle",  START_EVENT, CHECK_D, RIFLE_50M }, // 50 M Rifle
     {"",           0,           0,       0         }  // End of list marker
 };
 
@@ -364,7 +364,7 @@ static esp_err_t service_get_menu(httpd_req_t *req)
     if ( contains(req->uri, menu_actions[i].uri) )  // If the URI contains the action
     {
 
-      check_mask = menu_actions[i].check_mask;      // Set the check mask
+      check_mask |= menu_actions[i].check_mask;     // Set the check mask
       session_type += menu_actions[i].session_type; // Set the session type
 
       if ( menu_actions[i].start_stop == START_EVENT )
@@ -635,12 +635,12 @@ static esp_err_t service_get_who(httpd_req_t *req)
  * The format string is a text string that contains formatting
  * fields that are replaced with the data.
  *
- * For example: %A will be replaced with the string "CHECKED"
- * if the radio button has been CHECKED.
+ * For example: %A will be replaced with the string "SELECTED"
+ * if the radio button has been SELECTED.
  *
  *------------------------------------------------------------*/
-#define CHECKED                                                                                                                            \
-  strcat(_xs, "checked ");                                                                                                                 \
+#define SELECTED                                                                                                                           \
+  strcat(_xs, " selected ");                                                                                                               \
   i = strlen(_xs);
 
 static void http_printf(const char  *format, // Format string
@@ -672,45 +672,45 @@ static void http_printf(const char  *format, // Format string
           break;
 
         case 'A':
-          if ( CHECK_A & check_mask ) // If the Air Pistol button is checked
+          if ( CHECK_A & check_mask ) // If the Air Pistol button is SELECTED
           {
-            CHECKED
+            SELECTED
           }
 
           break;
 
         case 'B':
-          if ( CHECK_B & check_mask ) // If the Air Pistol button is checked
+          if ( CHECK_B & check_mask ) // If the Air Pistol button is SELECTED
           {
-            CHECKED
+            SELECTED
           }
           break;
 
         case 'C':
-          if ( CHECK_C & check_mask ) // If the Air Pistol button is checked
+          if ( CHECK_C & check_mask ) // If the Air Pistol button is SELECTED
           {
-            CHECKED
+            SELECTED
           }
           break;
 
         case 'D':
-          if ( CHECK_D & check_mask ) // If the Air Pistol button is checked
+          if ( CHECK_D & check_mask ) // If the Air Pistol button is SELECTED
           {
-            CHECKED
+            SELECTED
           }
           break;
 
         case 'E':
-          if ( CHECK_E & check_mask ) // If the Air Pistol button is checked
+          if ( CHECK_E & check_mask ) // If the Air Pistol button is SELECTED
           {
-            CHECKED
+            SELECTED
           }
           break;
 
         case 'F':
-          if ( CHECK_F & check_mask ) // If the Air Pistol button is checked
+          if ( CHECK_F & check_mask ) // If the Air Pistol button is SELECTED
           {
-            CHECKED
+            SELECTED
           }
           break;
 
@@ -732,6 +732,7 @@ static void http_printf(const char  *format, // Format string
      */
     if ( i >= sizeof(_xs) - 512 ) // If we have almost filled the buffer?
     {
+      printf("%s", _xs);          // Print the buffer to the console
       httpd_resp_send_chunk(req, _xs, i);
       i      = 0;                 // Reset the index
       _xs[0] = 0;                 // Null terminate the string
@@ -746,9 +747,6 @@ static void http_printf(const char  *format, // Format string
     _xs[i] = 0;                         // Null terminate the string
     httpd_resp_send_chunk(req, _xs, i); // Send the string to the client
   }
-
-  _xs[0] = 0;                           // Send the last thing
-  httpd_resp_send_chunk(req, _xs, 0);   // Send the string to the client
-
+  httpd_resp_send_chunk(req, NULL, 0);  // End the response
   return;
 }
