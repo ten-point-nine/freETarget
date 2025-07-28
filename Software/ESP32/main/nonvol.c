@@ -341,7 +341,7 @@ void init_nonvol(int verify) // Verification code entered by user
     return;
   }
 
-  factory_nonvol(false); // Reset to facgtory defaults and prompt for serial number
+  factory_nonvol(false); // Reset to facgtory defaults but do not run the factory test
 
   /*
    * All done, return
