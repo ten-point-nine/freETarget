@@ -366,7 +366,7 @@ static esp_err_t service_get_menu(httpd_req_t *req)
     if ( contains(req->uri, menu_actions[i].uri) )  // If the URI contains the action
     {
 
-      check_mask = menu_actions[i].check_mask;      // Set the check mask
+      check_mask |= menu_actions[i].check_mask;     // Set the check mask
       session_type += menu_actions[i].session_type; // Set the session type
 
       if ( menu_actions[i].start_stop == START_EVENT )
@@ -640,8 +640,8 @@ static esp_err_t service_get_who(httpd_req_t *req)
  * if the radio button has been CHECKED.
  *
  *------------------------------------------------------------*/
-#define CHECKED                                                                                                                            \
-  strcat(_xs, "checked ");                                                                                                                 \
+#define SELECTED                                                                                                                           \
+  strcat(_xs, " selected ");                                                                                                               \
   i = strlen(_xs);
 
 static void http_printf(const char  *format, // Format string
@@ -673,45 +673,45 @@ static void http_printf(const char  *format, // Format string
           break;
 
         case 'A':
-          if ( CHECK_A & check_mask ) // If the Air Pistol button is checked
+          if ( CHECK_A & check_mask ) // If the Air Pistol button is SELECTED
           {
-            CHECKED
+            SELECTED
           }
 
           break;
 
         case 'B':
-          if ( CHECK_B & check_mask ) // If the Air Pistol button is checked
+          if ( CHECK_B & check_mask ) // If the Air Pistol button is SELECTED
           {
-            CHECKED
+            SELECTED
           }
           break;
 
         case 'C':
-          if ( CHECK_C & check_mask ) // If the Air Pistol button is checked
+          if ( CHECK_C & check_mask ) // If the Air Pistol button is SELECTED
           {
-            CHECKED
+            SELECTED
           }
           break;
 
         case 'D':
-          if ( CHECK_D & check_mask ) // If the Air Pistol button is checked
+          if ( CHECK_D & check_mask ) // If the Air Pistol button is SELECTED
           {
-            CHECKED
+            SELECTED
           }
           break;
 
         case 'E':
-          if ( CHECK_E & check_mask ) // If the Air Pistol button is checked
+          if ( CHECK_E & check_mask ) // If the Air Pistol button is SELECTED
           {
-            CHECKED
+            SELECTED
           }
           break;
 
         case 'F':
-          if ( CHECK_F & check_mask ) // If the Air Pistol button is checked
+          if ( CHECK_F & check_mask ) // If the Air Pistol button is SELECTED
           {
-            CHECKED
+            SELECTED
           }
           break;
 
@@ -747,9 +747,6 @@ static void http_printf(const char  *format, // Format string
     _xs[i] = 0;                         // Null terminate the string
     httpd_resp_send_chunk(req, _xs, i); // Send the string to the client
   }
-
-  _xs[0] = 0;                           // Send the last thing
-  httpd_resp_send_chunk(req, _xs, 0);   // Send the string to the client
-
+  httpd_resp_send_chunk(req, NULL, 0);  // End the response
   return;
 }
