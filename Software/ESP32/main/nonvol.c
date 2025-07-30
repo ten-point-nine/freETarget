@@ -73,7 +73,6 @@ void read_nonvol(void)
   }
 
   nvs_get_i32(my_handle, "NONVOL_INIT", &nonvol_temp);
-
   if ( nonvol_temp != INIT_DONE )  // EEPROM never programmed
   {
     factory_nonvol(true);          // Force in good values and test the board
@@ -340,7 +339,8 @@ void init_nonvol(int verify) // Verification code entered by user
     return;
   }
 
-  factory_nonvol(false); // Reset to facgtory defaults and prompt for serial number
+  SEND(ALL, sprintf(_xs, "\r\nReset Serial Number\r\n");)
+  factory_nonvol(prompt_for_confirm()); // Reset to factory defaults and prompt for serial number
 
   /*
    * All done, return

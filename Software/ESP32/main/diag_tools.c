@@ -345,7 +345,6 @@ bool factory_test(void)
       }
       else
       {
-
         if ( ((find_sensor(1 << i)->short_name) == 'N') // Is this the North Sensor?
              && (json_pcnt_latency == 0) )              // and pcnt_latency is disabled?
         {

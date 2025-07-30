@@ -254,7 +254,7 @@ void gpio_init(void)
   revision();
 
   /*
-   *  Loop and setup the GPIO outputs
+   *  Loop and setup the GPIO outputs in a particular order
    */
   i = 0;
   while ( gpio_order[i] != 0 )       // Program the IO in order
@@ -295,7 +295,7 @@ void gpio_init_single(unsigned int type)                                        
 
         case DIGITAL_IO_IN:
         case PCNT_HI:
-          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Digital input: %s", gpio_table[i].gpio_name);))
+          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Digital input: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
           gpio_set_direction(gpio_table[i].gpio_number, GPIO_MODE_INPUT);
           gpio_set_pull_mode(gpio_table[i].gpio_number, GPIO_PULLUP_ONLY);
 

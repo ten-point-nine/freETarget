@@ -128,8 +128,9 @@ void arm_timers(void)
   gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);
   gpio_set_level(STOP_N, RUN_OFF);      // Reset the timer
   gpio_set_level(OSC_CONTROL, OSC_OFF); // Turn off the oscillator
+
   pcnt_clear();
-  if ( json_pcnt_latency != 0 )
+  if ( (PCNT_HIGH_GPIO & board_mask) && json_pcnt_latency != 0 )
   {
     gpio_intr_enable(RUN_NORTH_HI);     // Turn on the interrupts
     gpio_intr_enable(RUN_EAST_HI);
@@ -495,15 +496,18 @@ void read_timers(int timer[])
     timer[i] = pcnt_read(i);
   }
 
-  if ( (json_pcnt_latency != 0)                   // Latecy has a valid setting
-       && ((json_vref_hi - json_vref_lo) > 0) )   // The voltage references are good
+  /*
+   *  Read the high counters if they are available and enabled
+   */
+  if ( (PCNT_HIGH_GPIO & board_mask) && (json_pcnt_latency != 0) // Latecy has a valid setting
+       && ((json_vref_hi - json_vref_lo) > 0) )                  // The voltage references are good
   {
-    for ( i = N; i <= W; i++ )                    // Add the rise time to the signal to get a better estimate
+    for ( i = N; i <= W; i++ )                                   // Add the rise time to the signal to get a better estimate
     {
-      pcnt_hi = timer[i + 4] - json_pcnt_latency; // PCNT HI   (reading - latentcy)
-      if ( pcnt_hi > PCNT_NOT_TRIGGERED )         // Check to make sure the high timer was triggered by a shot
-      {                                           // and not dinged from the pellet trap
-        pcnt_hi = 0;                              // Not triggered by a shot
+      pcnt_hi = timer[i + 4] - json_pcnt_latency;                // PCNT HI   (reading - latentcy)
+      if ( pcnt_hi > PCNT_NOT_TRIGGERED )                        // Check to make sure the high timer was triggered by a shot
+      {                                                          // and not dinged from the pellet trap
+        pcnt_hi = 0;                                             // Not triggered by a shot
       }
       if ( pcnt_hi > 0 )
       {
@@ -926,13 +930,27 @@ void digital_test(void)
     {
       break;
     }
-    timer_delay(ONE_SECOND / 10);
+    timer_delay(ONE_SECOND);
+    SEND(ALL, sprintf(_xs, "\r\nTime: %lds", run_time_seconds());)
+    SEND(ALL, sprintf(_xs, "  DIP_A: %01X", !gpio_get_level(DIP_A));) // DIP A
+    SEND(ALL, sprintf(_xs, "  DIP_B: %01X", !gpio_get_level(DIP_B));) // DIP B
+    SEND(ALL, sprintf(_xs, "  DIP_C: %01X", !gpio_get_level(DIP_C));) // DIP C
+    SEND(ALL, sprintf(_xs, "  DIP_D: %01X", !gpio_get_level(DIP_D));) // DIP D
 
-    SEND(ALL, sprintf(_xs, "\r\nDIP_A: 0x%02X", !gpio_get_level(DIP_A));) // DIP A
-    SEND(ALL, sprintf(_xs, "   DIP_B: 0x%02X", !gpio_get_level(DIP_B));)  // DIP B
-    SEND(ALL, sprintf(_xs, "   DIP_C: 0x%02X", !gpio_get_level(DIP_C));)  // DIP C
-    SEND(ALL, sprintf(_xs, "   DIP_D: 0x%02X", !gpio_get_level(DIP_D));)  // DIP D
-    SEND(ALL, sprintf(_xs, "   Time: %lds", run_time_seconds());)
+    SEND(ALL, sprintf(_xs, "  N_LO: %01X", !gpio_get_level(RUN_NORTH_LO));)
+    SEND(ALL, sprintf(_xs, "  E_LO: %01X", !gpio_get_level(RUN_EAST_LO));)
+    SEND(ALL, sprintf(_xs, "  S_LO: %01X", !gpio_get_level(RUN_SOUTH_LO));)
+    SEND(ALL, sprintf(_xs, "  W_LO: %01X", !gpio_get_level(RUN_WEST_LO));)
+
+    if ( PCNT_HIGH_GPIO & board_mask ) // If the high GPIOs are enabled
+    {
+      SEND(ALL, sprintf(_xs, "  N_HI: %01X", !gpio_get_level(RUN_NORTH_HI));)
+      SEND(ALL, sprintf(_xs, "  E_HI: %01X", !gpio_get_level(RUN_EAST_HI));)
+      SEND(ALL, sprintf(_xs, "  S_HI: %01X", !gpio_get_level(RUN_SOUTH_HI));)
+      SEND(ALL, sprintf(_xs, "  W_HI: %01X", !gpio_get_level(RUN_WEST_HI));)
+    }
+
+    timer_delay(ONE_SECOND); // Wait for 1/2 second before reading again
   }
 
   SEND(ALL, sprintf(_xs, _DONE_);)

@@ -425,6 +425,13 @@ void set_VREF(void)
 {
   float volts[4];
 
+  if ( (json_vref_lo == 0) // Check for an uninitialized VREF
+       || (json_vref_hi == 0) )
+  {
+    json_vref_lo = 1.25;   // and force to something other than 0
+    json_vref_hi = 2.00;   // Otherwise the sensors continioustly interrupt
+  }
+
   if ( MCP4728 & board_mask )
   {
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Set VREF_LO: %4.2f   VREF_HI: %4.2f", json_vref_lo, json_vref_hi);))
@@ -432,13 +439,6 @@ void set_VREF(void)
   else
   {
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Set VREF_LO: %4.2f", json_vref_lo);))
-  }
-
-  if ( (json_vref_lo == 0)    // Check for an uninitialized VREF
-       || (json_vref_hi == 0) )
-  {
-    json_vref_lo = 1.25;      // and force to something other than 0
-    json_vref_hi = 2.00;      // Otherwise the sensors continioustly interrupt
   }
 
   if ( MCP4728 & board_mask ) // Check for four channel DAC

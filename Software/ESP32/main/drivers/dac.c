@@ -34,6 +34,8 @@
 /*
  *  Definitions
  */
+#define DAC_MCP4725_ADDR  0x60    // DAC I2C address
+#define DAC_MCP4725_WRITE 0x40    // Multi Write
 #define DAC_MCP4728_ADDR  0x60    // DAC I2C address
 #define DAC_MCP4728_WRITE 0x0b    // Multi Write
 #define UDAC              0x01    // Output immediatly
@@ -64,10 +66,12 @@ void DAC_write(float volts[]) // What value are we setting it to
 {
   if ( MCP4728 & board_mask )
   {
+    printf("DAC_write: MCP4728\n");
     DAC_write_MCP4728(volts); // MCP 4728 (four channel`)
   }
   else
   {
+    printf("DAC_write: MCP4725\n");
     DAC_write_MCP4725(volts); // MCP 4725 (single channel)
   }
 
@@ -97,36 +101,23 @@ void DAC_write(float volts[]) // What value are we setting it to
  * if it can be done by the internal reference or the external
  * one and selects the source automatically.
  *
+ * The MCP4728 has uses two channels to set the VREF_LO and VREF_HI
+ *
  *--------------------------------------------------------------*/
 static void DAC_write_MCP4728(float volts[]) // What value are we setting it to
 {
-  unsigned char data[3];                     // Bytes to send to the I2C
+  unsigned char data[3 * 4];                 // Bytes to send to the I2C
   unsigned int  scaled_value;                // Value (12 bits) to the DAC
   int           i;
   float         max;
-  int           v_source      = V_INTERNAL;  // Default to internal reference
-  float         v_ref         = VREF_INT;    // Default to 2.048 volts
-  unsigned int  channel_count = 1;           // Program one channel
+  int           v_source = V_INTERNAL;       // Default to internal reference
+  float         v_ref    = VREF_INT;         // Default to 2.048 volts
 
-  /*
-   *  Check for a valid voltage setting
-   */
-  for ( i = 0; i != channel_count; i++ )
-  {
-    if ( volts[i] < 0 )
-    {
-      volts[i] = 0;
-    }
-    if ( volts[i] > VREF_EXT )
-    {
-      volts[i] = VREF_EXT;
-    }
-  }
   /*
    *  Step 1, figure out what VREF should be
    */
   max = 0;
-  for ( i = 0; i != channel_count; i++ )
+  for ( i = 0; i != 4; i++ )
   {
     if ( volts[i] > max )
     {
@@ -144,23 +135,26 @@ static void DAC_write_MCP4728(float volts[]) // What value are we setting it to
     v_source = V_EXTERNAL; // Otherwise
     v_ref    = VREF_EXT;   // Default to 5.0 volts
   }
+  DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "DAC v_source:%d  v_ref:%4.2f)", v_source, v_ref);))
 
   /*
    *  Fill up the I2C buffer
    */
-  for ( i = 0; i != channel_count; i++ )
+  for ( i = 0; i != 4; i++ )
   {
-    scaled_value      = ((int)(volts[i] / v_ref * DAC_FS)) & 0xfff; // Figure the bits to send
-    data[(i * 3) + 0] = (DAC_MCP4728_WRITE << 3)                    // Write
-                        + ((i & 0x3) << 1)                          // Channel
-                        + UDAC;                                     // UDAC = 1  update automatically
-    data[(i * 3) + 1] = v_source                                    // Internal or external VREF
-                        + 0x00                                      // Normal Power Down
-                        + 0x00                                      // Gain x 1
-                        + ((scaled_value >> 8) & 0x0f);             // Top 4 bits of the setting
-    data[(i * 3) + 2] = scaled_value & 0xff;                        // Bottom 8 bits of the setting
-    i2c_write(DAC_MCP4728_ADDR, data, sizeof(data));                // Data transferred on last bit.
+    scaled_value = ((int)(volts[i] / v_ref * DAC_FS)) & 0xfff; // Figure the bits to send
+    DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "DAC_write(channel:%d Volts:%4.2f scale:%d)", i + 1, volts[i], scaled_value);))
+    data[(i * 3) + 0] = DAC_MCP4728_WRITE                      // Write
+                        + ((i & 0x3) << 1)                     // Channel
+                        + 1;                                   // UDAC = 1  update automatically
+    data[(i * 3) + 1] = v_source                               // Internal or external VREF
+                        + 0x00                                 // Normal Power Down
+                        + 0x00                                 // Gain x 1
+                        + ((scaled_value >> 8) & 0x0f);        // Top 4 bits of the setting
+    data[(i * 3) + 2] = scaled_value & 0xff;                   // Bottom 8 bits of the setting
   }
+
+  i2c_write(DAC_MCP4728_ADDR, data, (4 * 3));                  // Data transferred on last bit.
 
   /*
    *  All done, return;
