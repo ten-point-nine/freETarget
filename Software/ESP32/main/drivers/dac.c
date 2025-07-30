@@ -35,14 +35,15 @@
  *  Definitions
  */
 #define DAC_MCP4725_ADDR  0x60    // DAC I2C address
-#define DAC_MCP4725_WRITE 0x40    // Multi Write
+#define DAC_MCP4725_WRITE 0x0b    // Multi Write
 #define DAC_MCP4728_ADDR  0x60    // DAC I2C address
-#define DAC_MCP4728_WRITE 0x0b    // Multi Write
+#define DAC_MCP4728_WRITE 0x40    // Multi Write
 #define UDAC              0x01    // Output immediatly
 #define V_INTERNAL        0x80    // Select internal refernce in DAC
 #define VREF_INT          2.048   // Internal reference set at 2.048V
 #define V_EXTERNAL        0x00    // Select exteranl referece to DAC
 #define VREF_EXT          5.0     // Exterma; referemce nominally 5V (not very regulated)
+#define VREF_MCP4725      5.0
 #define DAC_FS            (0xfff) // 12 bit DAC{}
 
 /*
@@ -66,12 +67,10 @@ void DAC_write(float volts[]) // What value are we setting it to
 {
   if ( MCP4728 & board_mask )
   {
-    printf("DAC_write: MCP4728\n");
     DAC_write_MCP4728(volts); // MCP 4728 (four channel`)
   }
   else
   {
-    printf("DAC_write: MCP4725\n");
     DAC_write_MCP4725(volts); // MCP 4725 (single channel)
   }
 
@@ -101,7 +100,11 @@ void DAC_write(float volts[]) // What value are we setting it to
  * if it can be done by the internal reference or the external
  * one and selects the source automatically.
  *
- * The MCP4728 has uses two channels to set the VREF_LO and VREF_HI
+ * The MCP4728 has uses four channels
+ *    VREF_LO
+ *    VREF_HI
+ *    Not used
+ *    Not used
  *
  *--------------------------------------------------------------*/
 static void DAC_write_MCP4728(float volts[]) // What value are we setting it to
@@ -174,10 +177,9 @@ static void DAC_write_MCP4728(float volts[]) // What value are we setting it to
  *
  * This function sets the DAC
  *
+ * One DAC channel is supported to set VREF_LO
  *
  *--------------------------------------------------------------*/
-#define VREF_MCP4725      5.0                                       // External reference for the MCP4725
-#define DAC_MCP4725_WRITE 0x00                                      // Write to the DAC
 
 static void DAC_write_MCP4725(float volts[])                        // What value are we setting it to
 {
@@ -298,27 +300,18 @@ void DAC_test(void)
     }
     if ( MCP4728 & board_mask )
     {
-      volts[VREF_LO] = VREF_EXT * ((float)(i % 200) / 200.0);                  // Ramp Up
-      volts[VREF_HI] = VREF_EXT * ((float)((i - 10) % 200) / 200.0);           // Ramp Up delayed
+      volts[VREF_LO] = VREF_EXT * ((float)(i % 200) / 200.0);        // Ramp Up
+      volts[VREF_HI] = VREF_EXT * ((float)((i - 10) % 200) / 200.0); // Ramp Up delayed
       volts[VREF_2]  = 0.0;
       volts[VREF_3]  = 0.0;
     }
     else
     {
-      volts[VREF_LO] = VREF_EXT * ((float)(i % 200) / 200.0);                  // Ramp Up
+      volts[VREF_LO] = VREF_EXT * ((float)(i % 200) / 200.0);        // Ramp Up
     }
 
     DAC_write(volts);
-    vTaskDelay(TICK_10ms * 100);                                               // Wait 100ms
-
-    if ( MCP4725 & board_mask )
-    {
-      printf("\r\nWrite: %4.2f  Read: %4.2f", volts[VREF_LO], vref_measure()); // Read the VREF voltage
-    }
-    else
-    {
-      printf("\r\nWrite: %4.2f, %4.2f", volts[VREF_LO], volts[VREF_HI]);       // Read the VREF voltage
-    }
+    vTaskDelay(TICK_10ms * 100);                                     // Wait 100ms
 
     i++;
   }
