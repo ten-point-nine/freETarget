@@ -438,10 +438,13 @@ void show_echo(void)
   unsigned int  dip;
   char         *ABCD[] = {"A", "B", "C", "D"};
 
+  SEND(ALL, sprintf(_xs, "\r\n{\r\n");)
+  target_name(str_c);
+  SEND(ALL, sprintf(_xs, "\"NAME\":              \"%s\",\r\n", str_c);)
   /*
    * Loop through all of the JSON tokens
    */
-  SEND(ALL, sprintf(_xs, "\r\n{\r\n");)
+
   serial_to_all(NULL, EVEN_ODD_BEGIN);
   i = 0;
   while ( JSON[i].token != 0 )             // Still more to go?
