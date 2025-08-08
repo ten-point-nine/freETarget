@@ -443,7 +443,7 @@ void show_echo(void)
    *  Send out the name as a start sentinel
    */
   target_name(str_c);
-  SEND(ALL, sprintf(_xs, "\"NAME\":              \"%s,\r\n\"", str_c);)
+  SEND(ALL, sprintf(_xs, "\"NAME\":              \"%s\",\r\n", str_c);)
 
   /*
    * Loop through all of the JSON tokens
