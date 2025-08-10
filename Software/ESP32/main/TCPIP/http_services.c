@@ -177,8 +177,9 @@ static esp_err_t service_get_FreeETarget(httpd_req_t *req)
    */
   target_name(my_name);                             // Get the target name
   resp_str = (const char *)&FreeETarget_html_start; // point to the target HTML file
+  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "reply(%s)", my_name);))
   httpd_resp_set_hdr(req, "get_FreeETarget", my_name);
-  httpd_resp_send(req, resp_str, strlen(resp_str));
+  httpd_resp_send(req, resp_str, SIZEOF_FreeETarget_HTML);
 
   return ESP_OK;
 }
@@ -268,6 +269,7 @@ static esp_err_t service_get_events(httpd_req_t *req)
   strcat(str, "\n\n");
   httpd_resp_set_hdr(req, "application/json", "new_shotData");
   httpd_resp_set_type(req, "text/event-stream");
+  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "event(%s)", str);))
   httpd_resp_send(req, str, strlen(str));
 
   /*
@@ -419,7 +421,8 @@ static esp_err_t service_get_help(httpd_req_t *req)
   target_name(my_name);                      // Get the target name
   resp_str = (const char *)&help_html_start; // point to the target HTML file
   httpd_resp_set_hdr(req, "get_help", my_name);
-  httpd_resp_send(req, resp_str, strlen(resp_str));
+  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "reply(%s)", my_name);))
+  httpd_resp_send(req, resp_str, SIZEOF_help_HTML);
 
   return ESP_OK;
 }
