@@ -35,11 +35,11 @@ void test_build_fake_shots(void);                         // Generate a list of 
  * LED status messages
  *
  */
-//                       R              // RDY indicates operating status
-//                        X             // X indicates communications status
-//                         Y            // Y indicates feature status
-//                          C           // Optional C output
-//                           D          // Optional D ouput
+//                              R       // RDY indicates operating status
+//                               X      // X indicates communications status
+//                                Y     // Y indicates feature status
+//                                 C    // Optional C output
+//                                  D   // Optional D ouput
 
 #define LED_OFF                "     "  // Turn off all of the LEDs
 #define LED_HELLO_WORLD        "RWB--"  // Hello World
@@ -64,6 +64,7 @@ void test_build_fake_shots(void);                         // Generate a list of 
 #define LED_WIFI_STATION_CN "-G---"     // The WiFI is in station mode and connected
 #define LED_WIFI_ACCESS     "-b---"     // The WiFi is in access mode and not connected
 #define LED_WIFI_ACCESS_CN  "-B---"     // The WiFI is in access mode and connected
+#define LED_WIFI_FAULT      "-R---"     // The WiFi has a fault
 
 #define LED_NO_12V           "--R--"    // The 12 Volt supply is not present
 #define LED_LOW_12V          "--Y--"    // 12 Volt supply out of spec

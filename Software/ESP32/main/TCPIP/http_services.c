@@ -86,19 +86,19 @@ static void      http_printf(const char *format, httpd_req_t *req, unsigned int 
  *  URI handlers
  */
 const my_uri_t uri_list[] = {
-    {DEFAULT_HTTP_PORT, {"/", HTTP_GET, service_get_FreeETarget, NULL}                     }, // Main target page
-    {DEFAULT_HTTP_PORT, {"/events", HTTP_GET, service_get_events, (void *)&http_events_ctx}},
+    {DEFAULT_HTTP_PORT, "Display target",      {"/", HTTP_GET, service_get_FreeETarget, NULL}                     }, // Main target page
+    {DEFAULT_HTTP_PORT, "",                    {"/events", HTTP_GET, service_get_events, (void *)&http_events_ctx}},
 
-    {DEFAULT_HTTP_PORT, {"/help", HTTP_GET, service_get_help, NULL}                        },
-    {DEFAULT_HTTP_PORT, {"/who", HTTP_GET, service_get_who, NULL}                          },
-    {DEFAULT_HTTP_PORT, {"/json", HTTP_GET, service_get_json, NULL}                        },
-    {DEFAULT_HTTP_PORT, {"/favicon.ico", HTTP_GET, service_get_FreeETarget_png, NULL}      },
+    {DEFAULT_HTTP_PORT, "Help menu",           {"/help", HTTP_GET, service_get_help, NULL}                        },
+    {DEFAULT_HTTP_PORT, "Target info",         {"/who", HTTP_GET, service_get_who, NULL}                          },
+    {DEFAULT_HTTP_PORT, "JSON command line",   {"/json", HTTP_GET, service_get_json, NULL}                        },
+    {DEFAULT_HTTP_PORT, "",                    {"/favicon.ico", HTTP_GET, service_get_FreeETarget_png, NULL}      },
 
-    {EVENT_HTTP_PORT,   {"/", HTTP_GET, service_get_menu, (void *)&event_menu_ctx}         }, // Control back channel
-    {EVENT_HTTP_PORT,   {"/menu", HTTP_GET, service_get_menu, (void *)&event_menu_ctx}     },
-    {EVENT_HTTP_PORT,   {"/help", HTTP_GET, service_get_help, NULL}                        },
-    {EVENT_HTTP_PORT,   {"/favicon.ico", HTTP_GET, service_get_FreeETarget_png, NULL}      },
-    {0,                 {"", 0, NULL, NULL}                                                }
+    {EVENT_HTTP_PORT,   "Target control menu", {"/", HTTP_GET, service_get_menu, (void *)&event_menu_ctx}         }, // Control back channel
+    {EVENT_HTTP_PORT,   "Target control menu", {"/menu", HTTP_GET, service_get_menu, (void *)&event_menu_ctx}     },
+    {EVENT_HTTP_PORT,   "Duplicate Help menu", {"/help", HTTP_GET, service_get_help, NULL}                        },
+    {EVENT_HTTP_PORT,   "",                    {"/favicon.ico", HTTP_GET, service_get_FreeETarget_png, NULL}      },
+    {0,                 "",                    {"", 0, NULL, NULL}                                                }
 };
 
 /*
@@ -412,6 +412,7 @@ static esp_err_t service_get_help(httpd_req_t *req)
 {
   const char *resp_str;            // Reply to server
   char        my_name[SHORT_TEXT]; // Temporary string
+  int         i, j;
 
   DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_help(%s)", req->uri);))
 
@@ -422,8 +423,38 @@ static esp_err_t service_get_help(httpd_req_t *req)
   resp_str = (const char *)&help_html_start; // point to the target HTML file
   httpd_resp_set_hdr(req, "get_help", my_name);
   DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "reply(%s)", my_name);))
-  httpd_resp_send(req, resp_str, SIZEOF_help_HTML);
+  httpd_resp_send_chunk(req, resp_str, SIZEOF_help_HTML);
 
+  /*
+   *  Send the installed events
+   */
+  sprintf(_xs, "<br><p class=MsoNormal><b><span style='font-size:14.0pt;line-height:115%%'>INSTALLED SERVICES</span></b></p>");
+  httpd_resp_send_chunk(req, _xs, strlen(_xs));
+
+  i = 0;
+  while ( uri_list[i].port != 0 )
+  {
+    if ( uri_list[i].help[0] != 0 )
+    {
+      if ( uri_list[i].port == DEFAULT_HTTP_PORT )
+      {
+        sprintf(_xs, "<br>%s.local%s &nbsp;&nbsp;&nbsp;&nbsp;%s", my_name, uri_list[i].uri_struct.uri, uri_list[i].help);
+      }
+      else
+      {
+        sprintf(_xs, "<br>%s.local:%d%s. &nbsp;&nbsp;&nbsp;&nbsp;%s", my_name, uri_list[i].port, uri_list[i].uri_struct.uri,
+                uri_list[i].help);
+      }
+
+      httpd_resp_send_chunk(req, _xs, strlen(_xs));
+    }
+    i++;
+  }
+
+  /*
+   *  All done
+   */
+  httpd_resp_send_chunk(req, NULL, 0); // End the response
   return ESP_OK;
 }
 

@@ -298,20 +298,22 @@ void WiFi_station_init(void)
     WiFi_my_IP_address(str_c);
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Connected to AP SSID:  \"%s\"", json_wifi_ssid);))
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Using WiFi_IP_ADDRESS: \"%s\"", str_c);))
+    set_status_LED(LED_WIFI_STATION);
   }
   else if ( bits & WIFI_FAIL_BIT )
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to connect to SSID:%s, password:%s", json_wifi_ssid, json_wifi_pwd);))
+    set_status_LED(LED_WIFI_FAULT);
   }
   else
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Unexpectged WiFi event");))
+    set_status_LED(LED_WIFI_FAULT);
   }
 
   /*
    *  All done
    */
-  set_status_LED(LED_WIFI_STATION);
   return;
 }
 
