@@ -57,7 +57,7 @@ const char *names[] = {"TARGET",                                                
                        "1",      "2",      "3",       "4",      "5",       "6",       "7",      "8",     "9",      "10", //  1
                        "DOC",    "DOPEY",  "HAPPY",   "GRUMPY", "BASHFUL", "SNEEZEY", "SLEEPY",                          // 11
                        "RUDOLF", "DONNER", "BLITZEN", "DASHER", "PRANCER", "VIXEN",   "COMET",  "CUPID", "DUNDER",       // 18
-                       "ODIN",   "WODEN",  "THOR",    "BALDAR",                                                          // 26
+                       "ODIN",   "WODEN",  "THOR",    "BALDAR", "TEST",                                                  // 26
                        0};
 
 void target_name(char *name_space)

@@ -14,6 +14,7 @@
 typedef struct my_uri      // Internal URI structure
 {
   unsigned int port;       // Port number uri is listening on
+  char        *help;
   httpd_uri_t  uri_struct; // URI structure
 } my_uri_t;
 
