@@ -125,14 +125,14 @@ void test_build_fake_shots(void);                         // Generate a list of 
                                  /*
                                   *  Enable compile level tracing
                                   */
-// #define TRACE_APPLICATION
-// #define TRACE_COMMUNICATION
-// #define TRACE_DIAGNOSTICS
-// #define TRACE_DEBUG
-// #define TRACE_SCORE
-// #define TRACE_HTTP
-// #define TRACE_OTA
-/// #define TRACE_HEARTBEAT
+#define TRACE_APPLICATION   (0 == 1)
+#define TRACE_COMMUNICATION (0 == 1)
+#define TRACE_DIAGNOSTICS   (0 == 1)
+#define TRACE_DEBUG         (0 == 1)
+#define TRACE_SCORE         (0 == 1)
+#define TRACE_HTTP          (0 == 1)
+#define TRACE_OTA           (0 == 1)
+#define TRACE_HEARTBEAT     (0 == 1)
 
 // clang-format off
 #define DLT(level, z) if ( do_dlt(level) )  { z }

@@ -35,7 +35,7 @@
  *  Definitions
  */
 #define DAC_MCP4725_ADDR  0x60    // DAC I2C address
-#define DAC_MCP4725_WRITE 0x0b    // Multi Write
+#define DAC_MCP4725_WRITE 0x00    // Fast Write (don'e write to EEPROM)
 #define DAC_MCP4728_ADDR  0x60    // DAC I2C address
 #define DAC_MCP4728_WRITE 0x40    // Multi Write
 #define UDAC              0x01    // Output immediatly
@@ -71,6 +71,7 @@ void DAC_write(float volts[]) // What value are we setting it to
   }
   else
   {
+    printf("DAC_write_MCP4725(%4.2f)\n", volts[0]);
     DAC_write_MCP4725(volts); // MCP 4725 (single channel)
   }
 
@@ -183,16 +184,16 @@ static void DAC_write_MCP4728(float volts[]) // What value are we setting it to
 
 static void DAC_write_MCP4725(float volts[])                        // What value are we setting it to
 {
-  unsigned char data[4];                                            // Bytes to send to the I2C
+  unsigned char data[3];                                            // Bytes to send to the I2C
   unsigned int  scaled_value;                                       // Value (12 bits) to the DAC
 
   scaled_value = ((int)(volts[0] / VREF_MCP4725 * DAC_FS)) & 0xfff; // Figure the bits to send
-  data[0]      = (DAC_MCP4725_WRITE << 6)                           // Write
-            + (0x00 << 4)                                           // Power Down Select
-            + ((scaled_value >> 8) & 0x0f);                         // Top 4 bits of the setting
-  data[1] = scaled_value & 0xff;                                    // Bottom 8 bits of the setting
-  data[2] = data[0];                                                // Repeat bytes
-  data[3] = data[1];                                                // Repeat bytes
+  printf("DAC_write_MCP4725(%4.2f) scaled_value: %d\n", volts[0], scaled_value);
+
+  data[0] = (DAC_MCP4725_WRITE)                                     // Write
+            + (0x00 << 1)                                           // Power Down Select
+            + ((scaled_value >> 8) & 0xFf);                         // Top 4 bits of the setting
+  data[1] = scaled_value & 0x0ff;                                   // Bottom 8 bits of the setting
   i2c_write(DAC_MCP4725_ADDR, data, sizeof(data));                  // Data transferred on last bit.
 
   /*
