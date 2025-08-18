@@ -42,8 +42,9 @@ void         set_LED_PWM(int percent);                 // Ramp the PWM duty cycl
 void         set_LED_PWM_now(int percent);             // Set the PWM duty cycle
 float        v12_supply(void);                         // Read the 12V supply
 void         analog_input_test(void);                  // Read the analog input
+void         analog_input_raw(void);                   // Read and display the analog imputs as raw values
 double       speed_of_sound(double temperature,
                             double relative_humidity); // Calculate speed of sound
-float        vref_measure(void);                       // Read the reference voltages
+double       vref_measure(void);                       // Read the reference voltages
 
 #endif

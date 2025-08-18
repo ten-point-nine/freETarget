@@ -27,6 +27,7 @@
 #include "mfs.h"
 #include "token.h"
 #include "timer.h"
+#include "dac.h"
 
 /*
  * Definitions

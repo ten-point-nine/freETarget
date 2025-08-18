@@ -1067,36 +1067,43 @@ void WiFi_AP_scan_test(void)
 
   for ( i = 0; i < ap_count; i++ )
   {
-    SEND(ALL, sprintf(_xs, "\r\nAP[%d] SSID: %s,  RSSI:%d,  ", i, ap_info[i].ssid, ap_info[i].rssi);)
+    SEND(ALL, sprintf(_xs, "\r\nAP[%d] SSID: %-15s  RSSI:%d  ", i, ap_info[i].ssid, ap_info[i].rssi);)
 
     switch ( ap_info[i].authmode )
     {
       case WIFI_AUTH_OPEN:
-        SEND(ALL, sprintf(_xs, " Auth: Open");) break;
+        SEND(ALL, sprintf(_xs, " Auth: Open            ");) break;
       case WIFI_AUTH_WEP:
-        SEND(ALL, sprintf(_xs, " Auth: WEP");) break;
+        SEND(ALL, sprintf(_xs, " Auth: WEP             ");) break;
       case WIFI_AUTH_WPA_PSK:
-        SEND(ALL, sprintf(_xs, " Auth: WPA_PSK");) break;
+        SEND(ALL, sprintf(_xs, " Auth: WPA_PSK         ");) break;
       case WIFI_AUTH_WPA2_PSK:
-        SEND(ALL, sprintf(_xs, " Auth: WPA2_PSK");) break;
+        SEND(ALL, sprintf(_xs, " Auth: WPA2_PSK        ");) break;
       case WIFI_AUTH_WPA_WPA2_PSK:
-        SEND(ALL, sprintf(_xs, " Auth: WPA_WPA2_PSK");) break;
+        SEND(ALL, sprintf(_xs, " Auth: WPA_WPA2_PSK    ");) break;
       case WIFI_AUTH_WPA2_ENTERPRISE:
-        SEND(ALL, sprintf(_xs, " Auth: WPA2_ENTERPRISE");) break;
+        SEND(ALL, sprintf(_xs, " Auth: WPA2_ENTERPRISE ");) break;
       case WIFI_AUTH_WPA3_PSK:
-        SEND(ALL, sprintf(_xs, " Auth: WPA3_PSK");) break;
+        SEND(ALL, sprintf(_xs, " Auth: WPA3_PSK        ");) break;
       case WIFI_AUTH_WPA2_WPA3_PSK:
-        SEND(ALL, sprintf(_xs, " Auth: WPA2_WPA3_PSK");) break;
+        SEND(ALL, sprintf(_xs, " Auth: WPA2_WPA3_PSK   ");) break;
       case WIFI_AUTH_WAPI_PSK:
-        SEND(ALL, sprintf(_xs, " Auth: WAPI_PSK");) break;
+        SEND(ALL, sprintf(_xs, " Auth: WAPI_PSK        ");) break;
       case WIFI_AUTH_MAX:
-        SEND(ALL, sprintf(_xs, " Auth: MAX");) break;
+        SEND(ALL, sprintf(_xs, " Auth: MAX             ");) break;
 
       default:
-        SEND(ALL, sprintf(_xs, " Auth: Unknown");) break;
+        SEND(ALL, sprintf(_xs, " Auth: Unknown         ");) break;
     }
 
-    SEND(ALL, sprintf(_xs, "     {\"WIFI_SSID\":\"%s\", \"WIFI_PWD\":\"---\"}", ap_info[i].ssid);)
+    if ( ap_info[i].authmode == WIFI_AUTH_OPEN )
+    {
+      SEND(ALL, sprintf(_xs, "     {\"WIFI_SSID\":\"%s\", \"WIFI_PWD\":\"\"}", ap_info[i].ssid);)
+    }
+    else
+    {
+      SEND(ALL, sprintf(_xs, "     {\"WIFI_SSID\":\"%s\", \"WIFI_PWD\":\"---\"}", ap_info[i].ssid);)
+    }
   }
 
   /*

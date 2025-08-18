@@ -64,6 +64,7 @@ static const self_test_t test_list[] = {
     {"LED brightness test",               &LED_test                },
     {"Status LED driver",                 &status_LED_test         },
     {"Analog input test",                 &analog_input_test       },
+    {"Analog input raw",                  &analog_input_raw        },
     {"DAC test",                          &DAC_test                },
     {"DAC read",                          &DAC_read                },
     {"- Timer & PCNT test",               0                        },
@@ -284,6 +285,7 @@ bool factory_test(void)
     volts[VREF_2] = 0.00;
     volts[VREF_3] = 0.00;
     DAC_write(volts);
+    DAC_calibrate();
   }
 
   /*

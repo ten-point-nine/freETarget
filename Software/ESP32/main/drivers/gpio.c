@@ -930,7 +930,7 @@ void digital_test(void)
     {
       break;
     }
-    timer_delay(ONE_SECOND);
+    vTaskDelay(ONE_SECOND);
     SEND(ALL, sprintf(_xs, "\r\nTime: %lds", run_time_seconds());)
     SEND(ALL, sprintf(_xs, "  DIP_A: %01X", !gpio_get_level(DIP_A));) // DIP A
     SEND(ALL, sprintf(_xs, "  DIP_B: %01X", !gpio_get_level(DIP_B));) // DIP B
@@ -950,7 +950,7 @@ void digital_test(void)
       SEND(ALL, sprintf(_xs, "  W_HI: %01X", !gpio_get_level(RUN_WEST_HI));)
     }
 
-    timer_delay(ONE_SECOND); // Wait for 1/2 second before reading again
+    vTaskDelay(ONE_SECOND); // Wait for 1/2 second before reading again
   }
 
   SEND(ALL, sprintf(_xs, _DONE_);)
@@ -976,19 +976,19 @@ void status_LED_test(void)
     SEND(ALL, sprintf(_xs, "\r\nMFS_C or MFS_D not configured for output\r\n");)
   }
 
-  timer_delay(2 * ONE_SECOND);
+  vTaskDelay(2 * ONE_SECOND);
   set_status_LED("RRRRR");
-  timer_delay(2 * ONE_SECOND);
+  vTaskDelay(2 * ONE_SECOND);
   set_status_LED("GGGGG");
-  timer_delay(ONE_SECOND);
+  vTaskDelay(ONE_SECOND);
   set_status_LED("BBBRG");
-  timer_delay(ONE_SECOND);
+  vTaskDelay(ONE_SECOND);
   set_status_LED("WWWGR");
-  timer_delay(ONE_SECOND);
+  vTaskDelay(ONE_SECOND);
   set_status_LED("RGBRG");
-  timer_delay(ONE_SECOND);
+  vTaskDelay(ONE_SECOND);
   set_status_LED("rgbrg");
-  timer_delay(5 * ONE_SECOND); // Blink for 5 seconds
+  vTaskDelay(5 * ONE_SECOND); // Blink for 5 seconds
   set_status_LED(LED_READY);
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
@@ -1031,10 +1031,10 @@ void paper_test(void)
   {
     SEND(ALL, sprintf(_xs, "  %d+", (i + 1));)
     DCmotor_on_off(true, ONE_SECOND / 2);
-    timer_delay(ONE_SECOND / 2);
+    vTaskDelay(ONE_SECOND / 2);
     SEND(ALL, sprintf(_xs, "-");)
     DCmotor_on_off(false, 0);
-    timer_delay(ONE_SECOND / 2);
+    vTaskDelay(ONE_SECOND / 2);
   }
 
   SEND(ALL, sprintf(_xs, _DONE_);)

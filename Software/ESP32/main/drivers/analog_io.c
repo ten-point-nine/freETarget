@@ -105,12 +105,15 @@ void adc_init(unsigned int adc_channel,    // What ADC channel are we accessing
  * https://docs.espressif.com/projects/esp-idf/en/v4.4/esp32/api-reference/peripherals/adc.html
  *
  *--------------------------------------------------------------*/
+#define FILTER 16                              // How many averages
+
 unsigned int adc_read(unsigned int adc_channel // What input are we reading?
 )
 {
   unsigned int adc;                            // Which ADC (1/2)
   unsigned int channel;                        // Which channel attached to the ADC (0-10)
-  int          raw;                            // Raw value from the ADC
+  int          raw, sum;                       // Raw value from the ADC
+  int          i;
 
   adc     = ADC_ADC(adc_channel);              // What ADC are we on
   channel = ADC_CHANNEL(adc_channel);          // What channel are we using
@@ -118,21 +121,28 @@ unsigned int adc_read(unsigned int adc_channel // What input are we reading?
   /*
    *  Read the appropriate channel
    */
-  switch ( adc )
+  sum = 0;
+  for ( i = 0; i != FILTER; i++ )
   {
-    case 1:
-      raw = adc1_get_raw(channel);
-      break;
+    switch ( adc )
+    {
+      case 1:
+        raw = adc1_get_raw(channel);
+        break;
 
-    case 2:
-      adc2_get_raw(channel, ADC_WIDTH_BIT_DEFAULT, &raw);
-      break;
+      case 2:
+        adc2_get_raw(channel, ADC_WIDTH_BIT_DEFAULT, &raw);
+        break;
+    }
+    sum += raw;
   }
 
   /*
    *  Done
    */
-  return raw;
+  sum /= FILTER;
+
+  return (sum & 0x0fff);
 }
 
 #define V12_RESISITOR   ((40.2 + 5.0) / 5.0) // Resistor divider
@@ -198,19 +208,19 @@ void set_LED_PWM         // Theatre lighting
   /*
    * Loop and ramp the LED  PWM up or down slowly
    */
-  while ( new_LED_percent != old_LED_percent )   // Change in the brightness level?
+  while ( new_LED_percent != old_LED_percent )  // Change in the brightness level?
   {
 
     if ( new_LED_percent < old_LED_percent )
     {
-      old_LED_percent--;                         // Ramp the value down
+      old_LED_percent--;                        // Ramp the value down
     }
     else
     {
-      old_LED_percent++;                         // Ramp the value up
+      old_LED_percent++;                        // Ramp the value up
     }
-    pwm_set(LED_PWM, old_LED_percent);           // Write the value out
-    timer_delay((unsigned long)ONE_SECOND / 50); // Worst case, take 2 seconds to get there
+    pwm_set(LED_PWM, old_LED_percent);          // Write the value out
+    vTaskDelay((unsigned long)ONE_SECOND / 50); // Worst case, take 2 seconds to get there
   }
 
   /*
@@ -278,15 +288,15 @@ unsigned int revision(void)
  *  to a voltage
  *
  *--------------------------------------------------------------*/
-float vref_measure(void)
+double vref_measure(void)
 {
   if ( TMP1075D & board_mask )
   {
-    return (float)adc_read(VMES_LO) / 4095.0 * 1.1 * 2.0 * 3.3; // 4096 full scale, 1.1 VEEF 1/2 voltage divider
+    return (double)adc_read(VMES_LO) / 4095.0 * 1.1 * 2.0 * 3.3; // 4096 full scale, 1.1 VEEF 1/2 voltage divider
   }
   else
   {
-    return 0.0;
+    return -1.0;
   }
 }
 
@@ -423,7 +433,7 @@ double humidity_RH(void)
  *--------------------------------------------------------------*/
 void set_VREF(void)
 {
-  float volts[4];
+  double volts[4];
 
   if ( (json_vref_lo == 0) // Check for an uninitialized VREF
        || (json_vref_hi == 0) )
@@ -486,6 +496,63 @@ void analog_input_test(void)
     SEND(ALL, sprintf(_xs, "\r\nHumidity: N/A");)
   }
   SEND(ALL, sprintf(_xs, "\r\nSpeed of Sound: %4.2fmm/us", speed_of_sound(temperature_C(), humidity_RH()));)
+  SEND(ALL, sprintf(_xs, "\r\nDone\r\n");)
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: analog_input_raw()
+ *
+ * @brief:    Virtual adc oscilliscope
+ *
+ * @return:   None
+ *
+ *----------------------------------------------------------------
+ *
+ * Read the raw analog inputs and display them as hex
+ *
+ *--------------------------------------------------------------*/
+typedef struct analog_raw
+{
+  char        *name;     // Text of input
+  int          channel;  // Channel ID
+  unsigned int min, max; // Previous inputs
+} analog_raw_t;
+
+static analog_raw_t analog_sample[] = {
+    {"12V",     V_12_LED,  0xffff, 0},
+    {"BD Rev",  BOARD_REV, 0xffff, 0},
+    {"VREF_LO", VMES_LO,   0xffff, 0},
+    {"",        0,         0,      0}
+};
+
+void analog_input_raw(void)
+{
+  unsigned int i, raw;
+
+  while ( serial_available(ALL) == 0 )
+  {
+
+    SEND(ALL, sprintf(_xs, "\r\n");)
+    i = 0;
+    while ( analog_sample[i].name[0] != 0 )
+    {
+      raw = adc_read(analog_sample[i].channel);
+      if ( analog_sample[i].min > raw )
+      {
+        analog_sample[i].min = raw;
+      }
+      if ( analog_sample[i].max < raw )
+      {
+        analog_sample[i].max = raw;
+      }
+      SEND(ALL, sprintf(_xs, "%s: 0X%04X 0X%04X 0X%04X     ", analog_sample[i].name, analog_sample[i].min, raw, analog_sample[i].max);)
+      i++;
+    }
+    vTaskDelay(ONE_SECOND);
+  }
+
   SEND(ALL, sprintf(_xs, "\r\nDone\r\n");)
   return;
 }
