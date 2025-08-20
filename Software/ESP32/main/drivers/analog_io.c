@@ -104,6 +104,13 @@ void adc_init(unsigned int adc_channel,    // What ADC channel are we accessing
  *
  * https://docs.espressif.com/projects/esp-idf/en/v4.4/esp32/api-reference/peripherals/adc.html
  *
+ * There is noise on the power supply lines, and since all of the
+ * analog inputs are driven off of the 5 volt supply, there is
+ * a lot of noise in the sample.
+ *
+ * To get around this problem, the input is sampled FILTER times
+ * and averaged.
+ *
  *--------------------------------------------------------------*/
 #define FILTER 16                              // How many averages
 
