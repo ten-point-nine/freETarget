@@ -64,7 +64,7 @@ const json_message_t JSON[] = {
     {SHOW + LOCK, "\"FOLLOW_THROUGH\":",  &json_follow_through,        IS_INT32,                 0,                  NONVOL_FOLLOW_THROUGH,   0,          0 },
     {HIDE + LOCK, "\"INIT\"",             0,                           IS_VOID,                  &init_nonvol,       0,                       0,          0 },
     {SHOW + LOCK, "\"KEEP_ALIVE\":",      &json_keep_alive,            IS_INT32,                 0,                  NONVOL_KEEP_ALIVE,       120,        0 },
-    {HIDE + LOCK, "\"LED_BRIGHT\":",      &json_LED_PWM,               IS_INT32,                 &set_LED_PWM_now,   NONVOL_LED_PWM,          50,         0 },
+    {SHOW + LOCK, "\"LED_BRIGHT\":",      &json_LED_PWM,               IS_INT32,                 &set_LED_PWM_now,   NONVOL_LED_PWM,          50,         0 },
     {HIDE,        "\"MFS?",               0,                           IS_VOID,                  &mfs_show,          0,                       0,          0 },
     {SHOW + LOCK, "\"MFS_TAP_1\":",       &json_mfs_tap_1,             IS_MFS,                   0,                  NONVOL_MFS_TAP_A,        PAPER_SHOT, 2 },
     {SHOW + LOCK, "\"MFS_TAP_2\":",       &json_mfs_tap_2,             IS_MFS,                   0,                  NONVOL_MFS_TAP_B,        TARGET_ON,  2 },
