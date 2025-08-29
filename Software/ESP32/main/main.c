@@ -91,5 +91,5 @@ void app_main(void)
 
   freeETarget_timer_init();
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Running\r\n");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "SN:%d Running\r\n", json_serial_number);))
 }
