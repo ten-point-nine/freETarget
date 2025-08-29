@@ -13,6 +13,7 @@
 #include "driver/adc.h"
 
 #include "freETarget.h"
+#include "board_assembly.h"
 #include "diag_tools.h"
 #include "gpio.h"
 #include "analog_io.h"
@@ -30,7 +31,17 @@
 /*
  * Function prototypes
  */
-void set_vset_PWM(unsigned int pwm);
+void          set_vset_PWM(unsigned int pwm);
+static double temperature_C_HDC3022(void);  // Temperature in degrees C
+static double temperature_C_TMP1075D(void); // Temperature in degrees C
+
+/*
+ *  Variables
+ */
+int          board_version = -1; // Board Revision number
+unsigned int board_mask    = 0;  // Mask for the board revision
+static float t_c;                // Temperature from sensor
+static float rh;                 // Humidity from sensor
 
 /*----------------------------------------------------------------
  *
@@ -93,13 +104,23 @@ void adc_init(unsigned int adc_channel,    // What ADC channel are we accessing
  *
  * https://docs.espressif.com/projects/esp-idf/en/v4.4/esp32/api-reference/peripherals/adc.html
  *
+ * There is noise on the power supply lines, and since all of the
+ * analog inputs are driven off of the 5 volt supply, there is
+ * a lot of noise in the sample.
+ *
+ * To get around this problem, the input is sampled FILTER times
+ * and averaged.
+ *
  *--------------------------------------------------------------*/
+#define FILTER 16                              // How many averages
+
 unsigned int adc_read(unsigned int adc_channel // What input are we reading?
 )
 {
   unsigned int adc;                            // Which ADC (1/2)
   unsigned int channel;                        // Which channel attached to the ADC (0-10)
-  int          raw;                            // Raw value from the ADC
+  int          raw, sum;                       // Raw value from the ADC
+  int          i;
 
   adc     = ADC_ADC(adc_channel);              // What ADC are we on
   channel = ADC_CHANNEL(adc_channel);          // What channel are we using
@@ -107,27 +128,35 @@ unsigned int adc_read(unsigned int adc_channel // What input are we reading?
   /*
    *  Read the appropriate channel
    */
-  switch ( adc )
+  sum = 0;
+  for ( i = 0; i != FILTER; i++ )
   {
-    case 1:
-      raw = adc1_get_raw(channel);
-      break;
+    switch ( adc )
+    {
+      case 1:
+        raw = adc1_get_raw(channel);
+        break;
 
-    case 2:
-      adc2_get_raw(channel, ADC_WIDTH_BIT_DEFAULT, &raw);
-      break;
+      case 2:
+        adc2_get_raw(channel, ADC_WIDTH_BIT_DEFAULT, &raw);
+        break;
+    }
+    sum += raw;
   }
 
   /*
    *  Done
    */
-  return raw;
+  sum /= FILTER;
+
+  return (sum & 0x0fff);
 }
 
 #define V12_RESISITOR   ((40.2 + 5.0) / 5.0) // Resistor divider
 #define V12_ATTENUATION 3.548                // 11 DB
 #define V12_REF         1.1                  // ESP32 VREF
 #define V12_CAL         0.88
+
 float v12_supply(void)
 {
   float raw;                                 // Raw voltage from ADC
@@ -186,19 +215,19 @@ void set_LED_PWM         // Theatre lighting
   /*
    * Loop and ramp the LED  PWM up or down slowly
    */
-  while ( new_LED_percent != old_LED_percent )   // Change in the brightness level?
+  while ( new_LED_percent != old_LED_percent )  // Change in the brightness level?
   {
 
     if ( new_LED_percent < old_LED_percent )
     {
-      old_LED_percent--;                         // Ramp the value down
+      old_LED_percent--;                        // Ramp the value down
     }
     else
     {
-      old_LED_percent++;                         // Ramp the value up
+      old_LED_percent++;                        // Ramp the value up
     }
-    pwm_set(LED_PWM, old_LED_percent);           // Write the value out
-    timer_delay((unsigned long)ONE_SECOND / 50); // Worst case, take 2 seconds to get there
+    pwm_set(LED_PWM, old_LED_percent);          // Write the value out
+    vTaskDelay((unsigned long)ONE_SECOND / 50); // Worst case, take 2 seconds to get there
   }
 
   /*
@@ -227,27 +256,82 @@ void set_LED_PWM         // Theatre lighting
  *  undefined (< 100) then the last 'good' revision is returned
  *
  *--------------------------------------------------------------*/
-//                                       0      1  2  3  4  5  6  7  8  9   A   B   C   D   E   F
-const static unsigned int version[] = {REV_510, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, REV_520};
+//                                        0     1  2  3  4  5     6     7  8  9   A   B   C   D   E   F
+const static unsigned int version[] = {REV_510, 1, 2, 3, 4, 5, REV_600, 7, 8, 9, 10, 11, 12, 13, 14, REV_520};
 
 unsigned int revision(void)
 {
-  int revision;
+  int index;                // Index into the version table
+
+  if ( board_version >= 0 ) // Already read the revision?
+  {
+    return board_version;   // Return the cached value
+  }
 
   /*
    *  Read the resistors and determine the board revision
    */
-  revision = version[adc_read(BOARD_REV) >> (12 - 4)];
+  index         = adc_read(BOARD_REV) >> (12 - 4);
+  board_version = version[index]; // Get the board revision number
+  board_mask    = 1 << index;     // Set the mask for the board revision
 
-  /*
-   * Nothing more to do, return the board revision
-   */
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Board Revision: %d  Board Mask: %04X", board_version, board_mask);))
+
   return revision;
 }
 
 /*----------------------------------------------------------------
  *
+ * @function: vref_measure()
+ *
+ * @brief:  Measure the reference voltage
+ *
+ * @return: VREF in volts
+ *
+ *--------------------------------------------------------------
+ *
+ *  Read the VREF voltage.  Only applies on board revisions
+ *  530 and later.  The VREF is read from the ADC and converted
+ *  to a voltage
+ *
+ *--------------------------------------------------------------*/
+double vref_measure(void)
+{
+  if ( TMP1075D & board_mask )
+  {
+    return (double)adc_read(VMES_LO) / 4095.0 * 1.1 * 2.0 * 3.3; // 4096 full scale, 1.1 VEEF 1/2 voltage divider
+  }
+  else
+  {
+    return -1.0;                                                 // Not available
+  }
+}
+
+/*----------------------------------------------------------------
+ *
  * @function: temperature_C()
+ *
+ * @brief: Read the temperature sensor and return temperature in degrees C
+ *
+ *----------------------------------------------------------------
+ *
+ *
+ *--------------------------------------------------------------*/
+double temperature_C(void)
+{
+  if ( HDC3022 & board_mask )
+  {
+    return temperature_C_HDC3022();  // TI HDC3022
+  }
+  else
+  {
+    return temperature_C_TMP1075D(); // TI TMP1075D
+  }
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: temperature_C_HDC3022()
  *
  * @brief: Read the temperature sensor and return temperature in degrees C
  *
@@ -259,10 +343,7 @@ unsigned int revision(void)
  * A simple interrogation is used.
  *
  *--------------------------------------------------------------*/
-static float t_c; // Temperature from sensor
-static float rh;  // Humidity from sensor
-
-double temperature_C(void)
+static double temperature_C_HDC3022(void)
 {
   unsigned char temp_buffer[6];
   int           raw;
@@ -282,6 +363,43 @@ double temperature_C(void)
   t_c = -45.0 + (175.0 * (float)raw / 65535.0);
   raw = (temp_buffer[3] << 8) + temp_buffer[4];
   rh  = 100.0 * (float)raw / 65535.0;
+
+  return t_c;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: temperature_C_TMP1075D()
+ *
+ * @brief: Special driver for TMP1075D temperature sensor
+ *
+ *----------------------------------------------------------------
+ *
+ * See TI Documentation for TMP1075D
+ * https://www.ti.com/lit/ds/symlink/tmp1075.pdf?ts=1745106831531&ref_url=https%253A%252F%252Fwww.ti.com%252Fproduct%252FTMP1075
+ *
+ * A simple interrogation is used.
+ *
+ *--------------------------------------------------------------*/
+#define TC_CAL (0.0625 / 16) // 'C / LSB
+static double temperature_C_TMP1075D(void)
+{
+  unsigned char temp_buffer[6];
+  int           raw;
+
+  /*
+   * Read in the temperature and humidity together
+   */
+  temp_buffer[0] = 0x00;                       // Trigger read on demand
+  i2c_write(TEMP_IC_TMP1075D, temp_buffer, 1); // Send pointer to register
+  i2c_read(TEMP_IC_TMP1075D, temp_buffer, 2);  // Read 16 bit temperature
+
+  /*
+   *  Return the temperature in C
+   */
+  raw = (temp_buffer[0] << 8) + temp_buffer[1];
+  t_c = ((float)raw * TC_CAL);
+  rh  = 40.0;
 
   return t_c;
 }
@@ -322,9 +440,7 @@ double humidity_RH(void)
  *--------------------------------------------------------------*/
 void set_VREF(void)
 {
-  float volts[4];
-
-  DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "Set VREF: %4.2f %4.2f", json_vref_lo, json_vref_hi);))
+  double volts[4];
 
   if ( (json_vref_lo == 0) // Check for an uninitialized VREF
        || (json_vref_hi == 0) )
@@ -333,9 +449,21 @@ void set_VREF(void)
     json_vref_hi = 2.00;   // Otherwise the sensors continioustly interrupt
   }
 
-  if ( json_vref_lo >= json_vref_hi )
+  if ( MCP4728 & board_mask )
   {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "ERROR: json_vref_lo or json_vref_hi are out of order.");))
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Set VREF_LO: %4.2f   VREF_HI: %4.2f", json_vref_lo, json_vref_hi);))
+  }
+  else
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Set VREF_LO: %4.2f", json_vref_lo);))
+  }
+
+  if ( MCP4728 & board_mask ) // Check for four channel DAC
+  {
+    if ( json_vref_lo >= json_vref_hi )
+    {
+      DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "ERROR: json_vref_lo or json_vref_hi are out of order.");))
+    }
   }
 
   volts[VREF_LO] = json_vref_lo;
@@ -366,8 +494,72 @@ void analog_input_test(void)
   SEND(ALL, sprintf(_xs, "\r\n12V %5.3f", v12_supply());)
   SEND(ALL, sprintf(_xs, "\r\nBoard Rev %d", revision());)
   SEND(ALL, sprintf(_xs, "\r\nTemperature: %4.2f", temperature_C());)
-  SEND(ALL, sprintf(_xs, "\r\nHumidity: %4.2f", humidity_RH());)
+  if ( HDC3022 & board_mask )
+  {
+    SEND(ALL, sprintf(_xs, "\r\nHumidity: %4.2f", humidity_RH());)
+  }
+  else
+  {
+    SEND(ALL, sprintf(_xs, "\r\nHumidity: N/A");)
+  }
   SEND(ALL, sprintf(_xs, "\r\nSpeed of Sound: %4.2fmm/us", speed_of_sound(temperature_C(), humidity_RH()));)
+  SEND(ALL, sprintf(_xs, "\r\nDone\r\n");)
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: analog_input_raw()
+ *
+ * @brief:    Virtual adc oscilliscope
+ *
+ * @return:   None
+ *
+ *----------------------------------------------------------------
+ *
+ * Read the raw analog inputs and display them as hex
+ *
+ *--------------------------------------------------------------*/
+typedef struct analog_raw
+{
+  char        *name;     // Text of input
+  int          channel;  // Channel ID
+  unsigned int min, max; // Previous inputs
+} analog_raw_t;
+
+static analog_raw_t analog_sample[] = {
+    {"12V",     V_12_LED,  0xffff, 0},
+    {"BD Rev",  BOARD_REV, 0xffff, 0},
+    {"VREF_LO", VMES_LO,   0xffff, 0},
+    {"",        0,         0,      0}
+};
+
+void analog_input_raw(void)
+{
+  unsigned int i, raw;
+
+  while ( serial_available(ALL) == 0 )
+  {
+
+    SEND(ALL, sprintf(_xs, "\r\n");)
+    i = 0;
+    while ( analog_sample[i].name[0] != 0 )
+    {
+      raw = adc_read(analog_sample[i].channel);
+      if ( analog_sample[i].min > raw )
+      {
+        analog_sample[i].min = raw;
+      }
+      if ( analog_sample[i].max < raw )
+      {
+        analog_sample[i].max = raw;
+      }
+      SEND(ALL, sprintf(_xs, "%s: 0X%04X 0X%04X 0X%04X     ", analog_sample[i].name, analog_sample[i].min, raw, analog_sample[i].max);)
+      i++;
+    }
+    vTaskDelay(ONE_SECOND);
+  }
+
   SEND(ALL, sprintf(_xs, "\r\nDone\r\n");)
   return;
 }

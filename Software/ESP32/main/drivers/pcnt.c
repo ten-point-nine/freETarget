@@ -23,6 +23,8 @@
 #include "nonvol.h"
 
 #include "freETarget.h"
+#include "board_assembly.h"
+#include "gpio.h"
 #include "diag_tools.h"
 #include "gpio_define.h"
 #include "pcnt.h"

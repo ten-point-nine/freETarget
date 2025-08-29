@@ -341,7 +341,8 @@ void init_nonvol(int verify) // Verification code entered by user
     return;
   }
 
-  factory_nonvol(false); // Reset to facgtory defaults but do not run the factory test
+  SEND(ALL, sprintf(_xs, "\r\nReset Serial Number\r\n");)
+  factory_nonvol(prompt_for_confirm()); // Reset to factory defaults and prompt for serial number
 
   /*
    * All done, return

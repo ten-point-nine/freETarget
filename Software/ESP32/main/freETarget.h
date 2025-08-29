@@ -19,14 +19,14 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"6.1.19 August 21, 2025\""
+#define SOFTWARE_VERSION "\"6.2.0 August 28, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED" // Message to send on connection
 
 #define REV_500   500                // ESP32
 #define REV_510   510
 #define REV_520   520
-#define BUILD_REV REV_520
+#define BUILD_REV 520                // Build for Revision 530 and higher
 
 #define INIT_DONE 0xabcd             // NON-VOL Initialization complete signature
 #ifndef true
@@ -42,7 +42,7 @@
 #define IN_SHOT      0x0010 // The target is actively in a shot
 #define IN_REDUCTION 0x0020 // The data is being reduced
 #define IN_FATAL_ERR 0x0040 // A fatal error has occured and cannot be fixed
-#define IN_HTTP      0x0080 // HTTP output enabled
+#define IN_HTTP      0x0080 // The HTTP (JSON) data is being processed
 
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
 #define IF_IN(x)  if ( (run_state & (x)) != 0 )

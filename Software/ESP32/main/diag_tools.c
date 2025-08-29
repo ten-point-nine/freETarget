@@ -21,6 +21,7 @@
 #include "math.h"
 
 #include "freETarget.h"
+#include "board_assembly.h"
 #include "helpers.h"
 #include "http_client.h"
 #include "http_test.h"
@@ -43,6 +44,7 @@ extern volatile unsigned long paper_time;
 static void show_test_help(void);
 static void test_display_all_scores(void);
 static void test_rapidfire(void);
+static void test_rapidfire(void);
 
 /*
  * Diagnostic typedefs
@@ -62,7 +64,9 @@ static const self_test_t test_list[] = {
     {"LED brightness test",               &LED_test                },
     {"Status LED driver",                 &status_LED_test         },
     {"Analog input test",                 &analog_input_test       },
+    {"Analog input raw",                  &analog_input_raw        },
     {"DAC test",                          &DAC_test                },
+    {"DAC read",                          &DAC_read                },
     {"- Timer & PCNT test",               0                        },
     {"PCNT timers not stopping",          &pcnt_1                  },
     {"PCNT timers not running",           &pcnt_2                  },
@@ -80,8 +84,8 @@ static const self_test_t test_list[] = {
     {"Test WiFi as a station",            &WiFi_station_init       },
     {"Enable the WiFi Server",            &WiFi_server_test        },
     {"Enable the WiFi AP",                &WiFi_AP_init            },
-    {"Loopback the TCPIP data",           &WiFi_loopback_test      },
     {"Loopback WiFi",                     &WiFi_loopback_test      },
+    {"Scan for access points (APs)",      &WiFi_AP_scan_test       },
     {"- HTTP tests",                      0                        },
     {"DNS Lookup test",                   &http_DNS_test           },
     {"Send to server test",               &http_send_to_server_test},
@@ -97,6 +101,7 @@ static const self_test_t test_list[] = {
     {"build_json_score",                  &test_build_json_score   },
     {"build_fake_shots",                  &test_build_fake_shots   },
     {"display_all_scores",                &test_display_all_scores },
+    {"Rapidfire test",                    &test_rapidfire          },
     {"Rapidfire test",                    &test_rapidfire          },
     {"",                                  0                        }
 };
@@ -239,43 +244,59 @@ static void show_test_help(void)
 #define PASS_B       0x0200
 #define PASS_C       0X0400
 #define PASS_D       0x0800
-#define PASS_MASK    (PASS_RUNNING | PASS_A | PASS_B)
+#define PASS_VREF    0x1000
+#define PASS_MASK    (PASS_RUNNING | PASS_A | PASS_B | PASS_VREF)
 #define PASS_TEST    (PASS_RUNNING | PASS_C)
 
 bool factory_test(void)
 {
   int   i, percent;
-  int   running;         // Bit mask from run flip flops
-  int   dip;             // Input from DIP input
+  int   running;               // Bit mask from run flip flops
+  int   dip;                   // Input from DIP input
   char  ch;
-  char  ABCD[] = "DCBA"; // DIP switch order
-  int   pass;            // Pass YES/NO
-  bool  passed_once;     // Passed all of the tests at least once
+  char  ABCD[] = "DCBA";       // DIP switch order
+  int   pass;                  // Pass YES/NO
+  bool  passed_once;           // Passed all of the tests at least once
   float volts[4];
-  int   motor_toggle;    // Toggle motor on an off
+  float vmes_lo;
+  int   motor_toggle;          // Toggle motor on an off
+  int   number_of_sensors = 4; // Number of sensors to test
 
-  pass         = 0;      // Pass YES/NO
+  pass         = 0;            // Pass YES/NO
   passed_once  = false;
   percent      = 0;
   motor_toggle = 0;
+  if ( PCNT_HIGH_GPIO & board_mask )
+  {
+    number_of_sensors = 8;     // Number of sensors to test
+  }
 
   /*
    *  Force the refernce voltages - Incase the board has been uninitialized
    */
   if ( (json_vref_lo == 0) || (json_vref_hi == 0) )
   {
-    volts[VREF_LO] = 1.25;
-    volts[VREF_HI] = 2.00;
-    volts[VREF_2]  = 0.00;
-    volts[VREF_3]  = 0.00;
+    json_vref_lo   = 1.25; // Default VREF_LO
+    volts[VREF_LO] = json_vref_lo;
+
+    json_vref_hi   = 2.0;  // Default VREF_HI
+    volts[VREF_HI] = json_vref_hi;
+
+    volts[VREF_2] = 0.00;
+    volts[VREF_3] = 0.00;
     DAC_write(volts);
+    DAC_calibrate();
   }
+
   /*
    * Ready to start the test
    */
   SEND(ALL, sprintf(_xs, "\r\nFirmware version: %s   Board version: %d", SOFTWARE_VERSION, revision());)
   SEND(ALL, sprintf(_xs, "\r\n");)
-  SEND(ALL, sprintf(_xs, "\r\nHas the tape seal been removed from the temperature sensor?");)
+  if ( (board_mask & HDC3022) != 0 )
+  {
+    SEND(ALL, sprintf(_xs, "\r\nHas the tape seal been removed from the humidity sensor?");)
+  }
   SEND(ALL, sprintf(_xs, "\r\nPress 1 & 2 or ! to continue\r\n");)
 
   set_status_LED(LED_DLROW_OLLOH); // Blink Red, White, Blue
@@ -314,7 +335,7 @@ bool factory_test(void)
     SEND(ALL, sprintf(_xs, "\r\nSens: ");)
     running = is_running();
     pass |= running & RUN_MASK;
-    for ( i = 0; i != 8; i++ )
+    for ( i = 0; i != number_of_sensors; i++ )
     {
       if ( i == 4 )
       {
@@ -326,7 +347,6 @@ bool factory_test(void)
       }
       else
       {
-
         if ( ((find_sensor(1 << i)->short_name) == 'N') // Is this the North Sensor?
              && (json_pcnt_latency == 0) )              // and pcnt_latency is disabled?
         {
@@ -383,10 +403,28 @@ bool factory_test(void)
       }
     }
 
-    SEND(ALL, sprintf(_xs, "  12V: %4.2fV", v12_supply());)
+    if ( TMP1075D & board_mask )
+    {
+      vmes_lo = vref_measure();       // Read the VREF_LO voltage
+      SEND(ALL, sprintf(_xs, "  VREF_LO: %4.2fV", vmes_lo);)
+      if ( abs(vmes_lo - json_vref_lo) <= 0.1 )
+      {
+        SEND(ALL, sprintf(_xs, " ");)
+        pass |= PASS_VREF;            // Mark the test as passed
+      }
+      else
+      {
+        SEND(ALL, sprintf(_xs, "x");) // Show the voltage is out of range
+        pass &= ~PASS_VREF;
+      }
+    }
     SEND(ALL, sprintf(_xs, "  Temp: %4.2fC", temperature_C());)
-    SEND(ALL, sprintf(_xs, "  Humidiity: %4.2f%%", humidity_RH());)
+    if ( HDC3022 & board_mask )
+    {
+      SEND(ALL, sprintf(_xs, "  Humidity: %4.2f", humidity_RH());)
+    }
 
+    SEND(ALL, sprintf(_xs, "  12V: %4.2fV", v12_supply());)
     if ( v12_supply() >= V12_WORKING ) // Skip the motor and LED test if 12 volts not used
     {
       SEND(ALL, sprintf(_xs, "  M");)
@@ -409,6 +447,10 @@ bool factory_test(void)
       {
         percent = 0;
       }
+    }
+    else
+    {
+      SEND(ALL, sprintf(_xs, "  12V supply not present");)
     }
 
     if ( ((pass & PASS_MASK) == PASS_MASK) )
@@ -562,7 +604,8 @@ bool POST_counters(void)
    */
   gpio_set_level(STOP_N, RUN_OFF); // Clear the latch
   gpio_set_level(STOP_N, RUN_GO);  // and reenable it
-  running = is_running();
+  running = is_running() & RUN_MASK;
+
   if ( running != 0 )
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Stuck bit in run latch: ");))
@@ -575,7 +618,6 @@ bool POST_counters(void)
       }
       if ( running & s[i].high_sense.run_mask )
       {
-        DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "%c", find_sensor(s[i].high_sense.run_mask)->short_name);))
         set_diag_LED(s[i].high_sense.diag_LED, 10);
       }
     }
@@ -866,7 +908,7 @@ bool check_12V(void)
   if ( json_paper_time == 0 ) // The witness paper is not used
   {
     set_status_LED(LED_12V_NOT_USED);
-    fault_V12 = NONE;
+    fault_V12 = UNKNOWN;
     return false;
   }
 
@@ -877,7 +919,7 @@ bool check_12V(void)
 
   if ( v12 <= V12_CAUTION )
   {
-    if ( fault_V12 != NONE )
+    if ( fault_V12 != NONE ) // Don't update if the error is known.
     {
       set_status_LED(LED_NO_12V);
       fault_V12 = NONE;

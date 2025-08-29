@@ -23,7 +23,7 @@ void         echo_serial(int delay, int in_port, int out_port);         // Echo 
 void         build_json_score(shot_record_t *shot, const char *format); // Create the JSON score string
 int          http_target_type(void);                                    // Cnovert the target type to a number
 void         squish(char *source, char *destination);                   // Convert the uri into an arguement
-void         test_build_json_score(voids);                              // Test build_json_score
+void         test_build_json_score(void);                               // Test build_json_score
 double       sq(double x);                                              // Square (x)
 unsigned int hamming_weight(unsigned int word);                         // Add up the numbr of bits in a word
 void         to_binary(unsigned int x, unsigned int bits, char *s);     // Convert a number to a binary string

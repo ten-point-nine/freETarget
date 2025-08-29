@@ -1,3 +1,4 @@
+
 /*************************************************************************
  *
  * file: gpio_define.h
@@ -141,9 +142,10 @@ typedef struct LED_strip_struct
 
 typedef struct gpio_struct
 {
-  char *gpio_name;                                   // GPIO name
-  int   gpio_number;                                 // Number associated with GPIO
-  void *gpio_uses;                                   // Pointer to IO specific structure
+  char        *gpio_name;                            // GPIO name
+  int          gpio_number;                          // Number associated with GPIO
+  void        *gpio_uses;                            // Pointer to IO specific structure
+  unsigned int board_mask;                           // Board mask associated with this GPIO
 } gpio_struct_t;
 
 extern const gpio_struct_t gpio_table[];             // List of available devices

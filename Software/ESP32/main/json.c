@@ -13,6 +13,7 @@
 #define JSON_C // This is the JSON file
 #define JSON_C // This is the JSON file
 #include "freETarget.h"
+#include "board_assembly.h"
 #include "helpers.h"
 #include "analog_io.h"
 #include "ctype.h"
@@ -437,17 +438,14 @@ void show_echo(void)
   unsigned int  dip;
   char         *ABCD[] = {"A", "B", "C", "D"};
 
-  SEND(ALL, sprintf(_xs, "\r\n{\r\n");) // Start the echo
-
-  /*
-   *  Send out the name as a start sentinel
-   */
+  SEND(ALL, sprintf(_xs, "\r\n{\r\n");)
   target_name(str_c);
   SEND(ALL, sprintf(_xs, "\"NAME\":              \"%s\",\r\n", str_c);)
 
   /*
    * Loop through all of the JSON tokens
    */
+
   serial_to_all(NULL, EVEN_ODD_BEGIN);
   i = 0;
   while ( JSON[i].token != 0 )             // Still more to go?
@@ -501,6 +499,8 @@ void show_echo(void)
   serial_to_all(NULL, EVEN_ODD_END);                                                   // End the even odd line
   SEND(ALL, sprintf(_xs, "\r\n*** STATUS ***\r\n");)
   serial_to_all(NULL, EVEN_ODD_BEGIN);                                                 // Start over again
+  target_name(str_c);
+  SEND(ALL, sprintf(_xs, "\"NAME\":              \"%s\",", str_c);)
   SEND(ALL, sprintf(_xs, "\"SN\":                %d", json_serial_number);)
   SEND(ALL, sprintf(_xs, "\"TRACE\":             %d,", is_trace);)                     //
   SEND(ALL, sprintf(_xs, "\"RUN_STATE\":         %d,", run_state);)                    // Internal running state is enabled

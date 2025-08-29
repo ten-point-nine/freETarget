@@ -91,18 +91,10 @@ httpd_handle_t start_webserver(unsigned int port // Port to use for the web serv
    */
   if ( httpd_start(&server, &config) == ESP_OK ) // Create the server
   {
-#if ( 0 )
-    if ( server_count == 0 )
-    {
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Registering event handlers");))
-      ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &server));
-      ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
-    }
-#endif
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Registering URI handlers using port %d", port);))
     register_services(server, port);
     httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
-    server_count++; // Increment the number of servers started
+    server_count++;                              // Increment the number of servers started
 
     return server;
   }

@@ -32,5 +32,5 @@ void              reset_run_time(void);                                         
 /*
  *  Definitions
  */
-#define timer_delay(duration) vTaskDelay(duration)
+
 #endif

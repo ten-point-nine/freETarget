@@ -21,6 +21,7 @@
 
 #define FREETARGET_C
 #include "freETarget.h"
+#include "board_assembly.h"
 #include "helpers.h"
 #include "gpio.h"
 #include "gpio_define.h"
@@ -98,28 +99,28 @@ void freeETarget_init(void)
 {
   run_state = IN_STARTUP;
   is_trace  = DLT_INFO | DLT_CRITICAL;
-#ifdef TRACE_APPLICATION
+#if TRACE_APPLICATION
   is_trace |= DLT_APPLICATION;   // Enable application tracing
 #endif
-#ifdef TRACE_COMMUNICATION
+#if TRACE_COMMUNICATION
   is_trace |= DLT_COMMUNICATION; // Enable application tracing
 #endif
-#ifdef TRACE_DIAGNOSTICS
+#if TRACE_DIAGNOSTICS
   is_trace |= DLT_DIAG;          // Enable diagnostics tracing
 #endif
-#ifdef TRACE_DEBUG
+#if TRACE_DEBUG
   is_trace |= DLT_DEBUG;         // Enable debug tracing
 #endif
-#ifdef TRACE_SCORE
+#if TRACE_SCORE
   is_trace |= DLT_SCORE;         // Enable score tracing
 #endif
-#ifdef TRACE_HTTP
+#if TRACE_HTTP
   is_trace |= DLT_HTTP;          // Enable HTTP tracing
 #endif
-#ifdef TRACE_OTA
+#if TRACE_OTA
   is_trace |= DLT_OTA;           // Enable OTA tracing
 #endif
-#ifdef TRACE_HEARTBEAT
+#if TRACE_HEARTBEAT
   is_trace |= DLT_HEARTBEAT;     // Enable heartbeat tracing
 #endif
 
@@ -128,10 +129,11 @@ void freeETarget_init(void)
    */
   json_aux_mode = false; // Assume the AUX port is not used
   gpio_init();           // Setup the hardware
-  serial_io_init();      // Setup the console for debug messages
+  serial_io_init();      // Setup the console for debug message
   read_nonvol();         // Read in the settings
   serial_aux_init();     // Update the serial port if there is a change
-  set_VREF();
+  set_VREF();            // Set the reference voltages
+  DAC_calibrate();       // Adjust the DAC to compensate for voltage drop
   multifunction_init();  // Override the MFS if we have to
 
   /*
@@ -141,10 +143,10 @@ void freeETarget_init(void)
   set_status_LED(LED_RAPID_GREEN_OFF);
   set_status_LED(LED_HELLO_WORLD); // Hello World
   set_status_LED(LED_RAPID_RED);   // Red
-  timer_delay(ONE_SECOND);
+  vTaskDelay(ONE_SECOND);
   set_status_LED(LED_RAPID_OFF);
   set_status_LED(LED_RAPID_GREEN); // Green
-  timer_delay(ONE_SECOND);
+  vTaskDelay(ONE_SECOND);
   set_status_LED(LED_OFF);
   set_status_LED(LED_RAPID_OFF);   // Off
 
@@ -157,9 +159,9 @@ void freeETarget_init(void)
   ft_timer_new(&power_save, (unsigned long)(json_power_save) * (long)ONE_SECOND * 60L); // Power save timer
   ft_timer_new(&time_since_last_shot, HTTP_CLOSE_TIME * 60 * ONE_SECOND);               // 15 minutes since last shot
 
-  /*
-   * Run the power on self test
-   */
+                                                                                        /*
+                                                                                         * Run the power on self test
+                                                                                         */
   POST_counters();            // POST counters does not return if there is an error
   if ( check_12V() == false ) // Verify the 12 volt supply
   {
@@ -217,7 +219,8 @@ void freeETarget_target_loop(void *arg)
 
   set_status_LED(LED_READY);
 
-  if ( json_pcnt_latency != 0 )              // If the second set of timers has been enabled
+  if ( (PCNT_HIGH_GPIO & board_mask)         // Are the PCNT HIGH counters provided
+       && (json_pcnt_latency != 0) )         // If the second set of timers has been enabled
   {
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initializing PCNT high inputs");))
     gpio_init_single(PCNT_HI);               // Program the port
