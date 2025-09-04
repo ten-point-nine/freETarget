@@ -21,6 +21,8 @@ void POST_trip_point(void);                               // Display the set poi
 void set_trip_point(int x);                               // Calibrate the trip point
 bool do_dlt(unsigned int level);                          // Diagnostics Log and Trace
 bool factory_test(void);                                  // Test the hardware in production
+bool sensor_test(void);                                   // Test only the sensors in production
+bool do_factory_test(bool test_run);                      // Carry out the factory test
 void set_diag_LED(char *new_LEDs, unsigned int duration); // Display the LED failure code
 bool check_12V(void);                                     // Check the 12 volt supply
 void heartbeat(void);                                     // Send out regular status messages

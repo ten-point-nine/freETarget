@@ -472,9 +472,15 @@ void set_VREF(void)
   volts[VREF_3]  = 0.0;
   DAC_write(volts);
 
-  /*
+  /*{
    *  All done, return
    */
+  if ( MCP4725 & board_mask )
+  {
+    DAC_calibrate(); // Adjust the DAC output
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Read VREF_LO: %4.2f", vref_measure());))
+  }
+
   return;
 }
 

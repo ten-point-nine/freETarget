@@ -58,7 +58,8 @@ typedef struct
 static const self_test_t test_list[] = {
     {"Help",                              &show_test_help          },
     {"Factory test",                      &factory_test            },
-    {"- DIGITAL",                         0                        },
+    {"Sensor test",                       &sensor_test             },
+    {"- Digital",                         0                        },
     {"Digital inputs",                    &digital_test            },
     {"Advance paper backer",              &paper_test              },
     {"LED brightness test",               &LED_test                },
@@ -250,6 +251,15 @@ static void show_test_help(void)
 
 bool factory_test(void)
 {
+  return do_factory_test(1);
+}
+bool sensor_test(void)
+{
+  return do_factory_test(0);
+}
+
+bool do_factory_test(bool test_run)
+{
   int   i, percent;
   int   running;               // Bit mask from run flip flops
   int   dip;                   // Input from DIP input
@@ -292,35 +302,38 @@ bool factory_test(void)
    * Ready to start the test
    */
   SEND(ALL, sprintf(_xs, "\r\nFirmware version: %s   Board version: %d", SOFTWARE_VERSION, revision());)
-  SEND(ALL, sprintf(_xs, "\r\n");)
-  if ( (board_mask & HDC3022) != 0 )
-  {
-    SEND(ALL, sprintf(_xs, "\r\nHas the tape seal been removed from the humidity sensor?");)
-  }
-  SEND(ALL, sprintf(_xs, "\r\nPress 1 & 2 or ! to continue\r\n");)
 
-  set_status_LED(LED_DLROW_OLLOH); // Blink Red, White, Blue
-
-  while ( pass != (PASS_A | PASS_B) )
+  if ( test_run )
   {
-    if ( DIP_SW_A != 0 )
+    SEND(ALL, sprintf(_xs, "\r\n");)
+    if ( (board_mask & HDC3022) != 0 )
     {
-      pass |= PASS_A;
+      SEND(ALL, sprintf(_xs, "\r\nHas the tape seal been removed from the humidity sensor?");)
     }
-    if ( DIP_SW_B != 0 )
+    SEND(ALL, sprintf(_xs, "\r\nPress 1 & 2 or ! to continue\r\n");)
+
+    set_status_LED(LED_DLROW_OLLOH); // Blink Red, White, Blue
+
+    while ( pass != (PASS_A | PASS_B) )
     {
-      pass |= PASS_B;
-    }
-    if ( serial_available(ALL) )
-    {
-      if ( serial_getch(ALL) == '!' )
+      if ( DIP_SW_A != 0 )
       {
-        pass = (PASS_A | PASS_B);
+        pass |= PASS_A;
       }
+      if ( DIP_SW_B != 0 )
+      {
+        pass |= PASS_B;
+      }
+      if ( serial_available(ALL) )
+      {
+        if ( serial_getch(ALL) == '!' )
+        {
+          pass = (PASS_A | PASS_B);
+        }
+      }
+      vTaskDelay(1); // Release control to other tasks
     }
-    vTaskDelay(1); // Release control to other tasks
   }
-
   /*
    *  Begin test
    */
@@ -359,98 +372,105 @@ bool factory_test(void)
       }
     }
 
-    dip = read_DIP();
-    SEND(ALL, sprintf(_xs, "  DIP: ");)
-    if ( DIP_SW_A )
+    if ( test_run )                                     // Include the extened tests
     {
-      set_status_LED("-W-");
-      pass |= PASS_A;
-    }
-    else
-    {
-      set_status_LED("- -");
-    }
-
-    if ( DIP_SW_B )
-    {
-      set_status_LED("--W");
-      pass |= PASS_B;
-    }
-    else
-    {
-      set_status_LED("-- ");
-    }
-
-    if ( DIP_SW_C )
-    {
-      pass |= PASS_C;
-    }
-
-    if ( DIP_SW_D )
-    {
-      pass |= PASS_D;
-    }
-
-    for ( i = 3; i >= 0; i-- )
-    {
-      if ( (dip & (1 << i)) == 0 )
+      dip = read_DIP();
+      SEND(ALL, sprintf(_xs, "  DIP: ");)
+      if ( DIP_SW_A )
       {
-        SEND(ALL, sprintf(_xs, "%c", ABCD[i]);)
+        set_status_LED("-W-");
+        pass |= PASS_A;
       }
       else
       {
-        SEND(ALL, sprintf(_xs, "-");)
+        set_status_LED("- -");
       }
-    }
 
-    if ( TMP1075D & board_mask )
-    {
-      vmes_lo = vref_measure();       // Read the VREF_LO voltage
-      SEND(ALL, sprintf(_xs, "  VREF_LO: %4.2fV", vmes_lo);)
-      if ( abs(vmes_lo - json_vref_lo) <= 0.1 )
+      if ( DIP_SW_B )
       {
-        SEND(ALL, sprintf(_xs, " ");)
-        pass |= PASS_VREF;            // Mark the test as passed
+        set_status_LED("--W");
+        pass |= PASS_B;
       }
       else
       {
-        SEND(ALL, sprintf(_xs, "x");) // Show the voltage is out of range
-        pass &= ~PASS_VREF;
+        set_status_LED("-- ");
       }
-    }
-    SEND(ALL, sprintf(_xs, "  Temp: %4.2fC", temperature_C());)
-    if ( HDC3022 & board_mask )
-    {
-      SEND(ALL, sprintf(_xs, "  Humidity: %4.2f", humidity_RH());)
-    }
 
-    SEND(ALL, sprintf(_xs, "  12V: %4.2fV", v12_supply());)
-    if ( v12_supply() >= V12_WORKING ) // Skip the motor and LED test if 12 volts not used
-    {
-      SEND(ALL, sprintf(_xs, "  M");)
-      if ( motor_toggle )
+      if ( DIP_SW_C )
       {
-        SEND(ALL, sprintf(_xs, "+");)
-        DCmotor_on_off(true, ONE_SECOND);
+        pass |= PASS_C;
+      }
+
+      if ( DIP_SW_D )
+      {
+        pass |= PASS_D;
+      }
+
+      for ( i = 3; i >= 0; i-- )
+      {
+        if ( (dip & (1 << i)) == 0 )
+        {
+          SEND(ALL, sprintf(_xs, "%c", ABCD[i]);)
+        }
+        else
+        {
+          SEND(ALL, sprintf(_xs, "-");)
+        }
+      }
+
+      if ( TMP1075D & board_mask )
+      {
+        vmes_lo = vref_measure();       // Read the VREF_LO voltage
+        SEND(ALL, sprintf(_xs, "  VREF_LO: %4.2fV", vmes_lo);)
+        if ( abs(vmes_lo - json_vref_lo) <= 0.1 )
+        {
+          SEND(ALL, sprintf(_xs, " ");)
+          pass |= PASS_VREF;            // Mark the test as passed
+        }
+        else
+        {
+          SEND(ALL, sprintf(_xs, "x");) // Show the voltage is out of range
+          pass &= ~PASS_VREF;
+        }
+      }
+      SEND(ALL, sprintf(_xs, "  Temp: %4.2fC", temperature_C());)
+      if ( HDC3022 & board_mask )
+      {
+        SEND(ALL, sprintf(_xs, "  Humidity: %4.2f", humidity_RH());)
+      }
+
+      SEND(ALL, sprintf(_xs, "  12V: %4.2fV", v12_supply());)
+      if ( v12_supply() >= V12_WORKING ) // Skip the motor and LED test if 12 volts not used
+      {
+        SEND(ALL, sprintf(_xs, "  M");)
+        if ( motor_toggle )
+        {
+          SEND(ALL, sprintf(_xs, "+");)
+          DCmotor_on_off(true, ONE_SECOND);
+        }
+        else
+        {
+          SEND(ALL, sprintf(_xs, "-");)
+          DCmotor_on_off(false, 0);
+        }
+        motor_toggle ^= 1;
+
+        set_LED_PWM_now(percent);
+        SEND(ALL, sprintf(_xs, "  LED: %3d%% ", percent);)
+        percent = percent + 25;
+        if ( percent > 100 )
+        {
+          percent = 0;
+        }
       }
       else
       {
-        SEND(ALL, sprintf(_xs, "-");)
-        DCmotor_on_off(false, 0);
-      }
-      motor_toggle ^= 1;
-
-      set_LED_PWM_now(percent);
-      SEND(ALL, sprintf(_xs, "  LED: %3d%% ", percent);)
-      percent = percent + 25;
-      if ( percent > 100 )
-      {
-        percent = 0;
+        SEND(ALL, sprintf(_xs, "  12V supply not present");)
       }
     }
     else
     {
-      SEND(ALL, sprintf(_xs, "  12V supply not present");)
+      pass |= (PASS_A | PASS_B | PASS_VREF); // Only do the basic tests
     }
 
     if ( ((pass & PASS_MASK) == PASS_MASK) )
