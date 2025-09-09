@@ -9,8 +9,9 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "string.h"
+#include <sys/param.h>
+#include "esp_ota_ops.h"
 
-#define JSON_C // This is the JSON file
 #define JSON_C // This is the JSON file
 #include "freETarget.h"
 #include "board_assembly.h"
@@ -432,11 +433,13 @@ static void handle_json(void)
 
 void show_echo(void)
 {
-  int           i, j;
-  char          str_c[32]; // String holding buffers
-  mfs_action_t *mfs_ptr;
-  unsigned int  dip;
-  char         *ABCD[] = {"A", "B", "C", "D"};
+  int                    i, j;
+  char                   str_c[32]; // String holding buffers
+  mfs_action_t          *mfs_ptr;
+  unsigned int           dip;
+  char                  *ABCD[]            = {"A", "B", "C", "D"};
+  const esp_partition_t *running_partition = esp_ota_get_running_partition();
+  esp_app_desc_t         running_app_info;
 
   SEND(ALL, sprintf(_xs, "\r\n{\r\n");)
   target_name(str_c);
@@ -549,8 +552,10 @@ void show_echo(void)
   strcat(_xs, "\"");
   serial_to_all(_xs, ALL);
 
-  SEND(ALL, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);)        // Current software version
-  SEND(ALL, sprintf(_xs, "\"LOCKED\":           %s \"", yes_no[json_is_locked]);) // The JSON is locked
+  SEND(ALL, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);)         // Current software version
+  esp_ota_get_partition_description(running_partition, &running_app_info);
+  SEND(ALL, sprintf(_xs, "\"OTA BUILD\":        %s, ", running_app_info.version);) // Current OTA identifier
+  SEND(ALL, sprintf(_xs, "\"LOCKED\":           %s \"", yes_no[json_is_locked]);)  // The JSON is locked
 
 #if ( INCLUDE_OTA_ECHO )
   OTA_get_versions(running_app_version, new_app_version);

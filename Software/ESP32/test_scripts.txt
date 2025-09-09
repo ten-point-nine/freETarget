@@ -1,3 +1,4 @@
-{ "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108"}
+{ "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING"}
 { "NAME_ID": 99, "NAME_TEXT":"ALLAN"}
 HTTP Trace {"TRACE":128}
+{"RESET":0}
