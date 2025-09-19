@@ -12,7 +12,7 @@ idf_component_register(SRCS ${app_sources}
                     
                     EMBED_FILES 
                     "html/FreeEtarget.html"
-                    "html/FreeEtarget.png"
+                    "html/FreeEtargetIcon.png"
                     "html/help.html"
                     "html/menu.html"
                     "tcpip/ca_cert.pem"

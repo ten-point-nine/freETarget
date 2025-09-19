@@ -510,7 +510,6 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"TIME_TO_SLEEP\":     %4.2f,", (float)power_save / (float)(ONE_SECOND * 60));) // How long until we sleep
   SEND(ALL, sprintf(_xs, "\"TEMPERATURE\":       %4.2f,", temperature_C());)                              // Temperature in degrees C
   SEND(ALL, sprintf(_xs, "\"RELATIVE_HUMIDITY\": %4.2f,", humidity_RH());)
-  SEND(ALL, sprintf(_xs, "\"SPEED_OF_SOUND\":    %4.2f,", speed_of_sound(temperature_C(), humidity_RH()));)
   SEND(ALL, sprintf(_xs, "\"TIMER_COUNT\":       %d,",
                     (int)(SHOT_TIME * OSCILLATOR_MHZ));) // Maximum number of clock cycles to record shot (target dependent)
   SEND(ALL, sprintf(_xs, "\"V12\":               %4.2f,", v12_supply());) // 12 Volt LED supply
@@ -614,8 +613,9 @@ static void show_names(int v)
   }
   else
   {
-    SEND(ALL, sprintf(_xs, "%d: \"uassigned\", \r\n", JSON_NAME_TEXT);)          // Look for a user defined name
-    SEND(ALL, sprintf(_xs, "%d: \"uassigned\", \r\n", JSON_NAME_CLIENT);)        // Look for a user defined name
+    SEND(ALL, sprintf(_xs, "%d: \"FET-UserDefined\", \r\n", JSON_NAME_TEXT);)    // Look for a user defined name
+    SEND(ALL, sprintf(_xs, "%d: \"Userdefined\", \r\n", JSON_NAME_CLIENT);)      // Look for a user defined name
+    SEND(ALL, sprintf(_xs, "%d: \"FET-serialNumber\", \r\n", JSON_NAME_SN);)     // Use the serial number as the name
   }
 
   /*

@@ -60,7 +60,7 @@ extern const json_message_t JSON[];
 #define FLOAT_MASK ((~IS_MASK) & 0xFF)               // Scaling factor 8 bits
 
 #define SSID_SIZE        31                          // Reserve 30+1 bytes for SSID
-#define PWD_SIZE         31                          // Reserve 30+1 bytes for Password
+#define PWD_SIZE         63                          // Reserve 63+1 bytes for Password
 #define URL_SIZE         128                         // Reserve 129 bytes for server URL
 #define KEY_SIZE         31                          // Key size for remote access
 #define SMALL_STRING     32                          // Small strings are 32 bytes long
@@ -68,6 +68,7 @@ extern const json_message_t JSON[];
 #define IP_SIZE          sizeof("192.168.100.100\0") // Reserved space of IP address
 #define JSON_NAME_TEXT   99                          // Name ID = User defined
 #define JSON_NAME_CLIENT 100                         // Name ID = Client defined
+#define JSON_NAME_SN     101                         // Name ID = Serial Number
 
 /*
  * Global JSON variables and settings

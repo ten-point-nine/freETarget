@@ -15,7 +15,6 @@
  *
  * See:
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-reference/network/esp_wifi.html
- * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/network/esp_netif.html
  * https://medium.com/@fatehsali517/how-to-connect-esp32-to-wifi-using-esp-idf-iot-development-framework-d798dc89f0d6
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/lwip.html
  *
@@ -143,7 +142,7 @@ void WiFi_init(void)
   mdns_hostname_set(str_c);      // Set the hostname for the target
   mdns_instance_name_set(str_c); // Set the instance name for the target
 
-	DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "mDNS service set up for: \"%s\"", str_c);))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "mDNS service set up for: \"%s\"", str_c);))
 
   /*
    *  All done
@@ -269,6 +268,7 @@ void WiFi_station_init(void)
   strcpy((char *)&WiFi_config.sta.ssid, json_wifi_ssid);
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi password: %s", json_wifi_pwd);))
   strcpy((char *)&WiFi_config.sta.password, json_wifi_pwd);
+
   if ( json_wifi_pwd[0] == 0 )
   {
     WiFi_config.sta.threshold.authmode = WIFI_AUTH_OPEN;
@@ -277,18 +277,17 @@ void WiFi_station_init(void)
   {
     WiFi_config.sta.threshold.authmode = WIFI_AUTH_WEP;
   }
-
   WiFi_config.sta.pmf_cfg.capable  = true;
   WiFi_config.sta.pmf_cfg.required = false;
   esp_wifi_set_mode(WIFI_MODE_STA);
   esp_wifi_set_config(WIFI_IF_STA, &WiFi_config);
-
   esp_wifi_start(); // Start the WiFi
 
   /*
    * Wait here for an event to occur
    */
   EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
+
   /*
    *  The target has connected to an access point
    */
@@ -1041,13 +1040,13 @@ void WiFi_AP_loopback_test(void)
  * the signal strenght.
  *
  * RSSIs closer to 0 are better
- */
+ * **************************************************************************/
 
 void WiFi_AP_scan_test(void)
 {
   wifi_ap_record_t ap_info[20]; // Space for 20 APs
   uint16_t         ap_count = 20;
-  int              i, j;
+  int              i;
   char             str_c[SHORT_TEXT];
 
   SEND(ALL, sprintf(_xs, "\r\nCloser to 0 is stronger");)
@@ -1106,5 +1105,59 @@ void WiFi_AP_scan_test(void)
   SEND(ALL, sprintf(_xs, "\r\n\r\nConnected to AP SSID:  \"%s\"", json_wifi_ssid);)
   SEND(ALL, sprintf(_xs, "   IP: \"%s\"", str_c);)
   SEND(ALL, sprintf(_xs, _DONE_);)
+  return;
+}
+
+/*****************************************************************************
+ *
+ * @function: WiFi_pingpong_test
+ *
+ * @brief:    Send messages between two boards
+ *
+ * @return:   None
+ *
+ ****************************************************************************
+ *
+ * The board which is the Access Point sends a message to the station
+ * board.  The station board sends a message back to the access point.
+ * This is repeated indefinitely.
+ *
+ * **************************************************************************/
+
+void WiFi_pingpong_test(void)
+{
+  int i;
+  int ch;
+
+  if ( json_wifi_ssid[0] == 0 )
+  {
+    SEND(ALL, sprintf(_xs, "\r\nI am the access point (AP)");)
+  }
+  else
+  {
+    SEND(ALL, sprintf(_xs, "\r\nI am the station");)
+  }
+
+  i  = 0;
+  ch = 'A';
+  while ( 1 )
+  {
+    SEND(ALL, sprintf(_xs, "\r\nP:%d %c", i++, ch);)
+    vTaskDelay(ONE_SECOND);
+    if ( serial_available(ALL) )
+    {
+      ch = serial_getch(ALL);
+      if ( ch == '!' )
+      {
+        break;
+      }
+      SEND(ALL, sprintf(_xs, "\r\nHello World");)
+      i = 0;
+      serial_flush(ALL);
+    }
+  }
+
+  SEND(ALL, sprintf(_xs, _DONE_);)
+
   return;
 }

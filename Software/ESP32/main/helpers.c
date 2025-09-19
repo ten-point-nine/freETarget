@@ -75,6 +75,10 @@ void target_name(char *name_space)
         sprintf(name_space, "%s", json_name_text);          // Name - MyTargetName
         break;
 
+      case JSON_NAME_SN:
+        sprintf(name_space, "FET-%d", json_serial_number);  // Name - serial Number
+        break;
+
       default:
         sprintf(name_space, "FET-%s", names[json_name_id]); // Name - FET-TARGET, FET-2, etc.
         break;

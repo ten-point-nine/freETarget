@@ -17,8 +17,8 @@ extern const unsigned char FreeETarget_html_start[] asm("_binary_FreeETarget_htm
 extern const unsigned char FreeETarget_html_end[] asm("_binary_FreeETarget_html_end");
 #define SIZEOF_FreeETarget_HTML (FreeETarget_html_end - FreeETarget_html_start)
 
-extern const unsigned char FreeETarget_png_start[] asm("_binary_FreeETarget_png_start");
-extern const unsigned char FreeETarget_png_end[] asm("_binary_FreeETarget_png_end");
+extern const unsigned char FreeETarget_png_start[] asm("_binary_FreeETargetIcon_png_start");
+extern const unsigned char FreeETarget_png_end[] asm("_binary_FreeETargetIcon_png_end");
 #define SIZEOF_FREEETARGET_PNG (FreeETarget_png_end - FreeETarget_png_start)
 
 extern const unsigned char help_html_start[] asm("_binary_help_html_start");

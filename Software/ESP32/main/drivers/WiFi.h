@@ -21,6 +21,7 @@ void WiFi_remote_IP_address(char *s);          // Return the current gateway add
 void WiFi_MAC_address(char *mac);              // Read the MAC address
 void WiFi_setup(void);                         // Configure the WiFi operation
 void WiFi_AP_scan_test(void);                  // Scan for access points (APs)
+void WiFi_pingpong_test(void);                 // Ping pong the signals
 
 #if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE )
 bool WiFi_get_remote_IP(char *url);            // Get the IP address of the remote URL

@@ -328,11 +328,11 @@ static esp_err_t service_get_events(httpd_req_t *req)
 
 typedef struct
 {
-  char *uri;                                          // URI to handle
-  int   start_stop;                                   // Start or stop the ev
-  int   check_mask;                                   // Mask of the checkboxes
-  int   session_type;                                 // Session type (110, 111, 100, 101, 510, 511, 500, 501)
-} menu_action_t;                                      // Internal user context structure
+  char *uri;          // URI to handle
+  int   start_stop;   // Start or stop the ev
+  int   check_mask;   // Mask of the checkboxes
+  int   session_type; // Session type (110, 111, 100, 101, 510, 511, 500, 501)
+} menu_action_t;      // Internal user context structure
 
 menu_action_t menu_actions[] = {
     // uri         start_stop, check_mask, session_type
@@ -520,11 +520,11 @@ static esp_err_t service_get_FreeETarget_png(httpd_req_t *req)
   const char *resp_str;                           // Reply to server
   char        my_name[SHORT_TEXT];                // Target name
 
-  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_FreeETarget_png(%s)", req->uri);))
+  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_FreeETargetIcon_png(%s)", req->uri);))
 
   target_name(my_name);
   resp_str = (const char *)FreeETarget_png_start; // point to the target json file
-  httpd_resp_set_hdr(req, "get_FreeETarget_png", my_name);
+  httpd_resp_set_hdr(req, "get_FreeETargetIcon_png", my_name);
   httpd_resp_send(req, resp_str, SIZEOF_FREEETARGET_PNG);
 
   return ESP_OK;

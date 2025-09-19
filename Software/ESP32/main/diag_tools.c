@@ -87,6 +87,7 @@ static const self_test_t test_list[] = {
     {"Enable the WiFi AP",                &WiFi_AP_init            },
     {"Loopback WiFi",                     &WiFi_loopback_test      },
     {"Scan for access points (APs)",      &WiFi_AP_scan_test       },
+    {"WiFi Ping Pong test",               &WiFi_pingpong_test      },
     {"- HTTP tests",                      0                        },
     {"DNS Lookup test",                   &http_DNS_test           },
     {"Send to server test",               &http_send_to_server_test},
