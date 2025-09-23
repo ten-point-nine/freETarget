@@ -630,6 +630,7 @@ static esp_err_t service_get_who(httpd_req_t *req)
   char                   my_name[SHORT_TEXT];
   const esp_partition_t *running_partition = esp_ota_get_running_partition();
   esp_app_desc_t         running_app_info;
+  static int             cycle_count = 0;
 
   DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_who(%s)", req->uri);))
 
@@ -645,11 +646,13 @@ static esp_err_t service_get_who(httpd_req_t *req)
           "<br>OTA Version: %s"
           "<br>Athelete: %s"
           "<br>Target: %s"
-          "<br>Event: %s",
-          json_serial_number, my_name, SOFTWARE_VERSION, running_app_info.version, json_athlete, json_target_name,
-          json_event); // Fill in the target name
+          "<br>Event: %s"
+          "<br>Cycle count: %d",
+          json_serial_number, my_name, SOFTWARE_VERSION, running_app_info.version, json_athlete, json_target_name, json_event,
+          cycle_count); // Fill in the target name
 
   httpd_resp_send(req, _xs, HTTPD_RESP_USE_STRLEN);
+  cycle_count++;
   return ESP_OK;
 }
 /*----------------------------------------------------------------

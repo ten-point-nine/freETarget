@@ -401,6 +401,15 @@ static double temperature_C_TMP1075D(void)
   t_c = ((float)raw * TC_CAL);
   rh  = 40.0;
 
+  /*
+   * Compensate for self heating
+   */
+
+  if ( v12_supply() > V12_WORKING ) // If the 12V supply is up, then we are likely running the LEDs
+  {
+    t_c -= 10;                      // Rough compensation for self heating
+  }
+  
   return t_c;
 }
 

@@ -1,8 +1,13 @@
 { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING"}
 { "WIFI_SSID": "FET-WIFI",  "WIFI_PWD": "Mar1noni$", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING"}
+{ "WIFI_SSID": "FET-WIFI",  "WIFI_PWD": "Mar1noni$", "NAME_ID": 101}
 { "WIFI_SSID": "",  "WIFI_PWD": "", "NAME_ID": 101}
 { "NAME_ID": 99, "NAME_TEXT":"ALLAN"}
 { "NAME_ID": 101}
 HTTP Trace {"TRACE":128}
 {"RESET":0}
 {"INIT":0}
+{ "WIFI_SSID": "stand-de-tir-2G",  "WIFI_PWD": "", "NAME_ID": 1, "WIFI_IP":"192.168.109.181"}
+{ "WIFI_SSID": "stand-de-tir-2G",  "WIFI_PWD": "", "NAME_ID": 2, "WIFI_IP":"192.168.109.182"}
+{ "WIFI_SSID": "stand-de-tir-2G",  "WIFI_PWD": "", "NAME_ID": 3, "WIFI_IP":"192.168.109.183"}
+{ "WIFI_SSID": "",  "WIFI_PWD": "", "NAME_ID": 4}

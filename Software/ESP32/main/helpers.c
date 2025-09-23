@@ -271,10 +271,14 @@ bool prompt_for_confirm(void)
  *--------------------------------------------------------------*/
 void hello(void)
 {
+  char str[SHORT_TEXT];
+
   /*
    * Woken up again.  Turn things back on
    */
-  SEND(ALL, sprintf(_xs, "{\"Hello_World\":0}");)
+  target_name(str);
+  SEND(ALL, sprintf(_xs, "{\"%s\"0, \"NAME\":\"%s\"}", _HELLO_, str);)
+
   set_status_LED(LED_READY);
   set_LED_PWM_now(json_LED_PWM);
   ft_timer_new(&power_save, json_power_save * (unsigned long)ONE_SECOND * 60L);
@@ -301,14 +305,14 @@ void send_keep_alive(void)
 {
   static int keep_alive_count = 0;
   static int keep_alive       = 0;
+  char       str[SHORT_TEXT];
 
-  if ( (json_keep_alive != 0) && (keep_alive == 0) ) // Time in seconds
+  if ( (json_keep_alive != 0) && (keep_alive <= 0) ) // Time in seconds
   {
-    sprintf(_xs, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);
-    serial_to_all(_xs, TCPIP);
+    target_name(str);
+    SEND(TCPIP, sprintf(_xs, "{\"KEEP_ALIVE\":%d, \"NAME\":\"%s\"}", keep_alive_count++, str);)
     ft_timer_new(&keep_alive, (unsigned long)json_keep_alive * ONE_SECOND);
   }
-
   return;
 }
 /*----------------------------------------------------------------
@@ -344,6 +348,7 @@ void bye_tick(void)
 void bye(unsigned int force_bye) // Set to true to force a shutdown
 {
   static int bye_state = BYE_BYE;
+  char       str[SHORT_TEXT];
 
   /*
    * The BYE function does not work if we are a token ring.
@@ -362,9 +367,8 @@ void bye(unsigned int force_bye) // Set to true to force a shutdown
   switch ( bye_state )
   {
     case BYE_BYE:                          // Say Good Night Gracie!
-      SEND(ALL, sprintf(_xs, "{\"GOOD_BYE\":0}");)
-      json_tabata_enable = false;          // Turn off any automatic cycles
-      json_rapid_enable  = false;
+      target_name(str);
+      SEND(ALL, sprintf(_xs, "{\"%s\":0, \"NAME\":\"%s\"}", _BYE_, str);)
       set_LED_PWM(0);                      // Going to sleep
       set_status_LED(LED_BYE);
       serial_flush(ALL);                   // Purge the com port
