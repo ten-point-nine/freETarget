@@ -868,7 +868,8 @@ void tcpip_accept_poll(void *parameters)
  *******************************************************************************/
 static void WiFi_start_new_connection(int sock) // Socket token to use
 {
-  int i;
+  int  i;
+  char str[SHORT_TEXT];
 
   /*
    *  Build up a mask of existing WiFi connections
@@ -885,8 +886,8 @@ static void WiFi_start_new_connection(int sock) // Socket token to use
   /*
    *  Inform the PC what is going on
    */
-  sprintf(_xs, "{\"%s\":%lds}", _GREETING_, run_time_seconds());
-  send(sock, _xs, strlen(_xs), 0); // Only send to the most recent connection
+  target_name(str);
+  SEND(ALL, sprintf(_xs, "{\"%s\":%lds, \"NAME\":\"%s\"}", _GREETING_, run_time_seconds(), str);)
 
   for ( i = 0; i != SHOT_SPACE; i++ )
   {
