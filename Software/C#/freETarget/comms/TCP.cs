@@ -66,10 +66,10 @@ namespace freETarget.comms {
                 tcpclnt.SendTimeout = 1000;
                 //tcpclnt.Connect(this.IP, this.port);
                 var result = tcpclnt.BeginConnect(this.IP, this.port, null, null);
-                var success = result.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(1)); //connect timeout set to 1 second
+                var success = result.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(20)); //connect timeout set to 20 seconds - using MDNS is very slow
 
                 if (!success) {
-                    throw new SocketException();
+                    throw new SocketException(10060);
                 }
                 
                 stm = tcpclnt.GetStream();
