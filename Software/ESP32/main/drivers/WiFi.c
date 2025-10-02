@@ -958,15 +958,19 @@ void WiFi_loopback_task(void *parameters)
  *
  * @brief:    Return the IP address as a string
  *
- * @return:   None
+ * @return:   TRUE if there is a valid IP address
  *
  ****************************************************************************/
 #define TO_IP(x) ((int)x) & 0xff, ((int)x >> 8) & 0xff, ((int)x >> 16) & 0xff, ((int)x >> 24) & 0xff
-void WiFi_my_IP_address(char *s // Where to return the string
+bool WiFi_my_IP_address(char *s // Where to return the string
 )
 {
   sprintf(s, "%d.%d.%d.%d", TO_IP(ipInfo.ip.addr));
-  return;
+
+  if ( ipInfo.ip.addr == 0 )
+    return false;
+
+  return true;
 }
 
 #if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE )

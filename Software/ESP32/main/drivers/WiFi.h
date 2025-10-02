@@ -16,7 +16,7 @@ void WiFi_AP_init(void);                       // Initialize the WiFi as an Acce
 void WiFi_station_init(void);                  // Initialize the WiFI as a station
 void WiFi_tcp_server_task(void *pvParameters); // TCP Server task
 void WiFi_loopback_test(void);                 // Loopback the TCPIP channel
-void WiFi_my_IP_address(char *s);              // Return the current IP address
+bool WiFi_my_IP_address(char *s);              // Return the current IP address
 void WiFi_remote_IP_address(char *s);          // Return the current gateway address
 void WiFi_MAC_address(char *mac);              // Read the MAC address
 void WiFi_setup(void);                         // Configure the WiFi operation

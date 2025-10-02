@@ -64,6 +64,7 @@ static const self_test_t test_list[] = {
     {"Advance paper backer",              &paper_test              },
     {"LED brightness test",               &LED_test                },
     {"Status LED driver",                 &status_LED_test         },
+    {"- Analog",                          0                        },
     {"Analog input test",                 &analog_input_test       },
     {"Analog input raw",                  &analog_input_raw        },
     {"DAC test",                          &DAC_test                },
