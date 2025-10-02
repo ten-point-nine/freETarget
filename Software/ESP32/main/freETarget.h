@@ -19,7 +19,7 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"6.2.4 September 23, 2025\""
+#define SOFTWARE_VERSION "\"6.2.5 October 1, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED"   // Message to send on connection
 #define _BYE_            "BYE"         // Message to send on disconnection

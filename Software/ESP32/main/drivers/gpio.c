@@ -570,7 +570,7 @@ void paper_start(void)
    */
   if ( IS_DC_WITNESS ) // DC motor,
   {
-    DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "DC motor start: %d ms", json_paper_time);))
+    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "DC motor start: %d ms", json_paper_time);))
     DCmotor_on_off(true, json_paper_time);
   }
 
