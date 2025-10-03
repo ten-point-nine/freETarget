@@ -161,4 +161,5 @@ EXTERN int           json_session_type;              // What kind of session is 
 EXTERN char          json_ota_url[URL_SIZE];         // OTA URL
 EXTERN int           json_lock;                      // Lock the JSON message so it cannot be changed
 EXTERN int           json_is_locked;                 // JSON lock state
+EXTERN int           json_auth_code;                 // Target authorization code
 #endif

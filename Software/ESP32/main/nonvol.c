@@ -425,10 +425,13 @@ void update_nonvol(unsigned int current_version) // Version present in persisten
     {
       strcpy(json_ota_url, OTA_URL);                        // Copy the OTA URL to the nonvol
       nvs_set_str(my_handle, NONVOL_OTA_URL, json_ota_url); // Store the URL in the nonvol
+      version = 12;                                         // Skip to version 12
     }
     if ( version == 12 )
     {
       nvs_set_i32(my_handle, NONVOL_LOCK, 0);               // Disable the lock code
+      nvs_set_i32(my_handle, NONVOL_AUTH_CODE, 0);          // Disable the lock code
+      version = 13;
     }
   }
 

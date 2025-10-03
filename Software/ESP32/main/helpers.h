@@ -28,6 +28,7 @@ double       sq(double x);                                              // Squar
 unsigned int hamming_weight(unsigned int word);                         // Add up the numbr of bits in a word
 void         to_binary(unsigned int x, unsigned int bits, char *s);     // Convert a number to a binary string
 void         watchdog(void);                                            // Monitor the target health
+
 /*
  * Global helper variables
  */

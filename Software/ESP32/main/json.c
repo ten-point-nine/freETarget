@@ -42,6 +42,7 @@ static void set_trace(int v);                                                  /
 static void unlock_target(unsigned int password);                              // Unlock the target
 static void lock_target(unsigned int password);                                // Lock the target
 static bool good_input(unsigned int conversion, char next, unsigned int show); // Determine if the input is valid
+static void set_auth_code(unsigned int v);                                     // Set the authorization code
 
 /*
  *  Variables
@@ -58,6 +59,7 @@ const json_message_t JSON[] = {
     //  PS Value
     {HIDE,        "\"50M\":",             0,                           IS_VOID,                  &set_50m,           0,                       0,          0 },
     {HIDE + LOCK, "\"ANGLE\":",           &json_sensor_angle,          IS_INT32,                 0,                  NONVOL_SENSOR_ANGLE,     45,         0 },
+    {HIDE + LOCK, "\"AUTH_CODE\":",       &json_auth_code,             IS_INT32,                 &set_auth_code,     NONVOL_AUTH_CODE,        0,          13},
     {SHOW + LOCK, "\"AUX_MODE\":",        &json_aux_mode,              IS_INT32,                 0,                  NONVOL_AUX_PORT_ENABLE,  0,          6 },
     {HIDE,        "\"BYE\":",             0,                           IS_INT32,                 &bye,               0,                       0,          0 },
     {HIDE,        "\"ECHO\":",            0,                           IS_VOID,                  &show_echo,         0,                       0,          0 },
@@ -778,6 +780,71 @@ static void unlock_target(unsigned int password) // Password entered by the user
   {
     json_is_locked = 1; // Lock the target
     SEND(ALL, sprintf(_xs, "Invalid configuration lock code\r\n");)
+  }
+
+  /*
+   *  All done, return
+   */
+  return;
+}
+
+/*-----------------------------------------------------
+ *
+ * @function: set_auth_code
+ *
+ * @brief:    Set in the authentication code
+ *
+ * @return: None
+ *
+ *-----------------------------------------------------
+ *
+ * The authentication code is used to allow the score to
+ * be sent to the client.
+ *
+ * An auth code of zero means no authentication is required.
+ *
+ * A non-zero auth code means the client must provide a
+ * matching code to get the score.
+ *
+ * If the authcode saved in NONVOL matches the new_auth_code
+ * then the working auth code is cleared to zero.
+ *
+ * The is reset back to requried across power cycles.
+ *
+ * Setting auth_code
+ * {"AUTH_CODE":1234}  // Sets the auth code to 1234
+ *
+ * Clearing auth_code
+ * {"AUTH_CODE":1234} // Clears it if it matches
+ *
+ * Resetting the auth_code
+ * {"AUTH_CODE":1234, "AUTH_CODE":4321} // Match the first, set the second
+ *
+ *-----------------------------------------------------*/
+static void set_auth_code(unsigned int new_auth_code)         // Authcode entered by the user
+{
+  unsigned int saved_auth_code;                               // Auth code read from nonvol
+
+  nvs_get_i32(my_handle, NONVOL_AUTH_CODE, &saved_auth_code); // Read the auth code from nonvol
+
+  /*
+   * Is the current auth code zero? If so, then we can set a new one
+   */
+  if ( json_auth_code == 0 )
+  {
+    json_auth_code = new_auth_code;                          // Set the auth code
+    nvs_set_i32(my_handle, NONVOL_AUTH_CODE, new_auth_code); // Save the auth code
+    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Authentication code set\r\n");))
+    return;
+  }
+
+  /*
+   * The current auth code is non-zero, meaning set a code from the user
+   */
+  if ( saved_auth_code == new_auth_code ) // Does the new code match the nonvol one?
+  {
+    json_auth_code = 0;                   // Yes, then disable the auth code
+    return;
   }
 
   /*
