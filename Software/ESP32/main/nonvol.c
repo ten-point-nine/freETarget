@@ -144,18 +144,13 @@ void read_nonvol(void)
   }
 
   /*
-   *  Handle the special case of the lock code
+   * Special case of broken sensor diameter
    */
-  nvs_get_i32(my_handle, NONVOL_LOCK, &json_lock); // Read in the lock code
+  if ( json_sensor_dia < 0.1 ) // Sensor diameter is broken
+  {
+    json_sensor_dia = 230;     // Set to the default
+  }
 
-  if ( json_lock == 0 )
-  {
-    json_is_locked = 0;                            // Unlocked
-  }
-  else
-  {
-    json_is_locked = 1;                            // Locked
-  }
   /*
    * All done, begin the program
    */

@@ -49,7 +49,7 @@ void test_build_fake_shots(void);                         // Generate a list of 
 #define LED_GOOD               "G----"  // The software has started but not in shot mode
 #define LED_PASS               "GGG---" //
 #define LED_FATAL              "RRR--"  // A fatal error prevents operation
-#define LED_READY              "g----"  // The shot is ready to go.  Blink to show we are alive
+#define LED_READY              "a----"  // The shot is ready to go.  Blink to show we are alive. Test the Authorized state
 #define LED_BYE                "B----"  // Go to sleep
 #define LED_OTA_WAITING        "b  --"  // Waiting for OTA to start
 #define LED_OTA_DOWNLOAD       "B  --"  // The OTA is downloading

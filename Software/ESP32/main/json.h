@@ -74,7 +74,6 @@ extern const json_message_t JSON[];
  * Global JSON variables and settings
  */
 
-EXTERN int           json_is_locked;                 // Set to TRUE if the JSON is locked
 EXTERN int           json_aux_mode;                  // Enable comms from the AUX port
 EXTERN int           json_calibre_x10;               // Pellet Calibre
 EXTERN int           json_dip_switch;                // DIP switch overwritten by JSON message
@@ -160,6 +159,5 @@ EXTERN int           json_remote_modes;              // What modes are available
 EXTERN int           json_session_type;              // What kind of session is this?
 EXTERN char          json_ota_url[URL_SIZE];         // OTA URL
 EXTERN int           json_lock;                      // Lock the JSON message so it cannot be changed
-EXTERN int           json_is_locked;                 // JSON lock state
 EXTERN int           json_auth_code;                 // Target authorization code
 #endif

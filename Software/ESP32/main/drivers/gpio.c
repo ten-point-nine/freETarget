@@ -292,26 +292,39 @@ void set_status_LED(char new_state[]          // New LED colours
 
       switch ( new_state[i] )
       {
-        case 'r':              // RED LED
-          status[i].blink = 1; // Turn on Blinking
+        case 'a':                     // Authorized State
+          status[i].blink = 1;        // Turn on Blinking
+        case 'A':
+          if ( json_auth_code == 0 )
+          {
+            status[i].green = LED_ON; // Authorized
+          }
+          else
+          {
+            status[i].red = LED_ON;   // Not Authorized
+          }
+          break;
+
+        case 'r':                     // RED LED
+          status[i].blink = 1;        // Turn on Blinking
         case 'R':
           status[i].red = LED_ON;
           break;
 
-        case 'y':              // YELLOW LED
-          status[i].blink = 1; // Turn on Blinking
+        case 'y':                     // YELLOW LED
+          status[i].blink = 1;        // Turn on Blinking
         case 'Y':
           status[i].red   = LED_ON / 2;
           status[i].green = LED_ON / 2;
           break;
 
-        case 'g':              // GREEN LED
-          status[i].blink = 1; // Turn on Blinking
+        case 'g':                     // GREEN LED
+          status[i].blink = 1;        // Turn on Blinking
         case 'G':
           status[i].green = LED_ON;
           break;
 
-        case 'b':              // BLUE LED
+        case 'b':                     // BLUE LED
           status[i].blink = 1;
         case 'B':
           status[i].blue = LED_ON;

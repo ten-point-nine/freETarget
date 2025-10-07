@@ -556,7 +556,7 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);)         // Current software version
   esp_ota_get_partition_description(running_partition, &running_app_info);
   SEND(ALL, sprintf(_xs, "\"OTA BUILD\":        %s, ", running_app_info.version);) // Current OTA identifier
-  SEND(ALL, sprintf(_xs, "\"LOCKED\":           %s \"", yes_no[json_is_locked]);)  // The JSON is locked
+  SEND(ALL, sprintf(_xs, "\"LOCKED\":           %s \"", yes_no[json_lock != 0]);)  // The JSON is locked
 
 #if ( INCLUDE_OTA_ECHO )
   OTA_get_versions(running_app_version, new_app_version);
@@ -738,11 +738,10 @@ static void lock_target(unsigned int password) // Password entered by the user
   /*
    * First, test to see if there is a non-zero lock code?
    */
-  if ( json_is_locked == 0 )
+  if ( json_lock == 0 )
   {
     json_lock = password;                          // Set the lock code
     nvs_set_i32(my_handle, NONVOL_LOCK, password); // Save the lock code
-    json_is_locked = 1;
   }
 
   /*
@@ -773,13 +772,16 @@ static void unlock_target(unsigned int password) // Password entered by the user
    */
   if ( json_lock == password )
   {
-    json_is_locked = 0; // Unlock the target
+    json_lock = 0; // Unlock the target
     SEND(ALL, sprintf(_xs, "Configuration unlocked\r\n");)
+    return;
   }
-  else
+
+  if ( json_lock == 0 )
   {
-    json_is_locked = 1; // Lock the target
-    SEND(ALL, sprintf(_xs, "Invalid configuration lock code\r\n");)
+    json_lock = password; // Lock the target
+    SEND(ALL, sprintf(_xs, "Configuration locked\r\n");)
+    return;
   }
 
   /*
@@ -887,7 +889,7 @@ static bool good_input(unsigned int conversion, // What kind of input is it?
     return false;
   }
 
-  if ( json_is_locked == 0 )                    // The JSON is not locked
+  if ( json_lock == 0 )                         // The JSON is not locked
   {
     return true;
   }
