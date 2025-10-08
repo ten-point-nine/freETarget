@@ -445,6 +445,14 @@ void serial_to_all(char *str,        // String to output
   static char e_o_line[SHORT_TEXT];  // Place to store even odd srring
 
   /*
+   *  Check to see if we are authorized to output anything
+   */
+  if ( json_auth_code != 0 ) // Not authorized
+  {
+    return;
+  }
+
+  /*
    * Check to see if we have a control message coming
    */
   if ( (ports & EVEN_ODD_BEGIN) != 0 ) // Begin concatination

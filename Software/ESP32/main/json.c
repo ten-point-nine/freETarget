@@ -774,14 +774,15 @@ static void unlock_target(unsigned int password) // Password entered by the user
   {
     json_lock = 0; // Unlock the target
     SEND(ALL, sprintf(_xs, "Configuration unlocked\r\n");)
-    return;
   }
-
-  if ( json_lock == 0 )
+  else
   {
-    json_lock = password; // Lock the target
-    SEND(ALL, sprintf(_xs, "Configuration locked\r\n");)
-    return;
+    if ( json_lock == 0 )
+    {
+      json_lock = password; // Lock the target
+      SEND(ALL, sprintf(_xs, "Configuration locked\r\n");)
+      return;
+    }
   }
 
   /*
@@ -837,21 +838,19 @@ static void set_auth_code(unsigned int new_auth_code)         // Authcode entere
     json_auth_code = new_auth_code;                          // Set the auth code
     nvs_set_i32(my_handle, NONVOL_AUTH_CODE, new_auth_code); // Save the auth code
     DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Authentication code set\r\n");))
-    return;
   }
-
-  /*
-   * The current auth code is non-zero, meaning set a code from the user
-   */
-  if ( saved_auth_code == new_auth_code ) // Does the new code match the nonvol one?
+  else
   {
-    json_auth_code = 0;                   // Yes, then disable the auth code
-    return;
+    if ( json_auth_code == new_auth_code )                   // Does the new code match the nonvol one?
+    {
+      json_auth_code = 0;                                    // Yes, then disable the auth code
+    }
   }
 
   /*
    *  All done, return
    */
+  set_status_LED(LED_READY); // Revise blinking based on auth code status
   return;
 }
 

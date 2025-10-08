@@ -129,14 +129,15 @@ void freeETarget_init(void)
   /*
    *  Setup the hardware
    */
-  json_aux_mode = false; // Assume the AUX port is not used
-  gpio_init();           // Setup the hardware
-  serial_io_init();      // Setup the console for debug message
-  read_nonvol();         // Read in the settings
-  serial_aux_init();     // Update the serial port if there is a change
-  set_VREF();            // Set the reference voltages
-  DAC_calibrate();       // Adjust the DAC to compensate for voltage drop
-  multifunction_init();  // Override the MFS if we have to
+  json_aux_mode  = false; // Assume the AUX port is not used
+  json_auth_code = -1;    // No authorization code by default on power up
+  gpio_init();            // Setup the hardware
+  serial_io_init();       // Setup the console for debug message
+  read_nonvol();          // Read in the settings
+  serial_aux_init();      // Update the serial port if there is a change
+  set_VREF();             // Set the reference voltages
+  DAC_calibrate();        // Adjust the DAC to compensate for voltage drop
+  multifunction_init();   // Override the MFS if we have to
 
   /*
    * Put up a self test
