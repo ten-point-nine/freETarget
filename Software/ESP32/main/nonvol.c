@@ -144,19 +144,6 @@ void read_nonvol(void)
   }
 
   /*
-   *  Handle the special case of the lock code
-   */
-  nvs_get_i32(my_handle, NONVOL_LOCK, &json_lock); // Read in the lock code
-
-  if ( json_lock == 0 )
-  {
-    json_is_locked = 0;                            // Unlocked
-  }
-  else
-  {
-    json_is_locked = 1;                            // Locked
-  }
-  /*
    * All done, begin the program
    */
   return;

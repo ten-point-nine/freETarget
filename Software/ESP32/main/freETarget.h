@@ -203,10 +203,10 @@ EXTERN time_count_t          time_since_last_shot;                  // 15 minute
 EXTERN time_count_t          session_time[];                        // Time in each session
 EXTERN shot_record_t         record[SHOT_SPACE];
 #ifdef FREETARGET_C
-EXTERN char        *yes_no[]       = {"No", "Yes"};                 // Yes or No
+EXTERN char        *no_yes[]       = {"No", "Yes"};                 // Yes or No
 EXTERN time_count_t session_time[] = {1000 * 60, 15 * 60, 75 * 60}; // Time in each session EMPTY, SIGHT, SCORE // Array of shot records
 #else
-EXTERN char        *yes_no[]; // Yes or No strings
+EXTERN char        *no_yes[]; // Yes or No strings
 EXTERN time_count_t session_time[];
 #endif
 
