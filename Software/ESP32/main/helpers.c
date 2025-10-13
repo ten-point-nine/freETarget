@@ -429,8 +429,8 @@ void echo_serial(int duration, // Duration in clock ticks
                  int out_ports // Where to ouput to
 )
 {
-  unsigned char          ch;
-  volatile unsigned long test_time;
+  unsigned char ch;
+  time_count_t  test_time;
 
   ft_timer_new(&test_time, (unsigned long)duration);
 

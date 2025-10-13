@@ -458,7 +458,7 @@ void serial_to_all(char *str,        // String to output
 
   if ( (ports & EVEN_ODD_END) != 0 ) // End concatination
   {
-    even_odd_mode = false;
+    even_odd_mode = false;           // And send out the last
     return;
   }
 

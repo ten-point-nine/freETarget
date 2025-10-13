@@ -39,7 +39,7 @@
 #include "bluetooth.h"
 #include "ota.h"
 
-extern volatile unsigned long paper_time;
+extern volatile long paper_time; // Allow only positive time
 
 static void show_test_help(void);
 static void test_display_all_scores(void);
@@ -103,6 +103,7 @@ static const self_test_t test_list[] = {
     {"- Software tests",                  0                        },
     {"build_json_score",                  &test_build_json_score   },
     {"build_fake_shots",                  &test_build_fake_shots   },
+    {"generate_fake_shot",                &generate_fake_shot      },
     {"display_all_scores",                &test_display_all_scores },
     {"Rapidfire test",                    &test_rapidfire          },
     {"Rapidfire test",                    &test_rapidfire          },
@@ -262,25 +263,25 @@ bool sensor_test(void)
 
 bool do_factory_test(bool test_run)
 {
-  int   i, percent;
-  int   running;               // Bit mask from run flip flops
-  int   dip;                   // Input from DIP input
-  char  ch;
-  char  ABCD[] = "DCBA";       // DIP switch order
-  int   pass;                  // Pass YES/NO
-  bool  passed_once;           // Passed all of the tests at least once
-  float volts[4];
-  float vmes_lo;
-  int   motor_toggle;          // Toggle motor on an off
-  int   number_of_sensors = 4; // Number of sensors to test
+  int    i, percent;
+  int    running;               // Bit mask from run flip flops
+  int    dip;                   // Input from DIP input
+  char   ch;
+  char   ABCD[] = "DCBA";       // DIP switch order
+  int    pass;                  // Pass YES/NO
+  bool   passed_once;           // Passed all of the tests at least once
+  double volts[4];
+  float  vmes_lo;
+  int    motor_toggle;          // Toggle motor on an off
+  int    number_of_sensors = 4; // Number of sensors to test
 
-  pass         = 0;            // Pass YES/NO
+  pass         = 0;             // Pass YES/NO
   passed_once  = false;
   percent      = 0;
   motor_toggle = 0;
   if ( PCNT_HIGH_GPIO & board_mask )
   {
-    number_of_sensors = 8;     // Number of sensors to test
+    number_of_sensors = 8;      // Number of sensors to test
   }
 
   /*
@@ -686,7 +687,7 @@ void show_sensor_status(unsigned int sensor_status)
 {
   unsigned int i;
 
-  SEND(ALL, sprintf(_xs, " Latch:");)
+  SEND(ALL, sprintf(_xs, "Latch:");)
 
   for ( i = N; i <= W; i++ )
   {

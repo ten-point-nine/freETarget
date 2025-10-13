@@ -562,16 +562,19 @@ void read_timers(int timer[])
  * {"MFS_HOLD_C":26, "MFS_HOLD_D":28, "STEP_START":200, "STEP_RAMP": 5, "STEP_TIME":30, "STEP_COUNT": 200, "PAPER_TIME":0}
  *
  *-----------------------------------------------------*/
+static bool motor_running = false;
+
 void paper_start(void)
 {
 
   /*
    *  DC Motor, turn on the FET to start the motor
    */
-  if ( IS_DC_WITNESS ) // DC motor,
+  if ( IS_DC_WITNESS )    // DC motor,
   {
     DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "DC motor start: %d ms", json_paper_time);))
     DCmotor_on_off(true, json_paper_time);
+    motor_running = true; // Used for diagnostics
   }
 
   /*
@@ -608,14 +611,18 @@ void paper_start(void)
  *-----------------------------------------------------*/
 void paper_drive_tick(void)
 {
-
   /*
    * Drive the DC motor
    */
   if ( IS_DC_WITNESS )
   {
-    if ( paper_time == 0 )
+    if ( paper_time <= 0 )
     {
+      if ( motor_running == true )
+      {
+        motor_running = false;
+        DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "DC motor stopped");))
+      }
       paper_stop(); // Motor OFF
     }
   }
@@ -627,7 +634,7 @@ void paper_drive_tick(void)
   {
     if ( step_count != 0 )   // In motion
     {
-      if ( paper_time == 0 ) // Timer for next pulse?
+      if ( paper_time <= 0 ) // Timer for next pulse?
       {
         stepper_pulse();     // Motor toggle
       }

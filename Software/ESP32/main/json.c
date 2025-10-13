@@ -499,7 +499,7 @@ void show_echo(void)
   /*
    * Finish up with the special cases
    */
-  serial_to_all(NULL, EVEN_ODD_END);                                                   // End the even odd line
+  serial_to_all(_xs, EVEN_ODD_END);                                                    // End the even odd line
   SEND(ALL, sprintf(_xs, "\r\n*** STATUS ***\r\n");)
   serial_to_all(NULL, EVEN_ODD_BEGIN);                                                 // Start over again
   SEND(ALL, sprintf(_xs, "\"SN\":                %d", json_serial_number);)
@@ -565,12 +565,12 @@ void show_echo(void)
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
   SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                          // Current persistent storage version
   SEND(ALL, sprintf(_xs, "\"BD_REV\":            %4.2f ", (float)revision() / 100);) // Current board version
-  SEND(ALL, sprintf(_xs, "}\r\n");)
 
   /*
    *  All done, return
    */
-  serial_to_all(NULL, EVEN_ODD_END); // End the even odd line
+  serial_to_all(_xs, EVEN_ODD_END); // End the even odd line
+  SEND(ALL, sprintf(_xs, "}\r\n");)
 
   return;
 }

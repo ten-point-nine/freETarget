@@ -66,8 +66,11 @@
 #include "json.h"
 #include "serial_io.h"
 #include "timer.h"
+#include "token.h"
 
-static volatile unsigned long token_tick; // Token ring watchdog
+static time_count_t token_tick;              // Token ring watchdog
+int                 my_ring   = TOKEN_UNDEF; // Token ring address
+int                 whos_ring = TOKEN_UNDEF; // Who owns the ring right now?
 
 /*-----------------------------------------------------
  *
