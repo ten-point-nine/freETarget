@@ -710,8 +710,8 @@ void paper_stop(void)
  * DCmotor_on_off(false, 0)
  *
  *-----------------------------------------------------*/
-void DCmotor_on_off(bool          on,      // on == true, turn on motor drive
-                    unsigned long duration // How long will it be on for in ms?
+void DCmotor_on_off(bool         on,      // on == true, turn on motor drive
+                    time_count_t duration // How long will it be on for in ms?
 )
 {
   /*

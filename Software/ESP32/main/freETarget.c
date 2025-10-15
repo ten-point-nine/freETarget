@@ -155,13 +155,13 @@ void freeETarget_init(void)
   /*
    *  Set up the long running timers
    */
-  ft_timer_new(&keep_alive, (unsigned long)json_keep_alive * ONE_SECOND * 60l);         // Keep alive timer
-  ft_timer_new(&power_save, (unsigned long)(json_power_save) * (long)ONE_SECOND * 60L); // Power save timer
-  ft_timer_new(&time_since_last_shot, HTTP_CLOSE_TIME * 60 * ONE_SECOND);               // 15 minutes since last shot
+  ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND * 60l);                 // Keep alive timer
+  ft_timer_new(&power_save, (time_count_t)(json_power_save) * (time_count_t)ONE_SECOND * 60L); // Power save timer
+  ft_timer_new(&time_since_last_shot, HTTP_CLOSE_TIME * 60 * ONE_SECOND);                      // 15 minutes since last shot
 
-                                                                                        /*
-                                                                                         * Run the power on self test
-                                                                                         */
+                                                                                               /*
+                                                                                                * Run the power on self test
+                                                                                                */
   POST_counters();            // POST counters does not return if there is an error
   if ( check_12V() == false ) // Verify the 12 volt supply
   {
@@ -250,10 +250,10 @@ void freeETarget_target_loop(void *arg)
     switch ( freETarget_state )
     {
       default:
-      case START:                                                                                // Start of the loop
+      case START:                                                                              // Start of the loop
         DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "state: START");))
-        power_save           = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L; //  Reset the timer
-        time_since_last_shot = HTTP_CLOSE_TIME * 60l * ONE_SECOND;                               // 15 minutes since last shot
+        power_save           = (time_count_t)json_power_save * (time_count_t)ONE_SECOND * 60L; //  Reset the timer
+        time_since_last_shot = HTTP_CLOSE_TIME * 60l * ONE_SECOND;                             // 15 minutes since last shot
         set_mode(); // Set the mode for the next string of shot (ex Tabata or Rapid Fire)
         arm();      // Arm the circuit and check for errors
         set_status_LED(LED_READY);
