@@ -49,32 +49,32 @@
 unsigned int number_of_connections = 0; // How many people are connected to me?
 
                                         // Keep alive timer
-time_count_t tabata_timer;            // Free running state timer
-time_count_t rapid_timer;             // Timer used for rapid fire ecents
-                                      // Timer to reset LED status
-unsigned long go_dark     = 10l;      // Go dark for 10 seconds
-unsigned long go_wait     = 3l;       // Wait for the PC to catchup
-unsigned long all_done    = 0l;       // All finished
-int           always_true = true;
+time_count_t tabata_timer;           // Free running statsecondse timer
+time_count_t rapid_timer;            // Timer used for rapid fire ecents
+                                     // Timer to reset LED status
+int go_dark     = 10l;               // Go dark for 10
+int go_wait     = 3l;                // Wait for the PC to catchup
+int all_done    = 0l;                // All finished
+int always_true = true;
 
 static enum {
-  START = 0,                          // 0 et the operating mode
-  WAIT,                               // 1 ARM the circuit and wait for a shot
-  REDUCE                              // 2 Reduce the data and send the score
+  START = 0,                         // 0 et the operating mode
+  WAIT,                              // 1 ARM the circuit and wait for a shot
+  REDUCE                             // 2 Reduce the data and send the score
 } freETarget_state;
 
 typedef struct
 {
-  volatile unsigned long *timer;      // Timer used to control state length
-  char                   *status_LED; // Status LED output
-  float                   LED_bright; // Brightness of target LED
-  char                   *message;    // Message to be sent to PC
-  bool                    in_shot;    // In as shot cycle
+  volatile int *timer;               // Timer used to control state length
+  char         *status_LED;          // Status LED output
+  float         LED_bright;          // Brightness of target LED
+  char         *message;             // Message to be sent to PC
+  bool          in_shot;             // In as shot cycle
 } rapid_state_t;
 
 extern int isr_state;
 
-volatile unsigned int run_state = 0;  // Current operating state
+volatile unsigned int run_state = 0; // Current operating state
 
 /*
  *  Function Prototypes
@@ -158,13 +158,13 @@ void freeETarget_init(void)
   /*
    *  Set up the long running timers
    */
-  ft_timer_new(&keep_alive, (unsigned long)json_keep_alive * ONE_SECOND * 60l);         // Keep alive timer
-  ft_timer_new(&power_save, (unsigned long)(json_power_save) * (long)ONE_SECOND * 60L); // Power save timer
-  ft_timer_new(&time_since_last_shot, HTTP_CLOSE_TIME * 60 * ONE_SECOND);               // 15 minutes since last shot
+  ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND * 60l);         // Keep alive timer
+  ft_timer_new(&power_save, (time_count_t)(json_power_save) * (long)ONE_SECOND * 60L); // Power save timer
+  ft_timer_new(&time_since_last_shot, HTTP_CLOSE_TIME * 60 * ONE_SECOND);              // 15 minutes since last shot
 
-                                                                                        /*
-                                                                                         * Run the power on self test
-                                                                                         */
+                                                                                       /*
+                                                                                        * Run the power on self test
+                                                                                        */
   POST_counters();            // POST counters does not return if there is an error
   if ( check_12V() == false ) // Verify the 12 volt supply
   {
@@ -253,10 +253,10 @@ void freeETarget_target_loop(void *arg)
     switch ( freETarget_state )
     {
       default:
-      case START:                                                                                // Start of the loop
+      case START:                                                                              // Start of the loop
         DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "state: START");))
-        power_save           = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L; //  Reset the timer
-        time_since_last_shot = HTTP_CLOSE_TIME * 60l * ONE_SECOND;                               // 15 minutes since last shot
+        power_save           = (time_count_t)json_power_save * (time_count_t)ONE_SECOND * 60L; //  Reset the timer
+        time_since_last_shot = HTTP_CLOSE_TIME * 60l * ONE_SECOND;                             // 15 minutes since last shot
         set_mode(); // Set the mode for the next string of shot (ex Tabata or Rapid Fire)
         arm();      // Arm the circuit and check for errors
         set_status_LED(LED_READY);
@@ -459,8 +459,10 @@ unsigned int reduce(void)
     DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "shot_in: %d,  shot_out:%d", shot_in, shot_out);))
     DLT(DLT_DEBUG, show_sensor_status(record[shot_out].sensor_status);)
 
-    show_sensor_fault(record[shot_out].sensor_status);
-
+    if ( (record[shot_out].sensor_status & 0x0f) != 0x0f )
+    {
+      show_sensor_fault(record[shot_out].sensor_status);
+    }
     location = compute_hit(&record[shot_out]); // Compute the score
 
     /*
@@ -529,15 +531,15 @@ unsigned int reduce(void)
   /*
    * All done, Exit to FINISH if the timer has expired
    */
-  while ( ring_timer != 0 ) // Wait here to make sure the ringing has stopped
+  while ( ring_timer > 0 ) // Wait here to make sure the ringing has stopped
   {
     DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "ring_timer: %ld", ring_timer);))
     vTaskDelay(10);
   }
 
-                            /*
-                             * Finished reduction and going back into the shot
-                             */
+                           /*
+                            * Finished reduction and going back into the shot
+                            */
   run_state &= ~IN_REDUCTION;
 
   if ( tabata_timer == 0 )
@@ -702,7 +704,7 @@ void tabata_task(void)
   if ( tabata_timer == 0 )                                                           // Time to go to the next state?
   {
     tabata_state_machine++;                                                          // Next state
-    SEND(ALL, sprintf(_xs, "{\"%s\": %ld}\r\n", tabata_state[tabata_state_machine].message, *tabata_state[tabata_state_machine].timer);)
+    SEND(ALL, sprintf(_xs, "{\"%s\": %d}\r\n", tabata_state[tabata_state_machine].message, *tabata_state[tabata_state_machine].timer);)
 
     if ( *tabata_state[tabata_state_machine].timer == 0 )                            // Reached the end of the state machine
     {
@@ -806,7 +808,7 @@ void rapid_fire_task(void)
   if ( rapid_timer == 0 )                                                          // Time to go to the next state?
   {
     rapid_state_machine++;                                                         // Next state
-    SEND(ALL, sprintf(_xs, "{\"%s\": %ld}", rapid_state[rapid_state_machine].message, *rapid_state[rapid_state_machine].timer);)
+    SEND(ALL, sprintf(_xs, "{\"%s\": %d}", rapid_state[rapid_state_machine].message, *rapid_state[rapid_state_machine].timer);)
 
     if ( *rapid_state[rapid_state_machine].timer == 0 )                            // Reached the end of the state machine
     {
@@ -993,4 +995,53 @@ sensor_ID_t *find_sensor(unsigned int run_mask // Run mask to look for a match
    * Not found, return null
    */
   return LED_READY;
+}
+/*----------------------------------------------------------------
+ *
+ * @function: generate_fake_shot()
+ *
+ * @brief:    Geerate a fake shot by faking the registers
+ *
+ * @return:   None
+ *
+ *----------------------------------------------------------------
+ *
+ * Scan throught the sensor structure looking for the match to
+ * the run mask.
+ *
+ *--------------------------------------------------------------*/
+void generate_fake_shot(void)
+{
+  shot_in  = 0; // Reset the shot queue
+  shot_out = 0;
+
+  /*
+   *  Create fake data and reduct the result
+   */
+  while ( 1 )
+  {
+    SEND(ALL, sprintf(_xs, "\r\nGenerating fake shot %d\r\n", shot_in);)
+    record[shot_in].sensor_status  = 0xFF;                                   // Force a sensor trigger
+    record[shot_in].timer_count[N] = 1000;                                   // Should be 10.9
+    record[shot_in].timer_count[E] = 1000;
+    record[shot_in].timer_count[S] = 1000;
+    record[shot_in].timer_count[W] = 1000;
+    record[shot_in].shot           = shot_in;
+    record[shot_in].face_strike    = 0;                                      // No face strikes
+    ring_timer                     = json_min_ring_time * ONE_SECOND / 1000; // Reset the ring timer
+
+    shot_in++;
+    shot_in = shot_in % SHOT_SPACE;
+
+    reduce();                                                                // Process the shot
+
+    if ( serial_available(CONSOLE) )                                         // Exit if there is any input
+    {
+      serial_flush(CONSOLE);
+      break;
+    }
+    vTaskDelay(ONE_SECOND * 5);
+  }
+
+  return;
 }

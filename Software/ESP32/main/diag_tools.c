@@ -39,7 +39,7 @@
 #include "bluetooth.h"
 #include "ota.h"
 
-extern volatile unsigned long paper_time;
+extern volatile time_count_t paper_time;
 
 static void show_test_help(void);
 static void test_display_all_scores(void);
@@ -103,6 +103,7 @@ static const self_test_t test_list[] = {
     {"- Software tests",                  0                        },
     {"build_json_score",                  &test_build_json_score   },
     {"build_fake_shots",                  &test_build_fake_shots   },
+    {"generate_fake_shot",                &generate_fake_shot      },
     {"display_all_scores",                &test_display_all_scores },
     {"Rapidfire test",                    &test_rapidfire          },
     {"Rapidfire test",                    &test_rapidfire          },

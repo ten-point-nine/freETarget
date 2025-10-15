@@ -44,8 +44,8 @@ sensor_t s[4] = {
     {3, {'w', "WEST_LO", LED_WEST_FAILED, RUN_WEST_LO, BIT_WEST_LO},     {'W', "WEST_HI", LED_WEST_FAILED, RUN_WEST_HI, BIT_WEST_HI}    }
 };
 
-unsigned int                  pellet_calibre; // Time offset to compensate for pellet diameter
-static volatile unsigned long wdt;            // Warchdog  timer
+unsigned int        pellet_calibre;         // Time offset to compensate for pellet diameter
+static time_count_t wdt;                    // Warchdog  timer
 
 static void remap_target(shot_record_t *s);   // Map a club target if used
 

@@ -61,12 +61,12 @@ typedef struct
 /*
  * Local Variables
  */
-static volatile unsigned long *timers[N_TIMERS]; // Active timer list
-volatile unsigned long         shot_timer;       // Wait for the sound to hit all sensors
-volatile unsigned long         ring_timer;       // Let the ring on the backstop end
-static state                   isr_state;        // What sensor state are we in
-static unsigned long           base_time = 0;    // Base time to show elapsed time
-time_count_t                   time_to_go;       // Time remaining in event in seconds
+static time_count_t *timers[N_TIMERS];      // Active timer list (allow only positive time)
+time_count_t         shot_timer;            // Wait for the sound to hit all sensors
+time_count_t         ring_timer;            // Let the ring on the backstop end
+static state         isr_state;             // What sensor state are we in
+static time_count_t  base_time = 0;         // Base time to show elapsed time
+time_count_t         time_to_go;            // Time remaining in event in seconds
 
 static synchronous_task_t task_list[] = {
     {BAND_10ms,   token_cycle              }, // Check for token ring activity
@@ -80,7 +80,7 @@ static synchronous_task_t task_list[] = {
     {BAND_1000ms, check_12V                }, // Monitor the 12V supply
     {BAND_1000ms, send_keep_alive          }, // Send a keep alive message
     {BAND_1000ms, check_new_connection     }, // Check for a new WiFi connection
-                                                 //  {BAND_60s,    watchdog                 }, // Monitor the target health
+                                            //  {BAND_60s,    watchdog                 }, // Monitor the target health
     {0,           0                        }
 };
 
@@ -263,13 +263,20 @@ void freeETarget_timers(void *pvParameters)
     {
       for ( i = 0; i != N_TIMERS; i++ ) // Refresh the timers.  Decriment in 10ms increments
       {
-        if ( (timers[i] != 0) && (*timers[i] != 0) )
+        if ( timers[i] != 0 )           // The timer has a valid pointer
         {
-          (*timers[i])--;               // Decriment the timer
+          if ( *timers[i] > 0 )         // And is non-sero
+          {
+            (*timers[i])--;             // Decriment the timer
+          }
+          else                          // Timer has expired
+          {
+            *timers[i] = 0;             // Set the timer to zero
+          }
         }
       }
+      vTaskDelay(TICK_10ms);
     }
-    vTaskDelay(TICK_10ms);
   }
   /*
    * Never get here
@@ -360,7 +367,7 @@ void freeETarget_synchronous(void *pvParameters)
  *
  *-----------------------------------------------------*/
 int ft_timer_new(time_count_t *new_timer, // Pointer to new down counter
-                 unsigned long duration)  // Duration of the timer
+                 long          duration)           // Duration of the timer
 {
   unsigned int i;
 
@@ -374,7 +381,9 @@ int ft_timer_new(time_count_t *new_timer, // Pointer to new down counter
     if ( (timers[i] == 0)              // Got an empty timer slot
          || (timers[i] == new_timer) ) // or it already exists
     {
-      timers[i]  = new_timer;          // Add it in
+      timers[i] = new_timer;           // Add it in
+      duration /= 10;                  // Convert from ms to 10ms ticks
+      duration *= 10;                  // Round up to nearest 10ms
       *new_timer = duration;
       return 1;
     }
@@ -457,12 +466,12 @@ void show_time(void)
  * Common timer function
  *
  *---------------------------------------------------*/
-unsigned long run_time_seconds(void)
+time_count_t run_time_seconds(void)
 {
   return (esp_timer_get_time() - base_time) / 1000000;
 }
 
-unsigned long run_time_ms(void)
+time_count_t run_time_ms(void)
 {
   return (esp_timer_get_time() - base_time) / 1000;
 }

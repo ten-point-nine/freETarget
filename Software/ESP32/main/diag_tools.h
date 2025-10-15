@@ -27,6 +27,7 @@ void set_diag_LED(char *new_LEDs, unsigned int duration); // Display the LED fai
 bool check_12V(void);                                     // Check the 12 volt supply
 void heartbeat(void);                                     // Send out regular status messages
 void test_build_fake_shots(void);                         // Generate a list of shots
+void generate_fake_shot(void);                            // Generate a string of shots
 
 /*
  *  Definitions

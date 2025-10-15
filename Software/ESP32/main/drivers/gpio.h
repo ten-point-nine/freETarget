@@ -32,7 +32,7 @@ void enable_face_interrupt();                              // Turn on the face s
 void disable_face_interrupt(void);                         // Turn off the face strike interrupt
 
 void digital_test(void);                                   // Execute the digital test
-void DCmotor_on_off(bool on, unsigned long duration);      // Turn the motor on or off
+void DCmotor_on_off(bool on, time_count_t duration);       // Turn the motor on or off
 int  is_paper_on();                                        // Return the current running state
 void rapid_green(unsigned int state);                      // Drive the GREEN light
 void rapid_red(unsigned int state);                        // Drive the RED light

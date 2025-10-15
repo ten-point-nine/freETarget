@@ -67,7 +67,7 @@
 #include "serial_io.h"
 #include "timer.h"
 
-static volatile unsigned long token_tick; // Token ring watchdog
+static volatile time_count_t token_tick; // Token ring watchdog
 
 /*-----------------------------------------------------
  *
