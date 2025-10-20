@@ -297,12 +297,10 @@ void set_status_LED(char new_state[]          // New LED colours
         case 'A':
           if ( json_auth_code == 0 )
           {
-            printf("Green Authorized\r\n");
             status[i].green = LED_ON; // Authorized
           }
           else
           {
-            printf("Red Not Authorized\r\n");
             status[i].red = LED_ON;   // Not Authorized
           }
           break;

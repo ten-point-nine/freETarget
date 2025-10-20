@@ -43,6 +43,16 @@ unsigned int board_mask    = 0;  // Mask for the board revision
 static float t_c;                // Temperature from sensor
 static float rh;                 // Humidity from sensor
 
+/*
+ * Constants
+ */
+#define ADC_BIAS     0.1                    // ADC reads 0.1 volts low
+#define ADC_REF      3.3                    // ADC reference voltage
+#define ADC_FULL     4095.0                 // 12 bit ADC full scale
+#define VREF_DIVIDER ((4700 + 4700) / 4700) // Voltage divider ratio
+
+#define V12_RESISTOR ((40.2 + 4.7) / 4.7)   // Resistor divider
+
 /*----------------------------------------------------------------
  *
  * @function: adc_init()
@@ -129,7 +139,7 @@ unsigned int adc_read(unsigned int adc_channel // What input are we reading?
    *  Read the appropriate channel
    */
   sum = 0;
-  for ( i = 0; i != FILTER; i++ )
+  for ( i = 0; i != FILTER; i++ ) // Add up FILTER samples
   {
     switch ( adc )
     {
@@ -147,23 +157,14 @@ unsigned int adc_read(unsigned int adc_channel // What input are we reading?
   /*
    *  Done
    */
-  sum /= FILTER;
+  sum /= FILTER; // and return the average
 
   return (sum & 0x0fff);
 }
 
-#define V12_RESISITOR   ((40.2 + 5.0) / 5.0) // Resistor divider
-#define V12_ATTENUATION 3.548                // 11 DB
-#define V12_REF         1.1                  // ESP32 VREF
-#define V12_CAL         0.88
-
 float v12_supply(void)
 {
-  float raw;                                 // Raw voltage from ADC
-
-  raw = (float)adc_read(V_12_LED);
-
-  return V12_REF * V12_ATTENUATION * (raw / 4095.0) * V12_RESISITOR * V12_CAL;
+  return (float)adc_read(V_12_LED) / ADC_FULL * ADC_REF * V12_RESISTOR + ADC_BIAS;
 }
 
 /*----------------------------------------------------------------
@@ -256,8 +257,8 @@ void set_LED_PWM         // Theatre lighting
  *  undefined (< 100) then the last 'good' revision is returned
  *
  *--------------------------------------------------------------*/
-//                                        0     1  2  3  4  5     6     7  8  9   A   B   C   D   E   F
-const static unsigned int version[] = {REV_510, 1, 2, 3, 4, 5, REV_600, 7, 8, 9, 10, 11, 12, 13, 14, REV_520};
+//                                        0     1  2  3  4      5       6        7     8  9   A   B   C   D   E   F
+const static unsigned int version[] = {REV_510, 1, 2, 3, 4, REV_600, REV_600, REV_600, 8, 9, 10, 11, 12, 13, 14, REV_520};
 
 unsigned int revision(void)
 {
@@ -271,9 +272,13 @@ unsigned int revision(void)
   /*
    *  Read the resistors and determine the board revision
    */
-  index         = adc_read(BOARD_REV) >> (12 - 4);
-  board_version = version[index]; // Get the board revision number
-  board_mask    = 1 << index;     // Set the mask for the board revision
+  index         = (adc_read(BOARD_REV) >> (12 - 4)) & 0x0f; // Top 4 bits only
+  board_version = version[index];                           // Get the board revision number
+  if ( board_version == REV_600 )                           // Special case for 600, just in case
+  {
+    index = 6;
+  }
+  board_mask = 1 << index;                                  // Set the mask for the board revision
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Board Revision: %d  Board Mask: %04X", board_version, board_mask);))
 
@@ -295,15 +300,16 @@ unsigned int revision(void)
  *  to a voltage
  *
  *--------------------------------------------------------------*/
+
 double vref_measure(void)
 {
   if ( TMP1075D & board_mask )
   {
-    return (double)adc_read(VMES_LO) / 4095.0 * 1.1 * 2.0 * 3.3; // 4096 full scale, 1.1 VEEF 1/2 voltage divider
+    return ((double)adc_read(VMES_LO)) / ADC_FULL * ADC_REF * VREF_DIVIDER + ADC_BIAS; // 4096 full scale, 3.3 VREF 1/2 voltage divider
   }
   else
   {
-    return -1.0;                                                 // Not available
+    return -1.0;                                                                       // Not available
   }
 }
 
@@ -409,7 +415,7 @@ static double temperature_C_TMP1075D(void)
   {
     t_c -= 10;                      // Rough compensation for self heating
   }
-  
+
   return t_c;
 }
 
@@ -451,11 +457,17 @@ void set_VREF(void)
 {
   double volts[4];
 
-  if ( (json_vref_lo == 0) // Check for an uninitialized VREF
-       || (json_vref_hi == 0) )
+  if ( json_vref_lo == 0 ) // Check for an uninitialized VREF
   {
     json_vref_lo = 1.25;   // and force to something other than 0
-    json_vref_hi = 2.00;   // Otherwise the sensors continioustly interrupt
+  }
+
+  if ( MCP4728 & board_mask )
+  {
+    if ( json_vref_hi == 0 )
+    {
+      json_vref_hi = json_vref_lo + 0.75; // Otherwise the sensors continioustly interrupt
+    }
   }
 
   if ( MCP4728 & board_mask )
@@ -506,9 +518,14 @@ void set_VREF(void)
  *--------------------------------------------------------------*/
 void analog_input_test(void)
 {
-  SEND(ALL, sprintf(_xs, "\r\n12V %5.3f", v12_supply());)
-  SEND(ALL, sprintf(_xs, "\r\nBoard Rev %d", revision());)
+  SEND(ALL, sprintf(_xs, "\r\n12V: %5.3f", v12_supply());)
+  if ( VREF_FB & board_mask )
+  {
+    SEND(ALL, sprintf(_xs, "\r\nVREF_MEASURE: %5.3f", vref_measure());)
+  }
+  SEND(ALL, sprintf(_xs, "\r\nBoard Rev: %4.2f", (float)revision() / 100.0);)
   SEND(ALL, sprintf(_xs, "\r\nTemperature: %4.2f", temperature_C());)
+
   if ( HDC3022 & board_mask )
   {
     SEND(ALL, sprintf(_xs, "\r\nHumidity: %4.2f", humidity_RH());)

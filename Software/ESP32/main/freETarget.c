@@ -456,76 +456,76 @@ unsigned int reduce(void)
    */
   while ( shot_out != shot_in ) // Process the shots on the queue
   {
-    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "shot_in: %d,  shot_out:%d", shot_in, shot_out);))
-    DLT(DLT_DEBUG, show_sensor_status(record[shot_out].sensor_status);)
-
     if ( (record[shot_out].sensor_status & 0x0f) != 0x0f )
     {
       show_sensor_fault(record[shot_out].sensor_status);
     }
-    location = compute_hit(&record[shot_out]); // Compute the score
-
-    /*
-     *  Delay for a follow through
-     */
-    if ( location != MISS ) // Was it a miss or face strike?
+    else
     {
-      prepare_score(&record[shot_out], shot_out, NOT_MISSED_SHOT);
-
-      build_json_score(&record[shot_out], SCORE_USB);
-      serial_to_all(_xs, CONSOLE);
-
-      build_json_score(&record[shot_out], SCORE_TCPIP);
-      serial_to_all(_xs, TCPIP);
-
-      if ( (json_remote_modes & REMOTE_MODE_CLIENT) != 0 )
-      {
-        build_json_score(&record[shot_out], SCORE_TCPIP);
-        http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
-      }
+      location = compute_hit(&record[shot_out]); // Compute the score
 
       /*
-       *  Advance the paper
+       *  Delay for a follow through
        */
-      if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )                                 // Has the witness paper been enabled?
+      if ( location != MISS ) // Was it a miss or face strike?
       {
-        if ( (json_paper_eco == 0)                                               // PAPER_ECO turned off
-             || (record[shot_out].radius < (json_paper_eco / 2))                 // Inside the black (radius)
-             || (paper_shot_out > FORCE_PAPER_MOVE) )                            // Too many misses
+        prepare_score(&record[shot_out], shot_out, NOT_MISSED_SHOT);
+
+        build_json_score(&record[shot_out], SCORE_USB);
+        serial_to_all(_xs, CONSOLE);
+
+        build_json_score(&record[shot_out], SCORE_TCPIP);
+        serial_to_all(_xs, TCPIP);
+
+        if ( (json_remote_modes & REMOTE_MODE_CLIENT) != 0 )
         {
-          paper_shot++;                                                          //
-          DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", record[shot_out].radius, json_paper_eco / 2,
-                                           paper_shot, json_paper_shot);))
-          if ( (paper_shot >= json_paper_shot)                                   // Have met the number of good shots?
-               || (paper_shot_out >= FORCE_PAPER_MOVE) )                         // Or we just shot too many bad ones?
+          build_json_score(&record[shot_out], SCORE_TCPIP);
+          http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
+        }
+
+        /*
+         *  Advance the paper
+         */
+        if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )                                 // Has the witness paper been enabled?
+        {
+          if ( (json_paper_eco == 0)                                               // PAPER_ECO turned off
+               || (record[shot_out].radius < (json_paper_eco / 2))                 // Inside the black (radius)
+               || (paper_shot_out > FORCE_PAPER_MOVE) )                            // Too many misses
           {
-            if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
+            paper_shot++;                                                          //
+            DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", record[shot_out].radius, json_paper_eco / 2,
+                                             paper_shot, json_paper_shot);))
+            if ( (paper_shot >= json_paper_shot)                                   // Have met the number of good shots?
+                 || (paper_shot_out >= FORCE_PAPER_MOVE) )                         // Or we just shot too many bad ones?
             {
-              set_status_LED(LED_RAPID_RED);                                     // Show that the target cannot be used
+              if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
+              {
+                set_status_LED(LED_RAPID_RED);                                     // Show that the target cannot be used
+              }
+              paper_start();                                                       // Roll the paper
+              paper_shot     = 0;                                                  // And start over
+              paper_shot_out = 0;                                                  // Reset the outside shots
             }
-            paper_start();                                                       // Roll the paper
-            paper_shot     = 0;                                                  // And start over
-            paper_shot_out = 0;                                                  // Reset the outside shots
+          }
+          else
+          {
+            paper_shot_out++;                                      // Outside of the desired radius, keep track of the misses
+            DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Radius: %4.2f/%d bad shot: %d/%d", record[shot_out].radius, json_paper_eco / 2,
+                                             paper_shot, json_paper_shot);))
           }
         }
-        else
+      }
+      else                                                         // We have a miss
+      {
+        DLT(DLT_INFO, show_sensor_status(record[shot_out].sensor_status);)
+        set_status_LED(LED_MISS);
+        if ( json_send_miss != 0 )
         {
-          paper_shot_out++;                                                      // Outside of the desired radius, keep track of the misses
-          DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Radius: %4.2f/%d bad shot: %d/%d", record[shot_out].radius, json_paper_eco / 2, paper_shot,
-                                           json_paper_shot);))
+          prepare_score(&record[shot_out], shot_out, MISSED_SHOT); // Show a miss
         }
       }
     }
-    else                                                                         // We have a miss
-    {
-      DLT(DLT_INFO, show_sensor_status(record[shot_out].sensor_status);)
-      set_status_LED(LED_MISS);
-      if ( json_send_miss != 0 )
-      {
-        prepare_score(&record[shot_out], shot_out, MISSED_SHOT);                 // Show a miss
-      }
-    }
-    shot_out = (shot_out + 1) % SHOT_SPACE;                                      // Increment to the next shot
+    shot_out = (shot_out + 1) % SHOT_SPACE;                        // Increment to the next shot
   }
 
   /*
@@ -1006,42 +1006,63 @@ sensor_ID_t *find_sensor(unsigned int run_mask // Run mask to look for a match
  *
  *----------------------------------------------------------------
  *
- * Scan throught the sensor structure looking for the match to
- * the run mask.
+ * The function runs a raster of shots and converts them to time
+ * counts that are then used to generate a fake shot complete
+ * with motor runs.
  *
  *--------------------------------------------------------------*/
+#define MIN_BOUND    -(165 / 2) // Minimum bound of the target in mm
+#define MAX_BOUND    (165 / 2)  // Maximum bound of the target in mm
+#define SHOT_SPACING 15         // Spacing between shots in mm
+
 void generate_fake_shot(void)
 {
-  shot_in  = 0; // Reset the shot queue
+  int   i;                      // Loop index
+  int   x, y;                   // Shot location coordinates
+  float radius;                 // Radius of shot
+  float distance;               // Distance from shot to sensor
+
+  shot_in  = 0;                 // Reset the shot queue
   shot_out = 0;
 
   /*
    *  Create fake data and reduct the result
    */
-  while ( 1 )
+  while ( serial_available(CONSOLE) == false ) // Loop until there is input
   {
-    SEND(ALL, sprintf(_xs, "\r\nGenerating fake shot %d\r\n", shot_in);)
-    record[shot_in].sensor_status  = 0xFF;                                   // Force a sensor trigger
-    record[shot_in].timer_count[N] = 1000;                                   // Should be 10.9
-    record[shot_in].timer_count[E] = 1000;
-    record[shot_in].timer_count[S] = 1000;
-    record[shot_in].timer_count[W] = 1000;
-    record[shot_in].shot           = shot_in;
-    record[shot_in].face_strike    = 0;                                      // No face strikes
-    ring_timer                     = json_min_ring_time * ONE_SECOND / 1000; // Reset the ring timer
-
-    shot_in++;
-    shot_in = shot_in % SHOT_SPACE;
-
-    reduce();                                                                // Process the shot
-
-    if ( serial_available(CONSOLE) )                                         // Exit if there is any input
+    for ( x = MIN_BOUND; x <= MAX_BOUND; x += SHOT_SPACING )
     {
-      serial_flush(CONSOLE);
-      break;
+      for ( y = MIN_BOUND; y <= MAX_BOUND; y += SHOT_SPACING )
+      {
+        radius = sqrtf((float)sq(x) + sq(y));  // Compute the radius for polar coordinates
+        if ( radius <= (165.0 / 2.0) )         // inside the target radius
+        {
+          for ( i = N; i <= W; i++ )           // Loop through the sensors to compute the time counts
+          {
+            distance = sqrt((float)(sq(x - s[i].x_mm) + sq(y - s[i].y_mm)));
+            record[shot_in].timer_count[i] =
+                (int)(SHOT_TIME * OSCILLATOR_MHZ) - (distance / 0.35 * OSCILLATOR_MHZ); // Fake the travel time in
+          }
+
+          record[shot_in].shot          = shot_in;
+          record[shot_in].face_strike   = 0;                                            // No face strikes
+          record[shot_in].sensor_status = 0x0f;                                         // All sensors valid
+          ring_timer                    = json_min_ring_time * ONE_SECOND / 1000;       // Reset the ring timer
+
+          shot_in++;
+          shot_in = shot_in % SHOT_SPACE;
+
+          reduce();                                                                     // Process the shot
+          vTaskDelay(ONE_SECOND * 2);
+        }
+      }
     }
-    vTaskDelay(ONE_SECOND * 5);
   }
 
+  /*
+   * Nothing more to do
+   */
+  serial_flush(CONSOLE);
+  SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }

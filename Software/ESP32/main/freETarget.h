@@ -19,12 +19,12 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"1.0.0 October 7, 2025\""
+#define SOFTWARE_VERSION "\"1.0.2 October 19, 2025\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED"   // Message to send on connection
 #define _BYE_            "BYE"         // Message to send on disconnection
 #define _HELLO_          "HELLO WORLD" // Message to send on reconnection
-#define _SHOT_           "bang"        // Message to send on shot detection
+#define _SHOT_           "shot"        // Message to send on shot detection
 #define REV_500          500           // ESP32
 #define REV_510          510
 #define REV_520          520
@@ -160,6 +160,8 @@ typedef struct
   double       diagonal;       // Diagonal angle to next sensor (45')
   double       x;              // Sensor Location (X us)
   double       y;              // Sensor Location (Y us)
+  double       x_mm;           // Sensor X location in mm
+  double       y_mm;           // Sensor Y location in mm
   double       count;          // Working timer value
   double       a, b, c;        // Working dimensions
   double       xs;             // Computed X shot value

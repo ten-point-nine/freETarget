@@ -101,27 +101,27 @@ const DIO_struct_t dio48 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .i
 /*
  *  Analog IO usage
  */
-const ADC_struct_t adc1_ch0 = {.type = ANALOG_IO, .adc_channel = ADC(1, 0), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 1, ADC 0
-const ADC_struct_t adc1_ch1 = {.type = ANALOG_IO, .adc_channel = ADC(1, 1), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 1, ADC 1
-const ADC_struct_t adc1_ch2 = {.type = ANALOG_IO, .adc_channel = ADC(1, 2), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 1, ADC 2
-const ADC_struct_t adc1_ch3 = {.type = ANALOG_IO, .adc_channel = ADC(1, 3), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 1, ADC 3
-const ADC_struct_t adc1_ch4 = {.type = ANALOG_IO, .adc_channel = ADC(1, 4), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 1, ADC 4
-const ADC_struct_t adc1_ch5 = {.type = ANALOG_IO, .adc_channel = ADC(1, 5), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 1, ADC 5
-const ADC_struct_t adc1_ch6 = {.type = ANALOG_IO, .adc_channel = ADC(1, 6), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 1, ADC 6
-const ADC_struct_t adc1_ch7 = {.type = ANALOG_IO, .adc_channel = ADC(1, 7), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 1, ADC 7
-const ADC_struct_t adc1_ch8 = {.type = ANALOG_IO, .adc_channel = ADC(1, 8), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 1, ADC 9
-const ADC_struct_t adc1_ch9 = {.type = ANALOG_IO, .adc_channel = ADC(1, 9), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 1, ADC 10
+const ADC_struct_t adc1_ch0 = {.type = ANALOG_IO, .adc_channel = ADC(1, 0), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 1, ADC 0
+const ADC_struct_t adc1_ch1 = {.type = ANALOG_IO, .adc_channel = ADC(1, 1), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 1, ADC 1
+const ADC_struct_t adc1_ch2 = {.type = ANALOG_IO, .adc_channel = ADC(1, 2), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 1, ADC 2
+const ADC_struct_t adc1_ch3 = {.type = ANALOG_IO, .adc_channel = ADC(1, 3), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 1, ADC 3
+const ADC_struct_t adc1_ch4 = {.type = ANALOG_IO, .adc_channel = ADC(1, 4), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 1, ADC 4
+const ADC_struct_t adc1_ch5 = {.type = ANALOG_IO, .adc_channel = ADC(1, 5), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 1, ADC 5
+const ADC_struct_t adc1_ch6 = {.type = ANALOG_IO, .adc_channel = ADC(1, 6), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 1, ADC 6
+const ADC_struct_t adc1_ch7 = {.type = ANALOG_IO, .adc_channel = ADC(1, 7), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 1, ADC 7
+const ADC_struct_t adc1_ch8 = {.type = ANALOG_IO, .adc_channel = ADC(1, 8), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 1, ADC 9
+const ADC_struct_t adc1_ch9 = {.type = ANALOG_IO, .adc_channel = ADC(1, 9), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 1, ADC 10
 
-const ADC_struct_t adc2_ch0 = {.type = ANALOG_IO, .adc_channel = ADC(2, 0), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 2, ADC 0
-const ADC_struct_t adc2_ch1 = {.type = ANALOG_IO, .adc_channel = ADC(2, 1), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 2, ADC 1
-const ADC_struct_t adc2_ch2 = {.type = ANALOG_IO, .adc_channel = ADC(2, 2), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 2, ADC 2
-const ADC_struct_t adc2_ch3 = {.type = ANALOG_IO, .adc_channel = ADC(2, 3), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 2, ADC 3
-const ADC_struct_t adc2_ch4 = {.type = ANALOG_IO, .adc_channel = ADC(2, 4), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 2, ADC 4
-const ADC_struct_t adc2_ch5 = {.type = ANALOG_IO, .adc_channel = ADC(2, 5), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 2, ADC 5
-const ADC_struct_t adc2_ch6 = {.type = ANALOG_IO, .adc_channel = ADC(2, 6), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 2, ADC 6
-const ADC_struct_t adc2_ch7 = {.type = ANALOG_IO, .adc_channel = ADC(2, 7), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 2, ADC 7
+const ADC_struct_t adc2_ch0 = {.type = ANALOG_IO, .adc_channel = ADC(2, 0), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 2, ADC 0
+const ADC_struct_t adc2_ch1 = {.type = ANALOG_IO, .adc_channel = ADC(2, 1), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 2, ADC 1
+const ADC_struct_t adc2_ch2 = {.type = ANALOG_IO, .adc_channel = ADC(2, 2), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 2, ADC 2
+const ADC_struct_t adc2_ch3 = {.type = ANALOG_IO, .adc_channel = ADC(2, 3), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 2, ADC 3
+const ADC_struct_t adc2_ch4 = {.type = ANALOG_IO, .adc_channel = ADC(2, 4), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 2, ADC 4
+const ADC_struct_t adc2_ch5 = {.type = ANALOG_IO, .adc_channel = ADC(2, 5), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 2, ADC 5
+const ADC_struct_t adc2_ch6 = {.type = ANALOG_IO, .adc_channel = ADC(2, 6), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 2, ADC 6
+const ADC_struct_t adc2_ch7 = {.type = ANALOG_IO, .adc_channel = ADC(2, 7), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 2, ADC 7
 const ADC_struct_t adc2_ch8 = {.type = ANALOG_IO, .adc_channel = ADC(2, 8), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 2, ADC 8
-const ADC_struct_t adc2_ch9 = {.type = ANALOG_IO, .adc_channel = ADC(2, 9), .adc_attenuation = ADC_ATTEN_DB_11}; // CHANNEL 2, ADC 9
+const ADC_struct_t adc2_ch9 = {.type = ANALOG_IO, .adc_channel = ADC(2, 9), .adc_attenuation = ADC_ATTEN_DB_12}; // CHANNEL 2, ADC 9
 
 /*
  *  PWM Control, GPIO filled in by GPIO definition above

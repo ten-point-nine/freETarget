@@ -309,7 +309,7 @@ bool do_factory_test(bool test_run)
   if ( test_run )
   {
     SEND(ALL, sprintf(_xs, "\r\n");)
-    if ( (board_mask & HDC3022) != 0 )
+    if ( (HDC3022 & board_mask) != 0 )
     {
       SEND(ALL, sprintf(_xs, "\r\nHas the tape seal been removed from the humidity sensor?");)
     }
@@ -732,14 +732,12 @@ void show_sensor_fault(unsigned int sensor_status)
 {
   unsigned int i;
 
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "show_sensor_fault()");))
-
   for ( i = N; i <= W; i++ )
   {
     if ( (sensor_status & (1 << i)) == 0 )
     {
+      DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Sensor %s failed", find_sensor(1 << i)->long_name);))
       set_diag_LED(find_sensor(1 << i)->diag_LED, 2);
-      return;
     }
   }
 
