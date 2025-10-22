@@ -497,11 +497,19 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
     switch ( *fields )
     {
       case SCORE_LEFT_BRACE:
-        sprintf(str, "{");                                   // Start the opening bracket
+        sprintf(str, "{"); // Start the opening bracket
         break;
 
       case SCORE_RIGHT_BRACE:
-        sprintf(str, "}");                                   // End the closing bracket
+        if ( is_trace & DLT_SCORE )
+        {
+          sprintf(str, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d }", shot->timer_count[N], shot->timer_count[E], shot->timer_count[S],
+                  shot->timer_count[W]);                     // Hardware values
+        }
+        else
+        {
+          sprintf(str, "}");                                 // End the closing bracket
+        }
         break;
 
       case SCORE_NEW_LINE:                                   // Add a newline
