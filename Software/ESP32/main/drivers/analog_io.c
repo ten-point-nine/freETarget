@@ -40,7 +40,6 @@ static double temperature_C_TMP1075D(void); // Temperature in degrees C
  */
 int          board_version = -1; // Board Revision number
 unsigned int board_mask    = 0;  // Mask for the board revision
-static float t_c;                // Temperature from sensor
 static float rh;                 // Humidity from sensor
 
 /*----------------------------------------------------------------
@@ -347,6 +346,7 @@ static double temperature_C_HDC3022(void)
 {
   unsigned char temp_buffer[6];
   int           raw;
+  static float  t_c; // Remember the temperature
 
   /*
    * Read in the temperature and humidity together
@@ -380,12 +380,25 @@ static double temperature_C_HDC3022(void)
  *
  * A simple interrogation is used.
  *
+ * The temperature is read once and cached.  This is to avoid
+ * the problem of reading the temperature if the board has been
+ * self heating.
+ *
  *--------------------------------------------------------------*/
 #define TC_CAL (0.0625 / 16) // 'C / LSB
 static double temperature_C_TMP1075D(void)
 {
   unsigned char temp_buffer[6];
   int           raw;
+  static float  t_c = -274;  // Remember the temperature Set to below absolute zero
+
+  if ( v12_supply() >= 5.0 ) // Board powered up?
+  {
+    if ( t_c > -273 )        // If we have a valid temperature, return it
+    {
+      return t_c;
+    }
+  }
 
   /*
    * Read in the temperature and humidity together
@@ -401,15 +414,6 @@ static double temperature_C_TMP1075D(void)
   t_c = ((float)raw * TC_CAL);
   rh  = 40.0;
 
-  /*
-   * Compensate for self heating
-   */
-
-  if ( v12_supply() > V12_WORKING ) // If the 12V supply is up, then we are likely running the LEDs
-  {
-    t_c -= 10;                      // Rough compensation for self heating
-  }
-  
   return t_c;
 }
 

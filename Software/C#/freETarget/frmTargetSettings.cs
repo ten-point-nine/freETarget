@@ -102,8 +102,8 @@ namespace freETarget {
         }
 
         private void loadEcho (Echo echo) {
-            string n = echo.NAME.Substring(1, echo.NAME.Length - 2);
-            cmbName.SelectedItem = n;
+            int n = echo.NAME_ID;
+            cmbName.SelectedIndex = n;
             txtPaperTime.Text = echo.PAPER_TIME.ToString(CultureInfo.InvariantCulture);
             txtStepTime.Text = echo.STEP_TIME.ToString(CultureInfo.InvariantCulture);
             txtSteps.Text = echo.STEP_COUNT.ToString(CultureInfo.InvariantCulture);

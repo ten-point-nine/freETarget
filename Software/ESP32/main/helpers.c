@@ -25,6 +25,7 @@
 #include "gpio_define.h"
 #include "diag_tools.h"
 #include "analog_io.h"
+#include "wifi.h"
 
 #define SHOT_TIME_TO_SECONDS(x) ((float)(x)) / 1000000.0
 
@@ -80,6 +81,10 @@ void target_name(char *name_space)
         break;
 
       default:
+        if ( (json_name_id < 0) || (json_name_id > 26) )    // Check for limits
+        {
+          json_name_id = 0;
+        }
         sprintf(name_space, "FET-%s", names[json_name_id]); // Name - FET-TARGET, FET-2, etc.
         break;
     }
@@ -256,6 +261,7 @@ bool prompt_for_confirm(void)
     }
   }
 }
+
 /*----------------------------------------------------------------
  *
  * @function: hello
@@ -281,7 +287,7 @@ void hello(void)
 
   set_status_LED(LED_READY);
   set_LED_PWM_now(json_LED_PWM);
-  ft_timer_new(&power_save, json_power_save * (unsigned long)ONE_SECOND * 60L);
+  ft_timer_new(&power_save, json_power_save * (time_count_t)ONE_SECOND * 60L);
   run_state &= ~IN_SLEEP; // Out of sleep and back in operation
   run_state |= IN_OPERATION;
   return;
@@ -311,7 +317,7 @@ void send_keep_alive(void)
   {
     target_name(str);
     SEND(TCPIP, sprintf(_xs, "{\"KEEP_ALIVE\":%d, \"NAME\":\"%s\"}", keep_alive_count++, str);)
-    ft_timer_new(&keep_alive, (unsigned long)json_keep_alive * ONE_SECOND);
+    ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND);
   }
   return;
 }
@@ -423,10 +429,10 @@ void echo_serial(int duration, // Duration in clock ticks
                  int out_ports // Where to ouput to
 )
 {
-  unsigned char          ch;
-  volatile unsigned long test_time;
+  unsigned char ch;
+  time_count_t  test_time;
 
-  ft_timer_new(&test_time, (unsigned long)duration);
+  ft_timer_new(&test_time, (time_count_t)duration);
 
   /*
    * Loop and echo the characters
@@ -774,5 +780,49 @@ void to_binary(unsigned int x, // Number to convert
   }
   s[j] = 0;  // Terminate the string
 
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: watchdog
+ *
+ * @brief:    Monitor the target health
+ *
+ * @return:   Nothing
+ *
+ *----------------------------------------------------------------
+ *
+ * Monitor the health of the target and take action if something
+ * is wrong
+ *
+ *--------------------------------------------------------------*/
+void watchdog(void)
+{
+  char        str_c[SHORT_TEXT];
+  static bool wifi_was_connected = false;
+
+  /*
+   *  Check to see if we have a connection to the WiFi
+   */
+  if ( json_wifi_ssid[0] != 0 )                 // We are a station
+  {
+    if ( wifi_was_connected == false )          // Was not connected
+    {
+      if ( WiFi_my_IP_address(str_c) == false ) // Find our IP address
+      {
+        set_status_LED(LED_WIFI_FAULT);
+        WiFi_init();                            // Try to reconnect
+      }
+      else
+      {
+        wifi_was_connected = true;              // We are connected
+      }
+    }
+  }
+
+  /*
+   *  All done
+   */
   return;
 }

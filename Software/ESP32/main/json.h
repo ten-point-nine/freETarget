@@ -55,8 +55,9 @@ extern const json_message_t JSON[];
 #define IS_MFS    (6 << 8)                           // Value is a multifunction switch
 #define IS_TEXT_1 (7 << 8)                           // Used only on first connection
 #define IS_VOID   (8 << 8)                           // Value is a void
+#define IS_TIME   (9 << 8)                           // Value is time
 
-#define IS_MASK    (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED | IS_MFS)
+#define IS_MASK    (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED | IS_MFS | IS_TIME)
 #define FLOAT_MASK ((~IS_MASK) & 0xFF)               // Scaling factor 8 bits
 
 #define SSID_SIZE        31                          // Reserve 30+1 bytes for SSID
@@ -74,7 +75,6 @@ extern const json_message_t JSON[];
  * Global JSON variables and settings
  */
 
-EXTERN int           json_is_locked;                 // Set to TRUE if the JSON is locked
 EXTERN int           json_aux_mode;                  // Enable comms from the AUX port
 EXTERN int           json_calibre_x10;               // Pellet Calibre
 EXTERN int           json_dip_switch;                // DIP switch overwritten by JSON message
@@ -160,5 +160,4 @@ EXTERN int           json_remote_modes;              // What modes are available
 EXTERN int           json_session_type;              // What kind of session is this?
 EXTERN char          json_ota_url[URL_SIZE];         // OTA URL
 EXTERN int           json_lock;                      // Lock the JSON message so it cannot be changed
-EXTERN int           json_is_locked;                 // JSON lock state
 #endif
