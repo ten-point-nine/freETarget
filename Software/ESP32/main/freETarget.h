@@ -19,8 +19,9 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"6.2.7 October 15, 2025\""
+#define SOFTWARE_VERSION "\"6.2.8 October 30, 2025\""
 #define _DONE_           "\r\nDone\r\n"
+#define _SHOT_           "shot"
 #define _GREETING_       "CONNECTED"   // Message to send on connection
 #define _BYE_            "BYE"         // Message to send on disconnection
 #define _HELLO_          "HELLO WORLD" // Message to send on reconnection
@@ -158,6 +159,8 @@ typedef struct
   double       diagonal;       // Diagonal angle to next sensor (45')
   double       x;              // Sensor Location (X us)
   double       y;              // Sensor Location (Y us)
+  double       x_mm;           // Sensor X location in mm
+  double       y_mm;           // Sensor Y location in mm
   double       count;          // Working timer value
   double       a, b, c;        // Working dimensions
   double       xs;             // Computed X shot value

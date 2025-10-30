@@ -496,62 +496,70 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
         break;
 
       case SCORE_RIGHT_BRACE:
-        sprintf(str, "}");                             // End the closing bracket
+        if ( is_trace & DLT_SCORE )
+        {
+          sprintf(str, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d }", shot->timer_count[N], shot->timer_count[E], shot->timer_count[S],
+                  shot->timer_count[W]);                     // Hardware values
+        }
+        else
+        {
+          sprintf(str, "}");                                 // End the closing bracket
+        }
         break;
 
       case SCORE_NEW_LINE:                             // Add a newline
         sprintf(str, "\n");
         break;
 
-      case SCORE_TEST:                                 // Prime for HTTP
-        sprintf(str, "\"shot\":%d, \"x\":%d, \"y\":%d, \"r\":0, \"a\":0,\"target\":%d", ts, tx, ty, http_target_type());
+      case SCORE_TEST:                                       // Prime for HTTP
+        sprintf(str, "\"%s\":%d, \"x\":%d, \"y\":%d, \"r\":0, \"a\":0,\"target\":%d", _SHOT_, ts, tx, ty, http_target_type());
         ts++;
         tx = (tx + 5) % 103;
-        ty = (ty + 7) % 103;                           // Test values to show that the function works
+        ty = (ty + 7) % 103;                                 // Test values to show that the function works
         break;
 
-      case SCORE_PRIME:                                // Prime for HTTP
-        sprintf(str, "\"shot\":0, \"x\":0, \"y\":0, \"r\":0, \"a\":0,\"target\":%d", http_target_type());
+      case SCORE_PRIME:                                      // Prime for HTTP
+        sprintf(str, "\"%s\":0, \"x\":0, \"y\":0, \"r\":0, \"a\":0,\"target\":%d", _SHOT_, http_target_type());
         break;
 
-      case SCORE_SHOT:                                 // Shot number
-        sprintf(str, "\"shot\":%d", (shot->shot) + 1); // The client wants shots to start at 1
+      case SCORE_SHOT:                                       // Shot number
+        sprintf(str, "\"%s\":%d", _SHOT_, (shot->shot) + 1); // The client wants shots to start at 1
         break;
 
-      case SCORE_MISS:                                 // Miss
+      case SCORE_MISS:                                       // Miss
         sprintf(str, ", \"miss\":%d", shot->miss);
         break;
 
-      case SCORE_SESSION:                              // Session type
+      case SCORE_SESSION:                                    // Session type
         sprintf(str, ", \"session_type\":%d", shot->session_type);
         break;
 
-      case SCORE_TIME:                                 // Time
+      case SCORE_TIME:                                       // Time
         sprintf(str, ", \"time\":%ld, \"time_to_go\":%ld", shot->shot_time, time_to_go);
         break;
 
-      case SCORE_ELAPSED:                              // Time since shooting began
+      case SCORE_ELAPSED:                                    // Time since shooting began
         sprintf(str, ", \"elapsed_time\":%lds", run_time_seconds());
         break;
 
-      case SCORE_XY:                                   // X
+      case SCORE_XY:                                         // X
         sprintf(str, ", \"x\":%4.2f, \"y\":%4.2f", shot->x_mm, shot->y_mm);
         break;
 
-      case SCORE_POLAR:                                // Polar
+      case SCORE_POLAR:                                      // Polar
         sprintf(str, ", \"r\":%6.2f, \"a\":%6.2f", shot->radius, shot->angle);
         break;
 
-      case SCORE_HARDWARE:                             // Hardware
+      case SCORE_HARDWARE:                                   // Hardware
         sprintf(str, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d", (int)shot->timer_count[N + 0], (int)shot->timer_count[E + 0],
                 (int)shot->timer_count[S + 0], (int)shot->timer_count[W + 0]);
         break;
 
-      case SCORE_TARGET:                               // Target type
+      case SCORE_TARGET:                                     // Target type
         sprintf(str, ", \"target\":%d ", http_target_type());
         break;
 
-      case SCORE_EVENT:                                // Event data
+      case SCORE_EVENT:                                      // Event data
         sprintf(str, ", \"athelete\":\"%s\", \"event\":\"%s\", \"target_name\":\"%s\"", json_athlete, json_event, json_target_name);
         break;
 

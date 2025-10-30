@@ -61,12 +61,12 @@ typedef struct
 /*
  * Local Variables
  */
-static volatile long *timers[N_TIMERS];     // Active timer list (allow only positive time)
-time_count_t          shot_timer;           // Wait for the sound to hit all sensors
-time_count_t          ring_timer;           // Let the ring on the backstop end
-static state          isr_state;            // What sensor state are we in
-static time_count_t   base_time = 0;        // Base time to show elapsed time
-time_count_t          time_to_go;           // Time remaining in event in seconds
+static time_count_t *timers[N_TIMERS];      // Active timer list (allow only positive time)
+time_count_t         shot_timer;            // Wait for the sound to hit all sensors
+time_count_t         ring_timer;            // Let the ring on the backstop end
+static state         isr_state;             // What sensor state are we in
+static time_count_t  base_time = 0;         // Base time to show elapsed time
+time_count_t         time_to_go;            // Time remaining in event in seconds
 
 static synchronous_task_t task_list[] = {
     {BAND_10ms,   token_cycle              }, // Check for token ring activity

@@ -54,10 +54,11 @@ status_struct_t status[3] = {
     {0, 0, 0, 0},
     {0, 0, 0, 0}
 };
-int                   paper_state; // Drive is ON or OFF
-time_count_t          paper_time;  // How long the paper will be on for
-volatile unsigned int step_count;  // How many step counts do we need?
-volatile unsigned int step_time;   // Interval to next step
+int                   paper_state;   // Drive is ON or OFF
+time_count_t          paper_time;    // How long the paper will be on for
+volatile unsigned int step_count;    // How many step counts do we need?
+volatile unsigned int step_time;     // Interval to next step
+static bool           motor_running; // TRUE if the motor is running (for diagnostics)
 
 /*-----------------------------------------------------
  *
@@ -562,8 +563,6 @@ void read_timers(int timer[])
  * {"MFS_HOLD_C":26, "MFS_HOLD_D":28, "STEP_START":200, "STEP_RAMP": 5, "STEP_TIME":30, "STEP_COUNT": 200, "PAPER_TIME":0}
  *
  *-----------------------------------------------------*/
-static bool motor_running = false;
-
 void paper_start(void)
 {
 

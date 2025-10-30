@@ -42,6 +42,16 @@ int          board_version = -1; // Board Revision number
 unsigned int board_mask    = 0;  // Mask for the board revision
 static float rh;                 // Humidity from sensor
 
+/*
+ * Constants
+ */
+#define ADC_BIAS     0.1                    // ADC reads 0.1 volts low
+#define ADC_REF      3.3                    // ADC reference voltage
+#define ADC_FULL     4095.0                 // 12 bit ADC full scale
+#define VREF_DIVIDER ((4700 + 4700) / 4700) // Voltage divider ratio
+
+#define V12_RESISTOR ((40.2 + 4.7) / 4.7)   // Resistor divider
+
 /*----------------------------------------------------------------
  *
  * @function: adc_init()
@@ -158,11 +168,7 @@ unsigned int adc_read(unsigned int adc_channel // What input are we reading?
 
 float v12_supply(void)
 {
-  float raw;                                 // Raw voltage from ADC
-
-  raw = (float)adc_read(V_12_LED);
-
-  return V12_REF * V12_ATTENUATION * (raw / 4095.0) * V12_RESISITOR * V12_CAL;
+  return (float)adc_read(V_12_LED) / ADC_FULL * ADC_REF * V12_RESISTOR + ADC_BIAS;
 }
 
 /*----------------------------------------------------------------
@@ -298,7 +304,7 @@ double vref_measure(void)
 {
   if ( TMP1075D & board_mask )
   {
-    return (double)adc_read(VMES_LO) / 4095.0 * 1.1 * 2.0 * 3.3; // 4096 full scale, 1.1 VEEF 1/2 voltage divider
+    return ((double)adc_read(VMES_LO)) / ADC_FULL * ADC_REF * VREF_DIVIDER + ADC_BIAS; // 4096 full scale, 3.3 VREF 1/2 voltage divider
   }
   else
   {
@@ -459,7 +465,14 @@ void set_VREF(void)
        || (json_vref_hi == 0) )
   {
     json_vref_lo = 1.25;   // and force to something other than 0
-    json_vref_hi = 2.00;   // Otherwise the sensors continioustly interrupt
+  }
+
+  if ( MCP4728 & board_mask )
+  {
+    if ( json_vref_hi == 0 )
+    {
+      json_vref_hi = json_vref_lo + 0.75; // Otherwise the sensors continioustly interrupt
+    }
   }
 
   if ( MCP4728 & board_mask )
@@ -510,8 +523,12 @@ void set_VREF(void)
  *--------------------------------------------------------------*/
 void analog_input_test(void)
 {
-  SEND(ALL, sprintf(_xs, "\r\n12V %5.3f", v12_supply());)
-  SEND(ALL, sprintf(_xs, "\r\nBoard Rev %d", revision());)
+  SEND(ALL, sprintf(_xs, "\r\n12V: %5.3f", v12_supply());)
+  if ( VREF_FB & board_mask )
+  {
+    SEND(ALL, sprintf(_xs, "\r\nVREF_MEASURE: %5.3f", vref_measure());)
+  }
+  SEND(ALL, sprintf(_xs, "\r\nBoard Rev: %4.2f", (float)revision() / 100.0);)
   SEND(ALL, sprintf(_xs, "\r\nTemperature: %4.2f", temperature_C());)
   if ( HDC3022 & board_mask )
   {

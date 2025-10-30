@@ -144,6 +144,14 @@ void read_nonvol(void)
   }
 
   /*
+   * Special case of broken sensor diameter
+   */
+  if ( json_sensor_dia < 0.1 ) // Sensor diameter is broken
+  {
+    json_sensor_dia = 230;     // Set to the default
+  }
+
+  /*
    * All done, begin the program
    */
   return;
@@ -412,10 +420,12 @@ void update_nonvol(unsigned int current_version) // Version present in persisten
     {
       strcpy(json_ota_url, OTA_URL);                        // Copy the OTA URL to the nonvol
       nvs_set_str(my_handle, NONVOL_OTA_URL, json_ota_url); // Store the URL in the nonvol
+      version = 12;                                         // Skip to version 12
     }
     if ( version == 12 )
     {
       nvs_set_i32(my_handle, NONVOL_LOCK, 0);               // Disable the lock code
+      version = 13;
     }
   }
 

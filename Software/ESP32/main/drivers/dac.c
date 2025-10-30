@@ -34,17 +34,17 @@
 /*
  *  Definitions
  */
-#define DAC_MCP4725_ADDR  0x60    // DAC I2C address
-#define DAC_MCP4725_WRITE 0x00    // Fast Write (don'e write to EEPROM)
-#define DAC_MCP4728_ADDR  0x60    // DAC I2C address
-#define DAC_MCP4728_WRITE 0x40    // Multi Write
-#define UDAC              0x01    // Output immediatly
-#define V_INTERNAL        0x80    // Select internal refernce in DAC
-#define VREF_INT          2.048   // Internal reference set at 2.048V
-#define V_EXTERNAL        0x00    // Select exteranl referece to DAC
-#define VREF_EXT          5.0     // Exterma; referemce nominally 5V (not very regulated)
-#define VREF_MCP4725      5.0
-#define DAC_FS            (0xfff) // 12 bit DAC{}
+#define DAC_MCP4725_ADDR  0x60         // DAC I2C address
+#define DAC_MCP4725_WRITE 0x00         // Fast Write (don'e write to EEPROM)
+#define DAC_MCP4728_ADDR  0x60         // DAC I2C address
+#define DAC_MCP4728_WRITE 0x40         // Multi Write
+#define UDAC              0x01         // Output immediatly
+#define V_INTERNAL        0x80         // Select internal refernce in DAC
+#define VREF_INT          2.048        // Internal reference set at 2.048V
+#define V_EXTERNAL        0x00         // Select exteranl referece to DAC
+#define VREF_EXT          5.0          // Exterma; referemce nominally 5V (not very regulated)
+#define VREF_MCP4725      (5.0 - 0.25) // Compensate for diode drop
+#define DAC_FS            (0xfff)      // 12 bit DAC{}
 
 /*
  * Function Prototypes
@@ -127,6 +127,11 @@ static void DAC_write_MCP4728(double volts[]) // What value are we setting it to
   max = 0;
   for ( i = 0; i != 4; i++ )
   {
+    if ( volts[i] > VREF_EXT )
+    {
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "VREF %d out of range:%4.2f)", i, volts[i]);))
+      volts[i] = VREF_EXT - 0.5;
+    }
     if ( volts[i] > max )
     {
       max = volts[i];
@@ -186,10 +191,16 @@ static void DAC_write_MCP4728(double volts[]) // What value are we setting it to
  *
  *--------------------------------------------------------------*/
 
-static void DAC_write_MCP4725(double volts[])                                       // What value are we setting it to
+static void DAC_write_MCP4725(double volts[]) // What value are we setting it to
 {
-  unsigned char data[3];                                                            // Bytes to send to the I2C
-  unsigned int  scaled_value;                                                       // Value (12 bits) to the DAC
+  unsigned char data[3];                      // Bytes to send to the I2C
+  unsigned int  scaled_value;                 // Value (12 bits) to the DAC
+
+  if ( volts[0] > VREF_MCP4725 )
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "VREF out of range:%4.2f)", volts[0]);))
+    volts[0] = VREF_MCP4725 - 0.25;
+  }
 
   scaled_value = ((int)((volts[0] + vref_adjust) / VREF_MCP4725 * DAC_FS)) & 0xfff; // Figure the bits to send
   data[0]      = (DAC_MCP4725_WRITE)                                                // Write
@@ -285,20 +296,32 @@ void DAC_calibrate(void) // Desired setpoint voltage
   if ( TMP1075D & board_mask )
   {
     volts[VREF_LO] = json_vref_lo;
-    volts[VREF_HI] = json_vref_hi;
+    volts[VREF_HI] = 0;
     i              = BREAKOUT;
+    vref_adjust    = 0.0;
+
     while ( fabs(json_vref_lo - (v_measure = vref_measure())) > DAC_ERROR )
     {
-      DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "%d vref:%f   vref_measure:%f ", i, json_vref_lo, v_measure);))
-      vref_adjust += (json_vref_lo - v_measure) / K_INTEGRAL;
+      vref_adjust += (json_vref_lo - v_measure) / K_INTEGRAL; // Added at time of writing the DAC
+      if ( (vref_adjust + json_vref_lo) > VREF_MCP4725 )      // Can't reach full scale
+      {
+        break;
+      }
       DAC_write_MCP4725(&volts[VREF_LO]);
-      vTaskDelay(ONE_SECOND / 50);
+      DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "%d vref:%f  DAC:%f vref_measure:%f  vref_adjust:%f ", i, json_vref_lo,
+                                      json_vref_lo + vref_adjust, v_measure, vref_adjust);))
+      vTaskDelay(ONE_SECOND / 25);
       i--;
       if ( i == 0 )
       {
         break;
       }
     }
+    DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "vref:%f   vref_measure:%f ", json_vref_lo, v_measure);))
+  }
+  else
+  {
+    DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "Vref feedback not available on this board ");))
   }
 
   /*

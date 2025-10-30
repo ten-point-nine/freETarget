@@ -39,7 +39,7 @@
 #include "bluetooth.h"
 #include "ota.h"
 
-extern volatile long paper_time; // Allow only positive time
+extern volatile time_count_t paper_time;
 
 static void show_test_help(void);
 static void test_display_all_scores(void);
@@ -732,14 +732,12 @@ void show_sensor_fault(unsigned int sensor_status)
 {
   unsigned int i;
 
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "show_sensor_fault()");))
-
   for ( i = N; i <= W; i++ )
   {
     if ( (sensor_status & (1 << i)) == 0 )
     {
+      DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Sensor %s failed", find_sensor(1 << i)->long_name);))
       set_diag_LED(find_sensor(1 << i)->diag_LED, 2);
-      return;
     }
   }
 

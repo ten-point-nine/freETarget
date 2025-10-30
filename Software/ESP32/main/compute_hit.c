@@ -89,18 +89,26 @@ void init_sensors(void)
   s[N].index = N;
   s[N].x     = json_north_x / s_of_sound * OSCILLATOR_MHZ;
   s[N].y     = (json_sensor_dia / 2.0d + json_north_y) / s_of_sound * OSCILLATOR_MHZ;
+  s[N].x_mm  = json_north_x;
+  s[N].y_mm  = json_sensor_dia / 2.0d + json_north_y;
 
   s[E].index = E;
   s[E].x     = (json_sensor_dia / 2.0d + json_east_x) / s_of_sound * OSCILLATOR_MHZ;
   s[E].y     = (0.0d + json_east_y) / s_of_sound * OSCILLATOR_MHZ;
+  s[E].x_mm  = json_sensor_dia / 2.0d + json_east_x;
+  s[E].y_mm  = json_east_y;
 
   s[S].index = S;
   s[S].x     = 0.0d + json_south_x / s_of_sound * OSCILLATOR_MHZ;
   s[S].y     = -(json_sensor_dia / 2.0d + json_south_y) / s_of_sound * OSCILLATOR_MHZ;
+  s[S].x_mm  = json_south_x;
+  s[S].y_mm  = -(json_sensor_dia / 2.0d + json_south_y);
 
   s[W].index = W;
   s[W].x     = -(json_sensor_dia / 2.0d + json_west_x) / s_of_sound * OSCILLATOR_MHZ;
   s[W].y     = json_west_y / s_of_sound * OSCILLATOR_MHZ;
+  s[W].x_mm  = -(json_sensor_dia / 2.0d + json_west_x);
+  s[W].y_mm  = json_west_y;
 
   /*
    *  All done, return
@@ -272,8 +280,15 @@ unsigned int compute_hit(shot_record_t *shot // Storing the results
   /*
    * All done return
    */
+
   shot->x = x_avg;
   shot->y = y_avg;
+
+  if ( isnan(shot->x) || isnan(shot->y) ) // If the computation failed,
+  {
+    DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "Computation resulted in NaN");))
+    return MISS;                          // return an error
+  }
 
   return location;
 }
