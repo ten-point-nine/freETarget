@@ -456,6 +456,9 @@ unsigned int reduce(void)
    */
   while ( shot_out != shot_in ) // Process the shots on the queue
   {
+    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "shot_in: %d,  shot_out:%d", shot_in, shot_out);))
+    DLT(DLT_DEBUG, show_sensor_status(record[shot_out].sensor_status);)
+
     if ( (record[shot_out].sensor_status & 0x0f) != 0x0f )
     {
       show_sensor_fault(record[shot_out].sensor_status);

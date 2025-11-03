@@ -687,7 +687,7 @@ void show_sensor_status(unsigned int sensor_status)
 {
   unsigned int i;
 
-  SEND(ALL, sprintf(_xs, " Latch:");)
+  SEND(ALL, sprintf(_xs, "Latch:");)
 
   for ( i = N; i <= W; i++ )
   {
