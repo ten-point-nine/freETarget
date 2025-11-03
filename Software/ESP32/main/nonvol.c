@@ -327,8 +327,6 @@ void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calib
  *------------------------------------------------------------*/
 void init_nonvol(int verify) // Verification code entered by user
 {
-  json_auth_code = 0;        // Clear the Auth Code
-
   /*
    * Ensure that the user wants to init the unit
    */

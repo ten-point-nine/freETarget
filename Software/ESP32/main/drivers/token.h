@@ -52,7 +52,7 @@ void token_cycle(void);     // Token ring cyclic monitor
 /*
  *  GLobal Variables
  */
-EXTERN int my_ring;   // Token ring address
-EXTERN int whos_ring; // Who owns the ring right now?
+EXTERN int my_ring   = TOKEN_UNDEF; // Token ring address
+EXTERN int whos_ring = TOKEN_UNDEF; // Who owns the ring right now?
 
 #endif
