@@ -832,26 +832,23 @@ static void unlock_target(unsigned int password) // Password entered by the user
  * {"AUTH_CODE":1234, "AUTH_CODE":4321} // Match the first, set the second
  *
  *-----------------------------------------------------*/
-static void set_auth_code(unsigned int new_auth_code)         // Authcode entered by the user
+static void set_auth_code(unsigned int new_auth_code) // Authcode entered by the user
 {
-  unsigned int saved_auth_code;                               // Auth code read from nonvol
-
-  nvs_get_i32(my_handle, NONVOL_AUTH_CODE, &saved_auth_code); // Read the auth code from nonvol
-
   /*
    * Is the current auth code zero? If so, then we can set a new one
    */
-  if ( json_auth_code == 0 )
+  if ( json_auth_code == 0 )                                 // No auth code is set
   {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Setting Auth Code");))
     json_auth_code = new_auth_code;                          // Set the auth code
     nvs_set_i32(my_handle, NONVOL_AUTH_CODE, new_auth_code); // Save the auth code
-    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Authentication code set\r\n");))
   }
   else
   {
     if ( json_auth_code == new_auth_code )                   // Does the new code match the nonvol one?
     {
       json_auth_code = 0;                                    // Yes, then disable the auth code
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Auth Code is inactive\n");))
     }
   }
 

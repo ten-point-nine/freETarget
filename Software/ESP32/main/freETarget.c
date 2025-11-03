@@ -100,44 +100,47 @@ void freeETarget_init(void)
   run_state = IN_STARTUP;
   is_trace  = DLT_INFO | DLT_CRITICAL;
 #if TRACE_APPLICATION
-  is_trace |= DLT_APPLICATION;                               // Enable application tracing
+  is_trace |= DLT_APPLICATION;   // Enable application tracing
 #endif
 #if TRACE_COMMUNICATION
-  is_trace |= DLT_COMMUNICATION;                             // Enable application tracing
+  is_trace |= DLT_COMMUNICATION; // Enable application tracing
 #endif
 #if TRACE_DIAGNOSTICS
-  is_trace |= DLT_DIAG;                                      // Enable diagnostics tracing
+  is_trace |= DLT_DIAG;          // Enable diagnostics tracing
 #endif
 #if TRACE_DEBUG
-  is_trace |= DLT_DEBUG;                                     // Enable debug tracing
+  is_trace |= DLT_DEBUG;         // Enable debug tracing
 #endif
 #if TRACE_SCORE
-  is_trace |= DLT_SCORE;                                     // Enable score tracing
+  is_trace |= DLT_SCORE;         // Enable score tracing
 #endif
 #if TRACE_HTTP
-  is_trace |= DLT_HTTP;                                      // Enable HTTP tracing
+  is_trace |= DLT_HTTP;          // Enable HTTP tracing
 #endif
 #if TRACE_OTA
-  is_trace |= DLT_OTA;                                       // Enable OTA tracing
+  is_trace |= DLT_OTA;           // Enable OTA tracing
 #endif
 #if TRACE_HEARTBEAT
-  is_trace |= DLT_HEARTBEAT;                                 // Enable heartbeat tracing
+  is_trace |= DLT_HEARTBEAT;     // Enable heartbeat tracing
 #endif
 
-  nvs_get_i32(my_handle, NONVOL_AUTH_CODE, &json_auth_code); // Read in the auth code on power up
+  json_auth_code = 0;            // Disable the auth code until read from non-volatile memory
 
   /*
    *  Setup the hardware
    */
-  json_aux_mode  = false; // Assume the AUX port is not used
-  json_auth_code = -1;    // No authorization code by default on power up
-  gpio_init();            // Setup the hardware
-  serial_io_init();       // Setup the console for debug message
-  read_nonvol();          // Read in the settings
-  serial_aux_init();      // Update the serial port if there is a change
-  set_VREF();             // Set the reference voltages
-  DAC_calibrate();        // Adjust the DAC to compensate for voltage drop
-  multifunction_init();   // Override the MFS if we have to
+  json_aux_mode = false;                                                                       // Assume the AUX port is not used
+  gpio_init();                                                                                 // Setup the hardware
+  serial_io_init();                                                                            // Setup the console for debug message
+  read_nonvol();                                                                               // Read in the settings
+  if ( json_auth_code != 0 )                                                                   // If the auth code is zero
+  {
+    printf("\r\nWARNING: Auth code is enabled. Set a valid auth code to enable messages\r\n"); // Warn the user
+  }
+  serial_aux_init();    // Update the serial port if there is a change
+  set_VREF();           // Set the reference voltages
+  DAC_calibrate();      // Adjust the DAC to compensate for voltage drop
+  multifunction_init(); // Override the MFS if we have to
 
   /*
    * Put up a self test

@@ -582,7 +582,7 @@ void paper_start(void)
   /*
    *  DC Motor, turn on the FET to start the motor
    */
-  if ( IS_DC_WITNESS ) // DC motor,
+  if ( IS_DC_WITNESS )    // DC motor,
   {
     DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "DC motor start: %d ms", json_paper_time);))
     DCmotor_on_off(true, json_paper_time);
@@ -751,7 +751,7 @@ void DCmotor_on_off(bool         on,      // on == true, turn on motor drive
 
 int is_paper_on(void) // Return true if there is still time
 {
-  return (paper_time != 0);
+  return (paper_time > 0);
 }
 
 /*----------------------------------------------------------------
