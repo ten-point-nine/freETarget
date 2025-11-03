@@ -302,13 +302,13 @@ unsigned int revision(void)
  *--------------------------------------------------------------*/
 double vref_measure(void)
 {
-  if ( TMP1075D & board_mask )
+  if ( TMP1075D )
   {
     return ((double)adc_read(VMES_LO)) / ADC_FULL * ADC_REF * VREF_DIVIDER + ADC_BIAS; // 4096 full scale, 3.3 VREF 1/2 voltage divider
   }
   else
   {
-    return -1.0;                                                 // Not available
+    return -1.0;                                                                       // Not available
   }
 }
 
@@ -324,7 +324,7 @@ double vref_measure(void)
  *--------------------------------------------------------------*/
 double temperature_C(void)
 {
-  if ( HDC3022 & board_mask )
+  if ( HDC3022 )
   {
     return temperature_C_HDC3022();  // TI HDC3022
   }
@@ -467,7 +467,7 @@ void set_VREF(void)
     json_vref_lo = 1.25;   // and force to something other than 0
   }
 
-  if ( MCP4728 & board_mask )
+  if ( MCP4728 )
   {
     if ( json_vref_hi == 0 )
     {
@@ -475,7 +475,7 @@ void set_VREF(void)
     }
   }
 
-  if ( MCP4728 & board_mask )
+  if ( MCP4728 )
   {
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Set VREF_LO: %4.2f   VREF_HI: %4.2f", json_vref_lo, json_vref_hi);))
   }
@@ -484,7 +484,7 @@ void set_VREF(void)
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Set VREF_LO: %4.2f", json_vref_lo);))
   }
 
-  if ( MCP4728 & board_mask ) // Check for four channel DAC
+  if ( MCP4728 ) // Check for four channel DAC
   {
     if ( json_vref_lo >= json_vref_hi )
     {
@@ -501,7 +501,7 @@ void set_VREF(void)
   /*{
    *  All done, return
    */
-  if ( MCP4725 & board_mask )
+  if ( MCP4725 )
   {
     DAC_calibrate(); // Adjust the DAC output
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Read VREF_LO: %4.2f", vref_measure());))
@@ -524,13 +524,13 @@ void set_VREF(void)
 void analog_input_test(void)
 {
   SEND(ALL, sprintf(_xs, "\r\n12V: %5.3f", v12_supply());)
-  if ( VREF_FB & board_mask )
+  if ( VREF_FB )
   {
     SEND(ALL, sprintf(_xs, "\r\nVREF_MEASURE: %5.3f", vref_measure());)
   }
   SEND(ALL, sprintf(_xs, "\r\nBoard Rev: %4.2f", (float)revision() / 100.0);)
   SEND(ALL, sprintf(_xs, "\r\nTemperature: %4.2f", temperature_C());)
-  if ( HDC3022 & board_mask )
+  if ( HDC3022 )
   {
     SEND(ALL, sprintf(_xs, "\r\nHumidity: %4.2f", humidity_RH());)
   }

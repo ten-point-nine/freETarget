@@ -309,7 +309,7 @@ bool do_factory_test(bool test_run)
   if ( test_run )
   {
     SEND(ALL, sprintf(_xs, "\r\n");)
-    if ( (board_mask & HDC3022) != 0 )
+    if ( HDC3022 != 0 )
     {
       SEND(ALL, sprintf(_xs, "\r\nHas the tape seal been removed from the humidity sensor?");)
     }
@@ -421,7 +421,7 @@ bool do_factory_test(bool test_run)
         }
       }
 
-      if ( TMP1075D & board_mask )
+      if ( TMP1075D )
       {
         vmes_lo = vref_measure();       // Read the VREF_LO voltage
         SEND(ALL, sprintf(_xs, "  VREF_LO: %4.2fV", vmes_lo);)
@@ -437,7 +437,7 @@ bool do_factory_test(bool test_run)
         }
       }
       SEND(ALL, sprintf(_xs, "  Temp: %4.2fC", temperature_C());)
-      if ( HDC3022 & board_mask )
+      if ( HDC3022 )
       {
         SEND(ALL, sprintf(_xs, "  Humidity: %4.2f", humidity_RH());)
       }

@@ -70,7 +70,7 @@ static double vref_adjust = 0.0; // Adjustment to apply to DAC
  *--------------------------------------------------------------*/
 void DAC_write(double volts[]) // What value are we setting it to
 {
-  if ( MCP4728 & board_mask )
+  if ( MCP4728 )
   {
     DAC_write_MCP4728(volts);  // MCP 4728 (four channel`)
   }
@@ -237,7 +237,7 @@ void DAC_read(void)          // What value are we setting it to
 
   SEND(ALL, sprintf(_xs, "DAC_read: ");)
 
-  if ( MCP4728 & board_mask )
+  if ( MCP4728 )
   {
     sizeof_data = sizeof(data);                     // MCP4728 (4 channel`)
     i2c_read(DAC_MCP4728_ADDR, data, sizeof(data)); // Data transferred on last bit.
@@ -293,7 +293,7 @@ void DAC_calibrate(void) // Desired setpoint voltage
   int    i;
   double v_measure = 0.0;
 
-  if ( TMP1075D & board_mask )
+  if ( TMP1075D )
   {
     volts[VREF_LO] = json_vref_lo;
     volts[VREF_HI] = 0;
@@ -362,7 +362,7 @@ void DAC_test(void)
   int    i;
 
   SEND(ALL, sprintf(_xs, "\r\nDAC 0 Up ramp 0-5V");)
-  if ( MCP4728 & board_mask )
+  if ( MCP4728 )
   {
     SEND(ALL, sprintf(_xs, "\r\nDAC 1 Up ramp 0-5V delayed");)
   }
@@ -380,7 +380,7 @@ void DAC_test(void)
         break;
       }
     }
-    if ( MCP4728 & board_mask )
+    if ( MCP4728 )
     {
       volts[VREF_LO] = VREF_EXT * ((float)(i % 200) / 200.0);        // Ramp Up
       volts[VREF_HI] = VREF_EXT * ((float)((i - 10) % 200) / 200.0); // Ramp Up delayed

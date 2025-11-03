@@ -737,7 +737,7 @@ void DCmotor_on_off(bool         on,      // on == true, turn on motor drive
 
 int is_paper_on(void) // Return true if there is still time
 {
-  return (paper_time != 0);
+  return (paper_time < 0);
 }
 
 /*----------------------------------------------------------------
