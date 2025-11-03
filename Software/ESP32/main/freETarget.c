@@ -126,18 +126,22 @@ void freeETarget_init(void)
 
   nvs_get_i32(my_handle, NONVOL_AUTH_CODE, &json_auth_code); // Read in the auth code on power up
 
+  if ( json_auth_code != 0 )
+  {
+    DLT(DLT_INFO, printf("Authourization code required for this target");)
+  }
+
   /*
    *  Setup the hardware
    */
-  json_aux_mode  = false; // Assume the AUX port is not used
-  json_auth_code = -1;    // No authorization code by default on power up
-  gpio_init();            // Setup the hardware
-  serial_io_init();       // Setup the console for debug message
-  read_nonvol();          // Read in the settings
-  serial_aux_init();      // Update the serial port if there is a change
-  set_VREF();             // Set the reference voltages
-  DAC_calibrate();        // Adjust the DAC to compensate for voltage drop
-  multifunction_init();   // Override the MFS if we have to
+  json_aux_mode = false; // Assume the AUX port is not used
+  gpio_init();           // Setup the hardware
+  serial_io_init();      // Setup the console for debug message
+  read_nonvol();         // Read in the settings
+  serial_aux_init();     // Update the serial port if there is a change
+  set_VREF();            // Set the reference voltages
+  DAC_calibrate();       // Adjust the DAC to compensate for voltage drop
+  multifunction_init();  // Override the MFS if we have to
 
   /*
    * Put up a self test
@@ -158,13 +162,13 @@ void freeETarget_init(void)
   /*
    *  Set up the long running timers
    */
-  ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND * 60l);         // Keep alive timer
-  ft_timer_new(&power_save, (time_count_t)(json_power_save) * (long)ONE_SECOND * 60L); // Power save timer
-  ft_timer_new(&time_since_last_shot, HTTP_CLOSE_TIME * 60 * ONE_SECOND);              // 15 minutes since last shot
+  ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND * 60l);                 // Keep alive timer
+  ft_timer_new(&power_save, (time_count_t)(json_power_save) * (time_count_t)ONE_SECOND * 60L); // Power save timer
+  ft_timer_new(&time_since_last_shot, HTTP_CLOSE_TIME * 60 * ONE_SECOND);                      // 15 minutes since last shot
 
-                                                                                       /*
-                                                                                        * Run the power on self test
-                                                                                        */
+                                                                                               /*
+                                                                                                * Run the power on self test
+                                                                                                */
   POST_counters();            // POST counters does not return if there is an error
   if ( check_12V() == false ) // Verify the 12 volt supply
   {
@@ -456,6 +460,9 @@ unsigned int reduce(void)
    */
   while ( shot_out != shot_in ) // Process the shots on the queue
   {
+    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "shot_in: %d,  shot_out:%d", shot_in, shot_out);))
+    DLT(DLT_DEBUG, show_sensor_status(record[shot_out].sensor_status);)
+
     if ( (record[shot_out].sensor_status & 0x0f) != 0x0f )
     {
       show_sensor_fault(record[shot_out].sensor_status);

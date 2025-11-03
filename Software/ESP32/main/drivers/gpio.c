@@ -54,10 +54,11 @@ status_struct_t status[3] = {
     {0, 0, 0, 0},
     {0, 0, 0, 0}
 };
-int                   paper_state; // Drive is ON or OFF
-time_count_t          paper_time;  // How long the paper will be on for
-volatile unsigned int step_count;  // How many step counts do we need?
-volatile unsigned int step_time;   // Interval to next step
+int                   paper_state;   // Drive is ON or OFF
+time_count_t          paper_time;    // How long the paper will be on for
+volatile unsigned int step_count;    // How many step counts do we need?
+volatile unsigned int step_time;     // Interval to next step
+static bool           motor_running; // TRUE if the motor is running (for diagnostics)
 
 /*-----------------------------------------------------
  *
@@ -585,6 +586,7 @@ void paper_start(void)
   {
     DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "DC motor start: %d ms", json_paper_time);))
     DCmotor_on_off(true, json_paper_time);
+    motor_running = true; // Used for diagnostics
   }
 
   /*
@@ -627,8 +629,13 @@ void paper_drive_tick(void)
    */
   if ( IS_DC_WITNESS )
   {
-    if ( paper_time == 0 )
+    if ( paper_time <= 0 )
     {
+      if ( motor_running == true )
+      {
+        motor_running = false;
+        DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "DC motor stopped");))
+      }
       paper_stop(); // Motor OFF
     }
   }
@@ -640,7 +647,7 @@ void paper_drive_tick(void)
   {
     if ( step_count != 0 )   // In motion
     {
-      if ( paper_time == 0 ) // Timer for next pulse?
+      if ( paper_time <= 0 ) // Timer for next pulse?
       {
         stepper_pulse();     // Motor toggle
       }

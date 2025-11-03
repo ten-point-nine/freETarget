@@ -328,6 +328,7 @@ void DAC_calibrate(void) // Desired setpoint voltage
    *  All done, return
    */
 
+  DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "vref:%f   vref_measure:%f ", json_vref_lo, v_measure);))
   return;
 }
 

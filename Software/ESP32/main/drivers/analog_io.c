@@ -162,6 +162,11 @@ unsigned int adc_read(unsigned int adc_channel // What input are we reading?
   return (sum & 0x0fff);
 }
 
+#define V12_RESISITOR   ((40.2 + 5.0) / 5.0) // Resistor divider
+#define V12_ATTENUATION 3.548                // 11 DB
+#define V12_REF         1.1                  // ESP32 VREF
+#define V12_CAL         0.88
+
 float v12_supply(void)
 {
   return (float)adc_read(V_12_LED) / ADC_FULL * ADC_REF * V12_RESISTOR + ADC_BIAS;
@@ -257,8 +262,8 @@ void set_LED_PWM         // Theatre lighting
  *  undefined (< 100) then the last 'good' revision is returned
  *
  *--------------------------------------------------------------*/
-//                                        0     1  2  3  4      5       6        7     8  9   A   B   C   D   E   F
-const static unsigned int version[] = {REV_510, 1, 2, 3, 4, REV_600, REV_600, REV_600, 8, 9, 10, 11, 12, 13, 14, REV_520};
+//                                        0     1  2  3  4  5     6     7  8  9   A   B   C   D   E   F
+const static unsigned int version[] = {REV_510, 1, 2, 3, 4, 5, REV_600, 7, 8, 9, 10, 11, 12, 13, 14, REV_520};
 
 unsigned int revision(void)
 {
@@ -273,12 +278,8 @@ unsigned int revision(void)
    *  Read the resistors and determine the board revision
    */
   index         = (adc_read(BOARD_REV) >> (12 - 4)) & 0x0f; // Top 4 bits only
-  board_version = version[index];                           // Get the board revision number
-  if ( board_version == REV_600 )                           // Special case for 600, just in case
-  {
-    index = 6;
-  }
-  board_mask = 1 << index;                                  // Set the mask for the board revision
+  board_version = version[index]; // Get the board revision number
+  board_mask    = 1 << index;     // Set the mask for the board revision
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Board Revision: %d  Board Mask: %04X", board_version, board_mask);))
 
@@ -353,6 +354,7 @@ static double temperature_C_HDC3022(void)
 {
   unsigned char temp_buffer[6];
   int           raw;
+  static float  t_c; // Remember the temperature
 
   /*
    * Read in the temperature and humidity together
@@ -392,6 +394,15 @@ static double temperature_C_TMP1075D(void)
 {
   unsigned char temp_buffer[6];
   int           raw;
+  static float  t_c = -274;  // Remember the temperature Set to below absolute zero
+
+  if ( v12_supply() >= 5.0 ) // Board powered up?
+  {
+    if ( t_c > -273 )        // If we have a valid temperature, return it
+    {
+      return t_c;
+    }
+  }
 
   /*
    * Read in the temperature and humidity together
@@ -407,9 +418,6 @@ static double temperature_C_TMP1075D(void)
   t_c = ((float)raw * TC_CAL);
   rh  = 40.0;
 
-  /*
-   * Compensate for self heating not used in Indian boards
-   */
   return t_c;
 }
 

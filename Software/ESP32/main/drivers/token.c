@@ -66,6 +66,7 @@
 #include "json.h"
 #include "serial_io.h"
 #include "timer.h"
+#include "token.h"
 
 static volatile time_count_t token_tick; // Token ring watchdog
 
