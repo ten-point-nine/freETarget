@@ -181,6 +181,8 @@ void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calib
   unsigned int x;                        // Temporary Value
   unsigned int i;                        // Iteration Counter
 
+  json_auth_code = 0;                    // Force the enable to see prompts
+
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "factory_nonvol(%d)\r\n", do_calibration);))
 
   /*
@@ -427,7 +429,7 @@ void update_nonvol(unsigned int current_version) // Version present in persisten
     if ( version == 12 )
     {
       nvs_set_i32(my_handle, NONVOL_LOCK, 0);               // Disable the lock code
-      nvs_set_i32(my_handle, NONVOL_AUTH_CODE, 0);          // Disable the lock code
+      nvs_set_i32(my_handle, NONVOL_AUTH_CODE, 0);          // Disable the auth code
       version = 13;
     }
   }

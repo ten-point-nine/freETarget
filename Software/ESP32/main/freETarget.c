@@ -124,7 +124,7 @@ void freeETarget_init(void)
   is_trace |= DLT_HEARTBEAT;     // Enable heartbeat tracing
 #endif
 
-  json_auth_code = 0;            // Disable the auth code until read from non-volatile memory
+  json_auth_code = 1;            // Hide the console messages until NONVOL is read
 
   /*
    *  Setup the hardware
