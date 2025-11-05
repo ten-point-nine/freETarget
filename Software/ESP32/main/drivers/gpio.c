@@ -629,6 +629,10 @@ void paper_drive_tick(void)
    */
   if ( IS_DC_WITNESS )
   {
+    if ( motor_running )
+    {
+      DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "paper_time: %ld", paper_time);))
+    }
     if ( paper_time <= 0 )
     {
       if ( motor_running == true )
