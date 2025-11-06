@@ -7,5 +7,5 @@ After the installation is complete, if Windows does not recognize the ESP32 boar
 To upload the firmware, you need to install the uploaded tool ESPTOOL. There are multiple steps:
 1)	Install python from https://www.python.org/downloads/
 2)	When installing python, make sure to select the option to install the PIP tool 
-3)	Open a command window and type: „pip install esptool” 
+3)	Open a command window and type: „pip install "esptool<5" ” 
 4)	Make sure the esptool.exe file exists in the python\scripts folder and that it was added to the PATH environment variable
