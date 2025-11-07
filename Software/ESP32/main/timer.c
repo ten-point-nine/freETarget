@@ -61,27 +61,31 @@ typedef struct
 /*
  * Local Variables
  */
-static time_count_t *timers[N_TIMERS];      // Active timer list (allow only positive time)
-time_count_t         shot_timer;            // Wait for the sound to hit all sensors
-time_count_t         ring_timer;            // Let the ring on the backstop end
-static state         isr_state;             // What sensor state are we in
-static time_count_t  base_time = 0;         // Base time to show elapsed time
-time_count_t         time_to_go;            // Time remaining in event in seconds
+static time_count_t *timers[N_TIMERS];          // Active timer list (allow only positive time)
+time_count_t         shot_timer;                // Wait for the sound to hit all sensors
+time_count_t         ring_timer;                // Let the ring on the backstop end
+static state         isr_state;                 // What sensor state are we in
+static time_count_t  base_time = 0;             // Base time to show elapsed time
+time_count_t         time_to_go;                // Time remaining in event in seconds
 
-static synchronous_task_t task_list[] = {
-    {BAND_10ms,   token_cycle              }, // Check for token ring activity
-    {BAND_10ms,   multifunction_switch_tick}, // Look for MFS changes
-    {BAND_10ms,   multifunction_switch     },
-    {BAND_10ms,   paper_drive_tick         }, // Drive the paper drive motor
-    {BAND_500ms,  toggle_status_LEDs       }, // Blink the LEDs
-    {BAND_500ms,  tabata_task              }, // Manage the Tabata timer
-    {BAND_500ms,  rapid_fire_task          }, // Manage the rapid fire timer
-    {BAND_1000ms, bye_tick                 }, // See if it is time to go to sleep
-    {BAND_1000ms, check_12V                }, // Monitor the 12V supply
-    {BAND_1000ms, send_keep_alive          }, // Send a keep alive message
-    {BAND_1000ms, check_new_connection     }, // Check for a new WiFi connection
-    {0,           0                        }
-};
+static synchronous_task_t task_list[] =
+    {
+        {BAND_10ms,   token_cycle              }, // Check for token ring activity
+        {BAND_10ms,   multifunction_switch_tick}, // Look for MFS changes
+        {BAND_10ms,   multifunction_switch     },
+        {BAND_10ms,   paper_drive_tick         }, // Drive the paper drive motor
+        {BAND_500ms,  toggle_status_LEDs       }, // Blink the LEDs
+        {BAND_500ms,  tabata_task              }, // Manage the Tabata timer
+        {BAND_500ms,  rapid_fire_task          }, // Manage the rapid fire timer
+        {BAND_1000ms, bye_tick                 }, // See if it is time to go to sleep
+        {BAND_1000ms, check_12V                }, // Monitor the 12V supply
+        {BAND_1000ms, send_keep_alive          }, // Send a keep alive message
+        {BAND_1000ms, check_new_connection     }, // Check for a new WiFi connection
+        {BAND_60s,    watchdog                 }, // Watchdog monitor
+        {0,           0                        }
+}
+
+;
 
 /*
  *  Function Prototypes
