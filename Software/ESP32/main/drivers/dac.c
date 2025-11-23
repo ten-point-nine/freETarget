@@ -308,8 +308,8 @@ void DAC_calibrate(void) // Desired setpoint voltage
         break;
       }
       DAC_write_MCP4725(&volts[VREF_LO]);
-      DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "%d vref:%f  DAC:%f vref_measure:%f  vref_adjust:%f ", i, json_vref_lo,
-                                      json_vref_lo + vref_adjust, v_measure, vref_adjust);))
+      DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "vref:%f  DAC:%f vref_measure:%f  vref_adjust:%f ", json_vref_lo, json_vref_lo + vref_adjust,
+                                      v_measure, vref_adjust);))
       vTaskDelay(ONE_SECOND / 25);
       i--;
       if ( i == 0 )
