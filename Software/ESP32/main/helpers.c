@@ -814,6 +814,8 @@ void watchdog(void)
   char        str_c[SHORT_TEXT];
   static bool wifi_is_connected = false;
 
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "watchdog()");))
+
   /*
    *  Check to see if we have a connection to the WiFi
    */
@@ -823,8 +825,9 @@ void watchdog(void)
     {
       if ( WiFi_my_IP_address(str_c) == false ) // Find our IP address
       {
+        DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Trying to connect to access point");))
         set_status_LED(LED_WIFI_FAULT);         // Empty
-        WiFi_init();                            // Try to reconnect
+        WiFi_reconnect();
       }
       else
       {
