@@ -62,6 +62,7 @@ const json_message_t JSON[] = {
     {HIDE,        "\"BYE\":",             0,                           IS_INT32,                 &bye,               0,                       0,          0 },
     {HIDE,        "\"ECHO\":",            0,                           IS_VOID,                  &show_echo,         0,                       0,          0 },
     {HIDE + LOCK, "\"FACE_STRIKE\":",     &json_face_strike,           IS_INT32,                 0,                  NONVOL_FACE_STRIKE,      0,          0 },
+    {HIDE,        "\"FLASH\":",           0,                           IS_INT32,                 &OTA_serial,        0,                       0,          0 },
     {SHOW + LOCK, "\"FOLLOW_THROUGH\":",  &json_follow_through,        IS_INT32,                 0,                  NONVOL_FOLLOW_THROUGH,   0,          0 },
     {HIDE + LOCK, "\"INIT\"",             0,                           IS_VOID,                  &init_nonvol,       0,                       0,          0 },
     {SHOW + LOCK, "\"KEEP_ALIVE\":",      &json_keep_alive,            IS_INT32,                 0,                  NONVOL_KEEP_ALIVE,       120,        0 },

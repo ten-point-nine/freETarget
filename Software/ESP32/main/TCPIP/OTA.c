@@ -82,17 +82,13 @@ extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_pem_end");
  *------------------------------------------------------------*/
 void OTA_load(void)
 {
-  esp_ota_handle_t       update_handle = 0;
-  const esp_partition_t *update_partition;
-  const esp_partition_t *boot_partition           = esp_ota_get_boot_partition();
-  const esp_partition_t *running_partition        = esp_ota_get_running_partition();
-  bool                   image_header_was_checked = false;
-  int                    data_read;
-  int                    binary_file_length = 0;
-  //  esp_app_desc_t           new_app_info;
-  //  esp_app_desc_t           running_app_info;
-  //  const esp_partition_t   *last_invalid_app;
-  //  esp_app_desc_t           invalid_app_info;
+  esp_ota_handle_t         update_handle = 0;
+  const esp_partition_t   *update_partition;
+  const esp_partition_t   *boot_partition           = esp_ota_get_boot_partition();
+  const esp_partition_t   *running_partition        = esp_ota_get_running_partition();
+  bool                     image_header_was_checked = false;
+  int                      data_read;
+  int                      binary_file_length = 0;
   esp_http_client_handle_t client;
   int                      http_count = 0; // How many records have we read in
 
@@ -267,6 +263,255 @@ void OTA_load(void)
 void OTA_load_json(int empty)                                           // Shim between JSON and push buttons
 {
   OTA_load();                                                           // Load the OTA image from the server
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: OTA_serial()
+ *
+ * @brief:    Take in an OTA file over the serial port
+ *
+ * @return:   None
+ *
+ *---------------------------------------------------------------
+ *
+ * OTA_serial)() takes in an OTA image over the serial port
+ *
+ * OTA_serial() is almost identical to OTA_load() except that
+ * the data comes in over the serial port instead of HTTP.
+ * Conseuently, we have to manage the serial port reads and timeouts.
+ *
+ * The sequence is:
+ *
+ * PC Client sends message {"FLASH":size}
+ * where size is the number of bytes to follow
+ *
+ * This function starts and sends a respoinse to incidate the
+ * number of bytes that can be sent with each packet.
+ *
+ * PC                                Target
+ * {"FLASH":size_of_file"}
+ *                                   {"SEND":packet_size"}
+ * #block,size:data
+ *                                   !   (ACK) send next block
+ *                                   ?   (NAK) abort
+ * #block,size:data
+ *
+ * #block,0:                         !   (ACK) end of file
+ *
+ *------------------------------------------------------------*/
+typedef enum
+{
+  OTA_WAIT_FOR_START,
+  OTA_WAIT_FOR_BLOCK,
+  OTA_WAIT_FOR_SIZE,
+  OTA_COLLECT_DATA
+} ota_state_t;
+
+void OTA_serial(unsigned int size)                 // Size of the incoming file
+{
+  char                   ch;                       // Incoming character
+  esp_ota_handle_t       update_handle = 0;
+  const esp_partition_t *update_partition;
+  const esp_partition_t *boot_partition    = esp_ota_get_boot_partition();
+  const esp_partition_t *running_partition = esp_ota_get_running_partition();
+  ota_state_t            flash_state       = OTA_WAIT_FOR_START;
+  unsigned int           block_number, next_block; // Block numbers
+  unsigned int           block_size;               // How many bytes in the incoming block
+  unsigned int           bytes_received;           // Number of bytes received
+
+  unsigned int i;
+  bool         image_header_was_checked = false;
+
+  /*
+   *  Start, check that the partitions are available
+   */
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "OTA_serial()");)) set_status_LED(LED_OTA_DOWNLOAD);
+
+  if ( boot_partition == NULL )
+  {
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Boot partition not available");))
+  }
+
+  if ( running_partition == NULL )
+  {
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Running partition not available");))
+  }
+
+#if ( 0 )
+  if ( boot_partition != running_partition )
+  {
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Configured OTA boot partition at offset 0x%08" PRIx32 ", but running from offset 0x%08" PRIx32,
+                                   configured->address, running->address);))
+    DLT(DLT_INFO,
+        SEND(ALL, sprintf(_xs, "(This can happen if either the OTA boot data or preferred boot image become corrupted somehow.)");))
+  }
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Running partition type %d subtype %d (offset 0x%08" PRIx32 ")", running->type, running->subtype,
+                                 running->address);))
+#endif
+
+  /*
+   *  Acknowledge the request and send the packet size
+   */
+  serial_flush(ALL);                                     // Flush the serial port
+  SEND(ALL, sprintf(_xs, "{\"SEND\":%d}", sizeof(_xs));) // Packet size
+
+  update_partition = esp_ota_get_next_update_partition(NULL);
+  assert(update_partition != NULL);
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Writing to partition subtype %d at offset 0x%" PRIx32, update_partition->subtype,
+                                 update_partition->address);))
+  /*
+   *  Prepare for the update
+   */
+  if ( esp_ota_begin(update_partition, OTA_WITH_SEQUENTIAL_WRITES, &update_handle) != ESP_OK )
+  {
+    esp_ota_abort(update_handle);
+    OTA_halt_process(LED_OTA_FAILED_CONNECT, "esp_ota_begin failed");
+  }
+
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "esp_ota_begin succeeded");))
+
+  /*
+   * Loop here and bring in the file
+   */
+  block_number   = 0;
+  bytes_received = 0;
+  while ( 1 ) // Loop for each block
+  {
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Waiting for block %d", block_number + 1);))
+
+    /*
+     *  Wait for the block to arrive
+     */
+    next_block  = 0;
+    block_size  = 0;
+    i           = 0;
+    flash_state = OTA_WAIT_FOR_START;
+
+    while ( 1 )                           // Loop for each byte in the block
+    {
+      if ( (block_number & 32) == 0 )
+      {
+        set_status_LED(LED_OTA_DOWNLOAD); // Slowly blink the LED
+      }
+      else
+      {
+        set_status_LED(LED_OTA_DOWNLOAD_T);
+      }
+
+      while ( 1 )
+      {
+        while ( serial_available(ALL) == 0 ) // Wait here for something to show up
+        {
+          vTaskDelay(1);                     // Wait a bit
+        }
+
+        ch = serial_getch(ALL);              // Get the byte
+
+        switch ( flash_state )
+        {
+          case OTA_WAIT_FOR_START:
+            if ( ch == '#' )                 // Start of block
+            {
+              flash_state = OTA_WAIT_FOR_BLOCK;
+              next_block  = 0;
+            }
+            break;
+
+          case OTA_WAIT_FOR_BLOCK:
+            if ( ch == ',' )                          // End of block number
+            {
+              flash_state = OTA_WAIT_FOR_SIZE;
+              block_size  = 0;
+              if ( next_block != (block_number + 1) ) // Wrong block number
+              {
+                OTA_halt_process(LED_OTA_FATAL, "Wrong block number received");
+                DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Aborting. Expected block %d, got %d", block_number + 1, next_block);))
+                return;
+              }
+            }
+            else
+            {
+              next_block = (next_block * 10) + (ch - '0');
+            }
+            break;
+
+          case OTA_WAIT_FOR_SIZE:
+            if ( ch == ':' )         // End of size
+            {
+              flash_state = OTA_COLLECT_DATA;
+              i           = 0;
+              if ( block_size == 0 ) // End of file
+              {
+                goto ota_serial_done;
+              }
+            }
+            else
+            {
+              block_size = (block_size * 10) + (ch - '0');
+            }
+            break;
+
+          case OTA_COLLECT_DATA:
+            ota_write_data[i] = ch;
+            i++;
+            if ( i >= block_size ) // Got the whole block
+            {
+              /*
+               * Write the block to flash
+               */
+              bytes_received = block_size;             // Keep track of the bytes received
+              block_number++;                          // Wait for the next block
+              flash_state = OTA_WAIT_FOR_START;        // Back to start
+
+              if ( image_header_was_checked == false ) // First time through, check the header
+              {
+                OTA_check_header(ota_write_data, i, update_partition, running_partition, boot_partition);
+                image_header_was_checked = true;
+              }
+
+              /*
+               * flash the received data into OTA memory. esp_
+               */
+              if ( esp_ota_write(update_handle, (const void *)ota_write_data, i) != ESP_OK )
+              {
+                esp_ota_abort(update_handle);
+                OTA_halt_process(LED_OTA_FAILED_CONNECT, "esp_ota_write() failed");
+              }
+            }
+            serial_putch('!', ALL); // ACK
+        }
+      }
+    }
+  }
+
+  /*
+   *  The download is complete, make sure we have the complete file
+   */
+ota_serial_done:
+  set_status_LED(LED_OTA_FINSHED); // Show we are part way done
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Total Write binary data length: %d", bytes_received);))
+
+  if ( esp_ota_end(update_handle) != ESP_OK )
+  {
+    OTA_halt_process(LED_OTA_FATAL, "Failed to complete OTA update");
+  }
+
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "esp_ota_end succesful");))
+
+  /*
+   * Looks good, setup the registers
+   */
+  if ( esp_ota_set_boot_partition(update_partition) != ESP_OK )
+  {
+    OTA_halt_process(LED_OTA_FATAL, "esp_ota_set_boot_partition failed");
+  }
+
+  /*
+   *  All done, halt and wait for the user to restart
+   */
+  OTA_halt_process(LED_OTA_READY, "Cycle power to start new firmware"); // Reboot the system
   return;
 }
 
