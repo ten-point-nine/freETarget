@@ -103,7 +103,12 @@ unsigned int          connection_list; // Bitmask of existing connections
  *******************************************************************************
  *
  * The serial port is initialized and the interrupt
- * driver assigned
+ * driver assigned.
+ *
+ * IMPORTANT
+ *
+ * The basic 115200, N, 8, 1 is set up by th3 ESP32 boot prom, and this
+ * function exists to add in the parts needed for the target.
  *
  ******************************************************************************/
 void serial_io_init(void)
