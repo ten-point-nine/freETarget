@@ -556,7 +556,7 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);)         // Current software version
   esp_ota_get_partition_description(running_partition, &running_app_info);
   SEND(ALL, sprintf(_xs, "\"OTA BUILD\":        %s, ", running_app_info.version);) // Current OTA identifier
-  SEND(ALL, sprintf(_xs, "\"LOCKED\":           %s \"", no_yes[json_lock != 0]);)  // The JSON is locked
+  SEND(ALL, sprintf(_xs, "\"LOCKED\":           \"%s\"", no_yes[json_lock != 0]);) // The JSON is locked
 
 #if ( INCLUDE_OTA_ECHO )
   OTA_get_versions(running_app_version, new_app_version);
@@ -565,8 +565,9 @@ void show_echo(void)
 #endif
 
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
-  SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                          // Current persistent storage version
-  SEND(ALL, sprintf(_xs, "\"BD_REV\":            %4.2f ", (float)revision() / 100);) // Current board version
+  SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);) // Current persistent storage version
+  SEND(ALL, sprintf(_xs, "\"BD_REV\":            %d.%d.%d", (revision() / 100), ((revision() % 100) / 10),
+                    (revision() % 10));)                    // Current board version
 
   /*
    *  All done, return

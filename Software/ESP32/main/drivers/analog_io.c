@@ -157,7 +157,7 @@ unsigned int adc_read(unsigned int adc_channel // What input are we reading?
   /*
    *  Done
    */
-  sum /= FILTER; // and return the average
+  sum /= FILTER;                             // and return the average
 
   return (sum & 0x0fff);
 }
@@ -283,11 +283,15 @@ unsigned int revision(void)
   {
     index = 6;
   }
+
+  board_version = REV_610;                                  // AMB
+  index         = 7;                                        // AMB
+
   board_mask = 1 << index;                                  // Set the mask for the board revision
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Board Revision: %d  Board Mask: %04X", board_version, board_mask);))
 
-  return revision;
+  return board_version;
 }
 
 /*----------------------------------------------------------------
