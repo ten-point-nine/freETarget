@@ -252,13 +252,16 @@ static void show_test_help(void)
 #define PASS_MASK    (PASS_RUNNING | PASS_A | PASS_B | PASS_VREF)
 #define PASS_TEST    (PASS_RUNNING | PASS_C)
 
+#define FACTORY_TEST 1 // Execute a full factory test
+#define SENSOR_TEST  0 // Execute a sensor only test
+
 bool factory_test(void)
 {
-  return do_factory_test(1);
+  return do_factory_test(FACTORY_TEST);
 }
 bool sensor_test(void)
 {
-  return do_factory_test(0);
+  return do_factory_test(SENSOR_TEST);
 }
 
 bool do_factory_test(bool test_run)
@@ -374,8 +377,16 @@ bool do_factory_test(bool test_run)
         }
       }
     }
+    if ( test_run == SENSOR_TEST )                      // Only do the sensor tests
+    {
+      if ( (pass & running & RUN_MASK) != 0 )           // Clear the test if any sensor is detected
+      {
+        vTaskDelay(ONE_SECOND);
+        arm_timers();
+      }
+    }
 
-    if ( test_run )                                     // Include the extened tests
+    if ( test_run == FACTORY_TEST ) // Include the extened tests
     {
       dip = read_DIP();
       SEND(ALL, sprintf(_xs, "  DIP: ");)
