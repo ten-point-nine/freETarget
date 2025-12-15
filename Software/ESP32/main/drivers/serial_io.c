@@ -83,14 +83,15 @@ QueueHandle_t uart_aux_queue;
 
 typedef struct queue_struct
 {
-  char queue[1024];                    // Holding queue
-  int  in;                             // Index of input characters
-  int  out;                            // Index of output characters
+  char queue[1024];                       // Holding queue
+  int  in;                                // Index of input characters
+  int  out;                               // Index of output characters
 } queue_struct_t;
 
-static queue_struct_t in_buffer;       // TCPIP input buffer
-static queue_struct_t out_buffer;      // TCPIP input buffer
-unsigned int          connection_list; // Bitmask of existing connections
+static queue_struct_t in_buffer;          // TCPIP input buffer
+static queue_struct_t out_buffer;         // TCPIP input buffer
+unsigned int          connection_list;    // Bitmask of existing connections
+static int            last_stream_device; // Last device to provide input
 
 /******************************************************************************
  *
@@ -352,6 +353,26 @@ char serial_getch(int ports // Bit mask of active ports
   char ch;
 
   /*
+   * Overide the input port if LAST is used
+   */
+  if ( ports & ALL )
+  {
+    last_stream_device = 0;        // Reset the last stream device if the ports == ALL
+  }
+
+  if ( ports & LAST )              // Do we want the last device?
+  {
+    if ( last_stream_device != 0 ) // Is it defined?
+    {
+      ports = last_stream_device;  // Yes, use it
+    }
+    else
+    {
+      ports = ALL;                 // No, default to ALL
+    }
+  }
+
+  /*
    * Bring in the console bytes
    */
   if ( ports & CONSOLE )
@@ -359,6 +380,7 @@ char serial_getch(int ports // Bit mask of active ports
     if ( uart_read_bytes(uart_console, &ch, 1, 0) > 0 )
     {
       connection_list |= CONSOLE;
+      last_stream_device = CONSOLE; // Remember who talked to us last
       return ch;
     }
   }
@@ -371,6 +393,7 @@ char serial_getch(int ports // Bit mask of active ports
     if ( uart_read_bytes(uart_aux, &ch, 1, 0) > 0 )
     {
       connection_list |= AUX;
+      last_stream_device = AUX;
       return ch;
     }
   }
@@ -383,6 +406,7 @@ char serial_getch(int ports // Bit mask of active ports
     if ( tcpip_queue_2_app(&ch, 1) > 0 )
     {
       connection_list |= TCPIP; // Set the connection list
+      last_stream_device = TCPIP;
       return ch;
     }
   }
@@ -414,6 +438,26 @@ void serial_putch(char ch,
   if ( ports & (EVEN_ODD_BEGIN | EVEN_ODD_END) )
   {
     return;                  // Return if it's a control message
+  }
+
+  /*
+   * Overide the input port if LAST is used
+   */
+  if ( ports & ALL )
+  {
+    last_stream_device = 0;        // Reset the last stream device if the ports == ALL
+  }
+
+  if ( ports & LAST )              // Do we want the last device?
+  {
+    if ( last_stream_device != 0 ) // Is it defined?
+    {
+      ports = last_stream_device;  // Yes, use it
+    }
+    else
+    {
+      ports = ALL;                 // No, default to ALL
+    }
   }
 
   /*

@@ -841,3 +841,110 @@ void watchdog(void)
    */
   return;
 }
+
+/*----------------------------------------------------------------
+ *
+ * @function: get_s_format
+ *
+ * @brief:    Pull in an S-record
+ *
+ * @return:   Number of bytes read in
+ *            0 - End of record
+ *           -1 - Error
+ *
+ *----------------------------------------------------------------
+ *
+ * Pull in an S record
+ *
+ * Sfbbaa..aalldd...ddcc
+ *
+ * ff - Record Format
+ * bb - Byte count (number of bytes in record excluding ff and bb)
+ * a..a - Address (4 bytes for S3)
+ * ll - Data length
+ * dd..dd - Data bytes
+ * cc - Checksum
+ *
+ *--------------------------------------------------------------*/
+static int get_hex(int nibbles) // Number of nibbles to read
+{
+  unsigned char ch;
+  int           value;
+
+  value = 0;
+  while ( nibbles > 0 )
+  {
+    ch    = serial_getch(LAST);
+    value = (value << 4) + to_int(ch);
+    nibbles--;
+  }
+
+  return value;
+}
+
+//                           S1 S2 S3
+static int address_size[] = {4, 6, 8};
+
+int get_s_format(int  *byte_count, // Number of bytes in record
+                 int  *address,    // Address to load the data
+                 int  *length,     // Length of data
+                 char *s)          // String to return the S-record
+{
+  unsigned char ch;                // Inputting character
+  int           record_type;       // S-record type
+  int           address_count;     // Size of address field in nibbles
+  unsigned int  checksum;          // Checksum calculation
+
+  /*
+   * Wait here for the start sentinel
+   */
+  while ( 1 )
+  {
+    if ( serial_getch(LAST) == 'S' )
+    {
+      break;
+    }
+    vTaskDelay(1);
+  }
+
+  record_type = get_hex(1); // Read the record type
+
+  switch ( record_type )
+  {
+    case 0:
+      return 0;
+      break;                // End of file
+
+    case 1:                 // Data record
+    case 2:
+    case 3:
+      break;
+
+    default:
+      return -1;            // Not a valid S-record
+  }
+
+  *byte_count = get_hex(4);  // Number of bytes in the record
+
+  address_count = get_hex(address_size[record_type - 1]);
+
+  checksum = 0;
+  while ( address_count )   // While there is data to read
+  {
+    ch = get_hex(2);
+    checksum += ch;
+    *s++ = ch;
+    address_count -= 2;
+  }
+
+  checksum += get_hex(2); // Read the checksum
+  checksum = ~checksum;
+  if ( (checksum & 0xFF) != 0 )
+  {
+    return -1;            // Checksum error
+  }
+
+  serial_putch('!', ALL); // ACK
+
+  return *length;
+}
