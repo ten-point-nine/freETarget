@@ -307,19 +307,19 @@ typedef enum
   OTA_COLLECT_DATA
 } ota_state_t;
 
-void OTA_serial(unsigned int size)       // Size of the incoming file
+void OTA_serial(unsigned int size) // Size of the incoming file
 {
-  char                   ch;             // Incoming character
   esp_ota_handle_t       update_handle = 0;
   const esp_partition_t *update_partition;
   const esp_partition_t *boot_partition           = esp_ota_get_boot_partition();
   const esp_partition_t *running_partition        = esp_ota_get_running_partition();
   bool                   image_header_was_checked = false;
-  int                    byte_count;     // Number of bytes from S Record
-  int                    address;        // Address of record
-  int                    record_number;  // Record number being processed
-  int                    data_read;      // How many bytes in the record
-  int                    bytes_received; // Total bytes received
+  int                    byte_count               = 0; // Number of bytes from S Record
+  int                    address;                      // Address of record
+  int                    record_number = 0;            // Record number being processed
+  int                    data_read;                    // How many bytes in the record
+  int                    bytes_received = 0;           // Total bytes received
+
   /*
    *  Start, check that the partitions are available
    */
@@ -371,8 +371,6 @@ void OTA_serial(unsigned int size)       // Size of the incoming file
   /*
    * Loop here and bring in the file
    */
-  record_number  = 0;
-  bytes_received = 0;
   while ( 1 )                             // Loop for each block
   {
     DLT(DLT_OTA, SEND(LAST, sprintf(_xs, "Waiting for block %d", record_number + 1);))
@@ -388,18 +386,20 @@ void OTA_serial(unsigned int size)       // Size of the incoming file
         set_status_LED(LED_OTA_DOWNLOAD_T);
       }
 
-      if ( (get_s_format(&byte_count, &address, &data_read, &_xs)) > 0 ) // String to return the S-record
+      if ( (get_s_format(&data_read, &address, &byte_count, &ota_write_data)) > 0 ) // String to return the S-record
       {
-        DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "Received: %d", byte_count);))
-        if ( image_header_was_checked == false )                         // First time through, check the header
+        SEND(LAST, sprintf(_xs, "{\"RESPONSE\":\"ACK\"}");)                         // Ack the packaet
+        bytes_received += data_read;                                                // Keep track of how many bytes we have received
+
+        if ( image_header_was_checked == false )                                    // First time through, check the header
         {
-          OTA_check_header(_xs, data_read, update_partition, running_partition, boot_partition);
+          OTA_check_header(ota_write_data, data_read, update_partition, running_partition, boot_partition);
           image_header_was_checked = true;
         }
         /*
          * flash the received data into OTA memory. esp_
          */
-        if ( esp_ota_write(update_handle, (const void *)_xs, data_read) != ESP_OK )
+        if ( esp_ota_write(update_handle, (const void *)ota_write_data, data_read) != ESP_OK )
         {
           esp_ota_abort(update_handle);
           OTA_halt_process(LED_OTA_FAILED_CONNECT, "esp_ota_write() failed");
@@ -408,362 +408,363 @@ void OTA_serial(unsigned int size)       // Size of the incoming file
       }
       else
       {
-        break;
+        goto done_receiving; // No more data
       }
     }
   }
 
-    /*
-     *  The download is complete, make sure we have the complete file
-     */
-    set_status_LED(LED_OTA_FINSHED); // Show we are part way done
-    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Total Write binary data length: %d", bytes_received);))
+  /*
+   *  The download is complete, make sure we have the complete file
+   */
+done_receiving:
+  set_status_LED(LED_OTA_FINSHED); // Show we are part way done
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Total Write binary data length: %d", bytes_received);))
 
-    if ( esp_ota_end(update_handle) != ESP_OK )
-    {
-      OTA_halt_process(LED_OTA_FATAL, "Failed to complete OTA update");
-    }
-
-    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "esp_ota_end succesful");))
-
-    /*
-     * Looks good, setup the registers
-     */
-    if ( esp_ota_set_boot_partition(update_partition) != ESP_OK )
-    {
-      OTA_halt_process(LED_OTA_FATAL, "esp_ota_set_boot_partition failed");
-    }
-
-    /*
-     *  All done, halt and wait for the user to restart
-     */
-    OTA_halt_process(LED_OTA_READY, "Cycle power to start new firmware"); // Reboot the system
-    return;
+  if ( esp_ota_end(update_handle) != ESP_OK )
+  {
+    OTA_halt_process(LED_OTA_FATAL, "Failed to complete OTA update");
   }
 
-  /*----------------------------------------------------------------
-   *
-   * @function: OTA_check_header()
-   *
-   * @brief:    Check the header for the OTA image
-   *
-   * @return:   TRUE if the header is valid
-   *            Halt if an error is detected
-   *
-   *---------------------------------------------------------------
-   *
-   * Check the header for the OTA image
-   *
-   * Then verify the version so that we don't load the same or
-   * older version of the image.
-   *
-   * An error in this function is fatal, ie we cannot recover
-   * and trying to load it again will result in the same error.
-   *
-   *------------------------------------------------------------*/
-  static void OTA_check_header(char                  *ota_write_data,    // Data read from server
-                               int                    data_read,         // Number of bytes in record
-                               const esp_partition_t *update_partition,  // Update partition
-                               const esp_partition_t *running_partition, // Running partition
-                               const esp_partition_t *boot_partition     // Boot partition
-  )
+  DLT(DLT_OTA, SEND(LAST, sprintf(_xs, "esp_ota_end succesful");))
+
+  /*
+   * Looks good, setup the registers
+   */
+  if ( esp_ota_set_boot_partition(update_partition) != ESP_OK )
   {
-    esp_app_desc_t         new_app_info;
-    esp_app_desc_t         running_app_info;
-    const esp_partition_t *last_invalid_app;
-    esp_app_desc_t         invalid_app_info;
-    int                    i;
-
-    /*
-     *  Check that we read enough bytes
-     */
-    if ( data_read < sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t) )
-    {
-      OTA_halt_process(LED_OTA_FATAL, "Failed to read freeETarget.bin header");
-    }
-
-    /*
-     *  Extract the data and print it out
-     */
-    memcpy(&new_app_info, &ota_write_data[sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t)], sizeof(esp_app_desc_t));
-    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "New firmware version: %s", new_app_info.version);))
-
-    if ( esp_ota_get_partition_description(running_partition, &running_app_info) == ESP_OK )
-    {
-      DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Running firmware version: %s", running_app_info.version);))
-    }
-
-    last_invalid_app = esp_ota_get_last_invalid_partition();
-    if ( last_invalid_app != NULL )
-    {
-      if ( esp_ota_get_partition_description(last_invalid_app, &invalid_app_info) == ESP_OK )
-      {
-        DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Last invalid firmware version: %s", invalid_app_info.version);))
-      }
-
-      if ( memcmp(invalid_app_info.version, new_app_info.version, sizeof(new_app_info.version)) == 0 )
-      {
-        OTA_halt_process(LED_OTA_FATAL, "New version is the same as invalid version. Rolled back to previous version.");
-      }
-    }
-
-    /*
-     *  Make sure the new software is NEWER than the running software
-     */
-    i = 0;
-    while ( new_app_info.version[i] != 0 )
-    {
-      if ( new_app_info.version[i] < running_app_info.version[i] )
-      {
-        OTA_halt_process(LED_OTA_FATAL, "New version is older than running version. Abandoning the update.");
-      }
-      if ( new_app_info.version[i] > running_app_info.version[i] )
-      {
-        return;
-      }
-      i++;
-    }
-
-    /*
-     *  Got to the end and identical all the way along
-     */
-    OTA_halt_process(LED_OTA_FATAL, "New version is the same as running version. Abandoning the update.");
+    OTA_halt_process(LED_OTA_FATAL, "esp_ota_set_boot_partition failed");
   }
 
-  /*----------------------------------------------------------------
-   *
-   * @function: ota_rollback()
-   *
-   * @brief:    Undo the current partition and go back to the last
-   *
-   * @return: None
-   *---------------------------------------------------------------
-   *
-   * Check the stored nonvol value against the current persistent
-   * storage version and update if needed.
-   *
-   *------------------------------------------------------------*/
-  void OTA_rollback(void)
-  {
-    if ( esp_ota_mark_app_invalid_rollback_and_reboot() != ESP_OK )
-    {
-      OTA_halt_process(LED_OTA_FATAL, "Rollback failed.");   // Reboot the system
-    }
+  /*
+   *  All done, halt and wait for the user to restart
+   */
+  OTA_halt_process(LED_OTA_READY, "Cycle power to start new firmware"); // Reboot the system
+  return;
+}
 
-    OTA_halt_process(LED_OTA_READY, "Rollbback succesful."); // Reboot the system
+/*----------------------------------------------------------------
+ *
+ * @function: OTA_check_header()
+ *
+ * @brief:    Check the header for the OTA image
+ *
+ * @return:   TRUE if the header is valid
+ *            Halt if an error is detected
+ *
+ *---------------------------------------------------------------
+ *
+ * Check the header for the OTA image
+ *
+ * Then verify the version so that we don't load the same or
+ * older version of the image.
+ *
+ * An error in this function is fatal, ie we cannot recover
+ * and trying to load it again will result in the same error.
+ *
+ *------------------------------------------------------------*/
+static void OTA_check_header(char                  *ota_write_data,    // Data read from server
+                             int                    data_read,         // Number of bytes in record
+                             const esp_partition_t *update_partition,  // Update partition
+                             const esp_partition_t *running_partition, // Running partition
+                             const esp_partition_t *boot_partition     // Boot partition
+)
+{
+  esp_app_desc_t         new_app_info;
+  esp_app_desc_t         running_app_info;
+  const esp_partition_t *last_invalid_app;
+  esp_app_desc_t         invalid_app_info;
+  int                    i;
+
+  /*
+   *  Check that we read enough bytes
+   */
+  if ( data_read < sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t) )
+  {
+    OTA_halt_process(LED_OTA_FATAL, "Failed to read freeETarget.bin header");
   }
 
-  /*----------------------------------------------------------------
-   *
-   * @function: http_cleanup()
-   *
-   * @brief:    Clean up the HTTP client
-   *
-   * @return:   Nothing
-   *---------------------------------------------------------------
-   *
-   *------------------------------------------------------------*/
-  static void http_cleanup(esp_http_client_handle_t client)
+  /*
+   *  Extract the data and print it out
+   */
+  memcpy(&new_app_info, &ota_write_data[sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t)], sizeof(esp_app_desc_t));
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "New firmware version: %s", new_app_info.version);))
+
+  if ( esp_ota_get_partition_description(running_partition, &running_app_info) == ESP_OK )
   {
-    esp_http_client_close(client);
-    return;
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Running firmware version: %s", running_app_info.version);))
   }
 
-  /*----------------------------------------------------------------
-   *
-   * @function: ota_partitions
-   *
-   * @brief:  Show the partition data
-   *
-   * @return: None
-   *---------------------------------------------------------------
-   *
-   * Display the partition data for the ESP32
-   *
-   * After a download the partitions are:
-   *
-   *
-   * Boot Partition
-   * Type:ESP_PARTITION_TYPE_APP  Subtype:16
-   * Address: 0X210000  Size 0x200000
-   * Lable: ota_0
-   *
-   * Running Partition
-   * Type:ESP_PARTITION_TYPE_APP  Subtype:16
-   * Address: 0X210000 Size :0x200000
-   * Lable: ota_0
-   *
-   * Update Partition
-   * Type:ESP_PARTITION_TYPE_APP  Subtype:17
-   * Address: 0X410000  Size 0x200000
-   * Lable: ota_1
-   *
-   *------------------------------------------------------------*/
-  static char *partition_type[] = {"ESP_PARTITION_TYPE_APP", "ESP_PARTITION_TYPE_DATA"};
-
-  void OTA_partitions(void)
+  last_invalid_app = esp_ota_get_last_invalid_partition();
+  if ( last_invalid_app != NULL )
   {
-    const esp_partition_t *boot_partition    = esp_ota_get_boot_partition();
-    const esp_partition_t *running_partition = esp_ota_get_running_partition();
-    const esp_partition_t *update_partition  = esp_ota_get_next_update_partition(NULL);
-    esp_app_desc_t         running_app_info;
-
-    esp_ota_get_partition_description(running_partition, &running_app_info);
-    SEND(ALL, sprintf(_xs, "\r\nApplication Version: %s\r\n", running_app_info.version);)
-
-    SEND(ALL, sprintf(_xs, "\r\nBoot Partition");)
-    if ( boot_partition != NULL )
+    if ( esp_ota_get_partition_description(last_invalid_app, &invalid_app_info) == ESP_OK )
     {
-      SEND(ALL, sprintf(_xs, "\r\nType:%s  Subtype:%d", partition_type[boot_partition->type], boot_partition->subtype);)
-      SEND(ALL, sprintf(_xs, "\r\nAddress: 0X%lX  Size: 0x%lX", boot_partition->address, boot_partition->size);)
-      SEND(ALL, sprintf(_xs, "\r\nLable: %s\r\n", boot_partition->label);)
-    }
-    else
-    {
-      SEND(ALL, sprintf(_xs, " Not available\r\n");)
+      DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Last invalid firmware version: %s", invalid_app_info.version);))
     }
 
-    SEND(ALL, sprintf(_xs, "\r\nRunning Partition");)
-    if ( running_partition != NULL )
+    if ( memcmp(invalid_app_info.version, new_app_info.version, sizeof(new_app_info.version)) == 0 )
     {
-      SEND(ALL, sprintf(_xs, "\r\nType:%s  Subtype:%d", partition_type[running_partition->type], running_partition->subtype);)
-      SEND(ALL, sprintf(_xs, "\r\nAddress: 0X%lX Size: 0x%lX", running_partition->address, running_partition->size);)
-      SEND(ALL, sprintf(_xs, "\r\nLable: %s\r\n", running_partition->label);)
-    }
-    else
-    {
-      SEND(ALL, sprintf(_xs, " Not available"); SEND(ALL, sprintf(_xs, "\r\n");))
-    }
-
-    SEND(ALL, sprintf(_xs, "\r\nUpdate Partition");)
-    if ( update_partition != NULL )
-    {
-      SEND(ALL, sprintf(_xs, "\r\nType:%s  Subtype:%d", partition_type[update_partition->type], update_partition->subtype);)
-      SEND(ALL, sprintf(_xs, "\r\nAddress: 0X%lX  Size: 0x%lX", update_partition->address, update_partition->size);)
-      SEND(ALL, sprintf(_xs, "\r\nLable: %s\r\n", update_partition->label);)
-    }
-    else
-    {
-      SEND(ALL, sprintf(_xs, " Not available\r\n");)
-    }
-
-    return;
-  }
-
-  /*----------------------------------------------------------------
-   *
-   * @function: OTA_halt_process()
-   *
-   * @brief:    Manage a situation we can't recover from
-   *
-   * @return: None
-   *---------------------------------------------------------------
-   *
-   * Display the error LEDs and halt the system.
-   *
-   * Stay halted until either or the button are pressed.
-   *
-   *------------------------------------------------------------*/
-  static void OTA_halt_process(char *LED_status,   // Indicator sent to LEDs
-                               char *error_message // Why are we halting
-  )
-  {
-    set_status_LED(LED_status);
-
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "%s", error_message);))
-
-    serial_flush(ALL);                       // Purge anthing that may be present
-
-    while ( 1 )
-    {
-      vTaskDelay(ONE_SECOND);
-      if ( (DIP_SW_A == 1)                   // Switch A pressed
-           || (DIP_SW_B == 1)                // Switch B pressed
-           || (serial_available(ALL) != 0) ) // Something on the serial port
-      {
-        DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Restarting target");))
-        esp_restart();
-      }
+      OTA_halt_process(LED_OTA_FATAL, "New version is the same as invalid version. Rolled back to previous version.");
     }
   }
 
-  /*----------------------------------------------------------------
-   *
-   * @function: OTA_compare_versions()
-   *
-   * @brief:    Find out the version and report if it
-   *
-   * @return:   None
-   *
-   *---------------------------------------------------------------
-   *
-   * Get the OTA version and dsplay them
-   *
-   *------------------------------------------------------------*/
-  void OTA_get_versions(char *running_version, // Current running version
-                        char *OTA_version)     // Version watiting in OTA
+  /*
+   *  Make sure the new software is NEWER than the running software
+   */
+  i = 0;
+  while ( new_app_info.version[i] != 0 )
   {
-    esp_app_desc_t           new_app_info;
-    esp_app_desc_t           running_app_info;
-    esp_http_client_handle_t client;
-
-    const esp_partition_t *running_partition;
-
-    esp_http_client_config_t config = {
-        .cert_pem          = (char *)server_cert_pem_start,
-        .timeout_ms        = OTA_TIMEOUT,
-        .keep_alive_enable = true,
-    };
-
-    /*
-     *  Go and fetch the header for the current OTA update
-     */
-    sprintf(download_url, "%s/freeETarget.bin", json_ota_url);
-    config.url = download_url;
-    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "\r\nOTA download URL: \"%s\"", config.url);))
-
-    client = esp_http_client_init(&config);
-    if ( client == NULL )
+    if ( new_app_info.version[i] < running_app_info.version[i] )
     {
-      DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Cannot start HTTP connection");))
+      OTA_halt_process(LED_OTA_FATAL, "New version is older than running version. Abandoning the update.");
+    }
+    if ( new_app_info.version[i] > running_app_info.version[i] )
+    {
       return;
     }
-    if ( esp_http_client_open(client, 0) != ESP_OK )
-    {
-      DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Cannot start HTTP connection");))
-      return;
-    }
-
-    esp_http_client_fetch_headers(client);
-    esp_http_client_read(client, ota_write_data, BUFFSIZE); // Read the data from the server
-    memcpy(&new_app_info, &ota_write_data[sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t)], sizeof(esp_app_desc_t));
-    strcpy(OTA_version, new_app_info.version);
-
-    /*
-     *  Get the current application vesion
-     */
-    running_partition = esp_ota_get_running_partition();
-    esp_ota_get_partition_description(running_partition, &running_app_info);
-    strcpy(running_version, running_app_info.version);
-
-    http_cleanup(client);
-
-    return;
+    i++;
   }
 
-  void OTA_compare_versions(void) // Version watiting in OTA
+  /*
+   *  Got to the end and identical all the way along
+   */
+  OTA_halt_process(LED_OTA_FATAL, "New version is the same as running version. Abandoning the update.");
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: ota_rollback()
+ *
+ * @brief:    Undo the current partition and go back to the last
+ *
+ * @return: None
+ *---------------------------------------------------------------
+ *
+ * Check the stored nonvol value against the current persistent
+ * storage version and update if needed.
+ *
+ *------------------------------------------------------------*/
+void OTA_rollback(void)
+{
+  if ( esp_ota_mark_app_invalid_rollback_and_reboot() != ESP_OK )
   {
-    char new_app_version[sizeof(esp_app_desc_t)];
-    char running_app_version[sizeof(esp_app_desc_t)];
+    OTA_halt_process(LED_OTA_FATAL, "Rollback failed.");   // Reboot the system
+  }
 
-    OTA_get_versions(running_app_version, new_app_version);
+  OTA_halt_process(LED_OTA_READY, "Rollbback succesful."); // Reboot the system
+}
 
-    SEND(ALL, sprintf(_xs, "\r\nNew firmware version: %s", new_app_version);)
-    SEND(ALL, sprintf(_xs, "\r\nRunning firmware version: %s\r\n", running_app_version);)
-    if ( strcmp(new_app_version, running_app_version) != 0 )
+/*----------------------------------------------------------------
+ *
+ * @function: http_cleanup()
+ *
+ * @brief:    Clean up the HTTP client
+ *
+ * @return:   Nothing
+ *---------------------------------------------------------------
+ *
+ *------------------------------------------------------------*/
+static void http_cleanup(esp_http_client_handle_t client)
+{
+  esp_http_client_close(client);
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: ota_partitions
+ *
+ * @brief:  Show the partition data
+ *
+ * @return: None
+ *---------------------------------------------------------------
+ *
+ * Display the partition data for the ESP32
+ *
+ * After a download the partitions are:
+ *
+ *
+ * Boot Partition
+ * Type:ESP_PARTITION_TYPE_APP  Subtype:16
+ * Address: 0X210000  Size 0x200000
+ * Lable: ota_0
+ *
+ * Running Partition
+ * Type:ESP_PARTITION_TYPE_APP  Subtype:16
+ * Address: 0X210000 Size :0x200000
+ * Lable: ota_0
+ *
+ * Update Partition
+ * Type:ESP_PARTITION_TYPE_APP  Subtype:17
+ * Address: 0X410000  Size 0x200000
+ * Lable: ota_1
+ *
+ *------------------------------------------------------------*/
+static char *partition_type[] = {"ESP_PARTITION_TYPE_APP", "ESP_PARTITION_TYPE_DATA"};
+
+void OTA_partitions(void)
+{
+  const esp_partition_t *boot_partition    = esp_ota_get_boot_partition();
+  const esp_partition_t *running_partition = esp_ota_get_running_partition();
+  const esp_partition_t *update_partition  = esp_ota_get_next_update_partition(NULL);
+  esp_app_desc_t         running_app_info;
+
+  esp_ota_get_partition_description(running_partition, &running_app_info);
+  SEND(ALL, sprintf(_xs, "\r\nApplication Version: %s\r\n", running_app_info.version);)
+
+  SEND(ALL, sprintf(_xs, "\r\nBoot Partition");)
+  if ( boot_partition != NULL )
+  {
+    SEND(ALL, sprintf(_xs, "\r\nType:%s  Subtype:%d", partition_type[boot_partition->type], boot_partition->subtype);)
+    SEND(ALL, sprintf(_xs, "\r\nAddress: 0X%lX  Size: 0x%lX", boot_partition->address, boot_partition->size);)
+    SEND(ALL, sprintf(_xs, "\r\nLable: %s\r\n", boot_partition->label);)
+  }
+  else
+  {
+    SEND(ALL, sprintf(_xs, " Not available\r\n");)
+  }
+
+  SEND(ALL, sprintf(_xs, "\r\nRunning Partition");)
+  if ( running_partition != NULL )
+  {
+    SEND(ALL, sprintf(_xs, "\r\nType:%s  Subtype:%d", partition_type[running_partition->type], running_partition->subtype);)
+    SEND(ALL, sprintf(_xs, "\r\nAddress: 0X%lX Size: 0x%lX", running_partition->address, running_partition->size);)
+    SEND(ALL, sprintf(_xs, "\r\nLable: %s\r\n", running_partition->label);)
+  }
+  else
+  {
+    SEND(ALL, sprintf(_xs, " Not available"); SEND(ALL, sprintf(_xs, "\r\n");))
+  }
+
+  SEND(ALL, sprintf(_xs, "\r\nUpdate Partition");)
+  if ( update_partition != NULL )
+  {
+    SEND(ALL, sprintf(_xs, "\r\nType:%s  Subtype:%d", partition_type[update_partition->type], update_partition->subtype);)
+    SEND(ALL, sprintf(_xs, "\r\nAddress: 0X%lX  Size: 0x%lX", update_partition->address, update_partition->size);)
+    SEND(ALL, sprintf(_xs, "\r\nLable: %s\r\n", update_partition->label);)
+  }
+  else
+  {
+    SEND(ALL, sprintf(_xs, " Not available\r\n");)
+  }
+
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: OTA_halt_process()
+ *
+ * @brief:    Manage a situation we can't recover from
+ *
+ * @return: None
+ *---------------------------------------------------------------
+ *
+ * Display the error LEDs and halt the system.
+ *
+ * Stay halted until either or the button are pressed.
+ *
+ *------------------------------------------------------------*/
+static void OTA_halt_process(char *LED_status,   // Indicator sent to LEDs
+                             char *error_message // Why are we halting
+)
+{
+  set_status_LED(LED_status);
+
+  DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "%s", error_message);))
+
+  serial_flush(ALL);                       // Purge anthing that may be present
+
+  while ( 1 )
+  {
+    vTaskDelay(ONE_SECOND);
+    if ( (DIP_SW_A == 1)                   // Switch A pressed
+         || (DIP_SW_B == 1)                // Switch B pressed
+         || (serial_available(ALL) != 0) ) // Something on the serial port
     {
-      SEND(ALL, sprintf(_xs, "\r\nUpdate Available\r\n");)
+      DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Restarting target");))
+      esp_restart();
     }
+  }
+}
 
+/*----------------------------------------------------------------
+ *
+ * @function: OTA_compare_versions()
+ *
+ * @brief:    Find out the version and report if it
+ *
+ * @return:   None
+ *
+ *---------------------------------------------------------------
+ *
+ * Get the OTA version and dsplay them
+ *
+ *------------------------------------------------------------*/
+void OTA_get_versions(char *running_version, // Current running version
+                      char *OTA_version)     // Version watiting in OTA
+{
+  esp_app_desc_t           new_app_info;
+  esp_app_desc_t           running_app_info;
+  esp_http_client_handle_t client;
+
+  const esp_partition_t *running_partition;
+
+  esp_http_client_config_t config = {
+      .cert_pem          = (char *)server_cert_pem_start,
+      .timeout_ms        = OTA_TIMEOUT,
+      .keep_alive_enable = true,
+  };
+
+  /*
+   *  Go and fetch the header for the current OTA update
+   */
+  sprintf(download_url, "%s/freeETarget.bin", json_ota_url);
+  config.url = download_url;
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "\r\nOTA download URL: \"%s\"", config.url);))
+
+  client = esp_http_client_init(&config);
+  if ( client == NULL )
+  {
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Cannot start HTTP connection");))
     return;
   }
+  if ( esp_http_client_open(client, 0) != ESP_OK )
+  {
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Cannot start HTTP connection");))
+    return;
+  }
+
+  esp_http_client_fetch_headers(client);
+  esp_http_client_read(client, ota_write_data, BUFFSIZE); // Read the data from the server
+  memcpy(&new_app_info, &ota_write_data[sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t)], sizeof(esp_app_desc_t));
+  strcpy(OTA_version, new_app_info.version);
+
+  /*
+   *  Get the current application vesion
+   */
+  running_partition = esp_ota_get_running_partition();
+  esp_ota_get_partition_description(running_partition, &running_app_info);
+  strcpy(running_version, running_app_info.version);
+
+  http_cleanup(client);
+
+  return;
+}
+
+void OTA_compare_versions(void) // Version watiting in OTA
+{
+  char new_app_version[sizeof(esp_app_desc_t)];
+  char running_app_version[sizeof(esp_app_desc_t)];
+
+  OTA_get_versions(running_app_version, new_app_version);
+
+  SEND(ALL, sprintf(_xs, "\r\nNew firmware version: %s", new_app_version);)
+  SEND(ALL, sprintf(_xs, "\r\nRunning firmware version: %s\r\n", running_app_version);)
+  if ( strcmp(new_app_version, running_app_version) != 0 )
+  {
+    SEND(ALL, sprintf(_xs, "\r\nUpdate Available\r\n");)
+  }
+
+  return;
+}
