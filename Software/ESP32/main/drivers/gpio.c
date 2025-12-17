@@ -582,11 +582,10 @@ void paper_start(void)
   /*
    *  DC Motor, turn on the FET to start the motor
    */
-  if ( IS_DC_WITNESS )    // DC motor,
+  if ( IS_DC_WITNESS ) // DC motor,
   {
     DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "DC motor start: %d ms", json_paper_time);))
     DCmotor_on_off(true, json_paper_time);
-    motor_running = true; // Used for diagnostics
   }
 
   /*
@@ -623,7 +622,6 @@ void paper_start(void)
  *-----------------------------------------------------*/
 void paper_drive_tick(void)
 {
-
   /*
    * Drive the DC motor
    */
@@ -633,14 +631,13 @@ void paper_drive_tick(void)
     {
       DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "paper_time: %ld", paper_time);))
     }
-    if ( paper_time <= 0 )
+    if ( paper_time <= 0 ) // Ran out of time, stop the motor
     {
       if ( motor_running == true )
       {
-        motor_running = false;
         DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "DC motor stopped");))
+        paper_stop();      // Motor OFF
       }
-      paper_stop(); // Motor OFF
     }
   }
 
@@ -738,13 +735,18 @@ void DCmotor_on_off(bool         on,      // on == true, turn on motor drive
 
   if ( on == true )
   {
-    gpio_set_level(PAPER, PAPER_ON);  // Turn it on
+    gpio_set_level(PAPER, PAPER_ON); // Turn it on
     ft_timer_new(&paper_time, MS_TO_TICKS(duration));
+    motor_running = true;
   }
   else
   {
-    gpio_set_level(PAPER, PAPER_OFF); // Turn it off
-    ft_timer_delete(&paper_time);
+    if ( motor_running == true )
+    {
+      gpio_set_level(PAPER, PAPER_OFF); // Turn it off
+      ft_timer_delete(&paper_time);
+      motor_running = false;
+    }
   }
 
   /*

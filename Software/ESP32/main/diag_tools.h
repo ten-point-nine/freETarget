@@ -124,6 +124,7 @@ void generate_fake_shot(void);                            // Generate a string o
 #define DLT_HTTP          0x0080 // Log HTTP requests
 #define DLT_OTA           0x0100 // Log OTA requests
 #define DLT_HEARTBEAT     0x0200 // Kick out the time to see if we are alive
+#define DLT_AMB           0x4000 // Special Debug DLT
 
                                  /*
                                   *  Enable compile level tracing

@@ -386,6 +386,10 @@ int ft_timer_new(time_count_t *new_timer, // Pointer to new down counter
       return 1;
     }
   }
+
+  /*
+   * If we get here there are no timers available
+   */
   DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "No space for new timer");))
 
   return 0;

@@ -121,6 +121,7 @@ const dlt_name_t dlt_names[] = {
     {DLT_HTTP,          "DLT_HTTP",          'H'}, // Log HTTP events
     {DLT_OTA,           "DLT_OTA",           'O'}, // Log HTTP events
     {DLT_HEARTBEAT,     "DLT_HEARTBEAT",     'T'}, // Heartbeat tick
+    {DLT_AMB,           "DLT_AMB",           '1'}, // One shot debug
     {0,                 0,                   0  }
 };
 

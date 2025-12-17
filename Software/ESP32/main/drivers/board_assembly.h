@@ -27,7 +27,7 @@ extern int          board_revision; // Board revision number
 #define MASK_510 (1 << 0)  // First Test Board of V5
 #define MASK_520 (1 << 15) // First Production
 #define MASK_600 (1 << 6)  // Second Production Board
-#define MASK_610 (1 << 7)  // Second Production Board with thermal isolation
+#define MASK_610 (1 << 3)  // Second Production Board with thermal isolation
 
 /*
  * Processor Variants

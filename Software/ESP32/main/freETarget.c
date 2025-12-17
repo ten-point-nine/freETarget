@@ -98,33 +98,34 @@ extern void         gpio_init(void);
 void freeETarget_init(void)
 {
   run_state = IN_STARTUP;
-  is_trace  = DLT_INFO | DLT_CRITICAL;
+  is_trace  = DLT_INFO | DLT_CRITICAL; // Turn on info and critical tracing
+
 #if TRACE_APPLICATION
-  is_trace |= DLT_APPLICATION;   // Enable application tracing
+  is_trace |= DLT_APPLICATION;         // Enable application tracing
 #endif
 #if TRACE_COMMUNICATION
-  is_trace |= DLT_COMMUNICATION; // Enable application tracing
+  is_trace |= DLT_COMMUNICATION;       // Enable application tracing
 #endif
 #if TRACE_DIAGNOSTICS
-  is_trace |= DLT_DIAG;          // Enable diagnostics tracing
+  is_trace |= DLT_DIAG;                // Enable diagnostics tracing
 #endif
 #if TRACE_DEBUG
-  is_trace |= DLT_DEBUG;         // Enable debug tracing
+  is_trace |= DLT_DEBUG;               // Enable debug tracing
 #endif
 #if TRACE_SCORE
-  is_trace |= DLT_SCORE;         // Enable score tracing
+  is_trace |= DLT_SCORE;               // Enable score tracing
 #endif
 #if TRACE_HTTP
-  is_trace |= DLT_HTTP;          // Enable HTTP tracing
+  is_trace |= DLT_HTTP;                // Enable HTTP tracing
 #endif
 #if TRACE_OTA
-  is_trace |= DLT_OTA;           // Enable OTA tracing
+  is_trace |= DLT_OTA;                 // Enable OTA tracing
 #endif
 #if TRACE_HEARTBEAT
-  is_trace |= DLT_HEARTBEAT;     // Enable heartbeat tracing
+  is_trace |= DLT_HEARTBEAT;           // Enable heartbeat tracing
 #endif
 
-  json_auth_code = 1;            // Hide the console messages until NONVOL is read
+  json_auth_code = 1;                  // Hide the console messages until NONVOL is read
 
   /*
    *  Setup the hardware
