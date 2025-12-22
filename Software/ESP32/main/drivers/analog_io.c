@@ -138,7 +138,7 @@ unsigned int adc_read(unsigned int adc_channel // What input are we reading?
    *  Read the appropriate channel
    */
   sum = 0;
-  for ( i = 0; i != FILTER; i++ )
+  for ( i = 0; i != FILTER; i++ ) // Add up FILTER samples
   {
     switch ( adc )
     {
@@ -261,8 +261,8 @@ void set_LED_PWM         // Theatre lighting
  *  undefined (< 100) then the last 'good' revision is returned
  *
  *--------------------------------------------------------------*/
-//                                        0     1  2  3  4  5     6     7  8  9   A   B   C   D   E   F
-const static unsigned int version[] = {REV_510, 1, 2, 3, 4, 5, REV_600, 7, 8, 9, 10, 11, 12, 13, 14, REV_520};
+//                                        0     1  2     3     4  5     6     7  8  9   A   B   C   D   E   F
+const static unsigned int version[] = {REV_510, 1, 2, REV_610, 4, 5, REV_600, 7, 8, 9, 10, 11, 12, 13, 14, REV_520};
 
 unsigned int revision(void)
 {
@@ -276,13 +276,17 @@ unsigned int revision(void)
   /*
    *  Read the resistors and determine the board revision
    */
-  index         = adc_read(BOARD_REV) >> (12 - 4);
-  board_version = version[index]; // Get the board revision number
-  board_mask    = 1 << index;     // Set the mask for the board revision
+  index = (adc_read(BOARD_REV) >> (12 - 4)) & 0x0f; // Top 4 bits only
+
+  board_version = version[index];                   // Get the board revision number
+
+
+
+  board_mask = 1 << index;                          // Set the mask for the board revision
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Board Revision: %d  Board Mask: %04X", board_version, board_mask);))
 
-  return revision;
+  return board_version;
 }
 
 /*----------------------------------------------------------------
@@ -386,10 +390,12 @@ static double temperature_C_HDC3022(void)
  *
  * A simple interrogation is used.
  *
- * The temperature is read once and cached.  This is to avoid
- * the problem of reading the temperature if the board has been
- * self heating.
+ * The function has two modes.
  *
+ * Revision 6.0, read the temperature only once at power up, and
+ * return the same value thereafter.
+ *
+ * For all other revisions, read the temperature each time.
  *--------------------------------------------------------------*/
 #define TC_CAL (0.0625 / 16) // 'C / LSB
 static double temperature_C_TMP1075D(void)
@@ -398,16 +404,22 @@ static double temperature_C_TMP1075D(void)
   int           raw;
   static float  t_c = -274;  // Remember the temperature Set to below absolute zero
 
-  if ( v12_supply() >= 5.0 ) // Board powered up?
+                             /*
+                              * Check for a Rev 6.0 board
+                              */
+  if ( board_version == REV_600 ) // Revision 6.0 board?
   {
-    if ( t_c > -273 )        // If we have a valid temperature, return it
+    if ( v12_supply() >= 5.0 )     // 12V supply present.  Possible self heating.
     {
-      return t_c;
+      if ( t_c > -273 )            // If we have a valid temperature, return it
+      {
+        return t_c;
+      }
     }
   }
 
   /*
-   * Read in the temperature and humidity together
+   * Read in the temperature
    */
   temp_buffer[0] = 0x00;                       // Trigger read on demand
   i2c_write(TEMP_IC_TMP1075D, temp_buffer, 1); // Send pointer to register
@@ -418,8 +430,11 @@ static double temperature_C_TMP1075D(void)
    */
   raw = (temp_buffer[0] << 8) + temp_buffer[1];
   t_c = ((float)raw * TC_CAL);
-  rh  = 40.0;
+  rh  = 40.0; // Force humidity to 40% RH
 
+  /*
+   * Compensate for self heating not used in Indian boards
+   */
   return t_c;
 }
 

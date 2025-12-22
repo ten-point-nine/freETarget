@@ -78,7 +78,10 @@ const json_message_t JSON[] = {
     {SHOW + LOCK, "\"MFS_SELECT_CD\":",   &json_mfs_select_cd,         IS_MFS,                   0,                  NONVOL_MFS_SELECT_CD,    NO_ACTION,  2 },
     {SHOW + LOCK, "\"MIN_RING_TIME\":",   &json_min_ring_time,         IS_INT32,                 0,                  NONVOL_MIN_RING_TIME,    500,        0 },
     {SHOW + LOCK, "\"NAME_ID\":",         &json_name_id,               IS_INT32,                 &show_names,        NONVOL_NAME_ID,          0,          0 },
-    {SHOW + LOCK, "\"NAME_TEXT\":",       (int *)&json_name_text,      IS_TEXT + SSID_SIZE,      &show_names,        NONVOL_NAME_TEXT,        0,          8 },
+    {SHOW + LOCK, "\"NAME_TEXT\":",       (int *)&
+      
+      
+      ,      IS_TEXT + SSID_SIZE,      &show_names,        NONVOL_NAME_TEXT,        0,          8 },
     {HIDE + LOCK, "\"OTA\":",             0,                           0,                        &OTA_load_json,     0,                       0,          0 },
     {SHOW + LOCK, "\"OTA_URL\":",         (int *)&json_ota_url,        IS_TEXT + URL_SIZE,       0,                  NONVOL_OTA_URL,          0,          11},
     {SHOW + LOCK, "\"PAPER_ECO\":",       &json_paper_eco,             IS_INT32,                 0,                  NONVOL_PAPER_ECO,        0,          0 },
@@ -564,8 +567,9 @@ void show_echo(void)
 #endif
 
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
-  SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                          // Current persistent storage version
-  SEND(ALL, sprintf(_xs, "\"BD_REV\":            %4.2f ", (float)revision() / 100);) // Current board version
+  SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);) // Current persistent storage version
+  SEND(ALL, sprintf(_xs, "\"BD_REV\":            %d.%d.%d", (revision() / 100), ((revision() % 100) / 10),
+                    (revision() % 10));)                    // Current board version
 
   /*
    *  All done, return

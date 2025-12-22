@@ -21,16 +21,18 @@ extern int          board_revision; // Board revision number
 #define REV_510 510
 #define REV_520 520
 #define REV_600 600        // Value Engineered
+#define REV_610 610        // Board with thermal isolation
 
 #define MASK_500 (1 << 0)  // First Revision of V5
 #define MASK_510 (1 << 0)  // First Test Board of V5
 #define MASK_520 (1 << 15) // First Production
-#define MASK_600 (1 << 6)  // Value Engineered Board
+#define MASK_600 (1 << 6)  // Second Production Board
+#define MASK_610 (1 << 3)  // Second Production Board with thermal isolation
 
 /*
  * Processor Variants
  */
-#define EPP32_8MB ((MASK_500 | MASK_510 | MASK_520 | MASK_530 | MASK_600) & board_mask) // ESP32 with 8MB of flash (Standard)
+#define EPP32_8MB (MASK_500 | MASK_510 | MASK_520 | MASK_530 | MASK_600 | MASK_610) // ESP32 with 8MB of flash (Standard)
 
                                                                                         /*
                                                                                          * Hardware Variants
@@ -48,5 +50,5 @@ extern int          board_revision; // Board revision number
 #define LDAC_GPIO      (0)                                         // LDAC Control no longer used
 #define FACE_HALF_GPIO (MASK_500 | MASK_510 | MASK_520)            // FACE GPIO
 
-#define COMMON (MASK_500 | MASK_510 | MASK_520 | MASK_600)         // Common to all boards
+#define COMMON (MASK_500 | MASK_510 | MASK_520 | MASK_600 | MASK_610)         // Common to all boards
 #endif

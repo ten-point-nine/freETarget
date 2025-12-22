@@ -312,7 +312,7 @@ bool do_factory_test(bool test_run)
   if ( test_run )
   {
     SEND(ALL, sprintf(_xs, "\r\n");)
-    if ( HDC3022 != 0 )
+    if ( (HDC3022 & board_mask) != 0 )
     {
       SEND(ALL, sprintf(_xs, "\r\nHas the tape seal been removed from the humidity sensor?");)
     }
