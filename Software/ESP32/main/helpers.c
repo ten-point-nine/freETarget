@@ -809,27 +809,34 @@ void to_binary(unsigned int x, // Number to convert
  * Monitor the health of the target and take action if something
  * is wrong
  *
+ * WiFI connection not made.
+ *   The board IP address is empty
+ *   Try to reconnect
+ *
  *--------------------------------------------------------------*/
 void watchdog(void)
 {
   char        str_c[SHORT_TEXT];
-  static bool wifi_was_connected = false;
+  static bool wifi_is_connected = false;
+
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "watchdog()");))
 
   /*
    *  Check to see if we have a connection to the WiFi
    */
-  if ( json_wifi_ssid[0] != 0 )                 // We are a station
+  if ( json_wifi_ssid[0] != 0 )                 // We are a station?
   {
-    if ( wifi_was_connected == false )          // Was not connected
+    if ( wifi_is_connected == false )           // Was not connected
     {
       if ( WiFi_my_IP_address(str_c) == false ) // Find our IP address
       {
-        set_status_LED(LED_WIFI_FAULT);
-        WiFi_init();                            // Try to reconnect
+        DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Trying to connect to access point");))
+        set_status_LED(LED_WIFI_FAULT);         // Empty
+        WiFi_reconnect();
       }
       else
       {
-        wifi_was_connected = true;              // We are connected
+        wifi_is_connected = true;               // We are connected
       }
     }
   }

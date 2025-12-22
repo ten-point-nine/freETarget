@@ -137,9 +137,8 @@
 /*
  *  Types
  */
-
-typedef unsigned char          byte_t;
-typedef volatile unsigned long time_count_t;
+typedef unsigned char byte_t;
+typedef volatile long time_count_t;
 
 typedef struct sensor_ID
 {

@@ -253,28 +253,31 @@ static void show_test_help(void)
 #define PASS_MASK    (PASS_RUNNING | PASS_A | PASS_B | PASS_VREF)
 #define PASS_TEST    (PASS_RUNNING | PASS_C)
 
+#define FACTORY_TEST 1 // Execute a full factory test
+#define SENSOR_TEST  0 // Execute a sensor only test
+
 bool factory_test(void)
 {
-  return do_factory_test(1);
+  return do_factory_test(FACTORY_TEST);
 }
 bool sensor_test(void)
 {
-  return do_factory_test(0);
+  return do_factory_test(SENSOR_TEST);
 }
 
 bool do_factory_test(bool test_run)
 {
-  int   i, percent;
-  int   running;               // Bit mask from run flip flops
-  int   dip;                   // Input from DIP input
-  char  ch;
-  char  ABCD[] = "DCBA";       // DIP switch order
-  int   pass;                  // Pass YES/NO
-  bool  passed_once;           // Passed all of the tests at least once
-  float volts[4];
-  float vmes_lo;
-  int   motor_toggle;          // Toggle motor on an off
-  int   number_of_sensors = 4; // Number of sensors to test
+  int    i, percent;
+  int    running;               // Bit mask from run flip flops
+  int    dip;                   // Input from DIP input
+  char   ch;
+  char   ABCD[] = "DCBA";       // DIP switch order
+  int    pass;                  // Pass YES/NO
+  bool   passed_once;           // Passed all of the tests at least once
+  double volts[4];
+  float  vmes_lo;
+  int    motor_toggle;          // Toggle motor on an off
+  int    number_of_sensors = 4; // Number of sensors to test
 
   pass         = 0;            // Pass YES/NO
   passed_once  = false;
@@ -375,8 +378,16 @@ bool do_factory_test(bool test_run)
         }
       }
     }
+    if ( test_run == SENSOR_TEST )                      // Only do the sensor tests
+    {
+      if ( (pass & running & RUN_MASK) != 0 )           // Clear the test if any sensor is detected
+      {
+        vTaskDelay(ONE_SECOND);
+        arm_timers();
+      }
+    }
 
-    if ( test_run )                                     // Include the extened tests
+    if ( test_run == FACTORY_TEST ) // Include the extened tests
     {
       dip = read_DIP();
       SEND(ALL, sprintf(_xs, "  DIP: ");)
@@ -422,7 +433,7 @@ bool do_factory_test(bool test_run)
         }
       }
 
-      if ( TMP1075D & board_mask )
+      if ( TMP1075D )
       {
         vmes_lo = vref_measure();       // Read the VREF_LO voltage
         SEND(ALL, sprintf(_xs, "  VREF_LO: %4.2fV", vmes_lo);)
@@ -438,7 +449,7 @@ bool do_factory_test(bool test_run)
         }
       }
       SEND(ALL, sprintf(_xs, "  Temp: %4.2fC", temperature_C());)
-      if ( HDC3022 & board_mask )
+      if ( HDC3022 )
       {
         SEND(ALL, sprintf(_xs, "  Humidity: %4.2f", humidity_RH());)
       }
