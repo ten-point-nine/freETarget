@@ -280,8 +280,6 @@ unsigned int revision(void)
 
   board_version = version[index];                   // Get the board revision number
 
-
-
   board_mask = 1 << index;                          // Set the mask for the board revision
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Board Revision: %d  Board Mask: %04X", board_version, board_mask);))

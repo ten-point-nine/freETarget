@@ -844,9 +844,9 @@ void watchdog(void)
 
 /*----------------------------------------------------------------
  *
- * @function: get_s_format
+ * @function: get_OTA_serial
  *
- * @brief:    Pull in an S-record
+ * @brief:    Read a bloack of raw data
  *
  * @return:   Number of bytes read in
  *            0 - End of record
@@ -854,97 +854,48 @@ void watchdog(void)
  *
  *----------------------------------------------------------------
  *
- * Pull in an S record
- *
- * Sfbbaa..aalldd...ddcc
- *
- * ff - Record Format
- * bb - Byte count (number of bytes in record excluding ff and bb)
- * a..a - Address (4 bytes for S3)
- * ll - Data length
- * dd..dd - Data bytes
- * cc - Checksum
  *
  *--------------------------------------------------------------*/
-static int get_hex(int nibbles) // Number of nibbles to read
+#define OTA_SERIAL_TIMEOUT (time_count_t)10 * ONE_SECOND // 10 second timeout
+
+int get_OTA_serial(int   length,                         // Maximum number of bytes to read
+                   char *s)                              // Place to save the input data
 {
-  unsigned char ch;
-  int           value;
+  unsigned char ch;                                      // Inputing character
+  unsigned int  byte_count;                              // Number of bytes read in
+  time_count_t  time_out;                                // Timeout timer
 
-  value = 0;
-  while ( nibbles > 0 )
-  {
-    ch    = serial_getch(LAST);
-    value = (value << 4) + to_int(ch);
-    nibbles--;
-  }
-
-  return value;
-}
-
-//                           S1 S2 S3
-static int address_size[] = {4, 6, 8};
-
-int get_s_format(int  *byte_count, // Number of bytes in record
-                 int  *address,    // Address to load the data
-                 int  *length,     // Length of data
-                 char *s)          // String to return the S-record
-{
-  unsigned char ch;                // Inputting character
-  int           record_type;       // S-record type
-  int           address_count;     // Size of address field in nibbles
-  unsigned int  checksum;          // Checksum calculation
+  byte_count = 0;                                        // Nothing has arrived yet
+  ft_timer_new(&time_out, OTA_SERIAL_TIMEOUT);           // Time out timer
 
   /*
-   * Wait here for the start sentinel
+   * Loop and read the data
    */
   while ( 1 )
   {
-    if ( serial_getch(LAST) == 'S' )
+    while ( serial_available(ALL) != 0 ) // Got something?
     {
-      break;
+      time_out = OTA_SERIAL_TIMEOUT;     // Reset the timout
+      ch       = serial_getch(ALL);      // Read the character
+      *s       = ch;                     // and save it away
+      s++;                               // Move to the next character
+      length--;                          // One less to read
+      byte_count++;                      // Count the bytes read in
+
+      if ( length == 0 )
+      {
+        ft_timer_delete(&time_out);      // Give back the timer
+        return byte_count;               // Got everythig for now
+      }
     }
+
+    if ( time_out <= 0 )                 // Timeout
+    {
+      return -1;                         // Report an error
+    }
+
     vTaskDelay(1);
   }
 
-  record_type = get_hex(1); // Read the record type
-
-  switch ( record_type )
-  {
-    case 0:
-      return 0;
-      break;                // End of file
-
-    case 1:                 // Data record
-    case 2:
-    case 3:
-      break;
-
-    default:
-      return -1;            // Not a valid S-record
-  }
-
-  *byte_count = get_hex(4);  // Number of bytes in the record
-
-  address_count = get_hex(address_size[record_type - 1]);
-
-  checksum = 0;
-  while ( address_count )   // While there is data to read
-  {
-    ch = get_hex(2);
-    checksum += ch;
-    *s++ = ch;
-    address_count -= 2;
-  }
-
-  checksum += get_hex(2); // Read the checksum
-  checksum = ~checksum;
-  if ( (checksum & 0xFF) != 0 )
-  {
-    return -1;            // Checksum error
-  }
-
-  serial_putch('!', ALL); // ACK
-
-  return *length;
+  return byte_count;
 }

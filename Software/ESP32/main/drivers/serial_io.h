@@ -43,7 +43,6 @@ void check_new_connection(void);                     // Check to see if a new co
 #define TCPIP          (TCPIP_0 | TCPIP_1 | TCPIP_2 | TCPIP_3)
 #define EVEN_ODD_BEGIN 0x0100 // Remember to output in even_odd mode
 #define EVEN_ODD_END   0x0200 // Exit even odd mode
-#define LAST           0x0400 // Last device input
 
 #define ALL  (CONSOLE | AUX | BLUETOOTH | TCPIP | HTTP_CONNECTED)
 #define SOME (CONSOLE | TCPIP)

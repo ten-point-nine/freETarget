@@ -160,4 +160,5 @@ EXTERN int           json_remote_modes;              // What modes are available
 EXTERN int           json_session_type;              // What kind of session is this?
 EXTERN char          json_ota_url[URL_SIZE];         // OTA URL
 EXTERN int           json_lock;                      // Lock the JSON message so it cannot be changed
+EXTERN int           json_OTA_download_size;         // Number of bytes in the download image
 #endif

@@ -90,7 +90,7 @@ extern volatile unsigned int step_count; // Number of steps before stopping
 #define CLOCK_START GPIO_NUM_21                                            // Trigger a test cycle
 #define OSC_CONTROL GPIO_NUM_48                                            // Enable / kill 10MHz Oscillator
 #endif
-#if ( (BUILD_REV == REV_510) || (BUILD_REV == REV_520) || (BUILD_REV == REV_600) )
+#if ( (BUILD_REV == REV_510) || (BUILD_REV == REV_520) || (BUILD_REV == REV_600) || (BUILD_REV == REV_610) )
 #define STOP_N      GPIO_NUM_21                                            // Stop the RUN flipflops
 #define CLOCK_START GPIO_NUM_47                                            // Trigger a test cycle
 #define OSC_CONTROL GPIO_NUM_48                                            // Enable / kill 10MHz Oscillator

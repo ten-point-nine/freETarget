@@ -353,26 +353,6 @@ char serial_getch(int ports // Bit mask of active ports
   char ch;
 
   /*
-   * Overide the input port if LAST is used
-   */
-  if ( ports & ALL )
-  {
-    last_stream_device = 0;        // Reset the last stream device if the ports == ALL
-  }
-
-  if ( ports & LAST )              // Do we want the last device?
-  {
-    if ( last_stream_device != 0 ) // Is it defined?
-    {
-      ports = last_stream_device;  // Yes, use it
-    }
-    else
-    {
-      ports = ALL;                 // No, default to ALL
-    }
-  }
-
-  /*
    * Bring in the console bytes
    */
   if ( ports & CONSOLE )
@@ -438,26 +418,6 @@ void serial_putch(char ch,
   if ( ports & (EVEN_ODD_BEGIN | EVEN_ODD_END) )
   {
     return;                  // Return if it's a control message
-  }
-
-  /*
-   * Overide the input port if LAST is used
-   */
-  if ( ports & ALL )
-  {
-    last_stream_device = 0;        // Reset the last stream device if the ports == ALL
-  }
-
-  if ( ports & LAST )              // Do we want the last device?
-  {
-    if ( last_stream_device != 0 ) // Is it defined?
-    {
-      ports = last_stream_device;  // Yes, use it
-    }
-    else
-    {
-      ports = ALL;                 // No, default to ALL
-    }
   }
 
   /*
