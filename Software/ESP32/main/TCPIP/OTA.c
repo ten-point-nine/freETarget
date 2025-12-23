@@ -106,12 +106,14 @@ void OTA_load(void)
 
   if ( boot_partition == NULL )
   {
-    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Boot partition not available");))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Boot partition not available");))
+    return;
   }
 
   if ( running_partition == NULL )
   {
-    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Running partition not available");))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Running partition not available");))
+    return;
   }
 
 #if ( 0 )
@@ -319,12 +321,14 @@ void OTA_serial(unsigned int OTA_download_size)             // Size of the incom
 
   if ( boot_partition == NULL )
   {
-    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Boot partition not available");))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Boot partition not available");))
+    return;
   }
 
   if ( running_partition == NULL )
   {
-    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Running partition not available");))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Running partition not available");))
+    return
   }
 
 #if ( 0 )
