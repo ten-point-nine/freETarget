@@ -127,7 +127,7 @@ void freeETarget_init(void)
   /*
    *  Setup the hardware
    */
-  json_aux_mode = false; // Assume the AUX port is not used
+  json_aux_mode = 0; // Assume the AUX port is not used
   gpio_init();           // Setup the hardware
   serial_io_init();      // Setup the console for debug message
   read_nonvol();         // Read in the settings

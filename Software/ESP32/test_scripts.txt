@@ -28,6 +28,7 @@ Firmware debug trace   { "TRACE":16, "TRACE":32, "TRACE":64, "TEST":142}
 
 Output for Rapid Fire  { "MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":24}
 
-Tabata Practice        {"TABATA_WARN_ON": 5, "TABATA_WARN_OFF":2, "TABATA_ON":7, "TABATA_REST":30, "TABATA_ENABLE":1}
-
+Tabata Practice  {"TABATA_WARN_ON": 5, "TABATA_WARN_OFF":2, "TABATA_ON":7, "TABATA_REST":30, "TABATA_ENABLE":1}
+Tabata End       {"TABATA_ENABLE":0}
+Tabata Restart   {"TABATA_ENABLE":0}
 Start a download {"DOWNLOAD":1234}

@@ -193,7 +193,7 @@ void freeETarget_json(void *pvParameters)
      */
     while ( (serial_available(ALL) != 0) )                // Something waiting for us?
     {
-      from_BlueTooth = serial_available(BLUETOOTH | AUX); // How much from the BlueTooth port?
+      from_BlueTooth = serial_available(AUX_PORT); // How much from the BlueTooth port?
       ch             = serial_getch(ALL);
       serial_putch(ch, ALL);
 

@@ -328,7 +328,7 @@ void OTA_serial(unsigned int OTA_download_size)             // Size of the incom
   if ( running_partition == NULL )
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Running partition not available");))
-    return
+    return;
   }
 
 #if ( 0 )

@@ -143,7 +143,7 @@ void serial_io_init(void)
 
 void serial_aux_init(void)
 {
-  if ( (json_aux_mode != AUX) && (json_aux_mode != BLUETOOTH) )
+  if ( (json_aux_mode & AUX_PORT) == 0 )
   {
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX Port not enabled");))
     return;
@@ -157,17 +157,26 @@ void serial_aux_init(void)
   /*
    *  Setup the communications parameters
    */
-  if ( json_aux_mode == AUX )
+  if ( json_aux_mode != 0 )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX port enabled\r\n");))
-    uart_param_config(uart_aux, &uart_aux_config); // 115200 baud rate
-  }
-  if ( json_aux_mode == BLUETOOTH )
-  {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BLUETOOTH port enabled\r\n");))
-    uart_param_config(uart_aux, &uart_BT_config);  // 115200 baud rate
-  }
+    switch ( json_aux_mode )
+    {
+      case AUX:
+        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX port enabled\r\n");))
+        uart_param_config(uart_aux, &uart_aux_config); // 115200 baud rate
+        break;
 
+      case BLUETOOTH:
+        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BLUETOOTH port enabled\r\n");))
+        uart_param_config(uart_aux, &uart_BT_config);  // 115200 baud rate
+        break;
+
+      case RS488:
+        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RS488 port enabled\r\n");))
+        uart_param_config(uart_aux, &uart_aux_config); // 115200 baud rate
+        break;
+    }
+  }
   /*
    *  Set UART pins(TX: IO4, RX: IO5, RTS: IO18, CTS: IO19)
    */
@@ -236,7 +245,7 @@ int serial_available(int ports // Bit mask of active ports
     n_available += length;
   }
 
-  if ( ((ports & json_aux_mode) & (AUX | BLUETOOTH)) != 0 ) // Is there hardware on the Aux port?
+  if ( (ports & json_aux_mode & AUX_PORT) != 0 )
   {
     uart_get_buffered_data_len(uart_aux, (size_t *)&length);
     n_available += length;
@@ -288,7 +297,7 @@ int serial_who(void)
   uart_get_buffered_data_len(uart_aux, (size_t *)&length);
   if ( length != 0 )
   {
-    return AUX;
+    return AUX_PORT;
   }
 
   if ( in_buffer.in != in_buffer.out )
@@ -319,7 +328,7 @@ void serial_flush(int ports // active port list
     uart_flush(uart_console);
   }
 
-  if ( ((ports & json_aux_mode) & (AUX | BLUETOOTH)) != 0 ) // Is there hardware on the Aux port?
+  if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
   {
     uart_flush(uart_aux);
   }
@@ -368,7 +377,7 @@ char serial_getch(int ports // Bit mask of active ports
   /*
    *  Bring in the AUX bytes
    */
-  if ( ((ports & json_aux_mode) & (AUX | BLUETOOTH)) != 0 ) // Is there hardware on the Aux port?
+  if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
   {
     if ( uart_read_bytes(uart_aux, &ch, 1, 0) > 0 )
     {
@@ -425,10 +434,10 @@ void serial_putch(char ch,
    */
   if ( ports & CONSOLE )
   {
-    printf("%c", ch);                                       // Must be printf
+    printf("%c", ch);                            // Must be printf
   }
 
-  if ( ((ports & json_aux_mode) & (AUX | BLUETOOTH)) != 0 ) // Is there hardware on the Aux port?
+  if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
   {
     uart_write_bytes(uart_aux, (const char *)&ch, 1);
   }
@@ -511,10 +520,10 @@ void serial_to_all(char *str,        // String to output
    */
   if ( ports & CONSOLE )
   {
-    printf("%s", str);                                      // Must be printf
+    printf("%s", str);                           // Must be printf
   }
 
-  if ( ((ports & json_aux_mode) & (AUX | BLUETOOTH)) != 0 ) // Is there hardware on the Aux port?
+  if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
   {
     uart_write_bytes(uart_aux, (const char *)str, strlen(str));
   }
@@ -782,7 +791,7 @@ void serial_port_test(void)
   /*
    * Abort the test if the AUX port is not available
    */
-  if ( (json_aux_mode & (AUX | BLUETOOTH)) == 0 )
+  if ( (json_aux_mode & AUX_PORT) == 0 )
   {
     SEND(ALL, sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_MODE\": 2} to enable");)
     SEND(ALL, sprintf(_xs, _DONE_);)
