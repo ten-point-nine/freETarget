@@ -33,7 +33,7 @@ void check_new_connection(void);                     // Check to see if a new co
  *              CONSOLE   AUX    TCPIP
  */
 #define CONSOLE        0x0001                    // 0x1
-#define AUX            (2)                       // 0x2
+#define AUX            (CONSOLE << 1)            // 0x2
 #define BLUETOOTH      (AUX + 1)                 // 0x3
 #define RS488          (BLUETOOTH + 1)           // 0x4
 #define AUX_PORT       (AUX | BLUETOOTH | RS488) // 0x6

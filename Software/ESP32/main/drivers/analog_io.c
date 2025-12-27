@@ -267,6 +267,7 @@ const static unsigned int version[] = {REV_510, 1, 2, REV_610, 4, 5, REV_600, 7,
 unsigned int revision(void)
 {
   int index;                // Index into the version table
+  int adc_reading;          // ADC reading
 
   if ( board_version >= 0 ) // Already read the revision?
   {
@@ -276,13 +277,14 @@ unsigned int revision(void)
   /*
    *  Read the resistors and determine the board revision
    */
-  index = (adc_read(BOARD_REV) >> (12 - 4)) & 0x0f; // Top 4 bits only
 
-  board_version = version[index];                   // Get the board revision number
+  adc_reading   = adc_read(BOARD_REV);
+  index         = ((adc_reading - 0x040) >> (12 - 4)) & 0x0f; // Top 4 bits only
+  board_version = version[index];                             // Get the board revision number
+  board_mask    = 1 << index;                                 // Set the mask for the board revision
 
-  board_mask = 1 << index;                          // Set the mask for the board revision
-
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Board Revision: %d  Board Mask: %04X", board_version, board_mask);))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Board Version: %d.%d.%d   ADC: %d   Board Mask: 0X%04X", (board_version / 100),
+                                  ((board_version % 100) / 10), (board_version % 10), adc_reading, board_mask);))
 
   return board_version;
 }
@@ -407,9 +409,9 @@ static double temperature_C_TMP1075D(void)
                               */
   if ( board_version == REV_600 ) // Revision 6.0 board?
   {
-    if ( v12_supply() >= 5.0 )     // 12V supply present.  Possible self heating.
+    if ( v12_supply() >= 5.0 )    // 12V supply present.  Possible self heating.
     {
-      if ( t_c > -273 )            // If we have a valid temperature, return it
+      if ( t_c > -273 )           // If we have a valid temperature, return it
       {
         return t_c;
       }
