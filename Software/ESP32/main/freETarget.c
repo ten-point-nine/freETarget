@@ -127,14 +127,14 @@ void freeETarget_init(void)
   /*
    *  Setup the hardware
    */
-  json_aux_mode = 0; // Assume the AUX port is not used
-  gpio_init();           // Setup the hardware
-  serial_io_init();      // Setup the console for debug message
-  read_nonvol();         // Read in the settings
-  serial_aux_init();     // Update the serial port if there is a change
-  set_VREF();            // Set the reference voltages
-  DAC_calibrate();       // Adjust the DAC to compensate for voltage drop
-  multifunction_init();  // Override the MFS if we have to
+  json_aux_mode = 0;    // Assume the AUX port is not used
+  gpio_init();          // Setup the hardware
+  serial_io_init();     // Setup the console for debug message
+  read_nonvol();        // Read in the settings
+  serial_aux_init();    // Update the serial port if there is a change
+  set_VREF();           // Set the reference voltages
+  DAC_calibrate();      // Adjust the DAC to compensate for voltage drop
+  multifunction_init(); // Override the MFS if we have to
 
   /*
    * Put up a self test
@@ -448,6 +448,7 @@ unsigned int reduce(void)
   static unsigned int paper_shot_out = 0; // Count of missed shots
 
   run_state |= IN_REDUCTION;
+
   /*
    * Loop and process the shots.  Possibly more than one shot
    */
@@ -464,24 +465,24 @@ unsigned int reduce(void)
     {
       location = compute_hit(&record[shot_out]); // Compute the score
 
-    /*
-     *  Delay for a follow through
-     */
-    if ( location != MISS ) // Was it a miss or face strike?
-    {
-      prepare_score(&record[shot_out], shot_out, NOT_MISSED_SHOT);
-
-      build_json_score(&record[shot_out], SCORE_USB);
-      serial_to_all(_xs, CONSOLE);
-
-      build_json_score(&record[shot_out], SCORE_TCPIP);
-      serial_to_all(_xs, TCPIP);
-
-      if ( (json_remote_modes & REMOTE_MODE_CLIENT) != 0 )
+      /*
+       *  Delay for a follow through
+       */
+      if ( location != MISS ) // Was it a miss or face strike?
       {
+        prepare_score(&record[shot_out], shot_out, NOT_MISSED_SHOT);
+
+        build_json_score(&record[shot_out], SCORE_USB);
+        serial_to_all(_xs, (CONSOLE | AUX_PORT));
+
         build_json_score(&record[shot_out], SCORE_TCPIP);
-        http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
-      }
+        serial_to_all(_xs, TCPIP);
+
+        if ( (json_remote_modes & REMOTE_MODE_CLIENT) != 0 )
+        {
+          build_json_score(&record[shot_out], SCORE_TCPIP);
+          http_native_request(json_remote_url, METHOD_POST, _xs, sizeof(_xs));
+        }
 
         /*
          *  Advance the paper
@@ -525,7 +526,7 @@ unsigned int reduce(void)
         }
       }
     }
-    shot_out = (shot_out + 1) % SHOT_SPACE;                                      // Increment to the next shot
+    shot_out = (shot_out + 1) % SHOT_SPACE;                        // Increment to the next shot
   }
 
   /*
@@ -1049,8 +1050,8 @@ void generate_fake_shot(void)
           record[shot_in].sensor_status = 0x0f;                                         // All sensors valid
           ring_timer                    = json_min_ring_time * ONE_SECOND / 1000;       // Reset the ring timer
 
-    shot_in++;
-    shot_in = shot_in % SHOT_SPACE;
+          shot_in++;
+          shot_in = shot_in % SHOT_SPACE;
 
           reduce();                                                                     // Process the shot
           vTaskDelay(ONE_SECOND * 2);
@@ -1063,7 +1064,7 @@ void generate_fake_shot(void)
   /*
    * Nothing more to do
    */
-  serial_flush(CONSOLE);
+  serial_flush(ALL);
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }

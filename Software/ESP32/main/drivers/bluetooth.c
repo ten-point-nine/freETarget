@@ -64,7 +64,7 @@ void BlueTooth_configuration(void)
    */
   if ( json_aux_mode == 0 )
   {
-    SEND(SOME, sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_MODE\": 2} to enable");)
+    SEND(SOME, sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_MODE\": 3} to enable");)
     SEND(SOME, sprintf(_xs, _DONE_);)
     return;
   }

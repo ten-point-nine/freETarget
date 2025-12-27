@@ -41,12 +41,12 @@ void check_new_connection(void);                     // Check to see if a new co
 #define TCPIP_1        (TCPIP_0 << 1)
 #define TCPIP_2        (TCPIP_1 << 1)
 #define TCPIP_3        (TCPIP_2 << 1)
-#define HTTP_CONNECTED (TCPIP_3 << 1)
 #define TCPIP          (TCPIP_0 | TCPIP_1 | TCPIP_2 | TCPIP_3)
+#define HTTP_CONNECTED (TCPIP_3 << 1)
 #define EVEN_ODD_BEGIN (HTTP_CONNECTED << 1)     // Remember to output in even_odd mode
 #define EVEN_ODD_END   (EVEN_ODD_BEGIN << 1)     // Exit even odd mode
 
-#define ALL  (CONSOLE | AUX | BLUETOOTH | RS488 | TCPIP | HTTP_CONNECTED)
+#define ALL  (CONSOLE | AUX_PORT | TCPIP | HTTP_CONNECTED)
 #define SOME (CONSOLE | TCPIP)
 
 /*

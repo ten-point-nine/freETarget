@@ -191,7 +191,7 @@ void freeETarget_json(void *pvParameters)
     /*
      * See if anything is waiting and if so, add it in
      */
-    while ( (serial_available(ALL) != 0) )                // Something waiting for us?
+    while ( (serial_available(ALL) != 0) )         // Something waiting for us?
     {
       from_BlueTooth = serial_available(AUX_PORT); // How much from the BlueTooth port?
       ch             = serial_getch(ALL);
@@ -207,7 +207,9 @@ void freeETarget_json(void *pvParameters)
           {
             got_left_bracket  = false;
             got_right_bracket = in_JSON;
-            handle_json(); // Fall through to reinitialize
+            handle_json(); // Fall through to manage the JSON message
+            vTaskDelay(TICK_10ms);
+            serial_flush(ALL);
           }
 
         case '{':

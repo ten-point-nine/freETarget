@@ -60,36 +60,52 @@ void app_main(void)
    * Everything is ready, start the threads.  Low task priority number == low priority
    */
   xTaskCreate(freeETarget_target_loop, "freeETarget_target_loop", K4, NULL, MUST_RUN, NULL);
+  serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 
   xTaskCreate(freeETarget_timers, "freeETarget_timer", K4, NULL, TIMED, NULL);
+  serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 
   xTaskCreate(freeETarget_synchronous, "freeETarget_synchronous", K4, NULL, TIMED, NULL);
+  serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 
   xTaskCreate(freeETarget_json, "json_task", K6, NULL, BACKGROUND, NULL);
+  serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 
   xTaskCreate(WiFi_tcp_server_task, "WiFi_tcp_server", K4, NULL, NETWORK, NULL);
+  serial_flush(ALL);
   vTaskDelay(TICK_10ms);
   xTaskCreate(tcpip_accept_poll, "tcpip_accept_poll", K4, NULL, POLLING, NULL);
+  serial_flush(ALL);
   vTaskDelay(TICK_10ms);
   xTaskCreate(tcpip_socket_poll_0, "tcpip_socket_poll_0", K4, NULL, POLLING, NULL);
+  serial_flush(ALL);
   vTaskDelay(TICK_10ms);
   xTaskCreate(tcpip_socket_poll_1, "tcpip_socket_poll_1", K4, NULL, POLLING, NULL);
+  serial_flush(ALL);
   vTaskDelay(TICK_10ms);
   xTaskCreate(tcpip_socket_poll_2, "tcpip_socket_poll_2", K4, NULL, POLLING, NULL);
+  serial_flush(ALL);
   vTaskDelay(TICK_10ms);
   xTaskCreate(tcpip_socket_poll_3, "tcpip_socket_poll_3", K4, NULL, POLLING, NULL);
+  serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 
   start_webserver(DEFAULT_HTTP_PORT); // Main port for the web server
+  serial_flush(ALL);
   vTaskDelay(TICK_10ms);
   start_webserver(EVENT_HTTP_PORT);   // Control port for the web server
+  serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 
   freeETarget_timer_init();
+  vTaskDelay(TICK_10ms);
+  serial_flush(ALL);
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "SN:%d Running\r\n", json_serial_number);))
+  vTaskDelay(TICK_10ms);
+  serial_flush(ALL);
 }

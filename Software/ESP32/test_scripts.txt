@@ -21,15 +21,18 @@ Practice witness paper { "PAPER_TIME":125, "PAPER_ECO":40, "PAPER_SHOT":4}
 
 { "AUTH_CODE":1234,  "AUTH_CODE":4321}
 { "AUTH_CODE":1234, "AUTH_CODE":0, "ECHO":0 }
-{ "TRACE":16, "TRACE":32, "TRACE":64, "TEST":142}
-{ "MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":24}
 {"WIFI_SSID":"FSixC! Box FE":, "WIFI_PWD":":1234512345123451234512345"}
+
 Firmware debug trace   { "TRACE":16, "TRACE":32, "TRACE":64, "TEST":142}
 
 Output for Rapid Fire  { "MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":24}
 
 Tabata Practice  {"TABATA_WARN_ON": 5, "TABATA_WARN_OFF":2, "TABATA_ON":7, "TABATA_REST":30, "TABATA_ENABLE":1}
 Tabata End       {"TABATA_ENABLE":0}
-Tabata Restart   {"TABATA_ENABLE":0}
+Tabata Restart   {"TABATA_ENABLE":1}
+
+
 Start a download {"DOWNLOAD":1234}
 RS488 {"AUX_MODE":4}
+
+{"ECHO":0}

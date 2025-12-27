@@ -83,15 +83,15 @@ QueueHandle_t uart_aux_queue;
 
 typedef struct queue_struct
 {
-  char queue[1024];                       // Holding queue
-  int  in;                                // Index of input characters
-  int  out;                               // Index of output characters
+  char queue[1024];               // Holding queue
+  int  in;                        // Index of input characters
+  int  out;                       // Index of output characters
 } queue_struct_t;
 
-static queue_struct_t in_buffer;          // TCPIP input buffer
-static queue_struct_t out_buffer;         // TCPIP input buffer
-unsigned int          connection_list;    // Bitmask of existing connections
-static int            last_stream_device; // Last device to provide input
+static queue_struct_t in_buffer;  // TCPIP input buffer
+static queue_struct_t out_buffer; // TCPIP input buffer
+
+unsigned int connection_list;     // Bitmask of existing connections
 
 /******************************************************************************
  *
@@ -137,8 +137,7 @@ void serial_io_init(void)
   /*
    * All done, return
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Console port initialized");))
-  return;
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Console port initialized");)) return;
 }
 
 void serial_aux_init(void)
@@ -229,6 +228,13 @@ void serial_bt_config(unsigned int baud_rate) // Program port for Bluetooth init
  *
  *******************************************************************************
  *
+ * In the special case of the AUX port, we have to filter out
+ * invalid characters.
+ *
+ * THis is done by reading all of the characters from the UART
+ * and placing the valid characters into a software queue.
+ * The number of valid characters is then returned later on in the
+ * function serial_getch().
  *
  ******************************************************************************/
 int serial_available(int ports // Bit mask of active ports
@@ -248,6 +254,10 @@ int serial_available(int ports // Bit mask of active ports
   if ( (ports & json_aux_mode & AUX_PORT) != 0 )
   {
     uart_get_buffered_data_len(uart_aux, (size_t *)&length);
+    if ( length < 0 )
+    {
+      length = 0;
+    }
     n_available += length;
   }
 
@@ -294,8 +304,7 @@ int serial_who(void)
     return CONSOLE;
   }
 
-  uart_get_buffered_data_len(uart_aux, (size_t *)&length);
-  if ( length != 0 )
+  if ( uart_get_buffered_data_len(uart_aux, (size_t *)&length) > 0 )
   {
     return AUX_PORT;
   }
@@ -356,8 +365,7 @@ void serial_flush(int ports // active port list
  * If there is a character present, update the connection mask
  *
  *******************************************************************************-*/
-char serial_getch(int ports // Bit mask of active ports
-)
+char serial_getch(int ports) // Bit mask of active ports
 {
   char ch;
 
@@ -369,7 +377,6 @@ char serial_getch(int ports // Bit mask of active ports
     if ( uart_read_bytes(uart_console, &ch, 1, 0) > 0 )
     {
       connection_list |= CONSOLE;
-      last_stream_device = CONSOLE; // Remember who talked to us last
       return ch;
     }
   }
@@ -382,7 +389,6 @@ char serial_getch(int ports // Bit mask of active ports
     if ( uart_read_bytes(uart_aux, &ch, 1, 0) > 0 )
     {
       connection_list |= AUX;
-      last_stream_device = AUX;
       return ch;
     }
   }
@@ -395,7 +401,6 @@ char serial_getch(int ports // Bit mask of active ports
     if ( tcpip_queue_2_app(&ch, 1) > 0 )
     {
       connection_list |= TCPIP; // Set the connection list
-      last_stream_device = TCPIP;
       return ch;
     }
   }
