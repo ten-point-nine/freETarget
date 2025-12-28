@@ -32,7 +32,7 @@ Tabata End       {"TABATA_ENABLE":0}
 Tabata Restart   {"TABATA_ENABLE":1}
 
 
-Start a download {"DOWNLOAD":1234}
+Start a download {"DOWNLOAD":1234567}
 RS488 {"AUX_MODE":4}
 
 {"ECHO":0}

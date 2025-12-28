@@ -522,6 +522,7 @@ static void OTA_check_header(char                  *ota_write_data,    // Data r
   {
     if ( new_app_info.version[i] < running_app_info.version[i] )
     {
+      return;
       OTA_halt_process(LED_OTA_FATAL, "New version is older than running version. Abandoning the update.");
     }
     if ( new_app_info.version[i] > running_app_info.version[i] )
