@@ -321,25 +321,28 @@ void OTA_serial(unsigned int OTA_download_size)             // Size of the incom
 
   if ( boot_partition == NULL )
   {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Boot partition not available");))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "{\"RESPONSE\": \"FAIL: Boot partition not available\"}");))
     return;
   }
 
   if ( running_partition == NULL )
   {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Running partition not available");))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "{\"RESPONSE\": \"FAIL: Running partition not available\"}");))
     return;
   }
 
 #if ( 0 )
   if ( boot_partition != running_partition )
   {
-    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Configured OTA boot partition at offset 0x%08" PRIx32 ", but running from offset 0x%08" PRIx32,
+    DLT(DLT_OTA, SEND(ALL, sprintf(_xs,
+                                   "{\"RESPONSE\": \"INFO: Configured OTA boot partition at offset 0x%08" PRIx32
+                                   ", but running from offset 0x%08\"}" PRIx32,
                                    configured->address, running->address);))
-    DLT(DLT_INFO,
         SEND(LAST, sprintf(_xs, "(This can happen if either the OTA boot data or preferred boot image become corrupted somehow.)");))
   }
-  DLT(DLT_OTA, SEND(LAST, sprintf(_xs, "Running partition type %d subtype %d (offset 0x%08" PRIx32 ")", running->type, running->subtype,
+  DLT(DLT_OTA, SEND(LAST, sprintf(_xs,
+                                  "{\"RESPONSE\": \"INFO: Running partition type %d subtype %d (offset 0x%08" PRIx32 ")\", running->type,
+                                  running->subtype,
                                   running->address);))
 #endif
 
@@ -351,14 +354,14 @@ void OTA_serial(unsigned int OTA_download_size)             // Size of the incom
 
   update_partition = esp_ota_get_next_update_partition(NULL);
   assert(update_partition != NULL);
-  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Writing to partition subtype %d at offset 0x%" PRIx32, update_partition->subtype,
-                                 update_partition->address);))
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"INFO: Writing to partition subtype %d at offset 0x%" PRIx32,
+                                 update_partition->subtype, update_partition->address);))
   /*
    *  Prepare for the update
    */
   if ( esp_ota_begin(update_partition, OTA_WITH_SEQUENTIAL_WRITES, &update_handle) != ESP_OK )
   {
-    SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"DOWNLOAD FAILED BEGIN\"}");)
+    SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"FAIL: DOWNLOAD FAILED BEGIN\"}");)
     vTaskDelay(10); // Wait for the message to leave the buffer
     esp_ota_abort(update_handle);
     OTA_halt_process(LED_OTA_FAILED_CONNECT, "esp_ota_begin failed");
@@ -381,7 +384,7 @@ void OTA_serial(unsigned int OTA_download_size)             // Size of the incom
     if ( data_read < 0 )                                                // Error getting data
     {
       set_status_LED(LED_OTA_FATAL);                                    // Show the error on the LED
-      SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"DOWNLOAD FAILED TO RECEIVE DATA\"}");)
+      SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"FAIL: DOWNLOAD FAILED TO RECEIVE DATA\"}");)
       vTaskDelay(10);                                                   // Wait for the message to leave the buffer
       esp_ota_abort(update_handle);
       OTA_halt_process(LED_OTA_FAILED_CONNECT, "OTA_serial: Error receiving OTA file");
@@ -410,7 +413,7 @@ void OTA_serial(unsigned int OTA_download_size)             // Size of the incom
      */
     if ( esp_ota_write(update_handle, (const void *)ota_write_data, data_read) != ESP_OK )
     {
-      SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"esp_ota_write() failed\"");)
+      SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"FAIL: esp_ota_write() failed\"");)
       vTaskDelay(10); // Wait for the message to leave the buffer
       esp_ota_abort(update_handle);
       OTA_halt_process(LED_OTA_FAILED_CONNECT, "esp_ota_write() failed");
@@ -422,11 +425,11 @@ void OTA_serial(unsigned int OTA_download_size)             // Size of the incom
    *  The download is complete, make sure we have the complete file
    */
   set_status_LED(LED_OTA_FINSHED); // Show we are part way done
-  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Total Write binary data length: %d", bytes_received);))
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"INFO: Total Write binary data length: %d\"}", bytes_received);))
 
   if ( esp_ota_end(update_handle) != ESP_OK )
   {
-    SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"FAILED TO COMPLETE OTA UPDATE\"}");)
+    SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"FAIL: FAILED TO COMPLETE OTA UPDATE\"}");)
     vTaskDelay(10);                // Wait for the message to leave the buffer
     OTA_halt_process(LED_OTA_FATAL, "Failed to complete OTA update");
   }
@@ -444,8 +447,7 @@ void OTA_serial(unsigned int OTA_download_size)             // Size of the incom
   /*
    *  All done, halt and wait for the user to restart
    */
-  SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"DOWNLOAD SUCCESSFUL\"}");)
-  DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "OTA_SERIAL: Cycle power to start new firmware");))
+  DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"END: Cycle power to start new firmware\"}");))
   OTA_halt_process(LED_OTA_READY, "Cycle power to start new firmware"); // Reboot the system
   return;
 }
@@ -486,7 +488,8 @@ static void OTA_check_header(char                  *ota_write_data,    // Data r
    */
   if ( data_read < sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t) )
   {
-    OTA_halt_process(LED_OTA_FATAL, "Failed to read freeETarget.bin header");
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "{\"RESPONSE\": \"FAIL: OTA data size too small\"}");))
+    OTA_halt_process(LED_OTA_FATAL, "OTA data size too small");
   }
 
   /*
@@ -535,6 +538,7 @@ static void OTA_check_header(char                  *ota_write_data,    // Data r
   /*
    *  Got to the end and identical all the way along
    */
+  DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "{\"RESPONSE\": \"FAIL: New version is identical to running version.\"}");))
   OTA_halt_process(LED_OTA_FATAL, "New version is the same as running version. Abandoning the update.");
 }
 
