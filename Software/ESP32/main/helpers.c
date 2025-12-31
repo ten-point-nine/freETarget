@@ -866,7 +866,7 @@ int get_OTA_serial(int   length,                         // Maximum number of by
   time_count_t  time_out;                                // Timeout timer
 
   byte_count = 0;                                        // Nothing has arrived yet
-  ft_timer_new(&time_out, OTA_SERIAL_TIMEOUT);           // Time out timer
+  time_out   = OTA_SERIAL_TIMEOUT;                       // Reset the timout
 
   /*
    * Loop and read the data

@@ -135,7 +135,7 @@ void generate_fake_shot(void);                            // Generate a string o
 #define TRACE_DEBUG         (0 == 1)
 #define TRACE_SCORE         (0 == 1)
 #define TRACE_HTTP          (0 == 1)
-#define TRACE_OTA           (1 == 1)
+#define TRACE_OTA           (0 == 1)
 #define TRACE_HEARTBEAT     (0 == 1)
 
 // clang-format off
