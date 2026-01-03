@@ -435,6 +435,9 @@ void OTA_serial(unsigned int OTA_download_size)             // Size of the incom
     OTA_halt_process(LED_OTA_FATAL, "Failed to complete OTA update");
   }
 
+  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"INFO> esp_ota_end succesful\"}");))
+  return; // AMB Testing
+
   /*
    * Looks good, setup the registers
    */
