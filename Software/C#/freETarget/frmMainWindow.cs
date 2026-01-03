@@ -1636,6 +1636,8 @@ namespace freETarget {
         private void btnUpload_Click(object sender, EventArgs e) {
             frmUpload upload = new frmUpload(this);
             upload.ShowDialog();
+            upload.Dispose();
+            upload = null;
         }
 
         private void loadEventsOnTabs() {

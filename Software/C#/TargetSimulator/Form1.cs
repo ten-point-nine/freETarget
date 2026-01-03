@@ -18,6 +18,9 @@ namespace TargetSimulator
 
     public partial class Form1 : Form
     {
+
+        private delegate void SafeCallDelegate(string text);
+
         public const decimal distanceBetweenSensors = 160; //in milimiters
 
         private int range = (int)Math.Round(distanceBetweenSensors * 10 / 2, 0);
@@ -75,6 +78,7 @@ namespace TargetSimulator
                 btnImport.Enabled = true;
                 btnImportLog.Enabled = true;
                 btnMiss.Enabled = true;
+                btnSendString.Enabled = true;   
 
                 statusText.Text = "Connected";
                 count = 1;
@@ -101,6 +105,7 @@ namespace TargetSimulator
                 btnImport.Enabled = false;
                 btnImportLog.Enabled = false;
                 btnMiss.Enabled = false;
+                btnSendString.Enabled = false;
 
                 timer1.Enabled = false;
                 btnTimer.Text = "Start Timer";
@@ -325,6 +330,31 @@ namespace TargetSimulator
 
         private void btnMiss_Click(object sender, EventArgs e) {
             generateMissAndSend();
+        }
+
+        private void serialPort1_DataReceived(object sender, SerialDataReceivedEventArgs e) {
+            SerialPort sp = (SerialPort)sender;
+            string indata = sp.ReadExisting();
+            Console.WriteLine(indata);
+           inkoveString(indata);
+        }
+
+        private void btnSendString_Click(object sender, EventArgs e) {
+            try {
+                serialPort1.WriteLine(txtString.Text);
+            } catch (TimeoutException ex) {
+                statusText.Text = "Error writing to port: " + ex.Message;
+                Console.WriteLine("ERROR: " + ex.Message);
+            }
+        }
+
+        private void inkoveString(string text) {
+            var d = new SafeCallDelegate(updateConsole); //confirm connect
+            this.Invoke(d, new object[] { text.Trim() });
+        }
+
+        private void updateConsole(string text) {
+            txtInput.AppendText(text + Environment.NewLine);
         }
     }
 }

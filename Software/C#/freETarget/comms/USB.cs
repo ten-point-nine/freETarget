@@ -18,6 +18,7 @@ namespace freETarget.comms {
             this.mainWindow = mainW;
             
             this.serialPort = new SerialPort();
+            this.serialPort.WriteTimeout = 500;
 
             this.serialPort.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(this.serialPort_DataReceived);
         }

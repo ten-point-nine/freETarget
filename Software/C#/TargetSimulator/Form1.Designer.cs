@@ -29,11 +29,12 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.Windows.Forms.TabPage tabPage1;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            this.txtOutput = new System.Windows.Forms.TextBox();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
             this.btnConnect = new System.Windows.Forms.Button();
-            this.txtOutput = new System.Windows.Forms.TextBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.btnShot = new System.Windows.Forms.Button();
             this.btnTimer = new System.Windows.Forms.Button();
@@ -57,8 +58,41 @@
             this.chkChamp = new System.Windows.Forms.CheckBox();
             this.btnImportLog = new System.Windows.Forms.Button();
             this.btnMiss = new System.Windows.Forms.Button();
+            this.txtString = new System.Windows.Forms.TextBox();
+            this.btnSendString = new System.Windows.Forms.Button();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.txtInput = new System.Windows.Forms.TextBox();
+            tabPage1 = new System.Windows.Forms.TabPage();
+            tabPage1.SuspendLayout();
             this.status.SuspendLayout();
+            this.tabControl1.SuspendLayout();
+            this.tabPage2.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // tabPage1
+            // 
+            tabPage1.Controls.Add(this.txtOutput);
+            tabPage1.Location = new System.Drawing.Point(4, 22);
+            tabPage1.Name = "tabPage1";
+            tabPage1.Padding = new System.Windows.Forms.Padding(3);
+            tabPage1.Size = new System.Drawing.Size(555, 369);
+            tabPage1.TabIndex = 0;
+            tabPage1.Text = "Output";
+            tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // txtOutput
+            // 
+            this.txtOutput.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtOutput.Location = new System.Drawing.Point(6, 6);
+            this.txtOutput.Multiline = true;
+            this.txtOutput.Name = "txtOutput";
+            this.txtOutput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtOutput.Size = new System.Drawing.Size(543, 357);
+            this.txtOutput.TabIndex = 2;
+            this.txtOutput.WordWrap = false;
             // 
             // comboBox1
             // 
@@ -67,6 +101,10 @@
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(121, 21);
             this.comboBox1.TabIndex = 0;
+            // 
+            // serialPort1
+            // 
+            this.serialPort1.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(this.serialPort1_DataReceived);
             // 
             // btnConnect
             // 
@@ -78,19 +116,6 @@
             this.btnConnect.UseVisualStyleBackColor = true;
             this.btnConnect.Click += new System.EventHandler(this.btnConnect_Click);
             // 
-            // txtOutput
-            // 
-            this.txtOutput.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtOutput.Location = new System.Drawing.Point(12, 95);
-            this.txtOutput.Multiline = true;
-            this.txtOutput.Name = "txtOutput";
-            this.txtOutput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtOutput.Size = new System.Drawing.Size(565, 424);
-            this.txtOutput.TabIndex = 2;
-            this.txtOutput.WordWrap = false;
-            // 
             // timer1
             // 
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
@@ -98,7 +123,7 @@
             // btnShot
             // 
             this.btnShot.Enabled = false;
-            this.btnShot.Location = new System.Drawing.Point(416, 10);
+            this.btnShot.Location = new System.Drawing.Point(421, 10);
             this.btnShot.Name = "btnShot";
             this.btnShot.Size = new System.Drawing.Size(75, 23);
             this.btnShot.TabIndex = 3;
@@ -123,9 +148,9 @@
             // 
             this.status.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.statusText});
-            this.status.Location = new System.Drawing.Point(0, 519);
+            this.status.Location = new System.Drawing.Point(0, 523);
             this.status.Name = "status";
-            this.status.Size = new System.Drawing.Size(589, 22);
+            this.status.Size = new System.Drawing.Size(587, 22);
             this.status.TabIndex = 5;
             this.status.Text = "Ready";
             // 
@@ -229,7 +254,7 @@
             // btnShoot
             // 
             this.btnShoot.Enabled = false;
-            this.btnShoot.Location = new System.Drawing.Point(272, 67);
+            this.btnShoot.Location = new System.Drawing.Point(272, 69);
             this.btnShoot.Name = "btnShoot";
             this.btnShoot.Size = new System.Drawing.Size(75, 23);
             this.btnShoot.TabIndex = 15;
@@ -286,9 +311,9 @@
             // btnImportLog
             // 
             this.btnImportLog.Enabled = false;
-            this.btnImportLog.Location = new System.Drawing.Point(420, 66);
+            this.btnImportLog.Location = new System.Drawing.Point(420, 69);
             this.btnImportLog.Name = "btnImportLog";
-            this.btnImportLog.Size = new System.Drawing.Size(75, 26);
+            this.btnImportLog.Size = new System.Drawing.Size(75, 23);
             this.btnImportLog.TabIndex = 20;
             this.btnImportLog.Text = "Import log...";
             this.btnImportLog.UseVisualStyleBackColor = true;
@@ -297,7 +322,7 @@
             // btnMiss
             // 
             this.btnMiss.Enabled = false;
-            this.btnMiss.Location = new System.Drawing.Point(353, 67);
+            this.btnMiss.Location = new System.Drawing.Point(353, 69);
             this.btnMiss.Name = "btnMiss";
             this.btnMiss.Size = new System.Drawing.Size(61, 23);
             this.btnMiss.TabIndex = 21;
@@ -305,11 +330,68 @@
             this.btnMiss.UseVisualStyleBackColor = true;
             this.btnMiss.Click += new System.EventHandler(this.btnMiss_Click);
             // 
+            // txtString
+            // 
+            this.txtString.Location = new System.Drawing.Point(17, 100);
+            this.txtString.Name = "txtString";
+            this.txtString.Size = new System.Drawing.Size(478, 20);
+            this.txtString.TabIndex = 22;
+            // 
+            // btnSendString
+            // 
+            this.btnSendString.Enabled = false;
+            this.btnSendString.Location = new System.Drawing.Point(501, 98);
+            this.btnSendString.Name = "btnSendString";
+            this.btnSendString.Size = new System.Drawing.Size(75, 23);
+            this.btnSendString.TabIndex = 23;
+            this.btnSendString.Text = "Send String";
+            this.btnSendString.UseVisualStyleBackColor = true;
+            this.btnSendString.Click += new System.EventHandler(this.btnSendString_Click);
+            // 
+            // tabControl1
+            // 
+            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tabControl1.Controls.Add(tabPage1);
+            this.tabControl1.Controls.Add(this.tabPage2);
+            this.tabControl1.Location = new System.Drawing.Point(12, 126);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.Size = new System.Drawing.Size(563, 395);
+            this.tabControl1.TabIndex = 24;
+            // 
+            // tabPage2
+            // 
+            this.tabPage2.Controls.Add(this.txtInput);
+            this.tabPage2.Location = new System.Drawing.Point(4, 22);
+            this.tabPage2.Name = "tabPage2";
+            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage2.Size = new System.Drawing.Size(555, 369);
+            this.tabPage2.TabIndex = 1;
+            this.tabPage2.Text = "Input";
+            this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // txtInput
+            // 
+            this.txtInput.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtInput.Location = new System.Drawing.Point(6, 6);
+            this.txtInput.Multiline = true;
+            this.txtInput.Name = "txtInput";
+            this.txtInput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtInput.Size = new System.Drawing.Size(543, 357);
+            this.txtInput.TabIndex = 0;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(589, 541);
+            this.ClientSize = new System.Drawing.Size(587, 545);
+            this.Controls.Add(this.tabControl1);
+            this.Controls.Add(this.btnSendString);
+            this.Controls.Add(this.txtString);
             this.Controls.Add(this.btnMiss);
             this.Controls.Add(this.btnImportLog);
             this.Controls.Add(this.chkChamp);
@@ -329,14 +411,18 @@
             this.Controls.Add(this.status);
             this.Controls.Add(this.btnTimer);
             this.Controls.Add(this.btnShot);
-            this.Controls.Add(this.txtOutput);
             this.Controls.Add(this.btnConnect);
             this.Controls.Add(this.comboBox1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.Text = "Target Simulator";
+            tabPage1.ResumeLayout(false);
+            tabPage1.PerformLayout();
             this.status.ResumeLayout(false);
             this.status.PerformLayout();
+            this.tabControl1.ResumeLayout(false);
+            this.tabPage2.ResumeLayout(false);
+            this.tabPage2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -371,6 +457,11 @@
         private System.Windows.Forms.CheckBox chkChamp;
         private System.Windows.Forms.Button btnImportLog;
         private System.Windows.Forms.Button btnMiss;
+        private System.Windows.Forms.TextBox txtString;
+        private System.Windows.Forms.Button btnSendString;
+        private System.Windows.Forms.TabControl tabControl1;
+        private System.Windows.Forms.TabPage tabPage2;
+        private System.Windows.Forms.TextBox txtInput;
     }
 }
 
