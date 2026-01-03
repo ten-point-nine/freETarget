@@ -58,7 +58,6 @@ static char          ota_write_data[BUFFSIZE + 1] = {0};
 static char          download_url[OTA_URL_SIZE];
 extern const uint8_t server_cert_pem_start[] asm("_binary_ca_cert_pem_start");
 extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_pem_end");
-static time_count_t  time_out; // Time out timer
 
 /*----------------------------------------------------------------
  *
@@ -310,7 +309,7 @@ void OTA_load_json(int empty)                                           // Shim 
  *                                {"RESPONSE":"INFO> Informational message"}
  *
  *------------------------------------------------------------*/
-#define OTA_SERIAL_BLOCK_SIZE (sizeof(ota_write_data) - 8)  // Number of bytes we can accept at once
+#define OTA_SERIAL_BLOCK_SIZE (512)                   // Number of bytes we can accept at once
 #define OTA_SERIAL_TIMEOUT    (time_count_t)10 * ONE_SECOND // 10 second timeout
 
 void OTA_serial(unsigned int OTA_download_size)             // Size of the incoming file
@@ -329,7 +328,6 @@ void OTA_serial(unsigned int OTA_download_size)             // Size of the incom
    */
   DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "OTA_serial(%d)", OTA_download_size);))
   set_status_LED(LED_OTA_DOWNLOAD);
-  ft_timer_new(&time_out, OTA_SERIAL_TIMEOUT); // Time out timer
 
   if ( boot_partition == NULL )
   {
@@ -383,11 +381,12 @@ void OTA_serial(unsigned int OTA_download_size)             // Size of the incom
   /*
    * Loop here and bring in the file
    */
-  while ( bytes_received <= OTA_download_size )                         // Loop for each block
+  while ( bytes_received < OTA_download_size )                          // Loop for each block
   {
     data_read = OTA_SERIAL_BLOCK_SIZE;
     if ( (OTA_download_size - bytes_received) < OTA_SERIAL_BLOCK_SIZE ) // Last block?
     {
+      printf("\r\nLast block\r\n");
       data_read = OTA_download_size - bytes_received;                   // Yes, use a shorter block
     }
 
@@ -404,16 +403,7 @@ void OTA_serial(unsigned int OTA_download_size)             // Size of the incom
 
     bytes_received += data_read;                                        // Keep track of how many bytes we have received
 
-    if ( ((++record_number) & 32) == 0 )
-    {
-      set_status_LED(LED_OTA_DOWNLOAD);                                 // Slowly blink the LED
-    }
-    else
-    {
-      set_status_LED(LED_OTA_DOWNLOAD_T);
-    }
-
-    if ( image_header_was_checked == false ) // First time through, check the header
+    if ( image_header_was_checked == false )                            // First time through, check the header
     {
       OTA_check_header(ota_write_data, data_read, update_partition, running_partition, boot_partition);
       image_header_was_checked = true;

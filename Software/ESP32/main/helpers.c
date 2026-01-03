@@ -857,44 +857,46 @@ void watchdog(void)
  *
  *--------------------------------------------------------------*/
 #define OTA_SERIAL_TIMEOUT (time_count_t)10 * ONE_SECOND // 10 second timeout
+static time_count_t time_out;                            // Time out timer
 
 int get_OTA_serial(int   length,                         // Maximum number of bytes to read
                    char *s)                              // Place to save the input data
 {
   unsigned char ch;                                      // Inputing character
   unsigned int  byte_count;                              // Number of bytes read in
-  time_count_t  time_out;                                // Timeout timer
+  int           bytes_available;                         // Number of bytes available from PC Client
 
   byte_count = 0;                                        // Nothing has arrived yet
-  time_out   = OTA_SERIAL_TIMEOUT;                       // Reset the timout
+  ft_timer_new(&time_out, OTA_SERIAL_TIMEOUT);           // Time out timer
 
   /*
    * Loop and read the data
    */
   while ( 1 )
   {
-    while ( serial_available(ALL) != 0 ) // Got something?
+    bytes_available = serial_available(ALL);
+    if ( bytes_available > 0 )        // Got something?
     {
-      time_out = OTA_SERIAL_TIMEOUT;     // Reset the timout
-      ch       = serial_getch(ALL);      // Read the character
-      *s       = ch;                     // and save it away
-      s++;                               // Move to the next character
-      length--;                          // One less to read
-      byte_count++;                      // Count the bytes read in
-
-      if ( length == 0 )
+      time_out = OTA_SERIAL_TIMEOUT;  // Reset the timout
+      while ( bytes_available-- > 0 ) // Read all available characters
       {
-        ft_timer_delete(&time_out);      // Give back the timer
-        return byte_count;               // Got everythig for now
+        ch = serial_getch(ALL);       // Read the character
+        *s = ch;                      // and save it away
+        s++;                          // Move to the next character
+        length--;                     // One less to read
+        byte_count++;                 // Count the bytes read in
+
+        if ( length == 0 )            // Got everything for now
+        {
+          return byte_count;
+        }
       }
     }
 
-    if ( time_out <= 0 )                 // Timeout
+    if ( time_out <= 0 ) // Timeout
     {
-      return -1;                         // Report an error
+      return -1;         // Report an error
     }
-
-    vTaskDelay(1);
   }
 
   return byte_count;

@@ -40,7 +40,7 @@ const uart_config_t uart_console_config = {.baud_rate           = 115200,
                                            .parity              = UART_PARITY_DISABLE,
                                            .stop_bits           = UART_STOP_BITS_1,
                                            .flow_ctrl           = UART_HW_FLOWCTRL_DISABLE,
-                                           .rx_flow_ctrl_thresh = 122,
+                                           .rx_flow_ctrl_thresh = 512,
                                            .source_clk          = UART_SCLK_DEFAULT};
 const int           uart_console_size   = (1024 * 2);
 QueueHandle_t       uart_console_queue;
@@ -53,6 +53,9 @@ const uart_config_t uart_aux_config = {.baud_rate           = 115200,
                                        .flow_ctrl           = UART_HW_FLOWCTRL_DISABLE,
                                        .rx_flow_ctrl_thresh = 122,
                                        .source_clk          = UART_SCLK_DEFAULT};
+
+const int     uart_aux_size = (1024 * 2);
+QueueHandle_t uart_aux_queue;
 
 const uart_config_t uart_BT_config = {.baud_rate           = 115200,
                                       .data_bits           = UART_DATA_8_BITS,
@@ -77,9 +80,6 @@ const uart_config_t uart_BT_INIT_9600_config = {.baud_rate           = 9600,
                                                 .flow_ctrl           = UART_HW_FLOWCTRL_DISABLE,
                                                 .rx_flow_ctrl_thresh = 122,
                                                 .source_clk          = UART_SCLK_DEFAULT};
-
-const int     uart_aux_size = (1024 * 2);
-QueueHandle_t uart_aux_queue;
 
 typedef struct queue_struct
 {
@@ -125,6 +125,7 @@ void serial_io_init(void)
    */
   uart_param_config(uart_console, &uart_console_config);
   setvbuf(stdout, NULL, _IONBF, 0); // Send something out as soon as you get it
+  uart_set_sw_flow_ctrl(UART_NUM_0, true, sizeof(_xs) * 0.9, sizeof(_xs) * 0.1);
 
   /*
    *  Prepare the TCPIP queues
