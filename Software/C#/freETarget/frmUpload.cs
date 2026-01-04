@@ -231,7 +231,7 @@ namespace freETarget {
 
                         serialPort.Open();
                         status = directUploadStatus.CONNECTED;
-                        updateConsole("Connected. Waiting for " + (int.Parse(txtDelay.Text)) + " seconds.");
+                        updateConsole("Connected to target. Starting upload in " + (int.Parse(txtDelay.Text)) + " seconds. Please wait...");
                         int i = 0;
                         while (i < int.Parse(txtDelay.Text)*10) { //this will result in slighlty more wait time
                             Thread.Sleep(100); 
@@ -445,7 +445,7 @@ namespace freETarget {
 
         private void txtTimerDelay_TextChanged(object sender, EventArgs e) {
             if (!positiveNumber(txtDelay.Text)) {
-                txtDelay.Text = "100";
+                txtDelay.Text = "200";
             }
         }
     }

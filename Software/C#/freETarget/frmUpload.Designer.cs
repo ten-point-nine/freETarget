@@ -209,17 +209,17 @@ namespace freETarget {
             // 
             // txtTimerDelay
             // 
-            this.txtTimerDelay.Location = new System.Drawing.Point(449, 8);
+            this.txtTimerDelay.Location = new System.Drawing.Point(198, 8);
             this.txtTimerDelay.Name = "txtTimerDelay";
             this.txtTimerDelay.Size = new System.Drawing.Size(44, 20);
             this.txtTimerDelay.TabIndex = 6;
-            this.txtTimerDelay.Text = "100";
+            this.txtTimerDelay.Text = "200";
             this.txtTimerDelay.TextChanged += new System.EventHandler(this.txtTimerDelay_TextChanged);
             // 
             // lblTimerDelay
             // 
             this.lblTimerDelay.AutoSize = true;
-            this.lblTimerDelay.Location = new System.Drawing.Point(263, 11);
+            this.lblTimerDelay.Location = new System.Drawing.Point(12, 11);
             this.lblTimerDelay.Name = "lblTimerDelay";
             this.lblTimerDelay.Size = new System.Drawing.Size(180, 13);
             this.lblTimerDelay.TabIndex = 5;
@@ -227,21 +227,23 @@ namespace freETarget {
             // 
             // txtDelay
             // 
-            this.txtDelay.Location = new System.Drawing.Point(141, 8);
+            this.txtDelay.Location = new System.Drawing.Point(669, 8);
             this.txtDelay.Name = "txtDelay";
             this.txtDelay.Size = new System.Drawing.Size(50, 20);
             this.txtDelay.TabIndex = 4;
             this.txtDelay.Text = "16";
+            this.txtDelay.Visible = false;
             this.txtDelay.TextChanged += new System.EventHandler(this.txtDelay_TextChanged);
             // 
             // lblDelay
             // 
             this.lblDelay.AutoSize = true;
-            this.lblDelay.Location = new System.Drawing.Point(12, 11);
+            this.lblDelay.Location = new System.Drawing.Point(540, 11);
             this.lblDelay.Name = "lblDelay";
             this.lblDelay.Size = new System.Drawing.Size(123, 13);
             this.lblDelay.TabIndex = 3;
             this.lblDelay.Text = "Upload delay in seconds";
+            this.lblDelay.Visible = false;
             // 
             // btnDirectUpload
             // 
