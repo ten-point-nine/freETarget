@@ -39,9 +39,11 @@
 /*
  *  Macros
  */
-#define BUFFSIZE     1024
-#define HASH_LEN     32 /* SHA-256 digest length */
-#define OTA_URL_SIZE 256
+#define BUFFSIZE              1024
+#define HASH_LEN              32                              /* SHA-256 digest length */
+#define OTA_URL_SIZE          256
+#define OTA_SERIAL_BLOCK_SIZE (sizeof(ota_write_data) - 32)   // Number of bytes we can accept at once
+#define OTA_SERIAL_TIMEOUT    ((time_count_t)10 * ONE_SECOND) // 10 second timeout
 
 /*
  *  Local functions
@@ -309,10 +311,7 @@ void OTA_load_json(int empty)                                           // Shim 
  *                                {"RESPONSE":"INFO> Informational message"}
  *
  *------------------------------------------------------------*/
-#define OTA_SERIAL_BLOCK_SIZE (512)                   // Number of bytes we can accept at once
-#define OTA_SERIAL_TIMEOUT    (time_count_t)10 * ONE_SECOND // 10 second timeout
-
-void OTA_serial(unsigned int OTA_download_size)             // Size of the incoming file
+void OTA_serial(unsigned int OTA_download_size) // Size of the incoming file
 {
   esp_ota_handle_t       update_handle = 0;
   const esp_partition_t *update_partition;
@@ -436,7 +435,7 @@ void OTA_serial(unsigned int OTA_download_size)             // Size of the incom
   }
 
   DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"INFO> esp_ota_end succesful\"}");))
-  return; // AMB Testing
+  return;                          // AMB Testing
 
   /*
    * Looks good, setup the registers
