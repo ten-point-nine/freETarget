@@ -125,7 +125,7 @@ void serial_io_init(void)
    */
   uart_param_config(uart_console, &uart_console_config);
   setvbuf(stdout, NULL, _IONBF, 0); // Send something out as soon as you get it
-  uart_set_sw_flow_ctrl(UART_NUM_0, true, sizeof(_xs) * 0.9, sizeof(_xs) * 0.1);
+  uart_set_sw_flow_ctrl(UART_NUM_0, true, uart_console_size / 2 * 0.9, uart_console_size / 2 * 0.1);
 
   /*
    *  Prepare the TCPIP queues

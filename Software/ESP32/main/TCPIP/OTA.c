@@ -435,7 +435,6 @@ void OTA_serial(unsigned int OTA_download_size) // Size of the incoming file
   }
 
   DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"INFO> esp_ota_end succesful\"}");))
-  return;                          // AMB Testing
 
   /*
    * Looks good, setup the registers
@@ -496,7 +495,6 @@ static void OTA_check_header(char                  *ota_write_data,    // Data r
     OTA_halt_process(LED_OTA_FATAL, "OTA data size too small");
   }
 
-  return; // AMB
   /*
    *  Extract the data and print it out
    */
@@ -531,12 +529,12 @@ static void OTA_check_header(char                  *ota_write_data,    // Data r
     if ( new_app_info.version[i] < running_app_info.version[i] )
     {
       DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "{\"RESPOSE\":\"FAIL> New version is older thatn the running version.\"}");))
-      vTaskDelay(10); // Wait for the message to leave the buffer
+      vTaskDelay(10);                                            // Wait for the message to leave the buffer
       OTA_halt_process(LED_OTA_FATAL, "New version is older than running version. Abandoning the update.");
     }
-    if ( new_app_info.version[i] > running_app_info.version[i] )
+    if ( new_app_info.version[i] > running_app_info.version[i] ) // The new is 'bigger' than the old
     {
-      return;
+      return;                                                    // Nothing more to do,
     }
     i++;
   }
