@@ -43,8 +43,8 @@ const uart_config_t uart_console_config = {.baud_rate           = 115200,
                                            .rx_flow_ctrl_thresh = 122,
                                            .source_clk          = UART_SCLK_DEFAULT};
 const int           uart_console_size   = (1024 * 2);
-const int           uart_xon_threshold  = 16;
-const int           uart_xoff_threshold = (128 - 16);
+const int           uart_xon_threshold  = 16;         // When to turn on the XON flow control
+const int           uart_xoff_threshold = (128 - 16); // 128 is the size of the hardware FIFO
 
 QueueHandle_t uart_console_queue;
 
