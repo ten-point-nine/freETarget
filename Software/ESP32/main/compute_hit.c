@@ -273,7 +273,7 @@ unsigned int compute_hit(shot_record_t *shot // Storing the results
     count++;
     if ( count > 20 )
     {
-      break;
+      break; // Exit if we can't find a solution
     }
   }
 
@@ -442,7 +442,7 @@ bool find_xy_3D(sensor_t *s,             // Sensor to be operatated on
   })
 
   /*
-   *  All done, return
+   *  All done, return.  The location is in the structure s->x and s->y
    */
   if ( isnan(s->x) || isnan(s->y) ) // If the computation failed,
   {
@@ -503,10 +503,10 @@ void prepare_score(shot_record_t *shot,        //  record
   /*
    *  Work out the hole in perfect coordinates
    */
-  x            = shot->x * s_of_sound * CLOCK_PERIOD;   // Distance in mm
-  y            = shot->y * s_of_sound * CLOCK_PERIOD;   // Distance in mm
-  shot->radius = sqrt(sq(x) + sq(y));                   // radius in mm
-  shot->angle  = atan2(shot->y, shot->x) / PI * 180.0d; // Angle in degrees
+  x            = shot->x * s_of_sound * CLOCK_PERIOD;                // Distance in mm
+  y            = shot->y * s_of_sound * CLOCK_PERIOD;                // Distance in mm
+  shot->radius = sqrt(sq(x) + sq(y)) * (json_radius_adjust / 100.0); // radius in mm
+  shot->angle  = atan2(shot->y, shot->x) / PI * 180.0d;              // Angle in degrees
 
   /*
    * Rotate the result based on the construction, and recompute the hit

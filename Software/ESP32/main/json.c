@@ -87,11 +87,11 @@ const json_message_t JSON[] = {
     {SHOW + LOCK, "\"PAPER_TIME\":",      &json_paper_time,            IS_INT32,                 0,                  NONVOL_PAPER_TIME,       500,         0 },
     {SHOW + LOCK, "\"PCNT_LATENCY\":",    &json_pcnt_latency,          IS_INT32,                 0,                  NONVOL_PCNT_LATENCY,     0,           1 },
     {SHOW + LOCK, "\"POWER_SAVE\":",      &json_power_save,            IS_INT32,                 0,                  NONVOL_POWER_SAVE,       0,           0 },
+    {SHOW + LOCK, "\"RADIUS_ADJUST\":",   &json_radius_adjust,         IS_FLOAT,                 0,                  NONVOL_RADIUS_ADJUST,    100000,      14},
     {HIDE,        "\"RAPID_COUNT\":",     &json_rapid_count,           IS_INT32,                 0,                  0,                       0,           0 },
     {HIDE,        "\"RAPID_ENABLE\":",    &json_rapid_enable,          IS_INT32,                 0,                  0,                       0,           0 },
     {HIDE,        "\"RAPID_TIME\":",      &json_rapid_time,            IS_INT32,                 0,                  0,                       0,           0 },
     {HIDE,        "\"RAPID_WAIT\":",      &json_rapid_wait,            IS_INT32,                 0,                  0,                       0,           0 },
-
     {SHOW + LOCK, "\"REMOTE_ACTIVE\":",   &json_remote_active,         IS_INT32,                 0,                  NONVOL_REMOTE_ACTIVE,    0,           8 },
     {SHOW + LOCK, "\"REMOTE_KEY\":",      &json_remote_key,            IS_TEXT + KEY_SIZE,       0,                  NONVOL_REMOTE_KEY,       0,           8 },
     {SHOW + LOCK, "\"REMOTE_URL\":",      (int *)&json_remote_url,     IS_TEXT + URL_SIZE,       0,                  NONVOL_REMOTE_URL,       0,           8 },

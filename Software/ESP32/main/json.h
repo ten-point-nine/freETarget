@@ -106,6 +106,7 @@ EXTERN int           json_multifunction;             // Multifunction switch ope
 EXTERN double        json_x_offset;                  // Offset added to horizontal to centre target in sensors
 EXTERN double        json_y_offset;                  // Offset added to vertical to centre targetin sensors
 EXTERN int           json_z_offset;                  // Distance between paper and sensor plane (1mm / LSB)
+EXTERN double        json_radius_adjust;             // Gain applied to radius calculation
 EXTERN int           json_paper_eco;                 // Do not advance witness paper if shot is greater than json_paper_eco
 EXTERN int           json_target_type;               // Modify the location based on a target type (0 == regular 1 bull target)
 EXTERN int           json_tabata_enable;             // Enable the Tabata timer
