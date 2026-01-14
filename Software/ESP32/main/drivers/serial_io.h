@@ -32,23 +32,22 @@ void check_new_connection(void);                     // Check to see if a new co
  *  Definitions
  *              CONSOLE   AUX    TCPIP
  */
-#define CONSOLE        0x0001                    // 0x1
-#define AUX            (CONSOLE << 1)            // 0x2
-#define BLUETOOTH      (AUX + 1)                 // 0x3
-#define RS488          (BLUETOOTH + 1)           // 0x4
-#define AUX_PORT       (AUX | BLUETOOTH | RS488) // 0x6
-#define TCPIP_0        (RS488 << 4)              // 0x8
+#define CONSOLE        0x0001                // 0x1
+#define AUX            (CONSOLE << 1)        // 0x2
+#define BLUETOOTH      (AUX + 2)             // 0x4
+#define RS485          (BLUETOOTH + 2)       // 0x6
+#define TCPIP_0        (CONSOLE << 4)        // 0x10
 #define TCPIP_1        (TCPIP_0 << 1)
 #define TCPIP_2        (TCPIP_1 << 1)
 #define TCPIP_3        (TCPIP_2 << 1)
-#define TCPIP          (TCPIP_0 | TCPIP_1 | TCPIP_2 | TCPIP_3)
 #define HTTP_CONNECTED (TCPIP_3 << 1)
-#define EVEN_ODD_BEGIN (HTTP_CONNECTED << 1)     // Remember to output in even_odd mode
-#define EVEN_ODD_END   (EVEN_ODD_BEGIN << 1)     // Exit even odd mode
+#define EVEN_ODD_BEGIN (HTTP_CONNECTED << 1) // Remember to output in even_odd mode
+#define EVEN_ODD_END   (EVEN_ODD_BEGIN << 1) // Exit even odd mode
 
-#define ALL  (CONSOLE | AUX_PORT | TCPIP | HTTP_CONNECTED)
-#define SOME (CONSOLE | TCPIP)
-
+#define ALL      (CONSOLE | AUX_PORT | TCPIP | HTTP_CONNECTED)
+#define TCPIP    (TCPIP_0 | TCPIP_1 | TCPIP_2 | TCPIP_3)
+#define SOME     (CONSOLE | TCPIP)
+#define AUX_PORT (AUX | BLUETOOTH | RS485)
 /*
  *  Global Variables
  */

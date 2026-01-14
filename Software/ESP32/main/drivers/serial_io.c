@@ -174,8 +174,8 @@ void serial_aux_init(void)
         uart_param_config(uart_aux, &uart_BT_config);  // 115200 baud rate
         break;
 
-      case RS488:
-        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RS488 port enabled\r\n");))
+      case RS485:
+        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RS485 port enabled\r\n");))
         uart_param_config(uart_aux, &uart_aux_config); // 115200 baud rate
         break;
     }
