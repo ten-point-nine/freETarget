@@ -145,8 +145,30 @@ void serial_io_init(void)
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Console port initialized");)) return;
 }
 
+/******************************************************************************
+ *
+ * @function: serial_aux_init
+ *
+ * @brief: Initalize the AUX port
+ *
+ * @return: None
+ *
+ *******************************************************************************
+ *
+ * The serial port is initialized and the interrupt
+ * driver assigned.
+ *
+ * IMPORTANT
+ *
+ * The basic 115200, N, 8, 1 is set up by th3 ESP32 boot prom, and this
+ * function exists to add in the parts needed for the target.
+ *
+ ******************************************************************************/
 void serial_aux_init(void)
 {
+  /*
+   *  Check to see if the AUX port is enabled
+   */
   if ( (json_aux_mode & AUX_PORT) == 0 )
   {
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX Port not enabled");))
@@ -555,7 +577,7 @@ void serial_to_all(char *str,        // String to output
 
   if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
   {
-      RS485_transmit(RS485_TRANSMIT);            // Set RS485 to transmit
+    RS485_transmit(RS485_TRANSMIT);              // Set RS485 to transmit
     uart_write_bytes(uart_aux, (const char *)str, strlen(str));
   }
 
@@ -589,9 +611,17 @@ void serial_to_all(char *str,        // String to output
  ******************************************************************************/
 void RS485_transmit_off(void)
 {
+  printf("  OFF");
+  RS485_transmit(RS485_RECEIVE);    // Set RS485 to receive
 
-  RS485_transmit(RS485_RECEIVE); // Set RS485 to receive
-printf("  OFF");
+  while ( 1 )
+  {
+    RS485_transmit(RS485_RECEIVE);  // Set RS485 to receive
+    vTaskDelay(1);
+    RS485_transmit(RS485_TRANSMIT); // Set RS485 to receive
+    vTaskDelay(1);
+  }
+
   return;
 }
 

@@ -86,7 +86,7 @@ const DIO_struct_t dio35 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .ini
 const DIO_struct_t dio36 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Can only be input
 const DIO_struct_t dio37 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
 const DIO_struct_t dio38 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio39 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Can only be input // AMB
+const DIO_struct_t dio39 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Can only be input // AMB
 
 const DIO_struct_t dio40 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio41 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
@@ -182,9 +182,9 @@ const gpio_struct_t gpio_table[] = {
     {"TXD",          GPIO_NUM_43, NULL,                      COMMON        }, // UART Transmit   Initialized in serial_io_init
     {"RXD",          GPIO_NUM_44, NULL,                      COMMON        }, // UART Receive
     {"LDAC*",        GPIO_NUM_42, (void *)&dio42,            LDAC_GPIO     }, // Load DAC*
-    {"SPARE0",       GPIO_NUM_41, (void *)&dio41,            COMMON        }, //
+    {"RS485",        GPIO_NUM_41, (void *)&dio41,            COMMON        }, //
     {"FACE_HALF",    GPIO_NUM_40, (void *)&dio40,            FACE_HALF_GPIO}, // FACE Interrupt
-    {"RS485",        GPIO_NUM_39, (void *)&dio39,            COMMON        }, // RS485 direction control
+    {"SPARE",        GPIO_NUM_39, (void *)&dio39,            COMMON        }, // Spare, Output only
     {"A",            GPIO_NUM_38, (void *)&dio38,            COMMON        }, // Auxilary Input A
     {"B",            GPIO_NUM_37, (void *)&dio37,            COMMON        }, // Auxilary Input B
     {"C",            GPIO_NUM_36, (void *)&dio36,            COMMON        }, // Auxilary Input C
