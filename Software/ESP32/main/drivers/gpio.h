@@ -81,6 +81,10 @@ extern volatile unsigned int step_count; // Number of steps before stopping
 #define RUN_MASK (BIT_NORTH_LO | BIT_EAST_LO | BIT_SOUTH_LO | BIT_WEST_LO) // Include pcnt_lo bits and exclude pcnt_hi bits
 #define REF_CLK  GPIO_NUM_8
 
+#define RS485_CONTROL  GPIO_NUM_39                                         // RS485 Transmit control
+#define RS485_TRANSMIT 1
+#define RS485_RECEIVE  0                                                   // Control line settings
+
 #define PAPER     GPIO_NUM_12                                              // Paper advance drive active high
 #define PAPER_ON  1
 #define PAPER_OFF 0

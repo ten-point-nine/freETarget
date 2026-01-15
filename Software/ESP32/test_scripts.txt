@@ -33,6 +33,6 @@ Tabata Restart   {"TABATA_ENABLE":1}
 
 {"}
 Start a download {"DOWNLOAD":1234567}
-RS488 {"AUX_MODE":4}
+RS485 {"AUX_MODE":8}
 
 {"ECHO":0}

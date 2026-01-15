@@ -27,27 +27,29 @@ void serial_port_test(void);                         // Loopback the AUX port
 bool get_string(char destination[], int size);       // Collect a string from the input ports
 void serial_bt_config(unsigned int baud_rate);       // Initialize the Bluetooth port for operational configuration
 void check_new_connection(void);                     // Check to see if a new connection has been made
+void RS485_transmit(bool new_state);                 // Control the RS485 transmitter
+void RS485_transmit_off(void);                       // Turn off the RS485 transmitter after a delay
 
 /*
  *  Definitions
  *              CONSOLE   AUX    TCPIP
  */
-#define CONSOLE        0x0001                    // 0x1
-#define AUX            (CONSOLE << 1)            // 0x2
-#define BLUETOOTH      (AUX + 1)                 // 0x3
-#define RS488          (BLUETOOTH + 1)           // 0x4
-#define AUX_PORT       (AUX | BLUETOOTH | RS488) // 0x6
-#define TCPIP_0        (RS488 << 4)              // 0x8
-#define TCPIP_1        (TCPIP_0 << 1)
-#define TCPIP_2        (TCPIP_1 << 1)
-#define TCPIP_3        (TCPIP_2 << 1)
-#define TCPIP          (TCPIP_0 | TCPIP_1 | TCPIP_2 | TCPIP_3)
-#define HTTP_CONNECTED (TCPIP_3 << 1)
-#define EVEN_ODD_BEGIN (HTTP_CONNECTED << 1)     // Remember to output in even_odd mode
-#define EVEN_ODD_END   (EVEN_ODD_BEGIN << 1)     // Exit even odd mode
+#define CONSOLE        0x0001                // 0x1
+#define AUX            (CONSOLE << 1)        // 0x2
+#define BLUETOOTH      (AUX << 1)            // 0x4
+#define RS485          (BLUETOOTH << 1)      // 0x8
+#define TCPIP_0        (RS485 << 1)          // 0x10
+#define TCPIP_1        (TCPIP_0 << 1)        // 0x20
+#define TCPIP_2        (TCPIP_1 << 1)        // 0x40
+#define TCPIP_3        (TCPIP_2 << 1)        // 0x80
+#define HTTP_CONNECTED (TCPIP_3 << 1)        // 0x100
+#define EVEN_ODD_BEGIN (HTTP_CONNECTED << 1) // Remember to output in even_odd mode
+#define EVEN_ODD_END   (EVEN_ODD_BEGIN << 1) // Exit even odd mode
 
-#define ALL  (CONSOLE | AUX_PORT | TCPIP | HTTP_CONNECTED)
-#define SOME (CONSOLE | TCPIP)
+#define AUX_PORT (AUX | BLUETOOTH | RS485)   // 0xE
+#define SOME     (CONSOLE | TCPIP)
+#define TCPIP    (TCPIP_0 | TCPIP_1 | TCPIP_2 | TCPIP_3)
+#define ALL      (CONSOLE | AUX_PORT | TCPIP | HTTP_CONNECTED)
 
 /*
  *  Global Variables

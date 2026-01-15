@@ -95,6 +95,7 @@ static queue_struct_t in_buffer;  // TCPIP input buffer
 static queue_struct_t out_buffer; // TCPIP input buffer
 
 unsigned int connection_list;     // Bitmask of existing connections
+time_count_t RS485_timer = 0;     // Timer to turn off RS485 transmitter
 
 /******************************************************************************
  *
@@ -165,18 +166,21 @@ void serial_aux_init(void)
     switch ( json_aux_mode )
     {
       case AUX:
-        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX port enabled\r\n");))
+        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX port enabled");))
         uart_param_config(uart_aux, &uart_aux_config); // 115200 baud rate
         break;
 
       case BLUETOOTH:
-        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BLUETOOTH port enabled\r\n");))
+        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BLUETOOTH port enabled");))
         uart_param_config(uart_aux, &uart_BT_config);  // 115200 baud rate
         break;
 
-      case RS488:
-        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RS488 port enabled\r\n");))
+      case RS485:
+        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RS485 port enabled");))
+        DLT(DLT_INFO, SEND(RS485, sprintf(_xs, "RS485 port here");))
         uart_param_config(uart_aux, &uart_aux_config); // 115200 baud rate
+        ft_timer_new(&RS485_timer, 0);                 // Prime the RS485 timer
+        RS485_transmit_off();                          // Ensure we are in receive mode
         break;
     }
   }
@@ -419,13 +423,13 @@ char serial_getch(int ports) // Bit mask of active ports
  *
  * @function: serial_putch
  *
- * @brief:    Send a string to the available serial ports
+ * @brief:    Send a character to the available serial ports
  *
  * @return:   None
  *
  *******************************************************************************
  *
- * Send a string to all of the serial devices that are
+ * Send a character to all of the serial devices that are
  * in use.
  *
  ******************************************************************************/
@@ -448,6 +452,10 @@ void serial_putch(char ch,
 
   if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
   {
+    if ( ports & RS485 )                         // Is this RS488?
+    {
+      RS485_transmit(RS485_TRANSMIT);            // Set RS485 to transmit
+    }
     uart_write_bytes(uart_aux, (const char *)&ch, 1);
   }
 
@@ -461,7 +469,20 @@ void serial_putch(char ch,
    */
   return;
 }
-
+/*******************************************************************************
+ *
+ * @function: serial_to_all
+ *
+ * @brief:    Send a string to the available serial ports
+ *
+ * @return:   None
+ *
+ *******************************************************************************
+ *
+ * Send a string to all of the serial devices that are
+ * in use.
+ *
+ ******************************************************************************/
 void serial_to_all(char *str,        // String to output
                    int   ports       // List of ports to output to
 )
@@ -534,6 +555,7 @@ void serial_to_all(char *str,        // String to output
 
   if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
   {
+      RS485_transmit(RS485_TRANSMIT);            // Set RS485 to transmit
     uart_write_bytes(uart_aux, (const char *)str, strlen(str));
   }
 
@@ -552,7 +574,47 @@ void serial_to_all(char *str,        // String to output
    */
   return;
 }
+/*******************************************************************************
+ *
+ * @function: RS485_transmit
+ *
+ * @brief:    Turn off the RS485 transmitter
+ *
+ * @return:   None
+ *
+ *******************************************************************************
+ *
+ * Control the RS485 transmit line. Only change the state if it is different
+ *
+ ******************************************************************************/
+void RS485_transmit_off(void)
+{
 
+  RS485_transmit(RS485_RECEIVE); // Set RS485 to receive
+printf("  OFF");
+  return;
+}
+
+/*
+ * Set the RS485 transmit line
+ */
+void RS485_transmit(bool new_state)
+{
+  bool old_state = -1;
+
+  if ( new_state != old_state )               // Only change state if different
+  {
+    printf("  %s", (new_state == RS485_TRANSMIT) ? "ON" : "OFF");
+    old_state = new_state;
+    gpio_set_level(RS485_CONTROL, new_state); // Set RS485 to transmit
+    if ( new_state == RS485_TRANSMIT )        // Is it transmit?
+    {
+      RS485_timer = 2;                        // Set timer to turn off transmitter
+    }
+  }
+
+  return;
+}
 /*******************************************************************************
  *
  * @function: tcpip_app_2_queue

@@ -74,6 +74,7 @@ static synchronous_task_t task_list[] =
         {BAND_10ms,   multifunction_switch_tick}, // Look for MFS changes
         {BAND_10ms,   multifunction_switch     },
         {BAND_10ms,   paper_drive_tick         }, // Drive the paper drive motor
+        {BAND_10ms,   RS485_transmit_off       }, // Turn off RS485 transmitter
         {BAND_500ms,  toggle_status_LEDs       }, // Blink the LEDs
         {BAND_500ms,  tabata_task              }, // Manage the Tabata timer
         {BAND_500ms,  rapid_fire_task          }, // Manage the rapid fire timer
@@ -379,10 +380,10 @@ int ft_timer_new(time_count_t *new_timer, // Pointer to new down counter
     return 0;
   }
 
-  for ( i = 0; i != N_TIMERS; i++ )    // Look through the space
+  for ( i = 0; i != N_TIMERS; i++ )            // Look through the space
   {
-    if ( (timers[i] == 0)              // Got an empty timer slot
-         || (timers[i] == new_timer) ) // or it already exists
+    if ( (timers[i] == 0)                      // Got an empty timer slot
+         || (timers[i] == new_timer) )         // or it already exists
     {
       timers[i]  = new_timer;                  // Add it in
       *new_timer = duration - (duration % 10); // Set the timer value (round to 10ms)
