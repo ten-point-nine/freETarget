@@ -28,7 +28,7 @@ extern int          board_revision; // Board revision number
 #define MASK_520 (1 << 15) // First Production
 #define MASK_600 (1 << 6)  // Second Production Board
 #define MASK_610 (1 << 3)  // Second Production Board with thermal isolation
-
+#define MASK_620 (0)       // Third production board with MAX485
 /*
  * Processor Variants
  */
@@ -45,10 +45,12 @@ extern int          board_revision; // Board revision number
 
 #define MCP4728 ((MASK_500 | MASK_510 | MASK_520) & board_mask)               // Microchip MCP4728 4 channel Dac
 #define MCP4725 ((MASK_600 | MASK_610) & board_mask)                          // Microchip MCP4725 1 channel Dac
+#define MAX485  (MASK_600 | MASK_610 | MASK_620)                              // MAX485 control line on V6 only
 
 #define VREF_FB        ((MASK_600) & board_mask)                              // VREF Feedback
 #define LDAC_GPIO      (0)                                                    // LDAC Control no longer used
 #define FACE_HALF_GPIO (MASK_500 | MASK_510 | MASK_520)                       // FACE GPIO
 
 #define COMMON (MASK_500 | MASK_510 | MASK_520 | MASK_600 | MASK_610)         // Common to all boards
+
 #endif

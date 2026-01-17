@@ -27,7 +27,7 @@ void serial_port_test(void);                         // Loopback the AUX port
 bool get_string(char destination[], int size);       // Collect a string from the input ports
 void serial_bt_config(unsigned int baud_rate);       // Initialize the Bluetooth port for operational configuration
 void check_new_connection(void);                     // Check to see if a new connection has been made
-void RS485_transmit(bool new_state);                 // Control the RS485 transmitter
+void RS485_transmit(int new_state);                 // Control the RS485 transmitter
 void RS485_transmit_off(void);                       // Turn off the RS485 transmitter after a delay
 
 /*

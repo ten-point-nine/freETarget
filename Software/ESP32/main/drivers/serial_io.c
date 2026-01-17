@@ -199,7 +199,6 @@ void serial_aux_init(void)
 
       case RS485:
         DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RS485 port enabled");))
-        DLT(DLT_INFO, SEND(RS485, sprintf(_xs, "RS485 port here");))
         uart_param_config(uart_aux, &uart_aux_config); // 115200 baud rate
         ft_timer_new(&RS485_timer, 0);                 // Prime the RS485 timer
         RS485_transmit_off();                          // Ensure we are in receive mode
@@ -611,30 +610,19 @@ void serial_to_all(char *str,        // String to output
  ******************************************************************************/
 void RS485_transmit_off(void)
 {
-  printf("  OFF");
-  RS485_transmit(RS485_RECEIVE);    // Set RS485 to receive
-
-  while ( 1 )
-  {
-    RS485_transmit(RS485_RECEIVE);  // Set RS485 to receive
-    vTaskDelay(1);
-    RS485_transmit(RS485_TRANSMIT); // Set RS485 to receive
-    vTaskDelay(1);
-  }
-
+  RS485_transmit(RS485_RECEIVE); // Set RS485 to receive
   return;
 }
 
 /*
  * Set the RS485 transmit line
  */
-void RS485_transmit(bool new_state)
+void RS485_transmit(int new_state)
 {
-  bool old_state = -1;
+  static int old_state = -1;
 
   if ( new_state != old_state )               // Only change state if different
   {
-    printf("  %s", (new_state == RS485_TRANSMIT) ? "ON" : "OFF");
     old_state = new_state;
     gpio_set_level(RS485_CONTROL, new_state); // Set RS485 to transmit
     if ( new_state == RS485_TRANSMIT )        // Is it transmit?
@@ -645,6 +633,7 @@ void RS485_transmit(bool new_state)
 
   return;
 }
+
 /*******************************************************************************
  *
  * @function: tcpip_app_2_queue
