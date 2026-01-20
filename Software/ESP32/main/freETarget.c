@@ -77,7 +77,7 @@ extern int isr_state;
 volatile unsigned int run_state = 0; // Current operating state
 
 /*
- *  Function Prototypes
+ * Function Prototypes
  */
 static unsigned int set_mode(void); // Set the target running mode
 static unsigned int arm(void);      // Arm the circuit for a shot
@@ -155,13 +155,16 @@ void freeETarget_init(void)
   /*
    *  Set up the long running timers
    */
-  ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND * 60l, NULL);                 // Keep alive timer
-  ft_timer_new(&power_save, (time_count_t)(json_power_save) * (time_count_t)ONE_SECOND * 60L, NULL); // Power save timer
-  ft_timer_new(&time_since_last_shot, HTTP_CLOSE_TIME * 60 * ONE_SECOND, NULL);                      // 15 minutes since last shot
+  ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND * 60l, NULL, "keep alive");                      // Keep alive timer
+  ft_timer_new(&power_save, (time_count_t)(json_power_save) * (time_count_t)ONE_SECOND * 60L, &bye_tick, "power save"); // Power save timer
+  ft_timer_new(&time_since_last_shot, HTTP_CLOSE_TIME * 60 * ONE_SECOND, NULL, "time since last shot"); // 15 minutes since last shot
+  ft_timer_new(&time_to_go, 0, NULL, "time to go");                                                     // Time remaining in session
+  ft_timer_new(&shot_timer, MAX_WAIT_TIME, NULL, "shot timer");                                         // Wait for the shot to arrive
+  ft_timer_new(&ring_timer, MAX_RING_TIME, NULL, "ring timer");                                         // Wait for the ringing to stop
 
-                                                                                                     /*
-                                                                                                      * Run the power on self test
-                                                                                                      */
+  /*
+   * Run the power on self test
+   */
   POST_counters();            // POST counters does not return if there is an error
   if ( check_12V() == false ) // Verify the 12 volt supply
   {
@@ -710,7 +713,7 @@ void tabata_task(void)
     {
       tabata_state_machine = 1;                                                      // Go back to the beginning
     }
-    ft_timer_new(&tabata_timer, (*tabata_state[tabata_state_machine].timer) * ONE_SECOND, NULL);
+    ft_timer_new(&tabata_timer, (*tabata_state[tabata_state_machine].timer) * ONE_SECOND, NULL, "tabata timer");
     set_status_LED(tabata_state[tabata_state_machine].status_LED);
     if ( json_LED_PWM >= 0 )
     {
@@ -828,7 +831,7 @@ void rapid_fire_task(void)
     }
     else
     {
-      ft_timer_new(&rapid_timer, (*rapid_state[rapid_state_machine].timer) * ONE_SECOND, NULL);
+      ft_timer_new(&rapid_timer, (*rapid_state[rapid_state_machine].timer) * ONE_SECOND, NULL, "rapid timer");
       set_status_LED(rapid_state[rapid_state_machine].status_LED);
       set_LED_PWM_now(rapid_state[rapid_state_machine].LED_bright * json_LED_PWM); // Control the lights
 

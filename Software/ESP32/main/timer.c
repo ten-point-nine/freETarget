@@ -35,9 +35,6 @@
 #define FREQUENCY 1000ul                 // 1000 Hz
 #define N_TIMERS  32                     // Keep space for 32 timers
 
-#define MAX_WAIT_TIME 10                 // Wait up to 10 ms for the input to arrive
-#define MAX_RING_TIME 50                 // Wait 50 ms for the ringing to stop
-
 #define BAND_10ms   1                    // vTaskDelay in 10 ms
 #define BAND_100ms  (TICK_10ms * 10)     // vTaskDelay in 100 ms
 #define BAND_250ms  (TICK_10ms * 25)     // vTaskDelay in 250 ms
@@ -62,14 +59,13 @@ typedef struct
 {
   time_count_t *run_time;                // Pointer to running timer
   void (*callback)(void);                // Function to execute when time hits zero
+  char *name;
 } run_time_clock_t;
 
 /*
  * Local Variables
  */
 static run_time_clock_t timers[N_TIMERS];   // Active timer list (allow only positive time)
-time_count_t            shot_timer;         // Wait for the sound to hit all sensors
-time_count_t            ring_timer;         // Let the ring on the backstop end
 static state            isr_state;          // What sensor state are we in
 static time_count_t     base_time = 0;      // Base time to show elapsed time
 time_count_t            time_to_go;         // Time remaining in event in seconds
@@ -82,7 +78,6 @@ static synchronous_task_t task_list[] = {
     {BAND_500ms,  toggle_status_LEDs       }, // Blink the LEDs
     {BAND_500ms,  tabata_task              }, // Manage the Tabata timer
     {BAND_500ms,  rapid_fire_task          }, // Manage the rapid fire timer
-    {BAND_1000ms, bye_tick                 }, // See if it is time to go to sleep
     {BAND_1000ms, check_12V                }, // Monitor the 12V supply
     {BAND_1000ms, send_keep_alive          }, // Send a keep alive message
     {BAND_1000ms, check_new_connection     }, // Check for a new WiFi connection
@@ -136,8 +131,6 @@ void freeETarget_timer_init(void)
   timer_enable_intr(TIMER_GROUP_0, TIMER_1);             // Interrupt associated with this interrupt
   timer_isr_callback_add(TIMER_GROUP_0, TIMER_1, freeETarget_timer_isr_callback, NULL, 0);
   timer_start(TIMER_GROUP_0, TIMER_1);
-  ft_timer_new(&shot_timer, MAX_WAIT_TIME, NULL);        // Wait for the shot to arrive
-  ft_timer_new(&ring_timer, MAX_RING_TIME, NULL);        // Wait for the ringing to stop
   shot_in  = 0;
   shot_out = 0;
 
@@ -156,6 +149,21 @@ void freeETarget_timer_pause(void) // Stop the timer
 void freeETarget_timer_start(void) // Start the timer
 {
   timer_start(TIMER_GROUP_0, TIMER_1);
+  return;
+}
+
+void show_timers(void)             // Show the current timers
+{
+  unsigned int i;
+
+  SEND(ALL, sprintf(_xs, "\r\nCurrent Timers:\r\n");)
+  for ( i = 0; i != N_TIMERS; i++ )
+  {
+    if ( timers[i].run_time != 0 ) // Valid timer
+    {
+      SEND(ALL, sprintf(_xs, "  %s: %ld\r\n", timers[i].name, *timers[i].run_time);)
+    }
+  }
   return;
 }
 
@@ -265,22 +273,23 @@ void freeETarget_timers(void *pvParameters)
    */
   while ( 1 )
   {
-    IF_NOT(IN_STARTUP)                     // Dont run the timers if we are in startup
+    IF_NOT(IN_STARTUP)                       // Dont run the timers if we are in startup
     {
-      for ( i = 0; i != N_TIMERS; i++ )    // Refresh the timers.  Decriment in 10ms increments
+      for ( i = 0; i != N_TIMERS; i++ )      // Refresh the timers.  Decriment in 10ms increments
       {
-        if ( timers[i].run_time != 0 )     // The timer has a valid pointer
+        if ( timers[i].run_time != 0 )       // The timer has a valid pointer
         {
-          if ( *timers[i].run_time > 0 )   // And is non-sero
+          if ( *timers[i].run_time > 0 )     // And is non-sero
           {
-            (*timers[i].run_time)--;       // Decriment the timer
-          }
-          if ( *timers[i].run_time <= 0 )  // Timer has expired
-          {
-            *timers[i].run_time = 0;       // Set the timer to zero
-            if ( timers[i].callback != 0 ) // If there is a function to call
+            (*timers[i].run_time)--;         // Decriment the timer
+
+            if ( *timers[i].run_time <= 0 )  // Timer has expired
             {
-              timers[i].callback();        // Call the function
+              *timers[i].run_time = 0;       // Set the timer to zero
+              if ( timers[i].callback != 0 ) // If there is a function to call
+              {
+                timers[i].callback();        // Call the function
+              }
             }
           }
         }
@@ -378,7 +387,9 @@ void freeETarget_synchronous(void *pvParameters)
  *-----------------------------------------------------*/
 int ft_timer_new(time_count_t *new_timer, // Pointer to new down counter
                  long          duration,  // Duration of the timer
-                 void *(callback)())      // What to do when we hit zero
+                 void *(callback)(),      // What to do when we hit zero
+                 char *name               // Timer name
+)
 {
   unsigned int i;
 
@@ -394,6 +405,7 @@ int ft_timer_new(time_count_t *new_timer, // Pointer to new down counter
     {
       timers[i].run_time = new_timer;                  // Add it in
       timers[i].callback = callback;                   // Set the callback
+      timers[i].name     = name;                       // Record the name
       *new_timer         = duration - (duration % 10); // Set the timer value (round to 10ms)
       return 1;
     }

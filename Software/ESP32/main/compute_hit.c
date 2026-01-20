@@ -131,21 +131,20 @@ void init_sensors(void)
  *
  *--------------------------------------------------------------*/
 
-unsigned int compute_hit(shot_record_t *shot // Storing the results
-)
+unsigned int compute_hit(shot_record_t *shot)       // Storing the results
 {
-  double reference;                          // Time of reference counter
-  int    location;                           // Sensor chosen for reference location
+  double reference;                                // Time of reference counter
+  int    location;                                 // Sensor chosen for reference location
   int    i, count;
-  double estimate;                           // Estimated position
-  double last_estimate, error;               // Location error
-  double x_avg, y_avg;                       // Running average location
-  double z_offset_clock;                     // Time offset between paper and sensor plane
+  double estimate;                                 // Estimated position
+  double last_estimate, error;                     // Location error
+  double x_avg, y_avg;                             // Running average location
+  double z_offset_clock;                           // Time offset between paper and sensor plane
 
   x_avg = 0;
   y_avg = 0;
 
-  ft_timer_new(&wdt, 20, NULL);
+  ft_timer_new(&wdt, 20, NULL, "compute hit wdt"); // Watchdog timer
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "compute_hit()");))
 
@@ -488,10 +487,10 @@ void prepare_score(shot_record_t *shot,        //  record
   {
     while ( my_ring != whos_ring )
     {
-      token_take();                       // Grab the token ring
-      ft_timer_new(&wdt, 2 * ONE_SECOND, NULL); // 2 second watchdog
-      while ( (wdt != 0)                  // Wait up to 2 seconds
-              && (whos_ring != my_ring) ) // Or we own the ring
+      token_take();                                                // Grab the token ring
+      ft_timer_new(&wdt, 2 * ONE_SECOND, NULL, "Watch Dog Timer"); // 2 second watchdog
+      while ( (wdt != 0)                                           // Wait up to 2 seconds
+              && (whos_ring != my_ring) )                          // Or we own the ring
       {
         token_poll();
       }

@@ -721,7 +721,7 @@ void DCmotor_on_off(bool         on,      // on == true, turn on motor drive
   if ( on == true )
   {
     gpio_set_level(PAPER, PAPER_ON); // Turn it on
-    ft_timer_new(&paper_time, MS_TO_TICKS(duration), NULL);
+    ft_timer_new(&paper_time, MS_TO_TICKS(duration), NULL, "paper_time");
     motor_running = true;
   }
   else
@@ -774,7 +774,7 @@ void stepper_pulse(void)
   }
 
   DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "step_time %d   step_count: %d", step_time, step_count);))
-  ft_timer_new(&paper_time, MS_TO_TICKS(step_time), NULL);
+  ft_timer_new(&paper_time, MS_TO_TICKS(step_time), NULL, "step_time");
 
   if ( step_count != 0 )
   {

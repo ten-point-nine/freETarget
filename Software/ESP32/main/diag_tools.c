@@ -80,6 +80,7 @@ static const self_test_t test_list[] = {
     {"Turn the oscillator on and off",    &timer_cycle_oscillator  },
     {"Turn the RUN lines on and off",     &timer_run_all           },
     {"Show the current time",             &show_time               },
+    {"Show current timers",               &show_timers             },
     {"- Communiations Tests",             0                        },
     {"AUX serial port test",              &serial_port_test        },
     {"BlueTooth configuration",           &BlueTooth_configuration },

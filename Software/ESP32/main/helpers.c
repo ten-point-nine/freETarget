@@ -287,7 +287,7 @@ void hello(void)
 
   set_status_LED(LED_READY);
   set_LED_PWM_now(json_LED_PWM);
-  ft_timer_new(&power_save, json_power_save * (time_count_t)ONE_SECOND * 60L, NULL);
+  power_save = json_power_save * (time_count_t)ONE_SECOND * 60L;
   run_state &= ~IN_SLEEP; // Out of sleep and back in operation
   run_state |= IN_OPERATION;
   return;
@@ -317,7 +317,7 @@ void send_keep_alive(void)
   {
     target_name(str);
     SEND(TCPIP, sprintf(_xs, "{\"KEEP_ALIVE\":%d, \"NAME\":\"%s\"}", keep_alive_count++, str);)
-    ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND, NULL);
+    keep_alive = (time_count_t)json_keep_alive * ONE_SECOND;
   }
   return;
 }
@@ -334,42 +334,32 @@ void send_keep_alive(void)
  * This function allows the user to remotly shut down the unit
  * when not in use.
  *
- * This is called every second from the synchronous scheduler
+ * There are two modes of operation:
+ * 1. Forced Bye - When the power save timer runs out
+ * 2. Normal Bye - When commanded by the user via the MFS switch
  *
  *--------------------------------------------------------------*/
-static enum bye_state {
-  BYE_BYE = 0, // Wait for the timer to run out
-  BYE_HOLD,    // Wait for the MFS to be pressed
-  BYE_START    // Go back into service
-};
+static enum {
+  BYE_BYE = 0,                    // Wait for the timer to run out
+  BYE_HOLD,                       // Wait for the MFS to be pressed
+  BYE_START                       // Go back into service
+} bye_state;
 
-void bye_tick(void)
+void bye_tick(void)               // Call back from the power_save timer
 {
-  if ( time_to_go > 0 )
+  bye_state = BYE_BYE;
+  if ( json_token != TOKEN_NONE ) // Skip if token ring enabled
   {
-    time_to_go--;                // Decriment the time left in the session
+    return;
   }
   bye(0);
+  return;
 }
 
 void bye(unsigned int force_bye) // Set to true to force a shutdown
 {
-  static int bye_state = BYE_BYE;
-  char       str[SHORT_TEXT];
 
-  /*
-   * The BYE function does not work if we are a token ring.
-   */
-  if ( force_bye == 0 )             // Regular
-  {
-    if ( (json_token != TOKEN_NONE) // Skip if token ring enabled
-         || (json_power_save == 0)  // Power down has not been enabled
-         || (power_save != 0) )     // Power down has not run out
-    {
-      bye_state = BYE_BYE;
-      return;
-    }
-  }
+  char str[SHORT_TEXT];
 
   switch ( bye_state )
   {
@@ -433,7 +423,7 @@ void echo_serial(int duration, // Duration in clock ticks
   unsigned char ch;
   time_count_t  test_time;
 
-  ft_timer_new(&test_time, (time_count_t)duration, NULL);
+  ft_timer_new(&test_time, (time_count_t)duration, NULL, "echo serial");
 
   /*
    * Loop and echo the characters
@@ -868,7 +858,7 @@ int get_OTA_serial(int   length,                         // Maximum number of by
   int           bytes_available;                         // Number of bytes available from PC Client
 
   byte_count = 0;                                        // Nothing has arrived yet
-  ft_timer_new(&time_out, OTA_SERIAL_TIMEOUT, NULL);           // Time out timer
+  ft_timer_new(&time_out, OTA_SERIAL_TIMEOUT, NULL, "OTA serial timeout");     // Time out timer
 
   /*
    * Loop and read the data

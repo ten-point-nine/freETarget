@@ -134,6 +134,8 @@
 
 #define HTTP_CLOSE_TIME 15l                        // Time to close the HTTP connection after the last shot
 
+#define MAX_WAIT_TIME 10                 // Wait up to 10 ms for the input to arrive
+#define MAX_RING_TIME 50                 // Wait 50 ms for the ringing to stop
 /*
  *  Types
  */
@@ -204,6 +206,8 @@ EXTERN time_count_t          keep_alive;                            // Keep aliv
 EXTERN time_count_t          power_save;                            // Power save timer
 EXTERN time_count_t          time_since_last_shot;                  // 15 minutes since last shot
 EXTERN time_count_t          session_time[];                        // Time in each session
+EXTERN time_count_t          shot_timer;                            // Wait for the sound to hit all sensors
+EXTERN time_count_t          ring_timer;                            // Let the ring on the backstop end
 EXTERN shot_record_t         record[SHOT_SPACE];
 #ifdef FREETARGET_C
 EXTERN char        *no_yes[]       = {"No", "Yes"};                 // Yes or No
