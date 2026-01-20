@@ -561,10 +561,10 @@ void show_echo(void)
   strcat(_xs, "\"");
   serial_to_all(_xs, ALL);
 
-  SEND(ALL, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);)         // Current software version
+  SEND(ALL, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);)          // Current software version
   esp_ota_get_partition_description(running_partition, &running_app_info);
-  SEND(ALL, sprintf(_xs, "\"OTA BUILD\":        %s, ", running_app_info.version);) // Current OTA identifier
-  SEND(ALL, sprintf(_xs, "\"LOCKED\":           %s \"", no_yes[json_lock != 0]);)  // The JSON is locked
+  SEND(ALL, sprintf(_xs, "\"OTA BUILD\":        %s, ", running_app_info.version);)  // Current OTA identifier
+  SEND(ALL, sprintf(_xs, "\"LOCKED\":            \"%s\"", no_yes[json_lock != 0]);) // The JSON is locked
 
 #if ( INCLUDE_OTA_ECHO )
   OTA_get_versions(running_app_version, new_app_version);
