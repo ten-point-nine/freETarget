@@ -287,7 +287,7 @@ void hello(void)
 
   set_status_LED(LED_READY);
   set_LED_PWM_now(json_LED_PWM);
-  ft_timer_new(&power_save, json_power_save * (time_count_t)ONE_SECOND * 60L);
+  ft_timer_new(&power_save, json_power_save * (time_count_t)ONE_SECOND * 60L, NULL);
   run_state &= ~IN_SLEEP; // Out of sleep and back in operation
   run_state |= IN_OPERATION;
   return;
@@ -317,7 +317,7 @@ void send_keep_alive(void)
   {
     target_name(str);
     SEND(TCPIP, sprintf(_xs, "{\"KEEP_ALIVE\":%d, \"NAME\":\"%s\"}", keep_alive_count++, str);)
-    ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND);
+    ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND, NULL);
   }
   return;
 }
@@ -351,6 +351,7 @@ void bye_tick(void)
   }
   bye(0);
 }
+
 void bye(unsigned int force_bye) // Set to true to force a shutdown
 {
   static int bye_state = BYE_BYE;
@@ -432,7 +433,7 @@ void echo_serial(int duration, // Duration in clock ticks
   unsigned char ch;
   time_count_t  test_time;
 
-  ft_timer_new(&test_time, (time_count_t)duration);
+  ft_timer_new(&test_time, (time_count_t)duration, NULL);
 
   /*
    * Loop and echo the characters
@@ -867,7 +868,7 @@ int get_OTA_serial(int   length,                         // Maximum number of by
   int           bytes_available;                         // Number of bytes available from PC Client
 
   byte_count = 0;                                        // Nothing has arrived yet
-  ft_timer_new(&time_out, OTA_SERIAL_TIMEOUT);           // Time out timer
+  ft_timer_new(&time_out, OTA_SERIAL_TIMEOUT, NULL);           // Time out timer
 
   /*
    * Loop and read the data

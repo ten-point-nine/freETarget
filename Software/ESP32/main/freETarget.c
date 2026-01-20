@@ -155,13 +155,13 @@ void freeETarget_init(void)
   /*
    *  Set up the long running timers
    */
-  ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND * 60l);                 // Keep alive timer
-  ft_timer_new(&power_save, (time_count_t)(json_power_save) * (time_count_t)ONE_SECOND * 60L); // Power save timer
-  ft_timer_new(&time_since_last_shot, HTTP_CLOSE_TIME * 60 * ONE_SECOND);                      // 15 minutes since last shot
+  ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND * 60l, NULL);                 // Keep alive timer
+  ft_timer_new(&power_save, (time_count_t)(json_power_save) * (time_count_t)ONE_SECOND * 60L, NULL); // Power save timer
+  ft_timer_new(&time_since_last_shot, HTTP_CLOSE_TIME * 60 * ONE_SECOND, NULL);                      // 15 minutes since last shot
 
-                                                                                               /*
-                                                                                                * Run the power on self test
-                                                                                                */
+                                                                                                     /*
+                                                                                                      * Run the power on self test
+                                                                                                      */
   POST_counters();            // POST counters does not return if there is an error
   if ( check_12V() == false ) // Verify the 12 volt supply
   {
@@ -688,13 +688,12 @@ void tabata_task(void)
    */
   if ( json_tabata_enable == false )
   {
-    if ( tabata_state_machine != 0 )  // Reset the state machine
+    if ( tabata_state_machine != 0 ) // Reset the state machine
     {
-      tabata_state_machine = 0;       // Reset the Tabata state machine (incremented on entry)
-      run_state &= ~IN_SHOT;          // Take it out of a shot if it was in one
-      freETarget_state = START;       // Force the freeTarget state machine back to start
-      ft_timer_delete(&tabata_timer); // Delete the unused timer
-      set_LED_PWM_now(json_LED_PWM);  // Turn the lights back on
+      tabata_state_machine = 0;      // Reset the Tabata state machine (incremented on entry)
+      run_state &= ~IN_SHOT;         // Take it out of a shot if it was in one
+      freETarget_state = START;      // Force the freeTarget state machine back to start
+      set_LED_PWM_now(json_LED_PWM); // Turn the lights back on
     }
     return;
   }
@@ -711,7 +710,7 @@ void tabata_task(void)
     {
       tabata_state_machine = 1;                                                      // Go back to the beginning
     }
-    ft_timer_new(&tabata_timer, (*tabata_state[tabata_state_machine].timer) * ONE_SECOND);
+    ft_timer_new(&tabata_timer, (*tabata_state[tabata_state_machine].timer) * ONE_SECOND, NULL);
     set_status_LED(tabata_state[tabata_state_machine].status_LED);
     if ( json_LED_PWM >= 0 )
     {
@@ -796,7 +795,6 @@ void rapid_fire_task(void)
       rapid_state_machine = 0;       // Reset the Tabata state machine (incremented on entry)
       run_state &= ~IN_SHOT;         // Take it out of a shot if it was in one
       freETarget_state = START;      // Force the freeTarget state machine back to start
-      ft_timer_delete(&rapid_timer); // Delete the unused timer
       set_LED_PWM_now(json_LED_PWM); // Turn the lights back on
     }
     return;
@@ -830,7 +828,7 @@ void rapid_fire_task(void)
     }
     else
     {
-      ft_timer_new(&rapid_timer, (*rapid_state[rapid_state_machine].timer) * ONE_SECOND);
+      ft_timer_new(&rapid_timer, (*rapid_state[rapid_state_machine].timer) * ONE_SECOND, NULL);
       set_status_LED(rapid_state[rapid_state_machine].status_LED);
       set_LED_PWM_now(rapid_state[rapid_state_machine].LED_bright * json_LED_PWM); // Control the lights
 

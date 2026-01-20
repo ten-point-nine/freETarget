@@ -189,19 +189,19 @@ void serial_aux_init(void)
     {
       case AUX:
         DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX port enabled");))
-        uart_param_config(uart_aux, &uart_aux_config); // 115200 baud rate
+        uart_param_config(uart_aux, &uart_aux_config);        // 115200 baud rate
         break;
 
       case BLUETOOTH:
         DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BLUETOOTH port enabled");))
-        uart_param_config(uart_aux, &uart_BT_config);  // 115200 baud rate
+        uart_param_config(uart_aux, &uart_BT_config);         // 115200 baud rate
         break;
 
       case RS485:
         DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RS485 port enabled");))
-        uart_param_config(uart_aux, &uart_aux_config); // 115200 baud rate
-        ft_timer_new(&RS485_timer, 0);                 // Prime the RS485 timer
-        RS485_transmit_off();                          // Ensure we are in receive mode
+        uart_param_config(uart_aux, &uart_aux_config);        // 115200 baud rate
+        ft_timer_new(&RS485_timer, 0, &(RS485_transmit_off)); // Prime the RS485 timer
+        RS485_transmit_off();                                 // Ensure we are in receive mode
         break;
     }
   }
@@ -627,7 +627,7 @@ void RS485_transmit(int new_state)
     gpio_set_level(RS485_CONTROL, new_state); // Set RS485 to transmit
     if ( new_state == RS485_TRANSMIT )        // Is it transmit?
     {
-      RS485_timer = 2;                        // Set timer to turn off transmitter
+      RS485_timer = RS485_TRANSMIT_TIME;      // Set timer to turn off transmitter
     }
   }
 
@@ -898,7 +898,7 @@ void serial_port_test(void)
   /*
    * Send out the AUX port, back in, and then to the console
    */
-  ft_timer_new(&test_time, ONE_SECOND * 10);
+  ft_timer_new(&test_time, ONE_SECOND * 10, NULL);
   for ( i = 0; i != sizeof(test); i++ )
   {
     serial_putch(test[i], AUX); // Output to the AUX Port

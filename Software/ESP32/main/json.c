@@ -195,8 +195,14 @@ void freeETarget_json(void *pvParameters)
     {
       from_BlueTooth = serial_available(AUX_PORT); // How much from the BlueTooth port?
       ch             = serial_getch(ALL);
-      serial_putch(ch, ALL);
-
+      if ( json_aux_mode != RS485 )                // Not RS485 mode
+      {
+        serial_putch(ch, ALL);                     // Echo back to all ports
+      }
+      else                                         // If in RS485 mode, do not echo back to AUX
+      {
+        serial_putch(ch, SOME);                    // because RS485 diesables receive during transmit
+      }
       /*
        * Parse the stream
        */
