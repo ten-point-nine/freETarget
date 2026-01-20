@@ -611,6 +611,9 @@ void serial_to_all(char *str,        // String to output
  *
  * Control the RS485 transmit line. Only change the state if it is different
  *
+ * If the board is not using RS485 communications, set the driver to TRANSMIT
+ * so that it doesn't collide with the AUX port
+ *
  ******************************************************************************/
 void RS485_transmit_off(void)
 {
@@ -625,13 +628,19 @@ void RS485_transmit(int new_state)
 {
   static int old_state = -1;
 
-  if ( new_state != old_state )               // Only change state if different
+  if ( (json_aux_mode & RS485) == 0 )              // Not operating in RS485 mode?
+  {
+    gpio_set_level(RS485_CONTROL, RS485_TRANSMIT); // Set RS485 to transmit
+    return;
+  }
+
+  if ( new_state != old_state )                    // Only change state if different
   {
     old_state = new_state;
-    gpio_set_level(RS485_CONTROL, new_state); // Set RS485 to transmit
-    if ( new_state == RS485_TRANSMIT )        // Is it transmit?
+    gpio_set_level(RS485_CONTROL, new_state);      // Set RS485 to transmit
+    if ( new_state == RS485_TRANSMIT )             // Is it transmit?
     {
-      RS485_timer = RS485_TRANSMIT_TIME;      // Set timer to turn off transmitter
+      RS485_timer = RS485_TRANSMIT_TIME;           // Set timer to turn off transmitter
     }
   }
 
