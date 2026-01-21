@@ -21,12 +21,13 @@ typedef struct
 /*
  * Global functions
  */
-void          multifunction_init(void);        // Initialize the multifunction switches
-void          multifunction_switch(void);      // Handle the actions of the DIP Switch signal
-void          multifunction_switch_tick(void); // Monitor the switches for long and short presses
-void          multifunction_wait_open(void);   // Wait for both multifunction switches to be open
-mfs_action_t *mfs_find(unsigned int action);   // Find the MFS entry corresponding to the index
-void          mfs_show(void);                  // Show the available settings
+void          multifunction_init(void);          // Initialize the multifunction switches
+void          multifunction_switch(void);        // Handle the actions of the DIP Switch signal
+void          multifunction_switch_tick(void);   // Monitor the switches for long and short presses
+void          multifunction_wait_open(void);     // Wait for both multifunction switches to be open
+mfs_action_t *mfs_find(unsigned int action);     // Find the MFS entry corresponding to the index
+void          mfs_show(void);                    // Show the available settings
+void          mfs_RS485_control(bool direction); // Control RS485 direction
 
 /*
  * Multifunction Switch Use when using DIP Switch for MFS
@@ -66,4 +67,5 @@ void          mfs_show(void);                  // Show the available settings
 #define RAPID_HIGH     24 // Select Rapid Fire LED type
 #define STEPPER_DRIVE  26 // The output drives a stepper motor
 #define STEPPER_ENABLE 28 // The output enables the stepper motor
+#define RS485_SELECT   30 // Select RS488 mode
 #endif

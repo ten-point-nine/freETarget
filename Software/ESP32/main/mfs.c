@@ -67,6 +67,7 @@ const mfs_action_t  mfs_action[] = {
     {RAPID_HIGH,     NULL,           "RAPID HIGH"    }, // The output is active high
     {STEPPER_DRIVE,  NULL,           "STEPPER_DRIVE" }, // The output is used to drive stepper motor
     {STEPPER_ENABLE, NULL,           "STEPPER_ENABLE"}, // The output is used to drive stepper motor enable
+    {RS485_SELECT,   NULL,           "RS488 SELECT"  }, // The output is used to select RS488 direction
     {0,              0,              0               }
 };
 
@@ -129,6 +130,9 @@ void multifunction_init(void)
       case STEPPER_ENABLE:
         gpio_set_level(HOLD_C_GPIO, 0);
         break;
+      case RS485_CONTROL:
+        gpio_set_level(HOLD_C_GPIO, 0);
+        break;
     }
   }
 
@@ -150,6 +154,8 @@ void multifunction_init(void)
       case STEPPER_ENABLE:
         gpio_set_level(HOLD_D_GPIO, 0);
         break;
+      case RS485_CONTROL:
+        gpio_set_level(HOLD_D_GPIO, 0);
     }
   }
 
@@ -548,5 +554,43 @@ void mfs_show(void)
   }
 
   SEND(ALL, sprintf(_xs, "\r\n");)
+  return;
+}
+
+/*-----------------------------------------------------
+ *
+ * @function: mfs_RS485_control
+ *
+ * @brief:    Control the RS485 direction control pin
+ *
+ * @return:   None
+ *
+ *-----------------------------------------------------
+ *
+ * This is a special case to drive teh RS485 direction
+ * control pin for boards before V6.2
+ *
+ *-----------------------------------------------------*/
+void mfs_RS485_control(bool state) // Direction control state
+{
+  if ( json_mfs_hold_c == RS485_SELECT )
+  {
+    gpio_set_level(HOLD_C_GPIO, state);
+    return;
+  }
+
+  if ( json_mfs_hold_d == RS485_SELECT )
+  {
+    gpio_set_level(HOLD_D_GPIO, state);
+    return;
+  }
+
+  /*
+   * Neither MFS line was selected, so default to the built in
+   * selection and hope for the best
+   * */
+
+  gpio_set_level(RS485_CONTROL, state); // Set RS485 to transmit
+
   return;
 }

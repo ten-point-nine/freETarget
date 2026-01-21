@@ -23,6 +23,7 @@
 #include "esp_tls.h"
 
 #include "freETarget.h"
+#include "board_assembly.h"
 #include "helpers.h"
 #include "diag_tools.h"
 #include "serial_io.h"
@@ -30,6 +31,7 @@
 #include "json.h"
 #include "nonvol.h"
 #include "http_server.h"
+#include "mfs.h"
 
 /*
  *  Serial IO port configuration
@@ -628,22 +630,43 @@ void RS485_transmit(int new_state)
 {
   static int old_state = -1;
 
+  /*
+   * Check to see if we are even using RS485
+   */
   if ( (json_aux_mode & RS485) == 0 )              // Not operating in RS485 mode?
   {
-    gpio_set_level(RS485_CONTROL, RS485_TRANSMIT); // Set RS485 to transmit
+    gpio_set_level(RS485_CONTROL, RS485_TRANSMIT); // Set RS485 to transmit so as to avoid contention on the RX line
     return;
   }
 
-  if ( new_state != old_state )                    // Only change state if different
+  /*
+   *  Yes RS485 is enabled
+   */
+  if ( new_state == old_state )                 // No change, do nothing
   {
-    old_state = new_state;
-    gpio_set_level(RS485_CONTROL, new_state);      // Set RS485 to transmit
-    if ( new_state == RS485_TRANSMIT )             // Is it transmit?
+    return;
+  }
+
+  old_state = new_state;
+  if ( MAX485_MFS )                             // Choose how to control RS485
+  {
+    if ( json_mfs_hold_c == RS485_CONTROL )
     {
-      RS485_timer = RS485_TRANSMIT_TIME;           // Set timer to turn off transmitter
+      mfs_RS485_control(new_state);             // Control RS485 via MFS
+    }
+    else
+    {
+      gpio_set_level(RS485_CONTROL, new_state); // Set RS485 to transmit
+    }
+    if ( new_state == RS485_TRANSMIT )          // Is it transmit?
+    {
+      RS485_timer = RS485_TRANSMIT_TIME;        // Set timer to turn off transmitter
     }
   }
 
+  /*
+   * All done
+   */
   return;
 }
 
