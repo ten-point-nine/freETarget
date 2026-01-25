@@ -16,6 +16,7 @@ int          to_int(char h);                                            // Conve
 int          instr(char *s1, char *s2);                                 // Compare two strings
 bool         contains(char *s1, char *s2);                              // Return true if s1 contains s2
 bool         prompt_for_confirm(void);                                  // Prompt for confirmation
+void         get_number(char *prompt, double *value);                   // Get a number from the user
 void         send_keep_alive(void);                                     // Send a keep alive message
 void         bye(unsigned int force_bye);                               // Set to true to force a shutdown
 void         bye_tick(void);                                            // Tick for the bye state machine

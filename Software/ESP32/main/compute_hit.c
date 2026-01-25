@@ -131,7 +131,7 @@ void init_sensors(void)
  *
  *--------------------------------------------------------------*/
 
-unsigned int compute_hit(shot_record_t *shot)       // Storing the results
+unsigned int compute_hit(shot_record_t *shot)      // Storing the results
 {
   double reference;                                // Time of reference counter
   int    location;                                 // Sensor chosen for reference location

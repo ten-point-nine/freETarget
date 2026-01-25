@@ -31,6 +31,7 @@
 #include "bluetooth.h"
 #include "timer.h"
 #include "ota.h"
+#include "calibrate.h" 
 
 /*
  *  Function Prototypes
@@ -60,6 +61,7 @@ const json_message_t JSON[] = {
     {HIDE + LOCK, "\"ANGLE\":",           &json_sensor_angle,          IS_INT32,                 0,                  NONVOL_SENSOR_ANGLE,     45,          0 },
     {SHOW + LOCK, "\"AUX_MODE\":",        &json_aux_mode,              IS_INT32,                 0,                  NONVOL_AUX_PORT_ENABLE,  0,           6 },
     {HIDE,        "\"BYE\":",             0,                           IS_INT32,                 &bye,               0,                       0,           0 },
+    {HIDE,        "\"CALIBRATE\":",       0,                           IS_VOID,                  &calibrate,         0,                       0,           0 },
     {HIDE,        "\"DOWNLOAD\":",        &json_OTA_download_size,     IS_INT32,                 &OTA_serial,        0,                       0,           0 },
     {HIDE,        "\"ECHO\":",            0,                           IS_VOID,                  &show_echo,         0,                       0,           0 },
     {HIDE + LOCK, "\"FACE_STRIKE\":",     &json_face_strike,           IS_INT32,                 0,                  NONVOL_FACE_STRIKE,      0,           0 },

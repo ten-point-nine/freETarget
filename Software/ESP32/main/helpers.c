@@ -26,6 +26,7 @@
 #include "diag_tools.h"
 #include "analog_io.h"
 #include "wifi.h"
+#include "serial_io.h"
 
 #define SHOT_TIME_TO_SECONDS(x) ((float)(x)) / 1000000.0
 
@@ -847,18 +848,18 @@ void watchdog(void)
  *
  *
  *--------------------------------------------------------------*/
-#define OTA_SERIAL_TIMEOUT (time_count_t)10 * ONE_SECOND // 10 second timeout
-static time_count_t time_out;                            // Time out timer
+#define OTA_SERIAL_TIMEOUT (time_count_t)10 * ONE_SECOND                   // 10 second timeout
+static time_count_t time_out;                                              // Time out timer
 
-int get_OTA_serial(int   length,                         // Maximum number of bytes to read
-                   char *s)                              // Place to save the input data
+int get_OTA_serial(int   length,                                           // Maximum number of bytes to read
+                   char *s)                                                // Place to save the input data
 {
-  unsigned char ch;                                      // Inputing character
-  unsigned int  byte_count;                              // Number of bytes read in
-  int           bytes_available;                         // Number of bytes available from PC Client
+  unsigned char ch;                                                        // Inputing character
+  unsigned int  byte_count;                                                // Number of bytes read in
+  int           bytes_available;                                           // Number of bytes available from PC Client
 
-  byte_count = 0;                                        // Nothing has arrived yet
-  ft_timer_new(&time_out, OTA_SERIAL_TIMEOUT, NULL, "OTA serial timeout");     // Time out timer
+  byte_count = 0;                                                          // Nothing has arrived yet
+  ft_timer_new(&time_out, OTA_SERIAL_TIMEOUT, NULL, "OTA serial timeout"); // Time out timer
 
   /*
    * Loop and read the data
@@ -891,4 +892,51 @@ int get_OTA_serial(int   length,                         // Maximum number of by
   }
 
   return byte_count;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: get_number
+ *
+ * @brief:    Get a number from the command line
+ *
+ * @return:   Number entered
+ *
+ *----------------------------------------------------------------
+ *
+ *
+ *--------------------------------------------------------------*/
+void get_number(char *prompt, double *value)
+{
+  char   str[SHORT_TEXT];
+  char  *end_ptr;
+  double val;
+
+  SEND(ALL, sprintf(_xs, "%s", prompt);)
+
+  /*
+   * Loop and get a number
+   */
+  while ( 1 )
+  {
+    /*
+     * Get the input string
+     */
+    get_string(str, sizeof(str));
+
+    /*
+     * Convert to a number
+     */
+    val = strtod(str, &end_ptr);
+    if ( end_ptr != str ) // Got something
+    {
+      *value = val;
+      return;
+    }
+
+    /*
+     * Error, try again
+     */
+    SEND(ALL, sprintf(_xs, "Invalid number, try again:");)
+  }
 }

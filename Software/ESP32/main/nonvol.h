@@ -95,4 +95,5 @@ void nonvol_write_i32(char *name, int *value);    // Write a value to nonvol
 #define NONVOL_TARGET_NAME      "TARGET_NAME"     // Rememver the target name
 #define NONVOL_LOCK             "LOCK"            // Password for the target
 #define NONVOL_RADIUS_ADJUST    "RADIUS_ADJUST"   // Compensate for the diameter of the target
+#define NONVOL_CALIBRATION_DATA "CD"              // Calibration data block
 #endif
