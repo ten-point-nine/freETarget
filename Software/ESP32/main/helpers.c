@@ -940,3 +940,28 @@ void get_number(char *prompt, double *value)
     SEND(ALL, sprintf(_xs, "Invalid number, try again:");)
   }
 }
+
+/*----------------------------------------------------------------
+ *
+ * @function: atan2_2PI
+ *
+ * @brief:    atan2 function that returns 0 to 2PI
+ *
+ * @return:   angle in radians
+ *
+ *----------------------------------------------------------------
+ *
+ * The natice atan2 function returns -PI to +PI.
+ * This function returns 0 to 2PI
+ *
+ *--------------------------------------------------------------*/
+float atan2_2PI(float y, float x)
+{
+  float angle = atan2f(y, x);
+  if ( angle < 0 )
+  {
+    angle += TWO_PI; // Keep in range 0 to 2PI
+  }
+
+  return angle;
+}

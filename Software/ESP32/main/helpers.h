@@ -30,6 +30,7 @@ unsigned int hamming_weight(unsigned int word);                         // Add u
 void         to_binary(unsigned int x, unsigned int bits, char *s);     // Convert a number to a binary string
 void         watchdog(void);                                            // Monitor the target health
 int          get_OTA_serial(int lenght, char *s);                       // String to return the download image
+float        atan2_2PI(float y, float x);                               // atan2 function that returns 0 to 2PI
 
 /*
  * Global helper variables
