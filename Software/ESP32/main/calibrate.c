@@ -6,30 +6,17 @@
  *
  *****************************************************************************/
 #include "math.h"
-#include "analog_io.h"
 #include "stdio.h"
 #include "math.h"
 #include "stdbool.h"
-#include "gpio_types.h"
-#include "driver\gpio.h"
 #include "nvs.h"
 #include "nvs_flash.h"
-
-
 
 #include "freETarget.h"
 #include "helpers.h"
 #include "json.h"
-#include "mfs.h"
 #include "diag_tools.h"
-#include "token.h"
-#include "timer.h"
-#include "compute_hit.h"
-#include "serial_io.h"
-#include "gpio.h"
-#include "http_client.h"
-#include "json.h"
-#include "nonvol.h" 
+#include "nonvol.h"
 
 /*
  *  Function Prototypes
@@ -45,35 +32,38 @@ static void commit_calibration(void);   // Commit the calibration to NONVOL
  */
 typedef struct spline_point
 {
-  float t_x;        // X as recorded on the target
-  float a_x;        // Actual X location
-  float t_y;        // Y as recorded on the target
-  float a_y;        // Actual Y location
-  float t_rho;      // Distance along the spline
-  float t_theta;    // Angle along the spline
-  float a_rho;      // Distance along the spline
-  float a_theta;    // Angle along the spline
-  float scale;      // Scale factor (actual / target) ~1.0
-  float k0, k1, k2; // Spline coeficients
+  float t_x;                     // X as recorded on the target
+  float a_x;                     // Actual X location
+  float t_y;                     // Y as recorded on the target
+  float a_y;                     // Actual Y location
+  float t_rho;                   // Distance along the spline
+  float t_theta;                 // Angle along the spline
+  float a_rho;                   // Distance along the spline
+  float a_theta;                 // Angle along the spline
+  float scale;                   // Scale factor (actual / target) ~1.0
+  float k0, k1, k2;              // Spline coeficients
 } spline_point_t;
+
+#define MAX_CALIBRATION_SHOTS 10 // Maximum number of calibration shots
+#define SPLINE_PADDING        2  // Extra points at start and end
 
 /*
  *  Variables
  */
 
-static spline_point_t spline_points[10]; // Spline points for calibration
-static spline_point_t spline_temp;       // Temporary storage for sorting
+static spline_point_t spline_points[MAX_CALIBRATION_SHOTS + 2]; // Spline points for calibration
+static spline_point_t spline_temp;                              // Temporary storage for sorting
 
-static float calib_shot_x[10];           // X locations of calibration shots
-static float calib_shot_y[10];           // Y locations of calibration shots
-static int   calib_shot_n;               // Number of shots gathered
+static float calib_shot_x[MAX_CALIBRATION_SHOTS];               // X locations of calibration shots
+static float calib_shot_y[MAX_CALIBRATION_SHOTS];               // Y locations of calibration shots
+static int   calib_shot_n;                                      // Number of shots gathered
 
-static float centre_of_mass_t_x;         // Centre of mass of target shots
+static float centre_of_mass_t_x;                                // Centre of mass of target shots
 static float centre_of_mass_t_y;
-static float centre_of_mass_a_x;         // Centre of mass of actual shots
+static float centre_of_mass_a_x;                                // Centre of mass of actual shots
 static float centre_of_mass_a_y;
-static float delta_x, delta_y;           // Delta between centres of mass
-
+static float delta_x, delta_y;                                  // Delta between centres of mass
+static bool  calibration_data_ready = false;                    // Calibration data is ready (default false)
 /*----------------------------------------------------------------
  *
  * @function: calibrate()
@@ -101,7 +91,9 @@ void calibrate(void)
   SEND(ALL, sprintf(_xs, "\r\n1 - Gather shot data");)
   SEND(ALL, sprintf(_xs, "\r\n2 - Input actual shots");)
   SEND(ALL, sprintf(_xs, "\r\n3 - Commit calibration data to NONVOL");)
-  get_number("\r\n\r\nSelect step (1/2/3):", &value);
+  SEND(ALL, sprintf(_xs, "\r\n9 - Exit, no action");)
+
+  get_number("\r\n\r\nSelect step (1/2/3/9):", &value);
 
   switch ( (int)value )
   {
@@ -115,6 +107,10 @@ void calibrate(void)
 
     case 3:
       commit_calibration();
+      return;
+
+    case 9:
+      SEND(ALL, sprintf(_xs, "\r\nExiting calibration. No changes made.");)
       return;
 
     default:
@@ -146,8 +142,9 @@ static void start_calibration(void)
   SEND(ALL, sprintf(_xs, "\r\nStep 1 - Gather Shot Data\r\n");)
   SEND(ALL, sprintf(_xs, "\r\nUse a pistol target");)
   SEND(ALL, sprintf(_xs, "\r\nFire ten shots at random locations around the target.");)
-  SEND(ALL, sprintf(_xs, "\r\nWhen all ten shots are fired, proceed to step 2 to enter the actual locations.");)
+  SEND(ALL, sprintf(_xs, "\r\nWhen all ten shots are fired, proceed to Step 2 to enter the actual locations.");)
   SEND(ALL, sprintf(_xs, "\r\n\r\nStart calibration now...\r\n");)
+
   shot_in  = 0; // Clear out any junk
   shot_out = 0;
   return;
@@ -163,7 +160,13 @@ static void start_calibration(void)
  *
  *----------------------------------------------------------------
  *
- * The calibration is
+ * The calibration is performed by the following steps
+ *
+ * 1 - Gather actual shot locations from the user
+ * 2 - Find the centre of mass for actual and target shots
+ * 3 - Convert to polar coordinates
+ * 4 - Sort by angle
+ * 5 - Find the spline coeficients
  *
  *--------------------------------------------------------------*/
 static void perform_calibration(void)
@@ -174,13 +177,12 @@ static void perform_calibration(void)
   double value;          // User input
   int    i, j;           // Loop counters
 
-  SEND(ALL, sprintf(_xs, "\r\nPerforming Calibration\r\n");)
-  SEND(ALL, sprintf(_xs, "\r\nEnter actual shot locations");)
+  SEND(ALL, sprintf(_xs, "\r\nPerforming Calibration\r\nEnter actual shot locations");)
 
   /*
    *  Validate the shots
    */
-  if ( shot_in < 10 )
+  if ( shot_in < MAX_CALIBRATION_SHOTS )
   {
     SEND(ALL, sprintf(_xs, "\r\nNot enough shots fired (%d). Exiting.", shot_in);)
     return;
@@ -190,22 +192,54 @@ static void perform_calibration(void)
    * Gather actual shot locations
    */
   calib_shot_n = 0;
-  while ( (calib_shot_n < shot_in) && (calib_shot_n < sizeof(calib_shot_x) / sizeof(calib_shot_x[0])) )
+  if ( calibration_data_ready == false )
   {
-    SEND(ALL, sprintf(_xs, "\r\nShot %d X (mm):", calib_shot_n + 1);)
-    get_number("", &value);
-    spline_points[calib_shot_n].a_x = (float)value;
 
-    SEND(ALL, sprintf(_xs, "Shot %d Y (mm):", calib_shot_n + 1);)
-    get_number("", &value);
-    spline_points[calib_shot_n].a_y = (float)value;
+    while ( (calib_shot_n < shot_in) && (calib_shot_n < MAX_CALIBRATION_SHOTS) )
+    {
+      SEND(ALL, sprintf(_xs, "\r\nShot %d X (mm):", calib_shot_n + 1);)
+      get_number("", &value);
+      spline_points[calib_shot_n].a_x = (float)value;
+      spline_points[calib_shot_n].t_x = record[calib_shot_n].x_mm;
 
-    calib_shot_n++;
+      SEND(ALL, sprintf(_xs, "Shot %d Y (mm):", calib_shot_n + 1);)
+      get_number("", &value);
+      spline_points[calib_shot_n].a_y = (float)value;
+      spline_points[calib_shot_n].t_y = record[calib_shot_n].y_mm;
+
+      spline_points[calib_shot_n].t_rho   = sqrtf(spline_points[calib_shot_n].t_x * spline_points[calib_shot_n].t_x +
+                                                  spline_points[calib_shot_n].t_y * spline_points[calib_shot_n].t_y);
+      spline_points[calib_shot_n].t_theta = atan2f(spline_points[calib_shot_n].t_y, spline_points[calib_shot_n].t_x);
+      if ( spline_points[calib_shot_n].t_theta < 0 )
+      {
+        spline_points[calib_shot_n].t_theta += TWO_PI; // Keep in range 0 to 2PI
+      }
+
+      calib_shot_n++;
+    }
+  }
+  else
+  {
+    calib_shot_n = MAX_CALIBRATION_SHOTS;
+    shot_in      = MAX_CALIBRATION_SHOTS;
   }
 
   /*
    *  Find the centre of mass for the shots, Actual and Target
+   *  This shifts the points to be around the centre of mass
    */
+  centre_of_mass_a_x = 0.0f;
+  centre_of_mass_a_y = 0.0f;
+  for ( i = 0; i < calib_shot_n; i++ )
+  {
+    centre_of_mass_a_x += record[i].x_mm;
+    centre_of_mass_a_y += record[i].y_mm;
+  }
+  centre_of_mass_a_x /= calib_shot_n;
+  centre_of_mass_a_y /= calib_shot_n;
+
+  printf("\r\nCentre of Mass Actual X: %.2f mm Y: %.2f mm\r\n", centre_of_mass_a_x, centre_of_mass_a_y);
+
   centre_of_mass_t_x = 0.0f;
   centre_of_mass_t_y = 0.0f;
 
@@ -216,16 +250,10 @@ static void perform_calibration(void)
   }
   centre_of_mass_t_x /= calib_shot_n;
   centre_of_mass_t_y /= calib_shot_n;
+  printf("\r\nCentre of Mass Target X: %.2f mm Y: %.2f mm\r\n", centre_of_mass_t_x, centre_of_mass_t_y);
 
-  centre_of_mass_a_x = 0.0f;
-  centre_of_mass_a_y = 0.0f;
-  for ( i = 0; i < calib_shot_n; i++ )
-  {
-    centre_of_mass_a_x += record[i].x_mm;
-    centre_of_mass_a_y += record[i].y_mm;
-  }
-  centre_of_mass_a_x /= calib_shot_n;
-  centre_of_mass_a_y /= calib_shot_n;
+  json_x_offset = centre_of_mass_a_x - centre_of_mass_t_x; // Correct for target misalignment
+  json_y_offset = centre_of_mass_a_y - centre_of_mass_t_y;
 
   /*
    * Convert to polar coordinates and store recorded locations
@@ -237,6 +265,12 @@ static void perform_calibration(void)
 
     spline_points[i].a_rho   = sqrtf(a_x_mm * a_x_mm + a_y_mm * a_y_mm);
     spline_points[i].a_theta = atan2f(a_y_mm, a_x_mm);
+    if ( spline_points[i].a_theta < 0 )
+    {
+      spline_points[i].a_theta += TWO_PI; // Keep in range 0 to 2PI
+    }
+    printf("Shot %d Actual X: %3.2f mm Y: %3.2f mm Rho: %3.2f mm Theta: %3.2f rad\r\n", i + 1, spline_points[i].a_x, spline_points[i].a_y,
+           spline_points[i].a_rho, spline_points[i].a_theta);
   }
 
   /*
@@ -255,37 +289,47 @@ static void perform_calibration(void)
     }
   }
 
-  /*
-   *  Insert the target values in the right order with the actuals
-   */
+  printf("\r\nShots sorted by angle:\r\n");
   for ( i = 0; i < calib_shot_n; i++ )
   {
-    t_x_mm = record[i].x_mm - centre_of_mass_a_x;
-    t_y_mm = record[i].y_mm - centre_of_mass_a_y;
-    rho    = sqrtf(t_x_mm * t_x_mm + t_y_mm * t_y_mm);
-    theta  = atan2f(t_y_mm, t_x_mm);
+    printf("Shot %d Actual X: %.2f mm Y: %.2f mm Rho: %.2f mm Theta: %.2f rad\r\n", i + 1, spline_points[i].a_x, spline_points[i].a_y,
+           spline_points[i].a_rho, spline_points[i].a_theta);
+  }
 
-    for ( j = 0; j < calib_shot_n; j++ )
-    {
-      if ( j == calib_shot_n - 1 )
-      {
-        spline_points[j].t_x     = t_x_mm;
-        spline_points[j].t_y     = t_y_mm;
-        spline_points[j].t_rho   = rho;
-        spline_points[j].t_theta = theta;
-        spline_points[j].scale   = rho / spline_points[j].a_rho; // Scale factor
-        break;
-      }
-      else if ( spline_points[j].a_theta <= theta && spline_points[j + 1].a_theta >= theta )
-      {
-        spline_points[j].t_x     = t_x_mm;
-        spline_points[j].t_y     = t_y_mm;
-        spline_points[j].t_rho   = rho;
-        spline_points[j].t_theta = theta;
-        spline_points[j].scale   = rho / spline_points[j].a_rho; // Scale factor
-        break;
-      }
-    }
+  /*
+   *  Pad the beginning and end of the list with extra points to prevent singularities
+   *  0->2   1->3   ... n-2->n   n-1->n+1
+   *
+   *  then 0 and 1 are copies of n-2 and n-1 with theta adjusted
+   *  and n+1 and n+2 are copies of 2 and 3 with theta adjusted
+   *
+   */
+  for ( i = calib_shot_n - 1; i >= 0; i-- )
+  {
+    spline_points[i + SPLINE_PADDING] = spline_points[i]; // Shift up
+  }
+
+  printf("\r\nShots shifted: %d\r\n", calib_shot_n);
+  for ( i = 0; i < calib_shot_n + SPLINE_PADDING * 2; i++ )
+  {
+    printf("Shot %d Actual X: %.2f mm Y: %.2f mm Rho: %.2f mm Theta: %.2f rad\r\n", i + 1, spline_points[i].a_x, spline_points[i].a_y,
+           spline_points[i].a_rho, spline_points[i].a_theta);
+  }
+
+  spline_points[0] = spline_points[calib_shot_n - 2 + SPLINE_PADDING]; // Put the last two points at the start
+  spline_points[0].a_theta -= TWO_PI;
+  spline_points[1] = spline_points[calib_shot_n - 1 + SPLINE_PADDING];
+  spline_points[1].a_theta -= TWO_PI;
+  spline_points[calib_shot_n + 0 + SPLINE_PADDING] = spline_points[3]; // Put the first two points at the end
+  spline_points[calib_shot_n + 0 + SPLINE_PADDING].a_theta += TWO_PI;
+  spline_points[calib_shot_n + 1 + SPLINE_PADDING] = spline_points[2];
+  spline_points[calib_shot_n + 1 + SPLINE_PADDING].a_theta += TWO_PI;
+
+  printf("\r\nShots with padding:\r\n");
+  for ( i = 0; i < calib_shot_n + SPLINE_PADDING * 2; i++ )
+  {
+    printf("Shot %d Actual X: %.2f mm Y: %.2f mm Rho: %.2f mm Theta: %.2f rad\r\n", i + 1, spline_points[i].a_x, spline_points[i].a_y,
+           spline_points[i].a_rho, spline_points[i].a_theta);
   }
 
   /*
@@ -317,27 +361,37 @@ static void perform_calibration(void)
  * https://en.wikipedia.org/wiki/Spline_interpolation
  *
  *--------------------------------------------------------------*/
+#define NX 4        // Number of points in the spline segment
+#define NY 3        // Number of equations +1 for augmented matrix
+
 static void find_coeficients(void)
 {
-  float a[3][4];    // Augmented matrix for solving
+  float a[NY][NX];  // Augmented matrix for solving
   int   i, j, k;    // Loop counter
+  int   spline_i;   // Spline point index
   float x0, x1, x2; // X variable, (rho  in this case)
   float y0, y1, y2; // Y variable (scale in this case
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "\r\nCalculating calibration coeficients...\r\n");))
+  printf("\r\nCalculating calibration coeficients...\r\n");
 
   /*
    *  Construct the linear system of equations for each segment
    */
-  for ( i = 0; i < calib_shot_n - 1; i++ )
+  for ( spline_i = 1; spline_i < (calib_shot_n + SPLINE_PADDING * 2); spline_i++ )
   {
-    x0 = spline_points[i - 1].t_rho;
-    x1 = spline_points[i].t_rho;
-    x2 = spline_points[i + 1].t_rho;
+    x0 = spline_points[spline_i - 1].t_rho;
+    x1 = spline_points[spline_i].t_rho;
+    x2 = spline_points[spline_i + 1].t_rho;
 
-    y0 = spline_points[i - 1].scale;
-    y1 = spline_points[i].scale;
-    y2 = spline_points[i + 1].scale;
+    y0 = spline_points[spline_i - 1].scale;
+    y1 = spline_points[spline_i].scale;
+    y2 = spline_points[spline_i + 1].scale;
+
+    printf("\r\nSpline Point %d:\r\n", spline_i);
+    printf("  x0: %.6f y0: %.6f\r\n", x0, y0);
+    printf("  x1: %.6f y1: %.6f\r\n", x1, y1);
+    printf("  x2: %.6f y2: %.6f\r\n", x2, y2);
 
     a[0][0] = 2.0 / (x1 - x0);
     a[0][1] = 1.0 / (x1 - x0);
@@ -354,42 +408,57 @@ static void find_coeficients(void)
     a[0][3] = 3.0 * ((y1 - y0) / ((x1 - x0) * (x1 - x0)));
     a[1][3] = 3.0 * ((y2 - y1) / ((x2 - x1) * (x2 - x1)) - (y1 - y0) / ((x1 - x0) * (x1 - x0)));
     a[2][3] = 3.0 * ((y2 - y1) / ((x2 - x1) * (x2 - x1)));
-  }
 
-  /*
-   * Solve the linear equations to find k
-   */
-  for ( i = 0; i < 3; i++ )
-  {
-    float diag = a[i][i];     // Make the diagonal 1
-    for ( j = 0; j < 4; j++ )
+    for ( i = 0; i < NY; i++ )
     {
-      a[i][j] /= diag;
+      printf("Matrix %d: ", i);
+      for ( j = 0; j < NX; j++ )
+      {
+        printf("%10.6f ", a[i][j]);
+      }
+      printf("\r\n");
     }
 
-    for ( k = 0; k < 3; k++ ) // Eliminate the other rows
+    /*
+     * Solve the linear equations to find k
+     */
+    for ( i = 0; i < NY; i++ )
     {
-      if ( k != i )
+      float diag = a[i][i];      // Make the diagonal 1
+      for ( j = 0; j < NX; j++ )
       {
-        float factor = a[k][i];
-        for ( j = 0; j < 4; j++ )
+        a[i][j] /= diag;
+      }
+
+      for ( k = 0; k < NY; k++ ) // Eliminate the other rows
+      {
+        if ( k != i )
         {
-          a[k][j] -= factor * a[i][j];
+          float factor = a[k][i];
+          for ( j = 0; j < NX; j++ )
+          {
+            a[k][j] -= factor * a[i][j];
+          }
         }
       }
     }
-  }
 
-  /*
-   *  Store the coefficients for each point
-   */
-  spline_points[i].k0 = a[0][3];
-  spline_points[i].k1 = a[1][3];
-  spline_points[i].k2 = a[2][3];
+    /*
+     *  Store the coefficients for each point
+     */
+    spline_points[spline_i].k0 = a[0][3];
+    spline_points[spline_i].k1 = a[1][3];
+    spline_points[spline_i].k2 = a[2][3];
+  }
 
   /*
    * All done, return
    */
+
+  for ( i = 0; i < calib_shot_n + SPLINE_PADDING * 2; i++ )
+  {
+    printf("Point %d: k0: %.6f k1: %.6f k2: %.6f\r\n", i, spline_points[i].k0, spline_points[i].k1, spline_points[i].k2);
+  }
   SEND(ALL, sprintf(_xs, "\r\nCalibration calculations complete.\r\n");)
   return;
 }
@@ -414,37 +483,45 @@ void commit_calibration(void)
   char name[32];
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "\r\nCommitting calibration data to NONVOL...\r\n");))
 
+  /*
+   *  Save the spline coefficients for each point to NONVOL
+   */
   for ( i = 0; i != sizeof(spline_points) / sizeof(spline_points[0]); i++ )
   {
     sprintf(name, "%s_%d%d", NONVOL_CALIBRATION_DATA, i, 0);
-    nvs_set_f32(my_handle, name, &spline_points[i].k0);
+    nvs_set_i32(my_handle, name, (uint32_t)(spline_points[i].k0 * 10000)); // Conver to integer to save
     sprintf(name, "%s_%d%d", NONVOL_CALIBRATION_DATA, i, 1);
-    nvs_set_f32(my_handle, name, &spline_points[i].k1);
+    nvs_set_i32(my_handle, name, (uint32_t)(spline_points[i].k1 * 10000));
     sprintf(name, "%s_%d%d", NONVOL_CALIBRATION_DATA, i, 2);
-    nvs_set_f32(my_handle, name, &spline_points[i].k2);
+    nvs_set_i32(my_handle, name, (uint32_t)(spline_points[i].k2 * 10000));
   }
 
-  nvs_commit(my_handle);
-  SEND(ALL, sprintf(_xs, "\r\nCalibration data committed to NONVOL.\r\n");)
   /*
-   * Free the allocated memory
+   *  Save the offsets
+   */
+  nvs_set_i32(my_handle, NONVOL_X_OFFSET, json_x_offset);
+  nvs_set_i32(my_handle, NONVOL_Y_OFFSET, json_y_offset);
+
+  nvs_commit(my_handle);
+
+  /*
+   * All done, return
    */
   return;
 }
 
 /*----------------------------------------------------------------
  *
- * @function: commit_calibration()
+ * @function: get_calibration()
  *
- * @brief: Commit the calibration data to NONVOL
+ * @brief: Retrieve the calibration data from NONVOL
  *
  * @return: None
  *
  *----------------------------------------------------------------
  *
- * Save the calibration constants to NONVOL
- *
- * Save them as discrete values for each point.
+ * Pull the calibration data from NONVOL into the spline_points array
+ * for use during target processing.
  *--------------------------------------------------------------*/
 void get_calibration(void)
 {
@@ -455,15 +532,15 @@ void get_calibration(void)
   for ( i = 0; i != sizeof(spline_points) / sizeof(spline_points[0]); i++ )
   {
     sprintf(name, "%s_%d%d", NONVOL_CALIBRATION_DATA, i, 0);
-    nvs_get_f32(my_handle, name, &spline_points[i].k0);
+    nvs_get_i32(my_handle, name, &spline_points[i].k0);
     sprintf(name, "%s_%d%d", NONVOL_CALIBRATION_DATA, i, 1);
-    nvs_get_f32(my_handle, name, &spline_points[i].k1);
+    nvs_get_i32(my_handle, name, &spline_points[i].k1);
     sprintf(name, "%s_%d%d", NONVOL_CALIBRATION_DATA, i, 2);
-    nvs_get_f32(my_handle, name, &spline_points[i].k2);
+    nvs_get_i32(my_handle, name, &spline_points[i].k2);
   }
 
   /*
-   * Free the allocated memory
+   * All done, return
    */
   return;
 }
@@ -484,9 +561,9 @@ void get_calibration(void)
  *--------------------------------------------------------------*/
 float solve_spline(float theta)
 {
-  int   i;       // Loop counter
-  float scale;   // Scale factor
-  float delta_r; // Delta rho
+  int   i;           // Loop counter
+  float scale;       // Scale factor
+  float delta_theta; // Delta rho
 
   /*
    *  Find the right segment
@@ -495,11 +572,8 @@ float solve_spline(float theta)
   {
     if ( theta >= spline_points[i].a_theta && theta <= spline_points[i + 1].a_theta )
     {
-      /*
-       *  Solve the spline equation
-       */
-      delta_r = theta - spline_points[i].a_theta;
-      scale   = spline_points[i].k0 + (spline_points[i].k1) * delta_r + (spline_points[i].k2 * delta_r * delta_r);
+      delta_theta = theta - spline_points[i].a_theta;
+      scale       = spline_points[i].k0 + (spline_points[i].k1) * delta_theta + (spline_points[i].k2 * delta_theta * delta_theta);
       return scale;
     }
   }
@@ -508,4 +582,59 @@ float solve_spline(float theta)
    *  Out of range, return 1.0
    */
   return 1.0f;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: calibation_test
+ *
+ * @brief: Create a test calibration dataset
+ *
+ * @return: None
+ *
+ *----------------------------------------------------------------
+ *
+ * Create a ransom sample of calibration data for testing
+ *
+ *--------------------------------------------------------------*/
+void calibration_test(void)
+{
+  unsigned int i;
+
+  SEND(ALL, sprintf(_xs, "\r\nGenerating test calibration data...\r\n");)
+
+  for ( i = 0; i != MAX_CALIBRATION_SHOTS; i++ )
+  {
+    record[i].x_mm  = (float)(rand() % 400) - 200.0f;
+    record[i].y_mm  = (float)(rand() % 400) - 200.0f;
+    record[i].angle = atan2f(record[i].y_mm, record[i].x_mm);
+    if ( record[i].angle < 0 )
+    {
+      record[i].angle += TWO_PI; // Keep in range 0 to 2PI
+    }
+    record[i].radius = sqrtf(record[i].x_mm * record[i].x_mm + record[i].y_mm * record[i].y_mm);
+    printf("Test Shot %d: X: %.2f Y: %.2f Angle: %.2f Radius: %.2f\r\n", i + 1, record[i].x_mm, record[i].y_mm, record[i].angle,
+           record[i].radius);
+
+    spline_points[i].a_x   = record[i].x_mm + ((float)(rand() % 100) / 100.0f) - 0.5f;
+    spline_points[i].a_y   = record[i].y_mm + ((float)(rand() % 100) / 100.0f) - 0.5f;
+    spline_points[i].t_x   = record[i].x_mm;
+    spline_points[i].t_y   = record[i].y_mm;
+    spline_points[i].scale = 1.0f + (((float)(rand() % 200) / 1000.0f) - 0.1f); // Scale factor between 0.9 and 1.1
+
+    spline_points[i].t_rho   = sqrtf(spline_points[i].t_x * spline_points[i].t_x + spline_points[i].t_y * spline_points[i].t_y);
+    spline_points[i].t_theta = atan2f(spline_points[i].t_y, spline_points[i].t_x);
+    if ( spline_points[i].t_theta < 0 )
+    {
+      spline_points[i].t_theta += TWO_PI;                                       // Keep in range 0 to 2PI
+    }
+    printf("Test Target %d: X: %.2f Y: %.2f\r\n", i + 1, spline_points[i].a_x, spline_points[i].t_y);
+  }
+
+  calibration_data_ready = true;
+  shot_in                = MAX_CALIBRATION_SHOTS;                               // Fake it
+
+  calibrate();
+
+  return;
 }

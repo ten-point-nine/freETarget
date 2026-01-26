@@ -38,6 +38,7 @@
 #include "timer.h"
 #include "bluetooth.h"
 #include "ota.h"
+#include "calibrate.h"
 
 extern volatile time_count_t paper_time;
 
@@ -108,6 +109,7 @@ static const self_test_t test_list[] = {
     {"display_all_scores",                &test_display_all_scores },
     {"Rapidfire test",                    &test_rapidfire          },
     {"Rapidfire test",                    &test_rapidfire          },
+    {"Calibration test",                  &calibration_test        },
     {"",                                  0                        }
 };
 

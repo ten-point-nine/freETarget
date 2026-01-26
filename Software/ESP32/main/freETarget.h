@@ -101,41 +101,42 @@
 #define PI      3.14159269
 #define PI_ON_4 (PI / 4.0d)
 #define PI_ON_2 (PI / 2.0d)
+#define TWO_PI  (2.0d * PI)
 
-#define SESSION_EMPTY 0                            // No session data
-#define SESSION_VALID 1                            // Session is valid but undefined
-#define SESSION_SIGHT 2                            // Session is a sighter
-#define SESSION_MATCH 4                            // Session is a match
-#define SESSION_PRINT 10                           // Print out the session
+#define SESSION_EMPTY 0               // No session data
+#define SESSION_VALID 1               // Session is valid but undefined
+#define SESSION_SIGHT 2               // Session is a sighter
+#define SESSION_MATCH 4               // Session is a match
+#define SESSION_PRINT 10              // Print out the session
 
-#define SCORE_LEFT_BRACE  '{'                      // Opening JSON string
-#define SCORE_RIGHT_BRACE '}'                      // Closing JSON string
-#define SCORE_NEW_LINE    'n'                      // Add a newline
-#define SCORE_PRIME       '#'                      // Prime a reply to the client
-#define SCORE_SHOT        'S'                      // Include shot number
-#define SCORE_MISS        'M'                      // Include miss status
-#define SCORE_SESSION     '?'                      // Include session type
-#define SCORE_TIME        'T'                      // Include time stamp
-#define SCORE_ELAPSED     'D'                      // Include elapsed time
-#define SCORE_XY          'X'                      // Include X-Y coordinates
-#define SCORE_POLAR       'P'                      // Include polar coordinates
-#define SCORE_HARDWARE    'H'                      // Include hardware values
-#define SCORE_TARGET      'O'                      // Include target name
-#define SCORE_EVENT       'E'                      // Include the athelte name
-#define SCORE_TEST        '$'                      // Test the client with a test shot
+#define SCORE_LEFT_BRACE  '{'         // Opening JSON string
+#define SCORE_RIGHT_BRACE '}'         // Closing JSON string
+#define SCORE_NEW_LINE    'n'         // Add a newline
+#define SCORE_PRIME       '#'         // Prime a reply to the client
+#define SCORE_SHOT        'S'         // Include shot number
+#define SCORE_MISS        'M'         // Include miss status
+#define SCORE_SESSION     '?'         // Include session type
+#define SCORE_TIME        'T'         // Include time stamp
+#define SCORE_ELAPSED     'D'         // Include elapsed time
+#define SCORE_XY          'X'         // Include X-Y coordinates
+#define SCORE_POLAR       'P'         // Include polar coordinates
+#define SCORE_HARDWARE    'H'         // Include hardware values
+#define SCORE_TARGET      'O'         // Include target name
+#define SCORE_EVENT       'E'         // Include the athelte name
+#define SCORE_TEST        '$'         // Test the client with a test shot
 
-#define SCORE_ALL        "{S?TXPHOE}"              // shot / miss / target / time / x-y / radius-angle / North-East-South-West / target type
-#define SCORE_USB        "{S?TX}"                  // USB score elements
-#define SCORE_TCPIP      "{S?TXE}"                 // TCP score elements
-#define SCORE_BLUETOOTH  "{S?TX}"                  // Bluetooth score elements
-#define SCORE_HTTP       "{S?TXPOE}"               // HTTP score elements
-#define SCORE_HTTP_PRIME "{#}"                     // HTTP Prime the client
-#define SCORE_HTTP_TEST  "{$}"                     // HTTP Test the client
+#define SCORE_ALL        "{S?TXPHOE}" // shot / miss / target / time / x-y / radius-angle / North-East-South-West / target type
+#define SCORE_USB        "{S?TX}"     // USB score elements
+#define SCORE_TCPIP      "{S?TXE}"    // TCP score elements
+#define SCORE_BLUETOOTH  "{S?TX}"     // Bluetooth score elements
+#define SCORE_HTTP       "{S?TXPOE}"  // HTTP score elements
+#define SCORE_HTTP_PRIME "{#}"        // HTTP Prime the client
+#define SCORE_HTTP_TEST  "{$}"        // HTTP Test the client
 
-#define HTTP_CLOSE_TIME 15l                        // Time to close the HTTP connection after the last shot
+#define HTTP_CLOSE_TIME 15l           // Time to close the HTTP connection after the last shot
 
-#define MAX_WAIT_TIME 10                 // Wait up to 10 ms for the input to arrive
-#define MAX_RING_TIME 50                 // Wait 50 ms for the ringing to stop
+#define MAX_WAIT_TIME 10              // Wait up to 10 ms for the input to arrive
+#define MAX_RING_TIME 50              // Wait 50 ms for the ringing to stop
 /*
  *  Types
  */
