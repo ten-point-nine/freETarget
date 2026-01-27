@@ -37,4 +37,8 @@ float        atan2_2PI(float y, float x);                               // atan2
  */
 extern const char *names[]; // List of target names
 
+/*
+ *  Helpful #defines
+ */
+#define SQ(x) ((x) * (x)) // Square Number
 #endif
