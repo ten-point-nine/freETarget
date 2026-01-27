@@ -520,7 +520,7 @@ double solve_spline(double angle)
    */
   for ( s = SPLINE_PADDING; s < MAX_CALIBRATION_SHOTS + SPLINE_PADDING; s++ )
   {
-    if ( (angle >= spline_points[s].a_angle) && (angle <= spline_points[s + 1].a_angle) )
+    if ( (angle >= spline_points[s].a_angle) && (angle < spline_points[s + 1].a_angle) )
     {
       printf("\r\nIndex: %d angle: %.6f  spline:%.6f", s, angle, spline_points[s].a_angle);
       break;
