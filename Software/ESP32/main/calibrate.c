@@ -298,16 +298,17 @@ static void perform_calibration(void)
  * https://en.wikipedia.org/wiki/Spline_interpolation
  *
  *--------------------------------------------------------------*/
-#define NX 4         // Number of points in the spline segment
-#define NY 3         // Number of equations +1 for augmented matrix
+#define NX 4           // Number of points in the spline segment
+#define NY 3           // Number of equations +1 for augmented matrix
 
 static void find_coeficients(void)
 {
-  double a[NY][NX];  // Augmented matrix for solving
-  int    i, j, k;    // Loop counter
-  int    spline_i;   // Spline point index
-  double x0, x1, x2; // X variable, (rho  in this case)
-  double y0, y1, y2; // Y variable (scale in this case
+  double a[NY][NX];    // Augmented matrix for solving
+  double diag, factor; // Diagonal element, Normalization factor
+  int    i, j, k;      // Loop counter
+  int    spline_i;     // Spline point index
+  double x0, x1, x2;   // X variable, (rho  in this case)
+  double y0, y1, y2;   // Y variable (scale in this case
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "find_coefficient");))
 
@@ -320,6 +321,8 @@ static void find_coeficients(void)
     x0 = spline_points[spline_i - 1].t_rho;
     x1 = spline_points[spline_i].t_rho;
     x2 = spline_points[spline_i + 1].t_rho;
+
+    printf("\r\n%.6f  %.6f", x0, x1);
 
     y0 = spline_points[spline_i - 1].scale;
     y1 = spline_points[spline_i].scale;
@@ -346,7 +349,7 @@ static void find_coeficients(void)
      */
     for ( i = 0; i < NY; i++ )
     {
-      double diag = a[i][i];     // Make the diagonal 1
+      diag = a[i][i];            // Make the diagonal 1
       for ( j = 0; j < NX; j++ )
       {
         a[i][j] /= diag;
@@ -356,10 +359,10 @@ static void find_coeficients(void)
       {
         if ( k != i )
         {
-          double factor = a[k][i];
+          factor = a[k][i];
           for ( j = 0; j < NX; j++ )
           {
-            a[k][j] -= factor * a[i][j];
+            a[k][j] -= (factor * a[i][j]);
           }
         }
       }
@@ -371,9 +374,6 @@ static void find_coeficients(void)
     spline_points[spline_i].k0 = a[0][3];
     spline_points[spline_i].k1 = a[1][3];
     spline_points[spline_i].k2 = a[2][3];
-
-    printf("\r\nIndex %d k0: %.6f  k1: %.6f  k2: %.6f  ", spline_i, spline_points[spline_i].k0, spline_points[spline_i].k1,
-           spline_points[spline_i].k2);
   }
 
   /*
@@ -381,6 +381,99 @@ static void find_coeficients(void)
    */
 
   return;
+}
+/*----------------------------------------------------------------
+ *
+ * @function: verify_calibration()
+ *
+ * @brief: Apply the calibration to the shots and see if they match
+ *
+ * @return: None
+ *
+ *----------------------------------------------------------------
+ *
+ * This generates a circle and computes a spline scale for each
+ * angle.
+ *
+ *--------------------------------------------------------------*/
+#define VERIFY_SIZE 40
+#define VERIFY_STEP (TWO_PI / (float)VERIFY_SIZE)
+static void verify_calibration(void)
+{
+  int    i;
+  double scale; //  Answer we are looking for
+  double theta; // Angle we are trying
+
+  SEND(ALL, sprintf(_xs, "\r\nverify_calibration()\r\n");)
+
+  for ( i = 0; i < VERIFY_SIZE; i++ )
+  {
+    theta = VERIFY_STEP * (float)i;
+    scale = solve_spline(theta);
+    SEND(ALL, sprintf(_xs, "\r\nIndex:%d  Angle:%4.6f  Calibrated Scale: %4.6f", i, theta, scale);)
+  }
+
+  return;
+}
+/*----------------------------------------------------------------
+ *
+ * @function: solve_spline()
+ *
+ * @brief: Use the spline coeficients to find the scale factor
+ *
+ * @return: new scaled value
+ *
+ *----------------------------------------------------------------
+ *
+ * This implements the spline interpolation given in the Wikipedia
+ * article:
+ *
+ * https://en.wikipedia.org/wiki/Spline_interpolation
+ *
+ *
+ *--------------------------------------------------------------*/
+double solve_spline(double angle)
+{
+  int    s;      // segment index
+  double scale;  // Scale factor
+  double x0, x1; // X boundaries
+  double y0;     // Value of y at x0
+  double t;      // Interval fraction
+
+  /*
+   *  Find the right segment
+   */
+  for ( s = SPLINE_PADDING; s < MAX_CALIBRATION_SHOTS + SPLINE_PADDING; s++ )
+  {
+    if ( (angle >= spline_points[s].a_angle) && (angle < spline_points[s + 1].a_angle) )
+    {
+      break;
+    }
+  }
+
+  if ( s == MAX_CALIBRATION_SHOTS + SPLINE_PADDING )
+  {
+    return 1.0f; // Not found, return 1.0
+  }
+
+  /*
+   * Calculate the scale factor in this segment
+   */
+  x0 = spline_points[s].a_angle;
+  x1 = spline_points[s + 1].a_angle;
+  y0 = spline_points[s].scale;
+
+  if ( (x0 > 4.4) && (angle < 5.6) )
+  {
+    printf("\r\nIndex: %d  %.6f %.6f", s, x0, x1);
+  }
+  t     = (angle - x0) / (x1 - x0); // Interval fraction
+  scale = y0 + (spline_points[s].k0 * t) + (spline_points[s].k1 * t * t) + (spline_points[s].k2 * t * t * t);
+
+  /*
+   * All done, return the scale factor
+   */
+  return scale;
 }
 
 /*----------------------------------------------------------------
@@ -461,96 +554,6 @@ void get_calibration(void)
 
 /*----------------------------------------------------------------
  *
- * @function: verify_calibration()
- *
- * @brief: Apply the calibration to the shots and see if they match
- *
- * @return: None
- *
- *----------------------------------------------------------------
- *
- * The calibration is verified by applying the spline to the
- * recorded shots and comparing the scaled rho to the
- * calibrated rho.
- *
- *--------------------------------------------------------------*/
-static void verify_calibration(void)
-{
-  int    i;
-  double scale; //
-
-  SEND(ALL, sprintf(_xs, "\r\nverify_calibration()\r\n");)
-
-  for ( i = SPLINE_PADDING; i < MAX_CALIBRATION_SHOTS + SPLINE_PADDING; i++ )
-  {
-    scale = solve_spline(spline_points[i].a_angle);
-    SEND(ALL, sprintf(_xs, "\r\nIndex:%d  Angle:%4.6f  Actual Scale:%4.6f  Calibrated Scale: %4.6f", i, spline_points[i].a_angle,
-                      spline_points[i].scale, scale);)
-  }
-
-  return;
-}
-/*----------------------------------------------------------------
- *
- * @function: solve_spline()
- *
- * @brief: Use the spline coeficients to find the scale factor
- *
- * @return: new scaled value
- *
- *----------------------------------------------------------------
- *
- * This implements the spline interpolation given in the Wikipedia
- * article:
- *
- * https://en.wikipedia.org/wiki/Spline_interpolation
- *
- *
- *--------------------------------------------------------------*/
-double solve_spline(double angle)
-{
-  int    s;      // segment index
-  double scale;  // Scale factor
-  double x0, x1; // X boundaries
-  double y0;     // Value of y at x0
-  double t;      // Interval fraction
-
-  /*
-   *  Find the right segment
-   */
-  for ( s = SPLINE_PADDING; s < MAX_CALIBRATION_SHOTS + SPLINE_PADDING; s++ )
-  {
-    if ( (angle >= spline_points[s].a_angle) && (angle < spline_points[s + 1].a_angle) )
-    {
-      printf("\r\nIndex: %d angle: %.6f  spline:%.6f", s, angle, spline_points[s].a_angle);
-      break;
-    }
-  }
-
-  if ( s == MAX_CALIBRATION_SHOTS + SPLINE_PADDING )
-  {
-    return 1.0f; // Not found, return 1.0
-  }
-
-  /*
-   * Calculate the scale factor in this segment
-   */
-  x0 = spline_points[s].a_angle;
-  x1 = spline_points[s + 1].a_angle;
-  y0 = spline_points[s].scale;
-
-  t = (angle - x0) / (x1 - x0); // Interval fraction
-  printf("\r\nIndex: %d x0: %.6f   x1: %.6f  t: %6f ", s, x0, x1, t);
-  scale = y0 + (spline_points[s].k0 * t) + (spline_points[s].k1 * t * t) + (spline_points[s].k2 * t * t * t);
-
-  /*
-   * All done, return the scale factor
-   */
-  return scale;
-}
-
-/*----------------------------------------------------------------
- *
  * @function: calibration_test
  *
  * @brief: Create a test calibration dataset
@@ -559,34 +562,43 @@ double solve_spline(double angle)
  *
  *----------------------------------------------------------------
  *
- * Create a ransom sample of calibration data for testing
+ * Generate a ten point circle with radius of 75mm
+ *
+ * This should generate a spline fit that is unifor in all
+ * directions.
  *
  *--------------------------------------------------------------*/
+#define TEST_STEP (TWO_PI / (float)MAX_CALIBRATION_SHOTS) // Increment between steps
+
 void calibration_test(void)
 {
   unsigned int i;
+  float        theta;
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "calibration_test()");))
 
   for ( i = 0; i != MAX_CALIBRATION_SHOTS; i++ )
   {
-    record[i].x_mm   = (double)(rand() % 400) - 200.0f;
-    record[i].y_mm   = (double)(rand() % 400) - 200.0f;
-    record[i].angle  = atan2_2PI(record[i].y_mm, record[i].x_mm);
-    record[i].radius = sqrtf(SQ(record[i].x_mm) + SQ(record[i].y_mm));
+    theta = TEST_STEP * (float)i;
 
-    spline_points[i].a_x = record[i].x_mm + ((double)(rand() % 5000) / 1000.0f) - 0.5f;
-    spline_points[i].a_y = record[i].y_mm + ((double)(rand() % 5000) / 1000.0f) - 0.5f;
+    record[i].radius = 75.0f;
+    record[i].angle  = theta;
+    record[i].x_mm   = record[i].radius * cosf(theta);
+    record[i].y_mm   = record[i].radius * sinf(theta);
+
+    spline_points[i].a_x = record[i].x_mm;
+    spline_points[i].a_y = record[i].y_mm;
     spline_points[i].t_x = record[i].x_mm;
     spline_points[i].t_y = record[i].y_mm;
 
-    spline_points[i].a_rho   = sqrtf(SQ(spline_points[i].a_x) + SQ(spline_points[i].a_y));
-    spline_points[i].a_angle = atan2_2PI(spline_points[i].a_y, spline_points[i].a_x);
-    spline_points[i].scale   = spline_points[i].a_rho / record[i].radius;
+    spline_points[i].a_rho   = record[i].radius;
+    spline_points[i].a_angle = record[i].angle;
 
-    spline_points[i].t_rho   = sqrtf(SQ(spline_points[i].t_x) + SQ(spline_points[i].t_y));
-    spline_points[i].t_angle = atan2_2PI(spline_points[i].t_y, spline_points[i].t_x);
-    SEND(ALL, sprintf(_xs, "\r\nIndex: %d  Angle: %.6f  Scale: %.6f", i, spline_points[i].a_angle, spline_points[i].scale);)
+    spline_points[i].t_rho   = record[i].radius * (1.0f + ((double)(rand() % 5000) / 500000.0f) - 0.005f);
+    spline_points[i].t_angle = record[i].angle;
+    spline_points[i].scale   = spline_points[i].a_rho / spline_points[i].t_rho;
+    SEND(ALL, sprintf(_xs, "\r\nIndex: %d Angle: %.6f X: %.6f  Y: %6f  Scale: %.6f  ", i, spline_points[i].a_angle, spline_points[i].t_x,
+                      spline_points[i].t_y, spline_points[i].scale);)
   }
 
   calibration_diag = true;
