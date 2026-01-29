@@ -965,3 +965,78 @@ float atan2_2PI(float y, float x)
 
   return angle;
 }
+
+/*----------------------------------------------------------------
+ *
+ * @function: no_singularity
+ *
+ * @brief:    Ensure no sigularities between sets of numbers
+ *
+ * @return:   Numbers adjusted to prevent singularities
+ *
+ *----------------------------------------------------------------
+ *
+ * If any of the three arguements are equal, there is a risk of
+ * a singularity in the calculations.
+ *
+ * To avoid this problem, the numbers are tweaked a bit so that
+ * they are not the same.
+ *
+ * To do this, a mask of what equals what is generated.  If none
+ * are equal, then the function returns.
+ *
+ * If any or all are equal, the values are tweaked so they are
+ * different and the caomparison takes place again util they
+ * are all different.
+ *
+ *--------------------------------------------------------------*/
+#define AB  0b011 // A == B
+#define BC  0b110 // B == C
+#define AC  0b101 // A == C
+#define ABC 0b111 // A == B== C
+
+void no_singularity(float *a, float *b, float *c)
+{
+  int equal;      // Mask of equalities
+
+  while ( 1 )
+  {
+    equal = 0;
+    if ( *a == *b )
+    {
+      equal |= AB;
+    }
+    if ( *b == *c )
+    {
+      equal |= BC;
+    }
+    if ( *a == *c )
+    {
+      equal |= AC;
+    }
+
+    if ( equal == 0 ) // None are equal
+    {
+      return;         // Nothing more to do
+    }
+
+    switch ( equal )  // Jump to the ones that are equal
+    {
+      case ABC:
+        *a -= 1E-6;   // and adjust A smaller
+        *c += 1E-6;   // C bigger
+        break;
+
+      case AB:        // Change A
+        *a -= 1E-6;
+        break;
+
+      case BC:        // Change C
+      case AC:
+        *c += 1E-6;
+        break;
+    }
+  }
+
+  return;
+}

@@ -191,12 +191,10 @@ static void perform_calibration(void)
   {
     while ( (calib_shot_n < shot_in) && (calib_shot_n < MAX_CALIBRATION_SHOTS) )
     {
-      SEND(ALL, sprintf(_xs, "\r\nShot %d X (mm):", calib_shot_n + 1);)
       get_number("", &value);
       spline_points[calib_shot_n].a_x = (double)value;
       spline_points[calib_shot_n].t_x = record[calib_shot_n].x_mm;
 
-      SEND(ALL, sprintf(_xs, "Shot %d Y (mm):", calib_shot_n + 1);)
       get_number("", &value);
       spline_points[calib_shot_n].a_y = (double)value;
       spline_points[calib_shot_n].t_y = record[calib_shot_n].y_mm;
@@ -229,11 +227,6 @@ static void perform_calibration(void)
     }
   }
 
-  for ( i = 0; i < calib_shot_n; i++ )
-  {
-    printf("\r\nIndex: %d  Angle: %.6f", i, spline_points[i].a_angle);
-  }
-
   /*
    *  Pad the beginning and end of the list with extra points to prevent singularities
    *  0->2   1->3   ... n-2->n   n-1->n+1
@@ -255,13 +248,6 @@ static void perform_calibration(void)
   spline_points[calib_shot_n + 0 + SPLINE_PADDING].a_angle += TWO_PI;
   spline_points[calib_shot_n + 1 + SPLINE_PADDING] = spline_points[2];
   spline_points[calib_shot_n + 1 + SPLINE_PADDING].a_angle += TWO_PI;
-
-  printf("\r\nPadded");
-  for ( i = 0; i < MAX_CALIBRATION_SHOTS + SPLINE_PADDING * 2; i++ )
-  {
-    printf("\r\nIndex: %d  Angle: %.6f", i, spline_points[i].a_angle);
-  }
-  // Correct to this point
 
   /*
    *  Perform the calibration calculations
@@ -312,7 +298,6 @@ static void find_coeficients(void)
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "find_coefficient");))
 
-  printf("\r\nfind_coefficeints()\r\n");
   /*
    *  Construct the linear system of equations for each segment
    */
@@ -322,11 +307,12 @@ static void find_coeficients(void)
     x1 = spline_points[spline_i].t_rho;
     x2 = spline_points[spline_i + 1].t_rho;
 
-    printf("\r\n%.6f  %.6f", x0, x1);
-
     y0 = spline_points[spline_i - 1].scale;
     y1 = spline_points[spline_i].scale;
     y2 = spline_points[spline_i + 1].scale;
+
+    no_singularity(&x0, &x1, &x2);
+    no_singularity(&y0, &y1, &y2);
 
     a[0][0] = 2.0 / (x1 - x0);
     a[0][1] = 1.0 / (x1 - x0);
@@ -367,14 +353,14 @@ static void find_coeficients(void)
         }
       }
     }
-
-    /*
-     *  Store the coefficients for each point
-     */
-    spline_points[spline_i].k0 = a[0][3];
-    spline_points[spline_i].k1 = a[1][3];
-    spline_points[spline_i].k2 = a[2][3];
   }
+
+  /*
+   *  Store the coefficients for each point
+   */
+  spline_points[spline_i].k0 = a[0][3];
+  spline_points[spline_i].k1 = a[1][3];
+  spline_points[spline_i].k2 = a[2][3];
 
   /*
    * All done, return
@@ -404,13 +390,13 @@ static void verify_calibration(void)
   double scale; //  Answer we are looking for
   double theta; // Angle we are trying
 
-  SEND(ALL, sprintf(_xs, "\r\nverify_calibration()\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\nVerify_calibration()\r\n");)
 
   for ( i = 0; i < VERIFY_SIZE; i++ )
   {
     theta = VERIFY_STEP * (float)i;
     scale = solve_spline(theta);
-    SEND(ALL, sprintf(_xs, "\r\nIndex:%d  Angle:%4.6f  Calibrated Scale: %4.6f", i, theta, scale);)
+    SEND(ALL, sprintf(_xs, "\r\nIndex:%d  Angle:%4.4f  Calibrated Scale: %4.6f", i, theta / PI, scale);)
   }
 
   return;
@@ -437,6 +423,7 @@ double solve_spline(double angle)
   int    s;      // segment index
   double scale;  // Scale factor
   double x0, x1; // X boundaries
+  double k0, k1, k2;
   double y0;     // Value of y at x0
   double t;      // Interval fraction
 
@@ -463,10 +450,10 @@ double solve_spline(double angle)
   x1 = spline_points[s + 1].a_angle;
   y0 = spline_points[s].scale;
 
-  if ( (x0 > 4.4) && (angle < 5.6) )
-  {
-    printf("\r\nIndex: %d  %.6f %.6f", s, x0, x1);
-  }
+  k0 = spline_points[s].k0;
+  k1 = spline_points[s].k1;
+  k2 = spline_points[s].k2;
+
   t     = (angle - x0) / (x1 - x0); // Interval fraction
   scale = y0 + (spline_points[s].k0 * t) + (spline_points[s].k1 * t * t) + (spline_points[s].k2 * t * t * t);
 
@@ -594,9 +581,9 @@ void calibration_test(void)
     spline_points[i].a_rho   = record[i].radius;
     spline_points[i].a_angle = record[i].angle;
 
-    spline_points[i].t_rho   = record[i].radius * (1.0f + ((double)(rand() % 5000) / 500000.0f) - 0.005f);
+    spline_points[i].t_rho   = record[i].radius;
     spline_points[i].t_angle = record[i].angle;
-    spline_points[i].scale   = spline_points[i].a_rho / spline_points[i].t_rho;
+    spline_points[i].scale   = 1.0f;
     SEND(ALL, sprintf(_xs, "\r\nIndex: %d Angle: %.6f X: %.6f  Y: %6f  Scale: %.6f  ", i, spline_points[i].a_angle, spline_points[i].t_x,
                       spline_points[i].t_y, spline_points[i].scale);)
   }
