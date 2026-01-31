@@ -21,37 +21,42 @@
 #include "freETarget.h"
 #include "helpers.h"
 #include "diag_tools.h"
+#include "json.h"
 #include "nonvol.h"
 #include "calibrate.h"
 
 /*
  *  Function Prototypes
  */
-static void start_calibration(void);   // First step in the calibration
-static void perform_calibration(void); // Second step in the calibration
-static void find_coeficients(void);    // Find the spline coeficients
-static void commit_calibration(void);  // Commit the calibration to NONVOL
-static void verify_calibration(void);  // Verify the calibration data by applying it to the shots
+static void start_calibration(void);             // First step in the calibration
+static void perform_calibration(void);           // Second step in the calibration
+static void find_coeficients(void);              // Find the spline coeficients
+static void commit_calibration(void);            // Commit the calibration to NONVOL
+static void verify_calibration(void);            // Verify the calibration data by applying it to the shots
+static void void_calibration(void);              // Cancel the existing calibration
+static void target_offset(int number_of_points); // Adjust the target data for sensor location
+static void spline_sort(int calib_shot_n);       // Sort the entries in order
 
 /*
  *  Definitions
  */
 typedef struct spline_point
 {
-  double t_x;                    // X as recorded on the target
-  double t_y;                    // Y as recorded on the target
-  double a_x;                    // Actual X location
-  double a_y;                    // Actual Y location
-  double t_rho;                  // Distance along the spline
-  double t_angle;                // Angle along the spline
-  double a_rho;                  // Distance along the spline
-  double a_angle;                // Angle along the spline
-  double scale;                  // Scale factor (actual / target) ~1.0
-  double k0, k1, k2;             // Spline coeficients
+  double t_x;                        // X as recorded on the target
+  double t_y;                        // Y as recorded on the target
+  double a_x;                        // Actual X location
+  double a_y;                        // Actual Y location
+  double t_rho;                      // Distance along the spline
+  double t_angle;                    // Angle along the spline
+  double a_rho;                      // Distance along the spline
+  double a_angle;                    // Angle along the spline
+  double scale;                      // Scale factor (actual / target) ~1.0
+  double k0, k1, k2;                 // Spline coeficients
 } spline_point_t;
 
-#define MAX_CALIBRATION_SHOTS 10 // Maximum number of calibration shots
-#define SPLINE_PADDING        2  // Extra points at start and end
+#define MAX_CALIBRATION_SHOTS 10     // Maximum number of calibration shots
+#define SPLINE_PADDING        2      // Extra points at start and end
+#define SPLINE_VALID          1234.0 // Value to show spline data is valid
 
 /*
  *  Variables
@@ -60,6 +65,8 @@ static spline_point_t spline_points[MAX_CALIBRATION_SHOTS + SPLINE_PADDING * 2];
 
 static int  calib_shot_n;                                                        // Number of shots gathered
 static bool calibration_diag;                                                    // TRUE if in test mode
+
+static bool calibration_is_valid = false;                                        // Calibration valid marker
 
 /*----------------------------------------------------------------
  *
@@ -88,9 +95,10 @@ void calibrate(void)
   SEND(ALL, sprintf(_xs, "\r\n1 - Gather shot data");)
   SEND(ALL, sprintf(_xs, "\r\n2 - Input actual shots");)
   SEND(ALL, sprintf(_xs, "\r\n3 - Commit calibration data to NONVOL");)
+  SEND(ALL, sprintf(_xs, "\r\n4 - Void current calibration");)
   SEND(ALL, sprintf(_xs, "\r\n9 - Exit, no action");)
 
-  get_number("\r\n\r\nSelect step (1/2/3/9):", &value);
+  get_number("\r\n\r\nSelect action", &value);
 
   switch ( (int)value )
   {
@@ -104,6 +112,10 @@ void calibrate(void)
 
     case 3:
       commit_calibration();
+      return;
+
+    case 4:
+      void_calibration();
       return;
 
     case 9:
@@ -136,14 +148,17 @@ void calibrate(void)
 
 static void start_calibration(void)
 {
-  SEND(ALL, sprintf(_xs, "\r\nStep 1 - Gather Shot Data\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\nAction 1 - Gather Shot Data\r\n");)
   SEND(ALL, sprintf(_xs, "\r\nUse a pistol target");)
   SEND(ALL, sprintf(_xs, "\r\nFire ten shots at random locations around the target.");)
-  SEND(ALL, sprintf(_xs, "\r\nWhen all ten shots are fired, proceed to Step 2 to enter the actual locations.");)
+  SEND(ALL, sprintf(_xs, "\r\nWhen all ten shots are fired, proceed to action 2 to enter the actual locations.");)
   SEND(ALL, sprintf(_xs, "\r\n\r\nStart calibration now...\r\n");)
 
-  shot_in  = 0; // Clear out any junk
-  shot_out = 0;
+  shot_in              = 0;     // Clear out any junk
+  shot_out             = 0;
+  json_x_offset        = 0;     // Reset any offsets
+  json_y_offset        = 0;
+  calibration_is_valid = false; // Turn off the calibration
   return;
 }
 
@@ -168,11 +183,10 @@ static void start_calibration(void)
  *--------------------------------------------------------------*/
 static void perform_calibration(void)
 {
-  double         value;       // User input
-  int            i, j;        // Loop counters
-  spline_point_t spline_temp; // Temporary
+  double x, y; // User input
+  int    i, j; // Loop counters
 
-  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "perform_calibration");))
+  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "perform_calibration()");))
 
   /*
    *  Validate the shots
@@ -186,21 +200,34 @@ static void perform_calibration(void)
   /*
    * Gather actual shot locations
    */
-  calib_shot_n = 0;
+  calib_shot_n     = 0;
+  calibration_diag = false;
   if ( calibration_diag == false )
   {
     while ( (calib_shot_n < shot_in) && (calib_shot_n < MAX_CALIBRATION_SHOTS) )
     {
-      get_number("", &value);
-      spline_points[calib_shot_n].a_x = (double)value;
-      spline_points[calib_shot_n].t_x = record[calib_shot_n].x_mm;
+      while ( 1 ) //  Get input
+      {
+        SEND(ALL, sprintf(_xs, "Enter shot (%4.2f, %4.2f)", record[calib_shot_n].x_mm, record[calib_shot_n].y_mm);)
+        get_number("Actual X:", &x);
+        get_number("Actual Y:", &y);
 
-      get_number("", &value);
-      spline_points[calib_shot_n].a_y = (double)value;
-      spline_points[calib_shot_n].t_y = record[calib_shot_n].y_mm;
+        SEND(ALL, sprintf(_xs, "Target (%4.2f, %4.2f)   Actual (%4.2f, %4.2f)", record[calib_shot_n].x_mm, record[calib_shot_n].y_mm,
+                          spline_points[calib_shot_n].t_x, spline_points[calib_shot_n].t_y);)
 
-      spline_points[calib_shot_n].t_rho   = sqrtf(SQ(spline_points[calib_shot_n].t_x) + SQ(spline_points[calib_shot_n].t_y));
-      spline_points[calib_shot_n].t_angle = atan2_2PI(spline_points[calib_shot_n].t_y, spline_points[calib_shot_n].t_x);
+        if ( prompt_for_confirm() == true )
+        {
+          spline_points[calib_shot_n].a_x = (double)x;
+          spline_points[calib_shot_n].t_x = record[calib_shot_n].x_mm;
+          spline_points[calib_shot_n].a_y = (double)y;
+          spline_points[calib_shot_n].t_y = record[calib_shot_n].y_mm;
+
+          spline_points[calib_shot_n].t_rho   = sqrtf(SQ(spline_points[calib_shot_n].t_x) + SQ(spline_points[calib_shot_n].t_y));
+          spline_points[calib_shot_n].t_angle = atan2_2PI(spline_points[calib_shot_n].t_y, spline_points[calib_shot_n].t_x);
+          spline_points[calib_shot_n].scale   = spline_points[calib_shot_n].t_rho / record[calib_shot_n].radius;
+          break;
+        }
+      }
 
       calib_shot_n++;
     }
@@ -212,7 +239,116 @@ static void perform_calibration(void)
   }
 
   /*
-   *  Bubble sort the list by angle (rho)
+   *  Slide the data to match differences in the circuit
+   */
+  target_offset(calib_shot_n);
+
+  /*
+   *  Sort the data so that the entries are in order
+   */
+  spline_sort(calib_shot_n);
+
+  /*
+   *  Perform the calibration calculations
+   */
+  find_coeficients();
+
+  /*
+   * Check the calibration data
+   */
+  verify_calibration(); // Apply the calibration to the shots and see if they match the calibration
+
+  SEND(ALL, sprintf(_xs, "\r\n\r\nCalibration complete. ");)
+  SEND(ALL, sprintf(_xs, "\r\nRemember to commit the calibration");)
+  return;
+}
+/*----------------------------------------------------------------
+ *
+ * @function: target_offset()
+ *
+ * @brief: Slide the target coordinates to match the actual
+ *
+ * @return:Target cooordinates adjusted
+ *
+ *----------------------------------------------------------------
+ *
+ * There is an offset between what the circtuit things and the
+ * actual target postion.  This is most often due to the sensors
+ * being slightly out of alighment.
+ *
+ * This function works out the average postion of the target
+ * and the actual and slides the target data to meet the actual.
+ *
+ *--------------------------------------------------------------*/
+void target_offset(int number_of_points)
+{
+  double avg_ax, avg_ay, avg_tx, avg_ty; // Averages
+  double x_offset, y_offset;             // Average offset
+  int    i;
+
+  /*
+   * Work out the offset between the targets
+   */
+  avg_ax = 0;
+  avg_ay = 0;
+  avg_tx = 0;
+  avg_ty = 0;
+
+  for ( i = 0; i < number_of_points; i++ )
+  {
+    avg_ax = spline_points[i].a_x;
+    avg_ay = spline_points[i].a_y;
+    avg_tx = spline_points[i].t_x;
+    avg_ty = spline_points[i].t_y;
+  }
+
+  x_offset = (avg_ax - avg_tx) / calib_shot_n;
+  y_offset = (avg_ay - avg_ty) / calib_shot_n;
+
+  /*
+   *  Slide the target loctions slightly to match the actuals
+   */
+  for ( i = 0; i < number_of_points; i++ )
+  {
+    spline_points[i].t_x -= x_offset;
+    spline_points[i].t_y -= y_offset;
+  }
+
+  /*
+   *  All done, return
+   */
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: spline_sort()
+ *
+ * @brief: Sort the entries into ascending order by angle
+ *
+ * @return:The spline list sorted in angle order
+ *
+ *----------------------------------------------------------------
+ *
+ * The data points are collected in random order.
+ *
+ * This function sorts the data into ascending order by angle. This
+ * means that the first entries are lowest, and last entry is highest
+ *
+ * In order to avoid discontinuites at the beginning and end, the
+ * highest angles are adjusted by 2-PI and are copied to the
+ * beginning so that the lowest entries are correct.  Similarly the
+ * lowest entries are copied to the end and adjusted so that the
+ * large entries are coneinious.
+ *
+ *--------------------------------------------------------------*/
+void spline_sort(int calib_shot_n)
+{
+  int            i, j;
+  spline_point_t spline_temp;
+
+  /*
+   *  Bubble sort the list by angle
    */
   for ( i = 0; i < calib_shot_n - 1; i++ )
   {
@@ -244,21 +380,15 @@ static void perform_calibration(void)
   spline_points[0].a_angle -= TWO_PI;
   spline_points[1] = spline_points[calib_shot_n - 1 + SPLINE_PADDING];
   spline_points[1].a_angle -= TWO_PI;
+
   spline_points[calib_shot_n + 0 + SPLINE_PADDING] = spline_points[3]; // Put the first two points at the end
   spline_points[calib_shot_n + 0 + SPLINE_PADDING].a_angle += TWO_PI;
   spline_points[calib_shot_n + 1 + SPLINE_PADDING] = spline_points[2];
   spline_points[calib_shot_n + 1 + SPLINE_PADDING].a_angle += TWO_PI;
 
   /*
-   *  Perform the calibration calculations
+   Sorted. return
    */
-  find_coeficients();
-
-  /*
-   * Check the calibration data
-   */
-  verify_calibration(); // Apply the calibration to the shots and see if they match the calibration
-
   return;
 }
 
@@ -381,6 +511,8 @@ static void find_coeficients(void)
  * This generates a circle and computes a spline scale for each
  * angle.
  *
+ * In the output list, each entry should show a scale of 1.0
+ *
  *--------------------------------------------------------------*/
 #define VERIFY_SIZE 40
 #define VERIFY_STEP (TWO_PI / (float)VERIFY_SIZE)
@@ -395,7 +527,7 @@ static void verify_calibration(void)
   for ( i = 0; i < VERIFY_SIZE; i++ )
   {
     theta = VERIFY_STEP * (float)i;
-    scale = solve_spline(theta);
+    scale = solve_spline(theta, true); // Override calibration
     SEND(ALL, sprintf(_xs, "\r\nIndex:%d  Angle:%4.4f  Calibrated Scale: %4.6f", i, theta / PI, scale);)
   }
 
@@ -418,14 +550,23 @@ static void verify_calibration(void)
  *
  *
  *--------------------------------------------------------------*/
-double solve_spline(double angle)
+double solve_spline(double angle, // Angle to compute scaling factor
+                    bool   valid  // Override if needed
+)
 {
-  int    s;      // segment index
-  double scale;  // Scale factor
-  double x0, x1; // X boundaries
-  double k0, k1, k2;
-  double y0;     // Value of y at x0
-  double t;      // Interval fraction
+  int    s;                       // segment index
+  double scale;                   // Scale factor
+  double x0, x1;                  // X boundaries
+  double y0;                      // Value of y at x0
+  double t;                       // Interval fraction
+
+  /*
+   *  Return 1.0 if the calibration is not present
+   */
+  if ( valid == false )
+  {
+    return 1.0f;
+  }
 
   /*
    *  Find the right segment
@@ -449,10 +590,6 @@ double solve_spline(double angle)
   x0 = spline_points[s].a_angle;
   x1 = spline_points[s + 1].a_angle;
   y0 = spline_points[s].scale;
-
-  k0 = spline_points[s].k0;
-  k1 = spline_points[s].k1;
-  k2 = spline_points[s].k2;
 
   t     = (angle - x0) / (x1 - x0); // Interval fraction
   scale = y0 + (spline_points[s].k0 * t) + (spline_points[s].k1 * t * t) + (spline_points[s].k2 * t * t * t);
@@ -479,28 +616,41 @@ double solve_spline(double angle)
  *--------------------------------------------------------------*/
 void commit_calibration(void)
 {
-  int  i;
-  char name[32];
+  int     i;
+  size_t  size;               // How many bytes written
+  double *blob;
+
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "commit_calibration()");))
 
+  size      = 0;
+  blob      = (double *)&_xs; // Point to a chunk of memory
+  *(blob++) = SPLINE_VALID;   // Put in a marker
+  size += sizeof(double);
   /*
-   *  Save the spline coefficients for each point to NONVOL
+   *  Put the calibration data into _xs
    */
-  for ( i = 0; i != sizeof(spline_points) / sizeof(spline_points[0]); i++ )
+
+  for ( i = 0; i != calib_shot_n; i++ )
   {
-    sprintf(name, "%s_%d%d", NONVOL_CALIBRATION_DATA, i, 0);
-    nvs_set_i32(my_handle, name, (uint32_t)(spline_points[i].k0 * 10000)); // Conver to integer to save
-    sprintf(name, "%s_%d%d", NONVOL_CALIBRATION_DATA, i, 1);
-    nvs_set_i32(my_handle, name, (uint32_t)(spline_points[i].k1 * 10000));
-    sprintf(name, "%s_%d%d", NONVOL_CALIBRATION_DATA, i, 2);
-    nvs_set_i32(my_handle, name, (uint32_t)(spline_points[i].k2 * 10000));
+    *(blob++) = spline_points[i].scale;
+    *(blob++) = spline_points[i].k0;
+    *(blob++) = spline_points[i].k1;
+    *(blob++) = spline_points[i].k2;
+    *(blob++) = spline_points[i].a_angle;
+    size += sizeof(double) * 5;
   }
+
+  size = (size_t)blob - (size_t)&_xs;
+  nvs_set_blob(my_handle, NONVOL_CALIBRATION_DATA, &_xs, size);
+  nvs_set_i32(my_handle, NONVOL_X_OFFSET, (int)(json_x_offset * 1000));
+  nvs_set_i32(my_handle, NONVOL_Y_OFFSET, (int)(json_y_offset * 1000));
 
   nvs_commit(my_handle);
 
   /*
    * All done, return
    */
+  calibration_is_valid = true;
   return;
 }
 
@@ -510,32 +660,73 @@ void commit_calibration(void)
  *
  * @brief: Retrieve the calibration data from NONVOL
  *
- * @return: None
+ * @return: TRUE if settings were retreived
  *
  *----------------------------------------------------------------
  *
  * Pull the calibration data from NONVOL into the spline_points array
  * for use during target processing.
+ *
  *--------------------------------------------------------------*/
-void get_calibration(void)
+bool get_calibration(void)
 {
-  int  i;
-  char name[32];
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "get_calibration()");))
+  int    i;
+  size_t size;
+  float *blob;
+  float  marker;
 
-  for ( i = 0; i != sizeof(spline_points) / sizeof(spline_points[0]); i++ )
+//  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "get_calibration()");))
+
+  calibration_is_valid = false; // Assume false until proven otherwise
+
+  /*
+   *  Put the calibration data into _xs
+   */
+  blob = (double *)&_xs; // Point to a chunk of memory
+  nvs_get_blob(my_handle, NONVOL_CALIBRATION_DATA, &blob, &size);
+  if ( size != 0 )
   {
-    sprintf(name, "%s_%d%d", NONVOL_CALIBRATION_DATA, i, 0);
-    nvs_get_i32(my_handle, name, &spline_points[i].k0);
-    sprintf(name, "%s_%d%d", NONVOL_CALIBRATION_DATA, i, 1);
-    nvs_get_i32(my_handle, name, &spline_points[i].k1);
-    sprintf(name, "%s_%d%d", NONVOL_CALIBRATION_DATA, i, 2);
-    nvs_get_i32(my_handle, name, &spline_points[i].k2);
+    marker = *(blob++);
+    for ( i = 0; i != calib_shot_n; i++ )
+    {
+      spline_points[i].scale   = *(blob++);
+      spline_points[i].k0      = *(blob++);
+      spline_points[i].k1      = *(blob++);
+      spline_points[i].k2      = *(blob++);
+      spline_points[i].a_angle = *(blob++);
+    }
+    calibration_is_valid = (marker == SPLINE_VALID);
   }
 
   /*
-   * All done, return
+   * If we get here then there is no calibration data
    */
+  return calibration_is_valid;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: reset_calibration()
+ *
+ * @brief: Clear out all of the calibration data
+ *
+ * @return: Nothing
+ *
+ *----------------------------------------------------------------
+ *
+ * Invalidate the existing calibration settings.
+ *
+ *--------------------------------------------------------------*/
+static void void_calibration(void)
+{
+  float blob;
+
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "clear_calibration()");))
+
+  calibration_is_valid = false; // Assume false until proven otherwise
+
+  blob = 0;
+  nvs_set_blob(my_handle, NONVOL_CALIBRATION_DATA, &blob, sizeof(float));
   return;
 }
 

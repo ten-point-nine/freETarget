@@ -187,17 +187,14 @@ int instr(char *s1, // Source string
  *-----------------------------------------------------
  *
  *-----------------------------------------------------*/
-
 bool contains(char *source,                    // Source string
               char *match                      // Comparison string
 )
 {
-  int   i;
   char *start;
 
   start = match;                               // Save the start of the comparison string
 
-  i = 0;
   while ( (*source != 0) && (*match != 0) )
   {
     if ( toupper(*match) == toupper(*source) ) // Found a match
@@ -989,13 +986,16 @@ float atan2_2PI(float y, float x)
  * different and the caomparison takes place again util they
  * are all different.
  *
+ * A is adjusted downwards
+ * B is always left alone
+ * C is adjusted upwards
  *--------------------------------------------------------------*/
 #define AB  0b011 // A == B
 #define BC  0b110 // B == C
 #define AC  0b101 // A == C
 #define ABC 0b111 // A == B== C
 
-void no_singularity(float *a, float *b, float *c)
+void no_singularity(double *a, double *b, double *c)
 {
   int equal;      // Mask of equalities
 

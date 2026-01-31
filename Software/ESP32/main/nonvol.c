@@ -11,6 +11,7 @@
  * ----------------------------------------------------*/
 #include "nvs.h"
 #include "nvs_flash.h"
+#include "string.h"
 
 #include "freETarget.h"
 #include "helpers.h"
@@ -19,7 +20,7 @@
 #include "mfs.h"
 #include "nonvol.h"
 #include "serial_io.h"
-#include "string.h"
+#include "calibrate.h"
 #include "ota.h"
 
 /*
@@ -142,6 +143,11 @@ void read_nonvol(void)
     }
     i++;
   }
+
+  /*
+   *  Fetch the calibration data
+   */
+  get_calibration();
 
   /*
    * Special case of broken sensor diameter
