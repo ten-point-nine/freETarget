@@ -30,7 +30,7 @@
 
 #define SHOT_TIME_TO_SECONDS(x) ((float)(x)) / 1000000.0
 
-double sq(double x)
+real_t sq(real_t x)
 {
   return x * x;
 }
@@ -903,11 +903,11 @@ int get_OTA_serial(int   length,                                           // Ma
  *
  *
  *--------------------------------------------------------------*/
-void get_number(char *prompt, double *value)
+void get_number(char *prompt, real_t *value)
 {
   char   str[SHORT_TEXT];
   char  *end_ptr;
-  double val;
+  real_t val;
 
   SEND(ALL, sprintf(_xs, "%s", prompt);)
 
@@ -1000,7 +1000,7 @@ float atan2_degrees(float y, float x)
 #define AC  0b101 // A == C
 #define ABC 0b111 // A == B== C
 
-void no_singularity(double *a, double *b, double *c)
+void no_singularity(real_t *a, real_t *b, real_t *c)
 {
   int equal;      // Mask of equalities
 

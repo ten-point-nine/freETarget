@@ -32,8 +32,8 @@
  * Function prototypes
  */
 void          set_vset_PWM(unsigned int pwm);
-static double temperature_C_HDC3022(void);  // Temperature in degrees C
-static double temperature_C_TMP1075D(void); // Temperature in degrees C
+static real_t temperature_C_HDC3022(void);  // Temperature in degrees C
+static real_t temperature_C_TMP1075D(void); // Temperature in degrees C
 
 /*
  *  Variables
@@ -304,11 +304,11 @@ unsigned int revision(void)
  *  to a voltage
  *
  *--------------------------------------------------------------*/
-double vref_measure(void)
+real_t vref_measure(void)
 {
   if ( TMP1075D )
   {
-    return ((double)adc_read(VMES_LO)) / ADC_FULL * ADC_REF * VREF_DIVIDER + ADC_BIAS; // 4096 full scale, 3.3 VREF 1/2 voltage divider
+    return ((real_t)adc_read(VMES_LO)) / ADC_FULL * ADC_REF * VREF_DIVIDER + ADC_BIAS; // 4096 full scale, 3.3 VREF 1/2 voltage divider
   }
   else
   {
@@ -326,7 +326,7 @@ double vref_measure(void)
  *
  *
  *--------------------------------------------------------------*/
-double temperature_C(void)
+real_t temperature_C(void)
 {
   if ( HDC3022 )
   {
@@ -352,7 +352,7 @@ double temperature_C(void)
  * A simple interrogation is used.
  *
  *--------------------------------------------------------------*/
-static double temperature_C_HDC3022(void)
+static real_t temperature_C_HDC3022(void)
 {
   unsigned char temp_buffer[6];
   int           raw;
@@ -398,7 +398,7 @@ static double temperature_C_HDC3022(void)
  * For all other revisions, read the temperature each time.
  *--------------------------------------------------------------*/
 #define TC_CAL (0.0625 / 16) // 'C / LSB
-static double temperature_C_TMP1075D(void)
+static real_t temperature_C_TMP1075D(void)
 {
   unsigned char temp_buffer[6];
   int           raw;
@@ -453,7 +453,7 @@ static double temperature_C_TMP1075D(void)
  * A simple interrogation is used.
  *
  *--------------------------------------------------------------*/
-double humidity_RH(void)
+real_t humidity_RH(void)
 {
   temperature_C(); // Read in the temperature and humidity
   return rh;
@@ -474,7 +474,7 @@ double humidity_RH(void)
  *--------------------------------------------------------------*/
 void set_VREF(void)
 {
-  double volts[4];
+  real_t volts[4];
 
   if ( (json_vref_lo == 0) // Check for an uninitialized VREF
        || (json_vref_hi == 0) )

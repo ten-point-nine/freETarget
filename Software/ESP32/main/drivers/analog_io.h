@@ -22,7 +22,7 @@
 #define MAX_ANALOG 0x3ff                             // Largest analog input
 #define MAX_PWM    0xff                              // PWM is an 8 bit port
 
-#define TO_VOLTS(x) (((double)(x) * 5.0) / 1024.0)
+#define TO_VOLTS(x) (((real_t)(x) * 5.0) / 1024.0)
 
 #define TEMP_IC          (0x44)                      // TI HDC3022
 #define TEMP_IC_TMP1075D (0x48)                      // TI TMP1075D
@@ -35,16 +35,16 @@ void         adc_init(unsigned int channel,
                       unsigned int attenuation);       // Setup the analog hardware
 unsigned int adc_read(unsigned int channel);           // Return the raw value
 unsigned int revision(void);                           // Return the board revision
-double       temperature_C(void);                      // Temperature in degrees C
-double       humidity_RH(void);                        // Relative humidity in %
+real_t       temperature_C(void);                      // Temperature in degrees C
+real_t       humidity_RH(void);                        // Relative humidity in %
 void         set_VREF(void);                           // Set the output of the VREF DAC(s)
 void         set_LED_PWM(int percent);                 // Ramp the PWM duty cycle
 void         set_LED_PWM_now(int percent);             // Set the PWM duty cycle
 float        v12_supply(void);                         // Read the 12V supply
 void         analog_input_test(void);                  // Read the analog input
 void         analog_input_raw(void);                   // Read and display the analog imputs as raw values
-double       speed_of_sound(double temperature,
-                            double relative_humidity); // Calculate speed of sound
-double       vref_measure(void);                       // Read the reference voltages
+real_t       speed_of_sound(real_t temperature,
+                            real_t relative_humidity); // Calculate speed of sound
+real_t       vref_measure(void);                       // Read the reference voltages
 
 #endif

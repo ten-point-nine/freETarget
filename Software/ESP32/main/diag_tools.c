@@ -276,7 +276,7 @@ bool do_factory_test(bool test_run)
   char   ABCD[] = "DCBA";       // DIP switch order
   int    pass;                  // Pass YES/NO
   bool   passed_once;           // Passed all of the tests at least once
-  double volts[4];
+  real_t volts[4];
   float  vmes_lo;
   int    motor_toggle;          // Toggle motor on an off
   int    number_of_sensors = 4; // Number of sensors to test

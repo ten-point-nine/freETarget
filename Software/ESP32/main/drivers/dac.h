@@ -25,7 +25,7 @@
 /*
  *  Functions
  */
-void DAC_write(double volts[]);
+void DAC_write(real_t volts[]);
 void DAC_test(void);      // Ramp the DACs
 void DAC_read(void);      // Read the DAC registers
 void DAC_calibrate(void); // Adjust the DAC output

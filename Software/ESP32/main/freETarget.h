@@ -142,6 +142,7 @@
  */
 typedef unsigned char byte_t;
 typedef volatile long time_count_t;
+typedef double         real_t;
 
 typedef struct sensor_ID
 {

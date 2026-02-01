@@ -79,7 +79,7 @@ EXTERN int           json_aux_mode;                  // Enable comms from the AU
 EXTERN int           json_calibre_x10;               // Pellet Calibre
 EXTERN int           json_dip_switch;                // DIP switch overwritten by JSON message
 EXTERN int           json_dip_switch;                // DIP switch overwritten by JSON message
-EXTERN double        json_sensor_dia;                // Sensor radius overwitten by JSON message
+EXTERN real_t        json_sensor_dia;                // Sensor radius overwitten by JSON message
 EXTERN int           json_sensor_angle;              // Angle sensors are rotated through
 EXTERN int           json_paper_time;                // Time to turn on paper backer motor
 EXTERN int           json_echo;                      // Value to ech
@@ -103,8 +103,8 @@ EXTERN int           json_step_ramp;                 // Time interval between ra
 EXTERN int           json_step_start;                // Starting ramp inteval
 EXTERN int           json_step_time;                 // Duration of step pulse
 EXTERN int           json_multifunction;             // Multifunction switch operation
-EXTERN double        json_x_offset;                  // Offset added to horizontal to centre target in sensors
-EXTERN double        json_y_offset;                  // Offset added to vertical to centre targetin sensors
+EXTERN real_t        json_x_offset;                  // Offset added to horizontal to centre target in sensors
+EXTERN real_t        json_y_offset;                  // Offset added to vertical to centre targetin sensors
 EXTERN int           json_z_offset;                  // Distance between paper and sensor plane (1mm / LSB)
 EXTERN int           json_paper_eco;                 // Do not advance witness paper if shot is greater than json_paper_eco
 EXTERN int           json_target_type;               // Modify the location based on a target type (0 == regular 1 bull target)
@@ -117,7 +117,7 @@ EXTERN int           json_rapid_enable;              // Rapid Fire enabled
 EXTERN unsigned long json_rapid_on;                  // Rapid Fire ON timer
 EXTERN int           json_rapid_count;               // Number of expected shots
 EXTERN int           json_vset_PWM;                  // Voltage PWM count
-EXTERN double        json_vset;                      // Desired voltage setpont
+EXTERN real_t        json_vset;                      // Desired voltage setpont
 EXTERN int           json_follow_through;            // Follow through timer
 EXTERN int           json_keep_alive;                // Keepalive period
 EXTERN int           json_face_strike;               // Number of cycles to accept a face strike
@@ -135,8 +135,8 @@ EXTERN int           json_wifi_hidden;               // Hide the SSID if enabled
 EXTERN int           json_min_ring_time;             // Time to wait for ringing to stop
 EXTERN int           json_token;                     // Token ring setting
 EXTERN int           json_multifunction2;            // Multifunction Switch 2
-EXTERN double        json_vref_lo;                   // Sensor Voltage Reference Low (V)
-EXTERN double        json_vref_hi;                   // Sensor Voltage Reference High (V)
+EXTERN real_t        json_vref_lo;                   // Sensor Voltage Reference Low (V)
+EXTERN real_t        json_vref_hi;                   // Sensor Voltage Reference High (V)
 EXTERN int           json_pcnt_latency;              // pcnt interrupt latancy
 EXTERN int           json_mfs_hold_12;               // Hold A and B
 EXTERN int           json_mfs_tap_2;                 // Tap B
@@ -161,5 +161,5 @@ EXTERN int           json_session_type;              // What kind of session is 
 EXTERN char          json_ota_url[URL_SIZE];         // OTA URL
 EXTERN int           json_lock;                      // Lock the JSON message so it cannot be changed
 EXTERN int           json_OTA_download_size;         // Number of bytes in the download image
-EXTERN double        json_sensor_angle_offset;       // Correction to the sensor angle
+EXTERN real_t        json_sensor_angle_offset;       // Correction to the sensor angle
 #endif

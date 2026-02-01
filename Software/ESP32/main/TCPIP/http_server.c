@@ -20,7 +20,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/param.h>
+//#include <sys/param.h>
 #include "esp_http_server.h"
 #include "esp_event.h"
 #include "esp_netif.h"

@@ -9,7 +9,7 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "string.h"
-#include <sys/param.h>
+//#include <sys/param.h>
 #include "esp_ota_ops.h"
 
 #define JSON_C // This is the JSON file

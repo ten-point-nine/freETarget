@@ -132,11 +132,11 @@ void read_nonvol(void)
           if ( JSON[i].non_vol != 0 )
           {
             nvs_get_i32(my_handle, JSON[i].non_vol, &x); // Read in the value as an integer
-            *(double *)(JSON[i].value) = (float)x / 1000.0;
+            *(real_t *)(JSON[i].value) = (float)x / 1000.0;
           }
           else
           {
-            *(double *)(JSON[i].value) = (double)JSON[i].init_value / 1000.0;
+            *(real_t *)(JSON[i].value) = (real_t)JSON[i].init_value / 1000.0;
           }
           break;
       }

@@ -195,7 +195,6 @@ static void start_calibration(void)
 static void perform_calibration(void)
 {
   double x, y, action; // User input
-  int    i, j;         // Loop counters
   int    use_shot_n;   // Shot used for calibration
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "perform_calibration()");))

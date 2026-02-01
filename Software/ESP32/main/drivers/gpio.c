@@ -490,7 +490,7 @@ void commit_status_LEDs(unsigned int blink_state)
 void read_timers(int timer[])
 {
   unsigned int i;
-  double       pcnt_hi; // Reading from high counter
+  real_t       pcnt_hi; // Reading from high counter
 
   for ( i = 0; i != 8; i++ )
   {
@@ -569,7 +569,7 @@ void paper_start(void)
   /*
    *  DC Motor, turn on the FET to start the motor
    */
-  if ( IS_DC_WITNESS )    // DC motor,
+  if ( IS_DC_WITNESS ) // DC motor,
   {
     DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "DC motor start: %d ms", json_paper_time);))
     DCmotor_on_off(true, json_paper_time);
