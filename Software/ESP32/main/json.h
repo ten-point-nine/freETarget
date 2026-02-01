@@ -23,7 +23,7 @@ typedef struct
 {
   int   show;       // Display attributes
   char *token;      // JSON token string, ex "RADIUS":
-  int  *value;      // Where value is stored (cast to (float*) if needed)
+  int  *value;      // Where value is stored (cast to (real_t*) if needed)
   int   convert;    // Conversion type
   void (*f)(int x); // Function to execute with message
   char *non_vol;    // Storage in NON-VOL
@@ -48,7 +48,7 @@ extern const json_message_t JSON[];
 #define LOCK        0x02                             // The value is a secret
 #define MFS_DISPLAY 0x04                             // Display as MFS
 #define IS_FIXED    (1 << 8)                         // The value cannot be changed
-#define IS_FLOAT    (2 << 8)                         // Value is a floating point number
+#define IS_FLOAT    (2 << 8)                         // Value is a real_ting point number
 #define IS_INT32    (3 << 8)                         // Value is a 64 bit int
 #define IS_SECRET   (4 << 8)                         // Value is a string but hidden
 #define IS_TEXT     (5 << 8)                         // Value is a string
@@ -57,8 +57,8 @@ extern const json_message_t JSON[];
 #define IS_VOID     (8 << 8)                         // Value is a void
 #define IS_TIME     (9 << 8)                         // Value is time
 
-#define IS_MASK    (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED | IS_MFS | IS_TIME)
-#define FLOAT_MASK ((~IS_MASK) & 0xFF)               // Scaling factor 8 bits
+#define IS_MASK     (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED | IS_MFS | IS_TIME)
+#define real_t_MASK ((~IS_MASK) & 0xFF)              // Scaling factor 8 bits
 
 #define SSID_SIZE        31                          // Reserve 30+1 bytes for SSID
 #define PWD_SIZE         63                          // Reserve 63+1 bytes for Password

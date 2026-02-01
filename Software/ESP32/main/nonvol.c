@@ -109,7 +109,7 @@ void read_nonvol(void)
         case IS_SECRET:
           if ( JSON[i].non_vol != 0 ) // Is persistent storage enabled?
           {
-            length = JSON[i].convert & FLOAT_MASK;
+            length = JSON[i].convert & real_t_MASK;
             nvs_get_str(my_handle, JSON[i].non_vol, (char *)JSON[i].value, &length);
           }
           break;
@@ -132,7 +132,7 @@ void read_nonvol(void)
           if ( JSON[i].non_vol != 0 )
           {
             nvs_get_i32(my_handle, JSON[i].non_vol, &x); // Read in the value as an integer
-            *(real_t *)(JSON[i].value) = (float)x / 1000.0;
+            *(real_t *)(JSON[i].value) = (real_t)x / 1000.0;
           }
           else
           {

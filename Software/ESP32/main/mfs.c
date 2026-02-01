@@ -454,10 +454,10 @@ static void mfs_pc_test(void)
 
   temp                = esp_random() % (SCALE);
   sign                = ((esp_random() & 1) == 0) ? 1 : -1;
-  record[test_shot].x = (float)(sign * temp);
+  record[test_shot].x = (real_t)(sign * temp);
   temp                = esp_random() % (SCALE);
   sign                = ((esp_random() & 1) == 0) ? 1 : -1;
-  record[test_shot].y = (float)(sign * temp);
+  record[test_shot].y = (real_t)(sign * temp);
   s_of_sound          = speed_of_sound(temperature_C(), humidity_RH());
   prepare_score(&record[test_shot], test_shot, NOT_MISSED_SHOT);
   test_shot++;

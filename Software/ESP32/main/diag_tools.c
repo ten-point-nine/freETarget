@@ -277,7 +277,7 @@ bool do_factory_test(bool test_run)
   int    pass;                  // Pass YES/NO
   bool   passed_once;           // Passed all of the tests at least once
   real_t volts[4];
-  float  vmes_lo;
+  real_t  vmes_lo;
   int    motor_toggle;          // Toggle motor on an off
   int    number_of_sensors = 4; // Number of sensors to test
 
@@ -935,7 +935,7 @@ void set_diag_LED(char        *new_LEDs, // NEW LED display
 bool check_12V(void)
 {
   static unsigned int fault_V12 = UNKNOWN;
-  float               v12;
+  real_t               v12;
 
   /*
    *  Check to see that the witness paper is enabled
@@ -1081,7 +1081,7 @@ static void test_display_all_scores(void)
  * operation of the target detection.
  *
  *--------------------------------------------------------------*/
-static float rapid_schedule[] = {2.0, 1.0, .75, .5, .25, -1};
+static real_t rapid_schedule[] = {2.0, 1.0, .75, .5, .25, -1};
 
 static void test_rapidfire(void)
 {

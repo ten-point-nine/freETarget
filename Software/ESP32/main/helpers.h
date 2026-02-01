@@ -30,8 +30,8 @@ unsigned int hamming_weight(unsigned int word);                         // Add u
 void         to_binary(unsigned int x, unsigned int bits, char *s);     // Convert a number to a binary string
 void         watchdog(void);                                            // Monitor the target health
 int          get_OTA_serial(int lenght, char *s);                       // String to return the download image
-float        atan2_2PI(float y, float x);                               // atan2 function that returns 0 to 2PI
-float        atan2_degrees(float y, float x);                           // atan2 function that returns 0-360 degrees
+real_t        atan2_2PI(real_t y, real_t x);                               // atan2 function that returns 0 to 2PI
+real_t        atan2_degrees(real_t y, real_t x);                           // atan2 function that returns 0-360 degrees
 void         no_singularity(real_t *a, real_t *b, real_t *c);           // Prevent singularities
 /*
  * Global helper variables

@@ -67,7 +67,7 @@ typedef struct
 {
   volatile int *timer;               // Timer used to control state length
   char         *status_LED;          // Status LED output
-  float         LED_bright;          // Brightness of target LED
+  real_t         LED_bright;          // Brightness of target LED
   char         *message;             // Message to be sent to PC
   bool          in_shot;             // In as shot cycle
 } rapid_state_t;
@@ -1021,8 +1021,8 @@ void generate_fake_shot(void)
 {
   int   i;                      // Loop index
   int   x, y;                   // Shot location coordinates
-  float radius;                 // Radius of shot
-  float distance;               // Distance from shot to sensor
+  real_t radius;                 // Radius of shot
+  real_t distance;               // Distance from shot to sensor
 
   shot_in  = 0;                 // Reset the shot queue
   shot_out = 0;
@@ -1036,12 +1036,12 @@ void generate_fake_shot(void)
     {
       for ( y = MIN_BOUND; y <= MAX_BOUND; y += SHOT_SPACING )
       {
-        radius = sqrtf((float)sq(x) + sq(y));  // Compute the radius for polar coordinates
+        radius = sqrtf((real_t)sq(x) + sq(y));  // Compute the radius for polar coordinates
         if ( radius <= (165.0 / 2.0) )         // inside the target radius
         {
           for ( i = N; i <= W; i++ )           // Loop through the sensors to compute the time counts
           {
-            distance = sqrt((float)(sq(x - s[i].x_mm) + sq(y - s[i].y_mm)));
+            distance = sqrt((real_t)(sq(x - s[i].x_mm) + sq(y - s[i].y_mm)));
             record[shot_in].timer_count[i] =
                 (int)(SHOT_TIME * OSCILLATOR_MHZ) - (distance / 0.35 * OSCILLATOR_MHZ); // Fake the travel time in
           }

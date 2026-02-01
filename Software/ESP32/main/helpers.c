@@ -28,7 +28,7 @@
 #include "wifi.h"
 #include "serial_io.h"
 
-#define SHOT_TIME_TO_SECONDS(x) ((float)(x)) / 1000000.0
+#define SHOT_TIME_TO_SECONDS(x) ((real_t)(x)) / 1000000.0
 
 real_t sq(real_t x)
 {
@@ -952,9 +952,9 @@ void get_number(char *prompt, real_t *value)
  * This function returns 0 to 2PI
  *
  *--------------------------------------------------------------*/
-float atan2_2PI(float y, float x)
+real_t atan2_2PI(real_t y, real_t x)
 {
-  float angle = atan2f(y, x);
+  real_t angle = atan2f(y, x);
   if ( angle < 0 )
   {
     angle += TWO_PI; // Keep in range 0 to 2PI
@@ -963,7 +963,7 @@ float atan2_2PI(float y, float x)
   return angle;
 }
 
-float atan2_degrees(float y, float x)
+real_t atan2_degrees(real_t y, real_t x)
 {
   return atan2_2PI(x, y) / PI * 180.0f;
 }

@@ -40,7 +40,7 @@ real_t       humidity_RH(void);                        // Relative humidity in %
 void         set_VREF(void);                           // Set the output of the VREF DAC(s)
 void         set_LED_PWM(int percent);                 // Ramp the PWM duty cycle
 void         set_LED_PWM_now(int percent);             // Set the PWM duty cycle
-float        v12_supply(void);                         // Read the 12V supply
+real_t       v12_supply(void);                         // Read the 12V supply
 void         analog_input_test(void);                  // Read the analog input
 void         analog_input_raw(void);                   // Read and display the analog imputs as raw values
 real_t       speed_of_sound(real_t temperature,

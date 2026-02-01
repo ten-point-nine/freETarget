@@ -553,7 +553,7 @@ static void find_coeficients(void)
  *
  *--------------------------------------------------------------*/
 #define VERIFY_SIZE 40
-#define VERIFY_STEP (TWO_PI / (float)VERIFY_SIZE)
+#define VERIFY_STEP (TWO_PI / (real_t)VERIFY_SIZE)
 static void verify_calibration(void)
 {
   int    i;
@@ -564,7 +564,7 @@ static void verify_calibration(void)
 
   for ( i = 0; i < VERIFY_SIZE; i++ )
   {
-    theta = VERIFY_STEP * (float)i;
+    theta = VERIFY_STEP * (real_t)i;
     scale = solve_spline(theta, true); // Override calibration
     SEND(ALL, sprintf(_xs, "\r\nIndex:%d  Angle:%4.4f  Calibrated Scale: %4.6f", i, theta / PI, scale);)
   }
@@ -710,8 +710,8 @@ bool get_calibration(void)
 {
   int    i;
   size_t size;
-  float *blob;
-  float  marker;
+  real_t *blob;
+  real_t  marker;
 
   //  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "get_calibration()");))
 
@@ -757,14 +757,14 @@ bool get_calibration(void)
  *--------------------------------------------------------------*/
 static void void_calibration(void)
 {
-  float blob;
+  real_t blob;
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "clear_calibration()");))
 
   calibration_is_valid = false; // Assume false until proven otherwise
 
   blob = 0;
-  nvs_set_blob(my_handle, NONVOL_CALIBRATION_DATA, &blob, sizeof(float));
+  nvs_set_blob(my_handle, NONVOL_CALIBRATION_DATA, &blob, sizeof(real_t));
   return;
 }
 
@@ -784,18 +784,18 @@ static void void_calibration(void)
  * directions.
  *
  *--------------------------------------------------------------*/
-#define TEST_STEP (TWO_PI / (float)MAX_CALIBRATION_SHOTS) // Increment between steps
+#define TEST_STEP (TWO_PI / (real_t)MAX_CALIBRATION_SHOTS) // Increment between steps
 
 void calibration_test(void)
 {
   unsigned int i;
-  float        theta;
+  real_t        theta;
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "calibration_test()");))
 
   for ( i = 0; i != MAX_CALIBRATION_SHOTS; i++ )
   {
-    theta = TEST_STEP * (float)i;
+    theta = TEST_STEP * (real_t)i;
 
     record[i].radius = 75.0f;
     record[i].angle  = theta;
