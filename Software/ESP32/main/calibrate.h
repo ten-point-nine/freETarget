@@ -12,4 +12,9 @@ double solve_spline(double theta, bool valid); // Use the spline coeficients to 
 bool   get_calibration(void);                  // Retrieve calibration data from NONVOL
 void   calibration_test(void);                 // Generate test calibration data
 
+/*
+ *  Variables
+ */
+extern bool calibration_is_valid;
+
 #endif

@@ -19,7 +19,7 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"6.3.0 January 30, 2026\""
+#define SOFTWARE_VERSION "\"6.3.0 February 2, 2026\""
 #define _DONE_           "\r\nDone\r\n"
 #define _SHOT_           "shot"
 #define _GREETING_       "CONNECTED"   // Message to send on connection
@@ -53,8 +53,6 @@
 
 #define IS_DC_WITNESS      (json_paper_time != 0) // Determine the witness paper drive (DC Motor)
 #define IS_STEPPER_WITNESS (json_step_count != 0) // Determine the witness paper drive (stepper)
-
-#define JSON_NAME_TEXT 99                         // Use 99 to identify a user named target
 
 /*
  * Options
@@ -142,7 +140,7 @@
  */
 typedef unsigned char byte_t;
 typedef volatile long time_count_t;
-typedef double         real_t;
+typedef double        real_t;
 
 typedef struct sensor_ID
 {

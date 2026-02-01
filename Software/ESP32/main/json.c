@@ -159,10 +159,10 @@ const json_message_t JSON[] = {
  *
  * {"LABLE":value }
  *
- * {"ECHO":23"}
- * {"ECHO":12, "DIP":8}
- * {"DIP":9, "SENSOR":230.0, "ECHO":32}
- * {"TEST":7, "ECHO":5}
+ * {"ECHO":0"}
+ * {"ECHO":0, "DIP":8}
+ * {"DIP":9, "SENSOR":230.0, "ECHO":0}
+ * {"TEST":7, "ECHO":0}
  * {"PAPER":1, "DELAY":5, "PAPER":0, "TEST":16}
  *
  * Find the lable, ex "DIP": and save in the
@@ -516,6 +516,7 @@ void show_echo(void)
   serial_to_all(NULL, EVEN_ODD_BEGIN);                                                 // Start over again
   SEND(ALL, sprintf(_xs, "\"SN\":                %d", json_serial_number);)
   SEND(ALL, sprintf(_xs, "\"TRACE\":             %d,", is_trace);)                     //
+  SEND(ALL, sprintf(_xs, "\"CALIBRATION\":       %d,", calibration_is_valid);)         //
   SEND(ALL, sprintf(_xs, "\"RUN_STATE\":         %d,", run_state);)                    // Internal running state is enabled
   SEND(ALL, sprintf(_xs, "\"CONNECTION_LIST\":   %02X,", connection_list);)            // Who is attached
   SEND(ALL, sprintf(_xs, "\"RUNNING_MINUTES\":   %0.2f,", run_time_seconds() / 60.0);) // On Time

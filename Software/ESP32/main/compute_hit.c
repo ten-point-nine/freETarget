@@ -21,9 +21,6 @@
 #include "token.h"
 #include "timer.h"
 #include "compute_hit.h"
-// #include "serial_io.h"
-// #include "gpio.h"
-// #include "http_client.h"
 #include "json.h"
 #include "calibrate.h"
 
@@ -502,18 +499,17 @@ void prepare_score(shot_record_t *shot,        //  record
   /*
    *  Work out the hole in perfect coordinates
    */
-  x = shot->x * s_of_sound * CLOCK_PERIOD;                                                                        // Distance in mm
-  y = shot->y * s_of_sound * CLOCK_PERIOD;                                                                        // Distance in mm
-                                                                                                                  // Angle in radians
+  x            = shot->x * s_of_sound * CLOCK_PERIOD; // Distance in mm
+  y            = shot->y * s_of_sound * CLOCK_PERIOD; // Distance in mm // Angle in radians
   shot->radius = sqrt(sq(x) + sq(y)) * solve_spline(atan2_2PI(shot->y, shot->x) + json_sensor_angle_offset, true); // radius in mm
 
   /*
    * Rotate the result based on the construction, and recompute the hit
    */
-  shot->angle = atan2_degrees(shot->y, shot->x) + json_sensor_angle + (json_sensor_angle_offset / PI * 180);
-  shot->x_mm  = shot->radius * cos(PI * shot->angle / 180.0d) + json_x_offset; // Rotate onto the target face
-  shot->y_mm  = shot->radius * sin(PI * shot->angle / 180.0d) + json_y_offset; // and add in sensor correction
-  remap_target(shot);                                                          // Change the target if needed
+  shot->angle = atan2_2PI(shot->y, shot->x) + degrees_to_radians(json_sensor_angle) + json_sensor_angle_offset;
+  shot->x_mm  = shot->radius * cos(shot->angle) + json_x_offset; // Rotate onto the target face
+  shot->y_mm  = shot->radius * sin(shot->angle) + json_y_offset; // and add in sensor correction
+  remap_target(shot);                                            // Change the target if needed
   shot->session_type = SESSION_VALID | json_session_type;
 
   /*

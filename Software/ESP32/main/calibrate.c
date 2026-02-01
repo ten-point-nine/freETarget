@@ -66,7 +66,7 @@ static spline_point_t spline_points[MAX_CALIBRATION_SHOTS + SPLINE_PADDING * 2];
 static int  calib_shot_n;                                                        // Number of shots gathered
 static bool calibration_diag;                                                    // TRUE if in test mode
 
-static bool calibration_is_valid = false;                                        // Calibration valid marker
+bool calibration_is_valid = false;                                               // Calibration valid marker
 
 /*----------------------------------------------------------------
  *
@@ -87,7 +87,7 @@ static bool calibration_is_valid = false;                                       
  *--------------------------------------------------------------*/
 void calibrate(void)
 {
-  double action; // User input
+  char action; // User input
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "calibrate()");))
 
@@ -97,28 +97,29 @@ void calibrate(void)
   SEND(ALL, sprintf(_xs, "\r\n3 - Commit calibration data to NONVOL");)
   SEND(ALL, sprintf(_xs, "\r\n4 - Void current calibration");)
   SEND(ALL, sprintf(_xs, "\r\n9 - Exit, no action");)
+  SEND(ALL, sprintf(_xs, "\r\n\r\nSelect action: ");)
 
-  get_number("\r\n\r\nSelect action: ", &action);
+  action = serial_getch(ALL);
 
-  switch ( (int)action )
+  switch ( action )
   {
-    case 1:
+    case '1':
       start_calibration();
       return;
 
-    case 2:
+    case '2':
       perform_calibration();
       return;
 
-    case 3:
+    case '3':
       commit_calibration();
       return;
 
-    case 4:
+    case '4':
       void_calibration();
       return;
 
-    case 9:
+    case '9':
       SEND(ALL, sprintf(_xs, "\r\nExiting calibration. No changes made.");)
       return;
 
@@ -708,8 +709,8 @@ void commit_calibration(void)
  *--------------------------------------------------------------*/
 bool get_calibration(void)
 {
-  int    i;
-  size_t size;
+  int     i;
+  size_t  size;
   real_t *blob;
   real_t  marker;
 
@@ -789,7 +790,7 @@ static void void_calibration(void)
 void calibration_test(void)
 {
   unsigned int i;
-  real_t        theta;
+  real_t       theta;
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "calibration_test()");))
 

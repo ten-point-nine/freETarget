@@ -536,7 +536,7 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
         break;
 
       case SCORE_POLAR:                                      // Polar
-        sprintf(str, ", \"r\":%6.2f, \"a\":%6.2f", shot->radius, shot->angle);
+        sprintf(str, ", \"r\":%6.2f, \"a\":%6.2f", shot->radius, radians_to_degrees(shot->angle));
         break;
 
       case SCORE_HARDWARE:                                   // Hardware
@@ -1044,4 +1044,26 @@ void no_singularity(real_t *a, real_t *b, real_t *c)
   }
 
   return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: radians_to_degrees
+ *            degrees_to_radians
+ *
+ * @brief:    Angular conversions
+ *
+ * @return:   Converted values
+ *
+ *----------------------------------------------------------------
+ *
+ *--------------------------------------------------------------*/
+real_t radians_to_degrees(real_t radians)
+{
+  return (radians / PI * 180.0);
+}
+
+real_t degrees_to_radians(real_t degrees)
+{
+  return (degrees / 180.0 * PI);
 }
