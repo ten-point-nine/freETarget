@@ -9,7 +9,7 @@
  * In this file.
  *
  * The designation target or t_ indicates a calculation from the target
- * The designation actual or a_ refers to the actul measured value from the target
+ * The designation actual or actual_ refers to the actul measured value from the target
  *
  *****************************************************************************/
 #include "math.h"
@@ -42,14 +42,14 @@ static void spline_sort(int calib_shot_n);       // Sort the entries in order
  */
 typedef struct spline_point
 {
-  double t_x;                        // X as recorded on the target
-  double t_y;                        // Y as recorded on the target
-  double a_x;                        // Actual X location
-  double a_y;                        // Actual Y location
-  double t_rho;                      // Distance along the spline
-  double t_angle;                    // Angle along the spline
-  double a_rho;                      // Distance along the spline
-  double a_angle;                    // Angle along the spline
+  double target_x;                   // X as recorded on the target
+  double target_y;                   // Y as recorded on the target
+  double actual_x;                   // Actual X location
+  double actual_y;                   // Actual Y location
+  double target_rho;                 // Radial distance from target
+  double target_angle;               // Angle to shot from target in radians
+  double actual_rho;                 // Radial distance as actual
+  double actual_angle;               // Angle to shot as actual in radians
   double scale;                      // Scale factor (actual / target) ~1.0
   double k0, k1, k2;                 // Spline coeficients
 } spline_point_t;
@@ -87,7 +87,7 @@ static bool calibration_is_valid = false;                                       
  *--------------------------------------------------------------*/
 void calibrate(void)
 {
-  double value; // User input
+  double action; // User input
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "calibrate()");))
 
@@ -98,9 +98,9 @@ void calibrate(void)
   SEND(ALL, sprintf(_xs, "\r\n4 - Void current calibration");)
   SEND(ALL, sprintf(_xs, "\r\n9 - Exit, no action");)
 
-  get_number("\r\n\r\nSelect action", &value);
+  get_number("\r\n\r\nSelect action: ", &action);
 
-  switch ( (int)value )
+  switch ( (int)action )
   {
     case 1:
       start_calibration();
@@ -150,15 +150,20 @@ static void start_calibration(void)
 {
   SEND(ALL, sprintf(_xs, "\r\nAction 1 - Gather Shot Data\r\n");)
   SEND(ALL, sprintf(_xs, "\r\nUse a pistol target");)
-  SEND(ALL, sprintf(_xs, "\r\nFire ten shots at random locations around the target.");)
+  SEND(ALL, sprintf(_xs, "\r\nFire at least ten shots at random locations around the target.");)
   SEND(ALL, sprintf(_xs, "\r\nWhen all ten shots are fired, proceed to action 2 to enter the actual locations.");)
   SEND(ALL, sprintf(_xs, "\r\n\r\nStart calibration now...\r\n");)
 
-  shot_in              = 0;     // Clear out any junk
-  shot_out             = 0;
-  json_x_offset        = 0;     // Reset any offsets
-  json_y_offset        = 0;
-  calibration_is_valid = false; // Turn off the calibration
+  shot_in                  = 0;     // Clear out any junk
+  shot_out                 = 0;
+  json_x_offset            = 0;     // Reset any offsets
+  json_y_offset            = 0;
+  json_sensor_angle_offset = 0;
+  calibration_is_valid     = false; // Turn off the calibration
+
+  /*
+   *  Wait for the user to enter the data
+   */
   return;
 }
 
@@ -180,11 +185,18 @@ static void start_calibration(void)
  * 4 - Sort by angle
  * 5 - Find the spline coeficients
  *
+ * When entering the data, the user has the option to
+ *
+ * 1 - Use the data as entered
+ * 2 - Skip this entry and try the next
+ * 3 - Reenter the data
+ *
  *--------------------------------------------------------------*/
 static void perform_calibration(void)
 {
-  double x, y; // User input
-  int    i, j; // Loop counters
+  double x, y, action; // User input
+  int    i, j;         // Loop counters
+  int    use_shot_n;   // Shot used for calibration
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "perform_calibration()");))
 
@@ -197,39 +209,57 @@ static void perform_calibration(void)
     return;
   }
 
+  SEND(ALL, sprintf(_xs, "\r\nChoose ten shots furthest away from the centre\r\n");)
+
   /*
    * Gather actual shot locations
    */
-  calib_shot_n     = 0;
-  calibration_diag = false;
+  calib_shot_n = 0; // Shot to use for calibration
+  use_shot_n   = 0; // Shot used for data point
+
   if ( calibration_diag == false )
   {
     while ( (calib_shot_n < shot_in) && (calib_shot_n < MAX_CALIBRATION_SHOTS) )
     {
-      while ( 1 ) //  Get input
+      while ( 1 )   //  Get input
       {
         SEND(ALL, sprintf(_xs, "Enter shot (%4.2f, %4.2f)", record[calib_shot_n].x_mm, record[calib_shot_n].y_mm);)
-        get_number("Actual X:", &x);
-        get_number("Actual Y:", &y);
+        get_number("\r\nActual X: ", &x);
+        get_number("\r\nActual Y: ", &y);
 
         SEND(ALL, sprintf(_xs, "Target (%4.2f, %4.2f)   Actual (%4.2f, %4.2f)", record[calib_shot_n].x_mm, record[calib_shot_n].y_mm,
-                          spline_points[calib_shot_n].t_x, spline_points[calib_shot_n].t_y);)
+                          spline_points[calib_shot_n].target_x, spline_points[calib_shot_n].target_y);)
 
-        if ( prompt_for_confirm() == true )
+        get_number("\r\nAction (1-use, 2-skip, 3-reenter, 4-abort):", &action);
+
+        switch ( (int)action )
         {
-          spline_points[calib_shot_n].a_x = (double)x;
-          spline_points[calib_shot_n].t_x = record[calib_shot_n].x_mm;
-          spline_points[calib_shot_n].a_y = (double)y;
-          spline_points[calib_shot_n].t_y = record[calib_shot_n].y_mm;
+          case 1:                                                             // Use
+            spline_points[calib_shot_n].actual_x   = (double)x;               // Actual
+            spline_points[calib_shot_n].actual_y   = (double)y;
+            spline_points[calib_shot_n].actual_rho = sqrtf(SQ(spline_points[use_shot_n].actual_x) + SQ(spline_points[use_shot_n].actual_y));
+            spline_points[calib_shot_n].actual_angle = atan2_2PI(spline_points[use_shot_n].actual_y, spline_points[use_shot_n].actual_x);
 
-          spline_points[calib_shot_n].t_rho   = sqrtf(SQ(spline_points[calib_shot_n].t_x) + SQ(spline_points[calib_shot_n].t_y));
-          spline_points[calib_shot_n].t_angle = atan2_2PI(spline_points[calib_shot_n].t_y, spline_points[calib_shot_n].t_x);
-          spline_points[calib_shot_n].scale   = spline_points[calib_shot_n].t_rho / record[calib_shot_n].radius;
-          break;
+            spline_points[calib_shot_n].target_x   = record[use_shot_n].x_mm; // Target
+            spline_points[calib_shot_n].target_y   = record[use_shot_n].y_mm;
+            spline_points[calib_shot_n].target_rho = sqrtf(SQ(spline_points[use_shot_n].target_x) + SQ(spline_points[use_shot_n].target_y));
+            spline_points[calib_shot_n].target_angle = atan2_2PI(spline_points[use_shot_n].target_y, spline_points[use_shot_n].target_x);
+
+            spline_points[calib_shot_n].scale = spline_points[calib_shot_n].target_rho / record[calib_shot_n].radius;
+            calib_shot_n++;
+            break;
+
+          case 2: // Skip this shot
+            use_shot_n++;
+            break;
+
+          case 3: // Enter data again
+            break;
+
+          case 4: // Bail out
+            return;
         }
       }
-
-      calib_shot_n++;
     }
   }
   else
@@ -283,35 +313,44 @@ static void perform_calibration(void)
 void target_offset(int number_of_points)
 {
   double avg_ax, avg_ay, avg_tx, avg_ty; // Averages
-  double x_offset, y_offset;             // Average offset
+  double avg_aangle, avg_tangle;         // Average angles
   int    i;
 
   /*
    * Work out the offset between the targets
    */
-  avg_ax = 0;
-  avg_ay = 0;
-  avg_tx = 0;
-  avg_ty = 0;
+  avg_ax     = 0;
+  avg_ay     = 0;
+  avg_tx     = 0;
+  avg_ty     = 0;
+  avg_tangle = 0;
+  avg_aangle = 0;
 
   for ( i = 0; i < number_of_points; i++ )
   {
-    avg_ax = spline_points[i].a_x;
-    avg_ay = spline_points[i].a_y;
-    avg_tx = spline_points[i].t_x;
-    avg_ty = spline_points[i].t_y;
+    avg_ax     = spline_points[i].actual_x;
+    avg_ay     = spline_points[i].actual_y;
+    avg_tx     = spline_points[i].target_x;
+    avg_ty     = spline_points[i].target_y;
+    avg_aangle = spline_points[i].actual_angle;
+    avg_tangle = spline_points[i].target_angle;
   }
 
-  x_offset = (avg_ax - avg_tx) / calib_shot_n;
-  y_offset = (avg_ay - avg_ty) / calib_shot_n;
+  json_x_offset            = (avg_ax - avg_tx) / calib_shot_n;
+  json_y_offset            = (avg_ay - avg_ty) / calib_shot_n;
+  json_sensor_angle_offset = (avg_aangle - avg_tangle) / calib_shot_n; // Offset in radians
+
+  SEND(ALL,
+       sprintf(_xs, "\r\nX Offset: %4.2f  Y Offset: %4.2f  Sensor: %4.2f\r\n", json_x_offset, json_y_offset, json_sensor_angle_offset);)
 
   /*
    *  Slide the target loctions slightly to match the actuals
    */
   for ( i = 0; i < number_of_points; i++ )
   {
-    spline_points[i].t_x -= x_offset;
-    spline_points[i].t_y -= y_offset;
+    spline_points[i].target_x += json_x_offset;
+    spline_points[i].target_y += json_y_offset;
+    spline_points[i].target_angle += json_sensor_angle_offset; // in Radians
   }
 
   /*
@@ -354,7 +393,7 @@ void spline_sort(int calib_shot_n)
   {
     for ( j = 0; j < calib_shot_n - i - 1; j++ )
     {
-      if ( spline_points[j].a_angle > spline_points[j + 1].a_angle )
+      if ( spline_points[j].actual_angle > spline_points[j + 1].actual_angle )
       {
         spline_temp          = spline_points[j];
         spline_points[j]     = spline_points[j + 1]; // Swap the points
@@ -377,14 +416,14 @@ void spline_sort(int calib_shot_n)
   }
 
   spline_points[0] = spline_points[calib_shot_n - 2 + SPLINE_PADDING]; // Put the last two points at the start
-  spline_points[0].a_angle -= TWO_PI;
+  spline_points[0].actual_angle -= TWO_PI;
   spline_points[1] = spline_points[calib_shot_n - 1 + SPLINE_PADDING];
-  spline_points[1].a_angle -= TWO_PI;
+  spline_points[1].actual_angle -= TWO_PI;
 
   spline_points[calib_shot_n + 0 + SPLINE_PADDING] = spline_points[3]; // Put the first two points at the end
-  spline_points[calib_shot_n + 0 + SPLINE_PADDING].a_angle += TWO_PI;
+  spline_points[calib_shot_n + 0 + SPLINE_PADDING].actual_angle += TWO_PI;
   spline_points[calib_shot_n + 1 + SPLINE_PADDING] = spline_points[2];
-  spline_points[calib_shot_n + 1 + SPLINE_PADDING].a_angle += TWO_PI;
+  spline_points[calib_shot_n + 1 + SPLINE_PADDING].actual_angle += TWO_PI;
 
   /*
    Sorted. return
@@ -433,9 +472,9 @@ static void find_coeficients(void)
    */
   for ( spline_i = 1; spline_i < (calib_shot_n + SPLINE_PADDING * 2); spline_i++ )
   {
-    x0 = spline_points[spline_i - 1].t_rho;
-    x1 = spline_points[spline_i].t_rho;
-    x2 = spline_points[spline_i + 1].t_rho;
+    x0 = spline_points[spline_i - 1].actual_rho;
+    x1 = spline_points[spline_i].actual_rho;
+    x2 = spline_points[spline_i + 1].actual_rho;
 
     y0 = spline_points[spline_i - 1].scale;
     y1 = spline_points[spline_i].scale;
@@ -563,7 +602,7 @@ double solve_spline(double angle, // Angle to compute scaling factor
   /*
    *  Return 1.0 if the calibration is not present
    */
-  if ( valid == false )
+  if ( (valid == false) || (calibration_is_valid == false) )
   {
     return 1.0f;
   }
@@ -573,7 +612,7 @@ double solve_spline(double angle, // Angle to compute scaling factor
    */
   for ( s = SPLINE_PADDING; s < MAX_CALIBRATION_SHOTS + SPLINE_PADDING; s++ )
   {
-    if ( (angle >= spline_points[s].a_angle) && (angle < spline_points[s + 1].a_angle) )
+    if ( (angle >= spline_points[s].actual_angle) && (angle < spline_points[s + 1].actual_angle) )
     {
       break;
     }
@@ -587,8 +626,8 @@ double solve_spline(double angle, // Angle to compute scaling factor
   /*
    * Calculate the scale factor in this segment
    */
-  x0 = spline_points[s].a_angle;
-  x1 = spline_points[s + 1].a_angle;
+  x0 = spline_points[s].actual_angle;
+  x1 = spline_points[s + 1].actual_angle;
   y0 = spline_points[s].scale;
 
   t     = (angle - x0) / (x1 - x0); // Interval fraction
@@ -636,7 +675,7 @@ void commit_calibration(void)
     *(blob++) = spline_points[i].k0;
     *(blob++) = spline_points[i].k1;
     *(blob++) = spline_points[i].k2;
-    *(blob++) = spline_points[i].a_angle;
+    *(blob++) = spline_points[i].actual_angle;
     size += sizeof(double) * 5;
   }
 
@@ -644,7 +683,7 @@ void commit_calibration(void)
   nvs_set_blob(my_handle, NONVOL_CALIBRATION_DATA, &_xs, size);
   nvs_set_i32(my_handle, NONVOL_X_OFFSET, (int)(json_x_offset * 1000));
   nvs_set_i32(my_handle, NONVOL_Y_OFFSET, (int)(json_y_offset * 1000));
-
+  nvs_set_i32(my_handle, NONVOL_SENSOR_ANGLE_OFFSET, (int)(json_sensor_angle_offset * 1000));
   nvs_commit(my_handle);
 
   /*
@@ -675,7 +714,7 @@ bool get_calibration(void)
   float *blob;
   float  marker;
 
-//  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "get_calibration()");))
+  //  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "get_calibration()");))
 
   calibration_is_valid = false; // Assume false until proven otherwise
 
@@ -689,11 +728,11 @@ bool get_calibration(void)
     marker = *(blob++);
     for ( i = 0; i != calib_shot_n; i++ )
     {
-      spline_points[i].scale   = *(blob++);
-      spline_points[i].k0      = *(blob++);
-      spline_points[i].k1      = *(blob++);
-      spline_points[i].k2      = *(blob++);
-      spline_points[i].a_angle = *(blob++);
+      spline_points[i].scale        = *(blob++);
+      spline_points[i].k0           = *(blob++);
+      spline_points[i].k1           = *(blob++);
+      spline_points[i].k2           = *(blob++);
+      spline_points[i].actual_angle = *(blob++);
     }
     calibration_is_valid = (marker == SPLINE_VALID);
   }
@@ -764,19 +803,19 @@ void calibration_test(void)
     record[i].x_mm   = record[i].radius * cosf(theta);
     record[i].y_mm   = record[i].radius * sinf(theta);
 
-    spline_points[i].a_x = record[i].x_mm;
-    spline_points[i].a_y = record[i].y_mm;
-    spline_points[i].t_x = record[i].x_mm;
-    spline_points[i].t_y = record[i].y_mm;
+    spline_points[i].actual_x = record[i].x_mm;
+    spline_points[i].actual_y = record[i].y_mm;
+    spline_points[i].target_x = record[i].x_mm;
+    spline_points[i].target_y = record[i].y_mm;
 
-    spline_points[i].a_rho   = record[i].radius;
-    spline_points[i].a_angle = record[i].angle;
+    spline_points[i].actual_rho   = record[i].radius;
+    spline_points[i].actual_angle = record[i].angle;
 
-    spline_points[i].t_rho   = record[i].radius;
-    spline_points[i].t_angle = record[i].angle;
-    spline_points[i].scale   = 1.0f;
-    SEND(ALL, sprintf(_xs, "\r\nIndex: %d Angle: %.6f X: %.6f  Y: %6f  Scale: %.6f  ", i, spline_points[i].a_angle, spline_points[i].t_x,
-                      spline_points[i].t_y, spline_points[i].scale);)
+    spline_points[i].target_rho   = record[i].radius;
+    spline_points[i].target_angle = record[i].angle;
+    spline_points[i].scale        = 1.0f;
+    SEND(ALL, sprintf(_xs, "\r\nIndex: %d Angle: %.6f X: %.6f  Y: %6f  Scale: %.6f  ", i, spline_points[i].actual_angle,
+                      spline_points[i].target_x, spline_points[i].target_y, spline_points[i].scale);)
   }
 
   calibration_diag = true;

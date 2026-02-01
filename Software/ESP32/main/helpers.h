@@ -31,6 +31,7 @@ void         to_binary(unsigned int x, unsigned int bits, char *s);     // Conve
 void         watchdog(void);                                            // Monitor the target health
 int          get_OTA_serial(int lenght, char *s);                       // String to return the download image
 float        atan2_2PI(float y, float x);                               // atan2 function that returns 0 to 2PI
+float        atan2_degrees(float y, float x);                           // atan2 function that returns 0-360 degrees
 void         no_singularity(double *a, double *b, double *c);           // Prevent singularities
 /*
  * Global helper variables

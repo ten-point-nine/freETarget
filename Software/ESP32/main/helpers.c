@@ -963,6 +963,11 @@ float atan2_2PI(float y, float x)
   return angle;
 }
 
+float atan2_degrees(float y, float x)
+{
+  return atan2_2PI(x, y) / PI * 180.0f;
+}
+
 /*----------------------------------------------------------------
  *
  * @function: no_singularity
