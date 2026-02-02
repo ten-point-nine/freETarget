@@ -30,11 +30,6 @@
 
 #define SHOT_TIME_TO_SECONDS(x) ((real_t)(x)) / 1000000.0
 
-real_t sq(real_t x)
-{
-  return x * x;
-}
-
 /*-----------------------------------------------------
  *
  * @function: target_name

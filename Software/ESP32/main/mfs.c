@@ -508,7 +508,6 @@ static void mfs_led_adjust(void)
  * be used.
  *
  *-----------------------------------------------------*/
-
 mfs_action_t *mfs_find(unsigned int action // Switch to be displayed
 )
 {

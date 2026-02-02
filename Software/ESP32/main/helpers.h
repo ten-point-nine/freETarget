@@ -25,7 +25,6 @@ void         build_json_score(shot_record_t *shot, const char *format); // Creat
 int          http_target_type(void);                                    // Cnovert the target type to a number
 void         squish(char *source, char *destination);                   // Convert the uri into an arguement
 void         test_build_json_score(void);                               // Test build_json_score
-real_t       sq(real_t x);                                              // Square (x)
 unsigned int hamming_weight(unsigned int word);                         // Add up the numbr of bits in a word
 void         to_binary(unsigned int x, unsigned int bits, char *s);     // Convert a number to a binary string
 void         watchdog(void);                                            // Monitor the target health
@@ -34,8 +33,8 @@ real_t       atan2_2PI(real_t y, real_t x);                             // atan2
 real_t       atan2_degrees(real_t y, real_t x);                         // atan2 function that returns 0-360 degrees
 real_t       radians_to_degrees(real_t radians);                        // Convert radians to degrees
 real_t       degrees_to_radians(real_t degrees);                        // Convert degrees to readians
+void         no_singularity(real_t *a, real_t *b, real_t *c);           // Prevent singularities
 
-void no_singularity(real_t *a, real_t *b, real_t *c);                   // Prevent singularities
 /*
  * Global helper variables
  */
@@ -44,5 +43,10 @@ extern const char *names[]; // List of target names
 /*
  *  Helpful #defines
  */
-#define SQ(x) ((x) * (x)) // Square Number
+
+inline real_t SQ(real_t a)
+{
+  return a * a;
+}
+
 #endif

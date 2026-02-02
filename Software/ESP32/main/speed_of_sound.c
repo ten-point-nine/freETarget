@@ -16,6 +16,7 @@
 #include "diag_tools.h"
 #include "serial_io.h"
 #include "compute_hit.h"
+#include "helpers.h"
 
 #define TO_MM       1000.0d           // Convert Metres to mm
 #define TO_US       1000000.0d        // Convert seconds to microseconds
@@ -104,7 +105,7 @@ real_t speed_of_sound(real_t temperature,      // Current temperature in degrees
 
   TK = 273.15d + temperature; // Temperature converted to degrees Kelvin.
 
-  vapor_pressure = exp(((-7511.52d / TK) + 96.5389644d + (0.02399897d * (TK)) + (-0.000011654551d * sq(TK)) +
+  vapor_pressure = exp(((-7511.52d / TK) + 96.5389644d + (0.02399897d * (TK)) + (-0.000011654551d * SQ(TK)) +
                         (-0.000000012810336d * (TK * TK * TK)) + (0.000000000020998405d * (TK * TK * TK * TK))) -
                        12.150799d * log(TK));
   // Calculate saturation vapor pressure at temperature TK
@@ -118,7 +119,7 @@ real_t speed_of_sound(real_t temperature,      // Current temperature in degrees
   change_in_speed = (1.0d / sqrt(1.4d / M) * 100.0d) * sqrt(specific_heat_ratio / mean_molar_weight) - 100.0d;
   // % Change in speed due to humidity, relative to Speed of Sound in Dry Air at 0 degrees C.
 
-  y = 1.40092d - (0.0000196395d * temperature) - (0.000000162593d * sq(temperature));
+  y = 1.40092d - (0.0000196395d * temperature) - (0.000000162593d * SQ(temperature));
   // Algorithm for Ratio of Speific Heats of Air (Cp/Cv) relative to temperature in degrees C.
 
   speed_MPS = sqrt((y * R * TK) / M)       // Speed, in Metres per second, of Sound in Dry Air at (temperature) degrees C.

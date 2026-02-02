@@ -87,7 +87,7 @@ bool calibration_is_valid = false;                                              
  *--------------------------------------------------------------*/
 void calibrate(void)
 {
-  char action; // User input
+  real_t action; // User input
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "calibrate()");))
 
@@ -97,35 +97,36 @@ void calibrate(void)
   SEND(ALL, sprintf(_xs, "\r\n3 - Commit calibration data to NONVOL");)
   SEND(ALL, sprintf(_xs, "\r\n4 - Void current calibration");)
   SEND(ALL, sprintf(_xs, "\r\n9 - Exit, no action");)
-  SEND(ALL, sprintf(_xs, "\r\n\r\nSelect action: ");)
 
-  action = serial_getch(ALL);
-
-  switch ( action )
+  while ( 1 )
   {
-    case '1':
-      start_calibration();
-      return;
+    get_number("\r\n\r\nSelect action:", &action);
 
-    case '2':
-      perform_calibration();
-      return;
+    switch ( (int)action )
+    {
+      case 1:
+        start_calibration();
+        return;
 
-    case '3':
-      commit_calibration();
-      return;
+      case 2:
+        perform_calibration();
+        return;
 
-    case '4':
-      void_calibration();
-      return;
+      case 3:
+        commit_calibration();
+        return;
 
-    case '9':
-      SEND(ALL, sprintf(_xs, "\r\nExiting calibration. No changes made.");)
-      return;
+      case 4:
+        void_calibration();
+        return;
 
-    default:
-      SEND(ALL, sprintf(_xs, "\r\nUnknown input. Exiting");)
-      return;
+      case 9:
+        SEND(ALL, sprintf(_xs, "\r\nExiting calibration. No changes made.");)
+        return;
+
+      default:
+        break;
+    }
   }
 }
 
@@ -153,7 +154,7 @@ static void start_calibration(void)
   SEND(ALL, sprintf(_xs, "\r\nUse a pistol target");)
   SEND(ALL, sprintf(_xs, "\r\nFire at least ten shots at random locations around the target.");)
   SEND(ALL, sprintf(_xs, "\r\nWhen all ten shots are fired, proceed to action 2 to enter the actual locations.");)
-  SEND(ALL, sprintf(_xs, "\r\n\r\nStart calibration now...\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\n\r\nStart calibration now...\r\n\r\n");)
 
   shot_in                  = 0;     // Clear out any junk
   shot_out                 = 0;
@@ -205,7 +206,7 @@ static void perform_calibration(void)
    */
   if ( shot_in < MAX_CALIBRATION_SHOTS )
   {
-    SEND(ALL, sprintf(_xs, "\r\nNot enough shots fired (%d). Exiting.", shot_in);)
+    SEND(ALL, sprintf(_xs, "\r\nNot enough shots fired (%d).", shot_in);)
     return;
   }
 
@@ -223,7 +224,7 @@ static void perform_calibration(void)
     {
       while ( 1 )   //  Get input
       {
-        SEND(ALL, sprintf(_xs, "Enter shot (%4.2f, %4.2f)", record[calib_shot_n].x_mm, record[calib_shot_n].y_mm);)
+        SEND(ALL, sprintf(_xs, "Enter shot: %d (x:%4.2f, y:%4.2f)", calib_shot_n, record[calib_shot_n].x_mm, record[calib_shot_n].y_mm);)
         get_number("\r\nActual X: ", &x);
         get_number("\r\nActual Y: ", &y);
 

@@ -277,7 +277,7 @@ bool do_factory_test(bool test_run)
   int    pass;                  // Pass YES/NO
   bool   passed_once;           // Passed all of the tests at least once
   real_t volts[4];
-  real_t  vmes_lo;
+  real_t vmes_lo;
   int    motor_toggle;          // Toggle motor on an off
   int    number_of_sensors = 4; // Number of sensors to test
 
@@ -928,14 +928,14 @@ void set_diag_LED(char        *new_LEDs, // NEW LED display
  *
  *--------------------------------------------------------------*/
 #define NONE    0
-#define SOME    1
+#define V12_LOW    1
 #define V12OK   2
 #define UNKNOWN 99
 
 bool check_12V(void)
 {
   static unsigned int fault_V12 = UNKNOWN;
-  real_t               v12;
+  real_t              v12;
 
   /*
    *  Check to see that the witness paper is enabled
@@ -964,10 +964,10 @@ bool check_12V(void)
 
   if ( v12 <= V12_WORKING )
   {
-    if ( fault_V12 != SOME )
+    if ( fault_V12 != V12_LOW )
     {
       set_status_LED(LED_LOW_12V);
-      fault_V12 = SOME;
+      fault_V12 = V12_LOW;
     }
     return false;
   }
@@ -1009,8 +1009,8 @@ void test_build_fake_shots(void)
     record[i].y              = 2 * i + 1;
     record[i].xs             = 2 * i + 2;
     record[i].ys             = 2 * i + 3;
-    record[i].radius         = sqrt(sq(record[i].x) + sq(record[i].y));
-    record[i].angle          = 180.0 * atan2(record[i].y, record[i].x) / PI;
+    record[i].radius         = sqrt(SQ(record[i].x) + SQ(record[i].y));
+    record[i].angle          = atan2_degrees(record[i].y, record[i].x);
     record[i].timer_count[0] = 1;
     record[i].timer_count[1] = 2;
     record[i].timer_count[2] = 3;

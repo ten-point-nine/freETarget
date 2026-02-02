@@ -210,7 +210,7 @@ unsigned int compute_hit(shot_record_t *shot)      // Storing the results
   for ( i = N; i <= W; i++ )
   {
     s[i].b = s[i].count;
-    s[i].c = sqrt(sq(s[(i) % 4].x - s[(i + 1) % 4].x) + sq(s[(i) % 4].y - s[(i + 1) % 4].y));
+    s[i].c = sqrt(SQ(s[(i) % 4].x - s[(i + 1) % 4].x) + SQ(s[(i) % 4].y - s[(i + 1) % 4].y));
   }
 
   for ( i = N; i <= W; i++ )
@@ -262,7 +262,7 @@ unsigned int compute_hit(shot_record_t *shot)      // Storing the results
     x_avg /= 4.0d;
     y_avg /= 4.0d;
 
-    estimate = sqrt(sq(s[location].x - x_avg) + sq(s[location].y - y_avg));
+    estimate = sqrt(SQ(s[location].x - x_avg) + SQ(s[location].y - y_avg));
     error    = fabs(last_estimate - estimate);
 
     DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "x_avg: %4.2f  y_avg: %4.2f estimate: %4.2f error: %4.2f", x_avg, y_avg, estimate, error);))
@@ -368,19 +368,19 @@ bool find_xy_3D(sensor_t *s,             // Sensor to be operatated on
   /*
    * It looks like we have valid data.  Carry on
    */
-  x = sq(s->a + estimate); // - sq(z_offset_clock);
+  x = SQ(s->a + estimate); // - SQ(z_offset_clock);
   if ( x < 0 )
   {
-    sq(s->a + estimate);
+    SQ(s->a + estimate);
     DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "s->a is complex, truncting");))
   }
   ae = sqrt(x);            // Dimension with error included
 
-  x = sq(s->b + estimate); // - sq(z_offset_clock);
+  x = SQ(s->b + estimate); // - SQ(z_offset_clock);
   if ( x < 0 )
   {
     DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "s->b is complex, truncting");))
-    sq(s->b + estimate);
+    SQ(s->b + estimate);
   }
   be = sqrt(x);
 
@@ -390,7 +390,7 @@ bool find_xy_3D(sensor_t *s,             // Sensor to be operatated on
   }
   else
   {
-    s->angle_A = acos((sq(ae) - sq(be) - sq(s->c)) / (-2.0d * be * s->c));
+    s->angle_A = acos((SQ(ae) - SQ(be) - SQ(s->c)) / (-2.0d * be * s->c));
   }
 
   /*
@@ -501,7 +501,7 @@ void prepare_score(shot_record_t *shot,        //  record
    */
   x            = shot->x * s_of_sound * CLOCK_PERIOD; // Distance in mm
   y            = shot->y * s_of_sound * CLOCK_PERIOD; // Distance in mm // Angle in radians
-  shot->radius = sqrt(sq(x) + sq(y)) * solve_spline(atan2_2PI(shot->y, shot->x) + json_sensor_angle_offset, true); // radius in mm
+  shot->radius = sqrt(SQ(x) + SQ(y)) * solve_spline(atan2_2PI(shot->y, shot->x) + json_sensor_angle_offset, true); // radius in mm
 
   /*
    * Rotate the result based on the construction, and recompute the hit
@@ -694,7 +694,7 @@ static void remap_target(shot_record_t *shot)
   i = 0;
   while ( ptr->x != LAST_BULL )
   {
-    distance = sqrt(sq(ptr->x - shot->x_mm) + sq(ptr->y - shot->y_mm));
+    distance = sqrt(SQ(ptr->x - shot->x_mm) + SQ(ptr->y - shot->y_mm));
     DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, " distance: %4.2f", distance);))
     if ( distance < closest ) // Found a closer one?
     {
