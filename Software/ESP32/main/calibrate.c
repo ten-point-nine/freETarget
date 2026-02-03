@@ -42,6 +42,7 @@ static void spline_sort(int calib_shot_n);       // Sort the entries in order
  */
 typedef struct spline_point
 {
+  bool   is_valid;                   // This entry contains valid data
   double target_x;                   // X as recorded on the target
   double target_y;                   // Y as recorded on the target
   double actual_x;                   // Actual X location
@@ -58,6 +59,10 @@ typedef struct spline_point
 #define SPLINE_PADDING        2      // Extra points at start and end
 #define SPLINE_VALID          1234.0 // Value to show spline data is valid
 
+#define CAL_START   1
+#define CAL_PERFORM 2
+#define CAL_COMMIT  3
+#define CAL_VOID    4
 /*
  *  Variables
  */
@@ -85,48 +90,41 @@ bool calibration_is_valid = false;                                              
  *    a least squares fit to determine the calibration
  *
  *--------------------------------------------------------------*/
-void calibrate(void)
+void calibrate(int action)
 {
-  real_t action; // User input
 
-  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "calibrate()");))
+  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "calibrate(%d)", action);))
 
-  SEND(ALL, sprintf(_xs, "\r\nTarget Calibration\r\n");)
-  SEND(ALL, sprintf(_xs, "\r\n1 - Gather shot data");)
-  SEND(ALL, sprintf(_xs, "\r\n2 - Input actual shots");)
-  SEND(ALL, sprintf(_xs, "\r\n3 - Commit calibration data to NONVOL");)
-  SEND(ALL, sprintf(_xs, "\r\n4 - Void current calibration");)
-  SEND(ALL, sprintf(_xs, "\r\n9 - Exit, no action");)
-
-  while ( 1 )
+  switch ( action )
   {
-    get_number("\r\n\r\nSelect action:", &action);
+    case CAL_START:
+      start_calibration();
+      return;
 
-    switch ( (int)action )
-    {
-      case 1:
-        start_calibration();
-        return;
+    case CAL_PERFORM:
+      perform_calibration();
+      return;
 
-      case 2:
-        perform_calibration();
-        return;
+    case CAL_COMMIT:
+      commit_calibration();
+      return;
 
-      case 3:
-        commit_calibration();
-        return;
+    case CAL_VOID:
+      void_calibration();
+      return;
 
-      case 4:
-        void_calibration();
-        return;
+    case 9:
+      SEND(ALL, sprintf(_xs, "\r\nExiting calibration. No changes made.");)
+      return;
 
-      case 9:
-        SEND(ALL, sprintf(_xs, "\r\nExiting calibration. No changes made.");)
-        return;
-
-      default:
-        break;
-    }
+    default:
+      SEND(ALL, sprintf(_xs, "\r\nTarget Calibration\r\n");)
+      SEND(ALL, sprintf(_xs, "\r\n1 - Gather shot data");)
+      SEND(ALL, sprintf(_xs, "\r\n2 - Input actual shots");)
+      SEND(ALL, sprintf(_xs, "\r\n3 - Commit calibration data to NONVOL");)
+      SEND(ALL, sprintf(_xs, "\r\n4 - Void current calibration");)
+      SEND(ALL, sprintf(_xs, "\r\n9 - Exit, no action");)
+      return;
   }
 }
 
@@ -150,18 +148,24 @@ void calibrate(void)
 
 static void start_calibration(void)
 {
+  int i;
+
   SEND(ALL, sprintf(_xs, "\r\nAction 1 - Gather Shot Data\r\n");)
   SEND(ALL, sprintf(_xs, "\r\nUse a pistol target");)
   SEND(ALL, sprintf(_xs, "\r\nFire at least ten shots at random locations around the target.");)
   SEND(ALL, sprintf(_xs, "\r\nWhen all ten shots are fired, proceed to action 2 to enter the actual locations.");)
   SEND(ALL, sprintf(_xs, "\r\n\r\nStart calibration now...\r\n\r\n");)
 
-  shot_in                  = 0;     // Clear out any junk
+  shot_in                  = 0;        // Clear out any junk
   shot_out                 = 0;
-  json_x_offset            = 0;     // Reset any offsets
+  json_x_offset            = 0;        // Reset any offsets
   json_y_offset            = 0;
   json_sensor_angle_offset = 0;
-  calibration_is_valid     = false; // Turn off the calibration
+  calibration_is_valid     = false;    // Turn off the calibration
+  for ( i = 0; i != MAX_CALIBRATION_SHOTS; i++ )
+  {
+    spline_points[i].is_valid = false; // Cancel out all of the entries
+  }
 
   /*
    *  Wait for the user to enter the data
@@ -196,71 +200,67 @@ static void start_calibration(void)
  *--------------------------------------------------------------*/
 static void perform_calibration(void)
 {
-  double x, y, action; // User input
-  int    use_shot_n;   // Shot used for calibration
+  real_t actual_x, actual_y, distance; // User input
+  int    i, i_min;                     // Array indexes
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "perform_calibration()");))
 
   /*
    *  Validate the shots
    */
+  shot_in = MAX_CALIBRATION_SHOTS;
   if ( shot_in < MAX_CALIBRATION_SHOTS )
   {
     SEND(ALL, sprintf(_xs, "\r\nNot enough shots fired (%d).", shot_in);)
     return;
   }
 
-  SEND(ALL, sprintf(_xs, "\r\nChoose ten shots furthest away from the centre\r\n");)
-
   /*
    * Gather actual shot locations
    */
-  calib_shot_n = 0; // Shot to use for calibration
-  use_shot_n   = 0; // Shot used for data point
+  calib_shot_n = 0;  // Shot to use for calibration
+
+  json_find_first(); // Find the start of the input list
 
   if ( calibration_diag == false )
   {
     while ( (calib_shot_n < shot_in) && (calib_shot_n < MAX_CALIBRATION_SHOTS) )
     {
-      while ( 1 )   //  Get input
+      if ( (json_get_next(IS_FLOAT, (void *)&actual_x) && json_get_next(IS_FLOAT, &actual_y)) == false )
       {
-        SEND(ALL, sprintf(_xs, "Enter shot: %d (x:%4.2f, y:%4.2f)", calib_shot_n, record[calib_shot_n].x_mm, record[calib_shot_n].y_mm);)
-        get_number("\r\nActual X: ", &x);
-        get_number("\r\nActual Y: ", &y);
+        SEND(ALL, sprintf(_xs, "\r\nError in input stream");)
+        return;
+      }
 
-        SEND(ALL, sprintf(_xs, "Target (%4.2f, %4.2f)   Actual (%4.2f, %4.2f)", record[calib_shot_n].x_mm, record[calib_shot_n].y_mm,
-                          spline_points[calib_shot_n].target_x, spline_points[calib_shot_n].target_y);)
-
-        get_number("\r\nAction (1-use, 2-skip, 3-reenter, 4-abort):", &action);
-
-        switch ( (int)action )
+      distance = 1E6;                                                               // Find the entry closest to the input
+      i_min    = 0;
+      for ( i = 0; i != shot_in; i++ )
+      {
+        if ( ((SQ(actual_x - record[i].x_mm)) + SQ(actual_y - record[i].y_mm)) < distance )
         {
-          case 1:                                                             // Use
-            spline_points[calib_shot_n].actual_x   = (double)x;               // Actual
-            spline_points[calib_shot_n].actual_y   = (double)y;
-            spline_points[calib_shot_n].actual_rho = sqrtf(SQ(spline_points[use_shot_n].actual_x) + SQ(spline_points[use_shot_n].actual_y));
-            spline_points[calib_shot_n].actual_angle = atan2_2PI(spline_points[use_shot_n].actual_y, spline_points[use_shot_n].actual_x);
-
-            spline_points[calib_shot_n].target_x   = record[use_shot_n].x_mm; // Target
-            spline_points[calib_shot_n].target_y   = record[use_shot_n].y_mm;
-            spline_points[calib_shot_n].target_rho = sqrtf(SQ(spline_points[use_shot_n].target_x) + SQ(spline_points[use_shot_n].target_y));
-            spline_points[calib_shot_n].target_angle = atan2_2PI(spline_points[use_shot_n].target_y, spline_points[use_shot_n].target_x);
-
-            spline_points[calib_shot_n].scale = spline_points[calib_shot_n].target_rho / record[calib_shot_n].radius;
-            calib_shot_n++;
-            break;
-
-          case 2: // Skip this shot
-            use_shot_n++;
-            break;
-
-          case 3: // Enter data again
-            break;
-
-          case 4: // Bail out
-            return;
+          distance = SQ(actual_x - record[i].x_mm) + SQ(actual_y - record[i].x_mm); // Find the closest
+          i_min    = i;
         }
       }
+
+      spline_points[calib_shot_n].actual_x     = actual_x;                          // Actual
+      spline_points[calib_shot_n].actual_y     = actual_y;
+      spline_points[calib_shot_n].actual_rho   = sqrtf(SQ(actual_x) + SQ(actual_y));
+      spline_points[calib_shot_n].actual_angle = atan2_2PI(actual_y, actual_x);
+
+      spline_points[calib_shot_n].target_x     = record[i_min].x_mm;                // Target
+      spline_points[calib_shot_n].target_y     = record[i_min].y_mm;
+      spline_points[calib_shot_n].target_rho   = sqrtf(SQ(spline_points[calib_shot_n].target_x) + SQ(spline_points[calib_shot_n].target_y));
+      spline_points[calib_shot_n].target_angle = atan2_2PI(spline_points[calib_shot_n].target_y, spline_points[calib_shot_n].target_x);
+
+      spline_points[calib_shot_n].scale = spline_points[calib_shot_n].target_rho / record[calib_shot_n].radius;
+
+      spline_points[calib_shot_n].is_valid = true;
+
+      SEND(ALL, sprintf(_xs, "\r\nTarget (%4.2f, %4.2f)   Actual (%4.2f, %4.2f)", record[i_min].x_mm, record[i_min].y_mm,
+                        spline_points[calib_shot_n].actual_x, spline_points[calib_shot_n].actual_y);)
+
+      calib_shot_n++;
     }
   }
   else
@@ -269,6 +269,17 @@ static void perform_calibration(void)
     shot_in      = MAX_CALIBRATION_SHOTS;
   }
 
+  /*
+   *   Check that the splines all have data in them
+   */
+  for ( i = 0; i != MAX_CALIBRATION_SHOTS; i++ )
+  {
+    if ( spline_points[i].is_valid == false )
+    {
+      SEND(ALL, sprintf(_xs, "\r\n\r\nMissing data points.  Check input against shots");)
+      return;
+    }
+  }
   /*
    *  Slide the data to match differences in the circuit
    */
@@ -822,7 +833,7 @@ void calibration_test(void)
   calibration_diag = true;
   shot_in          = MAX_CALIBRATION_SHOTS; // Fake it
 
-  calibrate();
+  calibrate(CAL_PERFORM);
 
   return;
 }

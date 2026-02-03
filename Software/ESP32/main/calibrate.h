@@ -7,7 +7,7 @@
 /*
  * Functions
  */
-void   calibrate(void);
+void   calibrate(int action);
 double solve_spline(double theta, bool valid); // Use the spline coeficients to find the scale factor
 bool   get_calibration(void);                  // Retrieve calibration data from NONVOL
 void   calibration_test(void);                 // Generate test calibration data

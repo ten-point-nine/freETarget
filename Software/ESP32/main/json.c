@@ -62,7 +62,7 @@ const json_message_t JSON[] = {
     {HIDE + LOCK, "\"ANGLE_OFFSET\":",    &json_sensor_angle_offset,   IS_FLOAT,                 0,                  NONVOL_SENSOR_ANGLE_OFFSET, 0,           15},
     {SHOW + LOCK, "\"AUX_MODE\":",        &json_aux_mode,              IS_INT32,                 0,                  NONVOL_AUX_PORT_ENABLE,     0,           6 },
     {HIDE,        "\"BYE\":",             0,                           IS_INT32,                 &bye,               0,                          0,           0 },
-    {HIDE,        "\"CAL\":",             0,                           IS_VOID,                  &calibrate,         0,                          0,           0 },
+    {HIDE,        "\"CAL\":",             0,                           IS_INT32,                 &calibrate,         0,                          0,           0 },
     {HIDE,        "\"DOWNLOAD\":",        &json_OTA_download_size,     IS_INT32,                 &OTA_serial,        0,                          0,           0 },
     {HIDE,        "\"ECHO\":",            0,                           IS_VOID,                  &show_echo,         0,                          0,           0 },
     {HIDE + LOCK, "\"FACE_STRIKE\":",     &json_face_strike,           IS_INT32,                 0,                  NONVOL_FACE_STRIKE,         0,           0 },
@@ -197,6 +197,7 @@ void freeETarget_json(void *pvParameters)
     {
       from_BlueTooth = serial_available(AUX_PORT); // How much from the BlueTooth port?
       ch             = serial_getch(ALL);
+
       if ( json_aux_mode != RS485 )                // Not RS485 mode
       {
         serial_putch(ch, ALL);                     // Echo back to all ports
@@ -205,6 +206,7 @@ void freeETarget_json(void *pvParameters)
       {
         serial_putch(ch, SOME);                    // because RS485 diesables receive during transmit
       }
+
       /*
        * Parse the stream
        */
@@ -856,4 +858,94 @@ static bool good_input(unsigned int conversion, // What kind of input is it?
   }
 
   return false;                                 // Must be locked
+}
+
+/*-----------------------------------------------------
+ *
+ * @function: json_get_next
+ *
+ * @brief:    Read a number from the input stream
+ *
+ * @return:   Next number from the input stream
+ *
+ *-----------------------------------------------------
+ *
+ * The input is valid if
+ *
+ * 1 - No input is required
+ * 2 - The input text is not empty
+ * 3 - The JSON is not locked
+ * 4 - The JSON does not require a lock
+ *
+ *-----------------------------------------------------*/
+static int next_value;                    // Index to the next value to read
+
+bool json_find_first(void)                // Find the first element starting with [
+{
+  next_value = 0;
+
+  while ( input_JSON[next_value] != '[' ) // Look for an opening array
+  {
+    if ( input_JSON[next_value] == 0 )
+    {
+      next_value = 0;                     // Reached the end, exit
+      return false;                       // Report nothing here
+    }
+    next_value++;                         // Try the next
+  }
+
+  /*
+   *  Found it, advance and return
+   */
+  next_value++;                // Skip past the opening [
+  return true;                 // Show we have something
+}
+
+bool json_get_next(int   type, //  Expected input type
+                   void *value // Where to put the result
+)
+{
+  /*
+   * Check for garbage
+   */
+  if ( input_JSON[next_value] == ',' )
+  {
+    next_value++;
+  }
+
+  if ( (input_JSON[next_value] == 0) || (input_JSON[next_value] == ']') ) // Bumped up to the end
+  {
+    return false;
+  }
+
+  /*
+   *  Convert the next field
+   */
+  switch ( type )
+  {
+    case IS_FLOAT:
+
+      if ( input_JSON[next_value] == 0 )
+      {
+        *(real_t *)value = 0;
+      }
+      else
+      {
+        *(real_t *)value = atof(&input_JSON[next_value]); // Float
+      }
+      break;
+  }
+
+  /*
+   *  Prepare the next field
+   */
+  while ( (input_JSON[next_value] != ',') && input_JSON[next_value] != 0 )
+  {
+    next_value++;
+  }
+
+  /*
+   * All done, return
+   */
+  return true;
 }
