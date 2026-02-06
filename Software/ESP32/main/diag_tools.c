@@ -103,13 +103,13 @@ static const self_test_t test_list[] = {
     {"Polled target test",                &polled_target_test      },
     {"Interrupt target test",             &interrupt_target_test   },
     {"- Software tests",                  0                        },
-    {"build_json_score",                  &test_build_json_score   },
-    {"build_fake_shots",                  &test_build_fake_shots   },
-    {"generate_fake_shot",                &generate_fake_shot      },
-    {"display_all_scores",                &test_display_all_scores },
+    {"build_json_score",                  &test_build_json_score   }, // Generate a known score message
+    {"build_fake_shots",                  &test_build_fake_shots   }, // Fill up 10 shots with random values
+    {"generate_fake_shot",                &generate_fake_shot      }, // This forces shots into the software
+    {"display_all_scores",                &test_display_all_scores }, // Send fake JSON scores
     {"Rapidfire test",                    &test_rapidfire          },
     {"Rapidfire test",                    &test_rapidfire          },
-    {"Calibration test",                  &calibration_test        },
+    {"Calibration test",                  &calibration_test        }, // Generate fake scores and observe the calibration
     {"",                                  0                        }
 };
 
@@ -928,7 +928,7 @@ void set_diag_LED(char        *new_LEDs, // NEW LED display
  *
  *--------------------------------------------------------------*/
 #define NONE    0
-#define V12_LOW    1
+#define V12_LOW 1
 #define V12OK   2
 #define UNKNOWN 99
 

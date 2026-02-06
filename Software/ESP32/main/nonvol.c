@@ -132,7 +132,7 @@ void read_nonvol(void)
           if ( JSON[i].non_vol != 0 )
           {
             nvs_get_i32(my_handle, JSON[i].non_vol, &x); // Read in the value as an integer
-            *(real_t *)(JSON[i].value) = (real_t)x / 1000.0;
+            *(real_t *)(JSON[i].value) = (real_t)x / FLOAT_SCALE;
           }
           else
           {
@@ -143,11 +143,6 @@ void read_nonvol(void)
     }
     i++;
   }
-
-  /*
-   *  Fetch the calibration data
-   */
-  get_calibration();
 
   /*
    * Special case of broken sensor diameter

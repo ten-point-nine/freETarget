@@ -472,8 +472,8 @@ void prepare_score(shot_record_t *shot,        //  record
                    bool           miss         // TRUE if the shot was a miss
 )
 {
-  real_t x, y;                                 // Shot location in mm X, Y before rotation
-                                               //  char   str_c[SHORT_TEXT];                 // String holding buffers
+  real_t x_mm, y_mm;                           // Shot location in mm X, Y before rotation
+  real_t rho_radians;                          // Angle to shot location
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "prepare_score(%d)", shot_number);))
 
@@ -499,17 +499,25 @@ void prepare_score(shot_record_t *shot,        //  record
   /*
    *  Work out the hole in perfect coordinates
    */
-  x            = shot->x * s_of_sound * CLOCK_PERIOD; // Distance in mm
-  y            = shot->y * s_of_sound * CLOCK_PERIOD; // Distance in mm // Angle in radians
-  shot->radius = sqrt(SQ(x) + SQ(y)) * solve_spline(atan2_2PI(shot->y, shot->x) + json_sensor_angle_offset, true); // radius in mm
+  x_mm = shot->x * s_of_sound * CLOCK_PERIOD;           // Distance in mm
+  y_mm = shot->y * s_of_sound * CLOCK_PERIOD;           // Distance in mm
+
+  rho_radians = PI_ON_2 - atan2_2PI(x_mm, y_mm);        // Angle to shot
+  printf("1: rho_radians: %.6f x_mm: %.6f y_mm: %.6f\r\n", rho_radians, x_mm, y_mm);
+
+  rho_radians += degrees_to_radians(json_sensor_angle); // North is at the top Add in the rotation to the physical location
+  printf("2: rho_radians: %.6f\r\n", rho_radians);
+  rho_radians += json_sensor_angle_offset;              // Add in the correction for the physical location
+  printf("3: rho_radians: %.6f\r\n", rho_radians);
+  shot->angle  = rho_radians + solve_spline_for_angle(rho_radians, true);               // Correct for the spline interplation;
+  shot->radius = sqrt(SQ(x_mm) + SQ(y_mm)) * solve_spline_for_scale(shot->angle, true); // radius in mm
 
   /*
    * Rotate the result based on the construction, and recompute the hit
    */
-  shot->angle = atan2_2PI(shot->y, shot->x) + degrees_to_radians(json_sensor_angle) + json_sensor_angle_offset;
-  shot->x_mm  = shot->radius * cos(shot->angle) + json_x_offset; // Rotate onto the target face
-  shot->y_mm  = shot->radius * sin(shot->angle) + json_y_offset; // and add in sensor correction
-  remap_target(shot);                                            // Change the target if needed
+  shot->x_mm = shot->radius * cos(shot->angle) + json_x_offset; // Rotate onto the target face
+  shot->y_mm = shot->radius * sin(shot->angle) + json_y_offset; // and add in sensor correction
+  remap_target(shot);                                           // Change the target if needed
   shot->session_type = SESSION_VALID | json_session_type;
 
   /*

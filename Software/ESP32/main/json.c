@@ -373,27 +373,27 @@ static void handle_json(void)
               }
               if ( JSON[j].value != 0 )
               {
-                *JSON[j].value = x;                         // Save the value
+                *JSON[j].value = x;                                // Save the value
               }
               if ( JSON[j].non_vol != 0 )
               {
-                nvs_set_i32(my_handle, JSON[j].non_vol, x); // Store into NON-VOL
+                nvs_set_i32(my_handle, JSON[j].non_vol, x);        // Store into NON-VOL
               }
 
               break;
 
-            case IS_FLOAT:                                  // Convert a floating point number
+            case IS_FLOAT:                                         // Convert a floating point number
 
-              f = atof(&input_JSON[i + k]);                 // Float
-              x = f * 1000;                                 // Integer
+              f = atof(&input_JSON[i + k]);                        // Float
+              x = f * FLOAT_SCALE;                                 // Integer
               if ( JSON[j].value != 0 )
               {
-                *(double *)JSON[j].value = f;               // Working Value
+                *(double *)JSON[j].value = f;                      // Working Value
               }
               if ( JSON[j].non_vol != 0 )
               {
                 nvs_set_i32(my_handle, JSON[j].non_vol,
-                            x);                             // Store into NON-VOL as an integer * 1000
+                            x);                                    // Store into NON-VOL as an integer * 1000
               }
 
               break;

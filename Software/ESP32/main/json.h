@@ -58,6 +58,7 @@ extern const json_message_t JSON[];
 #define IS_TEXT_1   (7 << 8)                         // Used only on first connection
 #define IS_VOID     (8 << 8)                         // Value is a void
 #define IS_TIME     (9 << 8)                         // Value is time
+#define FLOAT_SCALE 1000.0 // Floats are stored as 1000x integer 
 
 #define IS_MASK     (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED | IS_MFS | IS_TIME)
 #define real_t_MASK ((~IS_MASK) & 0xFF)              // Scaling factor 8 bits
