@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 //NRA version of ISSF rapid fire target reduced for 50 yards
 namespace freETarget.targets {
+    [Serializable]
     class NRA_B38 : aTarget {
         private decimal pelletCaliber;
         private const decimal targetSize = 550; //mm

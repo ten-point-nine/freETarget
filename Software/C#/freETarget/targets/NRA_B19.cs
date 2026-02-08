@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 //NRA version of ISSF precision target reduced for 50 yards
 namespace freETarget.targets {
+    [Serializable]
     class NRA_B19 : aTarget {
         private decimal pelletCaliber;
         private const decimal targetSize = 550; //mm
