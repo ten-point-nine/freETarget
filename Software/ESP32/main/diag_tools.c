@@ -124,6 +124,8 @@ const dlt_name_t dlt_names[] = {
     {DLT_HTTP,          "DLT_HTTP",          'H'}, // Log HTTP events
     {DLT_OTA,           "DLT_OTA",           'O'}, // Log HTTP events
     {DLT_HEARTBEAT,     "DLT_HEARTBEAT",     'T'}, // Heartbeat tick
+    {DLT_CALIBRATION,   "DLT_CALIBRATION",   'X'}, // Calibration information
+    {DLT_AMB,           "DLT_AMB",           'M'}, // Special debug messages
     {0,                 0,                   0  }
 };
 

@@ -113,22 +113,23 @@ void generate_fake_shot(void);                            // Generate a string o
 /*
  * Tracing
  */
-#define DLT_NONE          0      // No DLT messages displayed
-#define DLT_CRITICAL      0x0001 // Action failed and needs to be reported
-#define DLT_INFO          0x0002 // Information which is always displayed
-#define DLT_APPLICATION   0x0004 // Application level messages displayed (freeETarget.c compute_hit.c)
-#define DLT_COMMUNICATION 0x0008 // Communications messages (wifi.c token.c serial_io.c)
-#define DLT_DIAG          0x0010 // Hardware diagnostics messages displayed
-#define DLT_DEBUG         0x0020 // Specific debug information
-#define DLT_SCORE         0x0040 // Display extended score record
-#define DLT_HTTP          0x0080 // Log HTTP requests
-#define DLT_OTA           0x0100 // Log OTA requests
-#define DLT_HEARTBEAT     0x0200 // Kick out the time to see if we are alive
-#define DLT_AMB           0x4000 // Special Debug DLT
+#define DLT_NONE          0                        // No DLT messages displayed
+#define DLT_CRITICAL      0x0001                   // Action failed and needs to be reported
+#define DLT_INFO          (DLT_CRITICAL << 1)      // Information which is always displayed
+#define DLT_APPLICATION   (DLT_INFO << 1)          // Application level messages displayed (freeETarget.c compute_hit.c)
+#define DLT_COMMUNICATION (DLT_APPLICATION << 1)   // Communications messages (wifi.c token.c serial_io.c)
+#define DLT_DIAG          (DLT_COMMUNICATION << 1) // Hardware diagnostics messages displayed
+#define DLT_DEBUG         (DLT_DIAG << 1)          // Specific debug information
+#define DLT_SCORE         (DLT_DEBUG << 1)         // Display extended score record
+#define DLT_HTTP          (DLT_SCORE << 1)         // Log HTTP requests
+#define DLT_OTA           (DLT_HTTP << 1)          // Log OTA requests
+#define DLT_CALIBRATION   (DLT_OTA << 1)           // Debug the calibraition software
+#define DLT_HEARTBEAT     (DLT_CALIBRATION << 1)   // Kick out the time to see if we are alive
+#define DLT_AMB           0x8000                   // Special Debug DLT
 
-                                 /*
-                                  *  Enable compile level tracing
-                                  */
+                                                   /*
+                                                    *  Enable compile level tracing
+                                                    */
 #define TRACE_APPLICATION   (0 == 1)
 #define TRACE_COMMUNICATION (0 == 1)
 #define TRACE_DIAGNOSTICS   (0 == 1)
