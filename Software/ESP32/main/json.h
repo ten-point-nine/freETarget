@@ -12,11 +12,11 @@
 /*
  * Public Functions
  */
-void reset_JSON(void);                     // Clear the JSON input buffer
-void freeETarget_json(void *);             // Task to scan the serial port looking for JSON input
-void show_echo(void);                      // Display the settings
-bool json_find_first(void);                // Find the start of the input stream
-bool json_get_next(int type, void *value); // Pull in the next array value
+void reset_JSON(void);                           // Clear the JSON input buffer
+void freeETarget_json(void *);                   // Task to scan the serial port looking for JSON input
+void show_echo(void);                            // Display the settings
+bool json_find_first(void);                      // Find the start of the input stream
+bool json_get_array_next(int type, void *value); // Pull in the next array value
 
 /*
  * JSON message typedefs
@@ -58,7 +58,8 @@ extern const json_message_t JSON[];
 #define IS_TEXT_1   (7 << 8)                         // Used only on first connection
 #define IS_VOID     (8 << 8)                         // Value is a void
 #define IS_TIME     (9 << 8)                         // Value is time
-#define FLOAT_SCALE 1000.0 // Floats are stored as 1000x integer 
+#define IS_ARRAY    (1 << (8 + 4))                   // Value is part of an array
+#define FLOAT_SCALE 1000.0                           // Floats are stored as 1000x integer
 
 #define IS_MASK     (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED | IS_MFS | IS_TIME)
 #define real_t_MASK ((~IS_MASK) & 0xFF)              // Scaling factor 8 bits

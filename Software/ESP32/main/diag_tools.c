@@ -1027,6 +1027,7 @@ void test_build_fake_shots(void)
   /*
    *  Finished
    */
+
   shot_in = i;
   SEND(ALL, sprintf(_xs, _DONE_);)
 

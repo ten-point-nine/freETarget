@@ -178,23 +178,24 @@ void freeETarget_init(void)
    */
   show_echo();
   set_LED_PWM(json_LED_PWM);
-  serial_flush(ALL);              // Get rid of everything
-  shot_in         = 0;            // Clear out any junk
+  serial_flush(ALL);                    // Get rid of everything
+  printf("\r\nfrom Free complete\r\n"); // Let the user know we are ready
+  shot_in         = 0;                  // Clear out any junk
   shot_out        = 0;
-  connection_list = 0;            // Nobody is connected yet
-  reset_run_time();               // Reset the time of day
-  time_to_go = 1000 * ONE_SECOND; // Infinite amount of time to start
+  connection_list = CONSOLE;            // The consule is always connected
+  reset_run_time();                     // Reset the time of day
+  time_to_go = 1000 * ONE_SECOND;       // Infinite amount of time to start
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initialization complete");))
 
-  if ( DIP_SW_A )                 // Switch A pressed
+  if ( DIP_SW_A )                       // Switch A pressed
   {
-    OTA_load();                   // Load in a new OTA
+    OTA_load();                         // Load in a new OTA
   }
 
-  if ( DIP_SW_B )                 // Switch B pressed
+  if ( DIP_SW_B )                       // Switch B pressed
   {
-    OTA_rollback();               // Roll back to old software
+    OTA_rollback();                     // Roll back to old software
   }
 
   /*
@@ -231,6 +232,7 @@ void freeETarget_target_loop(void *arg)
     gpio_init_single(PCNT_HI);               // Program the port
   }
 
+  printf("\r\ntarget_loop\r\n");
   start_new_session(0);
   shot_number = 1;                           // Start counting shots at 1
 
@@ -409,6 +411,7 @@ unsigned int wait(void)
   /*
    * See if any shots have arrived
    */
+
   if ( shot_in != shot_out )
   {
     return REDUCE;
@@ -596,6 +599,7 @@ void start_new_session(int session_type) //
       {
         record[i].session_type = SESSION_EMPTY;
       }
+      printf("\r\nNew session started\r\n");
       shot_in  = 0;
       shot_out = 0;
       reset_run_time();
@@ -1025,7 +1029,6 @@ void generate_fake_shot(void)
   int    x, y;                  // Shot location coordinates
   real_t radius;                // Radius of shot
   real_t distance;              // Distance from shot to sensor
-
   shot_in  = 0;                 // Reset the shot queue
   shot_out = 0;
 
@@ -1052,9 +1055,7 @@ void generate_fake_shot(void)
           record[shot_in].face_strike   = 0;                                            // No face strikes
           record[shot_in].sensor_status = 0x0f;                                         // All sensors valid
           ring_timer                    = json_min_ring_time * ONE_SECOND / 1000;       // Reset the ring timer
-
-          shot_in++;
-          shot_in = shot_in % SHOT_SPACE;
+          shot_in = (shot_in + 1) % SHOT_SPACE;
 
           reduce();                                                                     // Process the shot
           vTaskDelay(ONE_SECOND * 2);

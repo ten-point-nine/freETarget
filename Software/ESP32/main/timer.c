@@ -131,8 +131,6 @@ void freeETarget_timer_init(void)
   timer_enable_intr(TIMER_GROUP_0, TIMER_1);             // Interrupt associated with this interrupt
   timer_isr_callback_add(TIMER_GROUP_0, TIMER_1, freeETarget_timer_isr_callback, NULL, 0);
   timer_start(TIMER_GROUP_0, TIMER_1);
-  shot_in  = 0;
-  shot_out = 0;
 
   /*
    *  Timer running. return

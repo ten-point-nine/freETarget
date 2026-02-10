@@ -373,27 +373,27 @@ static void handle_json(void)
               }
               if ( JSON[j].value != 0 )
               {
-                *JSON[j].value = x;                                // Save the value
+                *JSON[j].value = x;                         // Save the value
               }
               if ( JSON[j].non_vol != 0 )
               {
-                nvs_set_i32(my_handle, JSON[j].non_vol, x);        // Store into NON-VOL
+                nvs_set_i32(my_handle, JSON[j].non_vol, x); // Store into NON-VOL
               }
 
               break;
 
-            case IS_FLOAT:                                         // Convert a floating point number
+            case IS_FLOAT:                                  // Convert a floating point number
 
-              f = atof(&input_JSON[i + k]);                        // Float
-              x = f * FLOAT_SCALE;                                 // Integer
+              f = atof(&input_JSON[i + k]);                 // Float
+              x = f * FLOAT_SCALE;                          // Integer
               if ( JSON[j].value != 0 )
               {
-                *(double *)JSON[j].value = f;                      // Working Value
+                *(double *)JSON[j].value = f;               // Working Value
               }
               if ( JSON[j].non_vol != 0 )
               {
                 nvs_set_i32(my_handle, JSON[j].non_vol,
-                            x);                                    // Store into NON-VOL as an integer * 1000
+                            x);                             // Store into NON-VOL as an integer * 1000
               }
 
               break;
@@ -582,9 +582,9 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"BD_REV\":            %d.%d.%d", (revision() / 100), ((revision() % 100) / 10),
                     (revision() % 10));)                    // Current board version
 
-  /*
-   *  All done, return
-   */
+                                                            /*
+                                                             *  All done, return
+                                                             */
   serial_to_all(_xs, EVEN_ODD_END); // End the even odd line
   SEND(ALL, sprintf(_xs, "}\r\n");)
 
@@ -897,12 +897,12 @@ bool json_find_first(void)                // Find the first element starting wit
   /*
    *  Found it, advance and return
    */
-  next_value++;                // Skip past the opening [
-  return true;                 // Show we have something
+  next_value++;                      // Skip past the opening [
+  return true;                       // Show we have something
 }
 
-bool json_get_next(int   type, //  Expected input type
-                   void *value // Where to put the result
+bool json_get_array_next(int   type, //  Expected input type
+                         void *value // Where to put the result
 )
 {
   /*

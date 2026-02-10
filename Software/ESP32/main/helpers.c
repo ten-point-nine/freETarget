@@ -29,7 +29,10 @@
 #include "serial_io.h"
 
 #define SHOT_TIME_TO_SECONDS(x) ((real_t)(x)) / 1000000.0
-
+real_t SQ(real_t a)
+{
+  return a * a;
+}
 /*-----------------------------------------------------
  *
  * @function: target_name
