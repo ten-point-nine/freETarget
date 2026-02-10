@@ -124,6 +124,9 @@ void freeETarget_init(void)
 #if TRACE_HEARTBEAT
   is_trace |= DLT_HEARTBEAT;     // Enable heartbeat tracing
 #endif
+#if TRACE_CALIBRATION
+  is_trace |= DLT_CALIBRATION;   // Enable calibration tracing
+#endif
 
   /*
    *  Setup the hardware
@@ -1055,7 +1058,7 @@ void generate_fake_shot(void)
           record[shot_in].face_strike   = 0;                                            // No face strikes
           record[shot_in].sensor_status = 0x0f;                                         // All sensors valid
           ring_timer                    = json_min_ring_time * ONE_SECOND / 1000;       // Reset the ring timer
-          shot_in = (shot_in + 1) % SHOT_SPACE;
+          shot_in                       = (shot_in + 1) % SHOT_SPACE;
 
           reduce();                                                                     // Process the shot
           vTaskDelay(ONE_SECOND * 2);
