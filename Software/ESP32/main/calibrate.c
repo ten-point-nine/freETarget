@@ -284,7 +284,18 @@ static void perform_calibration()
   report_mean_std_deviation("Calibration after spline");
 
   SEND(ALL, sprintf(_xs, "\r\n\r\nCalibration complete. ");)
-  SEND(ALL, sprintf(_xs, "\r\nRemember to commit the calibration\r\n");)
+
+  SEND(ALL, sprintf(_xs, "\r\nCommit the calibration?");)
+  if ( prompt_for_confirm() == true )
+  {
+    commit_calibration(); // Commit the calibration to NONVOL
+    SEND(ALL, sprintf(_xs, "\r\nCalibration committed to NONVOL.\r\n ");)
+  }
+  else
+  {
+    SEND(ALL, sprintf(_xs, "\r\nCalibration not committed. No changes made.\r\n");)
+  }
+ 
   return;
 }
 /*----------------------------------------------------------------
@@ -953,13 +964,17 @@ real_t solve_spline_for_scale(real_t angle) // Angle to compute scaling factor
   x0 = spline_points[s].actual.angle;     // Previous point
   x1 = spline_points[s + 1].actual.angle; // next point
   y0 = spline_points[s].scale;
+  if ( y0 == 0 )
+  {
+    y0 = 1.0f;
+  }
 
-  t     = (angle - x0) / (x1 - x0);       // Interval fraction
+  t     = (angle - x0) / (x1 - x0); // Interval fraction
   scale = y0 + (spline_points[s].s0 * t) + (spline_points[s].s1 * t * t) + (spline_points[s].s2 * t * t * t);
 
-                                          /*
-                                           * All done, return the scale factor
-                                           */
+                                    /*
+                                     * All done, return the scale factor
+                                     */
   DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "Spline scale: %4.2f", scale);))
   return scale;
 }
@@ -996,7 +1011,7 @@ void commit_calibration(void)
    *  Put the calibration data into _xs
    */
 
-  for ( i = 0; i != MAX_CALIBRATION_SHOTS; i++ )
+  for ( i = 0; i != MAX_CALIBRATION_SHOTS + SPLINE_PADDING * 2; i++ )
   {
     *(blob++) = spline_points[i].actual.angle; // 9
     *(blob++) = spline_points[i].scale;        // 1

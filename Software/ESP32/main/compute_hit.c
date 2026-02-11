@@ -503,13 +503,7 @@ void prepare_score(shot_record_t *shot,        //  record
   y_mm = shot->y * s_of_sound * CLOCK_PERIOD;                       // Distance in mm
 
   rho_radians = atan2_2PI(y_mm, x_mm);                              // Angle to shot
-  printf("\n\rx_mm: %4.2f  y_mm: %4.2f  rho_radians: %4.2f", x_mm, y_mm, rho_radians);
-  rho_radians -= PI_ON_2;                                           // Rotate so North is at the top
-  printf("\n\rrho_radians: %4.2f", rho_radians);
   rho_radians += degrees_to_radians(json_sensor_angle);             // North is at the top Add in the rotation to the physical location
-  printf("\n\rrho_radians: %4.2f", rho_radians);
-  rho_radians += json_sensor_angle_offset;                          // Add in the correction for the physical location
-  printf("\n\rrho_radians: %4.2f", rho_radians);
   shot->angle  = rho_radians + solve_spline_for_angle(rho_radians); // Correct for the spline interplation;
   shot->radius = sqrt(SQ(x_mm) + SQ(y_mm)) * solve_spline_for_scale(shot->angle); // radius in mm
 
