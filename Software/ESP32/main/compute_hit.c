@@ -499,18 +499,19 @@ void prepare_score(shot_record_t *shot,        //  record
   /*
    *  Work out the hole in perfect coordinates
    */
-  x_mm = shot->x * s_of_sound * CLOCK_PERIOD;           // Distance in mm
-  y_mm = shot->y * s_of_sound * CLOCK_PERIOD;           // Distance in mm
+  x_mm = shot->x * s_of_sound * CLOCK_PERIOD;                       // Distance in mm
+  y_mm = shot->y * s_of_sound * CLOCK_PERIOD;                       // Distance in mm
 
-  rho_radians = PI_ON_2 - atan2_2PI(x_mm, y_mm);        // Angle to shot
-  printf("1: rho_radians: %.6f x_mm: %.6f y_mm: %.6f\r\n", rho_radians, x_mm, y_mm);
-
-  rho_radians += degrees_to_radians(json_sensor_angle); // North is at the top Add in the rotation to the physical location
-  printf("2: rho_radians: %.6f\r\n", rho_radians);
-  rho_radians += json_sensor_angle_offset;              // Add in the correction for the physical location
-  printf("3: rho_radians: %.6f\r\n", rho_radians);
-  shot->angle  = rho_radians + solve_spline_for_angle(rho_radians, true);               // Correct for the spline interplation;
-  shot->radius = sqrt(SQ(x_mm) + SQ(y_mm)) * solve_spline_for_scale(shot->angle, true); // radius in mm
+  rho_radians = atan2_2PI(y_mm, x_mm);                              // Angle to shot
+  printf("\n\rx_mm: %4.2f  y_mm: %4.2f  rho_radians: %4.2f", x_mm, y_mm, rho_radians);
+  rho_radians -= PI_ON_2;                                           // Rotate so North is at the top
+  printf("\n\rrho_radians: %4.2f", rho_radians);
+  rho_radians += degrees_to_radians(json_sensor_angle);             // North is at the top Add in the rotation to the physical location
+  printf("\n\rrho_radians: %4.2f", rho_radians);
+  rho_radians += json_sensor_angle_offset;                          // Add in the correction for the physical location
+  printf("\n\rrho_radians: %4.2f", rho_radians);
+  shot->angle  = rho_radians + solve_spline_for_angle(rho_radians); // Correct for the spline interplation;
+  shot->radius = sqrt(SQ(x_mm) + SQ(y_mm)) * solve_spline_for_scale(shot->angle); // radius in mm
 
   /*
    * Rotate the result based on the construction, and recompute the hit
@@ -520,6 +521,8 @@ void prepare_score(shot_record_t *shot,        //  record
   remap_target(shot);                                           // Change the target if needed
   shot->session_type = SESSION_VALID | json_session_type;
 
+  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "x_mm: %4.2f  y_mm: %4.2f  radius: %4.2f  rho_radians: %4.2f", shot->x_mm, shot->y_mm,
+                                         shot->radius, shot->angle);))
   /*
    * All done, return
    */

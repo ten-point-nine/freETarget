@@ -578,14 +578,14 @@ void show_echo(void)
 #endif
 
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
-  SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);) // Current persistent storage version
+  SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                                   // Current persistent storage version
   SEND(ALL, sprintf(_xs, "\"BD_REV\":            %d.%d.%d", (revision() / 100), ((revision() % 100) / 10),
-                    (revision() % 10));)                    // Current board version
-
-                                                            /*
-                                                             *  All done, return
-                                                             */
-  serial_to_all(_xs, EVEN_ODD_END); // End the even odd line
+                    (revision() % 10));)                                                      // Current board version
+  SEND(ALL, sprintf(_xs, "\"SPLINE FIT\":        %s,", calibration_is_valid ? "Yes" : "No");) // Current persistent storage version
+                                                                                              /*
+                                                                                               *  All done, return
+                                                                                               */
+  serial_to_all(_xs, EVEN_ODD_END);                                                           // End the even odd line
   SEND(ALL, sprintf(_xs, "}\r\n");)
 
   return;

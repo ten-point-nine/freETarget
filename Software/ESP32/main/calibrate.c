@@ -185,8 +185,6 @@ void calibrate(int action)
 
 static void start_calibration(void)
 {
-  int i;
-
   SEND(ALL, sprintf(_xs, "\r\nAction 1 - Gather Shot Data\r\nCalibration data reset\r\n");)
 
   SEND(ALL, sprintf(_xs, "\r\nUse a pistol target");)
@@ -797,10 +795,10 @@ static void verify_calibration(void)
 
   for ( i = SPLINE_PADDING; i < MAX_CALIBRATION_SHOTS + SPLINE_PADDING * 2; i++ )
   {
-    angle_offset                  = solve_spline_for_angle(spline_points[i].actual.angle, true);
+    angle_offset                  = solve_spline_for_angle(spline_points[i].actual.angle);
     spline_points[i].target.angle = spline_points[i].actual.angle + angle_offset;
 
-    scale_factor                = solve_spline_for_scale(spline_points[i].actual.angle, true);
+    scale_factor                = solve_spline_for_scale(spline_points[i].actual.angle);
     spline_points[i].target.rho = spline_points[i].actual.rho * scale_factor;
 
     spline_points[i].target.x = spline_points[i].target.rho * cosf(spline_points[i].target.angle);
@@ -836,9 +834,7 @@ static void verify_calibration(void)
  *
  *
  *--------------------------------------------------------------*/
-real_t solve_spline_for_angle(real_t angle, // Angle to compute scaling factor
-                              bool   valid  // Override if needed
-)
+real_t solve_spline_for_angle(real_t angle) // Angle to compute scaling factor
 {
   int    s;                                 // segment index
   real_t offset;                            // Angular correction
@@ -846,10 +842,12 @@ real_t solve_spline_for_angle(real_t angle, // Angle to compute scaling factor
   real_t y0;                                // Value of y at x0
   real_t t;                                 // Interval fraction
 
+  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "solve_spline_for_angle(%4.2f)", angle);))
+
   /*
    *  Return 1.0 if the calibration is not present
    */
-  if ( (valid == false) || (calibration_is_valid == false) )
+  if ( calibration_is_valid == false )
   {
     return 0.0f;
   }
@@ -857,7 +855,7 @@ real_t solve_spline_for_angle(real_t angle, // Angle to compute scaling factor
   /*
    *  Find the right segment
    */
-  for ( s = SPLINE_PADDING; s < MAX_CALIBRATION_SHOTS + SPLINE_PADDING; s++ )
+  for ( s = SPLINE_PADDING; s < MAX_CALIBRATION_SHOTS + SPLINE_PADDING * 2; s++ )
   {
     if ( (angle >= spline_points[s].actual.angle) && (angle < spline_points[s + 1].actual.angle) )
     {
@@ -867,7 +865,15 @@ real_t solve_spline_for_angle(real_t angle, // Angle to compute scaling factor
 
   if ( s == MAX_CALIBRATION_SHOTS + SPLINE_PADDING )
   {
-    return 1.0f;                          // Not found, return 1.0
+    DLT(DLT_CALIBRATION, {
+      SEND(ALL, sprintf(_xs, "Spline angle not found %4.2f radians", angle);)
+      for ( s = 0; s != MAX_CALIBRATION_SHOTS + SPLINE_PADDING * 2; s++ )
+      {
+        SEND(ALL, sprintf(_xs, "\r\nSpline Point: %d  Angle: %4.2f", s, spline_points[s].actual.angle);)
+      }
+    })
+
+    return 0.0f;                          // Not found, return 0
   }
 
   x0 = spline_points[s].actual.angle;     // Previous point
@@ -880,6 +886,7 @@ real_t solve_spline_for_angle(real_t angle, // Angle to compute scaling factor
   /*
    * All done, return the angle offset
    */
+  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "Spline angle offset: %4.2f", offset);))
   return offset;
 }
 
@@ -900,9 +907,7 @@ real_t solve_spline_for_angle(real_t angle, // Angle to compute scaling factor
  *
  *
  *--------------------------------------------------------------*/
-real_t solve_spline_for_scale(real_t angle, // Angle to compute scaling factor
-                              bool   valid  // Override if needed
-)
+real_t solve_spline_for_scale(real_t angle) // Angle to compute scaling factor
 {
   int    s;                                 // segment index
   real_t scale;                             // Scale factor
@@ -910,10 +915,11 @@ real_t solve_spline_for_scale(real_t angle, // Angle to compute scaling factor
   real_t y0;                                // Value of y at x0
   real_t t;                                 // Interval fraction
 
+  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "solve_spline_for_scale(%4.2f)", angle);))
   /*
    *  Return 1.0 if the calibration is not present
    */
-  if ( (valid == false) || (calibration_is_valid == false) )
+  if ( calibration_is_valid == false )
   {
     return 1.0f;
   }
@@ -921,7 +927,7 @@ real_t solve_spline_for_scale(real_t angle, // Angle to compute scaling factor
   /*
    *  Find the right segment
    */
-  for ( s = SPLINE_PADDING; s < MAX_CALIBRATION_SHOTS + SPLINE_PADDING; s++ )
+  for ( s = SPLINE_PADDING; s != MAX_CALIBRATION_SHOTS + SPLINE_PADDING * 2; s++ )
   {
     if ( (angle >= spline_points[s].actual.angle) && (angle < spline_points[s + 1].actual.angle) )
     {
@@ -929,8 +935,15 @@ real_t solve_spline_for_scale(real_t angle, // Angle to compute scaling factor
     }
   }
 
-  if ( s == MAX_CALIBRATION_SHOTS + SPLINE_PADDING )
+  if ( s == MAX_CALIBRATION_SHOTS + SPLINE_PADDING * 2 )
   {
+    DLT(DLT_CALIBRATION, {
+      SEND(ALL, sprintf(_xs, "Spline angle not found %4.2f radians", angle);)
+      for ( s = 0; s < MAX_CALIBRATION_SHOTS + SPLINE_PADDING * 2; s++ )
+      {
+        SEND(ALL, sprintf(_xs, "\r\nSpline Point: %d  Angle: %4.2f", s, spline_points[s].actual.angle);)
+      }
+    })
     return 1.0f; // Not found, return 1.0
   }
 
@@ -944,9 +957,10 @@ real_t solve_spline_for_scale(real_t angle, // Angle to compute scaling factor
   t     = (angle - x0) / (x1 - x0);       // Interval fraction
   scale = y0 + (spline_points[s].s0 * t) + (spline_points[s].s1 * t * t) + (spline_points[s].s2 * t * t * t);
 
-  /*
-   * All done, return the scale factor
-   */
+                                          /*
+                                           * All done, return the scale factor
+                                           */
+  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "Spline scale: %4.2f", scale);))
   return scale;
 }
 
@@ -1092,6 +1106,13 @@ static void void_calibration(void)
   real_t blob;
 
   DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "clear_calibration()");))
+
+  SEND(ALL, sprintf(_xs, "Do you want to void the calibration?");)
+
+  if ( prompt_for_confirm() == false )
+  {
+    return;
+  }
 
   calibration_is_valid = false; // Assume false until proven otherwise
 
@@ -1274,7 +1295,7 @@ static void show_calibration(void)
 
   for ( i = 0; i != MAX_CALIBRATION_SHOTS + SPLINE_PADDING * 2; i++ )
   {
-    SEND(ALL, sprintf(_xs, "\r\n\r\nSpline: %d", i);)
+    SEND(ALL, sprintf(_xs, "\r\n\r\nSpline: %d  Angle: %4.2f", i, spline_points[i].actual.angle);)
     SEND(ALL, sprintf(_xs, "\r\nScale: %4.2f  s0:%6.4f  s1:%6.4f  s2:%6.4f", spline_points[i].scale, spline_points[i].s0,
                       spline_points[i].s1, spline_points[i].s2);)
     SEND(ALL, sprintf(_xs, "\r\nOffset: %4.2f o0:%4.2f  o1:%4.2f  o2:%4.2f", spline_points[i].offset, spline_points[i].o0,

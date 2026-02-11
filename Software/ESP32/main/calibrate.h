@@ -8,10 +8,10 @@
  * Functions
  */
 void   calibrate(int action);
-real_t solve_spline_for_angle(double theta, bool valid); // Use the spline coeficients to find the angular correction
-real_t solve_spline_for_scale(real_t angle, bool valid); // Angle to compute scaling factor
-bool   get_target_calibration(void);                     // Retrieve calibration data from NONVOL
-void   calibration_test(void);                           // Generate test calibration data
+real_t solve_spline_for_angle(double angle); // Use the spline coeficients to find the angular correction
+real_t solve_spline_for_scale(real_t angle); // Angle to compute scaling factor
+bool   get_target_calibration(void);         // Retrieve calibration data from NONVOL
+void   calibration_test(void);               // Generate test calibration data
 
 /*
  *  Variables
