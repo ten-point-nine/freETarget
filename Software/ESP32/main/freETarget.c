@@ -181,24 +181,21 @@ void freeETarget_init(void)
    */
   show_echo();
   set_LED_PWM(json_LED_PWM);
-  serial_flush(ALL);                    // Get rid of everything
-  printf("\r\nfrom Free complete\r\n"); // Let the user know we are ready
-  shot_in         = 0;                  // Clear out any junk
+  serial_flush(ALL);              // Get rid of everything
+  shot_in         = 0;            // Clear out any junk
   shot_out        = 0;
-  connection_list = CONSOLE;            // The consule is always connected
-  reset_run_time();                     // Reset the time of day
-  time_to_go = 1000 * ONE_SECOND;       // Infinite amount of time to start
+  connection_list = CONSOLE;      // The consule is always connected
+  reset_run_time();               // Reset the time of day
+  time_to_go = 1000 * ONE_SECOND; // Infinite amount of time to start
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initialization complete");))
-
-  if ( DIP_SW_A )                       // Switch A pressed
+  if ( DIP_SW_A )                 // Switch A pressed
   {
-    OTA_load();                         // Load in a new OTA
+    OTA_load();                   // Load in a new OTA
   }
 
-  if ( DIP_SW_B )                       // Switch B pressed
+  if ( DIP_SW_B )                 // Switch B pressed
   {
-    OTA_rollback();                     // Roll back to old software
+    OTA_rollback();               // Roll back to old software
   }
 
   /*

@@ -581,7 +581,7 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                                   // Current persistent storage version
   SEND(ALL, sprintf(_xs, "\"BD_REV\":            %d.%d.%d", (revision() / 100), ((revision() % 100) / 10),
                     (revision() % 10));)                                                      // Current board version
-  SEND(ALL, sprintf(_xs, "\"SPLINE FIT\":        %s,", calibration_is_valid ? "Yes" : "No");) // Current persistent storage version
+  SEND(ALL, sprintf(_xs, "\"SPLINE FIT\":        %s,", calibration_is_valid ? "\"Yes\"" : "\"No\"");) // Current persistent storage version
                                                                                               /*
                                                                                                *  All done, return
                                                                                                */

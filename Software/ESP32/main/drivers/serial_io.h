@@ -36,17 +36,6 @@ void RS485_transmit_off(void);                       // Turn off the RS485 trans
  */
 #define CONSOLE        0x0001                // 0x1
 #define AUX            (CONSOLE << 1)        // 0x2
-<<<<<<< HEAD
-#define BLUETOOTH      (AUX + 2)             // 0x4
-#define RS485          (BLUETOOTH + 2)       // 0x6
-#define TCPIP_0        (CONSOLE << 4)        // 0x10
-#define TCPIP_1        (TCPIP_0 << 1)
-#define TCPIP_2        (TCPIP_1 << 1)
-#define TCPIP_3        (TCPIP_2 << 1)
-#define HTTP_CONNECTED (TCPIP_3 << 1)
-#define EVEN_ODD_BEGIN (HTTP_CONNECTED << 1) // Remember to output in even_odd mode
-#define EVEN_ODD_END   (EVEN_ODD_BEGIN << 1) // Exit even odd mode
-=======
 #define BLUETOOTH      (AUX << 1)            // 0x4
 #define RS485          (BLUETOOTH << 1)      // 0x8
 #define TCPIP_0        (RS485 << 1)          // 0x10
@@ -56,12 +45,6 @@ void RS485_transmit_off(void);                       // Turn off the RS485 trans
 #define HTTP_CONNECTED (TCPIP_3 << 1)        // 0x100
 #define EVEN_ODD_BEGIN (HTTP_CONNECTED << 1) // Remember to output in even_odd mode
 #define EVEN_ODD_END   (EVEN_ODD_BEGIN << 1) // Exit even odd mode
-
-#define AUX_PORT (AUX | BLUETOOTH | RS485)   // 0xE
-#define SOME     (CONSOLE | TCPIP)
-#define TCPIP    (TCPIP_0 | TCPIP_1 | TCPIP_2 | TCPIP_3)
-#define ALL      (CONSOLE | AUX_PORT | TCPIP | HTTP_CONNECTED)
->>>>>>> RS485
 
 #define ALL      (CONSOLE | AUX_PORT | TCPIP | HTTP_CONNECTED)
 #define TCPIP    (TCPIP_0 | TCPIP_1 | TCPIP_2 | TCPIP_3)

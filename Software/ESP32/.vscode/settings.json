@@ -51,7 +51,7 @@
     "cstdint": "c"
   },
   "idf.flashType": "UART",
-  "idf.portWin": "COM5",
+  "idf.portWin": "COM3",
   "C_Cpp.default.compilerPath": "c:\\Users\\allan\\esp\\esp-idf\\tools\\tools\\xtensa-esp32s3-elf\\esp-2022r1-11.2.0\\xtensa-esp32s3-elf\\bin\\xtensa-esp32s3-elf-gcc.exe",
   "idf.currentSetup": "C:\\Users\\allan\\esp\\v5.3.1\\esp-idf"
 }

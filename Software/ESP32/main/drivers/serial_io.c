@@ -200,15 +200,10 @@ void serial_aux_init(void)
         break;
 
       case RS485:
-<<<<<<< HEAD
-        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RS485 port enabled\r\n");))
-        uart_param_config(uart_aux, &uart_aux_config); // 115200 baud rate
-=======
         DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RS485 port enabled");))
         uart_param_config(uart_aux, &uart_aux_config);                       // 115200 baud rate
         ft_timer_new(&RS485_timer, 0, &(RS485_transmit_off), "RS485 timer"); // Prime the RS485 timer
         RS485_transmit_off();                                                // Ensure we are in receive mode
->>>>>>> RS485
         break;
     }
   }
