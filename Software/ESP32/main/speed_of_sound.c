@@ -16,6 +16,7 @@
 #include "diag_tools.h"
 #include "serial_io.h"
 #include "compute_hit.h"
+#include "helpers.h"
 
 #define TO_MM       1000.0d           // Convert Metres to mm
 #define TO_US       1000000.0d        // Convert seconds to microseconds
@@ -68,30 +69,30 @@
 #define TO_MM 1000.0d                          // Convert Meters to MM
 #define TO_US 1000000.0d                       // Convert seconds to microseconds
 
-double speed_of_sound(double temperature,      // Current temperature in degrees C
-                      double relative_humidity // RH, 0-100%
+real_t speed_of_sound(real_t temperature,      // Current temperature in degrees C
+                      real_t relative_humidity // RH, 0-100%
 )
 {
-  double speed_MPS;                            // Speed Metres per second
-  double speed_mmPuS;                          // Speed in mm per microsecond
+  real_t speed_MPS;                            // Speed Metres per second
+  real_t speed_mmPuS;                          // Speed in mm per microsecond
 
-  double y;                                    // Ratio of Specific Heats
-  double TK;                                   // Temperature in degrees Kelvin
-  double vapor_pressure;                       //
-  double mole_fraction;                        //
-  double specific_heat_ratio;                  // Specific heat ratio of air @ relative_humidity
-  double mean_molar_weight;                    // Mean Molar Weight of Air @ relative_humidity
-  double change_in_speed;                      // % Change in speed due to humidity, relative to Speed of Sound in Dry Air at 0 degrees C.
+  real_t y;                                    // Ratio of Specific Heats
+  real_t TK;                                   // Temperature in degrees Kelvin
+  real_t vapor_pressure;                       //
+  real_t mole_fraction;                        //
+  real_t specific_heat_ratio;                  // Specific heat ratio of air @ relative_humidity
+  real_t mean_molar_weight;                    // Mean Molar Weight of Air @ relative_humidity
+  real_t change_in_speed;                      // % Change in speed due to humidity, relative to Speed of Sound in Dry Air at 0 degrees C.
 
   //********************************************************************************************************************************************************************************
   // The following can be implemented to calculate a more accurate value for M defined above as 28.9660 if the YEAR is known.
-  // double MMM                  // Mean Molar Mass of Dry Air.
+  // real_t MMM                  // Mean Molar Mass of Dry Air.
   // int CO2_percent             // Calculated % CO2 (PPM) based on NOAA Data. Estimated valid to 2036. Accuracy < 1% error 1945~2036. Used
   // to calculate Mean Molar Mass of Dry Air.
   // Calculate Mean Molar Mass of Dry Air for previous year CO2 average content.
   // present_YEAR = year()
   // CO2_percent = int(57697.26 - 59.19204286*(present_YEAR - 1) + 0.015264286*sq(present_YEAR - 1)  // % CO2 in PPM as a function of YEAR
-  // MMM = 28.96074487d + ((double)CO2_percent)*12.0107d/1000000.0d  // Mean Molecular Mass of Dry Air for CO2_percent.
+  // MMM = 28.96074487d + ((real_t)CO2_percent)*12.0107d/1000000.0d  // Mean Molecular Mass of Dry Air for CO2_percent.
   //*********************************************************************************************************************************************************************************
 
   // Calculate Coefficients to determine % change in speed of sound due to Humidity only, relative to Speed of Sound in Dry Air at 0 degrees
@@ -104,12 +105,12 @@ double speed_of_sound(double temperature,      // Current temperature in degrees
 
   TK = 273.15d + temperature; // Temperature converted to degrees Kelvin.
 
-  vapor_pressure = exp(((-7511.52d / TK) + 96.5389644d + (0.02399897d * (TK)) + (-0.000011654551d * sq(TK)) +
+  vapor_pressure = exp(((-7511.52d / TK) + 96.5389644d + (0.02399897d * (TK)) + (-0.000011654551d * SQ(TK)) +
                         (-0.000000012810336d * (TK * TK * TK)) + (0.000000000020998405d * (TK * TK * TK * TK))) -
                        12.150799d * log(TK));
   // Calculate saturation vapor pressure at temperature TK
 
-  mole_fraction = 0.01d * ((double)relative_humidity) * vapor_pressure / 101325.0d; // Calculate Mole Fraction of Water Vapor.
+  mole_fraction = 0.01d * ((real_t)relative_humidity) * vapor_pressure / 101325.0d; // Calculate Mole Fraction of Water Vapor.
 
   specific_heat_ratio = (7.0d + mole_fraction) / (5.0d + mole_fraction); // Calculate Specific Heat Ratio of air @ relative_humidity
 
@@ -118,7 +119,7 @@ double speed_of_sound(double temperature,      // Current temperature in degrees
   change_in_speed = (1.0d / sqrt(1.4d / M) * 100.0d) * sqrt(specific_heat_ratio / mean_molar_weight) - 100.0d;
   // % Change in speed due to humidity, relative to Speed of Sound in Dry Air at 0 degrees C.
 
-  y = 1.40092d - (0.0000196395d * temperature) - (0.000000162593d * sq(temperature));
+  y = 1.40092d - (0.0000196395d * temperature) - (0.000000162593d * SQ(temperature));
   // Algorithm for Ratio of Speific Heats of Air (Cp/Cv) relative to temperature in degrees C.
 
   speed_MPS = sqrt((y * R * TK) / M)       // Speed, in Metres per second, of Sound in Dry Air at (temperature) degrees C.

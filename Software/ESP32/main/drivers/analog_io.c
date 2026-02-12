@@ -32,15 +32,15 @@
  * Function prototypes
  */
 void          set_vset_PWM(unsigned int pwm);
-static double temperature_C_HDC3022(void);  // Temperature in degrees C
-static double temperature_C_TMP1075D(void); // Temperature in degrees C
+static real_t temperature_C_HDC3022(void);  // Temperature in degrees C
+static real_t temperature_C_TMP1075D(void); // Temperature in degrees C
 
 /*
  *  Variables
  */
-int          board_version = -1; // Board Revision number
-unsigned int board_mask    = 0;  // Mask for the board revision
-static float rh;                 // Humidity from sensor
+int           board_version = -1; // Board Revision number
+unsigned int  board_mask    = 0;  // Mask for the board revision
+static real_t rh;                 // Humidity from sensor
 
 /*
  * Constants
@@ -166,9 +166,9 @@ unsigned int adc_read(unsigned int adc_channel // What input are we reading?
 #define V12_REF         1.1                  // ESP32 VREF
 #define V12_CAL         0.88
 
-float v12_supply(void)
+real_t v12_supply(void)
 {
-  return (float)adc_read(V_12_LED) / ADC_FULL * ADC_REF * V12_RESISTOR + ADC_BIAS;
+  return (real_t)adc_read(V_12_LED) / ADC_FULL * ADC_REF * V12_RESISTOR + ADC_BIAS;
 }
 
 /*----------------------------------------------------------------
@@ -304,11 +304,11 @@ unsigned int revision(void)
  *  to a voltage
  *
  *--------------------------------------------------------------*/
-double vref_measure(void)
+real_t vref_measure(void)
 {
   if ( TMP1075D )
   {
-    return ((double)adc_read(VMES_LO)) / ADC_FULL * ADC_REF * VREF_DIVIDER + ADC_BIAS; // 4096 full scale, 3.3 VREF 1/2 voltage divider
+    return ((real_t)adc_read(VMES_LO)) / ADC_FULL * ADC_REF * VREF_DIVIDER + ADC_BIAS; // 4096 full scale, 3.3 VREF 1/2 voltage divider
   }
   else
   {
@@ -326,7 +326,7 @@ double vref_measure(void)
  *
  *
  *--------------------------------------------------------------*/
-double temperature_C(void)
+real_t temperature_C(void)
 {
   if ( HDC3022 )
   {
@@ -352,11 +352,11 @@ double temperature_C(void)
  * A simple interrogation is used.
  *
  *--------------------------------------------------------------*/
-static double temperature_C_HDC3022(void)
+static real_t temperature_C_HDC3022(void)
 {
   unsigned char temp_buffer[6];
   int           raw;
-  static float  t_c; // Remember the temperature
+  static real_t t_c; // Remember the temperature
 
   /*
    * Read in the temperature and humidity together
@@ -370,9 +370,9 @@ static double temperature_C_HDC3022(void)
    *  Return the temperature in C
    */
   raw = (temp_buffer[0] << 8) + temp_buffer[1];
-  t_c = -45.0 + (175.0 * (float)raw / 65535.0);
+  t_c = -45.0 + (175.0 * (real_t)raw / 65535.0);
   raw = (temp_buffer[3] << 8) + temp_buffer[4];
-  rh  = 100.0 * (float)raw / 65535.0;
+  rh  = 100.0 * (real_t)raw / 65535.0;
 
   return t_c;
 }
@@ -398,11 +398,11 @@ static double temperature_C_HDC3022(void)
  * For all other revisions, read the temperature each time.
  *--------------------------------------------------------------*/
 #define TC_CAL (0.0625 / 16) // 'C / LSB
-static double temperature_C_TMP1075D(void)
+static real_t temperature_C_TMP1075D(void)
 {
   unsigned char temp_buffer[6];
   int           raw;
-  static float  t_c = -274;  // Remember the temperature Set to below absolute zero
+  static real_t t_c = -274;  // Remember the temperature Set to below absolute zero
 
                              /*
                               * Check for a Rev 6.0 board
@@ -429,7 +429,7 @@ static double temperature_C_TMP1075D(void)
    *  Return the temperature in C
    */
   raw = (temp_buffer[0] << 8) + temp_buffer[1];
-  t_c = ((float)raw * TC_CAL);
+  t_c = ((real_t)raw * TC_CAL);
   rh  = 40.0; // Force humidity to 40% RH
 
   /*
@@ -453,7 +453,7 @@ static double temperature_C_TMP1075D(void)
  * A simple interrogation is used.
  *
  *--------------------------------------------------------------*/
-double humidity_RH(void)
+real_t humidity_RH(void)
 {
   temperature_C(); // Read in the temperature and humidity
   return rh;
@@ -474,7 +474,7 @@ double humidity_RH(void)
  *--------------------------------------------------------------*/
 void set_VREF(void)
 {
-  double volts[4];
+  real_t volts[4];
 
   if ( (json_vref_lo == 0) // Check for an uninitialized VREF
        || (json_vref_hi == 0) )
@@ -543,7 +543,7 @@ void analog_input_test(void)
   {
     SEND(ALL, sprintf(_xs, "\r\nVREF_MEASURE: %5.3f", vref_measure());)
   }
-  SEND(ALL, sprintf(_xs, "\r\nBoard Rev: %4.2f", (float)revision() / 100.0);)
+  SEND(ALL, sprintf(_xs, "\r\nBoard Rev: %4.2f", (real_t)revision() / 100.0);)
   SEND(ALL, sprintf(_xs, "\r\nTemperature: %4.2f", temperature_C());)
   if ( HDC3022 )
   {

@@ -490,7 +490,7 @@ void commit_status_LEDs(unsigned int blink_state)
 void read_timers(int timer[])
 {
   unsigned int i;
-  double       pcnt_hi; // Reading from high counter
+  real_t       pcnt_hi; // Reading from high counter
 
   for ( i = 0; i != 8; i++ )
   {
@@ -569,7 +569,7 @@ void paper_start(void)
   /*
    *  DC Motor, turn on the FET to start the motor
    */
-  if ( IS_DC_WITNESS )    // DC motor,
+  if ( IS_DC_WITNESS ) // DC motor,
   {
     DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "DC motor start: %d ms", json_paper_time);))
     DCmotor_on_off(true, json_paper_time);
@@ -674,7 +674,6 @@ void paper_stop(void)
   if ( IS_DC_WITNESS )        // DC motor - Turn the output on once
   {
     DCmotor_on_off(false, 0); // Motor OFF
-    ft_timer_delete(&paper_time);
   }
 
   if ( IS_STEPPER_WITNESS )   // Stepper motor - Toggle the output
@@ -684,7 +683,6 @@ void paper_stop(void)
     {
       gpio_set_level(HOLD_D_GPIO, STEP_DISABLE);
     }
-    ft_timer_delete(&paper_time);
   }
 
   /*
@@ -723,7 +721,7 @@ void DCmotor_on_off(bool         on,      // on == true, turn on motor drive
   if ( on == true )
   {
     gpio_set_level(PAPER, PAPER_ON); // Turn it on
-    ft_timer_new(&paper_time, MS_TO_TICKS(duration));
+    ft_timer_new(&paper_time, MS_TO_TICKS(duration), NULL, "paper_time");
     motor_running = true;
   }
   else
@@ -731,7 +729,6 @@ void DCmotor_on_off(bool         on,      // on == true, turn on motor drive
     if ( motor_running == true )
     {
       gpio_set_level(PAPER, PAPER_OFF); // Turn it off
-      ft_timer_delete(&paper_time);
       motor_running = false;
     }
   }
@@ -777,7 +774,7 @@ void stepper_pulse(void)
   }
 
   DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "step_time %d   step_count: %d", step_time, step_count);))
-  ft_timer_new(&paper_time, MS_TO_TICKS(step_time));
+  ft_timer_new(&paper_time, MS_TO_TICKS(step_time), NULL, "step_time");
 
   if ( step_count != 0 )
   {

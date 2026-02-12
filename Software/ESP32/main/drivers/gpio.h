@@ -81,6 +81,11 @@ extern volatile unsigned int step_count; // Number of steps before stopping
 #define RUN_MASK (BIT_NORTH_LO | BIT_EAST_LO | BIT_SOUTH_LO | BIT_WEST_LO) // Include pcnt_lo bits and exclude pcnt_hi bits
 #define REF_CLK  GPIO_NUM_8
 
+#define RS485_CONTROL       GPIO_NUM_9                                     // RS485 Transmit control Version 6 and later
+#define RS485_TRANSMIT      1
+#define RS485_RECEIVE       0                                              // Control line settings
+#define RS485_TRANSMIT_TIME 3                                              // 30ms transmit time
+
 #define PAPER     GPIO_NUM_12                                              // Paper advance drive active high
 #define PAPER_ON  1
 #define PAPER_OFF 0
@@ -101,7 +106,7 @@ extern volatile unsigned int step_count; // Number of steps before stopping
 #define RUN_GO            1                                                // Let the flip flops go
 #define CLOCK_TRIGGER_OFF 0                                                // The clock can be triggered by 0-1
 #define CLOCK_TRIGGER_ON  1                                                // The clock can be triggered by 0-1
-#define LDAC              GPIO_NUM_42                                      // No longer used
+#define LDAC              GPIO_NUM_41                                      // No longer used
 
 #define DIP_0   9
 #define RED_OUT 9                                                          // Rapid fire RED on DIP0

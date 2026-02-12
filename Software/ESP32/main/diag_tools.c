@@ -38,6 +38,7 @@
 #include "timer.h"
 #include "bluetooth.h"
 #include "ota.h"
+#include "calibrate.h"
 
 extern volatile time_count_t paper_time;
 
@@ -80,6 +81,7 @@ static const self_test_t test_list[] = {
     {"Turn the oscillator on and off",    &timer_cycle_oscillator  },
     {"Turn the RUN lines on and off",     &timer_run_all           },
     {"Show the current time",             &show_time               },
+    {"Show current timers",               &show_timers             },
     {"- Communiations Tests",             0                        },
     {"AUX serial port test",              &serial_port_test        },
     {"BlueTooth configuration",           &BlueTooth_configuration },
@@ -101,27 +103,31 @@ static const self_test_t test_list[] = {
     {"Polled target test",                &polled_target_test      },
     {"Interrupt target test",             &interrupt_target_test   },
     {"- Software tests",                  0                        },
-    {"build_json_score",                  &test_build_json_score   },
-    {"build_fake_shots",                  &test_build_fake_shots   },
-    {"generate_fake_shot",                &generate_fake_shot      },
-    {"display_all_scores",                &test_display_all_scores },
+    {"build_json_score",                  &test_build_json_score   }, // Generate a known score message
+    {"build_fake_shots",                  &test_build_fake_shots   }, // Fill up 10 shots with random values
+    {"generate_fake_shot",                &generate_fake_shot      }, // This forces shots into the software
+    {"display_all_scores",                &test_display_all_scores }, // Send fake JSON scores
     {"Rapidfire test",                    &test_rapidfire          },
     {"Rapidfire test",                    &test_rapidfire          },
+    {"Calibration test",                  &calibration_test        }, // Generate fake scores and observe the calibration
     {"",                                  0                        }
 };
 
 const dlt_name_t dlt_names[] = {
-    {DLT_CRITICAL,      "DLT_CRITICAL",      'E'}, // Prevents target from working
-    {DLT_INFO,          "DLT_INFO",          'I'}, // Running information
-    {DLT_APPLICATION,   "DLT_APPLICATION",   'A'}, // FreeTarget.c and compute.c logging
-    {DLT_COMMUNICATION, "DLT_COMMUNICATION", 'C'}, // WiFi and other communications information
-    {DLT_DIAG,          "DLT_DIAG",          'H'}, // Hardware diagnostics
-    {DLT_DEBUG,         "DLT_DEBUG",         'D'}, // Software debugging information
-    {DLT_SCORE,         "DLT_SCORE",         'S'}, // Display timing in the score message
-    {DLT_HTTP,          "DLT_HTTP",          'H'}, // Log HTTP events
-    {DLT_OTA,           "DLT_OTA",           'O'}, // Log HTTP events
-    {DLT_HEARTBEAT,     "DLT_HEARTBEAT",     'T'}, // Heartbeat tick
-    {0,                 0,                   0  }
+    {DLT_CRITICAL,            "DLT_CRITICAL",            'E'}, // Prevents target from working
+    {DLT_INFO,                "DLT_INFO",                'I'}, // Running information
+    {DLT_APPLICATION,         "DLT_APPLICATION",         'A'}, // FreeTarget.c and compute.c logging
+    {DLT_COMMUNICATION,       "DLT_COMMUNICATION",       'C'}, // WiFi and other communications information
+    {DLT_DIAG,                "DLT_DIAG",                'H'}, // Hardware diagnostics
+    {DLT_DEBUG,               "DLT_DEBUG",               'D'}, // Software debugging information
+    {DLT_SCORE,               "DLT_SCORE",               'S'}, // Display timing in the score message
+    {DLT_HTTP,                "DLT_HTTP",                'H'}, // Log HTTP events
+    {DLT_OTA,                 "DLT_OTA",                 'O'}, // Log HTTP events
+    {DLT_CALIBRATION,         "DLT_CALIBRATION",         'X'}, // Calibration information
+    {DLT_CALIBRATION_VERBOSE, "DLT_CALIBRATION_VERBOSE", 'x'}, // Calibration verbose information
+    {DLT_HEARTBEAT,           "DLT_HEARTBEAT",           'T'}, // Heartbeat tick
+    {DLT_AMB,                 "DLT_AMB",                 'M'}, // Special debug messages
+    {0,                       0,                         0  }
 };
 
 /*-----------------------------------------------------
@@ -273,8 +279,8 @@ bool do_factory_test(bool test_run)
   char   ABCD[] = "DCBA";       // DIP switch order
   int    pass;                  // Pass YES/NO
   bool   passed_once;           // Passed all of the tests at least once
-  double volts[4];
-  float  vmes_lo;
+  real_t volts[4];
+  real_t vmes_lo;
   int    motor_toggle;          // Toggle motor on an off
   int    number_of_sensors = 4; // Number of sensors to test
 
@@ -925,14 +931,14 @@ void set_diag_LED(char        *new_LEDs, // NEW LED display
  *
  *--------------------------------------------------------------*/
 #define NONE    0
-#define SOME    1
+#define V12_LOW 1
 #define V12OK   2
 #define UNKNOWN 99
 
 bool check_12V(void)
 {
   static unsigned int fault_V12 = UNKNOWN;
-  float               v12;
+  real_t              v12;
 
   /*
    *  Check to see that the witness paper is enabled
@@ -961,10 +967,10 @@ bool check_12V(void)
 
   if ( v12 <= V12_WORKING )
   {
-    if ( fault_V12 != SOME )
+    if ( fault_V12 != V12_LOW )
     {
       set_status_LED(LED_LOW_12V);
-      fault_V12 = SOME;
+      fault_V12 = V12_LOW;
     }
     return false;
   }
@@ -1006,8 +1012,8 @@ void test_build_fake_shots(void)
     record[i].y              = 2 * i + 1;
     record[i].xs             = 2 * i + 2;
     record[i].ys             = 2 * i + 3;
-    record[i].radius         = sqrt(sq(record[i].x) + sq(record[i].y));
-    record[i].angle          = 180.0 * atan2(record[i].y, record[i].x) / PI;
+    record[i].radius         = sqrt(SQ(record[i].x) + SQ(record[i].y));
+    record[i].angle          = atan2_degrees(record[i].y, record[i].x);
     record[i].timer_count[0] = 1;
     record[i].timer_count[1] = 2;
     record[i].timer_count[2] = 3;
@@ -1024,6 +1030,7 @@ void test_build_fake_shots(void)
   /*
    *  Finished
    */
+
   shot_in = i;
   SEND(ALL, sprintf(_xs, _DONE_);)
 
@@ -1078,7 +1085,7 @@ static void test_display_all_scores(void)
  * operation of the target detection.
  *
  *--------------------------------------------------------------*/
-static float rapid_schedule[] = {2.0, 1.0, .75, .5, .25, -1};
+static real_t rapid_schedule[] = {2.0, 1.0, .75, .5, .25, -1};
 
 static void test_rapidfire(void)
 {

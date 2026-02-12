@@ -42,6 +42,7 @@
 #include "http_client.h"
 #include "http_services.h"
 #include "OTA.h"
+#include "calibrate.h"
 
 /*
  *  Variables
@@ -67,7 +68,7 @@ typedef struct
 {
   volatile int *timer;               // Timer used to control state length
   char         *status_LED;          // Status LED output
-  float         LED_bright;          // Brightness of target LED
+  real_t        LED_bright;          // Brightness of target LED
   char         *message;             // Message to be sent to PC
   bool          in_shot;             // In as shot cycle
 } rapid_state_t;
@@ -77,7 +78,7 @@ extern int isr_state;
 volatile unsigned int run_state = 0; // Current operating state
 
 /*
- *  Function Prototypes
+ * Function Prototypes
  */
 static unsigned int set_mode(void); // Set the target running mode
 static unsigned int arm(void);      // Arm the circuit for a shot
@@ -123,18 +124,22 @@ void freeETarget_init(void)
 #if TRACE_HEARTBEAT
   is_trace |= DLT_HEARTBEAT;     // Enable heartbeat tracing
 #endif
+#if TRACE_CALIBRATION
+  is_trace |= DLT_CALIBRATION;   // Enable calibration tracing
+#endif
 
   /*
    *  Setup the hardware
    */
-  json_aux_mode = 0;    // Assume the AUX port is not used
-  gpio_init();          // Setup the hardware
-  serial_io_init();     // Setup the console for debug message
-  read_nonvol();        // Read in the settings
-  serial_aux_init();    // Update the serial port if there is a change
-  set_VREF();           // Set the reference voltages
-  DAC_calibrate();      // Adjust the DAC to compensate for voltage drop
-  multifunction_init(); // Override the MFS if we have to
+  json_aux_mode = 0;        // Assume the AUX port is not used
+  gpio_init();              // Setup the hardware
+  serial_io_init();         // Setup the console for debug message
+  read_nonvol();            // Read in the settings
+  serial_aux_init();        // Update the serial port if there is a change
+  set_VREF();               // Set the reference voltages
+  DAC_calibrate();          // Adjust the DAC to compensate for voltage drop
+  multifunction_init();     // Override the MFS if we have to
+  get_target_calibration(); // Retrieve the target settings
 
   /*
    * Put up a self test
@@ -155,13 +160,16 @@ void freeETarget_init(void)
   /*
    *  Set up the long running timers
    */
-  ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND * 60l);                 // Keep alive timer
-  ft_timer_new(&power_save, (time_count_t)(json_power_save) * (time_count_t)ONE_SECOND * 60L); // Power save timer
-  ft_timer_new(&time_since_last_shot, HTTP_CLOSE_TIME * 60 * ONE_SECOND);                      // 15 minutes since last shot
+  ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND * 60l, NULL, "keep alive");                      // Keep alive timer
+  ft_timer_new(&power_save, (time_count_t)(json_power_save) * (time_count_t)ONE_SECOND * 60L, &bye_tick, "power save"); // Power save timer
+  ft_timer_new(&time_since_last_shot, HTTP_CLOSE_TIME * 60 * ONE_SECOND, NULL, "time since last shot"); // 15 minutes since last shot
+  ft_timer_new(&time_to_go, 0, NULL, "time to go");                                                     // Time remaining in session
+  ft_timer_new(&shot_timer, MAX_WAIT_TIME, NULL, "shot timer");                                         // Wait for the shot to arrive
+  ft_timer_new(&ring_timer, MAX_RING_TIME, NULL, "ring timer");                                         // Wait for the ringing to stop
 
-                                                                                               /*
-                                                                                                * Run the power on self test
-                                                                                                */
+  /*
+   * Run the power on self test
+   */
   POST_counters();            // POST counters does not return if there is an error
   if ( check_12V() == false ) // Verify the 12 volt supply
   {
@@ -173,23 +181,24 @@ void freeETarget_init(void)
    */
   show_echo();
   set_LED_PWM(json_LED_PWM);
-  serial_flush(ALL);              // Get rid of everything
-  shot_in         = 0;            // Clear out any junk
+  serial_flush(ALL);                    // Get rid of everything
+  printf("\r\nfrom Free complete\r\n"); // Let the user know we are ready
+  shot_in         = 0;                  // Clear out any junk
   shot_out        = 0;
-  connection_list = 0;            // Nobody is connected yet
-  reset_run_time();               // Reset the time of day
-  time_to_go = 1000 * ONE_SECOND; // Infinite amount of time to start
+  connection_list = CONSOLE;            // The consule is always connected
+  reset_run_time();                     // Reset the time of day
+  time_to_go = 1000 * ONE_SECOND;       // Infinite amount of time to start
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initialization complete");))
 
-  if ( DIP_SW_A )                 // Switch A pressed
+  if ( DIP_SW_A )                       // Switch A pressed
   {
-    OTA_load();                   // Load in a new OTA
+    OTA_load();                         // Load in a new OTA
   }
 
-  if ( DIP_SW_B )                 // Switch B pressed
+  if ( DIP_SW_B )                       // Switch B pressed
   {
-    OTA_rollback();               // Roll back to old software
+    OTA_rollback();                     // Roll back to old software
   }
 
   /*
@@ -226,6 +235,7 @@ void freeETarget_target_loop(void *arg)
     gpio_init_single(PCNT_HI);               // Program the port
   }
 
+  printf("\r\ntarget_loop\r\n");
   start_new_session(0);
   shot_number = 1;                           // Start counting shots at 1
 
@@ -404,6 +414,7 @@ unsigned int wait(void)
   /*
    * See if any shots have arrived
    */
+
   if ( shot_in != shot_out )
   {
     return REDUCE;
@@ -591,6 +602,7 @@ void start_new_session(int session_type) //
       {
         record[i].session_type = SESSION_EMPTY;
       }
+      printf("\r\nNew session started\r\n");
       shot_in  = 0;
       shot_out = 0;
       reset_run_time();
@@ -688,13 +700,12 @@ void tabata_task(void)
    */
   if ( json_tabata_enable == false )
   {
-    if ( tabata_state_machine != 0 )  // Reset the state machine
+    if ( tabata_state_machine != 0 ) // Reset the state machine
     {
-      tabata_state_machine = 0;       // Reset the Tabata state machine (incremented on entry)
-      run_state &= ~IN_SHOT;          // Take it out of a shot if it was in one
-      freETarget_state = START;       // Force the freeTarget state machine back to start
-      ft_timer_delete(&tabata_timer); // Delete the unused timer
-      set_LED_PWM_now(json_LED_PWM);  // Turn the lights back on
+      tabata_state_machine = 0;      // Reset the Tabata state machine (incremented on entry)
+      run_state &= ~IN_SHOT;         // Take it out of a shot if it was in one
+      freETarget_state = START;      // Force the freeTarget state machine back to start
+      set_LED_PWM_now(json_LED_PWM); // Turn the lights back on
     }
     return;
   }
@@ -711,7 +722,7 @@ void tabata_task(void)
     {
       tabata_state_machine = 1;                                                      // Go back to the beginning
     }
-    ft_timer_new(&tabata_timer, (*tabata_state[tabata_state_machine].timer) * ONE_SECOND);
+    ft_timer_new(&tabata_timer, (*tabata_state[tabata_state_machine].timer) * ONE_SECOND, NULL, "tabata timer");
     set_status_LED(tabata_state[tabata_state_machine].status_LED);
     if ( json_LED_PWM >= 0 )
     {
@@ -796,7 +807,6 @@ void rapid_fire_task(void)
       rapid_state_machine = 0;       // Reset the Tabata state machine (incremented on entry)
       run_state &= ~IN_SHOT;         // Take it out of a shot if it was in one
       freETarget_state = START;      // Force the freeTarget state machine back to start
-      ft_timer_delete(&rapid_timer); // Delete the unused timer
       set_LED_PWM_now(json_LED_PWM); // Turn the lights back on
     }
     return;
@@ -830,7 +840,7 @@ void rapid_fire_task(void)
     }
     else
     {
-      ft_timer_new(&rapid_timer, (*rapid_state[rapid_state_machine].timer) * ONE_SECOND);
+      ft_timer_new(&rapid_timer, (*rapid_state[rapid_state_machine].timer) * ONE_SECOND, NULL, "rapid timer");
       set_status_LED(rapid_state[rapid_state_machine].status_LED);
       set_LED_PWM_now(rapid_state[rapid_state_machine].LED_bright * json_LED_PWM); // Control the lights
 
@@ -1018,11 +1028,10 @@ sensor_ID_t *find_sensor(unsigned int run_mask // Run mask to look for a match
 
 void generate_fake_shot(void)
 {
-  int   i;                      // Loop index
-  int   x, y;                   // Shot location coordinates
-  float radius;                 // Radius of shot
-  float distance;               // Distance from shot to sensor
-
+  int    i;                     // Loop index
+  int    x, y;                  // Shot location coordinates
+  real_t radius;                // Radius of shot
+  real_t distance;              // Distance from shot to sensor
   shot_in  = 0;                 // Reset the shot queue
   shot_out = 0;
 
@@ -1035,12 +1044,12 @@ void generate_fake_shot(void)
     {
       for ( y = MIN_BOUND; y <= MAX_BOUND; y += SHOT_SPACING )
       {
-        radius = sqrtf((float)sq(x) + sq(y));  // Compute the radius for polar coordinates
+        radius = sqrtf(SQ(x) + SQ(y));         // Compute the radius for polar coordinates
         if ( radius <= (165.0 / 2.0) )         // inside the target radius
         {
           for ( i = N; i <= W; i++ )           // Loop through the sensors to compute the time counts
           {
-            distance = sqrt((float)(sq(x - s[i].x_mm) + sq(y - s[i].y_mm)));
+            distance = sqrt((SQ(x - s[i].x_mm) + SQ(y - s[i].y_mm)));
             record[shot_in].timer_count[i] =
                 (int)(SHOT_TIME * OSCILLATOR_MHZ) - (distance / 0.35 * OSCILLATOR_MHZ); // Fake the travel time in
           }
@@ -1049,9 +1058,7 @@ void generate_fake_shot(void)
           record[shot_in].face_strike   = 0;                                            // No face strikes
           record[shot_in].sensor_status = 0x0f;                                         // All sensors valid
           ring_timer                    = json_min_ring_time * ONE_SECOND / 1000;       // Reset the ring timer
-
-          shot_in++;
-          shot_in = shot_in % SHOT_SPACE;
+          shot_in                       = (shot_in + 1) % SHOT_SPACE;
 
           reduce();                                                                     // Process the shot
           vTaskDelay(ONE_SECOND * 2);

@@ -19,7 +19,7 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"6.3.0 January 7, 2026\""
+#define SOFTWARE_VERSION "\"6.3.0 February 10, 2026\""
 #define _DONE_           "\r\nDone\r\n"
 #define _SHOT_           "shot"
 #define _GREETING_       "CONNECTED"   // Message to send on connection
@@ -53,8 +53,6 @@
 
 #define IS_DC_WITNESS      (json_paper_time != 0) // Determine the witness paper drive (DC Motor)
 #define IS_STEPPER_WITNESS (json_step_count != 0) // Determine the witness paper drive (stepper)
-
-#define JSON_NAME_TEXT 99                         // Use 99 to identify a user named target
 
 /*
  * Options
@@ -101,44 +99,48 @@
 #define PI      3.14159269
 #define PI_ON_4 (PI / 4.0d)
 #define PI_ON_2 (PI / 2.0d)
+#define TWO_PI  (2.0d * PI)
 
-#define SESSION_EMPTY 0                            // No session data
-#define SESSION_VALID 1                            // Session is valid but undefined
-#define SESSION_SIGHT 2                            // Session is a sighter
-#define SESSION_MATCH 4                            // Session is a match
-#define SESSION_PRINT 10                           // Print out the session
+#define SESSION_EMPTY 0               // No session data
+#define SESSION_VALID 1               // Session is valid but undefined
+#define SESSION_SIGHT 2               // Session is a sighter
+#define SESSION_MATCH 4               // Session is a match
+#define SESSION_PRINT 10              // Print out the session
 
-#define SCORE_LEFT_BRACE  '{'                      // Opening JSON string
-#define SCORE_RIGHT_BRACE '}'                      // Closing JSON string
-#define SCORE_NEW_LINE    'n'                      // Add a newline
-#define SCORE_PRIME       '#'                      // Prime a reply to the client
-#define SCORE_SHOT        'S'                      // Include shot number
-#define SCORE_MISS        'M'                      // Include miss status
-#define SCORE_SESSION     '?'                      // Include session type
-#define SCORE_TIME        'T'                      // Include time stamp
-#define SCORE_ELAPSED     'D'                      // Include elapsed time
-#define SCORE_XY          'X'                      // Include X-Y coordinates
-#define SCORE_POLAR       'P'                      // Include polar coordinates
-#define SCORE_HARDWARE    'H'                      // Include hardware values
-#define SCORE_TARGET      'O'                      // Include target name
-#define SCORE_EVENT       'E'                      // Include the athelte name
-#define SCORE_TEST        '$'                      // Test the client with a test shot
+#define SCORE_LEFT_BRACE  '{'         // Opening JSON string
+#define SCORE_RIGHT_BRACE '}'         // Closing JSON string
+#define SCORE_NEW_LINE    'n'         // Add a newline
+#define SCORE_PRIME       '#'         // Prime a reply to the client
+#define SCORE_SHOT        'S'         // Include shot number
+#define SCORE_MISS        'M'         // Include miss status
+#define SCORE_SESSION     '?'         // Include session type
+#define SCORE_TIME        'T'         // Include time stamp
+#define SCORE_ELAPSED     'D'         // Include elapsed time
+#define SCORE_XY          'X'         // Include X-Y coordinates
+#define SCORE_POLAR       'P'         // Include polar coordinates
+#define SCORE_HARDWARE    'H'         // Include hardware values
+#define SCORE_TARGET      'O'         // Include target name
+#define SCORE_EVENT       'E'         // Include the athelte name
+#define SCORE_TEST        '$'         // Test the client with a test shot
 
-#define SCORE_ALL        "{S?TXPHOE}"              // shot / miss / target / time / x-y / radius-angle / North-East-South-West / target type
-#define SCORE_USB        "{S?TX}"                  // USB score elements
-#define SCORE_TCPIP      "{S?TXE}"                 // TCP score elements
-#define SCORE_BLUETOOTH  "{S?TX}"                  // Bluetooth score elements
-#define SCORE_HTTP       "{S?TXPOE}"               // HTTP score elements
-#define SCORE_HTTP_PRIME "{#}"                     // HTTP Prime the client
-#define SCORE_HTTP_TEST  "{$}"                     // HTTP Test the client
+#define SCORE_ALL        "{S?TXPHOE}" // shot / miss / target / time / x-y / radius-angle / North-East-South-West / target type
+#define SCORE_USB        "{S?TX}"     // USB score elements
+#define SCORE_TCPIP      "{S?TXE}"    // TCP score elements
+#define SCORE_BLUETOOTH  "{S?TX}"     // Bluetooth score elements
+#define SCORE_HTTP       "{S?TXPOE}"  // HTTP score elements
+#define SCORE_HTTP_PRIME "{#}"        // HTTP Prime the client
+#define SCORE_HTTP_TEST  "{$}"        // HTTP Test the client
 
-#define HTTP_CLOSE_TIME 15l                        // Time to close the HTTP connection after the last shot
+#define HTTP_CLOSE_TIME 15l           // Time to close the HTTP connection after the last shot
 
+#define MAX_WAIT_TIME 10              // Wait up to 10 ms for the input to arrive
+#define MAX_RING_TIME 50              // Wait 50 ms for the ringing to stop
 /*
  *  Types
  */
 typedef unsigned char byte_t;
 typedef volatile long time_count_t;
+typedef double        real_t;
 
 typedef struct sensor_ID
 {
@@ -204,6 +206,8 @@ EXTERN time_count_t          keep_alive;                            // Keep aliv
 EXTERN time_count_t          power_save;                            // Power save timer
 EXTERN time_count_t          time_since_last_shot;                  // 15 minutes since last shot
 EXTERN time_count_t          session_time[];                        // Time in each session
+EXTERN time_count_t          shot_timer;                            // Wait for the sound to hit all sensors
+EXTERN time_count_t          ring_timer;                            // Let the ring on the backstop end
 EXTERN shot_record_t         record[SHOT_SPACE];
 #ifdef FREETARGET_C
 EXTERN char        *no_yes[]       = {"No", "Yes"};                 // Yes or No

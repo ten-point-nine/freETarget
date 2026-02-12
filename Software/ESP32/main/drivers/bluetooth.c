@@ -91,7 +91,7 @@ void BlueTooth_configuration(void)
    * Mark that the module is ready
    */
   json_aux_mode = BLUETOOTH;
-  nonvol_write_i32(NONVOL_AUX_PORT_ENABLE, json_aux_mode); // Remember that BT is enabled
+  nonvol_write_i32(NONVOL_AUX_PORT_ENABLE, &json_aux_mode); // Remember that BT is enabled
 
   /*
    *  Programmed

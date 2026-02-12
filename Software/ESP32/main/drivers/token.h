@@ -23,6 +23,7 @@ int  token_give(void);      // Rease the token ring
 int  token_available(void); // TRUE if the token ring can be taken
 void token_poll(void);      // Poll the token ring
 void token_cycle(void);     // Token ring cyclic monitor
+void show_timers(void);     // Show the current timers
 
 /*
  *  State Definitions

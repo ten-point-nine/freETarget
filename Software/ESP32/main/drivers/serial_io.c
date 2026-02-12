@@ -23,6 +23,7 @@
 #include "esp_tls.h"
 
 #include "freETarget.h"
+#include "board_assembly.h"
 #include "helpers.h"
 #include "diag_tools.h"
 #include "serial_io.h"
@@ -30,6 +31,7 @@
 #include "json.h"
 #include "nonvol.h"
 #include "http_server.h"
+#include "mfs.h"
 
 /*
  *  Serial IO port configuration
@@ -95,6 +97,7 @@ static queue_struct_t in_buffer;  // TCPIP input buffer
 static queue_struct_t out_buffer; // TCPIP input buffer
 
 unsigned int connection_list;     // Bitmask of existing connections
+time_count_t RS485_timer = 0;     // Timer to turn off RS485 transmitter
 
 /******************************************************************************
  *
@@ -144,8 +147,30 @@ void serial_io_init(void)
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Console port initialized");)) return;
 }
 
+/******************************************************************************
+ *
+ * @function: serial_aux_init
+ *
+ * @brief: Initalize the AUX port
+ *
+ * @return: None
+ *
+ *******************************************************************************
+ *
+ * The serial port is initialized and the interrupt
+ * driver assigned.
+ *
+ * IMPORTANT
+ *
+ * The basic 115200, N, 8, 1 is set up by th3 ESP32 boot prom, and this
+ * function exists to add in the parts needed for the target.
+ *
+ ******************************************************************************/
 void serial_aux_init(void)
 {
+  /*
+   *  Check to see if the AUX port is enabled
+   */
   if ( (json_aux_mode & AUX_PORT) == 0 )
   {
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX Port not enabled");))
@@ -165,18 +190,25 @@ void serial_aux_init(void)
     switch ( json_aux_mode )
     {
       case AUX:
-        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX port enabled\r\n");))
-        uart_param_config(uart_aux, &uart_aux_config); // 115200 baud rate
+        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX port enabled");))
+        uart_param_config(uart_aux, &uart_aux_config);                       // 115200 baud rate
         break;
 
       case BLUETOOTH:
-        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BLUETOOTH port enabled\r\n");))
-        uart_param_config(uart_aux, &uart_BT_config);  // 115200 baud rate
+        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BLUETOOTH port enabled");))
+        uart_param_config(uart_aux, &uart_BT_config);                        // 115200 baud rate
         break;
 
       case RS485:
+<<<<<<< HEAD
         DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RS485 port enabled\r\n");))
         uart_param_config(uart_aux, &uart_aux_config); // 115200 baud rate
+=======
+        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RS485 port enabled");))
+        uart_param_config(uart_aux, &uart_aux_config);                       // 115200 baud rate
+        ft_timer_new(&RS485_timer, 0, &(RS485_transmit_off), "RS485 timer"); // Prime the RS485 timer
+        RS485_transmit_off();                                                // Ensure we are in receive mode
+>>>>>>> RS485
         break;
     }
   }
@@ -419,13 +451,13 @@ char serial_getch(int ports) // Bit mask of active ports
  *
  * @function: serial_putch
  *
- * @brief:    Send a string to the available serial ports
+ * @brief:    Send a character to the available serial ports
  *
  * @return:   None
  *
  *******************************************************************************
  *
- * Send a string to all of the serial devices that are
+ * Send a character to all of the serial devices that are
  * in use.
  *
  ******************************************************************************/
@@ -448,6 +480,10 @@ void serial_putch(char ch,
 
   if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
   {
+    if ( ports & RS485 )                         // Is this RS488?
+    {
+      RS485_transmit(RS485_TRANSMIT);            // Set RS485 to transmit
+    }
     uart_write_bytes(uart_aux, (const char *)&ch, 1);
   }
 
@@ -461,7 +497,20 @@ void serial_putch(char ch,
    */
   return;
 }
-
+/*******************************************************************************
+ *
+ * @function: serial_to_all
+ *
+ * @brief:    Send a string to the available serial ports
+ *
+ * @return:   None
+ *
+ *******************************************************************************
+ *
+ * Send a string to all of the serial devices that are
+ * in use.
+ *
+ ******************************************************************************/
 void serial_to_all(char *str,        // String to output
                    int   ports       // List of ports to output to
 )
@@ -534,6 +583,11 @@ void serial_to_all(char *str,        // String to output
 
   if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
   {
+    if ( ports & RS485 )                         // Is this RS488?
+    {
+      RS485_transmit(RS485_TRANSMIT);            // Set RS485 to transmit
+      RS485_timer += RS485_TRANSMIT_TIME;        // Extend the timer for a string
+    }
     uart_write_bytes(uart_aux, (const char *)str, strlen(str));
   }
 
@@ -545,6 +599,74 @@ void serial_to_all(char *str,        // String to output
   if ( ports & HTTP_CONNECTED ) // Is there a web server connected?
   {
     http_send_string(str);      // Yes, send it to the web server
+  }
+
+  /*
+   * All done
+   */
+  return;
+}
+/*******************************************************************************
+ *
+ * @function: RS485_transmit
+ *
+ * @brief:    Turn off the RS485 transmitter
+ *
+ * @return:   None
+ *
+ *******************************************************************************
+ *
+ * Control the RS485 transmit line. Only change the state if it is different
+ *
+ * If the board is not using RS485 communications, set the driver to TRANSMIT
+ * so that it doesn't collide with the AUX port
+ *
+ ******************************************************************************/
+void RS485_transmit_off(void)
+{
+  RS485_transmit(RS485_RECEIVE); // Set RS485 to receive
+  return;
+}
+
+/*
+ * Set the RS485 transmit line
+ */
+void RS485_transmit(int new_state)
+{
+  static int old_state = -1;
+
+  /*
+   * Check to see if we are even using RS485
+   */
+  if ( (json_aux_mode & RS485) == 0 )              // Not operating in RS485 mode?
+  {
+    gpio_set_level(RS485_CONTROL, RS485_TRANSMIT); // Set RS485 to transmit so as to avoid contention on the RX line
+    return;
+  }
+
+  /*
+   *  Yes RS485 is enabled
+   */
+  if ( new_state == old_state )                 // No change, do nothing
+  {
+    return;
+  }
+
+  old_state = new_state;
+  if ( MAX485_MFS )                             // Choose how to control RS485
+  {
+    if ( json_mfs_hold_c == RS485_CONTROL )
+    {
+      mfs_RS485_control(new_state);             // Control RS485 via MFS
+    }
+    else
+    {
+      gpio_set_level(RS485_CONTROL, new_state); // Set RS485 to transmit
+    }
+    if ( new_state == RS485_TRANSMIT )          // Is it transmit?
+    {
+      RS485_timer = RS485_TRANSMIT_TIME;        // Set timer to turn off transmitter
+    }
   }
 
   /*
@@ -817,14 +939,14 @@ void serial_port_test(void)
   /*
    * Send out the AUX port, back in, and then to the console
    */
-  ft_timer_new(&test_time, ONE_SECOND * 10);
+  ft_timer_new(&test_time, ONE_SECOND * 10, NULL, "serial port test"); // 10 second timeout
   for ( i = 0; i != sizeof(test); i++ )
   {
-    serial_putch(test[i], AUX); // Output to the AUX Port
+    serial_putch(test[i], AUX);                                        // Output to the AUX Port
 
     while ( serial_available(AUX) == 0 )
     {
-      vTaskDelay(1);            // Wait for it to come back
+      vTaskDelay(1);                                                   // Wait for it to come back
       if ( test_time == 0 )
       {
         SEND(ALL, sprintf(_xs, "\r\nTest failed, no input from AUX\r\n");)

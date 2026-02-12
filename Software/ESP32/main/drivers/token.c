@@ -94,12 +94,12 @@ void token_init(void)
   /*
    * If not in token ring mode or WiFi is present,do nothing
    */
-  if ( json_token == TOKEN_NONE )            // Not in token ring mode
+  if ( json_token == TOKEN_NONE )                                // Not in token ring mode
   {
     return;
   }
 
-  ft_timer_new(&token_tick, 5 * ONE_SECOND); // Token ring watchdog
+  ft_timer_new(&token_tick, 5 * ONE_SECOND, NULL, "token_tick"); // Token ring watchdog
 
   DLT(DLT_COMMUNICATION, SEND(ALL, sprintf(_xs, "token_init()");))
 

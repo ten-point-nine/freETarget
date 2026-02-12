@@ -28,27 +28,29 @@ extern int          board_revision; // Board revision number
 #define MASK_520 (1 << 15) // First Production
 #define MASK_600 (1 << 6)  // Second Production Board
 #define MASK_610 (1 << 3)  // Second Production Board with thermal isolation
-
+#define MASK_620 (0)       // Third production board with MAX485
 /*
  * Processor Variants
  */
-#define EPP32_8MB (MASK_500 | MASK_510 | MASK_520 | MASK_530 | MASK_600 | MASK_610) // ESP32 with 8MB of flash (Standard)
+#define EPP32_8MB (MASK_500 | MASK_510 | MASK_520 | MASK_530 | MASK_600 | MASK_610 | MASK_620) // ESP32 with 8MB of flash (Standard)
 
-                                                                                    /*
-                                                                                     * Hardware Variants
-                                                                                     */
-#define HDC3022  ((MASK_500 | MASK_510 | MASK_520) & board_mask)              // TI HDC3022 Temperature Humidity
-#define TMP1075D ((MASK_600 | MASK_610) & board_mask)                         // TI TMP1075D Temperature Sensor
+                                                                                               /*
+                                                                                                * Hardware Variants
+                                                                                                */
+#define HDC3022  ((MASK_500 | MASK_510 | MASK_520) & board_mask)                             // TI HDC3022 Temperature Humidity
+#define TMP1075D ((MASK_600 | MASK_610) & board_mask)                                        // TI TMP1075D Temperature Sensor
 
-#define PCNT_LOW_GPIO  (MASK_500 | MASK_510 | MASK_520 | MASK_600 | MASK_610) // PCNT  LOW on GPIO
-#define PCNT_HIGH_GPIO (MASK_500 | MASK_510 | MASK_520)                       // PCNT HIGH on GPIO
+#define PCNT_LOW_GPIO  (MASK_500 | MASK_510 | MASK_520 | MASK_600 | MASK_610)                // PCNT  LOW on GPIO
+#define PCNT_HIGH_GPIO (MASK_500 | MASK_510 | MASK_520)                                      // PCNT HIGH on GPIO
 
-#define MCP4728 ((MASK_500 | MASK_510 | MASK_520) & board_mask)               // Microchip MCP4728 4 channel Dac
-#define MCP4725 ((MASK_600 | MASK_610) & board_mask)                          // Microchip MCP4725 1 channel Dac
+#define MCP4728        ((MASK_500 | MASK_510 | MASK_520) & board_mask)                       // Microchip MCP4728 4 channel Dac
+#define MCP4725        ((MASK_600 | MASK_610) & board_mask)                                  // Microchip MCP4725 1 channel Dac
+#define MAX485         (MASK_600 | MASK_610 | MASK_620)                                      // MAX485 control line on V6 only
+#define MAX485_MFS     ((MASK_500 | MASK_510 | MASK_520 | MASK_600 | MASK_610) & board_mask) // USE MFS to drive RS485
+#define LDAC_GPIO      (0)                                                                   // LDAC Control no longer used
+#define VREF_FB        ((MASK_600 | MASK_610 | MASK_620) & board_mask)                       // VREF Feedback
+#define FACE_HALF_GPIO (MASK_500 | MASK_510 | MASK_520)                                      // FACE GPIO
 
-#define VREF_FB        ((MASK_600) & board_mask)                              // VREF Feedback
-#define LDAC_GPIO      (0)                                                    // LDAC Control no longer used
-#define FACE_HALF_GPIO (MASK_500 | MASK_510 | MASK_520)                       // FACE GPIO
+#define COMMON (MASK_500 | MASK_510 | MASK_520 | MASK_600 | MASK_610)                        // Common to all boards
 
-#define COMMON (MASK_500 | MASK_510 | MASK_520 | MASK_600 | MASK_610)         // Common to all boards
 #endif

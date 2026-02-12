@@ -26,14 +26,13 @@
 #include "diag_tools.h"
 #include "analog_io.h"
 #include "wifi.h"
+#include "serial_io.h"
 
-#define SHOT_TIME_TO_SECONDS(x) ((float)(x)) / 1000000.0
-
-double sq(double x)
+#define SHOT_TIME_TO_SECONDS(x) ((real_t)(x)) / 1000000.0
+real_t SQ(real_t a)
 {
-  return x * x;
+  return a * a;
 }
-
 /*-----------------------------------------------------
  *
  * @function: target_name
@@ -186,17 +185,14 @@ int instr(char *s1, // Source string
  *-----------------------------------------------------
  *
  *-----------------------------------------------------*/
-
 bool contains(char *source,                    // Source string
               char *match                      // Comparison string
 )
 {
-  int   i;
   char *start;
 
   start = match;                               // Save the start of the comparison string
 
-  i = 0;
   while ( (*source != 0) && (*match != 0) )
   {
     if ( toupper(*match) == toupper(*source) ) // Found a match
@@ -287,7 +283,7 @@ void hello(void)
 
   set_status_LED(LED_READY);
   set_LED_PWM_now(json_LED_PWM);
-  ft_timer_new(&power_save, json_power_save * (time_count_t)ONE_SECOND * 60L);
+  power_save = json_power_save * (time_count_t)ONE_SECOND * 60L;
   run_state &= ~IN_SLEEP; // Out of sleep and back in operation
   run_state |= IN_OPERATION;
   return;
@@ -317,7 +313,7 @@ void send_keep_alive(void)
   {
     target_name(str);
     SEND(TCPIP, sprintf(_xs, "{\"KEEP_ALIVE\":%d, \"NAME\":\"%s\"}", keep_alive_count++, str);)
-    ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND);
+    keep_alive = (time_count_t)json_keep_alive * ONE_SECOND;
   }
   return;
 }
@@ -334,41 +330,32 @@ void send_keep_alive(void)
  * This function allows the user to remotly shut down the unit
  * when not in use.
  *
- * This is called every second from the synchronous scheduler
+ * There are two modes of operation:
+ * 1. Forced Bye - When the power save timer runs out
+ * 2. Normal Bye - When commanded by the user via the MFS switch
  *
  *--------------------------------------------------------------*/
-static enum bye_state {
-  BYE_BYE = 0, // Wait for the timer to run out
-  BYE_HOLD,    // Wait for the MFS to be pressed
-  BYE_START    // Go back into service
-};
+static enum {
+  BYE_BYE = 0,                    // Wait for the timer to run out
+  BYE_HOLD,                       // Wait for the MFS to be pressed
+  BYE_START                       // Go back into service
+} bye_state;
 
-void bye_tick(void)
+void bye_tick(void)               // Call back from the power_save timer
 {
-  if ( time_to_go > 0 )
+  bye_state = BYE_BYE;
+  if ( json_token != TOKEN_NONE ) // Skip if token ring enabled
   {
-    time_to_go--;                // Decriment the time left in the session
+    return;
   }
   bye(0);
+  return;
 }
+
 void bye(unsigned int force_bye) // Set to true to force a shutdown
 {
-  static int bye_state = BYE_BYE;
-  char       str[SHORT_TEXT];
 
-  /*
-   * The BYE function does not work if we are a token ring.
-   */
-  if ( force_bye == 0 )             // Regular
-  {
-    if ( (json_token != TOKEN_NONE) // Skip if token ring enabled
-         || (json_power_save == 0)  // Power down has not been enabled
-         || (power_save != 0) )     // Power down has not run out
-    {
-      bye_state = BYE_BYE;
-      return;
-    }
-  }
+  char str[SHORT_TEXT];
 
   switch ( bye_state )
   {
@@ -432,7 +419,7 @@ void echo_serial(int duration, // Duration in clock ticks
   unsigned char ch;
   time_count_t  test_time;
 
-  ft_timer_new(&test_time, (time_count_t)duration);
+  ft_timer_new(&test_time, (time_count_t)duration, NULL, "echo serial");
 
   /*
    * Loop and echo the characters
@@ -547,7 +534,7 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
         break;
 
       case SCORE_POLAR:                                      // Polar
-        sprintf(str, ", \"r\":%6.2f, \"a\":%6.2f", shot->radius, shot->angle);
+        sprintf(str, ", \"r\":%6.2f, \"a\":%6.2f", shot->radius, radians_to_degrees(shot->angle));
         break;
 
       case SCORE_HARDWARE:                                   // Hardware
@@ -856,18 +843,18 @@ void watchdog(void)
  *
  *
  *--------------------------------------------------------------*/
-#define OTA_SERIAL_TIMEOUT (time_count_t)10 * ONE_SECOND // 10 second timeout
-static time_count_t time_out;                            // Time out timer
+#define OTA_SERIAL_TIMEOUT (time_count_t)10 * ONE_SECOND                   // 10 second timeout
+static time_count_t time_out;                                              // Time out timer
 
-int get_OTA_serial(int   length,                         // Maximum number of bytes to read
-                   char *s)                              // Place to save the input data
+int get_OTA_serial(int   length,                                           // Maximum number of bytes to read
+                   char *s)                                                // Place to save the input data
 {
-  unsigned char ch;                                      // Inputing character
-  unsigned int  byte_count;                              // Number of bytes read in
-  int           bytes_available;                         // Number of bytes available from PC Client
+  unsigned char ch;                                                        // Inputing character
+  unsigned int  byte_count;                                                // Number of bytes read in
+  int           bytes_available;                                           // Number of bytes available from PC Client
 
-  byte_count = 0;                                        // Nothing has arrived yet
-  ft_timer_new(&time_out, OTA_SERIAL_TIMEOUT);           // Time out timer
+  byte_count = 0;                                                          // Nothing has arrived yet
+  ft_timer_new(&time_out, OTA_SERIAL_TIMEOUT, NULL, "OTA serial timeout"); // Time out timer
 
   /*
    * Loop and read the data
@@ -900,4 +887,181 @@ int get_OTA_serial(int   length,                         // Maximum number of by
   }
 
   return byte_count;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: get_number
+ *
+ * @brief:    Get a number from the command line
+ *
+ * @return:   Number entered
+ *
+ *----------------------------------------------------------------
+ *
+ *
+ *--------------------------------------------------------------*/
+void get_number(char *prompt, real_t *value)
+{
+  char   str[SHORT_TEXT];
+  char  *end_ptr;
+  real_t val;
+
+  SEND(ALL, sprintf(_xs, "%s", prompt);)
+
+  /*
+   * Loop and get a number
+   */
+  while ( 1 )
+  {
+    /*
+     * Get the input string
+     */
+    get_string(str, sizeof(str));
+
+    /*
+     * Convert to a number
+     */
+    val = strtod(str, &end_ptr);
+    if ( end_ptr != str ) // Got something
+    {
+      *value = val;
+      return;
+    }
+
+    /*
+     * Error, try again
+     */
+    SEND(ALL, sprintf(_xs, "Invalid number, try again:");)
+  }
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: atan2_2PI
+ *
+ * @brief:    atan2 function that returns 0 to 2PI
+ *
+ * @return:   angle in radians
+ *
+ *----------------------------------------------------------------
+ *
+ * The natice atan2 function returns -PI to +PI.
+ * This function returns 0 to 2PI
+ *
+ *--------------------------------------------------------------*/
+real_t atan2_2PI(real_t y, real_t x)
+{
+  real_t angle = atan2f(y, x);
+  if ( angle < 0 )
+  {
+    angle += TWO_PI; // Keep in range 0 to 2PI
+  }
+
+  return angle;
+}
+
+real_t atan2_degrees(real_t y, real_t x)
+{
+  return atan2_2PI(x, y) / PI * 180.0f;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: no_singularity
+ *
+ * @brief:    Ensure no sigularities between sets of numbers
+ *
+ * @return:   Numbers adjusted to prevent singularities
+ *
+ *----------------------------------------------------------------
+ *
+ * If any of the three arguements are equal, there is a risk of
+ * a singularity in the calculations.
+ *
+ * To avoid this problem, the numbers are tweaked a bit so that
+ * they are not the same.
+ *
+ * To do this, a mask of what equals what is generated.  If none
+ * are equal, then the function returns.
+ *
+ * If any or all are equal, the values are tweaked so they are
+ * different and the caomparison takes place again util they
+ * are all different.
+ *
+ * A is adjusted downwards
+ * B is always left alone
+ * C is adjusted upwards
+ *--------------------------------------------------------------*/
+#define AB  0b011 // A == B
+#define BC  0b110 // B == C
+#define AC  0b101 // A == C
+#define ABC 0b111 // A == B== C
+
+void no_singularity(real_t *a, real_t *b, real_t *c)
+{
+  int equal;      // Mask of equalities
+
+  while ( 1 )
+  {
+    equal = 0;
+    if ( *a == *b )
+    {
+      equal |= AB;
+    }
+    if ( *b == *c )
+    {
+      equal |= BC;
+    }
+    if ( *a == *c )
+    {
+      equal |= AC;
+    }
+
+    if ( equal == 0 ) // None are equal
+    {
+      return;         // Nothing more to do
+    }
+
+    switch ( equal )  // Jump to the ones that are equal
+    {
+      case ABC:
+        *a -= 1E-6;   // and adjust A smaller
+        *c += 1E-6;   // C bigger
+        break;
+
+      case AB:        // Change A
+        *a -= 1E-6;
+        break;
+
+      case BC:        // Change C
+      case AC:
+        *c += 1E-6;
+        break;
+    }
+  }
+
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: radians_to_degrees
+ *            degrees_to_radians
+ *
+ * @brief:    Angular conversions
+ *
+ * @return:   Converted values
+ *
+ *----------------------------------------------------------------
+ *
+ *--------------------------------------------------------------*/
+real_t radians_to_degrees(real_t radians)
+{
+  return (radians / PI * 180.0);
+}
+
+real_t degrees_to_radians(real_t degrees)
+{
+  return (degrees / 180.0 * PI);
 }

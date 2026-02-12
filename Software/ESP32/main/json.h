@@ -12,9 +12,11 @@
 /*
  * Public Functions
  */
-void reset_JSON(void);         // Clear the JSON input buffer
-void freeETarget_json(void *); // Task to scan the serial port looking for JSON input
-void show_echo(void);          // Display the settings
+void reset_JSON(void);                           // Clear the JSON input buffer
+void freeETarget_json(void *);                   // Task to scan the serial port looking for JSON input
+void show_echo(void);                            // Display the settings
+bool json_find_first(void);                      // Find the start of the input stream
+bool json_get_array_next(int type, void *value); // Pull in the next array value
 
 /*
  * JSON message typedefs
@@ -23,7 +25,7 @@ typedef struct
 {
   int   show;       // Display attributes
   char *token;      // JSON token string, ex "RADIUS":
-  int  *value;      // Where value is stored (cast to (float*) if needed)
+  int  *value;      // Where value is stored (cast to (real_t*) if needed)
   int   convert;    // Conversion type
   void (*f)(int x); // Function to execute with message
   char *non_vol;    // Storage in NON-VOL
@@ -43,22 +45,24 @@ extern const json_message_t JSON[];
 extern const json_message_t JSON[];
 #endif
 
-#define SHOW 0x01                                    // Show the value
-#define HIDE 0x00                                    // Hide the value
-#define LOCK 0x02                                    // The value is a secret
+#define SHOW        0x01                             // Show the value
+#define HIDE        0x00                             // Hide the value
+#define LOCK        0x02                             // The value is a secret
+#define MFS_DISPLAY 0x04                             // Display as MFS
+#define IS_FIXED    (1 << 8)                         // The value cannot be changed
+#define IS_FLOAT    (2 << 8)                         // Value is a real_ting point number
+#define IS_INT32    (3 << 8)                         // Value is a 64 bit int
+#define IS_SECRET   (4 << 8)                         // Value is a string but hidden
+#define IS_TEXT     (5 << 8)                         // Value is a string
+#define IS_MFS      (6 << 8)                         // Value is a multifunction switch
+#define IS_TEXT_1   (7 << 8)                         // Used only on first connection
+#define IS_VOID     (8 << 8)                         // Value is a void
+#define IS_TIME     (9 << 8)                         // Value is time
+#define IS_ARRAY    (1 << (8 + 4))                   // Value is part of an array
+#define FLOAT_SCALE 1000.0                           // Floats are stored as 1000x integer
 
-#define IS_FIXED  (1 << 8)                           // The value cannot be changed
-#define IS_FLOAT  (2 << 8)                           // Value is a floating point number
-#define IS_INT32  (3 << 8)                           // Value is a 64 bit int
-#define IS_SECRET (4 << 8)                           // Value is a string but hidden
-#define IS_TEXT   (5 << 8)                           // Value is a string
-#define IS_MFS    (6 << 8)                           // Value is a multifunction switch
-#define IS_TEXT_1 (7 << 8)                           // Used only on first connection
-#define IS_VOID   (8 << 8)                           // Value is a void
-#define IS_TIME   (9 << 8)                           // Value is time
-
-#define IS_MASK    (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED | IS_MFS | IS_TIME)
-#define FLOAT_MASK ((~IS_MASK) & 0xFF)               // Scaling factor 8 bits
+#define IS_MASK     (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED | IS_MFS | IS_TIME)
+#define real_t_MASK ((~IS_MASK) & 0xFF)              // Scaling factor 8 bits
 
 #define SSID_SIZE        31                          // Reserve 30+1 bytes for SSID
 #define PWD_SIZE         63                          // Reserve 63+1 bytes for Password
@@ -79,7 +83,7 @@ EXTERN int           json_aux_mode;                  // Enable comms from the AU
 EXTERN int           json_calibre_x10;               // Pellet Calibre
 EXTERN int           json_dip_switch;                // DIP switch overwritten by JSON message
 EXTERN int           json_dip_switch;                // DIP switch overwritten by JSON message
-EXTERN double        json_sensor_dia;                // Sensor radius overwitten by JSON message
+EXTERN real_t        json_sensor_dia;                // Sensor radius overwitten by JSON message
 EXTERN int           json_sensor_angle;              // Angle sensors are rotated through
 EXTERN int           json_paper_time;                // Time to turn on paper backer motor
 EXTERN int           json_echo;                      // Value to ech
@@ -103,10 +107,9 @@ EXTERN int           json_step_ramp;                 // Time interval between ra
 EXTERN int           json_step_start;                // Starting ramp inteval
 EXTERN int           json_step_time;                 // Duration of step pulse
 EXTERN int           json_multifunction;             // Multifunction switch operation
-EXTERN double        json_x_offset;                  // Offset added to horizontal to centre target in sensors
-EXTERN double        json_y_offset;                  // Offset added to vertical to centre targetin sensors
+EXTERN real_t        json_x_offset;                  // Offset added to horizontal to centre target in sensors
+EXTERN real_t        json_y_offset;                  // Offset added to vertical to centre targetin sensors
 EXTERN int           json_z_offset;                  // Distance between paper and sensor plane (1mm / LSB)
-EXTERN double        json_radius_adjust;             // Gain applied to radius calculation
 EXTERN int           json_paper_eco;                 // Do not advance witness paper if shot is greater than json_paper_eco
 EXTERN int           json_target_type;               // Modify the location based on a target type (0 == regular 1 bull target)
 EXTERN int           json_tabata_enable;             // Enable the Tabata timer
@@ -118,7 +121,7 @@ EXTERN int           json_rapid_enable;              // Rapid Fire enabled
 EXTERN unsigned long json_rapid_on;                  // Rapid Fire ON timer
 EXTERN int           json_rapid_count;               // Number of expected shots
 EXTERN int           json_vset_PWM;                  // Voltage PWM count
-EXTERN double        json_vset;                      // Desired voltage setpont
+EXTERN real_t        json_vset;                      // Desired voltage setpont
 EXTERN int           json_follow_through;            // Follow through timer
 EXTERN int           json_keep_alive;                // Keepalive period
 EXTERN int           json_face_strike;               // Number of cycles to accept a face strike
@@ -136,8 +139,8 @@ EXTERN int           json_wifi_hidden;               // Hide the SSID if enabled
 EXTERN int           json_min_ring_time;             // Time to wait for ringing to stop
 EXTERN int           json_token;                     // Token ring setting
 EXTERN int           json_multifunction2;            // Multifunction Switch 2
-EXTERN double        json_vref_lo;                   // Sensor Voltage Reference Low (V)
-EXTERN double        json_vref_hi;                   // Sensor Voltage Reference High (V)
+EXTERN real_t        json_vref_lo;                   // Sensor Voltage Reference Low (V)
+EXTERN real_t        json_vref_hi;                   // Sensor Voltage Reference High (V)
 EXTERN int           json_pcnt_latency;              // pcnt interrupt latancy
 EXTERN int           json_mfs_hold_12;               // Hold A and B
 EXTERN int           json_mfs_tap_2;                 // Tap B
@@ -162,4 +165,5 @@ EXTERN int           json_session_type;              // What kind of session is 
 EXTERN char          json_ota_url[URL_SIZE];         // OTA URL
 EXTERN int           json_lock;                      // Lock the JSON message so it cannot be changed
 EXTERN int           json_OTA_download_size;         // Number of bytes in the download image
+EXTERN real_t        json_sensor_angle_offset;       // Correction to the sensor angle
 #endif

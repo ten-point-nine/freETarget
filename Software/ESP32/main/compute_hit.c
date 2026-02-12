@@ -6,7 +6,6 @@
  *
  *****************************************************************************/
 #include "math.h"
-#include "analog_io.h"
 #include "stdio.h"
 #include "math.h"
 #include "stdbool.h"
@@ -14,6 +13,7 @@
 #include "driver\gpio.h"
 
 #include "freETarget.h"
+#include "analog_io.h"
 #include "helpers.h"
 #include "json.h"
 #include "mfs.h"
@@ -21,10 +21,8 @@
 #include "token.h"
 #include "timer.h"
 #include "compute_hit.h"
-#include "serial_io.h"
-#include "gpio.h"
-#include "http_client.h"
 #include "json.h"
+#include "calibrate.h"
 
 /*
  *  Definitions
@@ -81,7 +79,7 @@ void init_sensors(void)
    * Determine the speed of sound and ajust
    */
   s_of_sound     = speed_of_sound(temperature_C(), humidity_RH());
-  pellet_calibre = ((double)json_calibre_x10 / s_of_sound / 2.0d / 10.0d) * OSCILLATOR_MHZ; // Clock adjustement
+  pellet_calibre = ((real_t)json_calibre_x10 / s_of_sound / 2.0d / 10.0d) * OSCILLATOR_MHZ; // Clock adjustement
 
   /*
    * Work out the geometry of the sensors
@@ -131,21 +129,20 @@ void init_sensors(void)
  *
  *--------------------------------------------------------------*/
 
-unsigned int compute_hit(shot_record_t *shot // Storing the results
-)
+unsigned int compute_hit(shot_record_t *shot)      // Storing the results
 {
-  double reference;                          // Time of reference counter
-  int    location;                           // Sensor chosen for reference location
+  real_t reference;                                // Time of reference counter
+  int    location;                                 // Sensor chosen for reference location
   int    i, count;
-  double estimate;                           // Estimated position
-  double last_estimate, error;               // Location error
-  double x_avg, y_avg;                       // Running average location
-  double z_offset_clock;                     // Time offset between paper and sensor plane
+  real_t estimate;                                 // Estimated position
+  real_t last_estimate, error;                     // Location error
+  real_t x_avg, y_avg;                             // Running average location
+  real_t z_offset_clock;                           // Time offset between paper and sensor plane
 
   x_avg = 0;
   y_avg = 0;
 
-  ft_timer_new(&wdt, 20);
+  ft_timer_new(&wdt, 20, NULL, "compute hit wdt"); // Watchdog timer
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "compute_hit()");))
 
@@ -163,7 +160,7 @@ unsigned int compute_hit(shot_record_t *shot // Storing the results
    *  Compute the current geometry based on the speed of sound
    */
   init_sensors();
-  z_offset_clock = (double)json_z_offset * OSCILLATOR_MHZ / s_of_sound; // Clock adjustement for paper to sensor difference
+  z_offset_clock = (real_t)json_z_offset * OSCILLATOR_MHZ / s_of_sound; // Clock adjustement for paper to sensor difference
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "z_offset_clock: %4.2f", z_offset_clock);))
 
   /*
@@ -204,7 +201,7 @@ unsigned int compute_hit(shot_record_t *shot // Storing the results
   DLT(DLT_APPLICATION, {
     SEND(ALL, sprintf(_xs, "\r\nMicroseconds ");)
     for ( i = 0; i < 8; i++ )
-      SEND(ALL, sprintf(_xs, "%s: %4.2f ", find_sensor(1 << i)->long_name, (double)s[i].count / ((double)OSCILLATOR_MHZ));)
+      SEND(ALL, sprintf(_xs, "%s: %4.2f ", find_sensor(1 << i)->long_name, (real_t)s[i].count / ((real_t)OSCILLATOR_MHZ));)
   })
 
   /*
@@ -213,7 +210,7 @@ unsigned int compute_hit(shot_record_t *shot // Storing the results
   for ( i = N; i <= W; i++ )
   {
     s[i].b = s[i].count;
-    s[i].c = sqrt(sq(s[(i) % 4].x - s[(i + 1) % 4].x) + sq(s[(i) % 4].y - s[(i + 1) % 4].y));
+    s[i].c = sqrt(SQ(s[(i) % 4].x - s[(i + 1) % 4].x) + SQ(s[(i) % 4].y - s[(i + 1) % 4].y));
   }
 
   for ( i = N; i <= W; i++ )
@@ -265,7 +262,7 @@ unsigned int compute_hit(shot_record_t *shot // Storing the results
     x_avg /= 4.0d;
     y_avg /= 4.0d;
 
-    estimate = sqrt(sq(s[location].x - x_avg) + sq(s[location].y - y_avg));
+    estimate = sqrt(SQ(s[location].x - x_avg) + SQ(s[location].y - y_avg));
     error    = fabs(last_estimate - estimate);
 
     DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "x_avg: %4.2f  y_avg: %4.2f estimate: %4.2f error: %4.2f", x_avg, y_avg, estimate, error);))
@@ -351,13 +348,13 @@ unsigned int compute_hit(shot_record_t *shot // Storing the results
  *--------------------------------------------------------------*/
 
 bool find_xy_3D(sensor_t *s,             // Sensor to be operatated on
-                double    estimate,      // Estimated position
-                double    z_offset_clock // Time difference between paper and sensor plane
+                real_t    estimate,      // Estimated position
+                real_t    z_offset_clock // Time difference between paper and sensor plane
 )
 {
-  double ae, be;                         // Locations with error added
-  double rotation;                       // Angle shot is rotated through
-  double x;                              // Temporary value
+  real_t ae, be;                         // Locations with error added
+  real_t rotation;                       // Angle shot is rotated through
+  real_t x;                              // Temporary value
 
   /*
    * Check to see if the sensor data is correct.  If not, return an error
@@ -371,19 +368,19 @@ bool find_xy_3D(sensor_t *s,             // Sensor to be operatated on
   /*
    * It looks like we have valid data.  Carry on
    */
-  x = sq(s->a + estimate); // - sq(z_offset_clock);
+  x = SQ(s->a + estimate); // - SQ(z_offset_clock);
   if ( x < 0 )
   {
-    sq(s->a + estimate);
+    SQ(s->a + estimate);
     DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "s->a is complex, truncting");))
   }
   ae = sqrt(x);            // Dimension with error included
 
-  x = sq(s->b + estimate); // - sq(z_offset_clock);
+  x = SQ(s->b + estimate); // - SQ(z_offset_clock);
   if ( x < 0 )
   {
     DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "s->b is complex, truncting");))
-    sq(s->b + estimate);
+    SQ(s->b + estimate);
   }
   be = sqrt(x);
 
@@ -393,7 +390,7 @@ bool find_xy_3D(sensor_t *s,             // Sensor to be operatated on
   }
   else
   {
-    s->angle_A = acos((sq(ae) - sq(be) - sq(s->c)) / (-2.0d * be * s->c));
+    s->angle_A = acos((SQ(ae) - SQ(be) - SQ(s->c)) / (-2.0d * be * s->c));
   }
 
   /*
@@ -475,9 +472,8 @@ void prepare_score(shot_record_t *shot,        //  record
                    bool           miss         // TRUE if the shot was a miss
 )
 {
-  double x, y;                                 // Shot location in mm X, Y before rotation
-  double real_x, real_y;                       // Shot location in mm X, Y before remap
-                                               //  char   str_c[SHORT_TEXT];                 // String holding buffers
+  real_t x_mm, y_mm;                           // Shot location in mm X, Y before rotation
+  real_t rho_radians;                          // Angle to shot location
 
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "prepare_score(%d)", shot_number);))
 
@@ -488,10 +484,10 @@ void prepare_score(shot_record_t *shot,        //  record
   {
     while ( my_ring != whos_ring )
     {
-      token_take();                       // Grab the token ring
-      ft_timer_new(&wdt, 2 * ONE_SECOND);
-      while ( (wdt != 0)                  // Wait up to 2 seconds
-              && (whos_ring != my_ring) ) // Or we own the ring
+      token_take();                                                // Grab the token ring
+      ft_timer_new(&wdt, 2 * ONE_SECOND, NULL, "Watch Dog Timer"); // 2 second watchdog
+      while ( (wdt != 0)                                           // Wait up to 2 seconds
+              && (whos_ring != my_ring) )                          // Or we own the ring
       {
         token_poll();
       }
@@ -503,20 +499,24 @@ void prepare_score(shot_record_t *shot,        //  record
   /*
    *  Work out the hole in perfect coordinates
    */
-  x            = shot->x * s_of_sound * CLOCK_PERIOD;                // Distance in mm
-  y            = shot->y * s_of_sound * CLOCK_PERIOD;                // Distance in mm
-  shot->radius = sqrt(sq(x) + sq(y)) * (json_radius_adjust / 100.0); // radius in mm
-  shot->angle  = atan2(shot->y, shot->x) / PI * 180.0d;              // Angle in degrees
+  x_mm = shot->x * s_of_sound * CLOCK_PERIOD;                       // Distance in mm
+  y_mm = shot->y * s_of_sound * CLOCK_PERIOD;                       // Distance in mm
+
+  rho_radians = atan2_2PI(y_mm, x_mm);                              // Angle to shot
+  rho_radians += degrees_to_radians(json_sensor_angle);             // North is at the top Add in the rotation to the physical location
+  shot->angle  = rho_radians + solve_spline_for_angle(rho_radians); // Correct for the spline interplation;
+  shot->radius = sqrt(SQ(x_mm) + SQ(y_mm)) * solve_spline_for_scale(shot->angle); // radius in mm
 
   /*
    * Rotate the result based on the construction, and recompute the hit
    */
-  shot->angle += json_sensor_angle;
-  shot->x_mm = shot->radius * cos(PI * shot->angle / 180.0d) + json_x_offset; // Rotate onto the target face
-  shot->y_mm = shot->radius * sin(PI * shot->angle / 180.0d) + json_y_offset; // and add in sensor correction
-  remap_target(shot);                                                         // Change the target if needed
+  shot->x_mm = shot->radius * cos(shot->angle) + json_x_offset; // Rotate onto the target face
+  shot->y_mm = shot->radius * sin(shot->angle) + json_y_offset; // and add in sensor correction
+  remap_target(shot);                                           // Change the target if needed
   shot->session_type = SESSION_VALID | json_session_type;
 
+  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "x_mm: %4.2f  y_mm: %4.2f  radius: %4.2f  rho_radians: %4.2f", shot->x_mm, shot->y_mm,
+                                         shot->radius, shot->angle);))
   /*
    * All done, return
    */
@@ -601,8 +601,8 @@ void send_replay(shot_record_t *shot,                                           
  *--------------------------------------------------------------*/
 typedef struct
 {
-  double x;                 // X location of Bull
-  double y;                 // Y location of Bull
+  real_t x;                 // X location of Bull
+  real_t y;                 // Y location of Bull
 } new_target_t;
 
 #define LAST_BULL (-1000.0)
@@ -668,8 +668,8 @@ const new_target_t *ptr_list[] = {0, 0, 0, 0, five_bull_air_rifle_74mm, five_bul
 
 static void remap_target(shot_record_t *shot)
 {
-  double distance, closest; // Distance to bull in clock ticks
-  double dx, dy;            // Best fitting bullseye
+  real_t distance, closest; // Distance to bull in clock ticks
+  real_t dx, dy;            // Best fitting bullseye
   int    i;
   dx = 0.0;
   dy = 0.0;
@@ -699,7 +699,7 @@ static void remap_target(shot_record_t *shot)
   i = 0;
   while ( ptr->x != LAST_BULL )
   {
-    distance = sqrt(sq(ptr->x - shot->x_mm) + sq(ptr->y - shot->y_mm));
+    distance = sqrt(SQ(ptr->x - shot->x_mm) + SQ(ptr->y - shot->y_mm));
     DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, " distance: %4.2f", distance);))
     if ( distance < closest ) // Found a closer one?
     {

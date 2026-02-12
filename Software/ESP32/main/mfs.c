@@ -67,6 +67,7 @@ const mfs_action_t  mfs_action[] = {
     {RAPID_HIGH,     NULL,           "RAPID HIGH"    }, // The output is active high
     {STEPPER_DRIVE,  NULL,           "STEPPER_DRIVE" }, // The output is used to drive stepper motor
     {STEPPER_ENABLE, NULL,           "STEPPER_ENABLE"}, // The output is used to drive stepper motor enable
+    {RS485_SELECT,   NULL,           "RS488 SELECT"  }, // The output is used to select RS488 direction
     {0,              0,              0               }
 };
 
@@ -129,6 +130,9 @@ void multifunction_init(void)
       case STEPPER_ENABLE:
         gpio_set_level(HOLD_C_GPIO, 0);
         break;
+      case RS485_CONTROL:
+        gpio_set_level(HOLD_C_GPIO, 0);
+        break;
     }
   }
 
@@ -150,6 +154,8 @@ void multifunction_init(void)
       case STEPPER_ENABLE:
         gpio_set_level(HOLD_D_GPIO, 0);
         break;
+      case RS485_CONTROL:
+        gpio_set_level(HOLD_D_GPIO, 0);
     }
   }
 
@@ -448,10 +454,10 @@ static void mfs_pc_test(void)
 
   temp                = esp_random() % (SCALE);
   sign                = ((esp_random() & 1) == 0) ? 1 : -1;
-  record[test_shot].x = (float)(sign * temp);
+  record[test_shot].x = (real_t)(sign * temp);
   temp                = esp_random() % (SCALE);
   sign                = ((esp_random() & 1) == 0) ? 1 : -1;
-  record[test_shot].y = (float)(sign * temp);
+  record[test_shot].y = (real_t)(sign * temp);
   s_of_sound          = speed_of_sound(temperature_C(), humidity_RH());
   prepare_score(&record[test_shot], test_shot, NOT_MISSED_SHOT);
   test_shot++;
@@ -502,7 +508,6 @@ static void mfs_led_adjust(void)
  * be used.
  *
  *-----------------------------------------------------*/
-
 mfs_action_t *mfs_find(unsigned int action // Switch to be displayed
 )
 {
@@ -548,5 +553,43 @@ void mfs_show(void)
   }
 
   SEND(ALL, sprintf(_xs, "\r\n");)
+  return;
+}
+
+/*-----------------------------------------------------
+ *
+ * @function: mfs_RS485_control
+ *
+ * @brief:    Control the RS485 direction control pin
+ *
+ * @return:   None
+ *
+ *-----------------------------------------------------
+ *
+ * This is a special case to drive teh RS485 direction
+ * control pin for boards before V6.2
+ *
+ *-----------------------------------------------------*/
+void mfs_RS485_control(bool state) // Direction control state
+{
+  if ( json_mfs_hold_c == RS485_SELECT )
+  {
+    gpio_set_level(HOLD_C_GPIO, state);
+    return;
+  }
+
+  if ( json_mfs_hold_d == RS485_SELECT )
+  {
+    gpio_set_level(HOLD_D_GPIO, state);
+    return;
+  }
+
+  /*
+   * Neither MFS line was selected, so default to the built in
+   * selection and hope for the best
+   * */
+
+  gpio_set_level(RS485_CONTROL, state); // Set RS485 to transmit
+
   return;
 }
