@@ -114,19 +114,20 @@ static const self_test_t test_list[] = {
 };
 
 const dlt_name_t dlt_names[] = {
-    {DLT_CRITICAL,      "DLT_CRITICAL",      'E'}, // Prevents target from working
-    {DLT_INFO,          "DLT_INFO",          'I'}, // Running information
-    {DLT_APPLICATION,   "DLT_APPLICATION",   'A'}, // FreeTarget.c and compute.c logging
-    {DLT_COMMUNICATION, "DLT_COMMUNICATION", 'C'}, // WiFi and other communications information
-    {DLT_DIAG,          "DLT_DIAG",          'H'}, // Hardware diagnostics
-    {DLT_DEBUG,         "DLT_DEBUG",         'D'}, // Software debugging information
-    {DLT_SCORE,         "DLT_SCORE",         'S'}, // Display timing in the score message
-    {DLT_HTTP,          "DLT_HTTP",          'H'}, // Log HTTP events
-    {DLT_OTA,           "DLT_OTA",           'O'}, // Log HTTP events
-    {DLT_HEARTBEAT,     "DLT_HEARTBEAT",     'T'}, // Heartbeat tick
-    {DLT_CALIBRATION,   "DLT_CALIBRATION",   'X'}, // Calibration information
-    {DLT_AMB,           "DLT_AMB",           'M'}, // Special debug messages
-    {0,                 0,                   0  }
+    {DLT_CRITICAL,            "DLT_CRITICAL",            'E'}, // Prevents target from working
+    {DLT_INFO,                "DLT_INFO",                'I'}, // Running information
+    {DLT_APPLICATION,         "DLT_APPLICATION",         'A'}, // FreeTarget.c and compute.c logging
+    {DLT_COMMUNICATION,       "DLT_COMMUNICATION",       'C'}, // WiFi and other communications information
+    {DLT_DIAG,                "DLT_DIAG",                'H'}, // Hardware diagnostics
+    {DLT_DEBUG,               "DLT_DEBUG",               'D'}, // Software debugging information
+    {DLT_SCORE,               "DLT_SCORE",               'S'}, // Display timing in the score message
+    {DLT_HTTP,                "DLT_HTTP",                'H'}, // Log HTTP events
+    {DLT_OTA,                 "DLT_OTA",                 'O'}, // Log HTTP events
+    {DLT_CALIBRATION,         "DLT_CALIBRATION",         'X'}, // Calibration information
+    {DLT_CALIBRATION_VERBOSE, "DLT_CALIBRATION_VERBOSE", 'x'}, // Calibration verbose information
+    {DLT_HEARTBEAT,           "DLT_HEARTBEAT",           'T'}, // Heartbeat tick
+    {DLT_AMB,                 "DLT_AMB",                 'M'}, // Special debug messages
+    {0,                       0,                         0  }
 };
 
 /*-----------------------------------------------------

@@ -295,7 +295,7 @@ static void perform_calibration()
   {
     SEND(ALL, sprintf(_xs, "\r\nCalibration not committed. No changes made.\r\n");)
   }
- 
+
   return;
 }
 /*----------------------------------------------------------------
@@ -681,15 +681,29 @@ static void find_coeficients(int calib_shot_n)
     a[1][3] = 3.0 * ((y2 - y1) / ((x2 - x1) * (x2 - x1)) - (y1 - y0) / ((x1 - x0) * (x1 - x0)));
     a[2][3] = 3.0 * ((y2 - y1) / ((x2 - x1) * (x2 - x1)));
 
-    solve_matrix(a);
-  }
+    DLT(DLT_CALIBRATION_VERBOSE, {
+      SEND(ALL, sprintf(_xs, "\r\n\r\nScale Matrix: %d", spline_i);)
+      SEND(ALL, sprintf(_xs, "\r\n[ % 7.4f  % 7.4f  % 7.4f | % 7.4f ]", a[0][0], a[0][1], a[0][2], a[0][3]);)
+      SEND(ALL, sprintf(_xs, "\r\n[ % 7.4f  % 7.4f  % 7.4f | % 7.4f ]", a[1][0], a[1][1], a[1][2], a[1][3]);)
+      SEND(ALL, sprintf(_xs, "\r\n[ % 7.4f  % 7.4f  % 7.4f | % 7.4f ]", a[2][0], a[2][1], a[2][2], a[2][3]);)
+    })
 
-  /*
-   *  Store the coefficients for each point
-   */
-  spline_points[spline_i].s0 = a[0][3];
-  spline_points[spline_i].s1 = a[1][3];
-  spline_points[spline_i].s2 = a[2][3];
+    /*
+     *  Store the coefficients for each point
+     */
+    spline_points[spline_i].s0 = a[0][3];
+    spline_points[spline_i].s1 = a[1][3];
+    spline_points[spline_i].s2 = a[2][3];
+
+    solve_matrix(a);
+
+    DLT(DLT_CALIBRATION_VERBOSE, {
+      SEND(ALL, sprintf(_xs, "\r\n\r\nScale Matrix Inverted: %d", spline_i);)
+      SEND(ALL, sprintf(_xs, "\r\n[ % 7.4f  % 7.4f  % 7.4f | % 7.4f ]", a[0][0], a[0][1], a[0][2], a[0][3]);)
+      SEND(ALL, sprintf(_xs, "\r\n[ % 7.4f  % 7.4f  % 7.4f | % 7.4f ]", a[1][0], a[1][1], a[1][2], a[1][3]);)
+      SEND(ALL, sprintf(_xs, "\r\n[ % 7.4f  % 7.4f  % 7.4f | % 7.4f ]", a[2][0], a[2][1], a[2][2], a[2][3]);)
+    })
+  }
 
   /*
    *  Repeat for angular iterpolation
@@ -723,15 +737,29 @@ static void find_coeficients(int calib_shot_n)
     a[1][3] = 3.0 * ((y2 - y1) / ((x2 - x1) * (x2 - x1)) - (y1 - y0) / ((x1 - x0) * (x1 - x0)));
     a[2][3] = 3.0 * ((y2 - y1) / ((x2 - x1) * (x2 - x1)));
 
-    solve_matrix(a);
-  }
+    DLT(DLT_CALIBRATION_VERBOSE, {
+      SEND(ALL, sprintf(_xs, "\r\n\r\nAngel Offset Matrix: %d", spline_i);)
+      SEND(ALL, sprintf(_xs, "\r\n[ % 7.4f  % 7.4f  % 7.4f | % 7.4f ]", a[0][0], a[0][1], a[0][2], a[0][3]);)
+      SEND(ALL, sprintf(_xs, "\r\n[ % 7.4f  % 7.4f  % 7.4f | % 7.4f ]", a[1][0], a[1][1], a[1][2], a[1][3]);)
+      SEND(ALL, sprintf(_xs, "\r\n[ % 7.4f  % 7.4f  % 7.4f | % 7.4f ]", a[2][0], a[2][1], a[2][2], a[2][3]);)
+    })
 
-  /*
-   *  Store the coefficients for each point
-   */
-  spline_points[spline_i].o0 = a[0][3];
-  spline_points[spline_i].o1 = a[1][3];
-  spline_points[spline_i].o2 = a[2][3];
+    solve_matrix(a);
+
+    DLT(DLT_CALIBRATION_VERBOSE, {
+      SEND(ALL, sprintf(_xs, "\r\n\r\nAngel Offset Matrix Inverted: %d", spline_i);)
+      SEND(ALL, sprintf(_xs, "\r\n[ % 7.4f  % 7.4f  % 7.4f | % 7.4f ]", a[0][0], a[0][1], a[0][2], a[0][3]);)
+      SEND(ALL, sprintf(_xs, "\r\n[ % 7.4f  % 7.4f  % 7.4f | % 7.4f ]", a[1][0], a[1][1], a[1][2], a[1][3]);)
+      SEND(ALL, sprintf(_xs, "\r\n[ % 7.4f  % 7.4f  % 7.4f | % 7.4f ]", a[2][0], a[2][1], a[2][2], a[2][3]);)
+    })
+
+    /*
+     *  Store the coefficients for each point
+     */
+    spline_points[spline_i].o0 = a[0][3];
+    spline_points[spline_i].o1 = a[1][3];
+    spline_points[spline_i].o2 = a[2][3];
+  }
 
   /*
    * All done, return
@@ -815,7 +843,7 @@ static void verify_calibration(void)
     spline_points[i].target.x = spline_points[i].target.rho * cosf(spline_points[i].target.angle);
     spline_points[i].target.y = spline_points[i].target.rho * sinf(spline_points[i].target.angle);
 
-    DLT(DLT_CALIBRATION,
+    DLT(DLT_CALIBRATION_VERBOSE,
         SEND(ALL, sprintf(_xs, "Shot %d : Target (%4.2f, %4.2f)  Actual(%4.2f, %4.2f) Error: %4.2f  Scale: %4.2f  Offset: %4.2f", i,
                           spline_points[i].target.x, spline_points[i].target.y, spline_points[i].actual.x, spline_points[i].actual.y,
                           shot_distance(i), scale_factor, angle_offset);))
@@ -1311,7 +1339,7 @@ static void show_calibration(void)
   for ( i = 0; i != MAX_CALIBRATION_SHOTS + SPLINE_PADDING * 2; i++ )
   {
     SEND(ALL, sprintf(_xs, "\r\n\r\nSpline: %d  Angle: %4.2f", i, spline_points[i].actual.angle);)
-    SEND(ALL, sprintf(_xs, "\r\nScale: %4.2f  s0:%6.4f  s1:%6.4f  s2:%6.4f", spline_points[i].scale, spline_points[i].s0,
+    SEND(ALL, sprintf(_xs, "\r\nScale: %4.2f  s0:%7.4f  s1:%7.4f  s2:%7.4f", spline_points[i].scale, spline_points[i].s0,
                       spline_points[i].s1, spline_points[i].s2);)
     SEND(ALL, sprintf(_xs, "\r\nOffset: %4.2f o0:%4.2f  o1:%4.2f  o2:%4.2f", spline_points[i].offset, spline_points[i].o0,
                       spline_points[i].o1, spline_points[i].o2);)
