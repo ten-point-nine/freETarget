@@ -161,7 +161,7 @@ unsigned int compute_hit(shot_record_t *shot)      // Storing the results
    */
   init_sensors();
   z_offset_clock = (real_t)json_z_offset * OSCILLATOR_MHZ / s_of_sound; // Clock adjustement for paper to sensor difference
-  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "z_offset_clock: %4.2f", z_offset_clock);))
+  DLT(DLT_APPLICATION | DLT_VERBOSE, SEND(ALL, sprintf(_xs, "z_offset_clock: %4.2f", z_offset_clock);))
 
   /*
    *  Display the timer registers if in trace mode
@@ -183,7 +183,7 @@ unsigned int compute_hit(shot_record_t *shot)      // Storing the results
     }
   }
 
-  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "Reference: %4.2f   location: %s", reference, find_sensor(1 << location)->long_name);))
+  DLT(DLT_APPLICATION | DLT_VERBOSE, SEND(ALL, sprintf(_xs, "Reference: %4.2f   location: %s", reference, find_sensor(1 << location)->long_name);))
 
   /*
    * Correct the time to remove the shortest distance
@@ -198,7 +198,7 @@ unsigned int compute_hit(shot_record_t *shot)      // Storing the results
     }
   }
 
-  DLT(DLT_APPLICATION, {
+  DLT(DLT_APPLICATION | DLT_VERBOSE, {
     SEND(ALL, sprintf(_xs, "\r\nMicroseconds ");)
     for ( i = 0; i < 8; i++ )
       SEND(ALL, sprintf(_xs, "%s: %4.2f ", find_sensor(1 << i)->long_name, (real_t)s[i].count / ((real_t)OSCILLATOR_MHZ));)
@@ -227,7 +227,7 @@ unsigned int compute_hit(shot_record_t *shot)      // Storing the results
     estimate += s[i].count;
   }
   estimate = estimate / 4.0;
-  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "estimate: %4.2f", estimate);))
+  DLT(DLT_APPLICATION | DLT_VERBOSE, SEND(ALL, sprintf(_xs, "estimate: %4.2f", estimate);))
 
   /*
    *  Loop and calculate the unknown radius (estimate)
@@ -265,7 +265,7 @@ unsigned int compute_hit(shot_record_t *shot)      // Storing the results
     estimate = sqrt(SQ(s[location].x - x_avg) + SQ(s[location].y - y_avg));
     error    = fabs(last_estimate - estimate);
 
-    DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "x_avg: %4.2f  y_avg: %4.2f estimate: %4.2f error: %4.2f", x_avg, y_avg, estimate, error);))
+    DLT(DLT_APPLICATION | DLT_VERBOSE, SEND(ALL, sprintf(_xs, "x_avg: %4.2f  y_avg: %4.2f estimate: %4.2f error: %4.2f", x_avg, y_avg, estimate, error);))
 
     count++;
     if ( count > 20 )
@@ -431,7 +431,7 @@ bool find_xy_3D(sensor_t *s,             // Sensor to be operatated on
   /*
    * Debugging
    */
-  DLT(DLT_APPLICATION, {
+  DLT(DLT_APPLICATION | DLT_VERBOSE, {
     SEND(ALL, sprintf(_xs, "index: %d  a:%4.2f b: %4.2f ae: %4.2f  be: %4.2f c: %4.2f", s->index, s->a, s->b, ae, be, s->c);)
     SEND(ALL,
          sprintf(_xs, " cos: %4.2f  sin: %4.2f  angle_A: %4.2f  x: %4.2f y: %4.2f", cos(rotation), sin(rotation), s->angle_A, s->x, s->y);)
@@ -515,7 +515,7 @@ void prepare_score(shot_record_t *shot,        //  record
   remap_target(shot);                                           // Change the target if needed
   shot->session_type = SESSION_VALID | json_session_type;
 
-  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "x_mm: %4.2f  y_mm: %4.2f  radius: %4.2f  rho_radians: %4.2f", shot->x_mm, shot->y_mm,
+  DLT(DLT_CALIBRATION | DLT_VERBOSE, SEND(ALL, sprintf(_xs, "x_mm: %4.2f  y_mm: %4.2f  radius: %4.2f  rho_radians: %4.2f", shot->x_mm, shot->y_mm,
                                          shot->radius, shot->angle);))
   /*
    * All done, return

@@ -117,9 +117,9 @@ static void DAC_write_MCP4728(real_t volts[]) // What value are we setting it to
   unsigned char data[3 * 4];                  // Bytes to send to the I2C
   unsigned int  scaled_value;                 // Value (12 bits) to the DAC
   int           i;
-  real_t         max;
+  real_t        max;
   int           v_source = V_INTERNAL;        // Default to internal reference
-  real_t         v_ref    = VREF_INT;          // Default to 2.048 volts
+  real_t        v_ref    = VREF_INT;          // Default to 2.048 volts
 
   /*
    *  Step 1, figure out what VREF should be
@@ -393,7 +393,7 @@ void DAC_test(void)
     }
 
     DAC_write(volts);
-    vTaskDelay(TICK_10ms * 100);                                     // Wait 100ms
+    vTaskDelay(TICK_10ms * 100);                                      // Wait 100ms
 
     i++;
   }

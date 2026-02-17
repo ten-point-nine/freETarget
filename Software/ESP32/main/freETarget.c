@@ -181,24 +181,21 @@ void freeETarget_init(void)
    */
   show_echo();
   set_LED_PWM(json_LED_PWM);
-  serial_flush(ALL);                    // Get rid of everything
-  printf("\r\nfrom Free complete\r\n"); // Let the user know we are ready
-  shot_in         = 0;                  // Clear out any junk
+  serial_flush(ALL);              // Get rid of everything
+  shot_in         = 0;            // Clear out any junk
   shot_out        = 0;
-  connection_list = CONSOLE;            // The consule is always connected
-  reset_run_time();                     // Reset the time of day
-  time_to_go = 1000 * ONE_SECOND;       // Infinite amount of time to start
+  connection_list = CONSOLE;      // The consule is always connected
+  reset_run_time();               // Reset the time of day
+  time_to_go = 1000 * ONE_SECOND; // Infinite amount of time to start
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initialization complete");))
-
-  if ( DIP_SW_A )                       // Switch A pressed
+  if ( DIP_SW_A )                 // Switch A pressed
   {
-    OTA_load();                         // Load in a new OTA
+    OTA_load();                   // Load in a new OTA
   }
 
-  if ( DIP_SW_B )                       // Switch B pressed
+  if ( DIP_SW_B )                 // Switch B pressed
   {
-    OTA_rollback();                     // Roll back to old software
+    OTA_rollback();               // Roll back to old software
   }
 
   /*
@@ -780,19 +777,19 @@ void tabata_task(void)
 
 const rapid_state_t rapid_state[] = {
     // Time in state     Status LEDs    target LED  Message IN_SHOT
-    {&all_done,        LED_RAPID_GREEN_WARN, 0,  "RAPID_IDLE",    false}, // 0 Do nothing
-    {&go_wait,         LED_RAPID_OFF,        0,  "RAPID_ENABLED", false}, // 1 Wait for json_rapid_enable
-    {&json_rapid_wait, LED_RAPID_GREEN_WARN, -1, "RAPID_WAIT",    false}, // 2 Warn the shooter the event is enabled
-    {&go_wait,         LED_RAPID_OFF,        0,  "RAPID_DARK",    false}, // 3 Warn the shooter the event is enabled
-    {&json_rapid_time, LED_RAPID_GREEN,      0,  "RAPID_ON",      true }, // 4 Turn the timer on for the event
-    {&go_dark,         LED_RAPID_RED,        0,  "RAPID_OFF",     false}, // 5 Event finished, turn off
-    {&all_done,        LED_RAPID_OFF,        1,  "SLOW_FIRE",     true }  // 6 End of state machine
+    {&all_done,        LED_RAPID_OFF,   0,  "RAPID_IDLE",    false}, // 0 Do nothing
+    {&go_wait,         LED_RAPID_OFF,   0,  "RAPID_ENABLED", false}, // 1 Wait for json_rapid_enable
+    {&json_rapid_wait, LED_RAPID_RED,   -1, "RAPID_WAIT",    false}, // 2 Warn the shooter the event is enabled
+    {&go_wait,         LED_RAPID_RED,   0,  "RAPID_DARK",    false}, // 3 Warn the shooter the event is enabled
+    {&json_rapid_time, LED_RAPID_GREEN, 0,  "RAPID_ON",      true }, // 4 Turn the timer on for the event
+    {&go_dark,         LED_RAPID_RED,   0,  "RAPID_OFF",     false}, // 5 Event finished, turn off
+    {&all_done,        LED_RAPID_OFF,   1,  "SLOW_FIRE",     true }  // 6 End of state machine
 };
 
 void rapid_fire_task(void)
 {
-  static unsigned int rapid_state_machine = 0;                         // State machine index
-  static unsigned int rapid_count;                                     //  Number of shots received during rapid fire
+  static unsigned int rapid_state_machine = 0;                  // State machine index
+  static unsigned int rapid_count;                              //  Number of shots received during rapid fire
 
   IF_NOT(IN_OPERATION) return;
 
