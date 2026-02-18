@@ -894,7 +894,7 @@ real_t solve_spline_for_angle(real_t angle) // Angle to compute scaling factor
   /*
    *  Find the right segment
    */
-  for ( s = SPLINE_PADDING; s < MAX_CALIBRATION_SHOTS + SPLINE_PADDING * 2; s++ )
+  for ( s = 0; s < MAX_CALIBRATION_SHOTS + SPLINE_PADDING * 2; s++ )
   {
     if ( (angle >= spline_points[s].actual.angle) && (angle < spline_points[s + 1].actual.angle) )
     {
@@ -966,7 +966,7 @@ real_t solve_spline_for_scale(real_t angle) // Angle to compute scaling factor
   /*
    *  Find the right segment
    */
-  for ( s = SPLINE_PADDING; s != MAX_CALIBRATION_SHOTS + SPLINE_PADDING * 2; s++ )
+  for ( s = 0; s != MAX_CALIBRATION_SHOTS + SPLINE_PADDING * 2; s++ )
   {
     if ( (angle >= spline_points[s].actual.angle) && (angle < spline_points[s + 1].actual.angle) )
     {
@@ -1126,7 +1126,7 @@ bool get_target_calibration(void)
    * Calibration retrieved
    */
   calibration_is_valid = true;
-  SEND(ALL, sprintf(_xs, "Target calibration enabled");)
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "\r\nTarget calibration enabled");))
   return true;
 }
 

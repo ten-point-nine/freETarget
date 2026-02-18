@@ -776,20 +776,20 @@ void tabata_task(void)
  *--------------------------------------------------------------*/                                       // 100 signals random time, %10 is the duration
 
 const rapid_state_t rapid_state[] = {
-    // Time in state     Status LEDs    target LED  Message IN_SHOT
-    {&all_done,        LED_RAPID_OFF,   0,  "RAPID_IDLE",    false}, // 0 Do nothing
-    {&go_wait,         LED_RAPID_OFF,   0,  "RAPID_ENABLED", false}, // 1 Wait for json_rapid_enable
-    {&json_rapid_wait, LED_RAPID_RED,   -1, "RAPID_WAIT",    false}, // 2 Warn the shooter the event is enabled
-    {&go_wait,         LED_RAPID_RED,   0,  "RAPID_DARK",    false}, // 3 Warn the shooter the event is enabled
-    {&json_rapid_time, LED_RAPID_GREEN, 0,  "RAPID_ON",      true }, // 4 Turn the timer on for the event
-    {&go_dark,         LED_RAPID_RED,   0,  "RAPID_OFF",     false}, // 5 Event finished, turn off
-    {&all_done,        LED_RAPID_OFF,   1,  "SLOW_FIRE",     true }  // 6 End of state machine
+    // Time in state   Status LEDs     LED  Message IN_SHOT Score
+    //                               Brightness
+    {&all_done,        LED_RAPID_OFF,   0, "RAPID_IDLE",    false}, // 0 Do nothing
+    {&go_wait,         LED_RAPID_OFF,   0, "RAPID_ENABLED", false}, // 1 Wait for json_rapid_enable
+    {&json_rapid_wait, LED_RAPID_RED,   1, "RAPID_WAIT",    false}, // 2 Warn the shooter the event is enabled
+    {&json_rapid_time, LED_RAPID_GREEN, 1, "RAPID_ON",      true }, // 4 Turn the timer on for the event
+    {&go_dark,         LED_RAPID_RED,   0, "RAPID_OFF",     false}, // 5 Event finished, turn off
+    {&all_done,        LED_RAPID_OFF,   1, "SLOW_FIRE",     true }  // 6 End of state machine
 };
 
 void rapid_fire_task(void)
 {
-  static unsigned int rapid_state_machine = 0;                  // State machine index
-  static unsigned int rapid_count;                              //  Number of shots received during rapid fire
+  static unsigned int rapid_state_machine = 0;                 // State machine index
+  static unsigned int rapid_count;                             //  Number of shots received during rapid fire
 
   IF_NOT(IN_OPERATION) return;
 
@@ -816,17 +816,24 @@ void rapid_fire_task(void)
   if ( rapid_timer == 0 )                                                          // Time to go to the next state?
   {
     rapid_state_machine++;                                                         // Next state
-    SEND(ALL, sprintf(_xs, "{\"%s\": %d}", rapid_state[rapid_state_machine].message, *rapid_state[rapid_state_machine].timer);)
+    SEND(ALL, sprintf(_xs, "\r\n{\"%s\": %d, \"LED\": \"%s\"}", rapid_state[rapid_state_machine].message,
+                      *rapid_state[rapid_state_machine].timer, rapid_state[rapid_state_machine].status_LED);)
 
     if ( *rapid_state[rapid_state_machine].timer == 0 )                            // Reached the end of the state machine
     {
       set_status_LED(LED_RAPID_OFF);                                               // Turn off the Lights
       set_LED_PWM_now(json_LED_PWM);                                               // Turn off the lights
 
+      printf("\r\nRapid fire complete: rapid_count: %d, json_rapid_count: %d\r\n", rapid_count, json_rapid_count);
+
       while ( rapid_count < json_rapid_count )                                     // Send incomplete as misses
       {
-        record[rapid_count].shot_time = 0;                                         // Fake the time
-        prepare_score(&record[rapid_count], rapid_count, MISSED_SHOT);             // and show as a miss
+        record[rapid_count].shot_time     = 0;                                     // Fake the time
+        record[rapid_count].shot          = rapid_count;                           // Fake a shot number
+        record[rapid_count].sensor_status = 0;                                     // Fake the sensor status
+        record[rapid_count].miss          = 1;                                     // No face strike
+        build_json_score(&record[rapid_count], SCORE_SEND_MISS);                   // Build the JSON for the miss
+        serial_to_all(_xs, ALL);
         rapid_count = (rapid_count + 1) % SHOT_SPACE;
       }
 

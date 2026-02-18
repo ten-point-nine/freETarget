@@ -19,7 +19,7 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"6.3.0 February 16, 2026\""
+#define SOFTWARE_VERSION "\"6.3.0 February 17, 2026\""
 #define _DONE_           "\r\nDone\r\n"
 #define _SHOT_           "shot"
 #define _GREETING_       "CONNECTED"   // Message to send on connection
@@ -130,6 +130,7 @@
 #define SCORE_HTTP       "{S?TXPOE}"  // HTTP score elements
 #define SCORE_HTTP_PRIME "{#}"        // HTTP Prime the client
 #define SCORE_HTTP_TEST  "{$}"        // HTTP Test the client
+#define SCORE_SEND_MISS  "{SMT}n"     // Send a miss
 
 #define HTTP_CLOSE_TIME 15l           // Time to close the HTTP connection after the last shot
 
