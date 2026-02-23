@@ -51,7 +51,7 @@ namespace freETarget.targets {
             return ring10 / 2m + pelletCaliber / 2m;
         }
         public override string getName() {
-            return typeof(Pistol25mRF).FullName;
+            return typeof(NRA_B38).FullName;
         }
 
         public override decimal getOutterRing() {
