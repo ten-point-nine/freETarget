@@ -28,7 +28,7 @@
 #include "dac.h"
 #include "analog_io.h"
 #include "pwm.h"
-
+#include "serial_io.h"
 #include "../managed_components/espressif__led_strip/src/led_strip_rmt_encoder.h"
 
 /*
@@ -256,8 +256,8 @@ void status_LED_init(unsigned int led_gpio    // What GPIO is used for output
  *-----------------------------------------------------*/
 #define LED_ON       0x3F                     // Max full scale is 0xff (too bright)
 #define N_SERIAL_LED 3
-#define CEE          3                        // LED C takes the fourth position
-#define DEE          4                        // LED D takes the fifth position
+#define CEE          N_SERIAL_LED             // LED C takes the fourth position
+#define DEE          (CEE + 1)                // LED D takes the fifth position
 
 rmt_transmit_config_t tx_config = {
     .loop_count = 0,                          // no transfer loop
@@ -270,7 +270,7 @@ static unsigned char LED_D = ' ';             // Rapid fire LED D
 void set_status_LED(char new_state[]          // New LED colours
 )
 {
-  static char *old_state = "   ";
+  static char *old_state = ".....";
   int          i;
 
   if ( new_state == old_state )               // Dont't do anything if the state is the same
@@ -875,8 +875,7 @@ void aquire(void)
  *
  *--------------------------------------------------------------*/
 
-void rapid_red(unsigned int state        // New state for the RED light
-)
+void rapid_red(unsigned int state)       // New state for the RED light
 {
   if ( json_mfs_select_cd == RAPID_LOW ) // Inverted drive
   {
@@ -906,11 +905,14 @@ void rapid_green(unsigned int state      // New state for the GREEN light
   {
     gpio_set_level(DIP_C, state);
   }
-  if ( IS_HOLD_D(RAPID_GREEN) )
+  else if ( IS_HOLD_D(RAPID_GREEN) )
   {
     gpio_set_level(DIP_D, state);
   }
-
+else 
+{
+  printf("\r\n")
+}
   return;
 }
 
@@ -979,27 +981,55 @@ void digital_test(void)
  *----------------------------------------------------------------
  *
  *--------------------------------------------------------------*/
+typedef struct
+{
+  char *status; // Whar LEDs to drive
+  char *prompt; // Test Prompt
+} status_LED_test_t;
+
+static const status_LED_test_t status_LED_list[] = {
+    {"GGG G", "All Green"                            },
+    {"RRRR ", "All Red"                              },
+    {"BBBRG", "Blue, Blue, Blue, Green, Red"         },
+    {"WWW G", "White, White, White, Green"           },
+    {"RGBRG", "Red, Green, Blue, Green, Red"         },
+    {"rgbrg", "Blinking Red, Green, Blue, Green, Red"},
+    {"   RG", "Dark, Green, Red"                     },
+    {"     ", "Dark"                                 },
+    {0,       0                                      }
+};
+
 void status_LED_test(void)
 {
+  int i;
+
   if ( ((IS_HOLD_C(RAPID_RED)) && (IS_HOLD_C(RAPID_GREEN))) || ((IS_HOLD_D(RAPID_RED)) && (IS_HOLD_D(RAPID_GREEN))) )
   {
     SEND(ALL, sprintf(_xs, "\r\nMFS_C or MFS_D not configured for output\r\n");)
   }
 
-  vTaskDelay(2 * ONE_SECOND);
-  set_status_LED("RRRRR");
-  vTaskDelay(2 * ONE_SECOND);
-  set_status_LED("GGGGG");
-  vTaskDelay(ONE_SECOND);
-  set_status_LED("BBBRG");
-  vTaskDelay(ONE_SECOND);
-  set_status_LED("WWWGR");
-  vTaskDelay(ONE_SECOND);
-  set_status_LED("RGBRG");
-  vTaskDelay(ONE_SECOND);
-  set_status_LED("rgbrg");
-  vTaskDelay(5 * ONE_SECOND); // Blink for 5 seconds
-  set_status_LED(LED_READY);
+  SEND(ALL, sprintf(_xs, "\r\nSend * to advance test\r\n");)
+  serial_getch(ALL); // Clear the input
+
+  i = 0;
+  while ( status_LED_list[i].status != 0 )
+  {
+    SEND(ALL, sprintf(_xs, "\r\n%s: %s", status_LED_list[i].status, status_LED_list[i].prompt);)
+    set_status_LED(status_LED_list[i].status);
+    while ( serial_available(ALL) == 0 )
+    {
+      vTaskDelay(ONE_SECOND / 10);
+    }
+    if ( serial_getch(ALL) == 'R' )
+    {
+      i = 0; // Start over if the user sends an R
+    }
+    else
+    {
+      i++;   // Advance to the next test
+    }
+  }
+
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }
