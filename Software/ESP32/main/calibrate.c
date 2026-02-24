@@ -1104,7 +1104,7 @@ bool get_target_calibration(void)
   {
     if ( *(blob) != SPLINE_VALID )
     {
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Target calibration not validt");))
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Target calibration not valid");))
       return false;
     }
     blob++;
@@ -1126,7 +1126,7 @@ bool get_target_calibration(void)
    * Calibration retrieved
    */
   calibration_is_valid = true;
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "\r\nTarget calibration enabled");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Target calibration enabled");))
   return true;
 }
 

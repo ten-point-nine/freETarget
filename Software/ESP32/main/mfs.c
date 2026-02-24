@@ -61,8 +61,8 @@ const mfs_action_t  mfs_action[] = {
     {NO_ACTION,      NULL,           "NO ACTION"     }, // No action on C & D inputs
     {TARGET_TYPE,    NULL,           "TARGET TYPE"   }, // Put the target type into the send score
     {SHOOTER_LEVEL,  NULL,           "SHOOTER_LEVEL" }, // Shooter experiance level
-    {RAPID_RED,      NULL,           "RAPID RED"     }, // The output is used to drive the RED rapid fire LED
-    {RAPID_GREEN,    NULL,           "RAPID_GREEN"   }, // The output is used to drive the GREEN rapid fire LED
+    {MFS_C_LED,      NULL,           "RAPID RED"     }, // The output is used to drive the RED rapid fire LED
+    {MFS_D_LED,      NULL,           "RAPID GREEN"   }, // The output is used to drive the GREEN rapid fire LED
     {RAPID_LOW,      NULL,           "RAPID LOW"     }, // The output is active low
     {RAPID_HIGH,     NULL,           "RAPID HIGH"    }, // The output is active high
     {STEPPER_DRIVE,  NULL,           "STEPPER_DRIVE" }, // The output is used to drive stepper motor
@@ -112,17 +112,14 @@ void multifunction_init(void)
   /*
    * Check to see if the DIP switch has been overwritten
    */
-  if ( json_mfs_hold_c >= RAPID_RED )
+  if ( json_mfs_hold_c >= MFS_C_LED )
   {
     gpio_set_direction(HOLD_C_GPIO, GPIO_MODE_OUTPUT);
     gpio_set_pull_mode(HOLD_C_GPIO, GPIO_PULLUP_PULLDOWN);
     switch ( json_mfs_hold_c )
     {
-      case RAPID_RED:
-        rapid_red(0);
-        break;
-      case RAPID_GREEN:
-        rapid_green(0);
+      case MFS_C_LED:
+        rapid_C_LED(0);
         break;
       case STEPPER_DRIVE:
         gpio_set_level(HOLD_C_GPIO, 0);
@@ -136,17 +133,14 @@ void multifunction_init(void)
     }
   }
 
-  if ( json_mfs_hold_d >= RAPID_RED )
+  if ( json_mfs_hold_d >= MFS_C_LED )
   {
     gpio_set_direction(HOLD_D_GPIO, GPIO_MODE_OUTPUT);
     gpio_set_pull_mode(HOLD_D_GPIO, GPIO_PULLUP_PULLDOWN);
     switch ( json_mfs_hold_d )
     {
-      case RAPID_RED:
-        rapid_red(0);
-        break;
-      case RAPID_GREEN:
-        rapid_green(0);
+      case MFS_D_LED:
+        rapid_D_LED(0);
         break;
       case STEPPER_DRIVE:
         gpio_set_level(HOLD_D_GPIO, 0);

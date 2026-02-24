@@ -34,8 +34,8 @@ void disable_face_interrupt(void);                         // Turn off the face 
 void digital_test(void);                                   // Execute the digital test
 void DCmotor_on_off(bool on, time_count_t duration);       // Turn the motor on or off
 int  is_paper_on();                                        // Return the current running state
-void rapid_green(unsigned int state);                      // Drive the GREEN light
-void rapid_red(unsigned int state);                        // Drive the RED light
+void rapid_D_LED(unsigned int state);                      // Drive the GREEN light
+void rapid_C_LED(unsigned int state);                      // Drive the RED light
 void rapid_LED_test(void);
 void stepper_pulse(void);                                  // New state for the Stepper motor output
 void status_LED_init(unsigned int gpio_number);            // Initialize the RMT driver

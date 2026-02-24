@@ -69,26 +69,24 @@ void generate_fake_shot(void);                            // Generate a string o
 #define LED_WIFI_ACCESS_CN  "-B---"     // The WiFI is in access mode and connected
 #define LED_WIFI_FAULT      "-R---"     // The WiFi has a fault
 
-#define LED_NO_12V           "--R--"    // The 12 Volt supply is not present
-#define LED_LOW_12V          "--Y--"    // 12 Volt supply out of spec
-#define LED_OK_12V           "--g--"    // The 12 Volt supply is in spec
-#define LED_12V_NOT_USED     "--b--"    // The 12V is not used,
-#define LED_C_OFF            "--- -"    // LED C is OFF
-#define LED_C_BLINK          "---g-"    // LED C is blinking
-#define LED_C_ON             "---G-"    // LED C is ON
-#define LED_D_OFF            "-----"    // LED D is OFF
-#define LED_D_BLINK          "----r"    // LED D is blinking
-#define LED_D_ON             "----R"    // LED D is ON
-#define LED_RAPID_OFF        "---  "    // Rapid fire LEDs are OFF
-#define LED_RAPID_RED        "--- R"    // Rapid fire RED is ON
-#define LED_RAPID_RED_WARN   "--- r"    // Rapid fire RED is BLINKING
-#define LED_RAPID_RED_OFF    "---- "    // Rapid fire RED is OFF
-#define LED_RAPID_GREEN      "---G "    // Rapid fire GREEN is ON
-#define LED_RAPID_GREEN_OFF  "--- -"    // Rapid fire GREEN is OFF
-#define LED_RAPID_GREEN_WARN "---gr"    // Rapid fire GREEN is BLINKING
-#define LED_TABATA_OFF       "-----"    // TABATA LEDs are OFF
-#define LED_TABATA_WARN      "---g-"    // TABATA LEDS are blinking
-#define LED_TABATA_ON        "---G-"    // TABATA LEDs are ON
+#define LED_NO_12V       "--R--"        // The 12 Volt supply is not present
+#define LED_LOW_12V      "--Y--"        // 12 Volt supply out of spec
+#define LED_OK_12V       "--g--"        // The 12 Volt supply is in spec
+#define LED_12V_NOT_USED "--b--"        // The 12V is not used,
+#define LED_C_OFF        "--- -"        // LED C is OFF
+#define LED_C_BLINK      "---g-"        // LED C is blinking
+#define LED_C_ON         "---G-"        // LED C is ON
+#define LED_D_OFF        "-----"        // LED D is OFF
+#define LED_D_BLINK      "----r"        // LED D is blinking
+#define LED_D_ON         "----R"        // LED D is ON
+
+#define LED_RAPID_OFF  "---  "          // Rapid fire LEDs are OFF
+#define LED_RAPID_WARN "---R "          // Rapid fire RED is ON
+#define LED_RAPID_ON   "--- G"          // Rapid fire GREEN is ON
+
+#define LED_TABATA_OFF  "---  "         // TABATA LEDs are OFF
+#define LED_TABATA_WARN "---R "         // TABATA LEDS are blinking
+#define LED_TABATA_ON   "--- G"         // TABATA LEDs are ON
 
 // Fatal Error.  Halts operation
 

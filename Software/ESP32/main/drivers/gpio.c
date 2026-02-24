@@ -408,19 +408,15 @@ void commit_status_LEDs(unsigned int blink_state)
   {
     default:
     case ' ':
-      rapid_green(0);
-      break;
-    case 'g':
-      rapid_green(blink_state);
-      break;
-    case 'G':
-      rapid_green(1);
+      rapid_C_LED(0);
       break;
     case 'r':
-      rapid_red(blink_state);
+    case 'c':
+      rapid_C_LED(blink_state);
       break;
     case 'R':
-      rapid_red(1);
+    case 'C':
+      rapid_C_LED(1);
       break;
   }
 
@@ -428,19 +424,15 @@ void commit_status_LEDs(unsigned int blink_state)
   {
     default:
     case ' ':
-      rapid_red(0);
+      rapid_D_LED(0);
       break;
     case 'g':
-      rapid_green(blink_state);
+    case 'd':
+      rapid_D_LED(blink_state);
       break;
     case 'G':
-      rapid_green(1);
-      break;
-    case 'r':
-      rapid_red(blink_state);
-      break;
-    case 'R':
-      rapid_red(1);
+    case 'D':
+      rapid_D_LED(1);
       break;
   }
 
@@ -857,8 +849,8 @@ void aquire(void)
 
 /*----------------------------------------------------------------
  *
- * @function: rapid_red()
- *           rapid_green()
+ * @function: rapid_C_LED()
+ *            rapid_D_LED()
  *
  * @brief: Set the RED and GREEN lights
  *
@@ -875,44 +867,43 @@ void aquire(void)
  *
  *--------------------------------------------------------------*/
 
-void rapid_red(unsigned int state)       // New state for the RED light
+void rapid_C_LED(unsigned int state) // New state for the RED light
 {
+  static int old_state = 99;
+
+  if ( old_state == state )
+  {
+    return;
+  }
+  old_state = state;
+
   if ( json_mfs_select_cd == RAPID_LOW ) // Inverted drive
   {
     state = !state;
   }
-  if ( IS_HOLD_C(RAPID_RED) )
-  {
-    gpio_set_level(DIP_C, state);
-  }
-  if ( IS_HOLD_D(RAPID_RED) )
-  {
-    gpio_set_level(DIP_D, state);
-  }
+
+  gpio_set_level(DIP_C, state);
 
   return;
 }
 
-void rapid_green(unsigned int state      // New state for the GREEN light
-)
+void rapid_D_LED(unsigned int state) // New state for the GREEN light
 {
+  static int old_state = 99;
+
+  if ( old_state == state )
+  {
+    return;
+  }
+  old_state = state;
+
   if ( json_mfs_select_cd == RAPID_LOW ) // Inverted drive
   {
     state = !state;
   }
 
-  if ( IS_HOLD_C(RAPID_GREEN) )
-  {
-    gpio_set_level(DIP_C, state);
-  }
-  else if ( IS_HOLD_D(RAPID_GREEN) )
-  {
-    gpio_set_level(DIP_D, state);
-  }
-else 
-{
-  printf("\r\n")
-}
+  gpio_set_level(DIP_D, state);
+
   return;
 }
 
@@ -988,13 +979,17 @@ typedef struct
 } status_LED_test_t;
 
 static const status_LED_test_t status_LED_list[] = {
-    {"GGG G", "All Green"                            },
-    {"RRRR ", "All Red"                              },
-    {"BBBRG", "Blue, Blue, Blue, Green, Red"         },
+    {"G    ", "RDY Green"                            },
+    {" G   ", "Comm Green"                           },
+    {"  G  ", "12V Green"                            },
+    {"   R ", "Rapid Red"                            },
+    {"    G", "Rapid Green"                          },
+    {"RRRRG", "All On"                               },
+    {"BBBRG", "Blue, Blue, Blue, Red, Green"         },
+    {"WWWR ", "White, White, White, Red"             },
     {"WWW G", "White, White, White, Green"           },
-    {"RGBRG", "Red, Green, Blue, Green, Red"         },
-    {"rgbrg", "Blinking Red, Green, Blue, Green, Red"},
-    {"   RG", "Dark, Green, Red"                     },
+    {"RGBRG", "Red, Green, Blue, Red, Green"         },
+    {"rgbrg", "Blinking Red, Green, Blue, Red, Green"},
     {"     ", "Dark"                                 },
     {0,       0                                      }
 };
@@ -1003,7 +998,7 @@ void status_LED_test(void)
 {
   int i;
 
-  if ( ((IS_HOLD_C(RAPID_RED)) && (IS_HOLD_C(RAPID_GREEN))) || ((IS_HOLD_D(RAPID_RED)) && (IS_HOLD_D(RAPID_GREEN))) )
+  if ( ((IS_HOLD_C(rapid_C_LED)) && (IS_HOLD_C(rapid_D_LED))) || ((IS_HOLD_D(rapid_C_LED)) && (IS_HOLD_D(rapid_D_LED))) )
   {
     SEND(ALL, sprintf(_xs, "\r\nMFS_C or MFS_D not configured for output\r\n");)
   }

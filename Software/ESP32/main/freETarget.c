@@ -144,16 +144,13 @@ void freeETarget_init(void)
   /*
    * Put up a self test
    */
-  set_status_LED(LED_RAPID_RED_OFF);
-  set_status_LED(LED_RAPID_GREEN_OFF);
-  set_status_LED(LED_HELLO_WORLD); // Hello World
-  set_status_LED(LED_RAPID_RED);   // Red
-  vTaskDelay(ONE_SECOND);
   set_status_LED(LED_RAPID_OFF);
-  set_status_LED(LED_RAPID_GREEN); // Green
+  set_status_LED(LED_HELLO_WORLD); // Hello World
+  set_status_LED(LED_RAPID_WARN); // Red
+  vTaskDelay(ONE_SECOND);
+  set_status_LED(LED_RAPID_ON); // Green
   vTaskDelay(ONE_SECOND);
   set_status_LED(LED_OFF);
-  set_status_LED(LED_RAPID_OFF);   // Off
 
   WiFi_init();
 
@@ -266,7 +263,7 @@ void freeETarget_target_loop(void *arg)
         set_status_LED(LED_READY);
         if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
         {
-          set_status_LED(LED_RAPID_GREEN);                                   // Show that the target cannot be used
+          set_status_LED(LED_RAPID_OFF);                                   // Show that the target cannot be used
         }
         freETarget_state = WAIT;
         json_rapid_count = 0;
@@ -366,7 +363,7 @@ unsigned int arm(void)
   {
     if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
     {
-      set_status_LED(LED_RAPID_GREEN);                                   // Show that we are ready
+      set_status_LED(LED_RAPID_ON);                                   // Show that we are ready
     }
 
     return WAIT;                                                         // Fall through to WAIT
@@ -509,7 +506,7 @@ unsigned int reduce(void)
             {
               if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
               {
-                set_status_LED(LED_RAPID_RED);                                     // Show that the target cannot be used
+                set_status_LED(LED_RAPID_ON);                                     // Show that the target cannot be used
               }
               paper_start();                                                       // Roll the paper
               paper_shot     = 0;                                                  // And start over
@@ -666,29 +663,29 @@ void start_new_session(int session_type) //
  * indefinitly
  *
  * Test JSON
- * {"TABATA_WARN_ON": 1, "TABATA_WARN_OFF":5, "TABATA_ON":7, "TABATA_REST":30, "TABATA_ENABLE":1}
- * {"TABATA_WARN_ON": 5, "TABATA_WARN_OFF":2, "TABATA_ON":7, "TABATA_REST":30, "TABATA_ENABLE":1}
+ * {"TABATA_WARN_ON": 1, "TABATA_ON":7, "TABATA_REST":30, "TABATA_ENABLE":1}
+ * {"TABATA_WARN_ON": 5, "TABATA_ON":7, "TABATA_REST":30, "TABATA_ENABLE":1}
  * {"MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":22}
  *
  * Test 10.9
  *
- *  {"TABATA_WARN_ON": 3, "TABATA_WARN_OFF":3, "TABATA_ON":12, "TABATA_REST":25, "TABATA_ENABLE":1}
+ *  {"TABATA_WARN_ON": 3, "TABATA_ON":12, "TABATA_REST":25, "TABATA_ENABLE":1}
  *  {"TABATA_ENABLE":0}
  *-------------------------------------------------------------*/
 const rapid_state_t tabata_state[] = {
-    // Time in state           Status LEDs     target LED  Message     IN_SHOT
-    {&all_done,             LED_RAPID_OFF,        0,  "TABATA_IDLE",     false}, // 0 Wait for json_tabata_enable
-    {&json_tabata_warn_on,  LED_RAPID_GREEN_WARN, -1, "TABATA_WARN",     false}, // 1 Wait for json_tabata_enable
-    {&json_tabata_warn_off, LED_RAPID_OFF,        0,  "TABATA_WARN_OFF", false}, // 2 Turn the timer on for the event
-    {&json_tabata_on,       LED_RAPID_GREEN,      1,  "TABATA_ON",       true }, // 3 Wait for json_tabata_enable
-    {&json_tabata_rest,     LED_RAPID_RED,        0,  "TABATA_REST",     false}, // 4 Turn the timer on for the event
-    {&all_done,             LED_RAPID_OFF,        0,  "TABATA_START",    false}  // 5 Start/End of state machine
+    // Time in state         Status LEDs     target LED  Message     IN_SHOT
+    {&all_done,            LED_TABATA_OFF,  0,  "TABATA_IDLE",  false}, // 0 Wait for json_tabata_enable
+    {&json_tabata_warn_on, LED_TABATA_WARN, -1, "TABATA_BEGIN", false}, // 1 Wait for json_tabata_enable
+    {&json_tabata_on,      LED_TABATA_ON,   1,  "TABATA_ON",    true }, // 3 Wait for json_tabata_enable
+    {&json_tabata_warn_on, LED_TABATA_WARN, 0,  "TABATA_END",   false}, // 1 Wait for json_tabata_enable
+    {&json_tabata_rest,    LED_TABATA_OFF,  0,  "TABATA_REST",  false}, // 4 Turn the timer on for the event
+    {&all_done,            LED_TABATA_OFF,  0,  "TABATA_START", false}  // 5 Start/End of state machine
 };
 
 void tabata_task(void)
 {
-  static int tabata_state_machine = 0;                                      // State machine index
-  static int toggle               = 1;                                      // Toggle the lights
+  static int tabata_state_machine = 0;                                  // State machine index
+  static int toggle               = 1;                                  // Toggle the lights
 
   IF_NOT(IN_OPERATION) return;
 
@@ -778,18 +775,18 @@ void tabata_task(void)
 const rapid_state_t rapid_state[] = {
     // Time in state   Status LEDs     LED  Message IN_SHOT Score
     //                               Brightness
-    {&all_done,        LED_RAPID_OFF,   0, "RAPID_IDLE",    false}, // 0 Do nothing
-    {&go_wait,         LED_RAPID_OFF,   0, "RAPID_ENABLED", false}, // 1 Wait for json_rapid_enable
-    {&json_rapid_wait, LED_RAPID_RED,   1, "RAPID_WAIT",    false}, // 2 Warn the shooter the event is enabled
-    {&json_rapid_time, LED_RAPID_GREEN, 1, "RAPID_ON",      true }, // 4 Turn the timer on for the event
-    {&go_dark,         LED_RAPID_RED,   0, "RAPID_OFF",     false}, // 5 Event finished, turn off
-    {&all_done,        LED_RAPID_OFF,   1, "SLOW_FIRE",     true }  // 6 End of state machine
+    {&all_done,        LED_RAPID_OFF,  0, "RAPID_IDLE",    false}, // 0 Do nothing
+    {&go_wait,         LED_RAPID_OFF,  0, "RAPID_ENABLED", false}, // 1 Wait for json_rapid_enable
+    {&json_rapid_wait, LED_RAPID_WARN, 1, "RAPID_WAIT",    false}, // 2 Warn the shooter the event is enabled
+    {&json_rapid_time, LED_RAPID_ON,   1, "RAPID_ON",      true }, // 4 Turn the timer on for the event
+    {&go_dark,         LED_RAPID_OFF,  0, "RAPID_OFF",     false}, // 5 Event finished, turn off
+    {&all_done,        LED_RAPID_OFF,  1, "SLOW_FIRE",     true }  // 6 End of state machine
 };
 
 void rapid_fire_task(void)
 {
-  static unsigned int rapid_state_machine = 0;                 // State machine index
-  static unsigned int rapid_count;                             //  Number of shots received during rapid fire
+  static unsigned int rapid_state_machine = 0;                  // State machine index
+  static unsigned int rapid_count;                              //  Number of shots received during rapid fire
 
   IF_NOT(IN_OPERATION) return;
 

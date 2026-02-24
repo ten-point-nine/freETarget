@@ -61,8 +61,8 @@ void          mfs_RS485_control(bool direction); // Control RS485 direction
 #define MFS2_NU_2      14
 #define MFS2_NU_3      15
 #define MFS2_DIP       16 // C and D are DIPs
-#define RAPID_RED      18 // Rapid Fire Red Output
-#define RAPID_GREEN    20 // Rapid Fire Green Output
+#define MFS_C_LED    18 // LED Driver
+#define MFS_D_LED    20 // Rapid Fire Green Output
 #define RAPID_LOW      22 // Select Rapid Fire LED type
 #define RAPID_HIGH     24 // Select Rapid Fire LED type
 #define STEPPER_DRIVE  26 // The output drives a stepper motor

@@ -116,7 +116,6 @@ EXTERN int           json_tabata_enable;             // Enable the Tabata timer
 EXTERN int           json_tabata_on;                 // Tabata ON timer
 EXTERN int           json_tabata_rest;               // Tabata OFF timer
 EXTERN int           json_tabata_warn_on;            // Time to turn on the warning
-EXTERN int           json_tabata_warn_off;           // Time to go dark until we start
 EXTERN int           json_rapid_enable;              // Rapid Fire enabled
 EXTERN unsigned long json_rapid_on;                  // Rapid Fire ON timer
 EXTERN int           json_rapid_count;               // Number of expected shots
