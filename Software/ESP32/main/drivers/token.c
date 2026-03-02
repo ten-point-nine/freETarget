@@ -94,12 +94,12 @@ void token_init(void)
   /*
    * If not in token ring mode or WiFi is present,do nothing
    */
-  if ( json_token == TOKEN_NONE )            // Not in token ring mode
+  if ( json_token == TOKEN_NONE )                                // Not in token ring mode
   {
     return;
   }
 
-  ft_timer_new(&token_tick, 5 * ONE_SECOND); // Token ring watchdog
+  ft_timer_new(&token_tick, 5 * ONE_SECOND, NULL, "token_tick"); // Token ring watchdog
 
   DLT(DLT_COMMUNICATION, SEND(ALL, sprintf(_xs, "token_init()");))
 
@@ -311,7 +311,7 @@ void token_poll(void)
 
             case TOKEN_RELEASE:                                                   // A release is passing around
               whos_ring = TOKEN_UNDEF;                                            // Yes, Release it
-              set_status_LED(LED_READY);                                          // And show it is ready
+              set_status_LED(LED_READY);
               serial_putch(token, AUX);                                           // Pass it along to the master
               break;                                                              //
 

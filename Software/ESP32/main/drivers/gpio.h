@@ -34,8 +34,8 @@ void disable_face_interrupt(void);                         // Turn off the face 
 void digital_test(void);                                   // Execute the digital test
 void DCmotor_on_off(bool on, time_count_t duration);       // Turn the motor on or off
 int  is_paper_on();                                        // Return the current running state
-void rapid_green(unsigned int state);                      // Drive the GREEN light
-void rapid_red(unsigned int state);                        // Drive the RED light
+void rapid_D_LED(unsigned int state);                      // Drive the GREEN light
+void rapid_C_LED(unsigned int state);                      // Drive the RED light
 void rapid_LED_test(void);
 void stepper_pulse(void);                                  // New state for the Stepper motor output
 void status_LED_init(unsigned int gpio_number);            // Initialize the RMT driver
@@ -81,6 +81,11 @@ extern volatile unsigned int step_count; // Number of steps before stopping
 #define RUN_MASK (BIT_NORTH_LO | BIT_EAST_LO | BIT_SOUTH_LO | BIT_WEST_LO) // Include pcnt_lo bits and exclude pcnt_hi bits
 #define REF_CLK  GPIO_NUM_8
 
+#define RS485_CONTROL       GPIO_NUM_9                                     // RS485 Transmit control Version 6 and later
+#define RS485_TRANSMIT      1
+#define RS485_RECEIVE       0                                              // Control line settings
+#define RS485_TRANSMIT_TIME 3                                              // 30ms transmit time
+
 #define PAPER     GPIO_NUM_12                                              // Paper advance drive active high
 #define PAPER_ON  1
 #define PAPER_OFF 0
@@ -90,7 +95,7 @@ extern volatile unsigned int step_count; // Number of steps before stopping
 #define CLOCK_START GPIO_NUM_21                                            // Trigger a test cycle
 #define OSC_CONTROL GPIO_NUM_48                                            // Enable / kill 10MHz Oscillator
 #endif
-#if ( (BUILD_REV == REV_510) || (BUILD_REV == REV_520) || (BUILD_REV == REV_600) )
+#if ( (BUILD_REV == REV_510) || (BUILD_REV == REV_520) || (BUILD_REV == REV_600) || (BUILD_REV == REV_610) )
 #define STOP_N      GPIO_NUM_21                                            // Stop the RUN flipflops
 #define CLOCK_START GPIO_NUM_47                                            // Trigger a test cycle
 #define OSC_CONTROL GPIO_NUM_48                                            // Enable / kill 10MHz Oscillator
@@ -101,7 +106,7 @@ extern volatile unsigned int step_count; // Number of steps before stopping
 #define RUN_GO            1                                                // Let the flip flops go
 #define CLOCK_TRIGGER_OFF 0                                                // The clock can be triggered by 0-1
 #define CLOCK_TRIGGER_ON  1                                                // The clock can be triggered by 0-1
-#define LDAC              GPIO_NUM_42                                      // No longer used
+#define LDAC              GPIO_NUM_41                                      // No longer used
 
 #define DIP_0   9
 #define RED_OUT 9                                                          // Rapid fire RED on DIP0

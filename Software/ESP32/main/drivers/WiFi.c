@@ -83,6 +83,7 @@ static esp_netif_ip_info_t          ipInfo;                   // IP Address of t
 static int                          dns_valid;                // We have a valid IP address for the URL
 static ip_addr_t                    url_ip_address;           // Address of the server
 static esp_netif_t                 *sta_netif;                // Station configuration
+static bool                         WiFi_initialized = false;
 
 /*
  * Private Functions
@@ -147,6 +148,54 @@ void WiFi_init(void)
   /*
    *  All done
    */
+  WiFi_initialized = true;
+  return;
+}
+
+/*****************************************************************************
+ *
+ * @function: WiFi_reconnect()
+ *
+ * @brief:    Try and make a new WiFi connection
+ *
+ * @return:   None
+ *
+ ******************************************************************************
+ *
+ * This function stops and de-initializes the current WiFi interface.
+ *
+ *******************************************************************************/
+void WiFi_reconnect(void)
+{
+  char str_c[SHORT_TEXT];
+  esp_wifi_stop();
+  esp_wifi_start(); // Start the WiFi
+
+  /*
+   * Wait here for an event to occur
+   */
+  EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
+
+  /*
+   *  The target has connected to an access point
+   */
+  if ( bits & WIFI_CONNECTED_BIT )
+  {
+    WiFi_my_IP_address(str_c);
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Connected to AP SSID:  \"%s\"", json_wifi_ssid);))
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Using WiFi_IP_ADDRESS: \"%s\"", str_c);))
+    set_status_LED(LED_WIFI_STATION);
+  }
+  else if ( bits & WIFI_FAIL_BIT )
+  {
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to connect to SSID:%s, password:%s", json_wifi_ssid, json_wifi_pwd);))
+    set_status_LED(LED_WIFI_FAULT);
+  }
+  else
+  {
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Unexpectged WiFi event");))
+    set_status_LED(LED_WIFI_FAULT);
+  }
   return;
 }
 
