@@ -280,7 +280,6 @@ void hello(void)
    */
   target_name(str);
   SEND(ALL, sprintf(_xs, "{\"%s\"0, \"NAME\":\"%s\"}", _HELLO_, str);)
-
   set_status_LED(LED_READY);
   set_LED_PWM_now(json_LED_PWM);
   power_save = json_power_save * (time_count_t)ONE_SECOND * 60L;

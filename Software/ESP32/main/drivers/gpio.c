@@ -280,6 +280,19 @@ void set_status_LED(char new_state[]          // New LED colours
   old_state = new_state;
 
   /*
+   *   Check to see if tabata enabled is present.  If so, change from flashing green to flashing yellow 
+   */
+  if ( json_tabata_enable == 1 )
+  {
+    if ( new_state[0] == 'g' )
+    {
+      printf("Tabata enabled, changing flashing green to flashing yellow\r\n");
+      new_state[0] = 'y';
+      printf("New state: %s\r\n", new_state);
+    }
+  }
+
+  /*
    * Decode the calling string into a list of pixels
    */
   for ( i = 0; i != N_SERIAL_LED; i++ )
@@ -302,8 +315,8 @@ void set_status_LED(char new_state[]          // New LED colours
         case 'y':              // YELLOW LED
           status[i].blink = 1; // Turn on Blinking
         case 'Y':
-          status[i].red   = LED_ON / 2;
-          status[i].green = LED_ON / 2;
+          status[i].red   = LED_ON / 3;
+          status[i].green = LED_ON / 3;
           break;
 
         case 'g':              // GREEN LED
@@ -996,14 +1009,15 @@ static const status_LED_test_t status_LED_list[] = {
 
 void status_LED_test(void)
 {
-  int i;
+  int  i;
+  char ch;
 
   if ( ((IS_HOLD_C(rapid_C_LED)) && (IS_HOLD_C(rapid_D_LED))) || ((IS_HOLD_D(rapid_C_LED)) && (IS_HOLD_D(rapid_D_LED))) )
   {
     SEND(ALL, sprintf(_xs, "\r\nMFS_C or MFS_D not configured for output\r\n");)
   }
 
-  SEND(ALL, sprintf(_xs, "\r\nSend * to advance test\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\nSend * to advance test, ! to exit, R to restart\r\n");)
   serial_getch(ALL); // Clear the input
 
   i = 0;
@@ -1015,16 +1029,22 @@ void status_LED_test(void)
     {
       vTaskDelay(ONE_SECOND / 10);
     }
-    if ( serial_getch(ALL) == 'R' )
+    ch = serial_getch(ALL);
+    switch ( ch )
     {
-      i = 0; // Start over if the user sends an R
-    }
-    else
-    {
-      i++;   // Advance to the next test
+      case 'R':
+        i = 0;  // Start over if the user sends an R
+        break;
+
+      case '!': // Exit if the user sends a !
+        SEND(ALL, sprintf(_xs, _DONE_);)
+        return;
+
+      default:
+        i++;    // Advance to the next test
+        break;
     }
   }
-
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }

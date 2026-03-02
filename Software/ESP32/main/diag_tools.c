@@ -387,7 +387,7 @@ bool do_factory_test(bool test_run)
     {
       if ( (pass & running & RUN_MASK) != 0 )           // Clear the test if any sensor is detected
       {
-        vTaskDelay(ONE_SECOND);
+        vTaskDelay(ONE_SECOND/4);
         arm_timers();
       }
     }
@@ -512,13 +512,25 @@ bool do_factory_test(bool test_run)
       switch ( ch )
       {
         default:
-        case 'R':                 // Reset the test
+        case 'R':                    // Reset the test
         case 'r':
-          pass = PASS_A | PASS_B; // Reset the pass/fail
+          pass = PASS_A | PASS_B;    // Reset the pass/fail
           arm_timers();
           break;
 
-        case 'X':                 // Exit
+        case 'P':                    // Pause the test
+        case 'p':
+          SEND(ALL, sprintf(_xs, "\r\nTest Paused\r\n");)
+          set_status_LED(LED_PAUSE); // Blink the status LED
+          while ( serial_available(ALL) == 0 )
+          {
+            vTaskDelay(ONE_SECOND);  // Wait to continue
+          }
+          serial_getch(ALL);         // Clear the input
+          arm_timers();
+          break;
+
+        case 'X':                    // Exit
         case 'x':
         case '!':
           DCmotor_on_off(false, 0);

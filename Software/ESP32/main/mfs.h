@@ -48,12 +48,13 @@ void          mfs_RS485_control(bool direction); // Control RS485 direction
 /*
  *  MFS Use
  */
-#define TARGET_ON  0      // DIP A/B used to turn the target ON
-#define PAPER_FEED 1      // DIP A/B used as a paper feed
-#define LED_ADJUST 2      // DIP A/B used to set LED brightness
-#define PAPER_SHOT 3      // DIP A/B Advance paper one cycle
-#define PC_TEST    4      // DIP A/B used to trigger fake shot
-#define TARGET_OFF 5      // DIP A/B used to turn the target OFF
+#define TARGET_ON     0   // DIP A/B used to turn the target ON
+#define PAPER_FEED    1   // DIP A/B used as a paper feed
+#define LED_ADJUST    2   // DIP A/B used to set LED brightness
+#define PAPER_SHOT    3   // DIP A/B Advance paper one cycle
+#define PC_TEST       4   // DIP A/B used to trigger fake shot
+#define TARGET_OFF    5   // DIP A/B used to turn the target OFF
+#define TOGGLE_TABATA 6   // DIP A/B used to start/end a Tabata session
 
 #define NO_ACTION      9  // DIP usual function
 #define TARGET_TYPE    10 // Input outputs target type with score (Uses DIP_C or DIP_D state)
@@ -61,8 +62,8 @@ void          mfs_RS485_control(bool direction); // Control RS485 direction
 #define MFS2_NU_2      14
 #define MFS2_NU_3      15
 #define MFS2_DIP       16 // C and D are DIPs
-#define MFS_C_LED    18 // LED Driver
-#define MFS_D_LED    20 // Rapid Fire Green Output
+#define MFS_C_LED      18 // LED Driver
+#define MFS_D_LED      20 // Rapid Fire Green Output
 #define RAPID_LOW      22 // Select Rapid Fire LED type
 #define RAPID_HIGH     24 // Select Rapid Fire LED type
 #define STEPPER_DRIVE  26 // The output drives a stepper motor

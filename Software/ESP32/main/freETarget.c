@@ -146,9 +146,9 @@ void freeETarget_init(void)
    */
   set_status_LED(LED_RAPID_OFF);
   set_status_LED(LED_HELLO_WORLD); // Hello World
-  set_status_LED(LED_RAPID_WARN); // Red
+  set_status_LED(LED_RAPID_WARN);  // Red
   vTaskDelay(ONE_SECOND);
-  set_status_LED(LED_RAPID_ON); // Green
+  set_status_LED(LED_RAPID_ON);    // Green
   vTaskDelay(ONE_SECOND);
   set_status_LED(LED_OFF);
 
@@ -261,9 +261,10 @@ void freeETarget_target_loop(void *arg)
         set_mode(); // Set the mode for the next string of shot (ex Tabata or Rapid Fire)
         arm();      // Arm the circuit and check for errors
         set_status_LED(LED_READY);
+
         if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
         {
-          set_status_LED(LED_RAPID_OFF);                                   // Show that the target cannot be used
+          set_status_LED(LED_RAPID_OFF);                                     // Show that the target cannot be used
         }
         freETarget_state = WAIT;
         json_rapid_count = 0;
@@ -363,7 +364,7 @@ unsigned int arm(void)
   {
     if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
     {
-      set_status_LED(LED_RAPID_ON);                                   // Show that we are ready
+      set_status_LED(LED_RAPID_ON);                                      // Show that we are ready
     }
 
     return WAIT;                                                         // Fall through to WAIT
@@ -506,7 +507,7 @@ unsigned int reduce(void)
             {
               if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
               {
-                set_status_LED(LED_RAPID_ON);                                     // Show that the target cannot be used
+                set_status_LED(LED_RAPID_ON);                                      // Show that the target cannot be used
               }
               paper_start();                                                       // Roll the paper
               paper_shot     = 0;                                                  // And start over

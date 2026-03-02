@@ -41,16 +41,16 @@
 
 static void sw_state(unsigned int action); // Carry out the MFS function
 static void mfs_on(void);                  // Functions to carry out mfs actions.
-static void mfs_paper_feed(void);
-static void mfs_paper_shot(void);
+static void mfs_paper_feed(void);          // Continiously feed paper until the switch is released
+static void mfs_paper_shot(void);          // Feed paper the distance of one shot
 static void mfs_off(void);
-static void mfs_led_adjust(void);
+static void mfs_led_adjust(void);          // Adjust the LED brightness
 static void mfs_pc_test(void);
-
+static void mfs_tabata(void);              // Toggle the Tabata session on and off
 /*
  * Variables
  */
-static unsigned int switch_state;                // What switches are pressed
+static unsigned int switch_state;                  // What switches are pressed
 const mfs_action_t  mfs_action[] = {
     {TARGET_ON,      mfs_on,         "TARGET_ON"     }, // Take the target out of sleep
     {PAPER_FEED,     mfs_paper_feed, "PAPER FEED"    }, // Feed paper until button released
@@ -58,6 +58,7 @@ const mfs_action_t  mfs_action[] = {
     {PAPER_SHOT,     mfs_paper_shot, "PAPER SHOT"    }, // Advance paper the distance of one shot
     {PC_TEST,        mfs_pc_test,    "PC TEST"       }, // Send a test shot to the PC
     {TARGET_OFF,     mfs_off,        "TARGET OFF"    }, // Turn the target on or off
+    {TOGGLE_TABATA,  mfs_tabata,     "TOGGLE TABATA" }, // Start or stop a Tabata session
     {NO_ACTION,      NULL,           "NO ACTION"     }, // No action on C & D inputs
     {TARGET_TYPE,    NULL,           "TARGET TYPE"   }, // Put the target type into the send score
     {SHOOTER_LEVEL,  NULL,           "SHOOTER_LEVEL" }, // Shooter experiance level
@@ -461,7 +462,21 @@ static void mfs_pc_test(void)
 
 static void mfs_off(void)
 {
-  bye(true); // Stay in the Bye state until a wake up event comes along
+  bye(true);                                // Stay in the Bye state until a wake up event comes along
+  return;
+}
+
+static void mfs_tabata(void)
+{
+  json_tabata_enable = !json_tabata_enable; // Toggle the state of the Tabata session
+  if ( json_tabata_enable == true )
+  {
+    set_status_LED(LED_TABATA_ENABLED);
+  }
+  else
+  {
+    set_status_LED(LED_READY);
+  }
   return;
 }
 

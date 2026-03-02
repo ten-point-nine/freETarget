@@ -1,3 +1,6 @@
+//
+// WIFI Tests 
+//
 { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING"}
 { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING"}
 { "WIFI_SSID": "FET-WIFI",  "WIFI_PWD": "Mar1noni$", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING"}
@@ -15,6 +18,9 @@ Reinitialize the board {"INIT":0}
 { "WIFI_SSID": "stand-de-tir-2G",  "WIFI_PWD": "", "NAME_ID": 4, "WIFI_IP":"192.168.109.84", "NAME_TEXT":""}
 { "WIFI_SSID": "",  "WIFI_PWD": "", "NAME_ID": 4}
 
+//
+// Witness Paper Settings 
+//
 Practice witness paper { "PAPER_TIME":250, "PAPER_ECO":30, "PAPER_SHOT":4}
 Practice witness paper { "PAPER_TIME":250, "PAPER_ECO":40, "PAPER_SHOT":2}
 Practice witness paper { "PAPER_TIME":125, "PAPER_ECO":40, "PAPER_SHOT":4}
@@ -25,12 +31,16 @@ Practice witness paper { "PAPER_TIME":125, "PAPER_ECO":40, "PAPER_SHOT":4}
 
 Firmware debug trace   { "TRACE":16, "TRACE":32, "TRACE":64, "TEST":142}
 
+//
+// Rapid Fire and Tabata 
+//
 Output for Rapid Fire  { "MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":24}
 Rapid Fire  {"RAPID_TIME":20, "RAPID_COUNT":10, "RAPID_WAIT":5, "RAPID_ENABLE":1}
 
 Tabata Practice  {"TABATA_WARN_ON": 5, "TABATA_ON":7, "TABATA_REST":30, "TABATA_ENABLE":1}
 Tabata End       {"TABATA_ENABLE":0}
 Tabata Restart   {"TABATA_ENABLE":1}
+MFS Setting      {"MFS_TAP_1":6}
 
 {"}
 Start a download {"DOWNLOAD":1234567}
@@ -38,6 +48,9 @@ RS485 {"AUX_MODE":8}
 
 {"ECHO":0}
 
+//
+// Calibration Tests 
+//
 Raw
 {"CAL":1, "CAL":8, [-35.96, -43.34, -12.31, -35.85, 25.12, 40.27, -17.49, 32.01, -16.46, -29.50, 15.00, -65.67, -52.11, 22.98, -21.67, -16.85, 35.60, -41.26, 29.78, -24.88, 30.48, 91.39, -51.31, -0.62, -26.73, 21.00, -55.49, 10.10, 29.73, 14.96,  22.81, -23.55, -41.35, -7.55]}
 

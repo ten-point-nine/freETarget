@@ -183,7 +183,8 @@ unsigned int compute_hit(shot_record_t *shot)      // Storing the results
     }
   }
 
-  DLT(DLT_APPLICATION | DLT_VERBOSE, SEND(ALL, sprintf(_xs, "Reference: %4.2f   location: %s", reference, find_sensor(1 << location)->long_name);))
+  DLT(DLT_APPLICATION | DLT_VERBOSE,
+      SEND(ALL, sprintf(_xs, "Reference: %4.2f   location: %s", reference, find_sensor(1 << location)->long_name);))
 
   /*
    * Correct the time to remove the shortest distance
@@ -265,7 +266,8 @@ unsigned int compute_hit(shot_record_t *shot)      // Storing the results
     estimate = sqrt(SQ(s[location].x - x_avg) + SQ(s[location].y - y_avg));
     error    = fabs(last_estimate - estimate);
 
-    DLT(DLT_APPLICATION | DLT_VERBOSE, SEND(ALL, sprintf(_xs, "x_avg: %4.2f  y_avg: %4.2f estimate: %4.2f error: %4.2f", x_avg, y_avg, estimate, error);))
+    DLT(DLT_APPLICATION | DLT_VERBOSE,
+        SEND(ALL, sprintf(_xs, "x_avg: %4.2f  y_avg: %4.2f estimate: %4.2f error: %4.2f", x_avg, y_avg, estimate, error);))
 
     count++;
     if ( count > 20 )
@@ -515,16 +517,17 @@ void prepare_score(shot_record_t *shot,        //  record
   remap_target(shot);                                           // Change the target if needed
   shot->session_type = SESSION_VALID | json_session_type;
 
-  DLT(DLT_CALIBRATION | DLT_VERBOSE, SEND(ALL, sprintf(_xs, "x_mm: %4.2f  y_mm: %4.2f  radius: %4.2f  rho_radians: %4.2f", shot->x_mm, shot->y_mm,
-                                         shot->radius, shot->angle);))
+  DLT(DLT_CALIBRATION | DLT_VERBOSE, SEND(ALL, sprintf(_xs, "x_mm: %4.2f  y_mm: %4.2f  radius: %4.2f  rho_radians: %4.2f", shot->x_mm,
+                                                       shot->y_mm, shot->radius, shot->angle);))
   /*
    * All done, return
    */
   if ( json_token != TOKEN_NONE )
   {
-    token_give(); // Give up the token ring
+    token_give();                       // Give up the token ring
   }
-  set_status_LED(LED_READY);
+      set_status_LED(LED_READY);
+
   return;
 }
 

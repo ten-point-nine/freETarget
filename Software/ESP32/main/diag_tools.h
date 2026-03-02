@@ -51,6 +51,7 @@ void generate_fake_shot(void);                            // Generate a string o
 #define LED_PASS               "GGG---" //
 #define LED_FATAL              "RRR--"  // A fatal error prevents operation
 #define LED_READY              "g----"  // The shot is ready to go.  Blink to show we are alive
+#define LED_PAUSE              "rgb--"  // Show everything paused
 #define LED_BYE                "B----"  // Go to sleep
 #define LED_OTA_WAITING        "b  --"  // Waiting for OTA to start
 #define LED_OTA_DOWNLOAD       "B  --"  // The OTA is downloading
@@ -84,9 +85,10 @@ void generate_fake_shot(void);                            // Generate a string o
 #define LED_RAPID_WARN "---R "          // Rapid fire RED is ON
 #define LED_RAPID_ON   "--- G"          // Rapid fire GREEN is ON
 
-#define LED_TABATA_OFF  "---  "         // TABATA LEDs are OFF
-#define LED_TABATA_WARN "---R "         // TABATA LEDS are blinking
-#define LED_TABATA_ON   "--- G"         // TABATA LEDs are ON
+#define LED_TABATA_ENABLED "y--  "      // TABATA LEDs are enabled
+#define LED_TABATA_OFF     "---  "      // TABATA LEDs are OFF
+#define LED_TABATA_WARN    "---R "      // TABATA LEDS are blinking
+#define LED_TABATA_ON      "--- G"      // TABATA LEDs are ON
 
 // Fatal Error.  Halts operation
 

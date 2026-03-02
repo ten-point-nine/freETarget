@@ -8,7 +8,7 @@
 #ifndef _NONVOL_H
 #define _NONVOL_H
 
-#define PS_VERSION   15                                   // Persistent storage version
+#define PS_VERSION   16                                   // Persistent storage version
 #define PS_UNINIT(x) (((x) == 0xABAB) || ((x) == 0xFFFF)) // Uninitilized value
 
 #define NAME_SPACE "freETarget"
@@ -97,4 +97,7 @@ void nonvol_write_i32(char *name, int *value);    // Write a value to nonvol
 #define NONVOL_RADIUS_ADJUST       "RADIUS_ADJUST"       // Compensate for the diameter of the target
 #define NONVOL_CALIBRATION_DATA    "CD"                  // Calibration data block
 #define NONVOL_SENSOR_ANGLE_OFFSET "SENSOR_ANGLE_OFFSET" // Correction to sensor angle
+#define NONVOL_TABATA_WARN_ON      "TABATA_WARN_ON"      // Tabata warning on time
+#define NONVOL_TABATA_REST         "TABATA_REST"         // Tabata rest time
+#define NONVOL_TABATA_ON           "TABATA_ON"           // Tabata on time
 #endif

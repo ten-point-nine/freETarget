@@ -108,9 +108,9 @@ const json_message_t JSON[] = {
     {SHOW + LOCK, "\"STEP_TIME\":",      &json_step_time,             IS_INT32,                 0,                  NONVOL_STEP_TIME,           0,           0 },
     {HIDE,        "\"TABATA_ENABLE\":",  &json_tabata_enable,         IS_INT32,                 0,                  0,                          0,           0 },
 
-    {HIDE,        "\"TABATA_ON\":",      &json_tabata_on,             IS_INT32,                 0,                  0,                          0,           0 },
-    {HIDE,        "\"TABATA_REST\":",    &json_tabata_rest,           IS_INT32,                 0,                  0,                          0,           0 },
-    {HIDE,        "\"TABATA_WARN_ON\":", &json_tabata_warn_on,        IS_INT32,                 0,                  0,                          0,           0 },
+    {HIDE,        "\"TABATA_ON\":",      &json_tabata_on,             IS_INT32,                 0,                  NONVOL_TABATA_ON,           7,           16},
+    {HIDE,        "\"TABATA_REST\":",    &json_tabata_rest,           IS_INT32,                 0,                  NONVOL_TABATA_REST,         30,          16},
+    {HIDE,        "\"TABATA_WARN_ON\":", &json_tabata_warn_on,        IS_INT32,                 0,                  NONVOL_TABATA_WARN_ON,      3,           16},
     {HIDE,        "\"TARGET_TYPE\":",    &json_target_type,           IS_INT32,                 0,                  NONVOL_TARGET_TYPE,         0,           0 },
     {HIDE + LOCK, "\"TEST\":",           0,                           IS_INT32,                 &self_test,         0,                          0,           0 },
     {SHOW + LOCK, "\"TOKEN\":",          &json_token,                 IS_INT32,                 0,                  NONVOL_TOKEN,               0,           0 },

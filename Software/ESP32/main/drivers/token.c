@@ -311,7 +311,7 @@ void token_poll(void)
 
             case TOKEN_RELEASE:                                                   // A release is passing around
               whos_ring = TOKEN_UNDEF;                                            // Yes, Release it
-              set_status_LED(LED_READY);                                          // And show it is ready
+              set_status_LED(LED_READY);
               serial_putch(token, AUX);                                           // Pass it along to the master
               break;                                                              //
 
