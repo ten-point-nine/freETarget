@@ -264,7 +264,7 @@ void freeETarget_target_loop(void *arg)
 
         if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
         {
-          set_status_LED(LED_RAPID_OFF);                                     // Show that the target cannot be used
+          set_status_LED(LED_RAPID_ON);                                     // Show that the target is available for use
         }
         freETarget_state = WAIT;
         json_rapid_count = 0;
@@ -701,6 +701,7 @@ void tabata_task(void)
       run_state &= ~IN_SHOT;         // Take it out of a shot if it was in one
       freETarget_state = START;      // Force the freeTarget state machine back to start
       set_LED_PWM_now(json_LED_PWM); // Turn the lights back on
+      SEND(ALL, sprintf(_xs, "{\"TABATA_OFF\": 0}\r\n");)
     }
     return;
   }

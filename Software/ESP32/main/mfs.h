@@ -28,6 +28,7 @@ void          multifunction_wait_open(void);     // Wait for both multifunction 
 mfs_action_t *mfs_find(unsigned int action);     // Find the MFS entry corresponding to the index
 void          mfs_show(void);                    // Show the available settings
 void          mfs_RS485_control(bool direction); // Control RS485 direction
+void          mfs_tabata(void);                // Start or stop a Tabata session 
 
 /*
  * Multifunction Switch Use when using DIP Switch for MFS

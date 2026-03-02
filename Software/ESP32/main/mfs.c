@@ -46,7 +46,7 @@ static void mfs_paper_shot(void);          // Feed paper the distance of one sho
 static void mfs_off(void);
 static void mfs_led_adjust(void);          // Adjust the LED brightness
 static void mfs_pc_test(void);
-static void mfs_tabata(void);              // Toggle the Tabata session on and off
+
 /*
  * Variables
  */
@@ -466,17 +466,10 @@ static void mfs_off(void)
   return;
 }
 
-static void mfs_tabata(void)
+void mfs_tabata(void)
 {
   json_tabata_enable = !json_tabata_enable; // Toggle the state of the Tabata session
-  if ( json_tabata_enable == true )
-  {
-    set_status_LED(LED_TABATA_ENABLED);
-  }
-  else
-  {
-    set_status_LED(LED_READY);
-  }
+  json_tabata(json_tabata_enable);
   return;
 }
 

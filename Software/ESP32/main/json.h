@@ -17,6 +17,7 @@ void freeETarget_json(void *);                   // Task to scan the serial port
 void show_echo(void);                            // Display the settings
 bool json_find_first(void);                      // Find the start of the input stream
 bool json_get_array_next(int type, void *value); // Pull in the next array value
+void json_tabata(bool tabata_enable);            // Start or stop a Tabata session
 
 /*
  * JSON message typedefs
