@@ -11,6 +11,7 @@
  * ----------------------------------------------------*/
 #include "nvs.h"
 #include "nvs_flash.h"
+#include "string.h"
 
 #include "freETarget.h"
 #include "helpers.h"
@@ -19,7 +20,7 @@
 #include "mfs.h"
 #include "nonvol.h"
 #include "serial_io.h"
-#include "string.h"
+#include "calibrate.h"
 #include "ota.h"
 
 /*
@@ -108,7 +109,7 @@ void read_nonvol(void)
         case IS_SECRET:
           if ( JSON[i].non_vol != 0 ) // Is persistent storage enabled?
           {
-            length = JSON[i].convert & FLOAT_MASK;
+            length = JSON[i].convert & real_t_MASK;
             nvs_get_str(my_handle, JSON[i].non_vol, (char *)JSON[i].value, &length);
           }
           break;
@@ -131,11 +132,11 @@ void read_nonvol(void)
           if ( JSON[i].non_vol != 0 )
           {
             nvs_get_i32(my_handle, JSON[i].non_vol, &x); // Read in the value as an integer
-            *(double *)(JSON[i].value) = (float)x / 1000.0;
+            *(real_t *)(JSON[i].value) = (real_t)x / FLOAT_SCALE;
           }
           else
           {
-            *(double *)(JSON[i].value) = (double)JSON[i].init_value / 1000.0;
+            *(real_t *)(JSON[i].value) = (real_t)JSON[i].init_value / 1000.0;
           }
           break;
       }
@@ -180,8 +181,6 @@ void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calib
   char         ch, s[TINY_TEXT];
   unsigned int x;                        // Temporary Value
   unsigned int i;                        // Iteration Counter
-
-  json_auth_code = 0;                    // Force the enable to see prompts
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "factory_nonvol(%d)\r\n", do_calibration);))
 
@@ -329,8 +328,6 @@ void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calib
  *------------------------------------------------------------*/
 void init_nonvol(int verify) // Verification code entered by user
 {
-  json_auth_code = 0;        // Force the enable to see prompts
-
   /*
    * Ensure that the user wants to init the unit
    */
@@ -429,7 +426,6 @@ void update_nonvol(unsigned int current_version) // Version present in persisten
     if ( version == 12 )
     {
       nvs_set_i32(my_handle, NONVOL_LOCK, 0);               // Disable the lock code
-      nvs_set_i32(my_handle, NONVOL_AUTH_CODE, 0);          // Disable the auth code
       version = 13;
     }
   }

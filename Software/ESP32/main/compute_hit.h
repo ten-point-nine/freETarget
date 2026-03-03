@@ -34,5 +34,4 @@ void         send_replay(shot_record_t *shot, unsigned int shot_number);        
 void         rotate_hit(unsigned int location, shot_record_t *shot);                  // Rotate the shot back into the correct quadrant
 bool         find_xy_3D(sensor_t *s, double estimate, double z_offset_clock);         // Estimated position including slant range
 double       speed_of_sound(double temperature, double relative_humidity);            // Speed of sound in mm/us
-double       sq(double x);                                                            // Square function
 #endif

@@ -50,7 +50,8 @@ void generate_fake_shot(void);                            // Generate a string o
 #define LED_GOOD               "G----"  // The software has started but not in shot mode
 #define LED_PASS               "GGG---" //
 #define LED_FATAL              "RRR--"  // A fatal error prevents operation
-#define LED_READY              "a----"  // The shot is ready to go.  Blink to show we are alive. Test the Authorized state
+#define LED_READY              "g----"  // The shot is ready to go.  Blink to show we are alive
+#define LED_PAUSE              "rgb--"  // Show everything paused
 #define LED_BYE                "B----"  // Go to sleep
 #define LED_OTA_WAITING        "b  --"  // Waiting for OTA to start
 #define LED_OTA_DOWNLOAD       "B  --"  // The OTA is downloading
@@ -69,26 +70,25 @@ void generate_fake_shot(void);                            // Generate a string o
 #define LED_WIFI_ACCESS_CN  "-B---"     // The WiFI is in access mode and connected
 #define LED_WIFI_FAULT      "-R---"     // The WiFi has a fault
 
-#define LED_NO_12V           "--R--"    // The 12 Volt supply is not present
-#define LED_LOW_12V          "--Y--"    // 12 Volt supply out of spec
-#define LED_OK_12V           "--g--"    // The 12 Volt supply is in spec
-#define LED_12V_NOT_USED     "--b--"    // The 12V is not used,
-#define LED_C_OFF            "--- -"    // LED C is OFF
-#define LED_C_BLINK          "---g-"    // LED C is blinking
-#define LED_C_ON             "---G-"    // LED C is ON
-#define LED_D_OFF            "-----"    // LED D is OFF
-#define LED_D_BLINK          "----r"    // LED D is blinking
-#define LED_D_ON             "----R"    // LED D is ON
-#define LED_RAPID_OFF        "---  "    // Rapid fire LEDs are OFF
-#define LED_RAPID_RED        "--- R"    // Rapid fire RED is ON
-#define LED_RAPID_RED_WARN   "--- r"    // Rapid fire RED is BLINKING
-#define LED_RAPID_RED_OFF    "---- "    // Rapid fire RED is OFF
-#define LED_RAPID_GREEN      "---G "    // Rapid fire GREEN is ON
-#define LED_RAPID_GREEN_OFF  "--- -"    // Rapid fire GREEN is OFF
-#define LED_RAPID_GREEN_WARN "---gr"    // Rapid fire GREEN is BLINKING
-#define LED_TABATA_OFF       "-----"    // TABATA LEDs are OFF
-#define LED_TABATA_WARN      "---g-"    // TABATA LEDS are blinking
-#define LED_TABATA_ON        "---G-"    // TABATA LEDs are ON
+#define LED_NO_12V       "--R--"        // The 12 Volt supply is not present
+#define LED_LOW_12V      "--Y--"        // 12 Volt supply out of spec
+#define LED_OK_12V       "--g--"        // The 12 Volt supply is in spec
+#define LED_12V_NOT_USED "--b--"        // The 12V is not used,
+#define LED_C_OFF        "--- -"        // LED C is OFF
+#define LED_C_BLINK      "---g-"        // LED C is blinking
+#define LED_C_ON         "---G-"        // LED C is ON
+#define LED_D_OFF        "-----"        // LED D is OFF
+#define LED_D_BLINK      "----r"        // LED D is blinking
+#define LED_D_ON         "----R"        // LED D is ON
+
+#define LED_RAPID_OFF  "---  "          // Rapid fire LEDs are OFF
+#define LED_RAPID_WARN "---R "          // Rapid fire RED is ON
+#define LED_RAPID_ON   "--- G"          // Rapid fire GREEN is ON
+
+#define LED_TABATA_ENABLED "y--  "      // TABATA LEDs are enabled
+#define LED_TABATA_OFF     "---  "      // TABATA LEDs are OFF
+#define LED_TABATA_WARN    "---R "      // TABATA LEDS are blinking
+#define LED_TABATA_ON      "--- G"      // TABATA LEDs are ON
 
 // Fatal Error.  Halts operation
 
@@ -113,22 +113,24 @@ void generate_fake_shot(void);                            // Generate a string o
 /*
  * Tracing
  */
-#define DLT_NONE          0      // No DLT messages displayed
-#define DLT_CRITICAL      0x0001 // Action failed and needs to be reported
-#define DLT_INFO          0x0002 // Information which is always displayed
-#define DLT_APPLICATION   0x0004 // Application level messages displayed (freeETarget.c compute_hit.c)
-#define DLT_COMMUNICATION 0x0008 // Communications messages (wifi.c token.c serial_io.c)
-#define DLT_DIAG          0x0010 // Hardware diagnostics messages displayed
-#define DLT_DEBUG         0x0020 // Specific debug information
-#define DLT_SCORE         0x0040 // Display extended score record
-#define DLT_HTTP          0x0080 // Log HTTP requests
-#define DLT_OTA           0x0100 // Log OTA requests
-#define DLT_HEARTBEAT     0x0200 // Kick out the time to see if we are alive
-#define DLT_AMB           0x4000 // Special Debug DLT
+#define DLT_NONE          0                        // No DLT messages displayed
+#define DLT_CRITICAL      0x0001                   // Action failed and needs to be reported
+#define DLT_INFO          (DLT_CRITICAL << 1)      // Information which is always displayed
+#define DLT_APPLICATION   (DLT_INFO << 1)          // Application level messages displayed (freeETarget.c compute_hit.c)
+#define DLT_COMMUNICATION (DLT_APPLICATION << 1)   // Communications messages (wifi.c token.c serial_io.c)
+#define DLT_DIAG          (DLT_COMMUNICATION << 1) // Hardware diagnostics messages displayed
+#define DLT_DEBUG         (DLT_DIAG << 1)          // Specific debug information
+#define DLT_SCORE         (DLT_DEBUG << 1)         // Display extended score record
+#define DLT_HTTP          (DLT_SCORE << 1)         // Log HTTP requests
+#define DLT_OTA           (DLT_HTTP << 1)          // Log OTA requests
+#define DLT_CALIBRATION   (DLT_OTA << 1)           // Debug the calibraition software
+#define DLT_HEARTBEAT     (0x2000)                 // Kick out the time to see if we are alive
+#define DLT_VERBOSE       (0x4000)                 // Turn on verbose tracing
+#define DLT_AMB           (0x8000)                 // Special Debug DLT
 
-                                 /*
-                                  *  Enable compile level tracing
-                                  */
+/*
+ *  Enable compile level tracing
+ */
 #define TRACE_APPLICATION   (0 == 1)
 #define TRACE_COMMUNICATION (0 == 1)
 #define TRACE_DIAGNOSTICS   (0 == 1)
@@ -137,6 +139,7 @@ void generate_fake_shot(void);                            // Generate a string o
 #define TRACE_HTTP          (0 == 1)
 #define TRACE_OTA           (0 == 1)
 #define TRACE_HEARTBEAT     (0 == 1)
+#define TRACE_CALIBRATION   (1 == 1)
 
 // clang-format off
 #define DLT(level, z) if ( do_dlt(level) )  { z }
