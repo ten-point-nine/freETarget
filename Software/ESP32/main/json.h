@@ -18,6 +18,7 @@ void show_echo(void);                            // Display the settings
 bool json_find_first(void);                      // Find the start of the input stream
 bool json_get_array_next(int type, void *value); // Pull in the next array value
 void json_tabata(bool tabata_enable);            // Start or stop a Tabata session
+bool json_get_next_string(char *str, int size); // Get the next string from the JSON input
 
 /*
  * JSON message typedefs

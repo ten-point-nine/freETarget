@@ -29,7 +29,7 @@
  *  Function Prototypes
  */
 static void         start_calibration(void);                      // First step in the calibration
-static void         perform_calibration();                        // Second step in the calibration
+static void         perform_calibration(bool use_CSV);            // Second step in the calibration
 static void         find_coeficients(int calib_shot_n);           // Find the spline coeficients
 static void         commit_calibration(void);                     // Commit the calibration to NONVOL
 static void         verify_calibration(void);                     // Verify the calibration data by applying it to the shots
@@ -42,6 +42,7 @@ static unsigned int read_target_scan(void);                       // Read in a s
 static bool         build_spline_table(void);                     // Build the spline table from the target scan and the shots
 static void         report_mean_std_deviation(const char *label); // Report the mean and standard deviation of the calibration data
 static void         show_calibration(void);                       // Show the calibration data for debugging
+static void         read_target_scan_CSV(void);                   // Read a raw TargetScan CSV file
 
                                                                   /*
                                                                    *  Definitions
@@ -78,12 +79,13 @@ typedef struct target_scan_entry
 #define SPLINE_PADDING        2      // Extra points at start and end
 #define SPLINE_VALID          1234.0 // Value to show spline data is valid
 
-#define CAL_START      1
-#define CAL_PERFORM    (CAL_START + 1)
-#define CAL_COMMIT     (CAL_PERFORM + 1)
-#define CAL_SHOW       (CAL_COMMIT + 1)
-#define CAL_VOID       (CAL_SHOW + 1)
-#define CAL_TEST_SHOTS 8
+#define CAL_START       1            // Clear the target data
+#define CAL_PERFORM     (2)          // Carry out the calibration
+#define CAL_PERFORM_CSV (3)          // Carry out the calibration
+#define CAL_COMMIT      (4)          // Commit the values to memory
+#define CAL_SHOW        (5)          // Display the calibration values
+#define CAL_VOID        (6)          // Remove the calibration
+#define CAL_TEST_SHOTS  (8)          // Force in test data
 
 /*
  *  Variables
@@ -129,7 +131,11 @@ void calibrate(int action)
       return;
 
     case CAL_PERFORM:
-      perform_calibration();
+      perform_calibration(0);
+      return;
+
+    case CAL_PERFORM_CSV:
+      perform_calibration(1);
       return;
 
     case CAL_COMMIT:
@@ -155,11 +161,12 @@ void calibrate(int action)
     default:
       SEND(ALL, sprintf(_xs, "\r\nTarget Calibration\r\n");)
       SEND(ALL, sprintf(_xs, "\r\n1 - Gather shot data");)
-      SEND(ALL, sprintf(_xs, "\r\n2 - Input actual shots");)
-      SEND(ALL, sprintf(_xs, "\r\n3 - Commit calibration data to NONVOL");)
-      SEND(ALL, sprintf(_xs, "\r\n4 - Display calibration settings");)
-      SEND(ALL, sprintf(_xs, "\r\n5 - Void current calibration");)
-      SEND(ALL, sprintf(_xs, "\r\n8 - Read in test shots");)
+      SEND(ALL, sprintf(_xs, "\r\n2 - Input actual shots (X,Y)");)
+      SEND(ALL, sprintf(_xs, "\r\n3 - Input actual shots (TargetScan CSV)");)
+      SEND(ALL, sprintf(_xs, "\r\n4 - Commit calibration data to NONVOL");)
+      SEND(ALL, sprintf(_xs, "\r\n5 - Display calibration settings");)
+      SEND(ALL, sprintf(_xs, "\r\n6 - Void current calibration");)
+      SEND(ALL, sprintf(_xs, "\r\n7 - Read in test shots");)
       SEND(ALL, sprintf(_xs, "\r\n9 - Exit, no action\r\n");)
       return;
   }
@@ -230,9 +237,9 @@ static void start_calibration(void)
  * 3 - Reenter the data
  *
  *--------------------------------------------------------------*/
-static void perform_calibration()
+static void perform_calibration(bool use_CSV)
 {
-  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "perform_calibration(%d)", shot_in);))
+  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "perform_calibration(%d)", use_CSV);))
 
   SEND(ALL, sprintf(_xs, "\r\n");)
 
@@ -251,8 +258,14 @@ static void perform_calibration()
   /*
    * Gather actual shot location from target scan
    */
-  read_target_scan(); // Read in the target scan data for calibration
-
+  if ( use_CSV )
+  {
+    read_target_scan_CSV(); // Read in the target scan data for calibration
+  }
+  else
+  {
+    read_target_scan();     // Read in manually editied data for calibration
+  }
   if ( build_spline_table() == false )
   {
     SEND(ALL, sprintf(_xs, "\r\nCalibration failed. Check the input data and try again.");)
@@ -1347,5 +1360,70 @@ static void show_calibration(void)
   /*
    * All done, return
    */
+  return;
+}
+/*----------------------------------------------------------------
+ *
+ * @function: read_target_scan_CSV()
+ *
+ * @brief: Read the target scan data from a CSV file
+ *
+ * @return: None
+ *
+ *----------------------------------------------------------------
+ *
+ * Display the settings so they can be verifieed.
+ *
+ *--------------------------------------------------------------*/
+static void read_target_scan_CSV(void)
+{
+  int target_sample;
+
+  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "read_target_scan()");))
+
+  json_find_first();                  // Find the start of the input list
+  json_get_array_next(IS_VOID, NULL); // Skip the CSV file header
+  json_get_array_next(IS_VOID, NULL);
+  json_get_array_next(IS_VOID, NULL);
+  json_get_array_next(IS_VOID, NULL);
+
+  printf("\r\nReading TargetScan.CSV\r\n");
+
+  target_sample = 0;                    // Start at -1 so the first shot is 0
+  while ( target_sample < MAX_CALIBRATION_SHOTS * 3 )
+  {
+    json_get_array_next(IS_VOID, NULL); // Skip the shot number
+    json_get_array_next(IS_VOID, NULL); // Skip the scan number
+    json_get_array_next(IS_VOID, NULL); // Skip the score
+    if ( json_get_array_next(IS_FLOAT, (void *)&target_scan[target_sample].x_mm) == false )
+    {
+      break;
+    }
+    if ( json_get_array_next(IS_FLOAT, (void *)&target_scan[target_sample].y_mm) == false )
+    {
+      break;
+    }
+    target_scan[target_sample].rho   = sqrtf(SQ(target_scan[target_sample].x_mm) + SQ(target_scan[target_sample].y_mm));
+    target_scan[target_sample].angle = atan2_2PI(target_scan[target_sample].y_mm, target_scan[target_sample].x_mm);
+
+    DLT(DLT_CALIBRATION | DLT_VERBOSE, SEND(ALL, sprintf(_xs, "Read Target Scan %d : X: %4.2f  Y: %4.2f  Rho: %4.2f  Angle: %4.2f",
+                                                         target_sample, target_scan[target_sample].x_mm, target_scan[target_sample].y_mm,
+                                                         target_scan[target_sample].rho, target_scan[target_sample].angle);))
+    target_sample++;
+    if ( target_sample >= sizeof(target_scan) / sizeof(target_scan_entry_t) ) // Check for overflow
+    {
+      break;
+    }
+
+    target_sample++;
+  }
+
+  /*
+   *  Finished loading data
+   */
+  SEND(ALL, sprintf(_xs, "\r\nRead %d shots for calibration\r\n", target_sample);)
+  shot_in  = target_sample;
+  shot_out = shot_in;
+
   return;
 }

@@ -47,7 +47,7 @@ static bool good_input(unsigned int conversion, char next, unsigned int show); /
 /*
  *  Variables
  */
-static char input_JSON[256];  // JSON input buffer
+static char input_JSON[1024]; // JSON input buffer
 
 void        show_echo(void);  // Display the current settings
 static void show_names(int v);
@@ -206,9 +206,20 @@ void freeETarget_json(void *pvParameters)
         serial_putch(ch, SOME);                    // because RS485 diesables receive during transmit
       }
 
-      /*
-       * Parse the stream
-       */
+                                                   /*
+                                                    * Parse the stream
+                                                    */
+
+      if ( ch == '\n' ) // New Line
+      {
+        ch = ',';       // Convert to a comma
+      }
+
+      if ( ch == '\r' ) // Carriage Return, ignore it
+      {
+        continue;
+      }
+
       switch ( ch )
       {
         case '}':
@@ -869,20 +880,44 @@ static bool good_input(unsigned int conversion, // What kind of input is it?
  *
  *-----------------------------------------------------
  *
- * The input is valid if
+ * The input stream is a JSON array of numbers, ex:
+ * [1, 2, 3, 4, 5]
  *
- * 1 - No input is required
- * 2 - The input text is not empty
- * 3 - The JSON is not locked
- * 4 - The JSON does not require a lock
+ * This function will read the next number from the array and return it.
+ *
+ * Exceptions.
+ *
+ * Quotes are removed.
+ * Double quotes are converted to a space and comma
  *
  *-----------------------------------------------------*/
-static int next_value;                    // Index to the next value to read
+static int next_value;     // Index to the next value to read
 
-bool json_find_first(void)                // Find the first element starting with [
+bool json_find_first(void) // Find the first element starting with [
 {
+  int i;
   next_value = 0;
 
+  /*
+   * Filter the input JSON to remove any quotes and spaces
+   */
+  i = 0;
+  while ( input_JSON[i] != 0 )
+  {
+    if ( (input_JSON[i] == '"') && (input_JSON[i + 1] == '"') ) // If the next character is a quote, put in a comma
+    {
+      input_JSON[i + 1] = ',';                                  // "" --> ","
+    }
+    if ( input_JSON[i] == '"' )                                 // IReplace any remaining quotes with a space
+    {
+      input_JSON[i] = ' ';
+    }
+    i++;
+  }
+
+  /*
+   *  Find the start of the JSON
+   */
   while ( input_JSON[next_value] != '[' ) // Look for an opening array
   {
     if ( input_JSON[next_value] == 0 )
@@ -891,6 +926,11 @@ bool json_find_first(void)                // Find the first element starting wit
       return false;                       // Report nothing here
     }
     next_value++;                         // Try the next
+  }
+
+  while ( input_JSON[next_value] == ' ' || input_JSON[next_value] == '"' )
+  {
+    next_value++;
   }
 
   /*
@@ -923,7 +963,6 @@ bool json_get_array_next(int   type, //  Expected input type
   switch ( type )
   {
     case IS_FLOAT:
-
       if ( input_JSON[next_value] == 0 )
       {
         *(real_t *)value = 0;
@@ -932,6 +971,9 @@ bool json_get_array_next(int   type, //  Expected input type
       {
         *(real_t *)value = atof(&input_JSON[next_value]); // Float
       }
+      break;
+
+    case IS_VOID:
       break;
   }
 
