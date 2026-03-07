@@ -143,7 +143,7 @@ void generate_fake_shot(void);                            // Generate a string o
 #define TRACE_VERBOSE       (0 == 1)
 
 // clang-format off
-#define DLT(level, z) if ( do_dlt(level) )  { z }
+#define DLT(level, z) if ( do_dlt(level) )  { z }                                                                                                                       \
 // clang-format on
 
 typedef struct
