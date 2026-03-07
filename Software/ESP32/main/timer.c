@@ -78,7 +78,7 @@ static synchronous_task_t task_list[] = {
     {BAND_500ms,  toggle_status_LEDs       }, // Blink the LEDs
     {BAND_500ms,  tabata_task              }, // Manage the Tabata timer
     {BAND_500ms,  rapid_fire_task          }, // Manage the rapid fire timer
-    {BAND_1000ms, check_12V                }, // Monitor the 12V supply
+    {BAND_1000ms, check_12V          }, // Monitor the 12V supply
     {BAND_1000ms, send_keep_alive          }, // Send a keep alive message
     {BAND_1000ms, check_new_connection     }, // Check for a new WiFi connection
     {BAND_60s,    watchdog                 }, // Watchdog monitor

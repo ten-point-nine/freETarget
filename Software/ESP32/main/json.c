@@ -47,12 +47,12 @@ static bool good_input(unsigned int conversion, char next, unsigned int show); /
 /*
  *  Variables
  */
-static char input_JSON[1024]; // JSON input buffer
+char input_JSON[EXTRA_LARGE_STRING]; // JSON input buffer
 
-void        show_echo(void);  // Display the current settings
+void        show_echo(void);         // Display the current settings
 static void show_names(int v);
-static void set_trace(int v); // Set the trace on and off
-static void set_50m(int x);   // Configure for 50m pistol
+static void set_trace(int v);        // Set the trace on and off
+static void set_50m(int x);          // Configure for 50m pistol
 
 const json_message_t JSON[] = {
     //  show     token        value stored in RAM             convert                 service fcn()     NONVOL location      Initial Value
@@ -872,7 +872,7 @@ static bool good_input(unsigned int conversion, // What kind of input is it?
 
 /*-----------------------------------------------------
  *
- * @function: json_get_next
+ * @function: json_find_first
  *
  * @brief:    Read a number from the input stream
  *
@@ -897,23 +897,7 @@ bool json_find_first(void) // Find the first element starting with [
 {
   int i;
   next_value = 0;
-
-  /*
-   * Filter the input JSON to remove any quotes and spaces
-   */
-  i = 0;
-  while ( input_JSON[i] != 0 )
-  {
-    if ( (input_JSON[i] == '"') && (input_JSON[i + 1] == '"') ) // If the next character is a quote, put in a comma
-    {
-      input_JSON[i + 1] = ',';                                  // "" --> ","
-    }
-    if ( input_JSON[i] == '"' )                                 // IReplace any remaining quotes with a space
-    {
-      input_JSON[i] = ' ';
-    }
-    i++;
-  }
+  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "json_find_first()");))
 
   /*
    *  Find the start of the JSON
@@ -928,31 +912,70 @@ bool json_find_first(void) // Find the first element starting with [
     next_value++;                         // Try the next
   }
 
-  while ( input_JSON[next_value] == ' ' || input_JSON[next_value] == '"' )
-  {
-    next_value++;
-  }
-
   /*
    *  Found it, advance and return
    */
-  next_value++;                      // Skip past the opening [
-  return true;                       // Show we have something
+  next_value++; // Skip past the opening [
+  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "Start of array @%d characters", next_value);))
+  return true;  // Show we have something
 }
 
-bool json_get_array_next(int   type, //  Expected input type
-                         void *value // Where to put the result
-)
+/*----------------------------------------------------------------
+ *
+ * function: json_get_array_next()
+ *
+ * brief: Extract the next number from an array
+ *
+ * return: Value extracted from the array
+ *
+ *----------------------------------------------------------------
+ *
+ * The input is a text array of numbers in the form
+ *
+ * 1, 2, 3, 4....<NULL>
+ *
+ * The function looks for the first comma and then does an atof
+ * conversion of the text.
+ *
+ * The function also handles the case where the text array is
+ * of the form "1", "2", "3""4" by converting the quotes to spaces
+ * and "" to <space><comma>
+ *
+ *----------------------------------------------------------------*/
+bool json_get_array_next(int   type,  //  Expected input type
+                         void *value) // Where to put the result
 {
+  int i;
+
   /*
-   * Check for garbage
+   *  Check to see if this is the first time through and if so, filter the data
    */
-  if ( input_JSON[next_value] == ',' )
+  if ( type == IS_FIRST )
   {
-    next_value++;
+    i = 0;
+    while ( (input_JSON[i] != 0) && (input_JSON[i] != '!') )
+    {
+      if ( input_JSON[i] == '"' )       // The next character is a quote
+      {
+        input_JSON[i] = ' ';            // Make it a space
+        if ( input_JSON[i + 1] == '"' ) // And check that the one after that
+        {                               // isn't another quote
+          input_JSON[i + 1] = ',';      // And if it is, make it a comma
+        }
+      }
+
+      if ( input_JSON[i] == '\r' )      // The next character is a carriage return
+        input_JSON[i] = ',';            // Make it a comma
+      i++;
+    }
+    next_value = 0;
+    return 0;
   }
 
-  if ( (input_JSON[next_value] == 0) || (input_JSON[next_value] == ']') ) // Bumped up to the end
+  /*
+   *  Check to see if it is time to leave
+   */
+  if ( (input_JSON[next_value] == 0) || (input_JSON[next_value] == ']') || (input_JSON[next_value] == '!') ) // Bumped up to the end
   {
     return false;
   }
@@ -963,14 +986,7 @@ bool json_get_array_next(int   type, //  Expected input type
   switch ( type )
   {
     case IS_FLOAT:
-      if ( input_JSON[next_value] == 0 )
-      {
-        *(real_t *)value = 0;
-      }
-      else
-      {
-        *(real_t *)value = atof(&input_JSON[next_value]); // Float
-      }
+      *(real_t *)value = atof(&input_JSON[next_value]); // Float
       break;
 
     case IS_VOID:
@@ -980,10 +996,16 @@ bool json_get_array_next(int   type, //  Expected input type
   /*
    *  Prepare the next field
    */
-  while ( (input_JSON[next_value] != ',') && input_JSON[next_value] != 0 )
+  while ( input_JSON[next_value] != ',' )                                                                      // Got the next field
   {
     next_value++;
+    if ( (input_JSON[next_value] == 0) || (input_JSON[next_value] == ']') || (input_JSON[next_value] == '!') ) // Bumped up to the end
+    {
+      return true;
+    }
   }
+
+  next_value++;
 
   /*
    * All done, return

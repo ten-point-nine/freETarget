@@ -30,12 +30,12 @@
  */
 static void         start_calibration(void);                      // First step in the calibration
 static void         perform_calibration(bool use_CSV);            // Second step in the calibration
-static void         find_coeficients(int calib_shot_n);           // Find the spline coeficients
+static void         find_coeficients(int actual_samples);         // Find the spline coeficients
 static void         commit_calibration(void);                     // Commit the calibration to NONVOL
 static void         verify_calibration(void);                     // Verify the calibration data by applying it to the shots
 static void         void_calibration(void);                       // Cancel the existing calibration
 static void         target_offset(int number_of_points);          // Adjust the target data for sensor location
-static void         spline_sort(int calib_shot_n);                // Sort the entries in order
+static void         spline_sort(int actual_samples);              // Sort the entries in order
 static void         solve_matrix(real_t a[][4]);                  // Row reduce a matrix to find the solution
 static void         read_test_shots(void);                        // Read in test shots for calibration debugging
 static unsigned int read_target_scan(void);                       // Read in a scan of the target for calibration
@@ -79,13 +79,12 @@ typedef struct target_scan_entry
 #define SPLINE_PADDING        2      // Extra points at start and end
 #define SPLINE_VALID          1234.0 // Value to show spline data is valid
 
-#define CAL_START       1            // Clear the target data
-#define CAL_PERFORM     (2)          // Carry out the calibration
-#define CAL_PERFORM_CSV (3)          // Carry out the calibration
-#define CAL_COMMIT      (4)          // Commit the values to memory
-#define CAL_SHOW        (5)          // Display the calibration values
-#define CAL_VOID        (6)          // Remove the calibration
-#define CAL_TEST_SHOTS  (8)          // Force in test data
+#define CAL_START      1             // Clear the target data
+#define CAL_PERFORM    (2)           // Carry out the calibration
+#define CAL_COMMIT     (3)           // Commit the values to memory
+#define CAL_SHOW       (4)           // Display the calibration values
+#define CAL_VOID       (5)           // Remove the calibration
+#define CAL_TEST_SHOTS (8)           // Force in test data
 
 /*
  *  Variables
@@ -93,7 +92,7 @@ typedef struct target_scan_entry
 static spline_point_t      spline_points[MAX_CALIBRATION_SHOTS + SPLINE_PADDING * 2]; // Spline points for calibration
 static target_scan_entry_t target_scan[MAX_CALIBRATION_SHOTS * 3];                    // User input (more than it needs to allow for errors)
 
-static int  calib_shot_n;                                                             // Number of shots gathered
+static int  actual_samples;                                                           // Number of shots gathered
 static bool calibration_diag;                                                         // TRUE if in test mode
 
 bool calibration_is_valid = false;                                                    // Calibration valid marker
@@ -102,6 +101,9 @@ static real_t shot_distance(int i)                                              
 {
   return sqrtf(SQ(spline_points[i].target.x - spline_points[i].actual.x) + SQ(spline_points[i].target.y - spline_points[i].actual.y));
 }
+
+static int target_samples;                                                            // Number of samples from TargetScan
+static int shot_samples;                                                              // Number of samples from target
 
 /*----------------------------------------------------------------
  *
@@ -132,10 +134,6 @@ void calibrate(int action)
 
     case CAL_PERFORM:
       perform_calibration(0);
-      return;
-
-    case CAL_PERFORM_CSV:
-      perform_calibration(1);
       return;
 
     case CAL_COMMIT:
@@ -239,14 +237,13 @@ static void start_calibration(void)
  *--------------------------------------------------------------*/
 static void perform_calibration(bool use_CSV)
 {
-  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "perform_calibration(%d)", use_CSV);))
+  char ch; // What mode do we expect the data to be in
 
-  SEND(ALL, sprintf(_xs, "\r\n");)
+  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "perform_calibration(%d)", use_CSV);))
 
   /*
    *  Validate the shots
    */
-
   if ( shot_in < MAX_CALIBRATION_SHOTS )
   {
     SEND(ALL, sprintf(_xs, "\r\nNot enough shots fired (%d).", shot_in);)
@@ -256,23 +253,45 @@ static void perform_calibration(bool use_CSV)
   DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "\r\nPerforming calibration on %d shots\r\n", shot_in);))
 
   /*
-   * Gather actual shot location from target scan
+   * Find out what form the data arrives in
    */
-  if ( use_CSV )
+  SEND(ALL, sprintf(_xs, "1 - TargetScan CSV file\r\n2 - Tabulated Data\r\nEnter mode:");)
+  serial_flush(ALL);
+  while ( (ch = serial_getch(ALL)) == 0 )
   {
-    read_target_scan_CSV(); // Read in the target scan data for calibration
+    vTaskDelay(ONE_SECOND / 10);
   }
-  else
+
+  switch ( ch )
   {
-    read_target_scan();     // Read in manually editied data for calibration
+    case '1':
+      SEND(ALL, sprintf(_xs, "\r\nPaste & SEND TargetScan CSV file.\r\nRemove first line.\r\nAppend ! to end\r\n");)
+      get_string(input_JSON, EXTRA_LARGE_STRING);
+      read_target_scan_CSV(); // Read in the target scan data for calibration
+      break;
+
+    case '2':
+      SEND(ALL, sprintf(_xs, "\r\nPaste & SEND Tabulated Data\r\nAppend ! to end\r\n");)
+      get_string(input_JSON, EXTRA_LARGE_STRING);
+      read_target_scan();     // Read in manually editied data for calibration
+      break;
+
+    default:
+      SEND(ALL, sprintf(_xs, "\r\nInvalid Selection: %d", ch);)
+      return;
   }
+
+  /*
+   * Perform the calibration
+   */
+
   if ( build_spline_table() == false )
   {
     SEND(ALL, sprintf(_xs, "\r\nCalibration failed. Check the input data and try again.");)
     return;
   }
 
-  report_mean_std_deviation("Calibration before uffset");
+  report_mean_std_deviation("Calibration before offset");
 
   /*
    *  Slide the data to match differences in the circuit
@@ -298,8 +317,7 @@ static void perform_calibration(bool use_CSV)
 
   SEND(ALL, sprintf(_xs, "\r\n\r\nCalibration complete. ");)
 
-  SEND(ALL, sprintf(_xs, "\r\nCommit the calibration?");)
-  if ( prompt_for_confirm() == true )
+  SEND(ALL, sprintf(_xs, "\r\nCommit the calibration?");) if ( prompt_for_confirm() == true )
   {
     commit_calibration(); // Commit the calibration to NONVOL
     SEND(ALL, sprintf(_xs, "\r\nCalibration committed to NONVOL.\r\n ");)
@@ -330,49 +348,45 @@ static void perform_calibration(bool use_CSV)
  *--------------------------------------------------------------*/
 static unsigned int read_target_scan(void)
 {
-  int                 target_sample, i, m; // Loop indexes
+  int                 i, m; // Loop indexes
   target_scan_entry_t temp;
 
   DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "read_target_scan()");))
 
-                                           /*
-                                            * Read in the data and save it
-                                            */
-  target_sample = 0;
+                            /*
+                             * Read in the data and save it
+                             */
+  target_samples = 0;
   json_find_first();
   while ( 1 )
   {
-    if ( json_get_array_next(IS_FLOAT, (void *)&target_scan[target_sample].x_mm) == false )
+    if ( json_get_array_next(IS_FLOAT, (void *)&target_scan[target_samples].x_mm) == false )
     {
       break;
     }
-    if ( json_get_array_next(IS_FLOAT, (void *)&target_scan[target_sample].y_mm) == false )
+    if ( json_get_array_next(IS_FLOAT, (void *)&target_scan[target_samples].y_mm) == false )
     {
       break;
     }
-    target_scan[target_sample].rho   = sqrtf(SQ(target_scan[target_sample].x_mm) + SQ(target_scan[target_sample].y_mm));
-    target_scan[target_sample].angle = atan2_2PI(target_scan[target_sample].y_mm, target_scan[target_sample].x_mm);
+    target_scan[target_samples].rho   = sqrtf(SQ(target_scan[target_samples].x_mm) + SQ(target_scan[target_samples].y_mm));
+    target_scan[target_samples].angle = atan2_2PI(target_scan[target_samples].y_mm, target_scan[target_samples].x_mm);
 
     DLT(DLT_CALIBRATION | DLT_VERBOSE, SEND(ALL, sprintf(_xs, "Read Target Scan %d : X: %4.2f  Y: %4.2f  Rho: %4.2f  Angle: %4.2f",
-                                                         target_sample, target_scan[target_sample].x_mm, target_scan[target_sample].y_mm,
-                                                         target_scan[target_sample].rho, target_scan[target_sample].angle);))
-    target_sample++;
-    if ( target_sample >= sizeof(target_scan) / sizeof(target_scan_entry_t) ) // Check for overflow
+                                                         target_samples, target_scan[target_samples].x_mm, target_scan[target_samples].y_mm,
+                                                         target_scan[target_samples].rho, target_scan[target_samples].angle);))
+    target_samples++;
+    if ( target_samples >= sizeof(target_scan) / sizeof(target_scan_entry_t) ) // Check for overflow
     {
       break;
     }
   }
 
   /*
-   *  Sort the data so that the entries are in order of distance from the centre
-   */
-
-  /*
    * sort the values of target_sample in ascending order by rho
    */
-  for ( i = 0; i < target_sample - 1; i++ )
+  for ( i = 0; i < target_samples - 1; i++ )
   {
-    for ( m = i + 1; m < target_sample; m++ )
+    for ( m = i + 1; m < target_samples; m++ )
     {
       if ( target_scan[i].rho > target_scan[m].rho )
       {
@@ -381,13 +395,6 @@ static unsigned int read_target_scan(void)
         target_scan[m] = temp;
       }
     }
-  }
-
-  for ( i = 0; i < target_sample / 2; i++ )
-  {
-    temp                               = target_scan[i];
-    target_scan[i]                     = target_scan[target_sample - 1 - i];
-    target_scan[target_sample - 1 - i] = temp;
   }
 
   DLT(DLT_CALIBRATION | DLT_VERBOSE, {
@@ -402,7 +409,7 @@ static unsigned int read_target_scan(void)
   /*
    * All done, return
    */
-  return target_sample;
+  return target_samples;
 }
 
 /*----------------------------------------------------------------
@@ -420,6 +427,7 @@ static unsigned int read_target_scan(void)
  *
  * target_scan Vs. record
  *
+ * Match the closest shots to the closest targetScan
  *
  *
  *
@@ -470,6 +478,9 @@ static bool build_spline_table(void)
 
     spline_points[i].scale  = spline_points[i].target.rho / spline_points[i].actual.rho;
     spline_points[i].offset = spline_points[i].target.rho - spline_points[i].actual.rho;
+
+    DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "Target %d: (%4.2f, %4.2f)  Actual (%4.2f, %4.2f)", i, spline_points[i].target.x,
+                                           spline_points[i].target.y, spline_points[i].actual.x, spline_points[i].actual.y);))
   }
 
   /*
@@ -503,7 +514,7 @@ void target_offset(int number_of_points)
   int    i;
 
   /*
-   * Work out the offset between the targets
+   * Work out the offset between the target and the actual
    */
   avg_actual_x     = 0;
   avg_actual_y     = 0;
@@ -516,19 +527,19 @@ void target_offset(int number_of_points)
   {
     avg_actual_x += spline_points[i].actual.x;
     avg_actual_y += spline_points[i].actual.y;
-    avg_actual_angle += spline_points[i].actual.angle;
 
     avg_target_x += spline_points[i].target.x;
     avg_target_y += spline_points[i].target.y;
-    avg_target_angle += spline_points[i].target.angle;
   }
 
-  json_x_offset            = (avg_actual_x - avg_target_x) / number_of_points;
-  json_y_offset            = (avg_actual_y - avg_target_y) / number_of_points;
-  json_sensor_angle_offset = (avg_actual_angle - avg_target_angle) / number_of_points; // Offset in radians
+  avg_actual_x /= number_of_points;
+  avg_actual_y /= number_of_points;
+  avg_target_x /= number_of_points;
+  avg_target_y /= number_of_points;
+  json_x_offset = (avg_actual_x - avg_target_x);
+  json_y_offset = (avg_actual_y - avg_target_y);
 
-  DLT(DLT_CALIBRATION | DLT_VERBOSE, SEND(ALL, sprintf(_xs, "X Offset: %4.2f  Y Offset: %4.2f  Sensor: %4.2f\r\n", json_x_offset,
-                                                       json_y_offset, json_sensor_angle_offset);))
+  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "X Offset: %4.2f  Y Offset: %4.2f", json_x_offset, json_y_offset);))
 
   /*
    *  Slide the target loctions slightly to match the actuals
@@ -537,6 +548,29 @@ void target_offset(int number_of_points)
   {
     spline_points[i].target.x += json_x_offset;
     spline_points[i].target.y += json_y_offset;
+    DLT(DLT_CALIBRATION,
+        SEND(ALL, sprintf(_xs, "After offset Target %d (%4.2f, %4.2f)  Actual (%4.2f, %4.2f)", i, spline_points[i].target.x,
+                          spline_points[i].target.y, spline_points[i].actual.x, spline_points[i].actual.y);))
+  }
+
+  /*
+   * Revise the angular measurements
+   */
+  avg_actual_angle = 0.0;
+  for ( i = 0; i < number_of_points; i++ )
+  {
+    spline_points[i].target.angle = atan2_2PI(spline_points[i].target.y, spline_points[i].target.x);
+    avg_target_angle += spline_points[i].target.angle;
+    spline_points[i].actual.angle = atan2_2PI(spline_points[i].actual.y, spline_points[i].actual.x);
+    avg_actual_angle += spline_points[i].actual.angle;
+  }
+
+  avg_target_angle /= number_of_points;
+  avg_actual_angle /= number_of_points;
+  json_sensor_angle_offset = avg_actual_angle - avg_target_angle;
+
+  for ( i = 0; i < number_of_points; i++ )
+  {
     spline_points[i].target.angle += json_sensor_angle_offset; // in Radians
     spline_points[i].offset = spline_points[i].actual.angle - spline_points[i].target.angle;
   }
@@ -569,7 +603,7 @@ void target_offset(int number_of_points)
  * large entries are coneinious.
  *
  *--------------------------------------------------------------*/
-void spline_sort(int calib_shot_n)
+void spline_sort(int actual_samples)
 {
   int            i, j;
   spline_point_t spline_temp;
@@ -577,9 +611,9 @@ void spline_sort(int calib_shot_n)
   /*
    *  Bubble sort the list by angle
    */
-  for ( i = 0; i < calib_shot_n - 1; i++ )
+  for ( i = 0; i < actual_samples - 1; i++ )
   {
-    for ( j = 0; j < calib_shot_n - i - 1; j++ )
+    for ( j = 0; j < actual_samples - i - 1; j++ )
     {
       if ( spline_points[j].actual.angle > spline_points[j + 1].actual.angle )
       {
@@ -598,23 +632,23 @@ void spline_sort(int calib_shot_n)
    *  and n+1 and n+2 are copies of 2 and 3 with angle adjusted
    *
    */
-  for ( i = calib_shot_n - 1; i >= 0; i-- )
+  for ( i = actual_samples - 1; i >= 0; i-- )
   {
-    spline_points[i + SPLINE_PADDING] = spline_points[i];              // Shift up
+    spline_points[i + SPLINE_PADDING] = spline_points[i];                // Shift up
   }
 
-  spline_points[0] = spline_points[calib_shot_n - 2 + SPLINE_PADDING]; // Put the last two points at the start
+  spline_points[0] = spline_points[actual_samples - 2 + SPLINE_PADDING]; // Put the last two points at the start
   spline_points[0].actual.angle -= TWO_PI;
-  spline_points[1] = spline_points[calib_shot_n - 1 + SPLINE_PADDING];
+  spline_points[1] = spline_points[actual_samples - 1 + SPLINE_PADDING];
   spline_points[1].actual.angle -= TWO_PI;
 
-  spline_points[calib_shot_n + 0 + SPLINE_PADDING] = spline_points[3]; // Put the first two points at the end
-  spline_points[calib_shot_n + 0 + SPLINE_PADDING].actual.angle += TWO_PI;
-  spline_points[calib_shot_n + 1 + SPLINE_PADDING] = spline_points[2];
-  spline_points[calib_shot_n + 1 + SPLINE_PADDING].actual.angle += TWO_PI;
+  spline_points[actual_samples + 0 + SPLINE_PADDING] = spline_points[3]; // Put the first two points at the end
+  spline_points[actual_samples + 0 + SPLINE_PADDING].actual.angle += TWO_PI;
+  spline_points[actual_samples + 1 + SPLINE_PADDING] = spline_points[2];
+  spline_points[actual_samples + 1 + SPLINE_PADDING].actual.angle += TWO_PI;
 
-  DLT(DLT_CALIBRATION | DLT_VERBOSE, {
-    for ( i = 0; i < calib_shot_n + SPLINE_PADDING * 2; i++ )
+  DLT(DLT_CALIBRATION, {
+    for ( i = 0; i < actual_samples + SPLINE_PADDING * 2; i++ )
     {
       printf("Spline Point %d : Target (%4.2f, %4.2f)  Actual(%4.2f, %4.2f)  Scale: %4.2f  Offset: %4.2f\r\n", i, spline_points[i].target.x,
              spline_points[i].target.y, spline_points[i].actual.x, spline_points[i].actual.y, spline_points[i].scale,
@@ -653,7 +687,7 @@ void spline_sort(int calib_shot_n)
 #define NX 4         // Number of points in the spline segment
 #define NY 3         // Number of equations +1 for augmented matrix
 
-static void find_coeficients(int calib_shot_n)
+static void find_coeficients(int actual_samples)
 {
   real_t a[NY][NX];  // Augmented matrix for solving
   int    spline_i;   // Spline point index
@@ -665,7 +699,7 @@ static void find_coeficients(int calib_shot_n)
   /*
    *  Construct the linear system of equations for each segment
    */
-  for ( spline_i = 1; spline_i < (calib_shot_n + SPLINE_PADDING * 2); spline_i++ )
+  for ( spline_i = 1; spline_i < (actual_samples + SPLINE_PADDING * 2); spline_i++ )
   {
     x0 = spline_points[spline_i - 1].actual.rho;
     x1 = spline_points[spline_i].actual.rho;
@@ -721,7 +755,7 @@ static void find_coeficients(int calib_shot_n)
   /*
    *  Repeat for angular iterpolation
    */
-  for ( spline_i = 1; spline_i < (calib_shot_n + SPLINE_PADDING * 2); spline_i++ )
+  for ( spline_i = 1; spline_i < (actual_samples + SPLINE_PADDING * 2); spline_i++ )
   {
     x0 = spline_points[spline_i - 1].actual.rho;
     x1 = spline_points[spline_i].actual.rho;
@@ -855,11 +889,6 @@ static void verify_calibration(void)
 
     spline_points[i].target.x = spline_points[i].target.rho * cosf(spline_points[i].target.angle);
     spline_points[i].target.y = spline_points[i].target.rho * sinf(spline_points[i].target.angle);
-
-    DLT((DLT_CALIBRATION | DLT_VERBOSE),
-        SEND(ALL, sprintf(_xs, "Shot %d : Target (%4.2f, %4.2f)  Actual(%4.2f, %4.2f) Error: %4.2f  Scale: %4.2f  Offset: %4.2f", i,
-                          spline_points[i].target.x, spline_points[i].target.y, spline_points[i].actual.x, spline_points[i].actual.y,
-                          shot_distance(i), scale_factor, angle_offset);))
   }
 
   /*
@@ -1254,25 +1283,28 @@ void read_test_shots(void)
 
   json_find_first();         // Find the start of the input list
 
-  for ( calib_shot_n = 0; calib_shot_n != SHOT_SPACE; calib_shot_n++ )
+  for ( actual_samples = 0; actual_samples != SHOT_SPACE; actual_samples++ )
   {
     if ( (json_get_array_next(IS_FLOAT, (void *)&actual_x) && json_get_array_next(IS_FLOAT, &actual_y)) == false )
     {
       break;
     }
 
-    record[calib_shot_n].shot   = calib_shot_n; // Fill in the shot record with the actual values
-    record[calib_shot_n].x_mm   = actual_x;
-    record[calib_shot_n].y_mm   = actual_y;
-    record[calib_shot_n].radius = sqrt(SQ(actual_x) + SQ(actual_y));
-    record[calib_shot_n].angle  = atan2_2PI(actual_y, actual_x);
+    record[actual_samples].shot   = actual_samples; // Fill in the shot record with the actual values
+    record[actual_samples].x_mm   = actual_x;
+    record[actual_samples].y_mm   = actual_y;
+    record[actual_samples].radius = sqrt(SQ(actual_x) + SQ(actual_y));
+    record[actual_samples].angle  = atan2_2PI(actual_y, actual_x);
+
+    DLT(DLT_CALIBRATION | DLT_VERBOSE,
+        SEND(ALL, sprintf(_xs, "Shot: %d  x:%4.2f  y:%4.2f", actual_samples, record[actual_samples].x_mm, record[actual_samples].x_mm);))
   }
 
   /*
    *  Finished loading data
    */
-  SEND(ALL, sprintf(_xs, "\r\nRead %d shots for calibration\r\n", calib_shot_n + 1);)
-  shot_in  = calib_shot_n + 1;
+  SEND(ALL, sprintf(_xs, "\r\nRead %d shots for calibration\r\n", actual_samples + 1);)
+  shot_in  = actual_samples + 1;
   shot_out = shot_in;
   return;
 }
@@ -1372,57 +1404,65 @@ static void show_calibration(void)
  *
  *----------------------------------------------------------------
  *
- * Display the settings so they can be verifieed.
+ * Read in the actual shot locations from the TargetScan CSV file
  *
  *--------------------------------------------------------------*/
 static void read_target_scan_CSV(void)
 {
-  int target_sample;
+  int                 i, m;
+  target_scan_entry_t temp;
 
-  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "read_target_scan()");))
-
-  json_find_first();                  // Find the start of the input list
-  json_get_array_next(IS_VOID, NULL); // Skip the CSV file header
-  json_get_array_next(IS_VOID, NULL);
-  json_get_array_next(IS_VOID, NULL);
-  json_get_array_next(IS_VOID, NULL);
-
-  printf("\r\nReading TargetScan.CSV\r\n");
-
-  target_sample = 0;                    // Start at -1 so the first shot is 0
-  while ( target_sample < MAX_CALIBRATION_SHOTS * 3 )
+  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "read_target_scan_CSV()");))
+  json_get_array_next(IS_FIRST, NULL);                                                         // Reset the input pointer
+  target_samples = 0;                                                                           // Start at -1 so the first shot is 0
+  while ( target_samples < MAX_CALIBRATION_SHOTS * 3 )
   {
-    json_get_array_next(IS_VOID, NULL); // Skip the shot number
-    json_get_array_next(IS_VOID, NULL); // Skip the scan number
-    json_get_array_next(IS_VOID, NULL); // Skip the score
-    if ( json_get_array_next(IS_FLOAT, (void *)&target_scan[target_sample].x_mm) == false )
+    if ( (json_get_array_next(IS_VOID, NULL) == false) ||                                      // Skip the shot number
+         (json_get_array_next(IS_VOID, NULL) == false) ||                                      // Skip the scan number
+         (json_get_array_next(IS_VOID, NULL) == false) ||                                      // Skip the score
+         (json_get_array_next(IS_FLOAT, (void *)&target_scan[target_samples].x_mm) == false) || // Read the X
+         (json_get_array_next(IS_FLOAT, (void *)&target_scan[target_samples].y_mm) == false) )  // Read the
     {
-      break;
+      break;                                                                                   // Bail out if any error occurs
     }
-    if ( json_get_array_next(IS_FLOAT, (void *)&target_scan[target_sample].y_mm) == false )
-    {
-      break;
-    }
-    target_scan[target_sample].rho   = sqrtf(SQ(target_scan[target_sample].x_mm) + SQ(target_scan[target_sample].y_mm));
-    target_scan[target_sample].angle = atan2_2PI(target_scan[target_sample].y_mm, target_scan[target_sample].x_mm);
+    target_scan[target_samples].rho   = sqrtf(SQ(target_scan[target_samples].x_mm) + SQ(target_scan[target_samples].y_mm));
+    target_scan[target_samples].angle = atan2_2PI(target_scan[target_samples].y_mm, target_scan[target_samples].x_mm);
 
-    DLT(DLT_CALIBRATION | DLT_VERBOSE, SEND(ALL, sprintf(_xs, "Read Target Scan %d : X: %4.2f  Y: %4.2f  Rho: %4.2f  Angle: %4.2f",
-                                                         target_sample, target_scan[target_sample].x_mm, target_scan[target_sample].y_mm,
-                                                         target_scan[target_sample].rho, target_scan[target_sample].angle);))
-    target_sample++;
-    if ( target_sample >= sizeof(target_scan) / sizeof(target_scan_entry_t) ) // Check for overflow
-    {
-      break;
-    }
+    DLT(DLT_CALIBRATION | DLT_VERBOSE,
+        SEND(ALL, sprintf(_xs, " CSV %d : X: %4.2f  Y: %4.2f  Rho: %4.2f  Angle: %4.2f", target_samples, target_scan[target_samples].x_mm,
+                          target_scan[target_samples].y_mm, target_scan[target_samples].rho, target_scan[target_samples].angle);))
+    target_samples++;
+  }
 
-    target_sample++;
+  /*
+   * Sort the target locations by size
+   */
+  for ( i = 0; i < target_samples - 1; i++ )
+  {
+    for ( m = i + 1; m < target_samples; m++ )
+    {
+      if ( target_scan[i].rho > target_scan[m].rho )
+      {
+        temp           = target_scan[i];
+        target_scan[i] = target_scan[m];
+        target_scan[m] = temp;
+      }
+    }
+  }
+
+  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "Sorted");))
+
+  for ( i = 0; i < MAX_CALIBRATION_SHOTS; i++ )
+  {
+    DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, " CSV %d : X: %4.2f  Y: %4.2f  Rho: %4.2f", i, target_scan[i].x_mm, target_scan[i].y_mm,
+                                           target_scan[i].rho);))
   }
 
   /*
    *  Finished loading data
    */
-  SEND(ALL, sprintf(_xs, "\r\nRead %d shots for calibration\r\n", target_sample);)
-  shot_in  = target_sample;
+  SEND(ALL, sprintf(_xs, "\r\nRead %d shots for calibration\r\n", target_samples);)
+  shot_in  = target_samples;
   shot_out = shot_in;
 
   return;

@@ -24,10 +24,10 @@ int  tcpip_queue_2_socket(char *buffer, int length); // Take from queue and put 
 int  tcpip_socket_2_queue(char *buffer, int length); // Take from socket and queue
 int  tcpip_queue_2_app(char *buffer, int length);    // Take from queue and return to application
 void serial_port_test(void);                         // Loopback the AUX port
-bool get_string(char destination[], int size);       // Collect a string from the input ports
+int  get_string(char destination[], int size);       // Collect a string from the input ports
 void serial_bt_config(unsigned int baud_rate);       // Initialize the Bluetooth port for operational configuration
 void check_new_connection(void);                     // Check to see if a new connection has been made
-void RS485_transmit(int new_state);                 // Control the RS485 transmitter
+void RS485_transmit(int new_state);                  // Control the RS485 transmitter
 void RS485_transmit_off(void);                       // Turn off the RS485 transmitter after a delay
 
 /*

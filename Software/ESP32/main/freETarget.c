@@ -102,30 +102,43 @@ void freeETarget_init(void)
   is_trace  = DLT_INFO | DLT_CRITICAL;
 #if TRACE_APPLICATION
   is_trace |= DLT_APPLICATION;   // Enable application tracing
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT APPLICATON enabled");))
 #endif
 #if TRACE_COMMUNICATION
   is_trace |= DLT_COMMUNICATION; // Enable application tracing
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT COMMUNICATION enabled");))
 #endif
 #if TRACE_DIAGNOSTICS
   is_trace |= DLT_DIAG;          // Enable diagnostics tracing
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT DIAGNOSTICS enabled");))
 #endif
 #if TRACE_DEBUG
   is_trace |= DLT_DEBUG;         // Enable debug tracing
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT DEBUG enabled");))
 #endif
 #if TRACE_SCORE
   is_trace |= DLT_SCORE;         // Enable score tracing
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT SCORE enabled");))
 #endif
 #if TRACE_HTTP
   is_trace |= DLT_HTTP;          // Enable HTTP tracing
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT HTTP enabled");))
 #endif
 #if TRACE_OTA
   is_trace |= DLT_OTA;           // Enable OTA tracing
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT OTA enabled");))
 #endif
 #if TRACE_HEARTBEAT
   is_trace |= DLT_HEARTBEAT;     // Enable heartbeat tracing
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT HEARTBEAT enabled");))
 #endif
 #if TRACE_CALIBRATION
   is_trace |= DLT_CALIBRATION;   // Enable calibration tracing
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT CALIBRATION enabled");))
+#endif
+#if TRACE_VERBOSE
+  is_trace |= DLT_VERBOSE;       // Enable verbose messages
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT VERBOSE enabled");))
 #endif
 
   /*

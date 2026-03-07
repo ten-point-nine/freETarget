@@ -395,6 +395,8 @@ void serial_flush(int ports // active port list
  *
  * If there is a character present, update the connection mask
  *
+ * If no character is available, return a 0.
+ *
  *******************************************************************************-*/
 char serial_getch(int ports) // Bit mask of active ports
 {
@@ -838,7 +840,7 @@ int tcpip_socket_2_queue(char *buffer, // Where to return the bytes
  *
  * @brief:    Read a text string from the available ports
  *
- * @return:   TRUE if a CR or LF string terminator is entered
+ * @return:   Number of characters entered
  *
  *******************************************************************************
  *
@@ -847,23 +849,25 @@ int tcpip_socket_2_queue(char *buffer, // Where to return the bytes
  * has been received.
  *
  ******************************************************************************/
-bool get_string(char destination[], int size)
+int get_string(char destination[], int size)
 {
   int ch; // Input character
   int i;  // Input index
 
   i              = 0;
   destination[0] = 0;
+  serial_flush(ALL);
+
   while ( 1 )
   {
-    if ( serial_available(ALL) != 0 )
+    while ( serial_available(ALL) != 0 )
     {
       ch = serial_getch(ALL);
-      SEND(ALL, sprintf(_xs, "%c", ch);)
+      SEND(ALL, sprintf(_xs, "%c", ch);) // Echo the input
 
       switch ( ch )
       {
-        case 8: // Backspace
+        case 8:                          // Backspace
           i--;
           if ( i < 0 )
           {
@@ -872,13 +876,15 @@ bool get_string(char destination[], int size)
           destination[i] = 0;
           break;
 
-        case '\r':       // Enter
-        case '\n':       // newline
-          return 1;
+          //        case '\r':       // Enter Commented out since PC Client does not allow
+          //        case '\n':       // newline as an input terminator
+        case '!':        // Bang!
+          return i;
 
         case 'C' & 0x1F: // Control C, exit
         case 0x1B:       // Escape
-          return 0;
+          destination[0] = 0;
+          return 0;      // Remove anything we got
 
         default:
           destination[i] = ch;
