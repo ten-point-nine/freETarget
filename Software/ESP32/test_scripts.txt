@@ -1,11 +1,12 @@
 //
 // WIFI Tests 
 //
-{ "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING"}
+{ "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING", "WIFI_IP":"192.168.86.109" }
 { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING"}
 { "WIFI_SSID": "FET-WIFI",  "WIFI_PWD": "Mar1noni$", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING"}
 { "WIFI_SSID": "FET-WIFI",  "WIFI_PWD": "Mar1noni$", "NAME_ID": 101}
-WIFI Lab setup         { "WIFI_SSID": "",  "WIFI_PWD": "", "NAME_ID": 101}
+WIFI Lab setup
+         { "WIFI_SSID": "FET-WIFI",  "WIFI_PWD": "Mar1noni$", "NAME_ID": 100, "NAME_TEXT":"ALLAN", "WIFI_IP":"192.168.109.81",}
 { "NAME_ID": 99, "NAME_TEXT":"ALLAN"}
 { "NAME_ID": 101}
 HTTP Trace             {"TRACE":128}
