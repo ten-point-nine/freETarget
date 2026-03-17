@@ -15,6 +15,7 @@
 #include "driver\gpio.h"
 #include "math.h"
 #include "esp_timer.h"
+#include "esp_random.h"
 
 #include "freETarget.h"
 #include "helpers.h"
@@ -562,39 +563,6 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
   return;
 }
 
-/*
- *  Generate a known score message
- */
-void test_build_json_score(void)
-{
-  char str[MEDIUM_TEXT];
-
-  SEND(ALL, sprintf(_xs, "\r\ntest_build_json_score()");)
-
-  build_json_score(&record[0], SCORE_ALL);
-  strncpy(str, _xs, sizeof(str));
-  SEND(ALL, sprintf(_xs, "\r\nALL:       %s", str);)
-
-  build_json_score(&record[0], SCORE_USB);
-  strncpy(str, _xs, sizeof(str));
-  SEND(ALL, sprintf(_xs, "\r\nUSB:       %s", str);)
-
-  build_json_score(&record[0], SCORE_TCPIP);
-  strncpy(str, _xs, sizeof(str));
-  SEND(ALL, sprintf(_xs, "\r\nTCPIP:     %s", str);)
-
-  build_json_score(&record[0], SCORE_BLUETOOTH);
-  strncpy(str, _xs, sizeof(str));
-  SEND(ALL, sprintf(_xs, "\r\nBLUETOOTH: %s", str);)
-
-  build_json_score(&record[0], SCORE_HTTP);
-  strncpy(str, _xs, sizeof(str));
-  SEND(ALL, sprintf(_xs, "\r\nHTTP:      %s", str);)
-
-  SEND(ALL, sprintf(_xs, "%s", _DONE_);)
-
-  return;
-}
 
 /*----------------------------------------------------------------
  *

@@ -1,22 +1,14 @@
 //
 // WIFI Tests 
 //
-{ "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING", "WIFI_IP":"192.168.86.109" }
-{ "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING"}
-{ "WIFI_SSID": "FET-WIFI",  "WIFI_PWD": "Mar1noni$", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING"}
-{ "WIFI_SSID": "FET-WIFI",  "WIFI_PWD": "Mar1noni$", "NAME_ID": 101}
-WIFI Lab setup
-         { "WIFI_SSID": "FET-WIFI",  "WIFI_PWD": "Mar1noni$", "NAME_ID": 100, "NAME_TEXT":"ALLAN", "WIFI_IP":"192.168.109.81",}
+Static IP  { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING", "WIFI_IP":"192.168.86.109" }
+Dynamic IP { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING"}
 { "NAME_ID": 99, "NAME_TEXT":"ALLAN"}
 { "NAME_ID": 101}
 HTTP Trace             {"TRACE":128}
 Reset the target       {"RESET":0}
 Reinitialize the board {"INIT":0}
 
-{ "WIFI_SSID": "stand-de-tir-2G",  "WIFI_PWD": "", "NAME_ID": 1, "WIFI_IP":"192.168.109.81", "NAME_TEXT":""}
-{ "WIFI_SSID": "stand-de-tir-2G",  "WIFI_PWD": "", "NAME_ID": 2, "WIFI_IP":"192.168.109.82", "NAME_TEXT":""}
-{ "WIFI_SSID": "stand-de-tir-2G",  "WIFI_PWD": "", "NAME_ID": 3, "WIFI_IP":"192.168.109.83", "NAME_TEXT":""}
-{ "WIFI_SSID": "stand-de-tir-2G",  "WIFI_PWD": "", "NAME_ID": 4, "WIFI_IP":"192.168.109.84", "NAME_TEXT":""}
 { "WIFI_SSID": "",  "WIFI_PWD": "", "NAME_ID": 4}
 
 //
@@ -83,7 +75,7 @@ Target Scan
 Table Data
 {"CAL":2}
 2
--21.03, -15.66, -15.21, -28.20, -11.33, -33.89, -17.67, 32.17, 30.30, -21.61, 23.84, 42.26, 36.51, -38.42, -34.60, -42.56, -51.80, 22.48, 16.47, -61.17, -0.24, -9.43, -8.49, -23.85, 22.33, -20.86, 28.63, 17.05, -26.95, 21.98, -41.04, -6.76, -50.76, 0.22, -55.14, 10.89
+-21.03, -15.66, -15.21, -28.20, -11.33, -33.89, -17.67, 32.17, 30.30, -21.61, 23.84, 42.26, 36.51, -38.42, -34.60, -42.56, -51.80, 22.48, 16.47, -61.17, -0.24, -9.43, -8.49, -23.85, 22.33, -20.86, 28.63, 17.05, -26.95, 21.98, -41.04, -6.76, -50.76, 0.22, -55.14, 10.89!
 
 Commit Calibration {"CAL":3}
 

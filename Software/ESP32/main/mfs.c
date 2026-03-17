@@ -21,6 +21,7 @@
 #include "timer.h"
 #include "mfs.h"
 #include "ota.h"
+#include "helpers.h"
 
 /*
  *  Definitions
@@ -50,26 +51,26 @@ static void mfs_pc_test(void);
 /*
  * Variables
  */
-static unsigned int switch_state;                  // What switches are pressed
+static unsigned int switch_state;                     // What switches are pressed
 const mfs_action_t  mfs_action[] = {
-    {TARGET_ON,      mfs_on,         "TARGET_ON"     }, // Take the target out of sleep
-    {PAPER_FEED,     mfs_paper_feed, "PAPER FEED"    }, // Feed paper until button released
-    {LED_ADJUST,     mfs_led_adjust, "LED_ADJUST"    }, // Adjust LED brighness
-    {PAPER_SHOT,     mfs_paper_shot, "PAPER SHOT"    }, // Advance paper the distance of one shot
-    {PC_TEST,        mfs_pc_test,    "PC TEST"       }, // Send a test shot to the PC
-    {TARGET_OFF,     mfs_off,        "TARGET OFF"    }, // Turn the target on or off
-    {TOGGLE_TABATA,  mfs_tabata,     "TOGGLE TABATA" }, // Start or stop a Tabata session
-    {NO_ACTION,      NULL,           "NO ACTION"     }, // No action on C & D inputs
-    {TARGET_TYPE,    NULL,           "TARGET TYPE"   }, // Put the target type into the send score
-    {SHOOTER_LEVEL,  NULL,           "SHOOTER_LEVEL" }, // Shooter experiance level
-    {MFS_C_LED,      NULL,           "RAPID RED"     }, // The output is used to drive the RED rapid fire LED
-    {MFS_D_LED,      NULL,           "RAPID GREEN"   }, // The output is used to drive the GREEN rapid fire LED
-    {RAPID_LOW,      NULL,           "RAPID LOW"     }, // The output is active low
-    {RAPID_HIGH,     NULL,           "RAPID HIGH"    }, // The output is active high
-    {STEPPER_DRIVE,  NULL,           "STEPPER_DRIVE" }, // The output is used to drive stepper motor
-    {STEPPER_ENABLE, NULL,           "STEPPER_ENABLE"}, // The output is used to drive stepper motor enable
-    {RS485_SELECT,   NULL,           "RS488 SELECT"  }, // The output is used to select RS488 direction
-    {0,              0,              0               }
+    {TARGET_ON,      mfs_on,                    "TARGET_ON"     }, // Take the target out of sleep
+    {PAPER_FEED,     mfs_paper_feed,            "PAPER FEED"    }, // Feed paper until button released
+    {LED_ADJUST,     mfs_led_adjust,            "LED_ADJUST"    }, // Adjust LED brighness
+    {PAPER_SHOT,     mfs_paper_shot,            "PAPER SHOT"    }, // Advance paper the distance of one shot
+    {PC_TEST,        mfs_test_build_json_score, "PC TEST"       }, // Send a test shot to the PC
+    {TARGET_OFF,     mfs_off,                   "TARGET OFF"    }, // Turn the target on or off
+    {TOGGLE_TABATA,  mfs_tabata,                "TOGGLE TABATA" }, // Start or stop a Tabata session
+    {NO_ACTION,      NULL,                      "NO ACTION"     }, // No action on C & D inputs
+    {TARGET_TYPE,    NULL,                      "TARGET TYPE"   }, // Put the target type into the send score
+    {SHOOTER_LEVEL,  NULL,                      "SHOOTER_LEVEL" }, // Shooter experiance level
+    {MFS_C_LED,      NULL,                      "RAPID RED"     }, // The output is used to drive the RED rapid fire LED
+    {MFS_D_LED,      NULL,                      "RAPID GREEN"   }, // The output is used to drive the GREEN rapid fire LED
+    {RAPID_LOW,      NULL,                      "RAPID LOW"     }, // The output is active low
+    {RAPID_HIGH,     NULL,                      "RAPID HIGH"    }, // The output is active high
+    {STEPPER_DRIVE,  NULL,                      "STEPPER_DRIVE" }, // The output is used to drive stepper motor
+    {STEPPER_ENABLE, NULL,                      "STEPPER_ENABLE"}, // The output is used to drive stepper motor enable
+    {RS485_SELECT,   NULL,                      "RS488 SELECT"  }, // The output is used to select RS488 direction
+    {0,              0,                         0               }
 };
 
 /*
@@ -438,25 +439,6 @@ static void mfs_paper_shot(void)
     }
   }
   SEND(ALL, sprintf(_xs, "\r\nDone\r\n");)
-  return;
-}
-
-#define SCALE 1200
-static void mfs_pc_test(void)
-{
-  static unsigned int test_shot = 0;
-  int                 temp, sign;
-
-  temp                = esp_random() % (SCALE);
-  sign                = ((esp_random() & 1) == 0) ? 1 : -1;
-  record[test_shot].x = (real_t)(sign * temp);
-  temp                = esp_random() % (SCALE);
-  sign                = ((esp_random() & 1) == 0) ? 1 : -1;
-  record[test_shot].y = (real_t)(sign * temp);
-  s_of_sound          = speed_of_sound(temperature_C(), humidity_RH());
-  prepare_score(&record[test_shot], test_shot, NOT_MISSED_SHOT);
-  test_shot++;
-
   return;
 }
 

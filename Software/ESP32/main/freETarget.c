@@ -610,7 +610,6 @@ void start_new_session(int session_type) //
       {
         record[i].session_type = SESSION_EMPTY;
       }
-      printf("\r\nNew session started\r\n");
       shot_in  = 0;
       shot_out = 0;
       reset_run_time();

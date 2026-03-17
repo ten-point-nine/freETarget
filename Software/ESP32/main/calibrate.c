@@ -14,9 +14,13 @@
  * The calibration is performed in steps
  *
  * 1 - Read the actual data from the TargetScan.CSV file
- * 2 - Average the target data and actual data to determine the centre of gravity
- * 3 - Move the centre of gravity from the target data (x/y_offset)
- * 4 -
+ * 2 - Sort the Target Scan data largest to smallest.  Keep the largest 10
+ * 3 - Match the actual and TargetScan locations by finding the closest match
+ * 4 - Average the target data and actual data to determine the centre of gravity
+ * 5 - Move the centre of gravity from the target data (x/y_offset)
+ * 6 - Fill up the spline data by computing scale factors and offsets
+ * 7 - Work out the spline coeficients for each of the 10 samples
+ * 8 - Verify when corrections the sthot data matches targetScan
  *
  *****************************************************************************/
 #include "math.h"
@@ -40,7 +44,6 @@ static void perform_calibration(bool use_CSV);                             // Se
 static void find_coeficients(int i);                                       // Find the spline coeficients
 static void commit_calibration(void);                                      // Commit the calibration to NONVOL
 static void verify_calibration(int sample_size);                           // Verify the calibration data by applying it to the shots
-static void void_calibration(void);                                        // Cancel the existing calibration
 static void target_offset(int sample_size);                                // Adjust the target data for sensor location
 static void spline_sort(int i);                                            // Sort the entries in order
 static void solve_matrix(real_t a[][4]);                                   // Row reduce a matrix to find the solution
@@ -150,7 +153,7 @@ void calibrate(int action)
       return;
 
     case CAL_VOID:
-      void_calibration();
+      void_calibration(false); // Ask for confirmation and void
       return;
 
     case CAL_TEST_SHOTS:
@@ -1179,8 +1182,6 @@ bool get_target_calibration(void)
   size_t  size;
   real_t *blob;
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "get_target_calibration()");))
-
   calibration_is_valid = false; // Assume false until proven otherwise
 
   /*
@@ -1190,14 +1191,15 @@ bool get_target_calibration(void)
 
   if ( nvs_get_blob(my_handle, NONVOL_CALIBRATION_DATA, blob, &size) != ESP_OK )
   {
-    return false;
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Precision target calibration not present");))
+    return false;       // Return if calibration is not enabled
   }
 
   if ( size != 0 )
   {
     if ( *(blob) != SPLINE_VALID )
     {
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Target calibration not valid");))
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Error in precision target calibration");))
       return false;
     }
     blob++;
@@ -1219,7 +1221,7 @@ bool get_target_calibration(void)
    * Calibration retrieved
    */
   calibration_is_valid = true;
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Target calibration enabled");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Precision target calibration enabled");))
   return true;
 }
 
@@ -1236,17 +1238,20 @@ bool get_target_calibration(void)
  * Invalidate the existing calibration settings.
  *
  *--------------------------------------------------------------*/
-static void void_calibration(void)
+void void_calibration(bool confirm) // TRUE if unconditionally voiding
 {
   real_t blob;
 
-  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "clear_calibration()");))
-
-  SEND(ALL, sprintf(_xs, "Do you want to void the calibration?");)
-
-  if ( prompt_for_confirm() == false )
+  if ( confirm == false )           // Do not unconditionally voiding
   {
-    return;
+    DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "clear_calibration()");))
+
+    SEND(ALL, sprintf(_xs, "Do you want to void the calibration?");)
+
+    if ( prompt_for_confirm() == false )
+    {
+      return;
+    }
   }
 
   calibration_is_valid = false; // Assume false until proven otherwise
