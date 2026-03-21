@@ -73,22 +73,6 @@ const mfs_action_t  mfs_action[] = {
     {0,              0,                         0               }
 };
 
-/*
- * Test Vectors
-  {"MFS_HOLD_12":2, "MFS_TAP_2": 0, "MFS_TAP_1":3 , "MFS_HOLD_2": 5, "MFS_HOLD_1":1, "MFS_HOLD_D":9, "MFS_HOLD_C":9, "MFS_SELECT_CD":9,
- "ECHO":0}
-  {"MFS_HOLD_12":2}
-  {"MFS_TAP_2":0}
-  {"MFS_TAP_1":4}
-  {"MFS_HOLD_2":5}
-  {"MFS_HOLD_1":1}
-  {"MFS_HOLD_D":9}
-  {"MFS_HOLD_C":9}
-  {"MFS_SELECT_CD":9}
-  {"ECHO":0}
-
-*/
-
 /*-----------------------------------------------------
  *
  * @function: multifunction_init
@@ -492,8 +476,7 @@ static void mfs_led_adjust(void)
  * be used.
  *
  *-----------------------------------------------------*/
-mfs_action_t *mfs_find(unsigned int action // Switch to be displayed
-)
+mfs_action_t *mfs_find(unsigned int action) // Switch to be displayed
 {
   unsigned int i;
 
@@ -567,13 +550,6 @@ void mfs_RS485_control(bool state) // Direction control state
     gpio_set_level(HOLD_D_GPIO, state);
     return;
   }
-
-  /*
-   * Neither MFS line was selected, so default to the built in
-   * selection and hope for the best
-   * */
-
-  gpio_set_level(RS485_CONTROL, state); // Set RS485 to transmit
 
   return;
 }

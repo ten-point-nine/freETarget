@@ -1199,7 +1199,7 @@ bool get_target_calibration(void)
   {
     if ( *(blob) != SPLINE_VALID )
     {
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Error in precision target calibration");))
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Precision target calibration not present");))
       return false;
     }
     blob++;

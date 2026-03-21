@@ -17,12 +17,13 @@ extern int          board_revision; // Board revision number
 /*
  *  Board Variants
  */
-#define REV_500 500        // ESP32
-#define REV_510 510
-#define REV_520 520
-#define REV_600 600        // Value Engineered
-#define REV_610 610        // Board with thermal isolation
-#define REV_620 620        // Built in RS485
+#define REV_500   500      // ESP32
+#define REV_510   510
+#define REV_520   520
+#define REV_600   600      // Value Engineered
+#define REV_610   610      // Board with thermal isolation
+#define REV_620   620      // Built in RS485
+#define BUILD_REV 520      // Build for Revision 530 and higher
 
 #define MASK_500 (1 << 0)  // First Revision of V5
 #define MASK_510 (1 << 0)  // First Test Board of V5

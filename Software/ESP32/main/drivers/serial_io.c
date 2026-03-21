@@ -192,18 +192,20 @@ void serial_aux_init(void)
       case AUX:
         DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX port enabled");))
         uart_param_config(uart_aux, &uart_aux_config);                     // 115200 baud rate
+        RS485_transmit(RS485_TRANSMIT);                                    // Turn off the RS485 receiver
         break;
 
       case BLUETOOTH:
         DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BLUETOOTH port enabled");))
         uart_param_config(uart_aux, &uart_BT_config);                      // 115200 baud rate
+        RS485_transmit(RS485_TRANSMIT);                                    // Turn off the RS485 receiver
         break;
 
       case RS485:
         DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RS485 port enabled");))
         uart_param_config(uart_aux, &uart_aux_config);                     // 115200 baud rate
         ft_timer_new(&RS485_timer, 0, &RS485_transmit_off, "RS485 timer"); // Prime the RS485 timer
-        RS485_transmit_off();                                              // Ensure we are in receive mode
+        RS485_transmit(RS485_RECEIVE);                                     // Ensure we are in receive mode
         break;
     }
   }
@@ -617,32 +619,20 @@ void serial_to_all(char *str,        // String to output
  *
  * If the board is not using RS485 communications, set the driver to TRANSMIT
  * so that it doesn't collide with the AUX port
- * 
+ *
  * Version 6.2 controls the MAX485 directly through GPIO 9, whereas everything
- * before that uses one to the MFS output lines 
+ * before that uses one to the MFS output lines
  *
  ******************************************************************************/
-void RS485_transmit_off(void)
+void RS485_transmit_off(void) // Called from timer to put the timer back in receive
 {
-  RS485_transmit(RS485_RECEIVE); // Set RS485 to receive
+  RS485_transmit(RS485_RECEIVE);
   return;
 }
 
-/*
- * Set the RS485 transmit line
- */
 void RS485_transmit(int new_state)
 {
   static int old_state = -1;
-
-  /*
-   * Check to see if we are even using RS485
-   */
-  if ( (json_aux_mode & RS485) == 0 )              // Not operating in RS485 mode?
-  {
-    gpio_set_level(RS485_CONTROL, RS485_TRANSMIT); // Set RS485 to transmit so as to avoid contention on the RX line
-    return;
-  }
 
   /*
    *  Yes RS485 is enabled
@@ -654,17 +644,27 @@ void RS485_transmit(int new_state)
 
   old_state = new_state;
 
-  if ( json_mfs_hold_c == RS485_CONTROL )
+  /*
+   * Check to see if we are even using RS485
+   */
+  if ( (json_aux_mode & RS485) == 0 )              // Not operating in RS485 mode?
   {
-    mfs_RS485_control(new_state);             // Control RS485 via MFS
+    gpio_set_level(RS485_CONTROL, RS485_TRANSMIT); // Set RS485 to transmit so as to avoid contention on the RX line
+    return;
+  }
+
+  if ( (json_mfs_hold_c == RS485_SELECT) || (json_mfs_hold_d == RS485_SELECT) ) // Are we using MFS to drive the RS485 transmit?
+  {
+    mfs_RS485_control(new_state);                                               // Control RS485 via MFS
   }
   else
   {
-    gpio_set_level(RS485_CONTROL, new_state); // Set RS485 to transmit
+    gpio_set_level(RS485_CONTROL, new_state);                                   // Set RS485 to transmit
   }
-  if ( new_state == RS485_TRANSMIT )          // Is it transmit?
+
+  if ( new_state == RS485_TRANSMIT )                                            // Is it transmit?
   {
-    RS485_timer = RS485_TRANSMIT_TIME;        // Set timer to turn off transmitter
+    RS485_timer = RS485_TRANSMIT_TIME;                                          // Set timer to turn off transmitter
   }
 
   /*
@@ -985,7 +985,7 @@ void RS485_test(void)
 {
   int i;
 
-  for ( i = 0; i != 4096; i++ )
+  for ( i = 0; i != 512; i++ )
   {
     SEND(RS485, sprintf(_xs, " %d ", i);)
     vTaskDelay(1);

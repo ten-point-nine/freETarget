@@ -69,5 +69,5 @@ void          mfs_tabata(void);                // Start or stop a Tabata session
 #define RAPID_HIGH     24 // Select Rapid Fire LED type
 #define STEPPER_DRIVE  26 // The output drives a stepper motor
 #define STEPPER_ENABLE 28 // The output enables the stepper motor
-#define RS485_SELECT   30 // Select RS488 mode
+#define RS485_SELECT   30 // The output deives the RS485 direction control
 #endif

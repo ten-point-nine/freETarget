@@ -19,16 +19,12 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"6.3.2 March 16, 2026\""
+#define SOFTWARE_VERSION "\"6.3.2 March 19, 2026\""
 #define _DONE_           "\r\nDone\r\n"
 #define _SHOT_           "shot"
 #define _GREETING_       "CONNECTED"   // Message to send on connection
 #define _BYE_            "BYE"         // Message to send on disconnection
 #define _HELLO_          "HELLO WORLD" // Message to send on reconnection
-#define REV_500          500           // ESP32
-#define REV_510          510
-#define REV_520          520
-#define BUILD_REV        520           // Build for Revision 530 and higher
 
 #define INIT_DONE 0xabcd               // NON-VOL Initialization complete signature
 #ifndef true
