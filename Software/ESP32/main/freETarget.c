@@ -68,7 +68,7 @@ typedef struct
 {
   volatile int *timer;               // Timer used to control state length
   char         *status_LED;          // Status LED output
-  real_t        LED_bright;          // Brightness of target LED
+  int           LED_bright;          // Brightness of target LED
   char         *message;             // Message to be sent to PC
   bool          in_shot;             // In as shot cycle
 } rapid_state_t;
@@ -264,7 +264,7 @@ void freeETarget_target_loop(void *arg)
 
         if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
         {
-          set_status_LED(LED_RAPID_ON);                                     // Show that the target is available for use
+          set_status_LED(LED_RAPID_ON);                                      // Show that the target is available for use
         }
         freETarget_state = WAIT;
         json_rapid_count = 0;
@@ -673,20 +673,23 @@ void start_new_session(int session_type) //
  *  {"TABATA_WARN_ON": 3, "TABATA_ON":12, "TABATA_REST":25, "TABATA_ENABLE":1}
  *  {"TABATA_ENABLE":0}
  *-------------------------------------------------------------*/
+#define LED_RAMP 2
+#define LED_ON   1
+#define LED_OFF  0
+
 const rapid_state_t tabata_state[] = {
     // Time in state         Status LEDs     target LED  Message     IN_SHOT
-    {&all_done,            LED_TABATA_OFF,  0,  "TABATA_IDLE",  false}, // 0 Wait for json_tabata_enable
-    {&json_tabata_warn_on, LED_TABATA_WARN, -1, "TABATA_BEGIN", false}, // 1 Wait for json_tabata_enable
-    {&json_tabata_on,      LED_TABATA_ON,   1,  "TABATA_ON",    true }, // 3 Wait for json_tabata_enable
-    {&json_tabata_warn_on, LED_TABATA_WARN, 0,  "TABATA_END",   false}, // 1 Wait for json_tabata_enable
-    {&json_tabata_rest,    LED_TABATA_OFF,  0,  "TABATA_REST",  false}, // 4 Turn the timer on for the event
-    {&all_done,            LED_TABATA_OFF,  0,  "TABATA_START", false}  // 5 Start/End of state machine
+    {&all_done,            LED_TABATA_OFF,  LED_OFF,  "TABATA_IDLE",  false}, // 0 Wait for json_tabata_enable
+    {&json_tabata_warn_on, LED_TABATA_WARN, LED_RAMP, "TABATA_BEGIN", false}, // 1 Wait for json_tabata_enable
+    {&json_tabata_on,      LED_TABATA_ON,   LED_ON,   "TABATA_ON",    true }, // 3 Wait for json_tabata_enable
+    {&json_tabata_warn_on, LED_TABATA_WARN, LED_OFF,  "TABATA_END",   false}, // 1 Wait for json_tabata_enable
+    {&json_tabata_rest,    LED_TABATA_OFF,  LED_OFF,  "TABATA_REST",  false}, // 4 Turn the timer on for the event
+    {&all_done,            LED_TABATA_OFF,  LED_OFF,  "TABATA_START", false}  // 5 Start/End of state machine
 };
 
 void tabata_task(void)
 {
-  static int tabata_state_machine = 0;                                  // State machine index
-  static int toggle               = 1;                                  // Toggle the lights
+  static int tabata_state_machine = 0;                                        // State machine index
 
   IF_NOT(IN_OPERATION) return;
 
@@ -709,38 +712,40 @@ void tabata_task(void)
    *  Execute the state machine
    */
 
-  if ( tabata_timer == 0 )                                                           // Time to go to the next state?
+  if ( tabata_timer == 0 )                                // Time to go to the next state?
   {
-    tabata_state_machine++;                                                          // Next state
+    tabata_state_machine++;                               // Next state
     SEND(ALL, sprintf(_xs, "{\"%s\": %d}\r\n", tabata_state[tabata_state_machine].message, *tabata_state[tabata_state_machine].timer);)
 
-    if ( *tabata_state[tabata_state_machine].timer == 0 )                            // Reached the end of the state machine
+    if ( *tabata_state[tabata_state_machine].timer == 0 ) // Reached the end of the state machine
     {
-      tabata_state_machine = 1;                                                      // Go back to the beginning
+      tabata_state_machine = 1;                           // Go back to the beginning
     }
     ft_timer_new(&tabata_timer, (*tabata_state[tabata_state_machine].timer) * ONE_SECOND, NULL, "tabata timer");
     set_status_LED(tabata_state[tabata_state_machine].status_LED);
-    if ( json_LED_PWM >= 0 )
+    switch ( tabata_state[tabata_state_machine].LED_bright )
     {
-      set_LED_PWM_now(tabata_state[tabata_state_machine].LED_bright * json_LED_PWM); // Turn off the lights // TRUE if the lights are on
+      case LED_RAMP:
+        set_LED_PWM_now(10);                                  // Ramp the lights on
+        break;
+
+      case LED_ON:
+        set_LED_PWM_now(json_LED_PWM);                        // Turn on the lights
+        break;
+
+      case LED_OFF:
+        set_LED_PWM_now(0);                                   // Turn off the lights
+        break;
     }
 
-    if ( tabata_state[tabata_state_machine].in_shot == true )                        // Is the target ready to accept a shot?
+    if ( tabata_state[tabata_state_machine].in_shot == true ) // Is the target ready to accept a shot?
     {
-      run_state |= IN_SHOT;                                                          // Yes, set it so
-      shot_start = run_time_ms();                                                    // and remember this time
+      run_state |= IN_SHOT;                                   // Yes, set it so
+      shot_start = run_time_ms();                             // and remember this time
     }
     else
     {
       run_state &= ~IN_SHOT;
-    }
-  }
-  else // Blink the lights (called every 500 ms)
-  {
-    if ( tabata_state[tabata_state_machine].LED_bright < 0 )
-    {
-      set_LED_PWM_now(toggle * json_LED_PWM);
-      toggle ^= 1;
     }
   }
 
