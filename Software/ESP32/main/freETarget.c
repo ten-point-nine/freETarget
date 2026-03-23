@@ -170,12 +170,12 @@ void freeETarget_init(void)
   /*
    *  Set up the long running timers
    */
-  ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND * 60l, NULL, "keep alive");                      // Keep alive timer
+  ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND, send_keep_alive, "keep alive");                 // Keep alive timer
   ft_timer_new(&power_save, (time_count_t)(json_power_save) * (time_count_t)ONE_SECOND * 60L, &bye_tick, "power save"); // Power save timer
   ft_timer_new(&time_since_last_shot, HTTP_CLOSE_TIME * 60 * ONE_SECOND, NULL, "time since last shot"); // 15 minutes since last shot
   ft_timer_new(&time_to_go, 0, NULL, "time to go");                                                     // Time remaining in session
-  ft_timer_new(&shot_timer, MAX_WAIT_TIME, NULL, "shot timer");                                         // Wait for the shot to arrive
-  ft_timer_new(&ring_timer, MAX_RING_TIME, NULL, "ring timer");                                         // Wait for the ringing to stop
+  ft_timer_new(&shot_timer, 0, NULL, "shot timer");                                                     // Wait for the shot to arrive
+  ft_timer_new(&ring_timer, 0, NULL, "ring timer");                                                     // Wait for the ringing to stop
 
   /*
    * Run the power on self test
@@ -242,7 +242,6 @@ void freeETarget_target_loop(void *arg)
     gpio_init_single(PCNT_HI);               // Program the port
   }
 
-  printf("\r\ntarget_loop\r\n");
   start_new_session(0);
   shot_number = 1;                           // Start counting shots at 1
 
@@ -647,6 +646,10 @@ void start_new_session(int session_type) //
       break;
   }
 
+  /*
+   *  All done, return
+   */
+  SEND(ALL, sprintf(_xs, "\r\nSession data cleared\r\n");)
   return;
 }
 

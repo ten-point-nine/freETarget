@@ -299,22 +299,20 @@ void hello(void)
  *
  *----------------------------------------------------------------
  *
- * This is called every second to send out the keep alive to the
- * TCPIP server
+ * This is a callback when the keep alive timer expires.
+ *
+ * Send out the keep alive message and reset the timer
  *
  *--------------------------------------------------------------*/
 void send_keep_alive(void)
 {
   static int keep_alive_count = 0;
-  static int keep_alive       = 0;
   char       str[SHORT_TEXT];
 
-  if ( (json_keep_alive != 0) && (keep_alive <= 0) ) // Time in seconds
-  {
-    target_name(str);
-    SEND(TCPIP, sprintf(_xs, "{\"KEEP_ALIVE\":%d, \"NAME\":\"%s\"}", keep_alive_count++, str);)
-    keep_alive = (time_count_t)json_keep_alive * ONE_SECOND;
-  }
+  target_name(str);
+  SEND(TCPIP, sprintf(_xs, "{\"KEEP_ALIVE\":%d, \"NAME\":\"%s\"}", keep_alive_count++, str);)
+  keep_alive = (time_count_t)json_keep_alive * ONE_SECOND;
+
   return;
 }
 /*----------------------------------------------------------------
@@ -562,7 +560,6 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
    */
   return;
 }
-
 
 /*----------------------------------------------------------------
  *

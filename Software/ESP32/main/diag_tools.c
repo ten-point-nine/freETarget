@@ -83,7 +83,7 @@ static const self_test_t test_list[] = {
     {"Turn the RUN lines on and off",     &timer_run_all            },
     {"Show the current time",             &show_time                },
     {"Show current timers",               &show_timers              },
-    {"- Communiations Tests",             0                         },
+    {"- Communiactions Tests",             0                         },
     {"AUX port loopback test",            &aux_port_loopback_test   },
     {"BlueTooth configuration",           &BlueTooth_configuration  },
     {"RSS485 test",                       &RS485_test               },
@@ -444,7 +444,7 @@ bool do_factory_test(bool test_run)
       {
         vmes_lo = vref_measure();       // Read the VREF_LO voltage
         SEND(ALL, sprintf(_xs, "  VREF_LO: %4.2fV", vmes_lo);)
-        if ( abs(vmes_lo - json_vref_lo) <= 0.1 )
+        if ( fabs(vmes_lo - json_vref_lo) <= 0.1 )
         {
           SEND(ALL, sprintf(_xs, " ");)
           pass |= PASS_VREF;            // Mark the test as passed
@@ -1156,14 +1156,13 @@ static void test_rapidfire(void)
  *--------------------------------------------------------------*/
 void mfs_test_build_json_score(void)
 {
-  char str[LARGE_STRING];
+  char       str[LARGE_STRING];
+  static int test_shot = 0;
 
-  SEND(ALL, sprintf(_xs, "\r\nmfs_test_build_json_score()");)
-
+  record[0].shot = test_shot;
   record[0].x_mm = (real_t)(esp_random() % 1000) / 1000.0 * 40.0; // Pick a random location
   record[0].y_mm = (real_t)(esp_random() % 1000) / 1000.0 * 40.0;
 
-  printf("%f", record[0].x_mm);
   build_json_score(&record[0], SCORE_USB);
   strncpy(str, _xs, sizeof(str));
   SEND(CONSOLE, sprintf(_xs, "\r\nUSB:       %s", str);)
@@ -1174,11 +1173,11 @@ void mfs_test_build_json_score(void)
 
   build_json_score(&record[0], SCORE_BLUETOOTH);
   strncpy(str, _xs, sizeof(str));
-  SEND(AUX | BLUETOOTH | RS485, sprintf(_xs, "\r\nBLUETOOTH: %s", str);)
+  SEND(AUX | BLUETOOTH | RS485, sprintf(_xs, "\r\nAUX: %s", str);)
 
   paper_start();
 
-  SEND(ALL, sprintf(_xs, "%s", _DONE_);)
+  test_shot++; // Wait for next time
 
   return;
 }

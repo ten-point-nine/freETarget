@@ -78,8 +78,7 @@ static synchronous_task_t task_list[] = {
     {BAND_500ms,  toggle_status_LEDs       }, // Blink the LEDs
     {BAND_500ms,  tabata_task              }, // Manage the Tabata timer
     {BAND_500ms,  rapid_fire_task          }, // Manage the rapid fire timer
-    {BAND_1000ms, check_12V          }, // Monitor the 12V supply
-    {BAND_1000ms, send_keep_alive          }, // Send a keep alive message
+    {BAND_1000ms, check_12V                }, // Monitor the 12V supply
     {BAND_1000ms, check_new_connection     }, // Check for a new WiFi connection
     {BAND_60s,    watchdog                 }, // Watchdog monitor
     {0,           0                        }
@@ -150,7 +149,12 @@ void freeETarget_timer_start(void) // Start the timer
   return;
 }
 
-void show_timers(void)             // Show the current timers
+/*
+ * Show the value of the count down timers
+ *
+ * IMPORTANT.  Some timers may be reset as a function of executing this command
+ */
+void show_timers(void) // Show the current timers
 {
   unsigned int i;
 
@@ -162,6 +166,7 @@ void show_timers(void)             // Show the current timers
       SEND(ALL, sprintf(_xs, "  %s: %ld\r\n", timers[i].name, *timers[i].run_time);)
     }
   }
+
   return;
 }
 
@@ -384,7 +389,7 @@ void freeETarget_synchronous(void *pvParameters)
  *
  *-----------------------------------------------------*/
 int ft_timer_new(time_count_t *new_timer, // Pointer to new down counter
-                 long          duration,  // Duration of the timer
+                 time_count_t  duration,  // Duration of the timer
                  void *(callback)(),      // What to do when we hit zero
                  char *name               // Timer name
 )

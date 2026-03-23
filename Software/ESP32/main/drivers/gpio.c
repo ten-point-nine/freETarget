@@ -280,7 +280,7 @@ void set_status_LED(char new_state[]          // New LED colours
   old_state = new_state;
 
   /*
-   *   Check to see if tabata enabled is present.  If so, change from flashing green to flashing yellow 
+   *   Check to see if tabata enabled is present.  If so, change from flashing green to flashing yellow
    */
   if ( json_tabata_enable == 1 )
   {
@@ -1074,7 +1074,7 @@ void paper_test(void)
    */
   if ( check_12V() == false )
   {
-    SEND(ALL, sprintf(_xs, "\r\nTest failed, no 12V supply");)
+    SEND(ALL, sprintf(_xs, "\r\nTest failed, no 12V supply\r\n");)
     return;
   }
 

@@ -185,29 +185,28 @@ void serial_aux_init(void)
   /*
    *  Setup the communications parameters
    */
-  if ( json_aux_mode != 0 )
+
+  switch ( json_aux_mode )
   {
-    switch ( json_aux_mode )
-    {
-      case AUX:
-        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX port enabled");))
-        uart_param_config(uart_aux, &uart_aux_config);                     // 115200 baud rate
-        RS485_transmit(RS485_TRANSMIT);                                    // Turn off the RS485 receiver
-        break;
+    default:
+    case AUX:
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX port enabled");))
+      uart_param_config(uart_aux, &uart_aux_config);                     // 115200 baud rate
+      RS485_transmit(RS485_TRANSMIT);                                    // Turn off the RS485 receiver
+      break;
 
-      case BLUETOOTH:
-        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BLUETOOTH port enabled");))
-        uart_param_config(uart_aux, &uart_BT_config);                      // 115200 baud rate
-        RS485_transmit(RS485_TRANSMIT);                                    // Turn off the RS485 receiver
-        break;
+    case BLUETOOTH:
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BLUETOOTH port enabled");))
+      uart_param_config(uart_aux, &uart_BT_config);                      // 115200 baud rate
+      RS485_transmit(RS485_TRANSMIT);                                    // Turn off the RS485 receiver
+      break;
 
-      case RS485:
-        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RS485 port enabled");))
-        uart_param_config(uart_aux, &uart_aux_config);                     // 115200 baud rate
-        ft_timer_new(&RS485_timer, 0, &RS485_transmit_off, "RS485 timer"); // Prime the RS485 timer
-        RS485_transmit(RS485_RECEIVE);                                     // Ensure we are in receive mode
-        break;
-    }
+    case RS485:
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RS485 port enabled");))
+      uart_param_config(uart_aux, &uart_aux_config);                     // 115200 baud rate
+      ft_timer_new(&RS485_timer, 0, &RS485_transmit_off, "RS485 timer"); // Prime the RS485 timer
+      RS485_transmit(RS485_RECEIVE);                                     // Ensure we are in recei
+      break;
   }
   /*
    *  Set UART pins(TX: IO4, RX: IO5, RTS: IO18, CTS: IO19)
