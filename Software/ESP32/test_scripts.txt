@@ -3,6 +3,7 @@
 //
 Static IP  { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING", "WIFI_IP":"192.168.86.109" }
 Static IP  { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"NEXUS", "WIFI_IP":"192.168.86.110" }
+Static IP  { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"62I", "WIFI_IP":"192.168.86.111" }
 Dynamic IP { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING"}
 { "NAME_ID": 99, "NAME_TEXT":"ALLAN"}
 { "NAME_ID": 101}
@@ -25,6 +26,9 @@ Practice witness paper { "PAPER_TIME":125, "PAPER_ECO":40, "PAPER_SHOT":4}
 
 Firmware debug trace   { "TRACE":16, "TRACE":32, "TRACE":64, "TEST":142}
 
+Turn on RS488 {"AUX_MODE":8}
+
+
 //
 // Rapid Fire and Tabata 
 //
@@ -43,6 +47,7 @@ PC Shot Test {"MFS_TAP_1":4 }
 {"}
 Start a download {"DOWNLOAD":1234567}
 RS485 {"AUX_MODE":8}
+
 
 {"ECHO":0}
 

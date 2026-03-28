@@ -2,7 +2,7 @@
  *
  * freETarget.h
  *
- * Software to run the Air-Rifle / Small Bore Electronic Target
+ * Software to run the Air-Gun / Small Bore Electronic Target
  *
  *--------------------------------------------------------------*/
 
