@@ -15,6 +15,7 @@
 #include "driver\gpio.h"
 #include "math.h"
 #include "esp_timer.h"
+#include "esp_random.h"
 
 #include "freETarget.h"
 #include "helpers.h"
@@ -298,22 +299,20 @@ void hello(void)
  *
  *----------------------------------------------------------------
  *
- * This is called every second to send out the keep alive to the
- * TCPIP server
+ * This is a callback when the keep alive timer expires.
+ *
+ * Send out the keep alive message and reset the timer
  *
  *--------------------------------------------------------------*/
 void send_keep_alive(void)
 {
   static int keep_alive_count = 0;
-  static int keep_alive       = 0;
   char       str[SHORT_TEXT];
 
-  if ( (json_keep_alive != 0) && (keep_alive <= 0) ) // Time in seconds
-  {
-    target_name(str);
-    SEND(TCPIP, sprintf(_xs, "{\"KEEP_ALIVE\":%d, \"NAME\":\"%s\"}", keep_alive_count++, str);)
-    keep_alive = (time_count_t)json_keep_alive * ONE_SECOND;
-  }
+  target_name(str);
+  SEND(TCPIP, sprintf(_xs, "{\"KEEP_ALIVE\":%d, \"NAME\":\"%s\"}", keep_alive_count++, str);)
+  keep_alive = (time_count_t)json_keep_alive * ONE_SECOND;
+
   return;
 }
 /*----------------------------------------------------------------
@@ -559,40 +558,6 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
   /*
    * Put in the closing } and return
    */
-  return;
-}
-
-/*
- *  Generate a known score message
- */
-void test_build_json_score(void)
-{
-  char str[MEDIUM_TEXT];
-
-  SEND(ALL, sprintf(_xs, "\r\ntest_build_json_score()");)
-
-  build_json_score(&record[0], SCORE_ALL);
-  strncpy(str, _xs, sizeof(str));
-  SEND(ALL, sprintf(_xs, "\r\nALL:       %s", str);)
-
-  build_json_score(&record[0], SCORE_USB);
-  strncpy(str, _xs, sizeof(str));
-  SEND(ALL, sprintf(_xs, "\r\nUSB:       %s", str);)
-
-  build_json_score(&record[0], SCORE_TCPIP);
-  strncpy(str, _xs, sizeof(str));
-  SEND(ALL, sprintf(_xs, "\r\nTCPIP:     %s", str);)
-
-  build_json_score(&record[0], SCORE_BLUETOOTH);
-  strncpy(str, _xs, sizeof(str));
-  SEND(ALL, sprintf(_xs, "\r\nBLUETOOTH: %s", str);)
-
-  build_json_score(&record[0], SCORE_HTTP);
-  strncpy(str, _xs, sizeof(str));
-  SEND(ALL, sprintf(_xs, "\r\nHTTP:      %s", str);)
-
-  SEND(ALL, sprintf(_xs, "%s", _DONE_);)
-
   return;
 }
 

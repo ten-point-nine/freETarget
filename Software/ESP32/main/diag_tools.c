@@ -13,6 +13,7 @@
 #include "ctype.h"
 #include "driver\gpio.h"
 #include "esp_timer.h"
+#include "esp_random.h"
 #include "gpio_types.h"
 #include "serial_io.h"
 #include "stdbool.h"
@@ -57,60 +58,61 @@ typedef struct
 } self_test_t;
 
 static const self_test_t test_list[] = {
-    {"Help",                              &show_test_help          },
-    {"Factory test",                      &factory_test            },
-    {"Sensor test",                       &sensor_test             },
-    {"- Digital",                         0                        },
-    {"Digital inputs",                    &digital_test            },
-    {"Advance paper backer",              &paper_test              },
-    {"LED brightness test",               &LED_test                },
-    {"Status LED driver",                 &status_LED_test         },
-    {"- Analog",                          0                        },
-    {"Analog input test",                 &analog_input_test       },
-    {"Analog input raw",                  &analog_input_raw        },
-    {"DAC test",                          &DAC_test                },
-    {"DAC read",                          &DAC_read                },
-    {"- Timer & PCNT test",               0                        },
-    {"PCNT timers not stopping",          &pcnt_1                  },
-    {"PCNT timers not running",           &pcnt_2                  },
-    {"PCNT timers start - stop together", &pcnt_3                  },
-    {"PCNT Timers cleared",               &pcnt_4                  },
-    {"PCNT test all",                     &pcnt_all                },
-    {"PCNT calibration",                  &pcnt_cal                },
-    {"Sensor POST test",                  &POST_counters           },
-    {"Turn the oscillator on and off",    &timer_cycle_oscillator  },
-    {"Turn the RUN lines on and off",     &timer_run_all           },
-    {"Show the current time",             &show_time               },
-    {"Show current timers",               &show_timers             },
-    {"- Communiations Tests",             0                        },
-    {"AUX serial port test",              &serial_port_test        },
-    {"BlueTooth configuration",           &BlueTooth_configuration },
-    {"Test WiFi as a station",            &WiFi_station_init       },
-    {"Enable the WiFi Server",            &WiFi_server_test        },
-    {"Enable the WiFi AP",                &WiFi_AP_init            },
-    {"Loopback WiFi",                     &WiFi_loopback_test      },
-    {"Scan for access points (APs)",      &WiFi_AP_scan_test       },
-    {"WiFi Ping Pong test",               &WiFi_pingpong_test      },
-    {"- HTTP tests",                      0                        },
-    {"DNS Lookup test",                   &http_DNS_test           },
-    {"Send to server test",               &http_send_to_server_test},
-    {"Start web server",                  &http_server_test        },
-    {"OTA partitions",                    &OTA_partitions          },
-    {"OTA load",                          &OTA_load                },
-    {"OTA rollback",                      &OTA_rollback            },
-    {"OTA version",                       &OTA_compare_versions    },
-    {"-Interrupt Tests",                  0                        },
-    {"Polled target test",                &polled_target_test      },
-    {"Interrupt target test",             &interrupt_target_test   },
-    {"- Software tests",                  0                        },
-    {"build_json_score",                  &test_build_json_score   }, // Generate a known score message
-    {"build_fake_shots",                  &test_build_fake_shots   }, // Fill up 10 shots with random values
-    {"generate_fake_shot",                &generate_fake_shot      }, // This forces shots into the software
-    {"display_all_scores",                &test_display_all_scores }, // Send fake JSON scores
-    {"Rapidfire test",                    &test_rapidfire          },
-    {"Rapidfire test",                    &test_rapidfire          },
-    {"Calibration test",                  &calibration_test        }, // Generate fake scores and observe the calibration
-    {"",                                  0                        }
+    {"Help",                              &show_test_help           },
+    {"Factory test",                      &factory_test             },
+    {"Sensor test",                       &sensor_test              },
+    {"- Digital",                         0                         },
+    {"Digital inputs",                    &digital_test             },
+    {"Advance paper backer",              &paper_test               },
+    {"LED brightness test",               &LED_test                 },
+    {"Status LED driver",                 &status_LED_test          },
+    {"- Analog",                          0                         },
+    {"Analog input test",                 &analog_input_test        },
+    {"Analog input raw",                  &analog_input_raw         },
+    {"DAC test",                          &DAC_test                 },
+    {"DAC read",                          &DAC_read                 },
+    {"- Timer & PCNT test",               0                         },
+    {"PCNT timers not stopping",          &pcnt_1                   },
+    {"PCNT timers not running",           &pcnt_2                   },
+    {"PCNT timers start - stop together", &pcnt_3                   },
+    {"PCNT Timers cleared",               &pcnt_4                   },
+    {"PCNT test all",                     &pcnt_all                 },
+    {"PCNT calibration",                  &pcnt_cal                 },
+    {"Sensor POST test",                  &POST_counters            },
+    {"Turn the oscillator on and off",    &timer_cycle_oscillator   },
+    {"Turn the RUN lines on and off",     &timer_run_all            },
+    {"Show the current time",             &show_time                },
+    {"Show current timers",               &show_timers              },
+    {"- Communiactions Tests",            0                         },
+    {"AUX port loopback test",            &aux_port_loopback_test   },
+    {"BlueTooth configuration",           &BlueTooth_configuration  },
+    {"RSS485 test",                       &RS485_test               },
+    {"Test WiFi as a station",            &WiFi_station_init        },
+    {"Enable the WiFi Server",            &WiFi_server_test         },
+    {"Enable the WiFi AP",                &WiFi_AP_init             },
+    {"Loopback WiFi",                     &WiFi_loopback_test       },
+    {"Scan for access points (APs)",      &WiFi_AP_scan_test        },
+    {"WiFi Ping Pong test",               &WiFi_pingpong_test       },
+    {"- HTTP tests",                      0                         },
+    {"DNS Lookup test",                   &http_DNS_test            },
+    {"Send to server test",               &http_send_to_server_test },
+    {"Start web server",                  &http_server_test         },
+    {"OTA partitions",                    &OTA_partitions           },
+    {"OTA load",                          &OTA_load                 },
+    {"OTA rollback",                      &OTA_rollback             },
+    {"OTA version",                       &OTA_compare_versions     },
+    {"-Interrupt Tests",                  0                         },
+    {"Polled target test",                &polled_target_test       },
+    {"Interrupt target test",             &interrupt_target_test    },
+    {"- Software tests",                  0                         },
+    {"build_json_score",                  &mfs_test_build_json_score}, // Generate a known score message
+    {"build_fake_shots",                  &test_build_fake_shots    }, // Fill up 10 shots with random values
+    {"generate_fake_shot",                &generate_fake_shot       }, // This forces shots into the software
+    {"display_all_scores",                &test_display_all_scores  }, // Send fake JSON scores
+    {"Rapidfire test",                    &test_rapidfire           },
+    {"Rapidfire test",                    &test_rapidfire           },
+    {"Calibration test",                  &calibration_test         }, // Generate fake scores and observe the calibration
+    {"",                                  0                         }
 };
 
 const dlt_name_t dlt_names[] = {
@@ -387,7 +389,7 @@ bool do_factory_test(bool test_run)
     {
       if ( (pass & running & RUN_MASK) != 0 )           // Clear the test if any sensor is detected
       {
-        vTaskDelay(ONE_SECOND/4);
+        vTaskDelay(ONE_SECOND / 4);
         arm_timers();
       }
     }
@@ -442,7 +444,7 @@ bool do_factory_test(bool test_run)
       {
         vmes_lo = vref_measure();       // Read the VREF_LO voltage
         SEND(ALL, sprintf(_xs, "  VREF_LO: %4.2fV", vmes_lo);)
-        if ( abs(vmes_lo - json_vref_lo) <= 0.1 )
+        if ( fabs(vmes_lo - json_vref_lo) <= 0.1 )
         {
           SEND(ALL, sprintf(_xs, " ");)
           pass |= PASS_VREF;            // Mark the test as passed
@@ -1135,5 +1137,44 @@ static void test_rapidfire(void)
    *  Finished
    */
   SEND(ALL, sprintf(_xs, _DONE_);)
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: mfs_test_build_json_score
+ *
+ * @brief:    Build a fake score message and send it
+ *
+ * @return:   None
+ *
+ *----------------------------------------------------------------
+ *
+ * This self test sends a score message to the PC or network
+ * to simulate a shot.
+ *
+ *--------------------------------------------------------------*/
+#define TARGET_RADIUS 25.0
+void mfs_test_build_json_score(void)
+{
+  char       str[LARGE_STRING];
+  static int test_shot = 0;
+
+  record[0].shot = test_shot++;
+  record[0].x_mm = ((real_t)(esp_random() % 2000) - 1000) / 1000.0 * TARGET_RADIUS; // Pick a random location
+  record[0].y_mm = ((real_t)(esp_random() % 2000) - 1000) / 1000.0 * TARGET_RADIUS;
+
+  build_json_score(&record[0], SCORE_USB);
+  strncpy(str, _xs, sizeof(str));
+  SEND(CONSOLE, sprintf(_xs, "\r\nUSB:       %s", str);)
+
+  build_json_score(&record[0], SCORE_TCPIP);
+  strncpy(str, _xs, sizeof(str));
+  SEND(TCPIP, sprintf(_xs, "\r\nTCPIP:     %s", str);)
+
+  build_json_score(&record[0], SCORE_BLUETOOTH);
+  strncpy(str, _xs, sizeof(str));
+  SEND(AUX | BLUETOOTH | RS485, sprintf(_xs, "\r\nAUX: %s", str);)
+
   return;
 }

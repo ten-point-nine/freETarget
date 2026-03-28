@@ -185,27 +185,28 @@ void serial_aux_init(void)
   /*
    *  Setup the communications parameters
    */
-  if ( json_aux_mode != 0 )
+
+  switch ( json_aux_mode )
   {
-    switch ( json_aux_mode )
-    {
-      case AUX:
-        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX port enabled");))
-        uart_param_config(uart_aux, &uart_aux_config);                       // 115200 baud rate
-        break;
+    default:
+    case AUX:
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX port enabled");))
+      uart_param_config(uart_aux, &uart_aux_config);                     // 115200 baud rate
+      RS485_transmit(RS485_TRANSMIT);                                    // Turn off the RS485 receiver
+      break;
 
-      case BLUETOOTH:
-        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BLUETOOTH port enabled");))
-        uart_param_config(uart_aux, &uart_BT_config);                        // 115200 baud rate
-        break;
+    case BLUETOOTH:
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BLUETOOTH port enabled");))
+      uart_param_config(uart_aux, &uart_BT_config);                      // 115200 baud rate
+      RS485_transmit(RS485_TRANSMIT);                                    // Turn off the RS485 receiver
+      break;
 
-      case RS485:
-        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RS485 port enabled");))
-        uart_param_config(uart_aux, &uart_aux_config);                       // 115200 baud rate
-        ft_timer_new(&RS485_timer, 0, &(RS485_transmit_off), "RS485 timer"); // Prime the RS485 timer
-        RS485_transmit_off();                                                // Ensure we are in receive mode
-        break;
-    }
+    case RS485:
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RS485 port enabled");))
+      uart_param_config(uart_aux, &uart_aux_config);                     // 115200 baud rate
+      ft_timer_new(&RS485_timer, 0, &RS485_transmit_off, "RS485 timer"); // Prime the RS485 timer
+      RS485_transmit(RS485_RECEIVE);                                     // Ensure we are in recei
+      break;
   }
   /*
    *  Set UART pins(TX: IO4, RX: IO5, RTS: IO18, CTS: IO19)
@@ -394,6 +395,8 @@ void serial_flush(int ports // active port list
  * Poll the incoming queues and return the next character.
  *
  * If there is a character present, update the connection mask
+ *
+ * If no character is available, return a 0.
  *
  *******************************************************************************-*/
 char serial_getch(int ports) // Bit mask of active ports
@@ -616,19 +619,29 @@ void serial_to_all(char *str,        // String to output
  * If the board is not using RS485 communications, set the driver to TRANSMIT
  * so that it doesn't collide with the AUX port
  *
+ * Version 6.2 controls the MAX485 directly through GPIO 9, whereas everything
+ * before that uses one to the MFS output lines
+ *
  ******************************************************************************/
-void RS485_transmit_off(void)
+void RS485_transmit_off(void) // Called from timer to put the timer back in receive
 {
-  RS485_transmit(RS485_RECEIVE); // Set RS485 to receive
+  RS485_transmit(RS485_RECEIVE);
   return;
 }
 
-/*
- * Set the RS485 transmit line
- */
 void RS485_transmit(int new_state)
 {
   static int old_state = -1;
+
+  /*
+   *  Yes RS485 is enabled
+   */
+  if ( new_state == old_state ) // No change, do nothing
+  {
+    return;
+  }
+
+  old_state = new_state;
 
   /*
    * Check to see if we are even using RS485
@@ -639,29 +652,18 @@ void RS485_transmit(int new_state)
     return;
   }
 
-  /*
-   *  Yes RS485 is enabled
-   */
-  if ( new_state == old_state )                 // No change, do nothing
+  if ( (json_mfs_hold_c == RS485_SELECT) || (json_mfs_hold_d == RS485_SELECT) ) // Are we using MFS to drive the RS485 transmit?
   {
-    return;
+    mfs_RS485_control(new_state);                                               // Control RS485 via MFS
+  }
+  else
+  {
+    gpio_set_level(RS485_CONTROL, new_state);                                   // Set RS485 to transmit
   }
 
-  old_state = new_state;
-  if ( MAX485_MFS )                             // Choose how to control RS485
+  if ( new_state == RS485_TRANSMIT )                                            // Is it transmit?
   {
-    if ( json_mfs_hold_c == RS485_CONTROL )
-    {
-      mfs_RS485_control(new_state);             // Control RS485 via MFS
-    }
-    else
-    {
-      gpio_set_level(RS485_CONTROL, new_state); // Set RS485 to transmit
-    }
-    if ( new_state == RS485_TRANSMIT )          // Is it transmit?
-    {
-      RS485_timer = RS485_TRANSMIT_TIME;        // Set timer to turn off transmitter
-    }
+    RS485_timer = RS485_TRANSMIT_TIME;                                          // Set timer to turn off transmitter
   }
 
   /*
@@ -838,7 +840,7 @@ int tcpip_socket_2_queue(char *buffer, // Where to return the bytes
  *
  * @brief:    Read a text string from the available ports
  *
- * @return:   TRUE if a CR or LF string terminator is entered
+ * @return:   Number of characters entered
  *
  *******************************************************************************
  *
@@ -847,23 +849,25 @@ int tcpip_socket_2_queue(char *buffer, // Where to return the bytes
  * has been received.
  *
  ******************************************************************************/
-bool get_string(char destination[], int size)
+int get_string(char destination[], int size)
 {
   int ch; // Input character
   int i;  // Input index
 
   i              = 0;
   destination[0] = 0;
+  serial_flush(ALL);
+
   while ( 1 )
   {
-    if ( serial_available(ALL) != 0 )
+    while ( serial_available(ALL) != 0 )
     {
       ch = serial_getch(ALL);
-      SEND(ALL, sprintf(_xs, "%c", ch);)
+      SEND(ALL, sprintf(_xs, "%c", ch);) // Echo the input
 
       switch ( ch )
       {
-        case 8: // Backspace
+        case 8:                          // Backspace
           i--;
           if ( i < 0 )
           {
@@ -872,13 +876,15 @@ bool get_string(char destination[], int size)
           destination[i] = 0;
           break;
 
-        case '\r':       // Enter
-        case '\n':       // newline
-          return 1;
+          //        case '\r':       // Enter Commented out since PC Client does not allow
+          //        case '\n':       // newline as an input terminator
+        case '!':        // Bang!
+          return i;
 
         case 'C' & 0x1F: // Control C, exit
         case 0x1B:       // Escape
-          return 0;
+          destination[0] = 0;
+          return 0;      // Remove anything we got
 
         default:
           destination[i] = ch;
@@ -896,7 +902,7 @@ bool get_string(char destination[], int size)
 
 /*******************************************************************************
  *
- * @function: serial_port_test
+ * @function: aux_port_loopback_test
  *
  * @brief:    Loopback between AUX and console
  *
@@ -907,7 +913,7 @@ bool get_string(char destination[], int size)
  * Output to the AUX port, read back the results and send them to the console
  *
  ******************************************************************************/
-void serial_port_test(void)
+void aux_port_loopback_test(void)
 {
   unsigned char test[] = "PASS - This is the loopback test";
   unsigned int  i;
@@ -958,6 +964,34 @@ void serial_port_test(void)
    */
   ft_timer_delete(&test_time);
   SEND(ALL, sprintf(_xs, _DONE_);)
+  return;
+}
+
+/*******************************************************************************
+ *
+ * @function: RS485_test
+ *
+ * @brief:    Test the AUX port in RS485 mode
+ *
+ * @return:   None
+ *
+ *******************************************************************************
+ *
+ * Output to the AUX port, read back the results and send them to the console
+ *
+ ******************************************************************************/
+void RS485_test(void)
+{
+  int i;
+
+  for ( i = 0; i != 512; i++ )
+  {
+    SEND(RS485, sprintf(_xs, " %d ", i);)
+    vTaskDelay(1);
+  }
+
+  SEND(ALL, sprintf(_xs, _DONE_);)
+
   return;
 }
 

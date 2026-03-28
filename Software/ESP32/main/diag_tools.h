@@ -28,6 +28,7 @@ bool check_12V(void);                                     // Check the 12 volt s
 void heartbeat(void);                                     // Send out regular status messages
 void test_build_fake_shots(void);                         // Generate a list of shots
 void generate_fake_shot(void);                            // Generate a string of shots
+void mfs_test_build_json_score(void);                     // Test build_json_score
 
 /*
  *  Definitions
@@ -139,11 +140,12 @@ void generate_fake_shot(void);                            // Generate a string o
 #define TRACE_HTTP          (0 == 1)
 #define TRACE_OTA           (0 == 1)
 #define TRACE_HEARTBEAT     (0 == 1)
-#define TRACE_CALIBRATION   (1 == 1)
+#define TRACE_CALIBRATION   (0 == 1)
+#define TRACE_VERBOSE       (0 == 1)
 
 // clang-format off
-#define DLT(level, z) if ( do_dlt(level) )  { z }
-// clang-format on
+#define DLT(level, z) if ( do_dlt(level) )  { z }                                                                                                                       \
+  // clang-format on
 
 typedef struct
 {

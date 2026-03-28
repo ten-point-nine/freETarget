@@ -95,11 +95,12 @@ extern volatile unsigned int step_count; // Number of steps before stopping
 #define CLOCK_START GPIO_NUM_21                                            // Trigger a test cycle
 #define OSC_CONTROL GPIO_NUM_48                                            // Enable / kill 10MHz Oscillator
 #endif
-#if ( (BUILD_REV == REV_510) || (BUILD_REV == REV_520) || (BUILD_REV == REV_600) || (BUILD_REV == REV_610) )
+#if ( (BUILD_REV == REV_510) || (BUILD_REV == REV_520) || (BUILD_REV == REV_600) || (BUILD_REV == REV_610) || (BUILD_REV == REV_620) )
 #define STOP_N      GPIO_NUM_21                                            // Stop the RUN flipflops
 #define CLOCK_START GPIO_NUM_47                                            // Trigger a test cycle
 #define OSC_CONTROL GPIO_NUM_48                                            // Enable / kill 10MHz Oscillator
 #endif
+
 #define OSC_ON            1                                                // Enable the oscillator
 #define OSC_OFF           0                                                // Tristate the oscillator
 #define RUN_OFF           0                                                // Clear the run flip flops
@@ -121,19 +122,19 @@ extern volatile unsigned int step_count; // Number of steps before stopping
 /*
  * DIP Switch Use.
  */
-#define DIP_SW_A (gpio_get_level(DIP_A) == 0) // Switch Input A
-#define DIP_SW_B (gpio_get_level(DIP_B) == 0) // Switch Input B
-#define DIP_SW_C (gpio_get_level(DIP_C) == 0) // Switch Input C
-#define DIP_SW_D (gpio_get_level(DIP_D) == 0) // Switch Input D
+#define DIP_SW_A    (gpio_get_level(DIP_A) == 0)                           // Switch Input A
+#define DIP_SW_B    (gpio_get_level(DIP_B) == 0)                           // Switch Input B
+#define DIP_SW_C    (gpio_get_level(DIP_C) == 0)                           // Switch Input C
+#define DIP_SW_D    (gpio_get_level(DIP_D) == 0)                           // Switch Input D
 
-#define FACE_SENSOR 19
+#define FACE_SENSOR  19
 
 /*
  *  Driver Settings
  */
-#define STEP_ON      1 // Pulse stepper on
-#define STEP_OFF     0 // Pulse setpper off
-#define STEP_ENABLE  0 // Enable the stepper circuit
-#define STEP_DISABLE 1 // Disable stepper circuit
+#define STEP_ON      1                                                     // Pulse stepper on
+#define STEP_OFF     0                                                     // Pulse setpper off
+#define STEP_ENABLE  0                                                     // Enable the stepper circuit
+#define STEP_DISABLE 1                                                     // Disable stepper circuit
 
 #endif
