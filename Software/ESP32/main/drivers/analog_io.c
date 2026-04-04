@@ -257,14 +257,18 @@ void set_LED_PWM         // Theatre lighting
  *  The analog input is a number 0-1024 which is banded and
  *  used to look up a table of revision numbers.
  *
+ *  Due to errors in the reference voltage, some of the bands
+ *  are not well defined.  To accomodate this, if the result is
+ *  undefined version, then then some of the bands
+ *  are remapped to the same revision number.
+ *
  *  To accomodate unknown hardware builds, if the revision is
  *  undefined (< 100) then the last 'good' revision is returned
  *
  *--------------------------------------------------------------*/
-//                                        0     1  2     3     4  5     6     7  8  9   A   B       C   D   E   F
-const static unsigned int version[] = {REV_510, 1, 2, REV_610, 4, 5, REV_600, 7, 8, 9, 10, REV_620, 12, 13, 14, REV_520};
-
-unsigned int revision(void)
+//                                        0     1  2     3     4  5     6     7  8   9   A     B      C   D   E    F
+const static unsigned int version[] = {REV_510, 0, 3, REV_610, 3, 6, REV_600, 6, 6, 11, 11, REV_620, 11, 11, 15, REV_520};
+unsigned int              revision(void)
 {
   int index;                // Index into the version table
   int adc_reading;          // ADC reading
@@ -277,14 +281,18 @@ unsigned int revision(void)
   /*
    *  Read the resistors and determine the board revision
    */
+  adc_reading = adc_read(BOARD_REV);
+  index       = ((adc_reading + 0x080) >> (12 - 4)) & 0x0f; // ADC + 1/2, rounded, and masked to 4 bits
+  if ( version[index] < REV_500 )                           // Check for an invalid reading
+  {
+    index = version[index];                                 // Remap to the next good index
+  }
+  board_version = version[index];                           // Get the board revision number
+  board_mask    = 1 << index;                               // Set the mask for the board revision
 
-  adc_reading   = adc_read(BOARD_REV);
-  index         = ((adc_reading - 0x040) >> (12 - 4)) & 0x0f; // Top 4 bits only
-  board_version = version[index];                             // Get the board revision number
-  board_mask    = 1 << index;                                 // Set the mask for the board revision
-
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Board Version: %d.%d.%d   ADC: %d   Board Mask: 0X%04X", (board_version / 100),
-                                  ((board_version % 100) / 10), (board_version % 10), adc_reading, board_mask);))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Board Version: %d.%d.%d   ADC: %d   Volts: %4.2f  Index: %d   Board Mask: 0X%04X",
+                                  (board_version / 100), ((board_version % 100) / 10), (board_version % 10), adc_reading,
+                                  (real_t)adc_reading / 4096.0 * 3.3, index, board_mask);))
 
   return board_version;
 }

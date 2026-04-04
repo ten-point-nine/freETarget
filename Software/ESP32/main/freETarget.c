@@ -649,7 +649,6 @@ void start_new_session(int session_type) //
   /*
    *  All done, return
    */
-  SEND(ALL, sprintf(_xs, "\r\nSession data cleared\r\n");)
   return;
 }
 

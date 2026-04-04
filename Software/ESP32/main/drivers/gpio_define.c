@@ -297,7 +297,7 @@ void gpio_init_single(unsigned int type)                                        
       switch ( ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->type )
       {
         default:
-          printf("gpio not found");
+          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "GPIO not found: %d", i);))
           break;
 
         case DIGITAL_IO_IN:
@@ -353,12 +353,11 @@ void gpio_init_single(unsigned int type)                                        
           break;
       }
     }
+  i++;
+}
 
-    i++;
-  }
-
-  /*
-   *  All done, return
-   */
-  return;
+/*
+ *  All done, return
+ */
+return;
 }
