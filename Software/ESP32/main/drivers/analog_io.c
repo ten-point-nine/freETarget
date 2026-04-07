@@ -11,6 +11,7 @@
 #include "driver/gpio.h"
 #include "driver/ledc.h"
 #include "driver/adc.h"
+#include "esp_adc_cal.h"
 
 #include "freETarget.h"
 #include "board_assembly.h"
@@ -38,9 +39,13 @@ static real_t temperature_C_TMP1075D(void); // Temperature in degrees C
 /*
  *  Variables
  */
-int           board_version = -1; // Board Revision number
-unsigned int  board_mask    = 0;  // Mask for the board revision
-static real_t rh;                 // Humidity from sensor
+int                           board_version = -1; // Board Revision number
+unsigned int                  board_mask    = 0;  // Mask for the board revision
+static real_t                 rh;                 // Humidity from sensor
+esp_adc_cal_characteristics_t adc_chars_ch1;      // ADC characteristics for ADC1
+esp_adc_cal_characteristics_t adc_chars_ch2;      // ADC characteristics for ADC2
+
+static real_t bd_rev_cal = 1.0;                   // Calibration for the board revision resistor divider
 
 /*
  * Constants
@@ -67,13 +72,15 @@ static real_t rh;                 // Humidity from sensor
  * https://docs.espressif.com/projects/esp-idf/en/v4.4/esp32/api-reference/peripherals/adc.html
  *
  *--------------------------------------------------------------*/
+#define DEFAULT_VREF 1100                  // mV, used if no eFuse Vref calibration data
 
 void adc_init(unsigned int adc_channel,    // What ADC channel are we accessing
               unsigned int adc_attenuation // What is the channel attenuation
 )
 {
-  unsigned int adc;                        // Which ADC (1/2)
-  unsigned int channel;                    // Which channel attached to the ADC (0-10)
+  unsigned int        adc;                 // Which ADC (1/2)
+  unsigned int        channel;             // Which channel attached to the ADC (0-10)
+  esp_adc_cal_value_t val_type = ESP_ADC_CAL_VAL_EFUSE_TP;
 
   adc     = ADC_ADC(adc_channel);          // What ADC are we on
   channel = ADC_CHANNEL(adc_channel);
@@ -86,10 +93,30 @@ void adc_init(unsigned int adc_channel,    // What ADC channel are we accessing
   {
     case 1:
       ESP_ERROR_CHECK(adc1_config_channel_atten(channel, adc_attenuation));
+      val_type = esp_adc_cal_characterize(ADC_UNIT_1, adc_attenuation, ADC_WIDTH_BIT_12, DEFAULT_VREF, &adc_chars_ch1);
       break;
 
     case 2:
       ESP_ERROR_CHECK(adc2_config_channel_atten(channel, adc_attenuation));
+      val_type = esp_adc_cal_characterize(ADC_UNIT_2, adc_attenuation, ADC_WIDTH_BIT_12, DEFAULT_VREF, &adc_chars_ch2);
+      break;
+  }
+
+  /*
+   * Display the calibration values
+   */
+  switch ( val_type )
+  {
+    case ESP_ADC_CAL_VAL_EFUSE_TP:
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "ADC%d channel %d: calibrated using eFuse values two point calibration", adc, channel);))
+      break;
+
+    case ESP_ADC_CAL_VAL_EFUSE_VREF:
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "ADC%d channel %d: calibrated using eFuse VREF values", adc, channel);))
+      break;
+
+    default:
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "ADC%d channel %d: calibrated using default values", adc, channel);))
       break;
   }
 
@@ -128,7 +155,8 @@ unsigned int adc_read(unsigned int adc_channel // What input are we reading?
 {
   unsigned int adc;                            // Which ADC (1/2)
   unsigned int channel;                        // Which channel attached to the ADC (0-10)
-  int          raw, sum;                       // Raw value from the ADC
+  int          raw;                            // Raw value from the ADC
+  real_t       sum;
   int          i;
 
   adc     = ADC_ADC(adc_channel);              // What ADC are we on
@@ -150,25 +178,24 @@ unsigned int adc_read(unsigned int adc_channel // What input are we reading?
         adc2_get_raw(channel, ADC_WIDTH_BIT_DEFAULT, &raw);
         break;
     }
-    sum += raw;
+    sum += (real_t)raw;
   }
 
   /*
    *  Done
    */
   sum /= FILTER;
+  sum = sum * bd_rev_cal;                     // Apply the board revision calibration
 
-  return (sum & 0x0fff);
+  return ((int)sum & 0x0fff);
 }
 
-#define V12_RESISITOR   ((40.2 + 5.0) / 5.0) // Resistor divider
-#define V12_ATTENUATION 3.548                // 11 DB
-#define V12_REF         1.1                  // ESP32 VREF
-#define V12_CAL         0.88
+#define V12_RESISITOR ((40000 + 4700) / 4700) // Resistor divider
+#define V12_CAL       3.548                   // 11dB of gain from the resistor divider and the ADC calibration
 
 real_t v12_supply(void)
 {
-  return (real_t)adc_read(V_12_LED) / ADC_FULL * ADC_REF * V12_RESISTOR + ADC_BIAS;
+  return (real_t)adc_read(V_12_LED) / ADC_FULL * V12_CAL * V12_RESISTOR;
 }
 
 /*----------------------------------------------------------------
@@ -251,27 +278,47 @@ void set_LED_PWM         // Theatre lighting
  *
  *--------------------------------------------------------------
  *
- *  Read the analog value from the resistor divider, keep only
- *  the top 4 bits, and return the version number.
+ *  The ADC for the ESP32 is accurate +/-10%.
  *
- *  The analog input is a number 0-1024 which is banded and
- *  used to look up a table of revision numbers.
- *
- *  Due to errors in the reference voltage, some of the bands
- *  are not well defined.  To accomodate this, if the result is
- *  undefined version, then then some of the bands
- *  are remapped to the same revision number.
- *
- *  To accomodate unknown hardware builds, if the revision is
- *  undefined (< 100) then the last 'good' revision is returned
+ *  To find the board revision, the board revision is read and
+ *  provides a number 0-4096 (12 bits).  The values of the
+ *  resistor divider for each board revision are known, and the
+ *  ideal ADC reading for each board revision can be calculated.
+ *  The actual ADC reading is compared to the ideal readings,
+ *  and the closest match is used to determine the board revision.
  *
  *--------------------------------------------------------------*/
-//                                        0     1  2     3     4  5     6     7  8   9   A     B      C   D   E    F
-const static unsigned int version[] = {REV_510, 0, 3, REV_610, 3, 6, REV_600, 6, 6, 11, 11, REV_620, 11, 11, 15, REV_520};
-unsigned int              revision(void)
+//                                                       0     1  2     3     4  5     6     7  8  9   A     B      C   D   E    F
+const static unsigned int       version[]          = {REV_510, 1, 2, REV_610, 4, 5, REV_600, 7, 8, 9, 10, REV_620, 12, 13, 14, REV_520};
+const static BD_REV_resistors_t bd_rev_resistors[] = {
+    {10000, 0     }, // 0 5.1
+    {10000, 1428  }, // 1
+    {10000, 2308  }, // 2
+    {10000, 3300  }, // 3 6.1
+
+    {10000, 4545  }, // 4
+    {10000, 6000  }, // 5
+    {10000, 7777  }, // 6 6.0
+
+    {10000, 10000 }, // 7
+    {10000, 12857 }, // 8
+    {10000, 16666 }, // 9
+
+    {10000, 22222 }, // 10
+    {10000, 30000 }, // 11 6.2
+    {10000, 43333 }, // 12
+    {10000, 70000 }, // 13
+    {10000, 150000}, // 14
+    {0,     1E6   }, // 15 5.2
+};
+
+unsigned int revision(void)
 {
   int index;                // Index into the version table
   int adc_reading;          // ADC reading
+  int adc_ideal;            // Ideal ADC reading for this revision
+  int i;                    // Loop counter
+  int distance;             // Distance from the ideal reading
 
   if ( board_version >= 0 ) // Already read the revision?
   {
@@ -281,19 +328,37 @@ unsigned int              revision(void)
   /*
    *  Read the resistors and determine the board revision
    */
-  adc_reading = adc_read(BOARD_REV);
-  index       = ((adc_reading + 0x080) >> (12 - 4)) & 0x0f; // ADC + 1/2, rounded, and masked to 4 bits
-  if ( version[index] < REV_500 )                           // Check for an invalid reading
+  adc_reading = adc_read(BOARD_REV);                            // Read the ADC value for the board revision referenced to 3.3 volts
+  distance    = 0x0fff;                                         // Start with the maximum possible distance
+
+  for ( i = 0; i != sizeof(version) / sizeof(version[0]); i++ ) // Loop through the revisions
   {
-    index = version[index];                                 // Remap to the next good index
+    if ( version[i] >= REV_500 ) // LOnly consider revisions 5.0 and later, since the resistor values are well defined before then
+    {
+      adc_ideal = 4096 * (real_t)bd_rev_resistors[i].r2 /
+                  (bd_rev_resistors[i].r1 + bd_rev_resistors[i].r2); // Calculate the ideal ADC reading for this revision
+
+      if ( abs(adc_reading - adc_ideal) < distance ) // Is this revision closer to the actual reading than the previous best?
+      {
+        distance = abs(adc_reading - adc_ideal);     // Update the closest distance
+        index    = i;                                // Update the index of the closest revision
+      }
+    }
   }
-  board_version = version[index];                           // Get the board revision number
-  board_mask    = 1 << index;                               // Set the mask for the board revision
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Board Version: %d.%d.%d   ADC: %d   Volts: %4.2f  Index: %d   Board Mask: 0X%04X",
-                                  (board_version / 100), ((board_version % 100) / 10), (board_version % 10), adc_reading,
-                                  (real_t)adc_reading / 4096.0 * 3.3, index, board_mask);))
+  board_version = version[index];                    // Get the board revision number
+  board_mask    = 1 << index;                        // Set the mask for the board revision
 
+                                                     /*
+                                                      * Work out the board calibration
+                                                      */
+  adc_ideal  = 4096 * (real_t)bd_rev_resistors[index].r2 / (bd_rev_resistors[index].r1 + bd_rev_resistors[index].r2);
+  bd_rev_cal = (real_t)adc_ideal / (real_t)adc_reading;
+
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Board Version: %d.%d.%d  Board Mask: 0X%04X", (board_version / 100), ((board_version % 100) / 10),
+                                  (board_version % 10), board_mask);))
+  DLT(DLT_INFO + DLT_VERBOSE, SEND(ALL, sprintf(_xs, "ADC: %d   Volts: %4.2f  bd_rev_cal: %4.2f  index: %d", adc_reading,
+                                                bd_rev_cal * (real_t)adc_reading / 4096.0 * 3.3, bd_rev_cal, index);))
   return board_version;
 }
 

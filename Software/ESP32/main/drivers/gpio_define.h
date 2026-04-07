@@ -148,5 +148,11 @@ typedef struct gpio_struct
   unsigned int board_mask;                           // Board mask associated with this GPIO
 } gpio_struct_t;
 
+typedef struct BD_REV_resistors
+{
+  unsigned int r1;                                   // Resistor 1 value in ohms
+  unsigned int r2;                                   // Resistor 2 value in ohms
+} BD_REV_resistors_t;
+
 extern const gpio_struct_t gpio_table[];             // List of available devices
 #endif
