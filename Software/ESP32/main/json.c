@@ -60,7 +60,7 @@ const json_message_t JSON[] = {
     {HIDE,        "\"50M\":",            0,                           IS_VOID,                  &set_50m,           0,                          0,          0 },
     {HIDE + LOCK, "\"ANGLE\":",          &json_sensor_angle,          IS_INT32,                 0,                  NONVOL_SENSOR_ANGLE,        45,         0 },
     {HIDE + LOCK, "\"ANGLE_OFFSET\":",   &json_sensor_angle_offset,   IS_FLOAT,                 0,                  NONVOL_SENSOR_ANGLE_OFFSET, 0,          15},
-    {SHOW + LOCK, "\"AUX_MODE\":",       &json_aux_mode,              IS_INT32,                 0,                  NONVOL_AUX_PORT_ENABLE,     0,          6 },
+    {SHOW + LOCK, "\"AUX_MODE\":",       &json_aux_mode,              IS_INT32,                 0,                  NONVOL_AUX_PORT_ENABLE,     RS485,      6 },
     {HIDE,        "\"BYE\":",            0,                           IS_INT32,                 &bye,               0,                          0,          0 },
     {HIDE,        "\"CAL\":",            0,                           IS_INT32,                 &calibrate,         0,                          0,          0 },
     {HIDE,        "\"DOWNLOAD\":",       &json_OTA_download_size,     IS_INT32,                 &OTA_serial,        0,                          0,          0 },
