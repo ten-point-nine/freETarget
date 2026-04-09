@@ -19,7 +19,7 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"6.3.3 March 29, 2026\""
+#define SOFTWARE_VERSION "\"6.3.4 April 8, 2026\""
 #define _DONE_           "\r\nDone\r\n"
 #define _SHOT_           "shot"
 #define _GREETING_       "CONNECTED"   // Message to send on connection
@@ -31,7 +31,6 @@
 #define true  (1 == 1)
 #define false (0 == 1)
 #endif
-#define CLOCK_TEST false
 
 #define IN_STARTUP   0x0001 // The software is in initialization
 #define IN_OPERATION 0x0002 // The software is operational
