@@ -19,7 +19,7 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"6.3.4 April 8, 2026\""
+#define SOFTWARE_VERSION "\"6.3.4 April 10, 2026\""
 #define _DONE_           "\r\nDone\r\n"
 #define _SHOT_           "shot"
 #define _GREETING_       "CONNECTED"   // Message to send on connection
@@ -32,14 +32,14 @@
 #define false (0 == 1)
 #endif
 
-#define IN_STARTUP   0x0001 // The software is in initialization
-#define IN_OPERATION 0x0002 // The software is operational
-#define IN_TEST      0x0004 // A self test has been selected (Suspend operation)
-#define IN_SLEEP     0x0008 // The unit has powered down
-#define IN_SHOT      0x0010 // The target is actively in a shot
-#define IN_REDUCTION 0x0020 // The data is being reduced
-#define IN_FATAL_ERR 0x0040 // A fatal error has occured and cannot be fixed
-#define IN_HTTP      0x0080 // The HTTP (JSON) data is being processed
+#define IN_STARTUP   0x0001            // The software is in initialization
+#define IN_OPERATION 0x0002            // The software is operational
+#define IN_TEST      0x0004            // A self test has been selected (Suspend operation)
+#define IN_SLEEP     0x0008            // The unit has powered down
+#define IN_SHOT      0x0010            // The target is actively in a shot
+#define IN_REDUCTION 0x0020            // The data is being reduced
+#define IN_FATAL_ERR 0x0040            // A fatal error has occured and cannot be fixed
+#define IN_HTTP      0x0080            // The HTTP (JSON) data is being processed
 
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
 #define IF_IN(x)  if ( (run_state & (x)) != 0 )
