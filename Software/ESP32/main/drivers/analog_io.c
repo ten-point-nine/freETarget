@@ -152,17 +152,15 @@ static bool adc_calibration_init(int                adc,         // Which ADC (1
                                  adc_cali_handle_t *out_handle   // Output handle for the calibration
 )
 {
-  adc_cali_curve_fitting_config_t calibration_config = {
-      .unit_id  = adc,
-      .chan     = channel,
-      .atten    = attenuation,
-      .bitwidth = ADC_BITWIDTH_DEFAULT,
-  };
+  adc_calibration_config[adc][channel].unit_id  = adc;
+  adc_calibration_config[adc][channel].chan     = channel;
+  adc_calibration_config[adc][channel].atten    = attenuation;
+  adc_calibration_config[adc][channel].bitwidth = ADC_BITWIDTH_DEFAULT;
 
   /*
    *  Create the calibration scheme
    */
-  if ( adc_cali_create_scheme_curve_fitting(&adc_calibration_config, out_handle) != ESP_OK )
+  if ( adc_cali_create_scheme_curve_fitting(&adc_calibration_config[adc][channel], out_handle) != ESP_OK )
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "ADC%d channel %d: Calibration failed", adc, channel);))
     return false;
@@ -226,7 +224,7 @@ int adc_read(int adc_channel)                      // What input are we reading?
   return (volt_mV);
 }
 
-#define V12_RESISITOR ((40200 + 4700) / 4700) // Resistor divider
+#define V12_RESISITOR ((40.200 + 4.700) / 4.700) // Resistor divider
 
 real_t v12_supply(void)
 {
@@ -351,27 +349,28 @@ const static BD_REV_resistors_t bd_rev_resistors[] = {
     {0,     1E6   }, // 15 5.2
 };
 
+unsigned int vBD_measure(void) // Board revision ADC reading in mV
+{
+  return adc_read(BOARD_REV);
+}
+
 unsigned int revision(void)
 {
-  int index;                            // Index into the version table
-  int adc_reading;                      // ADC reading
-  int adc_ideal;                        // Ideal ADC reading for this revision
-  int i;                                // Loop counter
-  int distance;                         // Distance from the ideal reading
-  int milliVolts;                       // Voltage reading from the ADC
-  int adc     = ADC_ADC(BOARD_REV);     // ADC to use
-  int channel = ADC_CHANNEL(BOARD_REV); // Channel to use
+  int index;                // Index into the version table
+  int adc_ideal;            // Ideal ADC reading for this revision
+  int i;                    // Loop counter
+  int distance;             // Distance from the ideal reading
+  int milliVolts;           // Voltage reading from the ADC
 
-  if ( board_version >= 0 )             // Already read the revision?
+  if ( board_version >= 0 ) // Already read the revision?
   {
-    return board_version;               // Return the cached value
+    return board_version;   // Return the cached value
   }
 
   /*
    *  Read the resistors and determine the board revision
    */
-  milliVolts = adc_read(BOARD_REV);                             // Resistor divider in mV
-  printf("milliVolts: %d\n", milliVolts);
+  milliVolts = vBD_measure();                                   // Resistor divider in mV
 
   distance = 0x0fff;                                            // Start with the maximum possible distance
 

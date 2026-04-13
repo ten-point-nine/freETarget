@@ -63,15 +63,15 @@ const json_message_t JSON[] = {
     {SHOW + LOCK, "\"AUX_MODE\":",       &json_aux_mode,              IS_INT32,                 0,                  NONVOL_AUX_PORT_ENABLE,     RS485,      6 },
     {HIDE,        "\"BYE\"",             0,                           IS_INT32,                 &bye,               0,                          0,          0 },
     {HIDE,        "\"CAL\":",            0,                           IS_INT32,                 &calibrate,         0,                          0,          0 },
-    {HIDE,        "\"DOWNLOAD\"",       &json_OTA_download_size,     IS_INT32,                 &OTA_serial,        0,                          0,          0 },
+    {HIDE,        "\"DOWNLOAD\"",        &json_OTA_download_size,     IS_INT32,                 &OTA_serial,        0,                          0,          0 },
     {HIDE,        "\"ECHO\"",            0,                           IS_VOID,                  &show_echo,         0,                          0,          0 },
     {HIDE + LOCK, "\"FACE_STRIKE\":",    &json_face_strike,           IS_INT32,                 0,                  NONVOL_FACE_STRIKE,         0,          0 },
-    {HIDE,        "\"FLASH\"",          0,                           IS_INT32,                 &OTA_serial,        0,                          0,          0 },
+    {HIDE,        "\"FLASH\"",           0,                           IS_INT32,                 &OTA_serial,        0,                          0,          0 },
     {SHOW + LOCK, "\"FOLLOW_THROUGH\":", &json_follow_through,        IS_INT32,                 0,                  NONVOL_FOLLOW_THROUGH,      0,          0 },
     {HIDE + LOCK, "\"INIT\"",            0,                           IS_VOID,                  &init_nonvol,       0,                          0,          0 },
     {SHOW + LOCK, "\"KEEP_ALIVE\":",     &json_keep_alive,            IS_INT32,                 0,                  NONVOL_KEEP_ALIVE,          120,        0 },
     {SHOW + LOCK, "\"LED_BRIGHT\":",     &json_LED_PWM,               IS_INT32,                 &set_LED_PWM_now,   NONVOL_LED_PWM,             50,         0 },
-    {HIDE,        "\"MFS?\"",              0,                           IS_VOID,                  &mfs_show,          0,                          0,          0 },
+    {HIDE,        "\"MFS?\"",            0,                           IS_VOID,                  &mfs_show,          0,                          0,          0 },
     {SHOW + LOCK, "\"MFS_TAP_1\":",      &json_mfs_tap_1,             IS_MFS,                   0,                  NONVOL_MFS_TAP_A,           PAPER_SHOT, 2 },
     {SHOW + LOCK, "\"MFS_TAP_2\":",      &json_mfs_tap_2,             IS_MFS,                   0,                  NONVOL_MFS_TAP_B,           TARGET_ON,  2 },
     {SHOW + LOCK, "\"MFS_HOLD_1\":",     &json_mfs_hold_1,            IS_MFS,                   0,                  NONVOL_MFS_HOLD_A,          PAPER_FEED, 2 },
@@ -83,7 +83,7 @@ const json_message_t JSON[] = {
     {SHOW + LOCK, "\"MIN_RING_TIME\":",  &json_min_ring_time,         IS_INT32,                 0,                  NONVOL_MIN_RING_TIME,       500,        0 },
     {SHOW + LOCK, "\"NAME_ID\":",        &json_name_id,               IS_INT32,                 &show_names,        NONVOL_NAME_ID,             0,          0 },
     {SHOW + LOCK, "\"NAME_TEXT\":",      (int *)&json_name_text,      IS_TEXT + SSID_SIZE,      &show_names,        NONVOL_NAME_TEXT,           0,          8 },
-    {HIDE + LOCK, "\"OTA\"",            0,                           0,                        &OTA_load_json,     0,                          0,          0 },
+    {HIDE + LOCK, "\"OTA\"",             0,                           0,                        &OTA_load_json,     0,                          0,          0 },
     {SHOW + LOCK, "\"OTA_URL\":",        (int *)&json_ota_url,        IS_TEXT + URL_SIZE,       0,                  NONVOL_OTA_URL,             0,          11},
     {HIDE,        "\"P\"",               0,                           IS_VOID,                  &paper_start,       0,                          0,          0 },
     {SHOW + LOCK, "\"PAPER_ECO\":",      &json_paper_eco,             IS_INT32,                 0,                  NONVOL_PAPER_ECO,           0,          0 },
@@ -538,8 +538,9 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"RELATIVE_HUMIDITY\": %4.2f,", humidity_RH());)
   SEND(ALL, sprintf(_xs, "\"TIMER_COUNT\":       %d,",
                     (int)(SHOT_TIME * OSCILLATOR_MHZ));) // Maximum number of clock cycles to record shot (target dependent)
-  SEND(ALL, sprintf(_xs, "\"V12\":               %4.2f,", v12_supply());) // 12 Volt LED supply
-
+  SEND(ALL, sprintf(_xs, "\"V12\":               %4.2f,", v12_supply());)                   // 12 Volt LED supply
+  SEND(ALL, sprintf(_xs, "\"VREF_LO\":           %4.2f,", vref_measure());)                 // Reference voltage measurement
+  SEND(ALL, sprintf(_xs, "\"VBOARD_REV\":        %4.2f,", (real_t)vBD_measure() / 1000.0);) // Board Revision voltage measurement
   WiFi_MAC_address(str_c);
   SEND(ALL, sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\",", str_c[0], str_c[1], str_c[2], str_c[3], str_c[4],
                     str_c[5]);)

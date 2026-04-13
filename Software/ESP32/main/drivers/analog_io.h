@@ -43,5 +43,5 @@ void         analog_input_raw(void);                   // Read and display the a
 real_t       speed_of_sound(real_t temperature,
                             real_t relative_humidity); // Calculate speed of sound
 real_t       vref_measure(void);                       // Read the reference voltages
-
+unsigned int vBD_measure(void);                        // Read the board revision ADC reading in mV
 #endif
