@@ -4,14 +4,24 @@
  *
  * General purpose Analog driver
  *
+ *****************************************************************************
+ *
+ * Revised for oneshot operation
+ *
+ * See: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/adc.html
+ *
+ * This file manages the analog inputs and outputs, including the ADC, DAC, and PWM.
+ *
  *****************************************************************************/
 
 #include "stdbool.h"
 #include "stdio.h"
 #include "driver/gpio.h"
 #include "driver/ledc.h"
-#include "driver/adc.h"
-#include "esp_adc_cal.h"
+// #include "driver/adc.h"
+#include "esp_adc/adc_cali_scheme.h"
+#include "esp_adc/adc_cali.h"
+#include "esp_adc/adc_oneshot.h"
 
 #include "freETarget.h"
 #include "board_assembly.h"
@@ -35,18 +45,21 @@
 void          set_vset_PWM(unsigned int pwm);
 static real_t temperature_C_HDC3022(void);  // Temperature in degrees C
 static real_t temperature_C_TMP1075D(void); // Temperature in degrees C
+static bool   adc_calibration_init(int unit, int channel, int atten, adc_cali_handle_t *out_handle);
 
 /*
  *  Variables
  */
-int                           board_version = -1; // Board Revision number
-unsigned int                  board_mask    = 0;  // Mask for the board revision
-static real_t                 rh;                 // Humidity from sensor
-esp_adc_cal_characteristics_t adc_chars_ch1;      // ADC characteristics for ADC1
-esp_adc_cal_characteristics_t adc_chars_ch2;      // ADC characteristics for ADC2
+int           board_version = -1;                                     // Board Revision number
+unsigned int  board_mask    = 0;                                      // Mask for the board revision
+static real_t rh;                                                     // Humidity from sensor
 
-static real_t bd_rev_cal = 1.0;                   // Calibration for the board revision resistor divider
-
+static bool                            adc_used[2] = {false, false};  // Track which ADC channels are in use
+static adc_oneshot_unit_handle_t       adc_handle[2];                 // ADC handles for ADC1 and ADC2
+static adc_oneshot_unit_init_cfg_t     adc_init_config[2];            // ADC unit configuration for ADC1 and ADC2
+static adc_oneshot_chan_cfg_t          channel_config[2][10];         // Channel configuration for each channel
+static adc_cali_handle_t               adc_calibration_handle[2][10]; // Calibration handles for ADC1 and ADC2
+static adc_cali_curve_fitting_config_t adc_calibration_config[2][10]; // Calibration configuration for ADC1 and ADC2
 /*
  * Constants
  */
@@ -54,7 +67,6 @@ static real_t bd_rev_cal = 1.0;                   // Calibration for the board r
 #define ADC_REF      3.3                    // ADC reference voltage
 #define ADC_FULL     4095.0                 // 12 bit ADC full scale
 #define VREF_DIVIDER ((4700 + 4700) / 4700) // Voltage divider ratio
-
 #define V12_RESISTOR ((40.2 + 4.7) / 4.7)   // Resistor divider
 
 /*----------------------------------------------------------------
@@ -70,69 +82,104 @@ static real_t bd_rev_cal = 1.0;                   // Calibration for the board r
  * The ADC channel is initialized and the handle set up
  *
  * https://docs.espressif.com/projects/esp-idf/en/v4.4/esp32/api-reference/peripherals/adc.html
+ * https://docs.espressif.com/projects/esp-idf/en/v6.0/esp32/api-reference/peripherals/adc/adc_oneshot.html
  *
  *--------------------------------------------------------------*/
-#define DEFAULT_VREF 1100                  // mV, used if no eFuse Vref calibration data
-
 void adc_init(unsigned int adc_channel,    // What ADC channel are we accessing
               unsigned int adc_attenuation // What is the channel attenuation
 )
 {
-  unsigned int        adc;                 // Which ADC (1/2)
-  unsigned int        channel;             // Which channel attached to the ADC (0-10)
-  esp_adc_cal_value_t val_type = ESP_ADC_CAL_VAL_EFUSE_TP;
+  int adc     = ADC_ADC(adc_channel);      // Which ADC (1/2)
+  int channel = ADC_CHANNEL(adc_channel);  // Which channel attached to the ADC (0-9)
 
-  adc     = ADC_ADC(adc_channel);          // What ADC are we on
-  channel = ADC_CHANNEL(adc_channel);
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initializing ADC%d channel %d with attenuation %d  ", adc, channel, adc_attenuation);))
 
   /*
-   * Setup the channel
+   *  Initialize the ADC unit if not already initialized
    */
-  ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_DEFAULT));
-  switch ( adc )
+  if ( adc_used[adc] == false )                                                     // Check if the ADC unit is already initialized
   {
-    case 1:
-      ESP_ERROR_CHECK(adc1_config_channel_atten(channel, adc_attenuation));
-      val_type = esp_adc_cal_characterize(ADC_UNIT_1, adc_attenuation, ADC_WIDTH_BIT_12, DEFAULT_VREF, &adc_chars_ch1);
-      break;
-
-    case 2:
-      ESP_ERROR_CHECK(adc2_config_channel_atten(channel, adc_attenuation));
-      val_type = esp_adc_cal_characterize(ADC_UNIT_2, adc_attenuation, ADC_WIDTH_BIT_12, DEFAULT_VREF, &adc_chars_ch2);
-      break;
+    adc_init_config[adc].unit_id = adc;                                             // ADC unit configuration
+    ESP_ERROR_CHECK(adc_oneshot_new_unit(&adc_init_config[adc], &adc_handle[adc])); // Create a new ADC unit handle
+    adc_used[adc] = true;                                                           // Mark the ADC unit as used
   }
 
   /*
-   * Display the calibration values
+   *  Configure the ADC channel
    */
-  switch ( val_type )
+  channel_config[adc][channel].bitwidth = ADC_BITWIDTH_12; // 12-bit resolution
+  channel_config[adc][channel].atten    = adc_attenuation;
+  ESP_ERROR_CHECK(adc_oneshot_config_channel(adc_handle[adc], channel, &channel_config[adc][channel]));
+
+  /*
+   *  Initialize calibration
+   */
+  adc_calibration_handle[adc][channel] = NULL;
+  adc_calibration_init(adc, channel, adc_attenuation, &adc_calibration_handle[adc][channel]);
+  printf("ADC%d channel %d: Calibration handle: %p\n", adc, channel, adc_calibration_handle[adc][channel]);
+  adc_cali_curve_fitting_config_t calibration_config = {
+      .unit_id = adc, .chan = channel, .atten = adc_attenuation, .bitwidth = ADC_BITWIDTH_DEFAULT};
+
+  esp_err_t ret = adc_cali_create_scheme_curve_fitting(&calibration_config, &adc_calibration_handle[adc][channel]);
+
+  if ( ret != ESP_OK )
   {
-    case ESP_ADC_CAL_VAL_EFUSE_TP:
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "ADC%d channel %d: calibrated using eFuse values two point calibration", adc, channel);))
-      break;
-
-    case ESP_ADC_CAL_VAL_EFUSE_VREF:
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "ADC%d channel %d: calibrated using eFuse VREF values", adc, channel);))
-      break;
-
-    default:
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "ADC%d channel %d: calibrated using default values", adc, channel);))
-      break;
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Calibration failed %d", ret);))
   }
 
   /*
-   *  Ready to go
+   *  All done
    */
   return;
 }
 
 /*----------------------------------------------------------------
  *
- * @function: adc_read()
+ * @function: adc_calibration_init
  *
- * @brief:  Read a value from teh ADC channel
+ * @brief:  Setup the calibration for the ADC channel
  *
  * @return: None
+ *
+ *----------------------------------------------------------------
+ *
+ * Using curve fitting calibration.  See ESP-IDF documentation for details
+ * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/adc.html#calibration
+ *
+ *--------------------------------------------------------------*/
+
+static bool adc_calibration_init(int                adc,         // Which ADC (1/2)
+                                 int                channel,     // Which channel attached to the ADC (0-10)
+                                 int                attenuation, // Attenuation level
+                                 adc_cali_handle_t *out_handle   // Output handle for the calibration
+)
+{
+  adc_cali_curve_fitting_config_t calibration_config = {
+      .unit_id  = adc,
+      .chan     = channel,
+      .atten    = attenuation,
+      .bitwidth = ADC_BITWIDTH_DEFAULT,
+  };
+
+  /*
+   *  Create the calibration scheme
+   */
+  if ( adc_cali_create_scheme_curve_fitting(&calibration_config, out_handle) != ESP_OK )
+  {
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "ADC%d channel %d: Calibration failed", adc, channel);))
+    return false;
+  }
+
+  return true;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: adc_read()
+ *
+ * @brief:  Read a value from the ADC channel
+ *
+ * @return: Analog value for the ADC channel in mV
  *
  *----------------------------------------------------------------
  *
@@ -148,19 +195,18 @@ void adc_init(unsigned int adc_channel,    // What ADC channel are we accessing
  * and averaged.
  *
  *--------------------------------------------------------------*/
-#define FILTER 16                              // How many averages
+#define FILTER 16                                  // How many averages
 
-unsigned int adc_read(unsigned int adc_channel // What input are we reading?
-)
+int adc_read(int adc_channel)                      // What input are we reading?
 {
-  unsigned int adc;                            // Which ADC (1/2)
-  unsigned int channel;                        // Which channel attached to the ADC (0-10)
-  int          raw;                            // Raw value from the ADC
-  real_t       sum;
+  unsigned int adc     = ADC_ADC(adc_channel);     // Which ADC (1/2)
+  unsigned int channel = ADC_CHANNEL(adc_channel); // Which channel attached to the ADC (0-10)
+  int          raw;                                // Raw value from the ADC
+  int          sum;
   int          i;
+  int          volt_mV;                            // Voltage in mV
 
-  adc     = ADC_ADC(adc_channel);              // What ADC are we on
-  channel = ADC_CHANNEL(adc_channel);          // What channel are we using
+  printf("Reading ADC%d channel %d\n", adc, channel);
 
   /*
    *  Read the appropriate channel
@@ -168,34 +214,34 @@ unsigned int adc_read(unsigned int adc_channel // What input are we reading?
   sum = 0;
   for ( i = 0; i != FILTER; i++ ) // Add up FILTER samples
   {
-    switch ( adc )
-    {
-      case 1:
-        raw = adc1_get_raw(channel);
-        break;
-
-      case 2:
-        adc2_get_raw(channel, ADC_WIDTH_BIT_DEFAULT, &raw);
-        break;
-    }
-    sum += (real_t)raw;
+    ESP_ERROR_CHECK(adc_oneshot_read(adc_handle[adc], channel, &raw));
+    sum += raw;
   }
 
   /*
    *  Done
    */
   sum /= FILTER;
-  sum = sum * bd_rev_cal;                     // Apply the board revision calibration
+  sum &= 0x0fff;                              // Mask to 12 bits
 
-  return ((int)sum & 0x0fff);
+  printf("ADC%d channel %d: Raw reading: %d\n", adc, channel, sum);
+
+  adc_cali_raw_to_voltage(adc_calibration_handle[adc][channel], sum,
+                          &volt_mV);          // Convert the ADC reading to millivolts using the calibration handle
+
+  printf("ADC%d channel %d: Calibrated voltage: %d mV\n", adc, channel, volt_mV);
+  return (volt_mV);
 }
 
-#define V12_RESISITOR ((40000 + 4700) / 4700) // Resistor divider
-#define V12_CAL       3.548                   // 11dB of gain from the resistor divider and the ADC calibration
+#define V12_RESISITOR ((40200 + 4700) / 4700) // Resistor divider
 
 real_t v12_supply(void)
 {
-  return (real_t)adc_read(V_12_LED) / ADC_FULL * V12_CAL * V12_RESISTOR;
+  int volt_mV;
+
+  volt_mV = adc_read(V12_LED);                // Read the ADC value for the board revision referenced to 3.3 volts
+
+  return (real_t)volt_mV / 1000.0 * V12_RESISTOR;
 }
 
 /*----------------------------------------------------------------
@@ -314,51 +360,48 @@ const static BD_REV_resistors_t bd_rev_resistors[] = {
 
 unsigned int revision(void)
 {
-  int index;                // Index into the version table
-  int adc_reading;          // ADC reading
-  int adc_ideal;            // Ideal ADC reading for this revision
-  int i;                    // Loop counter
-  int distance;             // Distance from the ideal reading
+  int index;                            // Index into the version table
+  int adc_reading;                      // ADC reading
+  int adc_ideal;                        // Ideal ADC reading for this revision
+  int i;                                // Loop counter
+  int distance;                         // Distance from the ideal reading
+  int milliVolts;                           // Voltage reading from the ADC
+  int adc     = ADC_ADC(BOARD_REV);     // ADC to use
+  int channel = ADC_CHANNEL(BOARD_REV); // Channel to use
 
-  if ( board_version >= 0 ) // Already read the revision?
+  if ( board_version >= 0 )             // Already read the revision?
   {
-    return board_version;   // Return the cached value
+    return board_version;               // Return the cached value
   }
 
   /*
    *  Read the resistors and determine the board revision
    */
-  adc_reading = adc_read(BOARD_REV);                            // Read the ADC value for the board revision referenced to 3.3 volts
-  distance    = 0x0fff;                                         // Start with the maximum possible distance
+  milliVolts = adc_read(BOARD_REV);                                 // Resistor divider in mV
+  printf("milliVolts: %d\n", milliVolts);
+
+  distance = 0x0fff;                                            // Start with the maximum possible distance
 
   for ( i = 0; i != sizeof(version) / sizeof(version[0]); i++ ) // Loop through the revisions
   {
-    if ( version[i] >= REV_500 ) // LOnly consider revisions 5.0 and later, since the resistor values are well defined before then
+    if ( version[i] >= REV_500 ) // Only consider revisions 5.0 and later, since the resistor values are well defined before then
     {
-      adc_ideal = 4096 * (real_t)bd_rev_resistors[i].r2 /
+      adc_ideal = 3300 * (real_t)bd_rev_resistors[i].r2 /
                   (bd_rev_resistors[i].r1 + bd_rev_resistors[i].r2); // Calculate the ideal ADC reading for this revision
 
-      if ( abs(adc_reading - adc_ideal) < distance ) // Is this revision closer to the actual reading than the previous best?
+      if ( abs(milliVolts - adc_ideal) < distance ) // Is this revision closer to the actual reading than the previous best?
       {
-        distance = abs(adc_reading - adc_ideal);     // Update the closest distance
-        index    = i;                                // Update the index of the closest revision
+        distance = abs(milliVolts - adc_ideal);     // Update the closest distance
+        index    = i;                           // Update the index of the closest revision
       }
     }
   }
 
-  board_version = version[index];                    // Get the board revision number
-  board_mask    = 1 << index;                        // Set the mask for the board revision
-
-                                                     /*
-                                                      * Work out the board calibration
-                                                      */
-  adc_ideal  = 4096 * (real_t)bd_rev_resistors[index].r2 / (bd_rev_resistors[index].r1 + bd_rev_resistors[index].r2);
-  bd_rev_cal = (real_t)adc_ideal / (real_t)adc_reading;
+  board_version = version[index];               // Get the board revision number
+  board_mask    = 1 << index;                   // Set the mask for the board revision
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Board Version: %d.%d.%d  Board Mask: 0X%04X", (board_version / 100), ((board_version % 100) / 10),
                                   (board_version % 10), board_mask);))
-  DLT(DLT_INFO + DLT_VERBOSE, SEND(ALL, sprintf(_xs, "ADC: %d   Volts: %4.2f  bd_rev_cal: %4.2f  index: %d", adc_reading,
-                                                bd_rev_cal * (real_t)adc_reading / 4096.0 * 3.3, bd_rev_cal, index);))
   return board_version;
 }
 
@@ -652,7 +695,7 @@ typedef struct analog_raw
 } analog_raw_t;
 
 static analog_raw_t analog_sample[] = {
-    {"12V",     V_12_LED,  0xffff, 0},
+    {"12V",     V12_LED,   0xffff, 0},
     {"BD Rev",  BOARD_REV, 0xffff, 0},
     {"VREF_LO", VMES_LO,   0xffff, 0},
     {"",        0,         0,      0}

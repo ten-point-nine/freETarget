@@ -2,7 +2,7 @@
 // WIFI Tests 
 //
 Static IP  { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING", "WIFI_IP":"192.168.86.109" }
-Static IP  { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"NEXUS", "WIFI_IP":"192.168.86.110" }
+Static IP  { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"NEXUS", "WIFI_IP":"192.168.86.109" }
 Static IP  { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"62I", "WIFI_IP":"192.168.86.111" }
 Static IP  { "WIFI_SSID": "COMET", "WIFI_IP":"192.168.0.103", "WIFI_GATEWAY":"192.168.0.1" }
 Default IP { "WIFI_SSID": "", "WIFI_IP":"192.168.0.103", "WIFI_GATEWAY":"192.168.0.1" }

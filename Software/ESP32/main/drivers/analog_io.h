@@ -12,7 +12,7 @@
  *  Port Definitions
  */
 #define V_REFERENCE 0           // Reference Input
-#define V_12_LED    ADC(1, 0)   // 12 Volt LED input
+#define V12_LED     ADC(1, 0)   // 12 Volt LED input
 #define BOARD_REV   ADC(1, 3)   // Analog Version Input
 #define VMES_LO     ADC(2, 8)   // Low reference voltage
 
@@ -30,7 +30,7 @@
  */
 void         adc_init(unsigned int channel,
                       unsigned int attenuation);       // Setup the analog hardware
-unsigned int adc_read(unsigned int channel);           // Return the raw value
+int          adc_read(int adc_channel);                // Return the value in mV
 unsigned int revision(void);                           // Return the board revision
 real_t       temperature_C(void);                      // Temperature in degrees C
 real_t       humidity_RH(void);                        // Relative humidity in %

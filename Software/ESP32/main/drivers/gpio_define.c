@@ -167,10 +167,10 @@ const static LED_strip_struct_t led_strip_config = {.type = LED_STRIP}; // 3 LED
 
 const gpio_struct_t gpio_table[] = {
     //   Name      Number       Assigned   Used by
+    {"BD_REV",       GPIO_NUM_4,  (void *)&adc1_ch3,         COMMON        }, // BD_REV
     {"V12_REF",      GPIO_NUM_1,  (void *)&adc1_ch0,         COMMON        }, // LED Feedback (Measure 12VDC)
     {"LED_PWM",      GPIO_NUM_2,  (void *)&pwm0,             COMMON        }, // LED_PWM
     {"USB_JTAG",     GPIO_NUM_3,  NULL,                      COMMON        }, // JTAG Strap to 3V3
-    {"BD_REV",       GPIO_NUM_4,  (void *)&adc1_ch3,         COMMON        }, // BD_REV
     {"RUN_NORTH_LO", GPIO_NUM_5,  (void *)&pcnt0,            PCNT_LOW_GPIO }, // RUN_NORTH_LO
     {"RUN_EAST_LO",  GPIO_NUM_6,  (void *)&pcnt1,            PCNT_LOW_GPIO }, // RUN_EAST_LO
     {"RUN_SOUTH_LO", GPIO_NUM_7,  (void *)&pcnt2,            PCNT_LOW_GPIO }, // RUN_SOUTH_LO
@@ -353,11 +353,11 @@ void gpio_init_single(unsigned int type)                                        
           break;
       }
     }
-  i++;
-}
+    i++;
+  }
 
-/*
- *  All done, return
- */
-return;
+  /*
+   *  All done, return
+   */
+  return;
 }
