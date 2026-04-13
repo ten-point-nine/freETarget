@@ -50,7 +50,7 @@ extern int          board_revision; // Board revision number
 #define MAX485         (MASK_620)                                                            // MAX485 control line on V6 only
 #define MAX485_MFS     ((MASK_500 | MASK_510 | MASK_520 | MASK_600 | MASK_610) & board_mask) // USE MFS to drive RS485
 #define LDAC_GPIO      (0)                                                                   // LDAC Control no longer used
-#define VREF_FB        ((MASK_600 | MASK_610 | MASK_620) & board_mask)                       // VREF Feedback
+#define VREF_FB        (MASK_600 | MASK_610 | MASK_620)                                      // VREF Feedback
 #define FACE_HALF_GPIO (MASK_500 | MASK_510 | MASK_520)                                      // FACE GPIO
 
 #define COMMON (MASK_500 | MASK_510 | MASK_520 | MASK_600 | MASK_610 | MASK_620)             // Common to all boards

@@ -92,11 +92,9 @@ void adc_init(unsigned int adc_channel,    // What ADC channel are we accessing
   int adc     = ADC_ADC(adc_channel);      // Which ADC (1/2)
   int channel = ADC_CHANNEL(adc_channel);  // Which channel attached to the ADC (0-9)
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initializing ADC%d channel %d with attenuation %d  ", adc, channel, adc_attenuation);))
-
-  /*
-   *  Initialize the ADC unit if not already initialized
-   */
+                                           /*
+                                            *  Initialize the ADC unit if not already initialized
+                                            */
   if ( adc_used[adc] == false )                                                     // Check if the ADC unit is already initialized
   {
     adc_init_config[adc].unit_id = adc;                                             // ADC unit configuration
@@ -164,7 +162,7 @@ static bool adc_calibration_init(int                adc,         // Which ADC (1
   /*
    *  Create the calibration scheme
    */
-  if ( adc_cali_create_scheme_curve_fitting(&calibration_config, out_handle) != ESP_OK )
+  if ( adc_cali_create_scheme_curve_fitting(&adc_calibration_config, out_handle) != ESP_OK )
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "ADC%d channel %d: Calibration failed", adc, channel);))
     return false;
@@ -206,8 +204,6 @@ int adc_read(int adc_channel)                      // What input are we reading?
   int          i;
   int          volt_mV;                            // Voltage in mV
 
-  printf("Reading ADC%d channel %d\n", adc, channel);
-
   /*
    *  Read the appropriate channel
    */
@@ -224,12 +220,9 @@ int adc_read(int adc_channel)                      // What input are we reading?
   sum /= FILTER;
   sum &= 0x0fff;                              // Mask to 12 bits
 
-  printf("ADC%d channel %d: Raw reading: %d\n", adc, channel, sum);
-
   adc_cali_raw_to_voltage(adc_calibration_handle[adc][channel], sum,
                           &volt_mV);          // Convert the ADC reading to millivolts using the calibration handle
 
-  printf("ADC%d channel %d: Calibrated voltage: %d mV\n", adc, channel, volt_mV);
   return (volt_mV);
 }
 
@@ -365,7 +358,7 @@ unsigned int revision(void)
   int adc_ideal;                        // Ideal ADC reading for this revision
   int i;                                // Loop counter
   int distance;                         // Distance from the ideal reading
-  int milliVolts;                           // Voltage reading from the ADC
+  int milliVolts;                       // Voltage reading from the ADC
   int adc     = ADC_ADC(BOARD_REV);     // ADC to use
   int channel = ADC_CHANNEL(BOARD_REV); // Channel to use
 
@@ -377,7 +370,7 @@ unsigned int revision(void)
   /*
    *  Read the resistors and determine the board revision
    */
-  milliVolts = adc_read(BOARD_REV);                                 // Resistor divider in mV
+  milliVolts = adc_read(BOARD_REV);                             // Resistor divider in mV
   printf("milliVolts: %d\n", milliVolts);
 
   distance = 0x0fff;                                            // Start with the maximum possible distance
@@ -392,13 +385,13 @@ unsigned int revision(void)
       if ( abs(milliVolts - adc_ideal) < distance ) // Is this revision closer to the actual reading than the previous best?
       {
         distance = abs(milliVolts - adc_ideal);     // Update the closest distance
-        index    = i;                           // Update the index of the closest revision
+        index    = i;                               // Update the index of the closest revision
       }
     }
   }
 
-  board_version = version[index];               // Get the board revision number
-  board_mask    = 1 << index;                   // Set the mask for the board revision
+  board_version = version[index];                   // Get the board revision number
+  board_mask    = 1 << index;                       // Set the mask for the board revision
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Board Version: %d.%d.%d  Board Mask: 0X%04X", (board_version / 100), ((board_version % 100) / 10),
                                   (board_version % 10), board_mask);))
@@ -424,11 +417,11 @@ real_t vref_measure(void)
 {
   if ( TMP1075D )
   {
-    return ((real_t)adc_read(VMES_LO)) / ADC_FULL * ADC_REF * VREF_DIVIDER + ADC_BIAS; // 4096 full scale, 3.3 VREF 1/2 voltage divider
+    return ((real_t)adc_read(VMES_LO)) / 1000.0 * VREF_DIVIDER;
   }
   else
   {
-    return -1.0;                                                                       // Not available
+    return -1.0; // Not available
   }
 }
 
@@ -655,7 +648,7 @@ void set_VREF(void)
 void analog_input_test(void)
 {
   SEND(ALL, sprintf(_xs, "\r\n12V: %5.3f", v12_supply());)
-  if ( VREF_FB )
+  if ( VREF_FB & board_mask )
   {
     SEND(ALL, sprintf(_xs, "\r\nVREF_MEASURE: %5.3f", vref_measure());)
   }

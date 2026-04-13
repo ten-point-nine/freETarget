@@ -187,7 +187,7 @@ const gpio_struct_t gpio_table[] = {
     {"RUN_NORTH_HI", GPIO_NUM_16, (void *)&dio16,            PCNT_HIGH_GPIO}, // RUN_NORTH_HI Direct to GPIO
     {"ATX",          GPIO_NUM_17, (void *)&dio17,            COMMON        }, // ATX Initailize as input
     {"ARX",          GPIO_NUM_18, (void *)&dio18,            COMMON        }, // ARX and override later
-    {"USB_D-",       GPIO_NUM_19, NULL,                      COMMON        }, // JTAG USB D-
+    {"VREF_LO",      GPIO_NUM_19, (void *)&adc2_ch8,         VREF_FB       }, // Voltage feedback
 
     {"USB_D+",       GPIO_NUM_20, NULL,                      COMMON        }, // JTAG USB D+
     {"STOP*",        GPIO_NUM_21, (void *)&dio21,            COMMON        }, // Stop the RUN signals
