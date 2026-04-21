@@ -539,7 +539,10 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"TIMER_COUNT\":       %d,",
                     (int)(SHOT_TIME * OSCILLATOR_MHZ));) // Maximum number of clock cycles to record shot (target dependent)
   SEND(ALL, sprintf(_xs, "\"V12\":               %4.2f,", v12_supply());)                   // 12 Volt LED supply
-  SEND(ALL, sprintf(_xs, "\"VREF_LO\":           %4.2f,", vref_measure());)                 // Reference voltage measurement
+  if ( VREF_FB & board_mask )
+  {
+    SEND(ALL, sprintf(_xs, "\"VREF_LO\":           %4.2f,", vref_measure());)               // Reference voltage measurement
+  }
   SEND(ALL, sprintf(_xs, "\"VBOARD_REV\":        %4.2f,", (real_t)vBD_measure() / 1000.0);) // Board Revision voltage measurement
   WiFi_MAC_address(str_c);
   SEND(ALL, sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\",", str_c[0], str_c[1], str_c[2], str_c[3], str_c[4],

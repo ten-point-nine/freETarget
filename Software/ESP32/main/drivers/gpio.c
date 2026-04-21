@@ -811,15 +811,28 @@ void stepper_pulse(void)
  * on the front face.
  *
  *-----------------------------------------------------*/
-void face_ISR(void)
+IRAM_ATTR void face_strike_ISR(void)
 {
   face_strike++; // Got a face strike
-
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "\r\nface_ISR(): %d", face_strike);))
 
   return;
 }
 
+void enable_face_strike_interrupt(void)
+{
+  if ( (FACE_HALF_GPIO & board_mask) && (json_face_strike != 0) ) // Is the face strike sensor enabled?
+  {
+    gpio_intr_enable(FACE_SENSOR);                                // Turn on the interrupts
+  }
+
+  return;
+}
+
+void disable_face_strike_interrupt(void)
+{
+  gpio_intr_disable(FACE_SENSOR); // Turn off the interrupts
+  return;
+}
 /*----------------------------------------------------------------
  *
  * @function: aquire()

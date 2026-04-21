@@ -23,13 +23,13 @@ unsigned int read_counter(unsigned int direction);
 void         stop_timers(void);                            // Turn off the counter registers
 void         read_timers(int *timer_count);                // Read and return the counter registers
 void         paper_start(void);                            // Turn on the witness paper
-void         paper_stop(void);                             // Turn off the paper drive if
-                                                           // it is running
-void paper_drive_tick(void);                               // Turn the motor off when the time runs out
-void paper_stop(void);                                     // Stop the paper transport
-void aquire(void);                                         // Read the clock registers
-void enable_face_interrupt();                              // Turn on the face strike interrupt
-void disable_face_interrupt(void);                         // Turn off the face strike interrupt
+void         paper_stop(void);                             // Turn off the paper drive if it is running
+void         paper_drive_tick(void);                       // Turn the motor off when the time runs out
+void         paper_stop(void);                             // Stop the paper transport
+void         aquire(void);                                 // Read the clock registers
+void         face_strike_ISR(void);                         // Interrupt service routine for the face strike sensor
+void         enable_face_strike_interrupt();               // Turn on the face strike interrupt
+void         disable_face_strikeinterrupt(void);           // Turn off the face strike interrupt
 
 void digital_test(void);                                   // Execute the digital test
 void DCmotor_on_off(bool on, time_count_t duration);       // Turn the motor on or off
@@ -122,19 +122,19 @@ extern volatile unsigned int step_count; // Number of steps before stopping
 /*
  * DIP Switch Use.
  */
-#define DIP_SW_A    (gpio_get_level(DIP_A) == 0)                           // Switch Input A
-#define DIP_SW_B    (gpio_get_level(DIP_B) == 0)                           // Switch Input B
-#define DIP_SW_C    (gpio_get_level(DIP_C) == 0)                           // Switch Input C
-#define DIP_SW_D    (gpio_get_level(DIP_D) == 0)                           // Switch Input D
+#define DIP_SW_A (gpio_get_level(DIP_A) == 0) // Switch Input A
+#define DIP_SW_B (gpio_get_level(DIP_B) == 0) // Switch Input B
+#define DIP_SW_C (gpio_get_level(DIP_C) == 0) // Switch Input C
+#define DIP_SW_D (gpio_get_level(DIP_D) == 0) // Switch Input D
 
-#define FACE_SENSOR  19
+#define FACE_SENSOR 19
 
 /*
  *  Driver Settings
  */
-#define STEP_ON      1                                                     // Pulse stepper on
-#define STEP_OFF     0                                                     // Pulse setpper off
-#define STEP_ENABLE  0                                                     // Enable the stepper circuit
-#define STEP_DISABLE 1                                                     // Disable stepper circuit
+#define STEP_ON      1 // Pulse stepper on
+#define STEP_OFF     0 // Pulse setpper off
+#define STEP_ENABLE  0 // Enable the stepper circuit
+#define STEP_DISABLE 1 // Disable stepper circuit
 
 #endif

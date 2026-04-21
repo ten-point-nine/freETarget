@@ -47,6 +47,7 @@ static void show_test_help(void);
 static void test_display_all_scores(void);
 static void test_rapidfire(void);
 static void test_rapidfire(void);
+static void interrupt_face_strike_test(void);
 
 /*
  * Diagnostic typedefs
@@ -58,61 +59,62 @@ typedef struct
 } self_test_t;
 
 static const self_test_t test_list[] = {
-    {"Help",                              &show_test_help           },
-    {"Factory test",                      &factory_test             },
-    {"Sensor test",                       &sensor_test              },
-    {"- Digital",                         0                         },
-    {"Digital inputs",                    &digital_test             },
-    {"Advance paper backer",              &paper_test               },
-    {"LED brightness test",               &LED_test                 },
-    {"Status LED driver",                 &status_LED_test          },
-    {"- Analog",                          0                         },
-    {"Analog input test",                 &analog_input_test        },
-    {"Analog input raw",                  &analog_input_raw         },
-    {"DAC test",                          &DAC_test                 },
-    {"DAC read",                          &DAC_read                 },
-    {"- Timer & PCNT test",               0                         },
-    {"PCNT timers not stopping",          &pcnt_1                   },
-    {"PCNT timers not running",           &pcnt_2                   },
-    {"PCNT timers start - stop together", &pcnt_3                   },
-    {"PCNT Timers cleared",               &pcnt_4                   },
-    {"PCNT test all",                     &pcnt_all                 },
-    {"PCNT calibration",                  &pcnt_cal                 },
-    {"Sensor POST test",                  &POST_counters            },
-    {"Turn the oscillator on and off",    &timer_cycle_oscillator   },
-    {"Turn the RUN lines on and off",     &timer_run_all            },
-    {"Show the current time",             &show_time                },
-    {"Show current timers",               &show_timers              },
-    {"- Communiactions Tests",            0                         },
-    {"AUX port loopback test",            &aux_port_loopback_test   },
-    {"BlueTooth configuration",           &BlueTooth_configuration  },
-    {"RSS485 test",                       &RS485_test               },
-    {"Test WiFi as a station",            &WiFi_station_init        },
-    {"Enable the WiFi Server",            &WiFi_server_test         },
-    {"Enable the WiFi AP",                &WiFi_AP_init             },
-    {"Loopback WiFi",                     &WiFi_loopback_test       },
-    {"Scan for access points (APs)",      &WiFi_AP_scan_test        },
-    {"WiFi Ping Pong test",               &WiFi_pingpong_test       },
-    {"- HTTP tests",                      0                         },
-    {"DNS Lookup test",                   &http_DNS_test            },
-    {"Send to server test",               &http_send_to_server_test },
-    {"Start web server",                  &http_server_test         },
-    {"OTA partitions",                    &OTA_partitions           },
-    {"OTA load",                          &OTA_load                 },
-    {"OTA rollback",                      &OTA_rollback             },
-    {"OTA version",                       &OTA_compare_versions     },
-    {"-Interrupt Tests",                  0                         },
-    {"Polled target test",                &polled_target_test       },
-    {"Interrupt target test",             &interrupt_target_test    },
-    {"- Software tests",                  0                         },
-    {"build_json_score",                  &mfs_test_build_json_score}, // Generate a known score message
-    {"build_fake_shots",                  &test_build_fake_shots    }, // Fill up 10 shots with random values
-    {"generate_fake_shot",                &generate_fake_shot       }, // This forces shots into the software
-    {"display_all_scores",                &test_display_all_scores  }, // Send fake JSON scores
-    {"Rapidfire test",                    &test_rapidfire           },
-    {"Rapidfire test",                    &test_rapidfire           },
-    {"Calibration test",                  &calibration_test         }, // Generate fake scores and observe the calibration
-    {"",                                  0                         }
+    {"Help",                              &show_test_help            },
+    {"Factory test",                      &factory_test              },
+    {"Sensor test",                       &sensor_test               },
+    {"- Digital",                         0                          },
+    {"Digital inputs",                    &digital_test              },
+    {"Advance paper backer",              &paper_test                },
+    {"LED brightness test",               &LED_test                  },
+    {"Status LED driver",                 &status_LED_test           },
+    {"- Analog",                          0                          },
+    {"Analog input test",                 &analog_input_test         },
+    {"Analog input raw",                  &analog_input_raw          },
+    {"DAC test",                          &DAC_test                  },
+    {"DAC read",                          &DAC_read                  },
+    {"- Timer & PCNT test",               0                          },
+    {"PCNT timers not stopping",          &pcnt_1                    },
+    {"PCNT timers not running",           &pcnt_2                    },
+    {"PCNT timers start - stop together", &pcnt_3                    },
+    {"PCNT Timers cleared",               &pcnt_4                    },
+    {"PCNT test all",                     &pcnt_all                  },
+    {"PCNT calibration",                  &pcnt_cal                  },
+    {"Sensor POST test",                  &POST_counters             },
+    {"Turn the oscillator on and off",    &timer_cycle_oscillator    },
+    {"Turn the RUN lines on and off",     &timer_run_all             },
+    {"Show the current time",             &show_time                 },
+    {"Show current timers",               &show_timers               },
+    {"- Communiactions Tests",            0                          },
+    {"AUX port loopback test",            &aux_port_loopback_test    },
+    {"BlueTooth configuration",           &BlueTooth_configuration   },
+    {"RSS485 test",                       &RS485_test                },
+    {"Test WiFi as a station",            &WiFi_station_init         },
+    {"Enable the WiFi Server",            &WiFi_server_test          },
+    {"Enable the WiFi AP",                &WiFi_AP_init              },
+    {"Loopback WiFi",                     &WiFi_loopback_test        },
+    {"Scan for access points (APs)",      &WiFi_AP_scan_test         },
+    {"WiFi Ping Pong test",               &WiFi_pingpong_test        },
+    {"- HTTP tests",                      0                          },
+    {"DNS Lookup test",                   &http_DNS_test             },
+    {"Send to server test",               &http_send_to_server_test  },
+    {"Start web server",                  &http_server_test          },
+    {"OTA partitions",                    &OTA_partitions            },
+    {"OTA load",                          &OTA_load                  },
+    {"OTA rollback",                      &OTA_rollback              },
+    {"OTA version",                       &OTA_compare_versions      },
+    {"-Interrupt Tests",                  0                          },
+    {"Polled target test",                &polled_target_test        },
+    {"Interrupt target test",             &interrupt_target_test     },
+    {"Face strike test",                  &interrupt_face_strike_test},
+    {"- Software tests",                  0                          },
+    {"build_json_score",                  &mfs_test_build_json_score }, // Generate a known score message
+    {"build_fake_shots",                  &test_build_fake_shots     }, // Fill up 10 shots with random values
+    {"generate_fake_shot",                &generate_fake_shot        }, // This forces shots into the software
+    {"display_all_scores",                &test_display_all_scores   }, // Send fake JSON scores
+    {"Rapidfire test",                    &test_rapidfire            },
+    {"Rapidfire test",                    &test_rapidfire            },
+    {"Calibration test",                  &calibration_test          }, // Generate fake scores and observe the calibration
+    {"",                                  0                          }
 };
 
 const dlt_name_t dlt_names[] = {
@@ -1175,6 +1177,50 @@ void mfs_test_build_json_score(void)
   build_json_score(&record[0], SCORE_BLUETOOTH);
   strncpy(str, _xs, sizeof(str));
   SEND(AUX | BLUETOOTH | RS485, sprintf(_xs, "\r\nAUX: %s", str);)
+
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: interrupt_face_strike_test
+ *
+ * @brief:    Listen for a face strike and print out the results
+ *
+ * @return:   None
+ *
+ *----------------------------------------------------------------
+ *
+ * The face strike test polls face_strike and marks when it
+ * detects a face strike.
+ *
+ *--------------------------------------------------------------*/
+
+static void interrupt_face_strike_test(void)
+{
+  unsigned int last_face_strike = 0;
+
+  json_face_strike = 1;           // Force the face strike to be enabled
+  enable_face_strike_interrupt(); // Enable the face strike interrupt
+
+  while ( 1 )
+  {
+    if ( face_strike != last_face_strike )
+    {
+      last_face_strike = face_strike;
+      SEND(ALL, sprintf(_xs, "\r\nFace strike detected: %d", face_strike);)
+    }
+
+    if ( serial_available(ALL) )
+    {
+      if ( serial_getch(ALL) == '!' )
+      {
+        break; // Exit on !
+      }
+    }
+
+    vTaskDelay(100);
+  }
 
   return;
 }

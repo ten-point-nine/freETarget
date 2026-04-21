@@ -114,7 +114,6 @@ void adc_init(unsigned int adc_channel,    // What ADC channel are we accessing
    */
   adc_calibration_handle[adc][channel] = NULL;
   adc_calibration_init(adc, channel, adc_attenuation, &adc_calibration_handle[adc][channel]);
-  printf("ADC%d channel %d: Calibration handle: %p\n", adc, channel, adc_calibration_handle[adc][channel]);
   adc_cali_curve_fitting_config_t calibration_config = {
       .unit_id = adc, .chan = channel, .atten = adc_attenuation, .bitwidth = ADC_BITWIDTH_DEFAULT};
 
@@ -216,23 +215,33 @@ int adc_read(int adc_channel)                      // What input are we reading?
    *  Done
    */
   sum /= FILTER;
-  sum &= 0x0fff;                              // Mask to 12 bits
+  sum &= 0x0fff;                                                  // Mask to 12 bits
 
   adc_cali_raw_to_voltage(adc_calibration_handle[adc][channel], sum,
-                          &volt_mV);          // Convert the ADC reading to millivolts using the calibration handle
+                          &volt_mV);                              // Convert the ADC reading to millivolts using the calibration handle
 
   return (volt_mV);
 }
 
-#define V12_RESISITOR ((40.200 + 4.700) / 4.700) // Resistor divider
+#define V12_RESISITOR ((40.200 + 4.700) / 4.700)                  // Resistor divider
 
 real_t v12_supply(void)
 {
-  int volt_mV;
+  int    volt_mV;                                                 // Voltage from ADC in mV
+  real_t v12_volts;                                               // Voltage after scaling
 
-  volt_mV = adc_read(V12_LED);                // Read the ADC value for the board revision referenced to 3.3 volts
+  volt_mV = adc_read(V12_LED);                                    // Read the ADC value for the board revision referenced to 3.3 volts
 
-  return (real_t)volt_mV / 1000.0 * V12_RESISTOR;
+  if ( V12_DIODE & board_mask )                                   // Diode on V6 boards causes a voltage drop.  Compensate for it.
+  {
+    v12_volts = ((real_t)volt_mV / 1000.0 * V12_RESISTOR) + 0.75; // Add 0.75 volts for the diode drop
+  }
+  else
+  {
+    v12_volts = (real_t)volt_mV / 1000.0 * V12_RESISTOR;          // Scale the voltage up to the actual 12V supply
+  }
+
+  return v12_volts;
 }
 
 /*----------------------------------------------------------------

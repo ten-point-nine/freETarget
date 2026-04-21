@@ -366,6 +366,7 @@ unsigned int arm(void)
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "arm()");))
 
   face_strike = 0;                                                       // Reset the face strike count
+  enable_face_strike_interrupt();                                        // Enable the face strike interrupt
   stop_timers();
   arm_timers();                                                          // Arm the counters
   run_state |= IN_SHOT;
