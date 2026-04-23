@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>FreeETargetMenu</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+
+  <style>
+    html {
+      font-family: Helvetica;
+      display: inline-block;
+      margin: 0px auto;
+      text-align: center;
+    }
+  </style>
+
+  <style>
+    .gwd-select-ISSF_TARGET {
+      position: relative;
+      top: 0px;
+      left: 0px;
+      width: 170px;
+      font-family: "Arial";
+      font-size: 16px;
+      height: 46px;
+      border-radius: 6px;
+      background-color: aqua;
+    }
+
+    .gwd-select-ISSF_TARGET:hover {
+      background-color: pink;
+    }
+
+
+    .gwd-select-EVENT {
+      position: relative;
+      top: 0px;
+      left: 0px;
+      width: 100px;
+      font-family: "Arial";
+      font-size: 16px;
+      height: 46px;
+      border-radius: 6px;
+    }
+
+    .gwd-button-START {
+      position: relative;
+      top: 10px;
+      left: 0px;
+      width: 100px;
+      font-family: "Arial";
+      font-size: 16px;
+      height: 46px;
+      border-radius: 9px;
+      background-color: #00FF00;
+    }
+
+    .gwd-button-START:hover {
+      background-color: pink;
+    }
+
+    .gwd-button-START:active {
+      background-color: #00FF00;
+      transform: translateY(3px);
+    }
+
+    .gwd-button-STOP {
+      position: relative;
+      top: 20px;
+      left: 0px;
+      width: 100px;
+      font-family: "Arial";
+      font-size: 16px;
+      height: 46px;
+      border-radius: 9px;
+      background-color: red;
+    }
+
+    .gwd-button-STOP:hover {
+      background-color: pink;
+    }
+
+    .gwd-button-STOP:active {
+      background-color: red;
+      transform: translateY(3px);
+    }
+  </style>
+</head>
+
+<body>
+  <h1>FreeETarget Menu</h1>
+  <h2>Target Selection</h2>
+
+  <form name="event" action="/menu" method="get">
+
+    <select name="ISSF" id="ISSF" class="gwd-select-ISSF_TARGET">
+      <option value="Air Pistol" ^A>ISSF 10m Air Pistol</option>
+      <option value="Air Rifle" ^B>ISSF 10m Air Rifle</option>
+      <option value="50m Pistol" ^C>ISSF 50m Pistol</option>
+      <option value="50m Rifle" ^D>ISSF 50m Rifle</option>
+    </select>
+
+    <p> .</p>
+    <h2>ISSF Event Selection</h2>
+
+    <select name="Event" id="Event" class="gwd-select-EVENT">
+      <option value="Sight" ^E>SIGHT</option>
+      <option value="Match" ^F>MATCH</option>
+    </select>
+    <h2>Control Menu</h2>
+
+    <input type="submit" class="gwd-button-START" id="START" value="START">
+
+  </form>
+  <a href="/menu?stop"><button class="gwd-button-STOP" onclick"href=\"/menu\">STOP</button></a>
+</body>
+
+</html>
