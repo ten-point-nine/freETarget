@@ -34,15 +34,15 @@ endif()
 
 # Set default install directory permissions.
 if(NOT DEFINED CMAKE_OBJDUMP)
-  set(CMAKE_OBJDUMP "C:/Users/allan/.espressif/tools/xtensa-esp-elf/esp-13.2.0_20240530/xtensa-esp-elf/bin/xtensa-esp32s3-elf-objdump.exe")
+  set(CMAKE_OBJDUMP "C:/Users/allan/.espressif/tools/riscv32-esp-elf/esp-13.2.0_20240530/riscv32-esp-elf/bin/riscv32-esp-elf-objdump.exe")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/mbedtls/mbedtls/include/cmake_install.cmake")
-  include("C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/mbedtls/mbedtls/3rdparty/cmake_install.cmake")
-  include("C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/mbedtls/mbedtls/library/cmake_install.cmake")
-  include("C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/mbedtls/mbedtls/pkgconfig/cmake_install.cmake")
+  include("C:/Users/allan/Documents/freETarget/Software/Trace/build/esp-idf/mbedtls/mbedtls/include/cmake_install.cmake")
+  include("C:/Users/allan/Documents/freETarget/Software/Trace/build/esp-idf/mbedtls/mbedtls/3rdparty/cmake_install.cmake")
+  include("C:/Users/allan/Documents/freETarget/Software/Trace/build/esp-idf/mbedtls/mbedtls/library/cmake_install.cmake")
+  include("C:/Users/allan/Documents/freETarget/Software/Trace/build/esp-idf/mbedtls/mbedtls/pkgconfig/cmake_install.cmake")
 
 endif()
 

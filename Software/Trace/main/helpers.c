@@ -20,12 +20,10 @@
 #include "freETarget.h"
 #include "helpers.h"
 #include "json.h"
-#include "token.h"
 #include "timer.h"
 #include "gpio.h"
 #include "gpio_define.h"
 #include "diag_tools.h"
-#include "analog_io.h"
 #include "wifi.h"
 #include "serial_io.h"
 
@@ -33,71 +31,6 @@
 real_t SQ(real_t a)
 {
   return a * a;
-}
-/*-----------------------------------------------------
- *
- * @function: target_name
- *
- * @brief: Determine the target name and return
- *
- * @return: Target name returned via pointer
- *
- *-----------------------------------------------------
- *
- * Depending on the settings, determine the target name
- * and return it to the caller
- *
- * To set the target name, the following rules apply:
- *
- * {"NAME_ID":0-20} Pre defined names
- * {"NAME_ID":99, "NAME_TEXT":"myTargetName"}
- *
- *
- *-----------------------------------------------------*/
-const char *names[] = {"TARGET",                                                                                         //  0
-                       "1",      "2",      "3",       "4",      "5",       "6",       "7",      "8",     "9",      "10", //  1
-                       "DOC",    "DOPEY",  "HAPPY",   "GRUMPY", "BASHFUL", "SNEEZEY", "SLEEPY",                          // 11
-                       "RUDOLF", "DONNER", "BLITZEN", "DASHER", "PRANCER", "VIXEN",   "COMET",  "CUPID", "DUNDER",       // 18
-                       "ODIN",   "WODEN",  "THOR",    "BALDAR", "TEST",                                                  // 26
-                       0};
-
-void target_name(char *name_space)
-{
-
-  if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF) )
-  {
-    switch ( json_name_id )
-    {
-      case JSON_NAME_TEXT:
-        sprintf(name_space, "FET-%s", json_name_text);      // Name - FET-MyTargetName
-        break;
-
-      case JSON_NAME_CLIENT:
-        sprintf(name_space, "%s", json_name_text);          // Name - MyTargetName
-        break;
-
-      case JSON_NAME_SN:
-        sprintf(name_space, "FET-%d", json_serial_number);  // Name - serial Number
-        break;
-
-      default:
-        if ( (json_name_id < 0) || (json_name_id > 26) )    // Check for limits
-        {
-          json_name_id = 0;
-        }
-        sprintf(name_space, "FET-%s", names[json_name_id]); // Name - FET-TARGET, FET-2, etc.
-        break;
-    }
-  }
-  else
-  {
-    sprintf(name_space, "FET-%d", my_ring);
-  }
-
-  /*
-   * All done, return
-   */
-  return;
 }
 
 /*-----------------------------------------------------
@@ -279,10 +212,7 @@ void hello(void)
   /*
    * Woken up again.  Turn things back on
    */
-  target_name(str);
   SEND(ALL, sprintf(_xs, "{\"%s\"0, \"NAME\":\"%s\"}", _HELLO_, str);)
-  set_status_LED(LED_READY);
-  set_LED_PWM_now(json_LED_PWM);
   power_save = json_power_save * (time_count_t)ONE_SECOND * 60L;
   run_state &= ~IN_SLEEP; // Out of sleep and back in operation
   run_state |= IN_OPERATION;
@@ -309,90 +239,12 @@ void send_keep_alive(void)
   static int keep_alive_count = 0;
   char       str[SHORT_TEXT];
 
-  target_name(str);
   SEND(TCPIP, sprintf(_xs, "{\"KEEP_ALIVE\":%d, \"NAME\":\"%s\"}", keep_alive_count++, str);)
   keep_alive = (time_count_t)json_keep_alive * ONE_SECOND;
 
   return;
 }
-/*----------------------------------------------------------------
- *
- * @function: bye
- *
- * @brief:    Go into power saver
- *
- * @return:   Nothing
- *
- *----------------------------------------------------------------
- *
- * This function allows the user to remotly shut down the unit
- * when not in use.
- *
- * There are two modes of operation:
- * 1. Forced Bye - When the power save timer runs out
- * 2. Normal Bye - When commanded by the user via the MFS switch
- *
- *--------------------------------------------------------------*/
-static enum {
-  BYE_BYE = 0,                    // Wait for the timer to run out
-  BYE_HOLD,                       // Wait for the MFS to be pressed
-  BYE_START                       // Go back into service
-} bye_state;
 
-void bye_tick(void)               // Call back from the power_save timer
-{
-  bye_state = BYE_BYE;
-  if ( json_token != TOKEN_NONE ) // Skip if token ring enabled
-  {
-    return;
-  }
-  bye(0);
-  return;
-}
-
-void bye(unsigned int force_bye) // Set to true to force a shutdown
-{
-
-  char str[SHORT_TEXT];
-
-  switch ( bye_state )
-  {
-    case BYE_BYE:                          // Say Good Night Gracie!
-      target_name(str);
-      SEND(ALL, sprintf(_xs, "{\"%s\":0, \"NAME\":\"%s\"}", _BYE_, str);)
-      set_LED_PWM(0);                      // Going to sleep
-      set_status_LED(LED_BYE);
-      serial_flush(ALL);                   // Purge the com port
-      run_state &= ~IN_OPERATION;          // Take the system out of operating mode
-      run_state |= IN_SLEEP;               // Put it to sleep
-      bye_state = BYE_HOLD;
-      break;
-
-    case BYE_HOLD:                         // Loop waiting for something to happen
-      if ( (DIP_SW_A)                      // Wait for the switch to be pressed
-           || (DIP_SW_B)                   // Or the switch to be pressed
-           || (serial_available(ALL) != 0) // Or a character to arrive
-           || (is_running() != 0) )        // Or a shot arrives
-      {
-        bye_state = BYE_START;             // wait for the swich to be released
-      } // turns up
-      break;
-
-    case BYE_START:
-      if ( !(DIP_SW_A) // Wait here for both switches to be released
-           && !(DIP_SW_B) )
-      {
-        hello();
-        bye_state = BYE_BYE;
-      }
-      break;
-  }
-
-  /*
-   * Loop for the next time
-   */
-  return;
-}
 /*----------------------------------------------------------------
  *
  * @function: echo_serial
@@ -436,189 +288,6 @@ void echo_serial(int duration, // Duration in clock ticks
    */
   ft_timer_delete(&test_time);
   return;
-}
-
-/*----------------------------------------------------------------
- *
- * @function: build_json_score
- *
- * @brief:    Assemble the score as a JSON string based on the format
- *
- * @return:   _xs contains the JSON string
- *
- *----------------------------------------------------------------
- *
- * Build up a JSON string for the score.
- *
- * The function is called with the shot record to be reported and
- * a pointer to a string of fields used to build up the JSON
- * output.
- *
- * IMPORTANT
- *
- * Each field is preceeded with a comma (,) except for "shot"
- * which must be the first field printed.
- *
- *--------------------------------------------------------------*/
-
-void build_json_score(shot_record_t *shot, // Pointer to shot record
-                      const char    *fields)
-{
-  char       str[MEDIUM_TEXT];             // String holding buffers
-  static int ts, tx, ty;                   // Test Values
-
-  _xs[0] = 0;
-
-  /*
-   *  Loop and build up the payload
-   */
-  while ( *fields != 0 )
-  {
-    switch ( *fields )
-    {
-      case SCORE_LEFT_BRACE:
-        sprintf(str, "{"); // Start the opening bracket
-        break;
-
-      case SCORE_RIGHT_BRACE:
-        if ( is_trace & DLT_SCORE )
-        {
-          sprintf(str, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d }", shot->timer_count[N], shot->timer_count[E], shot->timer_count[S],
-                  shot->timer_count[W]);                     // Hardware values
-        }
-        else
-        {
-          sprintf(str, "}");                                 // End the closing bracket
-        }
-        break;
-
-      case SCORE_NEW_LINE:                                   // Add a newline
-        sprintf(str, "\n");
-        break;
-
-      case SCORE_TEST:                                       // Prime for HTTP
-        sprintf(str, "\"%s\":%d, \"x\":%d, \"y\":%d, \"r\":0, \"a\":0,\"target\":%d", _SHOT_, ts, tx, ty, http_target_type());
-        ts++;
-        tx = (tx + 5) % 103;
-        ty = (ty + 7) % 103;                                 // Test values to show that the function works
-        break;
-
-      case SCORE_PRIME:                                      // Prime for HTTP
-        sprintf(str, "\"%s\":0, \"x\":0, \"y\":0, \"r\":0, \"a\":0,\"target\":%d", _SHOT_, http_target_type());
-        break;
-
-      case SCORE_SHOT:                                       // Shot number
-        sprintf(str, "\"%s\":%d", _SHOT_, (shot->shot) + 1); // The client wants shots to start at 1
-        break;
-
-      case SCORE_MISS:                                       // Miss
-        sprintf(str, ", \"miss\":%d", shot->miss);
-        break;
-
-      case SCORE_SESSION:                                    // Session type
-        sprintf(str, ", \"session_type\":%d", shot->session_type);
-        break;
-
-      case SCORE_TIME:                                       // Time
-        sprintf(str, ", \"time\":%ld, \"time_to_go\":%ld", shot->shot_time, time_to_go);
-        break;
-
-      case SCORE_ELAPSED:                                    // Time since shooting began
-        sprintf(str, ", \"elapsed_time\":%lds", run_time_seconds());
-        break;
-
-      case SCORE_XY:                                         // X
-        sprintf(str, ", \"x\":%4.2f, \"y\":%4.2f", shot->x_mm, shot->y_mm);
-        break;
-
-      case SCORE_POLAR:                                      // Polar
-        sprintf(str, ", \"r\":%6.2f, \"a\":%6.2f", shot->radius, radians_to_degrees(shot->angle));
-        break;
-
-      case SCORE_HARDWARE:                                   // Hardware
-        sprintf(str, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d", (int)shot->timer_count[N + 0], (int)shot->timer_count[E + 0],
-                (int)shot->timer_count[S + 0], (int)shot->timer_count[W + 0]);
-        break;
-
-      case SCORE_TARGET:                                     // Target type
-        sprintf(str, ", \"target\":%d ", http_target_type());
-        break;
-
-      case SCORE_EVENT:                                      // Event data
-        sprintf(str, ", \"athelete\":\"%s\", \"event\":\"%s\", \"target_name\":\"%s\"", json_athlete, json_event, json_target_name);
-        break;
-
-      default:
-        break;
-    }
-    fields++;
-    strcat(_xs, str);
-  }
-
-  /*
-   * Put in the closing } and return
-   */
-  return;
-}
-
-/*----------------------------------------------------------------
- *
- * @function: http_target_type
- *
- * @brief:    Figure out the target type for
- *
- * @return:   target type number
- *
- *----------------------------------------------------------------
- *
- * The HTTP application uses a number to identify the target.
- *
- * This function matches up the target name from the PC client to
- * the number used by HTTP.
- *
- *  110   ISSF 10 Metre Air Rifle
- *  111   ISSF 10 Metre Air Rifle Practice
- *  100   ISSF 10 Metre Air Pistol
- *  101   ISSF 10 Metre Air Pistol Practice
- *  510   ISSF 50 Metre Rifle
- *  511   ISSF 50 Metre Rifle Practice
- *  500   ISSF 50 Metre .22 Pistol
- *  501   ISSF 50 Metre .22 Pistol Practice
- *
- *--------------------------------------------------------------*/
-int http_target_type(void)
-{
-  int target_code = 0;
-
-  /*
-   * Practice or event
-   */
-  if ( instr(json_event, "Practice") != -1 )
-  {
-    target_code += 1;
-  }
-
-  /*
-   * Rifle or pistol
-   */
-  if ( instr(json_target_name, "Rifle") != -1 )
-  {
-    target_code += 10;
-  }
-
-  /*
-   * 50m
-   */
-  if ( instr(json_target_name, "50m") != -1 )
-  {
-    target_code += 500;
-  }
-  else
-  {
-    target_code += 100;
-  }
-
-  return target_code;
 }
 
 /*----------------------------------------------------------------
@@ -777,7 +446,6 @@ void watchdog(void)
       if ( WiFi_my_IP_address(str_c) == false ) // Find our IP address
       {
         DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Trying to connect to access point");))
-        set_status_LED(LED_WIFI_FAULT);         // Empty
         WiFi_reconnect();
       }
       else

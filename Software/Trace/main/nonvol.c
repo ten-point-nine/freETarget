@@ -17,13 +17,9 @@
 #include "helpers.h"
 #include "diag_tools.h"
 #include "json.h"
-#include "mfs.h"
 #include "nonvol.h"
 #include "serial_io.h"
-#include "calibrate.h"
-#include "ota.h"
 #include "board_assembly.h"
-#include "analog_io.h"
 
 /*
  *  Local variables
@@ -235,9 +231,6 @@ void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calib
   /*
    * Handle special cases
    */
-  strcpy(json_ota_url, OTA_URL);                                   // Copy the OTA URL to the nonvol
-  nvs_set_str(my_handle, NONVOL_OTA_URL, json_ota_url);            // Store the URL in the nonvol
-  void_calibration(true);                                          // Unconditionally void the calibration
 
   /*
    *     Test the board only if it is a factor init
@@ -422,17 +415,6 @@ void update_nonvol(unsigned int current_version) // Version present in persisten
         }
       }
       i++;
-    }
-    if ( version == 11 )
-    {
-      strcpy(json_ota_url, OTA_URL);                        // Copy the OTA URL to the nonvol
-      nvs_set_str(my_handle, NONVOL_OTA_URL, json_ota_url); // Store the URL in the nonvol
-      version = 12;                                         // Skip to version 12
-    }
-    if ( version == 12 )
-    {
-      nvs_set_i32(my_handle, NONVOL_LOCK, 0);               // Disable the lock code
-      version = 13;
     }
   }
 

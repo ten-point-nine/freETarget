@@ -12,23 +12,11 @@
  * @function Prototypes
  */
 void self_test(unsigned int test);
-void show_sensor_status(unsigned int sensor_status);      // Display the sensor status as text
-void show_sensor_fault(unsigned int sensor_status);       // Use the LEDs to show what sensor didn't work
-void blink_fault(unsigned int fault_code);                // Blink a fault
 void POST_version(void);                                  // Show the version string
-bool POST_counters(void);                                 // Verify the counter operation
-void POST_trip_point(void);                               // Display the set point
-void set_trip_point(int x);                               // Calibrate the trip point
 bool do_dlt(unsigned int level);                          // Diagnostics Log and Trace
 bool factory_test(void);                                  // Test the hardware in production
-bool sensor_test(void);                                   // Test only the sensors in production
 bool do_factory_test(bool test_run);                      // Carry out the factory test
-void set_diag_LED(char *new_LEDs, unsigned int duration); // Display the LED failure code
-bool check_12V(void);                                     // Check the 12 volt supply
-void heartbeat(void);                                     // Send out regular status messages
-void test_build_fake_shots(void);                         // Generate a list of shots
-void generate_fake_shot(void);                            // Generate a string of shots
-void mfs_test_build_json_score(void);                     // Test build_json_score
+
 
 /*
  *  Definitions

@@ -12,16 +12,13 @@
  * Global functions
  */
 void WiFi_init(void);                          // Initialize the WiFi
-void WiFi_AP_init(void);                       // Initialize the WiFi as an Access Point
 void WiFi_station_init(void);                  // Initialize the WiFI as a station
 void WiFi_tcp_server_task(void *pvParameters); // TCP Server task
-void WiFi_loopback_test(void);                 // Loopback the TCPIP channel
 bool WiFi_my_IP_address(char *s);              // Return the current IP address
 void WiFi_remote_IP_address(char *s);          // Return the current gateway address
 void WiFi_MAC_address(char *mac);              // Read the MAC address
 void WiFi_setup(void);                         // Configure the WiFi operation
 void WiFi_AP_scan_test(void);                  // Scan for access points (APs)
-void WiFi_pingpong_test(void);                 // Ping pong the signals
 void WiFi_reconnect(void);                     // Try and start a new connection.
 
 #if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE )
@@ -37,7 +34,6 @@ void tcpip_socket_poll_3(void *parameters);    // Listen to TCPIP recv calls
 
 void WiFi_server_test(void);                   // Server test for diag.c
 void WiFi_station_loopback_test(void);         // Station test for diag.c
-void WiFi_AP_loopback_test(void);              // Access point test for diag.c
 
 /*
  * #defines

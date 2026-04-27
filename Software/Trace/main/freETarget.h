@@ -165,37 +165,15 @@ typedef struct
   double       ys;             // Computed Y shot value
 } sensor_t;
 
-typedef struct
-{
-  unsigned int shot;           // Shot number associated with this record, may not be 1:1
-  unsigned int miss;
-  unsigned int session_type;   // What kind of information is contained in the score
-  double       x;              // X location of shot as computed in clock cycles
-  double       y;              // Y location of shot as computed in clock cycles
-  double       xs;             // X location of shot rotated onto target in clock cycles
-  double       ys;             // Y location of shot rotated onto target in clock cycles
-  double       x_mm;           // Computed location in mm
-  double       y_mm;           // Computed location in mm
-  double       radius;         // Radius of shot from the center of the target
-  double       angle;          // Angle of shot from the center of the target
-  int          timer_count[8]; // Array of timer values 4 in hardware and 4 in software
-  unsigned int face_strike;    // Recording of face strike
-  unsigned int sensor_status;  // Triggering register
-  time_count_t shot_time;      // Shot time since start of after tabata start
-} shot_record_t;
+
 
 /*
  *  Global Variables
  */
 EXTERN char                  _xs[1024 + 512];                       // General purpose string buffer
-EXTERN double                s_of_sound;
-EXTERN unsigned int          face_strike;
 EXTERN unsigned int          is_trace;                              // Tracing level(s)
-EXTERN unsigned int          shot_in;                               // Index into the shot array (The shot that has JUST arrived)
-EXTERN unsigned int          shot_out;                              // Index into the shot array (Last shot processed)
-EXTERN unsigned int          shot_number;                           // Current shot number
+
 EXTERN time_count_t          shot_start;                            // Time when shot become valid
-EXTERN time_count_t          power_save;                            // Power down timer
 EXTERN volatile unsigned int run_state;                             // IPC states
 EXTERN time_count_t          LED_timer;                             // Turn off the LEDs when not in use
 EXTERN time_count_t          keep_alive;                            // Keep alive timer
@@ -204,7 +182,6 @@ EXTERN time_count_t          time_since_last_shot;                  // 15 minute
 EXTERN time_count_t          session_time[];                        // Time in each session
 EXTERN time_count_t          shot_timer;                            // Wait for the sound to hit all sensors
 EXTERN time_count_t          ring_timer;                            // Let the ring on the backstop end
-EXTERN shot_record_t         record[SHOT_SPACE];
 #ifdef FREETARGET_C
 EXTERN char        *no_yes[]       = {"No", "Yes"};                 // Yes or No
 EXTERN time_count_t session_time[] = {1000 * 60, 15 * 60, 75 * 60}; // Time in each session EMPTY, SIGHT, SCORE // Array of shot records
@@ -219,14 +196,5 @@ EXTERN time_count_t session_time[];
 void         freeETarget_init(void);              // Get the target software ready
 void         freeETarget_target_loop(void *arg);  // Target polling loop
 void         send_keep_alive(void);               // Send out the keep alive signal for TCPIP
-void         hello(void);                         // Say Hello World
-void         bye(unsigned int force_bye);         // Shut down and say goodbye
-void         polled_target_test(void);            // Test the target aquisition software
-void         interrupt_target_test(void);         // Test the target aquisition software
-void         tabata_task(void);                   // Run the TABATA timersArm the Tabata counter
-void         rapid_fire_task(void);               // Run the Rapid Fire state machine
-sensor_ID_t *find_sensor(unsigned int run_mask);  // Locate the sensor settings for the run_latch
-void         start_new_session(int session_type); // Start a new shooting session
 bool         prompt_for_confirm(void);            // Prompt for a confirmation
-
 #endif

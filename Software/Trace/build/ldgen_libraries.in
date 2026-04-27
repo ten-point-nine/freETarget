@@ -1,4 +1,4 @@
-$<TARGET_FILE:__idf_xtensa>
+$<TARGET_FILE:__idf_riscv>
 $<TARGET_FILE:__idf_esp_driver_gpio>
 $<TARGET_FILE:__idf_esp_pm>
 $<TARGET_FILE:__idf_mbedtls>
@@ -29,12 +29,9 @@ $<TARGET_FILE:__idf_esp_driver_uart>
 $<TARGET_FILE:__idf_app_trace>
 $<TARGET_FILE:__idf_esp_event>
 $<TARGET_FILE:__idf_nvs_flash>
-$<TARGET_FILE:__idf_esp_driver_pcnt>
 $<TARGET_FILE:__idf_esp_driver_spi>
-$<TARGET_FILE:__idf_esp_driver_mcpwm>
 $<TARGET_FILE:__idf_esp_driver_i2s>
 $<TARGET_FILE:__idf_sdmmc>
-$<TARGET_FILE:__idf_esp_driver_sdmmc>
 $<TARGET_FILE:__idf_esp_driver_sdspi>
 $<TARGET_FILE:__idf_esp_driver_rmt>
 $<TARGET_FILE:__idf_esp_driver_tsens>
@@ -76,10 +73,7 @@ $<TARGET_FILE:__idf_fatfs>
 $<TARGET_FILE:__idf_json>
 $<TARGET_FILE:__idf_mqtt>
 $<TARGET_FILE:__idf_nvs_sec_provider>
-$<TARGET_FILE:__idf_perfmon>
 $<TARGET_FILE:__idf_spiffs>
-$<TARGET_FILE:__idf_touch_element>
-$<TARGET_FILE:__idf_usb>
 $<TARGET_FILE:__idf_wifi_provisioning>
 $<TARGET_FILE:__idf_espressif__led_strip>
 $<TARGET_FILE:__idf_espressif__mdns>

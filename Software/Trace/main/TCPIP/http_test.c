@@ -33,10 +33,8 @@
 #include "freETarget.h"
 #include "http_client.h"
 #include "WiFi.h"
-#include "compute_hit.h"
 #include "diag_tools.h"
 #include "http_client.h"
-#include "http_server.h"
 #include "json.h"
 #include "nonvol.h"
 
@@ -171,20 +169,8 @@ void http_send_to_server_test(void)
  *******************************************************************************/
 void http_server_test(void)
 {
-  static void *server = NULL;
 
-  /*
-   * Start the server for the first time
-   */
-  server = start_webserver(DEFAULT_HTTP_PORT);
-
-  /*
-   * Stay here until someone removes the server
-   */
-  while ( server )
-  {
-    vTaskDelay(ONE_SECOND / 4);
-  }
+  return;
 }
 
 #endif

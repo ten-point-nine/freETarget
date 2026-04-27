@@ -9,7 +9,7 @@
  */
 /**
 
- *                    ESP32-S3 Linker Script Memory Layout
+ *                    ESP32-C3 Linker Script Memory Layout
 
  * This file describes the memory layout (memory blocks) by virtual memory addresses.
 
@@ -53,25 +53,11 @@
 /* CPU instruction prefetch padding size for memory protection scenario */
 /* Memory alignment size for PMS */
     /* rtc timer data (s_rtc_timer_retain_mem, see esp_clk.c files). For rtc_timer_data_in_rtc_mem section. */
-/*
+/**
 
- * 40370000 <- IRAM/Icache -> 40378000 <- D/IRAM (I) -> 403E0000
+ * physical memory is mapped twice to the vritual address (IRAM and DRAM).
 
- *                            3FC88000 <- D/IRAM (D) -> 3FCF0000 <- DRAM/DCache -> 3FD00000
-
- *
-
- * Startup code uses the IRAM from 0x403B9000 to 0x403E0000, which is not available for static
-
- * memory, but can only be used after app starts.
-
- *
-
- * D cache use the memory from high address, so when it's configured to 16K/32K, the region
-
- * 0x3FCF000 ~ (3FD00000 - DATA_CACHE_SIZE) should be available. This region is not used as
-
- * static memory, leaving to the heap.
+ * `I_D_SRAM_OFFSET` is the offset between the two locations of the same physical memory
 
  */
 MEMORY
@@ -86,7 +72,7 @@ MEMORY
 
    */
   /* IRAM for PRO CPU. */
-  iram0_0_seg (RX) : org = (0x40370000 + 0x4000), len = (((0x403CB700 - (0x40378000 - 0x3FC88000)) - 0x3FC88000) + 0x8000 - 0x4000)
+  iram0_0_seg (RX) : org = (0x4037C000 + 0x4000), len = 0x403CE710 - (0x4037C000 - 0x3FC7C000) - (0x3FC7C000 + 0x4000)
   /* Flash mapped instruction data */
   iram0_2_seg (RX) : org = 0x42000020, len = 0x800000-0x20
   /**
@@ -109,16 +95,16 @@ MEMORY
    * Enabling Bluetooth & Trace Memory features in menuconfig will decrease the amount of RAM available.
 
    */
-  dram0_0_seg (RW) : org = (0x3FC88000), len = ((0x403CB700 - (0x40378000 - 0x3FC88000)) - 0x3FC88000)
+  dram0_0_seg (RW) : org = (0x3FC7C000 + 0x4000), len = 0x403CE710 - (0x4037C000 - 0x3FC7C000) - (0x3FC7C000 + 0x4000)
   /* Flash mapped constant data */
-  drom0_0_seg (R) : org = 0x3C000020, len = 0x2000000-0x20
+  drom0_0_seg (R) : org = 0x3C000020, len = 0x800000-0x20
   /* (See iram0_2_seg for meaning of 0x20 offset in the above.) */
   /**
 
    * RTC fast memory (executable). Persists over deep sleep.
 
    */
-  rtc_iram_seg(RWX) : org = 0x600fe000, len = 0x2000 - (0 + (24))
+  rtc_iram_seg(RWX) : org = 0x50000000, len = 0x2000 - (0 + (24))
   /* We reduced the size of rtc_iram_seg by RESERVE_RTC_MEM value.
 
      It reserves the amount of RTC fast memory that we use for this memory segment.
@@ -132,34 +118,23 @@ MEMORY
      The aim of this is to keep data that will not be moved around and have a fixed address.
 
   */
-  rtc_reserved_seg(RW) : org = 0x600fe000 + 0x2000 - (0 + (24)), len = (0 + (24))
-  /**
-
-   * RTC slow memory (data accessible). Persists over deep sleep.
-
-   * Start of RTC slow memory is reserved for ULP co-processor code + data, if enabled.
-
-   */
-  rtc_slow_seg(RW) : org = 0x50000000 , len = 0x2000
-  /**
-
-   * `extern_ram_seg` and `drom0_0_seg` share the same bus and the address region.
-
-   * A dummy section is used to avoid overlap. See `.ext_ram.dummy` in `sections.ld.in`
-
-   */
-  extern_ram_seg(RWX) : org = 0x3c000020 , len = 0x2000000-0x20
+  rtc_reserved_seg(RW) : org = 0x50000000 + 0x2000 - (0 + (24)), len = (0 + (24))
 }
-_diram_i_start = 0x40378000;
-_heap_start = _heap_low_start;
 /* Heap ends at top of dram0_0_seg */
 _heap_end = 0x40000000;
 _data_seg_org = ORIGIN(rtc_data_seg);
-/* RTC fast memory shares the same range for both data and instructions */
+/**
+
+ *  The lines below define location alias for .rtc.data section
+
+ *  As C3 only has RTC fast memory, this is not configurable like on other targets
+
+ */
 REGION_ALIAS("rtc_data_seg", rtc_iram_seg );
-REGION_ALIAS("rtc_data_location", rtc_slow_seg );
-REGION_ALIAS("default_code_seg", iram0_2_seg);
-REGION_ALIAS("default_rodata_seg", drom0_0_seg);
+REGION_ALIAS("rtc_slow_seg", rtc_iram_seg );
+REGION_ALIAS("rtc_data_location", rtc_iram_seg );
+  REGION_ALIAS("default_code_seg", iram0_2_seg);
+  REGION_ALIAS("default_rodata_seg", drom0_0_seg);
 /**
 
  *  If rodata default segment is placed in `drom0_0_seg`, then flash's first rodata section must

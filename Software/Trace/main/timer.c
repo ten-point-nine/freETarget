@@ -24,10 +24,7 @@
 #include "gpio_types.h"
 #include "json.h"
 #include "serial_io.h"
-#include "mfs.h"
-#include "token.h"
 #include "timer.h"
-#include "dac.h"
 
 /*
  * Definitions
@@ -71,14 +68,6 @@ static time_count_t     base_time = 0;      // Base time to show elapsed time
 time_count_t            time_to_go;         // Time remaining in event in seconds
 
 static synchronous_task_t task_list[] = {
-    {BAND_10ms,   token_cycle              }, // Check for token ring activity
-    {BAND_10ms,   multifunction_switch_tick}, // Look for MFS changes
-    {BAND_10ms,   multifunction_switch     },
-    {BAND_10ms,   paper_drive_tick         }, // Drive the paper drive motor
-    {BAND_500ms,  toggle_status_LEDs       }, // Blink the LEDs
-    {BAND_500ms,  tabata_task              }, // Manage the Tabata timer
-    {BAND_500ms,  rapid_fire_task          }, // Manage the rapid fire timer
-    {BAND_1000ms, check_12V                }, // Monitor the 12V supply
     {BAND_1000ms, check_new_connection     }, // Check for a new WiFi connection
     {BAND_60s,    watchdog                 }, // Watchdog monitor
     {0,           0                        }
@@ -121,55 +110,6 @@ const timer_config_t config = {
     .auto_reload = 1,
 }; // default clock source is APB
 
-void freeETarget_timer_init(void)
-{
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "freeETarget_timer_init()");))
-  timer_init(TIMER_GROUP_0, TIMER_1, &config);
-  timer_set_counter_value(TIMER_GROUP_0, TIMER_1, 0);    // Start the timer at 0
-  timer_set_alarm_value(TIMER_GROUP_0, TIMER_1, ONE_MS); // Trigger on this value
-  timer_enable_intr(TIMER_GROUP_0, TIMER_1);             // Interrupt associated with this interrupt
-  timer_isr_callback_add(TIMER_GROUP_0, TIMER_1, freeETarget_timer_isr_callback, NULL, 0);
-  timer_start(TIMER_GROUP_0, TIMER_1);
-
-  /*
-   *  Timer running. return
-   */
-  return;
-}
-
-void freeETarget_timer_pause(void) // Stop the timer
-{
-  timer_pause(TIMER_GROUP_0, TIMER_1);
-  return;
-}
-
-void freeETarget_timer_start(void) // Start the timer
-{
-  timer_start(TIMER_GROUP_0, TIMER_1);
-  return;
-}
-
-/*
- * Show the value of the count down timers
- *
- * IMPORTANT.  Some timers may be reset as a function of executing this command
- */
-void show_timers(void) // Show the current timers
-{
-  unsigned int i;
-
-  SEND(ALL, sprintf(_xs, "\r\nCurrent Timers:\r\n");)
-  for ( i = 0; i != N_TIMERS; i++ )
-  {
-    if ( timers[i].run_time != 0 ) // Valid timer
-    {
-      SEND(ALL, sprintf(_xs, "  %s: %ld\r\n", timers[i].name, *timers[i].run_time);)
-    }
-  }
-
-  return;
-}
-
 /*-----------------------------------------------------
  *
  * @function: freeETarget_timer_isr_callback
@@ -201,47 +141,6 @@ void show_timers(void) // Show the current timers
 static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
 {
   BaseType_t   high_task_awoken = pdFALSE;
-  unsigned int pin;                                       // Value read from the port
-
-  IF_NOT(IN_OPERATION) return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISR
-
-  /*
-   * Decide what to do if based on what inputs are present
-   */
-  pin = is_running() & RUN_MASK; // Read in the RUN bits
-
-  /*
-   * Read the shot based on the ISR state
-   */
-  switch ( isr_state )
-  {
-    case PORT_STATE_IDLE:                                    // Idle, Wait for something to show up
-      if ( pin != 0 )                                        // Something has triggered
-      {
-        shot_timer = MAX_WAIT_TIME;                          // The wait timer makes sure all sensors are triggered
-        isr_state  = PORT_STATE_WAIT;                        // Got something wait for all of the sensors tro trigger
-      }
-      break;
-
-    case PORT_STATE_WAIT:                                    // Something is present, wait for all of the inputs
-      if ( (pin == RUN_MASK)                                 // We have all of the inputs
-           || (shot_timer == 0) )                            // or ran out of time.  Read the timers and restart
-      {
-        aquire();                                            // Read the counters
-        ring_timer = json_min_ring_time * ONE_SECOND / 1000; // Reset the ring timer
-        isr_state  = PORT_STATE_TIMEOUT;                     // and wait for the all clear
-      }
-      break;
-
-    case PORT_STATE_TIMEOUT:                                 // Wait for the ringing to stop
-      if ( ring_timer == 0 )
-      {
-        stop_timers();                                       // Clear the flipflops
-        arm_timers();                                        // Arm the timers for the next shot
-        isr_state = PORT_STATE_IDLE;                         // The ringing has stopped
-      }
-      break;
-  }
 
   /*
    * Return from interrupts
@@ -343,14 +242,6 @@ void freeETarget_synchronous(void *pvParameters)
       i++;
     }
 
-    /*
-     * 60 second band
-     */
-    if ( ((cycle_count % BAND_60s) == 0)         // Sixty second timer
-         || ((run_state ^ old_run_state) != 0) ) // or state change
-    {
-      heartbeat();
-    }
     old_run_state = run_state;                   // Remember the state
 
     /*

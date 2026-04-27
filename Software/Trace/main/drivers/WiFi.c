@@ -46,7 +46,6 @@
 #include "helpers.h"
 #include "http_client.h"
 #include "WiFi.h"
-#include "compute_hit.h"
 #include "diag_tools.h"
 #include "http_client.h"
 #include "json.h"
@@ -126,20 +125,13 @@ void WiFi_init(void)
   /*
    * Initialize the WiFI
    */
-  if ( json_wifi_ssid[0] == 0 ) // The SSID is undefined
-  {
-    WiFi_AP_init();
-  }
-  else
-  {
     WiFi_station_init();
-  }
+
 
   /*
    * Setup the mDNS service
    */
   mdns_init();                   // Initialize the mDNS service
-  target_name(str_c);            // Get the target name
   mdns_hostname_set(str_c);      // Set the hostname for the target
   mdns_instance_name_set(str_c); // Set the instance name for the target
 
@@ -184,94 +176,18 @@ void WiFi_reconnect(void)
     WiFi_my_IP_address(str_c);
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Connected to AP SSID:  \"%s\"", json_wifi_ssid);))
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Using WiFi_IP_ADDRESS: \"%s\"", str_c);))
-    set_status_LED(LED_WIFI_STATION);
   }
   else if ( bits & WIFI_FAIL_BIT )
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to connect to SSID:%s, password:%s", json_wifi_ssid, json_wifi_pwd);))
-    set_status_LED(LED_WIFI_FAULT);
   }
   else
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Unexpectged WiFi event");))
-    set_status_LED(LED_WIFI_FAULT);
   }
   return;
 }
 
-/*****************************************************************************
- *
- * @function: WiFi_AP_init()
- *
- * @brief:    Initialize the WiFi Interface as an access point
- *
- * @return:   None
- *
- ******************************************************************************
- *
- * This function initializes the WiFi to act as an Access Point.
- *
- * The target broadcasts an SSID and lets clients connect to it.  For example
- * FET-TARGET
- *
- * {"NAME_ID":99, "NAME_TEXT":"MyTarget"}
- *
- *******************************************************************************/
-void WiFi_AP_init(void)
-{
-  esp_netif_t       *wifiAP;
-  wifi_init_config_t WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
-
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi_AP_init()");))
-
-  /*
-   * Create the network interface
-   */
-  ESP_ERROR_CHECK(esp_netif_init());
-  ESP_ERROR_CHECK(esp_event_loop_create_default());
-
-  /*
-   * Setup the WiFi IP address before staring
-   */
-  wifiAP = esp_netif_create_default_wifi_ap();
-  IP4_ADDR(&ipInfo.ip, 192, 168, 10, 9);       // Setup the base IP address
-  IP4_ADDR(&ipInfo.gw, 192, 168, 10, 9);       // Setup the gateway (not used but needed)
-  IP4_ADDR(&ipInfo.netmask, 255, 255, 255, 0); // Setup the subnet mask
-  esp_netif_dhcps_stop(wifiAP);                // Remove the old value
-  esp_netif_set_ip_info(wifiAP, &ipInfo);      // Put in the one
-  esp_netif_dhcps_start(wifiAP);               // and start the DHCP
-
-  /*
-   *  Initialize the WiFi Access Point
-   */
-  esp_wifi_init(&WiFi_init_config);
-
-  esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFi_event_handler, NULL, NULL);
-
-  target_name((char *)&WiFi_config.ap.ssid);
-  WiFi_config.ap.ssid_len = strlen(json_wifi_ssid);
-  WiFi_config.ap.channel  = json_wifi_channel;
-  strcpy((char *)&WiFi_config.ap.password, json_wifi_pwd);
-  WiFi_config.ap.max_connection = 4;
-  if ( json_wifi_pwd[0] == 0 )
-  {
-    WiFi_config.ap.authmode = WIFI_AUTH_OPEN;
-  }
-  else
-  {
-    WiFi_config.ap.authmode = WIFI_AUTH_WPA2_PSK;
-  }
-  WiFi_config.ap.ssid_hidden = json_wifi_hidden;
-  esp_wifi_set_mode(WIFI_MODE_AP);
-  esp_wifi_set_config(WIFI_IF_AP, &WiFi_config);
-  esp_wifi_start();
-
-  /*
-   * Ready to go
-   */
-  set_status_LED(LED_WIFI_ACCESS); // I am an access point
-  return;
-}
 
 /*****************************************************************************
  *
@@ -345,17 +261,14 @@ void WiFi_station_init(void)
     WiFi_my_IP_address(str_c);
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Connected to AP SSID:  \"%s\"", json_wifi_ssid);))
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Using WiFi_IP_ADDRESS: \"%s\"", str_c);))
-    set_status_LED(LED_WIFI_STATION);
   }
   else if ( bits & WIFI_FAIL_BIT )
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to connect to SSID:%s, password:%s", json_wifi_ssid, json_wifi_pwd);))
-    set_status_LED(LED_WIFI_FAULT);
   }
   else
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Unexpectged WiFi event");))
-    set_status_LED(LED_WIFI_FAULT);
   }
 
   /*
@@ -481,7 +394,6 @@ void WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id
       {
         xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
       }
-      set_status_LED(LED_WIFI_STATION);
     }
   }
 
@@ -678,11 +590,9 @@ static void tcpip_server_io(void)
     {
       if ( json_wifi_ssid[0] != 0 ) //  I'm a station
       {
-        set_status_LED(LED_WIFI_STATION);
       }
       else                          // I'm an access point
       {
-        set_status_LED(LED_WIFI_ACCESS);
       }
     }
   }
@@ -889,7 +799,6 @@ void tcpip_accept_poll(void *parameters)
         inet_ntoa_r(((struct sockaddr_in *)&source_addr)->sin_addr, addr_str, sizeof(addr_str) - 1);
         SEND(ALL, sprintf(_xs, "Socket accepted ip address: %s\r\n", addr_str);)
       })
-      set_status_LED(LED_WIFI_STATION_CN);
     }
   }
 
@@ -918,7 +827,6 @@ void tcpip_accept_poll(void *parameters)
 static void WiFi_start_new_connection(int sock) // Socket token to use
 {
   int  i;
-  char str[SHORT_TEXT];
 
   /*
    *  Build up a mask of existing WiFi connections
@@ -929,21 +837,6 @@ static void WiFi_start_new_connection(int sock) // Socket token to use
     if ( socket_list[i] != AVAILABLE_SOCKET )
     {
       connection_list = (TCPIP_0) << i;
-    }
-  }
-
-  /*
-   *  Inform the PC what is going on
-   */
-  target_name(str);
-  SEND(ALL, sprintf(_xs, "{\"%s\":%lds, \"NAME\":\"%s\"}", _GREETING_, run_time_seconds(), str);)
-
-  for ( i = 0; i != SHOT_SPACE; i++ )
-  {
-    if ( (record[i].session_type & SESSION_VALID) != 0 )
-    {
-      send_replay(&record[i], i);
-      send(sock, _xs, strlen(_xs), 0);
     }
   }
 
@@ -1071,15 +964,6 @@ void WiFi_station_loopback_test(void)
   return;
 }
 
-void WiFi_AP_loopback_test(void)
-{
-  WiFi_AP_init();
-  xTaskCreate(WiFi_tcp_server_task, "WiFi_tcp_server", 4096, NULL, 5, NULL);
-  xTaskCreate(tcpip_accept_poll, "tcpip_accept_poll", 4096, NULL, 4, NULL);
-  WiFi_loopback_test();
-  return;
-}
-
 /*****************************************************************************
  *
  * @function: WiFi_AP_scan_test
@@ -1159,59 +1043,5 @@ void WiFi_AP_scan_test(void)
   SEND(ALL, sprintf(_xs, "\r\n\r\nConnected to AP SSID:  \"%s\"", json_wifi_ssid);)
   SEND(ALL, sprintf(_xs, "   IP: \"%s\"", str_c);)
   SEND(ALL, sprintf(_xs, _DONE_);)
-  return;
-}
-
-/*****************************************************************************
- *
- * @function: WiFi_pingpong_test
- *
- * @brief:    Send messages between two boards
- *
- * @return:   None
- *
- ****************************************************************************
- *
- * The board which is the Access Point sends a message to the station
- * board.  The station board sends a message back to the access point.
- * This is repeated indefinitely.
- *
- * **************************************************************************/
-
-void WiFi_pingpong_test(void)
-{
-  int i;
-  int ch;
-
-  if ( json_wifi_ssid[0] == 0 )
-  {
-    SEND(ALL, sprintf(_xs, "\r\nI am the access point (AP)");)
-  }
-  else
-  {
-    SEND(ALL, sprintf(_xs, "\r\nI am the station");)
-  }
-
-  i  = 0;
-  ch = 'A';
-  while ( 1 )
-  {
-    SEND(ALL, sprintf(_xs, "\r\nP:%d %c", i++, ch);)
-    vTaskDelay(ONE_SECOND);
-    if ( serial_available(ALL) )
-    {
-      ch = serial_getch(ALL);
-      if ( ch == '!' )
-      {
-        break;
-      }
-      SEND(ALL, sprintf(_xs, "\r\nHello World");)
-      i = 0;
-      serial_flush(ALL);
-    }
-  }
-
-  SEND(ALL, sprintf(_xs, _DONE_);)
-
   return;
 }

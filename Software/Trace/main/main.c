@@ -25,8 +25,6 @@
 #include "wifi.h"
 #include "diag_tools.h"
 #include "http_client.h"
-#include "http_server.h"
-#include "http_services.h"
 
 /*
  * Task Priorities
@@ -51,8 +49,6 @@
  */
 void app_main(void)
 {
-  char str_c[SHORT_TEXT]; // String holding buffer
-
   /*
    *  Start FreeETarget
    */
@@ -96,19 +92,7 @@ void app_main(void)
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 
-  start_webserver(DEFAULT_HTTP_PORT); // Main port for the web server
-  serial_flush(ALL);
-  vTaskDelay(TICK_10ms);
-  start_webserver(EVENT_HTTP_PORT);   // Control port for the web server
-  serial_flush(ALL);
-  vTaskDelay(TICK_10ms);
-
-  freeETarget_timer_init();
-  vTaskDelay(TICK_10ms);
-  serial_flush(ALL);
-
-  target_name(&str_c);
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "SN:%d Name: %s Running\r\n", json_serial_number, str_c);))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "SN:%d Running\r\n", json_serial_number);))
   vTaskDelay(TICK_10ms);
   serial_flush(ALL);
 }

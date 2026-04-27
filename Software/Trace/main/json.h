@@ -160,13 +160,8 @@ EXTERN int           json_aux_mode;                  // Enable comms from the AU
 EXTERN char          json_remote_url[URL_SIZE];      // Where are the messages going?
 EXTERN int           json_remote_active[URL_SIZE];   // Is there a remote present
 EXTERN char          json_remote_key[URL_SIZE];      // Security key if nessary
-EXTERN char          json_athlete[SMALL_STRING];     // Athelete shooting
-EXTERN char          json_event[SMALL_STRING];       // Event being shot
-EXTERN char          json_target_name[SMALL_STRING]; // Target being shot at
-EXTERN char          json_name_text[SMALL_STRING];   // Target name, ex (Target 54))
 EXTERN int           json_remote_modes;              // What modes are available to talk to a remote server
 EXTERN int           json_session_type;              // What kind of session is this?
-EXTERN char          json_ota_url[URL_SIZE];         // OTA URL
 EXTERN int           json_lock;                      // Lock the JSON message so it cannot be changed
 EXTERN int           json_OTA_download_size;         // Number of bytes in the download image
 EXTERN real_t        json_sensor_angle_offset;       // Correction to the sensor angle

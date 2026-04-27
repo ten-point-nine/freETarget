@@ -22,7 +22,6 @@ void factory_nonvol(bool new_serial_number);      // Factory reset nonvol
 void init_nonvol(int v);                          // Reset to defaults
 void read_nonvol(void);                           // Read in the locations
 void update_nonvol(unsigned int current_version); // Update the database if needed
-void restore_nonvol(void);                        // Copyt the nonvol back
 void nonvol_write_i32(char *name, int *value);    // Write a value to nonvol
 
 /*
@@ -84,7 +83,6 @@ void nonvol_write_i32(char *name, int *value);    // Write a value to nonvol
 #define NONVOL_MFS_HOLD_C          "MFS_HOLD_C"          // Action to take place when C is held
 #define NONVOL_MFS_SELECT_CD       "MFS_SELECT_CD"       // Hardware attached to CD
 #define NONVOL_WIFI_HIDDEN         "WIFI_HIDDEN"         // Hide the SSID if set to 1
-#define NONVOL_AUX_PORT_ENABLE     "AUX_PORT_ENABLE"     // Enable comms throught the AUX port
 #define NONVOL_NAME_TEXT           "NAME_TEXT"           // User supplied name for the target
 #define NONVOL_OTA_URL             "OTA_URL"             // User supplied name for the target
 #define NONVOL_REMOTE_ACTIVE       "REMOTE_ACTIVE"       // Send score to a remote server
@@ -92,7 +90,6 @@ void nonvol_write_i32(char *name, int *value);    // Write a value to nonvol
 #define NONVOL_REMOTE_KEY          "REMOTE_KEY"          // Remote server access key
 #define NONVOL_ATHELETE            "ATHELETE"            // Remember the athelete name
 #define NONVOL_EVENT               "EVENT"               // Remember the shooting event
-#define NONVOL_TARGET_NAME         "TARGET_NAME"         // Rememver the target name
 #define NONVOL_LOCK                "LOCK"                // Password for the target
 #define NONVOL_RADIUS_ADJUST       "RADIUS_ADJUST"       // Compensate for the diameter of the target
 #define NONVOL_CALIBRATION_DATA    "CD"                  // Calibration data block
