@@ -13,9 +13,9 @@
 #ifndef _HTML_H_
 #define _HTML_H_
 
-extern const unsigned char FreeETarget_png_start[] asm("_binary_FreeETargetIcon_png_start");
-extern const unsigned char FreeETarget_png_end[] asm("_binary_FreeETargetIcon_png_end");
-#define SIZEOF_FREEETARGET_PNG (FreeETarget_png_end - FreeETarget_png_start)
+extern const unsigned char trace_png_start[] asm("_binary_traceIcon_png_start");
+extern const unsigned char trace_png_end[] asm("_binary_traceIcon_png_end");
+#define SIZEOF_trace_PNG (trace_png_end - trace_png_start)
 
 extern const unsigned char help_html_start[] asm("_binary_help_html_start");
 extern const unsigned char help_html_end[] asm("_binary_help_html_end");

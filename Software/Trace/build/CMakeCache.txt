@@ -14,12 +14,6 @@
 # EXTERNAL cache entries
 ########################
 
-//No help, variable specified on the command line.
-CCACHE_ENABLE:UNINITIALIZED=1
-
-//Path to a program.
-CCACHE_FOUND:FILEPATH=C:/Users/allan/.espressif/tools/ccache/4.8/ccache-4.8-windows-x86_64/ccache.exe
-
 //Path to a program.
 CMAKE_ADDR2LINE:FILEPATH=C:/Users/allan/.espressif/tools/riscv32-esp-elf/esp-13.2.0_20240530/riscv32-esp-elf/bin/riscv32-esp-elf-addr2line.exe
 
@@ -160,7 +154,7 @@ CMAKE_INSTALL_MANDIR:PATH=
 CMAKE_INSTALL_OLDINCLUDEDIR:PATH=/usr/include
 
 //Install path prefix, prepended onto install directories.
-CMAKE_INSTALL_PREFIX:PATH=C:/Program Files (x86)/freeETarget
+CMAKE_INSTALL_PREFIX:PATH=C:/Program Files (x86)/trace
 
 //Run-time variable data (LOCALSTATEDIR/run)
 CMAKE_INSTALL_RUNSTATEDIR:PATH=
@@ -216,7 +210,7 @@ CMAKE_PROJECT_DESCRIPTION:STATIC=
 CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=freeETarget
+CMAKE_PROJECT_NAME:STATIC=trace
 
 //Value Computed by CMake
 CMAKE_PROJECT_VERSION:STATIC=3.6.0
@@ -350,9 +344,6 @@ Mbed TLS_IS_TOP_LEVEL:STATIC=OFF
 Mbed TLS_SOURCE_DIR:STATIC=C:/Users/allan/esp/v5.3.1/esp-idf/components/mbedtls/mbedtls
 
 //No help, variable specified on the command line.
-PYTHON:UNINITIALIZED=C:\Users\allan\.espressif\python_env\idf5.3_py3.11_env\Scripts\python.exe
-
-//No help, variable specified on the command line.
 PYTHON_DEPS_CHECKED:UNINITIALIZED=1
 
 //No help, variable specified on the command line.
@@ -379,15 +370,6 @@ esp-idf_SOURCE_DIR:STATIC=C:/Users/allan/esp/v5.3.1/esp-idf
 //Dependencies for the target
 everest_LIB_DEPENDS:STATIC=general;__idf_cxx;general;__idf_newlib;general;__idf_freertos;general;__idf_esp_hw_support;general;__idf_heap;general;__idf_log;general;__idf_soc;general;__idf_hal;general;__idf_esp_rom;general;__idf_esp_common;general;__idf_esp_system;general;__idf_riscv;
 
-//Value Computed by CMake
-freeETarget_BINARY_DIR:STATIC=C:/Users/allan/Documents/freETarget/Software/Trace/build
-
-//Value Computed by CMake
-freeETarget_IS_TOP_LEVEL:STATIC=ON
-
-//Value Computed by CMake
-freeETarget_SOURCE_DIR:STATIC=C:/Users/allan/Documents/freETarget/Software/Trace
-
 //Dependencies for the target
 mbedcrypto_LIB_DEPENDS:STATIC=general;__idf_cxx;general;__idf_newlib;general;__idf_freertos;general;__idf_esp_hw_support;general;__idf_heap;general;__idf_log;general;__idf_soc;general;__idf_hal;general;__idf_esp_rom;general;__idf_esp_common;general;__idf_esp_system;general;__idf_riscv;general;everest;general;p256m;general;idf::esp_mm;
 
@@ -399,6 +381,15 @@ mbedx509_LIB_DEPENDS:STATIC=general;__idf_cxx;general;__idf_newlib;general;__idf
 
 //Dependencies for the target
 p256m_LIB_DEPENDS:STATIC=general;__idf_cxx;general;__idf_newlib;general;__idf_freertos;general;__idf_esp_hw_support;general;__idf_heap;general;__idf_log;general;__idf_soc;general;__idf_hal;general;__idf_esp_rom;general;__idf_esp_common;general;__idf_esp_system;general;__idf_riscv;
+
+//Value Computed by CMake
+trace_BINARY_DIR:STATIC=C:/Users/allan/Documents/freETarget/Software/Trace/build
+
+//Value Computed by CMake
+trace_IS_TOP_LEVEL:STATIC=ON
+
+//Value Computed by CMake
+trace_SOURCE_DIR:STATIC=C:/Users/allan/Documents/freETarget/Software/Trace
 
 
 ########################
@@ -548,7 +539,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=117
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=115
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP
@@ -600,7 +591,7 @@ FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
 //ADVANCED property for variable: GIT_EXECUTABLE
 GIT_EXECUTABLE-ADVANCED:INTERNAL=1
 //CMAKE_INSTALL_PREFIX during last run
-_GNUInstallDirs_LAST_CMAKE_INSTALL_PREFIX:INTERNAL=C:/Program Files (x86)/freeETarget
+_GNUInstallDirs_LAST_CMAKE_INSTALL_PREFIX:INTERNAL=C:/Program Files (x86)/trace
 _Python3_EXECUTABLE:INTERNAL=C:/Users/allan/.espressif/python_env/idf5.3_py3.11_env/Scripts/python.exe
 //Python3 Properties
 _Python3_INTERPRETER_PROPERTIES:INTERNAL=Python;3;11;2;32;;;C:\Users\allan\.espressif\tools\idf-python\3.11.2\Lib;C:\Users\allan\.espressif\tools\idf-python\3.11.2\Lib;C:\Users\allan\.espressif\python_env\idf5.3_py3.11_env\Lib\site-packages;C:\Users\allan\.espressif\python_env\idf5.3_py3.11_env\Lib\site-packages

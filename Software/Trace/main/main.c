@@ -2,7 +2,7 @@
  *
  * main.c
  *
- * FreeETarget control loop
+ * trace control loop
  *
  *******************************************************************************
  *
@@ -17,7 +17,7 @@
 #include "esp_http_server.h"
 #include "esp_event.h"
 
-#include "freETarget.h"
+#include "trace.h"
 #include "helpers.h"
 #include "json.h"
 #include "timer.h"
@@ -50,26 +50,26 @@
 void app_main(void)
 {
   /*
-   *  Start FreeETarget
+   *  Start trace
    */
-  freeETarget_init();
+  trace_init();
 
   /*
    * Everything is ready, start the threads.  Low task priority number == low priority
    */
-  xTaskCreate(freeETarget_target_loop, "freeETarget_target_loop", K4, NULL, MUST_RUN, NULL);
+  xTaskCreate(trace_target_loop, "trace_target_loop", K4, NULL, MUST_RUN, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 
-  xTaskCreate(freeETarget_timers, "freeETarget_timer", K4, NULL, TIMED, NULL);
+  xTaskCreate(trace_timers, "trace_timer", K4, NULL, TIMED, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 
-  xTaskCreate(freeETarget_synchronous, "freeETarget_synchronous", K4, NULL, TIMED, NULL);
+  xTaskCreate(trace_synchronous, "trace_synchronous", K4, NULL, TIMED, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 
-  xTaskCreate(freeETarget_json, "json_task", K6, NULL, BACKGROUND, NULL);
+  xTaskCreate(trace_json, "json_task", K6, NULL, BACKGROUND, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 

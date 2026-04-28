@@ -1,8 +1,8 @@
 /*----------------------------------------------------------------
  *
- * gpio.h
+ * timer.h
  *
- * Header file for GPIO functions
+ * Header file for timer functions
  *
  *---------------------------------------------------------------*/
 #ifndef _TIMER_H_
@@ -11,16 +11,14 @@
 /*
  * Variables
  */
-extern time_count_t ring_timer; // Let the ring on the backstop end
-extern time_count_t time_to_go; // Time remaining in event in seconds
 
 /*
  * function Prototypes
  */
 int          ft_timer_new(time_count_t *timer_new, long duration, void *(callback)(), char *name); // Start a new timer in ms
 int          ft_timer_delete(time_count_t *timer);                                                 // Stop a running timer
-void         freeETarget_synchronous(void *pvParameters);                                          // Synchronou scheduler
-void         freeETarget_timers(void *pvParameters);                                               // Update the free running timers
+void         trace_synchronous(void *pvParameters);                                                // Synchronou scheduler
+void         trace_timers(void *pvParameters);                                                     // Update the free running timers
 void         show_time(void);                                                                      // Show the current time
 time_count_t run_time_seconds(void);                                                               // Show how long we have been running for
 time_count_t run_time_ms(void);    // Show how long we have been running for in ms

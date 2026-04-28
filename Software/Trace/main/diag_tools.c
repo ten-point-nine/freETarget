@@ -21,7 +21,7 @@
 #include "string.h"
 #include "math.h"
 
-#include "freETarget.h"
+#include "trace.h"
 #include "board_assembly.h"
 #include "helpers.h"
 #include "http_client.h"
@@ -47,25 +47,25 @@ typedef struct
 } self_test_t;
 
 static const self_test_t test_list[] = {
-    {"Help",                              &show_test_help            },
-    {"Factory test",                      &factory_test              },
-    {"- Digital",                         0                          },
-    {"Digital inputs",                    &digital_test              },
-    {"- Timer & PCNT test",               0                          },
-    {"Show the current time",             &show_time                 },
-    {"- Communiactions Tests",            0                          },
-    {"Test WiFi as a station",            &WiFi_station_init         },
-    {"Enable the WiFi Server",            &WiFi_server_test          },
-    {"Scan for access points (APs)",      &WiFi_AP_scan_test         },
-    {"- HTTP tests",                      0                          },
-    {"DNS Lookup test",                   &http_DNS_test             },
-    {"Send to server test",               &http_send_to_server_test  },
-    {"Start web server",                  &http_server_test          },
-    {"-Interrupt Tests",                  0                          },
+    {"Help",                         &show_test_help          },
+    {"Factory test",                 &factory_test            },
+    {"- Digital",                    0                        },
+    {"Digital inputs",               &digital_test            },
+    {"- Timer & PCNT test",          0                        },
+    {"Show the current time",        &show_time               },
+    {"- Communiactions Tests",       0                        },
+    {"Test WiFi as a station",       &WiFi_station_init       },
+    {"Enable the WiFi Server",       &WiFi_server_test        },
+    {"Scan for access points (APs)", &WiFi_AP_scan_test       },
+    {"- HTTP tests",                 0                        },
+    {"DNS Lookup test",              &http_DNS_test           },
+    {"Send to server test",          &http_send_to_server_test},
+    {"Start web server",             &http_server_test        },
+    {"-Interrupt Tests",             0                        },
 
-    {"- Software tests",                  0                          },
+    {"- Software tests",             0                        },
 
-    {"",                                  0                          }
+    {"",                             0                        }
 };
 
 const dlt_name_t dlt_names[] = {
@@ -118,11 +118,11 @@ void self_test(unsigned int test) // What test to execute
   /*
    *  Switch over to test mode
    */
-  run_state |= IN_TEST;      // Show the test is running
+  run_state |= IN_TEST; // Show the test is running
 
   while ( run_state & IN_OPERATION )
   {
-    vTaskDelay(10);          // Wait for everyone else to turn off
+    vTaskDelay(10);     // Wait for everyone else to turn off
   }
 
   /*
@@ -151,7 +151,7 @@ void self_test(unsigned int test) // What test to execute
   /*
    *  All done, return;
    */
-  run_state &= ~IN_TEST;     // Exit the test
+  run_state &= ~IN_TEST; // Exit the test
   return;
 }
 
@@ -213,12 +213,11 @@ bool factory_test(void)
   return do_factory_test(FACTORY_TEST);
 }
 
-
 bool do_factory_test(bool test_run)
 {
-  bool   passed_once;           // Passed all of the tests at least once
+  bool passed_once; // Passed all of the tests at least once
 
-  passed_once  = false;
+  passed_once = false;
 
   /*
    *  Force the refernce voltages - Incase the board has been uninitialized
@@ -232,7 +231,6 @@ bool do_factory_test(bool test_run)
   if ( test_run )
   {
     SEND(ALL, sprintf(_xs, "\r\n");)
-
   }
   /*
    *  Begin test
@@ -347,4 +345,3 @@ bool do_dlt(           //
 
   return false;
 }
-

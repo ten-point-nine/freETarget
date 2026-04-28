@@ -11,7 +11,7 @@
 #include "string.h"
 
 #define JSON_C // This is the JSON file
-#include "freETarget.h"
+#include "trace.h"
 #include "board_assembly.h"
 #include "helpers.h"
 #include "ctype.h"
@@ -46,20 +46,20 @@ static void set_trace(int v);        // Set the trace on and off
 const json_message_t JSON[] = {
     //  show     token        value stored in RAM             convert                 service fcn()     NONVOL location      Initial Value
     //  PS Value
-    {HIDE,        "\"ECHO\"",       0,                       IS_VOID,             &show_echo,     0,                      0,      0 },
-    {HIDE + LOCK, "\"INIT\"",       0,                       IS_VOID,             &init_nonvol,   0,                      0,      0 },
-    {SHOW + LOCK, "\"NAME_ID\":",   &json_name_id,           IS_INT32,            &show_names,    NONVOL_NAME_ID,         0,      0 },
-    {HIDE,        "\"RESET\"",      0,                       IS_VOID,             &esp_restart,   0,                      0,      0 },
-    {SHOW,        "\"SN\":",        &json_serial_number,     IS_FIXED,            0,              NONVOL_SERIAL_NO,       0xffff, 0 },
-    {HIDE + LOCK, "\"TEST\":",      0,                       IS_INT32,            &self_test,     0,                      0,      0 },
-    {SHOW,        "\"TRACE\":",     0,                       IS_INT32,            &set_trace,     0,                      0,      0 },
-    {SHOW,        "\"VERSION\"",    0,                       IS_INT32,            &POST_version,  0,                      0,      0 },
-    {0,           0,                0,                       0,                   0,              0,                      0,      0 }
+    {HIDE,        "\"ECHO\"",     0,                   IS_VOID,  &show_echo,    0,                0,      0},
+    {HIDE + LOCK, "\"INIT\"",     0,                   IS_VOID,  &init_nonvol,  0,                0,      0},
+    {SHOW + LOCK, "\"NAME_ID\":", &json_name_id,       IS_INT32, &show_names,   NONVOL_NAME_ID,   0,      0},
+    {HIDE,        "\"RESET\"",    0,                   IS_VOID,  &esp_restart,  0,                0,      0},
+    {SHOW,        "\"SN\":",      &json_serial_number, IS_FIXED, 0,             NONVOL_SERIAL_NO, 0xffff, 0},
+    {HIDE + LOCK, "\"TEST\":",    0,                   IS_INT32, &self_test,    0,                0,      0},
+    {SHOW,        "\"TRACE\":",   0,                   IS_INT32, &set_trace,    0,                0,      0},
+    {SHOW,        "\"VERSION\"",  0,                   IS_INT32, &POST_version, 0,                0,      0},
+    {0,           0,              0,                   0,        0,             0,                0,      0}
 };
 
 /*-----------------------------------------------------
  *
- * @function: freeETarget_json
+ * @function: trace_json
  *
  * @brief: Accumulate input from the serial port
  *
@@ -88,11 +88,11 @@ static bool         keep_space;         // Set to 1 if keeping spaces
 static bool         got_left_bracket;   // Set to 1 if we have a bracket
 unsigned int        from_BlueTooth = 0; // Count of characters from the BlueTooth port
 
-void freeETarget_json(void *pvParameters)
+void trace_json(void *pvParameters)
 {
   char ch;
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "freeETarget_json()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "trace_json()");))
 
   while ( 1 )
   {
@@ -105,14 +105,13 @@ void freeETarget_json(void *pvParameters)
     /*
      * See if anything is waiting and if so, add it in
      */
-    while ( (serial_available(ALL) != 0) )         // Something waiting for us?
+    while ( (serial_available(ALL) != 0) ) // Something waiting for us?
     {
-      ch             = serial_getch(ALL);
+      ch = serial_getch(ALL);
 
-
-                                                   /*
-                                                    * Parse the stream
-                                                    */
+                                           /*
+                                            * Parse the stream
+                                            */
 
       if ( ch == '\n' ) // New Line
       {
@@ -357,8 +356,8 @@ static void handle_json(void)
 
 void show_echo(void)
 {
-  int                    i, j;
-  char                   str_c[32]; // String holding buffers
+  int  i, j;
+  char str_c[32]; // String holding buffers
 
   SEND(ALL, sprintf(_xs, "\r\n{\r\n");)
   SEND(ALL, sprintf(_xs, "\"NAME\":              \"%s\",\r\n", str_c);)
@@ -438,14 +437,14 @@ void show_echo(void)
   strcat(_xs, "\"");
   serial_to_all(_xs, ALL);
 
-  SEND(ALL, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);)         // Current software version
+  SEND(ALL, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);) // Current software version
 
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
-  SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);) // Current persistent storage version
-                                                            /*
-                                                             *  All done, return
-                                                             */
-  serial_to_all(_xs, EVEN_ODD_END);                         // End the even odd line
+  SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                // Current persistent storage version
+                                                                           /*
+                                                                            *  All done, return
+                                                                            */
+  serial_to_all(_xs, EVEN_ODD_END);                                        // End the even odd line
   SEND(ALL, sprintf(_xs, "}\r\n");)
 
   return;
@@ -468,7 +467,7 @@ void show_echo(void)
 static void show_names(int v)
 {
   return;
-  
+
   /*
    *  All done, return
    */

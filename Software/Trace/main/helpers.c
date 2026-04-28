@@ -2,7 +2,7 @@
  *
  * file: helpers.c
  *
- * FreeETarget helper files
+ * trace helper files
  *
  *******************************************************************************
  *
@@ -17,7 +17,7 @@
 #include "esp_timer.h"
 #include "esp_random.h"
 
-#include "freETarget.h"
+#include "trace.h"
 #include "helpers.h"
 #include "json.h"
 #include "timer.h"
@@ -450,7 +450,7 @@ void watchdog(void)
       }
       else
       {
-        wifi_is_connected = true;               // We are connected
+        wifi_is_connected = true; // We are connected
       }
     }
   }

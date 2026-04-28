@@ -13,7 +13,7 @@
 #include "nvs_flash.h"
 #include "string.h"
 
-#include "freETarget.h"
+#include "trace.h"
 #include "helpers.h"
 #include "diag_tools.h"
 #include "json.h"

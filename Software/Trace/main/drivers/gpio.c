@@ -12,13 +12,12 @@
 #include "driver\gpio.h"
 #include "esp_timer.h"
 
-#include "freETarget.h"
+#include "trace.h"
 #include "board_assembly.h"
 #include "diag_tools.h"
 #include "gpio.h"
 #include "timer.h"
 #include "json.h"
-#include "serial_io.h"
 #include "timer.h"
 #include "gpio_define.h"
 #include "serial_io.h"
@@ -30,27 +29,11 @@
 /*
  *  Typedefs
  */
-typedef struct status_struct
-{
-  int blue;  // Bits to send to the LED
-  int green;
-  int red;
-  int blink; // TRUE if blinking enabled
-} status_struct_t;
+
 
 /*
  * Variables
  */
-status_struct_t status[3] = {
-    {0, 0, 0, 0},
-    {0, 0, 0, 0},
-    {0, 0, 0, 0}
-};
-int                   paper_state;   // Drive is ON or OFF
-time_count_t          paper_time;    // How long the paper will be on for
-volatile unsigned int step_count;    // How many step counts do we need?
-volatile unsigned int step_time;     // Interval to next step
-\
 
 
 /*-----------------------------------------------------
@@ -86,5 +69,3 @@ void digital_test(void)
 
   return;
 }
-
-

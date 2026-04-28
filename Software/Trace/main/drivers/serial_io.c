@@ -22,7 +22,7 @@
 #include "esp_netif.h"
 #include "esp_tls.h"
 
-#include "freETarget.h"
+#include "trace.h"
 #include "board_assembly.h"
 #include "helpers.h"
 #include "diag_tools.h"
@@ -50,15 +50,15 @@ QueueHandle_t uart_console_queue;
 
 typedef struct queue_struct
 {
-  char queue[1024];               // Holding queue
-  int  in;                        // Index of input characters
-  int  out;                       // Index of output characters
+  char queue[1024];                                   // Holding queue
+  int  in;                                            // Index of input characters
+  int  out;                                           // Index of output characters
 } queue_struct_t;
 
-static queue_struct_t in_buffer;  // TCPIP input buffer
-static queue_struct_t out_buffer; // TCPIP input buffer
+static queue_struct_t in_buffer;                      // TCPIP input buffer
+static queue_struct_t out_buffer;                     // TCPIP input buffer
 
-unsigned int connection_list;     // Bitmask of existing connections
+unsigned int connection_list;                         // Bitmask of existing connections
 
 /******************************************************************************
  *
@@ -221,7 +221,6 @@ char serial_getch(int ports) // Bit mask of active ports
     }
   }
 
-
   /*
    *  Bring in the TCPIP bytes
    */
@@ -268,10 +267,9 @@ void serial_putch(char ch,
    */
   if ( ports & CONSOLE )
   {
-    printf("%c", ch);                            // Must be printf
+    printf("%c", ch); // Must be printf
   }
 
-  
   if ( ports & TCPIP )
   {
     tcpip_app_2_queue(&ch, 1);
@@ -363,7 +361,7 @@ void serial_to_all(char *str,        // String to output
    */
   if ( ports & CONSOLE )
   {
-    printf("%s", str);                           // Must be printf
+    printf("%s", str); // Must be printf
   }
 
   if ( ports & TCPIP )
@@ -604,8 +602,6 @@ int get_string(char destination[], int size)
   }
 }
 
-
-
 /*******************************************************************************
  *
  * @function: check_new_connection
@@ -638,7 +634,6 @@ void check_new_connection(void)
   {
     return;                                  // Yes, then return
   }
-
 
   /*
    *  All done, return

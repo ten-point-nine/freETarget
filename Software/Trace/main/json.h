@@ -8,12 +8,12 @@
 #ifndef _JSON_H_
 #define _JSON_H_
 
-#include "freETarget.h"
+#include "trace.h"
 /*
  * Public Functions
  */
 void reset_JSON(void);                           // Clear the JSON input buffer
-void freeETarget_json(void *);                   // Task to scan the serial port looking for JSON input
+void trace_json(void *);                         // Task to scan the serial port looking for JSON input
 void show_echo(void);                            // Display the settings
 bool json_find_first(void);                      // Find the start of the input stream
 bool json_get_array_next(int type, void *value); // Pull in the next array value

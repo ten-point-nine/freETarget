@@ -17,43 +17,19 @@ extern int          board_revision; // Board revision number
 /*
  *  Board Variants
  */
-#define REV_500   500      // ESP32
-#define REV_510   510
-#define REV_520   520
-#define REV_600   600      // Value Engineered
-#define REV_610   610      // Board with thermal isolation
-#define REV_620   620      // Built in RS485
-#define BUILD_REV 520      // Build for Revision 530 and higher
+#define REV_100 100       // ESP32
 
-#define MASK_500 (1 << 0)  // First Revision of V5
-#define MASK_510 (1 << 0)  // First Test Board of V5
-#define MASK_520 (1 << 15) // First Production
-#define MASK_600 (1 << 6)  // Second Production Board
-#define MASK_610 (1 << 3)  // Second Production Board with thermal isolation
-#define MASK_620 (1 << 11) // Third production board with MAX485
+#define MASK_100 (1 << 0) // First Revision of V5
+
 /*
  * Processor Variants
  */
-#define EPP32_8MB (MASK_500 | MASK_510 | MASK_520 | MASK_530 | MASK_600 | MASK_610 | MASK_620) // ESP32 with 8MB of flash (Standard)
+#define EPP32_8MB (MASK_100) // ESP32 with 8MB of flash (Standard)
 
-                                                                                               /*
-                                                                                                * Hardware Variants
-                                                                                                */
-#define HDC3022  ((MASK_500 | MASK_510 | MASK_520) & board_mask)                             // TI HDC3022 Temperature Humidity
-#define TMP1075D ((MASK_600 | MASK_610 | MASK_620) & board_mask)                             // TI TMP1075D Temperature Sensor
+                             /*
+                              * Hardware Variants
+                              */
 
-#define PCNT_LOW_GPIO  (MASK_500 | MASK_510 | MASK_520 | MASK_600 | MASK_610 | MASK_620)     // PCNT  LOW on GPIO
-#define PCNT_HIGH_GPIO (MASK_500 | MASK_510 | MASK_520)                                      // PCNT HIGH on GPIO
-
-#define MCP4728        ((MASK_500 | MASK_510 | MASK_520) & board_mask)                       // Microchip MCP4728 4 channel Dac
-#define MCP4725        ((MASK_600 | MASK_610 | MASK_620) & board_mask)                       // Microchip MCP4725 1 channel Dac
-#define MAX485         (MASK_620)                                                            // MAX485 control line on V6 only
-#define MAX485_MFS     ((MASK_500 | MASK_510 | MASK_520 | MASK_600 | MASK_610) & board_mask) // USE MFS to drive RS485
-#define LDAC_GPIO      (0)                                                                   // LDAC Control no longer used
-#define VREF_FB        (MASK_600 | MASK_610 | MASK_620)                                      // VREF Feedback
-#define FACE_HALF_GPIO (MASK_500 | MASK_510 | MASK_520 | MASK_620)                           // FACE GPIO
-#define V12_DIODE      (MASK_600 | MASK_610 | MASK_620)                                      // Diode on V6 only
-
-#define COMMON (MASK_500 | MASK_510 | MASK_520 | MASK_600 | MASK_610 | MASK_620)             // Common to all boards
+#define COMMON (MASK_100) // Common to all boards
 
 #endif

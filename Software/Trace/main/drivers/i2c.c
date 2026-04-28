@@ -2,7 +2,7 @@
  *
  * file: i2c.c
  *
- * description:  Simple I2C driver for freeETarget
+ * description:  Simple I2C driver for trace
  *
  **************************************************************************
  *

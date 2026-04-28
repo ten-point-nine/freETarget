@@ -12,11 +12,10 @@
  * @function Prototypes
  */
 void self_test(unsigned int test);
-void POST_version(void);                                  // Show the version string
-bool do_dlt(unsigned int level);                          // Diagnostics Log and Trace
-bool factory_test(void);                                  // Test the hardware in production
-bool do_factory_test(bool test_run);                      // Carry out the factory test
-
+void POST_version(void);             // Show the version string
+bool do_dlt(unsigned int level);     // Diagnostics Log and Trace
+bool factory_test(void);             // Test the hardware in production
+bool do_factory_test(bool test_run); // Carry out the factory test
 
 /*
  *  Definitions
@@ -105,7 +104,7 @@ bool do_factory_test(bool test_run);                      // Carry out the facto
 #define DLT_NONE          0                        // No DLT messages displayed
 #define DLT_CRITICAL      0x0001                   // Action failed and needs to be reported
 #define DLT_INFO          (DLT_CRITICAL << 1)      // Information which is always displayed
-#define DLT_APPLICATION   (DLT_INFO << 1)          // Application level messages displayed (freeETarget.c compute_hit.c)
+#define DLT_APPLICATION   (DLT_INFO << 1)          // Application level messages displayed (trace.c compute_hit.c)
 #define DLT_COMMUNICATION (DLT_APPLICATION << 1)   // Communications messages (wifi.c token.c serial_io.c)
 #define DLT_DIAG          (DLT_COMMUNICATION << 1) // Hardware diagnostics messages displayed
 #define DLT_DEBUG         (DLT_DIAG << 1)          // Specific debug information

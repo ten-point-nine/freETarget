@@ -2,7 +2,7 @@
  *
  * WiFi.c
  *
- * WiFi Driver for FreeETarget
+ * WiFi Driver for trace
  *
  ******************************************************************************
  *
@@ -18,15 +18,11 @@
  * https://medium.com/@fatehsali517/how-to-connect-esp32-to-wifi-using-esp-idf-iot-development-framework-d798dc89f0d6
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/lwip.html
  *
- * MDNS documentation
- * https://docs.espressif.com/projects/esp-protocols/mdns/docs/latest/en/index.html
- *
  * *****************************************************************************/
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "freertos/task.h"
 #include <string.h>
-#include "mdns.h"
 
 #include "esp_event.h"
 #include "esp_log.h"
@@ -42,7 +38,7 @@
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 
-#include "freETarget.h"
+#include "trace.h"
 #include "helpers.h"
 #include "http_client.h"
 #include "WiFi.h"
@@ -122,20 +118,10 @@ void WiFi_init(void)
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi_init()");))
 
-  /*
-   * Initialize the WiFI
-   */
-    WiFi_station_init();
-
-
-  /*
-   * Setup the mDNS service
-   */
-  mdns_init();                   // Initialize the mDNS service
-  mdns_hostname_set(str_c);      // Set the hostname for the target
-  mdns_instance_name_set(str_c); // Set the instance name for the target
-
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "mDNS service set up for: \"%s\"", str_c);))
+                          /*
+                           * Initialize the WiFI
+                           */
+  WiFi_station_init();
 
   /*
    *  All done
@@ -187,7 +173,6 @@ void WiFi_reconnect(void)
   }
   return;
 }
-
 
 /*****************************************************************************
  *
@@ -826,7 +811,7 @@ void tcpip_accept_poll(void *parameters)
  *******************************************************************************/
 static void WiFi_start_new_connection(int sock) // Socket token to use
 {
-  int  i;
+  int i;
 
   /*
    *  Build up a mask of existing WiFi connections

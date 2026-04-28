@@ -27,7 +27,7 @@
     "compute_hit.h": "c",
     "diag_tools.h": "c",
     "json.h": "c",
-    "freetarget.h": "c",
+    "trace.h": "c",
     "numeric": "c",
     "string_view": "c",
     "token.h": "c",

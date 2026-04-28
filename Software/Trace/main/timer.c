@@ -18,7 +18,7 @@
 #include "esp_timer.h"
 #include "driver\timer.h"
 
-#include "freETarget.h"
+#include "trace.h"
 #include "helpers.h"
 #include "diag_tools.h"
 #include "gpio_types.h"
@@ -62,25 +62,25 @@ typedef struct
 /*
  * Local Variables
  */
-static run_time_clock_t timers[N_TIMERS];   // Active timer list (allow only positive time)
-static state            isr_state;          // What sensor state are we in
-static time_count_t     base_time = 0;      // Base time to show elapsed time
-time_count_t            time_to_go;         // Time remaining in event in seconds
+static run_time_clock_t timers[N_TIMERS]; // Active timer list (allow only positive time)
+static state            isr_state;        // What sensor state are we in
+static time_count_t     base_time = 0;    // Base time to show elapsed time
+time_count_t            time_to_go;       // Time remaining in event in seconds
 
 static synchronous_task_t task_list[] = {
-    {BAND_1000ms, check_new_connection     }, // Check for a new WiFi connection
-    {BAND_60s,    watchdog                 }, // Watchdog monitor
-    {0,           0                        }
+    {BAND_1000ms, check_new_connection}, // Check for a new WiFi connection
+    {BAND_60s,    watchdog            }, // Watchdog monitor
+    {0,           0                   }
 };
 
 /*
  *  Function Prototypes
  */
-static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args);
+static bool IRAM_ATTR trace_timer_isr_callback(void *args);
 
 /*-----------------------------------------------------
  *
- * @function: freeETarget_timer_init
+ * @function: trace_timer_init
  *
  * @brief:    Initialize the timer interrupt
  *
@@ -88,7 +88,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args);
  *
  *-----------------------------------------------------
  *
- * The FreeETarget software uses the FreeRTOS system calls
+ * The trace software uses the FreeRTOS system calls
  * to generate the cycle times needed to run the software
  * Unfortunatly, the FreeRTOS cycle time is 10 ms which is
  * too slow (infrequent) to manage the shot sensors
@@ -112,7 +112,7 @@ const timer_config_t config = {
 
 /*-----------------------------------------------------
  *
- * @function: freeETarget_timer_isr_callback
+ * @function: trace_timer_isr_callback
  *
  * @brief:    High speed synchronous task
  *
@@ -138,9 +138,9 @@ const timer_config_t config = {
  *
  *
  *-----------------------------------------------------*/
-static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
+static bool IRAM_ATTR trace_timer_isr_callback(void *args)
 {
-  BaseType_t   high_task_awoken = pdFALSE;
+  BaseType_t high_task_awoken = pdFALSE;
 
   /*
    * Return from interrupts
@@ -150,7 +150,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
 
 /*-----------------------------------------------------
  *
- * @function: freeETarget_timers
+ * @function: trace_timers
  *
  * @brief:    Update the free running timers
  *
@@ -164,11 +164,11 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
  * hit zero, the individual timer is deleted
  *
  *-----------------------------------------------------*/
-void freeETarget_timers(void *pvParameters)
+void trace_timers(void *pvParameters)
 {
   unsigned int i;
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "freeETarget_timers()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "trace_timers()");))
 
   /*
    *  Decrement the timers on a 10ms (100Hz) interval
@@ -207,7 +207,7 @@ void freeETarget_timers(void *pvParameters)
 
 /*-----------------------------------------------------
  *
- * @function: freeETarget_synchronous
+ * @function: trace_synchronous
  *
  * @brief:    Synchronous task scheduler
  *
@@ -222,13 +222,13 @@ void freeETarget_timers(void *pvParameters)
  * is called,
  *
  *-----------------------------------------------------*/
-void freeETarget_synchronous(void *pvParameters)
+void trace_synchronous(void *pvParameters)
 {
   unsigned int cycle_count   = 0;
   unsigned int old_run_state = 0;
   unsigned int i; // Index into the task list
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "freeETarget_synchronous()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "trace_synchronous()");))
 
   while ( 1 )
   {
@@ -242,7 +242,7 @@ void freeETarget_synchronous(void *pvParameters)
       i++;
     }
 
-    old_run_state = run_state;                   // Remember the state
+    old_run_state = run_state;             // Remember the state
 
     /*
      * All done, prepare for the next cycle

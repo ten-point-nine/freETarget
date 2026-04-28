@@ -30,7 +30,7 @@
 #include "lwip/sys.h"
 
 #include "serial_io.h"
-#include "freETarget.h"
+#include "trace.h"
 #include "http_client.h"
 #include "WiFi.h"
 #include "diag_tools.h"
