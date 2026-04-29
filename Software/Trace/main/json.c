@@ -46,15 +46,15 @@ static void set_trace(int v);        // Set the trace on and off
 const json_message_t JSON[] = {
     //  show     token        value stored in RAM             convert                 service fcn()     NONVOL location      Initial Value
     //  PS Value
-    {HIDE,        "\"ECHO\"",     0,                   IS_VOID,  &show_echo,    0,                0,      0},
-    {HIDE + LOCK, "\"INIT\"",     0,                   IS_VOID,  &init_nonvol,  0,                0,      0},
-    {SHOW + LOCK, "\"NAME_ID\":", &json_name_id,       IS_INT32, &show_names,   NONVOL_NAME_ID,   0,      0},
-    {HIDE,        "\"RESET\"",    0,                   IS_VOID,  &esp_restart,  0,                0,      0},
-    {SHOW,        "\"SN\":",      &json_serial_number, IS_FIXED, 0,             NONVOL_SERIAL_NO, 0xffff, 0},
-    {HIDE + LOCK, "\"TEST\":",    0,                   IS_INT32, &self_test,    0,                0,      0},
-    {SHOW,        "\"TRACE\":",   0,                   IS_INT32, &set_trace,    0,                0,      0},
-    {SHOW,        "\"VERSION\"",  0,                   IS_INT32, &POST_version, 0,                0,      0},
-    {0,           0,              0,                   0,        0,             0,                0,      0}
+    {HIDE, "\"ECHO\"",     0,                   IS_VOID,  &show_echo,    0,                0,      0},
+    {HIDE, "\"INIT\"",     0,                   IS_VOID,  &init_nonvol,  0,                0,      0},
+    {SHOW, "\"NAME_ID\":", &json_name_id,       IS_INT32, &show_names,   NONVOL_NAME_ID,   0,      0},
+    {HIDE, "\"RESET\"",    0,                   IS_VOID,  &esp_restart,  0,                0,      0},
+    {SHOW, "\"SN\":",      &json_serial_number, IS_FIXED, 0,             NONVOL_SERIAL_NO, 0xffff, 0},
+    {HIDE, "\"TEST\":",    0,                   IS_INT32, &self_test,    0,                0,      0},
+    {SHOW, "\"TRACE\":",   0,                   IS_INT32, &set_trace,    0,                0,      0},
+    {SHOW, "\"VERSION\"",  0,                   IS_INT32, &POST_version, 0,                0,      0},
+    {0,    0,              0,                   0,        0,             0,                0,      0}
 };
 
 /*-----------------------------------------------------
@@ -96,11 +96,13 @@ void trace_json(void *pvParameters)
 
   while ( 1 )
   {
+#if ( 0 )
     IF_NOT(IN_OPERATION)
     {
       vTaskDelay(ONE_SECOND);
       continue;
     }
+#endif
 
     /*
      * See if anything is waiting and if so, add it in
@@ -108,6 +110,7 @@ void trace_json(void *pvParameters)
     while ( (serial_available(ALL) != 0) ) // Something waiting for us?
     {
       ch = serial_getch(ALL);
+      serial_putch(ALL, ch);               // Echo the character back
 
                                            /*
                                             * Parse the stream

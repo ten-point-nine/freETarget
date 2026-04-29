@@ -67,9 +67,8 @@ static time_count_t     base_time = 0;    // Base time to show elapsed time
 time_count_t            time_to_go;       // Time remaining in event in seconds
 
 static synchronous_task_t task_list[] = {
-    {BAND_1000ms, check_new_connection}, // Check for a new WiFi connection
-    {BAND_60s,    watchdog            }, // Watchdog monitor
-    {0,           0                   }
+    {BAND_100ms, status_LED_timer}, // Drive the status LED
+    {0,          0               }
 };
 
 /*
@@ -145,6 +144,62 @@ static bool IRAM_ATTR trace_timer_isr_callback(void *args)
    * Return from interrupts
    */
   return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISR
+}
+
+/*
+ *  Function Prototypes
+ */
+static bool IRAM_ATTR trace_timer_isr_callback(void *args);
+
+/*-----------------------------------------------------
+ *
+ * @function: trace_timer_init
+ *
+ * @brief:    Initialize the timer interrupt
+ *
+ * @return:   None
+ *
+ *-----------------------------------------------------
+ *
+ * The Trace software uses the FreeRTOS system calls
+ * to generate the cycle times needed to run the software
+ * Unfortunatly, the FreeRTOS cycle time is 10 ms which is
+ * too slow (infrequent) to manage the shot sensors
+ * correctly.  For this reason the sensor polling is done
+ * by a 1 ms timer interrupt directly from the operating
+ * system
+ *
+ *-----------------------------------------------------*/
+#define TIMER_DIVIDER (16)                   //  Hardware timer clock divider
+#define TIMER_SCALE   (1000 / TIMER_DIVIDER) // convert counter value to seconds
+#define ONE_MS        (80 * TIMER_SCALE)     // 1 ms timer interrupt
+
+void trace_timer_init(void)
+{
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "trace_timer_init()");))
+  timer_init(TIMER_GROUP_0, TIMER_0, &config);
+  timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0);    // Start the timer at 0
+  timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, ONE_MS); // Trigger on this value
+  timer_enable_intr(TIMER_GROUP_0, TIMER_0);             // Interrupt associated with this interrupt
+  timer_isr_callback_add(TIMER_GROUP_0, TIMER_0, trace_timer_isr_callback, NULL, 0);
+  timer_start(TIMER_GROUP_0, TIMER_0);
+
+  /*
+   *  Timer running. return
+   */
+  return;
+}
+
+void trace_timer_pause(void) // Stop the timer
+{
+  timer_pause(TIMER_GROUP_0, TIMER_0);
+  return;
+}
+
+void trace_timer_start(void) // Start the timer
+{
+  timer_start(TIMER_GROUP_0, TIMER_0);
+  return;
 }
 
 /*-----------------------------------------------------

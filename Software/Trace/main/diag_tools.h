@@ -16,6 +16,8 @@ void POST_version(void);             // Show the version string
 bool do_dlt(unsigned int level);     // Diagnostics Log and Trace
 bool factory_test(void);             // Test the hardware in production
 bool do_factory_test(bool test_run); // Carry out the factory test
+void digital_input_test(void);       // Test the digital inputs
+void digital_output_test(void);      // Test the digital outputs
 
 /*
  *  Definitions

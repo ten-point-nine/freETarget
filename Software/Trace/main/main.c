@@ -76,7 +76,7 @@ void app_main(void)
   xTaskCreate(WiFi_tcp_server_task, "WiFi_tcp_server", K4, NULL, NETWORK, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
-  //xTaskCreate(tcpip_accept_poll, "tcpip_accept_poll", K4, NULL, POLLING, NULL);
+  // xTaskCreate(tcpip_accept_poll, "tcpip_accept_poll", K4, NULL, POLLING, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 

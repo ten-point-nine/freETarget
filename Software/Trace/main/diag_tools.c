@@ -50,7 +50,8 @@ static const self_test_t test_list[] = {
     {"Help",                         &show_test_help          },
     {"Factory test",                 &factory_test            },
     {"- Digital",                    0                        },
-    {"Digital inputs",               &digital_test            },
+    {"Digital inputs",               &digital_input_test      },
+    {"Digital outputs",              &digital_output_test     },
     {"- Timer & PCNT test",          0                        },
     {"Show the current time",        &show_time               },
     {"- Communiactions Tests",       0                        },
@@ -119,6 +120,8 @@ void self_test(unsigned int test) // What test to execute
    *  Switch over to test mode
    */
   run_state |= IN_TEST; // Show the test is running
+
+  run_state &= ~IN_OPERATION;
 
   while ( run_state & IN_OPERATION )
   {
@@ -273,6 +276,88 @@ void POST_version(void)
   /*
    * All done, return
    */
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: digital_input_test()
+ *
+ * @brief:    Test the switch
+ *
+ * @return:   None
+ *
+ *----------------------------------------------------------------
+ *
+ * Poll the switch and print out the state
+ *
+ *--------------------------------------------------------------*/
+void digital_input_test(void)
+{
+  while ( 1 )
+  {
+    if ( gpio_get_level(SWITCH_GPIO) == 0 )
+    {
+      SEND(ALL, sprintf(_xs, "\r\nON");)
+      gpio_set_level(STATUS_LED, 0); // Turn the LED on
+    }
+    else
+    {
+      SEND(ALL, sprintf(_xs, "\r\nOFF");)
+      gpio_set_level(STATUS_LED, 1); // Turn the LED off
+    }
+
+    if ( serial_available(ALL) != 0 )
+    {
+      char ch = serial_getch(ALL);
+      if ( ch == '!' )
+      {
+        break;
+      }
+    }
+    vTaskDelay(ONE_SECOND / 4);
+  }
+
+  /*
+   *  All done, return
+   */
+  SEND(ALL, sprintf(_xs, _DONE_);)
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: digital_output_test()
+ *
+ * @brief:    Test the LED
+ *
+ * @return:   None
+ *
+ *----------------------------------------------------------------
+ *
+ * Poll the switch and print out the state
+ *
+ *--------------------------------------------------------------*/
+void digital_output_test(void)
+{
+  int i;
+
+      set_status_LED(0xFF00FF00);
+  while ( 1 )
+  {
+
+
+    if ( serial_available(ALL) != 0 )
+    {
+      char ch = serial_getch(ALL);
+      if ( ch == '!' )
+      {
+        break;
+      }
+    }
+  }
+
+  SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }
 

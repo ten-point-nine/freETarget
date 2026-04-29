@@ -30,11 +30,9 @@
  *  Typedefs
  */
 
-
 /*
  * Variables
  */
-
 
 /*-----------------------------------------------------
  *
@@ -66,6 +64,50 @@ void digital_test(void)
   }
 
   SEND(ALL, sprintf(_xs, _DONE_);)
+
+  return;
+}
+
+/*-----------------------------------------------------
+ *
+ * @function: status_LED()
+ *
+ * @brief:    Set the status LED
+ *
+ * @return:   None
+ *
+ *-----------------------------------------------------
+ *
+ * Save the 32 bit status and use it to drive the status LED
+ *
+ *-----------------------------------------------------*/
+static unsigned int status_LED_mask = 0;
+
+void set_status_LED(unsigned int status)
+{
+  status_LED_mask = status; // Save the status LED for later
+  return;
+}
+
+/*-----------------------------------------------------
+ *
+ * @function: status_LED_timer()
+ *
+ * @brief:    Timer to drive the status LED
+ *
+ * @return:   None
+ *
+ *-----------------------------------------------------
+ *
+ * This timer is called every 100 ms and uses the status_LED_mask to drive the status LED
+ *
+ *-----------------------------------------------------*/
+void status_LED_timer(void)
+{
+  static unsigned int status_LED_count = 0; // Count of the number of times the timer has been called
+
+  gpio_set_level(STATUS_LED, (status_LED_mask & (1 << (status_LED_count % 32))) !=
+                                 0);        // Set the status LED based on the current bit in the working status LED mask
 
   return;
 }

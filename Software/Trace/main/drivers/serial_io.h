@@ -29,18 +29,13 @@ void check_new_connection(void);                     // Check to see if a new co
  *  Definitions
  *              CONSOLE   AUX    TCPIP
  */
-#define CONSOLE        0x0001                         // 0x1
-#define TCPIP_0        (CONSOLE << 1)                // 0x20
-#define TCPIP_1        (TCPIP_0 << 1)                 // 0x40
-#define TCPIP_2        (TCPIP_1 << 1)                 // 0x80
-#define TCPIP_3        (TCPIP_2 << 1)                 // 0x100
-#define HTTP_CONNECTED (TCPIP_3 << 1)                 // 0x200
-#define EVEN_ODD_BEGIN (HTTP_CONNECTED << 1)          // Remember to output in even_odd mode
-#define EVEN_ODD_END   (EVEN_ODD_BEGIN << 1)          // Exit even odd mode
+#define CONSOLE        0x0001                // 0x1
+#define TCPIP_0        (CONSOLE << 1)        // 0x20
+#define EVEN_ODD_BEGIN (TCPIP_0 << 1)   // Remember to output in even_odd mode
+#define EVEN_ODD_END   (EVEN_ODD_BEGIN << 1) // Exit even odd mode
 
-#define SOME     (CONSOLE | TCPIP)
-#define TCPIP    (TCPIP_0 | TCPIP_1 | TCPIP_2 | TCPIP_3)
-#define ALL      (CONSOLE | TCPIP | HTTP_CONNECTED)
+#define TCPIP (TCPIP_0)
+#define ALL   (CONSOLE | TCPIP)
 
 /*
  *  Global Variables

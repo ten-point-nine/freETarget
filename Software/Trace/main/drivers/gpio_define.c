@@ -35,12 +35,12 @@
  */
 const DIO_struct_t dio00 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio01 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
-const DIO_struct_t dio02 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
+const DIO_struct_t dio02 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
 const DIO_struct_t dio03 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio04 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio05 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio06 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
-const DIO_struct_t dio07 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};  // Mode and Initial Value
+const DIO_struct_t dio07 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
 const DIO_struct_t dio08 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio09 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio10 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
@@ -67,12 +67,12 @@ const gpio_struct_t gpio_table[] = {
     {"SDA",         GPIO_NUM_0,  (void *)&i2c,   COMMON}, // I2C SDA
     {"SCL",         GPIO_NUM_1,  NULL,           COMMON}, // I2C SCL
 
-    {"BD_REV",      GPIO_NUM_2,  (void *)&dio02, COMMON}, // BD_REV
+                                               // {"BD_REV",      GPIO_NUM_2,  (void *)&dio02, COMMON}, // BD_REV
     {"TP1",         GPIO_NUM_3,  (void *)&dio03, COMMON}, // Spare test point
-    {"TP2",         GPIO_NUM_4,  (void *)&dio04, COMMON}, // Spare test point
+                                                         // {"TP2",         GPIO_NUM_4,  (void *)&dio04, COMMON}, // Spare test point
     {"INT",         GPIO_NUM_5,  (void *)&dio05, COMMON}, // Interrupt from Gyro/Accel
-    {"LED",         GPIO_NUM_6,  (void *)&dio06, COMMON}, // Status LED, Active LOW
-    {"PUSH_BUTTON", GPIO_NUM_7,  (void *)&dio07, COMMON}, // Setup button, Active LOW
+    {"PUSH_BUTTON", GPIO_NUM_6,  (void *)&dio06, COMMON}, // Setup button, Active LOW
+    {"LED",         GPIO_NUM_2,  (void *)&dio02, COMMON}, // Status LED, Active LOW
     {"ROM_MESSAGE", GPIO_NUM_8,  NULL,           COMMON}, // Force ROM messages on the serial port, Active HIGH
     {"BOOT",        GPIO_NUM_9,  NULL,           COMMON}, // Stay in boot block
     {"NOT USED",    GPIO_NUM_10, NULL,           COMMON}, //

@@ -105,6 +105,7 @@ void trace_init(void)
   /*
    *  Set up the long running timers
    */
+  trace_timer_init(); // Start the timer interrupt to manage the timers
   // ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND, send_keep_alive, "keep alive");                 // Keep alive
   // timer ft_timer_new(&power_save, (time_count_t)(json_power_save) * (time_count_t)ONE_SECOND * 60L, &bye_tick, "power save"); // Power
   // save timer
