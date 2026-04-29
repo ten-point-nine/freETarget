@@ -27,7 +27,7 @@ extern volatile unsigned int step_count; // Number of steps before stopping
 /*
  *  Port Definitions
  */
-#define SWITCH_GPIO GPIO_NUM_6 // Control switch input
+#define SWITCH_GPIO GPIO_NUM_7 // Control switch input
 #define STATUS_LED  GPIO_NUM_2 // Status LED
 
 #endif

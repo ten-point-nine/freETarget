@@ -115,10 +115,15 @@ void self_test(unsigned int test) // What test to execute
 {
   unsigned int i;
   unsigned int test_ID;           // Computed test ID
+  unsigned int run_state_old;     // Previous state of the test run bit
 
-  /*
-   * Figure out what test to run
-   */
+  run_state_old = run_state;      // Save the current state of the test run bit
+  run_state     = IN_TEST;        // Set the test run bit to prevent other tasks from running
+
+                                  /*
+                                   * Figure out what test to run
+                                   */
+
   i       = 0;
   test_ID = 0;
   while ( test_list[i].help[0] != 0 )                         // Look through the list
@@ -127,6 +132,7 @@ void self_test(unsigned int test) // What test to execute
     {
       SEND(ALL, sprintf(_xs, "\r\nTest Number %2d - %s\r\n", test_ID, test_list[i].help);)
       test_list[i].f();                                       // Execute the test                                // Exit the test
+      run_state = run_state_old;                              // Restore the previous state of the test run bit
       return;
     }
     i++;
@@ -141,6 +147,7 @@ void self_test(unsigned int test) // What test to execute
   /*
    *  All done, return;
    */
+  run_state = run_state_old; // Restore the previous state of the test run bit
   return;
 }
 
@@ -221,7 +228,6 @@ bool do_factory_test(bool test_run)
   {
     SEND(ALL, sprintf(_xs, "\r\n");)
   }
-
 
   /*
    * Loop and poll the various inputs and output
@@ -325,10 +331,9 @@ void digital_output_test(void)
 {
   int i;
 
-      set_status_LED(0xFF00FF00);
+  set_status_LED(0xFF00FF00);
   while ( 1 )
   {
-
 
     if ( serial_available(ALL) != 0 )
     {

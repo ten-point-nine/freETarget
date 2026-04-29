@@ -28,15 +28,17 @@ void digital_output_test(void);      // Test the digital outputs
  * LED status messages
  *
  */
-#define build_mask(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, aa, bb, cc, dd, ee, ff)                   \
+#define build_LED(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, aa, bb, cc, dd, ee, ff)                    \
   ((a << 31) | (b << 30) | (c << 29) | (d << 28) | (e << 27) | (f << 26) | (g << 25) | (h << 24) | (i << 23) | (j << 22) | (k << 21) |     \
    (l << 20) | (m << 19) | (n << 18) | (o << 17) | (p << 16) | (q << 15) | (r << 14) | (s << 13) | (t << 12) | (u << 11) | (v << 10) |     \
    (w << 9) | (x << 8) | (y << 7) | (z << 6) | (aa << 5) | (bb << 4) | (cc << 3) | (dd << 2) | (ee << 1) | ff)
 
-//                           A  A  A  A  A  A  A  A  B  B  B  B  B  B  B  B  C  C  C  C  C  C  C  C  D  D  D  D  D  D  D  D
-#define LED_OFF   build_mask(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-#define LED_ON    build_mask(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0)
-#define LED_READY build_mask(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+//                          ----------------------  ----------------------  ----------------------  ----------------------
+#define LED_OFF   build_LED(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#define LED_ON    build_LED(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0)
+#define LED_READY build_LED(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#define LED_SETUP build_LED(1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)
+#define LED_ERROR build_LED(1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 /*
  *  On board expected values
