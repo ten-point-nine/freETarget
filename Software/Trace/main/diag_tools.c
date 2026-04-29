@@ -117,18 +117,6 @@ void self_test(unsigned int test) // What test to execute
   unsigned int test_ID;           // Computed test ID
 
   /*
-   *  Switch over to test mode
-   */
-  run_state |= IN_TEST; // Show the test is running
-
-  run_state &= ~IN_OPERATION;
-
-  while ( run_state & IN_OPERATION )
-  {
-    vTaskDelay(10);     // Wait for everyone else to turn off
-  }
-
-  /*
    * Figure out what test to run
    */
   i       = 0;
@@ -138,8 +126,7 @@ void self_test(unsigned int test) // What test to execute
     if ( (test_ID == test) && (test_list[i].help[0] != '-') ) // Found the test
     {
       SEND(ALL, sprintf(_xs, "\r\nTest Number %2d - %s\r\n", test_ID, test_list[i].help);)
-      test_list[i].f();                                       // Execute the test
-      run_state &= ~IN_TEST;                                  // Exit the test
+      test_list[i].f();                                       // Execute the test                                // Exit the test
       return;
     }
     i++;
@@ -154,7 +141,6 @@ void self_test(unsigned int test) // What test to execute
   /*
    *  All done, return;
    */
-  run_state &= ~IN_TEST; // Exit the test
   return;
 }
 
@@ -235,10 +221,7 @@ bool do_factory_test(bool test_run)
   {
     SEND(ALL, sprintf(_xs, "\r\n");)
   }
-  /*
-   *  Begin test
-   */
-  run_state = IN_TEST;
+
 
   /*
    * Loop and poll the various inputs and output

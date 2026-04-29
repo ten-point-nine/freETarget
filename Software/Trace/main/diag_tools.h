@@ -28,71 +28,15 @@ void digital_output_test(void);      // Test the digital outputs
  * LED status messages
  *
  */
-//                              R       // RDY indicates operating status
-//                               X      // X indicates communications status
-//                                Y     // Y indicates feature status
-//                                 C    // Optional C output
-//                                  D   // Optional D ouput
+#define build_mask(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, aa, bb, cc, dd, ee, ff)                   \
+  ((a << 31) | (b << 30) | (c << 29) | (d << 28) | (e << 27) | (f << 26) | (g << 25) | (h << 24) | (i << 23) | (j << 22) | (k << 21) |     \
+   (l << 20) | (m << 19) | (n << 18) | (o << 17) | (p << 16) | (q << 15) | (r << 14) | (s << 13) | (t << 12) | (u << 11) | (v << 10) |     \
+   (w << 9) | (x << 8) | (y << 7) | (z << 6) | (aa << 5) | (bb << 4) | (cc << 3) | (dd << 2) | (ee << 1) | ff)
 
-#define LED_OFF                "     "  // Turn off all of the LEDs
-#define LED_HELLO_WORLD        "RWB--"  // Hello World
-#define LED_DLROW_OLLOH        "BWR--"  // Hello World Backwards
-#define LED_GOOD               "G----"  // The software has started but not in shot mode
-#define LED_PASS               "GGG---" //
-#define LED_FATAL              "RRR--"  // A fatal error prevents operation
-#define LED_READY              "g----"  // The shot is ready to go.  Blink to show we are alive
-#define LED_PAUSE              "rgb--"  // Show everything paused
-#define LED_BYE                "B----"  // Go to sleep
-#define LED_OTA_WAITING        "b  --"  // Waiting for OTA to start
-#define LED_OTA_DOWNLOAD       "B  --"  // The OTA is downloading
-#define LED_OTA_DOWNLOAD_T     "BB --"  // The OTA is downloading blink
-#define LED_OTA_FAILED_CONNECT "BR --"  // The OTA has failed to connect (Check the network)
-#define LED_OTA_FAILED_LOAD    "B R--"  // The OTA has failed to load
-#define LED_OTA_FATAL          "BRR--"  // The data was OK, but the OTA should not be used
-#define LED_OTA_FINSHED        "BG --"  // The download has completed
-#define LED_OTA_READY          "BGG--"  // The OTA is ready to go.  Reset the board
-#define LED_READY_OFF          " ----"  // Turn off the READY light
-
-#define LED_WIFI_OFF        "- ---"     // The WiFi is not operational
-#define LED_WIFI_STATION    "-g---"     // The WiFi is in station mode but not connected
-#define LED_WIFI_STATION_CN "-G---"     // The WiFI is in station mode and connected
-#define LED_WIFI_ACCESS     "-b---"     // The WiFi is in access mode and not connected
-#define LED_WIFI_ACCESS_CN  "-B---"     // The WiFI is in access mode and connected
-#define LED_WIFI_FAULT      "-R---"     // The WiFi has a fault
-
-#define LED_NO_12V       "--R--"        // The 12 Volt supply is not present
-#define LED_LOW_12V      "--Y--"        // 12 Volt supply out of spec
-#define LED_OK_12V       "--g--"        // The 12 Volt supply is in spec
-#define LED_12V_NOT_USED "--b--"        // The 12V is not used,
-#define LED_C_OFF        "--- -"        // LED C is OFF
-#define LED_C_BLINK      "---g-"        // LED C is blinking
-#define LED_C_ON         "---G-"        // LED C is ON
-#define LED_D_OFF        "-----"        // LED D is OFF
-#define LED_D_BLINK      "----r"        // LED D is blinking
-#define LED_D_ON         "----R"        // LED D is ON
-
-#define LED_RAPID_OFF  "---  "          // Rapid fire LEDs are OFF
-#define LED_RAPID_WARN "---R "          // Rapid fire RED is ON
-#define LED_RAPID_ON   "--- G"          // Rapid fire GREEN is ON
-
-#define LED_TABATA_ENABLED "y--  "      // TABATA LEDs are enabled
-#define LED_TABATA_OFF     "---  "      // TABATA LEDs are OFF
-#define LED_TABATA_WARN    "---R "      // TABATA LEDS are blinking
-#define LED_TABATA_ON      "--- G"      // TABATA LEDs are ON
-
-// Fatal Error.  Halts operation
-
-#define LED_FAIL_CLOCK_STOP  "RBR--" // The reference clock cannot be stopped
-#define LED_FAIL_CLOCK_START "RBG--" // The reference clock cannot be started
-#define LED_FAIL_RUN_STUCK   "RBB--" // There is a stuck bit in the RUN latch
-#define LED_FAIL_RUN_OPEN    "RBW--" // The sensor line is open circuit
-
-// Fault Codes - RDY LED set to RED to indiate a fault
-#define LED_NORTH_FAILED "R-R--" // North sensor failed
-#define LED_EAST_FAILED  "R-G--" // East sensor failed
-#define LED_SOUTH_FAILED "R-B--" // South sensor failed
-#define LED_WEST_FAILED  "R-Y--" // West sensor failed
-#define LED_MISS         "R-r--" // Shot was detected as a miss
+//                           A  A  A  A  A  A  A  A  B  B  B  B  B  B  B  B  C  C  C  C  C  C  C  C  D  D  D  D  D  D  D  D
+#define LED_OFF   build_mask(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#define LED_ON    build_mask(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0)
+#define LED_READY build_mask(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 /*
  *  On board expected values

@@ -35,14 +35,11 @@
 #define IN_STARTUP   0x0001            // The software is in initialization
 #define IN_OPERATION 0x0002            // The software is operational
 #define IN_TEST      0x0004            // A self test has been selected (Suspend operation)
-#define IN_SLEEP     0x0008            // The unit has powered down
-#define IN_SHOT      0x0010            // The target is actively in a shot
 #define IN_REDUCTION 0x0020            // The data is being reduced
 #define IN_FATAL_ERR 0x0040            // A fatal error has occured and cannot be fixed
-#define IN_HTTP      0x0080            // The HTTP (JSON) data is being processed
 
+#define IF(x)     if ( (run_state & (x)) != 0 )
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
-#define IF_IN(x)  if ( (run_state & (x)) != 0 )
 
 #define SEND(who, message) {message} serial_to_all(_xs, who);
 
@@ -62,14 +59,12 @@
 /*
  * Oscillator Features
  */
-#define OSCILLATOR_MHZ 10.0                        // 10,000 cycles in 1 ms
-#define CLOCK_PERIOD   (1.0 / OSCILLATOR_MHZ)      // Seconds per bit
-#define ONE_SECOND     (100)                       // 10 ms delay per LSB
-#define TICK_10ms      (1)                         // Minimum timeout 10ms
-#define FULL_SCALE     0xffffffff                  // Full scale timer
-#define MS_TO_TICKS(x) (ONE_SECOND * (x) / 1000)   // Convert from time in ms to time ticks
-
-
+#define OSCILLATOR_MHZ 10.0                      // 10,000 cycles in 1 ms
+#define CLOCK_PERIOD   (1.0 / OSCILLATOR_MHZ)    // Seconds per bit
+#define ONE_SECOND     (100)                     // 10 ms delay per LSB
+#define TICK_10ms      (1)                       // Minimum timeout 10ms
+#define FULL_SCALE     0xffffffff                // Full scale timer
+#define MS_TO_TICKS(x) (ONE_SECOND * (x) / 1000) // Convert from time in ms to time ticks
 
 #define PI      3.14159269
 #define PI_ON_4 (PI / 4.0d)
@@ -131,13 +126,13 @@ typedef struct
 EXTERN char         _xs[1024 + 512];                                // General purpose string buffer
 EXTERN unsigned int is_trace;                                       // Tracing level(s)
 
-EXTERN time_count_t          shot_start;                            // Time when shot become valid
-EXTERN volatile unsigned int run_state;                             // IPC states
-EXTERN time_count_t          LED_timer;                             // Turn off the LEDs when not in use
-EXTERN time_count_t          keep_alive;                            // Keep alive timer
-EXTERN time_count_t          power_save;                            // Power save timer
-EXTERN time_count_t          time_since_last_shot;                  // 15 minutes since last shot
-EXTERN time_count_t          session_time[];                        // Time in each session
+EXTERN time_count_t shot_start;                                     // Time when shot become valid
+EXTERN time_count_t LED_timer;                                      // Turn off the LEDs when not in use
+EXTERN time_count_t keep_alive;                                     // Keep alive timer
+EXTERN time_count_t power_save;                                     // Power save timer
+EXTERN time_count_t time_since_last_shot;                           // 15 minutes since last shot
+EXTERN time_count_t session_time[];                                 // Time in each session
+EXTERN unsigned int run_state;                                      // Current running state of the software
 
 #ifdef TRACE_C
 EXTERN char        *no_yes[]       = {"No", "Yes"};                 // Yes or No

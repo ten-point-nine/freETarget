@@ -49,6 +49,8 @@
  */
 void app_main(void)
 {
+  run_state = IN_STARTUP; // Show we're in startup
+
   /*
    *  Start trace
    */
@@ -83,4 +85,7 @@ void app_main(void)
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "SN:%d Running\r\n", json_serial_number);))
   vTaskDelay(TICK_10ms);
   serial_flush(ALL);
+
+  run_state = IN_OPERATION;         // Show we're in startup
+  set_status_LED(LED_READY); // Show we're ready
 }

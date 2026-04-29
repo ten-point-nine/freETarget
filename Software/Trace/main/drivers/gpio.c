@@ -109,5 +109,7 @@ void status_LED_timer(void)
   gpio_set_level(STATUS_LED, (status_LED_mask & (1 << (status_LED_count % 32))) !=
                                  0);        // Set the status LED based on the current bit in the working status LED mask
 
+  status_LED_count++; // Increment the count
+  
   return;
 }

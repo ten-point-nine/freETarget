@@ -204,10 +204,8 @@ static void handle_json(void)
   int   x;
   float f;
   int   i, j, k;
-  char  s[64];          // Place to store a string
+  char  s[64]; // Place to store a string
   int   m;
-
-  run_state |= IN_HTTP; // Parsing a JON string
 
   /*
    * Found out where the braces are, extract the contents.
@@ -335,7 +333,6 @@ static void handle_json(void)
   /*
    * All done
    */
-  run_state &= ~IN_HTTP; // FInished parsing the JSON input
   in_JSON           = 0; // Start Over
   got_right_bracket = 0; // Need to wait for a new Right Bracket
   got_left_bracket  = false;
@@ -416,7 +413,6 @@ void show_echo(void)
   serial_to_all(NULL, EVEN_ODD_BEGIN);                                                 // Start over again
   SEND(ALL, sprintf(_xs, "\"SN\":                %d", json_serial_number);)
   SEND(ALL, sprintf(_xs, "\"TRACE\":             %d,", is_trace);)                     //
-  SEND(ALL, sprintf(_xs, "\"RUN_STATE\":         %d,", run_state);)                    // Internal running state is enabled
   SEND(ALL, sprintf(_xs, "\"CONNECTION_LIST\":   %02X,", connection_list);)            // Who is attached
   SEND(ALL, sprintf(_xs, "\"RUNNING_MINUTES\":   %0.2f,", run_time_seconds() / 60.0);) // On Time
   WiFi_MAC_address(str_c);

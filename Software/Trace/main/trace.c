@@ -41,14 +41,12 @@
 unsigned int number_of_connections = 0; // How many people are connected to me?
 
                                         // Timer to reset LED status
-int go_dark     = 10l;               // Go dark for 10
-int go_wait     = 3l;                // Wait for the PC to catchup
-int all_done    = 0l;                // All finished
+int go_dark     = 10l; // Go dark for 10
+int go_wait     = 3l;  // Wait for the PC to catchup
+int all_done    = 0l;  // All finished
 int always_true = true;
 
 extern int isr_state;
-
-volatile unsigned int run_state = 0; // Current operating state
 
 /*
  * Function Prototypes
@@ -67,8 +65,7 @@ extern void gpio_init(void);
 
 void trace_init(void)
 {
-  run_state = IN_STARTUP;
-  is_trace  = DLT_INFO | DLT_CRITICAL;
+  is_trace = DLT_INFO | DLT_CRITICAL;
 #if TRACE_APPLICATION
   is_trace |= DLT_APPLICATION;   // Enable application tracing
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT APPLICATON enabled");))
@@ -105,11 +102,6 @@ void trace_init(void)
   /*
    *  Set up the long running timers
    */
-  trace_timer_init(); // Start the timer interrupt to manage the timers
-  // ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND, send_keep_alive, "keep alive");                 // Keep alive
-  // timer ft_timer_new(&power_save, (time_count_t)(json_power_save) * (time_count_t)ONE_SECOND * 60L, &bye_tick, "power save"); // Power
-  // save timer
-  //  ft_timer_new(&time_since_last_shot, HTTP_CLOSE_TIME * 60 * ONE_SECOND, NULL, "time since last shot"); // 15 minutes since last shot
 
   /*
    * Run the power on self test
@@ -125,7 +117,6 @@ void trace_init(void)
   /*
    * Start the tasks running
    */
-  run_state &= ~IN_STARTUP; // Exit startup
   return;
 }
 
@@ -140,14 +131,13 @@ void trace_init(void)
  *----------------------------------------------------------------
  */
 
-unsigned int sensor_status;    // Record which sensors contain valid data
-unsigned int location;         // Sensor location
+unsigned int sensor_status; // Record which sensors contain valid data
+unsigned int location;      // Sensor location
 
 void trace_target_loop(void *arg)
 {
   while ( 1 )
   {
-    run_state |= IN_OPERATION; // We are in operation
     /*
      * End of the loop. timeout till the next time
      */

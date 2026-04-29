@@ -48,6 +48,7 @@ typedef enum
 
 typedef struct
 {
+  char        *name;                     // Name of the task
   time_count_t cycle_time;               // How long between calls
   void (*f)(void);                       // Function to execute at the cycle time
 } synchronous_task_t;
@@ -62,145 +63,22 @@ typedef struct
 /*
  * Local Variables
  */
-static run_time_clock_t timers[N_TIMERS]; // Active timer list (allow only positive time)
-static time_count_t     base_time = 0;    // Base time to show elapsed time
-time_count_t            time_to_go;       // Time remaining in event in seconds
+static run_time_clock_t timers[N_TIMERS];         // Active timer list (allow only positive time)
+static time_count_t     base_time = 0;            // Base time to show elapsed time
+time_count_t            time_to_go;               // Time remaining in event in seconds
 
 static synchronous_task_t task_list[] = {
-    {BAND_100ms, status_LED_timer}, // Drive the status LED
-    {0,          0               }
+    {"Status LED", BAND_100ms, status_LED_timer}, // Drive the status LED
+    {0, 0}
 };
 
 /*
  *  Function Prototypes
  */
-static bool IRAM_ATTR trace_timer_isr_callback(void *args);
-
-/*-----------------------------------------------------
- *
- * @function: trace_timer_init
- *
- * @brief:    Initialize the timer interrupt
- *
- * @return:   None
- *
- *-----------------------------------------------------
- *
- * The trace software uses the FreeRTOS system calls
- * to generate the cycle times needed to run the software
- * Unfortunatly, the FreeRTOS cycle time is 10 ms which is
- * too slow (infrequent) to manage the shot sensors
- * correctly.  For this reason the sensor polling is done
- * by a 1 ms timer interrupt directly from the operating
- * system
- *
- *-----------------------------------------------------*/
-#define TIMER_DIVIDER (16)                   //  Hardware timer clock divider
-#define TIMER_SCALE   (1000 / TIMER_DIVIDER) // convert counter value to seconds
-#define ONE_MS        (80 * TIMER_SCALE)     // 1 ms timer interrupt
-
-const timer_config_t config = {
-    .clk_src     = RMT_CLK_SRC_APB,
-    .divider     = TIMER_DIVIDER,
-    .counter_dir = TIMER_COUNT_UP,
-    .counter_en  = TIMER_PAUSE,
-    .alarm_en    = TIMER_ALARM_EN,
-    .auto_reload = 1,
-}; // default clock source is APB
-
-/*-----------------------------------------------------
- *
- * @function: trace_timer_isr_callback
- *
- * @brief:    High speed synchronous task
- *
- * @return:   None
- *
- *-----------------------------------------------------
- *
- * This task is called every 1 ms from the timer
- * interrupt
- *
- * Timer 1 samples the inputs and when all of the
- * sendor inputs are present, the counters are
- * read and made available to the software
- *
- * There are three data aquisition states
- *
- * IDLE    - Wait for a shot to arrive
- * WAIT    - Inputs are present, but we have to wait
- *           for all of the sensors to be present or
- *           timed out
- * TIMEOUT - We have read the counters but need to
- *           wait for the ringing to stop
- *
- *
- *-----------------------------------------------------*/
-static bool IRAM_ATTR trace_timer_isr_callback(void *args)
-{
-  BaseType_t high_task_awoken = pdFALSE;
-
-  /*
-   * Return from interrupts
-   */
-  return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISR
-}
 
 /*
  *  Function Prototypes
  */
-static bool IRAM_ATTR trace_timer_isr_callback(void *args);
-
-/*-----------------------------------------------------
- *
- * @function: trace_timer_init
- *
- * @brief:    Initialize the timer interrupt
- *
- * @return:   None
- *
- *-----------------------------------------------------
- *
- * The Trace software uses the FreeRTOS system calls
- * to generate the cycle times needed to run the software
- * Unfortunatly, the FreeRTOS cycle time is 10 ms which is
- * too slow (infrequent) to manage the shot sensors
- * correctly.  For this reason the sensor polling is done
- * by a 1 ms timer interrupt directly from the operating
- * system
- *
- *-----------------------------------------------------*/
-#define TIMER_DIVIDER (16)                   //  Hardware timer clock divider
-#define TIMER_SCALE   (1000 / TIMER_DIVIDER) // convert counter value to seconds
-#define ONE_MS        (80 * TIMER_SCALE)     // 1 ms timer interrupt
-
-void trace_timer_init(void)
-{
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "trace_timer_init()");))
-  timer_init(TIMER_GROUP_0, TIMER_0, &config);
-  timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0);    // Start the timer at 0
-  timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, ONE_MS); // Trigger on this value
-  timer_enable_intr(TIMER_GROUP_0, TIMER_0);             // Interrupt associated with this interrupt
-  timer_isr_callback_add(TIMER_GROUP_0, TIMER_0, trace_timer_isr_callback, NULL, 0);
-  timer_start(TIMER_GROUP_0, TIMER_0);
-
-  /*
-   *  Timer running. return
-   */
-  return;
-}
-
-void trace_timer_pause(void) // Stop the timer
-{
-  timer_pause(TIMER_GROUP_0, TIMER_0);
-  return;
-}
-
-void trace_timer_start(void) // Start the timer
-{
-  timer_start(TIMER_GROUP_0, TIMER_0);
-  return;
-}
 
 /*-----------------------------------------------------
  *
@@ -229,30 +107,28 @@ void trace_timers(void *pvParameters)
    */
   while ( 1 )
   {
-    IF_NOT(IN_STARTUP)                       // Dont run the timers if we are in startup
+    for ( i = 0; i != N_TIMERS; i++ )      // Refresh the timers.  Decriment in 10ms increments
     {
-      for ( i = 0; i != N_TIMERS; i++ )      // Refresh the timers.  Decriment in 10ms increments
+      if ( timers[i].run_time != 0 )       // The timer has a valid pointer
       {
-        if ( timers[i].run_time != 0 )       // The timer has a valid pointer
+        if ( *timers[i].run_time > 0 )     // And is non-sero
         {
-          if ( *timers[i].run_time > 0 )     // And is non-sero
-          {
-            (*timers[i].run_time)--;         // Decriment the timer
+          (*timers[i].run_time)--;         // Decriment the timer
 
-            if ( *timers[i].run_time <= 0 )  // Timer has expired
+          if ( *timers[i].run_time <= 0 )  // Timer has expired
+          {
+            *timers[i].run_time = 0;       // Set the timer to zero
+            if ( timers[i].callback != 0 ) // If there is a function to call
             {
-              *timers[i].run_time = 0;       // Set the timer to zero
-              if ( timers[i].callback != 0 ) // If there is a function to call
-              {
-                timers[i].callback();        // Call the function
-              }
+              timers[i].callback();        // Call the function
             }
           }
         }
       }
-      vTaskDelay(TICK_10ms);
     }
+    vTaskDelay(TICK_10ms);
   }
+
   /*
    * Never get here
    */
@@ -278,25 +154,26 @@ void trace_timers(void *pvParameters)
  *-----------------------------------------------------*/
 void trace_synchronous(void *pvParameters)
 {
-  unsigned int cycle_count   = 0;
-  unsigned int old_run_state = 0;
-  unsigned int i; // Index into the task list
+  unsigned int cycle_count = 0;
+  unsigned int i;                            // Index into the task list
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "trace_synchronous()");))
 
   while ( 1 )
   {
-    i = 0;
-    while ( task_list[i].cycle_time != 0 ) // Cycle through the task list
+    IF(IN_OPERATION)                         // Not in operation, wait a bit and check again
     {
-      if ( (cycle_count % task_list[i].cycle_time) == 0 )
+      i = 0;
+      while ( task_list[i].cycle_time != 0 ) // Cycle through the task list
       {
-        task_list[i].f();                  // Call the function
+        if ( (cycle_count % task_list[i].cycle_time) == 0 )
+        {
+          task_list[i].f();                  // Call the function
+          DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "Synchronous task: %s\r\n", task_list[i].name);))
+        }
+        i++;
       }
-      i++;
     }
-
-    old_run_state = run_state;             // Remember the state
 
     /*
      * All done, prepare for the next cycle
@@ -304,6 +181,11 @@ void trace_synchronous(void *pvParameters)
     cycle_count++;
     vTaskDelay(TICK_10ms); // Delay 10ms
   }
+
+  /*
+   * Never get here
+   */
+  return;
 }
 
 /*-----------------------------------------------------

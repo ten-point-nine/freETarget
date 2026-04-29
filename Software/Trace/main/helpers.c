@@ -213,8 +213,6 @@ void hello(void)
    * Woken up again.  Turn things back on
    */
   SEND(ALL, sprintf(_xs, "{\"%s\"0, \"NAME\":\"%s\"}", _HELLO_, str);)
-  run_state &= ~IN_SLEEP; // Out of sleep and back in operation
-  run_state |= IN_OPERATION;
   return;
 }
 
