@@ -69,38 +69,12 @@
 #define FULL_SCALE     0xffffffff                  // Full scale timer
 #define MS_TO_TICKS(x) (ONE_SECOND * (x) / 1000)   // Convert from time in ms to time ticks
 
-#define SHOT_TIME  ((int)(json_sensor_dia / 0.33)) // Worst case delay (microseconds) = sensor diameter / speed of sound)
-#define SHOT_SPACE 100                             // 40 Sighters + 60 on Score
 
-#define HI(x)    (((x) >> 8) & 0x00ff)             // High nibble
-#define LO(x)    ((x) & 0x00ff)                    // Low nibble
-#define HHH10(x) (((x) / 10000) % 10)              // Highest digit    2xxxx
-#define HHI10(x) (((x) / 1000) % 10)               // High High digit  x2xxx
-#define HLO10(x) (((x) / 100) % 10)                // High Low digit   xx2xx
-#define HI10(x)  (((x) / 10) % 10)                 // High digit       xxx2x
-#define LO10(x)  ((x) % 10)                        // Low digit        xxxx2
-
-#define N    0                                     // Index to North Timer
-#define E    1                                     // Index to East Timer
-#define S    2                                     // Index to South Timer
-#define W    3                                     // Index to West Timer
-#define N_HI 4
-#define E_HI 5
-#define S_HI 6
-#define W_HI 7
-
-#define MISS 9                                     // Timer was a miss
 
 #define PI      3.14159269
 #define PI_ON_4 (PI / 4.0d)
 #define PI_ON_2 (PI / 2.0d)
 #define TWO_PI  (2.0d * PI)
-
-#define SESSION_EMPTY 0               // No session data
-#define SESSION_VALID 1               // Session is valid but undefined
-#define SESSION_SIGHT 2               // Session is a sighter
-#define SESSION_MATCH 4               // Session is a match
-#define SESSION_PRINT 10              // Print out the session
 
 #define SCORE_LEFT_BRACE  '{'         // Opening JSON string
 #define SCORE_RIGHT_BRACE '}'         // Closing JSON string
@@ -128,9 +102,6 @@
 #define SCORE_SEND_MISS  "{SMT}n"     // Send a miss
 
 #define HTTP_CLOSE_TIME 15l           // Time to close the HTTP connection after the last shot
-
-#define MAX_WAIT_TIME 10              // Wait up to 10 ms for the input to arrive
-#define MAX_RING_TIME 50              // Wait 50 ms for the ringing to stop
 /*
  *  Types
  */

@@ -1,7 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "trace",
-    "project_version":    "ESP32-6.3.2-12-gaf52a55-dirty",
+    "project_version":    "ESP32-6.3.2-13-ga84903d-dirty",
     "project_path":       "C:/Users/allan/Documents/freETarget/Software/Trace",
     "idf_path":           "C:/Users/allan/esp/v5.3.1/esp-idf",
     "build_dir":          "C:/Users/allan/Documents/freETarget/Software/Trace/build",

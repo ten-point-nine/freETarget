@@ -139,13 +139,17 @@ void trace_init(void)
  *----------------------------------------------------------------
  */
 
-unsigned int sensor_status; // Record which sensors contain valid data
-unsigned int location;      // Sensor location
+unsigned int sensor_status;    // Record which sensors contain valid data
+unsigned int location;         // Sensor location
 
 void trace_target_loop(void *arg)
 {
-  /*
-   * End of the loop. timeout till the next time
-   */
-  vTaskDelay(TICK_10ms);
+  while ( 1 )
+  {
+    run_state |= IN_OPERATION; // We are in operation
+    /*
+     * End of the loop. timeout till the next time
+     */
+    vTaskDelay(TICK_10ms);
+  }
 }

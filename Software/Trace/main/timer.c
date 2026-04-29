@@ -63,7 +63,6 @@ typedef struct
  * Local Variables
  */
 static run_time_clock_t timers[N_TIMERS]; // Active timer list (allow only positive time)
-static state            isr_state;        // What sensor state are we in
 static time_count_t     base_time = 0;    // Base time to show elapsed time
 time_count_t            time_to_go;       // Time remaining in event in seconds
 

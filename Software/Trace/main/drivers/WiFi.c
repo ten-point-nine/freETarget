@@ -200,6 +200,8 @@ void WiFi_station_init(void)
 {
   char str_c[256];
 
+  return; 
+  
   wifi_init_config_t WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi_station_init()");))

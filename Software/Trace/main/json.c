@@ -416,9 +416,6 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"RUN_STATE\":         %d,", run_state);)                    // Internal running state is enabled
   SEND(ALL, sprintf(_xs, "\"CONNECTION_LIST\":   %02X,", connection_list);)            // Who is attached
   SEND(ALL, sprintf(_xs, "\"RUNNING_MINUTES\":   %0.2f,", run_time_seconds() / 60.0);) // On Time
-  SEND(ALL, sprintf(_xs, "\"TIME_TO_SLEEP\":     %4.2f,", (float)power_save / (float)(ONE_SECOND * 60));) // How long until we sleep
-  SEND(ALL, sprintf(_xs, "\"TIMER_COUNT\":       %d,",
-                    (int)(SHOT_TIME * OSCILLATOR_MHZ));) // Maximum number of clock cycles to record shot (target dependent)
   WiFi_MAC_address(str_c);
   SEND(ALL, sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\",", str_c[0], str_c[1], str_c[2], str_c[3], str_c[4],
                     str_c[5]);)
@@ -554,11 +551,6 @@ static bool good_input(unsigned int conversion, // What kind of input is it?
   if ( (next == ',') || (next == '}') )         // Empty field
   {
     return false;
-  }
-
-  if ( json_lock == 0 )                         // The JSON is not locked
-  {
-    return true;
   }
 
   if ( (show & LOCK) == 0 )                     // This item is not locked

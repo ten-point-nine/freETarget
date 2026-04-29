@@ -143,14 +143,6 @@ void read_nonvol(void)
   }
 
   /*
-   * Special case of broken sensor diameter
-   */
-  if ( json_sensor_dia < 0.1 ) // Sensor diameter is broken
-  {
-    json_sensor_dia = 230;     // Set to the default
-  }
-
-  /*
    * All done, begin the program
    */
   return;
@@ -226,71 +218,6 @@ void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calib
         break;
     }
     i++;
-  }
-
-  /*
-   * Handle special cases
-   */
-
-  /*
-   *     Test the board only if it is a factor init
-   */
-  if ( do_calibration ) // Was this started from the command line?
-  {
-    if ( factory_test() == false )
-    {
-      SEND(ALL, sprintf(_xs, "\r\nFactory test did not pass.");)
-      SEND(ALL, sprintf(_xs, "\r\nFactory Test will not be recorded");)
-    }
-
-    /*
-     * Ask for the serial number.  Exit when you get !
-     */
-    ch            = 0;
-    serial_number = 0;
-    serial_flush(ALL);
-
-    SEND(ALL, sprintf(_xs, "\r\nSerial Number? (ex 223! or X to cancel))");)
-
-    while ( 1 )
-    {
-      if ( serial_available(CONSOLE) != 0 )
-      {
-        ch = serial_getch(CONSOLE);
-        serial_putch(ch, CONSOLE);
-
-        switch ( ch )
-        {
-          case '!':
-            nvs_set_i32(my_handle, NONVOL_SERIAL_NO, serial_number);
-            SEND(ALL, sprintf(_xs, "\r\nSetting Serial Number to: %d", serial_number);)
-            break;
-
-          case 0x08: // Backspace
-            serial_number /= 10;
-            break;
-
-          case '0':
-          case '1':
-          case '2':
-          case '3':
-          case '4':
-          case '5':
-          case '6':
-          case '7':
-          case '8':
-          case '9':
-            serial_number *= 10;
-            serial_number += ch - '0';
-            break;
-        }
-      }
-      vTaskDelay(10);
-      if ( (ch == 'x') || (ch == 'X') || (ch == '!') )
-      {
-        break;
-      }
-    }
   }
 
   /*
