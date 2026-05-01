@@ -10,7 +10,7 @@
  * driver is written to be as generic as possible and should work with any
  * implementation of the ADXL345.
  *
- * See: https://www.analog.com/en/products/adxl345.html
+ * See: https://www.analog.com/en/products/ADXL345.html
  *      https://www.analog.com/media/en/technical-documentation/data-sheets/ADXL345.pdf
  *      https://www.analog.com/media/en/technical-documentation/application-notes/AN-1021.pdf
  *      https://www.analog.com/media/en/technical-documentation/application-notes/AN-1020.pdf
@@ -81,7 +81,7 @@ typedef struct
 {
   int address; // Device address
   int value;   // Value to write
-} adxl345_write_t;
+} ADXL345_write_t;
 
 /*
  * Function Prototypes
@@ -90,7 +90,7 @@ typedef struct
 /*
  * Variables
  */
-adxl345_write_t adxl345_init_data[] = {
+ADXL345_write_t ADXL345_init_data[] = {
     {0x2C, BW_RATE_100HZ    }, // BW_RATE register, 100 Hz data rate
     {0x2D, POWER_CTL_MEASURE}, // Power control register, Measure mode
     {0x2E, INT_MAP_NONE     }, // Interrupt map register, Map all interrupts to INT1 pin
@@ -99,7 +99,8 @@ adxl345_write_t adxl345_init_data[] = {
     {0,    0                }  // End of the list
 };
 
-real_t adxl345_lsb_per_g[] = {g2_lsb, g4_lsb, g8_lsb, g16_lsb}; // LSB per g for each range setting
+real_t           ADXL345_lsb_per_g[] = {g2_lsb, g4_lsb, g8_lsb, g16_lsb}; // LSB per g for each range setting
+ADXL345_sample_t ADXL345_zero_sample;                                     // Sample to hold the zeroed acceleration data
 
 /*----------------------------------------------------------------
  *
@@ -129,10 +130,10 @@ void ADXL345_init(void)
   }
 
   i = 0;
-  while ( adxl345_init_data[i].address != 0 )
+  while ( ADXL345_init_data[i].address != 0 )
   {
-    data[0] = adxl345_init_data[i].address; // Register address
-    data[1] = adxl345_init_data[i].value;   // Value to write
+    data[0] = ADXL345_init_data[i].address; // Register address
+    data[1] = ADXL345_init_data[i].value;   // Value to write
     i2c_write(ADXL345_ADDR, data, 2);       // Data transferred on last bit.
     i++;
   }
@@ -153,6 +154,14 @@ void ADXL345_init(void)
  *
  *----------------------------------------------------------------
  *
+ * The Acceleration data is read from the ADXL345 in 6 bytes,
+ * with the X, Y, and Z axis data each consisting of a low byte
+ * followed by a high byte. The raw acceleration data is stored
+ * in the provided sample structure.
+ *
+ * The raw acceleration data is in 10-bit resolution and is
+ * right justified with sign extension.
+ *
  *--------------------------------------------------------------*/
 void ADXL345_read_raw_accel(ADXL345_sample_t *sample)
 {
@@ -166,6 +175,94 @@ void ADXL345_read_raw_accel(ADXL345_sample_t *sample)
   sample->raw_y = (data[3] << 8) | data[2]; // Combine low and high bytes for Y-axis
   sample->raw_z = (data[5] << 8) | data[4]; // Combine low and high bytes for Z-axis
 
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: ADXL345_adjustzero()
+ *
+ * @brief:    Zero the acceleration data from the ADXL345
+ *
+ * @return: None
+ *
+ *----------------------------------------------------------------
+ *
+ * The acceleration data always contains the earth's gravity,
+ * so to get the actual acceleration of the device, we need to
+ * zero the data by taking a sample when the device is stationary
+ * and subtracting that from future samples.
+ *
+ *--------------------------------------------------------------*/
+void ADXL345_adjust_zero(ADXL345_sample_t *sample)
+{
+  sample->x -= ADXL345_zero_sample.x; // Subtract the zeroed X-axis acceleration from the sample
+  sample->y -= ADXL345_zero_sample.y; // Subtract the zeroed Y-axis acceleration from the sample
+  sample->z -= ADXL345_zero_sample.z; // Subtract the zeroed Z-axis acceleration from the sample
+
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: ADXL345_zero()
+ *
+ * @brief:    Determine the resting g levels for the ADXL345
+ *
+ * @return: None
+ *
+ *----------------------------------------------------------------
+ *
+ * The acceleration data always contains the earth's gravity,
+ * so to get the actual acceleration of the device, we need to
+ * zero the data by taking a sample when the device is stationary
+ * and subtracting that from future samples.
+ *
+ *--------------------------------------------------------------*/
+#define NUM_ZERO_SAMPLES 10
+
+void ADXL345_find_zero(void)
+{
+  int              i;
+  ADXL345_sample_t zero_samples[NUM_ZERO_SAMPLES]; // Buffer to hold multiple samples for averaging
+
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "ADXL345_find_zero()");))
+
+  /*
+   * Loop and collect samples
+   */
+  for ( i = 0; i < NUM_ZERO_SAMPLES; i++ )
+  {
+    gpio_set_level(STATUS_LED, i & 1);        // Blinik the LED to indicate that we are taking samples
+    ADXL345_read_raw_accel(&zero_samples[i]); // Take a sample of the raw acceleration data
+    ADXL345_convert_to_g(&zero_samples[i]);   // Convert the raw acceleration data to g
+    vTaskDelay(ONE_SECOND / 4);               // Delay between samples
+  }
+
+  /*
+   * Average the samples to get a more accurate zero level
+   */
+  ADXL345_zero_sample.x = 0;
+  ADXL345_zero_sample.y = 0;
+  ADXL345_zero_sample.z = 0;
+  for ( i = 0; i < NUM_ZERO_SAMPLES; i++ )
+  {
+    ADXL345_zero_sample.x += zero_samples[i].x; // Accumulate the X-axis raw acceleration data
+    ADXL345_zero_sample.y += zero_samples[i].y; // Accumulate the Y-axis raw acceleration data
+    ADXL345_zero_sample.z += zero_samples[i].z; // Accumulate the Z-axis raw acceleration data
+  }
+
+  ADXL345_zero_sample.x /= NUM_ZERO_SAMPLES;        // Average the X-axis raw acceleration data
+  ADXL345_zero_sample.y /= NUM_ZERO_SAMPLES;        // Average the Y-axis raw acceleration data
+  ADXL345_zero_sample.z /= NUM_ZERO_SAMPLES;        // Average the Z-axis raw acceleration data
+
+  /*
+   *  All done, return
+   */
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Zero levels - X: %.3f, Y: %.3f, Z: %.3f", ADXL345_zero_sample.x, ADXL345_zero_sample.y,
+                                  ADXL345_zero_sample.z);))
+
+  set_status_LED(LED_READY); // Indicate that we are ready
   return;
 }
 
@@ -186,7 +283,7 @@ void ADXL345_read_raw_accel(ADXL345_sample_t *sample)
 void ADXL345_convert_to_g(ADXL345_sample_t *sample)
 {
 
-  real_t lsb_per_g = adxl345_lsb_per_g[DATA_FORMAT & 0b00000011]; // Get the LSB per g for the current range setting
+  real_t lsb_per_g = ADXL345_lsb_per_g[DATA_FORMAT & 0b00000011]; // Get the LSB per g for the current range setting
 
   sample->x = sample->raw_x * lsb_per_g;                          // Convert raw X-axis data to g
   sample->y = sample->raw_y * lsb_per_g;                          // Convert raw Y-axis data to g
@@ -210,12 +307,34 @@ void ADXL345_convert_to_g(ADXL345_sample_t *sample)
 void ADXL345_test(void)
 {
   ADXL345_sample_t sample;           // Buffer to hold the raw acceleration data
+  real_t           vector_magnitude; // Magnitude of the acceleration vector
 
   while ( 1 )
   {
     ADXL345_read_raw_accel(&sample); // Read the acceleration data
     ADXL345_convert_to_g(&sample);   // Convert raw data to g
-    SEND(ALL, sprintf(_xs, "\r\nraw X: %d, Y: %d, Z: %d", sample.raw_x, sample.raw_y, sample.raw_z);)
+    ADXL345_adjust_zero(&sample);    // Adjust the sample by subtracting the zeroed acceleration data
+
+    vector_magnitude =
+        sqrt(sample.x * sample.x + sample.y * sample.y + sample.z * sample.z); // Calculate the magnitude of the acceleration vector
+
+    SEND(ALL, sprintf(_xs, "\r\nX: %.3fg, Y: %.3fg, Z: %.3fg, |A|: %.3fg", sample.x, sample.y, sample.z, vector_magnitude);)
+
+    vTaskDelay(ONE_SECOND / 4);
+
+    if ( serial_available(ALL) != 0 )
+    {
+      char ch = serial_getch(ALL);
+      if ( ch == '!' )
+      {
+        break;
+      }
+    }
+  }
+  while ( 1 )
+  {
+    ADXL345_read_raw_accel(&sample); // Read the acceleration data
+    ADXL345_convert_to_g(&sample);   // Convert raw data to g
     SEND(ALL, sprintf(_xs, "  X: %.3fg, Y: %.3fg, Z: %.3fg", sample.x, sample.y, sample.z);)
 
     vTaskDelay(ONE_SECOND / 4);

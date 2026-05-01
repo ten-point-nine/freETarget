@@ -27,6 +27,9 @@ typedef struct
 /*
  *  Functions
  */
-void ADXL345_init(void); // Initialize the ADXL345
+void ADXL345_init(void);                             // Initialize the ADXL345
 void ADXL345_read_raw_accel(ADXL345_sample_t *sample);
-void ADXL345_test(void); // Test the ADXL345
+void ADXL345_test(void);                             // Test the ADXL345
+void ADXL345_find_zero(void);                        // Take a zero sample to use for future adjustments
+void ADXL345_adjust_zero(ADXL345_sample_t *sample);  // Adjust a sample by subtracting the zero sample
+void ADXL345_convert_to_g(ADXL345_sample_t *sample); // Convert raw acceleration data to g
