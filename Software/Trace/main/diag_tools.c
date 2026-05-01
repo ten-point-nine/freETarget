@@ -32,6 +32,7 @@
 #include "gpio_define.h"
 #include "json.h"
 #include "timer.h"
+#include "ADXL345.h"
 
 extern volatile time_count_t paper_time;
 
@@ -52,6 +53,7 @@ static const self_test_t test_list[] = {
     {"- Digital",                    0                        },
     {"Digital inputs",               &digital_input_test      },
     {"Digital outputs",              &digital_output_test     },
+    {"Accelerometer",                &ADXL345_test            },
     {"- Timer & PCNT test",          0                        },
     {"Show the current time",        &show_time               },
     {"- Communiactions Tests",       0                        },

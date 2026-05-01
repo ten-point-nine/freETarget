@@ -77,7 +77,7 @@ void digital_output_test(void);      // Test the digital outputs
 #define TRACE_OTA           (0 == 1)
 #define TRACE_HEARTBEAT     (0 == 1)
 #define TRACE_CALIBRATION   (0 == 1)
-#define TRACE_VERBOSE       (1 == 1)
+#define TRACE_VERBOSE       (0 == 1)
 
 // clang-format off
 #define DLT(level, z) if ( do_dlt(level) )  { z }                                                                                                                       \

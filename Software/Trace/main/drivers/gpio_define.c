@@ -187,6 +187,7 @@ void gpio_init_single(unsigned int type)                                        
                    ((I2C_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SCL);
           break;
       }
+      DLT(DLT_INFO + DLT_VERBOSE, gpio_dump_io_configuration(stdout, (1ULL << i));)
     }
     i++;
   }
@@ -194,8 +195,6 @@ void gpio_init_single(unsigned int type)                                        
   /*
    *  All done, return
    */
-  DLT(DLT_INFO, gpio_dump_io_configuration(stdout, (1ULL << 0) | (1ULL << 1) | (1ULL << 2) | (1ULL << 3) | (1ULL << 4) | (1ULL << 5) |
-                                                       (1ULL << 6) | (1ULL << 7) | (1ULL << 8) | (1ULL << 9) | (1ULL << 10) | (1ULL << 19) |
-                                                       (1ULL << 20) | (1ULL << 21));)
+
   return;
 }
