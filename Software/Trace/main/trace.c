@@ -34,6 +34,7 @@
 #include "WiFi.h"
 #include "diag_tools.h"
 #include "http_client.h"
+#include "ADXL345.h"
 
 /*
  *  Variables
@@ -91,8 +92,10 @@ void trace_init(void)
    *  Setup the hardware
    */
   gpio_init();      // Setup the hardware
+  vTaskDelay(10); // Let the hardware settle
   serial_io_init(); // Setup the console for debug message
   read_nonvol();    // Read in the settings
+  ADXL345_init();   // Initialize the ADXL345 accelerometer
 
   /*
    * Put up a self test

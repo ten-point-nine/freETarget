@@ -331,10 +331,20 @@ void digital_output_test(void)
 {
   int i;
 
-  set_status_LED(0xFF00FF00);
   while ( 1 )
   {
-
+    for ( i = 0; i != 32; i++ )
+    {
+      if ( (LED_TEST & (1 << i)) != 0 )
+      {
+        gpio_set_level(STATUS_LED, 0); // Turn the LED on
+      }
+      else
+      {
+        gpio_set_level(STATUS_LED, 1); // Turn the LED off
+      }
+      vTaskDelay(ONE_SECOND / 4);
+    }
     if ( serial_available(ALL) != 0 )
     {
       char ch = serial_getch(ALL);

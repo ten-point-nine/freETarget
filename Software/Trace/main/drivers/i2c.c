@@ -13,6 +13,8 @@
  ***************************************************************************/
 #include <stdio.h>
 #include "driver/i2c.h"
+#include "diag_tools.h"
+#include "trace.h"
 
 /*
  * Definitions
@@ -51,14 +53,26 @@ esp_err_t i2c_init(int i2c_gpio_SDA, // GPIO SPI belongs to
                    int i2c_gpio_SCL  // GPIO SPI belongs to
 )
 {
-  int i2c_master_port = I2C_MASTER_NUM;
+  int       i2c_master_port = I2C_MASTER_NUM;
+  esp_err_t ret;
 
   i2c_configuration.sda_io_num = i2c_gpio_SDA;
   i2c_configuration.scl_io_num = i2c_gpio_SCL;
   i2c_configuration.mode       = I2C_MODE_MASTER, /*!< I2C master mode */
       i2c_param_config(i2c_master_port, &i2c_configuration);
 
-  return i2c_driver_install(i2c_master_port, i2c_configuration.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
+  ret = i2c_driver_install(i2c_master_port, i2c_configuration.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
+
+  if ( ret == ESP_OK )
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "I2C initialized successfully");))
+  }
+  else
+  {
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to initialize I2C: %s", esp_err_to_name(ret));))
+  }
+
+  return ret;
 }
 
 /*********************************************************************

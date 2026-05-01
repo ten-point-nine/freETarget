@@ -53,7 +53,7 @@ const DIO_struct_t dio21 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .i
 /*
  *  I2C COntrol.  GPIO explicitly filled in here
  */
-I2C_struct_t i2c = {I2C_PORT, GPIO_NUM_0, GPIO_NUM_1};
+I2C_struct_t i2c = {.type = I2C_PORT, .gpio_number_SDA = GPIO_NUM_0, .gpio_number_SCL = GPIO_NUM_1};
 
 /*
  *  GPIO Usage
@@ -66,15 +66,12 @@ const gpio_struct_t gpio_table[] = {
     //   Name      Number       Assigned   Used by
     {"SDA",         GPIO_NUM_0,  (void *)&i2c,   COMMON}, // I2C SDA
     {"SCL",         GPIO_NUM_1,  NULL,           COMMON}, // I2C SCL
-{"LED",         GPIO_NUM_2,  (void *)&dio02, COMMON}, // Status LED, Active LOW    {"ROM_MESSAGE", GPIO_NUM_8,  NULL,           COMMON}, // Force
-   
- //   {"BD_REV",      GPIO_NUM_2,  (void *)&dio02, COMMON}, // BD_REV
+    {"LED",         GPIO_NUM_2,  (void *)&dio02, COMMON}, // Status LED, Active LOW
     {"TP1",         GPIO_NUM_3,  (void *)&dio03, COMMON}, // Spare test point
     {"TP2",         GPIO_NUM_4,  (void *)&dio04, COMMON}, // Spare test point
-                                                    // {"INT",         GPIO_NUM_5,  (void *)&dio05, COMMON}, // Interrupt from Gyro/Accel
-
+    {"INT",         GPIO_NUM_6,  (void *)&dio06, COMMON}, // Interrupt from Gyro/Accel
     {"PUSH_BUTTON", GPIO_NUM_7,  (void *)&dio07, COMMON}, // Setup button, Active LOW
-                                                  // ROM messages on the serial port, Active HIGH
+    {"ROM_MESSAGE", GPIO_NUM_8,  NULL,           COMMON}, // ROM messages on the serial port, Active HIGH
     {"BOOT",        GPIO_NUM_9,  NULL,           COMMON}, // Stay in boot block
     {"NOT USED",    GPIO_NUM_10, NULL,           COMMON}, //
     {"NOT USED",    GPIO_NUM_19, NULL,           COMMON}, //
@@ -133,7 +130,6 @@ void gpio_init(void)
   /*
    *  All done, return
    */
-  gpio_dump_io_configuration(stdout, (1ULL << 5) | (1ULL << 6) | (1ULL << 7));
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "GPIO complete");))
   vTaskDelay(10);
   return;
@@ -184,7 +180,9 @@ void gpio_init_single(unsigned int type)                                        
           break;
 
         case I2C_PORT:
-          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "I2C: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
+          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "I2C: (%d) SCL: %d, SDA: %d", gpio_table[i].gpio_number,
+                                          ((I2C_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SCL,
+                                          ((I2C_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SDA);))
           i2c_init(((I2C_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SDA,
                    ((I2C_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SCL);
           break;
@@ -196,5 +194,8 @@ void gpio_init_single(unsigned int type)                                        
   /*
    *  All done, return
    */
+  DLT(DLT_INFO, gpio_dump_io_configuration(stdout, (1ULL << 0) | (1ULL << 1) | (1ULL << 2) | (1ULL << 3) | (1ULL << 4) | (1ULL << 5) |
+                                                       (1ULL << 6) | (1ULL << 7) | (1ULL << 8) | (1ULL << 9) | (1ULL << 10) | (1ULL << 19) |
+                                                       (1ULL << 20) | (1ULL << 21));)
   return;
 }

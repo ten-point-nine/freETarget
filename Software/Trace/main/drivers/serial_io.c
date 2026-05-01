@@ -81,7 +81,6 @@ unsigned int connection_list;                         // Bitmask of existing con
  ******************************************************************************/
 void serial_io_init(void)
 {
-
   /*
    *  Load the driver
    */
@@ -105,7 +104,8 @@ void serial_io_init(void)
   /*
    * All done, return
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Console port initialized");)) return;
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Console port initialized");))
+  return;
 }
 
 /*******************************************************************************
