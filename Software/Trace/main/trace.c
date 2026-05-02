@@ -141,6 +141,11 @@ void trace_target_loop(void *arg)
 {
   while ( 1 )
   {
+    if ( gpio_get_level(SWITCH_GPIO) == 0 )
+    {
+      ADXL345_find_zero();
+      SEND(ALL, sprintf(_xs, _DONE_);)
+    }
     /*
      * End of the loop. timeout till the next time
      */

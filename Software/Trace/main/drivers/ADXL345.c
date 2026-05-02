@@ -74,6 +74,7 @@
 #define INT_MAP_NONE     0x00 // INT_MAP register value to map all interrupts to INT1 pin
 #define INT_SOURCE_CLEAR 0x00 // INT_SOURCE register value to clear all interrupts
 
+#define SQ(x) ((x) * (x))
 /*
  *  Typedefs
  */
@@ -111,6 +112,8 @@ ADXL345_sample_t ADXL345_zero_sample;                                     // Sam
  * @return: None
  *
  *----------------------------------------------------------------
+ *
+ * Setup the accelerometer from the table
  *
  *--------------------------------------------------------------*/
 void ADXL345_init(void)
@@ -175,6 +178,7 @@ void ADXL345_read_raw_accel(ADXL345_sample_t *sample)
   sample->raw_y = (data[3] << 8) | data[2]; // Combine low and high bytes for Y-axis
   sample->raw_z = (data[5] << 8) | data[4]; // Combine low and high bytes for Z-axis
 
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Raw X: %04X,  Y: %04X,  Z: %04X", sample->raw_x, sample->raw_y, sample->raw_z);))
   return;
 }
 
@@ -196,9 +200,9 @@ void ADXL345_read_raw_accel(ADXL345_sample_t *sample)
  *--------------------------------------------------------------*/
 void ADXL345_adjust_zero(ADXL345_sample_t *sample)
 {
-  sample->x -= ADXL345_zero_sample.x; // Subtract the zeroed X-axis acceleration from the sample
-  sample->y -= ADXL345_zero_sample.y; // Subtract the zeroed Y-axis acceleration from the sample
-  sample->z -= ADXL345_zero_sample.z; // Subtract the zeroed Z-axis acceleration from the sample
+  sample->ax -= ADXL345_zero_sample.ax; // Subtract the zeroed X-axis acceleration from the sample
+  sample->ay -= ADXL345_zero_sample.ay; // Subtract the zeroed Y-axis acceleration from the sample
+  sample->az -= ADXL345_zero_sample.az; // Subtract the zeroed Z-axis acceleration from the sample
 
   return;
 }
@@ -219,48 +223,46 @@ void ADXL345_adjust_zero(ADXL345_sample_t *sample)
  * and subtracting that from future samples.
  *
  *--------------------------------------------------------------*/
-#define NUM_ZERO_SAMPLES 10
+#define NUM_ZERO_SAMPLES 100
+ADXL345_sample_t zero_samples; // Buffer to hold multiple samples for averaging
 
 void ADXL345_find_zero(void)
 {
-  int              i;
-  ADXL345_sample_t zero_samples[NUM_ZERO_SAMPLES]; // Buffer to hold multiple samples for averaging
+  int i;
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "ADXL345_find_zero()");))
 
   /*
    * Loop and collect samples
    */
-  for ( i = 0; i < NUM_ZERO_SAMPLES; i++ )
+  ADXL345_zero_sample.ax = 0;
+  ADXL345_zero_sample.ay = 0;
+  ADXL345_zero_sample.az = 0;
+  for ( i = 0; i != NUM_ZERO_SAMPLES; i++ )
   {
-    gpio_set_level(STATUS_LED, i & 1);        // Blinik the LED to indicate that we are taking samples
-    ADXL345_read_raw_accel(&zero_samples[i]); // Take a sample of the raw acceleration data
-    ADXL345_convert_to_g(&zero_samples[i]);   // Convert the raw acceleration data to g
-    vTaskDelay(ONE_SECOND / 4);               // Delay between samples
+    gpio_set_level(STATUS_LED, i & 8);         // Blinik the LED to indicate that we are taking samples
+    ADXL345_read_raw_accel(&zero_samples);     // Take a sample of the raw acceleration data
+    ADXL345_convert_to_g(&zero_samples);       // Convert the raw acceleration data to g
+
+    ADXL345_zero_sample.ax += zero_samples.ax; // Accumulate the X-axis raw acceleration data
+    ADXL345_zero_sample.ay += zero_samples.ay; // Accumulate the Y-axis raw acceleration data
+    ADXL345_zero_sample.az += zero_samples.az; // Accumulate the Z-axis raw acceleration data
+
+    vTaskDelay(TICK_10ms);                     // Delay between samples
   }
 
   /*
    * Average the samples to get a more accurate zero level
    */
-  ADXL345_zero_sample.x = 0;
-  ADXL345_zero_sample.y = 0;
-  ADXL345_zero_sample.z = 0;
-  for ( i = 0; i < NUM_ZERO_SAMPLES; i++ )
-  {
-    ADXL345_zero_sample.x += zero_samples[i].x; // Accumulate the X-axis raw acceleration data
-    ADXL345_zero_sample.y += zero_samples[i].y; // Accumulate the Y-axis raw acceleration data
-    ADXL345_zero_sample.z += zero_samples[i].z; // Accumulate the Z-axis raw acceleration data
-  }
-
-  ADXL345_zero_sample.x /= NUM_ZERO_SAMPLES;        // Average the X-axis raw acceleration data
-  ADXL345_zero_sample.y /= NUM_ZERO_SAMPLES;        // Average the Y-axis raw acceleration data
-  ADXL345_zero_sample.z /= NUM_ZERO_SAMPLES;        // Average the Z-axis raw acceleration data
+  ADXL345_zero_sample.ax /= (real_t)NUM_ZERO_SAMPLES; // Average the X-axis raw acceleration data
+  ADXL345_zero_sample.ay /= (real_t)NUM_ZERO_SAMPLES; // Average the Y-axis raw acceleration data
+  ADXL345_zero_sample.az /= (real_t)NUM_ZERO_SAMPLES; // Average the Z-axis raw acceleration data
 
   /*
    *  All done, return
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Zero levels - X: %.3f, Y: %.3f, Z: %.3f", ADXL345_zero_sample.x, ADXL345_zero_sample.y,
-                                  ADXL345_zero_sample.z);))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Zero levels - X: %.3f, Y: %.3f, Z: %.3f", ADXL345_zero_sample.ax, ADXL345_zero_sample.ay,
+                                   ADXL345_zero_sample.az);))
 
   set_status_LED(LED_READY); // Indicate that we are ready
   return;
@@ -282,12 +284,11 @@ void ADXL345_find_zero(void)
  *--------------------------------------------------------------*/
 void ADXL345_convert_to_g(ADXL345_sample_t *sample)
 {
-
   real_t lsb_per_g = ADXL345_lsb_per_g[DATA_FORMAT & 0b00000011]; // Get the LSB per g for the current range setting
 
-  sample->x = sample->raw_x * lsb_per_g;                          // Convert raw X-axis data to g
-  sample->y = sample->raw_y * lsb_per_g;                          // Convert raw Y-axis data to g
-  sample->z = sample->raw_z * lsb_per_g;                          // Convert raw Z-axis data to g
+  sample->ax = sample->raw_x * lsb_per_g;                         // Convert raw X-axis data to g
+  sample->ay = sample->raw_y * lsb_per_g;                         // Convert raw Y-axis data to g
+  sample->az = sample->raw_z * lsb_per_g;                         // Convert raw Z-axis data to g
 
   return;
 }
@@ -304,51 +305,75 @@ void ADXL345_convert_to_g(ADXL345_sample_t *sample)
  * Poll the ADXL345 and print out the acceleration data
  *
  *--------------------------------------------------------------*/
+#define TIME_STEP    (0.010 * TICK_10ms)
+#define TIME_STEP_SQ (TIME_STEP * TIME_STEP)
+
+#define G_mm_s2 9806.65f             // Acceleration due to gravity in mm/s^2
+
 void ADXL345_test(void)
 {
   ADXL345_sample_t sample;           // Buffer to hold the raw acceleration data
   real_t           vector_magnitude; // Magnitude of the acceleration vector
+  real_t           x, y, z;          // Position of the device in mm
+
+  x         = 0;
+  y         = 0;
+  z         = 0;
+  sample.vx = 0;
+  sample.vy = 0;
+  sample.vz = 0;
 
   while ( 1 )
   {
-    ADXL345_read_raw_accel(&sample); // Read the acceleration data
-    ADXL345_convert_to_g(&sample);   // Convert raw data to g
-    ADXL345_adjust_zero(&sample);    // Adjust the sample by subtracting the zeroed acceleration data
+    ADXL345_read_raw_accel(&sample);                                        // Read the acceleration data
+    ADXL345_convert_to_g(&sample);                                          // Convert raw data to g
+    ADXL345_adjust_zero(&sample);                                           // Adjust the sample by subtracting the zeroed acceleration data
 
-    vector_magnitude =
-        sqrt(sample.x * sample.x + sample.y * sample.y + sample.z * sample.z); // Calculate the magnitude of the acceleration vector
+    vector_magnitude = sqrt(SQ(sample.ax) + SQ(sample.ay) + SQ(sample.az)); // Calculate the magnitude of the acceleration vector
 
-    SEND(ALL, sprintf(_xs, "\r\nX: %.3fg, Y: %.3fg, Z: %.3fg, |A|: %.3fg", sample.x, sample.y, sample.z, vector_magnitude);)
+    /*
+     * Integrate the positition
+     */
+    x += (sample.vx * TIME_STEP) + (sample.ax * G_mm_s2 * (TIME_STEP_SQ) / 2); // Update the X position using the acceleration data
+    y += (sample.vy * TIME_STEP) + (sample.ay * G_mm_s2 * (TIME_STEP_SQ) / 2); // Update the Y position using the acceleration data
+    z += (sample.vz * TIME_STEP) + (sample.az * G_mm_s2 * (TIME_STEP_SQ) / 2); // Update the Z position using the acceleration data
+
+    /*
+     * Integrate the velocity
+     */
+    sample.vx += sample.ax * TIME_STEP;
+    sample.vy += sample.ay * TIME_STEP;
+    sample.vz += sample.az * TIME_STEP;
+
+    SEND(ALL, sprintf(_xs,
+                      "\r\nX: %+.3fg, Y: %+.3fg, Z: %+.3fg, |A|: %.3fg     x: %+.3fmm, y: %+.3fmm, z: %+.3fmm,   vx: %+.3fmm/s,  "
+                      "vy:%+.3fmm/s, vz: %+.3fmm/s",
+                      sample.ax, sample.ay, sample.az, vector_magnitude, x, y, z, sample.vx, sample.vy, sample.vz);)
 
     vTaskDelay(ONE_SECOND / 4);
 
     if ( serial_available(ALL) != 0 )
     {
       char ch = serial_getch(ALL);
-      if ( ch == '!' )
+      if ( ch == '!' )                  // Exit the test
       {
         break;
       }
-    }
-  }
-  while ( 1 )
-  {
-    ADXL345_read_raw_accel(&sample); // Read the acceleration data
-    ADXL345_convert_to_g(&sample);   // Convert raw data to g
-    SEND(ALL, sprintf(_xs, "  X: %.3fg, Y: %.3fg, Z: %.3fg", sample.x, sample.y, sample.z);)
-
-    vTaskDelay(ONE_SECOND / 4);
-
-    if ( serial_available(ALL) != 0 )
-    {
-      char ch = serial_getch(ALL);
-      if ( ch == '!' )
+      if ( (ch == 'R') || (ch == 'r') ) // Reset the test
       {
-        break;
+        x         = 0;
+        y         = 0;
+        z         = 0;
+        sample.vx = 0;
+        sample.vy = 0;
+        sample.vy = 0;
       }
     }
   }
 
+  /*
+   * All done
+   */
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }
