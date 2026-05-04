@@ -36,8 +36,8 @@
 
 #include "esp_http_client.h"
 
-#include "serial_io.h"
 #include "trace.h"
+#include "serial_io.h"
 #include "http_client.h"
 #include "diag_tools.h"
 #include "json.h"

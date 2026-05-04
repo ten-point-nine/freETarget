@@ -55,6 +55,7 @@ static const self_test_t test_list[] = {
     {"Digital outputs",              &digital_output_test     },
     {"Accelerometer zeroing",        &ADXL345_find_zero       },
     {"Accelerometer test",           &ADXL345_test            },
+    {"Accelerometer oscilliscope",   &ADXL345_oscilliscope    },
     {"- Timer & PCNT test",          0                        },
     {"Show the current time",        &show_time               },
     {"- Communiactions Tests",       0                        },

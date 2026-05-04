@@ -59,8 +59,6 @@
 /*
  * Oscillator Features
  */
-#define OSCILLATOR_MHZ 10.0                      // 10,000 cycles in 1 ms
-#define CLOCK_PERIOD   (1.0 / OSCILLATOR_MHZ)    // Seconds per bit
 #define ONE_SECOND     (100)                     // 10 ms delay per LSB
 #define TICK_10ms      (1)                       // Minimum timeout 10ms
 #define FULL_SCALE     0xffffffff                // Full scale timer
@@ -97,6 +95,11 @@
 #define SCORE_SEND_MISS  "{SMT}n"     // Send a miss
 
 #define HTTP_CLOSE_TIME 15l           // Time to close the HTTP connection after the last shot
+
+#define SAMPLE_DURATION 5             // Take 5 seconds of samples
+#define SAMPLE_RATE     (100)         // 100 samples per second
+#define SAMPLE_DEPTH    (SAMPLE_DURATION * SAMPLE_RATE)
+
 /*
  *  Types
  */
@@ -106,19 +109,19 @@ typedef double        real_t;
 
 typedef struct
 {
-  unsigned int index;    // Which sensor is this one
-  bool         is_valid; // TRUE if the sensor contains a valid time
-  double       angle_A;  // Angle to be computed
-  double       diagonal; // Diagonal angle to next sensor (45')
-  double       x;        // Sensor Location (X us)
-  double       y;        // Sensor Location (Y us)
-  double       x_mm;     // Sensor X location in mm
-  double       y_mm;     // Sensor Y location in mm
-  double       count;    // Working timer value
-  double       a, b, c;  // Working dimensions
-  double       xs;       // Computed X shot value
-  double       ys;       // Computed Y shot value
-} sensor_t;
+  int16_t raw_x; // X acceleration read from sensor
+  int16_t raw_y; // Y acceleration read from sensor
+  int16_t raw_z; // Z acceleration read from sensor
+  real_t  ax;    // X-axis acceleration in g
+  real_t  ay;    // Y-axis acceleration in g
+  real_t  az;    // Z-axis acceleration in g
+  real_t  vx;    // Velocity in the X axis
+  real_t  vy;    // Velocity in the Y axis
+  real_t  vz;    // Velocity in the Z axis
+  real_t  x;     // X position
+  real_t  y;     // Y position
+  real_t  z;     // Z position
+} accel_sample_t;
 
 /*
  *  Global Variables
@@ -134,6 +137,8 @@ EXTERN time_count_t time_since_last_shot;                           // 15 minute
 EXTERN time_count_t session_time[];                                 // Time in each session
 EXTERN unsigned int run_state;                                      // Current running state of the software
 
+EXTERN accel_sample_t samples[SAMPLE_DEPTH];                        // Where to store the data
+
 #ifdef TRACE_C
 EXTERN char        *no_yes[]       = {"No", "Yes"};                 // Yes or No
 EXTERN time_count_t session_time[] = {1000 * 60, 15 * 60, 75 * 60}; // Time in each session EMPTY, SIGHT, SCORE // Array of shot records
@@ -145,8 +150,8 @@ EXTERN time_count_t session_time[];
 /*
  * trace functions
  */
-void trace_init(void);             // Get the target software ready
-void trace_target_loop(void *arg); // Target polling loop
-void send_keep_alive(void);        // Send out the keep alive signal for TCPIP
-bool prompt_for_confirm(void);     // Prompt for a confirmation
+void trace_init(void);         // Get the target software ready
+void trace_loop(void *arg);    // Target polling loop
+void send_keep_alive(void);    // Send out the keep alive signal for TCPIP
+bool prompt_for_confirm(void); // Prompt for a confirmation
 #endif

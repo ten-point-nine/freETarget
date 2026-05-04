@@ -92,14 +92,10 @@ void trace_init(void)
    *  Setup the hardware
    */
   gpio_init();      // Setup the hardware
-  vTaskDelay(10); // Let the hardware settle
+  vTaskDelay(10);   // Let the hardware settle
   serial_io_init(); // Setup the console for debug message
   read_nonvol();    // Read in the settings
   ADXL345_init();   // Initialize the ADXL345 accelerometer
-
-  /*
-   * Put up a self test
-   */
   WiFi_init();
 
   /*
@@ -125,19 +121,17 @@ void trace_init(void)
 
 /*----------------------------------------------------------------
  *
- * @function: trace_task
+ * @function: trace_loop
  *
  * @brief: Main control loop
  *
  * @return: None
  *
  *----------------------------------------------------------------
- */
-
-unsigned int sensor_status; // Record which sensors contain valid data
-unsigned int location;      // Sensor location
-
-void trace_target_loop(void *arg)
+ *
+ *
+ *---------------------------------------------------------------*/
+void trace_loop(void *arg)
 {
   while ( 1 )
   {
@@ -146,9 +140,12 @@ void trace_target_loop(void *arg)
       ADXL345_find_zero();
       SEND(ALL, sprintf(_xs, _DONE_);)
     }
+
+    //   ADXL345_read_FIFO_accel();
+
     /*
      * End of the loop. timeout till the next time
      */
-    vTaskDelay(TICK_10ms);
+    vTaskDelay(5 * TICK_10ms);
   }
 }

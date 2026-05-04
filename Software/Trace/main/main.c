@@ -59,7 +59,7 @@ void app_main(void)
   /*
    * Everything is ready, start the threads.  Low task priority number == low priority
    */
-  xTaskCreate(trace_target_loop, "trace_target_loop", K4, NULL, MUST_RUN, NULL);
+  xTaskCreate(trace_loop, "trace_loop", K4, NULL, MUST_RUN, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 

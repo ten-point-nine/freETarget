@@ -14,28 +14,15 @@
 /*
  *  Definitions
  */
-typedef struct
-{
-  int16_t    raw_x; // X acceleration read from sensor
-  int16_t    raw_y; // Y acceleration read from sensor
-  int16_t    raw_z; // Z acceleration read from sensor
-  real_t ax;    // X-axis acceleration in g
-  real_t ay;    // Y-axis acceleration in g
-  real_t az;    // Z-axis acceleration in g
-  real_t vx;    // Velocity in the X axis
-  real_t vy;    // Velocity in the Y axis
-  real_t vz;    // Velocity in the Z axis
-  real_t x;     // X position
-  real_t y;     // Y position
-  real_t z;     // Z position
-} ADXL345_sample_t;
 
 /*
  *  Functions
  */
-void ADXL345_init(void);                               // Initialize the ADXL345
-void ADXL345_read_raw_accel(ADXL345_sample_t *sample); // Read the accelermeter
-void ADXL345_test(void);                               // Test the ADXL345
-void ADXL345_find_zero(void);                          // Take a zero sample to use for future adjustments
-void ADXL345_adjust_zero(ADXL345_sample_t *sample);    // Adjust a sample by subtracting the zero sample
-void ADXL345_convert_to_g(ADXL345_sample_t *sample);   // Convert raw acceleration data to g
+void         ADXL345_init(void);                             // Initialize the ADXL345
+unsigned int ADXL345_read_raw_accel(accel_sample_t *sample); // Read the accelermeter
+unsigned int ADXL345_read_FIFO_accel(void);                  // Read all of the samples in the FIFO
+void         ADXL345_test(void);                             // Test the ADXL345
+void         ADXL345_find_zero(void);                        // Take a zero sample to use for future adjustments
+void         ADXL345_adjust_zero(accel_sample_t *sample);    // Adjust a sample by subtracting the zero sample
+void         ADXL345_convert_to_g(accel_sample_t *sample);   // Convert raw acceleration data to g
+void         ADXL345_oscilliscope(void);                        // Poor man's oscilliscope
