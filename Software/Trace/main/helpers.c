@@ -33,6 +33,15 @@ real_t SQ(real_t a)
   return a * a;
 }
 
+real_t F_ABS(real_t x)
+{
+  if ( x < 0 )
+  {
+    x = -x;
+  }
+
+  return x;
+}
 /*-----------------------------------------------------
  *
  * @function: to_int

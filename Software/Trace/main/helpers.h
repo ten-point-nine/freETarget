@@ -28,6 +28,7 @@ real_t       radians_to_degrees(real_t radians);                        // Conve
 real_t       degrees_to_radians(real_t degrees);                        // Convert degrees to readians
 void         no_singularity(real_t *a, real_t *b, real_t *c);           // Prevent singularities
 real_t       SQ(real_t a);                                              // Square a number
+real_t F_ABS(real_t x);  // Floating point absolute value function 
 
 /*
  * Global helper variables
