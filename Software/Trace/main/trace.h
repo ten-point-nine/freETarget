@@ -98,7 +98,7 @@
 #define HTTP_CLOSE_TIME 15l           // Time to close the HTTP connection after the last shot
 
 #define SAMPLE_DURATION 8             // Take 10 seconds of samples
-#define SAMPLE_RATE     (39)         // 800 samples per second
+#define SAMPLE_RATE     (200)         // 200 samples per second
 #define SAMPLE_DEPTH    (SAMPLE_DURATION * SAMPLE_RATE)
 
 /*

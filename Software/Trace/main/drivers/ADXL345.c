@@ -19,6 +19,12 @@
  *      https://www.analog.com/media/en/technical-documentation/application-notes/AN-1024.pdf
  *
  *
+ * IMPORTANT
+ *
+ * This driver polls the FIFO to remove samples when the watermark is met.
+ * The interrupt is not used to trigger the reading of the FIFO.  This is because
+ * the I2C driver does not work with interrupts.
+ *
  *****************************************************************************/
 #include "stdio.h"
 #include "driver\gpio.h"
@@ -37,65 +43,24 @@
 /*
  * Definitions
  */
-#define ADXL345_ADDR 0x53   // I2C address of the ADXL345
 
-#define BW_RATE_1600HZ 0x0F // BW_RATE register value for 1600 Hz data rate
-#define BW_RATE_800HZ  0x0E // BW_RATE register value for 800 Hz data rate
-#define BW_RATE_400HZ  0x0D // BW_RATE register value for 400 Hz data rate
-#define BW_RATE_200HZ  0x0C // BW_RATE register value for 200 Hz data rate
-#define BW_RATE_100HZ  0x0A // BW_RATE register value for 100 Hz data rate
-#define BW_RATE_50HZ   0x09 // BW_RATE register value for 50 Hz data rate
-#define BW_RATE_25HZ   0x08 // BW_RATE register value for 25 Hz data rate
-#define BW_RATE_12_5HZ 0x07 // BW_RATE register value for 12.5 Hz data rate
-#define BW_RATE_6_25HZ 0x06 // BW_RATE register value for 6.25 Hz data rate
-#define BW_RATE_3_13HZ 0x05 // BW_RATE register value for 3.13 Hz data rate
-#define BW_RATE_1_56HZ 0x04 // BW_RATE register value for 1.56 Hz data rate
-#define BW_RATE_0_78HZ 0x03 // BW_RATE register value for 0.78 Hz data rate
-#define BW_RATE_0_39HZ 0x02 // BW_RATE register value for 0.39 Hz data rate
-#define BW_RATE_0_20HZ 0x01 // BW_RATE register value for 0.20 Hz data rate
+#define ADXL345_ADDR 0x53                   // I2C address of the ADXL345
 
-#if ( SAMPLE_RATE == 1600 )
-#define ACC_SAMPLE_RATE BW_RATE_1600HZ
-#endif
-#if ( SAMPLE_RATE == 800 )
-#define ACC_SAMPLE_RATE BW_RATE_800HZ
-#endif
-#if ( SAMPLE_RATE == 400 )
-#define ACC_SAMPLE_RATE BW_RATE_400HZ
-#endif
-#if ( SAMPLE_RATE == 200 )
-#define ACC_SAMPLE_RATE BW_RATE_200HZ
-#endif
-
-#if ( SAMPLE_RATE == 100 )
-#define ACC_SAMPLE_RATE BW_RATE_100HZ
-#endif
-#if ( SAMPLE_RATE == 50 )
-#define ACC_SAMPLE_RATE BW_RATE_50HZ
-#endif
-#if ( SAMPLE_RATE == 25 )
-#define ACC_SAMPLE_RATE BW_RATE_25HZ
-#endif
-#if ( SAMPLE_RATE == 12 )
-#define ACC_SAMPLE_RATE BW_RATE_12HZ
-#endif
-
-#if ( SAMPLE_RATE == 615 )
-#define ACC_SAMPLE_RATE BW_RATE_6_15HZ
-#endif
-#if ( SAMPLE_RATE == 313 )
-#define ACC_SAMPLE_RATE BW_RATE_3_13HZ
-#endif
-#if ( SAMPLE_RATE == 156 )
-#define ACC_SAMPLE_RATE BW_RATE_1_56HZ
-#endif
-#if ( SAMPLE_RATE == 78 )
-#define ACC_SAMPLE_RATE BW_RATE_0_78HZ
-#endif
-
-#if ( SAMPLE_RATE == 39 )
-#define ACC_SAMPLE_RATE BW_RATE_0_39HZ
-#endif
+#define BW_RATE_3200HZ 0x0F                 // BW_RATE register value for 1600 Hz data rate
+#define BW_RATE_1600HZ 0x0E                 // BW_RATE register value for 1600 Hz data rate
+#define BW_RATE_800HZ  0x0D                 // BW_RATE register value for 800 Hz data rate
+#define BW_RATE_400HZ  0x0C                 // BW_RATE register value for 400 Hz data rate
+#define BW_RATE_200HZ  0x0B                 // BW_RATE register value for 200 Hz data rate
+#define BW_RATE_100HZ  0x0A                 // BW_RATE register value for 100 Hz data rate
+#define BW_RATE_50HZ   0x09                 // BW_RATE register value for 50 Hz data rate
+#define BW_RATE_25HZ   0x08                 // BW_RATE register value for 25 Hz data rate
+#define BW_RATE_12_5HZ 0x07                 // BW_RATE register value for 12.5 Hz data rate
+#define BW_RATE_6_25HZ 0x06                 // BW_RATE register value for 6.25 Hz data rate
+#define BW_RATE_3_13HZ 0x05                 // BW_RATE register value for 3.13 Hz data rate
+#define BW_RATE_1_56HZ 0x04                 // BW_RATE register value for 1.56 Hz data rate
+#define BW_RATE_0_78HZ 0x03                 // BW_RATE register value for 0.78 Hz data rate
+#define BW_RATE_0_39HZ 0x02                 // BW_RATE register value for 0.39 Hz data rate
+#define BW_RATE_0_20HZ 0x01                 // BW_RATE register value for 0.20 Hz data rate
 
 #define g2      0                           // Select +/- 2g range
 #define g2_lsb  0.0039f                     // LSB value for +/- 2g range (4 mg/LSB)
@@ -130,17 +95,16 @@ typedef struct
  * Function Prototypes
  */
 
-
 /*
  * Variables
  */
 ADXL345_write_t ADXL345_init_data[] = {
-    {0x2C, ACC_SAMPLE_RATE}, // BW_RATE register, 800 Hz data rate
+    {0x2C, BW_RATE_200HZ  }, // BW_RATE register
     {0x2D, 0b00001000     }, // Power control register, Measure mode
     {0x2E, 0b00000010     }, // Interrupt map register, Watermark,  Map all interrupts to INT1 pin
     {0x2F, 0b00000000     }, // Send all interrupts to INT1
     {0x31, 0b00100000     }, // Data format register, Full resolution, Interrupt low, right justified, +/- 2g range
-    {0x38, 0b10001111     }, // FIFO mode, Stream, send INT to INT1, interrupt on 16 samples
+    {0x38, 0b10000000 + 20}, // FIFO mode, Stream, send INT to INT1, interrupt on 20 samples
     {0,    0              }  // End of the list
 };
 
@@ -203,56 +167,57 @@ void ADXL345_init(void)
    *  All done, return;
    */
 
-   while(gpio_get_level(FIFO_INTERRUPT) != 0 )
-   {
-     ADXL345_read_raw_accel(&ADXL345_zero_sample, false);
-   }
+  while ( gpio_get_level(FIFO_INTERRUPT) != 0 )
+  {
+    ADXL345_read_raw_accel(&ADXL345_zero_sample, false);
+  }
   return;
 }
 
 /*----------------------------------------------------------------
  *
- * @function: ADXL345_FIFO_ISR_callback
+ * @function: ADXL345_FIFO_read
  *
- * @brief:    Handle the FIFO interrupt
+ * @brief:    Pull all of the samples out of the FIFO and store them in the sample buffer
  *
  * @return:   Nothing
  *
  *----------------------------------------------------------------
  *
- * The FIFO is set to generate an interrupt when the FIFO is half
- * full.
- *
- * This ISR reads the registers until the FIFO is empty
+ * This function is called if the FIFO watermark is reached.
+ * It reads all the samples in the FIFO and stores them in the
+ * sample buffer.
  *
  *---------------------------------------------------------------*/
-bool IRAM_ATTR ADXL345_FIFO_ISR_callback(void *args)
+void ADXL345_FIFO_read(void)
 {
   unsigned char data[8];
-
-  assert(1);
-
-  IF_NOT(IN_OPERATION) return pdTRUE;                  // high_task_awoken == pdTRUE;        // return whether we need to yield at the end of ISR
+  unsigned int  i;
 
   run_state |= IN_COLLECTION;
 
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "ADXL345_FIFO_read()");))
+
+  i = 0;
   do
   {
-    data[0] = 0x32;                             // Register address for the X-axis acceleration data
-    i2c_write(ADXL345_ADDR, data, 1);           // Write the register address to the device
-    i2c_read(ADXL345_ADDR, data, sizeof(data)); // Read 6 bytes of acceleration data (X, Y, Z)
+    data[0] = 0x32;                                          // Register address for the X-axis acceleration data
+    i2c_write(ADXL345_ADDR, data, 1);                        // Write the register address to the device
+    i2c_read(ADXL345_ADDR, data, sizeof(data));              // Read 6 bytes of acceleration data (X, Y, Z)
 
     samples[sample_in].x = (data[1] << 8) | data[0];         // Combine low and high bytes for X-axis
     samples[sample_in].y = (data[3] << 8) | data[2];         // Combine low and high bytes for Y-axis
     samples[sample_in].z = (data[5] << 8) | data[4];         // Combine low and high bytes for Z-axis
     sample_in            = (sample_in + 1) % (SAMPLE_DEPTH); // Point to the next entry
+    i++;
   } while ( (data[7] & 0x1F) != 0 );
 
-  /*
-   * Return from interrupts
-   */
+                                                             /*
+                                                              * Return from interrupts
+                                                              */
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Samples read: %d", i);))
   run_state &= ~IN_COLLECTION;
-  return pdTRUE; //  high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISR
+  return;
 }
 
 /*----------------------------------------------------------------
@@ -274,33 +239,47 @@ bool IRAM_ATTR ADXL345_FIFO_ISR_callback(void *args)
  * right justified with sign extension.
  *
  * The function removes the DC bias for a level sensor
+ * by subtracting the zero offset from the raw data if the
+ * zero_offset parameter is true.
  *
  *--------------------------------------------------------------*/
 unsigned int ADXL345_read_raw_accel(trace_raw_t *sample,     // Where to save results
                                     bool         zero_offset // TRUE if a zero offset it to be applied
 )
 {
-  unsigned char data[8];
+  int samples_remaining;                                     // Number of samples remaining in the FIFO
 
-  data[0] = 0x32;                                            // Register address for acceleration then FIFO data
-  i2c_write(ADXL345_ADDR, data, 1);                          // Write the register address to the device
-  i2c_read(ADXL345_ADDR, data, sizeof(data));                // Read 6 bytes of acceleration data (X, Y, Z)
+  /*
+   * Check if there are any samples available
+   */
+  if ( sample_in == sample_out )
+  {
+    return 0; // No new samples available
+  }
 
-  sample->x = (data[1] << 8) | data[0];                      // 0x32 0x33 Combine low and high bytes for X-axis
-  sample->y = (data[3] << 8) | data[2];                      // 0x34 0x35 Combine low and high bytes for Y-axis
-  sample->z = (data[5] << 8) | data[4];                      // 0x36 0x37 Combine low and high bytes for Z-axis
+  /*
+   * Read the sample from the buffer
+   */
+  *sample    = samples[sample_out];               // Read from the sample buffer
+  sample_out = (sample_out + 1) % (SAMPLE_DEPTH); // Point to the next entry
 
   if ( zero_offset == true )
   {
-    sample->x -= ADXL345_zero_sample.x;                      // Combine low and high bytes for X-axis
-    sample->y -= ADXL345_zero_sample.y;                      // Combine low and high bytes for Y-axis
-    sample->z -= ADXL345_zero_sample.z;                      // Combine low and high bytes for Z-axi
+    sample->x -= ADXL345_zero_sample.x;           // Add the zero offset to the raw data
+    sample->y -= ADXL345_zero_sample.y;           // to remove the DC bias for a level sensor
+    sample->z -= ADXL345_zero_sample.z;
   }
 
   /*
    *  Return the number of samples remaining
    */
-  return data[7] & 0x1F; // Return FIFO samples remaining // 0x39
+  samples_remaining = sample_in - sample_out; // Calculate the number of samples remaining in the buffer
+  if ( samples_remaining < 0 )
+  {
+    samples_remaining += SAMPLE_DEPTH;        // Adjust for wrap-around
+  }
+
+  return samples_remaining;                   // Return FIFO samples remaining // 0x39
 }
 
 /*----------------------------------------------------------------
@@ -335,20 +314,21 @@ void ADXL345_find_zero(void)
    * Loop and collect samples
    */
 
-  ADXL345_sum.x = 0;                             // Zero out the sum
+  ADXL345_sum.x = 0; // Zero out the sum
   ADXL345_sum.y = 0;
   ADXL345_sum.z = 0;
 
-  for ( i = 0; i != NUM_ZERO_SAMPLES; i++ )
+  i = 0;
+  while ( i != NUM_ZERO_SAMPLES )
   {
-    gpio_set_level(STATUS_LED, i & 8);           // Blinik the LED to indicate that we are taking samples
-    ADXL345_read_raw_accel(&ADXL345_raw, false); // Take a sample of the raw acceleration data
-
-    ADXL345_sum.x += ADXL345_raw.x;              // Accumulate the X-axis raw acceleration data
-    ADXL345_sum.y += ADXL345_raw.y;              // Accumulate the Y-axis raw acceleration data
-    ADXL345_sum.z += ADXL345_raw.z;              // Accumulate the Z-axis raw acceleration data
-
-    vTaskDelay(TICK_10ms);                       // Delay between samples
+    if ( ADXL345_read_raw_accel(&ADXL345_raw, false) != 0 ) // Take a sample of the raw acceleration data
+    {
+      ADXL345_sum.x += ADXL345_raw.x;                       // Accumulate the X-axis raw acceleration data
+      ADXL345_sum.y += ADXL345_raw.y;                       // Accumulate the Y-axis raw acceleration data
+      ADXL345_sum.z += ADXL345_raw.z;                       // Accumulate the Z-axis raw acceleration data
+      i++;
+      printf("Sample %d: X: %04X, Y: %04X, Z: %04X\r\n", i, ADXL345_raw.x, ADXL345_raw.y, ADXL345_raw.z);
+    }
   }
 
   /*
@@ -425,12 +405,15 @@ void ADXL345_convert_to_g(trace_raw_t *sample, trace_point_t *actual)
 
 void ADXL345_test(void)
 {
-  static unsigned int next_sample = 0;                                         // Index to the raw acceleration data
-  real_t              vector_magnitude;                                        // Magnitude of the acceleration vector
+  real_t              vector_magnitude;                           // Magnitude of the acceleration vector
+  ADXL345_trace_raw_t previous;                                   // Previous sample
+  ADXL345_trace_raw_t present;                                    // Present sample
 
-  while ( ADXL345_read_raw_accel(&samples[next_sample], true) != 0 )           // Read the acceleration dataP )
+  ADXL345_read_raw_accel(&previous, true);
+
+  while ( ADXL345_read_raw_accel(&present, true) != 0 )           // Read the acceleration dataP )
   {
-    ADXL345_convert_to_g(&samples[next_sample], &present);                     // Convert raw data to g
+    ADXL345_convert_to_g(&samples[next_sample], &present);        // Convert raw data to g
 
     vector_magnitude = sqrt(SQ(present.ax) + SQ(present.ay) + SQ(present.az)); // Calculate the magnitude of the acceleration vector
 

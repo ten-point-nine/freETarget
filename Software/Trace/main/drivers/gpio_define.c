@@ -40,11 +40,7 @@ const DIO_struct_t dio01 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .ini
 const DIO_struct_t dio02 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
 const DIO_struct_t dio03 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio04 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
-const DIO_struct_t dio05 = {.type          = DIGITAL_IO_IN,
-                            .mode          = GPIO_MODE_INPUT,
-                            .initial_value = 1,
-                            .callback      = ADXL345_FIFO_ISR_callback,
-                            .edge_type     = GPIO_INTR_NEGEDGE};                                   // Mode and Initial Value
+const DIO_struct_t dio05 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0}; // Mode and Initial Value
 const DIO_struct_t dio06 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio07 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio08 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value

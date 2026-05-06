@@ -133,7 +133,6 @@ void trace_loop(void *arg)
 {
   run_state &= ~IN_STARTUP;
   run_state |= IN_OPERATION;
-  gpio_intr_enable(FIFO_INTERRUPT);
 
   while ( 1 )
   {
@@ -143,11 +142,14 @@ void trace_loop(void *arg)
       SEND(ALL, sprintf(_xs, _DONE_);)
     }
 
-    //   ADXL345_read_FIFO_accel();
+    if ( gpio_get_level(FIFO_INTERRUPT) == 0 )
+    {
+      ADXL345_FIFO_read();
+    }
 
     /*
      * End of the loop. timeout till the next time
      */
-    vTaskDelay(5 * TICK_10ms);
+    vTaskDelay(TICK_10ms);
   }
 }
