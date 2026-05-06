@@ -36,6 +36,7 @@ typedef struct DIO_struct
   int         mode;                                      // Mode used by the DIO
   int         initial_value;                             // Value set on initialization
   bool (*callback)(void);                                // Pointer to callback if needed
+  gpio_int_type_t edge_type;                             // Type of edge for interrupt
 } DIO_struct_t;
 
 typedef struct ADC_struct

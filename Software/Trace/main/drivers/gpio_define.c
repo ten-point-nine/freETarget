@@ -28,8 +28,10 @@
 #include "gpio_define.h"
 #include "serial_io.h"
 #include "i2c.h"
+#include "ADXL345.h"
 
 #define BOARD_REVISION 0 // Board revision via GPIO define entry #0
+
 /*
  *  Digital IO definitions
  */
@@ -38,8 +40,12 @@ const DIO_struct_t dio01 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .ini
 const DIO_struct_t dio02 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
 const DIO_struct_t dio03 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio04 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
-const DIO_struct_t dio05 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
-const DIO_struct_t dio06 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
+const DIO_struct_t dio05 = {.type          = DIGITAL_IO_IN,
+                            .mode          = GPIO_MODE_INPUT,
+                            .initial_value = 1,
+                            .callback      = ADXL345_FIFO_ISR_callback,
+                            .edge_type     = GPIO_INTR_NEGEDGE};                                   // Mode and Initial Value
+const DIO_struct_t dio06 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio07 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio08 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio09 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
@@ -69,11 +75,12 @@ const gpio_struct_t gpio_table[] = {
     {"LED",         GPIO_NUM_2,  (void *)&dio02, COMMON}, // Status LED, Active LOW
     {"TP1",         GPIO_NUM_3,  (void *)&dio03, COMMON}, // Spare test point
     {"TP2",         GPIO_NUM_4,  (void *)&dio04, COMMON}, // Spare test point
-    {"INT",         GPIO_NUM_6,  (void *)&dio06, COMMON}, // Interrupt from Gyro/Accel
+    {"INT",         GPIO_NUM_5,  (void *)&dio05, COMMON}, // Interrupt from Gyro/Accel
+    {"BD_REV_0",    GPIO_NUM_6,  (void *)&dio06, COMMON}, // Board Revision LSB
     {"PUSH_BUTTON", GPIO_NUM_7,  (void *)&dio07, COMMON}, // Setup button, Active LOW
     {"ROM_MESSAGE", GPIO_NUM_8,  NULL,           COMMON}, // ROM messages on the serial port, Active HIGH
     {"BOOT",        GPIO_NUM_9,  NULL,           COMMON}, // Stay in boot block
-    {"NOT USED",    GPIO_NUM_10, NULL,           COMMON}, //
+    {"BD_REF_1",    GPIO_NUM_10, (void *)&dio10, COMMON}, // Board Revison MSB
     {"NOT USED",    GPIO_NUM_19, NULL,           COMMON}, //
     {"TXD",         GPIO_NUM_21, NULL,           COMMON}, // UART TXD
     {"RXD",         GPIO_NUM_20, NULL,           COMMON}, // UART RXD
@@ -164,10 +171,12 @@ void gpio_init_single(unsigned int type)                                        
 
           if ( (gpio_isr_t)((const DIO_struct_t *)(gpio_table[i].gpio_uses))->callback != NULL )
           {
+            DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Interrupt: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
             gpio_intr_disable(gpio_table[i].gpio_number);
-            gpio_set_intr_type(gpio_table[i].gpio_number, GPIO_INTR_POSEDGE); // Setup the interrupt handler
+            gpio_set_intr_type(gpio_table[i].gpio_number,
+                               ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->edge_type); // Setup the interrupt handler
             gpio_isr_handler_add(gpio_table[i].gpio_number, (gpio_isr_t)((const DIO_struct_t *)(gpio_table[i].gpio_uses))->callback,
-                                 NULL);                                       // Add in the ISR handler
+                                 NULL);                                                       // Add in the ISR handler
           }
           break;
 

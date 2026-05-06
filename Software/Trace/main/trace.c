@@ -39,15 +39,6 @@
 /*
  *  Variables
  */
-unsigned int number_of_connections = 0; // How many people are connected to me?
-
-                                        // Timer to reset LED status
-int go_dark     = 10l; // Go dark for 10
-int go_wait     = 3l;  // Wait for the PC to catchup
-int all_done    = 0l;  // All finished
-int always_true = true;
-
-extern int isr_state;
 
 /*
  * Function Prototypes
@@ -88,6 +79,13 @@ void trace_init(void)
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT VERBOSE enabled");))
 #endif
 
+  /*
+   * Set the variables
+   */
+  sample_in  = 0; // Set up the sample queue
+  sample_out = 0;
+
+  board_revision = board_version();
   /*
    *  Setup the hardware
    */
@@ -133,6 +131,10 @@ void trace_init(void)
  *---------------------------------------------------------------*/
 void trace_loop(void *arg)
 {
+  run_state &= ~IN_STARTUP;
+  run_state |= IN_OPERATION;
+  gpio_intr_enable(FIFO_INTERRUPT);
+
   while ( 1 )
   {
     if ( gpio_get_level(SWITCH_GPIO) == 0 )

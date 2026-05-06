@@ -32,11 +32,12 @@
 #define false (0 == 1)
 #endif
 
-#define IN_STARTUP   0x0001            // The software is in initialization
-#define IN_OPERATION 0x0002            // The software is operational
-#define IN_TEST      0x0004            // A self test has been selected (Suspend operation)
-#define IN_REDUCTION 0x0020            // The data is being reduced
-#define IN_FATAL_ERR 0x0040            // A fatal error has occured and cannot be fixed
+#define IN_STARTUP    0x0001           // The software is in initialization
+#define IN_OPERATION  0x0002           // The software is operational
+#define IN_TEST       0x0004           // A self test has been selected (Suspend operation)
+#define IN_COLLECTION 0x0008           // Collecting data
+#define IN_REDUCTION  0x0020           // The data is being reduced
+#define IN_FATAL_ERR  0x0040           // A fatal error has occured and cannot be fixed
 
 #define IF(x)     if ( (run_state & (x)) != 0 )
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
@@ -96,8 +97,8 @@
 
 #define HTTP_CLOSE_TIME 15l           // Time to close the HTTP connection after the last shot
 
-#define SAMPLE_DURATION 5             // Take 5 seconds of samples
-#define SAMPLE_RATE     (100)         // 100 samples per second
+#define SAMPLE_DURATION 8             // Take 10 seconds of samples
+#define SAMPLE_RATE     (39)         // 800 samples per second
 #define SAMPLE_DEPTH    (SAMPLE_DURATION * SAMPLE_RATE)
 
 /*
@@ -109,19 +110,29 @@ typedef double        real_t;
 
 typedef struct
 {
-  int16_t raw_x; // X acceleration read from sensor
-  int16_t raw_y; // Y acceleration read from sensor
-  int16_t raw_z; // Z acceleration read from sensor
-  real_t  ax;    // X-axis acceleration in g
-  real_t  ay;    // Y-axis acceleration in g
-  real_t  az;    // Z-axis acceleration in g
-  real_t  vx;    // Velocity in the X axis
-  real_t  vy;    // Velocity in the Y axis
-  real_t  vz;    // Velocity in the Z axis
-  real_t  x;     // X position
-  real_t  y;     // Y position
-  real_t  z;     // Z position
-} accel_sample_t;
+  int16_t x;     // X acceleration read from sensor
+  int16_t y;     // Y acceleration read from sensor
+  int16_t z;     // Z acceleration read from sensor
+  int16_t rho;   // X axis rotation speed
+  int16_t theta; // Y axis rotation speed
+  int16_t phi;   // Z axis rotation speed
+} trace_raw_t;   // Value read from sensor
+
+typedef struct
+{
+  real_t ax;     // X-axis acceleration in g
+  real_t ay;     // Y-axis acceleration in g
+  real_t az;     // Z-axis acceleration in g
+  real_t vx;     // Velocity in the X axis
+  real_t vy;     // Velocity in the Y axis
+  real_t vz;     // Velocity in the Z axis
+  real_t x;      // X position
+  real_t y;      // Y position
+  real_t z;      // Z position
+  real_t rho;    // Computed X angle
+  real_t theta;  // Computed Y angle
+  real_t phi;    // Computed Z angle
+} trace_point_t; // computed point
 
 /*
  *  Global Variables
@@ -129,6 +140,7 @@ typedef struct
 EXTERN char         _xs[1024 + 512];                                // General purpose string buffer
 EXTERN unsigned int is_trace;                                       // Tracing level(s)
 
+EXTERN unsigned int board_revision;                                 // Board revision number
 EXTERN time_count_t shot_start;                                     // Time when shot become valid
 EXTERN time_count_t LED_timer;                                      // Turn off the LEDs when not in use
 EXTERN time_count_t keep_alive;                                     // Keep alive timer
@@ -137,7 +149,11 @@ EXTERN time_count_t time_since_last_shot;                           // 15 minute
 EXTERN time_count_t session_time[];                                 // Time in each session
 EXTERN unsigned int run_state;                                      // Current running state of the software
 
-EXTERN accel_sample_t samples[SAMPLE_DEPTH];                        // Where to store the data
+EXTERN trace_raw_t   samples[SAMPLE_DEPTH];                         // Where to store the data
+EXTERN unsigned int  sample_in;                                     // Index to entry
+EXTERN unsigned int  sample_out;                                    // Index to current entry
+EXTERN trace_point_t present;                                       // Present sample
+EXTERN trace_point_t previous;                                      // Prior sample
 
 #ifdef TRACE_C
 EXTERN char        *no_yes[]       = {"No", "Yes"};                 // Yes or No

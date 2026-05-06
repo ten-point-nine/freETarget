@@ -86,6 +86,6 @@ void app_main(void)
   vTaskDelay(TICK_10ms);
   serial_flush(ALL);
 
-  run_state = IN_OPERATION;         // Show we're in startup
+  run_state = IN_OPERATION;  // Show we're in startup
   set_status_LED(LED_READY); // Show we're ready
 }

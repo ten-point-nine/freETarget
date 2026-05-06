@@ -19,6 +19,7 @@
 #include "timer.h"
 #include "json.h"
 #include "timer.h"
+#include "gpio.h"
 #include "gpio_define.h"
 #include "serial_io.h"
 
@@ -33,6 +34,24 @@
 /*
  * Variables
  */
+
+/*-----------------------------------------------------
+ *
+ * @function: board_version()
+ *
+ * @brief:    Find out the board revision
+ *
+ * @return:   board version
+ *
+ *-----------------------------------------------------
+ *
+ * Read the board revisions and return the value
+ *
+ *-----------------------------------------------------*/
+unsigned int board_version(void)
+{
+  return (gpio_get_level(BD_REV_1) << 1) + gpio_get_level(BD_REV_0);
+}
 
 /*-----------------------------------------------------
  *
@@ -109,7 +128,7 @@ void status_LED_timer(void)
   gpio_set_level(STATUS_LED, (status_LED_mask & (1 << (status_LED_count % 32))) !=
                                  0);        // Set the status LED based on the current bit in the working status LED mask
 
-  status_LED_count++; // Increment the count
-  
+  status_LED_count++;                       // Increment the count
+
   return;
 }

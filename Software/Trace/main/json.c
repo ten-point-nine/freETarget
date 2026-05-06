@@ -434,7 +434,7 @@ void show_echo(void)
   serial_to_all(_xs, ALL);
 
   SEND(ALL, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);) // Current software version
-
+  SEND(ALL, sprintf(_xs, "\"BOARD REVISION\":   %d, ", board_revision);) // Current board version
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
   SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                // Current persistent storage version
                                                                            /*
