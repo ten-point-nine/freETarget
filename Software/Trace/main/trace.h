@@ -150,8 +150,8 @@ EXTERN time_count_t session_time[];                                 // Time in e
 EXTERN unsigned int run_state;                                      // Current running state of the software
 
 EXTERN trace_raw_t   samples[SAMPLE_DEPTH];                         // Where to store the data
-EXTERN unsigned int  sample_in;                                     // Index to entry
-EXTERN unsigned int  sample_out;                                    // Index to current entry
+EXTERN int           sample_in;                                     // Index to entry from sensor (<0 - wraps around)
+EXTERN int           sample_out;                                    // Index to output to application  (<0 - wraps around)
 EXTERN trace_point_t present;                                       // Present sample
 EXTERN trace_point_t previous;                                      // Prior sample
 

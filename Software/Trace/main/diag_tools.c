@@ -32,7 +32,7 @@
 #include "gpio_define.h"
 #include "json.h"
 #include "timer.h"
-#include "ADXL345.h"
+#include "BMI270.h"
 
 extern volatile time_count_t paper_time;
 
@@ -48,29 +48,29 @@ typedef struct
 } self_test_t;
 
 static const self_test_t test_list[] = {
-    {"Help",                         &show_test_help           },
-    {"Factory test",                 &factory_test             },
-    {"- Digital",                    0                         },
-    {"Digital inputs",               &digital_input_test       },
-    {"Digital outputs",              &digital_output_test      },
-    {"Accelerometer zeroing",        &ADXL345_find_zero        },
-    {"Accelerometer test",           &ADXL345_test             },
-    {"Accelerometer oscilliscope",   &ADXL345_oscilliscope     },
-    {"- Timer & PCNT test",          0                         },
-    {"Show the current time",        &show_time                },
-    {"- Communiactions Tests",       0                         },
-    {"Test WiFi as a station",       &WiFi_station_init        },
-    {"Enable the WiFi Server",       &WiFi_server_test         },
-    {"Scan for access points (APs)", &WiFi_AP_scan_test        },
-    {"- HTTP tests",                 0                         },
-    {"DNS Lookup test",              &http_DNS_test            },
-    {"Send to server test",          &http_send_to_server_test },
-    {"Start web server",             &http_server_test         },
-    {"-Interrupt Tests",             0                         },
+    {"Help",                         &show_test_help          },
+    {"Factory test",                 &factory_test            },
+    {"- Digital",                    0                        },
+    {"Digital inputs",               &digital_input_test      },
+    {"Digital outputs",              &digital_output_test     },
+    {"Accelerometer zeroing",        &BMI270_find_zero        },
+    {"Accelerometer test",           &BMI270_test             },
+    {"Accelerometer oscilliscope",   &BMI270_oscilliscope     },
+    {"- Timer & PCNT test",          0                        },
+    {"Show the current time",        &show_time               },
+    {"- Communiactions Tests",       0                        },
+    {"Test WiFi as a station",       &WiFi_station_init       },
+    {"Enable the WiFi Server",       &WiFi_server_test        },
+    {"Scan for access points (APs)", &WiFi_AP_scan_test       },
+    {"- HTTP tests",                 0                        },
+    {"DNS Lookup test",              &http_DNS_test           },
+    {"Send to server test",          &http_send_to_server_test},
+    {"Start web server",             &http_server_test        },
+    {"-Interrupt Tests",             0                        },
 
-    {"- Software tests",             0                         },
+    {"- Software tests",             0                        },
 
-    {"",                             0                         }
+    {"",                             0                        }
 };
 
 const dlt_name_t dlt_names[] = {

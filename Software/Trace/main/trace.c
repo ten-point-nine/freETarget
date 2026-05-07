@@ -34,7 +34,7 @@
 #include "WiFi.h"
 #include "diag_tools.h"
 #include "http_client.h"
-#include "ADXL345.h"
+#include "BMI270.h"
 
 /*
  *  Variables
@@ -93,7 +93,7 @@ void trace_init(void)
   vTaskDelay(10);   // Let the hardware settle
   serial_io_init(); // Setup the console for debug message
   read_nonvol();    // Read in the settings
-  ADXL345_init();   // Initialize the ADXL345 accelerometer
+  BMI270_init();    // Initialize the BMI270 accelerometer
   WiFi_init();
 
   /*
@@ -138,13 +138,13 @@ void trace_loop(void *arg)
   {
     if ( gpio_get_level(SWITCH_GPIO) == 0 )
     {
-      ADXL345_find_zero();
+      BMI270_find_zero();
       SEND(ALL, sprintf(_xs, _DONE_);)
     }
 
     if ( gpio_get_level(FIFO_INTERRUPT) == 0 )
     {
-      ADXL345_FIFO_read();
+      ;
     }
 
     /*

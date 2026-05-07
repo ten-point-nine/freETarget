@@ -1,17 +1,17 @@
 /******************************************************************************
  *
- * file: ADXL345.c
+ * file: BMI270.c
  *
- * Analog Devices ADXL345 3-axis accelerometer driver
+ * Analog Devices BMI270 3-axis accelerometer driver
  *
  *****************************************************************************
  *
- * This file contains the driver for the ADXL345 3-axis accelerometer.  The
+ * This file contains the driver for the BMI270 3-axis accelerometer.  The
  * driver is written to be as generic as possible and should work with any
- * implementation of the ADXL345.
+ * implementation of the BMI270.
  *
- * See: https://www.analog.com/en/products/ADXL345.html
- *      https://www.analog.com/media/en/technical-documentation/data-sheets/ADXL345.pdf
+ * See: https://www.analog.com/en/products/BMI270.html
+ *      https://www.analog.com/media/en/technical-documentation/data-sheets/BMI270.pdf
  *      https://www.analog.com/media/en/technical-documentation/application-notes/AN-1021.pdf
  *      https://www.analog.com/media/en/technical-documentation/application-notes/AN-1020.pdf
  *      https://www.analog.com/media/en/technical-documentation/application-notes/AN-1022.pdf
@@ -38,13 +38,13 @@
 #include "gpio.h"
 #include "json.h"
 #include "helpers.h"
-#include "ADXL345.h"
+#include "BMI270.h"
 
 /*
  * Definitions
  */
 
-#define ADXL345_ADDR 0x53                   // I2C address of the ADXL345
+#define BMI270_ADDR 0x53                    // I2C address of the BMI270
 
 #define BW_RATE_3200HZ 0x0F                 // BW_RATE register value for 1600 Hz data rate
 #define BW_RATE_1600HZ 0x0E                 // BW_RATE register value for 1600 Hz data rate
@@ -89,7 +89,7 @@ typedef struct
 {
   int address; // Device address
   int value;   // Value to write
-} ADXL345_write_t;
+} BMI270_write_t;
 
 /*
  * Function Prototypes
@@ -98,7 +98,7 @@ typedef struct
 /*
  * Variables
  */
-ADXL345_write_t ADXL345_init_data[] = {
+BMI270_write_t BMI270_init_data[] = {
     {0x2C, BW_RATE_200HZ  }, // BW_RATE register
     {0x2D, 0b00001000     }, // Power control register, Measure mode
     {0x2E, 0b00000010     }, // Interrupt map register, Watermark,  Map all interrupts to INT1 pin
@@ -108,14 +108,14 @@ ADXL345_write_t ADXL345_init_data[] = {
     {0,    0              }  // End of the list
 };
 
-real_t      ADXL345_lsb_per_g[] = {g2_lsb, g4_lsb, g8_lsb, g16_lsb}; // LSB per g for each range setting
-trace_raw_t ADXL345_zero_sample;                                     // Sample to hold the zeroed acceleration data
+real_t      BMI270_lsb_per_g[] = {g2_lsb, g4_lsb, g8_lsb, g16_lsb}; // LSB per g for each range setting
+trace_raw_t BMI270_zero_sample;                                     // Sample to hold the zeroed acceleration data
 
 /*----------------------------------------------------------------
  *
- * @function: ADXL345_init()
+ * @function: BMI270_init()
  *
- * @brief:    Initalize the ADXL345
+ * @brief:    Initalize the BMI270
  *
  * @return: None
  *
@@ -124,28 +124,28 @@ trace_raw_t ADXL345_zero_sample;                                     // Sample t
  * Setup the accelerometer from the table
  *
  *--------------------------------------------------------------*/
-void ADXL345_init(void)
+void BMI270_init(void)
 {
   int           i;
-  unsigned char data[2];           // Bytes to send to the I2C
+  unsigned char data[2];          // Bytes to send to the I2C
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "ADXL345_init()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270_init()");))
 
-  data[0] = 0x00;                  // Register address for the device ID
-  i2c_write(ADXL345_ADDR, data, 1);
-  i2c_read(ADXL345_ADDR, data, 1); // Read the device ID to verify communication
+  data[0] = 0x00;                 // Register address for the device ID
+  i2c_write(BMI270_ADDR, data, 1);
+  i2c_read(BMI270_ADDR, data, 1); // Read the device ID to verify communication
   if ( data[0] != 0xE5 )
   {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "ADXL345 not found! Device ID: 0x%02X", data[0]);))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "BMI270 not found! Device ID: 0x%02X", data[0]);))
     return;
   }
 
   i = 0;
-  while ( ADXL345_init_data[i].address != 0 )
+  while ( BMI270_init_data[i].address != 0 )
   {
-    data[0] = ADXL345_init_data[i].address; // Register address
-    data[1] = ADXL345_init_data[i].value;   // Value to write
-    i2c_write(ADXL345_ADDR, data, 2);       // Data transferred on last bit.
+    data[0] = BMI270_init_data[i].address; // Register address
+    data[1] = BMI270_init_data[i].value;   // Value to write
+    i2c_write(BMI270_ADDR, data, 2);       // Data transferred on last bit.
     i++;
   }
 
@@ -159,9 +159,9 @@ void ADXL345_init(void)
     samples[i].z = 0;
   }
 
-  ADXL345_zero_sample.x = 0;
-  ADXL345_zero_sample.y = 0;
-  ADXL345_zero_sample.z = 0;
+  BMI270_zero_sample.x = 0;
+  BMI270_zero_sample.y = 0;
+  BMI270_zero_sample.z = 0;
 
   /*
    *  All done, return;
@@ -169,14 +169,14 @@ void ADXL345_init(void)
 
   while ( gpio_get_level(FIFO_INTERRUPT) != 0 )
   {
-    ADXL345_read_raw_accel(&ADXL345_zero_sample, false);
+    BMI270_read_raw_accel(&BMI270_zero_sample, false);
   }
   return;
 }
 
 /*----------------------------------------------------------------
  *
- * @function: ADXL345_FIFO_read
+ * @function: BMI270_FIFO_read
  *
  * @brief:    Pull all of the samples out of the FIFO and store them in the sample buffer
  *
@@ -189,21 +189,21 @@ void ADXL345_init(void)
  * sample buffer.
  *
  *---------------------------------------------------------------*/
-void ADXL345_FIFO_read(void)
+void BMI270_FIFO_read(void)
 {
   unsigned char data[8];
   unsigned int  i;
 
   run_state |= IN_COLLECTION;
 
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "ADXL345_FIFO_read()");))
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_FIFO_read()");))
 
   i = 0;
   do
   {
     data[0] = 0x32;                                          // Register address for the X-axis acceleration data
-    i2c_write(ADXL345_ADDR, data, 1);                        // Write the register address to the device
-    i2c_read(ADXL345_ADDR, data, sizeof(data));              // Read 6 bytes of acceleration data (X, Y, Z)
+    i2c_write(BMI270_ADDR, data, 1);                         // Write the register address to the device
+    i2c_read(BMI270_ADDR, data, sizeof(data));               // Read 6 bytes of acceleration data (X, Y, Z)
 
     samples[sample_in].x = (data[1] << 8) | data[0];         // Combine low and high bytes for X-axis
     samples[sample_in].y = (data[3] << 8) | data[2];         // Combine low and high bytes for Y-axis
@@ -222,15 +222,15 @@ void ADXL345_FIFO_read(void)
 
 /*----------------------------------------------------------------
  *
- * @function: ADXL345_read_accel()
+ * @function: BMI270_read_accel()
  *
- * @brief:    Read acceleration data from the ADXL345
+ * @brief:    Read acceleration data from the BMI270
  *
  * @return:   Number of bytes remaining in the FIFO
  *
  *----------------------------------------------------------------
  *
- * The Acceleration data is read from the ADXL345 in 6 bytes,
+ * The Acceleration data is read from the BMI270 in 6 bytes,
  * with the X, Y, and Z axis data each consisting of a low byte
  * followed by a high byte. The raw acceleration data is stored
  * in the provided sample structure.
@@ -243,11 +243,11 @@ void ADXL345_FIFO_read(void)
  * zero_offset parameter is true.
  *
  *--------------------------------------------------------------*/
-unsigned int ADXL345_read_raw_accel(trace_raw_t *sample,     // Where to save results
-                                    bool         zero_offset // TRUE if a zero offset it to be applied
+unsigned int BMI270_read_raw_accel(trace_raw_t *sample,     // Where to save results
+                                   bool         zero_offset // TRUE if a zero offset it to be applied
 )
 {
-  int samples_remaining;                                     // Number of samples remaining in the FIFO
+  int samples_remaining;                                    // Number of samples remaining in the FIFO
 
   /*
    * Check if there are any samples available
@@ -265,9 +265,9 @@ unsigned int ADXL345_read_raw_accel(trace_raw_t *sample,     // Where to save re
 
   if ( zero_offset == true )
   {
-    sample->x -= ADXL345_zero_sample.x;           // Add the zero offset to the raw data
-    sample->y -= ADXL345_zero_sample.y;           // to remove the DC bias for a level sensor
-    sample->z -= ADXL345_zero_sample.z;
+    sample->x -= BMI270_zero_sample.x;            // Add the zero offset to the raw data
+    sample->y -= BMI270_zero_sample.y;            // to remove the DC bias for a level sensor
+    sample->z -= BMI270_zero_sample.z;
   }
 
   /*
@@ -284,9 +284,9 @@ unsigned int ADXL345_read_raw_accel(trace_raw_t *sample,     // Where to save re
 
 /*----------------------------------------------------------------
  *
- * @function: ADXL345_zero()
+ * @function: BMI270_zero()
  *
- * @brief:    Determine the resting g levels for the ADXL345
+ * @brief:    Determine the resting g levels for the BMI270
  *
  * @return: None
  *
@@ -303,46 +303,46 @@ unsigned int ADXL345_read_raw_accel(trace_raw_t *sample,     // Where to save re
 
 trace_raw_t zero_samples;  // Buffer to hold multiple samples for averaging
 
-void ADXL345_find_zero(void)
+void BMI270_find_zero(void)
 {
-  int         i;
-  trace_raw_t ADXL345_raw; // As read from the accelerometer
-  trace_raw_t ADXL345_sum;
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "ADXL345_find_zero()");))
+  unsigned int i;          // Loop counter
+  trace_raw_t  BMI270_raw; // As read from the accelerometer
+  trace_raw_t  BMI270_sum;
+
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270_find_zero()");))
 
   /*
    * Loop and collect samples
    */
 
-  ADXL345_sum.x = 0; // Zero out the sum
-  ADXL345_sum.y = 0;
-  ADXL345_sum.z = 0;
+  BMI270_sum.x = 0; // Zero out the sum
+  BMI270_sum.y = 0;
+  BMI270_sum.z = 0;
 
-  i = 0;
+  sample_out = BMI270_find_sample_out(NUM_ZERO_SAMPLES);
+  i          = 0;
   while ( i != NUM_ZERO_SAMPLES )
   {
-    if ( ADXL345_read_raw_accel(&ADXL345_raw, false) != 0 ) // Take a sample of the raw acceleration data
-    {
-      ADXL345_sum.x += ADXL345_raw.x;                       // Accumulate the X-axis raw acceleration data
-      ADXL345_sum.y += ADXL345_raw.y;                       // Accumulate the Y-axis raw acceleration data
-      ADXL345_sum.z += ADXL345_raw.z;                       // Accumulate the Z-axis raw acceleration data
-      i++;
-      printf("Sample %d: X: %04X, Y: %04X, Z: %04X\r\n", i, ADXL345_raw.x, ADXL345_raw.y, ADXL345_raw.z);
-    }
+    BMI270_read_raw_accel(&BMI270_raw, false); // Take a sample of the raw acceleration data
+    BMI270_sum.x += BMI270_raw.x;              // Accumulate the X-axis raw acceleration data
+    BMI270_sum.y += BMI270_raw.y;              // Accumulate the Y-axis raw acceleration data
+    BMI270_sum.z += BMI270_raw.z;              // Accumulate the Z-axis raw acceleration data
+    i++;
+    printf("Sample %d: X: %04X, Y: %04X, Z: %04X\r\n", i, BMI270_raw.x, BMI270_raw.y, BMI270_raw.z);
   }
 
   /*
    * Average the samples to get a more accurate zero level
    */
-  ADXL345_zero_sample.x = ADXL345_sum.x / NUM_ZERO_SAMPLES; // Average the X-axis raw acceleration data
-  ADXL345_zero_sample.y = ADXL345_sum.y / NUM_ZERO_SAMPLES; // Average the Y-axis raw acceleration data
-  ADXL345_zero_sample.z = ADXL345_sum.z / NUM_ZERO_SAMPLES; // Average the Z-axis raw acceleration data
+  BMI270_zero_sample.x = BMI270_sum.x / NUM_ZERO_SAMPLES; // Average the X-axis raw acceleration data
+  BMI270_zero_sample.y = BMI270_sum.y / NUM_ZERO_SAMPLES; // Average the Y-axis raw acceleration data
+  BMI270_zero_sample.z = BMI270_sum.z / NUM_ZERO_SAMPLES; // Average the Z-axis raw acceleration data
 
   /*
    *  All done, return
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Axis offset - X: %04X, Y: %04X, Z: %04X", ADXL345_zero_sample.x, ADXL345_zero_sample.y,
-                                  ADXL345_zero_sample.z);))
+  DLT(DLT_INFO,
+      SEND(ALL, sprintf(_xs, "Axis offset - X: %04X, Y: %04X, Z: %04X", BMI270_zero_sample.x, BMI270_zero_sample.y, BMI270_zero_sample.z);))
 
   set_status_LED(LED_READY); // Indicate that we are ready
   return;
@@ -350,7 +350,7 @@ void ADXL345_find_zero(void)
 
 /*----------------------------------------------------------------
  *
- * @function: ADXL345_convert_to_g()
+ * @function: BMI270_convert_to_g()
  *
  * @brief:    Convert raw acceleration data to g
  *
@@ -362,23 +362,23 @@ void ADXL345_find_zero(void)
  * current range setting to convert to g
  *
  *--------------------------------------------------------------*/
-void ADXL345_convert_to_g(trace_raw_t *sample, trace_point_t *actual)
+void BMI270_convert_to_g(trace_raw_t *sample, trace_point_t *actual)
 {
-  real_t lsb_per_g = ADXL345_lsb_per_g[DATA_FORMAT & 0b00000011]; // Get the LSB per g for the current range setting
+  real_t lsb_per_g = BMI270_lsb_per_g[DATA_FORMAT & 0b00000011]; // Get the LSB per g for the current range setting
 
-  actual->ax = (sample->x) * lsb_per_g;                           // Convert raw X-axis data to g
+  actual->ax = (sample->x) * lsb_per_g;                          // Convert raw X-axis data to g
   if ( F_ABS(actual->x) < 0.010 )
   {
     actual->ax = 0;
   }
 
-  actual->ay = (sample->y) * lsb_per_g;                           // Convert raw Y-axis data to g
+  actual->ay = (sample->y) * lsb_per_g;                          // Convert raw Y-axis data to g
   if ( F_ABS(actual->ay) < 0.010 )
   {
     actual->ay = 0;
   }
 
-  actual->az = (sample->z) * lsb_per_g;                           // Convert raw Z-axis data to g
+  actual->az = (sample->z) * lsb_per_g;                          // Convert raw Z-axis data to g
   if ( F_ABS(actual->az) < 0.010 )
   {
     actual->az = 0;
@@ -388,32 +388,36 @@ void ADXL345_convert_to_g(trace_raw_t *sample, trace_point_t *actual)
 
 /*----------------------------------------------------------------
  *
- * @function: ADXL345_test()
+ * @function: BMI270_test()
  *
- * @brief:    Test the ADXL345
+ * @brief:    Test the BMI270
  *
  * @return:   None
  *
  *----------------------------------------------------------------
  *
- * Poll the ADXL345 and print out the acceleration data
+ * Poll the BMI270 and print out the acceleration data
  *
  *--------------------------------------------------------------*/
 #define TIME_STEP    (0.010)
 #define TIME_STEP_SQ (TIME_STEP * TIME_STEP)
 #define G_mm_s2      9806.65
 
-void ADXL345_test(void)
+void BMI270_test(void)
 {
-  real_t              vector_magnitude;                           // Magnitude of the acceleration vector
-  ADXL345_trace_raw_t previous;                                   // Previous sample
-  ADXL345_trace_raw_t present;                                    // Present sample
+  real_t        vector_magnitude;                          // Magnitude of the acceleration vector
+  trace_raw_t   previous_raw;                              // Previous sample
+  trace_raw_t   present_raw;                               // Present sample
+  trace_point_t previous;                                  // Previous sample converted to g
+  trace_point_t present;                                   // Present sample converted to g
 
-  ADXL345_read_raw_accel(&previous, true);
+  BMI270_find_sample_out(NUM_ZERO_SAMPLES);                // Start at the point where we took the zero samples to get the most recent data
 
-  while ( ADXL345_read_raw_accel(&present, true) != 0 )           // Read the acceleration dataP )
+  BMI270_read_raw_accel(&previous_raw, true);
+
+  while ( BMI270_read_raw_accel(&present_raw, true) != 0 ) // Read the acceleration dataP )
   {
-    ADXL345_convert_to_g(&samples[next_sample], &present);        // Convert raw data to g
+    BMI270_convert_to_g(&present_raw, &present);           // Convert raw data to g
 
     vector_magnitude = sqrt(SQ(present.ax) + SQ(present.ay) + SQ(present.az)); // Calculate the magnitude of the acceleration vector
 
@@ -440,11 +444,6 @@ void ADXL345_test(void)
                       "vy:%+.3fmm/s, vz: %+.3fmm/s   x: %+.3fmm, y: %+.3fmm, z: %+.3fmm,   ",
                       present.ax, present.ay, present.az, vector_magnitude, present.vx, present.vy, present.vz, present.x, present.y,
                       present.z);)
-
-    /*
-     * Point to the next sample space
-     */
-    next_sample = (next_sample + 1) % SAMPLE_DEPTH;
   }
 
   /*
@@ -456,7 +455,7 @@ void ADXL345_test(void)
 
 /*----------------------------------------------------------------
  *
- * @function: ADXL345_oscilliscope()
+ * @function: BMI270_oscilliscope()
  *
  * @brief:    Create a real time oscilliscope for the accelerometer
  *
@@ -464,10 +463,10 @@ void ADXL345_test(void)
  *
  *----------------------------------------------------------------
  *
- * Poll the ADXL345 and print out the acceleration data
+ * Poll the BMI270 and print out the acceleration data
  *
  *--------------------------------------------------------------*/
-void ADXL345_oscilliscope(void)
+void BMI270_oscilliscope(void)
 {
   static unsigned int next_sample = 0;  // Index to the raw acceleration data
   real_t              vector_magnitude; // Magnitude of the acceleration vector
@@ -477,9 +476,9 @@ void ADXL345_oscilliscope(void)
   {
     if ( pause == false )
     {
-      while ( ADXL345_read_raw_accel(&samples[0], false) != 0 )
+      while ( BMI270_read_raw_accel(&samples[0], false) != 0 )
       {
-        ADXL345_convert_to_g(&samples[0], &present);                               // Convert raw data to g
+        BMI270_convert_to_g(&samples[0], &present);                                // Convert raw data to g
 
         vector_magnitude = sqrt(SQ(present.ax) + SQ(present.ay) + SQ(present.az)); // Calculate the magnitude of the acceleration vector
 
@@ -509,4 +508,32 @@ void ADXL345_oscilliscope(void)
    */
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: BMI270_find_sample_in()
+ *
+ * @brief:    Find the index of a sample based on a number of samples back from the current sample
+ *
+ * @return:   index of the sample in the sample buffer
+ *
+ *----------------------------------------------------------------
+ *
+ * Samples are taken continiously so the pointer sample_out
+ * may correspond to some point in time far back in the past.
+ *
+ * This function works out sample_out relative to sample_in
+ * to find a find a starting point correspondin to an interval.
+ *
+ *--------------------------------------------------------------*/
+unsigned int BMI270_find_sample_out(unsigned int sample_count) // Number of samples to look back
+{
+  sample_out = sample_in - sample_count;                       // Calculate the index of the sample that corresponds to the desired duration
+  if ( sample_out < 0 )                                        // If the index is negative, adjust for wrap-around
+  {
+    sample_out += SAMPLE_DEPTH;                                // Adjust for wrap-around if the index is negative
+  }
+
+  return sample_out;
 }

@@ -28,6 +28,7 @@ typedef enum gpio_type
   DIGITAL_IO_IN,                                         // GPIO is used for digital IO
   ANALOG_IO,                                             // GPIO is used for Analog IO
   I2C_PORT,                                              // GPIO is used as a i2c port
+  SPI_PORT                                               // GPIO used as a SPI port
 } gpio_type_t;
 
 typedef struct DIO_struct
@@ -62,6 +63,15 @@ typedef struct I2C_struct
   int         gpio_number_SDA;                           // Number associated with SDA
   int         gpio_number_SCL;                           // Number associated with SDA
 } I2C_struct_t;
+
+typedef struct SPI_struct
+{
+  gpio_type_t type;                                      // What type of structure am I
+  int         gpio_number_MOSI;                          // Number associated with MOSI
+  int         gpio_number_MISO;                          // Number associated with MISO
+  int         gpio_number_SCLK;                          // Number associated with SCLK
+  int         gpio_number_CS;                            // Number associated with CS
+} SPI_struct_t;
 
 typedef struct gpio_struct
 {

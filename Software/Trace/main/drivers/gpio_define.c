@@ -28,7 +28,7 @@
 #include "gpio_define.h"
 #include "serial_io.h"
 #include "i2c.h"
-#include "ADXL345.h"
+#include "BMI270.h"
 
 #define BOARD_REVISION 0 // Board revision via GPIO define entry #0
 
@@ -40,7 +40,7 @@ const DIO_struct_t dio01 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .ini
 const DIO_struct_t dio02 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
 const DIO_struct_t dio03 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio04 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
-const DIO_struct_t dio05 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0}; // Mode and Initial Value
+const DIO_struct_t dio05 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio06 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio07 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio08 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
@@ -55,7 +55,16 @@ const DIO_struct_t dio21 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .i
 /*
  *  I2C COntrol.  GPIO explicitly filled in here
  */
-I2C_struct_t i2c = {.type = I2C_PORT, .gpio_number_SDA = GPIO_NUM_0, .gpio_number_SCL = GPIO_NUM_1};
+const I2C_struct_t i2c = {.type = I2C_PORT, .gpio_number_SDA = GPIO_NUM_0, .gpio_number_SCL = GPIO_NUM_1};
+
+/*
+ *  SPI Control.  GPIO explicitly filled in here
+ */
+SPI_struct_t spi = {.type             = SPI_PORT,
+                    .gpio_number_MOSI = GPIO_NUM_0,
+                    .gpio_number_MISO = GPIO_NUM_1,
+                    .gpio_number_SCLK = GPIO_NUM_10,
+                    .gpio_number_CS   = GPIO_NUM_4};
 
 /*
  *  GPIO Usage
@@ -66,18 +75,19 @@ I2C_struct_t i2c = {.type = I2C_PORT, .gpio_number_SDA = GPIO_NUM_0, .gpio_numbe
 
 const gpio_struct_t gpio_table[] = {
     //   Name      Number       Assigned   Used by
-    {"SDA",         GPIO_NUM_0,  (void *)&i2c,   COMMON}, // I2C SDA
-    {"SCL",         GPIO_NUM_1,  NULL,           COMMON}, // I2C SCL
+    {"SDO",         GPIO_NUM_0,  (void *)&spi,   COMMON}, // SPI SPI Data Out (MOSI)
+    {"SDI",         GPIO_NUM_1,  NULL,           COMMON}, // SPI SPI Data In (MISO)
     {"LED",         GPIO_NUM_2,  (void *)&dio02, COMMON}, // Status LED, Active LOW
     {"TP1",         GPIO_NUM_3,  (void *)&dio03, COMMON}, // Spare test point
-    {"TP2",         GPIO_NUM_4,  (void *)&dio04, COMMON}, // Spare test point
+    {"CSB",         GPIO_NUM_4,  NULL,           COMMON}, // SPI Chip Select, Active LOW
     {"INT",         GPIO_NUM_5,  (void *)&dio05, COMMON}, // Interrupt from Gyro/Accel
     {"BD_REV_0",    GPIO_NUM_6,  (void *)&dio06, COMMON}, // Board Revision LSB
     {"PUSH_BUTTON", GPIO_NUM_7,  (void *)&dio07, COMMON}, // Setup button, Active LOW
     {"ROM_MESSAGE", GPIO_NUM_8,  NULL,           COMMON}, // ROM messages on the serial port, Active HIGH
     {"BOOT",        GPIO_NUM_9,  NULL,           COMMON}, // Stay in boot block
-    {"BD_REF_1",    GPIO_NUM_10, (void *)&dio10, COMMON}, // Board Revison MSB
-    {"NOT USED",    GPIO_NUM_19, NULL,           COMMON}, //
+    {"SCK",         GPIO_NUM_10, NULL,           COMMON}, // SPI Clock
+    {"SPARE",       GPIO_NUM_18, (void *)&dio18, COMMON}, // Spare
+    {"SPARE",       GPIO_NUM_19, (void *)&dio19, COMMON}, // Spare
     {"TXD",         GPIO_NUM_21, NULL,           COMMON}, // UART TXD
     {"RXD",         GPIO_NUM_20, NULL,           COMMON}, // UART RXD
     {0,             0,           0,              0     }
