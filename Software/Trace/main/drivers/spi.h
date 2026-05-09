@@ -1,18 +1,18 @@
 /*----------------------------------------------------------------
  *
- * pwm.j
+ * spi.h
  *
- * Header file for GPIO functions
+ * Header file for SPI functions
  *
  *---------------------------------------------------------------*/
-#ifndef _I2C_H_
-#define _I2C_H_
+#ifndef _SPI_H_
+#define _SPI_H_
 
 /*
  * Global functions
  */
-esp_err_t i2c_init(int i2c_gpio_SDA, int i2c_gpio_SCL);            // GPIO I2C belongs to
-esp_err_t i2c_write(uint8_t device, uint8_t *data, size_t length); // Write to the I2C device
-esp_err_t i2c_read(uint8_t device, uint8_t *data, size_t length);  // Read from the I2C device
+esp_err_t spi_init(unsigned int gpio_SCLK, unsigned int gpio_MISO, unsigned int gpio_MOSI);
+esp_err_t spi_write(uint8_t gpio_spi_cs, uint8_t *data, size_t length); // Write to SPI device
+esp_err_t spi_read(uint8_t gpio_spi_cs, uint8_t *data, size_t length);  // Read from SPI device
 
-#endif
+#endif                                                                  // _SPI_H_

@@ -89,11 +89,12 @@ void trace_init(void)
   /*
    *  Setup the hardware
    */
-  gpio_init();      // Setup the hardware
-  vTaskDelay(10);   // Let the hardware settle
-  serial_io_init(); // Setup the console for debug message
-  read_nonvol();    // Read in the settings
-  BMI270_init();    // Initialize the BMI270 accelerometer
+  gpio_init();            // Setup the hardware
+  vTaskDelay(10);         // Let the hardware settle
+  serial_io_init();       // Setup the console for debug message
+  read_nonvol();          // Read in the settings
+  BMI270_init(BMI270_CS); // Initialize the BMI270 accelerometer
+
   WiFi_init();
 
   /*
@@ -142,7 +143,7 @@ void trace_loop(void *arg)
       SEND(ALL, sprintf(_xs, _DONE_);)
     }
 
-    if ( gpio_get_level(FIFO_INTERRUPT) == 0 )
+    if ( gpio_get_level(BMI270_INTERRUPT) == 0 )
     {
       ;
     }

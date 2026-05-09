@@ -50,7 +50,7 @@
  *-----------------------------------------------------*/
 unsigned int board_version(void)
 {
-  return (gpio_get_level(BD_REV_1) << 1) + gpio_get_level(BD_REV_0);
+  return gpio_get_level(BD_REV);
 }
 
 /*-----------------------------------------------------

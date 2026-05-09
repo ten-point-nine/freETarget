@@ -28,6 +28,7 @@
 #include "gpio_define.h"
 #include "serial_io.h"
 #include "i2c.h"
+#include "spi.h"
 #include "BMI270.h"
 
 #define BOARD_REVISION 0 // Board revision via GPIO define entry #0
@@ -60,11 +61,8 @@ const I2C_struct_t i2c = {.type = I2C_PORT, .gpio_number_SDA = GPIO_NUM_0, .gpio
 /*
  *  SPI Control.  GPIO explicitly filled in here
  */
-SPI_struct_t spi = {.type             = SPI_PORT,
-                    .gpio_number_MOSI = GPIO_NUM_0,
-                    .gpio_number_MISO = GPIO_NUM_1,
-                    .gpio_number_SCLK = GPIO_NUM_10,
-                    .gpio_number_CS   = GPIO_NUM_4};
+SPI_struct_t spi = {
+    .type = SPI_PORT, .gpio_number_MOSI = SPI_SDI, .gpio_number_MISO = SPI_SDO, .gpio_number_SCLK = SPI_SCLK, .gpio_number_CS = BMI270_CS};
 
 /*
  *  GPIO Usage
@@ -81,7 +79,7 @@ const gpio_struct_t gpio_table[] = {
     {"TP1",         GPIO_NUM_3,  (void *)&dio03, COMMON}, // Spare test point
     {"CSB",         GPIO_NUM_4,  NULL,           COMMON}, // SPI Chip Select, Active LOW
     {"INT",         GPIO_NUM_5,  (void *)&dio05, COMMON}, // Interrupt from Gyro/Accel
-    {"BD_REV_0",    GPIO_NUM_6,  (void *)&dio06, COMMON}, // Board Revision LSB
+    {"BD_REV",      GPIO_NUM_6,  (void *)&dio06, COMMON}, // Board Revision LSB
     {"PUSH_BUTTON", GPIO_NUM_7,  (void *)&dio07, COMMON}, // Setup button, Active LOW
     {"ROM_MESSAGE", GPIO_NUM_8,  NULL,           COMMON}, // ROM messages on the serial port, Active HIGH
     {"BOOT",        GPIO_NUM_9,  NULL,           COMMON}, // Stay in boot block
@@ -101,6 +99,7 @@ const static gpio_type_t gpio_order[] = // Order in which to program devices
         DIGITAL_IO_OUT,                 // GPIO is used for Digital Output
         I2C_PORT,                       // GPIO is used as a i2c port
         DIGITAL_IO_IN,                  // GPIO is used for Digital Input
+        SPI_PORT,                       // GPIO is used as a SPI port
         0                               // End sentinel
 };
 
@@ -200,6 +199,17 @@ void gpio_init_single(unsigned int type)                                        
                                           ((I2C_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SDA);))
           i2c_init(((I2C_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SDA,
                    ((I2C_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SCL);
+          break;
+
+        case SPI_PORT:
+          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "SPI: (%d) SCK: %d, SDO: %d, SDI: %d", gpio_table[i].gpio_number,
+                                          ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SCLK,
+                                          ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_MISO,
+                                          ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_MOSI);))
+          spi_init(((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SCLK,
+                   ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_MISO,
+                   ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_MOSI);
+
           break;
       }
       DLT(DLT_INFO + DLT_VERBOSE, gpio_dump_io_configuration(stdout, (1ULL << i));)

@@ -167,8 +167,7 @@ void read_nonvol(void)
  *------------------------------------------------------------*/
 void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calibration
 {
-  unsigned int serial_number;            // Board serial number
-  char         ch, s[TINY_TEXT];
+  char          s[TINY_TEXT];
   unsigned int x;                        // Temporary Value
   unsigned int i;                        // Iteration Counter
 

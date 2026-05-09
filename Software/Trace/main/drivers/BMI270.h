@@ -18,7 +18,7 @@
 /*
  *  Functions
  */
-void         BMI270_init(void);                                               // Initialize the BMI270
+void         BMI270_init(unsigned int bmi270_gpio);                           // Initialize the BMI270
 unsigned int BMI270_read_raw_accel(trace_raw_t *sample, bool zero_offset);    // Read the accelermeter
 unsigned int BMI270_read_FIFO_accel(void);                                    // Read all of the samples in the FIFO
 void         BMI270_test(void);                                               // Test the BMI270

@@ -8,37 +8,29 @@
  *
  * This file manges the SPI driver
  *
- * See: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/i2c.html
+ * See:
+ *
+ * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/spi.html
+ * https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/peripherals/spi_master.html
+ * https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/peripherals/spi_flash/index.html
  *
  ***************************************************************************/
 #include <stdio.h>
-#include "driver/i2c.h"
+#include "driver/spi_master.h"
 #include "diag_tools.h"
 #include "trace.h"
 
 /*
  * Definitions
  */
-#define I2C_MASTER_NUM            0 /*!< I2C master i2c port number, the number of i2c peripheral interfaces available will depend on the chip */
-#define I2C_MASTER_FREQ_HZ        400000 /*!< I2C master clock frequency */
-#define I2C_MASTER_TX_BUF_DISABLE 0      /*!< I2C master doesn't need buffer */
-#define I2C_MASTER_RX_BUF_DISABLE 0      /*!< I2C master doesn't need buffer */
-#define I2C_MASTER_TIMEOUT_MS     1000
 
 /*
  * Variables
  */
-i2c_config_t i2c_configuration = {
-    // Do not make const
-    .mode             = I2C_MODE_MASTER,
-    .sda_pullup_en    = GPIO_PULLUP_ENABLE,
-    .scl_pullup_en    = GPIO_PULLUP_ENABLE,
-    .master.clk_speed = I2C_MASTER_FREQ_HZ,
-};
 
 /*********************************************************************
  *
- * @function: i2c_init
+ * @function: spi_init
  *
  * @brief:    Initialize the control
  *
@@ -46,30 +38,33 @@ i2c_config_t i2c_configuration = {
  *
  *********************************************************************
  *
- * Setup the registers for the I2C bus
+ * Setup the registers for the spi bus
  *
  ********************************************************************/
-esp_err_t i2c_init(int i2c_gpio_SDA, // GPIO SPI belongs to
-                   int i2c_gpio_SCL  // GPIO SPI belongs to
-)
+esp_err_t spi_init(unsigned int gpio_SCLK, unsigned int gpio_MISO, unsigned int gpio_MOSI)
 {
-  int       i2c_master_port = I2C_MASTER_NUM;
+  spi_bus_config_t spi_config;
+
   esp_err_t ret;
 
-  i2c_configuration.sda_io_num = i2c_gpio_SDA;
-  i2c_configuration.scl_io_num = i2c_gpio_SCL;
-  i2c_configuration.mode       = I2C_MODE_MASTER, /*!< I2C master mode */
-      i2c_param_config(i2c_master_port, &i2c_configuration);
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "spi_init()");))
 
-  ret = i2c_driver_install(i2c_master_port, i2c_configuration.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
+  spi_config.mosi_io_num     = gpio_MOSI;
+  spi_config.miso_io_num     = gpio_MISO;
+  spi_config.sclk_io_num     = gpio_SCLK,
+  spi_config.quadwp_io_num   = -1; // QSPI not used
+  spi_config.quadhd_io_num   = -1; // QSPI not used
+  spi_config.max_transfer_sz = 0;  // Default is 4094, but can be set to a larger value if needed
+
+  ret = spi_bus_initialize(SPI2_HOST, &spi_config, SPI_DMA_CH_AUTO);
 
   if ( ret == ESP_OK )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "I2C initialized successfully");))
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "spi initialized successfully");))
   }
   else
   {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to initialize I2C: %s", esp_err_to_name(ret));))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to initialize spi: %s", esp_err_to_name(ret));))
   }
 
   return ret;
@@ -77,43 +72,43 @@ esp_err_t i2c_init(int i2c_gpio_SDA, // GPIO SPI belongs to
 
 /*********************************************************************
  *
- * @function: i2c_read
+ * @function: spi_read
  *
- * @brief:    Read a sequence of bytes from an I2C registers
+ * @brief:    Read a sequence of bytes from an spi registers
  *
- * @return:   Read bytes from I2C and save to memory
+ * @return:   Read bytes from spi and save to memory
  *
  *********************************************************************
  *
- * The I2C transfer is set up and executed
+ * The spi transfer is set up and executed
  *
  ********************************************************************/
 
-esp_err_t i2c_read(uint8_t  device_addr, // I2C Device Address
+esp_err_t spi_read(uint8_t  gpio_spi_cs, // Chip Select GPIO
                    uint8_t *data,        // Buffer to be read
                    size_t   length       // Number of bytes to be read
 )
 {
-  return i2c_master_read_from_device(I2C_MASTER_NUM, device_addr, data, length, 10 * I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
+  return ESP_OK;
 }
 
 /*********************************************************************
  *
- * @function: i2c_write
+ * @function: spi_write
  *
- * @brief:    Write a sequence of bytes from an I2C registers
+ * @brief:    Write a sequence of bytes from an spi registers
  *
- * @return:   Read bytes from I2C and save to memory
+ * @return:   Read bytes from spi and save to memory
  *
  *********************************************************************
  *
- * The I2C transfer is set up and executed
+ * The spi transfer is set up and executed
  *
  ********************************************************************/
-esp_err_t i2c_write(uint8_t  device_addr, // Device Address
-                    uint8_t *data,        // Data to write
+esp_err_t spi_write(uint8_t  gpio_spi_cs, // Chip Select GPIO
+                    uint8_t *data,        // Buffer to be read
                     size_t   length       // Number of bytes to write
 )
 {
-  return i2c_master_write_to_device(I2C_MASTER_NUM, device_addr, data, length, I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
+  return ESP_OK;
 }
