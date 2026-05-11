@@ -40,6 +40,7 @@
 #include "json.h"
 #include "helpers.h"
 #include "BMI270.h"
+#include "spi.h"
 
 /*
  * Definitions
@@ -55,6 +56,9 @@
 #define g16_lsb 0.0312f // LSB value for +/- 16g range (31.2 mg/LSB)
 
 #define SQ(x) ((x) * (x))
+
+#define CHIP_ID 0x00
+
 /*
  *  Typedefs
  */
@@ -103,11 +107,19 @@ spi_device_interface_config_t BMI270_config = {
  *--------------------------------------------------------------*/
 void BMI270_init(unsigned int BMI270_gpio)
 {
+  uint8_t data[2];                                                               // Device ID
+
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270_init()");))
 
   BMI270_config.spics_io_num = BMI270_gpio;
 
-  spi_bus_add_device(SPI2_HOST, &BMI270_config, &BMI270_handle); // Add the SPI device to the bus
+  if ( spi_bus_add_device(SPI2_HOST, &BMI270_config, &BMI270_handle) != ESP_OK ) // Add the SPI device to the bus
+  {
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to add BMI270 device to SPI bus");))
+  }
+
+  spi_read(&BMI270_handle, CHIP_ID, &data, 2);
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Device ID: 0x%02X 0x%02X", data[0], data[1]);))
 
   return;
 }
@@ -129,7 +141,6 @@ void BMI270_init(unsigned int BMI270_gpio)
  *---------------------------------------------------------------*/
 void BMI270_FIFO_read(void)
 {
-
   run_state |= IN_COLLECTION;
 
   DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_FIFO_read()");))

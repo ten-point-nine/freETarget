@@ -44,8 +44,7 @@
 esp_err_t spi_init(unsigned int gpio_SCLK, unsigned int gpio_MISO, unsigned int gpio_MOSI)
 {
   spi_bus_config_t spi_config;
-
-  esp_err_t ret;
+  esp_err_t        ret;
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "spi_init()");))
 
@@ -84,11 +83,21 @@ esp_err_t spi_init(unsigned int gpio_SCLK, unsigned int gpio_MISO, unsigned int 
  *
  ********************************************************************/
 
-esp_err_t spi_read(uint8_t  gpio_spi_cs, // Chip Select GPIO
-                   uint8_t *data,        // Buffer to be read
-                   size_t   length       // Number of bytes to be read
+esp_err_t spi_read(spi_device_t *handle,        // Pointer to device handle
+                   uint8_t       address,       // Register address to read from
+                   uint8_t      *data,          // Buffer to be read
+                   size_t        length         // Number of bytes to be read
 )
 {
+  spi_transaction_t transaction;
+  memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure
+  transaction.address   = address;              // Register address to read from
+  transaction.length    = length * 8;           // Length in bits
+  transaction.rx_buffer = data;                 // Buffer to receive the data
+  transaction.flags     = SPI_TRANSFER_RXDATA;  // Indicate that this is a read operation
+
+  spi_device_transmit(handle, &transaction);    // Transmit the transaction
+
   return ESP_OK;
 }
 
@@ -105,10 +114,20 @@ esp_err_t spi_read(uint8_t  gpio_spi_cs, // Chip Select GPIO
  * The spi transfer is set up and executed
  *
  ********************************************************************/
-esp_err_t spi_write(uint8_t  gpio_spi_cs, // Chip Select GPIO
-                    uint8_t *data,        // Buffer to be read
-                    size_t   length       // Number of bytes to write
+esp_err_t spi_write(spi_device_t *handle,       // Pointer to device handle
+                    uint8_t       address,      // Register address to write to
+                    uint8_t      *data,         // Buffer to be write
+                    size_t        length        // Number of bytes to write
 )
 {
+  spi_transaction_t transaction;
+  memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure
+  transaction.addr      = address;              // Register address to write to
+  transaction.length    = length * 8;           // Length in bits
+  transaction.tx_buffer = data;                 // Buffer to send the data
+  transaction.flags     = SPI_TRANSFER_TXDATA;  // Indicate that this is a write operation
+
+  spi_device_transmit(handle, &transaction);    // Transmit the transaction
+
   return ESP_OK;
 }
