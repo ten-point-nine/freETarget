@@ -21,6 +21,8 @@
 #include "driver/ledc.h"
 #include "driver/pulse_cnt.h"
 #include "gpio_types.h"
+#include "driver/spi_master.h"
+#include "driver/spi_common.h"
 
 #include "trace.h"
 #include "board_assembly.h"

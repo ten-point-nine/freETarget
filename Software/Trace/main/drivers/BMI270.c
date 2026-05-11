@@ -27,11 +27,13 @@
  *
  *****************************************************************************/
 #include "stdio.h"
+#include "string.h"
 #include "driver\gpio.h"
 #include "i2c.h"
 #include "math.h"
 #include "assert.h"
 #include "driver/spi_master.h"
+#include "driver/spi_common.h"
 
 #include "trace.h"
 #include "board_assembly.h"
@@ -76,8 +78,8 @@ spi_device_handle_t BMI270_handle;      // Handle for the SPI device
 spi_device_interface_config_t BMI270_config = {
     // Configuration for the SPI device
     .command_bits     = 0,                   // No command phase
-    .address_bits     = 0,                   // No address phase
-    .dummy_bits       = 0,                   // No dummy bits
+    .address_bits     = 8,                   // No address phase
+    .dummy_bits       = 8,                   // No dummy bits
     .mode             = 0,                   // SPI mode 0
     .clock_source     = SPI_CLK_SRC_DEFAULT, // Use default clock source
     .duty_cycle_pos   = 128,                 // 50% duty cycle
@@ -87,7 +89,7 @@ spi_device_interface_config_t BMI270_config = {
     .input_delay_ns   = 0,                   // No input delay
     .spics_io_num     = BMI270_CS,           // CS pin
     .flags            = 0,                   // No special flags
-    .queue_size       = 2,
+    .queue_size       = 1,
     .pre_cb           = NULL,                // Callback to be called before a transmission is started.
     .post_cb          = NULL                 // Callback to be called after a transmission has completed.
 };
@@ -107,19 +109,33 @@ spi_device_interface_config_t BMI270_config = {
  *--------------------------------------------------------------*/
 void BMI270_init(unsigned int BMI270_gpio)
 {
-  uint8_t data[2];                                                               // Device ID
+  esp_err_t         ret;
+  spi_transaction_t transaction;
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270_init()");))
 
   BMI270_config.spics_io_num = BMI270_gpio;
 
+  /*
+   * Add the accelerometer to the bus
+   */
   if ( spi_bus_add_device(SPI2_HOST, &BMI270_config, &BMI270_handle) != ESP_OK ) // Add the SPI device to the bus
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to add BMI270 device to SPI bus");))
   }
 
-  spi_read(&BMI270_handle, CHIP_ID, &data, 2);
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Device ID: 0x%02X 0x%02X", data[0], data[1]);))
+  /*
+   * Read the device ID
+   */
+  memset(&transaction, 0, sizeof(transaction));           // Clear the transaction structure
+  transaction.addr     = CHIP_ID;                         // Register address to read from
+  transaction.length   = 0;                               // Transmit length in bits
+  transaction.rxlength = 1 * 8;                           // Receive length in bits
+  transaction.flags    = SPI_TRANS_USE_RXDATA;            // Indicate that this is a read operation
+
+  ret = spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Device ID: 0x%02X 0x%02X", transaction.rx_data[0], transaction.rx_data[1]);))
 
   return;
 }
