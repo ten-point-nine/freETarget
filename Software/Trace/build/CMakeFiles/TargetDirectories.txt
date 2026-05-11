@@ -624,7 +624,6 @@ C:/Users/allan/Documents/freETarget/Software/Trace/build/esp-idf/esp_driver_touc
 C:/Users/allan/Documents/freETarget/Software/Trace/build/esp-idf/esp_driver_touch_sens/CMakeFiles/install.dir
 C:/Users/allan/Documents/freETarget/Software/Trace/build/esp-idf/esp_driver_touch_sens/CMakeFiles/install/local.dir
 C:/Users/allan/Documents/freETarget/Software/Trace/build/esp-idf/esp_driver_touch_sens/CMakeFiles/install/strip.dir
-C:/Users/allan/Documents/freETarget/Software/Trace/build/esp-idf/esp_eth/CMakeFiles/__idf_esp_eth.dir
 C:/Users/allan/Documents/freETarget/Software/Trace/build/esp-idf/esp_eth/CMakeFiles/edit_cache.dir
 C:/Users/allan/Documents/freETarget/Software/Trace/build/esp-idf/esp_eth/CMakeFiles/rebuild_cache.dir
 C:/Users/allan/Documents/freETarget/Software/Trace/build/esp-idf/esp_eth/CMakeFiles/list_install_components.dir

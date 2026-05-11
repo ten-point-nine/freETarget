@@ -55,7 +55,6 @@ $<TARGET_FILE:__idf_http_parser>
 $<TARGET_FILE:__idf_esp-tls>
 $<TARGET_FILE:__idf_esp_adc>
 $<TARGET_FILE:__idf_esp_driver_cam>
-$<TARGET_FILE:__idf_esp_eth>
 $<TARGET_FILE:__idf_esp_gdbstub>
 $<TARGET_FILE:__idf_esp_hid>
 $<TARGET_FILE:__idf_tcp_transport>

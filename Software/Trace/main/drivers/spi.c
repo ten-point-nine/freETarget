@@ -52,12 +52,14 @@ esp_err_t spi_init(unsigned int gpio_SCLK, unsigned int gpio_MISO, unsigned int 
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "spi_init()");))
 
+  memset(&spi_config, 0, sizeof(spi_config)); // Clear the configuration structure
   spi_config.mosi_io_num     = gpio_MOSI;
   spi_config.miso_io_num     = gpio_MISO;
   spi_config.sclk_io_num     = gpio_SCLK,
-  spi_config.quadwp_io_num   = -1;  // QSPI not used
-  spi_config.quadhd_io_num   = -1;  // QSPI not used
-  spi_config.max_transfer_sz = 256; // Default is 4094, but can be set to a larger value if needed
+  spi_config.quadwp_io_num   = -1;            // QSPI not used
+  spi_config.quadhd_io_num   = -1;            // QSPI not used
+  spi_config.max_transfer_sz = 256;           // Default is 4094, but can be set to a larger value if needed
+  spi_config.flags           = 0;             // No special flags
 
   ret = spi_bus_initialize(SPI2_HOST, &spi_config, SPI_DMA_CH_AUTO);
 
@@ -104,7 +106,7 @@ esp_err_t spi_read(spi_device_handle_t handle,     // Pointer to device handle
   transaction.length    = 0;                       // Transmit length in bits
   transaction.rx_buffer = rx_data;                 // Buffer to receive the data
   transaction.rxlength  = rx_length * 8;           // Receive length in bits
-  transaction.flags = SPI_TRANS_USE_RXDATA;        // Indicate that this is a read operation
+  transaction.flags     = SPI_TRANS_USE_RXDATA;    // Indicate that this is a read operation
 
   ret = spi_device_transmit(handle, &transaction); // Transmit the transaction
 

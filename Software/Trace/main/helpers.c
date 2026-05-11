@@ -703,3 +703,29 @@ real_t degrees_to_radians(real_t degrees)
 {
   return (degrees / 180.0 * PI);
 }
+
+/*----------------------------------------------------------------
+ *
+ * @function: check_for_exit
+ *
+ * @brief:    Check for an exit command on the serial port
+ *
+ * @return:   Character read from the serial port
+ *
+ *----------------------------------------------------------------
+ *
+ * Checks to see if there is something waiting, and if so
+ * it is read and returned.  If there is nothing waiting, then
+ * 0 is returned.
+ *
+ *--------------------------------------------------------------*/
+
+unsigned char check_for_exit(void)
+{
+  if ( serial_available(ALL) != 0 )
+  {
+    return serial_getch(ALL);
+  }
+
+  return 0;
+}

@@ -1,7 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "trace",
-    "project_version":    "ESP32-6.3.2-28-ga2741f9-dirty",
+    "project_version":    "ESP32-6.3.2-29-g7cd4709-dirty",
     "project_path":       "C:/Users/allan/Documents/freETarget/Software/Trace",
     "idf_path":           "C:/Users/allan/esp/v5.3.1/esp-idf",
     "build_dir":          "C:/Users/allan/Documents/freETarget/Software/Trace/build",
@@ -633,15 +633,15 @@
             "target": "___idf_esp_eth",
             "prefix": "idf",
             "dir": "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_eth",
-            "type": "LIBRARY",
+            "type": "CONFIG_ONLY",
             "lib": "__idf_esp_eth",
             "reqs": [ "esp_event" ],
             "priv_reqs": [ "log", "esp_timer", "esp_driver_spi", "esp_driver_gpio" ],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "file": "C:/Users/allan/Documents/freETarget/Software/Trace/build/esp-idf/esp_eth/libesp_eth.a",
-            "sources": [ "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_eth/src/esp_eth.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_eth/src/phy/esp_eth_phy_802_3.c", "C:/Users/allan/esp/v5.3.1/esp-idf/components/esp_eth/src/esp_eth_netif_glue.c" ],
-            "include_dirs": [ "include" ]
+            "file": "",
+            "sources": [],
+            "include_dirs": []
         },
         "esp_event": {
             "alias": "idf::esp_event",
@@ -2035,7 +2035,7 @@
             "priv_reqs": [ "log", "esp_timer", "esp_driver_spi", "esp_driver_gpio" ],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "include_dirs": [ "include" ]
+            "include_dirs": []
         },
         "esp_event": {
             "alias": "idf::esp_event",

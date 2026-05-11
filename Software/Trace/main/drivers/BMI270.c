@@ -78,7 +78,7 @@ spi_device_handle_t BMI270_handle;      // Handle for the SPI device
 spi_device_interface_config_t BMI270_config = {
     // Configuration for the SPI device
     .command_bits     = 0,                   // No command phase
-    .address_bits     = 8,                   // No address phase
+    .address_bits     = 8,                   //
     .dummy_bits       = 8,                   // No dummy bits
     .mode             = 0,                   // SPI mode 0
     .clock_source     = SPI_CLK_SRC_DEFAULT, // Use default clock source
@@ -128,11 +128,13 @@ void BMI270_init(unsigned int BMI270_gpio)
    * Read the device ID
    */
   memset(&transaction, 0, sizeof(transaction));           // Clear the transaction structure
-  transaction.addr     = CHIP_ID;                         // Register address to read from
-  transaction.length   = 0;                               // Transmit length in bits
-  transaction.rxlength = 1 * 8;                           // Receive length in bits
-  transaction.flags    = SPI_TRANS_USE_RXDATA;            // Indicate that this is a read operation
+  transaction.addr      = 0x80 | CHIP_ID;                 // Register address to read from
+  transaction.length    = 8;                              // Transmit length in bits
+  transaction.tx_buffer = NULL;                           // Transmit buffer not used
+  transaction.rxlength  = 1 * 8;                          // Receive length in bits
+  transaction.flags     = SPI_TRANS_USE_RXDATA;           // Indicate that this is a read operation
 
+  ret = spi_device_transmit(BMI270_handle, &transaction); // Dummy read to put into SPI mode
   ret = spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Device ID: 0x%02X 0x%02X", transaction.rx_data[0], transaction.rx_data[1]);))
@@ -481,4 +483,54 @@ unsigned int BMI270_find_sample_out(unsigned int sample_count) // Number of samp
   }
 
   return sample_out;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: BMI270_device_id()
+ *
+ * @brief:    Read the device ID from the BMI270
+ *
+ * @return:   None
+ *
+ *----------------------------------------------------------------
+ *
+ * Samples are taken continiously so the pointer sample_out
+ * may correspond to some point in time far back in the past.
+ *
+ * This function works out sample_out relative to sample_in
+ * to find a find a starting point correspondin to an interval.
+ *
+ *--------------------------------------------------------------*/
+void BMI270_device_id(void)
+{
+  esp_err_t         ret;
+  spi_transaction_t transaction;
+  /*
+   * Read the device ID
+   */
+
+  while ( 1 )
+  {
+    memset(&transaction, 0, sizeof(transaction));           // Clear the transaction structure
+    transaction.addr     = 0x80 | CHIP_ID;                         // Register address to read from
+    transaction.length   = 1 * 8;                           // Transmit length in bits
+    transaction.rxlength = 1 * 8;                           // Receive length in bits
+    transaction.flags    = SPI_TRANS_USE_RXDATA;            // Indicate that this is a read operation
+
+    ret = spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Device ID: 0x%02X 0x%02X", transaction.rx_data[0], transaction.rx_data[1]);))
+    vTaskDelay(100);
+
+    if ( check_for_exit() == '!' )                          // Check for an exit command on the serial port
+    {
+      break;
+    }
+  }
+
+  /*
+   * All done
+   */
+  SEND(ALL, sprintf(_xs, _DONE_);)
+  return;
 }

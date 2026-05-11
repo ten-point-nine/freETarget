@@ -29,13 +29,13 @@ extern volatile unsigned int step_count; // Number of steps before stopping
  *  Port Definitions
  */
 
-#define SPI_SDI          GPIO_NUM_0 // SPI Master In Slave Out
-#define SPI_SDO          GPIO_NUM_1 // SPI Master Out Slave In
+#define SPI_SDO          GPIO_NUM_0 // SPI Master In Slave Out
+#define SPI_SDI          GPIO_NUM_1 // SPI Master Out Slave In
 #define STATUS_LED       GPIO_NUM_2 // Status LED
 #define TP1              GPIO_NUM_3 // Test point 1
 #define BMI270_CS        GPIO_NUM_4 // SPI Chip Select
 #define BMI270_INTERRUPT GPIO_NUM_5 // Input attached to FIFO interupt
-#define BD_REV         GPIO_NUM_6 // MSBLSB of board revision
+#define BD_REV           GPIO_NUM_6 // MSBLSB of board revision
 #define SWITCH_GPIO      GPIO_NUM_7 // Control switch input
 
 #define ROM_MESSAGE GPIO_NUM_8      // GPIO used for testing boolean output

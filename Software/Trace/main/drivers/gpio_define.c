@@ -204,10 +204,10 @@ void gpio_init_single(unsigned int type)                                        
           break;
 
         case SPI_PORT:
-          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "SPI: (%d) SCK: %d, SDO: %d, SDI: %d", gpio_table[i].gpio_number,
-                                          ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SCLK,
-                                          ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_MISO,
-                                          ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_MOSI);))
+          DLT(DLT_INFO,
+              SEND(ALL, sprintf(_xs, "SPI: SCK: %d, SDO: %d, SDI: %d", ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SCLK,
+                                ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_MISO,
+                                ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_MOSI);))
           spi_init(((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SCLK,
                    ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_MISO,
                    ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_MOSI);

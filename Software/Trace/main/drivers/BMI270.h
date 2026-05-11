@@ -27,3 +27,4 @@ void         BMI270_convert_to_g(trace_raw_t *sample, trace_point_t *actual); //
 void         BMI270_oscilliscope(void);                                       // Poor man's oscilliscope
 void         BMI270_FIFO_read(void);                                          // FIFO handler
 unsigned int BMI270_find_sample_out(unsigned int sample_count);               // Find the starting point in the sample buffer
+void         BMI270_device_id(void); // Read the device ID to confirm that we can communicate with the device
