@@ -214,7 +214,6 @@ void BMI270_init(unsigned int BMI270_gpio)
   /*
    * Programming the API
    */
-
   memset(&transaction, 0, sizeof(transaction));                             // Clear the transaction structure
   transaction.addr      = PWR_CONF;                                         // Disable the accelerometer before programming the API
   transaction.tx_buffer = 0;                                                // Disable the
@@ -222,6 +221,14 @@ void BMI270_init(unsigned int BMI270_gpio)
   transaction.rxlength  = 0;                                                // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_TXDATA;                             // Indicate that this is a read operation
   ret                   = spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+  if ( ret != ESP_OK )
+  {
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to disable BMI270 before programming API");))
+  }
+  else
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270 accelerometer disabled for API programming");))
+  }
   vTaskDelay(2);                                // Wait for the accelerometer to power down before programming the API
 
   memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure
@@ -231,6 +238,14 @@ void BMI270_init(unsigned int BMI270_gpio)
   transaction.rxlength  = 0;                    // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_TXDATA; // Indicate that this is a read operation
   ret                   = spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+  if ( ret != ESP_OK )
+  {
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to prepare BMI270 for API programming");))
+  }
+  else
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270 prepared for API programming");))
+  }
   vTaskDelay(10);
 
   memset(&transaction, 0, sizeof(transaction));                             // Clear the transaction structure
@@ -240,6 +255,14 @@ void BMI270_init(unsigned int BMI270_gpio)
   transaction.rxlength  = 0;                                                // Indicate that this is a read operation
   transaction.flags     = 0;                                                // Use default flags for a large write operation
   ret                   = spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+  if ( ret != ESP_OK )
+  {
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to transmit BMI270 API configuration file");))
+  }
+  else
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270 API configuration file transmitted");))
+  }
   vTaskDelay(100);
 
   memset(&transaction, 0, sizeof(transaction));                             // Clear the transaction structure
@@ -249,6 +272,15 @@ void BMI270_init(unsigned int BMI270_gpio)
   transaction.rxlength  = 0;                                                // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_TXDATA;                             // Indicate that this is a read operation
   ret                   = spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+  if ( ret != ESP_OK )
+  {
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to complete BMI270 API programming");))
+  }
+  else
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270 API programming complete");))
+  }
+
   vTaskDelay(10);
 
   /*
@@ -264,6 +296,10 @@ void BMI270_init(unsigned int BMI270_gpio)
   if ( transaction.rx_data[1] != 0x1 )                                      // Check the device ID
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Initialization failed: 0x%02X", transaction.rx_data[1]);))
+  }
+  else
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initialization successful: 0x%02X", transaction.rx_data[1]);))
   }
 
   /*
