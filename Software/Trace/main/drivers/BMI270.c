@@ -293,13 +293,13 @@ void BMI270_init(unsigned int BMI270_gpio)
   transaction.rxlength  = 1 * 8;                  // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_RXDATA;   // Indicate that this is a read operation
   ret                   = spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
-  if ( transaction.rx_data[1] != 0x1 )                                      // Check the device ID
+  if ( transaction.rx_data[0] != 0x1 )                                      // Check the device ID
   {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Initialization failed: 0x%02X", transaction.rx_data[1]);))
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Initialization failed: 0x%02X", transaction.rx_data[0]);))
   }
   else
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initialization successful: 0x%02X", transaction.rx_data[1]);))
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initialization successful: 0x%02X", transaction.rx_data[0]);))
   }
 
   /*
@@ -326,6 +326,96 @@ void BMI270_init(unsigned int BMI270_gpio)
   return;
 }
 
+/*----------------------------------------------------------------
+ *
+ * @function: BMI270_device_ID()
+ *
+ * @brief:    Read the device ID of the BMI270
+ *
+ * @return: None
+ *
+ *----------------------------------------------------------------
+ *
+ * Read the device ID as a single transaction to make sure the
+ * SPI is working and the device is responding.
+ *
+ *--------------------------------------------------------------*/
+unsigned int BMI270_device_ID(void)
+{
+  esp_err_t         ret;
+  spi_transaction_t transaction;
+
+  /*
+   * Read the device ID
+   */
+  memset(&transaction, 0, sizeof(transaction));           // Clear the transaction structure
+  transaction.addr      = 0x80 | CHIP_ID;                 // Register address to read from
+  transaction.length    = 1 * 8;                          // Transmit length in bits
+  transaction.tx_buffer = NULL;                           // Transmit buffer not used
+  transaction.rxlength  = 1 * 8;                          // Receive length in bits
+  transaction.flags     = SPI_TRANS_USE_RXDATA;           // Indicate that this is a read operation
+
+  ret = spi_device_transmit(BMI270_handle, &transaction); // Dummy read to put into SPI mode
+  ret = spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+
+  if ( transaction.rx_data[0] != 0x24 )                   // Check the device ID
+  {
+    SEND(ALL, sprintf(_xs, "Failed to read BMI270 device ID: 0x%02X", transaction.rx_data[0]);)
+  }
+  else
+  {
+    SEND(ALL, sprintf(_xs, "BMI270 device ID: 0x%02X", transaction.rx_data[0]);)
+  }
+
+  /*
+   * All done, return
+   */
+  SEND(ALL, sprintf(_xs, _DONE_);)
+  return transaction.rx_data[0]; // Return the device ID
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: BMI270_device_ID()
+ *
+ * @brief:    Read the device ID of the BMI270
+ *
+ * @return: None
+ *
+ *----------------------------------------------------------------
+ *
+ * Read the device ID as a single transaction to make sure the
+ * SPI is working and the device is responding.
+ *
+ *--------------------------------------------------------------*/
+unsigned int BMI270_device_status(void)
+{
+  esp_err_t         ret;
+  spi_transaction_t transaction;
+
+  memset(&transaction, 0, sizeof(transaction));           // Clear the transaction structure
+  transaction.addr      = 0x80 | INTERNAL_STATUS;         // Register address to read from
+  transaction.length    = 1 * 8;                          // Transmit length in bits
+  transaction.tx_buffer = NULL;                           // Transmit buffer not used
+  transaction.rxlength  = 1 * 8;                          // Receive length in bits
+  transaction.flags     = SPI_TRANS_USE_RXDATA;           // Indicate that this is a read operation
+
+  ret = spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+
+  if ( transaction.rx_data[0] != 0x1 )                    // Check the device ID
+  {
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Initialization failed: 0x%02X", transaction.rx_data[0]);))
+  }
+  else
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initialization successful: 0x%02X", transaction.rx_data[0]);))
+  }
+  /*
+   * All done, return
+   */
+  SEND(ALL, sprintf(_xs, _DONE_);)
+  return transaction.rx_data[0]; // Return the device ID
+}
 /*----------------------------------------------------------------
  *
  * @function: BMI270_FIFO_read
@@ -667,54 +757,4 @@ unsigned int BMI270_find_sample_out(unsigned int sample_count) // Number of samp
   }
 
   return sample_out;
-}
-
-/*----------------------------------------------------------------
- *
- * @function: BMI270_device_id()
- *
- * @brief:    Read the device ID from the BMI270
- *
- * @return:   None
- *
- *----------------------------------------------------------------
- *
- * Samples are taken continiously so the pointer sample_out
- * may correspond to some point in time far back in the past.
- *
- * This function works out sample_out relative to sample_in
- * to find a find a starting point correspondin to an interval.
- *
- *--------------------------------------------------------------*/
-void BMI270_device_id(void)
-{
-  esp_err_t         ret;
-  spi_transaction_t transaction;
-  /*
-   * Read the device ID
-   */
-
-  while ( 1 )
-  {
-    memset(&transaction, 0, sizeof(transaction));           // Clear the transaction structure
-    transaction.addr     = 0x80 | CHIP_ID;                  // Register address to read from
-    transaction.length   = 1 * 8;                           // Transmit length in bits
-    transaction.rxlength = 1 * 8;                           // Receive length in bits
-    transaction.flags    = SPI_TRANS_USE_RXDATA;            // Indicate that this is a read operation
-
-    ret = spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Device ID: 0x%02X", transaction.rx_data[0]);))
-    vTaskDelay(100);
-
-    if ( check_for_exit() == '!' )                          // Check for an exit command on the serial port
-    {
-      break;
-    }
-  }
-
-  /*
-   * All done
-   */
-  SEND(ALL, sprintf(_xs, _DONE_);)
-  return;
 }
