@@ -12,7 +12,6 @@
  *
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/spi.html
  * https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/peripherals/spi_master.html
- * https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/peripherals/spi_flash/index.html
  *
  ***************************************************************************/
 #include <stdio.h>
@@ -74,4 +73,3 @@ esp_err_t spi_init(unsigned int gpio_SCLK, unsigned int gpio_MISO, unsigned int 
 
   return ret;
 }
-

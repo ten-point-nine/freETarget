@@ -10,14 +10,11 @@
  * driver is written to be as generic as possible and should work with any
  * implementation of the BMI270.
  *
- * See: https://www.analog.com/en/products/BMI270.html
- *      https://www.analog.com/media/en/technical-documentation/data-sheets/BMI270.pdf
- *      https://www.analog.com/media/en/technical-documentation/application-notes/AN-1021.pdf
- *      https://www.analog.com/media/en/technical-documentation/application-notes/AN-1020.pdf
- *      https://www.analog.com/media/en/technical-documentation/application-notes/AN-1022.pdf
- *      https://www.analog.com/media/en/technical-documentation/application-notes/AN-1023.pdf
- *      https://www.analog.com/media/en/technical-documentation/application-notes/AN-1024.pdf
+ * See:
  *
+ * https://www.bosch-sensortec.com/en/products/motion-sensors/imus/bmi270
+ * https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmi270-ds000.pdf
+ * https://www.bosch-sensortec.com/media/boschsensortec/downloads/application_notes_1/bst-bmi270-an001.pdf
  *
  * IMPORTANT
  *
@@ -336,15 +333,15 @@ unsigned int BMI270_device_ID(void)
 
 /*----------------------------------------------------------------
  *
- * @function: BMI270_device_ID()
+ * @function: BMI270_device_status()
  *
- * @brief:    Read the device ID of the BMI270
+ * @brief:    Read the device status of the BMI270
  *
  * @return: None
  *
  *----------------------------------------------------------------
  *
- * Read the device ID as a single transaction to make sure the
+ * Read the device status as a single transaction to make sure the
  * SPI is working and the device is responding.
  *
  *--------------------------------------------------------------*/
@@ -376,6 +373,7 @@ unsigned int BMI270_device_status(void)
   SEND(ALL, sprintf(_xs, _DONE_);)
   return transaction.rx_data[0]; // Return the device ID
 }
+
 /*----------------------------------------------------------------
  *
  * @function: BMI270_FIFO_read
