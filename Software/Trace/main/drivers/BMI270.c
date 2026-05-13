@@ -221,16 +221,14 @@ void BMI270_init(unsigned int BMI270_gpio)
   transaction.rxlength  = 0;                                                // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_TXDATA;                             // Indicate that this is a read operation
   ret                   = spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
-  vTaskDelay(2);                                // Wait for the accelerometer to power down before programming the API
 
-  memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure
-  transaction.addr      = INIT_CTRL;            // Prepare the configuration file for the API programming
-  transaction.tx_buffer = 0;                    // Transmit buffer
-  transaction.length    = 8;                    // Transmit length in bits
-  transaction.rxlength  = 0;                    // Receive length in bits
-  transaction.flags     = SPI_TRANS_USE_TXDATA; // Indicate that this is a read operation
+  memset(&transaction, 0, sizeof(transaction));                             // Clear the transaction structure
+  transaction.addr      = INIT_CTRL;                                        // Prepare the configuration file for the API programming
+  transaction.tx_buffer = 0;                                                // Transmit buffer
+  transaction.length    = 8;                                                // Transmit length in bits
+  transaction.rxlength  = 0;                                                // Receive length in bits
+  transaction.flags     = SPI_TRANS_USE_TXDATA;                             // Indicate that this is a read operation
   ret                   = spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
-  vTaskDelay(10);
 
   memset(&transaction, 0, sizeof(transaction));                             // Clear the transaction structure
   transaction.addr      = INIT_DATA;                                        // Prepare the configuration file for the API programming
@@ -239,7 +237,7 @@ void BMI270_init(unsigned int BMI270_gpio)
   transaction.rxlength  = 0;                                                // Indicate that this is a read operation
   transaction.flags     = 0;                                                // Use default flags for a large write operation
   ret                   = spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
-  vTaskDelay(100);
+  vTaskDelay(1);
 
   memset(&transaction, 0, sizeof(transaction));                             // Clear the transaction structure
   transaction.addr      = INIT_CTRL;                                        // Prepare the configuration file for the API programming
@@ -248,7 +246,6 @@ void BMI270_init(unsigned int BMI270_gpio)
   transaction.rxlength  = 0;                                                // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_TXDATA;                             // Indicate that this is a read operation
   ret                   = spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
-  vTaskDelay(10);
 
   /*
    *  Make sure the API is properly initialized
@@ -262,7 +259,7 @@ void BMI270_init(unsigned int BMI270_gpio)
   ret                   = spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
   if ( transaction.rx_data[0] != 0x1 )                                      // Check the device ID
   {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Initialization failed: 0x%02X", transaction.rx_data[0]);))
+    DLT(DLT_FATAL, SEND(ALL, sprintf(_xs, "Initialization failed: 0x%02X", transaction.rx_data[0]);))
   }
 
   /*
@@ -285,7 +282,7 @@ void BMI270_init(unsigned int BMI270_gpio)
   /*
    * All done, return
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270 initialization complete");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270 initialization successful");))
   return;
 }
 

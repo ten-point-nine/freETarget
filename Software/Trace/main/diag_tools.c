@@ -424,6 +424,7 @@ bool do_dlt(           //
       SEND(ALL, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, run_time_ms() / 1000.);)
       if ( (level & DLT_FATAL) != 0 )             // This message is fatal
       {
+        set_status_LED(LED_ERROR);                // Indicate an error
         while ( 1 )
         {
           vTaskDelay(ONE_SECOND);                 // Stay here forever
