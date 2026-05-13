@@ -51,7 +51,8 @@ void digital_output_test(void);      // Test the digital outputs
  * Tracing
  */
 #define DLT_NONE          0                        // No DLT messages displayed
-#define DLT_CRITICAL      0x0001                   // Action failed and needs to be reported
+#define DLT_FATAL         0x0001                   // Fatal error that prevents the trace from working
+#define DLT_CRITICAL      (DLT_FATAL << 1)         // Action failed and needs to be reported
 #define DLT_INFO          (DLT_CRITICAL << 1)      // Information which is always displayed
 #define DLT_APPLICATION   (DLT_INFO << 1)          // Application level messages displayed (trace.c compute_hit.c)
 #define DLT_COMMUNICATION (DLT_APPLICATION << 1)   // Communications messages (wifi.c token.c serial_io.c)

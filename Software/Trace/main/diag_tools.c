@@ -422,6 +422,13 @@ bool do_dlt(           //
       dlt_id = dlt_names[i].dlt_id;               // Use the Verbose ID
 
       SEND(ALL, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, run_time_ms() / 1000.);)
+      if ( (level & DLT_FATAL) != 0 )             // This message is fatal
+      {
+        while ( 1 )
+        {
+          vTaskDelay(ONE_SECOND);                 // Stay here forever
+        }
+      }
       return true;                                // Send out the message
     }
 
