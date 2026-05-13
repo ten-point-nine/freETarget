@@ -99,7 +99,8 @@ extern void         gpio_init(void);
 void freeETarget_init(void)
 {
   run_state = IN_STARTUP;
-  is_trace  = DLT_INFO | DLT_CRITICAL;
+  is_trace  = DLT_FATAL | DLT_CRITICAL | DLT_INFO;
+  
 #if TRACE_APPLICATION
   is_trace |= DLT_APPLICATION;   // Enable application tracing
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT APPLICATON enabled");))

@@ -112,12 +112,12 @@ static const self_test_t test_list[] = {
     {"generate_fake_shot",                &generate_fake_shot        }, // This forces shots into the software
     {"display_all_scores",                &test_display_all_scores   }, // Send fake JSON scores
     {"Rapidfire test",                    &test_rapidfire            },
-    {"Rapidfire test",                    &test_rapidfire            },
     {"Calibration test",                  &calibration_test          }, // Generate fake scores and observe the calibration
     {"",                                  0                          }
 };
 
 const dlt_name_t dlt_names[] = {
+    {DLT_FATAL,         "DLT_FATAL",         'E'}, //  This is a fatal error and the system should not continue.
     {DLT_CRITICAL,      "DLT_CRITICAL",      'E'}, // Prevents target from working
     {DLT_INFO,          "DLT_INFO",          'I'}, // Running information
     {DLT_APPLICATION,   "DLT_APPLICATION",   'A'}, // FreeTarget.c and compute.c logging
@@ -838,7 +838,15 @@ bool do_dlt(           //
       dlt_id = dlt_names[i].dlt_id;               // Use the Verbose ID
 
       SEND(ALL, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, run_time_ms() / 1000.);)
-      return true;                                // Send out the message
+      if ( level & DLT_FATAL )
+      {
+        SEND(ALL, sprintf(_xs, "  FATAL ");)
+        while ( 1 )
+        {
+          vTaskDelay(ONE_SECOND);
+        }
+      }
+      return true; // Send out the message
     }
 
     i++;
@@ -1178,6 +1186,7 @@ void mfs_test_build_json_score(void)
   strncpy(str, _xs, sizeof(str));
   SEND(AUX | BLUETOOTH | RS485, sprintf(_xs, "\r\nAUX: %s", str);)
 
+  SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }
 

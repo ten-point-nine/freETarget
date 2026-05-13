@@ -223,22 +223,23 @@ void freeETarget_json(void *pvParameters)
 
       switch ( ch )
       {
-        case '}':
-          if ( in_JSON != 0 )
-          {
-            got_left_bracket  = false;
-            got_right_bracket = in_JSON;
-            handle_json(); // Fall through to manage the JSON message
-            vTaskDelay(TICK_10ms);
-            serial_flush(ALL);
-          }
-
         case '{':
           in_JSON           = 0;
           input_JSON[0]     = 0;
           got_right_bracket = 0;
           got_left_bracket  = true;
           keep_space        = 0;
+          break;
+
+        case '}':
+          if ( in_JSON != 0 )
+          {
+            got_left_bracket  = false;
+            got_right_bracket = in_JSON;
+            handle_json();         // Fall through to manage the JSON message
+            vTaskDelay(TICK_10ms);
+            serial_flush(ALL);
+          }
           break;
 
         case 0x08:                 // Backspace
@@ -672,19 +673,19 @@ static void show_names(int v)
  * affecting the other settings.
  *
  *-----------------------------------------------------*/
-static void set_trace(int trace)         // Trace mask on or off
+static void set_trace(int trace)                     // Trace mask on or off
 {
   unsigned int i;
 
-  if ( trace == 0 )                      // Used to turn off tracing
+  if ( trace == 0 )                                  // Used to turn off tracing
   {
     is_trace = 0;
   }
-  is_trace ^= trace;                     // XOR the input
-  is_trace |= (DLT_CRITICAL | DLT_INFO); // Info and critical is always enabled
+  is_trace ^= trace;                                 // XOR the input
+  is_trace |= (DLT_FATAL | DLT_CRITICAL | DLT_INFO); // Info and critical is always enabled
 
   i = 0;
-  while ( dlt_names[i].dlt_text != 0 )   // Print the help
+  while ( dlt_names[i].dlt_text != 0 )               // Print the help
   {
     if ( (is_trace & dlt_names[i].dlt_mask) != 0 )
     {

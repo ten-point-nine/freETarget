@@ -115,7 +115,8 @@ void mfs_test_build_json_score(void);                     // Test build_json_sco
  * Tracing
  */
 #define DLT_NONE          0                        // No DLT messages displayed
-#define DLT_CRITICAL      0x0001                   // Action failed and needs to be reported
+#define DLT_FATAL         0x0001                   // Action failed and we cannot continue
+#define DLT_CRITICAL      (DLT_FATAL << 1)         // Action failed and needs to be reported
 #define DLT_INFO          (DLT_CRITICAL << 1)      // Information which is always displayed
 #define DLT_APPLICATION   (DLT_INFO << 1)          // Application level messages displayed (freeETarget.c compute_hit.c)
 #define DLT_COMMUNICATION (DLT_APPLICATION << 1)   // Communications messages (wifi.c token.c serial_io.c)
@@ -128,6 +129,12 @@ void mfs_test_build_json_score(void);                     // Test build_json_sco
 #define DLT_HEARTBEAT     (0x2000)                 // Kick out the time to see if we are alive
 #define DLT_VERBOSE       (0x4000)                 // Turn on verbose tracing
 #define DLT_AMB           (0x8000)                 // Special Debug DLT
+
+#if ( (DLT_APPLICATION | DLT_COMMUNICATION | DLT_DIAG | DLT_DEBUG | DLT_SCORE | DLT_HTTP | DLT_OTA | DLT_CALIBRATION | DLT_HEARTBEAT |     \
+       DLT_VERBOSE) &                                                                                                                      \
+      (DLT_HEARTBEAT | DLT_VERBOSE | DLT_AMB) != 0 )
+#error "DLT levels overlapPlease choose other values for the DLT levels."
+#endif
 
 /*
  *  Enable compile level tracing
