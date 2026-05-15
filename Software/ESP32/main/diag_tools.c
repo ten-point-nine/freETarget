@@ -819,7 +819,7 @@ bool do_dlt(           //
     return false;                                            // Send out if the trace is higher than the level
   }
 
-  if ( (level & DLT_VERBOSE)                                 // This message is Verbose
+  if ( ((level & DLT_VERBOSE) != 0)                          // This message is Verbose
        && (is_trace & DLT_VERBOSE) == 0 )                    // but Verbose is not enabled
   {
     return false;                                            // Don't send out the message
@@ -840,7 +840,7 @@ bool do_dlt(           //
       SEND(ALL, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, run_time_ms() / 1000.);)
       if ( level & DLT_FATAL )
       {
-        SEND(ALL, sprintf(_xs, "  FATAL ");)
+        SEND(ALL, sprintf(_xs, "  FATAL");)
         while ( 1 )
         {
           vTaskDelay(ONE_SECOND);

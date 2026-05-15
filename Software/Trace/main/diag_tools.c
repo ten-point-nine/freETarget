@@ -76,6 +76,7 @@ static const self_test_t test_list[] = {
 };
 
 const dlt_name_t dlt_names[] = {
+    {DLT_FATAL,         "DLT_FATAL",         'E'}, // Fatal error that prevents the trace from working
     {DLT_CRITICAL,      "DLT_CRITICAL",      'E'}, // Prevents target from working
     {DLT_INFO,          "DLT_INFO",          'I'}, // Running information
     {DLT_APPLICATION,   "DLT_APPLICATION",   'A'}, // FreeTarget.c and compute.c logging
