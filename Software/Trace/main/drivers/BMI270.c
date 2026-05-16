@@ -213,26 +213,6 @@ void BMI270_init(unsigned int BMI270_gpio)
   }
 
   /*
-   * Program the registers from the configuration table
-   */
-  i = 0;
-  printf("here  ");
-  vTaskDelay(5 * ONE_SECOND);
-  while ( BMI270_config[i].address != 0x00 )          // Loop through the configuration table until the end is reached
-  {
-    memset(&transaction, 0, sizeof(transaction));     // Clear the transaction structure
-    transaction.addr      = BMI270_config[i].address; // Register address to write to
-    transaction.tx_buffer = BMI270_config[i].value;   // Send the value to be written to the register
-    transaction.length    = 1 * 8;                    // Transmit length in bits
-    transaction.rxlength  = 0 * 8;                    // Receive length in bits
-    transaction.flags     = SPI_TRANS_USE_TXDATA;     // Indicate that this is a read operation
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "register 0x%02X: 0x%02X", BMI270_config[i].address, BMI270_config[i].value);))
-    spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
-    vTaskDelay(2);
-    i++;
-  }
-
-  /*
    * Programming the API
    */
   memset(&transaction, 0, sizeof(transaction));                        // Clear the transaction structure
