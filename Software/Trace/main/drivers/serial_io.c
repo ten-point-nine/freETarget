@@ -581,6 +581,8 @@ int get_string(char destination[], int size)
           //        case '\r':       // Enter Commented out since PC Client does not allow
           //        case '\n':       // newline as an input terminator
         case '!':        // Bang!
+        case '\r':
+        case '\n':
           return i;
 
         case 'C' & 0x1F: // Control C, exit

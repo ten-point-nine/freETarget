@@ -57,9 +57,9 @@ extern void gpio_init(void);
 
 void trace_init(void)
 {
-  is_trace = DLT_INFO | DLT_CRITICAL;
+  is_trace = DLT_FATAL | DLT_INFO | DLT_CRITICAL;
 #if TRACE_APPLICATION
-  is_trace |= DLT_APPLICATION;   // Enable application tracing
+  is_trace |= DLT_APPICATION;   // Enable application tracing
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT APPLICATON enabled");))
 #endif
 #if TRACE_COMMUNICATION
@@ -145,7 +145,7 @@ void trace_loop(void *arg)
 
     if ( gpio_get_level(BMI270_INTERRUPT) == 0 )
     {
-      ;
+      printf("got here");
     }
 
     /*

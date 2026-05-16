@@ -16,6 +16,7 @@ int           instr(char *s1, char *s2);                             // Compare 
 bool          contains(char *s1, char *s2);                          // Return true if s1 contains s2
 bool          prompt_for_confirm(void);                              // Prompt for confirmation
 void          get_number(char *prompt, real_t *value);               // Get a number from the user
+int           get_hex(char *prompt);                                 // Get a hex number from the user
 void          send_keep_alive(void);                                 // Send a keep alive message
 void          echo_serial(int delay, int in_port, int out_port);     // Echo the serial port
 void          squish(char *source, char *destination);               // Convert the uri into an arguement

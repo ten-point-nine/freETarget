@@ -66,6 +66,12 @@ void digital_output_test(void);      // Test the digital outputs
 #define DLT_VERBOSE       (0x4000)                 // Turn on verbose tracing
 #define DLT_AMB           (0x8000)                 // Special Debug DLT
 
+#if ( ((DLT_FATAL | DLT_CRITICAL | DLT_INFO | DLT_APPLICATION | DLT_COMMUNICATION | DLT_DIAG | DLT_DEBUG | DLT_SCORE | DLT_HTTP |          \
+        DLT_OTA | DLT_CALIBRATION) &                                                                                                       \
+       (DLT_HEARTBEAT | DLT_VERBOSE | DLT_AMB)) != 0 )
+#error "DLT masks overlap"
+#endif
+
 /*
  *  Enable compile level tracing
  */
@@ -93,7 +99,7 @@ typedef struct
 
 extern const dlt_name_t dlt_names[];
 
-/*
- *  Variables
- */
+                         /*
+                          *  Variables
+                          */
 #endif

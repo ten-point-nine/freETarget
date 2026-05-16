@@ -576,6 +576,33 @@ void get_number(char *prompt, real_t *value)
 
 /*----------------------------------------------------------------
  *
+ * @function: get_hex
+ *
+ * @brief:    Get a number from the command line
+ *
+ * @return:   Number entered
+ *
+ *----------------------------------------------------------------
+ *
+ *
+ *--------------------------------------------------------------*/
+int get_hex(char *prompt)
+{
+  char  str[SHORT_TEXT];
+  char *end_ptr;
+  int   value;
+
+  SEND(ALL, sprintf(_xs, "%s", prompt);)
+
+  /*
+   * Get the input string
+   */
+  get_string(str, sizeof(str));
+  sscanf(str, "%x", &value);
+  return value;
+}
+/*----------------------------------------------------------------
+ *
  * @function: atan2_2PI
  *
  * @brief:    atan2 function that returns 0 to 2PI
