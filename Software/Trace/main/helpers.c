@@ -187,6 +187,7 @@ bool prompt_for_confirm(void)
       {
         case 'y':
         case 'Y':
+        case ' ': // Space bar
           return true;
 
         case 'n':
@@ -755,4 +756,33 @@ unsigned char check_for_exit(void)
   }
 
   return 0;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: pause
+ *
+ * @brief:    Puase execution until a space bar is pressed
+ *
+ * @return:   Nothing
+ * 
+ *---------------------------------------------------------------
+ *
+ * Stay here forever until a space bar has been pressed
+ *
+ *--------------------------------------------------------------*/
+void pause(void)
+{
+  SEND(ALL, sprintf(_xs, "Paused press space to continue");)
+  while ( 1 )
+  {
+    if ( serial_available(ALL) )
+    {
+      if ( serial_getch(ALL) == ' ' )
+      {
+        return;
+      }
+    }
+    vTaskDelay(10);
+  }
 }
