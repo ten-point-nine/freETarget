@@ -90,13 +90,13 @@ spi_device_interface_config_t BMI270_spi_config = {
     // Configuration for the SPI device
     .command_bits     = 0,                   // No command phase
     .address_bits     = 8,                   //
-    .dummy_bits       = 8,                   // No dummy bits
+    .dummy_bits       = 0,                   // No dummy bits
     .mode             = 0,                   // SPI mode 0
     .clock_source     = SPI_CLK_SRC_DEFAULT, // Use default clock source
     .duty_cycle_pos   = 128,                 // 50% duty cycle
     .cs_ena_pretrans  = 0,                   // No pre-transaction CS activation
     .cs_ena_posttrans = 0,                   // No post-transaction CS activation
-    .clock_speed_hz   = 400000,              // 400 kHz clock speed
+    .clock_speed_hz   = 4 * 100 * 1000,      // 400 kHz clock speed
     .input_delay_ns   = 0,                   // No input delay
     .spics_io_num     = BMI270_CS,           // CS pin
     .flags            = SPI_DEVICE_NO_DUMMY, // No special flags
@@ -109,7 +109,6 @@ BMI270_config_t BMI270_config[] = {
     //       76543210
     {0x7D, 0b00000110       }, // PWR_CTRL, Enable Gyro and Accel, disable Aux and temperature
     {0x40, 0b01010000 + 0x0b}, // ACC_CONF Performance optimized, Average 4, 800Hz
-    {0,    0                },
     {0x41, 0b00000000       }, // ACC_RANGE +/-2g
     {0x42, 0b11010000 + 0x0b}, // GYR_CONF, Performance Optimized, Average 4, 800 samples
     {0x43, 0b00000100       }, // GYR_RANGE, 125 dps
@@ -191,26 +190,29 @@ void BMI270_init(unsigned int BMI270_gpio)
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to add BMI270 device to SPI bus");))
   }
 
-  /*
-   * Read the device ID
-   */
+                                                                                     /*
+                                                                                      * Read the device ID
+                                                                                      */
+  PAUSE("CHIP_ID")
   memset(&transaction, 0, sizeof(transaction));     // Clear the transaction structure
   transaction.addr      = 0x80 | CHIP_ID;           // Register address to read from
-  transaction.length    = 1 * 8;                    // Transmit length in bits
+  transaction.length    = 2 * 8;                    // Transmit length in bits
   transaction.tx_buffer = NULL;                     // Transmit buffer not used
-  transaction.rxlength  = 1 * 8;                    // Receive length in bits
+  transaction.rxlength  = 2 * 8;                    // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_RXDATA;     // Indicate that this is a read operation
 
   spi_device_transmit(BMI270_handle, &transaction); // Dummy read to put into SPI mode
   spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
 
-  if ( transaction.rx_data[0] != 0x24 )             // Check the device ID
+  printf("transaction %X %X %x %x", transaction.rx_data[0], transaction.rx_data[1], transaction.rx_data[2], transaction.rx_data[3]);
+
+  if ( transaction.rx_data[1] != 0x24 )             // Check the device ID
   {
-    DLT(DLT_FATAL, SEND(ALL, sprintf(_xs, "Failed to read BMI270 device ID: 0x%02X", transaction.rx_data[0]);))
+    DLT(DLT_FATAL, SEND(ALL, sprintf(_xs, "Failed to read BMI270 device ID: 0x%02X", transaction.rx_data[1]);))
   }
   else
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270 device ID: 0x%02X", transaction.rx_data[0]);))
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270 device ID: 0x%02X", transaction.rx_data[1]);))
   }
 
   /*
@@ -264,9 +266,9 @@ void BMI270_init(unsigned int BMI270_gpio)
   transaction.rxlength  = 1 * 8;                    // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_RXDATA;     // Indicate that this is a read operation
   spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
-  if ( transaction.rx_data[0] != 0x1 )              // Check the device ID
+  if ( transaction.rx_data[1] != 0x1 )              // Check the device ID
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initialization failed: 0x%02X", transaction.rx_data[0]);))
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initialization failed: 0x%02X", transaction.rx_data[1]);))
   }
 
   /*
@@ -827,9 +829,9 @@ void BMI270_SPI_dump(void)
     spi_transaction_t transaction;
     memset(&transaction, 0, sizeof(transaction));               // Clear the transaction structure
     transaction.addr      = 0x80 | address;                     // Register address to read from
-    transaction.length    = 8;                                  // Transmit length in bits
+    transaction.length    = 2 * 8;                              // Transmit length in bits
     transaction.tx_buffer = NULL;                               // Transmit buffer not used
-    transaction.rxlength  = 8;                                  // Receive length in bits
+    transaction.rxlength  = 2 * 8;                              // Receive length in bits
     transaction.flags     = SPI_TRANS_USE_RXDATA;               // Indicate that this is a read operation
 
     spi_device_transmit(BMI270_handle, &transaction);           // Transmit the transaction
@@ -846,7 +848,7 @@ void BMI270_SPI_dump(void)
     {
       SEND(ALL, sprintf(_xs, "  ");)
     }
-    SEND(ALL, sprintf(_xs, "0x%02X ", transaction.rx_data[0]);) // Print the value read from the register}
+    SEND(ALL, sprintf(_xs, "0x%02X ", transaction.rx_data[1]);) // Print the value read from the register}
   }
 
   SEND(ALL, sprintf(_xs, _DONE_);)

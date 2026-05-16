@@ -39,6 +39,7 @@ unsigned char check_for_exit(void);                                  // Check fo
 /*
  *  Helpful #defines
  */
-#define PAUSE(prompt) {SEND(ALL, sprintf(_xs, "\r\n%s", prompt);) prompt_for_confirm();}
+#define PAUSE(prompt)
+// #define PAUSE(prompt) {SEND(ALL, sprintf(_xs, "\r\n%s", prompt);) prompt_for_confirm();}
 
 #endif

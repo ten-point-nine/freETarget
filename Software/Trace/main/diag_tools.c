@@ -425,6 +425,7 @@ bool do_dlt(           //
       dlt_id = dlt_names[i].dlt_id;               // Use the Verbose ID
 
       SEND(ALL, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, run_time_ms() / 1000.);)
+      #if(0)
       if ( (level & DLT_FATAL) != 0 )             // This message is fatal
       {
         set_status_LED(LED_ERROR);                // Indicate an error
@@ -433,6 +434,7 @@ bool do_dlt(           //
           vTaskDelay(ONE_SECOND);                 // Stay here forever
         }
       }
+        #endif
       return true;                                // Send out the message
     }
 
