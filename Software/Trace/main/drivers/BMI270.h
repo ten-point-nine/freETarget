@@ -45,17 +45,17 @@ typedef struct
   union
   {
     uint8_t x8[2]; // X acceleration byte addressable
-    int16_t x;     // X acceleration word addressable
+    int16_t x_dotdot;     // X acceleration word addressable
   };
   union
   {
     uint8_t y8[2];
-    int16_t y;
+    int16_t y_dotdot;
   };
   union
   {
     uint8_t z8[2];
-    int16_t z;
+    int16_t z_dotdot;
   };
   union
   {

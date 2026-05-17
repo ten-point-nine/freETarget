@@ -488,9 +488,9 @@ void BMI270_read_raw_accel(trace_raw_t *sample_as_read) // TRUE if a zero offset
   }
 
   DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "\r\n %d %p %p %04X (%02X %02X)  %04X  (%02X %02X) %04X  (%02X %02X)", sizeof(trace_raw_t),
-                                   &sample_as_read->dummy, &sample_as_read->x, sample_as_read->x, sample_as_read->x8[0],
-                                   sample_as_read->x8[1], sample_as_read->y, sample_as_read->y8[0], sample_as_read->y8[1],
-                                   sample_as_read->z, sample_as_read->z8[0], sample_as_read->z8[1]);))
+                                   &sample_as_read->dummy, &sample_as_read->x_dotdot, sample_as_read->x_dotdot, sample_as_read->x8[0],
+                                   sample_as_read->x8[1], sample_as_read->y_dotdot, sample_as_read->y8[0], sample_as_read->y8[1],
+                                   sample_as_read->z_dotdot, sample_as_read->z8[0], sample_as_read->z8[1]);))
 
   return; //}
 #if ( 0 )
@@ -530,7 +530,7 @@ void BMI270_read_raw_accel(trace_raw_t *sample_as_read) // TRUE if a zero offset
 
 /*----------------------------------------------------------------
  *
- * @function: BMI270_zero()
+ * @function: BMI270_find_zero()
  *
  * @brief:    Determine the resting g levels for the BMI270
  *
@@ -551,10 +551,11 @@ trace_raw_t zero_samples;  // Buffer to hold multiple samples for averaging
 
 void BMI270_find_zero(void)
 {
-#if ( 0 )
   unsigned int i;          // Loop counter
   trace_raw_t  BMI270_raw; // As read from the accelerometer
-  trace_raw_t  BMI270_sum;
+  int32_t      x_dotdot;   // 32 bit acceleration to prevent overflow
+  int32_t      y_dotdot;   // while summing
+  int32_t      z_dotdot;
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270_find_zero()");))
 
@@ -562,36 +563,37 @@ void BMI270_find_zero(void)
    * Loop and collect samples
    */
 
-  BMI270_sum.x = 0; // Zero out the sum
-  BMI270_sum.y = 0;
-  BMI270_sum.z = 0;
+  x_dotdot = 0; // Zero out the sum
+  y_dotdot = 0;
+  z_dotdot = 0;
 
-  sample_out = BMI270_find_sample_out(NUM_ZERO_SAMPLES);
-  i          = 0;
+                // sample_out = BMI270_find_sample_out(NUM_ZERO_SAMPLES);
+  i = 0;
   while ( i != NUM_ZERO_SAMPLES )
   {
     BMI270_read_raw_accel(&BMI270_raw); // Take a sample of the raw acceleration data
-    BMI270_sum.x += BMI270_raw.x;       // Accumulate the X-axis raw acceleration data
-    BMI270_sum.y += BMI270_raw.y;       // Accumulate the Y-axis raw acceleration data
-    BMI270_sum.z += BMI270_raw.z;       // Accumulate the Z-axis raw acceleration data
+    x_dotdot += BMI270_raw.x_dotdot;    // Accumulate the X-axis raw acceleration data
+    y_dotdot += BMI270_raw.y_dotdot;    // Accumulate the Y-axis raw acceleration data
+    z_dotdot += BMI270_raw.z_dotdot;    // Accumulate the Z-axis raw acceleration data
     i++;
   }
 
   /*
    * Average the samples to get a more accurate zero level
    */
-  BMI270_zero_sample.x = BMI270_sum.x / NUM_ZERO_SAMPLES; // Average the X-axis raw acceleration data
-  BMI270_zero_sample.y = BMI270_sum.y / NUM_ZERO_SAMPLES; // Average the Y-axis raw acceleration data
-  BMI270_zero_sample.z = BMI270_sum.z / NUM_ZERO_SAMPLES; // Average the Z-axis raw acceleration data
+  BMI270_zero_sample.x_dotdot = x_dotdot / NUM_ZERO_SAMPLES; // Average the X-axis raw acceleration data
+  BMI270_zero_sample.y_dotdot = y_dotdot / NUM_ZERO_SAMPLES; // Average the Y-axis raw acceleration data
+  BMI270_zero_sample.z_dotdot = z_dotdot / NUM_ZERO_SAMPLES; // Average the Z-axis raw acceleration data
 
   /*
    *  All done, return
    */
-  DLT(DLT_INFO,
-      SEND(ALL, sprintf(_xs, "Axis offset - X: %04X, Y: %04X, Z: %04X", BMI270_zero_sample.x, BMI270_zero_sample.y, BMI270_zero_sample.z);))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Axis offset - X: %04X, Y: %04X, Z: %04X", BMI270_zero_sample.x_dotdot, BMI270_zero_sample.y_dotdot,
+                                  BMI270_zero_sample.z_dotdot);))
 
   set_status_LED(LED_READY); // Indicate that we are ready
-#endif
+  SEND(ALL, sprintf(_xs, _DONE_);)
+
   return;
 }
 
@@ -608,42 +610,45 @@ void BMI270_find_zero(void)
  * Multiply the raw acceleration data by the LSB per g for the
  * current range setting to convert to g
  *
+ * The fudge factor 2* is because of the scaling inside of the
+ * register.
+ *
  *--------------------------------------------------------------*/
 #define ACCEL_DEAD_BAND 0.0
 #define GYRO_DEAD_BAND  0.0
 void BMI270_convert_to_g(trace_raw_t *sample, trace_point_t *actual)
 {
-  actual->ax = 2.0 * ((real_t)sample->x) * G_PER_LSB;             // Convert raw X-axis data to g
+  actual->x_dotdot = 2.0 * ((real_t)sample->x_dotdot) * G_PER_LSB; // Convert raw X-axis data to g
   if ( F_ABS(actual->x) < ACCEL_DEAD_BAND )
   {
-    actual->ax = 0;
+    actual->x_dotdot = 0;
   }
 
-  actual->ay = 2.0*((real_t)sample->y) * G_PER_LSB;                // Convert raw Y-axis data to g
-  if ( F_ABS(actual->ay) < ACCEL_DEAD_BAND )
+  actual->y_dotdot = 2.0 * ((real_t)sample->y_dotdot) * G_PER_LSB; // Convert raw Y-axis data to g
+  if ( F_ABS(actual->y_dotdot) < ACCEL_DEAD_BAND )
   {
-    actual->ay = 0;
+    actual->y_dotdot = 0;
   }
 
-  actual->az = 2.0 * ((real_t)sample->z) * G_PER_LSB;             // Convert raw Z-axis data to g
-  if ( F_ABS(actual->az) < ACCEL_DEAD_BAND )
+  actual->z_dotdot = 2.0 * ((real_t)sample->z_dotdot) * G_PER_LSB; // Convert raw Z-axis data to g
+  if ( F_ABS(actual->z_dotdot) < ACCEL_DEAD_BAND )
   {
-    actual->az = 0;
+    actual->z_dotdot = 0;
   }
 
-  actual->rho_dot = ((real_t)sample->rho_dot) * GYRO_PER_LSB;     // Convert raw X-axis data to g
+  actual->rho_dot = ((real_t)sample->rho_dot) * GYRO_PER_LSB;      // Convert raw X-axis data to g
   if ( F_ABS(actual->rho_dot) < GYRO_DEAD_BAND )
   {
     actual->rho_dot = 0;
   }
 
-  actual->theta_dot = ((real_t)sample->theta_dot) * GYRO_PER_LSB; // Convert raw X-axis data to g
+  actual->theta_dot = ((real_t)sample->theta_dot) * GYRO_PER_LSB;  // Convert raw X-axis data to g
   if ( F_ABS(actual->theta_dot) < GYRO_DEAD_BAND )
   {
     actual->theta_dot = 0;
   }
 
-  actual->phi_dot = ((real_t)sample->phi_dot) * GYRO_PER_LSB;     // Convert raw X-axis data to g
+  actual->phi_dot = ((real_t)sample->phi_dot) * GYRO_PER_LSB;      // Convert raw X-axis data to g
   if ( F_ABS(actual->phi_dot) < GYRO_DEAD_BAND )
   {
     actual->phi_dot = 0;
@@ -747,13 +752,14 @@ void BMI270_oscilliscope(void)
     if ( pause == false )
     {
       BMI270_read_raw_accel(&samples[0]);
-      BMI270_convert_to_g(&samples[0], &trace_value);                                        // Convert raw data to g
+      BMI270_convert_to_g(&samples[0], &trace_value);    // Convert raw data to g
 
-      vector_magnitude = sqrt(SQ(trace_value.ax) + SQ(trace_value.ay) + SQ(trace_value.az)); // Calculate the magnitude of the acceleration
+      vector_magnitude = sqrt(SQ(trace_value.x_dotdot) + SQ(trace_value.y_dotdot) +
+                              SQ(trace_value.z_dotdot)); // Calculate the magnitude of the acceleration
 
       SEND(ALL, sprintf(_xs, "\r\n\r|a|: %6.4f,   ax: %6.4f, ay: %6.4f,  az: %6.4f,    rho_dot: %6.4f, theta_dot: %6.4f, phi_dot: %6.4f",
-                        vector_magnitude, trace_value.ax, trace_value.ay, trace_value.az, trace_value.rho_dot, trace_value.theta_dot,
-                        trace_value.phi_dot);)
+                        vector_magnitude, trace_value.x_dotdot, trace_value.y_dotdot, trace_value.z_dotdot, trace_value.rho_dot,
+                        trace_value.theta_dot, trace_value.phi_dot);)
       vTaskDelay(ONE_SECOND / 2);
     }
 

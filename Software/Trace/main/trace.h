@@ -108,22 +108,21 @@ typedef unsigned char byte_t;
 typedef volatile long time_count_t;
 typedef double        real_t;
 
-
 typedef struct
 {
-  real_t ax;                    // X-axis acceleration in g
-  real_t ay;                    // Y-axis acceleration in g
-  real_t az;                    // Z-axis acceleration in g
-  real_t vx;                    // Velocity in the X axis
-  real_t vy;                    // Velocity in the Y axis
-  real_t vz;                    // Velocity in the Z axis
-  real_t x;                     // X position
-  real_t y;                     // Y position
-  real_t z;                     // Z position
-  real_t rho_dot;               // Computed X angle
-  real_t theta_dot;             // Computed Y angle
-  real_t phi_dot;               // Computed Z angle
-} trace_point_t;                // computed point
+  real_t x_dotdot;  // X-axis acceleration in g
+  real_t y_dotdot;  // Y-axis acceleration in g
+  real_t z_dotdot;  // Z-axis acceleration in g
+  real_t x_dot;     // Velocity in the X axis
+  real_t y_dot;     // Velocity in the Y axis
+  real_t z_dotz;    // Velocity in the Z axis
+  real_t x;         // X position
+  real_t y;         // Y position
+  real_t z;         // Z position
+  real_t rho_dot;   // X anglular velocity
+  real_t theta_dot; // Y anglular velocity
+  real_t phi_dot;   // Z anglular velocity
+} trace_point_t;    // computed point
 
 /*
  *  Global Variables
@@ -139,7 +138,6 @@ EXTERN time_count_t power_save;                                     // Power sav
 EXTERN time_count_t time_since_last_shot;                           // 15 minutes since last shot
 EXTERN time_count_t session_time[];                                 // Time in each session
 EXTERN unsigned int run_state;                                      // Current running state of the software
-
 
 EXTERN int           sample_in;                                     // Index to entry from sensor (<0 - wraps around)
 EXTERN int           sample_out;                                    // Index to output to application  (<0 - wraps around)
