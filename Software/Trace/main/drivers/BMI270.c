@@ -198,7 +198,7 @@ static spi_device_interface_config_t BMI270_spi_config = {
     .duty_cycle_pos   = 128,                                            // 50% duty cycle
     .cs_ena_pretrans  = 0,                                              // No pre-transaction CS activation
     .cs_ena_posttrans = 0,                                              // No post-transaction CS activation
-    .clock_speed_hz   = 4 * 100 * 1000,                                 // 400 kHz clock speed
+    .clock_speed_hz   = 8 * 1000 * 1000,                                // 8 MHz clock speed
     .input_delay_ns   = 0,                                              // No input delay
     .spics_io_num     = BMI270_CS,                                      // CS pin
     .flags            = SPI_DEVICE_NO_DUMMY,                            // No special flags
@@ -294,7 +294,7 @@ void BMI270_init(unsigned int BMI270_gpio)
                                                                                      /*
                                                                                       * Read the device ID
                                                                                       */
-  PAUSE("CHIP_ID")
+
   memset(&transaction, 0, sizeof(transaction));     // Clear the transaction structure
   transaction.addr      = 0x80 | CHIP_ID;           // Register address to read from
   transaction.length    = 2 * 8;                    // Transmit length in bits
@@ -303,6 +303,7 @@ void BMI270_init(unsigned int BMI270_gpio)
   transaction.flags     = SPI_TRANS_USE_RXDATA;     // Indicate that this is a read operation
 
   spi_device_transmit(BMI270_handle, &transaction); // Dummy read to put into SPI mode
+  PAUSE("CHIP_ID")
   spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
 
   if ( transaction.rx_data[1] != 0x24 )             // Check the device ID
@@ -361,8 +362,8 @@ void BMI270_init(unsigned int BMI270_gpio)
   memset(&transaction, 0, sizeof(transaction));     // Clear the transaction structure
   transaction.addr      = 0x80 | INTERNAL_STATUS;   // Read the internal status register to check if the API is properly initialized
   transaction.tx_buffer = NULL;                     // Transmit buffer not used
-  transaction.length    = 1 * 8;                    // Transmit length in bits
-  transaction.rxlength  = 1 * 8;                    // Receive length in bits
+  transaction.length    =2 * 8;                    // Transmit length in bits
+  transaction.rxlength  = 2 * 8;                    // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_RXDATA;     // Indicate that this is a read operation
   spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
   if ( transaction.rx_data[1] != 0x1 )              // Check the device ID
@@ -676,52 +677,55 @@ void BMI270_convert_to_g(trace_raw_t *sample, trace_point_t *actual)
 
 void BMI270_test(void)
 {
-#if ( 0 )
-  real_t        vector_magnitude;                    // Magnitude of the acceleration vector
-  trace_raw_t   previous_raw;                        // Previous sample
-  trace_raw_t   present_raw;                         // Present sample
-  trace_point_t previous;                            // Previous sample converted to g
-  trace_point_t present;                             // Present sample converted to g
-#if ( 0 )
-  BMI270_find_sample_out(NUM_ZERO_SAMPLES);          // Start at the point where we took the zero samples to get the most recent data
+
+  real_t        vector_magnitude;           // Magnitude of the acceleration vector
+  trace_raw_t   previous_raw;               // Previous sample
+  trace_raw_t   present_raw;                // Present sample
+  trace_point_t previous;                   // Previous sample converted to g
+  trace_point_t present;                    // Present sample converted to g
+
+  BMI270_find_sample_out(NUM_ZERO_SAMPLES); // Start at the point where we took the zero samples to get the most recent data
 
   BMI270_read_raw_accel(&previous_raw);
 
-  while ( BMI270_read_raw_accel(&present_raw) != 0 ) // Read the acceleration dataP )
+  while ( 1 )
   {
-    BMI270_convert_to_g(&present_raw, &present);     // Convert raw data to g
 
-    vector_magnitude = sqrt(SQ(present.ax) + SQ(present.ay) + SQ(present.az)); // Calculate the magnitude of the acceleration vector
+    BMI270_read_raw_accel(&present_raw);                                          // Read the acceleration dataP )
+
+    BMI270_convert_to_g(&present_raw, &present);                                  // Convert raw data to g
+
+    vector_magnitude =
+        sqrt(SQ(present.x_dotdot) + SQ(present.y_dotdot) + SQ(present.z_dotdot)); // Calculate the magnitude of the acceleration vector
 
     /*
      * Integrate the positition
      */
-    present.x = (previous.x) + (previous.vx * TIME_STEP) +
-                (present.ax * G_mm_s2 * (TIME_STEP_SQ) / 2); // Update the X position using the acceleration data
-    present.y = (previous.y) + (previous.vy * TIME_STEP) +
-                (present.ay * G_mm_s2 * (TIME_STEP_SQ) / 2); // Update the Y position using the acceleration data
-    present.z = (previous.z) + (previous.vz * TIME_STEP) +
-                (present.az * G_mm_s2 * (TIME_STEP_SQ) / 2); // Update the Z position using the acceleration data
+    present.x = (previous.x) + (previous.x_dot * TIME_STEP) +
+                (present.x_dotdot * G_mm_s2 * (TIME_STEP_SQ) / 2); // Update the X position using the acceleration data
+    present.y = (previous.y) + (previous.y_dot * TIME_STEP) +
+                (present.y_dotdot * G_mm_s2 * (TIME_STEP_SQ) / 2); // Update the Y position using the acceleration data
+    present.z = (previous.z) + (previous.z_dot * TIME_STEP) +
+                (present.z_dotdot * G_mm_s2 * (TIME_STEP_SQ) / 2); // Update the Z position using the acceleration data
     /*{"TR}"}
      * Integrate the velocity
      */
-    present.vx = previous.vx + (present.ax * G_mm_s2) * TIME_STEP;
-    present.vy = previous.vy + (present.ay * G_mm_s2) * TIME_STEP;
-    present.vz = previous.vz + (present.az * G_mm_s2) * TIME_STEP;
+    present.x_dot = previous.x_dot + (present.x_dotdot * G_mm_s2) * TIME_STEP;
+    present.y_dot = previous.y_dot + (present.y_dotdot * G_mm_s2) * TIME_STEP;
+    present.z_dot = previous.y_dot + (present.z_dotdot * G_mm_s2) * TIME_STEP;
 
     previous = present;
 
     SEND(ALL, sprintf(_xs,
-                      "\r\nax: %+.3fg, ay: %+.3fg, az: %+.3fg, |a|: %.3fg  vx: %+.3fmm/s,  "
-                      "vy:%+.3fmm/s, vz: %+.3fmm/s   x: %+.3fmm, y: %+.3fmm, z: %+.3fmm,   ",
-                      present.ax, present.ay, present.az, vector_magnitude, present.vx, present.vy, present.vz, present.x, present.y,
-                      present.z);)
+                      "\r\nx..: %+.3fg, y..: %+.3fg, z..: %+.3fg, |a|: %.3fg  x.: %+.3fmm/s,  "
+                      "y.:%+.3fmm/s, z.: %+.3fmm/s   x: %+.3fmm, y: %+.3fmm, z: %+.3fmm,   ",
+                      present.x_dotdot, present.y_dotdot, present.z_dotdot, vector_magnitude, present.x_dot, present.y_dot, present.z_dot,
+                      present.x, present.y, present.z);)
   }
-#endif
-/*
- * All done
- */
-#endif
+
+  /*
+   * All done
+   */
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }

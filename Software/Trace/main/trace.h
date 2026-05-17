@@ -19,7 +19,7 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"1.0.0 April 27, 2026\""
+#define SOFTWARE_VERSION "\"1.0.0 May 17, 2026\""
 #define _DONE_           "\r\nDone\r\n"
 #define _SHOT_           "shot"
 #define _GREETING_       "CONNECTED"   // Message to send on connection
@@ -115,7 +115,7 @@ typedef struct
   real_t z_dotdot;  // Z-axis acceleration in g
   real_t x_dot;     // Velocity in the X axis
   real_t y_dot;     // Velocity in the Y axis
-  real_t z_dotz;    // Velocity in the Z axis
+  real_t z_dot;     // Velocity in the Z axis
   real_t x;         // X position
   real_t y;         // Y position
   real_t z;         // Z position
