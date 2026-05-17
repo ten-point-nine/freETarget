@@ -108,26 +108,6 @@ typedef unsigned char byte_t;
 typedef volatile long time_count_t;
 typedef double        real_t;
 
-typedef struct
-{
-  uint8_t dummy;                // Padding
-  uint8_t x_lsb, x_msb;         // X acceleration read from sensor (little-endian)
-  uint8_t y_lsb, y_msb;         // Y acceleration read from sensor
-  uint8_t z_lsb, z_msb;         // Z acceleration read from sensor
-  uint8_t rho_lsb, rho_msb;     // X axis rotation speed
-  uint8_t theta_lsb, theta_msb; // Y axis rotation speed
-  uint8_t phi_lsb, phi_msb;     // Z axis rotation speed
-} trace_raw_t;                  // Value read from sensor
-
-typedef struct
-{
-  int16_t x;                    // X acceleration read from sensor
-  int16_t y;                    // Y acceleration read from sensor
-  int16_t z;                    // Z acceleration read from sensor
-  int16_t rho;                  // X axis rotation speed
-  int16_t theta;                // Y axis rotation speed
-  int16_t phi;                  // Z axis rotation speed
-} trace_big_endian_t;           // Value read from sensor
 
 typedef struct
 {
@@ -140,9 +120,9 @@ typedef struct
   real_t x;                     // X position
   real_t y;                     // Y position
   real_t z;                     // Z position
-  real_t rho;                   // Computed X angle
-  real_t theta;                 // Computed Y angle
-  real_t phi;                   // Computed Z angle
+  real_t rho_dot;               // Computed X angle
+  real_t theta_dot;             // Computed Y angle
+  real_t phi_dot;               // Computed Z angle
 } trace_point_t;                // computed point
 
 /*
@@ -160,7 +140,7 @@ EXTERN time_count_t time_since_last_shot;                           // 15 minute
 EXTERN time_count_t session_time[];                                 // Time in each session
 EXTERN unsigned int run_state;                                      // Current running state of the software
 
-EXTERN trace_raw_t   samples[SAMPLE_DEPTH];                         // Where to store the data
+
 EXTERN int           sample_in;                                     // Index to entry from sensor (<0 - wraps around)
 EXTERN int           sample_out;                                    // Index to output to application  (<0 - wraps around)
 EXTERN trace_point_t present;                                       // Present sample

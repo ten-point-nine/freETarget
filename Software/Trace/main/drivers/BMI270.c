@@ -77,16 +77,93 @@
  * BMI270 Register Addresses
  */
 #define CHIP_ID         0x00
-#define PWR_CONF        0x7C
-#define INIT_CTRL       0x59
-#define INIT_DATA       0x5E
+#define ACCEL_X         0x0C           // Acceleration X, Y, Z  Gyro X, Y, Z
+#define TIMER           0x18           // Sensor time register
 #define INTERNAL_STATUS 0x21
-#define ACCEL_X         0x0C // Acceleration X, Y, Z  Gyro X, Y, Z
-#define TIMER           0x18
-#define FIFO_LENGTH     0x24
-#define FIFO_DATA       0x26
 
-#define g_RANGE   g2         // Use 2G for the range
+#define ACC_CONF        0x40           // Acceleration Configuration
+#define acc_odr         0x09           // (odr_200) Output data rate 200
+#define acc_bwp         (0x01 << 4)    // (osr2_avg) Average two samples
+#define acc_filter_perf (0x01 << 7)    // (hp) Optimized for parformance
+
+#define ACC_RANGE 0x41                 // Acceleration range
+#define acc_range 0x01                 // +/- 2g
+
+#define GYR_CONF        0x42           // Gyro Configuration
+#define gyr_odr         0x09           // (odr_200)
+#define gyr_bwp         (0x1 << 4)     // (osr2) Bandwidth coefficient
+#define gyr_noise_perf  (1 << 6)       // (hp) performance optiminzed
+#define gyr_filter_perf (1 << 7)       // (hp) performance optimized
+
+#define GYR_RANGE 0x43                 // Gyro Range
+#define gyr_range 0x04                 // (range_125) +/- 125 dps
+#define ois_range (0x00 << 3)          // (range_250) Full scale resolution +/- 250 dps
+
+#define FIFO_DOWNS         0x45        // FIFO downsampling
+#define gyr_fifo_downs     0x1         // Downsampling for gyro, 2**gyr_fifo_downs
+#define gyr_fifo_filt_data (0x01 << 3) // Filtered data
+#define acc_fifo_downs     (0x01 << 4) // Downsampling for accel, 2**acc_fifo_downs
+#define acc_fifo_filt_data (0x01 << 7) // Filtered data
+
+#define FIFO_WTM_0 0x46                // FIFO Watermark lsb
+#define FIFO_WTM_1 0x47                // FIFO Watermark msb
+#define watermark  400                 // Interrupt after 400 samples
+
+#define FIFO_CONF_0       0x48         // FIFO Frame Configuration
+#define fifo_stop_on_full 0x00         // (disable) do not stop on full
+#define fifo_time_en      (0x00 << 1)  // (disable) do not return sensor time frame
+
+#define FIFO_CONFIG_1     0x49         // FIFO Frame Content Configuration
+#define fifo_tag_int_1_en 0x00         // (int_edge) enable tag on rising edge of int 2 pin
+#define fifo_tag_int_2_en (0x00 << 2)  // (int_edge) enable tag on rising edge of in 2 pin
+#define fifo_header_en    (0x00 << 4)  // (disable) no heder is stored
+#define fifo_aux_en       (0x00 << 5)  // (disable) no Auxilary sensor data is stored
+#define fifo_acc_en       (0x01 << 6)  // (enable) Accelerometer data is stored
+#define fifo_gyr_en       (0x01 << 7)  // (enable) Gryoscope data is stored
+
+#define INT_1_IO_CTRL 0x53             // Interrupt 1 configuration
+#define lvl           (0x00 << 1)      // (active_low)
+#define od            (0x00 << 2)      // (od) push pull
+#define output_en     (0x01 << 3)      // (on)
+#define input_en      (0x00 << 4)      // (off)
+
+#define INT_2_IO_CTRL  0x54            // Interrupt 2 configuration
+#define int_2_not_used 0x00            // disable everything
+
+#define INT_LATCH 0x55                 // Interupt latch
+#define int_latch 0x01                 // Permanent
+
+#define INT_MAP_DATA 0x58              // Data interupt mapping for both INT pins
+#define ffull_int1   0x00              // FIFO full to int 1
+#define fwm_int1     (0x01 << 1)       // FIFO watermark to int 1
+#define drdy_int1    (0x01 << 2)       // Data ready to int 1
+#define err_int1     (0x01 << 3)       // Error interrupt to int 1
+#define ffull_int2   (0x01 << 4)       // FIFO full to int 2
+#define fwm_int2     (0x01 << 5)       // FIFO watermark to int 2
+#define drdy_int2    (0x01 << 6)       // Data ready to int 2
+#define err_int2     (0x01 << 7)       // Error interrupt to int 2
+
+#define PWR_CONF          0x7C         // Power mode configuration
+#define adv_power_save    0x00         // Advanced powerf save disabled
+#define fifo_self_wake_up (0x01 << 1)  // (fsw_on) FIFO enabled in low power mode
+#define fup_en            (0x01 << 2)  // (fup_on) Fast power up enabled
+
+#define PWR_CTRL 0x7D                  // Power mode control register
+#define aux_en   0x00                  // (aux_off) disable aux sensor
+#define gyr_en   (0x01 << 1)           // (gyr_on) gyro enabled
+#define acc_en   (0x01 << 2)           // (acc_on) Acclerometer enabled
+#define temp_en  (0x00 << 3)           // (temp_off) Temperature disabled
+
+#define CMD 0x7E                       // Command register
+#define cmd (0xb0)                     // (fifo_flush) Clear FIFO contrent
+
+#define INIT_CTRL 0x59
+#define INIT_DATA 0x5E
+
+#define FIFO_LENGTH 0x24
+#define FIFO_DATA   0x26
+
+#define g_RANGE   g2 // Use 2G for the range
 #define g_PER_LSB ((g2_RANGE) / 65565.0)
 
 /*
@@ -108,51 +185,50 @@ typedef struct
 /*
  * Variables
  */
-static trace_big_endian_t  BMI270_zero_sample; // Sample to hold the zeroed acceleration data
+static trace_raw_t         BMI270_zero_sample; // Sample to hold the zeroed acceleration data
 static spi_device_handle_t BMI270_handle;      // Handle for the SPI device
 
 static spi_device_interface_config_t BMI270_spi_config = {
     // Configuration for the SPI device
-    .command_bits     = 0,                   // No command phase
-    .address_bits     = 8,                   //
-    .dummy_bits       = 0,                   // No dummy bits
-    .mode             = 0,                   // SPI mode 0
-    .clock_source     = SPI_CLK_SRC_DEFAULT, // Use default clock source
-    .duty_cycle_pos   = 128,                 // 50% duty cycle
-    .cs_ena_pretrans  = 0,                   // No pre-transaction CS activation
-    .cs_ena_posttrans = 0,                   // No post-transaction CS activation
-    .clock_speed_hz   = 4 * 100 * 1000,      // 400 kHz clock speed
-    .input_delay_ns   = 0,                   // No input delay
-    .spics_io_num     = BMI270_CS,           // CS pin
-    .flags            = SPI_DEVICE_NO_DUMMY, // No special flags
+    .command_bits     = 0,                                              // No command phase
+    .address_bits     = 8,                                              //
+    .dummy_bits       = 0,                                              // No dummy bits
+    .mode             = 0,                                              // SPI mode 0
+    .clock_source     = SPI_CLK_SRC_DEFAULT,                            // Use default clock source
+    .duty_cycle_pos   = 128,                                            // 50% duty cycle
+    .cs_ena_pretrans  = 0,                                              // No pre-transaction CS activation
+    .cs_ena_posttrans = 0,                                              // No post-transaction CS activation
+    .clock_speed_hz   = 4 * 100 * 1000,                                 // 400 kHz clock speed
+    .input_delay_ns   = 0,                                              // No input delay
+    .spics_io_num     = BMI270_CS,                                      // CS pin
+    .flags            = SPI_DEVICE_NO_DUMMY,                            // No special flags
     .queue_size       = 1,
-    .pre_cb           = NULL,                // Callback to be called before a transmission is started.
-    .post_cb          = NULL                 // Callback to be called after a transmission has completed.
+    .pre_cb           = NULL,                                           // Callback to be called before a transmission is started.
+    .post_cb          = NULL                                            // Callback to be called after a transmission has completed.
 };
 
 static BMI270_config_t BMI270_config[] = {
-    //       76543210
-    {0x7D, 0b00000110             }, // PWR_CTRL, Enable Gyro and Accel, disable Aux and temperature
-    {0x40, 0b01010000 + 0x0b      }, // ACC_CONF Performance optimized, Average 4, 800Hz
-    {0x41, 0b00000000 + G_RANGE   }, // ACC_RANGE +/-2g
-    {0x42, 0b11010000 + 0x0b      }, // GYR_CONF, Performance Optimized, Average 4, 800 samples
-    {0x43, 0b00000000 + GYRO_RANGE}, // GYR_RANGE, 125 dps
-    {0x45, 0b10001000             }, // FIFO_DOWNS FIFO downsampling
-    {0x46, 0b00000000             }, // FIFO_WTM_0,  Watermark LSB
-    {0x47, 0b00000010             }, // FIFO_WTM_1,  Watermark MSB
-    {0x48, 0b00000000             }, // FIFO_CONFIG_0, No timestamp, do not stop if FIFO full
-    {0x49, 0b11000000             }, // FIFO_CONNFIG_1, Store Accel and Gyro
-    {0x53, 0b00001000             }, // INT1_IO_CTRL, INT1 enabled, push pull, active low
-    {0x54, 0b00000000             }, // INT2_IO_CTRL, No interrupt on INT2
-    {0x55, 0b00000000             }, // INT_LATCH, non-latched
-    {0x58, 0b00000010             }, // INT1_MAP, FIFO watermark interrupt mapped to INT1
-    {0x59, 0b00000000             }, // INT2_MAP, No interrupts mapped to INT2      {0x70, 0b00000000       }, // NV_CONF, Advanced power up disabled
-    {0x7C, 0b00000011             }, // PWR_CONF, Advanced power up enabled
-    {0x7D, 0b00000110             }, // PWR_CTRL, Enable Gyro and Accel, disable Aux and temperature
-    {0x7E, 0b10110000             }, // CMD, Clear the FIFO
-    {0x00, 0x00                   }  // End of the configuration file
+    {ACC_CONF,      acc_odr + acc_bwp + acc_filter_perf                 }, // ACC_CONF Performance optimized, Average 4, 800Hz
+    {ACC_RANGE,     acc_range                                           }, // ACC_RANGE +/-2g
+    {GYR_CONF,      gyr_odr + gyr_bwp + gyr_noise_perf + gyr_filter_perf}, // GYR_CONF, Performance Optimized, Average 4, 800 samples
+    {GYR_RANGE,     gyr_range + ois_range                               }, // GYR_RANGE, 125 dps
+    {FIFO_DOWNS,    gyr_fifo_downs + gyr_fifo_filt_data + acc_fifo_downs}, // FIFO_DOWNS FIFO downsampling
+    {FIFO_WTM_0,    watermark & 0x00ff                                  }, // FIFO Watermark lsb
+    {FIFO_WTM_1,    (watermark >> 8) & 0x00ff                           }, // FIFO Watermark msb
+    {FIFO_CONF_0,   fifo_stop_on_full + fifo_time_en                    }, // FIFO_CONFIG_0, No timestamp, do not stop if FIFO full
+    {FIFO_CONFIG_1, fifo_tag_int_1_en + fifo_tag_int_2_en + fifo_header_en + fifo_aux_en + fifo_acc_en +
+                        fifo_gyr_en                  }, // FIFO_CONFIG_1, Store gyro and accel data
+    {INT_1_IO_CTRL, lvl + od + output_en + input_en                     }, // INT_1_IO_CTRL Interrupt 1 used
+    {INT_2_IO_CTRL, int_2_not_used                                      }, // INT_2_IO_CTRL, not used
+    {INT_LATCH,     int_latch                                           }, // INT_LATCH, latched
+    {INT_MAP_DATA,  fwm_int1                                            }, // INT1_MAP_DATA, FIFO watermark interrupt mapped to INT1
+    {PWR_CONF,      adv_power_save + fifo_self_wake_up + fup_en         }, // (fup_on) Fast power up enabled
+    {PWR_CTRL,      aux_en + gyr_en + acc_en + temp_en                  }, // PWR_CTRL, Enable Gyro and Accel, disable Aux and temperature
+    {CMD,           cmd                                                 }, // (fifo_flush) Clear FIFO contrent
+    {0x00,          0x00                                                }  // End of the configuration file
 };
 
+trace_raw_t samples[SAMPLE_DEPTH];                                      // Where to store the data
 /*
  * @name  Global array that stores the configuration file of BMI270
  *
@@ -371,7 +447,7 @@ unsigned int BMI270_pull_FIFO(void)
 
 /*----------------------------------------------------------------
  *
- * @function: BMI270_read_accel()
+ * @function: BMI270_read_raw_accel()
  *
  * @brief:    Read acceleration data from the BMI270
  *
@@ -401,8 +477,8 @@ void BMI270_read_raw_accel(trace_raw_t *sample_as_read) // TRUE if a zero offset
   transaction.addr      = 0x80 | ACCEL_X; // Start at Accel Acceleration Data Low register and read all 6 bytes in one transaction
   transaction.length    = (sizeof(trace_raw_t) + 1) * 8;  // Transmit length in bits
   transaction.tx_buffer = &filler;                        // Send dummy data to read the acceleration data
-  transaction.rxlength  = (sizeof(trace_raw_t) + 1) * 8;  //
-  transaction.rx_buffer = sample_as_read;                 // Receive buffer to store the raw acceleration data
+  transaction.rxlength  = sizeof(trace_raw_t) * 8;        //
+  transaction.rx_buffer = &sample_as_read->dummy;         // Receive buffer to store the raw acceleration data
   transaction.flags     = 0;
 
   ret = spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
@@ -411,7 +487,12 @@ void BMI270_read_raw_accel(trace_raw_t *sample_as_read) // TRUE if a zero offset
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to read sensor");))
   }
 
-  return;                                                 //}
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "\r\n %d %p %p %04X (%02X %02X)  %04X  (%02X %02X) %04X  (%02X %02X)", sizeof(trace_raw_t),
+                                   &sample_as_read->dummy, &sample_as_read->x, sample_as_read->x, sample_as_read->x8[0],
+                                   sample_as_read->x8[1], sample_as_read->y, sample_as_read->y8[0], sample_as_read->y8[1],
+                                   sample_as_read->z, sample_as_read->z8[0], sample_as_read->z8[1]);))
+
+  return; //}
 #if ( 0 )
   /*
    * Check if there are any samples available
@@ -528,42 +609,44 @@ void BMI270_find_zero(void)
  * current range setting to convert to g
  *
  *--------------------------------------------------------------*/
-void BMI270_convert_to_g(trace_big_endian_t *sample, trace_point_t *actual)
+#define ACCEL_DEAD_BAND 0.0
+#define GYRO_DEAD_BAND  0.0
+void BMI270_convert_to_g(trace_raw_t *sample, trace_point_t *actual)
 {
-  actual->ax = ((real_t)sample->x) * G_PER_LSB;           // Convert raw X-axis data to g
-  if ( F_ABS(actual->x) < 0.010 )
+  actual->ax = 2.0 * ((real_t)sample->x) * G_PER_LSB;             // Convert raw X-axis data to g
+  if ( F_ABS(actual->x) < ACCEL_DEAD_BAND )
   {
     actual->ax = 0;
   }
 
-  actual->ay = ((real_t)sample->y) * G_PER_LSB;           // Convert raw Y-axis data to g
-  if ( F_ABS(actual->ay) < 0.010 )
+  actual->ay = 2.0*((real_t)sample->y) * G_PER_LSB;                // Convert raw Y-axis data to g
+  if ( F_ABS(actual->ay) < ACCEL_DEAD_BAND )
   {
     actual->ay = 0;
   }
 
-  actual->az = ((real_t)sample->z) * G_PER_LSB;           // Convert raw Z-axis data to g
-  if ( F_ABS(actual->az) < 0.010 )
+  actual->az = 2.0 * ((real_t)sample->z) * G_PER_LSB;             // Convert raw Z-axis data to g
+  if ( F_ABS(actual->az) < ACCEL_DEAD_BAND )
   {
     actual->az = 0;
   }
 
-  actual->rho = ((real_t)sample->rho) * GYRO_PER_LSB;     // Convert raw X-axis data to g
-  if ( F_ABS(actual->rho) < 0.010 )
+  actual->rho_dot = ((real_t)sample->rho_dot) * GYRO_PER_LSB;     // Convert raw X-axis data to g
+  if ( F_ABS(actual->rho_dot) < GYRO_DEAD_BAND )
   {
-    actual->rho = 0;
+    actual->rho_dot = 0;
   }
 
-  actual->theta = ((real_t)sample->theta) * GYRO_PER_LSB; // Convert raw X-axis data to g
-  if ( F_ABS(actual->theta) < 0.010 )
+  actual->theta_dot = ((real_t)sample->theta_dot) * GYRO_PER_LSB; // Convert raw X-axis data to g
+  if ( F_ABS(actual->theta_dot) < GYRO_DEAD_BAND )
   {
-    actual->theta = 0;
+    actual->theta_dot = 0;
   }
 
-  actual->phi = ((real_t)sample->phi) * GYRO_PER_LSB;     // Convert raw X-axis data to g
-  if ( F_ABS(actual->phi) < 0.010 )
+  actual->phi_dot = ((real_t)sample->phi_dot) * GYRO_PER_LSB;     // Convert raw X-axis data to g
+  if ( F_ABS(actual->phi_dot) < GYRO_DEAD_BAND )
   {
-    actual->phi = 0;
+    actual->phi_dot = 0;
   }
 
   return;
@@ -614,7 +697,7 @@ void BMI270_test(void)
                 (present.ay * G_mm_s2 * (TIME_STEP_SQ) / 2); // Update the Y position using the acceleration data
     present.z = (previous.z) + (previous.vz * TIME_STEP) +
                 (present.az * G_mm_s2 * (TIME_STEP_SQ) / 2); // Update the Z position using the acceleration data
-    /*
+    /*{"TR}"}
      * Integrate the velocity
      */
     present.vx = previous.vx + (present.ax * G_mm_s2) * TIME_STEP;
@@ -651,23 +734,12 @@ void BMI270_test(void)
  * Poll the BMI270 and print out the acceleration data
  *
  *--------------------------------------------------------------*/
-void BMI270_swap_bytes(trace_raw_t *in, trace_big_endian_t *out)
-{
-  out->x     = (in->x_msb << 8) + in->x_lsb;
-  out->y     = (in->y_msb << 8) + in->y_lsb;
-  out->z     = (in->z_msb << 8) + in->z_lsb;
-  out->rho   = (in->rho_msb << 8) + in->rho_lsb;
-  out->theta = (in->theta_msb << 8) + in->theta_lsb;
-  out->phi   = (in->phi_msb << 8) + in->phi_lsb;
-  return;
-}
 
 void BMI270_oscilliscope(void)
 {
   static unsigned int next_sample = 0;  // Index to the raw acceleration data
   real_t              vector_magnitude; // Magnitude of the acceleration vector
   bool                pause = false;
-  trace_big_endian_t  swap_bytes;
   trace_point_t       trace_value;
 
   while ( 1 )
@@ -675,13 +747,13 @@ void BMI270_oscilliscope(void)
     if ( pause == false )
     {
       BMI270_read_raw_accel(&samples[0]);
-      BMI270_swap_bytes(&samples[0], &swap_bytes);
-      BMI270_convert_to_g(&swap_bytes, &trace_value);                                        // Convert raw data to g
+      BMI270_convert_to_g(&samples[0], &trace_value);                                        // Convert raw data to g
 
       vector_magnitude = sqrt(SQ(trace_value.ax) + SQ(trace_value.ay) + SQ(trace_value.az)); // Calculate the magnitude of the acceleration
 
-      SEND(ALL, sprintf(_xs, "\r\n\r|a|: %6.4f, ax: %6.4f, ay: %6.4f  az: %6.4f, rho: %6.4f, theta: %6.4f, phi: %6.4f", vector_magnitude,
-                        trace_value.ax, trace_value.ay, trace_value.az, trace_value.rho, trace_value.theta, trace_value.phi);)
+      SEND(ALL, sprintf(_xs, "\r\n\r|a|: %6.4f,   ax: %6.4f, ay: %6.4f,  az: %6.4f,    rho_dot: %6.4f, theta_dot: %6.4f, phi_dot: %6.4f",
+                        vector_magnitude, trace_value.ax, trace_value.ay, trace_value.az, trace_value.rho_dot, trace_value.theta_dot,
+                        trace_value.phi_dot);)
       vTaskDelay(ONE_SECOND / 2);
     }
 
