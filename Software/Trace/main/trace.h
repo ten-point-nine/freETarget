@@ -110,29 +110,40 @@ typedef double        real_t;
 
 typedef struct
 {
-  int16_t x;     // X acceleration read from sensor
-  int16_t y;     // Y acceleration read from sensor
-  int16_t z;     // Z acceleration read from sensor
-  int16_t rho;   // X axis rotation speed
-  int16_t theta; // Y axis rotation speed
-  int16_t phi;   // Z axis rotation speed
-} trace_raw_t;   // Value read from sensor
+  uint8_t dummy;                // Padding
+  uint8_t x_lsb, x_msb;         // X acceleration read from sensor (little-endian)
+  uint8_t y_lsb, y_msb;         // Y acceleration read from sensor
+  uint8_t z_lsb, z_msb;         // Z acceleration read from sensor
+  uint8_t rho_lsb, rho_msb;     // X axis rotation speed
+  uint8_t theta_lsb, theta_msb; // Y axis rotation speed
+  uint8_t phi_lsb, phi_msb;     // Z axis rotation speed
+} trace_raw_t;                  // Value read from sensor
 
 typedef struct
 {
-  real_t ax;     // X-axis acceleration in g
-  real_t ay;     // Y-axis acceleration in g
-  real_t az;     // Z-axis acceleration in g
-  real_t vx;     // Velocity in the X axis
-  real_t vy;     // Velocity in the Y axis
-  real_t vz;     // Velocity in the Z axis
-  real_t x;      // X position
-  real_t y;      // Y position
-  real_t z;      // Z position
-  real_t rho;    // Computed X angle
-  real_t theta;  // Computed Y angle
-  real_t phi;    // Computed Z angle
-} trace_point_t; // computed point
+  int16_t x;                    // X acceleration read from sensor
+  int16_t y;                    // Y acceleration read from sensor
+  int16_t z;                    // Z acceleration read from sensor
+  int16_t rho;                  // X axis rotation speed
+  int16_t theta;                // Y axis rotation speed
+  int16_t phi;                  // Z axis rotation speed
+} trace_big_endian_t;           // Value read from sensor
+
+typedef struct
+{
+  real_t ax;                    // X-axis acceleration in g
+  real_t ay;                    // Y-axis acceleration in g
+  real_t az;                    // Z-axis acceleration in g
+  real_t vx;                    // Velocity in the X axis
+  real_t vy;                    // Velocity in the Y axis
+  real_t vz;                    // Velocity in the Z axis
+  real_t x;                     // X position
+  real_t y;                     // Y position
+  real_t z;                     // Z position
+  real_t rho;                   // Computed X angle
+  real_t theta;                 // Computed Y angle
+  real_t phi;                   // Computed Z angle
+} trace_point_t;                // computed point
 
 /*
  *  Global Variables

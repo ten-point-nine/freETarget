@@ -45,14 +45,31 @@
  * Definitions
  */
 
-#define g2      0       // Select +/- 2g range
-#define g2_lsb  0.0039f // LSB value for +/- 2g range (4 mg/LSB)
-#define g4      1       // Select +/- 4g range
-#define g4_lsb  0.0078f // LSB value for +/- 4g range (8 mg/LSB)
-#define g8      2       // Select +/- 8g range
-#define g8_lsb  0.0156f // LSB value for +/- 8g range (16 mg/LSB)
-#define g16     3       // Select +/- 16g range
-#define g16_lsb 0.0312f // LSB value for +/- 16g range (31.2 mg/LSB)
+#define G2        (0)                                        // Select +/- 2g range
+#define G2_RANGE  (4.0)
+#define G4        1                                          // Select +/- 4g range
+#define G4_RANGE  (8.0)
+#define G8        2                                          // Select +/- 8g range
+#define G8_RANGE  (16.0)
+#define G16       3                                          // Select +/- 16g range
+#define G16_RANGE (32.0)
+
+#define G_RANGE   G2
+#define G_PER_LSB (G2_RANGE / 65535.0)                       // g per LSB for the selected range
+
+#define GYRO_2000       0                                    // Select +/- 2000 degrees per second
+#define GYRO_RANGE_2000 (4000)                               //
+#define GYRO_1000       1                                    // Select +/- 1000 degrees per second
+#define GYRO_RANGE_1000 (2000)                               //
+#define GYRO_500        2                                    // Select +/- 500 degrees per second
+#define GYRO_RANGE_500  (1000)                               //
+#define GYRO_250        3                                    // Select +/- 250 degrees per second
+#define GYRO_RANGE_259  (500)                                //
+#define GYRO_125        4                                    // Select +/- 125 degrees per second
+#define GYRO_RANGE_125  (250)                                //
+
+#define GYRO_RANGE   GYRO_125
+#define GYRO_PER_LSB (GYRO_RANGE_125 / 65535.0 * PI / 180.0) // in Radians per LSB
 
 #define SQ(x) ((x) * (x))
 
@@ -64,8 +81,13 @@
 #define INIT_CTRL       0x59
 #define INIT_DATA       0x5E
 #define INTERNAL_STATUS 0x21
-#define ACCEL_A         0x0C
+#define ACCEL_X         0x0C // Acceleration X, Y, Z  Gyro X, Y, Z
 #define TIMER           0x18
+#define FIFO_LENGTH     0x24
+#define FIFO_DATA       0x26
+
+#define g_RANGE   g2         // Use 2G for the range
+#define g_PER_LSB ((g2_RANGE) / 65565.0)
 
 /*
  *  Typedefs
@@ -79,14 +101,17 @@ typedef struct
 /*
  * Function Prototypes
  */
+#define DEBUG                                                                                                                              \
+  printf("\r\nrx_data: %02X %02X %02X %02X", transaction.rx_data[0], transaction.rx_data[1], transaction.rx_data[2],                       \
+         transaction.rx_data[3]);
 
 /*
  * Variables
  */
-trace_raw_t         BMI270_zero_sample; // Sample to hold the zeroed acceleration data
-spi_device_handle_t BMI270_handle;      // Handle for the SPI device
+static trace_big_endian_t  BMI270_zero_sample; // Sample to hold the zeroed acceleration data
+static spi_device_handle_t BMI270_handle;      // Handle for the SPI device
 
-spi_device_interface_config_t BMI270_spi_config = {
+static spi_device_interface_config_t BMI270_spi_config = {
     // Configuration for the SPI device
     .command_bits     = 0,                   // No command phase
     .address_bits     = 8,                   //
@@ -105,27 +130,27 @@ spi_device_interface_config_t BMI270_spi_config = {
     .post_cb          = NULL                 // Callback to be called after a transmission has completed.
 };
 
-BMI270_config_t BMI270_config[] = {
+static BMI270_config_t BMI270_config[] = {
     //       76543210
-    {0x7D, 0b00000110       }, // PWR_CTRL, Enable Gyro and Accel, disable Aux and temperature
-    {0x40, 0b01010000 + 0x0b}, // ACC_CONF Performance optimized, Average 4, 800Hz
-    {0x41, 0b00000000       }, // ACC_RANGE +/-2g
-    {0x42, 0b11010000 + 0x0b}, // GYR_CONF, Performance Optimized, Average 4, 800 samples
-    {0x43, 0b00000100       }, // GYR_RANGE, 125 dps
-    {0x45, 0b10001000       }, // FIFO_DOWNS FIFO downsampling
-    {0x46, 0b00000000       }, // FIFO_WTM_0,  Watermark LSB
-    {0x47, 0b10000000       }, // FIFO_WTM_1,  Watermark MSB
-    {0x48, 0b00000000       }, // FIFO_CONFIG_0, No timestamp, do not stop if FIFO full
-    {0x49, 0b11000000       }, // FIFO_CONNFIG_1, Store Accel and GYro
-    {0x53, 0b00001000       }, // INT1_IO_CTRL, INT1 enabled, push pull, active low
-    {0x54, 0b00000000       }, // INT2_IO_CTRL, No interrupt on INT2
-    {0x55, 0b00000000       }, // INT_LATCH, non-latched
-    {0x58, 0b00000010       }, // INT1_MAP, FIFO watermark interrupt mapped to INT1
-    {0x59, 0b00000000       }, // INT2_MAP, No interrupts mapped to INT2      {0x70, 0b00000000       }, // NV_CONF, Advanced power up disabled
-    {0x7C, 0b00000011       }, // PWR_CONF, Advanced power up enabled
-    {0x7D, 0b00000110       }, // PWR_CTRL, Enable Gyro and Accel, disable Aux and temperature
-    {0x7E, 0b10110000       }, // CMD, Clear the FIFO
-    {0x00, 0x00             }  // End of the configuration file
+    {0x7D, 0b00000110             }, // PWR_CTRL, Enable Gyro and Accel, disable Aux and temperature
+    {0x40, 0b01010000 + 0x0b      }, // ACC_CONF Performance optimized, Average 4, 800Hz
+    {0x41, 0b00000000 + G_RANGE   }, // ACC_RANGE +/-2g
+    {0x42, 0b11010000 + 0x0b      }, // GYR_CONF, Performance Optimized, Average 4, 800 samples
+    {0x43, 0b00000000 + GYRO_RANGE}, // GYR_RANGE, 125 dps
+    {0x45, 0b10001000             }, // FIFO_DOWNS FIFO downsampling
+    {0x46, 0b00000000             }, // FIFO_WTM_0,  Watermark LSB
+    {0x47, 0b00000010             }, // FIFO_WTM_1,  Watermark MSB
+    {0x48, 0b00000000             }, // FIFO_CONFIG_0, No timestamp, do not stop if FIFO full
+    {0x49, 0b11000000             }, // FIFO_CONNFIG_1, Store Accel and Gyro
+    {0x53, 0b00001000             }, // INT1_IO_CTRL, INT1 enabled, push pull, active low
+    {0x54, 0b00000000             }, // INT2_IO_CTRL, No interrupt on INT2
+    {0x55, 0b00000000             }, // INT_LATCH, non-latched
+    {0x58, 0b00000010             }, // INT1_MAP, FIFO watermark interrupt mapped to INT1
+    {0x59, 0b00000000             }, // INT2_MAP, No interrupts mapped to INT2      {0x70, 0b00000000       }, // NV_CONF, Advanced power up disabled
+    {0x7C, 0b00000011             }, // PWR_CONF, Advanced power up enabled
+    {0x7D, 0b00000110             }, // PWR_CTRL, Enable Gyro and Accel, disable Aux and temperature
+    {0x7E, 0b10110000             }, // CMD, Clear the FIFO
+    {0x00, 0x00                   }  // End of the configuration file
 };
 
 /*
@@ -204,8 +229,6 @@ void BMI270_init(unsigned int BMI270_gpio)
   spi_device_transmit(BMI270_handle, &transaction); // Dummy read to put into SPI mode
   spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
 
-  printf("transaction %X %X %x %x", transaction.rx_data[0], transaction.rx_data[1], transaction.rx_data[2], transaction.rx_data[3]);
-
   if ( transaction.rx_data[1] != 0x24 )             // Check the device ID
   {
     DLT(DLT_FATAL, SEND(ALL, sprintf(_xs, "Failed to read BMI270 device ID: 0x%02X", transaction.rx_data[1]);))
@@ -283,7 +306,7 @@ void BMI270_init(unsigned int BMI270_gpio)
     transaction.length    = 1 * 8;                    // Transmit length in bits
     transaction.rxlength  = 0 * 8;                    // Receive length in bits
     transaction.flags     = SPI_TRANS_USE_TXDATA;     // Indicate that this is a read operation
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "register 0x%02X: 0x%02X", BMI270_config[i].address, BMI270_config[i].value);))
+    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "register 0x%02X: 0x%02X", BMI270_config[i].address, BMI270_config[i].value);))
     PAUSE("Sending register value");
     spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
     vTaskDelay(2);
@@ -300,96 +323,7 @@ void BMI270_init(unsigned int BMI270_gpio)
 
 /*----------------------------------------------------------------
  *
- * @function: BMI270_device_ID()
- *
- * @brief:    Read the device ID of the BMI270
- *
- * @return: None
- *
- *----------------------------------------------------------------
- *
- * Read the device ID as a single transaction to make sure the
- * SPI is working and the device is responding.
- *
- *--------------------------------------------------------------*/
-unsigned int BMI270_device_ID(void)
-{
-  spi_transaction_t transaction;
-
-  /*
-   * Read the device ID
-   */
-  memset(&transaction, 0, sizeof(transaction));     // Clear the transaction structure
-  transaction.addr      = 0x80 | CHIP_ID;           // Register address to read from
-  transaction.length    = 1 * 8;                    // Transmit length in bits
-  transaction.tx_buffer = NULL;                     // Transmit buffer not used
-  transaction.rxlength  = 1 * 8;                    // Receive length in bits
-  transaction.flags     = SPI_TRANS_USE_RXDATA;     // Indicate that this is a read operation
-
-  spi_device_transmit(BMI270_handle, &transaction); // Dummy read to put into SPI mode
-  spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
-
-  if ( transaction.rx_data[0] != 0x24 )             // Check the device ID
-  {
-    SEND(ALL, sprintf(_xs, "Failed to read BMI270 device ID: 0x%02X", transaction.rx_data[0]);)
-  }
-  else
-  {
-    SEND(ALL, sprintf(_xs, "BMI270 device ID: 0x%02X", transaction.rx_data[0]);)
-  }
-
-  /*
-   * All done, return
-   */
-  SEND(ALL, sprintf(_xs, _DONE_);)
-  return transaction.rx_data[0]; // Return the device ID
-}
-
-/*----------------------------------------------------------------
- *
- * @function: BMI270_device_status()
- *
- * @brief:    Read the device status of the BMI270
- *
- * @return: None
- *
- *----------------------------------------------------------------
- *
- * Read the device status as a single transaction to make sure the
- * SPI is working and the device is responding.
- *
- *--------------------------------------------------------------*/
-unsigned int BMI270_device_status(void)
-{
-  spi_transaction_t transaction;
-
-  memset(&transaction, 0, sizeof(transaction));     // Clear the transaction structure
-  transaction.addr      = 0x80 | INTERNAL_STATUS;   // Register address to read from
-  transaction.length    = 1 * 8;                    // Transmit length in bits
-  transaction.tx_buffer = NULL;                     // Transmit buffer not used
-  transaction.rxlength  = 1 * 8;                    // Receive length in bits
-  transaction.flags     = SPI_TRANS_USE_RXDATA;     // Indicate that this is a read operation
-
-  spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
-
-  if ( transaction.rx_data[0] != 0x1 )              // Check the device ID
-  {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Initialization failed: 0x%02X", transaction.rx_data[0]);))
-  }
-  else
-  {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initialization successful: 0x%02X", transaction.rx_data[0]);))
-  }
-  /*
-   * All done, return
-   */
-  SEND(ALL, sprintf(_xs, _DONE_);)
-  return transaction.rx_data[0]; // Return the device ID
-}
-
-/*----------------------------------------------------------------
- *
- * @function: BMI270_FIFO_read
+ * @function: BMI270_pull_FIFO
  *
  * @brief:    Pull all of the samples out of the FIFO and store them in the sample buffer
  *
@@ -402,14 +336,37 @@ unsigned int BMI270_device_status(void)
  * sample buffer.
  *
  *---------------------------------------------------------------*/
-void BMI270_FIFO_read(void)
+unsigned int BMI270_pull_FIFO(void)
 {
+  spi_transaction_t transaction;
+  int               FIFO_length; // How many samples are waiting?
+
   run_state |= IN_COLLECTION;
 
   DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_FIFO_read()");))
 
+  /*
+   *  Read the FIFO length
+   */
+  memset(&transaction, 0, sizeof(transaction));     // Clear the transaction structure
+  transaction.addr      = 0x80 | FIFO_LENGTH;       // How many readings are waiting for uys
+  transaction.tx_buffer = NULL;                     // Transmit buffer not used
+  transaction.length    = 3 * 8;                    // Transmit length in bits
+  transaction.rxlength  = 3 * 8;                    // Receive length in bits
+  transaction.flags     = SPI_TRANS_USE_RXDATA;     // Indicate that this is a read operation
+  spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+
+#if ( 0 )
+  DEBUG
+
+  FIFO_length = (transaction.rx_data[0] << 8) + transaction.rx_data[1];
+
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "FIFO length %d", FIFO_length);))
+#endif
   run_state &= ~IN_COLLECTION;
-  return;
+  FIFO_length = 0;
+
+  return FIFO_length;
 }
 
 /*----------------------------------------------------------------
@@ -427,34 +384,33 @@ void BMI270_FIFO_read(void)
  * followed by a high byte. The raw acceleration data is stored
  * in the provided sample structure.
  *
- * The raw acceleration data is in 10-bit resolution and is
- * right justified with sign extension.
+ * IMPORTANT
  *
- * The function removes the DC bias for a level sensor
- * by subtracting the zero offset from the raw data if the
- * zero_offset parameter is true.
+ * The BMI270 brings the acceleration in as LSB and MSB.
+ * ie, the bytes need to be swapped before use.
  *
  *--------------------------------------------------------------*/
-void BMI270_read_raw_accel(trace_raw_t *sample)    // TRUE if a zero offset it to be applied
+void BMI270_read_raw_accel(trace_raw_t *sample_as_read) // TRUE if a zero offset it to be applied
 {
   esp_err_t         ret;
   spi_transaction_t transaction;
   trace_raw_t       filler;
 
-  memset(&filler, 0xff, sizeof(trace_raw_t));      // Clear the sample structure
-  memset(&transaction, 0x00, sizeof(transaction)); // Clear the transaction structure
-  transaction.addr      = 0x80 | 0x18;             // Start at Accel Acceleration Data Low register and read all 6 bytes in one transaction
-  transaction.length    = (sizeof(trace_raw_t)) * 8;      // Transmit length in bits
+  memset(&filler, 0xff, sizeof(trace_raw_t));           // Clear the sample structure
+  memset(&transaction, 0x00, sizeof(transaction));      // Clear the transaction structure
+  transaction.addr      = 0x80 | ACCEL_X; // Start at Accel Acceleration Data Low register and read all 6 bytes in one transaction
+  transaction.length    = (sizeof(trace_raw_t) + 1) * 8;  // Transmit length in bits
   transaction.tx_buffer = &filler;                        // Send dummy data to read the acceleration data
-  transaction.rxlength  = (sizeof(trace_raw_t)) * 8;      //
-  transaction.rx_buffer = sample;                         // Receive buffer to store the raw acceleration data
+  transaction.rxlength  = (sizeof(trace_raw_t) + 1) * 8;  //
+  transaction.rx_buffer = sample_as_read;                 // Receive buffer to store the raw acceleration data
   transaction.flags     = 0;
 
   ret = spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
   if ( ret != ESP_OK )
   {
-    printf("error");
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to read sensor");))
   }
+
   return;                                                 //}
 #if ( 0 )
   /*
@@ -514,6 +470,7 @@ trace_raw_t zero_samples;  // Buffer to hold multiple samples for averaging
 
 void BMI270_find_zero(void)
 {
+#if ( 0 )
   unsigned int i;          // Loop counter
   trace_raw_t  BMI270_raw; // As read from the accelerometer
   trace_raw_t  BMI270_sum;
@@ -537,7 +494,6 @@ void BMI270_find_zero(void)
     BMI270_sum.y += BMI270_raw.y;       // Accumulate the Y-axis raw acceleration data
     BMI270_sum.z += BMI270_raw.z;       // Accumulate the Z-axis raw acceleration data
     i++;
-    printf("Sample %d: X: %04X, Y: %04X, Z: %04X\r\n", i, BMI270_raw.x, BMI270_raw.y, BMI270_raw.z);
   }
 
   /*
@@ -554,6 +510,7 @@ void BMI270_find_zero(void)
       SEND(ALL, sprintf(_xs, "Axis offset - X: %04X, Y: %04X, Z: %04X", BMI270_zero_sample.x, BMI270_zero_sample.y, BMI270_zero_sample.z);))
 
   set_status_LED(LED_READY); // Indicate that we are ready
+#endif
   return;
 }
 
@@ -571,27 +528,44 @@ void BMI270_find_zero(void)
  * current range setting to convert to g
  *
  *--------------------------------------------------------------*/
-void BMI270_convert_to_g(trace_raw_t *sample, trace_point_t *actual)
+void BMI270_convert_to_g(trace_big_endian_t *sample, trace_point_t *actual)
 {
-  real_t lsb_per_g = 1.0;               //  BMI270_lsb_per_g[DATA_FORMAT & 0b00000011]; // Get the LSB per g for the current range setting
-
-  actual->ax = (sample->x) * lsb_per_g; // Convert raw X-axis data to g
+  actual->ax = ((real_t)sample->x) * G_PER_LSB;           // Convert raw X-axis data to g
   if ( F_ABS(actual->x) < 0.010 )
   {
     actual->ax = 0;
   }
 
-  actual->ay = (sample->y) * lsb_per_g; // Convert raw Y-axis data to g
+  actual->ay = ((real_t)sample->y) * G_PER_LSB;           // Convert raw Y-axis data to g
   if ( F_ABS(actual->ay) < 0.010 )
   {
     actual->ay = 0;
   }
 
-  actual->az = (sample->z) * lsb_per_g; // Convert raw Z-axis data to g
+  actual->az = ((real_t)sample->z) * G_PER_LSB;           // Convert raw Z-axis data to g
   if ( F_ABS(actual->az) < 0.010 )
   {
     actual->az = 0;
   }
+
+  actual->rho = ((real_t)sample->rho) * GYRO_PER_LSB;     // Convert raw X-axis data to g
+  if ( F_ABS(actual->rho) < 0.010 )
+  {
+    actual->rho = 0;
+  }
+
+  actual->theta = ((real_t)sample->theta) * GYRO_PER_LSB; // Convert raw X-axis data to g
+  if ( F_ABS(actual->theta) < 0.010 )
+  {
+    actual->theta = 0;
+  }
+
+  actual->phi = ((real_t)sample->phi) * GYRO_PER_LSB;     // Convert raw X-axis data to g
+  if ( F_ABS(actual->phi) < 0.010 )
+  {
+    actual->phi = 0;
+  }
+
   return;
 }
 
@@ -614,6 +588,7 @@ void BMI270_convert_to_g(trace_raw_t *sample, trace_point_t *actual)
 
 void BMI270_test(void)
 {
+#if ( 0 )
   real_t        vector_magnitude;                    // Magnitude of the acceleration vector
   trace_raw_t   previous_raw;                        // Previous sample
   trace_raw_t   present_raw;                         // Present sample
@@ -655,9 +630,10 @@ void BMI270_test(void)
                       present.z);)
   }
 #endif
-  /*
-   * All done
-   */
+/*
+ * All done
+ */
+#endif
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }
@@ -675,27 +651,38 @@ void BMI270_test(void)
  * Poll the BMI270 and print out the acceleration data
  *
  *--------------------------------------------------------------*/
+void BMI270_swap_bytes(trace_raw_t *in, trace_big_endian_t *out)
+{
+  out->x     = (in->x_msb << 8) + in->x_lsb;
+  out->y     = (in->y_msb << 8) + in->y_lsb;
+  out->z     = (in->z_msb << 8) + in->z_lsb;
+  out->rho   = (in->rho_msb << 8) + in->rho_lsb;
+  out->theta = (in->theta_msb << 8) + in->theta_lsb;
+  out->phi   = (in->phi_msb << 8) + in->phi_lsb;
+  return;
+}
+
 void BMI270_oscilliscope(void)
 {
   static unsigned int next_sample = 0;  // Index to the raw acceleration data
   real_t              vector_magnitude; // Magnitude of the acceleration vector
   bool                pause = false;
+  trace_big_endian_t  swap_bytes;
+  trace_point_t       trace_value;
 
   while ( 1 )
   {
     if ( pause == false )
     {
       BMI270_read_raw_accel(&samples[0]);
-      {
+      BMI270_swap_bytes(&samples[0], &swap_bytes);
+      BMI270_convert_to_g(&swap_bytes, &trace_value);                                        // Convert raw data to g
 
-        //        BMI270_convert_to_g(&samples[0], &present);                                // Convert raw data to g
+      vector_magnitude = sqrt(SQ(trace_value.ax) + SQ(trace_value.ay) + SQ(trace_value.az)); // Calculate the magnitude of the acceleration
 
-        //        vector_magnitude = sqrt(SQ(present.ax) + SQ(present.ay) + SQ(present.az)); // Calculate the magnitude of the acceleration
-        //        vector
-
-        SEND(ALL, sprintf(_xs, "\r\n\rlength: %d, ax: 0X%04X, ay: 0X%04X  az: 0X%04X, rho: 0X%04X, theta: 0X%04X, phi: 0X%04X",
-                          sizeof(trace_raw_t), samples[0].x, samples[0].y, samples[0].z, samples[0].rho, samples[0].theta, samples[0].phi);)
-      }
+      SEND(ALL, sprintf(_xs, "\r\n\r|a|: %6.4f, ax: %6.4f, ay: %6.4f  az: %6.4f, rho: %6.4f, theta: %6.4f, phi: %6.4f", vector_magnitude,
+                        trace_value.ax, trace_value.ay, trace_value.az, trace_value.rho, trace_value.theta, trace_value.phi);)
+      vTaskDelay(ONE_SECOND / 2);
     }
 
     if ( serial_available(ALL) != 0 )
@@ -853,4 +840,93 @@ void BMI270_SPI_dump(void)
 
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: BMI270_device_ID()
+ *
+ * @brief:    Read the device ID of the BMI270
+ *
+ * @return: None
+ *
+ *----------------------------------------------------------------
+ *
+ * Read the device ID as a single transaction to make sure the
+ * SPI is working and the device is responding.
+ *
+ *--------------------------------------------------------------*/
+unsigned int BMI270_device_ID(void)
+{
+  spi_transaction_t transaction;
+
+  /*
+   * Read the device ID
+   */
+  memset(&transaction, 0, sizeof(transaction));     // Clear the transaction structure
+  transaction.addr      = 0x80 | CHIP_ID;           // Register address to read from
+  transaction.length    = 1 * 8;                    // Transmit length in bits
+  transaction.tx_buffer = NULL;                     // Transmit buffer not used
+  transaction.rxlength  = 1 * 8;                    // Receive length in bits
+  transaction.flags     = SPI_TRANS_USE_RXDATA;     // Indicate that this is a read operation
+
+  spi_device_transmit(BMI270_handle, &transaction); // Dummy read to put into SPI mode
+  spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+
+  if ( transaction.rx_data[1] != 0x24 )             // Check the device ID
+  {
+    SEND(ALL, sprintf(_xs, "Failed to read BMI270 device ID: 0x%02X", transaction.rx_data[1]);)
+  }
+  else
+  {
+    SEND(ALL, sprintf(_xs, "BMI270 device ID: 0x%02X", transaction.rx_data[0]);)
+  }
+
+  /*
+   * All done, return
+   */
+  SEND(ALL, sprintf(_xs, _DONE_);)
+  return transaction.rx_data[0]; // Return the device ID
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: BMI270_device_status()
+ *
+ * @brief:    Read the device status of the BMI270
+ *
+ * @return: None
+ *
+ *----------------------------------------------------------------
+ *
+ * Read the device status as a single transaction to make sure the
+ * SPI is working and the device is responding.
+ *
+ *--------------------------------------------------------------*/
+unsigned int BMI270_device_status(void)
+{
+  spi_transaction_t transaction;
+
+  memset(&transaction, 0, sizeof(transaction));     // Clear the transaction structure
+  transaction.addr      = 0x80 | INTERNAL_STATUS;   // Register address to read from
+  transaction.length    = 1 * 8;                    // Transmit length in bits
+  transaction.tx_buffer = NULL;                     // Transmit buffer not used
+  transaction.rxlength  = 1 * 8;                    // Receive length in bits
+  transaction.flags     = SPI_TRANS_USE_RXDATA;     // Indicate that this is a read operation
+
+  spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+
+  if ( transaction.rx_data[1] != 0x1 )              // Check the device ID
+  {
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Initialization failed: 0x%02X", transaction.rx_data[1]);))
+  }
+  else
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initialization successful: 0x%02X", transaction.rx_data[1]);))
+  }
+  /*
+   * All done, return
+   */
+  SEND(ALL, sprintf(_xs, _DONE_);)
+  return transaction.rx_data[0]; // Return the device ID
 }
