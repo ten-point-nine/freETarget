@@ -2,7 +2,7 @@
  *
  * trace.h
  *
- * Software to run the Air-Gun / Small Bore Electronic Target
+ * IMU for guns to work with FreeETarget
  *
  *--------------------------------------------------------------*/
 
@@ -21,7 +21,6 @@
 
 #define SOFTWARE_VERSION "\"1.0.0 May 17, 2026\""
 #define _DONE_           "\r\nDone\r\n"
-#define _SHOT_           "shot"
 #define _GREETING_       "CONNECTED"   // Message to send on connection
 #define _BYE_            "BYE"         // Message to send on disconnection
 #define _HELLO_          "HELLO WORLD" // Message to send on reconnection

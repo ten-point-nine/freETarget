@@ -14,6 +14,8 @@
 /*
  *  Definitions
  */
+#define FIFO_READ 100 // Read 100 samples every time
+
 /*
  * Data as pulled in from the BMK270.
  * Note, the register order is LSB then MSB
@@ -40,39 +42,27 @@
 
 typedef struct
 {
-  uint8_t empty;   // Here to force uint16_t x to be on a word boundary
-  uint8_t dummy;   // Dummy byte as read from the SPI bus
-  union
-  {
-    uint8_t x8[2]; // X acceleration byte addressable
-    int16_t x_dotdot;     // X acceleration word addressable
-  };
-  union
-  {
-    uint8_t y8[2];
-    int16_t y_dotdot;
-  };
-  union
-  {
-    uint8_t z8[2];
-    int16_t z_dotdot;
-  };
-  union
-  {
-    uint8_t rho8_dot[2];
-    int16_t rho_dot;
-  };
-  union
-  {
-    uint8_t theta8_dot[2];
-    int16_t theta_dot;
-  };
-  union
-  {
-    uint8_t  phi8_dot[2];
-    uint16_t phi_dot; // Z axis rotation speed
-  };
-} trace_raw_t;        // Value read from sensor
+  int16_t  x_dotdot;       // Sample frame from BMI270
+  int16_t  y_dotdot;
+  int16_t  z_dotdot;
+  int16_t  rho_dot;
+  int16_t  theta_dot;
+  uint16_t phi_dot;        // Z axis rotation speed
+} trace_raw_frame_t;       // Value read from sensor
+
+typedef struct
+{                          // Single read directly from the BMI270
+  uint8_t           empty; // Here to force uint16_t x to be on a word boundary
+  uint8_t           dummy; // Dummy byte as read from the SPI bus
+  trace_raw_frame_t f;     // Single frame
+} trace_raw_t;             // Value read from sensor
+
+typedef struct
+{
+  uint8_t           empty; // Here to force uint16_t x to be on a word boundary
+  uint8_t           dummy; // Dummy byte as read from the SPI bus
+  trace_raw_frame_t f[FIFO_READ];
+} trace_FIFO_read_t;       // Value read from sensor via FIFO
 
 /*
  *  Functions
@@ -85,8 +75,8 @@ unsigned int BMI270_pull_FIFO(void);                     // Read all of the samp
 void         BMI270_test(void);                          // Test the BMI270
 void         BMI270_find_zero(void);                     // Take a zero sample to use for future adjustments
 void         BMI270_convert_to_g(trace_raw_t *sample, trace_point_t *actual); // Convert from bits t g
-void         BMI270_oscilliscope(void);                                              // Poor man's oscilliscope
-void         BMI270_FIFO_read(void);                                                 // FIFO handler
-unsigned int BMI270_find_sample_out(unsigned int sample_count);                      // Find the starting point in the sample buffer
+void         BMI270_oscilliscope(void);                                       // Poor man's oscilliscope
+void         BMI270_FIFO_read(void);                                          // FIFO handler
+unsigned int BMI270_find_sample_out(unsigned int sample_count);               // Find the starting point in the sample buffer
 void         BMI270_SPI_test(void); // Send a command to the BMI270 and read the response using SPI.
 void         BMI270_SPI_dump(void); // Dump the BMI270 registers using SPI.

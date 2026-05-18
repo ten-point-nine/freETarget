@@ -80,6 +80,9 @@
 #define ACCEL_X         0x0C           // Acceleration X, Y, Z  Gyro X, Y, Z
 #define TIMER           0x18           // Sensor time register
 #define INTERNAL_STATUS 0x21
+#define FIFO_LENGTH_0   0x24           // LSB of FIFO length
+#define FIFO_LENGTH_1   0x25           // MSB of FIFO length
+#define FIFO_DATA       0x26           // FIFO data register
 
 #define ACC_CONF        0x40           // Acceleration Configuration
 #define acc_odr         0x09           // (odr_200) Output data rate 200
@@ -109,17 +112,17 @@
 #define FIFO_WTM_1 0x47                // FIFO Watermark msb
 #define watermark  400                 // Interrupt after 400 samples
 
-#define FIFO_CONF_0       0x48         // FIFO Frame Configuration
+#define FIFO_CONFIG_0     0x48         // FIFO Frame Configuration
 #define fifo_stop_on_full 0x00         // (disable) do not stop on full
 #define fifo_time_en      (0x00 << 1)  // (disable) do not return sensor time frame
 
 #define FIFO_CONFIG_1     0x49         // FIFO Frame Content Configuration
-#define fifo_tag_int_1_en 0x00         // (int_edge) enable tag on rising edge of int 2 pin
-#define fifo_tag_int_2_en (0x00 << 2)  // (int_edge) enable tag on rising edge of in 2 pin
+#define fifo_tag_int_1_en 0x00         // (int_edge) enable tag on rising edge of int 12 pin
+#define fifo_tag_int_2_en (0x00 << 2)  // (int_edge) enable tag on rising edge of int 2 pin
 #define fifo_header_en    (0x00 << 4)  // (disable) no heder is stored
 #define fifo_aux_en       (0x00 << 5)  // (disable) no Auxilary sensor data is stored
 #define fifo_acc_en       (0x01 << 6)  // (enable) Accelerometer data is stored
-#define fifo_gyr_en       (0x01 << 7)  // (enable) Gryoscope data is stored
+#define fifo_gyr_en       (0x00 << 7)  // (enable) Gryoscope data is stored
 
 #define INT_1_IO_CTRL 0x53             // Interrupt 1 configuration
 #define lvl           (0x00 << 1)      // (active_low)
@@ -198,7 +201,7 @@ static spi_device_interface_config_t BMI270_spi_config = {
     .duty_cycle_pos   = 128,                                            // 50% duty cycle
     .cs_ena_pretrans  = 0,                                              // No pre-transaction CS activation
     .cs_ena_posttrans = 0,                                              // No post-transaction CS activation
-    .clock_speed_hz   = 8 * 1000 * 1000,                                // 8 MHz clock speed
+    .clock_speed_hz   = 2 * 1000 * 1000,                                // 2 MHz clock speed
     .input_delay_ns   = 0,                                              // No input delay
     .spics_io_num     = BMI270_CS,                                      // CS pin
     .flags            = SPI_DEVICE_NO_DUMMY,                            // No special flags
@@ -215,7 +218,7 @@ static BMI270_config_t BMI270_config[] = {
     {FIFO_DOWNS,    gyr_fifo_downs + gyr_fifo_filt_data + acc_fifo_downs}, // FIFO_DOWNS FIFO downsampling
     {FIFO_WTM_0,    watermark & 0x00ff                                  }, // FIFO Watermark lsb
     {FIFO_WTM_1,    (watermark >> 8) & 0x00ff                           }, // FIFO Watermark msb
-    {FIFO_CONF_0,   fifo_stop_on_full + fifo_time_en                    }, // FIFO_CONFIG_0, No timestamp, do not stop if FIFO full
+    {FIFO_CONFIG_0, fifo_stop_on_full + fifo_time_en                    }, // FIFO_CONFIG_0, No timestamp, do not stop if FIFO full
     {FIFO_CONFIG_1, fifo_tag_int_1_en + fifo_tag_int_2_en + fifo_header_en + fifo_aux_en + fifo_acc_en +
                         fifo_gyr_en                  }, // FIFO_CONFIG_1, Store gyro and accel data
     {INT_1_IO_CTRL, lvl + od + output_en + input_en                     }, // INT_1_IO_CTRL Interrupt 1 used
@@ -228,7 +231,8 @@ static BMI270_config_t BMI270_config[] = {
     {0x00,          0x00                                                }  // End of the configuration file
 };
 
-trace_raw_t samples[SAMPLE_DEPTH];                                      // Where to store the data
+trace_FIFO_read_t sample_read[10];                                      // Allow for 10 reads
+
 /*
  * @name  Global array that stores the configuration file of BMI270
  *
@@ -362,7 +366,7 @@ void BMI270_init(unsigned int BMI270_gpio)
   memset(&transaction, 0, sizeof(transaction));     // Clear the transaction structure
   transaction.addr      = 0x80 | INTERNAL_STATUS;   // Read the internal status register to check if the API is properly initialized
   transaction.tx_buffer = NULL;                     // Transmit buffer not used
-  transaction.length    =2 * 8;                    // Transmit length in bits
+  transaction.length    = 2 * 8;                    // Transmit length in bits
   transaction.rxlength  = 2 * 8;                    // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_RXDATA;     // Indicate that this is a read operation
   spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
@@ -420,26 +424,28 @@ unsigned int BMI270_pull_FIFO(void)
 
   run_state |= IN_COLLECTION;
 
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_FIFO_read()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270_FIFO_read()");))
 
-  /*
-   *  Read the FIFO length
-   */
+                                 /*
+                                  *  Read the FIFO length
+                                  */
   memset(&transaction, 0, sizeof(transaction));     // Clear the transaction structure
   transaction.addr      = 0x80 | FIFO_LENGTH;       // How many readings are waiting for uys
-  transaction.tx_buffer = NULL;                     // Transmit buffer not used
-  transaction.length    = 3 * 8;                    // Transmit length in bits
+  transaction.tx_buffer = 0;                        // Transmit buffer not used
+  transaction.length    = 4 * 8;                    // Transmit length in bits
   transaction.rxlength  = 3 * 8;                    // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_RXDATA;     // Indicate that this is a read operation
   spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
 
-#if ( 0 )
   DEBUG
 
-  FIFO_length = (transaction.rx_data[0] << 8) + transaction.rx_data[1];
+  FIFO_length = (transaction.rx_data[2] << 8) + transaction.rx_data[1];
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "FIFO length %d", FIFO_length);))
-#endif
+  if ( FIFO_length != 0 )
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "FIFO length %d", FIFO_length);))
+  }
+
   run_state &= ~IN_COLLECTION;
   FIFO_length = 0;
 
@@ -488,10 +494,9 @@ void BMI270_read_raw_accel(trace_raw_t *sample_as_read) // TRUE if a zero offset
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to read sensor");))
   }
 
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "\r\n %d %p %p %04X (%02X %02X)  %04X  (%02X %02X) %04X  (%02X %02X)", sizeof(trace_raw_t),
-                                   &sample_as_read->dummy, &sample_as_read->x_dotdot, sample_as_read->x_dotdot, sample_as_read->x8[0],
-                                   sample_as_read->x8[1], sample_as_read->y_dotdot, sample_as_read->y8[0], sample_as_read->y8[1],
-                                   sample_as_read->z_dotdot, sample_as_read->z8[0], sample_as_read->z8[1]);))
+  DLT(DLT_DEBUG,
+      SEND(ALL, sprintf(_xs, "\r\n %d %p %p x_dot: %04X   y_dor: %04X   z_dot: %04X  ", sizeof(trace_raw_t), &sample_as_read->dummy,
+                        &sample_as_read->f.x_dotdot, sample_as_read->f.x_dotdot, sample_as_read->f.y_dotdot, sample_as_read->f.z_dotdot);))
 
   return; //}
 #if ( 0 )
@@ -573,24 +578,24 @@ void BMI270_find_zero(void)
   while ( i != NUM_ZERO_SAMPLES )
   {
     BMI270_read_raw_accel(&BMI270_raw); // Take a sample of the raw acceleration data
-    x_dotdot += BMI270_raw.x_dotdot;    // Accumulate the X-axis raw acceleration data
-    y_dotdot += BMI270_raw.y_dotdot;    // Accumulate the Y-axis raw acceleration data
-    z_dotdot += BMI270_raw.z_dotdot;    // Accumulate the Z-axis raw acceleration data
+    x_dotdot += BMI270_raw.f.x_dotdot;  // Accumulate the X-axis raw acceleration data
+    y_dotdot += BMI270_raw.f.y_dotdot;  // Accumulate the Y-axis raw acceleration data
+    z_dotdot += BMI270_raw.f.z_dotdot;  // Accumulate the Z-axis raw acceleration data
     i++;
   }
 
   /*
    * Average the samples to get a more accurate zero level
    */
-  BMI270_zero_sample.x_dotdot = x_dotdot / NUM_ZERO_SAMPLES; // Average the X-axis raw acceleration data
-  BMI270_zero_sample.y_dotdot = y_dotdot / NUM_ZERO_SAMPLES; // Average the Y-axis raw acceleration data
-  BMI270_zero_sample.z_dotdot = z_dotdot / NUM_ZERO_SAMPLES; // Average the Z-axis raw acceleration data
+  BMI270_zero_sample.f.x_dotdot = x_dotdot / NUM_ZERO_SAMPLES; // Average the X-axis raw acceleration data
+  BMI270_zero_sample.f.y_dotdot = y_dotdot / NUM_ZERO_SAMPLES; // Average the Y-axis raw acceleration data
+  BMI270_zero_sample.f.z_dotdot = z_dotdot / NUM_ZERO_SAMPLES; // Average the Z-axis raw acceleration data
 
   /*
    *  All done, return
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Axis offset - X: %04X, Y: %04X, Z: %04X", BMI270_zero_sample.x_dotdot, BMI270_zero_sample.y_dotdot,
-                                  BMI270_zero_sample.z_dotdot);))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Axis offset - X: %04X, Y: %04X, Z: %04X", BMI270_zero_sample.f.x_dotdot,
+                                  BMI270_zero_sample.f.y_dotdot, BMI270_zero_sample.f.z_dotdot);))
 
   set_status_LED(LED_READY); // Indicate that we are ready
   SEND(ALL, sprintf(_xs, _DONE_);)
@@ -619,37 +624,37 @@ void BMI270_find_zero(void)
 #define GYRO_DEAD_BAND  0.0
 void BMI270_convert_to_g(trace_raw_t *sample, trace_point_t *actual)
 {
-  actual->x_dotdot = 2.0 * ((real_t)sample->x_dotdot) * G_PER_LSB; // Convert raw X-axis data to g
+  actual->x_dotdot = 2.0 * ((real_t)sample->f.x_dotdot) * G_PER_LSB; // Convert raw X-axis data to g
   if ( F_ABS(actual->x) < ACCEL_DEAD_BAND )
   {
     actual->x_dotdot = 0;
   }
 
-  actual->y_dotdot = 2.0 * ((real_t)sample->y_dotdot) * G_PER_LSB; // Convert raw Y-axis data to g
+  actual->y_dotdot = 2.0 * ((real_t)sample->f.y_dotdot) * G_PER_LSB; // Convert raw Y-axis data to g
   if ( F_ABS(actual->y_dotdot) < ACCEL_DEAD_BAND )
   {
     actual->y_dotdot = 0;
   }
 
-  actual->z_dotdot = 2.0 * ((real_t)sample->z_dotdot) * G_PER_LSB; // Convert raw Z-axis data to g
+  actual->z_dotdot = 2.0 * ((real_t)sample->f.z_dotdot) * G_PER_LSB; // Convert raw Z-axis data to g
   if ( F_ABS(actual->z_dotdot) < ACCEL_DEAD_BAND )
   {
     actual->z_dotdot = 0;
   }
 
-  actual->rho_dot = ((real_t)sample->rho_dot) * GYRO_PER_LSB;      // Convert raw X-axis data to g
+  actual->rho_dot = ((real_t)sample->f.rho_dot) * GYRO_PER_LSB;      // Convert raw X-axis data to g
   if ( F_ABS(actual->rho_dot) < GYRO_DEAD_BAND )
   {
     actual->rho_dot = 0;
   }
 
-  actual->theta_dot = ((real_t)sample->theta_dot) * GYRO_PER_LSB;  // Convert raw X-axis data to g
+  actual->theta_dot = ((real_t)sample->f.theta_dot) * GYRO_PER_LSB;  // Convert raw X-axis data to g
   if ( F_ABS(actual->theta_dot) < GYRO_DEAD_BAND )
   {
     actual->theta_dot = 0;
   }
 
-  actual->phi_dot = ((real_t)sample->phi_dot) * GYRO_PER_LSB;      // Convert raw X-axis data to g
+  actual->phi_dot = ((real_t)sample->f.phi_dot) * GYRO_PER_LSB;      // Convert raw X-axis data to g
   if ( F_ABS(actual->phi_dot) < GYRO_DEAD_BAND )
   {
     actual->phi_dot = 0;
@@ -750,13 +755,14 @@ void BMI270_oscilliscope(void)
   real_t              vector_magnitude; // Magnitude of the acceleration vector
   bool                pause = false;
   trace_point_t       trace_value;
+  trace_raw_t         sample;
 
   while ( 1 )
   {
     if ( pause == false )
     {
-      BMI270_read_raw_accel(&samples[0]);
-      BMI270_convert_to_g(&samples[0], &trace_value);    // Convert raw data to g
+      BMI270_read_raw_accel(&sample);
+      BMI270_convert_to_g(&sample, &trace_value);        // Convert raw data to g
 
       vector_magnitude = sqrt(SQ(trace_value.x_dotdot) + SQ(trace_value.y_dotdot) +
                               SQ(trace_value.z_dotdot)); // Calculate the magnitude of the acceleration
