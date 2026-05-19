@@ -280,7 +280,7 @@ void set_status_LED(char new_state[]          // New LED colours
   old_state = new_state;
 
   /*
-   *   Check to see if tabata enabled is present.  If so, change from flashing green to flashing yellow 
+   *   Check to see if tabata enabled is present.  If so, change from flashing green to flashing yellow
    */
   if ( json_tabata_enable == 1 )
   {
@@ -811,15 +811,29 @@ void stepper_pulse(void)
  * on the front face.
  *
  *-----------------------------------------------------*/
-void face_ISR(void)
+IRAM_ATTR void face_strike_ISR(void)
 {
   face_strike++; // Got a face strike
-
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "\r\nface_ISR(): %d", face_strike);))
 
   return;
 }
 
+void enable_face_strike_interrupt(void)
+{
+  if ( (FACE_HALF_GPIO & board_mask) // The hardware supports it?
+       && (json_face_strike != 0) )  // Is the face strike sensor enabled?
+  {
+    gpio_intr_enable(FACE_SENSOR);   // Turn on the interrupts
+  }
+
+  return;
+}
+
+void disable_face_strike_interrupt(void)
+{
+  gpio_intr_disable(FACE_SENSOR); // Turn off the interrupts
+  return;
+}
 /*----------------------------------------------------------------
  *
  * @function: aquire()
@@ -1074,7 +1088,7 @@ void paper_test(void)
    */
   if ( check_12V() == false )
   {
-    SEND(ALL, sprintf(_xs, "\r\nTest failed, no 12V supply");)
+    SEND(ALL, sprintf(_xs, "\r\nTest failed, no 12V supply\r\n");)
     return;
   }
 

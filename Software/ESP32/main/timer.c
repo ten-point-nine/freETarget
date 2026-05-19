@@ -150,7 +150,12 @@ void freeETarget_timer_start(void) // Start the timer
   return;
 }
 
-void show_timers(void)             // Show the current timers
+/*
+ * Show the value of the count down timers
+ *
+ * IMPORTANT.  Some timers may be reset as a function of executing this command
+ */
+void show_timers(void) // Show the current timers
 {
   unsigned int i;
 
@@ -384,7 +389,7 @@ void freeETarget_synchronous(void *pvParameters)
  *
  *-----------------------------------------------------*/
 int ft_timer_new(time_count_t *new_timer, // Pointer to new down counter
-                 long          duration,  // Duration of the timer
+                 time_count_t  duration,  // Duration of the timer
                  void *(callback)(),      // What to do when we hit zero
                  char *name               // Timer name
 )

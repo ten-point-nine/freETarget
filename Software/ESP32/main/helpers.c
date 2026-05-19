@@ -15,6 +15,7 @@
 #include "driver\gpio.h"
 #include "math.h"
 #include "esp_timer.h"
+#include "esp_random.h"
 
 #include "freETarget.h"
 #include "helpers.h"
@@ -298,22 +299,20 @@ void hello(void)
  *
  *----------------------------------------------------------------
  *
- * This is called every second to send out the keep alive to the
- * TCPIP server
+ * This is a callback when the keep alive timer expires.
+ *
+ * Send out the keep alive message and reset the timer
  *
  *--------------------------------------------------------------*/
 void send_keep_alive(void)
 {
   static int keep_alive_count = 0;
-  static int keep_alive       = 0;
   char       str[SHORT_TEXT];
 
-  if ( (json_keep_alive != 0) && (keep_alive <= 0) ) // Time in seconds
-  {
-    target_name(str);
-    SEND(TCPIP, sprintf(_xs, "{\"KEEP_ALIVE\":%d, \"NAME\":\"%s\"}", keep_alive_count++, str);)
-    keep_alive = (time_count_t)json_keep_alive * ONE_SECOND;
-  }
+  target_name(str);
+  SEND(TCPIP, sprintf(_xs, "{\"KEEP_ALIVE\":%d, \"NAME\":\"%s\"}", keep_alive_count++, str);)
+  keep_alive = (time_count_t)json_keep_alive * ONE_SECOND;
+
   return;
 }
 /*----------------------------------------------------------------
@@ -478,7 +477,8 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
     switch ( *fields )
     {
       case SCORE_LEFT_BRACE:
-        sprintf(str, "{"); // Start the opening bracket
+        sprintf(str, "{{{{{"); // Start the opening bracket.  Send five to wake up the client and get it to start parsing the JSON.  The
+                               // client will ignore the first four and use the fifth as the start of the JSON.
         break;
 
       case SCORE_RIGHT_BRACE:

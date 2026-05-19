@@ -99,33 +99,47 @@ extern void         gpio_init(void);
 void freeETarget_init(void)
 {
   run_state = IN_STARTUP;
-  is_trace  = DLT_INFO | DLT_CRITICAL;
+  is_trace  = DLT_FATAL | DLT_CRITICAL | DLT_INFO;
+
 #if TRACE_APPLICATION
   is_trace |= DLT_APPLICATION;   // Enable application tracing
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT APPLICATON enabled");))
 #endif
 #if TRACE_COMMUNICATION
   is_trace |= DLT_COMMUNICATION; // Enable application tracing
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT COMMUNICATION enabled");))
 #endif
 #if TRACE_DIAGNOSTICS
   is_trace |= DLT_DIAG;          // Enable diagnostics tracing
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT DIAGNOSTICS enabled");))
 #endif
 #if TRACE_DEBUG
   is_trace |= DLT_DEBUG;         // Enable debug tracing
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT DEBUG enabled");))
 #endif
 #if TRACE_SCORE
   is_trace |= DLT_SCORE;         // Enable score tracing
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT SCORE enabled");))
 #endif
 #if TRACE_HTTP
   is_trace |= DLT_HTTP;          // Enable HTTP tracing
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT HTTP enabled");))
 #endif
 #if TRACE_OTA
   is_trace |= DLT_OTA;           // Enable OTA tracing
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT OTA enabled");))
 #endif
 #if TRACE_HEARTBEAT
   is_trace |= DLT_HEARTBEAT;     // Enable heartbeat tracing
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT HEARTBEAT enabled");))
 #endif
 #if TRACE_CALIBRATION
   is_trace |= DLT_CALIBRATION;   // Enable calibration tracing
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT CALIBRATION enabled");))
+#endif
+#if TRACE_VERBOSE
+  is_trace |= DLT_VERBOSE;       // Enable verbose messages
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT VERBOSE enabled");))
 #endif
 
   /*
@@ -157,12 +171,12 @@ void freeETarget_init(void)
   /*
    *  Set up the long running timers
    */
-  ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND * 60l, NULL, "keep alive");                      // Keep alive timer
+  ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND, send_keep_alive, "keep alive");                 // Keep alive timer
   ft_timer_new(&power_save, (time_count_t)(json_power_save) * (time_count_t)ONE_SECOND * 60L, &bye_tick, "power save"); // Power save timer
   ft_timer_new(&time_since_last_shot, HTTP_CLOSE_TIME * 60 * ONE_SECOND, NULL, "time since last shot"); // 15 minutes since last shot
   ft_timer_new(&time_to_go, 0, NULL, "time to go");                                                     // Time remaining in session
-  ft_timer_new(&shot_timer, MAX_WAIT_TIME, NULL, "shot timer");                                         // Wait for the shot to arrive
-  ft_timer_new(&ring_timer, MAX_RING_TIME, NULL, "ring timer");                                         // Wait for the ringing to stop
+  ft_timer_new(&shot_timer, 0, NULL, "shot timer");                                                     // Wait for the shot to arrive
+  ft_timer_new(&ring_timer, 0, NULL, "ring timer");                                                     // Wait for the ringing to stop
 
   /*
    * Run the power on self test
@@ -353,6 +367,7 @@ unsigned int arm(void)
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "arm()");))
 
   face_strike = 0;                                                       // Reset the face strike count
+  enable_face_strike_interrupt();                                        // Enable the face strike interrupt
   stop_timers();
   arm_timers();                                                          // Arm the counters
   run_state |= IN_SHOT;
@@ -633,6 +648,9 @@ void start_new_session(int session_type) //
       break;
   }
 
+  /*
+   *  All done, return
+   */
   return;
 }
 

@@ -22,6 +22,8 @@
 #include "serial_io.h"
 #include "calibrate.h"
 #include "ota.h"
+#include "board_assembly.h"
+#include "analog_io.h"
 
 /*
  *  Local variables
@@ -230,8 +232,12 @@ void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calib
     i++;
   }
 
-  strcpy(json_ota_url, OTA_URL);                        // Copy the OTA URL to the nonvol
-  nvs_set_str(my_handle, NONVOL_OTA_URL, json_ota_url); // Store the URL in the nonvol
+  /*
+   * Handle special cases
+   */
+  strcpy(json_ota_url, OTA_URL);                                   // Copy the OTA URL to the nonvol
+  nvs_set_str(my_handle, NONVOL_OTA_URL, json_ota_url);            // Store the URL in the nonvol
+  void_calibration(true);                                          // Unconditionally void the calibration
 
   /*
    *     Test the board only if it is a factor init

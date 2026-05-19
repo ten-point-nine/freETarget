@@ -74,7 +74,6 @@ void BlueTooth_configuration(void)
   /*
    * Set the baud rate to the correct value and program
    */
-
   serial_bt_config(9600);
   vTaskDelay(TICK_10ms); // Wait for the port to settle
   send_AT();

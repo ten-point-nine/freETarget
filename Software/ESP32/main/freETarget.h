@@ -19,7 +19,7 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"1.3.0 March 2, 2026\""
+#define SOFTWARE_VERSION "\"1.4.0 May 19, 2026\""
 #define _DONE_           "\r\nDone\r\n"
 #define _SHOT_           "shot"
 #define _GREETING_       "CONNECTED"   // Message to send on connection
@@ -192,7 +192,7 @@ typedef struct
 /*
  *  Global Variables
  */
-EXTERN char                  _xs[LONG_TEXT];                        // General purpose string buffer
+EXTERN char                  _xs[1024 + 512];                       // General purpose string buffer
 EXTERN double                s_of_sound;
 EXTERN unsigned int          face_strike;
 EXTERN unsigned int          is_trace;                              // Tracing level(s)

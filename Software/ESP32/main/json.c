@@ -47,7 +47,7 @@ static void set_auth_code(unsigned int new_auth_code);                         /
 /*
  *  Variables
  */
-static char input_JSON[256];  // JSON input buffer
+char input_JSON[EXTRA_LARGE_STRING]; // JSON input buffer
 
 void        show_echo(void);  // Display the current settings
 static void show_names(int v);
@@ -61,31 +61,32 @@ const json_message_t JSON[] = {
     {HIDE + LOCK, "\"ANGLE\":",          &json_sensor_angle,          IS_INT32,                 0,                  NONVOL_SENSOR_ANGLE,        45,          0 },
     {HIDE + LOCK, "\"ANGLE_OFFSET\":",   &json_sensor_angle_offset,   IS_FLOAT,                 0,                  NONVOL_SENSOR_ANGLE_OFFSET, 0,           15},
     {HIDE,        "\"AUTH_CODE\":",      &json_auth_code,             IS_INT32,                 &set_auth_code,     NONVOL_AUTH_CODE,           0,           12},
-    {SHOW + LOCK, "\"AUX_MODE\":",       &json_aux_mode,              IS_INT32,                 0,                  NONVOL_AUX_PORT_ENABLE,     0,           6 },
+    {SHOW + LOCK, "\"AUX_MODE\":",       &json_aux_mode,              IS_INT32,                 0,                  NONVOL_AUX_PORT_ENABLE,     RS485,      6 },
     {HIDE,        "\"BYE\":",            0,                           IS_INT32,                 &bye,               0,                          0,           0 },
     {HIDE,        "\"CAL\":",            0,                           IS_INT32,                 &calibrate,         0,                          0,           0 },
-    {HIDE,        "\"DOWNLOAD\":",       &json_OTA_download_size,     IS_INT32,                 &OTA_serial,        0,                          0,           0 },
-    {HIDE,        "\"ECHO\":",           0,                           IS_VOID,                  &show_echo,         0,                          0,           0 },
-    {HIDE + LOCK, "\"FACE_STRIKE\":",    &json_face_strike,           IS_INT32,                 0,                  NONVOL_FACE_STRIKE,         0,           0 },
-    {HIDE,        "\"FLASH\":",          0,                           IS_INT32,                 &OTA_serial,        0,                          0,           0 },
-    {SHOW + LOCK, "\"FOLLOW_THROUGH\":", &json_follow_through,        IS_INT32,                 0,                  NONVOL_FOLLOW_THROUGH,      0,           0 },
-    {HIDE + LOCK, "\"INIT\"",            0,                           IS_VOID,                  &init_nonvol,       0,                          0,           0 },
-    {SHOW + LOCK, "\"KEEP_ALIVE\":",     &json_keep_alive,            IS_INT32,                 0,                  NONVOL_KEEP_ALIVE,          120,         0 },
-    {SHOW + LOCK, "\"LED_BRIGHT\":",     &json_LED_PWM,               IS_INT32,                 &set_LED_PWM_now,   NONVOL_LED_PWM,             50,          0 },
-    {HIDE,        "\"MFS?",              0,                           IS_VOID,                  &mfs_show,          0,                          0,           0 },
-    {SHOW + LOCK, "\"MFS_TAP_1\":",      &json_mfs_tap_1,             IS_MFS,                   0,                  NONVOL_MFS_TAP_A,           PAPER_SHOT,  2 },
-    {SHOW + LOCK, "\"MFS_TAP_2\":",      &json_mfs_tap_2,             IS_MFS,                   0,                  NONVOL_MFS_TAP_B,           TARGET_ON,   2 },
-    {SHOW + LOCK, "\"MFS_HOLD_1\":",     &json_mfs_hold_1,            IS_MFS,                   0,                  NONVOL_MFS_HOLD_A,          PAPER_FEED,  2 },
-    {SHOW + LOCK, "\"MFS_HOLD_2\":",     &json_mfs_hold_2,            IS_MFS,                   0,                  NONVOL_MFS_HOLD_B,          TARGET_OFF,  2 },
-    {SHOW + LOCK, "\"MFS_HOLD_12\":",    &json_mfs_hold_12,           IS_MFS,                   0,                  NONVOL_MFS_HOLD_AB,         LED_ADJUST,  2 },
-    {SHOW + LOCK, "\"MFS_HOLD_C\":",     &json_mfs_hold_c,            IS_MFS,                   0,                  NONVOL_MFS_HOLD_C,          rapid_C_LED, 2 },
-    {SHOW + LOCK, "\"MFS_HOLD_D\":",     &json_mfs_hold_d,            IS_MFS,                   0,                  NONVOL_MFS_HOLD_D,          rapid_D_LED, 2 },
-    {SHOW + LOCK, "\"MFS_SELECT_CD\":",  &json_mfs_select_cd,         IS_MFS,                   0,                  NONVOL_MFS_SELECT_CD,       RAPID_LOW,   2 },
-    {SHOW + LOCK, "\"MIN_RING_TIME\":",  &json_min_ring_time,         IS_INT32,                 0,                  NONVOL_MIN_RING_TIME,       500,         0 },
-    {SHOW + LOCK, "\"NAME_ID\":",        &json_name_id,               IS_INT32,                 &show_names,        NONVOL_NAME_ID,             0,           0 },
-    {SHOW + LOCK, "\"NAME_TEXT\":",      (int *)&json_name_text,      IS_TEXT + SSID_SIZE,      &show_names,        NONVOL_NAME_TEXT,           0,           8 },
-    {HIDE + LOCK, "\"OTA\":",            0,                           0,                        &OTA_load_json,     0,                          0,           0 },
-    {SHOW + LOCK, "\"OTA_URL\":",        (int *)&json_ota_url,        IS_TEXT + URL_SIZE,       0,                  NONVOL_OTA_URL,             0,           11},
+    {HIDE,        "\"DOWNLOAD\"",        &json_OTA_download_size,     IS_INT32,                 &OTA_serial,        0,                          0,          0 },
+    {HIDE,        "\"ECHO\"",            0,                           IS_VOID,                  &show_echo,         0,                          0,          0 },
+    {HIDE + LOCK, "\"FACE_STRIKE\":",    &json_face_strike,           IS_INT32,                 0,                  NONVOL_FACE_STRIKE,         0,          0 },
+    {HIDE,        "\"FLASH\"",           0,                           IS_INT32,                 &OTA_serial,        0,                          0,          0 },
+    {SHOW + LOCK, "\"FOLLOW_THROUGH\":", &json_follow_through,        IS_INT32,                 0,                  NONVOL_FOLLOW_THROUGH,      0,          0 },
+    {HIDE + LOCK, "\"INIT\"",            0,                           IS_VOID,                  &init_nonvol,       0,                          0,          0 },
+    {SHOW + LOCK, "\"KEEP_ALIVE\":",     &json_keep_alive,            IS_INT32,                 0,                  NONVOL_KEEP_ALIVE,          120,        0 },
+    {SHOW + LOCK, "\"LED_BRIGHT\":",     &json_LED_PWM,               IS_INT32,                 &set_LED_PWM_now,   NONVOL_LED_PWM,             50,         0 },
+    {HIDE,        "\"MFS?\"",            0,                           IS_VOID,                  &mfs_show,          0,                          0,          0 },
+    {SHOW + LOCK, "\"MFS_TAP_1\":",      &json_mfs_tap_1,             IS_MFS,                   0,                  NONVOL_MFS_TAP_A,           PAPER_SHOT, 2 },
+    {SHOW + LOCK, "\"MFS_TAP_2\":",      &json_mfs_tap_2,             IS_MFS,                   0,                  NONVOL_MFS_TAP_B,           TARGET_ON,  2 },
+    {SHOW + LOCK, "\"MFS_HOLD_1\":",     &json_mfs_hold_1,            IS_MFS,                   0,                  NONVOL_MFS_HOLD_A,          PAPER_FEED, 2 },
+    {SHOW + LOCK, "\"MFS_HOLD_2\":",     &json_mfs_hold_2,            IS_MFS,                   0,                  NONVOL_MFS_HOLD_B,          TARGET_OFF, 2 },
+    {SHOW + LOCK, "\"MFS_HOLD_12\":",    &json_mfs_hold_12,           IS_MFS,                   0,                  NONVOL_MFS_HOLD_AB,         LED_ADJUST, 2 },
+    {SHOW + LOCK, "\"MFS_HOLD_C\":",     &json_mfs_hold_c,            IS_MFS,                   0,                  NONVOL_MFS_HOLD_C,          MFS_C_LED,  2 },
+    {SHOW + LOCK, "\"MFS_HOLD_D\":",     &json_mfs_hold_d,            IS_MFS,                   0,                  NONVOL_MFS_HOLD_D,          MFS_D_LED,  2 },
+    {SHOW + LOCK, "\"MFS_SELECT_CD\":",  &json_mfs_select_cd,         IS_MFS,                   0,                  NONVOL_MFS_SELECT_CD,       RAPID_HIGH, 2 },
+    {SHOW + LOCK, "\"MIN_RING_TIME\":",  &json_min_ring_time,         IS_INT32,                 0,                  NONVOL_MIN_RING_TIME,       500,        0 },
+    {SHOW + LOCK, "\"NAME_ID\":",        &json_name_id,               IS_INT32,                 &show_names,        NONVOL_NAME_ID,             0,          0 },
+    {SHOW + LOCK, "\"NAME_TEXT\":",      (int *)&json_name_text,      IS_TEXT + SSID_SIZE,      &show_names,        NONVOL_NAME_TEXT,           0,          8 },
+    {HIDE + LOCK, "\"OTA\"",             0,                           0,                        &OTA_load_json,     0,                          0,          0 },
+    {SHOW + LOCK, "\"OTA_URL\":",        (int *)&json_ota_url,        IS_TEXT + URL_SIZE,       0,                  NONVOL_OTA_URL,             0,          11},
+    {HIDE,        "\"P\"",               0,                           IS_VOID,                  &paper_start,       0,                          0,          0 },
     {SHOW + LOCK, "\"PAPER_ECO\":",      &json_paper_eco,             IS_INT32,                 0,                  NONVOL_PAPER_ECO,           0,           0 },
     {SHOW + LOCK, "\"PAPER_SHOT\":",     &json_paper_shot,            IS_INT32,                 0,                  NONVOL_PAPER_SHOT,          0,           5 },
     {SHOW + LOCK, "\"PAPER_TIME\":",     &json_paper_time,            IS_INT32,                 0,                  NONVOL_PAPER_TIME,          500,         0 },
@@ -98,7 +99,7 @@ const json_message_t JSON[] = {
     {SHOW + LOCK, "\"REMOTE_ACTIVE\":",  &json_remote_active,         IS_INT32,                 0,                  NONVOL_REMOTE_ACTIVE,       0,           8 },
     {SHOW + LOCK, "\"REMOTE_KEY\":",     &json_remote_key,            IS_TEXT + KEY_SIZE,       0,                  NONVOL_REMOTE_KEY,          0,           8 },
     {SHOW + LOCK, "\"REMOTE_URL\":",     (int *)&json_remote_url,     IS_TEXT + URL_SIZE,       0,                  NONVOL_REMOTE_URL,          0,           8 },
-    {HIDE,        "\"RESET\":",          0,                           IS_VOID,                  &esp_restart,       0,                          0,           0 },
+    {HIDE,        "\"RESET\"",           0,                           IS_VOID,                  &esp_restart,       0,                          0,          0 },
     {SHOW + LOCK, "\"SEND_MISS\":",      &json_send_miss,             IS_INT32,                 0,                  NONVOL_SEND_MISS,           0,           0 },
     {SHOW + LOCK, "\"SENSOR\":",         (int *)&json_sensor_dia,     IS_FLOAT,                 0,                  NONVOL_SENSOR_DIA,          232000,      0 },
     {SHOW,        "\"SN\":",             &json_serial_number,         IS_FIXED,                 0,                  NONVOL_SERIAL_NO,           0xffff,      0 },
@@ -116,7 +117,7 @@ const json_message_t JSON[] = {
     {HIDE + LOCK, "\"TEST\":",           0,                           IS_INT32,                 &self_test,         0,                          0,           0 },
     {SHOW + LOCK, "\"TOKEN\":",          &json_token,                 IS_INT32,                 0,                  NONVOL_TOKEN,               0,           0 },
     {SHOW,        "\"TRACE\":",          0,                           IS_INT32,                 &set_trace,         0,                          0,           0 },
-    {SHOW,        "\"VERSION\":",        0,                           IS_INT32,                 &POST_version,      0,                          0,           0 },
+    {SHOW,        "\"VERSION\"",         0,                           IS_INT32,                 &POST_version,      0,                          0,          0 },
     {SHOW + LOCK, "\"VREF_LO\":",        (int *)&json_vref_lo,        IS_FLOAT,                 &set_VREF,          NONVOL_VREF_LO,             1250,        0 },
     {SHOW + LOCK, "\"VREF_HI\":",        (int *)&json_vref_hi,        IS_FLOAT,                 &set_VREF,          NONVOL_VREF_HI,             2000,        0 },
     {SHOW + LOCK, "\"WIFI_CHANNEL\":",   &json_wifi_channel,          IS_INT32,                 0,                  NONVOL_WIFI_CHANNEL,        6,           0 },
@@ -207,27 +208,39 @@ void freeETarget_json(void *pvParameters)
         serial_putch(ch, SOME);                    // because RS485 diesables receive during transmit
       }
 
-      /*
-       * Parse the stream
-       */
+                                                   /*
+                                                    * Parse the stream
+                                                    */
+
+      if ( ch == '\n' ) // New Line
+      {
+        ch = ',';       // Convert to a comma
+      }
+
+      if ( ch == '\r' ) // Carriage Return, ignore it
+      {
+        continue;
+      }
+
       switch ( ch )
       {
-        case '}':
-          if ( in_JSON != 0 )
-          {
-            got_left_bracket  = false;
-            got_right_bracket = in_JSON;
-            handle_json(); // Fall through to manage the JSON message
-            vTaskDelay(TICK_10ms);
-            serial_flush(ALL);
-          }
-
         case '{':
           in_JSON           = 0;
           input_JSON[0]     = 0;
           got_right_bracket = 0;
           got_left_bracket  = true;
           keep_space        = 0;
+          break;
+
+        case '}':
+          if ( in_JSON != 0 )
+          {
+            got_left_bracket  = false;
+            got_right_bracket = in_JSON;
+            handle_json();         // Fall through to manage the JSON message
+            vTaskDelay(TICK_10ms);
+            serial_flush(ALL);
+          }
           break;
 
         case 0x08:                 // Backspace
@@ -527,8 +540,12 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"RELATIVE_HUMIDITY\": %4.2f,", humidity_RH());)
   SEND(ALL, sprintf(_xs, "\"TIMER_COUNT\":       %d,",
                     (int)(SHOT_TIME * OSCILLATOR_MHZ));) // Maximum number of clock cycles to record shot (target dependent)
-  SEND(ALL, sprintf(_xs, "\"V12\":               %4.2f,", v12_supply());) // 12 Volt LED supply
-
+  SEND(ALL, sprintf(_xs, "\"V12\":               %4.2f,", v12_supply());)                   // 12 Volt LED supply
+  if ( VREF_FB & board_mask )
+  {
+    SEND(ALL, sprintf(_xs, "\"VREF_LO\":           %4.2f,", vref_measure());)               // Reference voltage measurement
+  }
+  SEND(ALL, sprintf(_xs, "\"VBOARD_REV\":        %4.2f,", (real_t)vBD_measure() / 1000.0);) // Board Revision voltage measurement
   WiFi_MAC_address(str_c);
   SEND(ALL, sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\",", str_c[0], str_c[1], str_c[2], str_c[3], str_c[4],
                     str_c[5]);)
@@ -580,12 +597,12 @@ void show_echo(void)
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
   SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                                   // Current persistent storage version
   SEND(ALL, sprintf(_xs, "\"BD_REV\":            %d.%d.%d", (revision() / 100), ((revision() % 100) / 10),
-                    (revision() % 10));)                                                      // Current board version
-  SEND(ALL, sprintf(_xs, "\"SPLINE FIT\":        %s,", calibration_is_valid ? "Yes" : "No");) // Current persistent storage version
-                                                                                              /*
-                                                                                               *  All done, return
-                                                                                               */
-  serial_to_all(_xs, EVEN_ODD_END);                                                           // End the even odd line
+                    (revision() % 10));)                                                              // Current board version
+  SEND(ALL, sprintf(_xs, "\"SPLINE FIT\":        %s,", calibration_is_valid ? "\"Yes\"" : "\"No\"");) // Current persistent storage version
+                                                                                                      /*
+                                                                                                       *  All done, return
+                                                                                                       */
+  serial_to_all(_xs, EVEN_ODD_END);                                                                   // End the even odd line
   SEND(ALL, sprintf(_xs, "}\r\n");)
 
   return;
@@ -665,8 +682,8 @@ static void set_trace(int trace)         // Trace mask on or off
   {
     is_trace = 0;
   }
-  is_trace ^= trace;                     // XOR the input
-  is_trace |= (DLT_CRITICAL | DLT_INFO); // Info and critical is always enabled
+  is_trace ^= trace;                                 // XOR the input
+  is_trace |= (DLT_FATAL | DLT_CRITICAL | DLT_INFO); // Info and critical is always enabled
 
   i = 0;
   while ( dlt_names[i].dlt_text != 0 )   // Print the help
@@ -862,7 +879,7 @@ static bool good_input(unsigned int conversion, // What kind of input is it?
 
 /*-----------------------------------------------------
  *
- * @function: json_get_next
+ * @function: json_find_first
  *
  * @brief:    Read a number from the input stream
  *
@@ -870,20 +887,28 @@ static bool good_input(unsigned int conversion, // What kind of input is it?
  *
  *-----------------------------------------------------
  *
- * The input is valid if
+ * The input stream is a JSON array of numbers, ex:
+ * [1, 2, 3, 4, 5]
  *
- * 1 - No input is required
- * 2 - The input text is not empty
- * 3 - The JSON is not locked
- * 4 - The JSON does not require a lock
+ * This function will read the next number from the array and return it.
+ *
+ * Exceptions.
+ *
+ * Quotes are removed.
+ * Double quotes are converted to a space and comma
  *
  *-----------------------------------------------------*/
-static int next_value;                    // Index to the next value to read
+static int next_value;     // Index to the next value to read
 
-bool json_find_first(void)                // Find the first element starting with [
+bool json_find_first(void) // Find the first element starting with [
 {
+  int i;
   next_value = 0;
+  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "json_find_first()");))
 
+  /*
+   *  Find the start of the JSON
+   */
   while ( input_JSON[next_value] != '[' ) // Look for an opening array
   {
     if ( input_JSON[next_value] == 0 )
@@ -897,23 +922,67 @@ bool json_find_first(void)                // Find the first element starting wit
   /*
    *  Found it, advance and return
    */
-  next_value++;                      // Skip past the opening [
-  return true;                       // Show we have something
+  next_value++; // Skip past the opening [
+  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "Start of array @%d characters", next_value);))
+  return true;  // Show we have something
 }
 
-bool json_get_array_next(int   type, //  Expected input type
-                         void *value // Where to put the result
-)
+/*----------------------------------------------------------------
+ *
+ * function: json_get_array_next()
+ *
+ * brief: Extract the next number from an array
+ *
+ * return: Value extracted from the array
+ *
+ *----------------------------------------------------------------
+ *
+ * The input is a text array of numbers in the form
+ *
+ * 1, 2, 3, 4....<NULL>
+ *
+ * The function looks for the first comma and then does an atof
+ * conversion of the text.
+ *
+ * The function also handles the case where the text array is
+ * of the form "1", "2", "3""4" by converting the quotes to spaces
+ * and "" to <space><comma>
+ *
+ *----------------------------------------------------------------*/
+bool json_get_array_next(int   type,  //  Expected input type
+                         void *value) // Where to put the result
 {
+  int i;
+
   /*
-   * Check for garbage
+   *  Check to see if this is the first time through and if so, filter the data
    */
-  if ( input_JSON[next_value] == ',' )
+  if ( type == IS_FIRST )
   {
-    next_value++;
+    i = 0;
+    while ( (input_JSON[i] != 0) && (input_JSON[i] != '!') )
+    {
+      if ( input_JSON[i] == '"' )       // The next character is a quote
+      {
+        input_JSON[i] = ' ';            // Make it a space
+        if ( input_JSON[i + 1] == '"' ) // And check that the one after that
+        {                               // isn't another quote
+          input_JSON[i + 1] = ',';      // And if it is, make it a comma
+        }
+      }
+
+      if ( input_JSON[i] == '\r' )      // The next character is a carriage return
+        input_JSON[i] = ',';            // Make it a comma
+      i++;
+    }
+    next_value = 0;
+    return 0;
   }
 
-  if ( (input_JSON[next_value] == 0) || (input_JSON[next_value] == ']') ) // Bumped up to the end
+  /*
+   *  Check to see if it is time to leave
+   */
+  if ( (input_JSON[next_value] == 0) || (input_JSON[next_value] == ']') || (input_JSON[next_value] == '!') ) // Bumped up to the end
   {
     return false;
   }
@@ -924,25 +993,26 @@ bool json_get_array_next(int   type, //  Expected input type
   switch ( type )
   {
     case IS_FLOAT:
+      *(real_t *)value = atof(&input_JSON[next_value]); // Float
+      break;
 
-      if ( input_JSON[next_value] == 0 )
-      {
-        *(real_t *)value = 0;
-      }
-      else
-      {
-        *(real_t *)value = atof(&input_JSON[next_value]); // Float
-      }
+    case IS_VOID:
       break;
   }
 
   /*
    *  Prepare the next field
    */
-  while ( (input_JSON[next_value] != ',') && input_JSON[next_value] != 0 )
+  while ( input_JSON[next_value] != ',' )                                                                      // Got the next field
   {
     next_value++;
+    if ( (input_JSON[next_value] == 0) || (input_JSON[next_value] == ']') || (input_JSON[next_value] == '!') ) // Bumped up to the end
+    {
+      return true;
+    }
   }
+
+  next_value++;
 
   /*
    * All done, return

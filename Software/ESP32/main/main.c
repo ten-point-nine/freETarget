@@ -18,6 +18,7 @@
 #include "esp_event.h"
 
 #include "freETarget.h"
+#include "helpers.h"
 #include "json.h"
 #include "timer.h"
 #include "serial_io.h"
@@ -50,6 +51,7 @@
  */
 void app_main(void)
 {
+  char str_c[SHORT_TEXT]; // String holding buffer
 
   /*
    *  Start FreeETarget
@@ -105,7 +107,8 @@ void app_main(void)
   vTaskDelay(TICK_10ms);
   serial_flush(ALL);
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "SN:%d Running\r\n", json_serial_number);))
+  target_name(&str_c);
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "SN:%d Name: %s Running\r\n", json_serial_number, str_c);))
   vTaskDelay(TICK_10ms);
   serial_flush(ALL);
 }

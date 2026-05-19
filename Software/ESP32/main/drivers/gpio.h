@@ -23,13 +23,13 @@ unsigned int read_counter(unsigned int direction);
 void         stop_timers(void);                            // Turn off the counter registers
 void         read_timers(int *timer_count);                // Read and return the counter registers
 void         paper_start(void);                            // Turn on the witness paper
-void         paper_stop(void);                             // Turn off the paper drive if
-                                                           // it is running
-void paper_drive_tick(void);                               // Turn the motor off when the time runs out
-void paper_stop(void);                                     // Stop the paper transport
-void aquire(void);                                         // Read the clock registers
-void enable_face_interrupt();                              // Turn on the face strike interrupt
-void disable_face_interrupt(void);                         // Turn off the face strike interrupt
+void         paper_stop(void);                             // Turn off the paper drive if it is running
+void         paper_drive_tick(void);                       // Turn the motor off when the time runs out
+void         paper_stop(void);                             // Stop the paper transport
+void         aquire(void);                                 // Read the clock registers
+void         face_strike_ISR(void);                         // Interrupt service routine for the face strike sensor
+void         enable_face_strike_interrupt();               // Turn on the face strike interrupt
+void         disable_face_strikeinterrupt(void);           // Turn off the face strike interrupt
 
 void digital_test(void);                                   // Execute the digital test
 void DCmotor_on_off(bool on, time_count_t duration);       // Turn the motor on or off
@@ -95,11 +95,12 @@ extern volatile unsigned int step_count; // Number of steps before stopping
 #define CLOCK_START GPIO_NUM_21                                            // Trigger a test cycle
 #define OSC_CONTROL GPIO_NUM_48                                            // Enable / kill 10MHz Oscillator
 #endif
-#if ( (BUILD_REV == REV_510) || (BUILD_REV == REV_520) || (BUILD_REV == REV_600) || (BUILD_REV == REV_610) )
+#if ( (BUILD_REV == REV_510) || (BUILD_REV == REV_520) || (BUILD_REV == REV_600) || (BUILD_REV == REV_610) || (BUILD_REV == REV_620) )
 #define STOP_N      GPIO_NUM_21                                            // Stop the RUN flipflops
 #define CLOCK_START GPIO_NUM_47                                            // Trigger a test cycle
 #define OSC_CONTROL GPIO_NUM_48                                            // Enable / kill 10MHz Oscillator
 #endif
+
 #define OSC_ON            1                                                // Enable the oscillator
 #define OSC_OFF           0                                                // Tristate the oscillator
 #define RUN_OFF           0                                                // Clear the run flip flops

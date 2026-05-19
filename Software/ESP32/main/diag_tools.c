@@ -13,6 +13,7 @@
 #include "ctype.h"
 #include "driver\gpio.h"
 #include "esp_timer.h"
+#include "esp_random.h"
 #include "gpio_types.h"
 #include "serial_io.h"
 #include "stdbool.h"
@@ -46,6 +47,7 @@ static void show_test_help(void);
 static void test_display_all_scores(void);
 static void test_rapidfire(void);
 static void test_rapidfire(void);
+static void interrupt_face_strike_test(void);
 
 /*
  * Diagnostic typedefs
@@ -82,38 +84,40 @@ static const self_test_t test_list[] = {
     {"Turn the RUN lines on and off",     &timer_run_all           },
     {"Show the current time",             &show_time               },
     {"Show current timers",               &show_timers             },
-    {"- Communiations Tests",             0                        },
-    {"AUX serial port test",              &serial_port_test        },
-    {"BlueTooth configuration",           &BlueTooth_configuration },
-    {"Test WiFi as a station",            &WiFi_station_init       },
-    {"Enable the WiFi Server",            &WiFi_server_test        },
-    {"Enable the WiFi AP",                &WiFi_AP_init            },
-    {"Loopback WiFi",                     &WiFi_loopback_test      },
-    {"Scan for access points (APs)",      &WiFi_AP_scan_test       },
-    {"WiFi Ping Pong test",               &WiFi_pingpong_test      },
-    {"- HTTP tests",                      0                        },
-    {"DNS Lookup test",                   &http_DNS_test           },
-    {"Send to server test",               &http_send_to_server_test},
-    {"Start web server",                  &http_server_test        },
-    {"OTA partitions",                    &OTA_partitions          },
-    {"OTA load",                          &OTA_load                },
-    {"OTA rollback",                      &OTA_rollback            },
-    {"OTA version",                       &OTA_compare_versions    },
-    {"-Interrupt Tests",                  0                        },
-    {"Polled target test",                &polled_target_test      },
-    {"Interrupt target test",             &interrupt_target_test   },
-    {"- Software tests",                  0                        },
-    {"build_json_score",                  &test_build_json_score   }, // Generate a known score message
-    {"build_fake_shots",                  &test_build_fake_shots   }, // Fill up 10 shots with random values
-    {"generate_fake_shot",                &generate_fake_shot      }, // This forces shots into the software
-    {"display_all_scores",                &test_display_all_scores }, // Send fake JSON scores
-    {"Rapidfire test",                    &test_rapidfire          },
-    {"Rapidfire test",                    &test_rapidfire          },
-    {"Calibration test",                  &calibration_test        }, // Generate fake scores and observe the calibration
-    {"",                                  0                        }
+    {"- Communiactions Tests",            0                          },
+    {"AUX port loopback test",            &aux_port_loopback_test    },
+    {"BlueTooth configuration",           &BlueTooth_configuration   },
+    {"RSS485 test",                       &RS485_test                },
+    {"Test WiFi as a station",            &WiFi_station_init         },
+    {"Enable the WiFi Server",            &WiFi_server_test          },
+    {"Enable the WiFi AP",                &WiFi_AP_init              },
+    {"Loopback WiFi",                     &WiFi_loopback_test        },
+    {"Scan for access points (APs)",      &WiFi_AP_scan_test         },
+    {"WiFi Ping Pong test",               &WiFi_pingpong_test        },
+    {"- HTTP tests",                      0                          },
+    {"DNS Lookup test",                   &http_DNS_test             },
+    {"Send to server test",               &http_send_to_server_test  },
+    {"Start web server",                  &http_server_test          },
+    {"OTA partitions",                    &OTA_partitions            },
+    {"OTA load",                          &OTA_load                  },
+    {"OTA rollback",                      &OTA_rollback              },
+    {"OTA version",                       &OTA_compare_versions      },
+    {"-Interrupt Tests",                  0                          },
+    {"Polled target test",                &polled_target_test        },
+    {"Interrupt target test",             &interrupt_target_test     },
+    {"Face strike test",                  &interrupt_face_strike_test},
+    {"- Software tests",                  0                          },
+    {"build_json_score",                  &mfs_test_build_json_score }, // Generate a known score message
+    {"build_fake_shots",                  &test_build_fake_shots     }, // Fill up 10 shots with random values
+    {"generate_fake_shot",                &generate_fake_shot        }, // This forces shots into the software
+    {"display_all_scores",                &test_display_all_scores   }, // Send fake JSON scores
+    {"Rapidfire test",                    &test_rapidfire            },
+    {"Calibration test",                  &calibration_test          }, // Generate fake scores and observe the calibration
+    {"",                                  0                          }
 };
 
 const dlt_name_t dlt_names[] = {
+    {DLT_FATAL,         "DLT_FATAL",         'E'}, //  This is a fatal error and the system should not continue.
     {DLT_CRITICAL,      "DLT_CRITICAL",      'E'}, // Prevents target from working
     {DLT_INFO,          "DLT_INFO",          'I'}, // Running information
     {DLT_APPLICATION,   "DLT_APPLICATION",   'A'}, // FreeTarget.c and compute.c logging
@@ -387,7 +391,7 @@ bool do_factory_test(bool test_run)
     {
       if ( (pass & running & RUN_MASK) != 0 )           // Clear the test if any sensor is detected
       {
-        vTaskDelay(ONE_SECOND/4);
+        vTaskDelay(ONE_SECOND / 4);
         arm_timers();
       }
     }
@@ -442,7 +446,7 @@ bool do_factory_test(bool test_run)
       {
         vmes_lo = vref_measure();       // Read the VREF_LO voltage
         SEND(ALL, sprintf(_xs, "  VREF_LO: %4.2fV", vmes_lo);)
-        if ( abs(vmes_lo - json_vref_lo) <= 0.1 )
+        if ( fabs(vmes_lo - json_vref_lo) <= 0.1 )
         {
           SEND(ALL, sprintf(_xs, " ");)
           pass |= PASS_VREF;            // Mark the test as passed
@@ -815,7 +819,7 @@ bool do_dlt(           //
     return false;                                            // Send out if the trace is higher than the level
   }
 
-  if ( (level & DLT_VERBOSE)                                 // This message is Verbose
+  if ( ((level & DLT_VERBOSE) != 0)                          // This message is Verbose
        && (is_trace & DLT_VERBOSE) == 0 )                    // but Verbose is not enabled
   {
     return false;                                            // Don't send out the message
@@ -834,7 +838,15 @@ bool do_dlt(           //
       dlt_id = dlt_names[i].dlt_id;               // Use the Verbose ID
 
       SEND(ALL, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, run_time_ms() / 1000.);)
-      return true;                                // Send out the message
+      if ( level & DLT_FATAL )
+      {
+        SEND(ALL, sprintf(_xs, "  FATAL");)
+        while ( 1 )
+        {
+          vTaskDelay(ONE_SECOND);
+        }
+      }
+      return true; // Send out the message
     }
 
     i++;
@@ -1135,5 +1147,89 @@ static void test_rapidfire(void)
    *  Finished
    */
   SEND(ALL, sprintf(_xs, _DONE_);)
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: mfs_test_build_json_score
+ *
+ * @brief:    Build a fake score message and send it
+ *
+ * @return:   None
+ *
+ *----------------------------------------------------------------
+ *
+ * This self test sends a score message to the PC or network
+ * to simulate a shot.
+ *
+ *--------------------------------------------------------------*/
+#define TARGET_RADIUS 25.0
+void mfs_test_build_json_score(void)
+{
+  char       str[LARGE_STRING];
+  static int test_shot = 0;
+
+  record[0].shot = test_shot++;
+  record[0].x_mm = ((real_t)(esp_random() % 2000) - 1000) / 1000.0 * TARGET_RADIUS; // Pick a random location
+  record[0].y_mm = ((real_t)(esp_random() % 2000) - 1000) / 1000.0 * TARGET_RADIUS;
+
+  build_json_score(&record[0], SCORE_USB);
+  strncpy(str, _xs, sizeof(str));
+  SEND(CONSOLE, sprintf(_xs, "\r\nUSB:       %s", str);)
+
+  build_json_score(&record[0], SCORE_TCPIP);
+  strncpy(str, _xs, sizeof(str));
+  SEND(TCPIP, sprintf(_xs, "\r\nTCPIP:     %s", str);)
+
+  build_json_score(&record[0], SCORE_BLUETOOTH);
+  strncpy(str, _xs, sizeof(str));
+  SEND(AUX | BLUETOOTH | RS485, sprintf(_xs, "\r\nAUX: %s", str);)
+
+  SEND(ALL, sprintf(_xs, _DONE_);)
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: interrupt_face_strike_test
+ *
+ * @brief:    Listen for a face strike and print out the results
+ *
+ * @return:   None
+ *
+ *----------------------------------------------------------------
+ *
+ * The face strike test polls face_strike and marks when it
+ * detects a face strike.
+ *
+ *--------------------------------------------------------------*/
+
+static void interrupt_face_strike_test(void)
+{
+  unsigned int last_face_strike = 0;
+
+  json_face_strike = 1;           // Force the face strike to be enabled
+  enable_face_strike_interrupt(); // Enable the face strike interrupt
+
+  while ( 1 )
+  {
+    if ( face_strike != last_face_strike )
+    {
+      last_face_strike = face_strike;
+      SEND(ALL, sprintf(_xs, "\r\nFace strike detected: %d", face_strike);)
+    }
+
+    if ( serial_available(ALL) )
+    {
+      if ( serial_getch(ALL) == '!' )
+      {
+        break; // Exit on !
+      }
+    }
+
+    vTaskDelay(100);
+  }
+
   return;
 }
