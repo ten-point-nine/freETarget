@@ -166,14 +166,15 @@ void calibrate(int action)
 
     default:
       SEND(ALL, sprintf(_xs, "\r\nTarget Calibration\r\n");)
-      SEND(ALL, sprintf(_xs, "\r\n1 - Gather shot data");)
-      SEND(ALL, sprintf(_xs, "\r\n2 - Input actual shots (X,Y)");)
-      SEND(ALL, sprintf(_xs, "\r\n3 - Input actual shots (TargetScan CSV)");)
-      SEND(ALL, sprintf(_xs, "\r\n4 - Commit calibration data to NONVOL");)
-      SEND(ALL, sprintf(_xs, "\r\n5 - Display calibration settings");)
-      SEND(ALL, sprintf(_xs, "\r\n6 - Void current calibration");)
-      SEND(ALL, sprintf(_xs, "\r\n7 - Read in test shots");)
-      SEND(ALL, sprintf(_xs, "\r\n9 - Exit, no action\r\n");)
+      SEND(ALL, sprintf(_xs, "\r\n{\"CAL\":0} - Command list");)
+      SEND(ALL, sprintf(_xs, "\r\n{\"CAL\":1} - Gather shot data");)
+      SEND(ALL, sprintf(_xs, "\r\n{\"CAL\":2} - Input actual shots (TargetScan CSV)");)
+      SEND(ALL, sprintf(_xs, "\r\n\r\nOptional");)
+      SEND(ALL, sprintf(_xs, "\r\n{\"CAL\":3} - Commit calibration data to NONVOL");)
+      SEND(ALL, sprintf(_xs, "\r\n{\"CAL\":4} - Display calibration settings");)
+      SEND(ALL, sprintf(_xs, "\r\n{\"CAL\":5} - Void current calibration");)
+      SEND(ALL, sprintf(_xs, "\r\n{\"CAL\":8} - Read in test shots");)
+      SEND(ALL, sprintf(_xs, "\r\n{\"CAL\":9} - Exit, no action\r\n");)
       return;
   }
 }
@@ -1439,6 +1440,18 @@ static void show_calibration(void)
 
   DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "show_calibration()");))
 
+  /*
+   *  Check if the calibration is valid
+   */
+  if ( calibration_is_valid == false )
+  {
+    SEND(ALL, sprintf(_xs, "Calibration is not valid\r\n");)
+    return;
+  }
+
+  /*
+   *  Display the calibration points
+   */
   for ( i = 0; i != CALIBRATION_SHOTS + SPLINE_PADDING * 2; i++ )
   {
     SEND(ALL, sprintf(_xs, "\r\n\r\nSpline: %d  Angle: %4.2f", i, spline_points[i].actual.angle);)

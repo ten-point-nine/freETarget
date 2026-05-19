@@ -207,6 +207,12 @@ void serial_aux_init(void)
       ft_timer_new(&RS485_timer, 0, &RS485_transmit_off, "RS485 timer"); // Prime the RS485 timer
       RS485_transmit(RS485_RECEIVE);                                     // Ensure we are in recei
       break;
+
+    case ETHERNET:
+      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "ETHERNET port enabled");))
+      uart_param_config(uart_aux, &uart_aux_config);                     // 115200 baud rate
+      RS485_transmit(RS485_TRANSMIT);                                    // Ensure we are in recei
+      break;
   }
   /*
    *  Set UART pins(TX: IO4, RX: IO5, RTS: IO18, CTS: IO19)

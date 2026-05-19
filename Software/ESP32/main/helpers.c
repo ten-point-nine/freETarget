@@ -477,7 +477,8 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
     switch ( *fields )
     {
       case SCORE_LEFT_BRACE:
-        sprintf(str, "{"); // Start the opening bracket
+        sprintf(str, "{{{{{"); // Start the opening bracket.  Send five to wake up the client and get it to start parsing the JSON.  The
+                               // client will ignore the first four and use the fifth as the start of the JSON.
         break;
 
       case SCORE_RIGHT_BRACE:

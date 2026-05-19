@@ -99,7 +99,8 @@ extern void         gpio_init(void);
 void freeETarget_init(void)
 {
   run_state = IN_STARTUP;
-  is_trace  = DLT_INFO | DLT_CRITICAL;
+  is_trace  = DLT_FATAL | DLT_CRITICAL | DLT_INFO;
+
 #if TRACE_APPLICATION
   is_trace |= DLT_APPLICATION;   // Enable application tracing
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT APPLICATON enabled");))
@@ -366,6 +367,7 @@ unsigned int arm(void)
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "arm()");))
 
   face_strike = 0;                                                       // Reset the face strike count
+  enable_face_strike_interrupt();                                        // Enable the face strike interrupt
   stop_timers();
   arm_timers();                                                          // Arm the counters
   run_state |= IN_SHOT;
@@ -649,7 +651,6 @@ void start_new_session(int session_type) //
   /*
    *  All done, return
    */
-  SEND(ALL, sprintf(_xs, "\r\nSession data cleared\r\n");)
   return;
 }
 

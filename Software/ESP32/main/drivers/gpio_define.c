@@ -89,17 +89,18 @@ const DIO_struct_t dio35 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .ini
 const DIO_struct_t dio36 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Can only be input
 const DIO_struct_t dio37 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
 const DIO_struct_t dio38 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};                  // Mode and Initial Value
-const DIO_struct_t dio39 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Can only be input // AMB
+const DIO_struct_t dio39 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};      // Can only be input // AMB
 
-const DIO_struct_t dio40 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
-const DIO_struct_t dio41 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 1}; // Mode and Initial Value
-const DIO_struct_t dio42 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
-const DIO_struct_t dio43 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
-const DIO_struct_t dio44 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
-const DIO_struct_t dio45 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
-const DIO_struct_t dio46 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
-const DIO_struct_t dio47 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
-const DIO_struct_t dio48 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 1}; // Mode and Initial Value
+const DIO_struct_t dio40 = {
+    .type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0, .callback = face_strike_ISR}; // Mode and Initial Value
+const DIO_struct_t dio41 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 1};    // Mode and Initial Value
+const DIO_struct_t dio42 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};    // Mode and Initial Value
+const DIO_struct_t dio43 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};    // Mode and Initial Value
+const DIO_struct_t dio44 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};      // Mode and Initial Value
+const DIO_struct_t dio45 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};    // Mode and Initial Value
+const DIO_struct_t dio46 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};      // Mode and Initial Value
+const DIO_struct_t dio47 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};    // Mode and Initial Value
+const DIO_struct_t dio48 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 1};    // Mode and Initial Value
 
 /*
  *  Analog IO usage
@@ -165,6 +166,9 @@ const static LED_strip_struct_t led_strip_config = {.type = LED_STRIP}; // 3 LED
  *
  */
 
+const gpio_struct_t board_rev_adc = {"BD_REV", GPIO_NUM_4, (void *)&adc1_ch3,
+                                     COMMON}; // Must be first entry in the table to be used for board revision detection
+
 const gpio_struct_t gpio_table[] = {
     //   Name      Number       Assigned   Used by
     {"V12_REF",      GPIO_NUM_1,  (void *)&adc1_ch0,         COMMON        }, // LED Feedback (Measure 12VDC)
@@ -187,7 +191,7 @@ const gpio_struct_t gpio_table[] = {
     {"RUN_NORTH_HI", GPIO_NUM_16, (void *)&dio16,            PCNT_HIGH_GPIO}, // RUN_NORTH_HI Direct to GPIO
     {"ATX",          GPIO_NUM_17, (void *)&dio17,            COMMON        }, // ATX Initailize as input
     {"ARX",          GPIO_NUM_18, (void *)&dio18,            COMMON        }, // ARX and override later
-    {"USB_D-",       GPIO_NUM_19, NULL,                      COMMON        }, // JTAG USB D-
+    {"VREF_LO",      GPIO_NUM_19, (void *)&adc2_ch8,         VREF_FB       }, // Voltage feedback
 
     {"USB_D+",       GPIO_NUM_20, NULL,                      COMMON        }, // JTAG USB D+
     {"STOP*",        GPIO_NUM_21, (void *)&dio21,            COMMON        }, // Stop the RUN signals
@@ -255,8 +259,8 @@ void gpio_init(void)
   /*
    * Hard program the analog input to find the board revision
    */
-  adc_init(((const ADC_struct_t *)(gpio_table[BOARD_REVISION].gpio_uses))->adc_channel,
-           ((const ADC_struct_t *)(gpio_table[BOARD_REVISION].gpio_uses))->adc_attenuation);
+  adc_init(((const ADC_struct_t *)(board_rev_adc.gpio_uses))->adc_channel,
+           ((const ADC_struct_t *)(board_rev_adc.gpio_uses))->adc_attenuation);
   revision();
 
   /*
@@ -297,7 +301,7 @@ void gpio_init_single(unsigned int type)                                        
       switch ( ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->type )
       {
         default:
-          printf("gpio not found");
+          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "GPIO not found: %d", i);))
           break;
 
         case DIGITAL_IO_IN:
@@ -353,7 +357,6 @@ void gpio_init_single(unsigned int type)                                        
           break;
       }
     }
-
     i++;
   }
 

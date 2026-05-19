@@ -11,29 +11,26 @@
 /*
  *  Port Definitions
  */
-#define V_REFERENCE 0                                // Reference Input
-#define V_12_LED    ADC(1, 0)                        // 12 Volt LED input
-#define K_12        ((10000.0d + 2200.0d) / 2200.0d) // Resistor divider
-#define BOARD_REV   ADC(1, 3)                        // Analog Version Input
-#define VMES_LO     ADC(2, 8)                        // Low reference voltage
+#define V_REFERENCE 0           // Reference Input
+#define V12_LED     ADC(1, 0)   // 12 Volt LED input
+#define BOARD_REV   ADC(1, 3)   // Analog Version Input
+#define VMES_LO     ADC(2, 8)   // Low reference voltage
 
-#define VMES_HI    ADC(2, 9)                         // High reference voltage
-#define LED_PWM    0                                 // PWM mapped to PWM channel 0
-#define MAX_ANALOG 0x3ff                             // Largest analog input
-#define MAX_PWM    0xff                              // PWM is an 8 bit port
+#define VMES_HI    ADC(2, 9)    // High reference voltage
+#define LED_PWM    0            // PWM mapped to PWM channel 0
+#define MAX_ANALOG 0x3ff        // Largest analog input
+#define MAX_PWM    0xff         // PWM is an 8 bit port
 
-#define TO_VOLTS(x) (((real_t)(x) * 5.0) / 1024.0)
-
-#define TEMP_IC          (0x44)                      // TI HDC3022
-#define TEMP_IC_TMP1075D (0x48)                      // TI TMP1075D
-#define DAC_IC           (0x60)                      // Microchip HCP4728
+#define TEMP_IC          (0x44) // TI HDC3022
+#define TEMP_IC_TMP1075D (0x48) // TI TMP1075D
+#define DAC_IC           (0x60) // Microchip HCP4728
 
 /*
  * Global functions
  */
 void         adc_init(unsigned int channel,
                       unsigned int attenuation);       // Setup the analog hardware
-unsigned int adc_read(unsigned int channel);           // Return the raw value
+int          adc_read(int adc_channel);                // Return the value in mV
 unsigned int revision(void);                           // Return the board revision
 real_t       temperature_C(void);                      // Temperature in degrees C
 real_t       humidity_RH(void);                        // Relative humidity in %
@@ -46,5 +43,5 @@ void         analog_input_raw(void);                   // Read and display the a
 real_t       speed_of_sound(real_t temperature,
                             real_t relative_humidity); // Calculate speed of sound
 real_t       vref_measure(void);                       // Read the reference voltages
-
+unsigned int vBD_measure(void);                        // Read the board revision ADC reading in mV
 #endif
