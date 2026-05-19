@@ -53,13 +53,11 @@ static const self_test_t test_list[] = {
     {"- Digital",                    0                        },
     {"Digital inputs",               &digital_input_test      },
     {"Digital outputs",              &digital_output_test     },
-    {"Accelerometer ID",             &BMI270_device_ID        },
-    {"Accelerometer status",         &BMI270_device_status    },
     {"Accelerometer zeroing",        &BMI270_find_zero        },
     {"Accelerometer test",           &BMI270_test             },
     {"Accelerometer oscilliscope",   &BMI270_oscilliscope     },
     {"SPI test",                     &BMI270_SPI_test         },
-    {"SPI dump",                     &BMI270_SPI_dump         },
+    {"Accelerometer dump",           &BMI270_SPI_dump         },
     {"- Timer & PCNT test",          0                        },
     {"Show the current time",        &show_time               },
     {"- Communiactions Tests",       0                        },
@@ -425,7 +423,7 @@ bool do_dlt(           //
       dlt_id = dlt_names[i].dlt_id;               // Use the Verbose ID
 
       SEND(ALL, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, run_time_ms() / 1000.);)
-      #if(0)
+#if ( 0 )
       if ( (level & DLT_FATAL) != 0 )             // This message is fatal
       {
         set_status_LED(LED_ERROR);                // Indicate an error
@@ -434,7 +432,7 @@ bool do_dlt(           //
           vTaskDelay(ONE_SECOND);                 // Stay here forever
         }
       }
-        #endif
+#endif
       return true;                                // Send out the message
     }
 

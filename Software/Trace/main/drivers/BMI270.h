@@ -67,13 +67,11 @@ typedef struct
 /*
  *  Functions
  */
-void         BMI270_init(unsigned int bmi270_gpio);      // Initialize the BMI270
-unsigned int BMI270_device_ID(void);                     // Read the device ID to confirm that we can communicate with the device
-unsigned int BMI270_device_status(void);                 // Read the device status to confirm that the device is working
-void         BMI270_read_raw_accel(trace_raw_t *sample); // Read the accelermeter
-unsigned int BMI270_pull_FIFO(void);                     // Read all of the samples in the FIFO
-void         BMI270_test(void);                          // Test the BMI270
-void         BMI270_find_zero(void);                     // Take a zero sample to use for future adjustments
+void         BMI270_init(unsigned int bmi270_gpio);                           // Initialize the BMI270
+void         BMI270_read_raw_accel(trace_raw_t *sample);                      // Read the accelermeter
+unsigned int BMI270_pull_FIFO(void);                                          // Read all of the samples in the FIFO
+void         BMI270_test(void);                                               // Test the BMI270
+void         BMI270_find_zero(void);                                          // Take a zero sample to use for future adjustments
 void         BMI270_convert_to_g(trace_raw_t *sample, trace_point_t *actual); // Convert from bits t g
 void         BMI270_oscilliscope(void);                                       // Poor man's oscilliscope
 void         BMI270_FIFO_read(void);                                          // FIFO handler
