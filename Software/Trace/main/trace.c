@@ -143,9 +143,9 @@ void trace_loop(void *arg)
       SEND(ALL, sprintf(_xs, _DONE_);)
     }
 
-//    if ( gpio_get_level(BMI270_INTERRUPT) == 0 )
+   if ( gpio_get_level(BMI270_INTERRUPT) == 0 )
     {
-      BMI270_pull_FIFO();
+  //   BMI270_pull_FIFO();
       vTaskDelay(100);
     }
 

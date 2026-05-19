@@ -78,42 +78,42 @@
  */
 #define CHIP_ID         0x00
 #define ACCEL_X         0x0C           // Acceleration X, Y, Z  Gyro X, Y, Z
-#define TIMER           0x18           // Sensor time register
+#define SENSORTIME_0    0x18           // Sensor time register
 #define INTERNAL_STATUS 0x21
 #define FIFO_LENGTH_0   0x24           // LSB of FIFO length
 #define FIFO_LENGTH_1   0x25           // MSB of FIFO length
 #define FIFO_DATA       0x26           // FIFO data register
 
 #define ACC_CONF        0x40           // Acceleration Configuration
-#define acc_odr         0x09           // (odr_200) Output data rate 200
-#define acc_bwp         (0x01 << 4)    // (osr2_avg) Average two samples
+#define acc_odr         (0x09 << 0)    // (odr_200) Output data rate 200
+#define acc_bwp         (0x02 << 4)    // (norm_avg4) Average four samples
 #define acc_filter_perf (0x01 << 7)    // (hp) Optimized for parformance
 
 #define ACC_RANGE 0x41                 // Acceleration range
-#define acc_range 0x01                 // +/- 2g
+#define acc_range 0x00                 // +/- 2g
 
 #define GYR_CONF        0x42           // Gyro Configuration
 #define gyr_odr         0x09           // (odr_200)
-#define gyr_bwp         (0x1 << 4)     // (osr2) Bandwidth coefficient
+#define gyr_bwp         (0x2 << 4)     // (norm) Bandwidth coefficient
 #define gyr_noise_perf  (1 << 6)       // (hp) performance optiminzed
 #define gyr_filter_perf (1 << 7)       // (hp) performance optimized
 
 #define GYR_RANGE 0x43                 // Gyro Range
-#define gyr_range 0x04                 // (range_125) +/- 125 dps
+#define gyr_range 0x03                 // (range_250) +/- 250 dps
 #define ois_range (0x00 << 3)          // (range_250) Full scale resolution +/- 250 dps
 
 #define FIFO_DOWNS         0x45        // FIFO downsampling
-#define gyr_fifo_downs     0x1         // Downsampling for gyro, 2**gyr_fifo_downs
+#define gyr_fifo_downs     (0x00 << 0) // Downsampling for gyro, 2**gyr_fifo_downs
 #define gyr_fifo_filt_data (0x01 << 3) // Filtered data
-#define acc_fifo_downs     (0x01 << 4) // Downsampling for accel, 2**acc_fifo_downs
+#define acc_fifo_downs     (0x00 << 4) // Downsampling for accel, 2**acc_fifo_downs
 #define acc_fifo_filt_data (0x01 << 7) // Filtered data
 
 #define FIFO_WTM_0 0x46                // FIFO Watermark lsb
 #define FIFO_WTM_1 0x47                // FIFO Watermark msb
-#define watermark  400                 // Interrupt after 400 samples
+#define watermark  100                 // Interrupt after 400 samples
 
 #define FIFO_CONFIG_0     0x48         // FIFO Frame Configuration
-#define fifo_stop_on_full 0x00         // (disable) do not stop on full
+#define fifo_stop_on_full (0x01 << 0)  // (disable) do not stop on full
 #define fifo_time_en      (0x00 << 1)  // (disable) do not return sensor time frame
 
 #define FIFO_CONFIG_1     0x49         // FIFO Frame Content Configuration
@@ -122,7 +122,7 @@
 #define fifo_header_en    (0x00 << 4)  // (disable) no heder is stored
 #define fifo_aux_en       (0x00 << 5)  // (disable) no Auxilary sensor data is stored
 #define fifo_acc_en       (0x01 << 6)  // (enable) Accelerometer data is stored
-#define fifo_gyr_en       (0x00 << 7)  // (enable) Gryoscope data is stored
+#define fifo_gyr_en       (0x01 << 7)  // (enable) Gryoscope data is stored
 
 #define INT_1_IO_CTRL 0x53             // Interrupt 1 configuration
 #define lvl           (0x00 << 1)      // (active_low)
@@ -137,7 +137,7 @@
 #define int_latch 0x01                 // Permanent
 
 #define INT_MAP_DATA 0x58              // Data interupt mapping for both INT pins
-#define ffull_int1   0x00              // FIFO full to int 1
+#define ffull_int1   (0x01 << 0)       // FIFO full to int 1
 #define fwm_int1     (0x01 << 1)       // FIFO watermark to int 1
 #define drdy_int1    (0x01 << 2)       // Data ready to int 1
 #define err_int1     (0x01 << 3)       // Error interrupt to int 1
@@ -152,13 +152,13 @@
 #define fup_en            (0x01 << 2)  // (fup_on) Fast power up enabled
 
 #define PWR_CTRL 0x7D                  // Power mode control register
-#define aux_en   0x00                  // (aux_off) disable aux sensor
+#define aux_en   (0x00 << 0)           // (aux_off) disable aux sensor
 #define gyr_en   (0x01 << 1)           // (gyr_on) gyro enabled
 #define acc_en   (0x01 << 2)           // (acc_on) Acclerometer enabled
 #define temp_en  (0x00 << 3)           // (temp_off) Temperature disabled
 
-#define CMD 0x7E                       // Command register
-#define cmd (0xb0)                     // (fifo_flush) Clear FIFO contrent
+#define CMD      0x7E                  // Command register
+#define fifo_cmd (0x15)                // (fifo_flush) Clear FIFO contrent
 
 #define INIT_CTRL 0x59
 #define INIT_DATA 0x5E
@@ -193,45 +193,46 @@ static spi_device_handle_t BMI270_handle;      // Handle for the SPI device
 
 static spi_device_interface_config_t BMI270_spi_config = {
     // Configuration for the SPI device
-    .command_bits     = 0,                                              // No command phase
-    .address_bits     = 8,                                              //
-    .dummy_bits       = 0,                                              // No dummy bits
-    .mode             = 0,                                              // SPI mode 0
-    .clock_source     = SPI_CLK_SRC_DEFAULT,                            // Use default clock source
-    .duty_cycle_pos   = 128,                                            // 50% duty cycle
-    .cs_ena_pretrans  = 0,                                              // No pre-transaction CS activation
-    .cs_ena_posttrans = 0,                                              // No post-transaction CS activation
-    .clock_speed_hz   = 4 * 1000 * 1000,                                // 4 MHz clock speed
-    .input_delay_ns   = 0,                                              // No input delay
-    .spics_io_num     = BMI270_CS,                                      // CS pin
-    .flags            = SPI_DEVICE_NO_DUMMY,                            // No special flags
+    .command_bits     = 0,                                            // No command phase
+    .address_bits     = 8,                                            //
+    .dummy_bits       = 0,                                            // No dummy bits
+    .mode             = 0,                                            // SPI mode 0
+    .clock_source     = SPI_CLK_SRC_DEFAULT,                          // Use default clock source
+    .duty_cycle_pos   = 128,                                          // 50% duty cycle
+    .cs_ena_pretrans  = 0,                                            // No pre-transaction CS activation
+    .cs_ena_posttrans = 0,                                            // No post-transaction CS activation
+    .clock_speed_hz   = 2 * 1000 * 1000,                              // 2 MHz clock speed (do not set higher than 2 MHz)
+    .input_delay_ns   = 0,                                            // No input delay
+    .spics_io_num     = BMI270_CS,                                    // CS pin
+    .flags            = SPI_DEVICE_NO_DUMMY,                          // No special flags
     .queue_size       = 1,
-    .pre_cb           = NULL,                                           // Callback to be called before a transmission is started.
-    .post_cb          = NULL                                            // Callback to be called after a transmission has completed.
+    .pre_cb           = NULL,                                         // Callback to be called before a transmission is started.
+    .post_cb          = NULL                                          // Callback to be called after a transmission has completed.
 };
 
 static BMI270_config_t BMI270_config[] = {
-    {ACC_CONF,      acc_odr + acc_bwp + acc_filter_perf                 }, // ACC_CONF Performance optimized, Average 4, 800Hz
-    {ACC_RANGE,     acc_range                                           }, // ACC_RANGE +/-2g
-    {GYR_CONF,      gyr_odr + gyr_bwp + gyr_noise_perf + gyr_filter_perf}, // GYR_CONF, Performance Optimized, Average 4, 800 samples
-    {GYR_RANGE,     gyr_range + ois_range                               }, // GYR_RANGE, 125 dps
-    {FIFO_DOWNS,    gyr_fifo_downs + gyr_fifo_filt_data + acc_fifo_downs}, // FIFO_DOWNS FIFO downsampling
-    {FIFO_WTM_0,    watermark & 0x00ff                                  }, // FIFO Watermark lsb
-    {FIFO_WTM_1,    (watermark >> 8) & 0x00ff                           }, // FIFO Watermark msb
-    {FIFO_CONFIG_0, fifo_stop_on_full + fifo_time_en                    }, // FIFO_CONFIG_0, No timestamp, do not stop if FIFO full
+    {ACC_CONF,      acc_odr + acc_bwp + acc_filter_perf                                      },
+    {ACC_RANGE,     acc_range                                                                }, // ACC_RANGE +/-2g
+    {GYR_CONF,      gyr_odr + gyr_bwp + gyr_noise_perf + gyr_filter_perf                     }, //  GYR_CONF, Performance Optimized, Average 4, 800 samples
+    {GYR_RANGE,     gyr_range + ois_range                                                    }, // GYR_RANGE, 125 dps
+    {FIFO_DOWNS,    gyr_fifo_downs + gyr_fifo_filt_data + acc_fifo_downs + acc_fifo_filt_data}, // FIFO_DOWNS FIFO downsampling
+    {FIFO_WTM_0,    watermark & 0x00ff                                                       }, // FIFO Watermark lsb
+    {FIFO_WTM_1,    (watermark >> 8) & 0x00ff                                                }, // FIFO Watermark msb
+    {FIFO_CONFIG_0, fifo_stop_on_full + fifo_time_en                                         }, // FIFO_CONFIG_0, No timestamp, do not stop if FIFO full
     {FIFO_CONFIG_1, fifo_tag_int_1_en + fifo_tag_int_2_en + fifo_header_en + fifo_aux_en + fifo_acc_en +
-                        fifo_gyr_en                  }, // FIFO_CONFIG_1, Store gyro and accel data
-    {INT_1_IO_CTRL, lvl + od + output_en + input_en                     }, // INT_1_IO_CTRL Interrupt 1 used
-    {INT_2_IO_CTRL, int_2_not_used                                      }, // INT_2_IO_CTRL, not used
-    {INT_LATCH,     int_latch                                           }, // INT_LATCH, latched
-    {INT_MAP_DATA,  fwm_int1                                            }, // INT1_MAP_DATA, FIFO watermark interrupt mapped to INT1
-    {PWR_CONF,      adv_power_save + fifo_self_wake_up + fup_en         }, // (fup_on) Fast power up enabled
-    {PWR_CTRL,      aux_en + gyr_en + acc_en + temp_en                  }, // PWR_CTRL, Enable Gyro and Accel, disable Aux and temperature
-    {CMD,           cmd                                                 }, // (fifo_flush) Clear FIFO contrent
-    {0x00,          0x00                                                }  // End of the configuration file
+                        fifo_gyr_en                                       }, // FIFO_CONFIG_1, Store gyro and accel data
+    {INT_1_IO_CTRL, lvl + od + output_en + input_en                                          }, // INT_1_IO_CTRL Interrupt 1 used
+    {INT_2_IO_CTRL, int_2_not_used                                                           }, // INT_2_IO_CTRL, not used
+    {INT_LATCH,     int_latch                                                                }, // INT_LATCH, latched
+    {INT_MAP_DATA,  fwm_int1                                                                 }, // INT1_MAP_DATA, FIFO watermark interrupt mapped to INT1
+    {PWR_CTRL,      aux_en + gyr_en + acc_en + temp_en                                       }, // PWR_CTRL, Enable Gyro and Accel, disable Aux and temperature
+    {CMD,           fifo_cmd                                                                 }, // (fifo_flush) Clear FIFO contrent
+    {PWR_CONF,      adv_power_save + fifo_self_wake_up +
+                   fup_en                                                      }, //    adv_power_save + fifo_self_wake_up + fup_en         }, // (fup_on) Fast power up enabled
+    {0x00,          0x00                                                                     }  // End of the configuration file
 };
 
-trace_FIFO_read_t sample_read[10];                                      // Allow for 10 reads
+trace_FIFO_read_t sample_read[10]; // Allow for 10 reads
 
 /*
  * @name  Global array that stores the configuration file of BMI270
@@ -387,8 +388,8 @@ void BMI270_init(unsigned int BMI270_gpio)
     transaction.length    = 1 * 8;                    // Transmit length in bits
     transaction.rxlength  = 0 * 8;                    // Receive length in bits
     transaction.flags     = SPI_TRANS_USE_TXDATA;     // Indicate that this is a read operation
-    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "register 0x%02X: 0x%02X", BMI270_config[i].address, BMI270_config[i].value);))
-    PAUSE("Sending register value");
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "register 0x%02X: 0x%02X", BMI270_config[i].address, BMI270_config[i].value);))
+    // PAUSE("Sending register value");
     spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
     vTaskDelay(2);
     i++;
@@ -894,14 +895,16 @@ void BMI270_SPI_test(void)
 
 void BMI270_SPI_dump(void)
 {
-  int address;
+  int               address;
+  uint8_t           buffer[128];
+  spi_transaction_t transaction;
 
-  /*
-   * Read and print the values of all registers
-   */
+/*
+ * Read and print the values of all registers
+ */
   for ( address = 0x00; address <= 0x7F; address++ )            // Loop through all the registers from 0x00 to 0x7F
   {
-    spi_transaction_t transaction;
+
     memset(&transaction, 0, sizeof(transaction));               // Clear the transaction structure
     transaction.addr      = 0x80 | address;                     // Register address to read from
     transaction.length    = 2 * 8;                              // Transmit length in bits
@@ -924,6 +927,24 @@ void BMI270_SPI_dump(void)
       SEND(ALL, sprintf(_xs, "  ");)
     }
     SEND(ALL, sprintf(_xs, "0x%02X ", transaction.rx_data[1]);) // Print the value read from the register}
+  }
+
+  /*
+   * Show the FIFO contents
+   */
+  memset(&transaction, 0, sizeof(transaction));     // Clear the transaction structure
+  transaction.addr      = 0x80 | FIFO_DATA;         // Register address to read from
+  transaction.length    = sizeof(buffer) * 8;       // Transmit length in bits
+  transaction.tx_buffer = NULL;                  // Transmit buffer not used
+  transaction.rxlength  = sizeof(buffer) * 8;       // Receive length in bits
+  transaction.rx_buffer = &buffer;
+  transaction.flags     = 0;                        // Indicate that this is a read operation
+  spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+
+  printf("\r\n");
+  for ( int i = 0; i != sizeof(buffer);  i++ )
+  {
+    printf("%02X ", buffer[i]);
   }
 
   SEND(ALL, sprintf(_xs, _DONE_);)
