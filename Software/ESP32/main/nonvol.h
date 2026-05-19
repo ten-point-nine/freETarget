@@ -100,5 +100,5 @@ void nonvol_write_i32(char *name, int *value);    // Write a value to nonvol
 #define NONVOL_TABATA_WARN_ON      "TABATA_WARN_ON"      // Tabata warning on time
 #define NONVOL_TABATA_REST         "TABATA_REST"         // Tabata rest time
 #define NONVOL_TABATA_ON           "TABATA_ON"           // Tabata on time
-#define NONVOL_AUTH_CODE           "AUTH_CODE"           // Target Authorization Code
+#define NONVOL_AUTH_CODE           "AUTH_CODE"           // Auth code for target lockout
 #endif

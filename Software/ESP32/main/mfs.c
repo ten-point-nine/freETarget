@@ -51,7 +51,7 @@ static void mfs_pc_test(void);
 /*
  * Variables
  */
-static unsigned int switch_state;                  // What switches are pressed
+static unsigned int switch_state;                     // What switches are pressed
 const mfs_action_t  mfs_action[] = {
     {TARGET_ON,      mfs_on,                    "TARGET_ON"     }, // Take the target out of sleep
     {PAPER_FEED,     mfs_paper_feed,            "PAPER FEED"    }, // Feed paper until button released
@@ -72,22 +72,6 @@ const mfs_action_t  mfs_action[] = {
     {RS485_SELECT,   NULL,                      "RS488 SELECT"  }, // The output is used to select RS488 direction
     {0,              0,                         0               }
 };
-
-/*
- * Test Vectors
-  {"MFS_HOLD_12":2, "MFS_TAP_2": 0, "MFS_TAP_1":3 , "MFS_HOLD_2": 5, "MFS_HOLD_1":1, "MFS_HOLD_D":9, "MFS_HOLD_C":9, "MFS_SELECT_CD":9,
- "ECHO":0}
-  {"MFS_HOLD_12":2}
-  {"MFS_TAP_2":0}
-  {"MFS_TAP_1":4}
-  {"MFS_HOLD_2":5}
-  {"MFS_HOLD_1":1}
-  {"MFS_HOLD_D":9}
-  {"MFS_HOLD_C":9}
-  {"MFS_SELECT_CD":9}
-  {"ECHO":0}
-
-*/
 
 /*-----------------------------------------------------
  *
@@ -442,25 +426,6 @@ static void mfs_paper_shot(void)
   return;
 }
 
-#define SCALE 1200
-static void mfs_pc_test(void)
-{
-  static unsigned int test_shot = 0;
-  int                 temp, sign;
-
-  temp                = esp_random() % (SCALE);
-  sign                = ((esp_random() & 1) == 0) ? 1 : -1;
-  record[test_shot].x = (real_t)(sign * temp);
-  temp                = esp_random() % (SCALE);
-  sign                = ((esp_random() & 1) == 0) ? 1 : -1;
-  record[test_shot].y = (real_t)(sign * temp);
-  s_of_sound          = speed_of_sound(temperature_C(), humidity_RH());
-  prepare_score(&record[test_shot], test_shot, NOT_MISSED_SHOT);
-  test_shot++;
-
-  return;
-}
-
 static void mfs_off(void)
 {
   bye(true);                                // Stay in the Bye state until a wake up event comes along
@@ -511,8 +476,7 @@ static void mfs_led_adjust(void)
  * be used.
  *
  *-----------------------------------------------------*/
-mfs_action_t *mfs_find(unsigned int action // Switch to be displayed
-)
+mfs_action_t *mfs_find(unsigned int action) // Switch to be displayed
 {
   unsigned int i;
 

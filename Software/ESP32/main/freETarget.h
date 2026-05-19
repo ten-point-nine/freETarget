@@ -2,7 +2,7 @@
  *
  * freETarget.h
  *
- * Software to run the Air-Rifle / Small Bore Electronic Target
+ * Software to run the Air-Gun / Small Bore Electronic Target
  *
  *--------------------------------------------------------------*/
 
@@ -25,26 +25,21 @@
 #define _GREETING_       "CONNECTED"   // Message to send on connection
 #define _BYE_            "BYE"         // Message to send on disconnection
 #define _HELLO_          "HELLO WORLD" // Message to send on reconnection
-#define REV_500          500           // ESP32
-#define REV_510          510
-#define REV_520          520
-#define BUILD_REV        520           // Build for Revision 530 and higher
 
 #define INIT_DONE 0xabcd               // NON-VOL Initialization complete signature
 #ifndef true
 #define true  (1 == 1)
 #define false (0 == 1)
 #endif
-#define CLOCK_TEST false
 
-#define IN_STARTUP   0x0001 // The software is in initialization
-#define IN_OPERATION 0x0002 // The software is operational
-#define IN_TEST      0x0004 // A self test has been selected (Suspend operation)
-#define IN_SLEEP     0x0008 // The unit has powered down
-#define IN_SHOT      0x0010 // The target is actively in a shot
-#define IN_REDUCTION 0x0020 // The data is being reduced
-#define IN_FATAL_ERR 0x0040 // A fatal error has occured and cannot be fixed
-#define IN_HTTP      0x0080 // The HTTP (JSON) data is being processed
+#define IN_STARTUP   0x0001            // The software is in initialization
+#define IN_OPERATION 0x0002            // The software is operational
+#define IN_TEST      0x0004            // A self test has been selected (Suspend operation)
+#define IN_SLEEP     0x0008            // The unit has powered down
+#define IN_SHOT      0x0010            // The target is actively in a shot
+#define IN_REDUCTION 0x0020            // The data is being reduced
+#define IN_FATAL_ERR 0x0040            // A fatal error has occured and cannot be fixed
+#define IN_HTTP      0x0080            // The HTTP (JSON) data is being processed
 
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
 #define IF_IN(x)  if ( (run_state & (x)) != 0 )

@@ -49,21 +49,21 @@ static void set_auth_code(unsigned int new_auth_code);                         /
  */
 char input_JSON[EXTRA_LARGE_STRING]; // JSON input buffer
 
-void        show_echo(void);  // Display the current settings
+void        show_echo(void);         // Display the current settings
 static void show_names(int v);
-static void set_trace(int v); // Set the trace on and off
-static void set_50m(int x);   // Configure for 50m pistol
+static void set_trace(int v);        // Set the trace on and off
+static void set_50m(int x);          // Configure for 50m pistol
 
 const json_message_t JSON[] = {
     //  show     token        value stored in RAM             convert                 service fcn()     NONVOL location      Initial Value
     //  PS Value
-    {HIDE,        "\"50M\":",            0,                           IS_VOID,                  &set_50m,           0,                          0,           0 },
-    {HIDE + LOCK, "\"ANGLE\":",          &json_sensor_angle,          IS_INT32,                 0,                  NONVOL_SENSOR_ANGLE,        45,          0 },
-    {HIDE + LOCK, "\"ANGLE_OFFSET\":",   &json_sensor_angle_offset,   IS_FLOAT,                 0,                  NONVOL_SENSOR_ANGLE_OFFSET, 0,           15},
-    {HIDE,        "\"AUTH_CODE\":",      &json_auth_code,             IS_INT32,                 &set_auth_code,     NONVOL_AUTH_CODE,           0,           12},
+    {HIDE,        "\"50M\"",             0,                           IS_VOID,                  &set_50m,           0,                          0,          0 },
+    {HIDE + LOCK, "\"ANGLE\":",          &json_sensor_angle,          IS_INT32,                 0,                  NONVOL_SENSOR_ANGLE,        45,         0 },
+    {HIDE + LOCK, "\"ANGLE_OFFSET\":",   &json_sensor_angle_offset,   IS_FLOAT,                 0,                  NONVOL_SENSOR_ANGLE_OFFSET, 0,          15},
+    {HIDE,        "\"AUTH_CODE\":",      &json_auth_code,             IS_INT32,                 &set_auth_code,     NONVOL_AUTH_CODE,           0,          12},
     {SHOW + LOCK, "\"AUX_MODE\":",       &json_aux_mode,              IS_INT32,                 0,                  NONVOL_AUX_PORT_ENABLE,     RS485,      6 },
-    {HIDE,        "\"BYE\":",            0,                           IS_INT32,                 &bye,               0,                          0,           0 },
-    {HIDE,        "\"CAL\":",            0,                           IS_INT32,                 &calibrate,         0,                          0,           0 },
+    {HIDE,        "\"BYE\"",             0,                           IS_INT32,                 &bye,               0,                          0,          0 },
+    {HIDE,        "\"CAL\":",            0,                           IS_INT32,                 &calibrate,         0,                          0,          0 },
     {HIDE,        "\"DOWNLOAD\"",        &json_OTA_download_size,     IS_INT32,                 &OTA_serial,        0,                          0,          0 },
     {HIDE,        "\"ECHO\"",            0,                           IS_VOID,                  &show_echo,         0,                          0,          0 },
     {HIDE + LOCK, "\"FACE_STRIKE\":",    &json_face_strike,           IS_INT32,                 0,                  NONVOL_FACE_STRIKE,         0,          0 },
@@ -87,63 +87,63 @@ const json_message_t JSON[] = {
     {HIDE + LOCK, "\"OTA\"",             0,                           0,                        &OTA_load_json,     0,                          0,          0 },
     {SHOW + LOCK, "\"OTA_URL\":",        (int *)&json_ota_url,        IS_TEXT + URL_SIZE,       0,                  NONVOL_OTA_URL,             0,          11},
     {HIDE,        "\"P\"",               0,                           IS_VOID,                  &paper_start,       0,                          0,          0 },
-    {SHOW + LOCK, "\"PAPER_ECO\":",      &json_paper_eco,             IS_INT32,                 0,                  NONVOL_PAPER_ECO,           0,           0 },
-    {SHOW + LOCK, "\"PAPER_SHOT\":",     &json_paper_shot,            IS_INT32,                 0,                  NONVOL_PAPER_SHOT,          0,           5 },
-    {SHOW + LOCK, "\"PAPER_TIME\":",     &json_paper_time,            IS_INT32,                 0,                  NONVOL_PAPER_TIME,          500,         0 },
-    {SHOW + LOCK, "\"PCNT_LATENCY\":",   &json_pcnt_latency,          IS_INT32,                 0,                  NONVOL_PCNT_LATENCY,        0,           1 },
-    {SHOW + LOCK, "\"POWER_SAVE\":",     &json_power_save,            IS_INT32,                 0,                  NONVOL_POWER_SAVE,          0,           0 },
-    {HIDE,        "\"RAPID_COUNT\":",    &json_rapid_count,           IS_INT32,                 0,                  0,                          0,           0 },
-    {HIDE,        "\"RAPID_ENABLE\":",   &json_rapid_enable,          IS_INT32,                 0,                  0,                          0,           0 },
-    {HIDE,        "\"RAPID_TIME\":",     &json_rapid_time,            IS_INT32,                 0,                  0,                          0,           0 },
-    {HIDE,        "\"RAPID_WAIT\":",     &json_rapid_wait,            IS_INT32,                 0,                  0,                          0,           0 },
-    {SHOW + LOCK, "\"REMOTE_ACTIVE\":",  &json_remote_active,         IS_INT32,                 0,                  NONVOL_REMOTE_ACTIVE,       0,           8 },
-    {SHOW + LOCK, "\"REMOTE_KEY\":",     &json_remote_key,            IS_TEXT + KEY_SIZE,       0,                  NONVOL_REMOTE_KEY,          0,           8 },
-    {SHOW + LOCK, "\"REMOTE_URL\":",     (int *)&json_remote_url,     IS_TEXT + URL_SIZE,       0,                  NONVOL_REMOTE_URL,          0,           8 },
+    {SHOW + LOCK, "\"PAPER_ECO\":",      &json_paper_eco,             IS_INT32,                 0,                  NONVOL_PAPER_ECO,           0,          0 },
+    {SHOW + LOCK, "\"PAPER_SHOT\":",     &json_paper_shot,            IS_INT32,                 0,                  NONVOL_PAPER_SHOT,          0,          5 },
+    {SHOW + LOCK, "\"PAPER_TIME\":",     &json_paper_time,            IS_INT32,                 0,                  NONVOL_PAPER_TIME,          500,        0 },
+    {SHOW + LOCK, "\"PCNT_LATENCY\":",   &json_pcnt_latency,          IS_INT32,                 0,                  NONVOL_PCNT_LATENCY,        0,          1 },
+    {SHOW + LOCK, "\"POWER_SAVE\":",     &json_power_save,            IS_INT32,                 0,                  NONVOL_POWER_SAVE,          0,          0 },
+    {HIDE,        "\"RAPID_COUNT\":",    &json_rapid_count,           IS_INT32,                 0,                  0,                          0,          0 },
+    {HIDE,        "\"RAPID_ENABLE\":",   &json_rapid_enable,          IS_INT32,                 0,                  0,                          0,          0 },
+    {HIDE,        "\"RAPID_TIME\":",     &json_rapid_time,            IS_INT32,                 0,                  0,                          0,          0 },
+    {HIDE,        "\"RAPID_WAIT\":",     &json_rapid_wait,            IS_INT32,                 0,                  0,                          0,          0 },
+    {SHOW + LOCK, "\"REMOTE_ACTIVE\":",  &json_remote_active,         IS_INT32,                 0,                  NONVOL_REMOTE_ACTIVE,       0,          8 },
+    {SHOW + LOCK, "\"REMOTE_KEY\":",     &json_remote_key,            IS_TEXT + KEY_SIZE,       0,                  NONVOL_REMOTE_KEY,          0,          8 },
+    {SHOW + LOCK, "\"REMOTE_URL\":",     (int *)&json_remote_url,     IS_TEXT + URL_SIZE,       0,                  NONVOL_REMOTE_URL,          0,          8 },
     {HIDE,        "\"RESET\"",           0,                           IS_VOID,                  &esp_restart,       0,                          0,          0 },
-    {SHOW + LOCK, "\"SEND_MISS\":",      &json_send_miss,             IS_INT32,                 0,                  NONVOL_SEND_MISS,           0,           0 },
-    {SHOW + LOCK, "\"SENSOR\":",         (int *)&json_sensor_dia,     IS_FLOAT,                 0,                  NONVOL_SENSOR_DIA,          232000,      0 },
-    {SHOW,        "\"SN\":",             &json_serial_number,         IS_FIXED,                 0,                  NONVOL_SERIAL_NO,           0xffff,      0 },
-    {SHOW,        "\"SESSION\":",        &json_session_type,          IS_INT32,                 &start_new_session, 0,                          0,           0 },
-    {SHOW + LOCK, "\"STEP_COUNT\":",     &json_step_count,            IS_INT32,                 0,                  NONVOL_STEP_COUNT,          0,           0 },
-    {SHOW + LOCK, "\"STEP_RAMP\":",      &json_step_ramp,             IS_INT32,                 0,                  NONVOL_STEP_RAMP,           0,           4 },
-    {SHOW,        "\"STEP_START\":",     &json_step_start,            IS_INT32,                 0,                  NONVOL_STEP_START,          0,           4 },
-    {SHOW + LOCK, "\"STEP_TIME\":",      &json_step_time,             IS_INT32,                 0,                  NONVOL_STEP_TIME,           0,           0 },
-    {HIDE,        "\"TABATA_ENABLE\":",  &json_tabata_enable,         IS_INT32,                 &json_tabata,       0,                          0,           0 },
+    {SHOW + LOCK, "\"SEND_MISS\":",      &json_send_miss,             IS_INT32,                 0,                  NONVOL_SEND_MISS,           0,          0 },
+    {SHOW + LOCK, "\"SENSOR\":",         (int *)&json_sensor_dia,     IS_FLOAT,                 0,                  NONVOL_SENSOR_DIA,          232000,     0 },
+    {SHOW,        "\"SN\":",             &json_serial_number,         IS_FIXED,                 0,                  NONVOL_SERIAL_NO,           0xffff,     0 },
+    {SHOW,        "\"SESSION\":",        &json_session_type,          IS_INT32,                 &start_new_session, 0,                          0,          0 },
+    {SHOW + LOCK, "\"STEP_COUNT\":",     &json_step_count,            IS_INT32,                 0,                  NONVOL_STEP_COUNT,          0,          0 },
+    {SHOW + LOCK, "\"STEP_RAMP\":",      &json_step_ramp,             IS_INT32,                 0,                  NONVOL_STEP_RAMP,           0,          4 },
+    {SHOW,        "\"STEP_START\":",     &json_step_start,            IS_INT32,                 0,                  NONVOL_STEP_START,          0,          4 },
+    {SHOW + LOCK, "\"STEP_TIME\":",      &json_step_time,             IS_INT32,                 0,                  NONVOL_STEP_TIME,           0,          0 },
+    {HIDE,        "\"TABATA_ENABLE\":",  &json_tabata_enable,         IS_INT32,                 &json_tabata,       0,                          0,          0 },
 
-    {HIDE,        "\"TABATA_ON\":",      &json_tabata_on,             IS_INT32,                 0,                  NONVOL_TABATA_ON,           7,           16},
-    {HIDE,        "\"TABATA_REST\":",    &json_tabata_rest,           IS_INT32,                 0,                  NONVOL_TABATA_REST,         30,          16},
-    {HIDE,        "\"TABATA_WARN_ON\":", &json_tabata_warn_on,        IS_INT32,                 0,                  NONVOL_TABATA_WARN_ON,      3,           16},
-    {HIDE,        "\"TARGET_TYPE\":",    &json_target_type,           IS_INT32,                 0,                  NONVOL_TARGET_TYPE,         0,           0 },
-    {HIDE + LOCK, "\"TEST\":",           0,                           IS_INT32,                 &self_test,         0,                          0,           0 },
-    {SHOW + LOCK, "\"TOKEN\":",          &json_token,                 IS_INT32,                 0,                  NONVOL_TOKEN,               0,           0 },
-    {SHOW,        "\"TRACE\":",          0,                           IS_INT32,                 &set_trace,         0,                          0,           0 },
+    {HIDE,        "\"TABATA_ON\":",      &json_tabata_on,             IS_INT32,                 0,                  NONVOL_TABATA_ON,           7,          16},
+    {HIDE,        "\"TABATA_REST\":",    &json_tabata_rest,           IS_INT32,                 0,                  NONVOL_TABATA_REST,         30,         16},
+    {HIDE,        "\"TABATA_WARN_ON\":", &json_tabata_warn_on,        IS_INT32,                 0,                  NONVOL_TABATA_WARN_ON,      3,          16},
+    {HIDE,        "\"TARGET_TYPE\":",    &json_target_type,           IS_INT32,                 0,                  NONVOL_TARGET_TYPE,         0,          0 },
+    {HIDE + LOCK, "\"TEST\":",           0,                           IS_INT32,                 &self_test,         0,                          0,          0 },
+    {SHOW + LOCK, "\"TOKEN\":",          &json_token,                 IS_INT32,                 0,                  NONVOL_TOKEN,               0,          0 },
+    {SHOW,        "\"TRACE\":",          0,                           IS_INT32,                 &set_trace,         0,                          0,          0 },
     {SHOW,        "\"VERSION\"",         0,                           IS_INT32,                 &POST_version,      0,                          0,          0 },
-    {SHOW + LOCK, "\"VREF_LO\":",        (int *)&json_vref_lo,        IS_FLOAT,                 &set_VREF,          NONVOL_VREF_LO,             1250,        0 },
-    {SHOW + LOCK, "\"VREF_HI\":",        (int *)&json_vref_hi,        IS_FLOAT,                 &set_VREF,          NONVOL_VREF_HI,             2000,        0 },
-    {SHOW + LOCK, "\"WIFI_CHANNEL\":",   &json_wifi_channel,          IS_INT32,                 0,                  NONVOL_WIFI_CHANNEL,        6,           0 },
-    {SHOW + LOCK, "\"WIFI_GATEWAY\":",   (int *)&json_wifi_gateway,   IS_TEXT + IP_SIZE,        0,                  NONVOL_WIFI_GATEWAY,        0,           9 },
-    {SHOW + LOCK, "\"WIFI_HIDDEN\":",    &json_wifi_hidden,           IS_INT32,                 0,                  NONVOL_WIFI_HIDDEN,         0,           1 },
-    {SHOW + LOCK, "\"WIFI_IP\":",        (int *)&json_wifi_static_ip, IS_TEXT + IP_SIZE,        0,                  NONVOL_WIFI_IP,             0,           9 },
-    {SHOW + LOCK, "\"WIFI_PWD\":",       (int *)&json_wifi_pwd,       IS_SECRET + PWD_SIZE,     0,                  NONVOL_WIFI_PWD,            0,           0 },
-    {SHOW + LOCK, "\"WIFI_RESET\":",     &json_wifi_reset_first,      IS_INT32,                 0,                  NONVOL_WIFI_RESET_FIRST,    1,           3 },
-    {SHOW + LOCK, "\"WIFI_SSID\":",      (int *)&json_wifi_ssid,      IS_TEXT + SSID_SIZE,      0,                  NONVOL_WIFI_SSID,           0,           0 },
-    {SHOW + LOCK, "\"X_OFFSET\":",       (int *)&json_x_offset,       IS_FLOAT,                 0,                  NONVOL_X_OFFSET,            0,           7 },
-    {SHOW + LOCK, "\"Y_OFFSET\":",       (int *)&json_y_offset,       IS_FLOAT,                 0,                  NONVOL_Y_OFFSET,            0,           7 },
-    {SHOW + LOCK, "\"Z_OFFSET\":",       &json_z_offset,              IS_INT32,                 0,                  NONVOL_Z_OFFSET,            13,          0 },
-    {HIDE + LOCK, "\"NORTH_X\":",        &json_north_x,               IS_INT32,                 0,                  NONVOL_NORTH_X,             0,           0 },
-    {HIDE + LOCK, "\"NORTH_Y\":",        &json_north_y,               IS_INT32,                 0,                  NONVOL_NORTH_Y,             0,           0 },
-    {HIDE + LOCK, "\"EAST_X\":",         &json_east_x,                IS_INT32,                 0,                  NONVOL_EAST_X,              0,           0 },
-    {HIDE + LOCK, "\"EAST_Y\":",         &json_east_y,                IS_INT32,                 0,                  NONVOL_EAST_Y,              0,           0 },
-    {HIDE + LOCK, "\"SOUTH_X\":",        &json_south_x,               IS_INT32,                 0,                  NONVOL_SOUTH_X,             0,           0 },
-    {HIDE + LOCK, "\"SOUTH_Y\":",        &json_south_y,               IS_INT32,                 0,                  NONVOL_SOUTH_Y,             0,           0 },
-    {HIDE + LOCK, "\"WEST_X\":",         &json_west_x,                IS_INT32,                 0,                  NONVOL_WEST_X,              0,           0 },
-    {HIDE + LOCK, "\"WEST_Y\":",         &json_west_y,                IS_INT32,                 0,                  NONVOL_WEST_Y,              0,           0 },
-    {SHOW,        "\"ATHLETE\":",        (int *)&json_athlete,        IS_TEXT_1 + LARGE_STRING, 0,                  NONVOL_ATHELETE,            0,           10},
-    {SHOW,        "\"EVENT\":",          (int *)&json_event,          IS_TEXT_1 + LARGE_STRING, 0,                  NONVOL_EVENT,               0,           10},
-    {SHOW,        "\"TARGET_NAME\":",    (int *)json_target_name,     IS_TEXT_1 + LARGE_STRING, 0,                  NONVOL_TARGET_NAME,         0,           10},
-    {HIDE,        "\"LOCK\":",           0,                           IS_INT32,                 &lock_target,       0,                          0,           12},
-    {HIDE,        "\"UNLOCK\":",         0,                           IS_INT32,                 &unlock_target,     0,                          0,           12},
-    {0,           0,                     0,                           0,                        0,                  0,                          0,           0 }
+    {SHOW + LOCK, "\"VREF_LO\":",        (int *)&json_vref_lo,        IS_FLOAT,                 &set_VREF,          NONVOL_VREF_LO,             1250,       0 },
+    {SHOW + LOCK, "\"VREF_HI\":",        (int *)&json_vref_hi,        IS_FLOAT,                 &set_VREF,          NONVOL_VREF_HI,             2000,       0 },
+    {SHOW + LOCK, "\"WIFI_CHANNEL\":",   &json_wifi_channel,          IS_INT32,                 0,                  NONVOL_WIFI_CHANNEL,        6,          0 },
+    {SHOW + LOCK, "\"WIFI_GATEWAY\":",   (int *)&json_wifi_gateway,   IS_TEXT + IP_SIZE,        0,                  NONVOL_WIFI_GATEWAY,        0,          9 },
+    {SHOW + LOCK, "\"WIFI_HIDDEN\":",    &json_wifi_hidden,           IS_INT32,                 0,                  NONVOL_WIFI_HIDDEN,         0,          1 },
+    {SHOW + LOCK, "\"WIFI_IP\":",        (int *)&json_wifi_static_ip, IS_TEXT + IP_SIZE,        0,                  NONVOL_WIFI_IP,             0,          9 },
+    {SHOW + LOCK, "\"WIFI_PWD\":",       (int *)&json_wifi_pwd,       IS_SECRET + PWD_SIZE,     0,                  NONVOL_WIFI_PWD,            0,          0 },
+    {SHOW + LOCK, "\"WIFI_RESET\":",     &json_wifi_reset_first,      IS_INT32,                 0,                  NONVOL_WIFI_RESET_FIRST,    1,          3 },
+    {SHOW + LOCK, "\"WIFI_SSID\":",      (int *)&json_wifi_ssid,      IS_TEXT + SSID_SIZE,      0,                  NONVOL_WIFI_SSID,           0,          0 },
+    {SHOW + LOCK, "\"X_OFFSET\":",       (int *)&json_x_offset,       IS_FLOAT,                 0,                  NONVOL_X_OFFSET,            0,          7 },
+    {SHOW + LOCK, "\"Y_OFFSET\":",       (int *)&json_y_offset,       IS_FLOAT,                 0,                  NONVOL_Y_OFFSET,            0,          7 },
+    {SHOW + LOCK, "\"Z_OFFSET\":",       &json_z_offset,              IS_INT32,                 0,                  NONVOL_Z_OFFSET,            13,         0 },
+    {HIDE + LOCK, "\"NORTH_X\":",        &json_north_x,               IS_INT32,                 0,                  NONVOL_NORTH_X,             0,          0 },
+    {HIDE + LOCK, "\"NORTH_Y\":",        &json_north_y,               IS_INT32,                 0,                  NONVOL_NORTH_Y,             0,          0 },
+    {HIDE + LOCK, "\"EAST_X\":",         &json_east_x,                IS_INT32,                 0,                  NONVOL_EAST_X,              0,          0 },
+    {HIDE + LOCK, "\"EAST_Y\":",         &json_east_y,                IS_INT32,                 0,                  NONVOL_EAST_Y,              0,          0 },
+    {HIDE + LOCK, "\"SOUTH_X\":",        &json_south_x,               IS_INT32,                 0,                  NONVOL_SOUTH_X,             0,          0 },
+    {HIDE + LOCK, "\"SOUTH_Y\":",        &json_south_y,               IS_INT32,                 0,                  NONVOL_SOUTH_Y,             0,          0 },
+    {HIDE + LOCK, "\"WEST_X\":",         &json_west_x,                IS_INT32,                 0,                  NONVOL_WEST_X,              0,          0 },
+    {HIDE + LOCK, "\"WEST_Y\":",         &json_west_y,                IS_INT32,                 0,                  NONVOL_WEST_Y,              0,          0 },
+    {SHOW,        "\"ATHLETE\":",        (int *)&json_athlete,        IS_TEXT_1 + LARGE_STRING, 0,                  NONVOL_ATHELETE,            0,          10},
+    {SHOW,        "\"EVENT\":",          (int *)&json_event,          IS_TEXT_1 + LARGE_STRING, 0,                  NONVOL_EVENT,               0,          10},
+    {SHOW,        "\"TARGET_NAME\":",    (int *)json_target_name,     IS_TEXT_1 + LARGE_STRING, 0,                  NONVOL_TARGET_NAME,         0,          10},
+    {HIDE,        "\"LOCK\":",           0,                           IS_INT32,                 &lock_target,       0,                          0,          12},
+    {HIDE,        "\"UNLOCK\":",         0,                           IS_INT32,                 &unlock_target,     0,                          0,          12},
+    {0,           0,                     0,                           0,                        0,                  0,                          0,          0 }
 };
 
 /*-----------------------------------------------------
@@ -595,7 +595,7 @@ void show_echo(void)
 #endif
 
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
-  SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                                   // Current persistent storage version
+  SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                                           // Current persistent storage version
   SEND(ALL, sprintf(_xs, "\"BD_REV\":            %d.%d.%d", (revision() / 100), ((revision() % 100) / 10),
                     (revision() % 10));)                                                              // Current board version
   SEND(ALL, sprintf(_xs, "\"SPLINE FIT\":        %s,", calibration_is_valid ? "\"Yes\"" : "\"No\"");) // Current persistent storage version
@@ -674,11 +674,11 @@ static void show_names(int v)
  * affecting the other settings.
  *
  *-----------------------------------------------------*/
-static void set_trace(int trace)         // Trace mask on or off
+static void set_trace(int trace)                     // Trace mask on or off
 {
   unsigned int i;
 
-  if ( trace == 0 )                      // Used to turn off tracing
+  if ( trace == 0 )                                  // Used to turn off tracing
   {
     is_trace = 0;
   }
@@ -686,7 +686,7 @@ static void set_trace(int trace)         // Trace mask on or off
   is_trace |= (DLT_FATAL | DLT_CRITICAL | DLT_INFO); // Info and critical is always enabled
 
   i = 0;
-  while ( dlt_names[i].dlt_text != 0 )   // Print the help
+  while ( dlt_names[i].dlt_text != 0 )               // Print the help
   {
     if ( (is_trace & dlt_names[i].dlt_mask) != 0 )
     {
