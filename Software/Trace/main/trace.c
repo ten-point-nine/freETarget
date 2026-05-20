@@ -112,9 +112,9 @@ void trace_init(void)
   connection_list = CONSOLE; // The consule is always connected
   reset_run_time();          // Reset the time of day
 
-  /*
-   * Start the tasks running
-   */
+                             /*
+                              * Start the tasks running
+                              */
   return;
 }
 
@@ -132,21 +132,22 @@ void trace_init(void)
  *---------------------------------------------------------------*/
 void trace_loop(void *arg)
 {
-  run_state &= ~IN_STARTUP;
-  run_state |= IN_OPERATION;
 
   while ( 1 )
   {
-    if ( gpio_get_level(SWITCH_GPIO) == 0 )
+    IF(IN_OPERATION)
     {
-      BMI270_find_zero();
-      SEND(ALL, sprintf(_xs, _DONE_);)
-    }
+      if ( gpio_get_level(SWITCH_GPIO) == 0 )
+      {
+        BMI270_find_zero();
+        SEND(ALL, sprintf(_xs, _DONE_);)
+      }
 
-   if ( gpio_get_level(BMI270_INTERRUPT) == 0 )
-    {
-  //   BMI270_pull_FIFO();
-      vTaskDelay(100);
+      if ( gpio_get_level(BMI270_INTERRUPT) == 0 )
+      {
+//        BMI270_pull_FIFO();
+        vTaskDelay(100);
+      }
     }
 
     /*

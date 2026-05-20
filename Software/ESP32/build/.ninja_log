@@ -1119,3 +1119,5 @@
 12233	12551	8005145652314534	C:/Users/allan/Documents/freETarget/Software/ESP32/build/.bin_timestamp	2c6a004edd16793b
 12551	12649	0	esp-idf/esptool_py/CMakeFiles/app_check_size	320b6643f1715748
 12551	12649	0	C:/Users/allan/Documents/freETarget/Software/ESP32/build/esp-idf/esptool_py/CMakeFiles/app_check_size	320b6643f1715748
+73	5149679	0	CMakeFiles/confserver	bed43f3522bb29b0
+73	5149679	0	C:/Users/allan/Documents/freETarget/Software/ESP32/build/CMakeFiles/confserver	bed43f3522bb29b0

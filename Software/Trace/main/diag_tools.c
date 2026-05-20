@@ -56,8 +56,8 @@ static const self_test_t test_list[] = {
     {"Accelerometer zeroing",        &BMI270_find_zero        },
     {"Accelerometer test",           &BMI270_test             },
     {"Accelerometer oscilliscope",   &BMI270_oscilliscope     },
-    {"SPI test",                     &BMI270_SPI_test         },
     {"Accelerometer dump",           &BMI270_SPI_dump         },
+    {"Accelerometer FIFO test",      &BMI270_FIFO_test           },
     {"- Timer & PCNT test",          0                        },
     {"Show the current time",        &show_time               },
     {"- Communiactions Tests",       0                        },
@@ -137,9 +137,10 @@ void self_test(unsigned int test) // What test to execute
   {
     if ( (test_ID == test) && (test_list[i].help[0] != '-') ) // Found the test
     {
+      run_state |= IN_TEST;
       SEND(ALL, sprintf(_xs, "\r\nTest Number %2d - %s\r\n", test_ID, test_list[i].help);)
       test_list[i].f();                                       // Execute the test                                // Exit the test
-      run_state = run_state_old;                              // Restore the previous state of the test run bit
+      run_state &= ~IN_TEST;
       return;
     }
     i++;
