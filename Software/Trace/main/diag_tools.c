@@ -57,7 +57,7 @@ static const self_test_t test_list[] = {
     {"Accelerometer test",           &BMI270_test             },
     {"Accelerometer oscilliscope",   &BMI270_oscilliscope     },
     {"Accelerometer dump",           &BMI270_SPI_dump         },
-    {"Accelerometer FIFO test",      &BMI270_FIFO_test           },
+    {"Accelerometer FIFO test",      &BMI270_FIFO_test        },
     {"- Timer & PCNT test",          0                        },
     {"Show the current time",        &show_time               },
     {"- Communiactions Tests",       0                        },
@@ -83,6 +83,7 @@ const dlt_name_t dlt_names[] = {
     {DLT_COMMUNICATION, "DLT_COMMUNICATION", 'C'}, // WiFi and other communications information
     {DLT_DIAG,          "DLT_DIAG",          'H'}, // Hardware diagnostics
     {DLT_DEBUG,         "DLT_DEBUG",         'D'}, // Software debugging information
+    {DLT_PAUSE,         "DLT_PAUSE",         'P'}, // Pause the execution
     {DLT_VERBOSE,       "DLT_VERBOSE",       'x'}, // Calibration verbose information
     {DLT_AMB,           "DLT_AMB",           'M'}, // Special debug messages
     {0,                 0,                   0  }

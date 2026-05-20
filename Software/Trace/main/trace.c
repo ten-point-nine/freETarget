@@ -74,6 +74,10 @@ void trace_init(void)
   is_trace |= DLT_DEBUG;         // Enable debug tracing
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT DEBUG enabled");))
 #endif
+#if TRACE_PAUSE
+  is_trace |= DLT_PAUSE;         // Enable verbose messages
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT PAUSE enabled");))
+#endif
 #if TRACE_VERBOSE
   is_trace |= DLT_VERBOSE;       // Enable verbose messages
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT VERBOSE enabled");))
@@ -145,7 +149,7 @@ void trace_loop(void *arg)
 
       if ( gpio_get_level(BMI270_INTERRUPT) == 0 )
       {
-//        BMI270_pull_FIFO();
+        //        BMI270_pull_FIFO();
         vTaskDelay(100);
       }
     }

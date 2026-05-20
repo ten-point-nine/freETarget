@@ -30,31 +30,31 @@
  * Definitions
  */
 
-#define G2        (0)                                        // Select +/- 2g range
+#define G2        (0)                                    // Select +/- 2g range
 #define G2_RANGE  (4.0)
-#define G4        1                                          // Select +/- 4g range
+#define G4        1                                      // Select +/- 4g range
 #define G4_RANGE  (8.0)
-#define G8        2                                          // Select +/- 8g range
+#define G8        2                                      // Select +/- 8g range
 #define G8_RANGE  (16.0)
-#define G16       3                                          // Select +/- 16g range
+#define G16       3                                      // Select +/- 16g range
 #define G16_RANGE (32.0)
 
 #define G_RANGE   G2
-#define G_PER_LSB (G2_RANGE / 65535.0)                       // g per LSB for the selected range
+#define G_PER_LSB (G2_RANGE / 65535.0)                   // g per LSB for the selected range
 
-#define GYRO_2000       0                                    // Select +/- 2000 degrees per second
-#define GYRO_RANGE_2000 (4000)                               //
-#define GYRO_1000       1                                    // Select +/- 1000 degrees per second
-#define GYRO_RANGE_1000 (2000)                               //
-#define GYRO_500        2                                    // Select +/- 500 degrees per second
-#define GYRO_RANGE_500  (1000)                               //
-#define GYRO_250        3                                    // Select +/- 250 degrees per second
-#define GYRO_RANGE_259  (500)                                //
-#define GYRO_125        4                                    // Select +/- 125 degrees per second
-#define GYRO_RANGE_125  (250)                                //
+#define GYRO_2000       0                                // Select +/- 2000 degrees per second
+#define GYRO_RANGE_2000 (4000)                           //
+#define GYRO_1000       1                                // Select +/- 1000 degrees per second
+#define GYRO_RANGE_1000 (2000)                           //
+#define GYRO_500        2                                // Select +/- 500 degrees per second
+#define GYRO_RANGE_500  (1000)                           //
+#define GYRO_250        3                                // Select +/- 250 degrees per second
+#define GYRO_RANGE_259  (500)                            //
+#define GYRO_125        4                                // Select +/- 125 degrees per second
+#define GYRO_RANGE_125  (250)                            //
 
 #define GYRO_RANGE   GYRO_125
-#define GYRO_PER_LSB (GYRO_RANGE_125 / 65535.0 * PI / 180.0) // in Radians per LSB
+#define GYRO_PER_LSB (GYRO_RANGE / 65535.0 * PI / 180.0) // in Radians per LSB
 
 #define SQ(x) ((x) * (x))
 
@@ -74,8 +74,11 @@
 #define acc_bwp         (0x02 << 4)    // (norm_avg4) Average four samples
 #define acc_filter_perf (0x01 << 7)    // (hp) Optimized for parformance
 
-#define ACC_RANGE 0x41                 // Acceleration range
-#define acc_range 0x00                 // +/- 2g
+#define ACC_RANGE     0x41             // Acceleration range
+#define acc_range_2g  0x00             // +/- 2g
+#define acc_range_4g  0x01             // +/- 4g
+#define acc_range_8g  0x02             // +/- 8g
+#define acc_range_16g 0x02             // +/- 16g
 
 #define GYR_CONF        0x42           // Gyro Configuration
 #define gyr_odr         0x09           // (odr_200)
@@ -84,7 +87,7 @@
 #define gyr_filter_perf (1 << 7)       // (hp) performance optimized
 
 #define GYR_RANGE 0x43                 // Gyro Range
-#define gyr_range 0x03                 // (range_250) +/- 250 dps
+#define gyr_range 0x04                 // (range_125) +/- 125 dps
 #define ois_range (0x00 << 3)          // (range_250) Full scale resolution +/- 250 dps
 
 #define FIFO_DOWNS         0x45        // FIFO downsampling
@@ -98,7 +101,7 @@
 #define watermark  400                 // Interrupt after 400 samples
 
 #define FIFO_CONFIG_0     0x48         // FIFO Frame Configuration
-#define fifo_stop_on_full (0x01 << 0)  // (disable) do not stop on full
+#define fifo_stop_on_full (0x00 << 0)  // (disable) do not stop on full
 #define fifo_time_en      (0x00 << 1)  // (disable) do not return sensor time frame
 
 #define FIFO_CONFIG_1     0x49         // FIFO Frame Content Configuration
@@ -132,9 +135,9 @@
 #define err_int2     (0x01 << 7)       // Error interrupt to int 2
 
 #define PWR_CONF          0x7C         // Power mode configuration
-#define adv_power_save    0x00         // Advanced powerf save disabled
+#define adv_power_save    (0x01 << 0)  // Advanced power save enabled
 #define fifo_self_wake_up (0x01 << 1)  // (fsw_on) FIFO enabled in low power mode
-#define fup_en            (0x01 << 2)  // (fup_on) Fast power up enabled
+#define fup_en            (0x00 << 2)  // (fup_on) Fast power up enabled
 
 #define PWR_CTRL 0x7D                  // Power mode control register
 #define aux_en   (0x00 << 0)           // (aux_off) disable aux sensor
@@ -142,8 +145,8 @@
 #define acc_en   (0x01 << 2)           // (acc_on) Acclerometer enabled
 #define temp_en  (0x00 << 3)           // (temp_off) Temperature disabled
 
-#define CMD      0x7E                  // Command register
-#define fifo_cmd (0x15)                // (fifo_flush) Clear FIFO contrent
+#define CMD        0x7E                // Command register
+#define fifo_flush (0xb0)              // Start the FIFO
 
 #define INIT_CTRL 0x59
 #define INIT_DATA 0x5E
@@ -186,7 +189,7 @@ static spi_device_interface_config_t BMI270_spi_config = {
     .duty_cycle_pos   = 128,                                          // 50% duty cycle
     .cs_ena_pretrans  = 0,                                            // No pre-transaction CS activation
     .cs_ena_posttrans = 0,                                            // No post-transaction CS activation
-    .clock_speed_hz   = 2 * 1000 * 1000,                              // 2 MHz clock speed (do not set higher than 2 MHz)
+    .clock_speed_hz   = 1 * 1000 * 1000,                              // 2 MHz clock speed (do not set higher than 2 MHz)
     .input_delay_ns   = 0,                                            // No input delay
     .spics_io_num     = BMI270_CS,                                    // CS pin
     .flags            = SPI_DEVICE_NO_DUMMY,                          // No special flags
@@ -196,24 +199,23 @@ static spi_device_interface_config_t BMI270_spi_config = {
 };
 
 static BMI270_config_t BMI270_config[] = {
-    {ACC_CONF,      acc_odr + acc_bwp + acc_filter_perf                                      },
-    {ACC_RANGE,     acc_range                                                                }, // ACC_RANGE +/-2g
-    {GYR_CONF,      gyr_odr + gyr_bwp + gyr_noise_perf + gyr_filter_perf                     }, //  GYR_CONF, Performance Optimized, Average 4, 800 samples
-    {GYR_RANGE,     gyr_range + ois_range                                                    }, // GYR_RANGE, 125 dps
-    {FIFO_DOWNS,    gyr_fifo_downs + gyr_fifo_filt_data + acc_fifo_downs + acc_fifo_filt_data}, // FIFO_DOWNS FIFO downsampling
+    {ACC_CONF,      acc_odr | acc_bwp | acc_filter_perf                                      },
+    {ACC_RANGE,     acc_range_2g                                                             }, // ACC_RANGE +/-2g
+    {PWR_CONF,      adv_power_save | fifo_self_wake_up | fup_en                              }, //
+    {GYR_CONF,      gyr_odr | gyr_bwp | gyr_noise_perf | gyr_filter_perf                     }, //  GYR_CONF, Performance Optimized,    Average 4, 800 samples
+    {GYR_RANGE,     gyr_range | ois_range                                                    }, //    GYR_RANGE, 125 dps
+    {FIFO_DOWNS,    gyr_fifo_downs | gyr_fifo_filt_data | acc_fifo_downs | acc_fifo_filt_data}, // FIFO_DOWNS
     {FIFO_WTM_0,    watermark & 0x00ff                                                       }, // FIFO Watermark lsb
     {FIFO_WTM_1,    (watermark >> 8) & 0x00ff                                                }, // FIFO Watermark msb
-    {FIFO_CONFIG_0, fifo_stop_on_full + fifo_time_en                                         }, // FIFO_CONFIG_0, No timestamp, do not stop if FIFO full
-    {FIFO_CONFIG_1, fifo_tag_int_1_en + fifo_tag_int_2_en + fifo_header_en + fifo_aux_en + fifo_acc_en +
+    {FIFO_CONFIG_0, fifo_stop_on_full | fifo_time_en                                         }, // FIFO_CONFIG_0, No timestamp, do
+    {FIFO_CONFIG_1, fifo_tag_int_1_en | fifo_tag_int_2_en | fifo_header_en | fifo_aux_en | fifo_acc_en |
                         fifo_gyr_en                                       }, // FIFO_CONFIG_1, Store gyro and accel data
-    {INT_1_IO_CTRL, lvl + od + output_en + input_en                                          }, // INT_1_IO_CTRL Interrupt 1 used
+    {INT_1_IO_CTRL, lvl | od | output_en | input_en                                          }, // INT_1_IO_CTRL Interrupt 1 used
     {INT_2_IO_CTRL, int_2_not_used                                                           }, // INT_2_IO_CTRL, not used
     {INT_LATCH,     int_latch                                                                }, // INT_LATCH, latched
-    {INT_MAP_DATA,  fwm_int1                                                                 }, // INT1_MAP_DATA, FIFO watermark interrupt mapped to INT1
-    {PWR_CTRL,      aux_en + gyr_en + acc_en + temp_en                                       }, // PWR_CTRL, Enable Gyro and Accel, disable Aux and temperature
-    {CMD,           fifo_cmd                                                                 }, // (fifo_flush) Clear FIFO contrent
-    {PWR_CONF,      adv_power_save + fifo_self_wake_up +
-                   fup_en                                                      }, //    adv_power_save + fifo_self_wake_up + fup_en         }, // (fup_on) Fast power up enabled
+    {INT_MAP_DATA,  fwm_int1                                                                 }, // INT1_MAP_DATA, FIFO watermark  interrupt mapped to INT1
+    {PWR_CTRL,      aux_en | gyr_en | acc_en | temp_en                                       }, // PWR_CTRL,    Enable Gyro and Accel, disable Aux and temperature
+    {CMD,           fifo_flush                                                               }, // CMD, clear the FIFO
     {0x00,          0x00                                                                     }  // End of the configuration file
 };
 
@@ -229,7 +231,7 @@ static BMI270_config_t BMI270_config[] = {
  *
  */
 const uint8_t bmi270_maximum_fifo_config_file[] = { // 22 x 15 = 330 bytes  -> 2640 bits (13.2ms)
-    //     0     1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18    19    20    21
+    // 0     1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18    19    20    21
     0xc8, 0x2e, 0x00, 0x2e, 0x80, 0x2e, 0x1a, 0x00, 0xc8, 0x2e, 0x00, 0x2e, 0xc8, 0x2e, 0x00, 0x2e, 0xc8, 0x2e, 0x00, 0x2e, 0xc8, 0x2e, // 0
     0x00, 0x2e, 0xc8, 0x2e, 0x00, 0x2e, 0xc8, 0x2e, 0x00, 0x2e, 0x90, 0x32, 0x21, 0x2e, 0x59, 0xf5, 0x10, 0x30, 0x21, 0x2e, 0x6a, 0xf5,
     0x1a, 0x24, 0x22, 0x00, 0x80, 0x2e, 0x3b, 0x00, 0xc8, 0x2e, 0x44, 0x47, 0x22, 0x00, 0x37, 0x00, 0xa4, 0x00, 0xff, 0x0f, 0xd1, 0x00,

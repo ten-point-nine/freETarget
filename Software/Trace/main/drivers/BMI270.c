@@ -106,6 +106,20 @@ void BMI270_init(unsigned int BMI270_gpio)
   {
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270 device ID: 0x%02X", transaction.rx_data[1]);))
   }
+  vTaskDelay(1);                                    /*
+                                                     * Reset the device
+                                                     */
+#if ( 0 )                                           // Do not enable
+  PAUSE("Sending CMD- -0xB6")
+  memset(&transaction, 0, sizeof(transaction));     // Clear the transaction structure
+  transaction.addr      = CMD;                      // Disable the accelerometer before programming the API
+  transaction.tx_buffer = 0xB6;                     // Soft Reset
+  transaction.length    = 8;                        // Transmit length in bits
+  transaction.rxlength  = 0;                        // Receive length in bits
+  transaction.flags     = SPI_TRANS_USE_TXDATA;     // Indicate that this is a read operation
+  spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+  vTaskDelay(1);
+#endif
 
   /*
    * Programming the API
@@ -118,6 +132,7 @@ void BMI270_init(unsigned int BMI270_gpio)
   transaction.rxlength  = 0;                                           // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_TXDATA;                        // Indicate that this is a read operation
   spi_device_transmit(BMI270_handle, &transaction);                    // Transmit the transaction
+  vTaskDelay(1);                                                       // Wait 450us
 
   PAUSE("sending INIT_CONTROL = 0")
   memset(&transaction, 0, sizeof(transaction));                        // Clear the transaction structure
@@ -127,6 +142,7 @@ void BMI270_init(unsigned int BMI270_gpio)
   transaction.rxlength  = 0;                                           // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_TXDATA;                        // Indicate that this is a read operation
   spi_device_transmit(BMI270_handle, &transaction);                    // Transmit the transaction
+  vTaskDelay(1);
 
   PAUSE("sending INIT_DATA")
   memset(&transaction, 0, sizeof(transaction));                        // Clear the transaction structure
@@ -146,6 +162,7 @@ void BMI270_init(unsigned int BMI270_gpio)
   transaction.rxlength  = 0;                                           // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_TXDATA;                        // Indicate that this is a read operation
   spi_device_transmit(BMI270_handle, &transaction);                    // Transmit the transaction
+  vTaskDelay(1);
 
   /*
    *  Make sure the API is properly initialized
@@ -162,10 +179,12 @@ void BMI270_init(unsigned int BMI270_gpio)
   {
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initialization failed: 0x%02X", transaction.rx_data[1]);))
   }
+  vTaskDelay(1);
 
   /*
    * Program the registers from the configuration table
    */
+
   i = 0;
   while ( BMI270_config[i].address != 0x00 )          // Loop through the configuration table until the end is reached
   {
@@ -175,8 +194,8 @@ void BMI270_init(unsigned int BMI270_gpio)
     transaction.length    = 1 * 8;                    // Transmit length in bits
     transaction.rxlength  = 0 * 8;                    // Receive length in bits
     transaction.flags     = SPI_TRANS_USE_TXDATA;     // Indicate that this is a read operation
+    PAUSE("Sending register value");
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "register 0x%02X: 0x%02X", BMI270_config[i].address, BMI270_config[i].value);))
-    // PAUSE("Sending register value");
     spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
     vTaskDelay(2);
     i++;
@@ -186,6 +205,7 @@ void BMI270_init(unsigned int BMI270_gpio)
    * All done, return
    */
   PAUSE("Finished")
+  BMI270_SPI_dump();
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270 initialization successful");))
   return;
 }
@@ -234,7 +254,7 @@ unsigned int BMI270_pull_FIFO(void)
     spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
 
     FIFO_length = (transaction.rx_data[2] << 8) + transaction.rx_data[1];
-printf("%d  ", FIFO_length);
+    printf("%d  ", FIFO_length);
     if ( FIFO_length <= FIFO_READ )
     {
       printf(_DONE_);
@@ -485,39 +505,40 @@ void BMI270_find_zero(void)
  *--------------------------------------------------------------*/
 #define ACCEL_DEAD_BAND 0.0
 #define GYRO_DEAD_BAND  0.0
+#define CAL_SCALE       1.0
 void BMI270_convert_to_g(trace_raw_t *sample, trace_point_t *actual)
 {
-  actual->x_dotdot = 2.0 * ((real_t)sample->f.x_dotdot) * G_PER_LSB; // Convert raw X-axis data to g
+  actual->x_dotdot = CAL_SCALE * ((real_t)sample->f.x_dotdot) * G_PER_LSB; // Convert raw X-axis data to g
   if ( F_ABS(actual->x) < ACCEL_DEAD_BAND )
   {
     actual->x_dotdot = 0;
   }
 
-  actual->y_dotdot = 2.0 * ((real_t)sample->f.y_dotdot) * G_PER_LSB; // Convert raw Y-axis data to g
+  actual->y_dotdot = CAL_SCALE * ((real_t)sample->f.y_dotdot) * G_PER_LSB; // Convert raw Y-axis data to g
   if ( F_ABS(actual->y_dotdot) < ACCEL_DEAD_BAND )
   {
     actual->y_dotdot = 0;
   }
 
-  actual->z_dotdot = 2.0 * ((real_t)sample->f.z_dotdot) * G_PER_LSB; // Convert raw Z-axis data to g
+  actual->z_dotdot = CAL_SCALE * ((real_t)sample->f.z_dotdot) * G_PER_LSB; // Convert raw Z-axis data to g
   if ( F_ABS(actual->z_dotdot) < ACCEL_DEAD_BAND )
   {
     actual->z_dotdot = 0;
   }
 
-  actual->rho_dot = ((real_t)sample->f.rho_dot) * GYRO_PER_LSB;      // Convert raw X-axis data to g
+  actual->rho_dot = ((real_t)sample->f.rho_dot) * GYRO_PER_LSB;            // Convert raw X-axis data to g
   if ( F_ABS(actual->rho_dot) < GYRO_DEAD_BAND )
   {
     actual->rho_dot = 0;
   }
 
-  actual->theta_dot = ((real_t)sample->f.theta_dot) * GYRO_PER_LSB;  // Convert raw X-axis data to g
+  actual->theta_dot = ((real_t)sample->f.theta_dot) * GYRO_PER_LSB;        // Convert raw X-axis data to g
   if ( F_ABS(actual->theta_dot) < GYRO_DEAD_BAND )
   {
     actual->theta_dot = 0;
   }
 
-  actual->phi_dot = ((real_t)sample->f.phi_dot) * GYRO_PER_LSB;      // Convert raw X-axis data to g
+  actual->phi_dot = ((real_t)sample->f.phi_dot) * GYRO_PER_LSB;            // Convert raw X-axis data to g
   if ( F_ABS(actual->phi_dot) < GYRO_DEAD_BAND )
   {
     actual->phi_dot = 0;
@@ -705,7 +726,7 @@ unsigned int BMI270_find_sample_out(unsigned int sample_count) // Number of samp
 void BMI270_SPI_dump(void)
 {
   int               address;
-  uint8_t           buffer[128];
+  uint8_t           registers[128];
   spi_transaction_t transaction;
 
   /*
@@ -744,8 +765,22 @@ void BMI270_SPI_dump(void)
       SEND(ALL, sprintf(_xs, "  ");)
     }
     SEND(ALL, sprintf(_xs, "0x%02X ", transaction.rx_data[1]);) // Print the value read from the register}
+    registers[address] = transaction.rx_data[1];
   }
 
+                                                                /*
+                                                                 *  Display known values
+                                                                 */
+  SEND(ALL, sprintf(_xs, "\r\n\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\n0x18: Sensor time: %d", (registers[0x1A] << 16) | (registers[0x19] << 8) | registers[18]);)
+  SEND(ALL, sprintf(_xs, "\r\n0x22: Temperature: %4.2f", (23.0 + (1 / 512.0) * ((registers[0x23] << 8) + registers[0x22])));)
+  SEND(ALL, sprintf(_xs, "\r\n0x24: FIFO length: %d", ((registers[0x25] << 8) + registers[0x24]));)
+  SEND(ALL, sprintf(_xs, "\r\n0x0C: ACC X: %04X", ((registers[0x0D] << 8) + registers[0x0C]));)
+  SEND(ALL, sprintf(_xs, "\r\n0x0E: ACC Y: %04X", ((registers[0x0F] << 8) + registers[0x0E]));)
+  SEND(ALL, sprintf(_xs, "\r\n0x10: ACC Z: %04X", ((registers[0x11] << 8) + registers[0x10]));)
+  SEND(ALL, sprintf(_xs, "\r\n0x12: GYRO X: %04X", ((registers[0x13] << 8) + registers[0x12]));)
+  SEND(ALL, sprintf(_xs, "\r\n0x14: GYRO Y: %04X", ((registers[0x15] << 8) + registers[0x14]));)
+  SEND(ALL, sprintf(_xs, "\r\n0x16: GYRO Z: %04X", ((registers[0x17] << 8) + registers[0x16]));)
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }

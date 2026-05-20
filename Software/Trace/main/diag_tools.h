@@ -58,19 +58,20 @@ void digital_output_test(void);      // Test the digital outputs
 #define DLT_COMMUNICATION (DLT_APPLICATION << 1)   // Communications messages (wifi.c token.c serial_io.c)
 #define DLT_DIAG          (DLT_COMMUNICATION << 1) // Hardware diagnostics messages displayed
 #define DLT_DEBUG         (DLT_DIAG << 1)          // Specific debug information
-#define DLT_SCORE         (DLT_DEBUG << 1)         // Display extended score record
-#define DLT_HTTP          (DLT_SCORE << 1)         // Log HTTP requests
-#define DLT_OTA           (DLT_HTTP << 1)          // Log OTA requests
-#define DLT_CALIBRATION   (DLT_OTA << 1)           // Debug the calibraition software
+#define DLT_HTTP          (DLT_DEBUG << 1)         // Log HTTP requests
+#define DLT_CALIBRATION   (DLT_HTTP << 1)          // Debug the calibraition software
+#define DLT_PAUSE         (DLT_CALIBRATION << 1)   // Enable pausing
 #define DLT_HEARTBEAT     (0x2000)                 // Kick out the time to see if we are alive
 #define DLT_VERBOSE       (0x4000)                 // Turn on verbose tracing
 #define DLT_AMB           (0x8000)                 // Special Debug DLT
 
 #if ( ((DLT_FATAL | DLT_CRITICAL | DLT_INFO | DLT_APPLICATION | DLT_COMMUNICATION | DLT_DIAG | DLT_DEBUG | DLT_SCORE | DLT_HTTP |          \
-        DLT_OTA | DLT_CALIBRATION) &                                                                                                       \
+        DLT_PAUSE) &                                                                                                                       \
        (DLT_HEARTBEAT | DLT_VERBOSE | DLT_AMB)) != 0 )
 #error "DLT masks overlap"
 #endif
+
+#define PAUSE(prompt) DLT(DLT_PAUSE, { SEND(ALL, sprintf(_xs, "%s", prompt);) prompt_for_confirm(); })
 
 /*
  *  Enable compile level tracing
@@ -84,6 +85,7 @@ void digital_output_test(void);      // Test the digital outputs
 #define TRACE_OTA           (0 == 1)
 #define TRACE_HEARTBEAT     (0 == 1)
 #define TRACE_CALIBRATION   (0 == 1)
+#define TRACE_PAUSE         (0 == 1)
 #define TRACE_VERBOSE       (0 == 1)
 
 // clang-format off
