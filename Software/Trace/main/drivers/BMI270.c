@@ -26,17 +26,12 @@
 #include "stdio.h"
 #include "string.h"
 #include "driver\gpio.h"
-#include "i2c.h"
 #include "math.h"
-#include "assert.h"
 #include "driver/spi_master.h"
 #include "driver/spi_common.h"
-
 #include "trace.h"
-#include "board_assembly.h"
 #include "diag_tools.h"
 #include "gpio.h"
-#include "json.h"
 #include "helpers.h"
 #include "BMI270.h"
 #include "BMI270_define.h"
@@ -50,8 +45,9 @@
 
 unsigned int FIFO_raw_in  = 0;
 unsigned int FIFO_raw_out = 0;
-#define FIFO_RAW_SAMPLE 10
-FIFO_raw_read_t sample_raw_read[FIFO_RAW_SAMPLE]; // Allow for 10 reads
+
+FIFO_raw_t sample_raw_read[RAW_FRAMES_REQ]; // Space for 10 seconds of data
+
 /*----------------------------------------------------------------
  *
  * @function: BMI270_init()
@@ -212,6 +208,31 @@ void BMI270_init(unsigned int BMI270_gpio)
 
 /*----------------------------------------------------------------
  *
+ * @function: BMI270_memory_check()
+ *
+ * @brief:    Display memory statistics
+ *
+ * @return: None
+ *
+ *----------------------------------------------------------------
+ *
+ * Display the memory statistics
+ *
+ *--------------------------------------------------------------*/
+void BMI_memory_check(void)
+{
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RAW_FRAME_COUNT:   %d", RAW_FRAME_COUNT);))    // How much is read each time
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RAW_FRAMES_REQ:    %d", RAW_FRAMES_REQ);))     // How many frames do we need
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RAW_MEMORY_SIZE:   %d", RAW_MEMORY_SIZE);))    // How much memory is used to store raw data
+
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "TRACE_MEMORY_SIZE: %d", TRACE_MEMORY_SIZE);))  // How much memory does the trace take
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI_MEMORY_USED:   %d", BMI270_MEMORY_USED);)) // How much memory does the trace take
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "ESP32_C3_REMAIN:   %d", ESP32_C3_REMAIN);))    // How much memory does the trace take
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
  * @function: BMI270_pull_FIFO
  *
  * @brief:    Pull all of the samples out of the FIFO and store them in the sample buffer
@@ -222,8 +243,12 @@ void BMI270_init(unsigned int BMI270_gpio)
  *
  * This function is called if the FIFO watermark is reached.
  *
- * The function determines how much there is in the FIFO and
- * reads out the contents until there
+ * By the time we get here there are AT LEAST WATERMARK bytes of
+ * samples in the FIFO.  The function will read one WATERMARKs
+ * number of cycles and save them into memory.
+ *
+ * There may be samples left in the FIFO, but we will get them
+ * the next time the watermark interrupt is fired.
  *
  *---------------------------------------------------------------*/
 void BMI270_FIFO_test(void)
@@ -231,59 +256,30 @@ void BMI270_FIFO_test(void)
   BMI270_pull_FIFO();
   printf(_DONE_);
 }
-unsigned int BMI270_pull_FIFO(void)
+void BMI270_pull_FIFO(void)
 {
   spi_transaction_t transaction;
-  int               FIFO_length; // How many samples are waiting?
 
   run_state |= IN_COLLECTION;
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270_FIFO_read()");))
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_FIFO_read()");))
 
-  while ( 1 )
-  {
-    /*
-     *  Read the FIFO length
-     */
-    memset(&transaction, 0, sizeof(transaction));     // Clear the transaction structure
-    transaction.addr      = 0x80 | FIFO_LENGTH;       // How many readings are waiting for uys
-    transaction.tx_buffer = 0;                        // Transmit buffer not used
-    transaction.length    = 4 * 8;                    // Transmit length in bits
-    transaction.rxlength  = 3 * 8;                    // Receive length in bits
-    transaction.flags     = SPI_TRANS_USE_RXDATA;     // Indicate that this is a read operation
-    spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+  /*
+   *  Read in the next bunch of samples
+   */
+  memset(&transaction, 0, sizeof(transaction));                // Clear the transaction structure{"TEST":24}
+  transaction.addr      = 0x80 | FIFO_DATA;                    // Point to the FIFO read regisetrt
+  transaction.tx_buffer = &sample_raw_read[FIFO_raw_in].dummy; // Transmit buffer not used
+  transaction.length    = (sizeof(FIFO_raw_t) - 1) * 8;        // Transmit length in bits
+  transaction.rxlength  = (sizeof(FIFO_raw_t) - 1) * 8;        // Receive length in bits
+  transaction.flags     = 0;                                   // Indicate that this is a read operation
+  spi_device_transmit(BMI270_handle, &transaction);
 
-    FIFO_length = (transaction.rx_data[2] << 8) + transaction.rx_data[1];
-    printf("%d  ", FIFO_length);
-    if ( FIFO_length <= FIFO_READ )
-    {
-      printf(_DONE_);
-      break;
-    }
-
-    /*
-     *  Read in the next bunch of samples
-     */
-    memset(&transaction, 0, sizeof(transaction));                // Clear the transaction structure{"TEST":24}
-    transaction.addr      = 0x80 | FIFO_DATA;                    // Point to the FIFO read regisetrt
-    transaction.tx_buffer = &sample_raw_read[FIFO_raw_in].dummy; // Transmit buffer not used
-    transaction.length    = sizeof(FIFO_raw_read_t) * 8;         // Transmit length in bits
-    transaction.rxlength  = sizeof(FIFO_raw_read_t) * 8;         // Receive length in bits
-    transaction.flags     = 0;                                   // Indicate that this is a read operation
-    spi_device_transmit(BMI270_handle, &transaction);
-
-    FIFO_raw_in = (FIFO_raw_in + 1) % FIFO_RAW_SAMPLE;           // Point to the next buffer
-
-    if ( FIFO_raw_in == FIFO_raw_out )                           // Wrapped around and collided with the output
-    {
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Finished buffer");))
-      break;
-    }
-  }
+  FIFO_raw_in = (FIFO_raw_in + 1) % RAW_FRAMES_REQ;            // Point to the next buffer
 
   run_state &= ~IN_COLLECTION;
 
-  return FIFO_length;
+  return;
 }
 
 /*----------------------------------------------------------------
@@ -322,11 +318,11 @@ bool BMI270_get_next_raw_sample(raw_frame_t *sample)
                                            */
   *sample = sample_raw_read[FIFO_raw_out].f[inner_index];
 
-  inner_index = (inner_index + 1) % FIFO_READ; // Next sample
+  inner_index = (inner_index + 1) % RAW_FRAME_COUNT; // Next sample
 
-  if ( inner_index == 0 )                      // Next chunk
+  if ( inner_index == 0 )                            // Next chunk
   {
-    FIFO_raw_out = (FIFO_raw_out + 1) % FIFO_RAW_SAMPLE;
+    FIFO_raw_out = (FIFO_raw_out + 1) % RAW_FRAMES_REQ;
   }
 
   /*
@@ -356,18 +352,18 @@ bool BMI270_get_next_raw_sample(raw_frame_t *sample)
  * ie, the bytes need to be swapped before use.
  *
  *--------------------------------------------------------------*/
-void BMI270_read_raw_accel(trace_raw_t *sample_as_read) // TRUE if a zero offset it to be applied
+void BMI270_read_raw_accel(single_raw_t *sample_as_read) // TRUE if a zero offset it to be applied
 {
   esp_err_t         ret;
   spi_transaction_t transaction;
-  trace_raw_t       filler;
+  single_raw_t      filler;
 
-  memset(&filler, 0xff, sizeof(trace_raw_t));           // Clear the sample structure
-  memset(&transaction, 0x00, sizeof(transaction));      // Clear the transaction structure
+  memset(&filler, 0xff, sizeof(raw_frame_t));            // Clear the sample structure
+  memset(&transaction, 0x00, sizeof(transaction));       // Clear the transaction structure
   transaction.addr      = 0x80 | ACCEL_X; // Start at Accel Acceleration Data Low register and read all 6 bytes in one transaction
-  transaction.length    = (sizeof(trace_raw_t) + 1) * 8;  // Transmit length in bits
+  transaction.length    = (sizeof(single_raw_t) + 1) * 8; // Transmit length in bits
   transaction.tx_buffer = &filler;                        // Send dummy data to read the acceleration data
-  transaction.rxlength  = sizeof(trace_raw_t) * 8;        //
+  transaction.rxlength  = sizeof(single_raw_t) * 8;       //
   transaction.rx_buffer = &sample_as_read->dummy;         // Receive buffer to store the raw acceleration data
   transaction.flags     = 0;
 
@@ -378,7 +374,7 @@ void BMI270_read_raw_accel(trace_raw_t *sample_as_read) // TRUE if a zero offset
   }
 
   DLT(DLT_DEBUG,
-      SEND(ALL, sprintf(_xs, "\r\n %d %p %p x_dot: %04X   y_dor: %04X   z_dot: %04X  ", sizeof(trace_raw_t), &sample_as_read->dummy,
+      SEND(ALL, sprintf(_xs, "\r\n %d %p %p x_dot: %04X   y_dor: %04X   z_dot: %04X  ", sizeof(raw_frame_t), &sample_as_read->dummy,
                         &sample_as_read->f.x_dotdot, sample_as_read->f.x_dotdot, sample_as_read->f.y_dotdot, sample_as_read->f.z_dotdot);))
 
   return; //}
@@ -436,14 +432,14 @@ void BMI270_read_raw_accel(trace_raw_t *sample_as_read) // TRUE if a zero offset
 #define NUM_ZERO_SAMPLES   100
 #define SCALE_ZERO_SAMPLES 1
 
-trace_raw_t zero_samples;  // Buffer to hold multiple samples for averaging
+raw_frame_t BMI270_zero_sample; // Buffer to hold multiple samples for averaging
 
 void BMI270_find_zero(void)
 {
-  unsigned int i;          // Loop counter
-  trace_raw_t  BMI270_raw; // As read from the accelerometer
-  int32_t      x_dotdot;   // 32 bit acceleration to prevent overflow
-  int32_t      y_dotdot;   // while summing
+  unsigned int i;               // Loop counter
+  single_raw_t BMI270_raw;      // As read from the accelerometer
+  int32_t      x_dotdot;        // 32 bit acceleration to prevent overflow
+  int32_t      y_dotdot;        // while summing
   int32_t      z_dotdot;
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270_find_zero()");))
@@ -456,7 +452,6 @@ void BMI270_find_zero(void)
   y_dotdot = 0;
   z_dotdot = 0;
 
-                // sample_out = BMI270_find_sample_out(NUM_ZERO_SAMPLES);
   i = 0;
   while ( i != NUM_ZERO_SAMPLES )
   {
@@ -470,15 +465,15 @@ void BMI270_find_zero(void)
   /*
    * Average the samples to get a more accurate zero level
    */
-  BMI270_zero_sample.f.x_dotdot = x_dotdot / NUM_ZERO_SAMPLES; // Average the X-axis raw acceleration data
-  BMI270_zero_sample.f.y_dotdot = y_dotdot / NUM_ZERO_SAMPLES; // Average the Y-axis raw acceleration data
-  BMI270_zero_sample.f.z_dotdot = z_dotdot / NUM_ZERO_SAMPLES; // Average the Z-axis raw acceleration data
+  BMI270_zero_sample.x_dotdot = x_dotdot / NUM_ZERO_SAMPLES; // Average the X-axis raw acceleration data
+  BMI270_zero_sample.y_dotdot = y_dotdot / NUM_ZERO_SAMPLES; // Average the Y-axis raw acceleration data
+  BMI270_zero_sample.z_dotdot = z_dotdot / NUM_ZERO_SAMPLES; // Average the Z-axis raw acceleration data
 
   /*
    *  All done, return
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Axis offset - X: %04X, Y: %04X, Z: %04X", BMI270_zero_sample.f.x_dotdot,
-                                  BMI270_zero_sample.f.y_dotdot, BMI270_zero_sample.f.z_dotdot);))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Axis offset - X: %04X, Y: %04X, Z: %04X", BMI270_zero_sample.x_dotdot, BMI270_zero_sample.y_dotdot,
+                                  BMI270_zero_sample.z_dotdot);))
 
   set_status_LED(LED_READY); // Indicate that we are ready
   SEND(ALL, sprintf(_xs, _DONE_);)
@@ -506,39 +501,39 @@ void BMI270_find_zero(void)
 #define ACCEL_DEAD_BAND 0.0
 #define GYRO_DEAD_BAND  0.0
 #define CAL_SCALE       1.0
-void BMI270_convert_to_g(trace_raw_t *sample, trace_point_t *actual)
+void BMI270_convert_to_g(raw_frame_t *sample, trace_point_t *actual)
 {
-  actual->x_dotdot = CAL_SCALE * ((real_t)sample->f.x_dotdot) * G_PER_LSB; // Convert raw X-axis data to g
+  actual->x_dotdot = CAL_SCALE * ((real_t)sample->x_dotdot) * G_PER_LSB; // Convert raw X-axis data to g
   if ( F_ABS(actual->x) < ACCEL_DEAD_BAND )
   {
     actual->x_dotdot = 0;
   }
 
-  actual->y_dotdot = CAL_SCALE * ((real_t)sample->f.y_dotdot) * G_PER_LSB; // Convert raw Y-axis data to g
+  actual->y_dotdot = CAL_SCALE * ((real_t)sample->y_dotdot) * G_PER_LSB; // Convert raw Y-axis data to g
   if ( F_ABS(actual->y_dotdot) < ACCEL_DEAD_BAND )
   {
     actual->y_dotdot = 0;
   }
 
-  actual->z_dotdot = CAL_SCALE * ((real_t)sample->f.z_dotdot) * G_PER_LSB; // Convert raw Z-axis data to g
+  actual->z_dotdot = CAL_SCALE * ((real_t)sample->z_dotdot) * G_PER_LSB; // Convert raw Z-axis data to g
   if ( F_ABS(actual->z_dotdot) < ACCEL_DEAD_BAND )
   {
     actual->z_dotdot = 0;
   }
 
-  actual->rho_dot = ((real_t)sample->f.rho_dot) * GYRO_PER_LSB;            // Convert raw X-axis data to g
+  actual->rho_dot = ((real_t)sample->rho_dot) * GYRO_PER_LSB;            // Convert raw X-axis data to g
   if ( F_ABS(actual->rho_dot) < GYRO_DEAD_BAND )
   {
     actual->rho_dot = 0;
   }
 
-  actual->theta_dot = ((real_t)sample->f.theta_dot) * GYRO_PER_LSB;        // Convert raw X-axis data to g
+  actual->theta_dot = ((real_t)sample->theta_dot) * GYRO_PER_LSB;        // Convert raw X-axis data to g
   if ( F_ABS(actual->theta_dot) < GYRO_DEAD_BAND )
   {
     actual->theta_dot = 0;
   }
 
-  actual->phi_dot = ((real_t)sample->f.phi_dot) * GYRO_PER_LSB;            // Convert raw X-axis data to g
+  actual->phi_dot = ((real_t)sample->phi_dot) * GYRO_PER_LSB;            // Convert raw X-axis data to g
   if ( F_ABS(actual->phi_dot) < GYRO_DEAD_BAND )
   {
     actual->phi_dot = 0;
@@ -568,8 +563,8 @@ void BMI270_test(void)
 {
 
   real_t        vector_magnitude;           // Magnitude of the acceleration vector
-  trace_raw_t   previous_raw;               // Previous sample
-  trace_raw_t   present_raw;                // Present sample
+  raw_frame_t   previous_raw;               // Previous sample
+  raw_frame_t   present_raw;                // Present sample
   trace_point_t previous;                   // Previous sample converted to g
   trace_point_t present;                    // Present sample converted to g
 
@@ -639,7 +634,7 @@ void BMI270_oscilliscope(void)
   real_t              vector_magnitude; // Magnitude of the acceleration vector
   bool                pause = false;
   trace_point_t       trace_value;
-  trace_raw_t         sample;
+  raw_frame_t         sample;
 
   while ( 1 )
   {
@@ -697,6 +692,7 @@ void BMI270_oscilliscope(void)
  *--------------------------------------------------------------*/
 unsigned int BMI270_find_sample_out(unsigned int sample_count) // Number of samples to look back
 {
+#if ( 0 )
   sample_out = sample_in - sample_count;                       // Calculate the index of the sample that corresponds to the desired duration
   if ( sample_out < 0 )                                        // If the index is negative, adjust for wrap-around
   {
@@ -704,6 +700,8 @@ unsigned int BMI270_find_sample_out(unsigned int sample_count) // Number of samp
   }
 
   return sample_out;
+#endif
+  return 0;
 }
 
 /*----------------------------------------------------------------
@@ -775,12 +773,12 @@ void BMI270_SPI_dump(void)
   SEND(ALL, sprintf(_xs, "\r\n0x18: Sensor time: %d", (registers[0x1A] << 16) | (registers[0x19] << 8) | registers[18]);)
   SEND(ALL, sprintf(_xs, "\r\n0x22: Temperature: %4.2f", (23.0 + (1 / 512.0) * ((registers[0x23] << 8) + registers[0x22])));)
   SEND(ALL, sprintf(_xs, "\r\n0x24: FIFO length: %d", ((registers[0x25] << 8) + registers[0x24]));)
-  SEND(ALL, sprintf(_xs, "\r\n0x0C: ACC X: %04X", ((registers[0x0D] << 8) + registers[0x0C]));)
-  SEND(ALL, sprintf(_xs, "\r\n0x0E: ACC Y: %04X", ((registers[0x0F] << 8) + registers[0x0E]));)
-  SEND(ALL, sprintf(_xs, "\r\n0x10: ACC Z: %04X", ((registers[0x11] << 8) + registers[0x10]));)
-  SEND(ALL, sprintf(_xs, "\r\n0x12: GYRO X: %04X", ((registers[0x13] << 8) + registers[0x12]));)
-  SEND(ALL, sprintf(_xs, "\r\n0x14: GYRO Y: %04X", ((registers[0x15] << 8) + registers[0x14]));)
-  SEND(ALL, sprintf(_xs, "\r\n0x16: GYRO Z: %04X", ((registers[0x17] << 8) + registers[0x16]));)
+  SEND(ALL, sprintf(_xs, "\r\n0x0C: ACC X: %04X", ((registers[0x0D] << 8) | registers[0x0C]));)
+  SEND(ALL, sprintf(_xs, "\r\n0x0E: ACC Y: %04X", ((registers[0x0F] << 8) | registers[0x0E]));)
+  SEND(ALL, sprintf(_xs, "\r\n0x10: ACC Z: %04X", ((registers[0x11] << 8) | registers[0x10]));)
+  SEND(ALL, sprintf(_xs, "\r\n0x12: GYRO X: %04X", ((registers[0x13] << 8) | registers[0x12]));)
+  SEND(ALL, sprintf(_xs, "\r\n0x14: GYRO Y: %04X", ((registers[0x15] << 8) | registers[0x14]));)
+  SEND(ALL, sprintf(_xs, "\r\n0x16: GYRO Z: %04X", ((registers[0x17] << 8) | registers[0x16]));)
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }

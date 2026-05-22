@@ -98,7 +98,6 @@
 
 #define FIFO_WTM_0 0x46                // FIFO Watermark lsb
 #define FIFO_WTM_1 0x47                // FIFO Watermark msb
-#define watermark  400                 // Interrupt after 400 samples
 
 #define FIFO_CONFIG_0     0x48         // FIFO Frame Configuration
 #define fifo_stop_on_full (0x00 << 0)  // (disable) do not stop on full
@@ -176,8 +175,7 @@ typedef struct
 /*
  * Variables
  */
-static trace_raw_t         BMI270_zero_sample; // Sample to hold the zeroed acceleration data
-static spi_device_handle_t BMI270_handle;      // Handle for the SPI device
+static spi_device_handle_t BMI270_handle; // Handle for the SPI device
 
 static spi_device_interface_config_t BMI270_spi_config = {
     // Configuration for the SPI device
@@ -189,7 +187,7 @@ static spi_device_interface_config_t BMI270_spi_config = {
     .duty_cycle_pos   = 128,                                          // 50% duty cycle
     .cs_ena_pretrans  = 0,                                            // No pre-transaction CS activation
     .cs_ena_posttrans = 0,                                            // No post-transaction CS activation
-    .clock_speed_hz   = 1 * 1000 * 1000,                              // 2 MHz clock speed (do not set higher than 2 MHz)
+    .clock_speed_hz   = 4 * 1000 * 1000,                              // 2 MHz clock speed (do not set higher than 2 MHz)
     .input_delay_ns   = 0,                                            // No input delay
     .spics_io_num     = BMI270_CS,                                    // CS pin
     .flags            = SPI_DEVICE_NO_DUMMY,                          // No special flags
@@ -198,15 +196,15 @@ static spi_device_interface_config_t BMI270_spi_config = {
     .post_cb          = NULL                                          // Callback to be called after a transmission has completed.
 };
 
-static BMI270_config_t BMI270_config[] = {
+static const BMI270_config_t BMI270_config[] = {
     {ACC_CONF,      acc_odr | acc_bwp | acc_filter_perf                                      },
     {ACC_RANGE,     acc_range_2g                                                             }, // ACC_RANGE +/-2g
     {PWR_CONF,      adv_power_save | fifo_self_wake_up | fup_en                              }, //
     {GYR_CONF,      gyr_odr | gyr_bwp | gyr_noise_perf | gyr_filter_perf                     }, //  GYR_CONF, Performance Optimized,    Average 4, 800 samples
     {GYR_RANGE,     gyr_range | ois_range                                                    }, //    GYR_RANGE, 125 dps
     {FIFO_DOWNS,    gyr_fifo_downs | gyr_fifo_filt_data | acc_fifo_downs | acc_fifo_filt_data}, // FIFO_DOWNS
-    {FIFO_WTM_0,    watermark & 0x00ff                                                       }, // FIFO Watermark lsb
-    {FIFO_WTM_1,    (watermark >> 8) & 0x00ff                                                }, // FIFO Watermark msb
+    {FIFO_WTM_0,    (WATERMARK & 0x00ff)                                                     }, // FIFO Watermark lsb
+    {FIFO_WTM_1,    ((WATERMARK >> 8) & 0x00ff)                                              }, // FIFO Watermark msb
     {FIFO_CONFIG_0, fifo_stop_on_full | fifo_time_en                                         }, // FIFO_CONFIG_0, No timestamp, do
     {FIFO_CONFIG_1, fifo_tag_int_1_en | fifo_tag_int_2_en | fifo_header_en | fifo_aux_en | fifo_acc_en |
                         fifo_gyr_en                                       }, // FIFO_CONFIG_1, Store gyro and accel data
@@ -230,7 +228,7 @@ static BMI270_config_t BMI270_config[] = {
  * https://github.com/boschsensortec/BMI270_SensorAPI/blob/master/bmi270_maximum_fifo.c
  *
  */
-const uint8_t bmi270_maximum_fifo_config_file[] = { // 22 x 15 = 330 bytes  -> 2640 bits (13.2ms)
+static const uint8_t bmi270_maximum_fifo_config_file[] = { // 22 x 15 = 330 bytes  -> 2640 bits (13.2ms)
     // 0     1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18    19    20    21
     0xc8, 0x2e, 0x00, 0x2e, 0x80, 0x2e, 0x1a, 0x00, 0xc8, 0x2e, 0x00, 0x2e, 0xc8, 0x2e, 0x00, 0x2e, 0xc8, 0x2e, 0x00, 0x2e, 0xc8, 0x2e, // 0
     0x00, 0x2e, 0xc8, 0x2e, 0x00, 0x2e, 0xc8, 0x2e, 0x00, 0x2e, 0x90, 0x32, 0x21, 0x2e, 0x59, 0xf5, 0x10, 0x30, 0x21, 0x2e, 0x6a, 0xf5,

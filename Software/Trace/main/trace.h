@@ -96,16 +96,30 @@
 
 #define HTTP_CLOSE_TIME 15l           // Time to close the HTTP connection after the last shot
 
-#define SAMPLE_DURATION 8             // Take 10 seconds of samples
-#define SAMPLE_RATE     (200)         // 200 samples per second
-#define SAMPLE_DEPTH    (SAMPLE_DURATION * SAMPLE_RATE)
+
+ /*
+ *  Memory Calculations (needed for memory allocation)
+ */
+#define AVAILABLE_FIFO     (6 * 1024)                                          // (6144) 6K FIFO available
+#define RAW_FRAME_SIZE     (6 * 2)                                             // (12)   6 entries @ 2 bytes per entry
+#define WATERMARK          (AVAILABLE_FIFO * 3 / 4)                            // (4608) Use 75% of the FIFO
+#define RAW_FRAME_COUNT    (WATERMARK / RAW_FRAME_SIZE)                        // (384)  entries in the FIFO
+#define ESP32_C3_RAM       (350 * 1024)                                        // (409600) Available memory
+#define SAMPLE_RATE        (800)                                               // 400 samples per second, 2.5ms / sample
+#define SAMPLE_LOOP        (10)                                                // Accumulate sampls for 10 seconds
+#define RAW_FRAMES_REQ     ((SAMPLE_RATE * SAMPLE_LOOP) / RAW_FRAME_COUNT) + 2 // (12) Number of frames needed to store 10 seconds of data
+#define RAW_MEMORY_SIZE    (RAW_FRAMES_REQ * RAW_FRAME_COUNT * RAW_FRAME_SIZE) // (55296)
+#define TRACE_FRAME_SIZE   (6 * 4)                                             // (24) 6 entries at 4 bytes (32 bits) each
+#define TRACE_MEMORY_SIZE  (SAMPLE_RATE * SAMPLE_LOOP * TRACE_FRAME_SIZE)      // (96000)
+#define BMI270_MEMORY_USED (RAW_MEMORY_SIZE + TRACE_MEMORY_SIZE)               // 145296 needed
+#define ESP32_C3_REMAIN    (ESP32_C3_RAM - BMI270_MEMORY_USED)                 //
 
 /*
  *  Types
  */
 typedef unsigned char byte_t;
 typedef volatile long time_count_t;
-typedef double        real_t;
+typedef float         real_t;
 
 typedef struct
 {
@@ -126,15 +140,16 @@ typedef struct
 /*
  *  Global Variables
  */
-EXTERN char         _xs[1024 + 512];                                // General purpose string buffer
-EXTERN unsigned int is_trace;                                       // Tracing level(s)
+EXTERN trace_point_t trace[SAMPLE_RATE * SAMPLE_LOOP];              // Space for the trace
+EXTERN char          _xs[1024 + 512];                               // General purpose string buffer
+EXTERN unsigned int  is_trace;                                      // Tracing level(s)
 
 EXTERN unsigned int board_revision;                                 // Board revision number
 EXTERN time_count_t shot_start;                                     // Time when shot become valid
 EXTERN time_count_t LED_timer;                                      // Turn off the LEDs when not in use
 EXTERN time_count_t keep_alive;                                     // Keep alive timer
 EXTERN time_count_t power_save;                                     // Power save timer
-EXTERN time_count_t time_since_last_shot;                           // 15 minutes since last shot
+                                                                    // 15 minutes since last shot
 EXTERN time_count_t session_time[];                                 // Time in each session
 EXTERN unsigned int run_state;                                      // Current running state of the software
 
