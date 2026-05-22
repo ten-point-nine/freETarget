@@ -251,11 +251,6 @@ void BMI_memory_check(void)
  * the next time the watermark interrupt is fired.
  *
  *---------------------------------------------------------------*/
-void BMI270_FIFO_test(void)
-{
-  BMI270_pull_FIFO();
-  printf(_DONE_);
-}
 void BMI270_pull_FIFO(void)
 {
   spi_transaction_t transaction;

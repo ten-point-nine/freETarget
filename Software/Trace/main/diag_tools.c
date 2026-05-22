@@ -57,7 +57,6 @@ static const self_test_t test_list[] = {
     {"Accelerometer test",           &BMI270_test             },
     {"Accelerometer oscilliscope",   &BMI270_oscilliscope     },
     {"Accelerometer dump",           &BMI270_SPI_dump         },
-    {"Accelerometer FIFO test",      &BMI270_FIFO_test        },
     {"- Timer & PCNT test",          0                        },
     {"Show the current time",        &show_time               },
     {"- Communiactions Tests",       0                        },

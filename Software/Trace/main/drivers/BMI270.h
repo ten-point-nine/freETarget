@@ -81,5 +81,4 @@ void         BMI270_oscilliscope(void);                                       //
 void         BMI270_FIFO_read(void);                                          // FIFO handler
 unsigned int BMI270_find_sample_out(unsigned int sample_count);               // Find the starting point in the sample buffer
 void         BMI270_SPI_dump(void);                                           // Dump the BMI270 registers using SPI.
-void         BMI270_FIFO_test(void);
 bool         BMI270_get_next_raw_sample(raw_frame_t *sample);                 // Pull out the next sample
