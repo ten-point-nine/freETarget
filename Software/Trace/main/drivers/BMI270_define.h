@@ -150,6 +150,7 @@
 
 #define CMD        0x7E                         // Command register
 #define fifo_flush (0xb0)                       // Start the FIFO
+#define soft_reset (0xb6)                       // Flush the settings
 
 #define INIT_CTRL 0x59
 #define INIT_DATA 0x5E
@@ -201,6 +202,7 @@ static spi_device_interface_config_t BMI270_spi_config = {
 };
 
 static const BMI270_config_t BMI270_config[] = {
+//    {CMD,           soft_reset                                                               }, // CMD, Clear the settings
     {ACC_CONF,      acc_odr | acc_bwp | acc_filter_perf                                      },
     {ACC_RANGE,     acc_range_2g                                                             }, // ACC_RANGE +/-2g
     {PWR_CONF,      adv_power_save | fifo_self_wake_up | fup_en                              }, //
