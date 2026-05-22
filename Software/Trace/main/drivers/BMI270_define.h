@@ -62,26 +62,29 @@
  * BMI270 Register Addresses
  */
 #define CHIP_ID         0x00
-#define ACCEL_X         0x0C           // Acceleration X, Y, Z  Gyro X, Y, Z
-#define SENSORTIME_0    0x18           // Sensor time register
+#define ACCEL_X         0x0C // Acceleration X, Y, Z  Gyro X, Y, Z
+#define SENSORTIME_0    0x18 // Sensor time register
+#define INT_STATUS_1    0x1D // Interrupt status register
 #define INTERNAL_STATUS 0x21
-#define FIFO_LENGTH_0   0x24           // LSB of FIFO length
-#define FIFO_LENGTH_1   0x25           // MSB of FIFO length
-#define FIFO_DATA       0x26           // FIFO data register
+#define FIFO_LENGTH_0   0x24 // LSB of FIFO length
+#define FIFO_LENGTH_1   0x25 // MSB of FIFO length
+#define FIFO_DATA       0x26 // FIFO data register
 
-#define ACC_CONF        0x40           // Acceleration Configuration
-#define acc_odr         (0x09 << 0)    // (odr_200) Output data rate 200
-#define acc_bwp         (0x02 << 4)    // (norm_avg4) Average four samples
-#define acc_filter_perf (0x01 << 7)    // (hp) Optimized for parformance
+#define ACC_CONF 0x40        // Acceleration Configuration
+#define acc_odr  (0x02 << 0) // (odr_200) Output data rate 200
+// #define acc_odr         (0x09 << 0)    // (odr_200) Output data rate 200
+#define acc_bwp         (0x02 << 4) // (norm_avg4) Average four samples
+#define acc_filter_perf (0x01 << 7) // (hp) Optimized for parformance
 
-#define ACC_RANGE     0x41             // Acceleration range
-#define acc_range_2g  0x00             // +/- 2g
-#define acc_range_4g  0x01             // +/- 4g
-#define acc_range_8g  0x02             // +/- 8g
-#define acc_range_16g 0x02             // +/- 16g
+#define ACC_RANGE     0x41          // Acceleration range
+#define acc_range_2g  0x00          // +/- 2g
+#define acc_range_4g  0x01          // +/- 4g
+#define acc_range_8g  0x02          // +/- 8g
+#define acc_range_16g 0x02          // +/- 16g
 
-#define GYR_CONF        0x42           // Gyro Configuration
-#define gyr_odr         0x09           // (odr_200)
+#define GYR_CONF 0x42               // Gyro Configuration
+#define gyr_odr  0x02               // (odr_200)
+// #define gyr_odr         0x09           // (odr_200)
 #define gyr_bwp         (0x2 << 4)     // (norm) Bandwidth coefficient
 #define gyr_noise_perf  (1 << 6)       // (hp) performance optiminzed
 #define gyr_filter_perf (1 << 7)       // (hp) performance optimized
@@ -121,7 +124,7 @@
 #define int_2_not_used 0x00            // disable everything
 
 #define INT_LATCH 0x55                 // Interupt latch
-#define int_latch 0x01                 // Permanent
+#define int_latch 0x01                 // Level
 
 #define INT_MAP_DATA 0x58              // Data interupt mapping for both INT pins
 #define ffull_int1   (0x01 << 0)       // FIFO full to int 1

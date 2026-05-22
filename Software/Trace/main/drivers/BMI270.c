@@ -264,6 +264,8 @@ void BMI270_pull_FIFO(void)
 
   DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_FIFO_read()");))
 
+  run_state &= ~IN_COLLECTION;
+
   /*
    *  Read in the next bunch of samples
    */
@@ -277,8 +279,21 @@ void BMI270_pull_FIFO(void)
 
   FIFO_raw_in = (FIFO_raw_in + 1) % RAW_FRAMES_REQ;            // Point to the next buffer
 
-  run_state &= ~IN_COLLECTION;
+  /*
+   *  Reset the interrupt status
+   */
+  memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure{"TEST":24}
+  transaction.addr      = 0x80 | INT_STATUS_1;  // Point to the FIFO read regisetrt
+  transaction.tx_buffer = NULL;                 // Transmit buffer not used
+  transaction.length    = 3 * 8;                // Transmit length in bits
+  transaction.rxlength  = 1 * 8;                    // Receive length in bits
+  transaction.flags     = SPI_TRANS_USE_RXDATA; // Read into the four byte pointer
+  spi_device_transmit(BMI270_handle, &transaction);
 
+  /*
+   *  All done, return
+   */
+  run_state &= ~IN_COLLECTION;
   return;
 }
 
