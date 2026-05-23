@@ -142,6 +142,20 @@
 #define fifo_self_wake_up (0x01 << 1)           // (fsw_on) FIFO enabled in low power mode
 #define fup_en            (0x00 << 2)           // (fup_on) Fast power up enabled
 
+#define NV_CONF     0x70                        // Nonvol configuration
+#define spi_en      (0x01 << 0)                 // SPI enabled
+#define i2c_wdt_sel (0x00 << 1)                 // I2C watchdog disabled (not used)
+#define i2c_wdt_en  (0x00 << 1)                 // I2C watchdog disabled
+#define acc_off_en  (0x01 << 3)                 // Acceleratoin offset applied
+
+#define OFFSET_0              0x71              // X Axis Offset
+#define OFFSET_6              0x77              // Gyro offset and control
+#define gyr_user_offset_x_9_8 (0x00 << 0)       // Gyro X offset, msb
+#define gyr_user_offset_y_9_8 (0x00 << 2)       // Gyro Y offset, msb
+#define gyr_user_offset_z_9_8 (0x00 << 4)       // Gyro Z offset, msb
+#define gyr_off_en            (0x01 << 6)       // Enable Gyro offset
+#define gyr_gain_en           (0x00 << 7)       // Disable Gyro gain
+
 #define PWR_CTRL 0x7D                           // Power mode control register
 #define aux_en   (0x00 << 0)                    // (aux_off) disable aux sensor
 #define gyr_en   (0x01 << 1)                    // (gyr_on) gyro enabled
@@ -184,25 +198,25 @@ static spi_device_handle_t BMI270_handle; // Handle for the SPI device
 
 static spi_device_interface_config_t BMI270_spi_config = {
     // Configuration for the SPI device
-    .command_bits     = 0,                                            // No command phase
-    .address_bits     = 8,                                            //
-    .dummy_bits       = 0,                                            // No dummy bits
-    .mode             = 0,                                            // SPI mode 0
-    .clock_source     = SPI_CLK_SRC_DEFAULT,                          // Use default clock source
-    .duty_cycle_pos   = 128,                                          // 50% duty cycle
-    .cs_ena_pretrans  = 0,                                            // No pre-transaction CS activation
-    .cs_ena_posttrans = 0,                                            // No post-transaction CS activation
-    .clock_speed_hz   = 4 * 1000 * 1000,                              // 2 MHz clock speed (do not set higher than 2 MHz)
-    .input_delay_ns   = 0,                                            // No input delay
-    .spics_io_num     = BMI270_CS,                                    // CS pin
-    .flags            = SPI_DEVICE_NO_DUMMY,                          // No special flags
+    .command_bits     = 0,                   // No command phase
+    .address_bits     = 8,                   //
+    .dummy_bits       = 0,                   // No dummy bits
+    .mode             = 0,                   // SPI mode 0
+    .clock_source     = SPI_CLK_SRC_DEFAULT, // Use default clock source
+    .duty_cycle_pos   = 128,                 // 50% duty cycle
+    .cs_ena_pretrans  = 0,                   // No pre-transaction CS activation
+    .cs_ena_posttrans = 0,                   // No post-transaction CS activation
+    .clock_speed_hz   = 4 * 1000 * 1000,     // 2 MHz clock speed (do not set higher than 2 MHz)
+    .input_delay_ns   = 0,                   // No input delay
+    .spics_io_num     = BMI270_CS,           // CS pin
+    .flags            = SPI_DEVICE_NO_DUMMY, // No special flags
     .queue_size       = 1,
-    .pre_cb           = NULL,                                         // Callback to be called before a transmission is started.
-    .post_cb          = NULL                                          // Callback to be called after a transmission has completed.
+    .pre_cb           = NULL,                // Callback to be called before a transmission is started.
+    .post_cb          = NULL                 // Callback to be called after a transmission has completed.
 };
 
 static const BMI270_config_t BMI270_config[] = {
-//    {CMD,           soft_reset                                                               }, // CMD, Clear the settings
+    //    {CMD,           soft_reset                                                               }, // CMD, Clear the settings
     {ACC_CONF,      acc_odr | acc_bwp | acc_filter_perf                                      },
     {ACC_RANGE,     acc_range_2g                                                             }, // ACC_RANGE +/-2g
     {PWR_CONF,      adv_power_save | fifo_self_wake_up | fup_en                              }, //

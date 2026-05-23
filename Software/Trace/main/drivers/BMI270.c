@@ -328,8 +328,8 @@ void BMI270_read_raw_accel(single_raw_t *sample_as_read) // TRUE if a zero offse
   spi_device_transmit(BMI270_handle, &transaction);       // Transmit the transaction
 
   DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "x_..: 0X%04X   y_..: 0X%04X   z_..: 0X%04X   rho_.: 0X%04X   theta_.: 0X%04X   phi_.: 0X%04X",
-                                  sample_as_read->f.x_dotdot, sample_as_read->f.y_dotdot, sample_as_read->f.z_dotdot,
-                                  sample_as_read->f.rho_dot, sample_as_read->f.theta_dot, sample_as_read->f.phi_dot);))
+                                   sample_as_read->f.x_dotdot, sample_as_read->f.y_dotdot, sample_as_read->f.z_dotdot,
+                                   sample_as_read->f.rho_dot, sample_as_read->f.theta_dot, sample_as_read->f.phi_dot);))
 
   run_state &= ~IN_SINGLE;
 
@@ -353,19 +353,50 @@ void BMI270_read_raw_accel(single_raw_t *sample_as_read) // TRUE if a zero offse
  *
  *--------------------------------------------------------------*/
 #define NUM_ZERO_SAMPLES 100
+#define NUM_OFFSET_BYTES (OFFSET_6 - OFFSET_0)         // Number of bytes in offset register
 
 void BMI270_find_zero(void)
 {
-  unsigned int i;             // Loop counter
-  single_raw_t BMI270_raw;    // As read from the accelerometer
-  int32_t      x_dotdot  = 0; // 32 bit acceleration to prevent overflow
-  int32_t      y_dotdot  = 0; // while summing
-  int32_t      z_dotdot  = 0;
-  int32_t      rho_dot   = 0;
-  int32_t      theta_dot = 0;
-  int32_t      phi_dot   = 0;
+  unsigned int      i;                                 // Loop counter
+  single_raw_t      BMI270_raw;                        // As read from the accelerometer
+  int32_t           x_dotdot  = 0;                     // 32 bit acceleration to prevent overflow
+  int32_t           y_dotdot  = 0;                     // while summing
+  int32_t           z_dotdot  = 0;
+  int32_t           rho_dot   = 0;
+  int32_t           theta_dot = 0;
+  int32_t           phi_dot   = 0;
+  uint8_t           offset_write[OFFSET_6 - OFFSET_0]; // Offset buffer
+  spi_transaction_t transaction;
 
   DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_find_zero()");))
+
+  /*
+   *  Set the offset registers to zero
+   */
+  memset(&offset_write, 0x00, NUM_OFFSET_BYTES);    // Clear the sample structure
+  memset(&transaction, 0x00, sizeof(transaction));  // Clear the transaction structure
+  transaction.addr      = OFFSET_0;                 // Point to the offset registers
+  transaction.length    = (NUM_OFFSET_BYTES) * 8;   // Transmit length in bits (less the empty)
+  transaction.tx_buffer = &offset_write;            // Clear out the offsets
+  transaction.rxlength  = 0;                        // Not reading anything
+  transaction.rx_buffer = NULL;
+  transaction.flags     = 0;
+  spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+
+  /*
+   *  Read the registers to find the average
+   */
+  for ( i = 0; i != NUM_ZERO_SAMPLES; i++ )
+  {
+    BMI270_read_raw_accel(&BMI270_raw); // Take a sample of the raw acceleration data
+    x_dotdot += BMI270_raw.f.x_dotdot;  // Accumulate the X-axis raw acceleration data
+    y_dotdot += BMI270_raw.f.y_dotdot;  // Accumulate the Y-axis raw acceleration data
+    z_dotdot += BMI270_raw.f.z_dotdot;  // Accumulate the Z-axis raw acceleration data
+    rho_dot += BMI270_raw.f.rho_dot;
+    theta_dot += BMI270_raw.f.theta_dot;
+    phi_dot += BMI270_raw.f.phi_dot;
+    vTaskDelay(1);
+  }
 
   /*
    * Loop and collect samples
@@ -391,6 +422,39 @@ void BMI270_find_zero(void)
   BMI270_zero_sample.rho_dot   = rho_dot / NUM_ZERO_SAMPLES;
   BMI270_zero_sample.theta_dot = theta_dot / NUM_ZERO_SAMPLES;
   BMI270_zero_sample.phi_dot   = phi_dot / NUM_ZERO_SAMPLES;
+
+                                                              /*
+                                                               * Write out the offsets
+                                                               */
+  offset_write[0] = (BMI270_zero_sample.x_dotdot >> 0) & 0xff;
+  offset_write[1] = (BMI270_zero_sample.y_dotdot >> 0) & 0xff;
+  offset_write[2] = (BMI270_zero_sample.z_dotdot >> 0) & 0xff;
+  offset_write[3] = (BMI270_zero_sample.rho_dot >> 0) & 0xff;
+  offset_write[4] = (BMI270_zero_sample.theta_dot >> 0) & 0xff;
+  offset_write[5] = (BMI270_zero_sample.phi_dot >> 0) & 0xff;
+  offset_write[6] = ((BMI270_zero_sample.rho_dot >> 0) & 0b00000011) | ((BMI270_zero_sample.theta_dot >> 2) & 0b00001100) |
+                    ((BMI270_zero_sample.phi_dot >> 2) & 0b00110000) | gyr_off_en;
+
+  memset(&transaction, 0x00, sizeof(transaction));  // Clear the transaction structure
+  transaction.addr      = OFFSET_0;                 // Point to the offset registers
+  transaction.length    = (NUM_OFFSET_BYTES) * 8;   // Transmit length in bits (less the empty)
+  transaction.tx_buffer = &offset_write;            // Clear out the offsets
+  transaction.rxlength  = 0;                        // Not reading anything
+  transaction.rx_buffer = NULL;
+  transaction.flags     = 0;
+  spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+
+  /*
+   * Now enable it
+   */
+  memset(&transaction, 0x00, sizeof(transaction));  // Clear the transaction structure
+  transaction.addr      = NV_CONF;                  // Point to the Nonvol configuration
+  transaction.length    = 1 * 8;                    // Transmit length in bits (less the empty)
+  transaction.tx_buffer = acc_off_en;               // Enable the offsets
+  transaction.rxlength  = 0;                        // Not reading anything
+  transaction.rx_buffer = NULL;
+  transaction.flags     = SPI_TRANS_USE_TXDATA;
+  spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
 
   /*
    *  All done, return
