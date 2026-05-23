@@ -86,8 +86,6 @@ void trace_init(void)
   /*
    * Set the variables
    */
-  sample_in  = 0; // Set up the sample queue
-  sample_out = 0;
 
   board_revision = board_version();
   /*
@@ -141,16 +139,20 @@ void trace_loop(void *arg)
   {
     IF(IN_OPERATION)
     {
+#if ( 0 )
       if ( gpio_get_level(SWITCH_GPIO) == 0 )
       {
         BMI270_find_zero();
-        SEND(ALL, sprintf(_xs, _DONE_);)
       }
 
-      if ( gpio_get_level(BMI270_INTERRUPT) == 0 )
+      IF_NOT(IN_SINGLE)
       {
-                BMI270_pull_FIFO();
+        if ( gpio_get_level(BMI270_INTERRUPT) == 0 )
+        {
+          BMI270_pull_FIFO();
+        }
       }
+#endif
     }
 
     /*

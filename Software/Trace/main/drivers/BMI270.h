@@ -69,6 +69,15 @@ typedef struct       // Large buffer to hold all the FIFO data
 } FIFO_raw_t;        // Value read from sensor via FIFO
 
 /*
+ * Pointers to access structures
+ */
+typedef struct
+{
+  uint16_t inner; // Inner pointer
+  uint16_t outer; // Outer pointer
+} trace_index_t;
+
+/*
  *  Functions
  */
 void         BMI270_init(unsigned int bmi270_gpio);                           // Initialize the BMI270

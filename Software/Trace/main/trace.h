@@ -35,6 +35,7 @@
 #define IN_OPERATION  0x0002           // The software is operational
 #define IN_TEST       0x0004           // A self test has been selected (Suspend operation)
 #define IN_COLLECTION 0x0008           // Collecting data
+#define IN_SINGLE     0x0010           // Reading a single sample directly from BMK270
 #define IN_REDUCTION  0x0020           // The data is being reduced
 #define IN_FATAL_ERR  0x0040           // A fatal error has occured and cannot be fixed
 
@@ -96,23 +97,29 @@
 
 #define HTTP_CLOSE_TIME 15l           // Time to close the HTTP connection after the last shot
 
+                                      /*
+                                       *  Memory Calculations (needed for memory allocation)
+                                       *
+                                       *  A frame is a single sample read from the ACCEL/GYRO
+                                       *  A sample buffer is the space to store a single FIFO pull
+                                       *  A trace is the path drawn by the gun on the target
+                                       *  A vector is the locaton and direction of a sample
+                                       */
+#define AVAILABLE_FIFO (6 * 1024)                                               // (6144) 6K FIFO available
+#define WATERMARK      (AVAILABLE_FIFO * 3 / 4)                                 // (4608) Use 75% of the FIFO
 
- /*
- *  Memory Calculations (needed for memory allocation)
- */
-#define AVAILABLE_FIFO     (6 * 1024)                                          // (6144) 6K FIFO available
-#define RAW_FRAME_SIZE     (6 * 2)                                             // (12)   6 entries @ 2 bytes per entry
-#define WATERMARK          (AVAILABLE_FIFO * 3 / 4)                            // (4608) Use 75% of the FIFO
-#define RAW_FRAME_COUNT    (WATERMARK / RAW_FRAME_SIZE)                        // (384)  entries in the FIFO
-#define ESP32_C3_RAM       (350 * 1024)                                        // (409600) Available memory
-#define SAMPLE_RATE        (800)                                               // 400 samples per second, 2.5ms / sample
-#define SAMPLE_LOOP        (10)                                                // Accumulate sampls for 10 seconds
-#define RAW_FRAMES_REQ     ((SAMPLE_RATE * SAMPLE_LOOP) / RAW_FRAME_COUNT) + 2 // (12) Number of frames needed to store 10 seconds of data
-#define RAW_MEMORY_SIZE    (RAW_FRAMES_REQ * RAW_FRAME_COUNT * RAW_FRAME_SIZE) // (55296)
-#define TRACE_FRAME_SIZE   (6 * 4)                                             // (24) 6 entries at 4 bytes (32 bits) each
-#define TRACE_MEMORY_SIZE  (SAMPLE_RATE * SAMPLE_LOOP * TRACE_FRAME_SIZE)      // (96000)
-#define BMI270_MEMORY_USED (RAW_MEMORY_SIZE + TRACE_MEMORY_SIZE)               // 145296 needed
-#define ESP32_C3_REMAIN    (ESP32_C3_RAM - BMI270_MEMORY_USED)                 //
+#define RAW_FRAME_SIZE  (6 * 2)                                                 // (12)   6 entries @ 2 bytes per entry
+#define RAW_FRAME_COUNT (WATERMARK / RAW_FRAME_SIZE)                            // (384)  entries in the FIFO
+
+#define SAMPLE_RATE         (800)                                               // 400 samples per second, 2.5ms / sample
+#define SAMPLE_PERIOD       (10)                                                // Accumulate sampls for 10 seconds
+#define SAMPLE_BUFFER_COUNT ((SAMPLE_RATE * SAMPLE_PERIOD) / RAW_FRAME_COUNT) + 2 // (12) Number of frames needed to store 10 seconds of data
+
+#define VECTOR_FRAME_SIZE  (6 * 4)                                              // (24) 6 entries at 4 bytes (32 bits) each
+#define VECTOR_BUFFER_SIZE (SAMPLE_RATE * SAMPLE_PERIOD)                        // Memory used to store vectors
+
+#define TRACE_FRAME_SIZE  (2 * 4)                                               // (24) 6 entries at 4 bytes (32 bits) each
+#define TRACE_MEMORY_SIZE (SAMPLE_RATE * SAMPLE_PERIOD * TRACE_FRAME_SIZE)      // (96000)
 
 /*
  *  Types
@@ -137,12 +144,17 @@ typedef struct
   real_t phi_dot;   // Z anglular velocity
 } trace_point_t;    // computed point
 
+typedef struct
+{
+  real_t x;         // X position
+  real_t y;         // Y position
+} trace_path_t;     // computed point
 /*
  *  Global Variables
  */
-EXTERN trace_point_t trace[SAMPLE_RATE * SAMPLE_LOOP];              // Space for the trace
-EXTERN char          _xs[1024 + 512];                               // General purpose string buffer
-EXTERN unsigned int  is_trace;                                      // Tracing level(s)
+EXTERN trace_path_t trace[SAMPLE_RATE * SAMPLE_PERIOD];             // Space for the trace
+EXTERN char         _xs[1024 + 512];                                // General purpose string buffer
+EXTERN unsigned int is_trace;                                       // Tracing level(s)
 
 EXTERN unsigned int board_revision;                                 // Board revision number
 EXTERN time_count_t shot_start;                                     // Time when shot become valid

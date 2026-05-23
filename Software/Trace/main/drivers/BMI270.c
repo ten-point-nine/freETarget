@@ -40,19 +40,29 @@
 /*
  * Definitions
  */
-
 #define SQ(x) ((x) * (x))
 
-unsigned int FIFO_raw_in  = 0;
-unsigned int FIFO_raw_out = 0;
+/*
+ *  Typedefs
+ */
+trace_index_t index_in  = {0, 0};                 // Pointer to the input side
+trace_index_t index_out = {0, 0};                 // Pointer to the output side
 
-FIFO_raw_t sample_raw_read[RAW_FRAMES_REQ]; // Space for 10 seconds of data
+FIFO_raw_t  sample_raw_read[SAMPLE_BUFFER_COUNT]; // Space for 10 seconds of data
+raw_frame_t BMI270_zero_sample;                   // Buffer to hold multiple samples for averaging
+
+/*
+ *  Local Functions
+ */
+static bool trace_first(void);                     // Reset the trace pointers
+static bool trace_next(trace_index_t *index);      // Go to the next pointer
+static bool trace_FIFO_next(trace_index_t *index); // Point to the next input bufferf
 
 /*----------------------------------------------------------------
  *
  * @function: BMI270_init()
  *
- * @brief:    Initaliz              e the BMI270
+ * @brief:    Initalize the BMI270
  *
  * @return: None
  *
@@ -208,31 +218,6 @@ void BMI270_init(unsigned int BMI270_gpio)
 
 /*----------------------------------------------------------------
  *
- * @function: BMI270_memory_check()
- *
- * @brief:    Display memory statistics
- *
- * @return: None
- *
- *----------------------------------------------------------------
- *
- * Display the memory statistics
- *
- *--------------------------------------------------------------*/
-void BMI_memory_check(void)
-{
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RAW_FRAME_COUNT:   %d", RAW_FRAME_COUNT);))    // How much is read each time
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RAW_FRAMES_REQ:    %d", RAW_FRAMES_REQ);))     // How many frames do we need
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RAW_MEMORY_SIZE:   %d", RAW_MEMORY_SIZE);))    // How much memory is used to store raw data
-
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "TRACE_MEMORY_SIZE: %d", TRACE_MEMORY_SIZE);))  // How much memory does the trace take
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI_MEMORY_USED:   %d", BMI270_MEMORY_USED);)) // How much memory does the trace take
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "ESP32_C3_REMAIN:   %d", ESP32_C3_REMAIN);))    // How much memory does the trace take
-  return;
-}
-
-/*----------------------------------------------------------------
- *
  * @function: BMI270_pull_FIFO
  *
  * @brief:    Pull all of the samples out of the FIFO and store them in the sample buffer
@@ -255,24 +240,33 @@ void BMI270_pull_FIFO(void)
 {
   spi_transaction_t transaction;
 
+  /*
+   *  Check to see if we are reading a single sample
+   */
+  IF(IN_SINGLE) // Single sample?
+  {
+    return;     // Yes, return and do nothing
+  }
+
+  /*
+   *  We can read the FIFO
+   */
   run_state |= IN_COLLECTION;
 
   DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_FIFO_read()");))
 
-  run_state &= ~IN_COLLECTION;
-
   /*
    *  Read in the next bunch of samples
    */
-  memset(&transaction, 0, sizeof(transaction));                // Clear the transaction structure{"TEST":24}
-  transaction.addr      = 0x80 | FIFO_DATA;                    // Point to the FIFO read regisetrt
-  transaction.tx_buffer = &sample_raw_read[FIFO_raw_in].dummy; // Transmit buffer not used
-  transaction.length    = (sizeof(FIFO_raw_t) - 1) * 8;        // Transmit length in bits
-  transaction.rxlength  = (sizeof(FIFO_raw_t) - 1) * 8;        // Receive length in bits
-  transaction.flags     = 0;                                   // Indicate that this is a read operation
+  memset(&transaction, 0, sizeof(transaction));                   // Clear the transaction structure{"TEST":24}
+  transaction.addr      = 0x80 | FIFO_DATA;                       // Point to the FIFO read regisetrt
+  transaction.tx_buffer = &sample_raw_read[index_in.outer].dummy; // Transmit buffer not used
+  transaction.length    = (sizeof(FIFO_raw_t) - 1) * 8;           // Transmit length in bits
+  transaction.rxlength  = (sizeof(FIFO_raw_t) - 1) * 8;           // Receive length in bits
+  transaction.flags     = 0;                                      // Indicate that this is a read operation
   spi_device_transmit(BMI270_handle, &transaction);
 
-  FIFO_raw_in = (FIFO_raw_in + 1) % RAW_FRAMES_REQ;            // Point to the next buffer
+  trace_next(&index_in);
 
   /*
    *  Reset the interrupt status
@@ -281,7 +275,7 @@ void BMI270_pull_FIFO(void)
   transaction.addr      = 0x80 | INT_STATUS_1;  // Point to the FIFO read regisetrt
   transaction.tx_buffer = NULL;                 // Transmit buffer not used
   transaction.length    = 3 * 8;                // Transmit length in bits
-  transaction.rxlength  = 1 * 8;                    // Receive length in bits
+  transaction.rxlength  = 1 * 8;                // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_RXDATA; // Read into the four byte pointer
   spi_device_transmit(BMI270_handle, &transaction);
 
@@ -290,55 +284,6 @@ void BMI270_pull_FIFO(void)
    */
   run_state &= ~IN_COLLECTION;
   return;
-}
-
-/*----------------------------------------------------------------
- *
- * @function: BMI270_get_next_sample
- *
- * @brief:    Pull the next sample out of the circular queue
- *
- * @return:   TRUE if a valid sample has been found.
- *----------------------------------------------------------------
- *
- * The raw data is pulled out of the BMI270 FIFO in fixed chunks
- * each of these chunk is stored in an array.
- *
- * This function keeps track of which cunk is currently in use and
- * where in the chunk the next sample lives.
- *
- * The sample is removed from the array and the pointers updated
- * to point to the next available value;
- *---------------------------------------------------------------*/
-bool BMI270_get_next_raw_sample(raw_frame_t *sample)
-{
-  static unsigned int inner_index = 0;
-
-  /*
-   * Check to see if we have wrapped around
-   */
-  if ( (inner_index == 0)                 // Starting a new chunk
-       && (FIFO_raw_out == FIFO_raw_in) ) // Wrapped around and no new data
-  {
-    return false;                         // This sample is not valid
-  }
-
-                                          /*
-                                           * Pull the next sample out of the chunk
-                                           */
-  *sample = sample_raw_read[FIFO_raw_out].f[inner_index];
-
-  inner_index = (inner_index + 1) % RAW_FRAME_COUNT; // Next sample
-
-  if ( inner_index == 0 )                            // Next chunk
-  {
-    FIFO_raw_out = (FIFO_raw_out + 1) % RAW_FRAMES_REQ;
-  }
-
-  /*
-   * All done, show we have valid data
-   */
-  return true;
 }
 
 /*----------------------------------------------------------------
@@ -364,63 +309,31 @@ bool BMI270_get_next_raw_sample(raw_frame_t *sample)
  *--------------------------------------------------------------*/
 void BMI270_read_raw_accel(single_raw_t *sample_as_read) // TRUE if a zero offset it to be applied
 {
-  esp_err_t         ret;
   spi_transaction_t transaction;
   single_raw_t      filler;
 
-  memset(&filler, 0xff, sizeof(raw_frame_t));            // Clear the sample structure
-  memset(&transaction, 0x00, sizeof(transaction));       // Clear the transaction structure
-  transaction.addr      = 0x80 | ACCEL_X; // Start at Accel Acceleration Data Low register and read all 6 bytes in one transaction
-  transaction.length    = (sizeof(single_raw_t) + 1) * 8; // Transmit length in bits
+  run_state |= IN_SINGLE;
+
+  /*
+   * Prepare and read a single sample directly from the BMI270
+   */
+  memset(&filler, 0xff, sizeof(single_raw_t));     // Clear the sample structure
+  memset(&transaction, 0x00, sizeof(transaction)); // Clear the transaction structure
+  transaction.addr      = 0x80 | ACCEL_X;          // Start at Accel Acceleration Data Low register and read all 6 bytes in one transaction
+  transaction.length    = (sizeof(single_raw_t) - 1) * 8; // Transmit length in bits (less the empty)
   transaction.tx_buffer = &filler;                        // Send dummy data to read the acceleration data
-  transaction.rxlength  = sizeof(single_raw_t) * 8;       //
+  transaction.rxlength  = (sizeof(single_raw_t) - 1) * 8; // Don't count the empty
   transaction.rx_buffer = &sample_as_read->dummy;         // Receive buffer to store the raw acceleration data
   transaction.flags     = 0;
+  spi_device_transmit(BMI270_handle, &transaction);       // Transmit the transaction
 
-  ret = spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
-  if ( ret != ESP_OK )
-  {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to read sensor");))
-  }
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "x_..: 0X%04X   y_..: 0X%04X   z_..: 0X%04X   rho_.: 0X%04X   theta_.: 0X%04X   phi_.: 0X%04X",
+                                  sample_as_read->f.x_dotdot, sample_as_read->f.y_dotdot, sample_as_read->f.z_dotdot,
+                                  sample_as_read->f.rho_dot, sample_as_read->f.theta_dot, sample_as_read->f.phi_dot);))
 
-  DLT(DLT_DEBUG,
-      SEND(ALL, sprintf(_xs, "\r\n %d %p %p x_dot: %04X   y_dor: %04X   z_dot: %04X  ", sizeof(raw_frame_t), &sample_as_read->dummy,
-                        &sample_as_read->f.x_dotdot, sample_as_read->f.x_dotdot, sample_as_read->f.y_dotdot, sample_as_read->f.z_dotdot);))
+  run_state &= ~IN_SINGLE;
 
-  return; //}
-#if ( 0 )
-  /*
-   * Check if there are any samples available
-   */
-  if ( sample_in == sample_out )
-  {
-    return 0; // No new samples available
-  }
-
-  /*
-   * Read the sample from the buffer
-   */
-  *sample    = samples[sample_out];               // Read from the sample buffer
-  sample_out = (sample_out + 1) % (SAMPLE_DEPTH); // Point to the next entry
-
-  if ( zero_offset == true )
-  {
-    sample->x -= BMI270_zero_sample.x;            // Add the zero offset to the raw data
-    sample->y -= BMI270_zero_sample.y;            // to remove the DC bias for a level sensor
-    sample->z -= BMI270_zero_sample.z;
-  }
-
-  /*
-   *  Return the number of samples remaining
-   */
-  samples_remaining = sample_in - sample_out; // Calculate the number of samples remaining in the buffer
-  if ( samples_remaining < 0 )
-  {
-    samples_remaining += SAMPLE_DEPTH;        // Adjust for wrap-around
-  }
-
-  return samples_remaining;                   // Return FIFO samples remaining // 0x39
-#endif
+  return;
 }
 
 /*----------------------------------------------------------------
@@ -439,51 +352,52 @@ void BMI270_read_raw_accel(single_raw_t *sample_as_read) // TRUE if a zero offse
  * and subtracting that from future samples.
  *
  *--------------------------------------------------------------*/
-#define NUM_ZERO_SAMPLES   100
-#define SCALE_ZERO_SAMPLES 1
-
-raw_frame_t BMI270_zero_sample; // Buffer to hold multiple samples for averaging
+#define NUM_ZERO_SAMPLES 100
 
 void BMI270_find_zero(void)
 {
-  unsigned int i;               // Loop counter
-  single_raw_t BMI270_raw;      // As read from the accelerometer
-  int32_t      x_dotdot;        // 32 bit acceleration to prevent overflow
-  int32_t      y_dotdot;        // while summing
-  int32_t      z_dotdot;
+  unsigned int i;             // Loop counter
+  single_raw_t BMI270_raw;    // As read from the accelerometer
+  int32_t      x_dotdot  = 0; // 32 bit acceleration to prevent overflow
+  int32_t      y_dotdot  = 0; // while summing
+  int32_t      z_dotdot  = 0;
+  int32_t      rho_dot   = 0;
+  int32_t      theta_dot = 0;
+  int32_t      phi_dot   = 0;
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270_find_zero()");))
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_find_zero()");))
 
   /*
    * Loop and collect samples
    */
-
-  x_dotdot = 0; // Zero out the sum
-  y_dotdot = 0;
-  z_dotdot = 0;
-
-  i = 0;
-  while ( i != NUM_ZERO_SAMPLES )
+  for ( i = 0; i != NUM_ZERO_SAMPLES; i++ )
   {
     BMI270_read_raw_accel(&BMI270_raw); // Take a sample of the raw acceleration data
     x_dotdot += BMI270_raw.f.x_dotdot;  // Accumulate the X-axis raw acceleration data
     y_dotdot += BMI270_raw.f.y_dotdot;  // Accumulate the Y-axis raw acceleration data
     z_dotdot += BMI270_raw.f.z_dotdot;  // Accumulate the Z-axis raw acceleration data
-    i++;
+    rho_dot += BMI270_raw.f.rho_dot;
+    theta_dot += BMI270_raw.f.theta_dot;
+    phi_dot += BMI270_raw.f.phi_dot;
+    vTaskDelay(1);
   }
 
   /*
    * Average the samples to get a more accurate zero level
    */
-  BMI270_zero_sample.x_dotdot = x_dotdot / NUM_ZERO_SAMPLES; // Average the X-axis raw acceleration data
-  BMI270_zero_sample.y_dotdot = y_dotdot / NUM_ZERO_SAMPLES; // Average the Y-axis raw acceleration data
-  BMI270_zero_sample.z_dotdot = z_dotdot / NUM_ZERO_SAMPLES; // Average the Z-axis raw acceleration data
+  BMI270_zero_sample.x_dotdot  = x_dotdot / NUM_ZERO_SAMPLES; // Average the X-axis raw acceleration data
+  BMI270_zero_sample.y_dotdot  = y_dotdot / NUM_ZERO_SAMPLES; // Average the Y-axis raw acceleration data
+  BMI270_zero_sample.z_dotdot  = z_dotdot / NUM_ZERO_SAMPLES; // Average the Z-axis raw acceleration data
+  BMI270_zero_sample.rho_dot   = rho_dot / NUM_ZERO_SAMPLES;
+  BMI270_zero_sample.theta_dot = theta_dot / NUM_ZERO_SAMPLES;
+  BMI270_zero_sample.phi_dot   = phi_dot / NUM_ZERO_SAMPLES;
 
   /*
    *  All done, return
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Axis offset - X: %04X, Y: %04X, Z: %04X", BMI270_zero_sample.x_dotdot, BMI270_zero_sample.y_dotdot,
-                                  BMI270_zero_sample.z_dotdot);))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Zero - X_..: 0X%04X  Y_..: 0X%04X  Z_..: 0X%04X   rho_.: 0X%04X   theta_.: 0X%04X  phi_.: 0X%04X ",
+                                  BMI270_zero_sample.x_dotdot, BMI270_zero_sample.y_dotdot, BMI270_zero_sample.z_dotdot,
+                                  BMI270_zero_sample.rho_dot, BMI270_zero_sample.theta_dot, BMI270_zero_sample.phi_dot);))
 
   set_status_LED(LED_READY); // Indicate that we are ready
   SEND(ALL, sprintf(_xs, _DONE_);)
@@ -583,6 +497,7 @@ void BMI270_test(void)
   BMI270_read_raw_accel(&previous_raw);
 
   while ( 1 )
+
   {
 
     BMI270_read_raw_accel(&present_raw);                                          // Read the acceleration dataP )
@@ -640,11 +555,10 @@ void BMI270_test(void)
 
 void BMI270_oscilliscope(void)
 {
-  static unsigned int next_sample = 0;  // Index to the raw acceleration data
-  real_t              vector_magnitude; // Magnitude of the acceleration vector
-  bool                pause = false;
-  trace_point_t       trace_value;
-  raw_frame_t         sample;
+  real_t        vector_magnitude; // Magnitude of the acceleration vector
+  bool          pause = false;
+  trace_point_t trace_value;
+  raw_frame_t   sample;
 
   while ( 1 )
   {
@@ -791,4 +705,49 @@ void BMI270_SPI_dump(void)
   SEND(ALL, sprintf(_xs, "\r\n0x16: GYRO Z: %04X", ((registers[0x17] << 8) | registers[0x16]));)
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: trace_first()
+ *            trace_next()
+ *            trace_read_next();
+ *
+ * @brief:    Manage indexes
+ *
+ * @return:   Index set for the next operation
+ *
+ *----------------------------------------------------------------
+ *
+ * The raw input is stored in two queues, inner and outer
+ *
+ * outer           ^ --> outer          ^ --> outer -->
+ *                 |                    |
+ *   inner --> inner     inner --> inner
+ *
+ * outer points to the next available FIFO input buffer
+ * inner points to an individual sample in the FIFO input buffer
+ *
+ *--------------------------------------------------------------*/
+static bool trace_first(void)
+{
+  index_out = index_in;   // Move the output index to the current position
+  trace_next(&index_out); // And move over to the 'first' entry
+  return true;
+}
+
+static bool trace_next(trace_index_t *index)
+{
+  index->inner = (index->inner + 1) % RAW_FRAME_COUNT;
+  if ( index->inner == 0 )
+  {
+    trace_FIFO_next(index);
+  }
+  return true;
+}
+
+static bool trace_FIFO_next(trace_index_t *index)
+{
+  index->outer = (index->outer + 1) % SAMPLE_BUFFER_COUNT;
+  return true;
 }
