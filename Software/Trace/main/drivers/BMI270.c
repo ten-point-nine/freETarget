@@ -257,7 +257,7 @@ void BMI270_pull_FIFO(void)
   run_state |= IN_COLLECTION;
 
   DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_FIFO_read()");))
-  
+
   /*
    *  Read in the next bunch of samples
    */
@@ -311,38 +311,24 @@ void BMI270_pull_FIFO(void)
  * ie, the bytes need to be swapped before use.
  *
  *--------------------------------------------------------------*/
-void BMI270_read_raw_accel(single_raw_t *sample_as_read, // Returned values
-                           bool          apply_offset    // TRUE if a zero offset it to be applied
-)
-
+void BMI270_read_raw_accel(single_raw_t *sample_as_read) // Returned values
 {
   spi_transaction_t transaction;
-  single_raw_t      filler;
 
   run_state |= IN_SINGLE;
 
   /*
    * Prepare and read a single sample directly from the BMI270
    */
-  memset(&filler, 0xff, sizeof(single_raw_t));     // Clear the sample structure
   memset(&transaction, 0x00, sizeof(transaction)); // Clear the transaction structure
   transaction.addr      = 0x80 | ACCEL_X;          // Start at Accel Acceleration Data Low register and read all 6 bytes in one transaction
   transaction.length    = (sizeof(single_raw_t) - 1) * 8; // Transmit length in bits (less the empty)
-  transaction.tx_buffer = &filler;                        // Send dummy data to read the acceleration data
+  transaction.tx_buffer = NULL;                           // Send dummy data to read the acceleration data
   transaction.rxlength  = (sizeof(single_raw_t) - 1) * 8; // Don't count the empty
   transaction.rx_buffer = &sample_as_read->dummy;         // Receive buffer to store the raw acceleration data
   transaction.flags     = 0;
   spi_device_transmit(BMI270_handle, &transaction);       // Transmit the transaction
 
-  if ( apply_offset == true )
-  {
-    sample_as_read->f.x_dotdot += json_x_dotdot_offset;
-    sample_as_read->f.y_dotdot += json_y_dotdot_offset;
-    sample_as_read->f.z_dotdot += json_z_dotdot_offset;
-    sample_as_read->f.rho_dot += json_rho_dot_offset;
-    sample_as_read->f.theta_dot += json_theta_dot_offset;
-    sample_as_read->f.phi_dot += json_phi_dot_offset;
-  }
   DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "x_..: 0X%04X   y_..: 0X%04X   z_..: 0X%04X   rho_.: 0X%04X   theta_.: 0X%04X   phi_.: 0X%04X",
                                    sample_as_read->f.x_dotdot, sample_as_read->f.y_dotdot, sample_as_read->f.z_dotdot,
                                    sample_as_read->f.rho_dot, sample_as_read->f.theta_dot, sample_as_read->f.phi_dot);))
@@ -393,7 +379,7 @@ void BMI270_find_zero(void)
    */
   for ( i = 0; i != NUM_ZERO_SAMPLES; i++ )
   {
-    BMI270_read_raw_accel(&BMI270_raw, false);     // Take a sample of the raw acceleration data
+    BMI270_read_raw_accel(&BMI270_raw);            // Take a sample of the raw acceleration data
     json_x_dotdot_offset -= BMI270_raw.f.x_dotdot; // Accumulate the X-axis raw acceleration data
     json_y_dotdot_offset -= BMI270_raw.f.y_dotdot; // Accumulate the Y-axis raw acceleration data
     json_z_dotdot_offset -= BMI270_raw.f.z_dotdot; // Accumulate the Z-axis raw acceleration data
@@ -425,10 +411,10 @@ void BMI270_find_zero(void)
   {
     nvs_set_i32(my_handle, NONVOL_X_DOTDOT_OFFSET, json_x_dotdot_offset); // Save the value
     nvs_set_i32(my_handle, NONVOL_Y_DOTDOT_OFFSET, json_y_dotdot_offset);
-    nvs_set_i32(my_handle, NONVOL_Y_DOTDOT_OFFSET, json_z_dotdot_offset);
+    nvs_set_i32(my_handle, NONVOL_Z_DOTDOT_OFFSET, json_z_dotdot_offset);
     nvs_set_i32(my_handle, NONVOL_RHO_DOT_OFFSET, json_rho_dot_offset);
     nvs_set_i32(my_handle, NONVOL_THETA_DOT_OFFSET, json_theta_dot_offset);
-    nvs_set_i32(my_handle, NONVOL_PHI_DOT_OFFSET, json_theta_dot_offset);
+    nvs_set_i32(my_handle, NONVOL_PHI_DOT_OFFSET, json_phi_dot_offset);
   }
   else
   {
@@ -466,37 +452,37 @@ void BMI270_find_zero(void)
 #define CAL_SCALE       1.0
 void BMI270_convert_to_g(raw_frame_t *sample, trace_vector_t *actual)
 {
-  actual->x_dotdot = CAL_SCALE * (real_t)(sample->x_dotdot - json_x_dotdot_offset) * G_PER_LSB; // Convert raw X-axis data to g
+  actual->x_dotdot = CAL_SCALE * (real_t)(sample->x_dotdot + json_x_dotdot_offset) * G_PER_LSB; // Convert raw X-axis data to g
   if ( F_ABS(actual->x) < ACCEL_DEAD_BAND )
   {
     actual->x_dotdot = 0;
   }
 
-  actual->y_dotdot = CAL_SCALE * (real_t)(sample->y_dotdot - json_y_dotdot_offset) * G_PER_LSB; // Convert raw Y-axis data to g
+  actual->y_dotdot = CAL_SCALE * (real_t)(sample->y_dotdot + json_y_dotdot_offset) * G_PER_LSB; // Convert raw Y-axis data to g
   if ( F_ABS(actual->y_dotdot) < ACCEL_DEAD_BAND )
   {
     actual->y_dotdot = 0;
   }
 
-  actual->z_dotdot = CAL_SCALE * (real_t)(sample->z_dotdot - json_z_dotdot_offset) * G_PER_LSB; // Convert raw Z-axis data to g
+  actual->z_dotdot = CAL_SCALE * (real_t)(sample->z_dotdot + json_z_dotdot_offset) * G_PER_LSB; // Convert raw Z-axis data to g
   if ( F_ABS(actual->z_dotdot) < ACCEL_DEAD_BAND )
   {
     actual->z_dotdot = 0;
   }
 
-  actual->rho_dot = (real_t)(sample->rho_dot - json_rho_dot_offset) * GYRO_PER_LSB;             // Convert raw X-axis data to g
+  actual->rho_dot = (real_t)(sample->rho_dot + json_rho_dot_offset) * GYRO_PER_LSB;             // Convert raw X-axis data to g
   if ( F_ABS(actual->rho_dot) < GYRO_DEAD_BAND )
   {
     actual->rho_dot = 0;
   }
 
-  actual->theta_dot = (real_t)(sample->theta_dot - json_theta_dot_offset) * GYRO_PER_LSB;       // Convert raw X-axis data to g
+  actual->theta_dot = (real_t)(sample->theta_dot + json_theta_dot_offset) * GYRO_PER_LSB;       // Convert raw X-axis data to g
   if ( F_ABS(actual->theta_dot) < GYRO_DEAD_BAND )
   {
     actual->theta_dot = 0;
   }
 
-  actual->phi_dot = (real_t)(sample->phi_dot - json_phi_dot_offset) * GYRO_PER_LSB;             // Convert raw X-axis data to g
+  actual->phi_dot = (real_t)(sample->phi_dot + json_phi_dot_offset) * GYRO_PER_LSB;             // Convert raw X-axis data to g
   if ( F_ABS(actual->phi_dot) < GYRO_DEAD_BAND )
   {
     actual->phi_dot = 0;
@@ -594,23 +580,25 @@ void BMI270_test(void)
 void BMI270_oscilliscope(void)
 {
   real_t         vector_magnitude; // Magnitude of the acceleration vector
-  bool           pause = false;
   trace_vector_t trace_vector;
   raw_frame_t    sample;
+  bool           pause = false;
 
   while ( 1 )
   {
     if ( pause == false )
     {
-      BMI270_read_raw_accel(&sample, false);
+      BMI270_read_raw_accel(&sample);
       BMI270_convert_to_g(&sample, &trace_vector);        // Convert raw data to g
 
       vector_magnitude = sqrt(SQ(trace_vector.x_dotdot) + SQ(trace_vector.y_dotdot) +
                               SQ(trace_vector.z_dotdot)); // Calculate the magnitude of the acceleration
-
-      SEND(ALL, sprintf(_xs, "\r\n\r|a|: %6.4f,   ax: %6.4f, ay: %6.4f,  az: %6.4f,    rho_dot: %6.4f, theta_dot: %6.4f, phi_dot: %6.4f",
-                        vector_magnitude, trace_vector.x_dotdot, trace_vector.y_dotdot, trace_vector.z_dotdot, trace_vector.rho_dot,
-                        trace_vector.theta_dot, trace_vector.phi_dot);)
+      if ( (is_trace & DLT_DEBUG) == 0 )
+      {
+        SEND(ALL, sprintf(_xs, "\r\n\r|a|: %6.4f,   ax: %6.4f, ay: %6.4f,  az: %6.4f,    rho_dot: %6.4f, theta_dot: %6.4f, phi_dot: %6.4f",
+                          vector_magnitude, trace_vector.x_dotdot, trace_vector.y_dotdot, trace_vector.z_dotdot, trace_vector.rho_dot,
+                          trace_vector.theta_dot, trace_vector.phi_dot);)
+      }
       vTaskDelay(ONE_SECOND / 2);
     }
 
@@ -750,10 +738,10 @@ void BMI270_SPI_dump(void)
   for ( i = 0; i != SAMPLE_BUFFER_COUNT; i++ )
   {
     SEND(ALL, sprintf(_xs, "\r\nBuffer: %d   ", i);)
-    SEND(ALL, sprintf(_xs, "x_dotdot: %04X   y_dotdot: %04X   z_dotdot:%04X    ", sample_raw_read[i].f[0].x_dotdot, sample_raw_read[i].f[0].y_dotdot,
-                      sample_raw_read[i].f[0].z_dotdot);)
-    SEND(ALL, sprintf(_xs, "rho_dot: %04X   theta_dot: %04X    phi_dot: %04X", sample_raw_read[i].f[0].rho_dot, sample_raw_read[i].f[0].theta_dot,
-                      sample_raw_read[i].f[0].phi_dot);)
+    SEND(ALL, sprintf(_xs, "x_dotdot: %04X   y_dotdot: %04X   z_dotdot:%04X    ", sample_raw_read[i].f[0].x_dotdot,
+                      sample_raw_read[i].f[0].y_dotdot, sample_raw_read[i].f[0].z_dotdot);)
+    SEND(ALL, sprintf(_xs, "rho_dot: %04X   theta_dot: %04X    phi_dot: %04X", sample_raw_read[i].f[0].rho_dot,
+                      sample_raw_read[i].f[0].theta_dot, sample_raw_read[i].f[0].phi_dot);)
   }
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
