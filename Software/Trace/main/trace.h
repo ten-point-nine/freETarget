@@ -114,7 +114,7 @@
 #define SAMPLE_RATE   (800)                                                // 400 samples per second, 2.5ms / sample
 #define SAMPLE_PERIOD (10)                                                 // Accumulate sampls for 10 seconds
 #define SAMPLE_BUFFER_COUNT                                                                                                                \
-  ((SAMPLE_RATE * SAMPLE_PERIOD) / RAW_FRAME_COUNT) + 2                    // (12) Number of frames needed to store 10 seconds of data
+  (((SAMPLE_RATE * SAMPLE_PERIOD) / RAW_FRAME_COUNT) + 2)                  // (12) Number of frames needed to store 10 seconds of data
 
 #define VECTOR_FRAME_SIZE  (6 * 4)                                         // (24) 6 entries at 4 bytes (32 bits) each
 #define VECTOR_BUFFER_SIZE (SAMPLE_RATE * SAMPLE_PERIOD)                   // Memory used to store vectors
@@ -154,7 +154,7 @@ typedef struct
  *  Global Variables
  */
 EXTERN trace_vector_t trace_vector[2];                              // Space for the trace vector
-EXTERN trace_point_t   trace_point[SAMPLE_RATE * SAMPLE_PERIOD];     // Space for the trace
+EXTERN trace_point_t  trace_point[SAMPLE_RATE * SAMPLE_PERIOD];     // Space for the trace
 EXTERN char           _xs[1024 + 512];                              // General purpose string buffer
 EXTERN unsigned int   is_trace;                                     // Tracing level(s)
 

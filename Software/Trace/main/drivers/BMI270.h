@@ -38,15 +38,15 @@
 /*
  * A single sample frame read from the BMI270
  */
-typedef struct       // A single raw frame as read from the FIFO
+typedef struct      // A single raw frame as read from the FIFO
 {
-  int16_t  x_dotdot; // Sample frame from BMI270
-  int16_t  y_dotdot;
-  int16_t  z_dotdot;
-  int16_t  rho_dot;
-  int16_t  theta_dot;
-  uint16_t phi_dot;  // Z axis rotation speed
-} raw_frame_t;       // Value read from sensor
+  int16_t rho_dot;
+  int16_t theta_dot;
+  int16_t phi_dot;  // Z axis rotation speed
+  int16_t x_dotdot; // Sample frame from BMI270
+  int16_t y_dotdot;
+  int16_t z_dotdot;
+} raw_frame_t;      // Value read from sensor
 
 /*
  * A buffer to hold a frame as read directly from the BMI270

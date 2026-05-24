@@ -49,8 +49,8 @@
 /*
  *  Typedefs
  */
-trace_index_t index_in  = {0, 0};                // Pointer to the input side
-trace_index_t index_out = {0, 0};                // Pointer to the output side
+static trace_index_t index_in  = {0, 0};         // Pointer to the input side
+static trace_index_t index_out = {0, 0};         // Pointer to the output side
 
 FIFO_raw_t sample_raw_read[SAMPLE_BUFFER_COUNT]; // Space for 10 seconds of data
 
@@ -257,19 +257,20 @@ void BMI270_pull_FIFO(void)
   run_state |= IN_COLLECTION;
 
   DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_FIFO_read()");))
-
+  
   /*
    *  Read in the next bunch of samples
    */
   memset(&transaction, 0, sizeof(transaction));         // Clear the transaction structure{"TEST":24}
   transaction.addr      = 0x80 | FIFO_DATA;             // Point to the FIFO read regisetrt
   transaction.tx_buffer = NULL;                         // Transmit buffer not used
-  transaction.length    = (sizeof(FIFO_raw_t)) * 8;     // Transmit length in bits
+  transaction.length    = (sizeof(FIFO_raw_t) - 0) * 8; // Transmit length in bits
   transaction.rx_buffer = &sample_raw_read[index_in.outer].dummy;
   transaction.rxlength  = (sizeof(FIFO_raw_t) - 1) * 8; // Receive length in bits
   transaction.flags     = 0;                            // Indicate that this is a read operation
   spi_device_transmit(BMI270_handle, &transaction);
-
+  printf("\r\nin:%d %p %p   %04X %04X  %04X  ", index_in.outer,  &sample_raw_read[index_in.outer].f[0].z_dotdot, &sample_raw_read[index_in.outer].f[1].z_dotdot, sample_raw_read[index_in.outer].f[0].z_dotdot, sample_raw_read[index_in.outer].f[1].z_dotdot,
+         sample_raw_read[index_in.outer].f[RAW_FRAME_COUNT - 1].z_dotdot);
   trace_FIFO_next(&index_in);
 
   /*
@@ -747,7 +748,7 @@ void BMI270_SPI_dump(void)
    *  Display the contents of the FIFO loop
    */
   SEND(ALL, sprintf(_xs, "\r\n");)
-  for ( i = 0; i != 10; i++ )
+  for ( i = 0; i != SAMPLE_BUFFER_COUNT; i++ )
   {
     SEND(ALL, sprintf(_xs, "\r\nBuffer: %d   ", i);)
     SEND(ALL, sprintf(_xs, "%04X  %04X  %04X  ", sample_raw_read[i].f[0].x_dotdot, sample_raw_read[i].f[0].y_dotdot,
@@ -800,6 +801,7 @@ static bool trace_next(trace_index_t *index)
 
 static bool trace_FIFO_next(trace_index_t *index)
 {
-  index->outer = (index->outer + 1) % SAMPLE_BUFFER_COUNT;
+  index->outer = ((index->outer) + 1) % SAMPLE_BUFFER_COUNT;
+
   return true;
 }
