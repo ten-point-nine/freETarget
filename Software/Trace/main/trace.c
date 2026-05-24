@@ -139,7 +139,6 @@ void trace_loop(void *arg)
   {
     IF(IN_OPERATION)
     {
-#if ( 0 )
       if ( gpio_get_level(SWITCH_GPIO) == 0 )
       {
         BMI270_find_zero();
@@ -152,7 +151,6 @@ void trace_loop(void *arg)
           BMI270_pull_FIFO();
         }
       }
-#endif
     }
 
     /*

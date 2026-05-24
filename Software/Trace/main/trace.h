@@ -105,21 +105,22 @@
                                        *  A trace is the path drawn by the gun on the target
                                        *  A vector is the locaton and direction of a sample
                                        */
-#define AVAILABLE_FIFO (6 * 1024)                                               // (6144) 6K FIFO available
-#define WATERMARK      (AVAILABLE_FIFO * 3 / 4)                                 // (4608) Use 75% of the FIFO
+#define AVAILABLE_FIFO (6 * 1024)                                          // (6144) 6K FIFO available
+#define WATERMARK      (AVAILABLE_FIFO * 3 / 4)                            // (4608) Use 75% of the FIFO
 
-#define RAW_FRAME_SIZE  (6 * 2)                                                 // (12)   6 entries @ 2 bytes per entry
-#define RAW_FRAME_COUNT (WATERMARK / RAW_FRAME_SIZE)                            // (384)  entries in the FIFO
+#define RAW_FRAME_SIZE  (6 * 2)                                            // (12)   6 entries @ 2 bytes per entry
+#define RAW_FRAME_COUNT (WATERMARK / RAW_FRAME_SIZE)                       // (384)  entries in the FIFO
 
-#define SAMPLE_RATE         (800)                                               // 400 samples per second, 2.5ms / sample
-#define SAMPLE_PERIOD       (10)                                                // Accumulate sampls for 10 seconds
-#define SAMPLE_BUFFER_COUNT ((SAMPLE_RATE * SAMPLE_PERIOD) / RAW_FRAME_COUNT) + 2 // (12) Number of frames needed to store 10 seconds of data
+#define SAMPLE_RATE   (800)                                                // 400 samples per second, 2.5ms / sample
+#define SAMPLE_PERIOD (10)                                                 // Accumulate sampls for 10 seconds
+#define SAMPLE_BUFFER_COUNT                                                                                                                \
+  ((SAMPLE_RATE * SAMPLE_PERIOD) / RAW_FRAME_COUNT) + 2                    // (12) Number of frames needed to store 10 seconds of data
 
-#define VECTOR_FRAME_SIZE  (6 * 4)                                              // (24) 6 entries at 4 bytes (32 bits) each
-#define VECTOR_BUFFER_SIZE (SAMPLE_RATE * SAMPLE_PERIOD)                        // Memory used to store vectors
+#define VECTOR_FRAME_SIZE  (6 * 4)                                         // (24) 6 entries at 4 bytes (32 bits) each
+#define VECTOR_BUFFER_SIZE (SAMPLE_RATE * SAMPLE_PERIOD)                   // Memory used to store vectors
 
-#define TRACE_FRAME_SIZE  (2 * 4)                                               // (24) 6 entries at 4 bytes (32 bits) each
-#define TRACE_MEMORY_SIZE (SAMPLE_RATE * SAMPLE_PERIOD * TRACE_FRAME_SIZE)      // (96000)
+#define TRACE_FRAME_SIZE  (2 * 4)                                          // (24) 6 entries at 4 bytes (32 bits) each
+#define TRACE_MEMORY_SIZE (SAMPLE_RATE * SAMPLE_PERIOD * TRACE_FRAME_SIZE) // (96000)
 
 /*
  *  Types
@@ -142,19 +143,20 @@ typedef struct
   real_t rho_dot;   // X anglular velocity
   real_t theta_dot; // Y anglular velocity
   real_t phi_dot;   // Z anglular velocity
-} trace_point_t;    // computed point
+} trace_vector_t;   // Vector at the point
 
 typedef struct
 {
   real_t x;         // X position
   real_t y;         // Y position
-} trace_path_t;     // computed point
+} trace_point_t;    // computed point
 /*
  *  Global Variables
  */
-EXTERN trace_path_t trace[SAMPLE_RATE * SAMPLE_PERIOD];             // Space for the trace
-EXTERN char         _xs[1024 + 512];                                // General purpose string buffer
-EXTERN unsigned int is_trace;                                       // Tracing level(s)
+EXTERN trace_vector_t trace_vector[2];                              // Space for the trace vector
+EXTERN trace_point_t   trace_point[SAMPLE_RATE * SAMPLE_PERIOD];     // Space for the trace
+EXTERN char           _xs[1024 + 512];                              // General purpose string buffer
+EXTERN unsigned int   is_trace;                                     // Tracing level(s)
 
 EXTERN unsigned int board_revision;                                 // Board revision number
 EXTERN time_count_t shot_start;                                     // Time when shot become valid

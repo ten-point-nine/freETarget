@@ -29,13 +29,17 @@
 #include "math.h"
 #include "driver/spi_master.h"
 #include "driver/spi_common.h"
+#include "nvs_flash.h"
+
 #include "trace.h"
+#include "json.h"
 #include "diag_tools.h"
 #include "gpio.h"
 #include "helpers.h"
 #include "BMI270.h"
 #include "BMI270_define.h"
 #include "spi.h"
+#include "nonvol.h"
 
 /*
  * Definitions
@@ -45,11 +49,10 @@
 /*
  *  Typedefs
  */
-trace_index_t index_in  = {0, 0};                 // Pointer to the input side
-trace_index_t index_out = {0, 0};                 // Pointer to the output side
+trace_index_t index_in  = {0, 0};                // Pointer to the input side
+trace_index_t index_out = {0, 0};                // Pointer to the output side
 
-FIFO_raw_t  sample_raw_read[SAMPLE_BUFFER_COUNT]; // Space for 10 seconds of data
-raw_frame_t BMI270_zero_sample;                   // Buffer to hold multiple samples for averaging
+FIFO_raw_t sample_raw_read[SAMPLE_BUFFER_COUNT]; // Space for 10 seconds of data
 
 /*
  *  Local Functions
@@ -258,15 +261,16 @@ void BMI270_pull_FIFO(void)
   /*
    *  Read in the next bunch of samples
    */
-  memset(&transaction, 0, sizeof(transaction));                   // Clear the transaction structure{"TEST":24}
-  transaction.addr      = 0x80 | FIFO_DATA;                       // Point to the FIFO read regisetrt
-  transaction.tx_buffer = &sample_raw_read[index_in.outer].dummy; // Transmit buffer not used
-  transaction.length    = (sizeof(FIFO_raw_t) - 1) * 8;           // Transmit length in bits
-  transaction.rxlength  = (sizeof(FIFO_raw_t) - 1) * 8;           // Receive length in bits
-  transaction.flags     = 0;                                      // Indicate that this is a read operation
+  memset(&transaction, 0, sizeof(transaction));         // Clear the transaction structure{"TEST":24}
+  transaction.addr      = 0x80 | FIFO_DATA;             // Point to the FIFO read regisetrt
+  transaction.tx_buffer = NULL;                         // Transmit buffer not used
+  transaction.length    = (sizeof(FIFO_raw_t)) * 8;     // Transmit length in bits
+  transaction.rx_buffer = &sample_raw_read[index_in.outer].dummy;
+  transaction.rxlength  = (sizeof(FIFO_raw_t) - 1) * 8; // Receive length in bits
+  transaction.flags     = 0;                            // Indicate that this is a read operation
   spi_device_transmit(BMI270_handle, &transaction);
 
-  trace_next(&index_in);
+  trace_FIFO_next(&index_in);
 
   /*
    *  Reset the interrupt status
@@ -307,7 +311,10 @@ void BMI270_pull_FIFO(void)
  * ie, the bytes need to be swapped before use.
  *
  *--------------------------------------------------------------*/
-void BMI270_read_raw_accel(single_raw_t *sample_as_read) // TRUE if a zero offset it to be applied
+void BMI270_read_raw_accel(single_raw_t *sample_as_read, // Returned values
+                           bool          apply_offset    // TRUE if a zero offset it to be applied
+)
+
 {
   spi_transaction_t transaction;
   single_raw_t      filler;
@@ -327,6 +334,15 @@ void BMI270_read_raw_accel(single_raw_t *sample_as_read) // TRUE if a zero offse
   transaction.flags     = 0;
   spi_device_transmit(BMI270_handle, &transaction);       // Transmit the transaction
 
+  if ( apply_offset == true )
+  {
+    sample_as_read->f.x_dotdot += json_x_dotdot_offset;
+    sample_as_read->f.y_dotdot += json_y_dotdot_offset;
+    sample_as_read->f.z_dotdot += json_z_dotdot_offset;
+    sample_as_read->f.rho_dot += json_rho_dot_offset;
+    sample_as_read->f.theta_dot += json_theta_dot_offset;
+    sample_as_read->f.phi_dot += json_phi_dot_offset;
+  }
   DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "x_..: 0X%04X   y_..: 0X%04X   z_..: 0X%04X   rho_.: 0X%04X   theta_.: 0X%04X   phi_.: 0X%04X",
                                    sample_as_read->f.x_dotdot, sample_as_read->f.y_dotdot, sample_as_read->f.z_dotdot,
                                    sample_as_read->f.rho_dot, sample_as_read->f.theta_dot, sample_as_read->f.phi_dot);))
@@ -353,116 +369,75 @@ void BMI270_read_raw_accel(single_raw_t *sample_as_read) // TRUE if a zero offse
  *
  *--------------------------------------------------------------*/
 #define NUM_ZERO_SAMPLES 100
-#define NUM_OFFSET_BYTES (OFFSET_6 - OFFSET_0)         // Number of bytes in offset register
 
 void BMI270_find_zero(void)
 {
-  unsigned int      i;                                 // Loop counter
-  single_raw_t      BMI270_raw;                        // As read from the accelerometer
-  int32_t           x_dotdot  = 0;                     // 32 bit acceleration to prevent overflow
-  int32_t           y_dotdot  = 0;                     // while summing
-  int32_t           z_dotdot  = 0;
-  int32_t           rho_dot   = 0;
-  int32_t           theta_dot = 0;
-  int32_t           phi_dot   = 0;
-  uint8_t           offset_write[OFFSET_6 - OFFSET_0]; // Offset buffer
+  unsigned int      i; // Loop counter
   spi_transaction_t transaction;
+  single_raw_t      BMI270_raw;
 
   DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_find_zero()");))
 
   /*
-   *  Set the offset registers to zero
+   *  Clear the current offset
    */
-  memset(&offset_write, 0x00, NUM_OFFSET_BYTES);    // Clear the sample structure
-  memset(&transaction, 0x00, sizeof(transaction));  // Clear the transaction structure
-  transaction.addr      = OFFSET_0;                 // Point to the offset registers
-  transaction.length    = (NUM_OFFSET_BYTES) * 8;   // Transmit length in bits (less the empty)
-  transaction.tx_buffer = &offset_write;            // Clear out the offsets
-  transaction.rxlength  = 0;                        // Not reading anything
-  transaction.rx_buffer = NULL;
-  transaction.flags     = 0;
-  spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+  json_x_dotdot_offset  = 0;
+  json_y_dotdot_offset  = 0;
+  json_z_dotdot_offset  = 0;
+  json_rho_dot_offset   = 0;
+  json_theta_dot_offset = 0;
+  json_phi_dot_offset   = 0;
 
   /*
    *  Read the registers to find the average
    */
   for ( i = 0; i != NUM_ZERO_SAMPLES; i++ )
   {
-    BMI270_read_raw_accel(&BMI270_raw); // Take a sample of the raw acceleration data
-    x_dotdot += BMI270_raw.f.x_dotdot;  // Accumulate the X-axis raw acceleration data
-    y_dotdot += BMI270_raw.f.y_dotdot;  // Accumulate the Y-axis raw acceleration data
-    z_dotdot += BMI270_raw.f.z_dotdot;  // Accumulate the Z-axis raw acceleration data
-    rho_dot += BMI270_raw.f.rho_dot;
-    theta_dot += BMI270_raw.f.theta_dot;
-    phi_dot += BMI270_raw.f.phi_dot;
-    vTaskDelay(1);
-  }
-
-  /*
-   * Loop and collect samples
-   */
-  for ( i = 0; i != NUM_ZERO_SAMPLES; i++ )
-  {
-    BMI270_read_raw_accel(&BMI270_raw); // Take a sample of the raw acceleration data
-    x_dotdot += BMI270_raw.f.x_dotdot;  // Accumulate the X-axis raw acceleration data
-    y_dotdot += BMI270_raw.f.y_dotdot;  // Accumulate the Y-axis raw acceleration data
-    z_dotdot += BMI270_raw.f.z_dotdot;  // Accumulate the Z-axis raw acceleration data
-    rho_dot += BMI270_raw.f.rho_dot;
-    theta_dot += BMI270_raw.f.theta_dot;
-    phi_dot += BMI270_raw.f.phi_dot;
+    BMI270_read_raw_accel(&BMI270_raw, false);     // Take a sample of the raw acceleration data
+    json_x_dotdot_offset -= BMI270_raw.f.x_dotdot; // Accumulate the X-axis raw acceleration data
+    json_y_dotdot_offset -= BMI270_raw.f.y_dotdot; // Accumulate the Y-axis raw acceleration data
+    json_z_dotdot_offset -= BMI270_raw.f.z_dotdot; // Accumulate the Z-axis raw acceleration data
+    json_rho_dot_offset -= BMI270_raw.f.rho_dot;
+    json_theta_dot_offset -= BMI270_raw.f.theta_dot;
+    json_phi_dot_offset -= BMI270_raw.f.phi_dot;
     vTaskDelay(1);
   }
 
   /*
    * Average the samples to get a more accurate zero level
    */
-  BMI270_zero_sample.x_dotdot  = x_dotdot / NUM_ZERO_SAMPLES; // Average the X-axis raw acceleration data
-  BMI270_zero_sample.y_dotdot  = y_dotdot / NUM_ZERO_SAMPLES; // Average the Y-axis raw acceleration data
-  BMI270_zero_sample.z_dotdot  = z_dotdot / NUM_ZERO_SAMPLES; // Average the Z-axis raw acceleration data
-  BMI270_zero_sample.rho_dot   = rho_dot / NUM_ZERO_SAMPLES;
-  BMI270_zero_sample.theta_dot = theta_dot / NUM_ZERO_SAMPLES;
-  BMI270_zero_sample.phi_dot   = phi_dot / NUM_ZERO_SAMPLES;
-
-                                                              /*
-                                                               * Write out the offsets
-                                                               */
-  offset_write[0] = (BMI270_zero_sample.x_dotdot >> 0) & 0xff;
-  offset_write[1] = (BMI270_zero_sample.y_dotdot >> 0) & 0xff;
-  offset_write[2] = (BMI270_zero_sample.z_dotdot >> 0) & 0xff;
-  offset_write[3] = (BMI270_zero_sample.rho_dot >> 0) & 0xff;
-  offset_write[4] = (BMI270_zero_sample.theta_dot >> 0) & 0xff;
-  offset_write[5] = (BMI270_zero_sample.phi_dot >> 0) & 0xff;
-  offset_write[6] = ((BMI270_zero_sample.rho_dot >> 0) & 0b00000011) | ((BMI270_zero_sample.theta_dot >> 2) & 0b00001100) |
-                    ((BMI270_zero_sample.phi_dot >> 2) & 0b00110000) | gyr_off_en;
-
-  memset(&transaction, 0x00, sizeof(transaction));  // Clear the transaction structure
-  transaction.addr      = OFFSET_0;                 // Point to the offset registers
-  transaction.length    = (NUM_OFFSET_BYTES) * 8;   // Transmit length in bits (less the empty)
-  transaction.tx_buffer = &offset_write;            // Clear out the offsets
-  transaction.rxlength  = 0;                        // Not reading anything
-  transaction.rx_buffer = NULL;
-  transaction.flags     = 0;
-  spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+  json_x_dotdot_offset /= NUM_ZERO_SAMPLES;
+  json_y_dotdot_offset /= NUM_ZERO_SAMPLES;
+  json_z_dotdot_offset /= NUM_ZERO_SAMPLES;
+  json_rho_dot_offset /= NUM_ZERO_SAMPLES;
+  json_theta_dot_offset /= NUM_ZERO_SAMPLES;
+  json_phi_dot_offset /= NUM_ZERO_SAMPLES;
 
   /*
-   * Now enable it
+   * Put the results in NONVOL
    */
-  memset(&transaction, 0x00, sizeof(transaction));  // Clear the transaction structure
-  transaction.addr      = NV_CONF;                  // Point to the Nonvol configuration
-  transaction.length    = 1 * 8;                    // Transmit length in bits (less the empty)
-  transaction.tx_buffer = acc_off_en;               // Enable the offsets
-  transaction.rxlength  = 0;                        // Not reading anything
-  transaction.rx_buffer = NULL;
-  transaction.flags     = SPI_TRANS_USE_TXDATA;
-  spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Zero - X_..: 0X%04X  Y_..: 0X%04X  Z_..: 0X%04X   rho_.: 0X%04X   theta_.: 0X%04X  phi_.: 0X%04X ",
+                                  json_x_dotdot_offset, json_y_dotdot_offset, json_z_dotdot_offset, json_rho_dot_offset,
+                                  json_rho_dot_offset, json_rho_dot_offset);))
+
+  SEND(ALL, sprintf(_xs, "\r\nCommit settings.");)
+  if ( prompt_for_confirm() == true )
+  {
+    nvs_set_i32(my_handle, NONVOL_X_DOTDOT_OFFSET, json_x_dotdot_offset); // Save the value
+    nvs_set_i32(my_handle, NONVOL_Y_DOTDOT_OFFSET, json_y_dotdot_offset);
+    nvs_set_i32(my_handle, NONVOL_Y_DOTDOT_OFFSET, json_z_dotdot_offset);
+    nvs_set_i32(my_handle, NONVOL_RHO_DOT_OFFSET, json_rho_dot_offset);
+    nvs_set_i32(my_handle, NONVOL_THETA_DOT_OFFSET, json_theta_dot_offset);
+    nvs_set_i32(my_handle, NONVOL_PHI_DOT_OFFSET, json_theta_dot_offset);
+  }
+  else
+  {
+    SEND(ALL, sprintf(_xs, "Settings not changed");)
+  }
 
   /*
    *  All done, return
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Zero - X_..: 0X%04X  Y_..: 0X%04X  Z_..: 0X%04X   rho_.: 0X%04X   theta_.: 0X%04X  phi_.: 0X%04X ",
-                                  BMI270_zero_sample.x_dotdot, BMI270_zero_sample.y_dotdot, BMI270_zero_sample.z_dotdot,
-                                  BMI270_zero_sample.rho_dot, BMI270_zero_sample.theta_dot, BMI270_zero_sample.phi_dot);))
-
   set_status_LED(LED_READY); // Indicate that we are ready
   SEND(ALL, sprintf(_xs, _DONE_);)
 
@@ -489,39 +464,39 @@ void BMI270_find_zero(void)
 #define ACCEL_DEAD_BAND 0.0
 #define GYRO_DEAD_BAND  0.0
 #define CAL_SCALE       1.0
-void BMI270_convert_to_g(raw_frame_t *sample, trace_point_t *actual)
+void BMI270_convert_to_g(raw_frame_t *sample, trace_vector_t *actual)
 {
-  actual->x_dotdot = CAL_SCALE * ((real_t)sample->x_dotdot) * G_PER_LSB; // Convert raw X-axis data to g
+  actual->x_dotdot = CAL_SCALE * (real_t)(sample->x_dotdot - json_x_dotdot_offset) * G_PER_LSB; // Convert raw X-axis data to g
   if ( F_ABS(actual->x) < ACCEL_DEAD_BAND )
   {
     actual->x_dotdot = 0;
   }
 
-  actual->y_dotdot = CAL_SCALE * ((real_t)sample->y_dotdot) * G_PER_LSB; // Convert raw Y-axis data to g
+  actual->y_dotdot = CAL_SCALE * (real_t)(sample->y_dotdot - json_y_dotdot_offset) * G_PER_LSB; // Convert raw Y-axis data to g
   if ( F_ABS(actual->y_dotdot) < ACCEL_DEAD_BAND )
   {
     actual->y_dotdot = 0;
   }
 
-  actual->z_dotdot = CAL_SCALE * ((real_t)sample->z_dotdot) * G_PER_LSB; // Convert raw Z-axis data to g
+  actual->z_dotdot = CAL_SCALE * (real_t)(sample->z_dotdot - json_z_dotdot_offset) * G_PER_LSB; // Convert raw Z-axis data to g
   if ( F_ABS(actual->z_dotdot) < ACCEL_DEAD_BAND )
   {
     actual->z_dotdot = 0;
   }
 
-  actual->rho_dot = ((real_t)sample->rho_dot) * GYRO_PER_LSB;            // Convert raw X-axis data to g
+  actual->rho_dot = (real_t)(sample->rho_dot - json_rho_dot_offset) * GYRO_PER_LSB;             // Convert raw X-axis data to g
   if ( F_ABS(actual->rho_dot) < GYRO_DEAD_BAND )
   {
     actual->rho_dot = 0;
   }
 
-  actual->theta_dot = ((real_t)sample->theta_dot) * GYRO_PER_LSB;        // Convert raw X-axis data to g
+  actual->theta_dot = (real_t)(sample->theta_dot - json_theta_dot_offset) * GYRO_PER_LSB;       // Convert raw X-axis data to g
   if ( F_ABS(actual->theta_dot) < GYRO_DEAD_BAND )
   {
     actual->theta_dot = 0;
   }
 
-  actual->phi_dot = ((real_t)sample->phi_dot) * GYRO_PER_LSB;            // Convert raw X-axis data to g
+  actual->phi_dot = (real_t)(sample->phi_dot - json_phi_dot_offset) * GYRO_PER_LSB;             // Convert raw X-axis data to g
   if ( F_ABS(actual->phi_dot) < GYRO_DEAD_BAND )
   {
     actual->phi_dot = 0;
@@ -549,22 +524,20 @@ void BMI270_convert_to_g(raw_frame_t *sample, trace_point_t *actual)
 
 void BMI270_test(void)
 {
-
   real_t        vector_magnitude;           // Magnitude of the acceleration vector
   raw_frame_t   previous_raw;               // Previous sample
   raw_frame_t   present_raw;                // Present sample
   trace_point_t previous;                   // Previous sample converted to g
   trace_point_t present;                    // Present sample converted to g
-
+#if ( 0 )
   BMI270_find_sample_out(NUM_ZERO_SAMPLES); // Start at the point where we took the zero samples to get the most recent data
 
-  BMI270_read_raw_accel(&previous_raw);
+  BMI270_read_raw_accel(&previous_raw, true);
 
   while ( 1 )
-
   {
 
-    BMI270_read_raw_accel(&present_raw);                                          // Read the acceleration dataP )
+    BMI270_read_raw_accel(&present_raw, true);                                    // Read the acceleration dataP )
 
     BMI270_convert_to_g(&present_raw, &present);                                  // Convert raw data to g
 
@@ -595,6 +568,7 @@ void BMI270_test(void)
                       present.x_dotdot, present.y_dotdot, present.z_dotdot, vector_magnitude, present.x_dot, present.y_dot, present.z_dot,
                       present.x, present.y, present.z);)
   }
+#endif
 
   /*
    * All done
@@ -619,24 +593,24 @@ void BMI270_test(void)
 
 void BMI270_oscilliscope(void)
 {
-  real_t        vector_magnitude; // Magnitude of the acceleration vector
-  bool          pause = false;
-  trace_point_t trace_value;
-  raw_frame_t   sample;
+  real_t         vector_magnitude; // Magnitude of the acceleration vector
+  bool           pause = false;
+  trace_vector_t trace_vector;
+  raw_frame_t    sample;
 
   while ( 1 )
   {
     if ( pause == false )
     {
-      BMI270_read_raw_accel(&sample);
-      BMI270_convert_to_g(&sample, &trace_value);        // Convert raw data to g
+      BMI270_read_raw_accel(&sample, false);
+      BMI270_convert_to_g(&sample, &trace_vector);        // Convert raw data to g
 
-      vector_magnitude = sqrt(SQ(trace_value.x_dotdot) + SQ(trace_value.y_dotdot) +
-                              SQ(trace_value.z_dotdot)); // Calculate the magnitude of the acceleration
+      vector_magnitude = sqrt(SQ(trace_vector.x_dotdot) + SQ(trace_vector.y_dotdot) +
+                              SQ(trace_vector.z_dotdot)); // Calculate the magnitude of the acceleration
 
       SEND(ALL, sprintf(_xs, "\r\n\r|a|: %6.4f,   ax: %6.4f, ay: %6.4f,  az: %6.4f,    rho_dot: %6.4f, theta_dot: %6.4f, phi_dot: %6.4f",
-                        vector_magnitude, trace_value.x_dotdot, trace_value.y_dotdot, trace_value.z_dotdot, trace_value.rho_dot,
-                        trace_value.theta_dot, trace_value.phi_dot);)
+                        vector_magnitude, trace_vector.x_dotdot, trace_vector.y_dotdot, trace_vector.z_dotdot, trace_vector.rho_dot,
+                        trace_vector.theta_dot, trace_vector.phi_dot);)
       vTaskDelay(ONE_SECOND / 2);
     }
 
@@ -711,8 +685,9 @@ unsigned int BMI270_find_sample_out(unsigned int sample_count) // Number of samp
 
 void BMI270_SPI_dump(void)
 {
-  int               address;
-  uint8_t           registers[128];
+  int               address;        // Display address
+  int               i;              // Index
+  uint8_t           registers[128]; // Copy of registers
   spi_transaction_t transaction;
 
   /*
@@ -757,7 +732,7 @@ void BMI270_SPI_dump(void)
                                                                 /*
                                                                  *  Display known values
                                                                  */
-  SEND(ALL, sprintf(_xs, "\r\n\r\n");)
+  SEND(ALL, sprintf(_xs, "\r\n");)
   SEND(ALL, sprintf(_xs, "\r\n0x18: Sensor time: %d", (registers[0x1A] << 16) | (registers[0x19] << 8) | registers[18]);)
   SEND(ALL, sprintf(_xs, "\r\n0x22: Temperature: %4.2f", (23.0 + (1 / 512.0) * ((registers[0x23] << 8) + registers[0x22])));)
   SEND(ALL, sprintf(_xs, "\r\n0x24: FIFO length: %d", ((registers[0x25] << 8) + registers[0x24]));)
@@ -767,6 +742,19 @@ void BMI270_SPI_dump(void)
   SEND(ALL, sprintf(_xs, "\r\n0x12: GYRO X: %04X", ((registers[0x13] << 8) | registers[0x12]));)
   SEND(ALL, sprintf(_xs, "\r\n0x14: GYRO Y: %04X", ((registers[0x15] << 8) | registers[0x14]));)
   SEND(ALL, sprintf(_xs, "\r\n0x16: GYRO Z: %04X", ((registers[0x17] << 8) | registers[0x16]));)
+
+  /*
+   *  Display the contents of the FIFO loop
+   */
+  SEND(ALL, sprintf(_xs, "\r\n");)
+  for ( i = 0; i != 10; i++ )
+  {
+    SEND(ALL, sprintf(_xs, "\r\nBuffer: %d   ", i);)
+    SEND(ALL, sprintf(_xs, "%04X  %04X  %04X  ", sample_raw_read[i].f[0].x_dotdot, sample_raw_read[i].f[0].y_dotdot,
+                      sample_raw_read[i].f[0].z_dotdot);)
+    SEND(ALL, sprintf(_xs, "%04X  %04X  %04X  ", sample_raw_read[i].f[0].rho_dot, sample_raw_read[i].f[0].theta_dot,
+                      sample_raw_read[i].f[0].phi_dot);)
+  }
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }
