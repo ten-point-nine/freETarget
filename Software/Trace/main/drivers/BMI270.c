@@ -269,8 +269,7 @@ void BMI270_pull_FIFO(void)
   transaction.rxlength  = (sizeof(FIFO_raw_t) - 1) * 8; // Receive length in bits
   transaction.flags     = 0;                            // Indicate that this is a read operation
   spi_device_transmit(BMI270_handle, &transaction);
-  printf("\r\nin:%d %p %p   %04X %04X  %04X  ", index_in.outer,  &sample_raw_read[index_in.outer].f[0].z_dotdot, &sample_raw_read[index_in.outer].f[1].z_dotdot, sample_raw_read[index_in.outer].f[0].z_dotdot, sample_raw_read[index_in.outer].f[1].z_dotdot,
-         sample_raw_read[index_in.outer].f[RAW_FRAME_COUNT - 1].z_dotdot);
+
   trace_FIFO_next(&index_in);
 
   /*
@@ -751,9 +750,9 @@ void BMI270_SPI_dump(void)
   for ( i = 0; i != SAMPLE_BUFFER_COUNT; i++ )
   {
     SEND(ALL, sprintf(_xs, "\r\nBuffer: %d   ", i);)
-    SEND(ALL, sprintf(_xs, "%04X  %04X  %04X  ", sample_raw_read[i].f[0].x_dotdot, sample_raw_read[i].f[0].y_dotdot,
+    SEND(ALL, sprintf(_xs, "x_dotdot: %04X   y_dotdot: %04X   z_dotdot:%04X    ", sample_raw_read[i].f[0].x_dotdot, sample_raw_read[i].f[0].y_dotdot,
                       sample_raw_read[i].f[0].z_dotdot);)
-    SEND(ALL, sprintf(_xs, "%04X  %04X  %04X  ", sample_raw_read[i].f[0].rho_dot, sample_raw_read[i].f[0].theta_dot,
+    SEND(ALL, sprintf(_xs, "rho_dot: %04X   theta_dot: %04X    phi_dot: %04X", sample_raw_read[i].f[0].rho_dot, sample_raw_read[i].f[0].theta_dot,
                       sample_raw_read[i].f[0].phi_dot);)
   }
   SEND(ALL, sprintf(_xs, _DONE_);)
