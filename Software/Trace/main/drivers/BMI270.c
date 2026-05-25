@@ -2,7 +2,7 @@
  *
  * file: BMI270.c
  *
- * Analog Devices BMI270 3-axis accelerometer driver
+ * Bosch BMI270 3-axis accelerometer driver
  *
  *****************************************************************************
  *
@@ -16,11 +16,6 @@
  * https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmi270-ds000.pdf
  * https://www.bosch-sensortec.com/media/boschsensortec/downloads/application_notes_1/bst-bmi270-an001.pdf
  *
- * IMPORTANT
- *
- * This driver polls the FIFO to remove samples when the watermark is met.
- * The interrupt is not used to trigger the reading of the FIFO.  This is because
- * the I2C driver does not work with interrupts.
  *
  *****************************************************************************/
 #include "stdio.h"
@@ -40,6 +35,7 @@
 #include "BMI270_define.h"
 #include "spi.h"
 #include "nonvol.h"
+#include "IMU.h"
 
 /*
  * Definitions
@@ -49,17 +45,29 @@
 /*
  *  Typedefs
  */
-static trace_index_t index_in  = {0, 0};         // Pointer to the input side
-static trace_index_t index_out = {0, 0};         // Pointer to the output side
+/*
+ * A single sample frame read from the BMI270 from each of the registers.
+ * Internally, the target software will use the FIFO format for operations.
+ * Any function using the register_raw format will need to convert to the
+ * FIFO format before use.
+ */
+typedef struct                                   // A single raw frame read from registers
+{
+  uint8_t empty;                                 // Here to force uint16_t x to be on a word boundary
+  uint8_t dummy;                                 // Dummy byte as read from the SPI bus
+  int16_t x_dotdot;                              // Sample frame directly from BMI270
+  int16_t y_dotdot;
+  int16_t z_dotdot;
+  int16_t rho_dot;
+  int16_t theta_dot;
+  int16_t phi_dot;                               // Z axis rotation speed
+} register_raw_frame_t;                          // Value read from sensor
 
 FIFO_raw_t sample_raw_read[SAMPLE_BUFFER_COUNT]; // Space for 10 seconds of data
 
 /*
  *  Local Functions
  */
-static bool trace_first(void);                     // Reset the trace pointers
-static bool trace_next(trace_index_t *index);      // Go to the next pointer
-static bool trace_FIFO_next(trace_index_t *index); // Point to the next input bufferf
 
 /*----------------------------------------------------------------
  *
@@ -225,7 +233,7 @@ void BMI270_init(unsigned int BMI270_gpio)
  *
  * @brief:    Pull all of the samples out of the FIFO and store them in the sample buffer
  *
- * @return:   Nothing
+ * @return:   TRUE if the FIFO is completely full of data
  *
  *----------------------------------------------------------------
  *
@@ -239,16 +247,17 @@ void BMI270_init(unsigned int BMI270_gpio)
  * the next time the watermark interrupt is fired.
  *
  *---------------------------------------------------------------*/
-void BMI270_pull_FIFO(void)
+bool BMI270_pull_FIFO(void)
 {
   spi_transaction_t transaction;
+  static bool       return_value = false; // Return TRUE if the FIFO is completely full of data
 
   /*
    *  Check to see if we are reading a single sample
    */
-  IF(IN_SINGLE) // Single sample?
+  IF(IN_SINGLE)          // Single sample?
   {
-    return;     // Yes, return and do nothing
+    return return_value; // Yes, return and do nothing
   }
 
   /*
@@ -271,6 +280,10 @@ void BMI270_pull_FIFO(void)
   spi_device_transmit(BMI270_handle, &transaction);
 
   trace_FIFO_next(&index_in);
+  if ( index_in.outer == index_out.outer )              // Wrapped around the buffer is full
+  {
+    return_value = true;
+  }
 
   /*
    *  Reset the interrupt status
@@ -287,7 +300,7 @@ void BMI270_pull_FIFO(void)
    *  All done, return
    */
   run_state &= ~IN_COLLECTION;
-  return;
+  return return_value;
 }
 
 /*----------------------------------------------------------------
@@ -296,7 +309,7 @@ void BMI270_pull_FIFO(void)
  *
  * @brief:    Read acceleration data from the BMI270
  *
- * @return:   Number of bytes remaining in the FIFO
+ * @return:   Acceleration in FIFO format
  *
  *----------------------------------------------------------------
  *
@@ -310,28 +323,42 @@ void BMI270_pull_FIFO(void)
  * The BMI270 brings the acceleration in as LSB and MSB.
  * ie, the bytes need to be swapped before use.
  *
+ * The function collects information from the BMI270 registers
+ * and scrambles it into the FIFO format for use by the rest of the program.\
+ *
  *--------------------------------------------------------------*/
-void BMI270_read_raw_accel(single_raw_t *sample_as_read) // Returned values
+void BMI270_read_raw_accel(FIFO_raw_frame_t *sample) // Returned values
 {
-  spi_transaction_t transaction;
+  spi_transaction_t    transaction;
+  register_raw_frame_t raw_frame;
 
   run_state |= IN_SINGLE;
 
   /*
    * Prepare and read a single sample directly from the BMI270
    */
-  memset(&transaction, 0x00, sizeof(transaction)); // Clear the transaction structure
-  transaction.addr      = 0x80 | ACCEL_X;          // Start at Accel Acceleration Data Low register and read all 6 bytes in one transaction
-  transaction.length    = (sizeof(single_raw_t) - 1) * 8; // Transmit length in bits (less the empty)
-  transaction.tx_buffer = NULL;                           // Send dummy data to read the acceleration data
-  transaction.rxlength  = (sizeof(single_raw_t) - 1) * 8; // Don't count the empty
-  transaction.rx_buffer = &sample_as_read->dummy;         // Receive buffer to store the raw acceleration data
+  memset(&transaction, 0x00, sizeof(transaction));            // Clear the transaction structure
+  transaction.addr      = 0x80 | ACCEL_X;                     // Start at Accel Acceleration Data and read all 6 bytes in one transaction
+  transaction.length    = (sizeof(register_raw_frame_t)) * 8; // Transmit length in bits (less the empty)
+  transaction.tx_buffer = NULL;                               // Send dummy data to read the acceleration data
+  transaction.rxlength  = (sizeof(register_raw_frame_t)) * 8; // Don't count the empty
+  transaction.rx_buffer = &raw_frame.dummy;                   // Receive buffer to store the raw acceleration data
   transaction.flags     = 0;
-  spi_device_transmit(BMI270_handle, &transaction);       // Transmit the transaction
+  spi_device_transmit(BMI270_handle, &transaction);           // Transmit the transaction
 
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "x_..: 0X%04X   y_..: 0X%04X   z_..: 0X%04X   rho_.: 0X%04X   theta_.: 0X%04X   phi_.: 0X%04X",
-                                   sample_as_read->f.x_dotdot, sample_as_read->f.y_dotdot, sample_as_read->f.z_dotdot,
-                                   sample_as_read->f.rho_dot, sample_as_read->f.theta_dot, sample_as_read->f.phi_dot);))
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "raw  x_..: 0X%04X   y_..: 0X%04X   z_..: 0X%04X   rho_.: 0X%04X   theta_.: 0X%04X   phi_.: 0X%04X",
+                                   raw_frame.x_dotdot, raw_frame.y_dotdot, raw_frame.z_dotdot, raw_frame.rho_dot, raw_frame.theta_dot,
+                                   raw_frame.phi_dot);))
+
+  /*
+   *  Scramble the register values to FIFO position
+   */
+  sample->x_dotdot  = raw_frame.x_dotdot;
+  sample->y_dotdot  = raw_frame.y_dotdot;
+  sample->z_dotdot  = raw_frame.z_dotdot;
+  sample->rho_dot   = raw_frame.rho_dot;
+  sample->theta_dot = raw_frame.theta_dot;
+  sample->phi_dot   = raw_frame.phi_dot;
 
   run_state &= ~IN_SINGLE;
 
@@ -349,7 +376,7 @@ void BMI270_read_raw_accel(single_raw_t *sample_as_read) // Returned values
  *----------------------------------------------------------------
  *
  * The acceleration data always contains the earth's gravity,
- * so to get the actual acceleration of the device, we need to
+ * so to get the vector acceleration of the device, we need to
  * zero the data by taking a sample when the device is stationary
  * and subtracting that from future samples.
  *
@@ -358,9 +385,8 @@ void BMI270_read_raw_accel(single_raw_t *sample_as_read) // Returned values
 
 void BMI270_find_zero(void)
 {
-  unsigned int      i; // Loop counter
-  spi_transaction_t transaction;
-  single_raw_t      BMI270_raw;
+  unsigned int     i;               // Loop counter
+  FIFO_raw_frame_t BMI270_FIFO_raw; // Read in the order the FIFO returns data
 
   DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_find_zero()");))
 
@@ -379,13 +405,13 @@ void BMI270_find_zero(void)
    */
   for ( i = 0; i != NUM_ZERO_SAMPLES; i++ )
   {
-    BMI270_read_raw_accel(&BMI270_raw);            // Take a sample of the raw acceleration data
-    json_x_dotdot_offset -= BMI270_raw.f.x_dotdot; // Accumulate the X-axis raw acceleration data
-    json_y_dotdot_offset -= BMI270_raw.f.y_dotdot; // Accumulate the Y-axis raw acceleration data
-    json_z_dotdot_offset -= BMI270_raw.f.z_dotdot; // Accumulate the Z-axis raw acceleration data
-    json_rho_dot_offset -= BMI270_raw.f.rho_dot;
-    json_theta_dot_offset -= BMI270_raw.f.theta_dot;
-    json_phi_dot_offset -= BMI270_raw.f.phi_dot;
+    BMI270_read_raw_accel(&BMI270_FIFO_raw);          // Take a sample of the raw acceleration data
+    json_x_dotdot_offset -= BMI270_FIFO_raw.x_dotdot; // Accumulate the X-axis raw acceleration data
+    json_y_dotdot_offset -= BMI270_FIFO_raw.y_dotdot; // Accumulate the Y-axis raw acceleration data
+    json_z_dotdot_offset -= BMI270_FIFO_raw.z_dotdot; // Accumulate the Z-axis raw acceleration data
+    json_rho_dot_offset -= BMI270_FIFO_raw.rho_dot;
+    json_theta_dot_offset -= BMI270_FIFO_raw.theta_dot;
+    json_phi_dot_offset -= BMI270_FIFO_raw.phi_dot;
     vTaskDelay(1);
   }
 
@@ -424,7 +450,6 @@ void BMI270_find_zero(void)
   /*
    *  All done, return
    */
-  set_status_LED(LED_READY); // Indicate that we are ready
   SEND(ALL, sprintf(_xs, _DONE_);)
 
   return;
@@ -450,116 +475,46 @@ void BMI270_find_zero(void)
 #define ACCEL_DEAD_BAND 0.0
 #define GYRO_DEAD_BAND  0.0
 #define CAL_SCALE       1.0
-void BMI270_convert_to_g(raw_frame_t *sample, trace_vector_t *actual)
+void BMI270_convert_to_g(FIFO_raw_frame_t *sample,                                              // 16 bit numbers read from BBMI270
+                         trace_vector_t   *vector                                               // Working values
+)
 {
-  actual->x_dotdot = CAL_SCALE * (real_t)(sample->x_dotdot + json_x_dotdot_offset) * G_PER_LSB; // Convert raw X-axis data to g
-  if ( F_ABS(actual->x) < ACCEL_DEAD_BAND )
+  vector->x_dotdot = CAL_SCALE * (real_t)(sample->x_dotdot + json_x_dotdot_offset) * G_PER_LSB; // Convert raw X-axis data to g
+  if ( F_ABS(vector->x) < ACCEL_DEAD_BAND )
   {
-    actual->x_dotdot = 0;
+    vector->x_dotdot = 0;
   }
 
-  actual->y_dotdot = CAL_SCALE * (real_t)(sample->y_dotdot + json_y_dotdot_offset) * G_PER_LSB; // Convert raw Y-axis data to g
-  if ( F_ABS(actual->y_dotdot) < ACCEL_DEAD_BAND )
+  vector->y_dotdot = CAL_SCALE * (real_t)(sample->y_dotdot + json_y_dotdot_offset) * G_PER_LSB; // Convert raw Y-axis data to g
+  if ( F_ABS(vector->y_dotdot) < ACCEL_DEAD_BAND )
   {
-    actual->y_dotdot = 0;
+    vector->y_dotdot = 0;
   }
 
-  actual->z_dotdot = CAL_SCALE * (real_t)(sample->z_dotdot + json_z_dotdot_offset) * G_PER_LSB; // Convert raw Z-axis data to g
-  if ( F_ABS(actual->z_dotdot) < ACCEL_DEAD_BAND )
+  vector->z_dotdot = CAL_SCALE * (real_t)(sample->z_dotdot + json_z_dotdot_offset) * G_PER_LSB; // Convert raw Z-axis data to g
+  if ( F_ABS(vector->z_dotdot) < ACCEL_DEAD_BAND )
   {
-    actual->z_dotdot = 0;
+    vector->z_dotdot = 0;
   }
 
-  actual->rho_dot = (real_t)(sample->rho_dot + json_rho_dot_offset) * GYRO_PER_LSB;             // Convert raw X-axis data to g
-  if ( F_ABS(actual->rho_dot) < GYRO_DEAD_BAND )
+  vector->rho_dot = (real_t)(sample->rho_dot + json_rho_dot_offset) * GYRO_PER_LSB;             // Convert raw X-axis data to g
+  if ( F_ABS(vector->rho_dot) < GYRO_DEAD_BAND )
   {
-    actual->rho_dot = 0;
+    vector->rho_dot = 0;
   }
 
-  actual->theta_dot = (real_t)(sample->theta_dot + json_theta_dot_offset) * GYRO_PER_LSB;       // Convert raw X-axis data to g
-  if ( F_ABS(actual->theta_dot) < GYRO_DEAD_BAND )
+  vector->theta_dot = (real_t)(sample->theta_dot + json_theta_dot_offset) * GYRO_PER_LSB;       // Convert raw X-axis data to g
+  if ( F_ABS(vector->theta_dot) < GYRO_DEAD_BAND )
   {
-    actual->theta_dot = 0;
+    vector->theta_dot = 0;
   }
 
-  actual->phi_dot = (real_t)(sample->phi_dot + json_phi_dot_offset) * GYRO_PER_LSB;             // Convert raw X-axis data to g
-  if ( F_ABS(actual->phi_dot) < GYRO_DEAD_BAND )
+  vector->phi_dot = (real_t)(sample->phi_dot + json_phi_dot_offset) * GYRO_PER_LSB;             // Convert raw X-axis data to g
+  if ( F_ABS(vector->phi_dot) < GYRO_DEAD_BAND )
   {
-    actual->phi_dot = 0;
+    vector->phi_dot = 0;
   }
 
-  return;
-}
-
-/*----------------------------------------------------------------
- *
- * @function: BMI270_test()
- *
- * @brief:    Test the BMI270
- *
- * @return:   None
- *
- *----------------------------------------------------------------
- *
- * Poll the BMI270 and print out the acceleration data
- *
- *--------------------------------------------------------------*/
-#define TIME_STEP    (0.010)
-#define TIME_STEP_SQ (TIME_STEP * TIME_STEP)
-#define G_mm_s2      9806.65
-
-void BMI270_test(void)
-{
-  real_t        vector_magnitude;           // Magnitude of the acceleration vector
-  raw_frame_t   previous_raw;               // Previous sample
-  raw_frame_t   present_raw;                // Present sample
-  trace_point_t previous;                   // Previous sample converted to g
-  trace_point_t present;                    // Present sample converted to g
-#if ( 0 )
-  BMI270_find_sample_out(NUM_ZERO_SAMPLES); // Start at the point where we took the zero samples to get the most recent data
-
-  BMI270_read_raw_accel(&previous_raw, true);
-
-  while ( 1 )
-  {
-
-    BMI270_read_raw_accel(&present_raw, true);                                    // Read the acceleration dataP )
-
-    BMI270_convert_to_g(&present_raw, &present);                                  // Convert raw data to g
-
-    vector_magnitude =
-        sqrt(SQ(present.x_dotdot) + SQ(present.y_dotdot) + SQ(present.z_dotdot)); // Calculate the magnitude of the acceleration vector
-
-    /*
-     * Integrate the positition
-     */
-    present.x = (previous.x) + (previous.x_dot * TIME_STEP) +
-                (present.x_dotdot * G_mm_s2 * (TIME_STEP_SQ) / 2); // Update the X position using the acceleration data
-    present.y = (previous.y) + (previous.y_dot * TIME_STEP) +
-                (present.y_dotdot * G_mm_s2 * (TIME_STEP_SQ) / 2); // Update the Y position using the acceleration data
-    present.z = (previous.z) + (previous.z_dot * TIME_STEP) +
-                (present.z_dotdot * G_mm_s2 * (TIME_STEP_SQ) / 2); // Update the Z position using the acceleration data
-    /*{"TR}"}
-     * Integrate the velocity
-     */
-    present.x_dot = previous.x_dot + (present.x_dotdot * G_mm_s2) * TIME_STEP;
-    present.y_dot = previous.y_dot + (present.y_dotdot * G_mm_s2) * TIME_STEP;
-    present.z_dot = previous.y_dot + (present.z_dotdot * G_mm_s2) * TIME_STEP;
-
-    previous = present;
-
-    SEND(ALL, sprintf(_xs,
-                      "\r\nx..: %+.3fg, y..: %+.3fg, z..: %+.3fg, |a|: %.3fg  x.: %+.3fmm/s,  "
-                      "y.:%+.3fmm/s, z.: %+.3fmm/s   x: %+.3fmm, y: %+.3fmm, z: %+.3fmm,   ",
-                      present.x_dotdot, present.y_dotdot, present.z_dotdot, vector_magnitude, present.x_dot, present.y_dot, present.z_dot,
-                      present.x, present.y, present.z);)
-  }
-#endif
-
-  /*
-   * All done
-   */
-  SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }
 
@@ -579,10 +534,10 @@ void BMI270_test(void)
 
 void BMI270_oscilliscope(void)
 {
-  real_t         vector_magnitude; // Magnitude of the acceleration vector
-  trace_vector_t trace_vector;
-  raw_frame_t    sample;
-  bool           pause = false;
+  real_t           vector_magnitude; // Magnitude of the acceleration vector
+  trace_vector_t   trace_vector;
+  FIFO_raw_frame_t sample;
+  bool             pause = false;
 
   while ( 1 )
   {
@@ -621,37 +576,6 @@ void BMI270_oscilliscope(void)
    */
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
-}
-
-/*----------------------------------------------------------------
- *
- * @function: BMI270_find_sample_in()
- *
- * @brief:    Find the index of a sample based on a number of samples back from the current sample
- *
- * @return:   index of the sample in the sample buffer
- *
- *----------------------------------------------------------------
- *
- * Samples are taken continiously so the pointer sample_out
- * may correspond to some point in time far back in the past.
- *
- * This function works out sample_out relative to sample_in
- * to find a find a starting point correspondin to an interval.
- *
- *--------------------------------------------------------------*/
-unsigned int BMI270_find_sample_out(unsigned int sample_count) // Number of samples to look back
-{
-#if ( 0 )
-  sample_out = sample_in - sample_count;                       // Calculate the index of the sample that corresponds to the desired duration
-  if ( sample_out < 0 )                                        // If the index is negative, adjust for wrap-around
-  {
-    sample_out += SAMPLE_DEPTH;                                // Adjust for wrap-around if the index is negative
-  }
-
-  return sample_out;
-#endif
-  return 0;
 }
 
 /*----------------------------------------------------------------
@@ -745,50 +669,4 @@ void BMI270_SPI_dump(void)
   }
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
-}
-
-/*----------------------------------------------------------------
- *
- * @function: trace_first()
- *            trace_next()
- *            trace_read_next();
- *
- * @brief:    Manage indexes
- *
- * @return:   Index set for the next operation
- *
- *----------------------------------------------------------------
- *
- * The raw input is stored in two queues, inner and outer
- *
- * outer           ^ --> outer          ^ --> outer -->
- *                 |                    |
- *   inner --> inner     inner --> inner
- *
- * outer points to the next available FIFO input buffer
- * inner points to an individual sample in the FIFO input buffer
- *
- *--------------------------------------------------------------*/
-static bool trace_first(void)
-{
-  index_out = index_in;   // Move the output index to the current position
-  trace_next(&index_out); // And move over to the 'first' entry
-  return true;
-}
-
-static bool trace_next(trace_index_t *index)
-{
-  index->inner = (index->inner + 1) % RAW_FRAME_COUNT;
-  if ( index->inner == 0 )
-  {
-    trace_FIFO_next(index);
-  }
-  return true;
-}
-
-static bool trace_FIFO_next(trace_index_t *index)
-{
-  index->outer = ((index->outer) + 1) % SAMPLE_BUFFER_COUNT;
-
-  return true;
 }

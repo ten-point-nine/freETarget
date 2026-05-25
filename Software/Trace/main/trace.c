@@ -134,6 +134,7 @@ void trace_init(void)
  *---------------------------------------------------------------*/
 void trace_loop(void *arg)
 {
+  set_status_LED(LED_SETUP); // Indicate that we are ready
 
   while ( 1 )
   {
@@ -148,7 +149,10 @@ void trace_loop(void *arg)
       {
         if ( gpio_get_level(BMI270_INTERRUPT) == 0 )
         {
-          BMI270_pull_FIFO();
+          if ( BMI270_pull_FIFO() )
+          {
+            set_status_LED(LED_READY); // Indicate that we are ready
+          }
         }
       }
     }

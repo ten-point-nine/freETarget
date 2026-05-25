@@ -33,6 +33,7 @@
 #include "json.h"
 #include "timer.h"
 #include "BMI270.h"
+#include "IMU.h"
 
 extern volatile time_count_t paper_time;
 
@@ -54,7 +55,6 @@ static const self_test_t test_list[] = {
     {"Digital inputs",               &digital_input_test      },
     {"Digital outputs",              &digital_output_test     },
     {"Accelerometer zeroing",        &BMI270_find_zero        },
-    {"Accelerometer test",           &BMI270_test             },
     {"Accelerometer oscilliscope",   &BMI270_oscilliscope     },
     {"Accelerometer dump",           &BMI270_SPI_dump         },
     {"- Timer & PCNT test",          0                        },
@@ -68,9 +68,8 @@ static const self_test_t test_list[] = {
     {"Send to server test",          &http_send_to_server_test},
     {"Start web server",             &http_server_test        },
     {"-Interrupt Tests",             0                        },
-
     {"- Software tests",             0                        },
-
+    {"IMU test",                     &IMU_test                },
     {"",                             0                        }
 };
 

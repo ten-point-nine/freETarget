@@ -150,6 +150,7 @@ typedef struct
   real_t x;         // X position
   real_t y;         // Y position
 } trace_point_t;    // computed point
+
 /*
  *  Global Variables
  */

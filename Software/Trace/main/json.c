@@ -44,7 +44,7 @@ static void show_names(int v);
 static void set_trace(int v);        // Set the trace on and off
 
 const json_message_t JSON[] = {
-    //  show     token        value stored in RAM             convert                 service fcn()     NONVOL location      Initial Value
+    //  show     token        value stored in RAM           convert   service fcn()   NONVOL location      Initial Value
     //  PS Value
     {HIDE, "\"ECHO\"",              0,                      IS_VOID,  &show_echo,    0,                       0,      0},
     {HIDE, "\"INIT\"",              0,                      IS_VOID,  &init_nonvol,  0,                       0,      0},
