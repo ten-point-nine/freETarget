@@ -27,9 +27,8 @@ extern volatile unsigned int step_count; // Number of steps before stopping
 
 /*
  *  Port Definitions
- */
-
-#define SPI_SDO          GPIO_NUM_0 // SPI Master In Slave Out
+ 
+ 
 #define SPI_SDI          GPIO_NUM_1 // SPI Master Out Slave In
 #define STATUS_LED       GPIO_NUM_2 // Status LED
 #define TP1              GPIO_NUM_3 // Test point 1
