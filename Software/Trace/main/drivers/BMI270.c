@@ -477,8 +477,8 @@ void BMI270_find_zero(void)
  * register.
  *
  *--------------------------------------------------------------*/
-#define ACCEL_DEAD_BAND 0.0
-#define GYRO_DEAD_BAND  0.0
+#define ACCEL_DEAD_BAND 0.002
+#define GYRO_DEAD_BAND  0.002
 #define CAL_SCALE       1.0
 
 void BMI270_convert_to_g(FIFO_raw_frame_t *sample,                                              // 16 bit numbers read from BBMI270
