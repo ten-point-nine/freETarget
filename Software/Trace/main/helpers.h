@@ -14,7 +14,7 @@
 int           to_int(char h);                                        // Convert char to integer ('A' = 0x0A)
 int           instr(char *s1, char *s2);                             // Compare two strings
 bool          contains(char *s1, char *s2);                          // Return true if s1 contains s2
-bool          prompt_for_confirm(void);                              // Prompt for confirmation
+bool          prompt_for_confirm(char * prompt);                              // Prompt for confirmation
 void          get_number(char *prompt, real_t *value);               // Get a number from the user
 int           get_hex(char *prompt);                                 // Get a hex number from the user
 void          send_keep_alive(void);                                 // Send a keep alive message

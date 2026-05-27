@@ -256,14 +256,13 @@ void init_nonvol(int verify) // Verification code entered by user
   /*
    * Ensure that the user wants to init the unit
    */
-  if ( prompt_for_confirm() == false )
+  if ( prompt_for_confirm("Initialize board") == false )
   {
     SEND(ALL, sprintf(_xs, "\r\nInitialization cancelled\r\n");)
     return;
   }
 
-  SEND(ALL, sprintf(_xs, "\r\nReset Serial Number\r\n");)
-  factory_nonvol(prompt_for_confirm()); // Reset to factory defaults and prompt for serial number
+  factory_nonvol(prompt_for_confirm("Reset Serial Number")); // Reset to factory defaults and prompt for serial number
 
   /*
    * All done, return

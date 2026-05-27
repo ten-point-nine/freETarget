@@ -169,11 +169,11 @@ bool contains(char *source,                    // Source string
  * @return:   TRUE if the confirmation is Yes
  *
  *--------------------------------------------------------------*/
-bool prompt_for_confirm(void)
+bool prompt_for_confirm(char * prompt)
 {
   unsigned char ch;
 
-  SEND(ALL, sprintf(_xs, "\r\nConfirm Y/N?");)
+  SEND(ALL, sprintf(_xs, "\r\n%s. Confirm Y/N?", prompt);)
 
   /*
    * Loop and wait for a confirmation

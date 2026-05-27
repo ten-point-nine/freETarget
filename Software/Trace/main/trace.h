@@ -21,23 +21,24 @@
 
 #define SOFTWARE_VERSION "\"1.0.0 May 17, 2026\""
 #define _DONE_           "\r\nDone\r\n"
-#define _GREETING_       "CONNECTED"   // Message to send on connection
-#define _BYE_            "BYE"         // Message to send on disconnection
-#define _HELLO_          "HELLO WORLD" // Message to send on reconnection
+#define _GREETING_       "CONNECTED"       // Message to send on connection
+#define _BYE_            "BYE"             // Message to send on disconnection
+#define _HELLO_          "HELLO WORLD"     // Message to send on reconnection
 
-#define INIT_DONE 0xabcd               // NON-VOL Initialization complete signature
+#define INIT_DONE 0xabcd                   // NON-VOL Initialization complete signature
 #ifndef true
 #define true  (1 == 1)
 #define false (0 == 1)
 #endif
 
-#define IN_STARTUP    0x0001           // The software is in initialization
-#define IN_OPERATION  0x0002           // The software is operational
-#define IN_TEST       0x0004           // A self test has been selected (Suspend operation)
-#define IN_COLLECTION 0x0008           // Collecting data
-#define IN_SINGLE     0x0010           // Reading a single sample directly from BMK270
-#define IN_REDUCTION  0x0020           // The data is being reduced
-#define IN_FATAL_ERR  0x0040           // A fatal error has occured and cannot be fixed
+#define IN_STARTUP    0x0001               // The software is in initialization
+#define IN_OPERATION  (IN_STARTUP << 1)    // The software is operational
+#define IN_TEST       (IN_OPERATION << 1)   // A self test has been selected (Suspend operation)
+#define IN_COLLECTION (IN_TEST < 1)        // Collecting data
+#define IN_SINGLE     (IN_COLLECTION << 1) // Reading a single sample directly from BMK270
+#define IN_FIFO_FULL  (IN_COLLECTION << 1) // The FIFO has complete data
+#define IN_REDUCTION  (IN_FIFO_FULL << 1)  // The data is being reduced
+#define IN_FATAL_ERR  (IN_REDUCTION << 1)  // A fatal error has occured and cannot be fixed
 
 #define IF(x)     if ( (run_state & (x)) != 0 )
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
@@ -111,7 +112,7 @@
 #define RAW_FRAME_SIZE  (6 * 2)                                            // (12)   6 entries @ 2 bytes per entry
 #define RAW_FRAME_COUNT (WATERMARK / RAW_FRAME_SIZE)                       // (384)  entries in the FIFO
 
-#define SAMPLE_RATE   (800)                                                // 400 samples per second, 2.5ms / sample
+#define SAMPLE_RATE   (800)                                                // Output Data Rate samples per second
 #define SAMPLE_PERIOD (10)                                                 // Accumulate sampls for 10 seconds
 #define SAMPLE_BUFFER_COUNT                                                                                                                \
   (((SAMPLE_RATE * SAMPLE_PERIOD) / RAW_FRAME_COUNT) + 2)                  // (12) Number of frames needed to store 10 seconds of data
@@ -184,8 +185,8 @@ EXTERN time_count_t session_time[];
 /*
  * trace functions
  */
-void trace_init(void);         // Get the target software ready
-void trace_loop(void *arg);    // Target polling loop
-void send_keep_alive(void);    // Send out the keep alive signal for TCPIP
-bool prompt_for_confirm(void); // Prompt for a confirmation
+void trace_init(void);                 // Get the target software ready
+void trace_loop(void *arg);            // Target polling loop
+void send_keep_alive(void);            // Send out the keep alive signal for TCPIP
+bool prompt_for_confirm(char *prompt); // Prompt for a confirmation
 #endif

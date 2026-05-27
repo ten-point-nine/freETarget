@@ -135,6 +135,7 @@ void trace_init(void)
 void trace_loop(void *arg)
 {
   set_status_LED(LED_SETUP); // Indicate that we are ready
+  run_state &= ~IN_FIFO_FULL;
 
   while ( 1 )
   {
@@ -151,6 +152,7 @@ void trace_loop(void *arg)
         {
           if ( BMI270_pull_FIFO() )
           {
+            run_state |= IN_FIFO_FULL;
             set_status_LED(LED_READY); // Indicate that we are ready
           }
         }

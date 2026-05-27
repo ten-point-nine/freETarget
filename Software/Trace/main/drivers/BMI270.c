@@ -278,7 +278,6 @@ bool BMI270_pull_FIFO(void)
   transaction.rxlength  = (sizeof(FIFO_raw_t) - 1) * 8; // Receive length in bits
   transaction.flags     = 0;                            // Indicate that this is a read operation
   spi_device_transmit(BMI270_handle, &transaction);
-
   trace_FIFO_next(&index_in);
   if ( index_in.outer == index_out.outer )              // Wrapped around the buffer is full
   {
@@ -432,9 +431,9 @@ void BMI270_find_zero(void)
                                   json_x_dotdot_offset, json_y_dotdot_offset, json_z_dotdot_offset, json_rho_dot_offset,
                                   json_rho_dot_offset, json_rho_dot_offset);))
 
-  SEND(ALL, sprintf(_xs, "\r\nCommit settings.");)
-  if ( prompt_for_confirm() == true )
+  if ( prompt_for_confirm("Commit settings?") == true )
   {
+    SEND(ALL, sprintf(_xs, "\r\nZero offset saved");)
     nvs_set_i32(my_handle, NONVOL_X_DOTDOT_OFFSET, json_x_dotdot_offset); // Save the value
     nvs_set_i32(my_handle, NONVOL_Y_DOTDOT_OFFSET, json_y_dotdot_offset);
     nvs_set_i32(my_handle, NONVOL_Z_DOTDOT_OFFSET, json_z_dotdot_offset);
@@ -444,7 +443,13 @@ void BMI270_find_zero(void)
   }
   else
   {
-    SEND(ALL, sprintf(_xs, "Settings not changed");)
+    SEND(ALL, sprintf(_xs, "\r\nZero offset removed");)
+    nvs_set_i32(my_handle, NONVOL_X_DOTDOT_OFFSET, 0); // Save the value
+    nvs_set_i32(my_handle, NONVOL_Y_DOTDOT_OFFSET, 0);
+    nvs_set_i32(my_handle, NONVOL_Z_DOTDOT_OFFSET, 0);
+    nvs_set_i32(my_handle, NONVOL_RHO_DOT_OFFSET, 0);
+    nvs_set_i32(my_handle, NONVOL_THETA_DOT_OFFSET, 0);
+    nvs_set_i32(my_handle, NONVOL_PHI_DOT_OFFSET, 0);
   }
 
   /*
@@ -475,6 +480,7 @@ void BMI270_find_zero(void)
 #define ACCEL_DEAD_BAND 0.0
 #define GYRO_DEAD_BAND  0.0
 #define CAL_SCALE       1.0
+
 void BMI270_convert_to_g(FIFO_raw_frame_t *sample,                                              // 16 bit numbers read from BBMI270
                          trace_vector_t   *vector                                               // Working values
 )

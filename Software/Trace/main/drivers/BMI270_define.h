@@ -31,13 +31,13 @@
  */
 
 #define G2        (0)                                    // Select +/- 2g range
-#define G2_RANGE  (4.0)
+#define G2_RANGE  (2.0 - (-2.0))
 #define G4        1                                      // Select +/- 4g range
-#define G4_RANGE  (8.0)
+#define G4_RANGE  (4.0 - (-4.0))
 #define G8        2                                      // Select +/- 8g range
-#define G8_RANGE  (16.0)
+#define G8_RANGE  (8.0 - (-8.0))
 #define G16       3                                      // Select +/- 16g range
-#define G16_RANGE (32.0)
+#define G16_RANGE (16.0 - (-16.0))
 
 #define G_RANGE   G2
 #define G_PER_LSB (G2_RANGE / 65535.0)                   // g per LSB for the selected range
@@ -56,10 +56,38 @@
 #define GYRO_RANGE   GYRO_125
 #define GYRO_PER_LSB (GYRO_RANGE / 65535.0 * PI / 180.0) // in Radians per LSB
 
-#define OUTPUT_DATA_RATE 0x0A                            // 400 samples per second
-#define ACC_BANDWIDTH    0x03                            // Averge 8 samples
+#if ( SAMPLE_RATE == 100 )
+#define OUTPUT_DATA_RATE 0x08
+#endif
+
+#if ( SAMPLE_RATE == 200 )
+#define OUTPUT_DATA_RATE 0x09
+#endif
+
+#if ( SAMPLE_RATE == 400 )
+#define OUTPUT_DATA_RATE 0x0A
+#endif
+
+#if ( SAMPLE_RATE == 800 )
+#define OUTPUT_DATA_RATE 0x0B
+#endif
+
+#if ( SAMPLE_RATE == 1600 )
+#define OUTPUT_DATA_RATE 0x0C
+#endif
+
+#define ACC_BANDWIDTH    0x01                            // OSR1 mode
 
 #define SQ(x) ((x) * (x))
+
+/*
+ *  Understanding the BMI270 settings
+ *
+ * odr - Output Data Rate       This is the rate at which samples are generated at the output point
+ * bwp - Bandwidth Coefficient  This is a hardware averaging that is applied BEFORE the odr
+ * performance optimized        Trading sample rate for power consumption
+ * FIFO downsample              How many samples are thrown away before putting into the FIFO  expresed as 2**n
+ */
 
 /*
  * BMI270 Register Addresses
@@ -75,7 +103,7 @@
 
 #define ACC_CONF        0x40                    // Acceleration Configuration
 #define acc_odr         (OUTPUT_DATA_RATE << 0) // (odr_200) Output data rate 200
-#define acc_bwp         (ACC_BANDWIDTH << 4)    // (norm_avg4) Average four samples
+#define acc_bwp         (ACC_BANDWIDTH << 4)    // (osr2_avg2)
 #define acc_filter_perf (0x01 << 7)             // (hp) Optimized for parformance
 
 #define ACC_RANGE     0x41                      // Acceleration range
@@ -86,7 +114,7 @@
 
 #define GYR_CONF        0x42                    // Gyro Configuration
 #define gyr_odr         (OUTPUT_DATA_RATE << 0) // (odr_200)
-#define gyr_bwp         (0x2 << 4)              // (norm) Bandwidth coefficient
+#define gyr_bwp         (ACC_BANDWIDTH << 4)    // (osr2) Bandwidth coefficient
 #define gyr_noise_perf  (1 << 6)                // (hp) performance optiminzed
 #define gyr_filter_perf (1 << 7)                // (hp) performance optimized
 
@@ -206,7 +234,7 @@ static spi_device_interface_config_t BMI270_spi_config = {
     .duty_cycle_pos   = 128,                 // 50% duty cycle
     .cs_ena_pretrans  = 0,                   // No pre-transaction CS activation
     .cs_ena_posttrans = 0,                   // No post-transaction CS activation
-    .clock_speed_hz   = 10 * 1000 * 1000,     // 2 MHz clock speed (do not set higher than 2 MHz)
+    .clock_speed_hz   = 10 * 1000 * 1000,    // 2 MHz clock speed (do not set higher than 2 MHz)
     .input_delay_ns   = 0,                   // No input delay
     .spics_io_num     = BMI270_CS,           // CS pin
     .flags            = SPI_DEVICE_NO_DUMMY, // No special flags

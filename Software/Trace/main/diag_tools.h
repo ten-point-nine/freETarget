@@ -71,7 +71,7 @@ void digital_output_test(void);      // Test the digital outputs
 #error "DLT masks overlap"
 #endif
 
-#define PAUSE(prompt) DLT(DLT_PAUSE, { SEND(ALL, sprintf(_xs, "%s", prompt);) prompt_for_confirm(); })
+#define PAUSE(prompt) DLT(DLT_PAUSE, { SEND(ALL, sprintf(_xs, "%s", prompt);) prompt_for_confirm("Pause."); })
 
 /*
  *  Enable compile level tracing
