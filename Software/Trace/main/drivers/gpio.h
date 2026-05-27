@@ -14,7 +14,6 @@
 void init_gpio(void);                             // Initialize the GPIO ports
 
 void         digital_test(void);                  // Execute the digital test
-void         set_status_LED(unsigned int status); // Set the status LED
 void         status_LED_timer(void);              // Timer to drive the status LED
 void         timer_run_all(void);                 // Run all fo the timers at once
 void         timer_cycle_oscillator(void);        // Turn the oscillator on and off

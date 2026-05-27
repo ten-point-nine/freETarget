@@ -263,7 +263,6 @@ bool BMI270_pull_FIFO(void)
   /*
    *  We can read the FIFO
    */
-  run_state |= IN_COLLECTION;
 
   DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_FIFO_read()");))
 
@@ -298,7 +297,6 @@ bool BMI270_pull_FIFO(void)
   /*
    *  All done, return
    */
-  run_state &= ~IN_COLLECTION;
   return return_value;
 }
 
@@ -607,14 +605,6 @@ void BMI270_SPI_dump(void)
   int               i;              // Index
   uint8_t           registers[128]; // Copy of registers
   spi_transaction_t transaction;
-
-  /*
-   * Wait here if we are collecting data
-   */
-  while ( run_state & IN_COLLECTION )
-  {
-    vTaskDelay(1);
-  }
 
   /*
    * Read and print the values of all registers

@@ -91,12 +91,17 @@ void trace_init(void)
   /*
    *  Setup the hardware
    */
-  gpio_init();            // Setup the hardware
-  vTaskDelay(10);         // Let the hardware settle
-  serial_io_init();       // Setup the console for debug message
-  read_nonvol();          // Read in the settings
-  BMI270_init(BMI270_CS); // Initialize the BMI270 accelerometer
-
+  gpio_init();              // Setup the hardware
+  vTaskDelay(10);           // Let the hardware settle
+  serial_io_init();         // Setup the console for debug message
+  read_nonvol();            // Read in the settings
+  if ( (json_x_dotdot_offset | json_theta_dot_offset) == 0 )
+  {
+    run_state |= IN_NO_CAL; // The board is not calibrated
+  }
+  json_distance_to_target = 10.0;
+  
+  BMI270_init(BMI270_CS);   // Initialize the BMI270 accelerometer
   WiFi_init();
 
   /*
@@ -106,6 +111,7 @@ void trace_init(void)
   /*
    * Run the power on self test
    */
+
   /*
    * Ready to go
    */
@@ -134,8 +140,7 @@ void trace_init(void)
  *---------------------------------------------------------------*/
 void trace_loop(void *arg)
 {
-  set_status_LED(LED_SETUP); // Indicate that we are ready
-  run_state &= ~IN_FIFO_FULL;
+  run_state &= ~IN_FIFO_READY;
 
   while ( 1 )
   {
@@ -152,8 +157,7 @@ void trace_loop(void *arg)
         {
           if ( BMI270_pull_FIFO() )
           {
-            run_state |= IN_FIFO_FULL;
-            set_status_LED(LED_READY); // Indicate that we are ready
+            run_state |= IN_FIFO_READY;
           }
         }
       }

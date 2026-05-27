@@ -21,24 +21,24 @@
 
 #define SOFTWARE_VERSION "\"1.0.0 May 17, 2026\""
 #define _DONE_           "\r\nDone\r\n"
-#define _GREETING_       "CONNECTED"       // Message to send on connection
-#define _BYE_            "BYE"             // Message to send on disconnection
-#define _HELLO_          "HELLO WORLD"     // Message to send on reconnection
+#define _GREETING_       "CONNECTED"         // Message to send on connection
+#define _BYE_            "BYE"               // Message to send on disconnection
+#define _HELLO_          "HELLO WORLD"       // Message to send on reconnection
 
-#define INIT_DONE 0xabcd                   // NON-VOL Initialization complete signature
+#define INIT_DONE 0xabcd                     // NON-VOL Initialization complete signature
 #ifndef true
 #define true  (1 == 1)
 #define false (0 == 1)
 #endif
 
-#define IN_STARTUP    0x0001               // The software is in initialization
-#define IN_OPERATION  (IN_STARTUP << 1)    // The software is operational
-#define IN_TEST       (IN_OPERATION << 1)   // A self test has been selected (Suspend operation)
-#define IN_COLLECTION (IN_TEST < 1)        // Collecting data
-#define IN_SINGLE     (IN_COLLECTION << 1) // Reading a single sample directly from BMK270
-#define IN_FIFO_FULL  (IN_COLLECTION << 1) // The FIFO has complete data
-#define IN_REDUCTION  (IN_FIFO_FULL << 1)  // The data is being reduced
-#define IN_FATAL_ERR  (IN_REDUCTION << 1)  // A fatal error has occured and cannot be fixed
+#define IN_STARTUP     0x0001                // The software is in initialization
+#define IN_OPERATION   (IN_STARTUP << 1)     // FIFO has data, unit has been zeroed
+#define IN_NO_CAL      (IN_OPERATION << 1)   // The unit has not been calibrated
+#define IN_SINGLE      (IN_NO_CAL << 1)      // Reading a single sample directly from BMK270
+#define IN_FIFO_READY  (IN_SINGLE << 1)      // The FIFO has complete data
+#define IN_REDUCTION   (IN_FIFO_READY << 1)  // The data is being reduced
+#define IN_FATAL_ERROR (IN_REDUCTION << 1)   // A fatal error has occured and cannot be fixed
+#define IN_TEST        (IN_FATAL_ERROR << 1) // Running a test
 
 #define IF(x)     if ( (run_state & (x)) != 0 )
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )

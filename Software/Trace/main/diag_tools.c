@@ -342,14 +342,7 @@ void digital_output_test(void)
   {
     for ( i = 0; i != 32; i++ )
     {
-      if ( (LED_TEST & (1 << i)) != 0 )
-      {
-        gpio_set_level(STATUS_LED, 0); // Turn the LED on
-      }
-      else
-      {
-        gpio_set_level(STATUS_LED, 1); // Turn the LED off
-      }
+      gpio_set_level(STATUS_LED, i & 1); // Turn the LED off
       vTaskDelay(ONE_SECOND / 4);
     }
     if ( serial_available(ALL) != 0 )
@@ -426,7 +419,7 @@ bool do_dlt(           //
 #if ( 0 )
       if ( (level & DLT_FATAL) != 0 )             // This message is fatal
       {
-        set_status_LED(LED_ERROR);                // Indicate an error
+        set_status_LED();                         // Indicate an error
         while ( 1 )
         {
           vTaskDelay(ONE_SECOND);                 // Stay here forever
