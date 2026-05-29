@@ -63,6 +63,10 @@ void app_main(void)
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 
+  xTaskCreate(trace_push_button, "trace_push_button", K4, NULL, MUST_RUN, NULL);
+  serial_flush(ALL);
+  vTaskDelay(TICK_10ms);
+
   xTaskCreate(trace_timers, "trace_timer", K4, NULL, TIMED, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
@@ -85,7 +89,4 @@ void app_main(void)
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "SN:%d Running\r\n", json_serial_number);))
   vTaskDelay(TICK_10ms);
   serial_flush(ALL);
-
-  run_state &= ~IN_STARTUP;
-  run_state |= IN_OPERATION; // Show we're in startup
 }

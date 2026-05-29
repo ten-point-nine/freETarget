@@ -70,13 +70,13 @@ typedef struct
 /*
  *  Functions
  */
-void         BMI270_init(unsigned int bmi270_gpio);                                 // Initialize the BMI270
-void         BMI270_read_raw_accel(FIFO_raw_frame_t *sample);                       // Read the accelermeter
-bool         BMI270_pull_FIFO(void);                                                // Read all of the samples in the FIFO
-void         BMI270_test(void);                                                     // Test the BMI270
-void         BMI270_find_zero(void);                                                // Take a zero sample to use for future adjustments
-void         BMI270_convert_to_g(FIFO_raw_frame_t *sample, trace_vector_t *actual); // Convert the raw sample to a vector
-void         BMI270_oscilliscope(void);                                             // Poor man's oscilliscope
-void         BMI270_FIFO_read(void);                                                // FIFO handler
-void         BMI270_SPI_dump(void);                                                 // Dump the BMI270 registers using SPI.
-bool         BMI270_get_next_raw_sample(FIFO_raw_frame_t *sample);                  // Pull out the next sample
+void BMI270_init(unsigned int bmi270_gpio);                                 // Initialize the BMI270
+void BMI270_read_raw_accel(FIFO_raw_frame_t *sample);                       // Read the accelermeter
+bool BMI270_pull_FIFO(void);                                                // Read all of the samples in the FIFO
+void BMI270_test(void);                                                     // Test the BMI270
+void BMI270_find_zero(bool automatic_confirm);                             // Take a zero sample to use for future adjustments
+void BMI270_convert_to_g(FIFO_raw_frame_t *sample, trace_vector_t *actual); // Convert the raw sample to a vector
+void BMI270_oscilliscope(void);                                             // Poor man's oscilliscope
+void BMI270_FIFO_read(void);                                                // FIFO handler
+void BMI270_SPI_dump(void);                                                 // Dump the BMI270 registers using SPI.
+bool BMI270_get_next_raw_sample(FIFO_raw_frame_t *sample);                  // Pull out the next sample

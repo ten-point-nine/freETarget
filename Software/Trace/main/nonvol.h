@@ -29,11 +29,9 @@ void nonvol_write_i32(char *name, int *value);    // Write a value to nonvol
  */
 #define NONVOL_DISTANCE_TO_TARGET "DISTANCE_TO_TARGET" // Distance to target in meters
 #define NONVOL_INIT               "NONVOL_INIT"        // Show when the INIT is done
-#define NONVOL_NAME_ID            "NAME_ID"            // Name Identifier
 #define NONVOL_SERIAL_NO          "SERIAL_NO"          // EIN
 #define NONVOL_PS_VERSION         "PS_VERSION"         // Persistent storage version
 #define NONVOL_KEEP_ALIVE         "KEEP_ALIVE"         // Send out a keep alive at a r
-#define NONVOL_VREF_LO            "VREF_LO"            // Sensor Reference Voltage low in V
 #define NONVOL_WIFI_CHANNEL       "WIFI_CHANNEL"       // Channel to use for WiFI
 #define NONVOL_WIFI_DHCP          "WIFI_DHCP"          //
 #define NONVOL_WIFI_SSID          "WIFI_SSID"          // Storage for SSID
@@ -41,10 +39,7 @@ void nonvol_write_i32(char *name, int *value);    // Write a value to nonvol
 #define NONVOL_WIFI_IP            "WIFI_IP"            // Storage forIP Address
 #define NONVOL_WIFI_GATEWAY       "WIFI_GATEWAY"       // Storage for Gateway mask
 #define NONVOL_WIFI_RESET_FIRST   "WIFI_RESET"         // Reset the target on the first WiFi connction
-
-#define NONVOL_MFS_SELECT_CD    "MFS_SELECT_CD"        // Hardware attached to CD
 #define NONVOL_WIFI_HIDDEN      "WIFI_HIDDEN"          // Hide the SSID if set to 1
-#define NONVOL_NAME_TEXT        "NAME_TEXT"            // User supplied name for the target
 #define NONVOL_OTA_URL          "OTA_URL"              // User supplied name for the target
 #define NONVOL_REMOTE_ACTIVE    "REMOTE_ACTIVE"        // Send score to a remote server
 #define NONVOL_REMOTE_URL       "REMOTE_URL"           // URL of the remote server

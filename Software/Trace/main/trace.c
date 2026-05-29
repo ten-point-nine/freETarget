@@ -100,7 +100,7 @@ void trace_init(void)
     run_state |= IN_NO_CAL; // The board is not calibrated
   }
   json_distance_to_target = 10.0;
-  
+
   BMI270_init(BMI270_CS);   // Initialize the BMI270 accelerometer
   WiFi_init();
 
@@ -136,29 +136,31 @@ void trace_init(void)
  *
  *----------------------------------------------------------------
  *
+ * This is the main control loop for the trace module.
+ *
+ * It is a simple polling loop that checks the various inputs
+ * and executes the task.
+ *
+ * IMPORANT.
+ *
+ * No one operation should exceed 500ms.
  *
  *---------------------------------------------------------------*/
 void trace_loop(void *arg)
 {
-  run_state &= ~IN_FIFO_READY;
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "trace_loop()");))
+
+  run_state = (IN_OPERATION | IN_FIFO_FILLING);
 
   while ( 1 )
   {
     IF(IN_OPERATION)
     {
-      if ( gpio_get_level(SWITCH_GPIO) == 0 )
-      {
-        BMI270_find_zero();
-      }
-
       IF_NOT(IN_SINGLE)
       {
         if ( gpio_get_level(BMI270_INTERRUPT) == 0 )
         {
-          if ( BMI270_pull_FIFO() )
-          {
-            run_state |= IN_FIFO_READY;
-          }
+          BMI270_pull_FIFO();
         }
       }
     }
@@ -168,4 +170,61 @@ void trace_loop(void *arg)
      */
     vTaskDelay(TICK_10ms);
   }
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: trace_pushbutton
+ *
+ * @brief: Monitor the push button for action
+ *
+ * @return: None
+ *
+ *----------------------------------------------------------------
+ *
+ * The push button supports wto modes of operation,
+ *
+ * SHORT_PUSH --
+ * LONG_PUSH  -- Recalibrate the trace
+ *
+ *---------------------------------------------------------------*/
+#define SHORT_PUSH 50
+#define LONG_PUSH  100
+
+void trace_push_button(void *arg)
+{
+  static int time_tick = 0;
+
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "trace_push_button()");))
+
+  while ( 1 )
+  {
+
+    if ( gpio_get_level(SWITCH_GPIO) == 0 ) // If the button is held down
+    {
+      time_tick++;                          // Increment the timer
+    }
+    else
+    {
+      if ( time_tick != 0 )                 // The button has just been released
+      {
+        if ( time_tick < SHORT_PUSH )       // Short push
+        {
+        }
+        else
+        {
+          run_state |= IN_FIFO_FILLING;     // Reset the FIFO
+          vTaskDelay(ONE_SECOND);
+          BMI270_find_zero(false);          // Long push, automatically save
+        }
+        time_tick = 0;                      // Reset the timer
+      }
+
+      /*
+       * End of the loop. timeout till the next time
+       */
+      vTaskDelay(TICK_10ms);
+    }
+  }
+  return; // Never get here
 }

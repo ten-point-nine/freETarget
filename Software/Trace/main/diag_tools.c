@@ -121,10 +121,8 @@ void self_test(unsigned int test) // What test to execute
 {
   unsigned int i;
   unsigned int test_ID;           // Computed test ID
-  unsigned int run_state_old;     // Previous state of the test run bit
 
-  run_state_old = run_state;      // Save the current state of the test run bit
-  run_state     = IN_TEST;        // Set the test run bit to prevent other tasks from running
+  run_state     |= IN_TEST;        // Set the test run bit to prevent other tasks from running
 
                                   /*
                                    * Figure out what test to run
@@ -154,7 +152,7 @@ void self_test(unsigned int test) // What test to execute
   /*
    *  All done, return;
    */
-  run_state = run_state_old; // Restore the previous state of the test run bit
+  run_state &= ~IN_TEST; // Restore the previous state of the test run bit
   return;
 }
 

@@ -49,7 +49,6 @@ const json_message_t JSON[] = {
     {SHOW, "\"DISTANCE\"",          (int *)&json_distance_to_target, IS_FLOAT, 0,             NONVOL_DISTANCE_TO_TARGET, 10000,  0},
     {HIDE, "\"ECHO\"",              0,                               IS_VOID,  &show_echo,    0,                         0,      0},
     {HIDE, "\"INIT\"",              0,                               IS_VOID,  &init_nonvol,  0,                         0,      0},
-    {SHOW, "\"NAME_ID\":",          &json_name_id,                   IS_INT32, &show_names,   NONVOL_NAME_ID,            0,      0},
     {SHOW, "\"X_DOTDOT_OFFSET\":",  &json_x_dotdot_offset,           IS_INT32, 0,             NONVOL_X_DOTDOT_OFFSET,    0,      0},
     {SHOW, "\"Y_DOTDOT_OFFSET\":",  &json_y_dotdot_offset,           IS_INT32, 0,             NONVOL_Y_DOTDOT_OFFSET,    0,      0},
     {SHOW, "\"Z_DOTDOT_OFFSET\":",  &json_z_dotdot_offset,           IS_INT32, 0,             NONVOL_Z_DOTDOT_OFFSET,    0,      0},
@@ -368,7 +367,6 @@ void show_echo(void)
   char str_c[32]; // String holding buffers
 
   SEND(ALL, sprintf(_xs, "\r\n{\r\n");)
-  SEND(ALL, sprintf(_xs, "\"NAME\":              \"%s\",\r\n", str_c);)
 
   /*
    * Loop through all of the JSON tokens

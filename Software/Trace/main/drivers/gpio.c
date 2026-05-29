@@ -106,37 +106,43 @@ void digital_test(void)
  *-----------------------------------------------------*/
 typedef struct
 {
-  unsigned int state;                                     //  Current Running State
-  char* mask;                                      // Status mask associated with the state
+  unsigned int state;                          //  Current Running State
+  char        *mask;                           // Status mask associated with the state
 } status_LED_t;
 
 static status_LED_t states[] = {
-    {IN_STARTUP,     LED_STARTUP},
-    {IN_OPERATION,   LED_READY  }, // Operation, working, FIFO Data full
-    {IN_NO_CAL,      LED_NO_CAL },
-    {IN_FATAL_ERROR, LED_ERROR  },
-    {0,              0          }
+    {IN_FATAL_ERROR,  LED_ERROR       }, // Blink the LEDs based on the state
+    {IN_STARTUP,      LED_STARTUP     }, // This table is organized in highest
+    {IN_FIFO_FILLING, LED_FIFO_FILLING}, // to lowest priority.
+    {IN_REDUCTION,    LED_REDUCTION   },
+    {IN_NO_CAL,       LED_NO_CAL      }, // Not calibrated.  Cannot start
+    {IN_OPERATION,    LED_READY       }, // Operation, working, FIFO Data full
+    {0,               0               }
 };
 
 void status_LED_timer(void)
 {
   int                 i;
-  static unsigned int status_LED_count = 0;               // Count of the number of times the timer has been called
-  char* status_LED_mask =NULL ; // Pattern to display
+  static unsigned int status_LED_count = 0;    // Count of the number of times the timer has been called
+  char               *status_LED_mask  = NULL; // Pattern to display
 
+  /*
+   *  Search the list
+   */
   i = 0;
   while ( states[i].mask != 0 )
   {
     if ( (run_state & states[i].state) != 0 )
     {
       status_LED_mask = states[i].mask;
+      break; // Remeber and exit when we find a match
     }
     i++;
   }
 
   gpio_set_level(STATUS_LED, *(status_LED_mask + (status_LED_count % 32)) == '*');
-  
-  status_LED_count++;                // Increment the count
+
+  status_LED_count++; // Increment the count
 
   return;
 }

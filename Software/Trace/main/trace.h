@@ -21,24 +21,24 @@
 
 #define SOFTWARE_VERSION "\"1.0.0 May 17, 2026\""
 #define _DONE_           "\r\nDone\r\n"
-#define _GREETING_       "CONNECTED"         // Message to send on connection
-#define _BYE_            "BYE"               // Message to send on disconnection
-#define _HELLO_          "HELLO WORLD"       // Message to send on reconnection
+#define _GREETING_       "CONNECTED"           // Message to send on connection
+#define _BYE_            "BYE"                 // Message to send on disconnection
+#define _HELLO_          "HELLO WORLD"         // Message to send on reconnection
 
-#define INIT_DONE 0xabcd                     // NON-VOL Initialization complete signature
+#define INIT_DONE 0xabcd                       // NON-VOL Initialization complete signature
 #ifndef true
 #define true  (1 == 1)
 #define false (0 == 1)
 #endif
 
-#define IN_STARTUP     0x0001                // The software is in initialization
-#define IN_OPERATION   (IN_STARTUP << 1)     // FIFO has data, unit has been zeroed
-#define IN_NO_CAL      (IN_OPERATION << 1)   // The unit has not been calibrated
-#define IN_SINGLE      (IN_NO_CAL << 1)      // Reading a single sample directly from BMK270
-#define IN_FIFO_READY  (IN_SINGLE << 1)      // The FIFO has complete data
-#define IN_REDUCTION   (IN_FIFO_READY << 1)  // The data is being reduced
-#define IN_FATAL_ERROR (IN_REDUCTION << 1)   // A fatal error has occured and cannot be fixed
-#define IN_TEST        (IN_FATAL_ERROR << 1) // Running a test
+#define IN_STARTUP      0x0001                 // The software is in initialization
+#define IN_NO_CAL       (IN_STARTUP << 1)      // The unit has not been calibrated
+#define IN_FIFO_FILLING (IN_NO_CAL << 1)       // The FIFO is filling up
+#define IN_SINGLE       (IN_FIFO_FILLING << 1) // Reading a single sample directly from BMK270
+#define IN_REDUCTION    (IN_SINGLE << 1)       // The data is being reduced
+#define IN_OPERATION    (IN_REDUCTION << 1)    // FIFO has data, unit has been zeroed
+#define IN_FATAL_ERROR  (IN_OPERATION << 1)    // A fatal error has occured and cannot be fixed
+#define IN_TEST         (IN_FATAL_ERROR << 1)  // Running a test
 
 #define IF(x)     if ( (run_state & (x)) != 0 )
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
@@ -187,6 +187,7 @@ EXTERN time_count_t session_time[];
  */
 void trace_init(void);                 // Get the target software ready
 void trace_loop(void *arg);            // Target polling loop
+void trace_push_button(void *arg);     // Monitor the push button
 void send_keep_alive(void);            // Send out the keep alive signal for TCPIP
 bool prompt_for_confirm(char *prompt); // Prompt for a confirmation
 #endif

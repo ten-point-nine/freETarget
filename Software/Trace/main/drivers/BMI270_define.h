@@ -39,7 +39,7 @@
 #define G16       3                                      // Select +/- 16g range
 #define G16_RANGE (16.0 - (-16.0))
 
-#define G_RANGE   G2
+#define G_RANGE    G2
 #define G_PER_LSB (G2_RANGE / 65535.0)                   // g per LSB for the selected range
 
 #define GYRO_2000       0                                // Select +/- 2000 degrees per second
@@ -110,7 +110,7 @@
 #define acc_range_2g  0x00                      // +/- 2g
 #define acc_range_4g  0x01                      // +/- 4g
 #define acc_range_8g  0x02                      // +/- 8g
-#define acc_range_16g 0x02                      // +/- 16g
+#define acc_range_16g 0x03                      // +/- 16g
 
 #define GYR_CONF        0x42                    // Gyro Configuration
 #define gyr_odr         (OUTPUT_DATA_RATE << 0) // (odr_200)

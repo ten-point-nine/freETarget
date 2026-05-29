@@ -260,6 +260,11 @@ bool BMI270_pull_FIFO(void)
     return return_value; // Yes, return and do nothing
   }
 
+  IF(IN_TEST)
+  {
+    return return_value;
+  }
+
   /*
    *  We can read the FIFO
    */
@@ -281,6 +286,7 @@ bool BMI270_pull_FIFO(void)
   if ( index_in.outer == index_out.outer )              // Wrapped around the buffer is full
   {
     return_value = true;
+    run_state &= ~IN_FIFO_FILLING;
   }
 
   /*
@@ -377,15 +383,20 @@ void BMI270_read_raw_accel(FIFO_raw_frame_t *sample) // Returned values
  * zero the data by taking a sample when the device is stationary
  * and subtracting that from future samples.
  *
+ * The function computes the AVERAGE acceleration value which
+ * must later be SUBRACTED from the raw sensor value
+ *
  *--------------------------------------------------------------*/
-#define NUM_ZERO_SAMPLES 100
+#define NUM_ZERO_SAMPLES 200
 
-void BMI270_find_zero(void)
+void BMI270_find_zero(bool ask_for_confirm) // Ask for save confirmation)
 {
-  unsigned int     i;               // Loop counter
-  FIFO_raw_frame_t BMI270_FIFO_raw; // Read in the order the FIFO returns data
+  unsigned int     i;                       // Loop counter
+  FIFO_raw_frame_t BMI270_FIFO_raw;         // Read in the order the FIFO returns data
 
   DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_find_zero()");))
+
+  run_state |= IN_TEST;
 
   /*
    *  Clear the current offset
@@ -403,13 +414,14 @@ void BMI270_find_zero(void)
   for ( i = 0; i != NUM_ZERO_SAMPLES; i++ )
   {
     BMI270_read_raw_accel(&BMI270_FIFO_raw);          // Take a sample of the raw acceleration data
-    json_x_dotdot_offset -= BMI270_FIFO_raw.x_dotdot; // Accumulate the X-axis raw acceleration data
-    json_y_dotdot_offset -= BMI270_FIFO_raw.y_dotdot; // Accumulate the Y-axis raw acceleration data
-    json_z_dotdot_offset -= BMI270_FIFO_raw.z_dotdot; // Accumulate the Z-axis raw acceleration data
-    json_rho_dot_offset -= BMI270_FIFO_raw.rho_dot;
-    json_theta_dot_offset -= BMI270_FIFO_raw.theta_dot;
-    json_phi_dot_offset -= BMI270_FIFO_raw.phi_dot;
-    vTaskDelay(1);
+    json_x_dotdot_offset += BMI270_FIFO_raw.x_dotdot; // Accumulate the X-axis raw acceleration data
+    json_y_dotdot_offset += BMI270_FIFO_raw.y_dotdot; // Accumulate the Y-axis raw acceleration data
+    json_z_dotdot_offset += BMI270_FIFO_raw.z_dotdot; // Accumulate the Z-axis raw acceleration data
+    json_rho_dot_offset += BMI270_FIFO_raw.rho_dot;
+    json_theta_dot_offset += BMI270_FIFO_raw.theta_dot;
+    json_phi_dot_offset += BMI270_FIFO_raw.phi_dot;
+    printf("  %04X", BMI270_FIFO_raw.x_dotdot);
+    vTaskDelay(2);
   }
 
   /*
@@ -429,7 +441,30 @@ void BMI270_find_zero(void)
                                   json_x_dotdot_offset, json_y_dotdot_offset, json_z_dotdot_offset, json_rho_dot_offset,
                                   json_rho_dot_offset, json_rho_dot_offset);))
 
-  if ( prompt_for_confirm("Commit settings?") == true )
+  if ( ask_for_confirm == true )
+  {
+    if ( prompt_for_confirm("Commit settings?") == true )
+    {
+      SEND(ALL, sprintf(_xs, "\r\nZero offset saved");)
+      nvs_set_i32(my_handle, NONVOL_X_DOTDOT_OFFSET, json_x_dotdot_offset); // Save the value
+      nvs_set_i32(my_handle, NONVOL_Y_DOTDOT_OFFSET, json_y_dotdot_offset);
+      nvs_set_i32(my_handle, NONVOL_Z_DOTDOT_OFFSET, json_z_dotdot_offset);
+      nvs_set_i32(my_handle, NONVOL_RHO_DOT_OFFSET, json_rho_dot_offset);
+      nvs_set_i32(my_handle, NONVOL_THETA_DOT_OFFSET, json_theta_dot_offset);
+      nvs_set_i32(my_handle, NONVOL_PHI_DOT_OFFSET, json_phi_dot_offset);
+    }
+    else
+    {
+      SEND(ALL, sprintf(_xs, "\r\nZero offset removed");)
+      nvs_set_i32(my_handle, NONVOL_X_DOTDOT_OFFSET, 0); // Save the value
+      nvs_set_i32(my_handle, NONVOL_Y_DOTDOT_OFFSET, 0);
+      nvs_set_i32(my_handle, NONVOL_Z_DOTDOT_OFFSET, 0);
+      nvs_set_i32(my_handle, NONVOL_RHO_DOT_OFFSET, 0);
+      nvs_set_i32(my_handle, NONVOL_THETA_DOT_OFFSET, 0);
+      nvs_set_i32(my_handle, NONVOL_PHI_DOT_OFFSET, 0);
+    }
+  }
+  else
   {
     SEND(ALL, sprintf(_xs, "\r\nZero offset saved");)
     nvs_set_i32(my_handle, NONVOL_X_DOTDOT_OFFSET, json_x_dotdot_offset); // Save the value
@@ -439,20 +474,11 @@ void BMI270_find_zero(void)
     nvs_set_i32(my_handle, NONVOL_THETA_DOT_OFFSET, json_theta_dot_offset);
     nvs_set_i32(my_handle, NONVOL_PHI_DOT_OFFSET, json_phi_dot_offset);
   }
-  else
-  {
-    SEND(ALL, sprintf(_xs, "\r\nZero offset removed");)
-    nvs_set_i32(my_handle, NONVOL_X_DOTDOT_OFFSET, 0); // Save the value
-    nvs_set_i32(my_handle, NONVOL_Y_DOTDOT_OFFSET, 0);
-    nvs_set_i32(my_handle, NONVOL_Z_DOTDOT_OFFSET, 0);
-    nvs_set_i32(my_handle, NONVOL_RHO_DOT_OFFSET, 0);
-    nvs_set_i32(my_handle, NONVOL_THETA_DOT_OFFSET, 0);
-    nvs_set_i32(my_handle, NONVOL_PHI_DOT_OFFSET, 0);
-  }
 
   /*
    *  All done, return
    */
+  run_state &= ~IN_TEST;
   SEND(ALL, sprintf(_xs, _DONE_);)
 
   return;
@@ -475,7 +501,7 @@ void BMI270_find_zero(void)
  * register.
  *
  *--------------------------------------------------------------*/
-#define ACCEL_DEAD_BAND 0.002
+#define ACCEL_DEAD_BAND 0.005
 #define GYRO_DEAD_BAND  0.002
 #define CAL_SCALE       1.0
 
@@ -483,37 +509,37 @@ void BMI270_convert_to_g(FIFO_raw_frame_t *sample,                              
                          trace_vector_t   *vector                                               // Working values
 )
 {
-  vector->x_dotdot = CAL_SCALE * (real_t)(sample->x_dotdot + json_x_dotdot_offset) * G_PER_LSB; // Convert raw X-axis data to g
+  vector->x_dotdot = CAL_SCALE * (real_t)(sample->x_dotdot - json_x_dotdot_offset) * G_PER_LSB; // Convert raw X-axis data to g
   if ( F_ABS(vector->x) < ACCEL_DEAD_BAND )
   {
     vector->x_dotdot = 0;
   }
 
-  vector->y_dotdot = CAL_SCALE * (real_t)(sample->y_dotdot + json_y_dotdot_offset) * G_PER_LSB; // Convert raw Y-axis data to g
+  vector->y_dotdot = CAL_SCALE * (real_t)(sample->y_dotdot - json_y_dotdot_offset) * G_PER_LSB; // Convert raw Y-axis data to g
   if ( F_ABS(vector->y_dotdot) < ACCEL_DEAD_BAND )
   {
     vector->y_dotdot = 0;
   }
 
-  vector->z_dotdot = CAL_SCALE * (real_t)(sample->z_dotdot + json_z_dotdot_offset) * G_PER_LSB; // Convert raw Z-axis data to g
+  vector->z_dotdot = CAL_SCALE * (real_t)(sample->z_dotdot - json_z_dotdot_offset) * G_PER_LSB; // Convert raw Z-axis data to g
   if ( F_ABS(vector->z_dotdot) < ACCEL_DEAD_BAND )
   {
     vector->z_dotdot = 0;
   }
 
-  vector->rho_dot = (real_t)(sample->rho_dot + json_rho_dot_offset) * GYRO_PER_LSB;             // Convert raw X-axis data to g
+  vector->rho_dot = (real_t)(sample->rho_dot - json_rho_dot_offset) * GYRO_PER_LSB;             // Convert raw X-axis data to g
   if ( F_ABS(vector->rho_dot) < GYRO_DEAD_BAND )
   {
     vector->rho_dot = 0;
   }
 
-  vector->theta_dot = (real_t)(sample->theta_dot + json_theta_dot_offset) * GYRO_PER_LSB;       // Convert raw X-axis data to g
+  vector->theta_dot = (real_t)(sample->theta_dot - json_theta_dot_offset) * GYRO_PER_LSB;       // Convert raw X-axis data to g
   if ( F_ABS(vector->theta_dot) < GYRO_DEAD_BAND )
   {
     vector->theta_dot = 0;
   }
 
-  vector->phi_dot = (real_t)(sample->phi_dot + json_phi_dot_offset) * GYRO_PER_LSB;             // Convert raw X-axis data to g
+  vector->phi_dot = (real_t)(sample->phi_dot - json_phi_dot_offset) * GYRO_PER_LSB;             // Convert raw X-axis data to g
   if ( F_ABS(vector->phi_dot) < GYRO_DEAD_BAND )
   {
     vector->phi_dot = 0;
@@ -535,7 +561,6 @@ void BMI270_convert_to_g(FIFO_raw_frame_t *sample,                              
  * Poll the BMI270 and print out the acceleration data
  *
  *--------------------------------------------------------------*/
-
 void BMI270_oscilliscope(void)
 {
   real_t           vector_magnitude; // Magnitude of the acceleration vector
@@ -552,12 +577,15 @@ void BMI270_oscilliscope(void)
 
       vector_magnitude = sqrt(SQ(trace_vector.x_dotdot) + SQ(trace_vector.y_dotdot) +
                               SQ(trace_vector.z_dotdot)); // Calculate the magnitude of the acceleration
-      if ( (is_trace & DLT_DEBUG) == 0 )
-      {
-        SEND(ALL, sprintf(_xs, "\r\n\r|a|: %6.4f,   ax: %6.4f, ay: %6.4f,  az: %6.4f,    rho_dot: %6.4f, theta_dot: %6.4f, phi_dot: %6.4f",
-                          vector_magnitude, trace_vector.x_dotdot, trace_vector.y_dotdot, trace_vector.z_dotdot, trace_vector.rho_dot,
-                          trace_vector.theta_dot, trace_vector.phi_dot);)
-      }
+
+      SEND(ALL, sprintf(_xs,
+                        "\r\n\r zx: 0x%04X  rx: 0x%04X  ry: 0x%04X  rz: 0x%04X     |a|: %6.4f,   ax: %6.4f, ay: %6.4f,  az: %6.4f,    "
+                        "rho_dot: %6.4f, "
+                        "theta_dot: %6.4f, phi_dot: %6.4f",
+                        sample.x_dotdot - json_x_dotdot_offset, sample.x_dotdot, sample.y_dotdot, sample.z_dotdot, vector_magnitude,
+                        trace_vector.x_dotdot, trace_vector.y_dotdot, trace_vector.z_dotdot, trace_vector.rho_dot, trace_vector.theta_dot,
+                        trace_vector.phi_dot);)
+
       vTaskDelay(ONE_SECOND / 2);
     }
 
