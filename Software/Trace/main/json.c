@@ -24,6 +24,8 @@
 #include "serial_io.h"
 #include "wifi.h"
 #include "timer.h"
+#include "BMI270.h"
+#include "imu.h"
 
 /*
  *  Function Prototypes
@@ -46,7 +48,10 @@ static void set_trace(int v);        // Set the trace on and off
 const json_message_t JSON[] = {
     //  show     token        value stored in RAM           convert   service fcn()   NONVOL location         Initial Value
     //  PS Value
-    {SHOW, "\"DISTANCE\"",          (int *)&json_distance_to_target, IS_FLOAT, 0,             NONVOL_DISTANCE_TO_TARGET, 10000,  0},
+    {HIDE, "\"BUILD\":",            0,                               IS_INT32, &trace_build_and_send ,  0,                         0,      0},
+    {SHOW, "\"DISTANCE\":",         (int *)&json_distance_to_target, IS_FLOAT, 0,             NONVOL_DISTANCE_TO_TARGET, 10000,  0},
+    {SHOW, "\"MUZZLE_VELOCITY\":",  (int *)&json_muzzle_velocity,    IS_FLOAT, 0,             NONVOL_MUZZLE_VELOCITY,    17500,  0},
+
     {HIDE, "\"ECHO\"",              0,                               IS_VOID,  &show_echo,    0,                         0,      0},
     {HIDE, "\"INIT\"",              0,                               IS_VOID,  &init_nonvol,  0,                         0,      0},
     {SHOW, "\"X_DOTDOT_OFFSET\":",  &json_x_dotdot_offset,           IS_INT32, 0,             NONVOL_X_DOTDOT_OFFSET,    0,      0},
@@ -57,7 +62,7 @@ const json_message_t JSON[] = {
     {SHOW, "\"PHI_DOT_OFFSET\":",   &json_phi_dot_offset,            IS_INT32, 0,             NONVOL_PHI_DOT_OFFSET,     0,      0},
 
     {HIDE, "\"RESET\"",             0,                               IS_VOID,  &esp_restart,  0,                         0,      0},
-    {SHOW, "\"SN\":",               &json_serial_number,             IS_FIXED, 0,             NONVOL_SERIAL_NO,          0xffff, 0},
+    {HIDE, "\"SN\":",               &json_serial_number,             IS_FIXED, 0,             NONVOL_SERIAL_NO,          0xffff, 0},
     {HIDE, "\"TEST\":",             0,                               IS_INT32, &self_test,    0,                         0,      0},
     {SHOW, "\"TRACE\":",            0,                               IS_INT32, &set_trace,    0,                         0,      0},
     {SHOW, "\"VERSION\"",           0,                               IS_INT32, &POST_version, 0,                         0,      0},
@@ -135,6 +140,10 @@ void trace_json(void *pvParameters)
 
       switch ( ch )
       {
+        case '+': // Synchronize the clocks
+          reset_run_time_us();
+          break;
+
         case '}':
           if ( in_JSON != 0 )
           {
@@ -300,15 +309,16 @@ static void handle_json(void)
               break;
 
             case IS_FLOAT:                                  // Convert a floating point number
-
               f = atof(&input_JSON[i + k]);                 // Float
               x = f * FLOAT_SCALE;                          // Integer
               if ( JSON[j].value != 0 )
               {
+                printf("f %f", f);
                 *(double *)JSON[j].value = f;               // Working Value
               }
               if ( JSON[j].non_vol != 0 )
               {
+                printf("nonvol %d", x);
                 nvs_set_i32(my_handle, JSON[j].non_vol,
                             x);                             // Store into NON-VOL as an integer * 1000
               }
@@ -403,7 +413,7 @@ void show_echo(void)
           break;
 
         case IS_FLOAT:
-          SEND(ALL, sprintf(_xs, "%-18s %6.2f, ", JSON[i].token, *(double *)JSON[i].value);)
+          SEND(ALL, sprintf(_xs, "%-18s %6.2f, ", JSON[i].token, *(real_t *)JSON[i].value);)
           break;
       }
       vTaskDelay(10);
@@ -414,13 +424,13 @@ void show_echo(void)
   /*
    * Finish up with the special cases
    */
-  serial_to_all(_xs, EVEN_ODD_END);                                                    // End the even odd line
+  serial_to_all(_xs, EVEN_ODD_END);                                         // End the even odd line
   SEND(ALL, sprintf(_xs, "\r\n*** STATUS ***\r\n");)
-  serial_to_all(NULL, EVEN_ODD_BEGIN);                                                 // Start over again
+  serial_to_all(NULL, EVEN_ODD_BEGIN);                                      // Start over again
   SEND(ALL, sprintf(_xs, "\"SN\":                %d", json_serial_number);)
-  SEND(ALL, sprintf(_xs, "\"TRACE\":             %d,", is_trace);)                     //
-  SEND(ALL, sprintf(_xs, "\"CONNECTION_LIST\":   %02X,", connection_list);)            // Who is attached
-  SEND(ALL, sprintf(_xs, "\"RUNNING_MINUTES\":   %0.2f,", run_time_seconds() / 60.0);) // On Time
+  SEND(ALL, sprintf(_xs, "\"TRACE\":             %d,", is_trace);)          //
+  SEND(ALL, sprintf(_xs, "\"CONNECTION_LIST\":   %02X,", connection_list);) // Who is attached
+  SEND(ALL, sprintf(_xs, "\"TIME_STAMP\":   %ld,", run_time_us());)         // On Time
   WiFi_MAC_address(str_c);
   SEND(ALL, sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\",", str_c[0], str_c[1], str_c[2], str_c[3], str_c[4],
                     str_c[5]);)

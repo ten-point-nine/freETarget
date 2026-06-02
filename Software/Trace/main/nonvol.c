@@ -134,7 +134,7 @@ void read_nonvol(void)
           }
           else
           {
-            *(real_t *)(JSON[i].value) = (real_t)JSON[i].init_value / 1000.0;
+            *(real_t *)(JSON[i].value) = (real_t)JSON[i].init_value / FLOAT_SCALE;
           }
           break;
       }
@@ -167,7 +167,7 @@ void read_nonvol(void)
  *------------------------------------------------------------*/
 void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calibration
 {
-  char          s[TINY_TEXT];
+  char         s[TINY_TEXT];
   unsigned int x;                        // Temporary Value
   unsigned int i;                        // Iteration Counter
 
@@ -204,7 +204,7 @@ void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calib
         x = JSON[i].init_value;                       // Read in the value
         if ( JSON[i].non_vol != 0 )
         {
-          nvs_set_i32(my_handle, JSON[i].non_vol, x); // Read in the value
+          nvs_set_i32(my_handle, JSON[i].non_vol, x); // Save to NONVOL
         }
         break;
 
@@ -212,7 +212,7 @@ void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calib
         x = JSON[i].init_value;                       // Read in the value
         if ( JSON[i].non_vol != 0 )
         {
-          nvs_set_i32(my_handle, JSON[i].non_vol, x); // Read in the value
+          nvs_set_i32(my_handle, JSON[i].non_vol, x); // Save to NONVOL
         }
         break;
     }

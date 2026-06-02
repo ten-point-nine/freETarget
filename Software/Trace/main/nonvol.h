@@ -28,6 +28,7 @@ void nonvol_write_i32(char *name, int *value);    // Write a value to nonvol
  * NON Vol Storage
  */
 #define NONVOL_DISTANCE_TO_TARGET "DISTANCE_TO_TARGET" // Distance to target in meters
+#define NONVOL_MUZZLE_VELOCITY    "MUZZLE_VELOCITY"    // Pellet speed
 #define NONVOL_INIT               "NONVOL_INIT"        // Show when the INIT is done
 #define NONVOL_SERIAL_NO          "SERIAL_NO"          // EIN
 #define NONVOL_PS_VERSION         "PS_VERSION"         // Persistent storage version
@@ -39,19 +40,19 @@ void nonvol_write_i32(char *name, int *value);    // Write a value to nonvol
 #define NONVOL_WIFI_IP            "WIFI_IP"            // Storage forIP Address
 #define NONVOL_WIFI_GATEWAY       "WIFI_GATEWAY"       // Storage for Gateway mask
 #define NONVOL_WIFI_RESET_FIRST   "WIFI_RESET"         // Reset the target on the first WiFi connction
-#define NONVOL_WIFI_HIDDEN      "WIFI_HIDDEN"          // Hide the SSID if set to 1
-#define NONVOL_OTA_URL          "OTA_URL"              // User supplied name for the target
-#define NONVOL_REMOTE_ACTIVE    "REMOTE_ACTIVE"        // Send score to a remote server
-#define NONVOL_REMOTE_URL       "REMOTE_URL"           // URL of the remote server
-#define NONVOL_REMOTE_KEY       "REMOTE_KEY"           // Remote server access key
-#define NONVOL_ATHELETE         "ATHELETE"             // Remember the athelete name
-#define NONVOL_EVENT            "EVENT"                // Remember the shooting event
-#define NONVOL_LOCK             "LOCK"                 // Password for the target
-#define NONVOL_X_DOTDOT_OFFSET  "X_DOTDOT_OFFSET"      // Correction for X acceleration
-#define NONVOL_Y_DOTDOT_OFFSET  "Y_DOTDOT_OFFSET"      // Correction for Y acceleration
-#define NONVOL_Z_DOTDOT_OFFSET  "Z_DOTDOT_OFFSET"      // Correction for Z acceleration
-#define NONVOL_RHO_DOT_OFFSET   "RHO_DOT_OFFSET"       // Correction for angular velocity
-#define NONVOL_THETA_DOT_OFFSET "THETA_DOT_OFFSET"     // Correction for angular velocity
-#define NONVOL_PHI_DOT_OFFSET   "PHI_DOT_OFFSET"       // Correction for angular velocity
+#define NONVOL_WIFI_HIDDEN        "WIFI_HIDDEN"        // Hide the SSID if set to 1
+#define NONVOL_OTA_URL            "OTA_URL"            // User supplied name for the target
+#define NONVOL_REMOTE_ACTIVE      "REMOTE_ACTIVE"      // Send score to a remote server
+#define NONVOL_REMOTE_URL         "REMOTE_URL"         // URL of the remote server
+#define NONVOL_REMOTE_KEY         "REMOTE_KEY"         // Remote server access key
+#define NONVOL_ATHELETE           "ATHELETE"           // Remember the athelete name
+#define NONVOL_EVENT              "EVENT"              // Remember the shooting event
+#define NONVOL_LOCK               "LOCK"               // Password for the target
+#define NONVOL_X_DOTDOT_OFFSET    "X_DOTDOT_OFFSET"    // Correction for X acceleration
+#define NONVOL_Y_DOTDOT_OFFSET    "Y_DOTDOT_OFFSET"    // Correction for Y acceleration
+#define NONVOL_Z_DOTDOT_OFFSET    "Z_DOTDOT_OFFSET"    // Correction for Z acceleration
+#define NONVOL_RHO_DOT_OFFSET     "RHO_DOT_OFFSET"     // Correction for angular velocity
+#define NONVOL_THETA_DOT_OFFSET   "THETA_DOT_OFFSET"   // Correction for angular velocity
+#define NONVOL_PHI_DOT_OFFSET     "PHI_DOT_OFFSET"     // Correction for angular velocity
 
 #endif

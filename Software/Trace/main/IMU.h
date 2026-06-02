@@ -45,8 +45,13 @@ extern trace_index_t index_out; // Pointer to the output side
  */
 FIFO_raw_frame_t *trace_first(void);                     // Reset the trace pointers
 FIFO_raw_frame_t *trace_next(trace_index_t *index);      // Go to the next pointer
+FIFO_raw_frame_t *trace_previous(trace_index_t *index);  // Go to the prior pointer
 FIFO_raw_frame_t *trace_FIFO_next(trace_index_t *index); // Point to the next input buffer
 bool              trace_ready();                         // Is there data in the FIFO to read?
 void              IMU_test(void);                        // Test the IMU
+void              trace_build(int timestamp);            // Build up the trace
+void              trace_build_and_send(int timestamp);   // Build and send a trace
+void              trace_send(int oversample);            // Build and send a trace
+void IMU_real_time(void);                                // Output the trace in real time
 
 #endif

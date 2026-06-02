@@ -70,6 +70,7 @@ static const self_test_t test_list[] = {
     {"-Interrupt Tests",             0                        },
     {"- Software tests",             0                        },
     {"IMU test",                     &IMU_test                },
+    {"IMU real-time test",           &IMU_real_time           },
     {"",                             0                        }
 };
 
@@ -122,7 +123,7 @@ void self_test(unsigned int test) // What test to execute
   unsigned int i;
   unsigned int test_ID;           // Computed test ID
 
-  run_state     |= IN_TEST;        // Set the test run bit to prevent other tasks from running
+  run_state |= IN_TEST;           // Set the test run bit to prevent other tasks from running
 
                                   /*
                                    * Figure out what test to run
@@ -413,17 +414,8 @@ bool do_dlt(           //
     {
       dlt_id = dlt_names[i].dlt_id;               // Use the Verbose ID
 
-      SEND(ALL, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, run_time_ms() / 1000.);)
-#if ( 0 )
-      if ( (level & DLT_FATAL) != 0 )             // This message is fatal
-      {
-        set_status_LED();                         // Indicate an error
-        while ( 1 )
-        {
-          vTaskDelay(ONE_SECOND);                 // Stay here forever
-        }
-      }
-#endif
+      SEND(ALL, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, run_time_us() / 1000000.);)
+
       return true;                                // Send out the message
     }
 

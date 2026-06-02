@@ -30,31 +30,31 @@
  * Definitions
  */
 
-#define G2        (0)                                    // Select +/- 2g range
+#define G2        (0)                                              // Select +/- 2g range
 #define G2_RANGE  (2.0 - (-2.0))
-#define G4        1                                      // Select +/- 4g range
+#define G4        1                                                // Select +/- 4g range
 #define G4_RANGE  (4.0 - (-4.0))
-#define G8        2                                      // Select +/- 8g range
+#define G8        2                                                // Select +/- 8g range
 #define G8_RANGE  (8.0 - (-8.0))
-#define G16       3                                      // Select +/- 16g range
+#define G16       3                                                // Select +/- 16g range
 #define G16_RANGE (16.0 - (-16.0))
 
-#define G_RANGE    G2
-#define G_PER_LSB (G2_RANGE / 65535.0)                   // g per LSB for the selected range
+#define G_RANGE   G2
+#define G_PER_LSB (G2_RANGE / 65535.0)                             // g per LSB for the selected range
 
-#define GYRO_2000       0                                // Select +/- 2000 degrees per second
-#define GYRO_RANGE_2000 (4000)                           //
-#define GYRO_1000       1                                // Select +/- 1000 degrees per second
-#define GYRO_RANGE_1000 (2000)                           //
-#define GYRO_500        2                                // Select +/- 500 degrees per second
-#define GYRO_RANGE_500  (1000)                           //
-#define GYRO_250        3                                // Select +/- 250 degrees per second
-#define GYRO_RANGE_259  (500)                            //
-#define GYRO_125        4                                // Select +/- 125 degrees per second
-#define GYRO_RANGE_125  (250)                            //
+#define GYRO_2000       0                                          // Select +/- 2000 degrees per second
+#define GYRO_RANGE_2000 (4000)                                     //
+#define GYRO_1000       1                                          // Select +/- 1000 degrees per second
+#define GYRO_RANGE_1000 (2000)                                     //
+#define GYRO_500        2                                          // Select +/- 500 degrees per second
+#define GYRO_RANGE_500  (1000)                                     //
+#define GYRO_250        3                                          // Select +/- 250 degrees per second
+#define GYRO_RANGE_259  (500)                                      //
+#define GYRO_125        4                                          // Select +/- 125 degrees per second
+#define GYRO_RANGE_125  (250)                                      //
 
 #define GYRO_RANGE   GYRO_125
-#define GYRO_PER_LSB (GYRO_RANGE / 65535.0 * PI / 180.0) // in Radians per LSB
+#define GYRO_PER_LSB (((real_t)GYRO_RANGE) / 65535.0 * PI / 180.0) // in Radians per LSB
 
 #if ( SAMPLE_RATE == 100 )
 #define OUTPUT_DATA_RATE 0x08
@@ -76,7 +76,7 @@
 #define OUTPUT_DATA_RATE 0x0C
 #endif
 
-#define ACC_BANDWIDTH    0x01                            // OSR1 mode
+#define ACC_BANDWIDTH 0x01 // OSR1 mode
 
 #define SQ(x) ((x) * (x))
 

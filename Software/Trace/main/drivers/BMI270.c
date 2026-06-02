@@ -36,6 +36,7 @@
 #include "spi.h"
 #include "nonvol.h"
 #include "IMU.h"
+#include "timer.h"
 
 /*
  * Definitions
@@ -45,23 +46,11 @@
 /*
  *  Typedefs
  */
+
 /*
- * A single sample frame read from the BMI270 from each of the registers.
- * Internally, the target software will use the FIFO format for operations.
- * Any function using the register_raw format will need to convert to the
- * FIFO format before use.
+ *  Variables
  */
-typedef struct                                   // A single raw frame read from registers
-{
-  uint8_t empty;                                 // Here to force uint16_t x to be on a word boundary
-  uint8_t dummy;                                 // Dummy byte as read from the SPI bus
-  int16_t x_dotdot;                              // Sample frame directly from BMI270
-  int16_t y_dotdot;
-  int16_t z_dotdot;
-  int16_t rho_dot;
-  int16_t theta_dot;
-  int16_t phi_dot;                               // Z axis rotation speed
-} register_raw_frame_t;                          // Value read from sensor
+time_count_t last_FIFO_read;                     // Remember when we took the last sample
 
 FIFO_raw_t sample_raw_read[SAMPLE_BUFFER_COUNT]; // Space for 10 seconds of data
 
@@ -212,7 +201,7 @@ void BMI270_init(unsigned int BMI270_gpio)
     transaction.rxlength  = 0 * 8;                    // Receive length in bits
     transaction.flags     = SPI_TRANS_USE_TXDATA;     // Indicate that this is a read operation
     PAUSE("Sending register value");
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "register 0x%02X: 0x%02X", BMI270_config[i].address, BMI270_config[i].value);))
+    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "register 0x%02X: 0x%02X", BMI270_config[i].address, BMI270_config[i].value);))
     spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
     vTaskDelay(2);
     i++;
@@ -222,7 +211,6 @@ void BMI270_init(unsigned int BMI270_gpio)
    * All done, return
    */
   PAUSE("Finished")
-  BMI270_SPI_dump();
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270 initialization successful");))
   return;
 }
@@ -253,43 +241,6 @@ bool BMI270_pull_FIFO(void)
   static bool       return_value = false; // Return TRUE if the FIFO is completely full of data
 
   /*
-   *  Check to see if we are reading a single sample
-   */
-  IF(IN_SINGLE)          // Single sample?
-  {
-    return return_value; // Yes, return and do nothing
-  }
-
-  IF(IN_TEST)
-  {
-    return return_value;
-  }
-
-  /*
-   *  We can read the FIFO
-   */
-
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_FIFO_read()");))
-
-  /*
-   *  Read in the next bunch of samples
-   */
-  memset(&transaction, 0, sizeof(transaction));         // Clear the transaction structure{"TEST":24}
-  transaction.addr      = 0x80 | FIFO_DATA;             // Point to the FIFO read regisetrt
-  transaction.tx_buffer = NULL;                         // Transmit buffer not used
-  transaction.length    = (sizeof(FIFO_raw_t) - 0) * 8; // Transmit length in bits
-  transaction.rx_buffer = &sample_raw_read[index_in.outer].dummy;
-  transaction.rxlength  = (sizeof(FIFO_raw_t) - 1) * 8; // Receive length in bits
-  transaction.flags     = 0;                            // Indicate that this is a read operation
-  spi_device_transmit(BMI270_handle, &transaction);
-  trace_FIFO_next(&index_in);
-  if ( index_in.outer == index_out.outer )              // Wrapped around the buffer is full
-  {
-    return_value = true;
-    run_state &= ~IN_FIFO_FILLING;
-  }
-
-  /*
    *  Reset the interrupt status
    */
   memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure{"TEST":24}
@@ -301,9 +252,112 @@ bool BMI270_pull_FIFO(void)
   spi_device_transmit(BMI270_handle, &transaction);
 
   /*
+   *  Check to see if we need to suspend the logging
+   */
+  IF((IN_SINGLE | IN_TEST | IN_REDUCTION)) // Single sample?
+  {
+    return false;                          // Yes, return and do nothing
+  }
+
+  /*
+   *  We can read the FIFO
+   */
+  last_FIFO_read = run_time_us(); // When was the last sample taken
+
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_FIFO_read(), %ld", last_FIFO_read);))
+
+  /*
+   *  Read in the next bunch of samples
+   */
+  memset(&transaction, 0, sizeof(transaction));         // Clear the transaction structure{"TEST":24}
+  transaction.addr      = 0x80 | FIFO_DATA;             // Point to the FIFO read regisetrt
+  transaction.tx_buffer = NULL;                         // Transmit buffer not used
+  transaction.length    = (sizeof(FIFO_raw_t) - 1) * 8; // Transmit length in bits
+  transaction.rx_buffer = &sample_raw_read[index_in.outer].dummy;
+  transaction.rxlength  = (sizeof(FIFO_raw_t) - 2) * 8; // Receive length in bits
+  transaction.flags     = 0;                            // Indicate that this is a read operation
+  spi_device_transmit(BMI270_handle, &transaction);
+  trace_FIFO_next(&index_in);
+  if ( index_in.outer == index_out.outer )              // Wrapped around the buffer is full
+  {
+    return_value = true;
+    run_state &= ~IN_FIFO_FILLING;
+  }
+
+  /*
    *  All done, return
    */
   return return_value;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: BMI270_find_index_out
+ *
+ * @brief:    Find the place corresponding to the shot sample
+ *
+ * @return:   TRUE if the data is valid
+ *            Starting point of the trace
+ *
+ *----------------------------------------------------------------
+ *
+ * The FIFO is a freerunning queue that is updated perfiodically
+ * (SAMPLE_RATE).
+ *
+ * The entry to the queue is index_in and the output is index_out
+ * The function picks up the current index_in and subtracts the
+ * entries needed to go backwards in time to the desired shot
+ * time (index_out).
+ *
+ * Sample Calculations:
+ *
+ * shot:           99,627,789
+ * last_FIFO_read:101,515,835
+ *                -----------
+ *                  1,888,046
+ *
+ * time_delay_s:  1.888,046 seconds
+ * sample_delay:  1,510 samples
+ *
+ * index_in: (6, 0)
+ * index_out:(2, 90)
+ *
+ * 2  -----  3  -----  4  ----- 5  -----  ( 6 not yet used)
+ *  90 | 310     400        400      400
+ *     |       1510 back in time          |
+ *
+ *---------------------------------------------------------------*/
+bool BMI270_find_index_out(time_count_t shot) // Time shot occured
+{
+  real_t       time_delay_s;                  // Time shot occured in micro seconds
+  unsigned int sample_delay;
+
+  /*
+   * Calculate how much to go backwards in time
+   */
+  time_delay_s = (real_t)(last_FIFO_read - shot) / (1000000.0); // Time in microseconds (ago)
+  sample_delay = time_delay_s * SAMPLE_RATE;                    // This is how many samples behind
+
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "last_FIFO_read:%ld shot:%ld) => time_delay_s %f   sample_delay:%d  %d", last_FIFO_read, shot,
+                                   time_delay_s, sample_delay, sample_delay / RAW_FRAME_COUNT);))
+
+  /*
+   * Figure out what indexes to use
+   */
+  index_out.outer = (index_in.outer - (sample_delay / RAW_FRAME_COUNT) - 1); // Go backwards in time
+  if ( index_out.outer < 0 )                                                 // Gone negative, wrap around
+  {
+    index_out.outer += SAMPLE_BUFFER_COUNT;
+  }
+
+  index_out.inner = RAW_FRAME_COUNT - (sample_delay % RAW_FRAME_COUNT);      // Residiue of the timer index;
+
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "in:%d %d = out:%d %d", index_in.outer, index_in.inner, index_out.outer, index_out.inner);))
+
+  /*
+   * All done, return
+   */
+  return true;
 }
 
 /*----------------------------------------------------------------
@@ -502,7 +556,7 @@ void BMI270_find_zero(bool ask_for_confirm) // Ask for save confirmation)
  *
  *--------------------------------------------------------------*/
 #define ACCEL_DEAD_BAND 0.005
-#define GYRO_DEAD_BAND  0.002
+#define GYRO_DEAD_BAND  0.005
 #define CAL_SCALE       1.0
 
 void BMI270_convert_to_g(FIFO_raw_frame_t *sample,                                              // 16 bit numbers read from BBMI270
@@ -510,7 +564,7 @@ void BMI270_convert_to_g(FIFO_raw_frame_t *sample,                              
 )
 {
   vector->x_dotdot = CAL_SCALE * (real_t)(sample->x_dotdot - json_x_dotdot_offset) * G_PER_LSB; // Convert raw X-axis data to g
-  if ( F_ABS(vector->x) < ACCEL_DEAD_BAND )
+  if ( F_ABS(vector->x_dotdot) < ACCEL_DEAD_BAND )
   {
     vector->x_dotdot = 0;
   }
@@ -580,8 +634,7 @@ void BMI270_oscilliscope(void)
 
       SEND(ALL, sprintf(_xs,
                         "\r\n\r zx: 0x%04X  rx: 0x%04X  ry: 0x%04X  rz: 0x%04X     |a|: %6.4f,   ax: %6.4f, ay: %6.4f,  az: %6.4f,    "
-                        "rho_dot: %6.4f, "
-                        "theta_dot: %6.4f, phi_dot: %6.4f",
+                        "rho_dot: %6.4f,  theta_dot: %6.4f, phi_dot: %6.4f",
                         sample.x_dotdot - json_x_dotdot_offset, sample.x_dotdot, sample.y_dotdot, sample.z_dotdot, vector_magnitude,
                         trace_vector.x_dotdot, trace_vector.y_dotdot, trace_vector.z_dotdot, trace_vector.rho_dot, trace_vector.theta_dot,
                         trace_vector.phi_dot);)

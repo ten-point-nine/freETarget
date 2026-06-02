@@ -35,6 +35,7 @@
 #include "diag_tools.h"
 #include "http_client.h"
 #include "BMI270.h"
+#include "IMU.h"
 
 /*
  *  Variables
@@ -44,6 +45,11 @@
  * Function Prototypes
  */
 extern void gpio_init(void);
+
+/*
+ *  External variables
+ */
+extern FIFO_raw_t sample_raw_read[];
 
 /*----------------------------------------------------------------
  *
@@ -118,7 +124,6 @@ void trace_init(void)
   show_echo();
   serial_flush(ALL);         // Get rid of everything
   connection_list = CONSOLE; // The consule is always connected
-  reset_run_time();          // Reset the time of day
 
                              /*
                               * Start the tasks running
@@ -174,7 +179,7 @@ void trace_loop(void *arg)
 
 /*----------------------------------------------------------------
  *
- * @function: trace_pushbutton
+ * @function: trace_push_button
  *
  * @brief: Monitor the push button for action
  *
@@ -182,49 +187,56 @@ void trace_loop(void *arg)
  *
  *----------------------------------------------------------------
  *
- * The push button supports wto modes of operation,
+ * The push button supports two modes of operation,
  *
  * SHORT_PUSH --
  * LONG_PUSH  -- Recalibrate the trace
+ * HOLD_PUSH  --
  *
+ * We get here every 100ms
  *---------------------------------------------------------------*/
-#define SHORT_PUSH 50
-#define LONG_PUSH  100
+#define SHORT_PUSH 5                      // 1/2 second press
+#define LONG_PUSH  20                     // 2 second press
+#define HOLD_PUSH  50                     // Long hold
 
 void trace_push_button(void *arg)
 {
   static int time_tick = 0;
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "trace_push_button()");))
-
-  while ( 1 )
+  if ( gpio_get_level(SWITCH_GPIO) == 0 ) // If the button is held down
   {
-
-    if ( gpio_get_level(SWITCH_GPIO) == 0 ) // If the button is held down
+    time_tick++;                          // Increment the timer
+  }
+  else                                    // Button not held
+  {
+    if ( time_tick != 0 )                 // The button has just been released
     {
-      time_tick++;                          // Increment the timer
-    }
-    else
-    {
-      if ( time_tick != 0 )                 // The button has just been released
+      printf("time_tick %d\r\n", time_tick);
+      if ( time_tick < SHORT_PUSH )       // Too short to be recognized
       {
-        if ( time_tick < SHORT_PUSH )       // Short push
-        {
-        }
-        else
-        {
-          run_state |= IN_FIFO_FILLING;     // Reset the FIFO
-          vTaskDelay(ONE_SECOND);
-          BMI270_find_zero(false);          // Long push, automatically save
-        }
-        time_tick = 0;                      // Reset the timer
+        time_tick = 0;
       }
-
-      /*
-       * End of the loop. timeout till the next time
-       */
-      vTaskDelay(TICK_10ms);
+      if ( time_tick < LONG_PUSH )        // Short push
+      {
+        time_tick = 0;
+      }
+      else if ( time_tick < HOLD_PUSH )   // Long push
+      {
+        run_state |= IN_FIFO_FILLING;     // Reset the FIFO
+        vTaskDelay(ONE_SECOND);
+        BMI270_find_zero(false);          // Long push, automatically save
+        time_tick = 0;
+      }
     }
   }
+
+  if ( time_tick >= HOLD_PUSH )
+  {
+    time_tick = 0;
+  }
+
+  /*
+   * All done, return
+   */
   return; // Never get here
 }

@@ -63,12 +63,13 @@ typedef struct
 /*
  * Local Variables
  */
-static run_time_clock_t timers[N_TIMERS];         // Active timer list (allow only positive time)
-static time_count_t     base_time = 0;            // Base time to show elapsed time
-time_count_t            time_to_go;               // Time remaining in event in seconds
+static run_time_clock_t timers[N_TIMERS];           // Active timer list (allow only positive time)
+static time_count_t     base_time = 0;              // Base time to show elapsed time
+time_count_t            time_to_go;                 // Time remaining in event in seconds
 
 static synchronous_task_t task_list[] = {
     {"Status LED", BAND_100ms, status_LED_timer}, // Drive the status LED
+    {"Push button", BAND_100ms, trace_push_button}, // Monitor the push button
     {0, 0}
 };
 
@@ -288,14 +289,11 @@ int ft_timer_delete(time_count_t *old_timer) // Pointer to new down counter
  *---------------------------------------------------*/
 void show_time(void)
 {
-  long time;
-
   SEND(ALL, sprintf(_xs, "\r\nTime test.  Press any key to exit\r\n");)
 
   while ( serial_available(ALL) == 0 )
   {
-    time = run_time_seconds();
-    SEND(ALL, sprintf(_xs, "\r\n%ld.%ld s", time / 1000, time % 1000);)
+    SEND(ALL, sprintf(_xs, "\r\n%ld us", run_time_us());)
     vTaskDelay(ONE_SECOND);
   }
 
@@ -306,31 +304,26 @@ void show_time(void)
 
 /*-----------------------------------------------------
  *
- * @function: run_time_seconds()
- *            reset_run_time()
+ * @function: run_time_us()
+ *            reset_ru n_time_us_us()
  *
- * @brief:    Return the run time in seconds
+ * @brief:    Return the run time in microseconds
  *            Reset the timer to now
  *
- * @return:   time in seconds since reset
+ * @return:   microseconds since reset
  *
  *-----------------------------------------------------
  *
  * Common timer function
  *
  *---------------------------------------------------*/
-time_count_t run_time_seconds(void)
+time_count_t run_time_us(void)
 {
-  return (esp_timer_get_time() - base_time) / 1000000;
+  return (esp_timer_get_time() - base_time);
 }
 
-time_count_t run_time_ms(void)
+void reset_run_time_us(void)
 {
-  return (esp_timer_get_time() - base_time) / 1000;
-}
-
-void reset_run_time(void)
-{
-  base_time = 0;
+  base_time = esp_timer_get_time();
   return;
 }

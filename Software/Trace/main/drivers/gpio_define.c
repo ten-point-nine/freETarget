@@ -29,7 +29,6 @@
 #include "diag_tools.h"
 #include "gpio_define.h"
 #include "serial_io.h"
-#include "i2c.h"
 #include "spi.h"
 #include "BMI270.h"
 
@@ -56,10 +55,6 @@ const DIO_struct_t dio19 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .ini
 const DIO_struct_t dio20 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio21 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 1}; // Mode and Initial Value
 
-/*
- *  I2C COntrol.  GPIO explicitly filled in here
- */
-const I2C_struct_t i2c = {.type = I2C_PORT, .gpio_number_SDA = GPIO_NUM_0, .gpio_number_SCL = GPIO_NUM_1};
 
 /*
  *  SPI Control.  GPIO explicitly filled in here
@@ -194,14 +189,6 @@ void gpio_init_single(unsigned int type)                                        
           gpio_set_direction(gpio_table[i].gpio_number, ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->mode);
           gpio_set_pull_mode(gpio_table[i].gpio_number, GPIO_PULLUP_PULLDOWN);
           gpio_set_level(gpio_table[i].gpio_number, ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->initial_value);
-          break;
-
-        case I2C_PORT:
-          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "I2C: (%d) SCL: %d, SDA: %d", gpio_table[i].gpio_number,
-                                          ((I2C_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SCL,
-                                          ((I2C_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SDA);))
-          i2c_init(((I2C_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SDA,
-                   ((I2C_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SCL);
           break;
 
         case SPI_PORT:

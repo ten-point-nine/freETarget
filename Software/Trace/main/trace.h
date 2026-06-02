@@ -110,7 +110,7 @@
 #define WATERMARK      (AVAILABLE_FIFO * 3 / 4)                            // (4608) Use 75% of the FIFO
 
 #define RAW_FRAME_SIZE  (6 * 2)                                            // (12)   6 entries @ 2 bytes per entry
-#define RAW_FRAME_COUNT (WATERMARK / RAW_FRAME_SIZE)                       // (384)  entries in the FIFO
+#define RAW_FRAME_COUNT (200)                       // (400)  entries in the FIFO
 
 #define SAMPLE_RATE   (800)                                                // Output Data Rate samples per second
 #define SAMPLE_PERIOD (10)                                                 // Accumulate sampls for 10 seconds
@@ -126,9 +126,28 @@
 /*
  *  Types
  */
-typedef unsigned char byte_t;
-typedef volatile long time_count_t;
-typedef float         real_t;
+typedef unsigned char     byte_t;
+typedef volatile long int time_count_t;
+typedef float             real_t;
+
+/*
+ * A single sample frame read from the BMI270 from each of the registers.
+ * Internally, the target software will use the FIFO format for operations.
+ * Any function using the register_raw format will need to convert to the
+ * FIFO format before use.
+ */
+typedef struct          // A single raw frame read from registers
+{
+  uint8_t empty;        // Here to force uint16_t x to be on a word boundary
+  uint8_t dummy;        // Dummy byte as read from the SPI bus
+  int16_t x_dotdot;     // Sample frame directly from BMI270
+  int16_t y_dotdot;
+  int16_t z_dotdot;
+  int16_t rho_dot;
+  int16_t theta_dot;
+  int16_t phi_dot;      // Z axis rotation speed
+} register_raw_frame_t; // Value read from sensor
+
 
 typedef struct
 {
@@ -144,12 +163,15 @@ typedef struct
   real_t rho_dot;   // X anglular velocity
   real_t theta_dot; // Y anglular velocity
   real_t phi_dot;   // Z anglular velocity
+  real_t rho;       // X angle
+  real_t theta;     // Y angle
+  real_t phi;       // Z angle
 } trace_vector_t;   // Vector at the point
 
 typedef struct
 {
-  real_t x;         // X position
-  real_t y;         // Y position
+  real_t x;         // X position in mm
+  real_t y;         // Y position in mm
 } trace_point_t;    // computed point
 
 /*
@@ -188,6 +210,8 @@ EXTERN time_count_t session_time[];
 void trace_init(void);                 // Get the target software ready
 void trace_loop(void *arg);            // Target polling loop
 void trace_push_button(void *arg);     // Monitor the push button
+void trace_build(int timestamp);       // Build and send a trace
+void trace_send(int oversample); // Build and send a trace
 void send_keep_alive(void);            // Send out the keep alive signal for TCPIP
 bool prompt_for_confirm(char *prompt); // Prompt for a confirmation
 #endif

@@ -28,18 +28,18 @@
 #include "serial_io.h"
 
 #define SHOT_TIME_TO_SECONDS(x) ((real_t)(x)) / 1000000.0
-real_t SQ(real_t a)
+
+real_t SQ(real_t a)    // Square
 {
   return a * a;
 }
 
-real_t F_ABS(real_t x)
+real_t F_ABS(real_t x) // Floating point absolute value
 {
   if ( x < 0 )
   {
     x = -x;
   }
-
   return x;
 }
 /*-----------------------------------------------------
@@ -169,7 +169,7 @@ bool contains(char *source,                    // Source string
  * @return:   TRUE if the confirmation is Yes
  *
  *--------------------------------------------------------------*/
-bool prompt_for_confirm(char * prompt)
+bool prompt_for_confirm(char *prompt)
 {
   unsigned char ch;
 
@@ -765,7 +765,7 @@ unsigned char check_for_exit(void)
  * @brief:    Puase execution until a space bar is pressed
  *
  * @return:   Nothing
- * 
+ *
  *---------------------------------------------------------------
  *
  * Stay here forever until a space bar has been pressed

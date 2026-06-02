@@ -21,10 +21,11 @@
 #include "esp_event.h"
 #include "esp_netif.h"
 #include "esp_tls.h"
+//#include "components\hal\esp32c3\include\hal\uart_ll.h"
 
 #include "trace.h"
 #include "board_assembly.h"
-#include "helpers.h"
+#include "helpers.h"//
 #include "diag_tools.h"
 #include "serial_io.h"
 #include "timer.h"
@@ -42,23 +43,32 @@ const uart_config_t uart_console_config = {.baud_rate           = 115200,
                                            .flow_ctrl           = UART_HW_FLOWCTRL_DISABLE,
                                            .rx_flow_ctrl_thresh = 122,
                                            .source_clk          = UART_SCLK_DEFAULT};
-const int           uart_console_size   = (1024 * 2);
-const int           uart_xon_threshold  = 16;         // When to turn on the XON flow control
-const int           uart_xoff_threshold = (128 - 16); // 128 is the size of the hardware FIFO
+
+                                           #if(0)
+uart_intr_config_t  uart_intr           = {
+               .intr_enable_mask   =  UART_INTR_CMD_CHAR_DET,
+               .rxfifo_full_thresh = 100,
+               .rx_timeout_thresh  = 10,
+};
+#endif 
+
+const int uart_console_size   = (1024 * 2);
+const int uart_xon_threshold  = 16;         // When to turn on the XON flow control
+const int uart_xoff_threshold = (128 - 16); // 128 is the size of the hardware FIFO
 
 QueueHandle_t uart_console_queue;
 
 typedef struct queue_struct
 {
-  char queue[1024];                                   // Holding queue
-  int  in;                                            // Index of input characters
-  int  out;                                           // Index of output characters
+  char queue[1024];                         // Holding queue
+  int  in;                                  // Index of input characters
+  int  out;                                 // Index of output characters
 } queue_struct_t;
 
-static queue_struct_t in_buffer;                      // TCPIP input buffer
-static queue_struct_t out_buffer;                     // TCPIP input buffer
+static queue_struct_t in_buffer;            // TCPIP input buffer
+static queue_struct_t out_buffer;           // TCPIP input buffer
 
-unsigned int connection_list;                         // Bitmask of existing connections
+unsigned int connection_list;               // Bitmask of existing connections
 
 /******************************************************************************
  *
@@ -90,8 +100,9 @@ void serial_io_init(void)
    *  Setup the communications parameters
    */
   uart_param_config(uart_console, &uart_console_config);
-  setvbuf(stdout, NULL, _IONBF, 0); // Send something out as soon as you get it
+  setvbuf(stdout, NULL, _IONBF, 0);                                 // Send something out as soon as you get it
   uart_set_sw_flow_ctrl(UART_NUM_0, true, uart_xon_threshold, uart_xoff_threshold);
+  //uart_enable_pattern_det_baud_intr(uart_console, '+', 3, 9, 0, 0); // Wait for +++
 
   /*
    *  Prepare the TCPIP queues
