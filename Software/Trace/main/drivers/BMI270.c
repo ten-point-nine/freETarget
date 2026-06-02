@@ -241,17 +241,6 @@ bool BMI270_pull_FIFO(void)
   static bool       return_value = false; // Return TRUE if the FIFO is completely full of data
 
   /*
-   *  Reset the interrupt status
-   */
-  memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure{"TEST":24}
-  transaction.addr      = 0x80 | INT_STATUS_1;  // Point to the FIFO read regisetrt
-  transaction.tx_buffer = NULL;                 // Transmit buffer not used
-  transaction.length    = 3 * 8;                // Transmit length in bits
-  transaction.rxlength  = 1 * 8;                // Receive length in bits
-  transaction.flags     = SPI_TRANS_USE_RXDATA; // Read into the four byte pointer
-  spi_device_transmit(BMI270_handle, &transaction);
-
-  /*
    *  Check to see if we need to suspend the logging
    */
   IF((IN_SINGLE | IN_TEST | IN_REDUCTION)) // Single sample?
@@ -272,9 +261,9 @@ bool BMI270_pull_FIFO(void)
   memset(&transaction, 0, sizeof(transaction));         // Clear the transaction structure{"TEST":24}
   transaction.addr      = 0x80 | FIFO_DATA;             // Point to the FIFO read regisetrt
   transaction.tx_buffer = NULL;                         // Transmit buffer not used
-  transaction.length    = (sizeof(FIFO_raw_t) - 1) * 8; // Transmit length in bits
+  transaction.length    = sizeof(FIFO_raw_t) * 8; // Transmit length in bits
   transaction.rx_buffer = &sample_raw_read[index_in.outer].dummy;
-  transaction.rxlength  = (sizeof(FIFO_raw_t) - 2) * 8; // Receive length in bits
+  transaction.rxlength  = sizeof(FIFO_raw_t) * 8; // Receive length in bits
   transaction.flags     = 0;                            // Indicate that this is a read operation
   spi_device_transmit(BMI270_handle, &transaction);
   trace_FIFO_next(&index_in);
@@ -283,6 +272,17 @@ bool BMI270_pull_FIFO(void)
     return_value = true;
     run_state &= ~IN_FIFO_FILLING;
   }
+
+  /*
+   *  Reset the interrupt status
+   */
+  memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure{"TEST":24}
+  transaction.addr      = 0x80 | INT_STATUS_1;  // Point to the FIFO read regisetrt
+  transaction.tx_buffer = NULL;                 // Transmit buffer not used
+  transaction.length    = 3 * 8;                // Transmit length in bits
+  transaction.rxlength  = 1 * 8;                // Receive length in bits
+  transaction.flags     = SPI_TRANS_USE_RXDATA; // Read into the four byte pointer
+  spi_device_transmit(BMI270_handle, &transaction);
 
   /*
    *  All done, return
@@ -556,7 +556,7 @@ void BMI270_find_zero(bool ask_for_confirm) // Ask for save confirmation)
  *
  *--------------------------------------------------------------*/
 #define ACCEL_DEAD_BAND 0.005
-#define GYRO_DEAD_BAND  0.005
+#define GYRO_DEAD_BAND  0.000
 #define CAL_SCALE       1.0
 
 void BMI270_convert_to_g(FIFO_raw_frame_t *sample,                                              // 16 bit numbers read from BBMI270

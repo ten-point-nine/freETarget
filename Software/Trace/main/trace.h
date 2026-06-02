@@ -107,10 +107,15 @@
                                        *  A vector is the locaton and direction of a sample
                                        */
 #define AVAILABLE_FIFO (6 * 1024)                                          // (6144) 6K FIFO available
-#define WATERMARK      (AVAILABLE_FIFO * 3 / 4)                            // (4608) Use 75% of the FIFO
 
 #define RAW_FRAME_SIZE  (6 * 2)                                            // (12)   6 entries @ 2 bytes per entry
-#define RAW_FRAME_COUNT (200)                       // (400)  entries in the FIFO
+#define RAW_FRAME_COUNT (400)                                              // (400)  entries in the FIFO
+
+#define WATERMARK (RAW_FRAME_SIZE * (RAW_FRAME_COUNT + 2))                 // (4800 + 2 sample buffer) Use 75% of the FIFO
+
+#if ( WATERMARK > (AVAILABLE_FIFO * 8 / 10) )                              // If the watermark is over 80% of the FIFO
+#error "WATERMARK IS TOO HIGH"
+#endif
 
 #define SAMPLE_RATE   (800)                                                // Output Data Rate samples per second
 #define SAMPLE_PERIOD (10)                                                 // Accumulate sampls for 10 seconds
@@ -148,31 +153,30 @@ typedef struct          // A single raw frame read from registers
   int16_t phi_dot;      // Z axis rotation speed
 } register_raw_frame_t; // Value read from sensor
 
+typedef struct
+{
+  real_t x_dotdot;      // X-axis acceleration in g
+  real_t y_dotdot;      // Y-axis acceleration in g
+  real_t z_dotdot;      // Z-axis acceleration in g
+  real_t x_dot;         // Velocity in the X axis
+  real_t y_dot;         // Velocity in the Y axis
+  real_t z_dot;         // Velocity in the Z axis
+  real_t x;             // X position
+  real_t y;             // Y position
+  real_t z;             // Z position
+  real_t rho_dot;       // X anglular velocity
+  real_t theta_dot;     // Y anglular velocity
+  real_t phi_dot;       // Z anglular velocity
+  real_t rho;           // X angle
+  real_t theta;         // Y angle
+  real_t phi;           // Z angle
+} trace_vector_t;       // Vector at the point
 
 typedef struct
 {
-  real_t x_dotdot;  // X-axis acceleration in g
-  real_t y_dotdot;  // Y-axis acceleration in g
-  real_t z_dotdot;  // Z-axis acceleration in g
-  real_t x_dot;     // Velocity in the X axis
-  real_t y_dot;     // Velocity in the Y axis
-  real_t z_dot;     // Velocity in the Z axis
-  real_t x;         // X position
-  real_t y;         // Y position
-  real_t z;         // Z position
-  real_t rho_dot;   // X anglular velocity
-  real_t theta_dot; // Y anglular velocity
-  real_t phi_dot;   // Z anglular velocity
-  real_t rho;       // X angle
-  real_t theta;     // Y angle
-  real_t phi;       // Z angle
-} trace_vector_t;   // Vector at the point
-
-typedef struct
-{
-  real_t x;         // X position in mm
-  real_t y;         // Y position in mm
-} trace_point_t;    // computed point
+  real_t x;             // X position in mm
+  real_t y;             // Y position in mm
+} trace_point_t;        // computed point
 
 /*
  *  Global Variables
@@ -211,7 +215,7 @@ void trace_init(void);                 // Get the target software ready
 void trace_loop(void *arg);            // Target polling loop
 void trace_push_button(void *arg);     // Monitor the push button
 void trace_build(int timestamp);       // Build and send a trace
-void trace_send(int oversample); // Build and send a trace
+void trace_send(int oversample);       // Build and send a trace
 void send_keep_alive(void);            // Send out the keep alive signal for TCPIP
 bool prompt_for_confirm(char *prompt); // Prompt for a confirmation
 #endif

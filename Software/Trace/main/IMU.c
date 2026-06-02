@@ -108,12 +108,14 @@ void IMU_real_time(void)
     current.rho   = previous.rho + (current.rho_dot / SAMPLE_RATE);
     current.theta = previous.theta + (current.theta_dot / SAMPLE_RATE);
     current.phi   = previous.phi + (current.phi_dot / SAMPLE_RATE);
-    //if ( (i % 50) == 0 )
+
+    if ( (i % 50) == 0 )
     {
-      printf("xd %d   phi %f %f  theta  %f %f   xy: %f %f working: %d %d\r\n", sample_raw_read[working.outer].f[working.inner].x_dotdot, current.phi, current.phi_dot, current.theta, current.theta_dot,
+      printf("phi %f %f  theta  %f %f   xy: %f %f working: %d %d\r\n", current.phi, current.phi_dot, current.theta, current.theta_dot,
              current.x, current.y, working.outer, working.inner);
     }
     i++;
+
     current.x = sin(current.phi) * json_distance_to_target * 1000.0;
     current.y = sin(current.theta) * json_distance_to_target * 1000.0;
 
