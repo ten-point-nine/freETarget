@@ -84,9 +84,9 @@ extern char                 input_JSON[];
  * Global JSON variables and settings
  */
 
-EXTERN int json_name_id;                    // Name Identifier
-EXTERN int json_serial_number;              // EIN
-
+EXTERN int    json_name_id;                 // Name Identifier
+EXTERN int    json_serial_number;           // EIN
+EXTERN int    json_trace_size;              // Size of trace to be sent to the client in mm
 EXTERN int    json_keep_alive;              // Keepalive period
 EXTERN int    json_wifi_channel;            // Channel assigned to this SSID
 EXTERN int    json_wifi_dhcp;               // TRUE if the DHCP server is enabled

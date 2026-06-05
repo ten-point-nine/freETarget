@@ -258,16 +258,16 @@ bool BMI270_pull_FIFO(void)
   /*
    *  Read in the next bunch of samples
    */
-  memset(&transaction, 0, sizeof(transaction));         // Clear the transaction structure{"TEST":24}
-  transaction.addr      = 0x80 | FIFO_DATA;             // Point to the FIFO read regisetrt
-  transaction.tx_buffer = NULL;                         // Transmit buffer not used
+  memset(&transaction, 0, sizeof(transaction));   // Clear the transaction structure{"TEST":24}
+  transaction.addr      = 0x80 | FIFO_DATA;       // Point to the FIFO read regisetrt
+  transaction.tx_buffer = NULL;                   // Transmit buffer not used
   transaction.length    = sizeof(FIFO_raw_t) * 8; // Transmit length in bits
   transaction.rx_buffer = &sample_raw_read[index_in.outer].dummy;
   transaction.rxlength  = sizeof(FIFO_raw_t) * 8; // Receive length in bits
-  transaction.flags     = 0;                            // Indicate that this is a read operation
+  transaction.flags     = 0;                      // Indicate that this is a read operation
   spi_device_transmit(BMI270_handle, &transaction);
   trace_FIFO_next(&index_in);
-  if ( index_in.outer == index_out.outer )              // Wrapped around the buffer is full
+  if ( index_in.outer == index_out.outer )        // Wrapped around the buffer is full
   {
     return_value = true;
     run_state &= ~IN_FIFO_FILLING;
@@ -332,32 +332,41 @@ bool BMI270_find_index_out(time_count_t shot) // Time shot occured
   real_t       time_delay_s;                  // Time shot occured in micro seconds
   unsigned int sample_delay;
 
-  /*
-   * Calculate how much to go backwards in time
-   */
-  time_delay_s = (real_t)(last_FIFO_read - shot) / (1000000.0); // Time in microseconds (ago)
-  sample_delay = time_delay_s * SAMPLE_RATE;                    // This is how many samples behind
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_find_index_out(%ld)", shot);))
 
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "last_FIFO_read:%ld shot:%ld) => time_delay_s %f   sample_delay:%d  %d", last_FIFO_read, shot,
-                                   time_delay_s, sample_delay, sample_delay / RAW_FRAME_COUNT);))
-
-  /*
-   * Figure out what indexes to use
-   */
-  index_out.outer = (index_in.outer - (sample_delay / RAW_FRAME_COUNT) - 1); // Go backwards in time
-  if ( index_out.outer < 0 )                                                 // Gone negative, wrap around
+  if ( shot == 0 )                            // No shot time, just start at the current point in the FIFO
   {
-    index_out.outer += SAMPLE_BUFFER_COUNT;
+    index_out.inner = 0;
+    index_out.outer = 0;
+    return false;
   }
 
-  index_out.inner = RAW_FRAME_COUNT - (sample_delay % RAW_FRAME_COUNT);      // Residiue of the timer index;
+/*
+ * Calculate how much to go backwards in time
+ */
+time_delay_s = (real_t)(last_FIFO_read - shot) / (1000000.0); // Time in microseconds (ago)
+sample_delay = time_delay_s * SAMPLE_RATE;                    // This is how many samples behind
 
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "in:%d %d = out:%d %d", index_in.outer, index_in.inner, index_out.outer, index_out.inner);))
+DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "last_FIFO_read:%ld shot:%ld) => time_delay_s %f   sample_delay:%d  %d", last_FIFO_read, shot,
+                                 time_delay_s, sample_delay, sample_delay / RAW_FRAME_COUNT);))
 
-  /*
-   * All done, return
-   */
-  return true;
+/*
+ * Figure out what indexes to use
+ */
+index_out.outer = (index_in.outer - (sample_delay / RAW_FRAME_COUNT) - 1); // Go backwards in time
+if ( index_out.outer < 0 )                                                 // Gone negative, wrap around
+{
+  index_out.outer += SAMPLE_BUFFER_COUNT;
+}
+
+index_out.inner = RAW_FRAME_COUNT - (sample_delay % RAW_FRAME_COUNT);      // Residiue of the timer index;
+
+DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "in:%d %d = out:%d %d", index_in.outer, index_in.inner, index_out.outer, index_out.inner);))
+
+/*
+ * All done, return
+ */
+return true;
 }
 
 /*----------------------------------------------------------------
@@ -556,7 +565,7 @@ void BMI270_find_zero(bool ask_for_confirm) // Ask for save confirmation)
  *
  *--------------------------------------------------------------*/
 #define ACCEL_DEAD_BAND 0.005
-#define GYRO_DEAD_BAND  0.000
+#define GYRO_DEAD_BAND  0.0001
 #define CAL_SCALE       1.0
 
 void BMI270_convert_to_g(FIFO_raw_frame_t *sample,                                              // 16 bit numbers read from BBMI270

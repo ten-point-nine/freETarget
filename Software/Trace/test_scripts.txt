@@ -25,7 +25,7 @@ Firmware debug trace   { "TRACE":16, "TRACE":32, "TRACE":64, "TEST":142}
 
 {"DISTANCE":10.0}
 {"MUZZLE_VELOCITY":175.0}
-
+{"TRACE_SIZE": 165}
 
 
 {"ECHO":0}

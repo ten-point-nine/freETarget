@@ -29,6 +29,7 @@ void nonvol_write_i32(char *name, int *value);    // Write a value to nonvol
  */
 #define NONVOL_DISTANCE_TO_TARGET "DISTANCE_TO_TARGET" // Distance to target in meters
 #define NONVOL_MUZZLE_VELOCITY    "MUZZLE_VELOCITY"    // Pellet speed
+#define NONVOL_TRACE_SIZE         "TRACE_SIZE"         // Exclusion radius of the target in mm.
 #define NONVOL_INIT               "NONVOL_INIT"        // Show when the INIT is done
 #define NONVOL_SERIAL_NO          "SERIAL_NO"          // EIN
 #define NONVOL_PS_VERSION         "PS_VERSION"         // Persistent storage version

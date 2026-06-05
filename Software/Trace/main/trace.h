@@ -19,7 +19,7 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"1.0.0 May 17, 2026\""
+#define SOFTWARE_VERSION "\"1.0.0 June 3, 2026\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED"           // Message to send on connection
 #define _BYE_            "BYE"                 // Message to send on disconnection
@@ -106,27 +106,25 @@
                                        *  A trace is the path drawn by the gun on the target
                                        *  A vector is the locaton and direction of a sample
                                        */
-#define AVAILABLE_FIFO (6 * 1024)                                          // (6144) 6K FIFO available
+#define AVAILABLE_FIFO (6 * 1024)                                         // (6144) 6K FIFO available
 
-#define RAW_FRAME_SIZE  (6 * 2)                                            // (12)   6 entries @ 2 bytes per entry
-#define RAW_FRAME_COUNT (400)                                              // (400)  entries in the FIFO
+#define RAW_FRAME_SIZE  (6 * 2)                                           // (12)   6 entries @ 2 bytes per entry
+#define RAW_FRAME_COUNT (400)                                             // (400)  entries in the FIFO
 
-#define WATERMARK (RAW_FRAME_SIZE * (RAW_FRAME_COUNT + 2))                 // (4800 + 2 sample buffer) Use 75% of the FIFO
+#define WATERMARK (RAW_FRAME_SIZE * (RAW_FRAME_COUNT + 2))                // (4800 + 2 sample buffer) Use 75% of the FIFO
 
-#if ( WATERMARK > (AVAILABLE_FIFO * 8 / 10) )                              // If the watermark is over 80% of the FIFO
+#if ( WATERMARK > (AVAILABLE_FIFO * 8 / 10) )                             // If the watermark is over 80% of the FIFO
 #error "WATERMARK IS TOO HIGH"
 #endif
 
-#define SAMPLE_RATE   (800)                                                // Output Data Rate samples per second
-#define SAMPLE_PERIOD (10)                                                 // Accumulate sampls for 10 seconds
+#define SAMPLE_RATE   (1600)                                              // Output Data Rate samples per second
+#define SAMPLE_PERIOD (8)                                                 // Accumulate sampls for 8 seconds
 #define SAMPLE_BUFFER_COUNT                                                                                                                \
-  (((SAMPLE_RATE * SAMPLE_PERIOD) / RAW_FRAME_COUNT) + 2)                  // (12) Number of frames needed to store 10 seconds of data
+  (((SAMPLE_RATE * SAMPLE_PERIOD) / RAW_FRAME_COUNT) + 2)                 // (12) Number of frames needed to store 10 seconds of data
 
-#define VECTOR_FRAME_SIZE  (6 * 4)                                         // (24) 6 entries at 4 bytes (32 bits) each
-#define VECTOR_BUFFER_SIZE (SAMPLE_RATE * SAMPLE_PERIOD)                   // Memory used to store vectors
-
-#define TRACE_FRAME_SIZE  (2 * 4)                                          // (24) 6 entries at 4 bytes (32 bits) each
-#define TRACE_MEMORY_SIZE (SAMPLE_RATE * SAMPLE_PERIOD * TRACE_FRAME_SIZE) // (96000)
+#define TRACE_RATE        (100)                                           // Trace points per
+#define TRACE_FRAME_SIZE  (2 * 4)                                         // (24) 6 entries at 4 bytes (32 bits) each
+#define TRACE_MEMORY_SIZE (TRACE_RATE * SAMPLE_PERIOD * TRACE_FRAME_SIZE) // (96000)
 
 /*
  *  Types
@@ -182,7 +180,7 @@ typedef struct
  *  Global Variables
  */
 EXTERN trace_vector_t trace_vector[2];                              // Space for the trace vector
-EXTERN trace_point_t  trace_point[SAMPLE_RATE * SAMPLE_PERIOD];     // Space for the trace
+EXTERN trace_point_t  trace_point[TRACE_RATE * SAMPLE_PERIOD];      // Space for the trace
 EXTERN char           _xs[1024 + 512];                              // General purpose string buffer
 EXTERN unsigned int   is_trace;                                     // Tracing level(s)
 

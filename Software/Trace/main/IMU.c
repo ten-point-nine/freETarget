@@ -31,9 +31,9 @@
 /*
  * Definitions
  */
-#define APPROACH       7 // Go back in time 7 seconds
-#define FOLLOW_THROUGH 2 // Go forwards 2 seconds
-#define OVERSAMPLE     8 // Only send 1/8 samples
+#define APPROACH       7                          // Go back in time 7 seconds
+#define FOLLOW_THROUGH 2                          // Go forwards 2 seconds
+#define OVERSAMPLE     (SAMPLE_RATE / TRACE_RATE) // Only send 1/8 samples
 /*
  *  Typedefs
  */
@@ -109,12 +109,10 @@ void IMU_real_time(void)
     current.theta = previous.theta + (current.theta_dot / SAMPLE_RATE);
     current.phi   = previous.phi + (current.phi_dot / SAMPLE_RATE);
 
-    if ( (i % 50) == 0 )
+    if ( ((i++) % 200) == 0 )
     {
-      printf("phi %f %f  theta  %f %f   xy: %f %f working: %d %d\r\n", current.phi, current.phi_dot, current.theta, current.theta_dot,
-             current.x, current.y, working.outer, working.inner);
+      printf("phi %f %f  theta  %f %f\r\n", current.phi, current.phi_dot, current.theta, current.theta_dot);
     }
-    i++;
 
     current.x = sin(current.phi) * json_distance_to_target * 1000.0;
     current.y = sin(current.theta) * json_distance_to_target * 1000.0;
@@ -128,6 +126,15 @@ void IMU_real_time(void)
       if ( check_for_exit() == '!' )
       {
         break;
+      }
+      if ( gpio_get_level(SWITCH_GPIO) == 0 ) // If the switch is pressed, reset
+      {
+        previous.x     = 0;
+        previous.y     = 0;
+        previous.z     = 0;
+        previous.rho   = 0;
+        previous.theta = 0;
+        previous.phi   = 0;
       }
     }
   }
@@ -160,10 +167,10 @@ void IMU_real_time(void)
  * gun path onto the target.
  *
  *---------------------------------------------------------------*/
-trace_point_t approach[APPROACH * SAMPLE_RATE];             // Samples back in time
-trace_point_t follow_through[FOLLOW_THROUGH * SAMPLE_RATE]; // Samples forward in time
+trace_point_t approach[APPROACH * TRACE_RATE];             // Samples back in time
+trace_point_t follow_through[FOLLOW_THROUGH * TRACE_RATE]; // Samples forward in time
 
-void trace_build_and_send(int timestamp)                    // Build and send a trace
+void trace_build_and_send(int timestamp)                   // Build and send a trace
 {
   trace_build(timestamp);
   trace_send(OVERSAMPLE);
@@ -175,7 +182,7 @@ void trace_build(int timestamp) // Build and send a trace
   trace_index_t  working;       // Working data point
   trace_vector_t current;       // Current computed location
   trace_vector_t previous;      // Last computed location
-  int            i;             // Index
+  int            i, j;          // Index
 
   run_state |= IN_REDUCTION;    // Stop collecting FIFO data
 
@@ -197,15 +204,20 @@ void trace_build(int timestamp) // Build and send a trace
   previous.theta = 0;
   previous.phi   = 0;
 
-  for ( i = 0; i < FOLLOW_THROUGH * SAMPLE_RATE; i++ )
+  for ( i = 0, j = 0; i < FOLLOW_THROUGH * SAMPLE_RATE; i++ )
   {
     BMI270_convert_to_g(&sample_raw_read[working.outer].f[working.inner], &current);
     current.rho   = previous.rho + (current.rho_dot / SAMPLE_RATE);
     current.theta = previous.theta + (current.theta_dot / SAMPLE_RATE);
     current.phi   = previous.phi + (current.phi_dot / SAMPLE_RATE);
     //   printf("phi %f   theta  %f", current.phi, current.theta);
-    follow_through[i].x = sin(current.phi) * json_distance_to_target * 1000.0;
-    follow_through[i].y = sin(current.theta) * json_distance_to_target * 1000.0;
+
+    if ( (i % (TRACE_RATE)) == 0 )
+    {
+      follow_through[j].x = sin(current.phi) * json_distance_to_target * 1000.0;
+      follow_through[j].y = sin(current.theta) * json_distance_to_target * 1000.0;
+      j++;
+    }
 
     previous = current;
     trace_next(&working);
@@ -222,16 +234,18 @@ void trace_build(int timestamp) // Build and send a trace
   previous.phi   = 0;
   working        = index_in;
 
-  for ( i = (APPROACH * SAMPLE_RATE) - 1; i >= 0; i-- )
+  for ( i = (APPROACH * SAMPLE_RATE) - 1, j = (APPROACH * TRACE_RATE) - 1; i >= 0; i-- )
   {
     BMI270_convert_to_g(&sample_raw_read[working.outer].f[working.inner], &current);
     current.rho   = previous.rho - (current.rho_dot / SAMPLE_RATE);
     current.theta = previous.theta - (current.theta_dot / SAMPLE_RATE);
     current.phi   = previous.phi - (current.phi_dot / SAMPLE_RATE);
     //    printf("phi %f   theta  %f", current.phi, current.theta);
-    approach[i].x = sin(current.phi) * json_distance_to_target * 1000.0;
-    approach[i].y = sin(current.theta) * json_distance_to_target * 1000.0;
-
+    if ( (i % TRACE_RATE) == 0 )
+    {
+      approach[j].x = sin(current.phi) * json_distance_to_target * 1000.0;
+      approach[j].y = sin(current.theta) * json_distance_to_target * 1000.0;
+    }
     previous = current;
     trace_previous(&working);
   }
@@ -253,31 +267,94 @@ void trace_build(int timestamp) // Build and send a trace
  *
  *----------------------------------------------------------------
  *
- * Format the previously built trace and send it to the host
+ * Format the previously built trace and send it to the host.
+ *
+ * The device uses a crude form of compression.
+ *
+ * The data is saved as ordered pairs of x and y coordinates.
+ *
+ * When sending, the data is scaled to fit on the target surface
+ * and is sent as deltas between each pair.
+ *
+ * ex
+ *
+ * (100, 200)  --> (100, 200)
+ * (105, 195)  --> (5, -5)
+ *
+ * Each delta is sent as ASCII hex, the first field is fixed at 3
+ * characters wide and the second is variable length.
+ *
+ * When decoding, the field length is determined and the first
+ * three bytes are assigned to X, the remainder to Y.
  *
  *---------------------------------------------------------------*/
-void trace_send(int oversample) // Build and send a trace
-{
-  int i;                        // Index
+#define TRACE_FORMAT "%03X%X,"             // Format for sending the trace, 3 characters for X and the rest for Y
 
-  run_state |= IN_REDUCTION;    // Stop collecting FIFO data
+void trace_send(int oversample)            // Build and send a trace
+{
+  int    i;                                // Index
+  real_t trace_scale;                      // Scale factor for the trace
+  real_t last_x, last_y;                   // Last sent coordinates
+  bool   start_sending = false;            // Have we started sending the trace yet?
+  int    delta_x, delta_y;                 // Deltas to send
+  real_t trace_size_squared = SQ(json_trace_size);
+
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "trace_send(%d))", oversample);))
+
+  run_state |= IN_REDUCTION;               // Stop collecting FIFO data
+
+  trace_scale = json_trace_size / 32768.0; // Scale the trace to fit on the target
+
+                                           /*
+                                            *  Find the first point within the target to send
+                                            */
+  for ( i = 1; i < (APPROACH * SAMPLE_RATE) - 1; i += oversample )
+  {
+    if ( (SQ(approach[i].x) + SQ(approach[i].y)) <= trace_size_squared ) // Wait for the first point to be within the target
+    {
+      start_sending = true;
+      break;
+    }
+  }
+
+  if ( start_sending == false ) // Nothing to send, bail out
+  {
+    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Nothing to send\r\n");))
+    return;
+  }
 
   /*
-   *  Now send the trace
+   * Start off sending the approach
    */
-  SEND(ALL, sprintf(_xs, "{\"TRACE\":");)
+  last_x = approach[i].x;
+  last_y = approach[i].y;
+  SEND(ALL, sprintf(_xs, "{\"TRACE\": %f, [%6.4f, %6.4f], ", trace_scale, last_x, last_y);)
 
-  for ( i = 0; i < (APPROACH * SAMPLE_RATE) - 1; i += oversample )
+  for ( i = i + 1; i < (APPROACH * SAMPLE_RATE) - 1; i += oversample )
   {
-    SEND(ALL, sprintf(_xs, "(%4.2f, %4.2f), ", approach[i].x, approach[i].y);)
+    delta_x = (int)((approach[i].x - last_x) / trace_scale);
+    delta_y = (int)((approach[i].y - last_y) / trace_scale);
+    SEND(ALL, sprintf(_xs, TRACE_FORMAT, delta_x & 0xfff, delta_y & 0xfff);)
+    last_x = approach[i].x;
+    last_y = approach[i].y;
   }
 
   for ( i = 0; i < (FOLLOW_THROUGH * SAMPLE_RATE) - 1; i += oversample )
   {
-    SEND(ALL, sprintf(_xs, "(%4.2f, %4.2f), ", follow_through[i].x, follow_through[i].y);)
+    if ( (SQ(follow_through[i].x) + SQ(follow_through[i].y)) >= trace_size_squared ) // See if we go out of bounds
+    {
+      break;                                                                         // Yes, nothing more to send
+    }
+
+    delta_x = (int)((follow_through[i].x - last_x) / trace_scale);
+    delta_y = (int)((follow_through[i].y - last_y) / trace_scale);
+    SEND(ALL, sprintf(_xs, TRACE_FORMAT, delta_x & 0xfff, delta_y & 0xfff);)
+    last_x = follow_through[i].x;
+    last_y = follow_through[i].y;
   }
 
-  SEND(ALL, sprintf(_xs, "(0, 0) }");)
+  SEND(ALL, sprintf(_xs, "00000}");)
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DONE");))
 
   /*
    *  All done, return

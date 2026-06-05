@@ -21,11 +21,11 @@
 #include "esp_event.h"
 #include "esp_netif.h"
 #include "esp_tls.h"
-//#include "components\hal\esp32c3\include\hal\uart_ll.h"
+// #include "components\hal\esp32c3\include\hal\uart_ll.h"
 
 #include "trace.h"
 #include "board_assembly.h"
-#include "helpers.h"//
+#include "helpers.h" //
 #include "diag_tools.h"
 #include "serial_io.h"
 #include "timer.h"
@@ -36,7 +36,7 @@
  *  Serial IO port configuration
  */
 const int           uart_console        = UART_NUM_0;
-const uart_config_t uart_console_config = {.baud_rate           = 115200,
+const uart_config_t uart_console_config = {.baud_rate           = DEFAULT_BAUD_RATE,
                                            .data_bits           = UART_DATA_8_BITS,
                                            .parity              = UART_PARITY_DISABLE,
                                            .stop_bits           = UART_STOP_BITS_1,
@@ -44,13 +44,13 @@ const uart_config_t uart_console_config = {.baud_rate           = 115200,
                                            .rx_flow_ctrl_thresh = 122,
                                            .source_clk          = UART_SCLK_DEFAULT};
 
-                                           #if(0)
-uart_intr_config_t  uart_intr           = {
-               .intr_enable_mask   =  UART_INTR_CMD_CHAR_DET,
-               .rxfifo_full_thresh = 100,
-               .rx_timeout_thresh  = 10,
+#if ( 0 )
+uart_intr_config_t uart_intr = {
+    .intr_enable_mask   = UART_INTR_CMD_CHAR_DET,
+    .rxfifo_full_thresh = 100,
+    .rx_timeout_thresh  = 10,
 };
-#endif 
+#endif
 
 const int uart_console_size   = (1024 * 2);
 const int uart_xon_threshold  = 16;         // When to turn on the XON flow control
@@ -100,9 +100,9 @@ void serial_io_init(void)
    *  Setup the communications parameters
    */
   uart_param_config(uart_console, &uart_console_config);
-  setvbuf(stdout, NULL, _IONBF, 0);                                 // Send something out as soon as you get it
+  setvbuf(stdout, NULL, _IONBF, 0); // Send something out as soon as you get it
   uart_set_sw_flow_ctrl(UART_NUM_0, true, uart_xon_threshold, uart_xoff_threshold);
-  //uart_enable_pattern_det_baud_intr(uart_console, '+', 3, 9, 0, 0); // Wait for +++
+  // uart_enable_pattern_det_baud_intr(uart_console, '+', 3, 9, 0, 0); // Wait for +++
 
   /*
    *  Prepare the TCPIP queues

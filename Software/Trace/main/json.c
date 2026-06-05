@@ -48,25 +48,25 @@ static void set_trace(int v);        // Set the trace on and off
 const json_message_t JSON[] = {
     //  show     token        value stored in RAM           convert   service fcn()   NONVOL location         Initial Value
     //  PS Value
-    {HIDE, "\"BUILD\":",            0,                               IS_INT32, &trace_build_and_send ,  0,                         0,      0},
-    {SHOW, "\"DISTANCE\":",         (int *)&json_distance_to_target, IS_FLOAT, 0,             NONVOL_DISTANCE_TO_TARGET, 10000,  0},
-    {SHOW, "\"MUZZLE_VELOCITY\":",  (int *)&json_muzzle_velocity,    IS_FLOAT, 0,             NONVOL_MUZZLE_VELOCITY,    17500,  0},
+    {HIDE, "\"BUILD\":",            0,                               IS_INT32, &trace_build_and_send, 0,                         0,      0},
+    {SHOW, "\"DISTANCE\":",         (int *)&json_distance_to_target, IS_FLOAT, 0,                     NONVOL_DISTANCE_TO_TARGET, 10000,  0},
+    {SHOW, "\"MUZZLE_VELOCITY\":",  (int *)&json_muzzle_velocity,    IS_FLOAT, 0,                     NONVOL_MUZZLE_VELOCITY,    17500,  0},
+    {SHOW, "\"TRACE_SIZE\":",       &json_trace_size,                IS_INT32, 0,                     NONVOL_TRACE_SIZE,         100,    0},
+    {HIDE, "\"ECHO\"",              0,                               IS_VOID,  &show_echo,            0,                         0,      0},
+    {HIDE, "\"INIT\"",              0,                               IS_VOID,  &init_nonvol,          0,                         0,      0},
+    {SHOW, "\"X_DOTDOT_OFFSET\":",  &json_x_dotdot_offset,           IS_INT32, 0,                     NONVOL_X_DOTDOT_OFFSET,    0,      0},
+    {SHOW, "\"Y_DOTDOT_OFFSET\":",  &json_y_dotdot_offset,           IS_INT32, 0,                     NONVOL_Y_DOTDOT_OFFSET,    0,      0},
+    {SHOW, "\"Z_DOTDOT_OFFSET\":",  &json_z_dotdot_offset,           IS_INT32, 0,                     NONVOL_Z_DOTDOT_OFFSET,    0,      0},
+    {SHOW, "\"RHO_DOT_OFFSET\":",   &json_rho_dot_offset,            IS_INT32, 0,                     NONVOL_RHO_DOT_OFFSET,     0,      0},
+    {SHOW, "\"THETA_DOT_OFFSET\":", &json_theta_dot_offset,          IS_INT32, 0,                     NONVOL_THETA_DOT_OFFSET,   0,      0},
+    {SHOW, "\"PHI_DOT_OFFSET\":",   &json_phi_dot_offset,            IS_INT32, 0,                     NONVOL_PHI_DOT_OFFSET,     0,      0},
 
-    {HIDE, "\"ECHO\"",              0,                               IS_VOID,  &show_echo,    0,                         0,      0},
-    {HIDE, "\"INIT\"",              0,                               IS_VOID,  &init_nonvol,  0,                         0,      0},
-    {SHOW, "\"X_DOTDOT_OFFSET\":",  &json_x_dotdot_offset,           IS_INT32, 0,             NONVOL_X_DOTDOT_OFFSET,    0,      0},
-    {SHOW, "\"Y_DOTDOT_OFFSET\":",  &json_y_dotdot_offset,           IS_INT32, 0,             NONVOL_Y_DOTDOT_OFFSET,    0,      0},
-    {SHOW, "\"Z_DOTDOT_OFFSET\":",  &json_z_dotdot_offset,           IS_INT32, 0,             NONVOL_Z_DOTDOT_OFFSET,    0,      0},
-    {SHOW, "\"RHO_DOT_OFFSET\":",   &json_rho_dot_offset,            IS_INT32, 0,             NONVOL_RHO_DOT_OFFSET,     0,      0},
-    {SHOW, "\"THETA_DOT_OFFSET\":", &json_theta_dot_offset,          IS_INT32, 0,             NONVOL_THETA_DOT_OFFSET,   0,      0},
-    {SHOW, "\"PHI_DOT_OFFSET\":",   &json_phi_dot_offset,            IS_INT32, 0,             NONVOL_PHI_DOT_OFFSET,     0,      0},
-
-    {HIDE, "\"RESET\"",             0,                               IS_VOID,  &esp_restart,  0,                         0,      0},
-    {HIDE, "\"SN\":",               &json_serial_number,             IS_FIXED, 0,             NONVOL_SERIAL_NO,          0xffff, 0},
-    {HIDE, "\"TEST\":",             0,                               IS_INT32, &self_test,    0,                         0,      0},
-    {SHOW, "\"TRACE\":",            0,                               IS_INT32, &set_trace,    0,                         0,      0},
-    {SHOW, "\"VERSION\"",           0,                               IS_INT32, &POST_version, 0,                         0,      0},
-    {0,    0,                       0,                               0,        0,             0,                         0,      0}
+    {HIDE, "\"RESET\"",             0,                               IS_VOID,  &esp_restart,          0,                         0,      0},
+    {HIDE, "\"SN\":",               &json_serial_number,             IS_FIXED, 0,                     NONVOL_SERIAL_NO,          0xffff, 0},
+    {HIDE, "\"TEST\":",             0,                               IS_INT32, &self_test,            0,                         0,      0},
+    {SHOW, "\"TRACE\":",            0,                               IS_INT32, &set_trace,            0,                         0,      0},
+    {SHOW, "\"VERSION\"",           0,                               IS_INT32, &POST_version,         0,                         0,      0},
+    {0,    0,                       0,                               0,        0,                     0,                         0,      0}
 };
 
 /*-----------------------------------------------------
