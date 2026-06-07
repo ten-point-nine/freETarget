@@ -31,9 +31,7 @@
 /*
  * Definitions
  */
-#define APPROACH       7                          // Go back in time 7 seconds
-#define FOLLOW_THROUGH 2                          // Go forwards 2 seconds
-#define OVERSAMPLE     (SAMPLE_RATE / TRACE_RATE) // Only send 1/8 samples
+
 /*
  *  Typedefs
  */

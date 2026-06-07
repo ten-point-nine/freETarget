@@ -117,8 +117,12 @@
 #error "WATERMARK IS TOO HIGH"
 #endif
 
+#define APPROACH       7                          // Go back in time 7 seconds
+#define FOLLOW_THROUGH 2                          // Go forwards 2 seconds
+#define OVERSAMPLE     (SAMPLE_RATE / TRACE_RATE) // Only send 1/8 samples
+
 #define SAMPLE_RATE   (1600)                                              // Output Data Rate samples per second
-#define SAMPLE_PERIOD (8)                                                 // Accumulate sampls for 8 seconds
+#define SAMPLE_PERIOD (APPROACH + FOLLOW_THROUGH)                                                 // Accumulate sampls for 8 seconds
 #define SAMPLE_BUFFER_COUNT                                                                                                                \
   (((SAMPLE_RATE * SAMPLE_PERIOD) / RAW_FRAME_COUNT) + 2)                 // (12) Number of frames needed to store 10 seconds of data
 
