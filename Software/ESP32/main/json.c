@@ -107,8 +107,8 @@ const json_message_t JSON[] = {
     {SHOW + LOCK, "\"STEP_RAMP\":",      &json_step_ramp,             IS_INT32,                 0,                  NONVOL_STEP_RAMP,           0,          4 },
     {SHOW,        "\"STEP_START\":",     &json_step_start,            IS_INT32,                 0,                  NONVOL_STEP_START,          0,          4 },
     {SHOW + LOCK, "\"STEP_TIME\":",      &json_step_time,             IS_INT32,                 0,                  NONVOL_STEP_TIME,           0,          0 },
+    {HIDE,        "\"TIME_SYNCH\"",       0,                           IS_VOID,                  &network_time_sync, 0,                          0,          0 },
     {HIDE,        "\"TABATA_ENABLE\":",  &json_tabata_enable,         IS_INT32,                 &json_tabata,       0,                          0,          0 },
-
     {HIDE,        "\"TABATA_ON\":",      &json_tabata_on,             IS_INT32,                 0,                  NONVOL_TABATA_ON,           7,          16},
     {HIDE,        "\"TABATA_REST\":",    &json_tabata_rest,           IS_INT32,                 0,                  NONVOL_TABATA_REST,         30,         16},
     {HIDE,        "\"TABATA_WARN_ON\":", &json_tabata_warn_on,        IS_INT32,                 0,                  NONVOL_TABATA_WARN_ON,      3,          16},

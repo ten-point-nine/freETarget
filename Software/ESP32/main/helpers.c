@@ -524,6 +524,10 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
         sprintf(str, ", \"time\":%ld, \"time_to_go\":%ld", shot->shot_time, time_to_go);
         break;
 
+      case SCORE_NETWORK:                                    // Time
+        sprintf(str, ", \"network_time\":%ld", shot->network_time);
+        break;
+
       case SCORE_ELAPSED:                                    // Time since shooting began
         sprintf(str, ", \"elapsed_time\":%lds", run_time_seconds());
         break;

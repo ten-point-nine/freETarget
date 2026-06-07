@@ -19,7 +19,7 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"6.3.5 May 13, 2026\""
+#define SOFTWARE_VERSION "\"6.5.0 June 7, 2026\""
 #define _DONE_           "\r\nDone\r\n"
 #define _SHOT_           "shot"
 #define _GREETING_       "CONNECTED"   // Message to send on connection
@@ -110,6 +110,7 @@
 #define SCORE_MISS        'M'         // Include miss status
 #define SCORE_SESSION     '?'         // Include session type
 #define SCORE_TIME        'T'         // Include time stamp
+#define SCORE_NETWORK     'N'         // Include network time
 #define SCORE_ELAPSED     'D'         // Include elapsed time
 #define SCORE_XY          'X'         // Include X-Y coordinates
 #define SCORE_POLAR       'P'         // Include polar coordinates
@@ -120,7 +121,7 @@
 
 #define SCORE_ALL        "{S?TXPHOE}" // shot / miss / target / time / x-y / radius-angle / North-East-South-West / target type
 #define SCORE_USB        "{S?TX}"     // USB score elements
-#define SCORE_TCPIP      "{S?TXE}"    // TCP score elements
+#define SCORE_TCPIP      "{S?TNXE}"   // TCP score elements
 #define SCORE_BLUETOOTH  "{S?TX}"     // Bluetooth score elements
 #define SCORE_HTTP       "{S?TXPOE}"  // HTTP score elements
 #define SCORE_HTTP_PRIME "{#}"        // HTTP Prime the client
@@ -182,6 +183,7 @@ typedef struct
   unsigned int face_strike;    // Recording of face strike
   unsigned int sensor_status;  // Triggering register
   time_count_t shot_time;      // Shot time since start of after tabata start
+  time_count_t network_time;   // Time when the shot was recorded on the network clock
 } shot_record_t;
 
 /*

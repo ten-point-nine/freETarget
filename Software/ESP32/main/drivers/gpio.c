@@ -863,6 +863,7 @@ void aquire(void)
   IF_IN(IN_SHOT)                                                // Only record the shot if we are actually expecting a shot
   {
     record[shot_in].shot_time     = run_time_ms() - shot_start; // Capture the time into the shot
+    record[shot_in].network_time  = run_time_us();              // Record the network time
     record[shot_in].face_strike   = face_strike;                // Record if it's a face strike
     record[shot_in].sensor_status = is_running();               // Record the sensor status
     shot_in                       = (shot_in + 1) % SHOT_SPACE; // Prepare for the next shot

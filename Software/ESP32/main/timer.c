@@ -41,6 +41,7 @@
 #define BAND_500ms  (TICK_10ms * 50)     // vTaskDelay in 500 ms
 #define BAND_1000ms (TICK_10ms * 100)    // vTaskDelay in 1000 ms
 #define BAND_60s    ((BAND_1000ms) * 60) // vTaskDelay in 1 minute
+#define BAND_10m    ((BAND_60s) * 10)    // vTaskDelay in 10 minutes
 
 typedef enum
 {
@@ -81,6 +82,7 @@ static synchronous_task_t task_list[] = {
     {BAND_1000ms, check_12V                }, // Monitor the 12V supply
     {BAND_1000ms, check_new_connection     }, // Check for a new WiFi connection
     {BAND_60s,    watchdog                 }, // Watchdog monitor
+    {BAND_10m,    network_time_sync        }, // Synchronize the time with the network
     {0,           0                        }
 };
 
@@ -492,18 +494,32 @@ void show_time(void)
  * Common timer function
  *
  *---------------------------------------------------*/
+time_count_t network_time = 0; // Time of the last network sync in microseconds
+
 time_count_t run_time_seconds(void)
 {
-  return (esp_timer_get_time() - base_time) / 1000000;
+  return run_time_us() / 1000000;
 }
 
 time_count_t run_time_ms(void)
 {
-  return (esp_timer_get_time() - base_time) / 1000;
+  return run_time_us() / 1000;
+}
+
+time_count_t run_time_us(void)
+{
+  return (esp_timer_get_time() - network_time);
 }
 
 void reset_run_time(void)
 {
   base_time = 0;
+  return;
+}
+
+void network_time_sync(void)
+{
+  network_time = esp_timer_get_time();
+  SEND(ALL, sprintf(_xs, "%c", 'Q' & 0x01F);) // DC1 to signal the network time has been updated
   return;
 }
