@@ -59,19 +59,20 @@ void app_main(void)
   /*
    * Everything is ready, start the threads.  Low task priority number == low priority
    */
+  #if(00)
   xTaskCreate(trace_loop, "trace_loop", K4, NULL, MUST_RUN, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 
-  xTaskCreate(trace_timers, "trace_timer", K4, NULL, TIMED, NULL);
+  xTaskCreate(trace_timers, "trace_timers", K4, NULL, TIMED, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 
   xTaskCreate(trace_synchronous, "trace_synchronous", K4, NULL, TIMED, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
-
-  xTaskCreate(trace_json, "json_task", K6, NULL, BACKGROUND, NULL);
+#endif
+  xTaskCreate(trace_json, "trace_json", K6, NULL, BACKGROUND, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 
