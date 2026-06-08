@@ -2,7 +2,7 @@
  *
  * WiFi.c
  *
- * WiFi Driver for trace
+ * WiFi Driver for FreeETarget
  *
  ******************************************************************************
  *
@@ -17,6 +17,9 @@
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-reference/network/esp_wifi.html
  * https://medium.com/@fatehsali517/how-to-connect-esp32-to-wifi-using-esp-idf-iot-development-framework-d798dc89f0d6
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/lwip.html
+ *
+ * MDNS documentation
+ * https://docs.espressif.com/projects/esp-protocols/mdns/docs/latest/en/index.html
  *
  * *****************************************************************************/
 #include "freertos/FreeRTOS.h"
@@ -43,7 +46,6 @@
 #include "http_client.h"
 #include "WiFi.h"
 #include "diag_tools.h"
-#include "http_client.h"
 #include "json.h"
 #include "nonvol.h"
 #include "serial_io.h"
@@ -73,10 +75,10 @@ static EventGroupHandle_t           s_wifi_event_group;
 static esp_event_handler_instance_t instance_any_id;
 static esp_event_handler_instance_t instance_got_ip;
 static int                          s_retry_num = 0;
-//static int                          socket_list[MAX_SOCKETS]; // Space to remember four sockets
+static int                          socket_list[MAX_SOCKETS]; // Space to remember four sockets
 static esp_netif_ip_info_t          ipInfo;                   // IP Address of the access point
-//static int                          dns_valid;                // We have a valid IP address for the URL
-//static ip_addr_t                    url_ip_address;           // Address of the server
+static int                          dns_valid;                // We have a valid IP address for the URL
+static ip_addr_t                    url_ip_address;           // Address of the server
 static esp_netif_t                 *sta_netif;                // Station configuration
 static bool                         WiFi_initialized = false;
 
@@ -84,12 +86,10 @@ static bool                         WiFi_initialized = false;
  * Private Functions
  */
 void        WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
-#if ( BUILD_SERVER )
 static void tcpip_server_io(void);                  // Manage TCPIP traffic
 static void dns_found_cb(const char *name, const ip_addr_t *ip_addr, void *callback_arg);
 esp_err_t   esp_base_mac_addr_get(uint8_t *mac);
-#endif 
-//static void WiFi_start_new_connection(int sock);    // Socket token to use
+static void WiFi_start_new_connection(int sock);    // Socket token to use
 static void wifi_set_static_ip(esp_netif_t *netif); // Override the IP address
 
 /*
@@ -97,40 +97,6 @@ static void wifi_set_static_ip(esp_netif_t *netif); // Override the IP address
  */
 #define TO_IP(x) ((int)x) & 0xff, ((int)x >> 8) & 0xff, ((int)x >> 16) & 0xff, ((int)x >> 24) & 0xff
 
-/*****************************************************************************
- *
- * @function: WiFi_init()
- *
- * @brief:    Initialize the WiFi Interface
- *
- * @return:   None
- *
- ******************************************************************************
- *
- * The initialization determines if the target is a station
- * or an access point (AP) that provides the SSID to connect to.
- *
- * Once that is done the appropriate configuration is made and the target
- *enabled.
- *
- *******************************************************************************/
-void WiFi_init(void)
-{
-  char str_c[SHORT_TEXT]; // Place to store the target name
-
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi_init()");))
-
-                          /*
-                           * Initialize the WiFI
-                           */
-  WiFi_station_init();
-
-  /*
-   *  All done
-   */
-  WiFi_initialized = true;
-  return;
-}
 
 /*****************************************************************************
  *
@@ -175,6 +141,7 @@ void WiFi_reconnect(void)
   }
   return;
 }
+
 
 /*****************************************************************************
  *
@@ -238,7 +205,7 @@ void WiFi_station_init(void)
   /*
    * Wait here for an event to occur
    */
-  EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT, pdFALSE, pdFALSE, 1000); // portMAX_DELAY);
+  EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
 
   /*
    *  The target has connected to an access point
@@ -264,7 +231,6 @@ void WiFi_station_init(void)
   return;
 }
 
-#if ( BUILD_SERVER )
 /*****************************************************************************
  *
  * @function: WiFi_get_remote_IP()
@@ -286,8 +252,7 @@ void WiFi_station_init(void)
  * for LWIP errors
  *
  ****************************************************************************/
-bool WiFi_get_remote_IP(char *remote_url // Text string of the remote URL
-)
+bool WiFi_get_remote_IP(char *remote_url) // Text string of the remote URL
 {
   int i;
   /*
@@ -332,8 +297,6 @@ static void dns_found_cb(const char      *name,        // Name of dns search
 
   return;
 }
-
-#endif 
 
 /*****************************************************************************
  *
@@ -471,41 +434,6 @@ static void wifi_set_static_ip(esp_netif_t *netif)
   return;
 }
 
-#if ( BUILD_SERVER )
-/*****************************************************************************
- *
- * @function: WiFi_tcp_server_task()
- *
- * @brief: Synchorous task to manage the TCPIP Stack
- *
- * @return: Never
- *
- ******************************************************************************
- *
- * Synchronous task called from freeRTOS to interrogate the TCPIP stack and
- * accept calls from clients.
- *
- * Once a socket has been connected, the input and outut queues are managed
- * to send and receive data
- *
- *******************************************************************************/
-
-void WiFi_tcp_server_task(void *pvParameters)
-{
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi_tcp_server_task()");))
-
-  /*
-   *  Move data in and out of the TCP queues
-   */
-  while ( 1 )
-  {
-    tcpip_server_io();
-    /*
-     *  Time out till the next time
-     */
-    vTaskDelay(ONE_SECOND / 2);
-  }
-}
 
 /*****************************************************************************
  *
@@ -576,16 +504,6 @@ static void tcpip_server_io(void)
         break;
       }
     }
-
-    if ( i == MAX_SOCKETS )         // All of them are closed?
-    {
-      if ( json_wifi_ssid[0] != 0 ) //  I'm a station
-      {
-      }
-      else                          // I'm an access point
-      {
-      }
-    }
   }
   /*
    *  All done
@@ -593,299 +511,6 @@ static void tcpip_server_io(void)
   return;
 }
 
-/*****************************************************************************
- *
- * @function: tcpip_socket_poll()  0-3
- *
- * @brief:    Tasks to poll the sockets
- *
- * @return:   None
- *
- ******************************************************************************
- *
- * There are four identical functions that wait for a TCPIP message to arrive.
- * On receipt of the message, the bytes are copied from TCPIP into a circular
- * queue that holds everything until needed.
- *
- * IMPORTANT
- *
- * The recv function is a blocking call that waits for something to
- * appear in the TCPIP channel. Meaning that these functions will be suspended
- * indefinitly until something arrives and then be woken up until the next
- * recv() call is made.  For this reason, the functions are separated out, one
- * for each possible socket.
- *
- *******************************************************************************/
-void tcpip_socket_poll_0(void *parameters)
-{
-  int  length;
-  char rx_buffer[256];
-
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "tcp_socket_poll_0()");))
-
-  while ( 1 )
-  {
-    if ( socket_list[0] > 0 )
-    {
-      length = recv(socket_list[0], rx_buffer, sizeof(rx_buffer), 0);
-      if ( length > 0 )
-      {
-        tcpip_socket_2_queue(rx_buffer, length);
-      }
-    }
-    vTaskDelay(10);
-  }
-}
-
-void tcpip_socket_poll_1(void *parameters)
-{
-  int  length;
-  char rx_buffer[256];
-
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "tcp_socket_poll_1()");))
-
-  while ( 1 )
-  {
-    if ( socket_list[1] > 0 )
-    {
-      length = recv(socket_list[1], rx_buffer, sizeof(rx_buffer), 0);
-      if ( length > 0 )
-      {
-        tcpip_socket_2_queue(rx_buffer, length);
-      }
-    }
-    vTaskDelay(10);
-  }
-}
-
-void tcpip_socket_poll_2(void *parameters)
-{
-  int  length;
-  char rx_buffer[256];
-
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "tcp_socket_poll_2()");))
-
-  while ( 1 )
-  {
-    if ( socket_list[2] > 0 )
-    {
-      length = recv(socket_list[2], rx_buffer, sizeof(rx_buffer), 0);
-      if ( length > 0 )
-      {
-        tcpip_socket_2_queue(rx_buffer, length);
-      }
-    }
-    vTaskDelay(10);
-  }
-}
-
-void tcpip_socket_poll_3(void *parameters)
-{
-  int  length;
-  char rx_buffer[256];
-
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "tcp_socket_poll_3()");))
-
-  while ( 1 )
-  {
-    if ( socket_list[3] > 0 )
-    {
-      length = recv(socket_list[3], rx_buffer, sizeof(rx_buffer), 0);
-      if ( length > 0 )
-      {
-        tcpip_socket_2_queue(rx_buffer, length);
-      }
-    }
-    vTaskDelay(10);
-  }
-}
-
-/*****************************************************************************
- *
- * @function: tcpip_accept_poll()
- *
- * @brief:    Tasks to poll waiting for an incoming connection
- *
- * @return:   None
- *
- ******************************************************************************
- *
- * Once the WiFi has been set up, the target waits here for an incoming
- * connection.
- *
- * Once the connection has been made, the function determines the socket address
- * and then looks for an empty entry in the socket list. The new socket is now
- * added to the socket list and polled via the functions above.
- *
- *******************************************************************************/
-void tcpip_accept_poll(void *parameters)
-{
-  char                    addr_str[128];
-  int                     ip_protocol  = 0;
-  int                     keepAlive    = 1;
-  int                     keepIdle     = KEEPALIVE_IDLE;
-  int                     keepInterval = KEEPALIVE_INTERVAL;
-  int                     keepCount    = KEEPALIVE_COUNT;
-  struct sockaddr_storage dest_addr;
-  int                     listen_sock;
-  int                     option = 1;
-  struct sockaddr_storage source_addr; // Large enough for both IPv4 or IPv6
-  socklen_t               addr_len = sizeof(source_addr);
-  int                     sock;
-  int                     i;
-
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "tcp_accept_poll()");))
-
-  /*
-   * Start the server
-   */
-  for ( i = 0; i != MAX_SOCKETS; i++ )
-  {
-    socket_list[i] = AVAILABLE_SOCKET;
-  }
-
-  struct sockaddr_in *dest_addr_ip4 = (struct sockaddr_in *)&dest_addr;
-  dest_addr_ip4->sin_addr.s_addr    = htonl(INADDR_ANY);
-  dest_addr_ip4->sin_family         = AF_INET;
-  dest_addr_ip4->sin_port           = htons(PORT);
-  ip_protocol                       = IPPROTO_IP;
-
-  listen_sock = socket(AF_INET, SOCK_STREAM, ip_protocol);
-  if ( listen_sock < 0 )
-  {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Unable to create socket: errno %d\r\n", errno);))
-    vTaskDelete(NULL);
-    return;
-  }
-
-  option = 1;
-  setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
-  bind(listen_sock, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
-  listen(listen_sock, 1);
-
-  while ( 1 )
-  {
-    sock = accept(listen_sock, (struct sockaddr *)&source_addr, &addr_len);
-    if ( sock > 0 )
-    {
-      for ( i = 0; i != MAX_SOCKETS; i++ )
-      {
-        if ( socket_list[i] == AVAILABLE_SOCKET )
-        {
-          socket_list[i] = sock;
-          WiFi_start_new_connection(sock);
-          break;
-        }
-      }
-
-      /*
-       * Set tcp keepalive option
-       */
-      setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &keepAlive, sizeof(int));
-      setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE, &keepIdle, sizeof(int));
-      setsockopt(sock, IPPROTO_TCP, TCP_KEEPINTVL, &keepInterval, sizeof(int));
-      setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT, &keepCount, sizeof(int));
-
-      DLT(DLT_INFO, {
-        inet_ntoa_r(((struct sockaddr_in *)&source_addr)->sin_addr, addr_str, sizeof(addr_str) - 1);
-        SEND(ALL, sprintf(_xs, "Socket accepted ip address: %s\r\n", addr_str);)
-      })
-    }
-  }
-
-  /*
-   *  Never get here
-   */
-  return;
-}
-
-/*****************************************************************************
- *
- * @function: WiFi_start_new_connection
- *
- * @brief:    Prepare a new connection
- *
- * @return:   Nothing
- *
- ******************************************************************************
- *
- * A new socket connection has been made.
- *
- * Once that has been done, then update the PC client with all of  the pending
- * scores.
- *
- *******************************************************************************/
-static void WiFi_start_new_connection(int sock) // Socket token to use
-{
-  int i;
-
-  /*
-   *  Build up a mask of existing WiFi connections
-   */
-  connection_list &= ~(TCPIP);
-  for ( i = 0; i != MAX_SOCKETS; i++ ) // How many connections do we have?
-  {
-    if ( socket_list[i] != AVAILABLE_SOCKET )
-    {
-      connection_list = (TCPIP_0) << i;
-    }
-  }
-
-  /*
-   *  All done, return
-   */
-  return;
-}
-#endif 
-
-/*****************************************************************************
- *
- * @function: WiFi_loopback_test
- *
- * @brief:    Echo the input to the output
- *
- * @return:   Never
- *
- ******************************************************************************
- *
- * A waiting task is started.
- *
- * The waiting task copies the input to the output of the synchronous IO
- *
- *******************************************************************************/
-void WiFi_loopback_task(void *parameters);
-
-void WiFi_loopback_test(void)
-{
-  xTaskCreate(WiFi_loopback_task, "WiFi_loopback_task", 4096, NULL, 5, NULL);
-  return;
-}
-
-void WiFi_loopback_task(void *parameters)
-{
-  int  length;
-  char buffer[1024];
-  int  i;
-
-  tcpip_app_2_queue("Hello", 5);
-
-  while ( 1 )
-  {
-    length = tcpip_queue_2_app(buffer, sizeof(buffer));
-    if ( length != 0 )
-    {
-      for ( i = 0; i != length; i++ )
-      {
-        buffer[i]++; // Add 1 to the input
-      }
-      tcpip_app_2_queue(buffer, length);
-    }
-    vTaskDelay(ONE_SECOND);
-  }
-  /*
-   *  Never get here
-   */
-}
 
 /*****************************************************************************
  *
@@ -917,7 +542,6 @@ void WiFi_remote_IP_address(char *s // Where to return the string
 }
 #endif
 
-#if (BUILD_SERVER)
 /*****************************************************************************
  *
  * @function: WiFi_MAC_address()
@@ -933,9 +557,7 @@ void WiFi_MAC_address(char *mac // Where to return the string
   esp_base_mac_addr_get((uint8_t *)mac);
   return;
 }
-#endif
 
-#if (BUILD_SERVER)
 /*****************************************************************************
  *
  * @function: WiFi_tests
@@ -945,21 +567,6 @@ void WiFi_MAC_address(char *mac // Where to return the string
  * @return:   None
  *
  ****************************************************************************/
-void WiFi_server_test(void)
-{
-  xTaskCreate(WiFi_tcp_server_task, "WiFi_tcp_server", 4096, NULL, 5, NULL);
-  return;
-}
-
-void WiFi_station_loopback_test(void)
-{
-  WiFi_station_init();
-  xTaskCreate(WiFi_tcp_server_task, "WiFi_tcp_server", 4096, NULL, 5, NULL);
-  xTaskCreate(tcpip_accept_poll, "tcpip_accept_poll", 4096, NULL, 4, NULL);
-  WiFi_loopback_test();
-  return;
-}
-#endif 
 
 /*****************************************************************************
  *
@@ -1041,29 +648,4 @@ void WiFi_AP_scan_test(void)
   SEND(ALL, sprintf(_xs, "   IP: \"%s\"", str_c);)
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
-}
-
-/*****************************************************************************
- *
- * @function: WiFi_Client()
- *
- * @brief:    Be a client to the target serverf
- *
- * @return:   None
- *
- ****************************************************************************
- *
- * The function looks for APs that it can find and reports the SSID and
- * the signal strenght.
- *
- * RSSIs closer to 0 are better
- * **************************************************************************/
-
-void WiFi_Client(void)
-{
-
-  struct sockaddr_in dest_addr;
-  dest_addr.sin_addr.s_addr = inet_addr(json_wifi_target_ip);
-  dest_addr.sin_family      = AF_INET;
-  dest_addr.sin_port        = htons(1090);
 }

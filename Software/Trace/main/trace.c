@@ -112,7 +112,7 @@ void trace_init(void)
   json_distance_to_target = 10.0;
 
   BMI270_init(BMI270_CS);                 // Initialize the BMI270 accelerometer
- WiFi_init();
+ WiFi_station_init();
 
   /*
    *  Set up the long running timers
