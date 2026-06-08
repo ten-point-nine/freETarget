@@ -101,7 +101,7 @@ void trace_timers(void *pvParameters)
 {
   unsigned int i;
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "trace_timers()");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "trace_timers()");))
 
   /*
    *  Decrement the timers on a 10ms (100Hz) interval
@@ -158,7 +158,7 @@ void trace_synchronous(void *pvParameters)
   unsigned int cycle_count = 0;
   unsigned int i;                            // Index into the task list
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "trace_synchronous()");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "trace_synchronous()");))
 
   while ( 1 )
   {
@@ -170,7 +170,7 @@ void trace_synchronous(void *pvParameters)
         if ( (cycle_count % task_list[i].cycle_time) == 0 )
         {
           task_list[i].f();                  // Call the function
-          DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "Synchronous task: %s\r\n", task_list[i].name);))
+          DLT(DLT_APPLICATION, SEND(CONSOLE, sprintf(_xs, "Synchronous task: %s\r\n", task_list[i].name);))
         }
         i++;
       }
@@ -241,7 +241,7 @@ int ft_timer_new(time_count_t *new_timer, // Pointer to new down counter
       return 1;
     }
   }
-  DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "No space for new timer");))
+  DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "No space for new timer");))
 
   return 0;
 }
@@ -289,15 +289,15 @@ int ft_timer_delete(time_count_t *old_timer) // Pointer to new down counter
  *---------------------------------------------------*/
 void show_time(void)
 {
-  SEND(ALL, sprintf(_xs, "\r\nTime test.  Press any key to exit\r\n");)
+  SEND(CONSOLE, sprintf(_xs, "\r\nTime test.  Press any key to exit\r\n");)
 
   while ( serial_available(ALL) == 0 )
   {
-    SEND(ALL, sprintf(_xs, "\r\n%ld us", run_time_us());)
+    SEND(CONSOLE, sprintf(_xs, "\r\n%ld us", run_time_us());)
     vTaskDelay(ONE_SECOND);
   }
 
-  SEND(ALL, sprintf(_xs, _DONE_);)
+  SEND(CONSOLE, sprintf(_xs, _DONE_);)
 
   return;
 }

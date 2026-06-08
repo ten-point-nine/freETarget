@@ -66,27 +66,27 @@ void trace_init(void)
   is_trace = DLT_FATAL | DLT_INFO | DLT_CRITICAL;
 #if TRACE_APPLICATION
   is_trace |= DLT_APPICATION;    // Enable application tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT APPLICATON enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT APPLICATON enabled");))
 #endif
 #if TRACE_COMMUNICATION
   is_trace |= DLT_COMMUNICATION; // Enable application tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT COMMUNICATION enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT COMMUNICATION enabled");))
 #endif
 #if TRACE_DIAGNOSTICS
   is_trace |= DLT_DIAG;          // Enable diagnostics tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT DIAGNOSTICS enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT DIAGNOSTICS enabled");))
 #endif
 #if TRACE_DEBUG
   is_trace |= DLT_DEBUG;         // Enable debug tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT DEBUG enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT DEBUG enabled");))
 #endif
 #if TRACE_PAUSE
   is_trace |= DLT_PAUSE;         // Enable verbose messages
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT PAUSE enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT PAUSE enabled");))
 #endif
 #if TRACE_VERBOSE
   is_trace |= DLT_VERBOSE;       // Enable verbose messages
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT VERBOSE enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT VERBOSE enabled");))
 #endif
 
   /*
@@ -112,7 +112,8 @@ void trace_init(void)
   json_distance_to_target = 10.0;
 
   BMI270_init(BMI270_CS);                 // Initialize the BMI270 accelerometer
-                                           WiFi_station_init();
+  WiFi_station_init();
+  WiFi_client_init();
 
   /*
    *  Set up the long running timers
@@ -126,12 +127,11 @@ void trace_init(void)
    * Ready to go
    */
   show_echo();
-  serial_flush(ALL);         // Get rid of everything
-  connection_list = CONSOLE; // The consule is always connected
+  serial_flush(ALL); // Get rid of everything
 
-                             /*
-                              * Start the tasks running
-                              */
+                     /*
+                      * Start the tasks running
+                      */
   return;
 }
 
@@ -157,9 +157,9 @@ void trace_init(void)
  *---------------------------------------------------------------*/
 void trace_loop(void *arg)
 {
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "trace_loop()");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "trace_loop()");))
 
-  run_state = (IN_OPERATION | IN_FIFO_FILLING);
+  run_state = IN_OPERATION;
 
   while ( 1 )
   {
@@ -167,12 +167,10 @@ void trace_loop(void *arg)
     {
       BMI270_pull_FIFO();
     }
-    vTaskDelay(TICK_10ms);
+    vTaskDelay(TICK_50ms);
   }
 
-  /*
-   * End of the loop. timeout till the next time
-   */
+  return; // Never get here
 }
 
 /*----------------------------------------------------------------

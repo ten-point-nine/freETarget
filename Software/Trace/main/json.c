@@ -110,7 +110,7 @@ void trace_json(void *pvParameters)
 {
   char ch;
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "trace_json()");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "trace_json()");))
 
   while ( 1 )
   {
@@ -128,7 +128,7 @@ void trace_json(void *pvParameters)
     while ( (serial_available(ALL) != 0) ) // Something waiting for us?
     {
       ch = serial_getch(ALL);
-      printf("%c",ch);
+      printf("%c", ch);
       serial_putch(ALL, ch);               // Echo the character back
 
                                            /*
@@ -251,7 +251,7 @@ static void handle_json(void)
           not_found = false;                      // Read and convert the JSON value
           if ( good_input(JSON[j].convert, input_JSON[i + k], JSON[j].show) == false )
           {
-            SEND(ALL, sprintf(_xs, "\r\nInvalid input or locked: {%s}\r\n", input_JSON);)
+            SEND(CONSOLE, sprintf(_xs, "\r\nInvalid input or locked: {%s}\r\n", input_JSON);)
             break;                                // Invalid input
           }
 
@@ -263,11 +263,6 @@ static void handle_json(void)
               x = 0;
               break;
 
-            case IS_TEXT_1:
-              if ( hamming_weight(connection_list) > 1 )
-              {
-                break;
-              }
             case IS_TEXT:                                   // Convert to text
             case IS_SECRET:
 
@@ -351,7 +346,7 @@ static void handle_json(void)
    */
   if ( (not_found == true) )
   {
-    SEND(ALL, sprintf(_xs, "\r\n\r\nCannot decode: {%s}\r\n", input_JSON);)
+    SEND(CONSOLE, sprintf(_xs, "\r\n\r\nCannot decode: {%s}\r\n", input_JSON);)
   }
 
   /*
@@ -383,7 +378,7 @@ void show_echo(void)
   int  i, j;
   char str_c[32]; // String holding buffers
 
-  SEND(ALL, sprintf(_xs, "\r\n{\r\n");)
+  SEND(CONSOLE, sprintf(_xs, "\r\n{\r\n");)
 
   /*
    * Loop through all of the JSON tokens
@@ -411,16 +406,16 @@ void show_echo(void)
             strncpy(str_c, "*************************************************", strlen(str_c));
           }
 
-          SEND(ALL, sprintf(_xs, "%-18s \"%s\", ", JSON[i].token, str_c);)
+          SEND(CONSOLE, sprintf(_xs, "%-18s \"%s\", ", JSON[i].token, str_c);)
           break;
 
         case IS_INT32:
         case IS_FIXED:
-          SEND(ALL, sprintf(_xs, "%-18s %d, ", JSON[i].token, *JSON[i].value);)
+          SEND(CONSOLE, sprintf(_xs, "%-18s %d, ", JSON[i].token, *JSON[i].value);)
           break;
 
         case IS_FLOAT:
-          SEND(ALL, sprintf(_xs, "%-18s %6.2f, ", JSON[i].token, *(real_t *)JSON[i].value);)
+          SEND(CONSOLE, sprintf(_xs, "%-18s %6.2f, ", JSON[i].token, *(real_t *)JSON[i].value);)
           break;
       }
       vTaskDelay(10);
@@ -431,40 +426,40 @@ void show_echo(void)
   /*
    * Finish up with the special cases
    */
-  serial_to_all(_xs, EVEN_ODD_END);                                         // End the even odd line
-  SEND(ALL, sprintf(_xs, "\r\n*** STATUS ***\r\n");)
-  serial_to_all(NULL, EVEN_ODD_BEGIN);                                      // Start over again
-  SEND(ALL, sprintf(_xs, "\"SN\":                %d", json_serial_number);)
-  SEND(ALL, sprintf(_xs, "\"TRACE\":             %d,", is_trace);)          //
-  SEND(ALL, sprintf(_xs, "\"CONNECTION_LIST\":   %02X,", connection_list);) // Who is attached
-  SEND(ALL, sprintf(_xs, "\"TIME_STAMP\":   %ld,", run_time_us());)         // On Time
-                                                                            // WiFi_MAC_address(str_c);
-  // SEND(ALL, sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\",", str_c[0], str_c[1], str_c[2], str_c[3], str_c[4],
+  serial_to_all(_xs, EVEN_ODD_END);                                             // End the even odd line
+  SEND(CONSOLE, sprintf(_xs, "\r\n*** STATUS ***\r\n");)
+  serial_to_all(NULL, EVEN_ODD_BEGIN);                                          // Start over again
+  SEND(CONSOLE, sprintf(_xs, "\"SN\":                %d", json_serial_number);)
+  SEND(CONSOLE, sprintf(_xs, "\"TRACE\":             %d,", is_trace);)          //
+  SEND(CONSOLE, sprintf(_xs, "\"TIME_STAMP\":   %ld,", run_time_us());)         // On Time
+                                                                                // WiFi_MAC_address(str_c);
+  // SEND(CONSOLE, sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\",", str_c[0], str_c[1], str_c[2], str_c[3],
+  // str_c[4],
   //                   str_c[5]);)
   WiFi_my_IP_address(str_c);
-  SEND(ALL, sprintf(_xs, "\"WiFi_IP_ADDRESS\":   \"%s\",", str_c);)
+  SEND(CONSOLE, sprintf(_xs, "\"WiFi_IP_ADDRESS\":   \"%s\",", str_c);)
 
-  if ( json_wifi_ssid[0] == 0 )                                                     // The SSID is undefined
+  if ( json_wifi_ssid[0] == 0 )                                                         // The SSID is undefined
   {
-    SEND(ALL, sprintf(_xs, "\"WiFi_MODE\":         \"Access Point: %s\",", str_c);) // Print out the IP address
+    SEND(CONSOLE, sprintf(_xs, "\"WiFi_MODE\":         \"Access Point: %s\",", str_c);) // Print out the IP address
   }
   else
   {
-    SEND(ALL, sprintf(_xs, "\"WiFi_MODE\":         \"Connected to %s\",", (char *)&json_wifi_ssid);)
+    SEND(CONSOLE, sprintf(_xs, "\"WiFi_MODE\":         \"Connected to %s\",", (char *)&json_wifi_ssid);)
   }
 
   strcat(_xs, "\"");
   serial_to_all(_xs, ALL);
-  SEND(ALL, sprintf(_xs, "\"RUN_STATE\":        0X%04X, ", run_state);)    // Current software version
-  SEND(ALL, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);) // Current software version
-  SEND(ALL, sprintf(_xs, "\"BOARD REVISION\":   %d, ", board_revision);)   // Current board version
+  SEND(CONSOLE, sprintf(_xs, "\"RUN_STATE\":        0X%04X, ", run_state);)    // Current software version
+  SEND(CONSOLE, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);) // Current software version
+  SEND(CONSOLE, sprintf(_xs, "\"BOARD REVISION\":   %d, ", board_revision);)   // Current board version
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
-  SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                // Current persistent storage version
-                                                                           /*
-                                                                            *  All done, return
-                                                                            */
-  serial_to_all(_xs, EVEN_ODD_END);                                        // End the even odd line
-  SEND(ALL, sprintf(_xs, "}\r\n");)
+  SEND(CONSOLE, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                // Current persistent storage version
+                                                                               /*
+                                                                                *  All done, return
+                                                                                */
+  serial_to_all(_xs, EVEN_ODD_END);                                            // End the even odd line
+  SEND(CONSOLE, sprintf(_xs, "}\r\n");)
 
   return;
 }
@@ -526,17 +521,17 @@ static void set_trace(int trace)                     // Trace mask on or off
   {
     if ( (is_trace & dlt_names[i].dlt_mask) != 0 )
     {
-      SEND(ALL, sprintf(_xs, "\r\n+ ");)
+      SEND(CONSOLE, sprintf(_xs, "\r\n+ ");)
     }
     else
     {
-      SEND(ALL, sprintf(_xs, "\r\n  ");)
+      SEND(CONSOLE, sprintf(_xs, "\r\n  ");)
     }
-    SEND(ALL, sprintf(_xs, "%03d %s", dlt_names[i].dlt_mask, dlt_names[i].dlt_text);)
+    SEND(CONSOLE, sprintf(_xs, "%03d %s", dlt_names[i].dlt_mask, dlt_names[i].dlt_text);)
     i++;
   }
 
-  SEND(ALL, sprintf(_xs, "\r\n");)
+  SEND(CONSOLE, sprintf(_xs, "\r\n");)
 
   return;
 }
@@ -609,7 +604,7 @@ static int next_value;     // Index to the next value to read
 bool json_find_first(void) // Find the first element starting with [
 {
   next_value = 0;
-  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "json_find_first()");))
+  DLT(DLT_CALIBRATION, SEND(CONSOLE, sprintf(_xs, "json_find_first()");))
 
   /*
    *  Find the start of the JSON
@@ -628,7 +623,7 @@ bool json_find_first(void) // Find the first element starting with [
    *  Found it, advance and return
    */
   next_value++; // Skip past the opening [
-  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "Start of array @%d characters", next_value);))
+  DLT(DLT_CALIBRATION, SEND(CONSOLE, sprintf(_xs, "Start of array @%d characters", next_value);))
   return true;  // Show we have something
 }
 

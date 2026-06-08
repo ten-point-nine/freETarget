@@ -30,12 +30,10 @@ void check_new_connection(void);                     // Check to see if a new co
  *              CONSOLE   AUX    TCPIP
  */
 #define CONSOLE        0x0001                // 0x1
-#define TCPIP_0        (CONSOLE << 1)        // 0x20
-#define EVEN_ODD_BEGIN (TCPIP_0 << 1)        // Remember to output in even_odd mode
+#define TARGET         (CONSOLE << 1)        // 0x20
+#define EVEN_ODD_BEGIN (TARGET << 1)         // Remember to output in even_odd mode
 #define EVEN_ODD_END   (EVEN_ODD_BEGIN << 1) // Exit even odd mode
-
-#define TCPIP (TCPIP_0)
-#define ALL   (CONSOLE | TCPIP)
+#define ALL   (CONSOLE | TARGET)
 
 #define DEFAULT_BAUD_RATE 115200             // Standard development baud rate for the console port
 #define MAX_BAUD_RATE     921600             // Maximum baud rate for the console port
@@ -43,6 +41,5 @@ void check_new_connection(void);                     // Check to see if a new co
 /*
  *  Global Variables
  */
-extern unsigned int connection_list;
 
 #endif

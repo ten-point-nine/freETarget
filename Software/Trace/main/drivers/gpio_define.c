@@ -55,7 +55,6 @@ const DIO_struct_t dio19 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .ini
 const DIO_struct_t dio20 = {.type = DIGITAL_IO_IN, .mode = GPIO_MODE_INPUT, .initial_value = 0};   // Mode and Initial Value
 const DIO_struct_t dio21 = {.type = DIGITAL_IO_OUT, .mode = GPIO_MODE_OUTPUT, .initial_value = 1}; // Mode and Initial Value
 
-
 /*
  *  SPI Control.  GPIO explicitly filled in here
  */
@@ -124,7 +123,7 @@ void gpio_init(void)
 {
   int i;
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "gpio_init()");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "gpio_init()");))
 
   gpio_install_isr_service(0); // Install the ISR service for later
   /*
@@ -140,7 +139,7 @@ void gpio_init(void)
   /*
    *  All done, return
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "GPIO complete");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "GPIO complete");))
   vTaskDelay(10);
   return;
 }
@@ -164,17 +163,17 @@ void gpio_init_single(unsigned int type)                                        
       switch ( ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->type )
       {
         default:
-          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "GPIO not found: %d", i);))
+          DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "GPIO not found: %d", i);))
           break;
 
         case DIGITAL_IO_IN:
-          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Digital input: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
+          DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Digital input: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
           gpio_set_direction(gpio_table[i].gpio_number, GPIO_MODE_INPUT);
           gpio_set_pull_mode(gpio_table[i].gpio_number, GPIO_PULLUP_ONLY);
 
           if ( (gpio_isr_t)((const DIO_struct_t *)(gpio_table[i].gpio_uses))->callback != NULL )
           {
-            DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Interrupt: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
+            DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Interrupt: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
             gpio_intr_disable(gpio_table[i].gpio_number);
             gpio_set_intr_type(gpio_table[i].gpio_number,
                                ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->edge_type); // Setup the interrupt handler
@@ -184,8 +183,8 @@ void gpio_init_single(unsigned int type)                                        
           break;
 
         case DIGITAL_IO_OUT:
-          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Digital output: (%d) %s = %d", gpio_table[i].gpio_number, gpio_table[i].gpio_name,
-                                          ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->initial_value);))
+          DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Digital output: (%d) %s = %d", gpio_table[i].gpio_number, gpio_table[i].gpio_name,
+                                              ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->initial_value);))
           gpio_set_direction(gpio_table[i].gpio_number, ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->mode);
           gpio_set_pull_mode(gpio_table[i].gpio_number, GPIO_PULLUP_PULLDOWN);
           gpio_set_level(gpio_table[i].gpio_number, ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->initial_value);
@@ -193,9 +192,9 @@ void gpio_init_single(unsigned int type)                                        
 
         case SPI_PORT:
           DLT(DLT_INFO,
-              SEND(ALL, sprintf(_xs, "SPI: SCK: %d, SDO: %d, SDI: %d", ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SCLK,
-                                ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_MISO,
-                                ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_MOSI);))
+              SEND(CONSOLE, sprintf(_xs, "SPI: SCK: %d, SDO: %d, SDI: %d", ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SCLK,
+                                    ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_MISO,
+                                    ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_MOSI);))
           spi_init(((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SCLK,
                    ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_MISO,
                    ((SPI_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_MOSI);

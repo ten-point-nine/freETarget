@@ -15,7 +15,7 @@ Reinitialize the board {"INIT":0}
 
 { "WIFI_SSID": "",  "WIFI_PWD": "", "NAME_ID": 4}
 
-
+{"WIFI_TARGET_IP":"192.168.86.109"}
 
 { "AUTH_CODE":1234,  "AUTH_CODE":4321}
 { "AUTH_CODE":1234, "AUTH_CODE":0, "ECHO":0 }

@@ -68,8 +68,6 @@ typedef struct queue_struct
 static queue_struct_t in_buffer;            // TCPIP input buffer
 static queue_struct_t out_buffer;           // TCPIP input buffer
 
-unsigned int connection_list;               // Bitmask of existing connections
-
 /******************************************************************************
  *
  * @function: serial_io_init
@@ -115,7 +113,7 @@ void serial_io_init(void)
   /*
    * All done, return
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Console port initialized");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Console port initialized");))
   return;
 }
 
@@ -152,7 +150,7 @@ int serial_available(int ports // Bit mask of active ports
     n_available += length;
   }
 
-  if ( ports & TCPIP )
+  if ( ports & TARGET )
   {
     if ( in_buffer.in != in_buffer.out )
     {
@@ -191,7 +189,7 @@ void serial_flush(int ports // active port list
     uart_flush(uart_console);
   }
 
-  if ( ports & TCPIP )
+  if ( ports & TARGET)
   {
     in_buffer.in  = 0;
     in_buffer.out = 0;
@@ -227,7 +225,6 @@ char serial_getch(int ports) // Bit mask of active ports
   {
     if ( uart_read_bytes(uart_console, &ch, 1, 0) > 0 )
     {
-      connection_list |= CONSOLE;
       return ch;
     }
   }
@@ -235,11 +232,10 @@ char serial_getch(int ports) // Bit mask of active ports
   /*
    *  Bring in the TCPIP bytes
    */
-  if ( ports & TCPIP )
+  if ( ports & TARGET )
   {
     if ( tcpip_queue_2_app(&ch, 1) > 0 )
     {
-      connection_list |= TCPIP; // Set the connection list
       return ch;
     }
   }
@@ -281,7 +277,7 @@ void serial_putch(char ch,
     printf("%c", ch); // Must be printf
   }
 
-  if ( ports & TCPIP )
+  if ( ports & TARGET )
   {
     tcpip_app_2_queue(&ch, 1);
   }
@@ -375,7 +371,7 @@ void serial_to_all(char *str,        // String to output
     printf("%s", str); // Must be printf
   }
 
-  if ( ports & TCPIP )
+  if ( ports & TARGET)
   {
     tcpip_app_2_queue(str, strlen(str));
   }
@@ -539,7 +535,7 @@ int tcpip_socket_2_queue(char *buffer, // Where to return the bytes
     in_buffer.in = (in_buffer.in + 1) % sizeof(in_buffer.queue);
     if ( in_buffer.out == in_buffer.in )
     {
-      DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "TCPIP input queue overrun\r\n");)) // Reached the end
+      DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "TCPIP input queue overrun\r\n");)) // Reached the end
       break;
     }
   }
@@ -576,11 +572,11 @@ int get_string(char destination[], int size)
     while ( serial_available(ALL) != 0 )
     {
       ch = serial_getch(ALL);
-      SEND(ALL, sprintf(_xs, "%c", ch);) // Echo the input
+      SEND(CONSOLE, sprintf(_xs, "%c", ch);) // Echo the input
 
       switch ( ch )
       {
-        case 8:                          // Backspace
+        case 8:                              // Backspace
           i--;
           if ( i < 0 )
           {
@@ -615,41 +611,3 @@ int get_string(char destination[], int size)
   }
 }
 
-/*******************************************************************************
- *
- * @function: check_new_connection
- *
- * @brief:    Look to see if anybody new has connected
- *
- * @return:   None
- *
- *******************************************************************************
- *
- * Check to see if there is a new connection, and if so, check to see if the
- * variables need to be cleared
- *
- ******************************************************************************/
-static unsigned int old_connection_list = 0;    // Previous connection mask
-
-void check_new_connection(void)
-{
-
-  if ( old_connection_list == connection_list ) // Has anything changed?
-  {
-    return;                                     // No, do nothing
-  }
-  old_connection_list = connection_list;
-
-  /*
-   *  Count up the number of connections
-   */
-  if ( hamming_weight(connection_list) > 1 ) // Do we have more than one connection?
-  {
-    return;                                  // Yes, then return
-  }
-
-  /*
-   *  All done, return
-   */
-  return;
-}

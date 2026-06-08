@@ -35,7 +35,7 @@ void digital_output_test(void);      // Test the digital outputs
 #define LED_STARTUP      "* * * * * * * * * * * * * * * * "
 #define LED_READY        "*****************               "
 #define LED_FIFO_FILLING "****    ****    ****    ****    "
-#define LED_REDUCTION        "************    ****    ****    "
+#define LED_REDUCTION    "************    ****    ****    "
 #define LED_NO_CAL       "**  **  **  **  **  **  **  **  "
 #define LED_ERROR        "****                            "
 
@@ -69,7 +69,7 @@ void digital_output_test(void);      // Test the digital outputs
 #error "DLT masks overlap"
 #endif
 
-#define PAUSE(prompt) DLT(DLT_PAUSE, { SEND(ALL, sprintf(_xs, "%s", prompt);) prompt_for_confirm("Pause."); })
+#define PAUSE(prompt) DLT(DLT_PAUSE, { SEND(CONSOLE, sprintf(_xs, "%s", prompt);) prompt_for_confirm("Pause."); })
 
 /*
  *  Enable compile level tracing

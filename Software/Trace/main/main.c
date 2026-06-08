@@ -43,6 +43,8 @@
 #define K4 (K1 * 4)                 // 4 Kilo Bytes
 #define K6 (K1 * 6)                 // 6 Kilo Bytes
 #define K8 (K1 * 8)                 // 8 Kilo Bytes
+StaticTask_t trace_loop_tcb;
+StackType_t  trace_loop_stack[4096];
 
 /*
  * Start up the tasks
@@ -59,20 +61,29 @@ void app_main(void)
   /*
    * Everything is ready, start the threads.  Low task priority number == low priority
    */
-
-  xTaskCreate(trace_timers, "trace_timers", K4, NULL, TIMED, NULL);
-  serial_flush(ALL);
+  if ( xTaskCreate(trace_loop, "trace_loop", K4, NULL, MUST_RUN, NULL) != pdPASS )
+  {
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "trace_loop()");))
+  }
   vTaskDelay(TICK_10ms);
 
-  xTaskCreate(trace_synchronous, "trace_synchronous", K4, NULL, TIMED, NULL);
-  serial_flush(ALL);
+  if ( xTaskCreate(trace_timers, "trace_timers", K4, NULL, TIMED, NULL) != pdPASS )
+  {
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "trace_timers()");))
+  }
   vTaskDelay(TICK_10ms);
 
-printf("A");
-  xTaskCreate(trace_json, "trace_json", K6, NULL, BACKGROUND, NULL);
-  serial_flush(ALL);
+  if ( xTaskCreate(trace_synchronous, "trace_synchronous", K4, NULL, TIMED, NULL) != pdPASS )
+  {
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "trace_sunchronous()");))
+  }
   vTaskDelay(TICK_10ms);
-printf("B");
+
+  if ( xTaskCreate(trace_json, "trace_json", K4, NULL, BACKGROUND, NULL) != pdPASS )
+  {
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "trace_json()");))
+  }
+  vTaskDelay(TICK_10ms);
 
 #if ( 0 )
   xTaskCreate(WiFi_tcp_server_task, "WiFi_tcp_server", K4, NULL, NETWORK, NULL);
@@ -84,11 +95,7 @@ printf("B");
   vTaskDelay(TICK_10ms);
 #endif
 
-  xTaskCreate(trace_loop, "trace_loop", K4, NULL, MUST_RUN, NULL);
-  serial_flush(ALL);
-  vTaskDelay(TICK_10ms);
-
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "SN:%d Running\r\n", json_serial_number);))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "SN:%d Running\r\n", json_serial_number);))
   vTaskDelay(TICK_10ms);
   serial_flush(ALL);
 }

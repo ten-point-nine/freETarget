@@ -76,7 +76,7 @@ void BMI270_init(unsigned int BMI270_gpio)
   spi_transaction_t transaction;
   int               i;
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270_init()");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "BMI270_init()");))
   PAUSE("Ready")
 
   BMI270_spi_config.spics_io_num = BMI270_gpio;
@@ -86,7 +86,7 @@ void BMI270_init(unsigned int BMI270_gpio)
    */
   if ( spi_bus_add_device(SPI2_HOST, &BMI270_spi_config, &BMI270_handle) != ESP_OK ) // Add the SPI device to the bus
   {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to add BMI270 device to SPI bus");))
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to add BMI270 device to SPI bus");))
   }
 
                                                                                      /*
@@ -106,11 +106,11 @@ void BMI270_init(unsigned int BMI270_gpio)
 
   if ( transaction.rx_data[1] != 0x24 )             // Check the device ID
   {
-    DLT(DLT_FATAL, SEND(ALL, sprintf(_xs, "Failed to read BMI270 device ID: 0x%02X", transaction.rx_data[1]);))
+    DLT(DLT_FATAL, SEND(CONSOLE, sprintf(_xs, "Failed to read BMI270 device ID: 0x%02X", transaction.rx_data[1]);))
   }
   else
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270 device ID: 0x%02X", transaction.rx_data[1]);))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "BMI270 device ID: 0x%02X", transaction.rx_data[1]);))
   }
   vTaskDelay(1);                                    /*
                                                      * Reset the device
@@ -183,7 +183,7 @@ void BMI270_init(unsigned int BMI270_gpio)
   spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
   if ( transaction.rx_data[1] != 0x1 )              // Check the device ID
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initialization failed: 0x%02X", transaction.rx_data[1]);))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Initialization failed: 0x%02X", transaction.rx_data[1]);))
   }
   vTaskDelay(1);
 
@@ -201,7 +201,7 @@ void BMI270_init(unsigned int BMI270_gpio)
     transaction.rxlength  = 0 * 8;                    // Receive length in bits
     transaction.flags     = SPI_TRANS_USE_TXDATA;     // Indicate that this is a read operation
     PAUSE("Sending register value");
-    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "register 0x%02X: 0x%02X", BMI270_config[i].address, BMI270_config[i].value);))
+    DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "register 0x%02X: 0x%02X", BMI270_config[i].address, BMI270_config[i].value);))
     spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
     vTaskDelay(2);
     i++;
@@ -211,7 +211,7 @@ void BMI270_init(unsigned int BMI270_gpio)
    * All done, return
    */
   PAUSE("Finished")
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270 initialization successful.  Sample Rate: %d", SAMPLE_RATE);))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "BMI270 initialization successful.  Sample Rate: %d", SAMPLE_RATE);))
   return;
 }
 
@@ -253,7 +253,7 @@ bool BMI270_pull_FIFO(void)
    */
   last_FIFO_read = run_time_us(); // When was the last sample taken
 
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_FIFO_read(), %ld", last_FIFO_read);))
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "BMI270_FIFO_read(), %ld", last_FIFO_read);))
 
   /*
    *  Read in the next bunch of samples
@@ -332,7 +332,7 @@ bool BMI270_find_index_out(time_count_t shot) // Time shot occured
   real_t       time_delay_s;                  // Time shot occured in micro seconds
   unsigned int sample_delay;
 
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_find_index_out(%ld)", shot);))
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "BMI270_find_index_out(%ld)", shot);))
 
   if ( shot == 0 )                            // No shot time, just start at the current point in the FIFO
   {
@@ -341,32 +341,32 @@ bool BMI270_find_index_out(time_count_t shot) // Time shot occured
     return false;
   }
 
-/*
- * Calculate how much to go backwards in time
- */
-time_delay_s = (real_t)(last_FIFO_read - shot) / (1000000.0); // Time in microseconds (ago)
-sample_delay = time_delay_s * SAMPLE_RATE;                    // This is how many samples behind
+  /*
+   * Calculate how much to go backwards in time
+   */
+  time_delay_s = (real_t)(last_FIFO_read - shot) / (1000000.0); // Time in microseconds (ago)
+  sample_delay = time_delay_s * SAMPLE_RATE;                    // This is how many samples behind
 
-DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "last_FIFO_read:%ld shot:%ld) => time_delay_s %f   sample_delay:%d  %d", last_FIFO_read, shot,
-                                 time_delay_s, sample_delay, sample_delay / RAW_FRAME_COUNT);))
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "last_FIFO_read:%ld shot:%ld) => time_delay_s %f   sample_delay:%d  %d", last_FIFO_read, shot,
+                                       time_delay_s, sample_delay, sample_delay / RAW_FRAME_COUNT);))
 
-/*
- * Figure out what indexes to use
- */
-index_out.outer = (index_in.outer - (sample_delay / RAW_FRAME_COUNT) - 1); // Go backwards in time
-if ( index_out.outer < 0 )                                                 // Gone negative, wrap around
-{
-  index_out.outer += SAMPLE_BUFFER_COUNT;
-}
+  /*
+   * Figure out what indexes to use
+   */
+  index_out.outer = (index_in.outer - (sample_delay / RAW_FRAME_COUNT) - 1); // Go backwards in time
+  if ( index_out.outer < 0 )                                                 // Gone negative, wrap around
+  {
+    index_out.outer += SAMPLE_BUFFER_COUNT;
+  }
 
-index_out.inner = RAW_FRAME_COUNT - (sample_delay % RAW_FRAME_COUNT);      // Residiue of the timer index;
+  index_out.inner = RAW_FRAME_COUNT - (sample_delay % RAW_FRAME_COUNT);      // Residiue of the timer index;
 
-DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "in:%d %d = out:%d %d", index_in.outer, index_in.inner, index_out.outer, index_out.inner);))
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "in:%d %d = out:%d %d", index_in.outer, index_in.inner, index_out.outer, index_out.inner);))
 
-/*
- * All done, return
- */
-return true;
+  /*
+   * All done, return
+   */
+  return true;
 }
 
 /*----------------------------------------------------------------
@@ -412,9 +412,10 @@ void BMI270_read_raw_accel(FIFO_raw_frame_t *sample) // Returned values
   transaction.flags     = 0;
   spi_device_transmit(BMI270_handle, &transaction);           // Transmit the transaction
 
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "raw  x_..: 0X%04X   y_..: 0X%04X   z_..: 0X%04X   rho_.: 0X%04X   theta_.: 0X%04X   phi_.: 0X%04X",
-                                   raw_frame.x_dotdot, raw_frame.y_dotdot, raw_frame.z_dotdot, raw_frame.rho_dot, raw_frame.theta_dot,
-                                   raw_frame.phi_dot);))
+  DLT(DLT_DEBUG,
+      SEND(CONSOLE,
+           sprintf(_xs, "raw  x_..: 0X%04X   y_..: 0X%04X   z_..: 0X%04X   rho_.: 0X%04X   theta_.: 0X%04X   phi_.: 0X%04X",
+                   raw_frame.x_dotdot, raw_frame.y_dotdot, raw_frame.z_dotdot, raw_frame.rho_dot, raw_frame.theta_dot, raw_frame.phi_dot);))
 
   /*
    *  Scramble the register values to FIFO position
@@ -457,7 +458,7 @@ void BMI270_find_zero(bool ask_for_confirm) // Ask for save confirmation)
   unsigned int     i;                       // Loop counter
   FIFO_raw_frame_t BMI270_FIFO_raw;         // Read in the order the FIFO returns data
 
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "BMI270_find_zero()");))
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "BMI270_find_zero()");))
 
   run_state |= IN_TEST;
 
@@ -500,15 +501,16 @@ void BMI270_find_zero(bool ask_for_confirm) // Ask for save confirmation)
   /*
    * Put the results in NONVOL
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Zero - X_..: 0X%04X  Y_..: 0X%04X  Z_..: 0X%04X   rho_.: 0X%04X   theta_.: 0X%04X  phi_.: 0X%04X ",
-                                  json_x_dotdot_offset, json_y_dotdot_offset, json_z_dotdot_offset, json_rho_dot_offset,
-                                  json_rho_dot_offset, json_rho_dot_offset);))
+  DLT(DLT_INFO,
+      SEND(CONSOLE, sprintf(_xs, "Zero - X_..: 0X%04X  Y_..: 0X%04X  Z_..: 0X%04X   rho_.: 0X%04X   theta_.: 0X%04X  phi_.: 0X%04X ",
+                            json_x_dotdot_offset, json_y_dotdot_offset, json_z_dotdot_offset, json_rho_dot_offset, json_rho_dot_offset,
+                            json_rho_dot_offset);))
 
   if ( ask_for_confirm == true )
   {
     if ( prompt_for_confirm("Commit settings?") == true )
     {
-      SEND(ALL, sprintf(_xs, "\r\nZero offset saved");)
+      SEND(CONSOLE, sprintf(_xs, "\r\nZero offset saved");)
       nvs_set_i32(my_handle, NONVOL_X_DOTDOT_OFFSET, json_x_dotdot_offset); // Save the value
       nvs_set_i32(my_handle, NONVOL_Y_DOTDOT_OFFSET, json_y_dotdot_offset);
       nvs_set_i32(my_handle, NONVOL_Z_DOTDOT_OFFSET, json_z_dotdot_offset);
@@ -518,7 +520,7 @@ void BMI270_find_zero(bool ask_for_confirm) // Ask for save confirmation)
     }
     else
     {
-      SEND(ALL, sprintf(_xs, "\r\nZero offset removed");)
+      SEND(CONSOLE, sprintf(_xs, "\r\nZero offset removed");)
       nvs_set_i32(my_handle, NONVOL_X_DOTDOT_OFFSET, 0); // Save the value
       nvs_set_i32(my_handle, NONVOL_Y_DOTDOT_OFFSET, 0);
       nvs_set_i32(my_handle, NONVOL_Z_DOTDOT_OFFSET, 0);
@@ -529,7 +531,7 @@ void BMI270_find_zero(bool ask_for_confirm) // Ask for save confirmation)
   }
   else
   {
-    SEND(ALL, sprintf(_xs, "\r\nZero offset saved");)
+    SEND(CONSOLE, sprintf(_xs, "\r\nZero offset saved");)
     nvs_set_i32(my_handle, NONVOL_X_DOTDOT_OFFSET, json_x_dotdot_offset); // Save the value
     nvs_set_i32(my_handle, NONVOL_Y_DOTDOT_OFFSET, json_y_dotdot_offset);
     nvs_set_i32(my_handle, NONVOL_Z_DOTDOT_OFFSET, json_z_dotdot_offset);
@@ -542,7 +544,7 @@ void BMI270_find_zero(bool ask_for_confirm) // Ask for save confirmation)
    *  All done, return
    */
   run_state &= ~IN_TEST;
-  SEND(ALL, sprintf(_xs, _DONE_);)
+  SEND(CONSOLE, sprintf(_xs, _DONE_);)
 
   return;
 }
@@ -641,12 +643,12 @@ void BMI270_oscilliscope(void)
       vector_magnitude = sqrt(SQ(trace_vector.x_dotdot) + SQ(trace_vector.y_dotdot) +
                               SQ(trace_vector.z_dotdot)); // Calculate the magnitude of the acceleration
 
-      SEND(ALL, sprintf(_xs,
-                        "\r\n\r zx: 0x%04X  rx: 0x%04X  ry: 0x%04X  rz: 0x%04X     |a|: %6.4f,   ax: %6.4f, ay: %6.4f,  az: %6.4f,    "
-                        "rho_dot: %6.4f,  theta_dot: %6.4f, phi_dot: %6.4f",
-                        sample.x_dotdot - json_x_dotdot_offset, sample.x_dotdot, sample.y_dotdot, sample.z_dotdot, vector_magnitude,
-                        trace_vector.x_dotdot, trace_vector.y_dotdot, trace_vector.z_dotdot, trace_vector.rho_dot, trace_vector.theta_dot,
-                        trace_vector.phi_dot);)
+      SEND(CONSOLE, sprintf(_xs,
+                            "\r\n\r zx: 0x%04X  rx: 0x%04X  ry: 0x%04X  rz: 0x%04X     |a|: %6.4f,   ax: %6.4f, ay: %6.4f,  az: %6.4f,    "
+                            "rho_dot: %6.4f,  theta_dot: %6.4f, phi_dot: %6.4f",
+                            sample.x_dotdot - json_x_dotdot_offset, sample.x_dotdot, sample.y_dotdot, sample.z_dotdot, vector_magnitude,
+                            trace_vector.x_dotdot, trace_vector.y_dotdot, trace_vector.z_dotdot, trace_vector.rho_dot,
+                            trace_vector.theta_dot, trace_vector.phi_dot);)
 
       vTaskDelay(ONE_SECOND / 2);
     }
@@ -668,7 +670,7 @@ void BMI270_oscilliscope(void)
   /*
    * All done
    */
-  SEND(ALL, sprintf(_xs, _DONE_);)
+  SEND(CONSOLE, sprintf(_xs, _DONE_);)
   return;
 }
 
@@ -699,60 +701,60 @@ void BMI270_SPI_dump(void)
   /*
    * Read and print the values of all registers
    */
-  for ( address = 0x00; address <= 0x7F; address++ )            // Loop through all the registers from 0x00 to 0x7F
+  for ( address = 0x00; address <= 0x7F; address++ )                // Loop through all the registers from 0x00 to 0x7F
   {
 
-    memset(&transaction, 0, sizeof(transaction));               // Clear the transaction structure
-    transaction.addr      = 0x80 | address;                     // Register address to read from
-    transaction.length    = 2 * 8;                              // Transmit length in bits
-    transaction.tx_buffer = NULL;                               // Transmit buffer not used
-    transaction.rxlength  = 2 * 8;                              // Receive length in bits
-    transaction.flags     = SPI_TRANS_USE_RXDATA;               // Indicate that this is a read operation
+    memset(&transaction, 0, sizeof(transaction));                   // Clear the transaction structure
+    transaction.addr      = 0x80 | address;                         // Register address to read from
+    transaction.length    = 2 * 8;                                  // Transmit length in bits
+    transaction.tx_buffer = NULL;                                   // Transmit buffer not used
+    transaction.rxlength  = 2 * 8;                                  // Receive length in bits
+    transaction.flags     = SPI_TRANS_USE_RXDATA;                   // Indicate that this is a read operation
 
-    spi_device_transmit(BMI270_handle, &transaction);           // Transmit the transaction
+    spi_device_transmit(BMI270_handle, &transaction);               // Transmit the transaction
 
     if ( (address % 0x40) == 0x00 )
     {
-      SEND(ALL, sprintf(_xs, HEADER);)                          // Print the register address at the start of each line
+      SEND(CONSOLE, sprintf(_xs, HEADER);)                          // Print the register address at the start of each line
     }
     if ( (address & 0x0F) == 0x00 )
     {
-      SEND(ALL, sprintf(_xs, "\n0x%02X: ", address);)           // Print the register address at the start of each line
+      SEND(CONSOLE, sprintf(_xs, "\n0x%02X: ", address);)           // Print the register address at the start of each line
     }
     if ( (address % 4) == 0x00 )
     {
-      SEND(ALL, sprintf(_xs, "  ");)
+      SEND(CONSOLE, sprintf(_xs, "  ");)
     }
-    SEND(ALL, sprintf(_xs, "0x%02X ", transaction.rx_data[1]);) // Print the value read from the register}
+    SEND(CONSOLE, sprintf(_xs, "0x%02X ", transaction.rx_data[1]);) // Print the value read from the register}
     registers[address] = transaction.rx_data[1];
   }
 
-                                                                /*
-                                                                 *  Display known values
-                                                                 */
-  SEND(ALL, sprintf(_xs, "\r\n");)
-  SEND(ALL, sprintf(_xs, "\r\n0x18: Sensor time: %d", (registers[0x1A] << 16) | (registers[0x19] << 8) | registers[18]);)
-  SEND(ALL, sprintf(_xs, "\r\n0x22: Temperature: %4.2f", (23.0 + (1 / 512.0) * ((registers[0x23] << 8) + registers[0x22])));)
-  SEND(ALL, sprintf(_xs, "\r\n0x24: FIFO length: %d", ((registers[0x25] << 8) + registers[0x24]));)
-  SEND(ALL, sprintf(_xs, "\r\n0x0C: ACC X: %04X", ((registers[0x0D] << 8) | registers[0x0C]));)
-  SEND(ALL, sprintf(_xs, "\r\n0x0E: ACC Y: %04X", ((registers[0x0F] << 8) | registers[0x0E]));)
-  SEND(ALL, sprintf(_xs, "\r\n0x10: ACC Z: %04X", ((registers[0x11] << 8) | registers[0x10]));)
-  SEND(ALL, sprintf(_xs, "\r\n0x12: GYRO X: %04X", ((registers[0x13] << 8) | registers[0x12]));)
-  SEND(ALL, sprintf(_xs, "\r\n0x14: GYRO Y: %04X", ((registers[0x15] << 8) | registers[0x14]));)
-  SEND(ALL, sprintf(_xs, "\r\n0x16: GYRO Z: %04X", ((registers[0x17] << 8) | registers[0x16]));)
+                                                                    /*
+                                                                     *  Display known values
+                                                                     */
+  SEND(CONSOLE, sprintf(_xs, "\r\n");)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x18: Sensor time: %d", (registers[0x1A] << 16) | (registers[0x19] << 8) | registers[18]);)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x22: Temperature: %4.2f", (23.0 + (1 / 512.0) * ((registers[0x23] << 8) + registers[0x22])));)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x24: FIFO length: %d", ((registers[0x25] << 8) + registers[0x24]));)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x0C: ACC X: %04X", ((registers[0x0D] << 8) | registers[0x0C]));)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x0E: ACC Y: %04X", ((registers[0x0F] << 8) | registers[0x0E]));)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x10: ACC Z: %04X", ((registers[0x11] << 8) | registers[0x10]));)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x12: GYRO X: %04X", ((registers[0x13] << 8) | registers[0x12]));)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x14: GYRO Y: %04X", ((registers[0x15] << 8) | registers[0x14]));)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x16: GYRO Z: %04X", ((registers[0x17] << 8) | registers[0x16]));)
 
   /*
    *  Display the contents of the FIFO loop
    */
-  SEND(ALL, sprintf(_xs, "\r\n");)
+  SEND(CONSOLE, sprintf(_xs, "\r\n");)
   for ( i = 0; i != SAMPLE_BUFFER_COUNT; i++ )
   {
-    SEND(ALL, sprintf(_xs, "\r\nBuffer: %d   ", i);)
-    SEND(ALL, sprintf(_xs, "x_dotdot: %04X   y_dotdot: %04X   z_dotdot:%04X    ", sample_raw_read[i].f[0].x_dotdot,
-                      sample_raw_read[i].f[0].y_dotdot, sample_raw_read[i].f[0].z_dotdot);)
-    SEND(ALL, sprintf(_xs, "rho_dot: %04X   theta_dot: %04X    phi_dot: %04X", sample_raw_read[i].f[0].rho_dot,
-                      sample_raw_read[i].f[0].theta_dot, sample_raw_read[i].f[0].phi_dot);)
+    SEND(CONSOLE, sprintf(_xs, "\r\nBuffer: %d   ", i);)
+    SEND(CONSOLE, sprintf(_xs, "x_dotdot: %04X   y_dotdot: %04X   z_dotdot:%04X    ", sample_raw_read[i].f[0].x_dotdot,
+                          sample_raw_read[i].f[0].y_dotdot, sample_raw_read[i].f[0].z_dotdot);)
+    SEND(CONSOLE, sprintf(_xs, "rho_dot: %04X   theta_dot: %04X    phi_dot: %04X", sample_raw_read[i].f[0].rho_dot,
+                          sample_raw_read[i].f[0].theta_dot, sample_raw_read[i].f[0].phi_dot);)
   }
-  SEND(ALL, sprintf(_xs, _DONE_);)
+  SEND(CONSOLE, sprintf(_xs, _DONE_);)
   return;
 }

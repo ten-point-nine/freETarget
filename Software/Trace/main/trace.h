@@ -61,8 +61,10 @@
 /*
  * Oscillator Features
  */
-#define ONE_SECOND     (100)                     // 10 ms delay per LSB
-#define TICK_10ms      (1)                       // Minimum timeout 10ms
+#define TICK_10ms  (1)                           // Minimum timeout 10ms
+#define TICK_50ms  (5 * TICK_10ms)               // Minimum timeout 10ms
+#define ONE_SECOND (100 * TICK_10ms)             // 10 ms delay per LSB
+
 #define FULL_SCALE     0xffffffff                // Full scale timer
 #define MS_TO_TICKS(x) (ONE_SECOND * (x) / 1000) // Convert from time in ms to time ticks
 
@@ -117,14 +119,14 @@
 #error "WATERMARK IS TOO HIGH"
 #endif
 
-#define APPROACH       7                          // Go back in time 7 seconds
-#define FOLLOW_THROUGH 2                          // Go forwards 2 seconds
-#define OVERSAMPLE     (SAMPLE_RATE / TRACE_RATE) // Only send 1/8 samples
+#define APPROACH       5                                                  // Go back in time 5 seconds
+#define FOLLOW_THROUGH 2                                                  // Go forwards 2 seconds
+#define OVERSAMPLE     (SAMPLE_RATE / TRACE_RATE)                         // Only send 1/8 samples
 
-#define SAMPLE_RATE   (400)                                              // Output Data Rate samples per second
-#define SAMPLE_PERIOD (APPROACH + FOLLOW_THROUGH)                                                 // Accumulate sampls for 8 seconds
+#define SAMPLE_RATE   (1600)                                              // Output Data Rate samples per second
+#define SAMPLE_PERIOD (APPROACH + FOLLOW_THROUGH)                         // Accumulate sampls for 8 seconds
 #define SAMPLE_BUFFER_COUNT                                                                                                                \
-  (((SAMPLE_RATE * SAMPLE_PERIOD) / RAW_FRAME_COUNT) + 2)                 // (12) Number of frames needed to store 10 seconds of data
+  (((SAMPLE_RATE * SAMPLE_PERIOD) / RAW_FRAME_COUNT) + 1)                 // Number of frames needed to store the approach and follow through
 
 #define TRACE_RATE        (100)                                           // Trace points per
 #define TRACE_FRAME_SIZE  (2 * 4)                                         // (24) 6 entries at 4 bytes (32 bits) each

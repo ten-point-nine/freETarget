@@ -76,14 +76,14 @@ void http_DNS_test(void)
     strcpy(test_URL, "google.com");
   }
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "http_DNS_test(%s)", test_URL);))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "http_DNS_test(%s)", test_URL);))
 
   /*
    * Make sure we ares setup correctly
    */
   if ( json_wifi_ssid[0] == 0 )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "\r\nWiFi must be attached to gateway");))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "\r\nWiFi must be attached to gateway");))
     return;
   }
 
@@ -92,22 +92,22 @@ void http_DNS_test(void)
    */
   if ( WiFi_get_remote_IP(test_URL) == 0 )
   {
-    SEND(ALL, sprintf(_xs, "DNS lookup failed");)
+    SEND(CONSOLE, sprintf(_xs, "DNS lookup failed");)
   }
   else
   {
     WiFi_remote_IP_address(&str_c);
-    SEND(ALL, sprintf(_xs, "\r\nThe IP address of %s is %s", test_URL, str_c);)
+    SEND(CONSOLE, sprintf(_xs, "\r\nThe IP address of %s is %s", test_URL, str_c);)
   }
 
   /*
    * Exit the test
    */
-  SEND(ALL, sprintf(_xs, _DONE_);)
+  SEND(CONSOLE, sprintf(_xs, _DONE_);)
   return;
 }
 
-#if (BUILD_SERVER)
+#if ( BUILD_SERVER )
 /*****************************************************************************
  *
  * @function: http_send_to_server_test
@@ -132,14 +132,14 @@ static char test_payload[] = "Hello World";
 
 void http_send_to_server_test(void)
 {
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, " http_send_to_server_test(%s)", test_payload);))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, " http_send_to_server_test(%s)", test_payload);))
 
   /*
    * Make sure we ares setup correctly
    */
   if ( json_wifi_ssid[0] == 0 )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "\r\nWiFi should be attached to gateway");))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "\r\nWiFi should be attached to gateway");))
   }
 
   /*
@@ -150,7 +150,7 @@ void http_send_to_server_test(void)
   /*
    * Exit the test
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, _DONE_);))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, _DONE_);))
   return;
 }
 

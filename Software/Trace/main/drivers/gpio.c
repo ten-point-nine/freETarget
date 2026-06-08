@@ -69,7 +69,7 @@ unsigned int board_version(void)
  *-----------------------------------------------------*/
 void digital_test(void)
 {
-  SEND(ALL, sprintf(_xs, "\r\nDigital Inputs:");)
+  SEND(CONSOLE, sprintf(_xs, "\r\nDigital Inputs:");)
   /*
    * Read in the fixed digital inputs
    */
@@ -82,7 +82,7 @@ void digital_test(void)
     vTaskDelay(ONE_SECOND);
   }
 
-  SEND(ALL, sprintf(_xs, _DONE_);)
+  SEND(CONSOLE, sprintf(_xs, _DONE_);)
 
   return;
 }

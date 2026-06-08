@@ -62,7 +62,7 @@ extern FIFO_raw_t sample_raw_read[SAMPLE_BUFFER_COUNT]; // Space for 10 seconds 
 void IMU_test(void)
 {
   trace_build(last_FIFO_read - ((TEST_BACKOFF - TEST_JITTER) + (esp_random() % TEST_JITTER))); // Go back 2 seconds
-  SEND(ALL, sprintf(_xs, _DONE_);)
+  SEND(CONSOLE, sprintf(_xs, _DONE_);)
   return;
 }
 
@@ -119,7 +119,7 @@ void IMU_real_time(void)
 
     if ( trace_next(&working) == NULL ) // NULL = End of the FIFO buffer
     {
-      SEND(ALL, sprintf(_xs, "X: %6.2f Y: %6.2f\r\n", current.x, current.y);)
+      SEND(CONSOLE, sprintf(_xs, "X: %6.2f Y: %6.2f\r\n", current.x, current.y);)
       vTaskDelay(ONE_SECOND / 2);
       if ( check_for_exit() == '!' )
       {
@@ -140,7 +140,7 @@ void IMU_real_time(void)
   /*
    *  All done, return
    */
-  SEND(ALL, sprintf(_xs, "\r\n%s", _DONE_);)
+  SEND(CONSOLE, sprintf(_xs, "\r\n%s", _DONE_);)
   return;
 }
 
@@ -184,7 +184,7 @@ void trace_build(int timestamp) // Build and send a trace
 
   run_state |= IN_REDUCTION;    // Stop collecting FIFO data
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "trace_build(%d)", timestamp);))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "trace_build(%d)", timestamp);))
 
                                 /*
                                  *  Starting points
@@ -297,7 +297,7 @@ void trace_send(int oversample)            // Build and send a trace
   int    delta_x, delta_y;                 // Deltas to send
   real_t trace_size_squared = SQ(json_trace_size);
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "trace_send(%d))", oversample);))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "trace_send(%d))", oversample);))
 
   run_state |= IN_REDUCTION;               // Stop collecting FIFO data
 
@@ -317,7 +317,7 @@ void trace_send(int oversample)            // Build and send a trace
 
   if ( start_sending == false ) // Nothing to send, bail out
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Nothing to send\r\n");))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Nothing to send\r\n");))
     return;
   }
 
@@ -326,13 +326,13 @@ void trace_send(int oversample)            // Build and send a trace
    */
   last_x = approach[i].x;
   last_y = approach[i].y;
-  SEND(ALL, sprintf(_xs, "{\"TRACE\": %f, [%6.4f, %6.4f], ", trace_scale, last_x, last_y);)
+  SEND(CONSOLE, sprintf(_xs, "{\"TRACE\": %f, [%6.4f, %6.4f], ", trace_scale, last_x, last_y);)
 
   for ( i = i + 1; i < (APPROACH * SAMPLE_RATE) - 1; i += oversample )
   {
     delta_x = (int)((approach[i].x - last_x) / trace_scale);
     delta_y = (int)((approach[i].y - last_y) / trace_scale);
-    SEND(ALL, sprintf(_xs, TRACE_FORMAT, delta_x & 0xfff, delta_y & 0xfff);)
+    SEND(CONSOLE, sprintf(_xs, TRACE_FORMAT, delta_x & 0xfff, delta_y & 0xfff);)
     last_x = approach[i].x;
     last_y = approach[i].y;
   }
@@ -346,13 +346,13 @@ void trace_send(int oversample)            // Build and send a trace
 
     delta_x = (int)((follow_through[i].x - last_x) / trace_scale);
     delta_y = (int)((follow_through[i].y - last_y) / trace_scale);
-    SEND(ALL, sprintf(_xs, TRACE_FORMAT, delta_x & 0xfff, delta_y & 0xfff);)
+    SEND(CONSOLE, sprintf(_xs, TRACE_FORMAT, delta_x & 0xfff, delta_y & 0xfff);)
     last_x = follow_through[i].x;
     last_y = follow_through[i].y;
   }
 
-  SEND(ALL, sprintf(_xs, "00000}");)
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DONE");))
+  SEND(CONSOLE, sprintf(_xs, "00000}");)
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DONE");))
 
   /*
    *  All done, return

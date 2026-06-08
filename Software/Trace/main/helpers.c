@@ -173,7 +173,7 @@ bool prompt_for_confirm(char *prompt)
 {
   unsigned char ch;
 
-  SEND(ALL, sprintf(_xs, "\r\n%s. Confirm Y/N?", prompt);)
+  SEND(CONSOLE, sprintf(_xs, "\r\n%s. Confirm Y/N?", prompt);)
 
   /*
    * Loop and wait for a confirmation
@@ -222,7 +222,7 @@ void hello(void)
   /*
    * Woken up again.  Turn things back on
    */
-  SEND(ALL, sprintf(_xs, "{\"%s\"0, \"NAME\":\"%s\"}", _HELLO_, str);)
+  SEND(CONSOLE, sprintf(_xs, "{\"%s\"0, \"NAME\":\"%s\"}", _HELLO_, str);)
   return;
 }
 
@@ -246,7 +246,7 @@ void send_keep_alive(void)
   static int keep_alive_count = 0;
   char       str[SHORT_TEXT];
 
-  SEND(TCPIP, sprintf(_xs, "{\"KEEP_ALIVE\":%d, \"NAME\":\"%s\"}", keep_alive_count++, str);)
+  SEND(TARGET, sprintf(_xs, "{\"KEEP_ALIVE\":%d, \"NAME\":\"%s\"}", keep_alive_count++, str);)
   keep_alive = (time_count_t)json_keep_alive * ONE_SECOND;
 
   return;
@@ -441,26 +441,7 @@ void watchdog(void)
   char        str_c[SHORT_TEXT];
   static bool wifi_is_connected = false;
 
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "watchdog()");))
-
-  /*
-   *  Check to see if we have a connection to the WiFi
-   */
-  if ( json_wifi_ssid[0] != 0 )                 // We are a station?
-  {
-    if ( wifi_is_connected == false )           // Was not connected
-    {
-      if ( WiFi_my_IP_address(str_c) == false ) // Find our IP address
-      {
-        DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Trying to connect to access point");))
-        WiFi_reconnect();
-      }
-      else
-      {
-        wifi_is_connected = true; // We are connected
-      }
-    }
-  }
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "watchdog()");))
 
   /*
    *  All done
@@ -546,7 +527,7 @@ void get_number(char *prompt, real_t *value)
   char  *end_ptr;
   real_t val;
 
-  SEND(ALL, sprintf(_xs, "%s", prompt);)
+  SEND(CONSOLE, sprintf(_xs, "%s", prompt);)
 
   /*
    * Loop and get a number
@@ -571,7 +552,7 @@ void get_number(char *prompt, real_t *value)
     /*
      * Error, try again
      */
-    SEND(ALL, sprintf(_xs, "Invalid number, try again:");)
+    SEND(CONSOLE, sprintf(_xs, "Invalid number, try again:");)
   }
 }
 
@@ -593,7 +574,7 @@ int get_hex(char *prompt)
   char *end_ptr;
   int   value;
 
-  SEND(ALL, sprintf(_xs, "%s", prompt);)
+  SEND(CONSOLE, sprintf(_xs, "%s", prompt);)
 
   /*
    * Get the input string
@@ -773,7 +754,7 @@ unsigned char check_for_exit(void)
  *--------------------------------------------------------------*/
 void pause(void)
 {
-  SEND(ALL, sprintf(_xs, "Paused press space to continue");)
+  SEND(CONSOLE, sprintf(_xs, "Paused press space to continue");)
   while ( 1 )
   {
     if ( serial_available(ALL) )

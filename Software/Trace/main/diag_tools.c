@@ -136,7 +136,7 @@ void self_test(unsigned int test) // What test to execute
     if ( (test_ID == test) && (test_list[i].help[0] != '-') ) // Found the test
     {
       run_state |= IN_TEST;
-      SEND(ALL, sprintf(_xs, "\r\nTest Number %2d - %s\r\n", test_ID, test_list[i].help);)
+      SEND(CONSOLE, sprintf(_xs, "\r\nTest Number %2d - %s\r\n", test_ID, test_list[i].help);)
       test_list[i].f();                                       // Execute the test                                // Exit the test
       run_state &= ~IN_TEST;
       return;
@@ -171,16 +171,16 @@ static void show_test_help(void)
   {
     if ( test_list[i].help[0] != '-' )
     {
-      SEND(ALL, sprintf(_xs, "\r\n%2d - %s", test_ID, test_list[i].help);)
+      SEND(CONSOLE, sprintf(_xs, "\r\n%2d - %s", test_ID, test_list[i].help);)
     }
     else
     {
-      SEND(ALL, sprintf(_xs, "\r\n\n%s", test_list[i].help);)
+      SEND(CONSOLE, sprintf(_xs, "\r\n\n%s", test_list[i].help);)
     }
     i++;
     test_ID = next_test(test_list[i].help[0], test_ID);
   }
-  SEND(ALL, sprintf(_xs, "\r\n\n");)
+  SEND(CONSOLE, sprintf(_xs, "\r\n\n");)
   return;
 }
 /*-----------------------------------------------------
@@ -228,11 +228,11 @@ bool do_factory_test(bool test_run)
   /*
    * Ready to start the test
    */
-  SEND(ALL, sprintf(_xs, "\r\nFirmware version: %s", SOFTWARE_VERSION);)
+  SEND(CONSOLE, sprintf(_xs, "\r\nFirmware version: %s", SOFTWARE_VERSION);)
 
   if ( test_run )
   {
-    SEND(ALL, sprintf(_xs, "\r\n");)
+    SEND(CONSOLE, sprintf(_xs, "\r\n");)
   }
 
   /*
@@ -266,7 +266,7 @@ bool do_factory_test(bool test_run)
  *******************************************************************************/
 void POST_version(void)
 {
-  SEND(ALL, sprintf(_xs, "\r\n{\"VERSION\": %s}\r\n", SOFTWARE_VERSION);)
+  SEND(CONSOLE, sprintf(_xs, "\r\n{\"VERSION\": %s}\r\n", SOFTWARE_VERSION);)
 
   /*
    * All done, return
@@ -293,12 +293,12 @@ void digital_input_test(void)
   {
     if ( gpio_get_level(SWITCH_GPIO) == 0 )
     {
-      SEND(ALL, sprintf(_xs, "\r\nON");)
+      SEND(CONSOLE, sprintf(_xs, "\r\nON");)
       gpio_set_level(STATUS_LED, 0); // Turn the LED on
     }
     else
     {
-      SEND(ALL, sprintf(_xs, "\r\nOFF");)
+      SEND(CONSOLE, sprintf(_xs, "\r\nOFF");)
       gpio_set_level(STATUS_LED, 1); // Turn the LED off
     }
 
@@ -316,7 +316,7 @@ void digital_input_test(void)
   /*
    *  All done, return
    */
-  SEND(ALL, sprintf(_xs, _DONE_);)
+  SEND(CONSOLE, sprintf(_xs, _DONE_);)
   return;
 }
 
@@ -354,7 +354,7 @@ void digital_output_test(void)
     }
   }
 
-  SEND(ALL, sprintf(_xs, _DONE_);)
+  SEND(CONSOLE, sprintf(_xs, _DONE_);)
   return;
 }
 
@@ -414,7 +414,7 @@ bool do_dlt(           //
     {
       dlt_id = dlt_names[i].dlt_id;               // Use the Verbose ID
 
-      SEND(ALL, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, run_time_us() / 1000000.);)
+      SEND(CONSOLE, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, run_time_us() / 1000000.);)
 
       return true;                                // Send out the message
     }
