@@ -111,7 +111,7 @@ void trace_json(void *pvParameters)
   char ch;
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "trace_json()");))
-printf("here");
+
   while ( 1 )
   {
 #if ( 0 )

@@ -211,7 +211,7 @@ void BMI270_init(unsigned int BMI270_gpio)
    * All done, return
    */
   PAUSE("Finished")
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270 initialization successful");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BMI270 initialization successful.  Sample Rate: %d", SAMPLE_RATE);))
   return;
 }
 

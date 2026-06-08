@@ -112,7 +112,7 @@ void trace_init(void)
   json_distance_to_target = 10.0;
 
   BMI270_init(BMI270_CS);                 // Initialize the BMI270 accelerometer
- WiFi_station_init();
+                                           WiFi_station_init();
 
   /*
    *  Set up the long running timers
@@ -163,22 +163,16 @@ void trace_loop(void *arg)
 
   while ( 1 )
   {
-    IF(IN_OPERATION)
+    if ( gpio_get_level(BMI270_INTERRUPT) == 0 )
     {
-      IF_NOT(IN_SINGLE)
-      {
-        if ( gpio_get_level(BMI270_INTERRUPT) == 0 )
-        {
-          BMI270_pull_FIFO();
-        }
-      }
+      BMI270_pull_FIFO();
     }
-
-    /*
-     * End of the loop. timeout till the next time
-     */
     vTaskDelay(TICK_10ms);
   }
+
+  /*
+   * End of the loop. timeout till the next time
+   */
 }
 
 /*----------------------------------------------------------------

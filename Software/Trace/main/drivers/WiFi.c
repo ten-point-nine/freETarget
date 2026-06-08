@@ -97,7 +97,6 @@ static void wifi_set_static_ip(esp_netif_t *netif); // Override the IP address
  */
 #define TO_IP(x) ((int)x) & 0xff, ((int)x >> 8) & 0xff, ((int)x >> 16) & 0xff, ((int)x >> 24) & 0xff
 
-
 /*****************************************************************************
  *
  * @function: WiFi_reconnect()
@@ -141,7 +140,6 @@ void WiFi_reconnect(void)
   }
   return;
 }
-
 
 /*****************************************************************************
  *
@@ -434,84 +432,6 @@ static void wifi_set_static_ip(esp_netif_t *netif)
   return;
 }
 
-
-/*****************************************************************************
- *
- * @function: tcpip_server_io()
- *
- * @brief: Transmit data in and out of the target
- *
- * @return: None
- *
- ******************************************************************************
- *
- * If there is any data in the tcpip_queue_2_socket queue, this function
- * extracts the data and then loops through the active sockets to put the data
- * out to the client.
- *
- * When trying to send to a previously active socket which is now closed, the
- * SEND(ALL,) function will return a -1 to indicate that no information was sent.
- * This is the signal that the connection has been dropped.  At the end of the
- * loop, if all of the sockets have been closed the connection indication is
- * updated.
- *
- *******************************************************************************/
-static void tcpip_server_io(void)
-{
-  int  length;
-  char rx_buffer[128];
-  int  to_send;
-  int  i;
-  int  buffer_offset;
-  bool new_socket_closed;
-
-  new_socket_closed = false; // Was a socket closed this cycle?
-                             /*
-                              * Out to TCPIP
-                              */
-  to_send = tcpip_queue_2_socket(rx_buffer, sizeof(rx_buffer));
-  if ( to_send > 0 )
-  {
-    for ( i = 0; i != MAX_SOCKETS; i++ )
-    {
-      if ( socket_list[i] > 0 )
-      {
-        buffer_offset = 0;
-        while ( buffer_offset < to_send )
-        {
-          length = send(socket_list[i], rx_buffer + buffer_offset, to_send - buffer_offset, 0);
-          if ( length <= 0 )
-          {
-            close(socket_list[i]);
-            socket_list[i]    = AVAILABLE_SOCKET;
-            new_socket_closed = true;
-            break;
-          }
-          buffer_offset += length;
-        }
-      }
-    }
-  }
-  /*
-   *  See if all of the sockets are closed
-   */
-  if ( new_socket_closed )
-  {
-    for ( i = 0; i != MAX_SOCKETS; i++ )
-    {
-      if ( socket_list[i] > 0 )
-      {
-        break;
-      }
-    }
-  }
-  /*
-   *  All done
-   */
-  return;
-}
-
-
 /*****************************************************************************
  *
  * @function: WiFi_my_IP_address()
@@ -649,3 +569,153 @@ void WiFi_AP_scan_test(void)
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
 }
+
+/*
+ *  New
+ */
+
+#include <string.h>
+#include <errno.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_wifi.h"
+#include "esp_event.h"
+#include "esp_log.h"
+#include "nvs_flash.h"
+#include "lwip/sockets.h"
+#include "lwip/inet.h"
+
+#define WIFI_SSID "YOUR_WIFI_SSID"
+#define WIFI_PASS "YOUR_WIFI_PASS"
+#define SERVER_IP                                                                                                                          \
+  "192.168.0.167" // Set to your server's IP [InlineCitation-3-esp-idf/examples/protocols/sockets/tcp_client/README.md at master ·
+                  // espressif/esp-idf ·
+                  // GitHub](https://github.com/espressif/esp-idf/blob/master/examples/protocols/sockets/tcp_client/README.md)
+#define SERVER_PORT                                                                                                                        \
+  3333            // Set to your TCP server port [InlineCitation-3-esp-idf/examples/protocols/sockets/tcp_client/README.md at master ·
+       // espressif/esp-idf · GitHub](https://github.com/espressif/esp-idf/blob/master/examples/protocols/sockets/tcp_client/README.md)
+
+static const char *TAG = "tcp_client";
+
+/* Wi-Fi event handler */
+static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
+{
+  if ( event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START )
+  {
+    esp_wifi_connect();
+  }
+  else if ( event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED )
+  {
+    ESP_LOGW(TAG, "Wi-Fi disconnected, retrying...");
+    esp_wifi_connect();
+  }
+  else if ( event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP )
+  {
+    ESP_LOGI(TAG, "Got IP address");
+  }
+}
+
+/* Initialize Wi-Fi in station mode */
+#if(0)
+static void wifi_client_init(void)
+{
+  ESP_ERROR_CHECK(esp_netif_init());
+  ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+  esp_netif_create_default_wifi_sta();
+
+  wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+  ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
+  ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL));
+
+  wifi_config_t wifi_config = {
+      .sta =
+          {
+                .ssid     = WIFI_SSID,
+                .password = WIFI_PASS,
+                },
+  };
+
+  ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+  ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+  ESP_ERROR_CHECK(esp_wifi_start());
+}
+#endif 
+
+/* TCP client task */
+static void tcp_client_task(void *pvParameters)
+{
+  char               rx_buffer[128];
+  struct sockaddr_in dest_addr;
+
+  dest_addr.sin_addr.s_addr = inet_addr(json_wifi_target_ip);
+  dest_addr.sin_family      = AF_INET;
+  dest_addr.sin_port        = 1090;
+
+  while ( 1 )
+  {
+    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+    if ( sock < 0 )
+    {
+      ESP_LOGE(TAG, "Unable to create socket: errno %d", errno);
+      vTaskDelay(pdMS_TO_TICKS(2000));
+      continue;
+    }
+
+    ESP_LOGI(TAG, "Connecting to %s:%d", SERVER_IP, SERVER_PORT);
+
+    int err = connect(sock, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
+    if ( err != 0 )
+    {
+      ESP_LOGE(TAG, "Socket unable to connect: errno %d", errno);
+      close(sock);
+      vTaskDelay(pdMS_TO_TICKS(2000));
+      continue;
+    }
+
+    ESP_LOGI(TAG, "Successfully connected");
+
+    int counter = 0;
+    while ( 1 )
+    {
+      char message[64];
+      snprintf(message, sizeof(message), "Hello from ESP32, msg #%d", ++counter);
+
+      int err = send(sock, message, strlen(message), 0);
+      if ( err < 0 )
+      {
+        ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
+        break;
+      }
+
+      ESP_LOGI(TAG, "Sent: %s", message);
+
+      int len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
+      if ( len < 0 )
+      {
+        ESP_LOGE(TAG, "Recv failed: errno %d", errno);
+        break;
+      }
+      else if ( len == 0 )
+      {
+        ESP_LOGW(TAG, "Connection closed by server");
+        break;
+      }
+      else
+      {
+        rx_buffer[len] = 0;
+        ESP_LOGI(TAG, "Received: %s", rx_buffer);
+      }
+
+      vTaskDelay(pdMS_TO_TICKS(2000));
+    }
+
+    ESP_LOGI(TAG, "Shutting down and restarting");
+    shutdown(sock, 0);
+    close(sock);
+    vTaskDelay(pdMS_TO_TICKS(2000));
+  }
+}
+

@@ -60,10 +60,6 @@ void app_main(void)
    * Everything is ready, start the threads.  Low task priority number == low priority
    */
 
-  xTaskCreate(trace_loop, "trace_loop", K4, NULL, MUST_RUN, NULL);
-  serial_flush(ALL);
-  vTaskDelay(TICK_10ms);
-
   xTaskCreate(trace_timers, "trace_timers", K4, NULL, TIMED, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
@@ -72,9 +68,11 @@ void app_main(void)
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 
+printf("A");
   xTaskCreate(trace_json, "trace_json", K6, NULL, BACKGROUND, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
+printf("B");
 
 #if ( 0 )
   xTaskCreate(WiFi_tcp_server_task, "WiFi_tcp_server", K4, NULL, NETWORK, NULL);
@@ -85,6 +83,10 @@ void app_main(void)
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 #endif
+
+  xTaskCreate(trace_loop, "trace_loop", K4, NULL, MUST_RUN, NULL);
+  serial_flush(ALL);
+  vTaskDelay(TICK_10ms);
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "SN:%d Running\r\n", json_serial_number);))
   vTaskDelay(TICK_10ms);
