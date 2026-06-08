@@ -19,9 +19,11 @@
 /*
  *  Definitions
  */
-#define BUILD_HTTP   1        // Build HTTP transfers
-#define BUILD_SIMPLE 1        // Build for simple HTTP transfers
+#define BUILD_HTTP   0        // Build HTTP transfers
+#define BUILD_SIMPLE 0        // Build for simple HTTP transfers
 #define BUILD_HTTPS  0        // BUild HTTPS transfers
+#define BUILD_SERVER 0        // Build for a WiFi server
+#define BUILD_CLIENT 1        // Build for a WiFi client
 
 #define INCLUDE_GET     0     // Include GET methods
 #define INCLUDE_POST    1     // Include POST methods

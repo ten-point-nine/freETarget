@@ -88,16 +88,11 @@ EXTERN int    json_name_id;                 // Name Identifier
 EXTERN int    json_serial_number;           // EIN
 EXTERN int    json_trace_size;              // Size of trace to be sent to the client in mm
 EXTERN int    json_keep_alive;              // Keepalive period
-EXTERN int    json_wifi_channel;            // Channel assigned to this SSID
-EXTERN int    json_wifi_dhcp;               // TRUE if the DHCP server is enabled
-EXTERN char   json_wifi_static_ip[IP_SIZE]; // Static IP assigned to the target
-EXTERN char   json_wifi_gateway[IP_SIZE];   // Text of WiFI gateway mask
+EXTERN char   json_wifi_target_ip[IP_SIZE]; // server IP assigned to the target
+EXTERN char   json_wifi_static_ip[IP_SIZE]; // Static IP assigned to the trace sensor
 EXTERN char   json_wifi_ssid[SSID_SIZE];    // Text of WiFI SSID
 EXTERN char   json_wifi_pwd[PWD_SIZE];      // Text of WiFI password
-EXTERN int    json_wifi_hidden;             // Hide the SSID if enabled
-EXTERN char   json_remote_url[URL_SIZE];    // Where are the messages going?
-EXTERN int    json_remote_active[URL_SIZE]; // Is there a remote present
-EXTERN char   json_remote_key[URL_SIZE];    // Security key if nessary
+EXTERN char   json_wifi_gateway[PWD_SIZE];  // Gateway for WiFi
 EXTERN int    json_remote_modes;            // What modes are available to talk to a remote server
 EXTERN int    json_x_dotdot_offset;         // Correction applied to readings
 EXTERN int    json_y_dotdot_offset;

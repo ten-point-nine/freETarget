@@ -16,7 +16,7 @@ void WiFi_station_init(void);                  // Initialize the WiFI as a stati
 void WiFi_tcp_server_task(void *pvParameters); // TCP Server task
 bool WiFi_my_IP_address(char *s);              // Return the current IP address
 void WiFi_remote_IP_address(char *s);          // Return the current gateway address
-void WiFi_MAC_address(char *mac);              // Read the MAC address
+//void WiFi_MAC_address(char *mac);              // Read the MAC address
 void WiFi_setup(void);                         // Configure the WiFi operation
 void WiFi_AP_scan_test(void);                  // Scan for access points (APs)
 void WiFi_reconnect(void);                     // Try and start a new connection.

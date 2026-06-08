@@ -73,10 +73,10 @@ static EventGroupHandle_t           s_wifi_event_group;
 static esp_event_handler_instance_t instance_any_id;
 static esp_event_handler_instance_t instance_got_ip;
 static int                          s_retry_num = 0;
-static int                          socket_list[MAX_SOCKETS]; // Space to remember four sockets
+//static int                          socket_list[MAX_SOCKETS]; // Space to remember four sockets
 static esp_netif_ip_info_t          ipInfo;                   // IP Address of the access point
-static int                          dns_valid;                // We have a valid IP address for the URL
-static ip_addr_t                    url_ip_address;           // Address of the server
+//static int                          dns_valid;                // We have a valid IP address for the URL
+//static ip_addr_t                    url_ip_address;           // Address of the server
 static esp_netif_t                 *sta_netif;                // Station configuration
 static bool                         WiFi_initialized = false;
 
@@ -84,10 +84,12 @@ static bool                         WiFi_initialized = false;
  * Private Functions
  */
 void        WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
+#if ( BUILD_SERVER )
 static void tcpip_server_io(void);                  // Manage TCPIP traffic
 static void dns_found_cb(const char *name, const ip_addr_t *ip_addr, void *callback_arg);
 esp_err_t   esp_base_mac_addr_get(uint8_t *mac);
-static void WiFi_start_new_connection(int sock);    // Socket token to use
+#endif 
+//static void WiFi_start_new_connection(int sock);    // Socket token to use
 static void wifi_set_static_ip(esp_netif_t *netif); // Override the IP address
 
 /*
@@ -200,8 +202,6 @@ void WiFi_station_init(void)
 {
   char str_c[256];
 
-  return; 
-  
   wifi_init_config_t WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi_station_init()");))
@@ -238,7 +238,7 @@ void WiFi_station_init(void)
   /*
    * Wait here for an event to occur
    */
-  EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
+  EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT, pdFALSE, pdFALSE, 1000); // portMAX_DELAY);
 
   /*
    *  The target has connected to an access point
@@ -264,6 +264,7 @@ void WiFi_station_init(void)
   return;
 }
 
+#if ( BUILD_SERVER )
 /*****************************************************************************
  *
  * @function: WiFi_get_remote_IP()
@@ -331,6 +332,8 @@ static void dns_found_cb(const char      *name,        // Name of dns search
 
   return;
 }
+
+#endif 
 
 /*****************************************************************************
  *
@@ -468,6 +471,7 @@ static void wifi_set_static_ip(esp_netif_t *netif)
   return;
 }
 
+#if ( BUILD_SERVER )
 /*****************************************************************************
  *
  * @function: WiFi_tcp_server_task()
@@ -832,6 +836,8 @@ static void WiFi_start_new_connection(int sock) // Socket token to use
    */
   return;
 }
+#endif 
+
 /*****************************************************************************
  *
  * @function: WiFi_loopback_test
@@ -911,6 +917,7 @@ void WiFi_remote_IP_address(char *s // Where to return the string
 }
 #endif
 
+#if (BUILD_SERVER)
 /*****************************************************************************
  *
  * @function: WiFi_MAC_address()
@@ -926,7 +933,9 @@ void WiFi_MAC_address(char *mac // Where to return the string
   esp_base_mac_addr_get((uint8_t *)mac);
   return;
 }
+#endif
 
+#if (BUILD_SERVER)
 /*****************************************************************************
  *
  * @function: WiFi_tests
@@ -950,6 +959,7 @@ void WiFi_station_loopback_test(void)
   WiFi_loopback_test();
   return;
 }
+#endif 
 
 /*****************************************************************************
  *
@@ -1031,4 +1041,29 @@ void WiFi_AP_scan_test(void)
   SEND(ALL, sprintf(_xs, "   IP: \"%s\"", str_c);)
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
+}
+
+/*****************************************************************************
+ *
+ * @function: WiFi_Client()
+ *
+ * @brief:    Be a client to the target serverf
+ *
+ * @return:   None
+ *
+ ****************************************************************************
+ *
+ * The function looks for APs that it can find and reports the SSID and
+ * the signal strenght.
+ *
+ * RSSIs closer to 0 are better
+ * **************************************************************************/
+
+void WiFi_Client(void)
+{
+
+  struct sockaddr_in dest_addr;
+  dest_addr.sin_addr.s_addr = inet_addr(json_wifi_target_ip);
+  dest_addr.sin_family      = AF_INET;
+  dest_addr.sin_port        = htons(1090);
 }

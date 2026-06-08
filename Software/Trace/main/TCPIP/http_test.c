@@ -67,7 +67,6 @@ void http_DNS_test(void)
 {
   char str_c[128];
 
-  printf("%s ", json_remote_url);
   if ( json_remote_url[0] != 0 )
   {
     strcpy(test_URL, json_remote_url);
@@ -108,6 +107,7 @@ void http_DNS_test(void)
   return;
 }
 
+#if (BUILD_SERVER)
 /*****************************************************************************
  *
  * @function: http_send_to_server_test
@@ -172,5 +172,5 @@ void http_server_test(void)
 
   return;
 }
-
+#endif // BUILD_SERVER
 #endif

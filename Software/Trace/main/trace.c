@@ -97,17 +97,21 @@ void trace_init(void)
   /*
    *  Setup the hardware
    */
-  gpio_init();              // Setup the hardware
-  vTaskDelay(10);           // Let the hardware settle
-  serial_io_init();         // Setup the console for debug message
-  read_nonvol();            // Read in the settings
+  gpio_init();                            // Setup the hardware
+  vTaskDelay(10);                         // Let the hardware settle
+  if ( gpio_get_level(SWITCH_GPIO) == 0 ) // If the button is held down
+  {
+    factory_nonvol(true);                 // Force a re-init
+  }
+  serial_io_init();                       // Setup the console for debug message
+  read_nonvol();                          // Read in the settings
   if ( (json_x_dotdot_offset | json_theta_dot_offset) == 0 )
   {
-    run_state |= IN_NO_CAL; // The board is not calibrated
+    run_state |= IN_NO_CAL;               // The board is not calibrated
   }
   json_distance_to_target = 10.0;
 
-  BMI270_init(BMI270_CS);   // Initialize the BMI270 accelerometer
+  BMI270_init(BMI270_CS);                 // Initialize the BMI270 accelerometer
   WiFi_init();
 
   /*

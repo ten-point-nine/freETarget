@@ -48,25 +48,31 @@ static void set_trace(int v);        // Set the trace on and off
 const json_message_t JSON[] = {
     //  show     token        value stored in RAM           convert   service fcn()   NONVOL location         Initial Value
     //  PS Value
-    {HIDE, "\"BUILD\":",            0,                               IS_INT32, &trace_build_and_send, 0,                         0,      0},
-    {SHOW, "\"DISTANCE\":",         (int *)&json_distance_to_target, IS_FLOAT, 0,                     NONVOL_DISTANCE_TO_TARGET, 10000,  0},
-    {SHOW, "\"MUZZLE_VELOCITY\":",  (int *)&json_muzzle_velocity,    IS_FLOAT, 0,                     NONVOL_MUZZLE_VELOCITY,    17500,  0},
-    {SHOW, "\"TRACE_SIZE\":",       &json_trace_size,                IS_INT32, 0,                     NONVOL_TRACE_SIZE,         100,    0},
-    {HIDE, "\"ECHO\"",              0,                               IS_VOID,  &show_echo,            0,                         0,      0},
-    {HIDE, "\"INIT\"",              0,                               IS_VOID,  &init_nonvol,          0,                         0,      0},
-    {SHOW, "\"X_DOTDOT_OFFSET\":",  &json_x_dotdot_offset,           IS_INT32, 0,                     NONVOL_X_DOTDOT_OFFSET,    0,      0},
-    {SHOW, "\"Y_DOTDOT_OFFSET\":",  &json_y_dotdot_offset,           IS_INT32, 0,                     NONVOL_Y_DOTDOT_OFFSET,    0,      0},
-    {SHOW, "\"Z_DOTDOT_OFFSET\":",  &json_z_dotdot_offset,           IS_INT32, 0,                     NONVOL_Z_DOTDOT_OFFSET,    0,      0},
-    {SHOW, "\"RHO_DOT_OFFSET\":",   &json_rho_dot_offset,            IS_INT32, 0,                     NONVOL_RHO_DOT_OFFSET,     0,      0},
-    {SHOW, "\"THETA_DOT_OFFSET\":", &json_theta_dot_offset,          IS_INT32, 0,                     NONVOL_THETA_DOT_OFFSET,   0,      0},
-    {SHOW, "\"PHI_DOT_OFFSET\":",   &json_phi_dot_offset,            IS_INT32, 0,                     NONVOL_PHI_DOT_OFFSET,     0,      0},
+    {HIDE, "\"BUILD\":",            0,                               IS_INT32,             &trace_build_and_send, 0,                         0,      0},
+    {SHOW, "\"DISTANCE\":",         (int *)&json_distance_to_target, IS_FLOAT,             0,                     NONVOL_DISTANCE_TO_TARGET, 10000,  0},
+    {SHOW, "\"MUZZLE_VELOCITY\":",  (int *)&json_muzzle_velocity,    IS_FLOAT,             0,                     NONVOL_MUZZLE_VELOCITY,    17500,  0},
+    {SHOW, "\"TRACE_SIZE\":",       &json_trace_size,                IS_INT32,             0,                     NONVOL_TRACE_SIZE,         100,    0},
+    {HIDE, "\"ECHO\"",              0,                               IS_VOID,              &show_echo,            0,                         0,      0},
+    {HIDE, "\"INIT\"",              0,                               IS_VOID,              &init_nonvol,          0,                         0,      0},
+    {SHOW, "\"X_DOTDOT_OFFSET\":",  &json_x_dotdot_offset,           IS_INT32,             0,                     NONVOL_X_DOTDOT_OFFSET,    0,      0},
+    {SHOW, "\"Y_DOTDOT_OFFSET\":",  &json_y_dotdot_offset,           IS_INT32,             0,                     NONVOL_Y_DOTDOT_OFFSET,    0,      0},
+    {SHOW, "\"Z_DOTDOT_OFFSET\":",  &json_z_dotdot_offset,           IS_INT32,             0,                     NONVOL_Z_DOTDOT_OFFSET,    0,      0},
+    {SHOW, "\"RHO_DOT_OFFSET\":",   &json_rho_dot_offset,            IS_INT32,             0,                     NONVOL_RHO_DOT_OFFSET,     0,      0},
+    {SHOW, "\"THETA_DOT_OFFSET\":", &json_theta_dot_offset,          IS_INT32,             0,                     NONVOL_THETA_DOT_OFFSET,   0,      0},
+    {SHOW, "\"PHI_DOT_OFFSET\":",   &json_phi_dot_offset,            IS_INT32,             0,                     NONVOL_PHI_DOT_OFFSET,     0,      0},
 
-    {HIDE, "\"RESET\"",             0,                               IS_VOID,  &esp_restart,          0,                         0,      0},
-    {HIDE, "\"SN\":",               &json_serial_number,             IS_FIXED, 0,                     NONVOL_SERIAL_NO,          0xffff, 0},
-    {HIDE, "\"TEST\":",             0,                               IS_INT32, &self_test,            0,                         0,      0},
-    {SHOW, "\"TRACE\":",            0,                               IS_INT32, &set_trace,            0,                         0,      0},
-    {SHOW, "\"VERSION\"",           0,                               IS_INT32, &POST_version,         0,                         0,      0},
-    {0,    0,                       0,                               0,        0,                     0,                         0,      0}
+    {SHOW, "\"WIFI_TARGET_IP\":",   (int *)&json_wifi_target_ip,     IS_TEXT + IP_SIZE,    0,                     NONVOL_WIFI_TARGET_IP,     0,      0},
+    {SHOW, "\"WIFI_STATIC_IP\":",   (int *)&json_wifi_static_ip,     IS_TEXT + IP_SIZE,    0,                     NONVOL_WIFI_STATIC_IP,     0,      0},
+    {SHOW, "\"WIFI_PWD\":",         (int *)&json_wifi_pwd,           IS_TEXT + PWD_SIZE, 0,                     NONVOL_WIFI_PWD,           0,      0},
+    {SHOW, "\"WIFI_SSID\":",        (int *)&json_wifi_ssid,          IS_TEXT + SSID_SIZE,  0,                     NONVOL_WIFI_SSID,          0,      0},
+    {SHOW, "\"WIFI_GATEWAY\":",     (int *)&json_wifi_gateway,       IS_TEXT + IP_SIZE,    0,                     NONVOL_WIFI_GATEWAY,       0,      0},
+
+    {HIDE, "\"RESET\"",             0,                               IS_VOID,              &esp_restart,          0,                         0,      0},
+    {HIDE, "\"SN\":",               &json_serial_number,             IS_FIXED,             0,                     NONVOL_SERIAL_NO,          0xffff, 0},
+    {HIDE, "\"TEST\":",             0,                               IS_INT32,             &self_test,            0,                         0,      0},
+    {SHOW, "\"TRACE\":",            0,                               IS_INT32,             &set_trace,            0,                         0,      0},
+    {SHOW, "\"VERSION\"",           0,                               IS_INT32,             &POST_version,         0,                         0,      0},
+    {0,    0,                       0,                               0,                    0,                     0,                         0,      0}
 };
 
 /*-----------------------------------------------------
@@ -431,9 +437,9 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"TRACE\":             %d,", is_trace);)          //
   SEND(ALL, sprintf(_xs, "\"CONNECTION_LIST\":   %02X,", connection_list);) // Who is attached
   SEND(ALL, sprintf(_xs, "\"TIME_STAMP\":   %ld,", run_time_us());)         // On Time
-  WiFi_MAC_address(str_c);
-  SEND(ALL, sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\",", str_c[0], str_c[1], str_c[2], str_c[3], str_c[4],
-                    str_c[5]);)
+                                                                            // WiFi_MAC_address(str_c);
+  // SEND(ALL, sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\",", str_c[0], str_c[1], str_c[2], str_c[3], str_c[4],
+  //                   str_c[5]);)
   WiFi_my_IP_address(str_c);
   SEND(ALL, sprintf(_xs, "\"WiFi_IP_ADDRESS\":   \"%s\",", str_c);)
 

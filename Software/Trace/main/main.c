@@ -75,6 +75,7 @@ void app_main(void)
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 
+#if ( 0 )
   xTaskCreate(WiFi_tcp_server_task, "WiFi_tcp_server", K4, NULL, NETWORK, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
@@ -82,6 +83,7 @@ void app_main(void)
   // xTaskCreate(tcpip_accept_poll, "tcpip_accept_poll", K4, NULL, POLLING, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
+#endif
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "SN:%d Running\r\n", json_serial_number);))
   vTaskDelay(TICK_10ms);
