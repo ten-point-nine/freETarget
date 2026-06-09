@@ -102,4 +102,7 @@ EXTERN int    json_theta_dot_offset;
 EXTERN int    json_phi_dot_offset;
 EXTERN real_t json_distance_to_target;      // Distance to target in meters
 EXTERN real_t json_muzzle_velocity;         // Pellet speed
+EXTERN real_t json_x;                       // Location of target shot (X)
+EXTERN real_t json_y;                       // Location of target shot (Y)
+EXTERN int    json_timestamp;               // When shot occured
 #endif

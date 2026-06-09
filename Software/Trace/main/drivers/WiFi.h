@@ -23,6 +23,9 @@ void WiFi_server_test(void);           // Server test for diag.c
 void WiFi_station_loopback_test(void); // Station test for diag.c
 void WiFi_AP_loopback_test(void);      // Access point test for diag.c
 
+void WiFi_client_send(void);           // Send a message out the TCPIP port
+void WiFi_client_get(void);     // Receive a message from the TCPIP port
+
 /*
  * #defines
  */

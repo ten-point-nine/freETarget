@@ -243,9 +243,9 @@ bool BMI270_pull_FIFO(void)
   /*
    *  Check to see if we need to suspend the logging
    */
-  IF((IN_SINGLE | IN_TEST | IN_REDUCTION)) // Single sample?
+  IF((IN_TEST | IN_REDUCTION)) // Single sample?
   {
-    return false;                          // Yes, return and do nothing
+    return false;              // Yes, return and do nothing
   }
 
   /*
@@ -398,8 +398,6 @@ void BMI270_read_raw_accel(FIFO_raw_frame_t *sample) // Returned values
   spi_transaction_t    transaction;
   register_raw_frame_t raw_frame;
 
-  run_state |= IN_SINGLE;
-
   /*
    * Prepare and read a single sample directly from the BMI270
    */
@@ -427,8 +425,9 @@ void BMI270_read_raw_accel(FIFO_raw_frame_t *sample) // Returned values
   sample->theta_dot = raw_frame.theta_dot;
   sample->phi_dot   = raw_frame.phi_dot;
 
-  run_state &= ~IN_SINGLE;
-
+  /*
+   *  All done
+   */
   return;
 }
 

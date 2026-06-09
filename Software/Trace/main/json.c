@@ -46,33 +46,37 @@ static void show_names(int v);
 static void set_trace(int v);        // Set the trace on and off
 
 const json_message_t JSON[] = {
-    //  show     token        value stored in RAM           convert   service fcn()   NONVOL location         Initial Value
+    //  show     token               value stored in RAM           convert   service fcn()   NONVOL location         Initial Value
     //  PS Value
-    {HIDE, "\"BUILD\":",            0,                               IS_INT32,            &trace_build_and_send, 0,                         0,      0},
-    {SHOW, "\"DISTANCE\":",         (int *)&json_distance_to_target, IS_FLOAT,            0,                     NONVOL_DISTANCE_TO_TARGET, 10000,  0},
-    {SHOW, "\"MUZZLE_VELOCITY\":",  (int *)&json_muzzle_velocity,    IS_FLOAT,            0,                     NONVOL_MUZZLE_VELOCITY,    17500,  0},
-    {SHOW, "\"TRACE_SIZE\":",       &json_trace_size,                IS_INT32,            0,                     NONVOL_TRACE_SIZE,         100,    0},
-    {HIDE, "\"ECHO\"",              0,                               IS_VOID,             &show_echo,            0,                         0,      0},
-    {HIDE, "\"INIT\"",              0,                               IS_VOID,             &init_nonvol,          0,                         0,      0},
-    {SHOW, "\"X_DOTDOT_OFFSET\":",  &json_x_dotdot_offset,           IS_INT32,            0,                     NONVOL_X_DOTDOT_OFFSET,    0,      0},
-    {SHOW, "\"Y_DOTDOT_OFFSET\":",  &json_y_dotdot_offset,           IS_INT32,            0,                     NONVOL_Y_DOTDOT_OFFSET,    0,      0},
-    {SHOW, "\"Z_DOTDOT_OFFSET\":",  &json_z_dotdot_offset,           IS_INT32,            0,                     NONVOL_Z_DOTDOT_OFFSET,    0,      0},
-    {SHOW, "\"RHO_DOT_OFFSET\":",   &json_rho_dot_offset,            IS_INT32,            0,                     NONVOL_RHO_DOT_OFFSET,     0,      0},
-    {SHOW, "\"THETA_DOT_OFFSET\":", &json_theta_dot_offset,          IS_INT32,            0,                     NONVOL_THETA_DOT_OFFSET,   0,      0},
-    {SHOW, "\"PHI_DOT_OFFSET\":",   &json_phi_dot_offset,            IS_INT32,            0,                     NONVOL_PHI_DOT_OFFSET,     0,      0},
 
-    {SHOW, "\"WIFI_TARGET_IP\":",   (int *)&json_wifi_target_ip,     IS_TEXT + IP_SIZE,   0,                     NONVOL_WIFI_TARGET_IP,     0,      0},
-    {SHOW, "\"WIFI_STATIC_IP\":",   (int *)&json_wifi_static_ip,     IS_TEXT + IP_SIZE,   0,                     NONVOL_WIFI_STATIC_IP,     0,      0},
-    {SHOW, "\"WIFI_PWD\":",         (int *)&json_wifi_pwd,           IS_TEXT + PWD_SIZE,  0,                     NONVOL_WIFI_PWD,           0,      0},
-    {SHOW, "\"WIFI_SSID\":",        (int *)&json_wifi_ssid,          IS_TEXT + SSID_SIZE, 0,                     NONVOL_WIFI_SSID,          0,      0},
-    {SHOW, "\"WIFI_GATEWAY\":",     (int *)&json_wifi_gateway,       IS_TEXT + IP_SIZE,   0,                     NONVOL_WIFI_GATEWAY,       0,      0},
+    {HIDE, "\"X\":",                &json_x,                         IS_FLOAT,            0,             0,                         0,      0}, // X coordinate of shot
+    {HIDE, "\"Y\":",                &json_y,                         IS_FLOAT,            0,             0,                         0,      0}, // Y coordinate of shot
+    {HIDE, "\"T\":",                &json_timestamp,                 IS_INT32,            &trace_build,  0,                         0,      0}, // Time stamp of shot
 
-    {HIDE, "\"RESET\"",             0,                               IS_VOID,             &esp_restart,          0,                         0,      0},
-    {HIDE, "\"SN\":",               &json_serial_number,             IS_FIXED,            0,                     NONVOL_SERIAL_NO,          0xffff, 0},
-    {HIDE, "\"TEST\":",             0,                               IS_INT32,            &self_test,            0,                         0,      0},
-    {SHOW, "\"TRACE\":",            0,                               IS_INT32,            &set_trace,            0,                         0,      0},
-    {SHOW, "\"VERSION\"",           0,                               IS_INT32,            &POST_version,         0,                         0,      0},
-    {0,    0,                       0,                               0,                   0,                     0,                         0,      0}
+    {SHOW, "\"DISTANCE\":",         (int *)&json_distance_to_target, IS_FLOAT,            0,             NONVOL_DISTANCE_TO_TARGET, 10000,  0},
+    {SHOW, "\"MUZZLE_VELOCITY\":",  (int *)&json_muzzle_velocity,    IS_FLOAT,            0,             NONVOL_MUZZLE_VELOCITY,    17500,  0},
+    {SHOW, "\"TRACE_SIZE\":",       &json_trace_size,                IS_INT32,            0,             NONVOL_TRACE_SIZE,         100,    0},
+    {HIDE, "\"ECHO\"",              0,                               IS_VOID,             &show_echo,    0,                         0,      0},
+    {HIDE, "\"INIT\"",              0,                               IS_VOID,             &init_nonvol,  0,                         0,      0},
+    {SHOW, "\"X_DOTDOT_OFFSET\":",  &json_x_dotdot_offset,           IS_INT32,            0,             NONVOL_X_DOTDOT_OFFSET,    0,      0},
+    {SHOW, "\"Y_DOTDOT_OFFSET\":",  &json_y_dotdot_offset,           IS_INT32,            0,             NONVOL_Y_DOTDOT_OFFSET,    0,      0},
+    {SHOW, "\"Z_DOTDOT_OFFSET\":",  &json_z_dotdot_offset,           IS_INT32,            0,             NONVOL_Z_DOTDOT_OFFSET,    0,      0},
+    {SHOW, "\"RHO_DOT_OFFSET\":",   &json_rho_dot_offset,            IS_INT32,            0,             NONVOL_RHO_DOT_OFFSET,     0,      0},
+    {SHOW, "\"THETA_DOT_OFFSET\":", &json_theta_dot_offset,          IS_INT32,            0,             NONVOL_THETA_DOT_OFFSET,   0,      0},
+    {SHOW, "\"PHI_DOT_OFFSET\":",   &json_phi_dot_offset,            IS_INT32,            0,             NONVOL_PHI_DOT_OFFSET,     0,      0},
+
+    {SHOW, "\"WIFI_TARGET_IP\":",   (int *)&json_wifi_target_ip,     IS_TEXT + IP_SIZE,   0,             NONVOL_WIFI_TARGET_IP,     0,      0},
+    {SHOW, "\"WIFI_STATIC_IP\":",   (int *)&json_wifi_static_ip,     IS_TEXT + IP_SIZE,   0,             NONVOL_WIFI_STATIC_IP,     0,      0},
+    {SHOW, "\"WIFI_PWD\":",         (int *)&json_wifi_pwd,           IS_TEXT + PWD_SIZE,  0,             NONVOL_WIFI_PWD,           0,      0},
+    {SHOW, "\"WIFI_SSID\":",        (int *)&json_wifi_ssid,          IS_TEXT + SSID_SIZE, 0,             NONVOL_WIFI_SSID,          0,      0},
+    {SHOW, "\"WIFI_GATEWAY\":",     (int *)&json_wifi_gateway,       IS_TEXT + IP_SIZE,   0,             NONVOL_WIFI_GATEWAY,       0,      0},
+
+    {HIDE, "\"RESET\"",             0,                               IS_VOID,             &esp_restart,  0,                         0,      0},
+    {HIDE, "\"SN\":",               &json_serial_number,             IS_FIXED,            0,             NONVOL_SERIAL_NO,          0xffff, 0},
+    {HIDE, "\"TEST\":",             0,                               IS_INT32,            &self_test,    0,                         0,      0},
+    {SHOW, "\"TRACE\":",            0,                               IS_INT32,            &set_trace,    0,                         0,      0},
+    {SHOW, "\"VERSION\"",           0,                               IS_INT32,            &POST_version, 0,                         0,      0},
+    {0,    0,                       0,                               0,                   0,             0,                         0,      0}
 };
 
 /*-----------------------------------------------------
@@ -236,30 +240,30 @@ static void handle_json(void)
   not_found = true;
   k         = 0;
 
-  for ( i = 0; i != got_right_bracket; i++ )      // Go across the JSON input
+  for ( i = 0; i != got_right_bracket; i++ )                // Go across the JSON input
   {
-    j = 0;                                        // Index across the JSON token table
+    j = 0;                                                  // Index across the JSON token table
 
-    while ( (JSON[j].token != 0) )                // Cycle through the tokens
+    while ( (JSON[j].token != 0) )                          // Cycle through the tokens
     {
       x = 0;
       if ( JSON[j].token != 0 )
       {
-        k = instr(&input_JSON[i], JSON[j].token); // Compare the input against the list of JSON tags
-        if ( k > 0 )                              // Non zero, found something
+        k = instr(&input_JSON[i], JSON[j].token);           // Compare the input against the list of JSON tags
+        if ( k > 0 )                                        // Non zero, found something
         {
-          not_found = false;                      // Read and convert the JSON value
+          not_found = false;                                // Read and convert the JSON value
           if ( good_input(JSON[j].convert, input_JSON[i + k], JSON[j].show) == false )
           {
             SEND(CONSOLE, sprintf(_xs, "\r\nInvalid input or locked: {%s}\r\n", input_JSON);)
-            break;                                // Invalid input
+            break;                                          // Invalid input
           }
 
           switch ( JSON[j].convert & IS_MASK )
           {
             default:
-            case IS_VOID:                         // Void, default to zero
-            case IS_FIXED:                        // Fixed cannot be changed
+            case IS_VOID:                                   // Void, default to zero
+            case IS_FIXED:                                  // Fixed cannot be changed
               x = 0;
               break;
 
@@ -426,13 +430,13 @@ void show_echo(void)
   /*
    * Finish up with the special cases
    */
-  serial_to_all(_xs, EVEN_ODD_END);                                             // End the even odd line
+  serial_to_all(_xs, EVEN_ODD_END);                                     // End the even odd line
   SEND(CONSOLE, sprintf(_xs, "\r\n*** STATUS ***\r\n");)
-  serial_to_all(NULL, EVEN_ODD_BEGIN);                                          // Start over again
+  serial_to_all(NULL, EVEN_ODD_BEGIN);                                  // Start over again
   SEND(CONSOLE, sprintf(_xs, "\"SN\":                %d", json_serial_number);)
-  SEND(CONSOLE, sprintf(_xs, "\"TRACE\":             %d,", is_trace);)          //
-  SEND(CONSOLE, sprintf(_xs, "\"TIME_STAMP\":   %ld,", run_time_us());)         // On Time
-                                                                                // WiFi_MAC_address(str_c);
+  SEND(CONSOLE, sprintf(_xs, "\"TRACE\":             %d,", is_trace);)  //
+  SEND(CONSOLE, sprintf(_xs, "\"TIME_STAMP\":   %ld,", run_time_us());) // On Time
+                                                                        // WiFi_MAC_address(str_c);
   // SEND(CONSOLE, sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\",", str_c[0], str_c[1], str_c[2], str_c[3],
   // str_c[4],
   //                   str_c[5]);)

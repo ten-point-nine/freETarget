@@ -40,6 +40,7 @@
 /*
  *  Variables
  */
+time_count_t sync_time_remaining; // How long before we have to synch again
 
 /*
  * Function Prototypes
@@ -118,6 +119,7 @@ void trace_init(void)
   /*
    *  Set up the long running timers
    */
+  ft_timer_new(&sync_time_remaining, 10 * 60 * ONE_SECOND, NULL, "Synchronize time"); // Start the synch timer
 
   /*
    * Run the power on self test
@@ -159,7 +161,7 @@ void trace_loop(void *arg)
 {
   DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "trace_loop()");))
 
-  run_state = IN_OPERATION;
+  run_state |= IN_OPERATION;
 
   while ( 1 )
   {
@@ -189,13 +191,14 @@ void trace_loop(void *arg)
  * LONG_PUSH  -- Recalibrate the trace
  * HOLD_PUSH  --
  *
- * We get here every 100ms
+ * We get here every 100ms from the synchronous foreground
+ *
  *---------------------------------------------------------------*/
 #define SHORT_PUSH 5                      // 1/2 second press
 #define LONG_PUSH  20                     // 2 second press
 #define HOLD_PUSH  50                     // Long hold
 
-void trace_push_button(void *arg)
+void trace_push_button(void)
 {
   static int time_tick = 0;
 
@@ -231,6 +234,43 @@ void trace_push_button(void *arg)
     time_tick = 0;
   }
 
+  /*
+   * All done, return
+   */
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: trace_health_monitor
+ *
+ * @brief:  Watch what is going on and update states
+ *
+ * @return: None
+ *
+ *----------------------------------------------------------------
+ *
+ * We get here every 1000ms from the synchronous foreground
+ *
+ *---------------------------------------------------------------*/
+
+void trace_health_monitor(void)
+{
+  /*
+   *  Check to see if we are connected to the target
+   */
+  if ( (run_state & TARGET_CONNECTED) == 0 )
+  {
+    WiFi_client_init(); // Try to make a new connection
+  }
+
+  /*
+   * Check to see how long it's been since we got a time update
+   */
+  if ( sync_time_remaining == 0 )
+  {
+    SEND(TARGET, sprintf(_xs, "{\"TIME\"}");)
+  }
   /*
    * All done, return
    */

@@ -21,32 +21,30 @@
 
 #define SOFTWARE_VERSION "\"1.0.0 June 3, 2026\""
 #define _DONE_           "\r\nDone\r\n"
-#define _GREETING_       "CONNECTED"           // Message to send on connection
-#define _BYE_            "BYE"                 // Message to send on disconnection
-#define _HELLO_          "HELLO WORLD"         // Message to send on reconnection
+#define _GREETING_       "CONNECTED"             // Message to send on connection
+#define _BYE_            "BYE"                   // Message to send on disconnection
+#define _HELLO_          "HELLO WORLD"           // Message to send on reconnection
 
-#define INIT_DONE 0xabcd                       // NON-VOL Initialization complete signature
+#define INIT_DONE 0xabcd                         // NON-VOL Initialization complete signature
 #ifndef true
 #define true  (1 == 1)
 #define false (0 == 1)
 #endif
 
-#define IN_STARTUP      0x0001                 // The software is in initialization
-#define IN_NO_CAL       (IN_STARTUP << 1)      // The unit has not been calibrated
-#define IN_FIFO_FILLING (IN_NO_CAL << 1)       // The FIFO is filling up
-#define IN_SINGLE       (IN_FIFO_FILLING << 1) // Reading a single sample directly from BMK270
-#define IN_REDUCTION    (IN_SINGLE << 1)       // The data is being reduced
-#define IN_OPERATION    (IN_REDUCTION << 1)    // FIFO has data, unit has been zeroed
-#define IN_FATAL_ERROR  (IN_OPERATION << 1)    // A fatal error has occured and cannot be fixed
-#define IN_TEST         (IN_FATAL_ERROR << 1)  // Running a test
+#define IN_STARTUP       0x0001                  // The software is in initialization
+#define IN_NO_CAL        (IN_STARTUP << 1)       // The unit has not been calibrated
+#define IN_FIFO_FILLING  (IN_NO_CAL << 1)        // The FIFO is filling up
+#define IN_REDUCTION     (IN_FIFO_FILLING << 1)  // The data is being reduced
+#define IN_OPERATION     (IN_REDUCTION << 1)     // FIFO has data, unit has been zeroed
+#define IN_FATAL_ERROR   (IN_OPERATION << 1)     // A fatal error has occured and cannot be fixed
+#define IN_TEST          (IN_FATAL_ERROR << 1)   // Running a test
+#define TARGET_CONNECTED (IN_TEST << 1)          // We are connected to the target
+#define TIME_VALID       (TARGET_CONNECTED << 1) // The timebase is valid
 
 #define IF(x)     if ( (run_state & (x)) != 0 )
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
 
 #define SEND(who, message) {message} serial_to_all(_xs, who);
-
-#define IS_DC_WITNESS      (json_paper_time != 0) // Determine the witness paper drive (DC Motor)
-#define IS_STEPPER_WITNESS (json_step_count != 0) // Determine the witness paper drive (stepper)
 
 /*
  * Options
@@ -108,28 +106,28 @@
                                        *  A trace is the path drawn by the gun on the target
                                        *  A vector is the locaton and direction of a sample
                                        */
-#define AVAILABLE_FIFO (6 * 1024)                                         // (6144) 6K FIFO available
+#define AVAILABLE_FIFO (6 * 1024)                          // (6144) 6K FIFO available
 
-#define RAW_FRAME_SIZE  (6 * 2)                                           // (12)   6 entries @ 2 bytes per entry
-#define RAW_FRAME_COUNT (400)                                             // (400)  entries in the FIFO
+#define RAW_FRAME_SIZE  (6 * 2)                            // (12)   6 entries @ 2 bytes per entry
+#define RAW_FRAME_COUNT (400)                              // (400)  entries in the FIFO
 
-#define WATERMARK (RAW_FRAME_SIZE * (RAW_FRAME_COUNT + 2))                // (4800 + 2 sample buffer) Use 75% of the FIFO
+#define WATERMARK (RAW_FRAME_SIZE * (RAW_FRAME_COUNT + 2)) // (4800 + 2 sample buffer) Use 75% of the FIFO
 
-#if ( WATERMARK > (AVAILABLE_FIFO * 8 / 10) )                             // If the watermark is over 80% of the FIFO
+#if ( WATERMARK > (AVAILABLE_FIFO * 8 / 10) )              // If the watermark is over 80% of the FIFO
 #error "WATERMARK IS TOO HIGH"
 #endif
 
-#define APPROACH       5                                                  // Go back in time 5 seconds
-#define FOLLOW_THROUGH 2                                                  // Go forwards 2 seconds
-#define OVERSAMPLE     (SAMPLE_RATE / TRACE_RATE)                         // Only send 1/8 samples
+#define APPROACH       5                                   // Go back in time 5 seconds
+#define FOLLOW_THROUGH 2                                   // Go forwards 2 seconds
+#define OVERSAMPLE     (SAMPLE_RATE / TRACE_RATE)          // Only send 1/8 samples
 
-#define SAMPLE_RATE   (1600)                                              // Output Data Rate samples per second
-#define SAMPLE_PERIOD (APPROACH + FOLLOW_THROUGH)                         // Accumulate sampls for 8 seconds
+#define SAMPLE_RATE   (1600)                               // Output Data Rate samples per second
+#define SAMPLE_PERIOD (APPROACH + FOLLOW_THROUGH)          // Accumulate sampls for 8 seconds
 #define SAMPLE_BUFFER_COUNT                                                                                                                \
-  (((SAMPLE_RATE * SAMPLE_PERIOD) / RAW_FRAME_COUNT) + 1)                 // Number of frames needed to store the approach and follow through
+  (((SAMPLE_RATE * SAMPLE_PERIOD) / RAW_FRAME_COUNT) + 1)  // Number of frames needed to store the approach and follow through
 
-#define TRACE_RATE        (100)                                           // Trace points per
-#define TRACE_FRAME_SIZE  (2 * 4)                                         // (24) 6 entries at 4 bytes (32 bits) each
+#define TRACE_RATE        (100)                            // Trace points per
+#define TRACE_FRAME_SIZE  (2 * 4)                          // (24) 6 entries at 4 bytes (32 bits) each
 #define TRACE_MEMORY_SIZE (TRACE_RATE * SAMPLE_PERIOD * TRACE_FRAME_SIZE) // (96000)
 
 /*
@@ -217,9 +215,11 @@ EXTERN time_count_t session_time[];
  */
 void trace_init(void);                 // Get the target software ready
 void trace_loop(void *arg);            // Target polling loop
-void trace_push_button(void *arg);     // Monitor the push button
-void trace_build(int timestamp);       // Build and send a trace
+void trace_push_button(void);          // Monitor the push button
+void trace_reduce(int timestamp);      // Reduce the data and send it
 void trace_send(int oversample);       // Build and send a trace
 void send_keep_alive(void);            // Send out the keep alive signal for TCPIP
 bool prompt_for_confirm(char *prompt); // Prompt for a confirmation
+void trace_health_monitor(void);       // Check the health of the sensor
+
 #endif

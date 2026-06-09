@@ -189,7 +189,7 @@ void serial_flush(int ports // active port list
     uart_flush(uart_console);
   }
 
-  if ( ports & TARGET)
+  if ( ports & TARGET )
   {
     in_buffer.in  = 0;
     in_buffer.out = 0;
@@ -371,7 +371,7 @@ void serial_to_all(char *str,        // String to output
     printf("%s", str); // Must be printf
   }
 
-  if ( ports & TARGET)
+  if ( ports & TARGET )
   {
     tcpip_app_2_queue(str, strlen(str));
   }
@@ -395,8 +395,8 @@ void serial_to_all(char *str,        // String to output
  * TCPIP queue for later output onto the TCPIP channel
  *
  ******************************************************************************/
-int tcpip_app_2_queue(char *buffer, // Where to return the bytes
-                      int   length  // Maximum transfer size
+int tcpip_app_2_queue(char *buffer, // Message to be sent
+                      int   length  // Size of message to be sent
 )
 {
   int bytes_moved;                  // Number of bytes written
@@ -453,7 +453,7 @@ int tcpip_queue_2_socket(char *buffer, // Place to put data
     out_buffer.out = (out_buffer.out + 1) % sizeof(out_buffer.queue);
     if ( out_buffer.out == out_buffer.in )
     {
-      break; // RUn out of things to read
+      break; // Run out of things to read
     }
   }
 
@@ -610,4 +610,3 @@ int get_string(char destination[], int size)
     vTaskDelay(10);
   }
 }
-

@@ -25,6 +25,7 @@
 #include "json.h"
 #include "serial_io.h"
 #include "timer.h"
+#include "WiFi.h"
 
 /*
  * Definitions
@@ -63,13 +64,16 @@ typedef struct
 /*
  * Local Variables
  */
-static run_time_clock_t timers[N_TIMERS];           // Active timer list (allow only positive time)
-static time_count_t     base_time = 0;              // Base time to show elapsed time
-time_count_t            time_to_go;                 // Time remaining in event in seconds
+static run_time_clock_t timers[N_TIMERS];                  // Active timer list (allow only positive time)
+static time_count_t     base_time = 0;                     // Base time to show elapsed time
+time_count_t            time_to_go;                        // Time remaining in event in seconds
 
 static synchronous_task_t task_list[] = {
     {"Status LED", BAND_100ms, status_LED_timer}, // Drive the status LED
     {"Push button", BAND_100ms, trace_push_button}, // Monitor the push button
+    {"Health monitor", BAND_60s, trace_health_monitor}, // Monitor the health of the sensor
+    {"TCPIP polling output", BAND_10ms, WiFi_client_send}, // Send stuff to the target
+
     {0, 0}
 };
 
@@ -305,7 +309,9 @@ void show_time(void)
 /*-----------------------------------------------------
  *
  * @function: run_time_us()
- *            reset_ru n_time_us_us()
+ *            run_time_ms()
+ *            run_time_s()
+ *            reset_run_time_us_us()
  *
  * @brief:    Return the run time in microseconds
  *            Reset the timer to now
@@ -325,5 +331,6 @@ time_count_t run_time_us(void)
 void reset_run_time_us(void)
 {
   base_time = esp_timer_get_time();
+  run_state |= TIME_VALID;
   return;
 }

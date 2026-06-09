@@ -438,7 +438,7 @@ void WiFi_AP_scan_test(void)
 
 /*****************************************************************************
  *
- * @function: WiFFi_client_init
+ * @function: WiFi_client_init
  *
  * @brief:    Start a client connection
  *
@@ -453,6 +453,17 @@ bool WiFi_client_init(void)
 {
   struct sockaddr_in dest_addr;
 
+  /*
+   *  Check to see if we are already connected
+   */
+  IF(TARGET_CONNECTED)
+  {
+    return true;
+  }
+
+  /*
+   *  Not connected, then connect
+   */
   memset((void *)&dest_addr, 0, sizeof(dest_addr));
   dest_addr.sin_len         = sizeof(dest_addr);
   dest_addr.sin_addr.s_addr = inet_addr(json_wifi_target_ip);
@@ -483,5 +494,68 @@ bool WiFi_client_init(void)
    *  Got here, ready to go
    */
   DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Connected to %s:%d", json_wifi_target_ip, 1090);))
+  run_state |= TARGET_CONNECTED; // Yay, we're connected
   return true;
+}
+
+/*****************************************************************************
+ *
+ * @function: WiFi_client_send
+ *
+ * @brief:    Send a payload to the target
+ *
+ * @return:   TRUE if the connection is succesful
+ *
+ ****************************************************************************
+ *
+ *  Take the message and send it out the TCPIP port
+ *
+ *
+ ***************************************************************************/
+void WiFi_client_send(void) //
+{
+  char s[MEDIUM_TEXT];
+  int  length;              // Number f bytes to send
+
+  length = tcpip_app_2_queue(s, sizeof(s));
+  if ( length > 0 )
+  {
+    send(client_socket, s, length, 0);
+  }
+
+  return;
+}
+
+/*****************************************************************************
+ *
+ * @function: WiFi_client_send
+ *
+ * @brief:    Send a payload to the target
+ *
+ * @return:   TRUE if the connection is succesful
+ *
+ ****************************************************************************
+ *
+ *  Take the message and send it out the TCPIP port
+ *
+ *
+ ***************************************************************************/
+void WiFi_client_get(void)
+{
+  char s[MEDIUM_TEXT];
+  int  rx_length; // Number of characters received
+
+  /*
+   *  Receive the data
+   */
+  rx_length = recv(client_socket, s, sizeof(s), 0);
+  if ( rx_length < 0 )
+  {
+    run_state &= ~TARGET_CONNECTED;
+    return;
+  }
+
+  tcpip_socket_2_queue(s, rx_length);
+
+  return;
 }
