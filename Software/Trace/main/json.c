@@ -345,14 +345,7 @@ static void handle_json(void)
       nvs_commit(my_handle); // Save to memory
     }
   }
-  /*
-   * Report an error if input not found
-   */
-  if ( (not_found == true) )
-  {
-    SEND(CONSOLE, sprintf(_xs, "\r\n\r\nCannot decode: {%s}\r\n", input_JSON);)
-  }
-
+  
   /*
    * All done
    */

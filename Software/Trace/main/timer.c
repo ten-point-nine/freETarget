@@ -72,6 +72,7 @@ static synchronous_task_t task_list[] = {
     {"Status LED", BAND_100ms, status_LED_timer}, // Drive the status LED
     {"Push button", BAND_100ms, trace_push_button}, // Monitor the push button
     {"Health monitor", BAND_60s, trace_health_monitor}, // Monitor the health of the sensor
+    {"Trace client", BAND_10ms, WiFi_client_task}, // Check on traffic
     {0, 0}
 };
 

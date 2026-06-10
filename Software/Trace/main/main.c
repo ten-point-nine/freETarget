@@ -85,10 +85,6 @@ void app_main(void)
   }
   vTaskDelay(TICK_10ms);
 
-  xTaskCreate(WiFi_client_task, "WiFi_tcp_client", K4, NULL, NETWORK, NULL);
-  serial_flush(ALL);
-  vTaskDelay(TICK_10ms);
-
   DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "SN:%d Running\r\n", json_serial_number);))
   vTaskDelay(TICK_10ms);
   serial_flush(ALL);

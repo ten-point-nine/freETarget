@@ -512,7 +512,7 @@ bool WiFi_client_init(void)
  *
  *
  ***************************************************************************/
-void WiFi_client_task(void *arg) //
+void WiFi_client_task(void) //
 {
   char s[MEDIUM_TEXT];
   int  length;             // Number f bytes to send

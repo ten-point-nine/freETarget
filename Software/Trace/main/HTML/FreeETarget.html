@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<style>
+  .container .btn {
+    position: absolute;
+    top: 22px;
+    left: 230px;
+    width: 28px;
+    heigth: 18px;
+    background-color: aqua;
+    border-radius: 3px;
+    border: 1px solid #000000;
+  }
+
+  .container .btn:hover {
+    background-color: pink;
+  }
+
+  .container .btn:active {
+    background-color: yellow;
+    transform: translateY(3px);
+  }
+
+
+  
+</style>
+
+<body>
+
+  <div class="container">
+    <button class="btn" onclick="window.print()"><svg width="16" height="16" fill="#000000" class="bi bi-printer"
+        viewBox="0 -4 17 20">
+        <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1" />
+        <path
+          d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1" />
+      </svg></button>
+  </div>
+
+
+  <canvas id='etargetCanvas' width='1183' height='767' style='border:1px solid #000000;'>Sorry, your browser does not
+    support canvas.</canvas>
+
+  <script>
+    //
+    //  E-Target Display 
+    //  By Stephen Carrington
+    //
+    //  The drawTarget function will draw any target with 10 equally spaced scoring rings
+    //  using simple target defination data.
+    //
+    //  Target is cleared every 10 shots.
+    //
+    //  Shot data is passed via a JSON String.
+    //  Create a jsonString  containing shot data. Example given below:
+    //  jsonString  = {"shot":1, "x":9.5, "y":5.8, "target":110, "athelete": "John Doe"}; 
+    //  
+    //  The first JSON String sent to a new target should be as follows:
+    //  jsonString  = {"shot":0, "x":0, "y":0, "target":xxx, "athelete": "John Doe"}; // xxx should be a valid Target Identifaction Number.
+    //  Without a valid Target Identifaction Number being sent the default display is an ISSF 10 meter Air Rifle Target.
+    //
+    //  Target Defination Data
+    //  *************************************************************************************************
+    //  Scale of Target:
+    //  Choose a (number) such that the target (diameter(mm) * (number)) ~ 540 < result < 680 pixels
+    //  tscale = 4 for 10m Air Pistol & 50m .22lr Rifle.
+    //  tscale = 12 for 10m Air Rifle.
+    //  tccale = 1.24 for 50m Pistol. 
+    // 
+    //    Example 50 metre 0.22-lr rifle.
+    //
+    //  tscale = 4;       //Scale of Target             
+    //  ord = 154.4;      // Outer Ring Diameter (mm)
+    //  aimMark = 112.4;  // Aiming Mark (mm)
+    //  ringSpacing = 8;  // Ring Spacing 8 (mm)
+    //  nbr = 3;          // Number of Black Rings
+    //  nwr = 7;          // Number of White Rings
+    //  itr = 5;          // Inner Ten Ring (mm). If no inner 10 Ring, Then 10 Ring Dims.
+    //  cor = 0;          // cor = 1 If Aiming Mark ends on a Ring. 
+    //                       cor = 0 if Aiming Mark ends between Rings.
+    //  tenRing = ord - 9*ringSpacing*2;  // Calculated from above data.
+    //  cal = 5.6;
+    //  drawTarget(tscale, ord, aimMark, ringSpacing, nbr, nwr, itr, cor, cal)
+    //  drawTarget(4, 154.4, 112.4, 8, 3, 7, 5, 0, 5.6); // ISSF 50 Metre Rifle
+    //
+    //  Other examples:
+    //  drawTarget(4, 155.5, 59.5, 8, 6, 3, 5, 1, 4.5);  // ISSF 10 Metre Air Pistol
+    //  drawTarget(1.24, 500, 200, 25, 6, 3, 25, 1, 5.6); // ISSF 50 Metre .22 Pisto
+    //  drawTarget(12, 45.5, 30.5, 2.5, 3, 6, 0.25, 1, 4.5);   // ISSF 10 Metre Air Rifle 
+    //  *************************************************************************************************
+    //
+    //  Target Identifaction Number:
+    //  110   ISSF 10 Metre Air Rifle
+    //  111   ISSF 10 Metre Air Rifle Practice
+    //  100   ISSF 10 Metre Air Pistol
+    //  101   ISSF 10 Metre Air Pistol Practice
+    //  510   ISSF 50 Metre Rifle
+    //  511   ISSF 50 Metre Rifle Practice
+    //  500   ISSF 50 Metre .22 Pistol
+    //  501   ISSF 50 Metre .22 Pistol Practice
+    //
+    //  Get Started...........
+    //
+    const canvas = document.getElementById('etargetCanvas');
+    const ctx = canvas.getContext('2d');
+
+    globalVariables();  //  Delare global variables
+
+    targetCanvas();     //  Fill and outline entire canvas.
+
+    leftScoreBox();     //  Create and outline Left Score Box
+
+    rightScoreBox();    //  Create and outline Right Score Box
+
+    //  Start Count Down Timer
+    countDown = 90 * 60 * 1000;
+    d = new Date();
+    correct = d.getTime();
+	setInterval(countDownTimer, 1000);
+
+    //  Draw any target to get started. 
+    drawTarget(12, 45.5, 30.5, 2.5, 3, 6, 0.25, 1, 4.5);   // ISSF 10 Metre Air Rifle default.
+
+
+    //
+    //  Listen for an event and display data.
+    //
+    if (!!window.EventSource) { // Check if browser supports EventSource
+      var source = new EventSource('/events');
+
+      source.addEventListener('open', function (e) {
+        console.log("Events Connected");
+      }, false);
+
+      source.addEventListener('error', function (e) {
+        if (e.target.readyState != EventSource.OPEN) {
+          console.log("Events Disconnected");
+        }
+      }, false);
+
+      source.addEventListener('close', function (e) {
+        console.log("Events closed by target");
+        source.close();
+        window.location.href = "/help"; // Redirect to Menu
+      }, false);
+
+      source.addEventListener('message', function (e) {
+        console.log("message", e.data);
+      }, false);
+
+      source.addEventListener('new_shotData', function (e) {
+        console.log("new_shotData", e.data);
+        var myObj = JSON.parse(e.data);
+        console.log(myObj);
+        var ss = myObj.shot;
+        var xx = myObj.x;
+        var yy = myObj.y;
+        targetType = myObj.target;
+        athelete = myObj.athelete;
+        sx = xx;
+        sy = yy;
+        sr = Math.sqrt(xx * xx + yy * yy);
+        sn = ss;
+
+        xHistory[parseFloat(sn)] = parseFloat(xx);
+        yHistory[parseFloat(sn)] = parseFloat(yy);
+        snHistory[parseFloat(sn)] = parseFloat(ss);
+
+
+        plotShot();
+      }, false);
+    }
+    // 
+    // Any Mice ?
+    //
+    canvas.addEventListener("click", function (event) {
+      let mx = event.offsetX;
+      let my = event.offsetY;
+   
+      // Check/Review Shot History
+      if (mx > 975 && mx < 1172) {
+        if (my > 27 && my < 41) {
+          rTarget = 0;
+          plotHistory(rTarget);
+        } else if (my > 43 && my < 57) {
+          rTarget = 1;
+          plotHistory(rTarget);
+        } else if (my > 59 && my < 73) {
+          rTarget = 2;
+          plotHistory(rTarget);
+        } else if (my > 75 && my < 89) {
+          rTarget = 3;
+          plotHistory(rTarget);
+        } else if (my > 91 && my < 105) {
+          rTarget = 4;
+          plotHistory(rTarget);
+        } else if (my > 107 && my < 121) {
+          rTarget = 5;
+          plotHistory(rTarget);
+        }
+      }
+    });
+    //
+    //  That's it!
+    //  
+    //  Functions list......
+    //
+    function globalVariables() {
+      // Delare global variables    
+      sn = 0;       // Shot No.
+      sx = 0;       // x axis value.
+      sy = 0;       // y axis value.
+      sr = 0;       // shot position radius
+      sa = 0;       // shot position angle
+      xPrev = 0;    // Previous x axis value.
+      yPrev = 0;    // Previous y axis value.
+      sPrev = 0;    // Previous shot Number
+      score = 0;    // Score
+      tscale = 0;   // Used to scale the target
+      tenRing = 0;  // Used to calculate 10 Ring
+      index = 0;    // counter variable in drawing target.
+      refPos = 0;   // A reference position variable for ploting Ring Numbers.
+      cal = 0;      // Caliber of bullet (mm)    
+      ord = 0;      // Outer Ring Diameter (mm)
+      aimMark = 0;  // Aiming Mark (mm)
+      ringSpacing = 0;  // Ring Spacing (mm)
+      nbr = 0;      // Number of Black Rings
+      nwr = 0;      // Number of White Rings
+      itr = 0;      // Inner 10 Ring (mm). If no inner 10 Ring, Then 10 Ring Dims.
+      cor = 0;      // cor = 1 If Aiming Mark ends on a Ring. 
+      // cor = 0 if Aiming Mark ends between Rings.
+      tds = 0;      // total digital score for left score box
+      tis = 0;      // total interger score for left score box
+      rbtis = 0;    // right box total interger score
+      nos = 0;      // number of shots detected       
+      sumX = 0;     // sum of x positions
+      sumY = 0;     // sum of y positions
+      sumR = 0;     // sum of shot Radii
+      windage = 0;
+      elevation = 0;
+      linen = 0;    // Line counter for displaying Target Score 
+      plinen = 0;   // Previous Line counter
+      countDown = 0;
+      d = 0;        // Date variable
+      dx = 0;
+      dy = 0;
+      theta = 0;
+      nX = 0;       // counter for number of X shots
+      athelete = "John Doe";
+      xHistory = [];
+      xHistory.length = 90;
+      xHistory.fill(0);
+      yHistory = [];
+      yHistory.length = 90;
+      yHistory.fill(0);
+      snHistory = [];
+      snHistory.length = 90;
+      snHistory.fill(0);
+    }
+    // End function globalVariables
+    // 
+    function countDownTimer() {
+      d = new Date();
+      var now = d.getTime() - correct;
+      var stopWatch = countDown - now;
+
+      // Calculate Hours, Minutes, Seconds
+      var hours = Math.floor(stopWatch / (1000 * 60 * 60));
+      var minutes = Math.floor((stopWatch % (1000 * 60 * 60)) / (1000 * 60));
+      var seconds = Math.floor((stopWatch % (1000 * 60)) / 1000);
+
+      if (stopWatch > 0) {
+        ctx.beginPath();
+        ctx.rect(977, 723, 194, 32);
+        ctx.fillStyle = '#FE5BAC';
+        ctx.fill();
+        ctx.fillStyle = "#000000";
+        ctx.textBaseline = "middle";
+        ctx.font = "30px arial bold";
+        ctx.fillText(hours, 1022, 740);
+        ctx.fillText(":", 1042, 740);
+        ctx.fillText(minutes, 1052, 740);
+        ctx.fillText(":", 1090, 740);
+        ctx.fillText(seconds, 1100, 740);
+
+      } else if (stopWatch < 0) {
+        ctx.beginPath();
+        ctx.rect(977, 723, 194, 32);
+        ctx.fillStyle = '#FE5BAC';
+        ctx.fill();
+        ctx.fillStyle = "#000000";
+        ctx.font = "30px arial bold";
+		ctx.textBaseline = "middle";
+        ctx.fillText("00:00:00", 1022, 740);
+        //ctx.fillText("EXPIRED",1022,740);
+      }
+      ctx.textBaseline = "alphabetic";
+    }
+    // End function countDownTimer
+    //
+    function targetCanvas() {
+      ctx.beginPath();
+      ctx.rect(1, 1, 1182, 766);
+      ctx.fillStyle = '#EDEADE';
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#000000";
+      ctx.stroke();
+    }
+    // End function targetCanvas
+    //
+    function leftScoreBox() {
+      ctx.beginPath();
+      ctx.rect(8, 8, 200, 596);
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#000000";
+      ctx.stroke();
+
+      // Place Headings
+      ctx.fillStyle = "#000000";
+      ctx.font = "10px arial";
+      ctx.textBaseline = "alphabetic";
+      ctx.fillText("Dir", 24, 22);
+      ctx.fillText("Nr", 75, 22);
+      ctx.fillText("Score", 119, 22);
+      ctx.fillText("Decimal", 162, 22);
+      ctx.font = "10px georgia";
+      ctx.fillText("Last Shot", 9, 630);
+      ctx.fillText("Total", 9, 665);
+      ctx.fillText("Windage", 9, 695);
+      ctx.fillText("Max Spread", 115, 695);
+      ctx.fillText("Elevation", 9, 720);
+      ctx.fillText("Mean Radius", 110, 720);
+      ctx.fillText("NAME:", 9, 752);
+
+      // Last Shot Box
+      ctx.beginPath();
+      ctx.moveTo(58, 645);
+      ctx.lineTo(158, 645);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "gray";
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(158, 645);
+      ctx.lineTo(158, 610);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "gray";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(58, 645);
+      ctx.lineTo(58, 610);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "white";
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(58, 610);
+      ctx.lineTo(158, 610);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "white";
+      ctx.stroke();
+
+      // Create and outline Direction Box
+      ctx.beginPath();
+      ctx.rect(173, 610, 35, 35);
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#000000";
+      ctx.stroke();
+
+      // Total Box
+      ctx.beginPath();
+      ctx.moveTo(45, 672);
+      ctx.lineTo(208, 672);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "gray";
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(208, 672);
+      ctx.lineTo(208, 650);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "gray";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(45, 672);
+      ctx.lineTo(45, 650);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "white";
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(45, 650);
+      ctx.lineTo(208, 650);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "white";
+      ctx.stroke();
+
+      // Windage Box
+      ctx.beginPath();
+      ctx.moveTo(58, 698);
+      ctx.lineTo(88, 698);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "gray";
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(88, 698);
+      ctx.lineTo(88, 682);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "gray";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(58, 698);
+      ctx.lineTo(58, 682);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "white";
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(58, 682);
+      ctx.lineTo(88, 682);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "white";
+      ctx.stroke();
+
+      // Max Spread Box
+      ctx.beginPath();
+      ctx.moveTo(176, 698);
+      ctx.lineTo(208, 698);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "gray";
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(208, 698);
+      ctx.lineTo(208, 682);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "gray";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(176, 698);
+      ctx.lineTo(176, 682);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "white";
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(176, 682);
+      ctx.lineTo(208, 682);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "white";
+      ctx.stroke();
+
+      // Elevation Box
+      ctx.beginPath();
+      ctx.moveTo(58, 723);
+      ctx.lineTo(88, 723);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "gray";
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(88, 723);
+      ctx.lineTo(88, 707);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "gray";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(58, 723);
+      ctx.lineTo(58, 707);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "white";
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(58, 707);
+      ctx.lineTo(88, 707);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "white";
+      ctx.stroke();
+
+      // Mean Radius Box
+      ctx.beginPath();
+      ctx.moveTo(176, 723);
+      ctx.lineTo(208, 723);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "gray";
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(208, 723);
+      ctx.lineTo(208, 707);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "gray";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(176, 723);
+      ctx.lineTo(176, 707);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "white";
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(176, 707);
+      ctx.lineTo(208, 707);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "white";
+      ctx.stroke();
+
+      // Name: Box
+      ctx.beginPath();
+      ctx.moveTo(45, 758);
+      ctx.lineTo(208, 758);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "gray";
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(208, 758);
+      ctx.lineTo(208, 738);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "gray";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(45, 758);
+      ctx.lineTo(45, 738);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "white";
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(45, 738);
+      ctx.lineTo(208, 738);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "white";
+      ctx.stroke();
+
+      // Draw Vertical Divisions Bold
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#EDEADE";
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(58 + (i * 50), 9);
+        ctx.lineTo(58 + (i * 50), 603);
+        ctx.stroke();
+      }
+      // Draw Horizontal Divisions Bold
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#EDEADE";
+      for (let i = 0; i < 11; i++) {
+        ctx.beginPath();
+        ctx.moveTo(9, (62 + (i * 54)));
+        ctx.lineTo(207, (62 + (i * 54)));
+        ctx.stroke();
+      }
+      // Draw Horizontal Divisions Light
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#EDEADE";
+      for (let i = 0; i < 33; i++) {
+        ctx.beginPath();
+        ctx.moveTo(9, (26 + (i * 18)));
+        ctx.lineTo(207, (26 + (i * 18)));
+        ctx.stroke();
+      }
+    }
+    // End function leftScoreBox
+    //
+    function rightScoreBox() {
+      ctx.beginPath();
+      ctx.rect(974, 8, 200, 148);
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#000000";
+      ctx.stroke();
+
+      // Draw Vertical Divisions
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#EDEADE";
+      ctx.beginPath();
+      ctx.moveTo(1000, 9);
+      ctx.lineTo(1000, 155);
+      ctx.stroke();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#EDEADE";
+      for (let i = 0; i < 11; i++) {
+        ctx.beginPath();
+        ctx.moveTo((1000 + (i * 15)), 9);
+        ctx.lineTo((1000 + (i * 15)), 155);
+        ctx.stroke();
+      }
+      // Draw Horizontal Divisions Bold
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#EDEADE";
+      for (let i = 0; i < 2; i++) {
+        ctx.beginPath();
+        ctx.moveTo(975, (59 + (i * 48)));
+        ctx.lineTo(1173, (59 + (i * 48)));
+        ctx.stroke();
+      }
+      // Draw Horizontal Divisions Light
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#EDEADE";
+      for (let i = 0; i < 9; i++) {
+        ctx.beginPath();
+        ctx.moveTo(975, (26 + (i * 16)));
+        ctx.lineTo(1173, (26 + (i * 16)));
+        ctx.stroke();
+      }
+      // Place Headings
+      ctx.fillStyle = "#000000";
+      ctx.font = "10px arial";
+      ctx.textBaseline = "alphabetic";
+      for (let i = 0; i < 9; i++) {
+        ctx.fillText(i + 1, (1004 + (i * 15)), 22);
+      }
+      ctx.fillText("10", 1136, 22);
+      ctx.fillText("Total", 1150, 22);
+
+      // Draw rightSoreBoxBottom
+      ctx.beginPath();
+      ctx.rect(974, 164, 200, 594);
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#000000";
+      ctx.stroke();
+
+      // Draw Vertical Divisions Bold
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#EDEADE";
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo((1025 + (i * 50)), 165);
+        ctx.lineTo((1025 + (i * 50)), 757);
+        ctx.stroke();
+      }
+      // Draw Horizontal Divisions Bold
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#EDEADE";
+      for (let i = 0; i < 12; i++) {
+        ctx.beginPath();
+        ctx.moveTo(975, (180 + (i * 54)));
+        ctx.lineTo(1173, (180 + (i * 54)));
+        ctx.stroke();
+      }
+      // Draw Horizontal Divisions Light
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#EDEADE";
+      for (let i = 0; i < 32; i++) {
+        ctx.beginPath();
+        ctx.moveTo(975, (180 + (i * 18)));
+        ctx.lineTo(1173, (180 + (i * 18)));
+        ctx.stroke();
+      }
+      // Place Headings
+      ctx.fillStyle = "#000000";
+      ctx.font = "10px arial";
+      ctx.fillText("Dir", 992, 176);
+      ctx.fillText("Nr", 1042, 176);
+      ctx.fillText("Score", 1086, 176);
+      ctx.fillText("Decimal", 1129, 176);
+
+      // Count Down Timer Box
+      ctx.beginPath();
+      ctx.moveTo(976, 756);
+      ctx.lineTo(1172, 756);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "blue";
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(1172, 757);
+      ctx.lineTo(1172, 721);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "blue";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(976, 757);
+      ctx.lineTo(976, 721);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "blue";
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(976, 722);
+      ctx.lineTo(1172, 722);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "blue";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.rect(977, 723, 194, 32);
+      ctx.fillStyle = '#FE5BAC';
+      ctx.fill();
+    }
+    // end funtion rightScoreBox
+    //
+    function targetCard() {
+      ctx.beginPath();
+      ctx.rect(216,08, 750, 750);
+      ctx.fillStyle = "#FFDEAD";
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#000000";
+      ctx.stroke();
+    }
+    // End function targetCard
+    //
+    function drawTriangle() {
+      ctx.beginPath();
+      ctx.moveTo(841, 8);
+      ctx.lineTo(966, 8);
+      ctx.lineTo(966, 133);
+      ctx.lineTo(841, 8);
+      ctx.fillStyle = "blue";
+      ctx.fill();
+      ctx.strokeStyle = "blue";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    // End function drawTriangle
+    //
+    function drawTarget(ztscale, zord, zaimMark, zringSpacing, znbr, znwr, zitr, zcor, zcal) {
+
+      tscale = ztscale;
+      ord = zord;
+      aimMark = zaimMark;
+      ringSpacing = zringSpacing;
+      nbr = znbr;
+      nwr = znwr;
+      itr = zitr;
+      cor = zcor;
+      cal = zcal;
+      tenRing = ord - 9 * ringSpacing * 2;
+      //
+      //  Clear and define Target Card
+      targetCard();
+      //
+      // Aiming Mark
+      ctx.beginPath();
+      ctx.arc(591, 383, (aimMark / 2) * tscale, 0, 2 * Math.PI);
+      ctx.fillStyle = "#000000";
+      ctx.fill();
+      //
+      // Draw Black Rings
+      for (let i = 0; i < nbr; i++) {
+        ctx.beginPath();
+        ctx.arc(591, 383, ((ord / 2) * tscale - (i * ringSpacing * tscale)), 0, 2 * Math.PI);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'black';
+        ctx.stroke();
+      }
+      //
+      //  Draw White Rings
+      for (let i = 0; i < nwr; i++) {
+        ctx.beginPath();
+        ctx.arc(591, 383, (((ord / 2) * tscale - ((nbr + cor) * ringSpacing * tscale)) - (i * ringSpacing * tscale)), 0, 2 * Math.PI);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'white';
+        ctx.stroke();
+      }
+      //
+      // Draw Inner 10 Ring
+      ctx.beginPath();
+      ctx.arc(591, 383, ((itr / 2) * tscale), 0, 2 * Math.PI);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'white';
+      ctx.stroke();
+      //
+      // Plot Ring numbers
+      ctx.font = "10px Arial";
+      ctx.textBaseline = "middle";
+      refPos = ((ord * tscale / 2) - tscale * ringSpacing / 2);
+      index = 1;
+      for (let i = 0; i < 8; i++) {
+        ctx.fillStyle = "black";
+        if (index > nbr) {
+          ctx.fillStyle = "white";
+        }
+        ctx.fillText(i + 1, 588 - refPos, 383);
+        ctx.fillText(i + 1, 588 + refPos, 383);
+        ctx.fillText(i + 1, 588, 383 - refPos);
+        ctx.fillText(i + 1, 588, 383 + refPos);
+        index = index + 1;
+        if (index > nbr) {
+          ctx.fillStyle = "white";
+        }
+        refPos = refPos - tscale * ringSpacing;
+      }
+      return tenRing;
+    }
+    // End function drawTarget
+    //
+    function plotActiveTarget() {
+
+      if (targetType == 510 || targetType == 511) {
+        drawTarget(4, 154.4, 112.4, 8, 3, 7, 5, 0, 5.6); // ISSF 50 Metre Rifle
+      } else if (targetType == 100 || targetType == 101) {
+        drawTarget(4, 155.5, 59.5, 8, 6, 3, 5, 1, 4.5);  // ISSF 10 Metre Air Pistol
+      } else if (targetType == 110 || targetType == 111) {
+        drawTarget(12, 45.5, 30.5, 2.5, 3, 6, 0.25, 1, 4.5);   // ISSF 10 Metre Air Rifle
+      } else if (targetType == 500 || targetType == 501) {
+        drawTarget(1.24, 500, 200, 25, 6, 3, 25, 1, 5.6); // ISSF 50 Metre .22 Pistol
+      }
+      // Check for Practice Target
+      if (targetType == 101 || targetType == 111 || targetType == 501 || targetType == 511) {
+        drawTriangle();
+      }
+
+      if (linen < 1) {
+        if (targetType == 101 || targetType == 111 || targetType == 501 || targetType == 511) {
+          countDown = 15 * 60 * 1000;
+        }
+        if (targetType == 100) {
+          countDown = 60 * 60 * 1000;
+        } else if (targetType == 110) {
+          countDown = 75 * 60 * 1000;
+        } else if (targetType == 500) {
+          countDown = 90 * 60 * 1000;
+        } else if (targetType == 510) {
+          countDown = 90 * 60 * 1000;
+        }
+      }
+    }
+    // End function plotActiveTarget
+    //
+    function plotShot() {
+      if (sn < 61) {
+        if (nos > 0) {
+          if (targetType != p_targetType) {
+            startOver();
+          }
+        }
+        if (sn < 1) {
+          plotActiveTarget();
+          p_targetType = targetType;
+        }
+
+        if (sn > 0) {
+          if (nos < 1) {
+            plotActiveTarget();
+            p_targetType = targetType;
+          }
+          if (nos > 0) {
+            ctx.beginPath();
+            ctx.arc((591 + xPrev * tscale), (383 - yPrev * tscale), cal * tscale / 2, 0, 2 * Math.PI); // Shot Position
+            ctx.fillStyle = 'rgb(0 150 255)';
+            ctx.fill();
+            ctx.font = "10px Arial";
+            shift = 5;
+            if (tscale < 2) {
+              ctx.font = "5px Arial";
+              shift = 3;
+            }
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = "white";
+            ctx.fillText(Math.trunc(sn - 1), 591 - shift + xPrev * tscale, 383 - yPrev * tscale);
+            ctx.font = "10px Arial";
+          }
+          ctx.beginPath();
+          ctx.arc((591 + sx * tscale), (383 - sy * tscale), cal * tscale / 2, 0, 2 * Math.PI); // Shot Position
+          ctx.fillStyle = 'red';
+          ctx.fill();
+          ctx.font = "10px Arial";
+          shift = 5;
+          if (tscale < 2) {
+            ctx.font = "5px Arial";
+            shift = 3;
+          }
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = "black";
+          ctx.fillText(Math.trunc(sn), 591 - shift + sx * tscale, 383 - sy * tscale);
+          ctx.font = "10px Arial";
+          xPrev = sx;
+          yPrev = sy;
+          sPrev = sn;
+
+          updateTables();
+        }
+      }
+    }
+    //  End Function plotShot  
+    //
+    function updateTables() {
+
+      srr = cal / 2;
+      if (targetType == 100 || targetType == 101 || targetType == 110 || targetType == 111 || targetType == 510 || targetType == 511) {
+        srr = 0;
+      }
+      score = 11 - ((sr - srr) * 18 / (ord - tenRing));
+      if (score < 1) {
+        score = 0;
+      }
+      if (score > 10.9) {
+        score = 10.9;
+      }
+      nos = nos + 1;
+      tis = tis + Math.trunc(score);        // Total interger score
+      tds = tds + Math.trunc(score * 10) / 10;  // Total digital score
+      // Update Left Sore Box
+      ctx.fillStyle = "#000000";
+      // If shot # > 30 place score in right shot box. Else place score in left shot box.
+      if (sn > 30) {
+        ctx.font = "12px Arial";
+        ctx.fillText(Math.trunc(sn), 1040, (172 + (18 * (sn - 30))));
+        ctx.font = "14px Arial, bold";
+        ctx.fillText(Math.trunc(score), 1089, (173 + (18 * (sn - 30))));
+        ctx.fillText(Math.trunc(score * 10) / 10, 1130, (173 + (18 * (sn - 30))));
+        // Check if shot is an X
+        if (targetType == 110 || targetType == 111) {
+          if (sr <= 2.0) {
+            ctx.fillText("*", 1160, (173 + (18 * (sn - 30))));
+            nX = nX + 1;
+          }
+        } else if (targetType == 100 || targetType == 101) {
+          if (sr <= ((cal / 2) + (itr / 2))) {
+            ctx.fillText("*", 1160, (173 + (18 * (sn - 30))));
+            nX = nX + 1;
+          }
+        } else if (targetType == 510 || targetType == 511) {
+          if (sr <= ((cal / 2) + (itr / 2))) {
+            ctx.fillText("*", 1160, (173 + (18 * (sn - 30))));
+            nX = nX + 1;
+          }
+        } else if (targetType == 500 || targetType == 501) {
+          if (sr <= ((cal / 2) + (itr / 2))) {
+            ctx.fillText("*", 1160, (173 + (18 * (sn - 30))));
+            nX = nX + 1;
+          }
+        }
+        // Fill the Dir Box > 30 Shots
+        // Draw Direction Arrow
+        var yx = Math.abs(sy / sx);
+        theta = Math.atan(yx);
+        dx = 5 * Math.cos(theta);
+        dy = 5 * Math.sin(theta);
+        if (sx > 0 && sy > 0) {
+          dx = dx;
+          dy = dy;
+        } else if (sx < 0 && sy > 0) {
+          dx = -dx;
+          dy = dy;
+        } else if (sx < 0 && sy < 0) {
+          dx = -dx;
+          dy = -dy;
+        } else if (sx > 0 && sy < 0) {
+          dx = dx;
+          dy = -dy;
+        }
+        ctx.beginPath();
+        ctx.arc(1000 + dx, ((171 + (18 * (sn - 30))) - dy), 2, 0, 2 * Math.PI); // aHead Position
+        ctx.fillStyle = "#000000";
+        ctx.fill();
+        // Draw arrow shaft    
+        ctx.beginPath();
+        ctx.moveTo(1000 + dx, ((171 + (18 * (sn - 30))) - dy));
+        ctx.lineTo(1000 - dx, ((171 + (18 * (sn - 30))) + dy));
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "#000000";
+        ctx.stroke();
+      } else if (sn < 31) {  // Update Left Score Box
+        ctx.font = "12px Arial";
+        ctx.fillText(Math.trunc(sn), 75, (18 + (18 * sn)));
+        ctx.font = "14px Arial, bold";
+        ctx.fillText(Math.trunc(score), 124, (18 + (18 * sn)));
+        ctx.fillText(Math.trunc(score * 10) / 10, 165, (18 + (18 * sn)));
+        // Check if shot is an X
+        if (targetType == 110 || targetType == 111) {
+          if (sr <= 2.0) {
+            ctx.fillText("*", 195, (18 + (18 * sn)));
+            nX = nX + 1;
+          }
+        } else if (targetType == 100 || targetType == 101) {
+          if (sr <= ((cal / 2) + (itr / 2))) {
+            ctx.fillText("*", 195, (18 + (18 * sn)));
+            nX = nX + 1;
+          }
+        } else if (targetType == 510 || targetType == 511) {
+          if (sr <= ((cal / 2) + (itr / 2))) {
+            ctx.fillText("*", 195, (18 + (18 * sn)));
+            nX = nX + 1;
+          }
+        } else if (targetType == 500 || targetType == 501) {
+          if (sr <= ((cal / 2) + (itr / 2))) {
+            ctx.fillText("*", 195, (18 + (18 * sn)));
+            nX = nX + 1;
+          }
+        }
+
+        // Fill the Dir Box < 31 Shots
+        // Draw Direction Arrow
+        var yx = Math.abs(sy / sx);
+        theta = Math.atan(yx);
+        dx = 5 * Math.cos(theta);
+        dy = 5 * Math.sin(theta);
+        if (sx > 0 && sy > 0) {
+          dx = dx;
+          dy = dy;
+        } else if (sx < 0 && sy > 0) {
+          dx = -dx;
+          dy = dy;
+        } else if (sx < 0 && sy < 0) {
+          dx = -dx;
+          dy = -dy;
+        } else if (sx > 0 && sy < 0) {
+          dx = dx;
+          dy = -dy;
+        }
+        ctx.beginPath();
+        ctx.arc(35 + dx, ((17 + (18 * sn)) - dy), 2, 0, 2 * Math.PI); // aHead Position
+        ctx.fillStyle = "#000000";
+        ctx.fill();
+        // Draw arrow shaft    
+        ctx.beginPath();
+        ctx.moveTo(35 + dx, ((17 + (18 * sn)) - dy));
+        ctx.lineTo(35 - dx, ((17 + (18 * sn)) + dy));
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "#000000";
+        ctx.stroke();
+
+      }
+      // Update Right Top Target Score Box
+      ctx.font = "10px Arial";
+      linen = Math.trunc(((parseFloat(sn) - 1) / 10));
+
+      ctx.fillText(Math.trunc(score), 987 + ((sn - linen * 10) * 15), (35 + (linen * 16)));
+      for (let j = 0; j < 6; j++) {
+        ctx.beginPath();
+        ctx.arc(981, (34 + (j * 16)), 4, 0, 2 * Math.PI); // Current Target Position
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fill();
+      }
+      ctx.beginPath();
+      ctx.rect(975, (27 + (linen * 16)), 22, 14);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fill();
+      ctx.fillStyle = '#000000';
+      ctx.fillText("T", 986, (35 + (linen * 16)));
+      ctx.fillText(Math.trunc(linen + 1), 992, (35 + (linen * 16)));
+      ctx.beginPath();
+      ctx.arc(981, (34 + (linen * 16)), 3, 0, 2 * Math.PI); // Current Target Position
+      ctx.fillStyle = "#000000";
+      ctx.fill();
+
+      // Redraw Target after every tenth shot on target.
+      if (linen - plinen > 0) {
+        rbtis = 0;
+        plotActiveTarget();
+
+        ctx.beginPath();
+        ctx.arc((591 + sx * tscale), (383 - sy * tscale), cal * tscale / 2, 0, 2 * Math.PI); // Shot Position
+        ctx.fillStyle = 'red';
+        ctx.fill();
+        ctx.font = "10px Arial";
+        shift = 5;
+        if (tscale < 2) {
+          ctx.font = "5px Arial";
+          shift = 3;
+        }
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "black";
+        ctx.fillText(Math.trunc(sn), 591 - shift + sx * tscale, 383 - sy * tscale);
+
+        xPrev = sx;
+        yPrev = sy;
+        sPrev = sn;
+      }
+      rbtis = rbtis + Math.trunc(score);
+      ctx.beginPath();
+      ctx.rect(1152, (27 + (linen * 16)), 20, 14);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fill();
+      ctx.fillStyle = '#000000';
+      ctx.fillText(rbtis, 1153, (35 + (linen * 16)));
+      plinen = linen;
+
+
+      // Update Last Shot Box
+      ctx.beginPath();
+      ctx.rect(60, 612, 96, 30);
+      ctx.fillStyle = '#EDEADE';
+      ctx.fill();
+
+      ctx.font = "26px Arial, bold";
+      ctx.fillStyle = "#000000";
+      ctx.fillText(Math.trunc(score * 10) / 10, 90, 628);
+
+      // Update Direction Box
+      //
+      ctx.beginPath();
+      ctx.rect(173, 610, 35, 35);
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#000000";
+      ctx.stroke();
+      var yx = Math.abs(sy / sx);
+      theta = Math.atan(yx);
+      dx = 13 * Math.cos(theta);
+      dy = 13 * Math.sin(theta);
+      if (sx > 0 && sy > 0) {
+        dx = dx;
+        dy = dy;
+      } else if (sx < 0 && sy > 0) {
+        dx = -dx;
+        dy = dy;
+      } else if (sx < 0 && sy < 0) {
+        dx = -dx;
+        dy = -dy;
+      } else if (sx > 0 && sy < 0) {
+        dx = dx;
+        dy = -dy;
+      }
+      ctx.beginPath();
+      ctx.arc(190 + dx, 627 - dy, 2, 0, 2 * Math.PI); // aHead Position
+      ctx.fillStyle = "#000000";
+      ctx.fill();
+      // Draw arrow shaft    
+      ctx.beginPath();
+      ctx.moveTo(190 + dx, 627 - dy);
+      ctx.lineTo(190 - dx, 627 + dy);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#000000";
+      ctx.stroke();
+
+      // Update Total Box
+      ctx.beginPath();
+      ctx.rect(47, 652, 159, 18);
+      ctx.fillStyle = '#EDEADE';
+      ctx.fill();
+
+      ctx.font = "16px Arial, bold";
+      ctx.fillStyle = "#000000";
+      ctx.fillText(nos, 52, 661);
+      ctx.fillText(tis, 80, 661);
+      ctx.fillText("(", 115, 661);
+      ctx.fillText(Math.trunc(tds * 10) / 10, 120, 661);
+      ctx.fillText(")-", 165, 661);
+      ctx.fillText(nX, 180, 661);
+      ctx.fillText("x", 198, 661);
+
+      // Update Windage Box
+      sumX = +sumX + parseFloat(sx);
+      windage = +sumX / nos;
+      windage = Math.trunc(windage * 10) / 10;
+      ctx.beginPath();
+      ctx.rect(59, 680, 28, 14);
+      ctx.fillStyle = '#EDEADE';
+      ctx.fill();
+
+      ctx.font = "12px Arial, bold";
+      ctx.fillStyle = "#000000";
+      ctx.fillText(windage, 60, 690);
+
+      // Update Elevation Box
+      sumY = +sumY + parseFloat(sy);
+      elevation = +sumY / nos;
+      elevation = Math.trunc(elevation * 10) / 10;
+      ctx.beginPath();
+      ctx.rect(59, 705, 28, 14);
+      ctx.fillStyle = '#EDEADE';
+      ctx.fill();
+
+      ctx.font = "12px Arial, bold";
+      ctx.fillStyle = "#000000";
+      ctx.fillText(elevation, 60, 715);
+
+      // Update Radius Box
+      sumR = +sumR + parseFloat(sr);
+      mradius = +sumR / nos;
+      mradius = Math.trunc(mradius * 10) / 10;
+      ctx.beginPath();
+      ctx.rect(178, 705, 28, 14);
+      ctx.fillStyle = '#EDEADE';
+      ctx.fill();
+
+      ctx.font = "12px Arial, bold";
+      ctx.fillStyle = "#000000";
+      ctx.fillText(mradius, 180, 715);
+
+      // Update Name Box
+      let pName = athelete;
+      ctx.beginPath();
+      ctx.rect(47, 739, 159, 17);
+      ctx.fillStyle = '#EDEADE';
+      ctx.fill();
+
+      ctx.font = "12px Arial, bold";
+      ctx.fillStyle = "#000000";
+      ctx.fillText(pName, 49, 748);
+    }
+    // End Function updateTables
+    //
+    function startOver() {
+      // Delare global variables
+      globalVariables();
+      // Fill and outline entire canvas.
+      targetCanvas();
+      // Create and outline Left Score Box
+      leftScoreBox();
+      // Create and outline Right Score Box
+      rightScoreBox();
+      //
+      // Start Count Down Timer
+      //
+      countDown = 90 * 60 * 1000;
+      d = new Date();
+      correct = d.getTime();
+	  setInterval(countDownTimer, 1000);
+      //  Draw any target to get started.
+
+      drawTarget(12, 45.5, 30.5, 2.5, 3, 6, 0.25, 1, 4.5);   // ISSF 10 Metre Air Rifle
+    }
+    // End function startOver
+    //
+    function plotHistory(T) {
+      plotActiveTarget();
+      for (let j = 0; j < 6; j++) {
+        ctx.beginPath();
+        ctx.arc(981, (34 + (j * 16)), 4, 0, 2 * Math.PI); // Delete Target Position Dot
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fill();
+      }
+      ctx.beginPath();
+      ctx.arc(981, (34 + (T * 16)), 3, 0, 2 * Math.PI); // Current Target Position Dot
+      ctx.fillStyle = "#000000";
+      ctx.fill();
+
+      for (let i = 0; i < 10; i++) {
+        var sni = i + 1 + (10 * T);
+        var sxx = xHistory[sni];
+        var syy = yHistory[sni];
+        var snn = snHistory[sni];
+
+        if (snn > 0) {
+          ctx.beginPath();
+          ctx.arc((591 + sxx * tscale), (383 - syy * tscale), cal * tscale / 2, 0, 2 * Math.PI); // Shot Position
+          ctx.fillStyle = 'rgb(0 150 255)';
+          ctx.fill();
+          ctx.font = "10px Arial";
+          shift = 5;
+          if (tscale < 2) {
+            ctx.font = "5px Arial";
+            shift = 3;
+          }
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = "white";
+          ctx.fillText(Math.trunc(snn), 591 - shift + sxx * tscale, 383 - syy * tscale);
+          ctx.font = "10px Arial";
+        }
+      }
+    }
+
+   </script>
+ </body>
+</html>
