@@ -448,6 +448,8 @@ void show_echo(void)
   strcat(_xs, "\"");
   serial_to_all(_xs, ALL);
   SEND(CONSOLE, sprintf(_xs, "\"RUN_STATE\":        0X%04X, ", run_state);)    // Current software version
+  
+  trace_statistics();
   SEND(CONSOLE, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);) // Current software version
   SEND(CONSOLE, sprintf(_xs, "\"BOARD REVISION\":   %d, ", board_revision);)   // Current board version
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);

@@ -18,6 +18,7 @@
 #include "esp_netif.h"
 #include "esp_tls.h"
 #include <esp_wifi.h>
+#include "esp_timer.h"
 
 #define TRACE_C
 #include "trace.h"
@@ -41,7 +42,7 @@
  *  Variables
  */
 time_count_t sync_time_remaining; // How long before we have to synch again
-time_count_t keep_alive_timer; // TCPIP keep alive timer
+time_count_t keep_alive_timer;    // TCPIP keep alive timer
 
 /*
  * Function Prototypes
@@ -122,8 +123,8 @@ void trace_init(void)
   /*
    *  Set up the long running timers
    */
-  ft_timer_new(&sync_time_remaining, NETWORK_TIME_PERIOD, NULL, "Synchronize time"); // Start the synch timer
-  ft_timer_new(&keep_alive_timer, NETWORK_TIME_PERIOD, send_keep_alive, "Keep alive");                // keepalive timer
+  ft_timer_new(&sync_time_remaining, NETWORK_TIME_PERIOD, NULL, "Synchronize time");    // Start the synch timer
+  ft_timer_new(&keep_alive_timer, NETWORK_TIME_PERIOD, &send_keep_alive, "Keep alive"); // keepalive timer
 
   /*
    * Run the power on self test
@@ -161,9 +162,15 @@ void trace_init(void)
  * No one operation should exceed 500ms.
  *
  *---------------------------------------------------------------*/
+int FIFO_pull = 0;                                   // How many FIFO pulls have we done
+
+time_count_t FIFO_time_us;                           // Last pull in microseconds
+
 void trace_loop(void *arg)
 {
   DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "trace_loop()");))
+
+  time_count_t start_time_us = esp_timer_get_time(); // Remember when we got here
 
   run_state |= IN_OPERATION;
 
@@ -172,11 +179,21 @@ void trace_loop(void *arg)
     if ( gpio_get_level(BMI270_INTERRUPT) == 0 )
     {
       BMI270_pull_FIFO();
+      FIFO_pull++;
+      FIFO_time_us = esp_timer_get_time() - start_time_us;
     }
     vTaskDelay(TICK_50ms);
   }
 
-  return; // Never get here
+  return;                   // Never get here
+}
+
+void trace_statistics(void) // Display the FIFO diagnostics
+{
+  SEND(CONSOLE, sprintf(_xs, "\"FIFO time\": %.4f", ((real_t)FIFO_time_us) / 1000000.0);)
+  SEND(CONSOLE, sprintf(_xs, "\"FIFO pull\": %d", FIFO_pull);)
+  SEND(CONSOLE, sprintf(_xs, "\"FIFO check\": %d", (int)(((real_t)FIFO_time_us / 1000000.0) * SAMPLE_RATE / RAW_FRAME_COUNT));)
+  return;
 }
 
 /*----------------------------------------------------------------

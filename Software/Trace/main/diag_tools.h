@@ -33,17 +33,15 @@ void digital_output_test(void);      // Test the digital outputs
 #define LED_OFF          "                                "
 #define LED_ON           "********************************"
 #define LED_STARTUP      "* * * * * * * * * * * * * * * * "
-#define LED_READY        "*****************               "
-#define LED_FIFO_FILLING "****    ****    ****    ****    "
-#define LED_REDUCTION    "************    ****    ****    "
-#define LED_NO_CAL       "**  **  **  **  **  **  **  **  "
+#define LED_READY        "********                        "
+#define LED_FIFO_FILLING "********     ****               "
+#define LED_REDUCTION    "********     ****     ****      "
+#define LED_NO_CAL       "********  **  **  **  ** **  ** "
 #define LED_ERROR        "****                            "
 
 /*
  *  On board expected values
  */
-#define V12_WORKING 10.0 // Expect that the 12 Volt supply is over 10 volts
-#define V12_CAUTION 5.0  // Caution if the 12 Volts supply is less than 5 volts
 
 /*
  * Tracing

@@ -179,11 +179,12 @@ EXTERN time_count_t session_time[];
 /*
  * trace functions
  */
-void trace_init(void);                 // Get the target software ready
-void trace_loop(void *arg);            // Target polling loop
-void trace_push_button(void);          // Monitor the push button
-void trace_reduce(int timestamp);      // Reduce the data and send it
-void trace_send(int oversample);       // Build and send a trace
-void trace_health_monitor(void);       // Check the health of the sensor
+void trace_init(void);            // Get the target software ready
+void trace_loop(void *arg);       // Target polling loop
+void trace_push_button(void);     // Monitor the push button
+void trace_reduce(int timestamp); // Reduce the data and send it
+void trace_send(int oversample);  // Build and send a trace
+void trace_health_monitor(void);  // Check the health of the sensor
+void trace_statistics(void);      // Display the statistics
 
 #endif
