@@ -241,13 +241,15 @@ void hello(void)
  * Send out the keep alive message and reset the timer
  *
  *--------------------------------------------------------------*/
+extern time_count_t keep_alive_timer;
+
 void send_keep_alive(void)
 {
   static int keep_alive_count = 0;
   char       str[SHORT_TEXT];
 
   SEND(TARGET, sprintf(_xs, "{\"KEEP_ALIVE\":%d, \"NAME\":\"%s\"}", keep_alive_count++, str);)
-  keep_alive = (time_count_t)json_keep_alive * ONE_SECOND;
+  keep_alive_timer = (time_count_t)json_keep_alive * ONE_SECOND;
 
   return;
 }

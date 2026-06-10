@@ -64,8 +64,6 @@ static const self_test_t test_list[] = {
     //    {"Enable the WiFi Server",       &WiFi_server_test        },
         {"Scan for access points (APs)", &WiFi_AP_scan_test       },
     {"- HTTP tests",               0                   },
-      {"Send to  test",          &http_send_to_server_test},
-
     {"-Interrupt Tests",           0                   },
     {"- Software tests",           0                   },
     {"IMU test",                   &IMU_test           },

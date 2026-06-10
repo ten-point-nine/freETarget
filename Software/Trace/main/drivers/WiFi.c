@@ -500,11 +500,11 @@ bool WiFi_client_init(void)
 
 /*****************************************************************************
  *
- * @function: WiFi_client_send
+ * @function: WiFi_tcp_client
  *
- * @brief:    Send a payload to the target
+ * @brief:    Send and receive packets from the target
  *
- * @return:   TRUE if the connection is succesful
+ * @return:   None
  *
  ****************************************************************************
  *
@@ -512,50 +512,31 @@ bool WiFi_client_init(void)
  *
  *
  ***************************************************************************/
-void WiFi_client_send(void) //
+void WiFi_client_task(void *arg) //
 {
   char s[MEDIUM_TEXT];
-  int  length;              // Number f bytes to send
+  int  length;             // Number f bytes to send
 
+  /*
+   * Send the data
+   */
   length = tcpip_app_2_queue(s, sizeof(s));
   if ( length > 0 )
   {
     send(client_socket, s, length, 0);
   }
 
-  return;
-}
-
-/*****************************************************************************
- *
- * @function: WiFi_client_send
- *
- * @brief:    Send a payload to the target
- *
- * @return:   TRUE if the connection is succesful
- *
- ****************************************************************************
- *
- *  Take the message and send it out the TCPIP port
- *
- *
- ***************************************************************************/
-void WiFi_client_get(void)
-{
-  char s[MEDIUM_TEXT];
-  int  rx_length; // Number of characters received
-
   /*
    *  Receive the data
    */
-  rx_length = recv(client_socket, s, sizeof(s), 0);
-  if ( rx_length < 0 )
+  length = recv(client_socket, s, sizeof(s), 0);
+  if ( length < 0 )
   {
     run_state &= ~TARGET_CONNECTED;
     return;
   }
 
-  tcpip_socket_2_queue(s, rx_length);
+  tcpip_socket_2_queue(s, length);
 
   return;
 }

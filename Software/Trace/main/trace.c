@@ -41,6 +41,7 @@
  *  Variables
  */
 time_count_t sync_time_remaining; // How long before we have to synch again
+time_count_t keep_alive_timer; // TCPIP keep alive timer
 
 /*
  * Function Prototypes
@@ -65,6 +66,7 @@ extern FIFO_raw_t sample_raw_read[];
 void trace_init(void)
 {
   is_trace = DLT_FATAL | DLT_INFO | DLT_CRITICAL;
+
 #if TRACE_APPLICATION
   is_trace |= DLT_APPICATION;    // Enable application tracing
   DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT APPLICATON enabled");))
@@ -110,6 +112,7 @@ void trace_init(void)
   {
     run_state |= IN_NO_CAL;               // The board is not calibrated
   }
+
   json_distance_to_target = 10.0;
 
   BMI270_init(BMI270_CS);                 // Initialize the BMI270 accelerometer
@@ -119,7 +122,8 @@ void trace_init(void)
   /*
    *  Set up the long running timers
    */
-  ft_timer_new(&sync_time_remaining, 10 * 60 * ONE_SECOND, NULL, "Synchronize time"); // Start the synch timer
+  ft_timer_new(&sync_time_remaining, NETWORK_TIME_PERIOD, NULL, "Synchronize time"); // Start the synch timer
+  ft_timer_new(&keep_alive_timer, NETWORK_TIME_PERIOD, send_keep_alive, "Keep alive");                // keepalive timer
 
   /*
    * Run the power on self test
@@ -269,7 +273,7 @@ void trace_health_monitor(void)
    */
   if ( sync_time_remaining == 0 )
   {
-    SEND(TARGET, sprintf(_xs, "{\"TIME\"}");)
+    SEND(TARGET, sprintf(_xs, "{\"TIME_SYNCH\"}");)
   }
   /*
    * All done, return

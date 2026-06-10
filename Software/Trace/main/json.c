@@ -151,7 +151,7 @@ void trace_json(void *pvParameters)
 
       switch ( ch )
       {
-        case '+': // Synchronize the clocks
+        case 'Q' & 0x1F: // Synchronize the clocks. Receive a DC1
           reset_run_time_us();
           break;
 

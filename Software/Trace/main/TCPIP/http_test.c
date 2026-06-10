@@ -107,7 +107,6 @@ void http_DNS_test(void)
   return;
 }
 
-#if ( BUILD_SERVER )
 /*****************************************************************************
  *
  * @function: http_send_to_server_test
@@ -172,5 +171,5 @@ void http_server_test(void)
 
   return;
 }
-#endif // BUILD_SERVER
+
 #endif

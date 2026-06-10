@@ -64,18 +64,18 @@ typedef struct
 /*
  * Local Variables
  */
-static run_time_clock_t timers[N_TIMERS];                  // Active timer list (allow only positive time)
-static time_count_t     base_time = 0;                     // Base time to show elapsed time
-time_count_t            time_to_go;                        // Time remaining in event in seconds
+static run_time_clock_t timers[N_TIMERS];               // Active timer list (allow only positive time)
+static time_count_t     base_time = 0;                  // Base time to show elapsed time
+time_count_t            time_to_go;                     // Time remaining in event in seconds
 
 static synchronous_task_t task_list[] = {
     {"Status LED", BAND_100ms, status_LED_timer}, // Drive the status LED
     {"Push button", BAND_100ms, trace_push_button}, // Monitor the push button
     {"Health monitor", BAND_60s, trace_health_monitor}, // Monitor the health of the sensor
-    {"TCPIP polling output", BAND_10ms, WiFi_client_send}, // Send stuff to the target
-
     {0, 0}
 };
+
+extern time_count_t sync_time_remaining;                // Time waiting for a time update
 
 /*
  *  Function Prototypes
@@ -332,5 +332,6 @@ void reset_run_time_us(void)
 {
   base_time = esp_timer_get_time();
   run_state |= TIME_VALID;
+  sync_time_remaining = NETWORK_TIME_PERIOD; // Reset the timer
   return;
 }

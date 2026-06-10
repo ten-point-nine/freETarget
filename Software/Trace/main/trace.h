@@ -21,25 +21,27 @@
 
 #define SOFTWARE_VERSION "\"1.0.0 June 3, 2026\""
 #define _DONE_           "\r\nDone\r\n"
-#define _GREETING_       "CONNECTED"             // Message to send on connection
-#define _BYE_            "BYE"                   // Message to send on disconnection
-#define _HELLO_          "HELLO WORLD"           // Message to send on reconnection
+#define _GREETING_       "CONNECTED"               // Message to send on connection
+#define _BYE_            "BYE"                     // Message to send on disconnection
+#define _HELLO_          "HELLO WORLD"             // Message to send on reconnection
 
-#define INIT_DONE 0xabcd                         // NON-VOL Initialization complete signature
+#define NETWORK_TIME_PERIOD (10 * 60 * ONE_SECOND) // Expect a time synch every 10 minutes
+
+#define INIT_DONE 0xabcd                           // NON-VOL Initialization complete signature
 #ifndef true
 #define true  (1 == 1)
 #define false (0 == 1)
 #endif
 
-#define IN_STARTUP       0x0001                  // The software is in initialization
-#define IN_NO_CAL        (IN_STARTUP << 1)       // The unit has not been calibrated
-#define IN_FIFO_FILLING  (IN_NO_CAL << 1)        // The FIFO is filling up
-#define IN_REDUCTION     (IN_FIFO_FILLING << 1)  // The data is being reduced
-#define IN_OPERATION     (IN_REDUCTION << 1)     // FIFO has data, unit has been zeroed
-#define IN_FATAL_ERROR   (IN_OPERATION << 1)     // A fatal error has occured and cannot be fixed
-#define IN_TEST          (IN_FATAL_ERROR << 1)   // Running a test
-#define TARGET_CONNECTED (IN_TEST << 1)          // We are connected to the target
-#define TIME_VALID       (TARGET_CONNECTED << 1) // The timebase is valid
+#define IN_STARTUP       0x0001                    // The software is in initialization
+#define IN_NO_CAL        (IN_STARTUP << 1)         // The unit has not been calibrated
+#define IN_FIFO_FILLING  (IN_NO_CAL << 1)          // The FIFO is filling up
+#define IN_REDUCTION     (IN_FIFO_FILLING << 1)    // The data is being reduced
+#define IN_OPERATION     (IN_REDUCTION << 1)       // FIFO has data, unit has been zeroed
+#define IN_FATAL_ERROR   (IN_OPERATION << 1)       // A fatal error has occured and cannot be fixed
+#define IN_TEST          (IN_FATAL_ERROR << 1)     // Running a test
+#define TARGET_CONNECTED (IN_TEST << 1)            // We are connected to the target
+#define TIME_VALID       (TARGET_CONNECTED << 1)   // The timebase is valid
 
 #define IF(x)     if ( (run_state & (x)) != 0 )
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
@@ -49,12 +51,10 @@
 /*
  * Options
  */
-#define SAMPLE_CALCULATIONS  (1 == 0)    // Trace the COUNTER values
-#define COMPENSATE_RISE_TIME (1 == 0)    // Use PCNT4-7 to compensate for rise time
-#define LONG_TEXT            (512 + 256) // Long text strings are 512 long
-#define MEDIUM_TEXT          256         // Medimum length strings are 256 long
-#define SHORT_TEXT           128         // Short text strings are 128 long
-#define TINY_TEXT            64          // Tiny text strings are 64 long
+#define LONG_TEXT   (512 + 256) // Long text strings are 512 long
+#define MEDIUM_TEXT 256         // Medimum length strings are 256 long
+#define SHORT_TEXT  128         // Short text strings are 128 long
+#define TINY_TEXT   64          // Tiny text strings are 64 long
 
 /*
  * Oscillator Features
@@ -71,41 +71,13 @@
 #define PI_ON_2 (PI / 2.0d)
 #define TWO_PI  (2.0d * PI)
 
-#define SCORE_LEFT_BRACE  '{'         // Opening JSON string
-#define SCORE_RIGHT_BRACE '}'         // Closing JSON string
-#define SCORE_NEW_LINE    'n'         // Add a newline
-#define SCORE_PRIME       '#'         // Prime a reply to the client
-#define SCORE_SHOT        'S'         // Include shot number
-#define SCORE_MISS        'M'         // Include miss status
-#define SCORE_SESSION     '?'         // Include session type
-#define SCORE_TIME        'T'         // Include time stamp
-#define SCORE_ELAPSED     'D'         // Include elapsed time
-#define SCORE_XY          'X'         // Include X-Y coordinates
-#define SCORE_POLAR       'P'         // Include polar coordinates
-#define SCORE_HARDWARE    'H'         // Include hardware values
-#define SCORE_TARGET      'O'         // Include target name
-#define SCORE_EVENT       'E'         // Include the athelte name
-#define SCORE_TEST        '$'         // Test the client with a test shot
-
-#define SCORE_ALL        "{S?TXPHOE}" // shot / miss / target / time / x-y / radius-angle / North-East-South-West / target type
-#define SCORE_USB        "{S?TX}"     // USB score elements
-#define SCORE_TCPIP      "{S?TXE}"    // TCP score elements
-#define SCORE_BLUETOOTH  "{S?TX}"     // Bluetooth score elements
-#define SCORE_HTTP       "{S?TXPOE}"  // HTTP score elements
-#define SCORE_HTTP_PRIME "{#}"        // HTTP Prime the client
-#define SCORE_HTTP_TEST  "{$}"        // HTTP Test the client
-#define SCORE_SEND_MISS  "{SMT}n"     // Send a miss
-
-#define HTTP_CLOSE_TIME 15l           // Time to close the HTTP connection after the last shot
-
-                                      /*
-                                       *  Memory Calculations (needed for memory allocation)
-                                       *
-                                       *  A frame is a single sample read from the ACCEL/GYRO
-                                       *  A sample buffer is the space to store a single FIFO pull
-                                       *  A trace is the path drawn by the gun on the target
-                                       *  A vector is the locaton and direction of a sample
-                                       */
+/*
+ *  Memory Calculations (needed for memory allocation)
+ *
+ *  A frame is a single sample read from the ACCEL/GYRO
+ *  A sample buffer is the space to store a single FIFO pull
+ *  A trace is the path drawn by the gun on the target
+ */
 #define AVAILABLE_FIFO (6 * 1024)                          // (6144) 6K FIFO available
 
 #define RAW_FRAME_SIZE  (6 * 2)                            // (12)   6 entries @ 2 bytes per entry
@@ -189,12 +161,6 @@ EXTERN char           _xs[1024 + 512];                              // General p
 EXTERN unsigned int   is_trace;                                     // Tracing level(s)
 
 EXTERN unsigned int board_revision;                                 // Board revision number
-EXTERN time_count_t shot_start;                                     // Time when shot become valid
-EXTERN time_count_t LED_timer;                                      // Turn off the LEDs when not in use
-EXTERN time_count_t keep_alive;                                     // Keep alive timer
-EXTERN time_count_t power_save;                                     // Power save timer
-                                                                    // 15 minutes since last shot
-EXTERN time_count_t session_time[];                                 // Time in each session
 EXTERN unsigned int run_state;                                      // Current running state of the software
 
 EXTERN int           sample_in;                                     // Index to entry from sensor (<0 - wraps around)
@@ -218,8 +184,6 @@ void trace_loop(void *arg);            // Target polling loop
 void trace_push_button(void);          // Monitor the push button
 void trace_reduce(int timestamp);      // Reduce the data and send it
 void trace_send(int oversample);       // Build and send a trace
-void send_keep_alive(void);            // Send out the keep alive signal for TCPIP
-bool prompt_for_confirm(char *prompt); // Prompt for a confirmation
 void trace_health_monitor(void);       // Check the health of the sensor
 
 #endif
