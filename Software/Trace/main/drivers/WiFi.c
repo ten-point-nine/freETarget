@@ -681,7 +681,14 @@ void WiFi_client_test(void) //
       while ( serial_available(TARGET) != 0 )
       {
         ch = serial_getch(TARGET);
-        SEND(CONSOLE, sprintf(_xs, "%c", ch);)
+        if ( isprint(ch) )
+        {
+          SEND(CONSOLE, sprintf(_xs, "%c", ch);)
+        }
+        else
+        {
+          SEND(CONSOLE, sprintf(_xs, " 0x%02X ", ch);)
+        }
       }
     }
 
