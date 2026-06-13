@@ -289,12 +289,16 @@ void trace_health_monitor(void)
   /*
    * Check to see how long it's been since we got a time update
    */
-  if ( sync_time_remaining == 0 )
+  IF_NOT(TIME_VALID)              // We have not received a sync
+  {
+    sync_time_remaining = 0;      // Force a sync
+  }
+  if ( sync_time_remaining == 0 ) // Ask for a refresh
   {
     SEND(TARGET, sprintf(_xs, "{\"%s\"}", _SYNC_);)
     DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "{\"%s\"}", _SYNC_);))
   }
-  
+
   /*
    * All done, return
    */
