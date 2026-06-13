@@ -78,6 +78,7 @@ static int                          s_retry_num = 0;
 static esp_netif_ip_info_t          ipInfo;        // IP Address of the access point
 static esp_netif_t                 *sta_netif;     // Station configuration
 static int                          client_socket; // Socket used to talk to the target
+static int                          unget_c = 0;   // Character to unget
 
 /*
  * Private Functions
@@ -461,6 +462,8 @@ bool WiFi_client_init(void)
     return true;
   }
 
+  close(client_socket);
+
   /*
    *  Not connected, then connect
    */
@@ -493,11 +496,12 @@ bool WiFi_client_init(void)
   /*
    *  Got here, ready to go
    */
-  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Connected to %s:%d", json_wifi_target_ip, 1090);))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Connected to target at: %s:%d", json_wifi_target_ip, 1090);))
   run_state |= TARGET_CONNECTED; // Yay, we're connected
   return true;
 }
 
+#if ( 0 )
 /*****************************************************************************
  *
  * @function: WiFi_tcp_client
@@ -515,14 +519,15 @@ bool WiFi_client_init(void)
 void WiFi_client_task(void) //
 {
   char s[MEDIUM_TEXT];
-  int  length;             // Number f bytes to send
+  int  length;              // Number f bytes to send
 
   /*
    * Send the data
    */
-  length = tcpip_app_2_queue(s, sizeof(s));
+  length = tcpip_queue_2_socket(s, sizeof(s));
   if ( length > 0 )
   {
+    printf("#%s", s);
     send(client_socket, s, length, 0);
   }
 
@@ -538,5 +543,209 @@ void WiFi_client_task(void) //
 
   tcpip_socket_2_queue(s, length);
 
+  /*
+   *  Done
+   */
+  return;
+}
+#endif
+
+/*****************************************************************************
+ *
+ * @function: WiFi_available
+ *            WiFi_putc
+ *            WiFi_getc
+ *
+ * @brief:    Primitive TCPIP send and receive
+ *
+ * @return:   Number of characters waiting or character
+ *
+ ****************************************************************************
+ *
+ * Look to see if there is an unget character waiting, if there is, then
+ * return 1 to show one character available.
+ *
+ * If not, read the next character from the queue and remember it.
+ *
+ ***************************************************************************/
+#define UNGET_C 0x100
+
+int WiFi_available(void)
+{
+  char ch;
+  int  length; // Number of characters received
+
+  DLT(DLT_COMMUNICATION, SEND(CONSOLE, sprintf(_xs, "WiFi_available()");))
+
+  IF_NOT(TARGET_CONNECTED)
+  {
+    unget_c = 0;
+    return 0;
+  }
+
+  if ( unget_c & UNGET_C )                            // Is there a character waiting for us?
+  {
+    return 1;                                         // Yes, return 1
+  }
+
+  length = recv(client_socket, &ch, 1, MSG_DONTWAIT); // Try to read the buffer
+  if ( length < 0 )                                   // Less than 0, no connection
+  {
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Target not connected");))
+
+    run_state &= ~TARGET_CONNECTED;                   // Nothing, no connection
+    unget_c = 0;
+    return 0;
+  }
+
+  if ( (length == 0) || (ch == 0) )                   // There is a connection, but nothing waiting
+  {
+    unget_c = 0;
+    return 0;
+  }
+
+  unget_c = UNGET_C | ch;                             // Remember what is waiting
+  return 1;
+}
+
+int WiFi_putch(char ch)
+{
+  DLT(DLT_COMMUNICATION, SEND(CONSOLE, sprintf(_xs, "WiFi_putch(%c)", ch);))
+
+  IF_NOT(TARGET_CONNECTED)          // Not connected
+  {
+    return -1;                      // Return a failure
+  }
+
+  if ( lwip_send(client_socket, &ch, 1, MSG_DONTWAIT) == 0 )
+  {
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "disconnected");))
+    run_state &= ~TARGET_CONNECTED; // Tried to send, but nothing went out
+    return -1;
+  }
+
+  return 1;                         // Succeeded in sending
+}
+
+char WiFi_getch(void)
+{
+  char ch;
+
+  DLT(DLT_COMMUNICATION, SEND(CONSOLE, sprintf(_xs, "WiFi_getch()");))
+
+  IF_NOT(TARGET_CONNECTED)                                  // Not connected
+  {
+    return 0;                                               // Return nothing
+  }
+
+  if ( (unget_c & UNGET_C) != 0 )                           // Is there a character waiting?
+  {
+    ch      = unget_c & ~UNGET_C;
+    unget_c = 0;
+    return ch;                                              // Yes, return it and forget we have anything
+  }
+
+  if ( lwip_recv(client_socket, &ch, 1, MSG_DONTWAIT) < 0 ) // Try  to read the port directly
+  {
+    if ( errno == ENOTCONN )
+    {
+      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Target disconnected");))
+      run_state &= ~TARGET_CONNECTED;                       // tried to read, but nothing
+    }
+    return 0;
+  }
+
+  return ch;                                                // Got something
+}
+
+int WiFi_puts(char *s,                                      // String to output
+              int   length)                                   // Length of string
+{
+
+  DLT(DLT_COMMUNICATION, SEND(CONSOLE, sprintf(_xs, "WiFi_puts(%s)", s);))
+
+  if ( (run_state & TARGET_CONNECTED) == 0 )                // Not connected
+  {
+    return 0;                                               // Return nothing
+  }
+
+  if ( lwip_send(client_socket, s, length, MSG_DONTWAIT) == 0 )
+  {
+    printf("puts disconnected");
+    run_state &= ~TARGET_CONNECTED;                         // Tried to send, but nothing went out
+    return 0;
+  }
+
+  return length;                                            // Sent it
+}
+/*****************************************************************************
+ *
+ * @function: WiFi_client_test
+ *
+ * @brief:    Send and receive packets from the target for test
+ *
+ * @return:   None
+ *
+ ****************************************************************************
+ *
+ *
+ *
+ ***************************************************************************/
+static char *test_s[] = {"{\"ECHO\"}", "{\"VERSION\"}", "{\"SYNC_IN\"}", NULL};
+
+void WiFi_client_test(void) //
+{
+  char ch;
+  int  i;
+
+  SEND(CONSOLE, sprintf(_xs, "\t\nWiFi_client_test()");)
+
+  while ( 1 )
+  {
+    SEND(CONSOLE, sprintf(_xs, "\r\nChoose test");)
+    i = 0;
+
+    while ( test_s[i] != NULL ) // Display the tests
+    {
+      SEND(CONSOLE, sprintf(_xs, "\r\n%d: %s", i, test_s[i]);)
+      i++;
+    }
+    SEND(CONSOLE, sprintf(_xs, "\r\n");)
+
+    while ( serial_available(CONSOLE) == 0 )
+    {
+      vTaskDelay(TICK_50ms);
+    }
+
+    ch = serial_getch(CONSOLE); // Get the test number
+    if ( ch == '!' )            // ! => Exit
+    {
+      break;
+    }
+
+    ch = (ch - '0') % (sizeof(test_s) / sizeof(char *) - 1);
+
+    IF_NOT(TARGET_CONNECTED)                                             // Not connected
+    {
+      SEND(CONSOLE, sprintf(_xs, "\r\nTarget not connected");)           // Send this test
+      break;                                                             // Return nothing
+    }
+
+    SEND(CONSOLE, sprintf(_xs, "\r\nSending: %s\r\n", test_s[(int)ch]);) // Send this test
+    SEND(TARGET, sprintf(_xs, "%s", test_s[(int)ch]);)                   // Send this test
+
+    vTaskDelay(ONE_SECOND);                                              // Wait for the target to catch up
+
+    while ( serial_available(TARGET) != 0 )
+    {
+      ch = serial_getch(TARGET);                                         // And display it
+      SEND(CONSOLE, sprintf(_xs, "%c", ch);)
+    }
+  }
+
+  /*
+   *  Test done
+   */
+  SEND(CONSOLE, sprintf(_xs, _DONE_);)
   return;
 }

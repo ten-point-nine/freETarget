@@ -520,6 +520,7 @@ void reset_run_time(void)
 void network_time_sync(void)
 {
   network_time = esp_timer_get_time();
-  SEND(ALL, sprintf(_xs, "%c", 'Q' & 0x01F);) // DC1 to signal the network time has been updated
+  SEND(TCPIP, sprintf(_xs, "%c", 'Q' & 0x01F);)            // DC1 to signal the network time has been updated
+  SEND(CONSOLE, sprintf(_xs, "{\"%s\"}", _SYNC_);) // Send message to COM port
   return;
 }

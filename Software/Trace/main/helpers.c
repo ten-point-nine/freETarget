@@ -180,9 +180,9 @@ bool prompt_for_confirm(char *prompt)
    */
   while ( 1 )
   {
-    if ( serial_available(ALL) != 0 )
+    if ( serial_available(CONSOLE) != 0 )
     {
-      ch = serial_getch(ALL);
+      ch = serial_getch(CONSOLE);
       switch ( ch )
       {
         case 'y':
@@ -483,13 +483,13 @@ int get_OTA_serial(int   length,                                           // Ma
    */
   while ( 1 )
   {
-    bytes_available = serial_available(ALL);
+    bytes_available = serial_available(CONSOLE);
     if ( bytes_available > 0 )        // Got something?
     {
       time_out = OTA_SERIAL_TIMEOUT;  // Reset the timout
       while ( bytes_available-- > 0 ) // Read all available characters
       {
-        ch = serial_getch(ALL);       // Read the character
+        ch = serial_getch(CONSOLE);       // Read the character
         *s = ch;                      // and save it away
         s++;                          // Move to the next character
         length--;                     // One less to read
@@ -733,9 +733,9 @@ real_t degrees_to_radians(real_t degrees)
 
 unsigned char check_for_exit(void)
 {
-  if ( serial_available(ALL) != 0 )
+  if ( serial_available(CONSOLE) != 0 )
   {
-    return serial_getch(ALL);
+    return serial_getch(CONSOLE);
   }
 
   return 0;
@@ -759,9 +759,9 @@ void pause(void)
   SEND(CONSOLE, sprintf(_xs, "Paused press space to continue");)
   while ( 1 )
   {
-    if ( serial_available(ALL) )
+    if ( serial_available(CONSOLE) )
     {
-      if ( serial_getch(ALL) == ' ' )
+      if ( serial_getch(CONSOLE) == ' ' )
       {
         return;
       }

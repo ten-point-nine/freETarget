@@ -652,9 +652,9 @@ void BMI270_oscilliscope(void)
       vTaskDelay(ONE_SECOND / 2);
     }
 
-    if ( serial_available(ALL) != 0 )
+    if ( serial_available(CONSOLE) != 0 )
     {
-      char ch = serial_getch(ALL);
+      char ch = serial_getch(CONSOLE);
       if ( ch == '!' )                  // Exit the test
       {
         break;

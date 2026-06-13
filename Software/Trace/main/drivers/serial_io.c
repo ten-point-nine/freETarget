@@ -31,6 +31,7 @@
 #include "timer.h"
 #include "json.h"
 #include "nonvol.h"
+#include "WiFi.h"
 
 /*
  *  Serial IO port configuration
@@ -65,8 +66,8 @@ typedef struct queue_struct
   int  out;                                 // Index of output characters
 } queue_struct_t;
 
-static queue_struct_t in_buffer;            // TCPIP input buffer
-static queue_struct_t out_buffer;           // TCPIP input buffer
+// static queue_struct_t in_buffer;            // TCPIP input buffer
+// static queue_struct_t out_buffer;           // TCPIP input buffer
 
 /******************************************************************************
  *
@@ -102,13 +103,15 @@ void serial_io_init(void)
   uart_set_sw_flow_ctrl(UART_NUM_0, true, uart_xon_threshold, uart_xoff_threshold);
   // uart_enable_pattern_det_baud_intr(uart_console, '+', 3, 9, 0, 0); // Wait for +++
 
+#if ( 0 )
   /*
    *  Prepare the TCPIP queues
-   */
+  78 */
   in_buffer.in   = 0; // Queue pointers
   in_buffer.out  = 0;
   out_buffer.in  = 0; // Queue pointers
   out_buffer.out = 0;
+#endif
 
   /*
    * All done, return
@@ -136,8 +139,7 @@ void serial_io_init(void)
  * function serial_getch().
  *
  ******************************************************************************/
-int serial_available(int ports // Bit mask of active ports
-)
+int serial_available(int ports) // Bit mask of active ports
 {
   int n_available;
   int length;
@@ -152,15 +154,7 @@ int serial_available(int ports // Bit mask of active ports
 
   if ( ports & TARGET )
   {
-    if ( in_buffer.in != in_buffer.out )
-    {
-      length = in_buffer.in - in_buffer.out;
-      if ( length < 0 )
-      {
-        length += sizeof(in_buffer.queue);
-      }
-      n_available += length;
-    }
+    n_available += WiFi_available();
   }
 
   /*
@@ -181,8 +175,7 @@ int serial_available(int ports // Bit mask of active ports
  *
  *
  ********************************************************************************/
-void serial_flush(int ports // active port list
-)
+void serial_flush(int ports) // active port list
 {
   if ( ports & CONSOLE )
   {
@@ -191,8 +184,10 @@ void serial_flush(int ports // active port list
 
   if ( ports & TARGET )
   {
-    in_buffer.in  = 0;
-    in_buffer.out = 0;
+    while ( WiFi_getch() > 0 )
+    {
+      continue;
+    }
   }
   return;
 }
@@ -234,10 +229,7 @@ char serial_getch(int ports) // Bit mask of active ports
    */
   if ( ports & TARGET )
   {
-    if ( tcpip_queue_2_app(&ch, 1) > 0 )
-    {
-      return ch;
-    }
+    return WiFi_getch();
   }
 
   /*
@@ -279,7 +271,7 @@ void serial_putch(char ch,
 
   if ( ports & TARGET )
   {
-    tcpip_app_2_queue(&ch, 1);
+    WiFi_putch(ch);
   }
 
   /*
@@ -373,7 +365,7 @@ void serial_to_all(char *str,        // String to output
 
   if ( ports & TARGET )
   {
-    tcpip_app_2_queue(str, strlen(str));
+    WiFi_puts(str, strlen(str));
   }
 
   /*
@@ -381,6 +373,7 @@ void serial_to_all(char *str,        // String to output
    */
   return;
 }
+#if ( 0 )
 /*******************************************************************************
  *
  * @function: tcpip_app_2_queue
@@ -542,6 +535,7 @@ int tcpip_socket_2_queue(char *buffer, // Where to return the bytes
 
   return bytes_moved;
 }
+#endif
 
 /*******************************************************************************
  *
@@ -569,9 +563,9 @@ int get_string(char destination[], int size)
 
   while ( 1 )
   {
-    while ( serial_available(ALL) != 0 )
+    while ( serial_available(CONSOLE) != 0 )
     {
-      ch = serial_getch(ALL);
+      ch = serial_getch(CONSOLE);
       SEND(CONSOLE, sprintf(_xs, "%c", ch);) // Echo the input
 
       switch ( ch )

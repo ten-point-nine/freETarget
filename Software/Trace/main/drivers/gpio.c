@@ -75,7 +75,7 @@ void digital_test(void)
    */
   while ( 1 )
   {
-    if ( serial_available(ALL) != 0 )
+    if ( serial_available(CONSOLE) != 0 )
     {
       break;
     }

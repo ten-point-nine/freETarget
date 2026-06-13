@@ -19,29 +19,31 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"1.0.0 June 3, 2026\""
+#define SOFTWARE_VERSION "\"1.0.0 June 13, 2026\""
 #define _DONE_           "\r\nDone\r\n"
-#define _GREETING_       "CONNECTED"               // Message to send on connection
-#define _BYE_            "BYE"                     // Message to send on disconnection
-#define _HELLO_          "HELLO WORLD"             // Message to send on reconnection
+#define _GREETING_       "CONNECTED"   // Message to send on connection
+#define _BYE_            "BYE"         // Message to send on disconnection
+#define _HELLO_          "HELLO WORLD" // Message to send on reconnection
+#define _SYNC_           "SYNC_IN"     // Synchronization message
 
-#define NETWORK_TIME_PERIOD (10 * 60 * ONE_SECOND) // Expect a time synch every 10 minutes
+// #define NETWORK_TIME_PERIOD (10 * 60 * ONE_SECOND) // Expect a time synch every 10 minutes
+#define NETWORK_TIME_PERIOD (30 * ONE_SECOND)    // Expect a time synch every 10 minutes
 
-#define INIT_DONE 0xabcd                           // NON-VOL Initialization complete signature
+#define INIT_DONE 0xabcd                         // NON-VOL Initialization complete signature
 #ifndef true
 #define true  (1 == 1)
 #define false (0 == 1)
 #endif
 
-#define IN_STARTUP       0x0001                    // The software is in initialization
-#define IN_NO_CAL        (IN_STARTUP << 1)         // The unit has not been calibrated
-#define IN_FIFO_FILLING  (IN_NO_CAL << 1)          // The FIFO is filling up
-#define IN_REDUCTION     (IN_FIFO_FILLING << 1)    // The data is being reduced
-#define IN_OPERATION     (IN_REDUCTION << 1)       // FIFO has data, unit has been zeroed
-#define IN_FATAL_ERROR   (IN_OPERATION << 1)       // A fatal error has occured and cannot be fixed
-#define IN_TEST          (IN_FATAL_ERROR << 1)     // Running a test
-#define TARGET_CONNECTED (IN_TEST << 1)            // We are connected to the target
-#define TIME_VALID       (TARGET_CONNECTED << 1)   // The timebase is valid
+#define IN_STARTUP       0x0001                  // The software is in initialization
+#define IN_NO_CAL        (IN_STARTUP << 1)       // The unit has not been calibrated
+#define IN_FIFO_FILLING  (IN_NO_CAL << 1)        // The FIFO is filling up
+#define IN_REDUCTION     (IN_FIFO_FILLING << 1)  // The data is being reduced
+#define IN_OPERATION     (IN_REDUCTION << 1)     // FIFO has data, unit has been zeroed
+#define IN_FATAL_ERROR   (IN_OPERATION << 1)     // A fatal error has occured and cannot be fixed
+#define IN_TEST          (IN_FATAL_ERROR << 1)   // Running a test
+#define TARGET_CONNECTED (IN_TEST << 1)          // We are connected to the target
+#define TIME_VALID       (TARGET_CONNECTED << 1) // The timebase is valid
 
 #define IF(x)     if ( (run_state & (x)) != 0 )
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )

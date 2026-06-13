@@ -19,12 +19,13 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"6.5.0 June 7, 2026\""
+#define SOFTWARE_VERSION "\"6.5.0 June 12, 2026\""
 #define _DONE_           "\r\nDone\r\n"
 #define _SHOT_           "shot"
 #define _GREETING_       "CONNECTED"   // Message to send on connection
 #define _BYE_            "BYE"         // Message to send on disconnection
 #define _HELLO_          "HELLO WORLD" // Message to send on reconnection
+#define _SYNC_           "SYNC_OUT"    // Outgoing synch message
 
 #define INIT_DONE 0xabcd               // NON-VOL Initialization complete signature
 #ifndef true

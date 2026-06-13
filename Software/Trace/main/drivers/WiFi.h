@@ -23,8 +23,12 @@ void WiFi_server_test(void);           // Server test for diag.c
 void WiFi_station_loopback_test(void); // Station test for diag.c
 void WiFi_AP_loopback_test(void);      // Access point test for diag.c
 
-void WiFi_client_task(void);    // Send and receive
-
+// void WiFi_client_task(void);    // Send and receive
+int  WiFi_available(void);             // Number of characters waiting
+int  WiFi_putch(char ch);              // Output a charcter
+char WiFi_getch(void);                 // Read a character
+int  WiFi_puts(char *str, int length); // Output a string to the WiFi
+void WiFi_client_test(void);           // Send and receive stuff from the target
 /*
  * #defines
  */

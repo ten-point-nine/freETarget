@@ -190,7 +190,7 @@ void trace_loop(void *arg)
 
 void trace_statistics(void) // Display the FIFO diagnostics
 {
-  SEND(CONSOLE, sprintf(_xs, "\"FIFO time\": %.4f", ((real_t)FIFO_time_us) / 1000000.0);)
+  SEND(CONSOLE, sprintf(_xs, "\"FIFO time\": %.2f", ((real_t)FIFO_time_us) / 1000000.0);)
   SEND(CONSOLE, sprintf(_xs, "\"FIFO pull\": %d", FIFO_pull);)
   SEND(CONSOLE, sprintf(_xs, "\"FIFO check\": %d", (int)(((real_t)FIFO_time_us / 1000000.0) * SAMPLE_RATE / RAW_FRAME_COUNT));)
   return;
@@ -280,8 +280,9 @@ void trace_health_monitor(void)
   /*
    *  Check to see if we are connected to the target
    */
-  if ( (run_state & TARGET_CONNECTED) == 0 )
+  IF_NOT(TARGET_CONNECTED)
   {
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Reconnecting to target");))
     WiFi_client_init(); // Try to make a new connection
   }
 
@@ -290,7 +291,8 @@ void trace_health_monitor(void)
    */
   if ( sync_time_remaining == 0 )
   {
-    SEND(TARGET, sprintf(_xs, "{\"TIME_SYNCH\"}");)
+    SEND(TARGET, sprintf(_xs, _SYNC_);)
+    printf("{\"%s\"}", _SYNC_);
   }
   /*
    * All done, return

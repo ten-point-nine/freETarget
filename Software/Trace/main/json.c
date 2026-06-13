@@ -129,15 +129,14 @@ void trace_json(void *pvParameters)
     /*
      * See if anything is waiting and if so, add it in
      */
-    while ( (serial_available(ALL) != 0) ) // Something waiting for us?
+    while ( (serial_available(CONSOLE) != 0) ) // Something waiting for us?
     {
-      ch = serial_getch(ALL);
-      printf("%c", ch);
-      serial_putch(ALL, ch);               // Echo the character back
+      ch = serial_getch(CONSOLE);
+      serial_putch(CONSOLE, ch);               // Echo the character back
 
-                                           /*
-                                            * Parse the stream
-                                            */
+                                               /*
+                                                * Parse the stream
+                                                */
 
       if ( ch == '\n' ) // New Line
       {
@@ -345,7 +344,7 @@ static void handle_json(void)
       nvs_commit(my_handle); // Save to memory
     }
   }
-  
+
   /*
    * All done
    */
@@ -436,19 +435,10 @@ void show_echo(void)
   WiFi_my_IP_address(str_c);
   SEND(CONSOLE, sprintf(_xs, "\"WiFi_IP_ADDRESS\":   \"%s\",", str_c);)
 
-  if ( json_wifi_ssid[0] == 0 )                                                         // The SSID is undefined
-  {
-    SEND(CONSOLE, sprintf(_xs, "\"WiFi_MODE\":         \"Access Point: %s\",", str_c);) // Print out the IP address
-  }
-  else
-  {
-    SEND(CONSOLE, sprintf(_xs, "\"WiFi_MODE\":         \"Connected to %s\",", (char *)&json_wifi_ssid);)
-  }
+  SEND(CONSOLE, sprintf(_xs, "\"WiFi_MODE\":         \"Connected to %s\",", (char *)&json_wifi_ssid);)
 
-  strcat(_xs, "\"");
-  serial_to_all(_xs, ALL);
   SEND(CONSOLE, sprintf(_xs, "\"RUN_STATE\":        0X%04X, ", run_state);)    // Current software version
-  
+
   trace_statistics();
   SEND(CONSOLE, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);) // Current software version
   SEND(CONSOLE, sprintf(_xs, "\"BOARD REVISION\":   %d, ", board_revision);)   // Current board version

@@ -22,11 +22,13 @@ void serial_flush(int ports);                       // Get rid of everything
 int  get_string(char destination[], int size);      // Collect a string from the input ports
 void check_new_connection(void);                    // Check to see if a new connection has been made
 
+#if(0)
 int tcpip_app_2_queue(char *buffer, int length);    // From the application to a buffer  (application level)
 int tcpip_queue_2_socket(char *buffer, int length); // From the buffer to the application (driver level)
 
 int tcpip_socket_2_queue(char *buffer, int length); // From socket to the queue (driver level)
 int tcpip_queue_2_app(char *buffer, int length);    // Take from queue and return to application (application level)
+#endif 
 
 /*
  *  Definitions

@@ -60,7 +60,7 @@ static const self_test_t test_list[] = {
     {"- Timer",        0                   },
     {"Show the current time",      &show_time          },
     {"- Communications Tests",     0                   },
-    //    {"Test WiFi as a station",       &WiFi_station_init       },
+        {"Test WiFi as a client",       &WiFi_client_test       },
     //    {"Enable the WiFi Server",       &WiFi_server_test        },
         {"Scan for access points (APs)", &WiFi_AP_scan_test       },
     {"- HTTP tests",               0                   },
@@ -299,9 +299,9 @@ void digital_input_test(void)
       gpio_set_level(STATUS_LED, 1); // Turn the LED off
     }
 
-    if ( serial_available(ALL) != 0 )
+    if ( serial_available(CONSOLE) != 0 )
     {
-      char ch = serial_getch(ALL);
+      char ch = serial_getch(CONSOLE);
       if ( ch == '!' )
       {
         break;
@@ -341,7 +341,7 @@ void digital_output_test(void)
       gpio_set_level(STATUS_LED, i & 1); // Turn the LED off
       vTaskDelay(ONE_SECOND / 4);
     }
-    if ( serial_available(ALL) != 0 )
+    if ( serial_available(CONSOLE) != 0 )
     {
       char ch = serial_getch(ALL);
       if ( ch == '!' )
