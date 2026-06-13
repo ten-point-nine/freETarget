@@ -17,7 +17,7 @@
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-reference/network/esp_wifi.html
  * https://medium.com/@fatehsali517/how-to-connect-esp32-to-wifi-using-esp-idf-iot-development-framework-d798dc89f0d6
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/lwip.html
- *
+ * https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-guides/lwip.html
  * MDNS documentation
  * https://docs.espressif.com/projects/esp-protocols/mdns/docs/latest/en/index.html
  *
@@ -501,55 +501,6 @@ bool WiFi_client_init(void)
   return true;
 }
 
-#if ( 0 )
-/*****************************************************************************
- *
- * @function: WiFi_tcp_client
- *
- * @brief:    Send and receive packets from the target
- *
- * @return:   None
- *
- ****************************************************************************
- *
- *  Take the message and send it out the TCPIP port
- *
- *
- ***************************************************************************/
-void WiFi_client_task(void) //
-{
-  char s[MEDIUM_TEXT];
-  int  length;              // Number f bytes to send
-
-  /*
-   * Send the data
-   */
-  length = tcpip_queue_2_socket(s, sizeof(s));
-  if ( length > 0 )
-  {
-    printf("#%s", s);
-    send(client_socket, s, length, 0);
-  }
-
-  /*
-   *  Receive the data
-   */
-  length = recv(client_socket, s, sizeof(s), 0);
-  if ( length < 0 )
-  {
-    run_state &= ~TARGET_CONNECTED;
-    return;
-  }
-
-  tcpip_socket_2_queue(s, length);
-
-  /*
-   *  Done
-   */
-  return;
-}
-#endif
-
 /*****************************************************************************
  *
  * @function: WiFi_available
@@ -583,28 +534,30 @@ int WiFi_available(void)
     return 0;
   }
 
-  if ( unget_c & UNGET_C )                            // Is there a character waiting for us?
+  if ( unget_c & UNGET_C )                                 // Is there a character waiting for us?
   {
-    return 1;                                         // Yes, return 1
+    return 1;                                              // Yes, return 1
   }
 
-  length = recv(client_socket, &ch, 1, MSG_DONTWAIT); // Try to read the buffer
-  if ( length < 0 )                                   // Less than 0, no connection
+  length = lwip_recv(client_socket, &ch, 1, MSG_DONTWAIT); // Try to read the buffer
+  if ( length < 0 )                                        // Less than 0, no connection
   {
-    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Target not connected");))
-
-    run_state &= ~TARGET_CONNECTED;                   // Nothing, no connection
+    if ( errno == ENOTCONN )
+    {
+      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Target not connected %d", errno);))
+      run_state &= ~TARGET_CONNECTED;                      // Nothing, no connection
+    }
     unget_c = 0;
     return 0;
   }
 
-  if ( (length == 0) || (ch == 0) )                   // There is a connection, but nothing waiting
+  if ( (length == 0) || (ch == 0) )                        // There is a connection, but nothing waiting
   {
     unget_c = 0;
     return 0;
   }
 
-  unget_c = UNGET_C | ch;                             // Remember what is waiting
+  unget_c = UNGET_C | ch;                                  // Remember what is waiting
   return 1;
 }
 
@@ -612,19 +565,24 @@ int WiFi_putch(char ch)
 {
   DLT(DLT_COMMUNICATION, SEND(CONSOLE, sprintf(_xs, "WiFi_putch(%c)", ch);))
 
-  IF_NOT(TARGET_CONNECTED)          // Not connected
+  IF_NOT(TARGET_CONNECTED) // Not connected
   {
-    return -1;                      // Return a failure
+    return -1;             // Return a failure
   }
 
   if ( lwip_send(client_socket, &ch, 1, MSG_DONTWAIT) == 0 )
   {
-    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "disconnected");))
-    run_state &= ~TARGET_CONNECTED; // Tried to send, but nothing went out
+    if ( errno == ENOTCONN )
+    {
+      run_state &= ~TARGET_CONNECTED; // Tried to send, but nothing went out
+    }
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "disconnected %d", errno);))
+    printf("\r\nputch\r\n");
+
     return -1;
   }
 
-  return 1;                         // Succeeded in sending
+  return 1; // Succeeded in sending
 }
 
 char WiFi_getch(void)
@@ -650,6 +608,7 @@ char WiFi_getch(void)
     if ( errno == ENOTCONN )
     {
       DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Target disconnected");))
+      printf("\r\nthis one\r\n");
       run_state &= ~TARGET_CONNECTED;                       // tried to read, but nothing
     }
     return 0;
@@ -664,19 +623,22 @@ int WiFi_puts(char *s,                                      // String to output
 
   DLT(DLT_COMMUNICATION, SEND(CONSOLE, sprintf(_xs, "WiFi_puts(%s)", s);))
 
-  if ( (run_state & TARGET_CONNECTED) == 0 )                // Not connected
+  IF_NOT(TARGET_CONNECTED)                                  // Not connected
   {
     return 0;                                               // Return nothing
   }
 
   if ( lwip_send(client_socket, s, length, MSG_DONTWAIT) == 0 )
   {
-    printf("puts disconnected");
-    run_state &= ~TARGET_CONNECTED;                         // Tried to send, but nothing went out
+    if ( errno == ENOTCONN )
+    {
+      run_state &= ~TARGET_CONNECTED; // Tried to send, but nothing went out
+      printf("\r\nputs disconnected\r\n");
+    }
     return 0;
   }
 
-  return length;                                            // Sent it
+  return length;                      // Sent it
 }
 /*****************************************************************************
  *
@@ -698,10 +660,11 @@ void WiFi_client_test(void) //
   char ch;
   int  i;
 
-  SEND(CONSOLE, sprintf(_xs, "\t\nWiFi_client_test()");)
-
   while ( 1 )
   {
+    /*
+     *  Prompt for a test number.  Display incoming messages
+     */
     SEND(CONSOLE, sprintf(_xs, "\r\nChoose test");)
     i = 0;
 
@@ -714,7 +677,12 @@ void WiFi_client_test(void) //
 
     while ( serial_available(CONSOLE) == 0 )
     {
-      vTaskDelay(TICK_50ms);
+      vTaskDelay(TICK_10ms);
+      while ( serial_available(TARGET) != 0 )
+      {
+        ch = serial_getch(TARGET);
+        SEND(CONSOLE, sprintf(_xs, "%c", ch);)
+      }
     }
 
     ch = serial_getch(CONSOLE); // Get the test number
@@ -723,6 +691,9 @@ void WiFi_client_test(void) //
       break;
     }
 
+    /*
+     *  Send out the test
+     */
     ch = (ch - '0') % (sizeof(test_s) / sizeof(char *) - 1);
 
     IF_NOT(TARGET_CONNECTED)                                             // Not connected
@@ -733,14 +704,6 @@ void WiFi_client_test(void) //
 
     SEND(CONSOLE, sprintf(_xs, "\r\nSending: %s\r\n", test_s[(int)ch]);) // Send this test
     SEND(TARGET, sprintf(_xs, "%s", test_s[(int)ch]);)                   // Send this test
-
-    vTaskDelay(ONE_SECOND);                                              // Wait for the target to catch up
-
-    while ( serial_available(TARGET) != 0 )
-    {
-      ch = serial_getch(TARGET);                                         // And display it
-      SEND(CONSOLE, sprintf(_xs, "%c", ch);)
-    }
   }
 
   /*

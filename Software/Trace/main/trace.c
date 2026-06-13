@@ -291,9 +291,10 @@ void trace_health_monitor(void)
    */
   if ( sync_time_remaining == 0 )
   {
-    SEND(TARGET, sprintf(_xs, _SYNC_);)
-    printf("{\"%s\"}", _SYNC_);
+    SEND(TARGET, sprintf(_xs, "{\"%s\"}", _SYNC_);)
+    DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "{\"%s\"}", _SYNC_);))
   }
+  
   /*
    * All done, return
    */
