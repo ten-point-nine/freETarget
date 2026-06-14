@@ -69,10 +69,10 @@ static time_count_t     base_time = 0;                  // Base time to show ela
 time_count_t            time_to_go;                     // Time remaining in event in seconds
 
 static synchronous_task_t task_list[] = {
-    {"Status LED", BAND_100ms, status_LED_timer}, // Drive the status LED
-    {"Push button", BAND_100ms, trace_push_button}, // Monitor the push button
-    {"Health monitor", BAND_60s, trace_health_monitor}, // Monitor the health of the sensor
-    {0, 0}
+    {"Status LED",     BAND_250ms, status_LED_timer    }, // Drive the status LED
+    {"Push button",    BAND_100ms, trace_push_button   }, // Monitor the push button
+    {"Health monitor", BAND_60s,   trace_health_monitor}, // Monitor the health of the sensor
+    {0,                0,          0                   }
 };
 
 extern time_count_t sync_time_remaining;                // Time waiting for a time update

@@ -28,6 +28,7 @@
 #include "analog_io.h"
 #include "wifi.h"
 #include "serial_io.h"
+#include "NTP.h"
 
 #define SHOT_TIME_TO_SECONDS(x) ((real_t)(x)) / 1000000.0
 real_t SQ(real_t a)
@@ -525,7 +526,7 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
         break;
 
       case SCORE_NETWORK:                                    // Time
-        sprintf(str, ", \"network_time\":%ld", shot->network_time);
+        sprintf(str, ", \"NTP\":%ld", shot->network_time);
         break;
 
       case SCORE_ELAPSED:                                    // Time since shooting began
@@ -790,6 +791,14 @@ void watchdog(void)
         wifi_is_connected = true;               // We are connected
       }
     }
+  }
+
+  /*
+   * Check to see how long it's been since we got a time update
+   */
+  if ( NTP_ttg() )
+  {
+    NTP_master();
   }
 
   /*

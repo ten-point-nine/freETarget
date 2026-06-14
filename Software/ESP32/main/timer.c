@@ -484,12 +484,8 @@ void show_time(void)
  *            run_time_ms()       // Timer duration in ms
  *            run_time_us()       // Timer duration in us
  *            reset_run_time()    // Reset the run timer on command
- *            network_time_sync() // Send a sync command to the network
- *            show_NTP()          // Show the loop time
- *
+ * *
  *------------------------------------------------------*/
-
-time_count_t network_time = 0; // Time of the last network sync in microseconds
 
 time_count_t run_time_seconds(void)
 {
@@ -503,25 +499,5 @@ time_count_t run_time_ms(void)
 
 time_count_t run_time_us(void)
 {
-  return (esp_timer_get_time() - network_time);
-}
-
-void reset_run_time(void)
-{
-  base_time = 0;
-  return;
-}
-
-void network_time_sync(void)
-{
-  network_time = esp_timer_get_time();
-  serial_putch('Q' & 0x01F, TCPIP);                                  // DC1 to signal the network time has been updated
-  SEND(CONSOLE, sprintf(_xs, "{\"%s\":%ld}", _SYNC_, network_time);) // Send message to COM port
-  return;
-}
-
-void show_NTP(void)
-{
-  SEND(CONSOLE, sprintf(_xs, "{\"NTP\":%ld}", (time_count_t)esp_timer_get_time() - network_time);) // Show how long the return trip takes
-  return;
+  return (esp_timer_get_time() - base_time);
 }

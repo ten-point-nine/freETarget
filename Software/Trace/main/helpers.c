@@ -489,7 +489,7 @@ int get_OTA_serial(int   length,                                           // Ma
       time_out = OTA_SERIAL_TIMEOUT;  // Reset the timout
       while ( bytes_available-- > 0 ) // Read all available characters
       {
-        ch = serial_getch(CONSOLE);       // Read the character
+        ch = serial_getch(CONSOLE);   // Read the character
         *s = ch;                      // and save it away
         s++;                          // Move to the next character
         length--;                     // One less to read

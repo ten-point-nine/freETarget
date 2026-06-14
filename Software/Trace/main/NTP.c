@@ -20,8 +20,8 @@
 // #include "gpio_types.h"
 // #include "json.h"
 #include "serial_io.h"
- #include "timer.h"
-#include "WiFi.h"
+#include "timer.h"
+// #include "WiFi.h"
 #include "NTP.h"
 
 /*
@@ -47,11 +47,8 @@ time_count_t        sync_time_remaining; // How long before we have to synch aga
  *---------------------------------------------------*/
 bool NTP_ttg(void)
 {
-  static time_count_t sync_time_remaining = 0;
-
-  if ( sync_time_remaining == 0 )                                                      // Time ran out?
-  {                                                                                    // Reset
-    ft_timer_new(&sync_time_remaining, NETWORK_TIME_PERIOD, NULL, "Synchronize time"); // Start the synch timer
+  if ( sync_time_remaining == 0 ) // Time ran out?
+  {                               // Reset
     return true;
   }
   return false;
@@ -67,17 +64,23 @@ bool NTP_ttg(void)
  *
  *-----------------------------------------------------
  *
- * Reset the time base and command the  slave to
- * resynchronize
+ * The master is the device that is telling everyone
+ * to reset thier clocks to thier time.
  *
+ * Target                           Trace
+ *    |<----------------------------{ASK}
+ *    |
+ * {MASTER} ------------------------->|
+ *                                    |
+ *    |<---------------------------{SLAVE}
+ *    |
+ * {OFFSET}
  *---------------------------------------------------*/
 void NTP_master(void)
 {
-  NTP_base_time = esp_timer_get_time();                 // Reset the time
-  SEND(TARGET, sprintf(_xs, "{\"%s\"}", _NTP_MASTER_);) // Send back the ack
-  sync_time_remaining = NETWORK_TIME_PERIOD;            // Reset the watchdog
-  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "{\"%s\"}", _NTP_MASTER_);))
-
+  NTP_base_time = esp_timer_get_time();                                    // Reset the time
+  SEND(TARGET, sprintf(_xs, "{\"%s\":%ld}", _NTP_MASTER_, NTP_base_time);) // Send back the ack
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "{\"%s\":%ld}", _NTP_MASTER_, NTP_base_time);))
   return;
 }
 
@@ -91,17 +94,17 @@ void NTP_master(void)
  *
  *-----------------------------------------------------
  *
- * A command to reset the network time has arrived
- *
- * Reset the time and reply to the master
+ * The slave is the remote device that has been told
+ * to reset it's time to line up with the master
  *
  *---------------------------------------------------*/
 void NTP_slave(void)
 {
-  NTP_base_time = esp_timer_get_time();                // Reset the time
-  SEND(TARGET, sprintf(_xs, "{\"%s\"}", _NTP_SLAVE_);) // Send back the ack
-  run_state |= TIME_VALID;                             // The trime is valid
-  sync_time_remaining = NETWORK_TIME_PERIOD;           // Reset the watchdog
+  NTP_base_time = esp_timer_get_time();                                   // Reset the time
+  run_state |= TIME_VALID;                                                // The trime is valid
+  sync_time_remaining = NETWORK_TIME_PERIOD;                              // Reset the watchdog
+  SEND(TARGET, sprintf(_xs, "{\"%s\":%ld}", _NTP_SLAVE_, NTP_base_time);) // Send back the ack
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "{\"%s\":%ld}", _NTP_SLAVE_, NTP_base_time);))
   return;
 }
 
@@ -123,6 +126,9 @@ void NTP_slave(void)
  *---------------------------------------------------*/
 void NTP_offset(void)
 {
-  NTP_offset_time = (esp_timer_get_time() - NTP_base_time) / 2;
+  NTP_offset_time     = (esp_timer_get_time() - NTP_base_time) / 2;
+  sync_time_remaining = NETWORK_TIME_PERIOD; // Reset the watchdog
+  run_state |= TIME_VALID;                   // Boths sides are happy
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "{\"%s\":%ld}", _NTP_OFFSET_, NTP_offset_time);))
   return;
 }

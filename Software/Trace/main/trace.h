@@ -25,8 +25,7 @@
 #define _BYE_            "BYE"                     // Message to send on disconnection
 #define _HELLO_          "HELLO WORLD"             // Message to send on reconnection
 
-
-#define NETWORK_TIME_PERIOD (10 * 60 * ONE_SECOND) // Expect a time synch every 10 minutes
+#define NETWORK_TIME_PERIOD (15 * 60 * ONE_SECOND) // Expect a time synch every 15 minutes
 
 #define INIT_DONE 0xabcd                           // NON-VOL Initialization complete signature
 #ifndef true

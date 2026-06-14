@@ -29,15 +29,17 @@ void digital_output_test(void);      // Test the digital outputs
  *
  */
 
-#define LED_32           "01234567890123456789012345678901"
-#define LED_OFF          "                                "
-#define LED_ON           "********************************"
-#define LED_STARTUP      "* * * * * * * * * * * * * * * * "
-#define LED_READY        "********                        "
-#define LED_FIFO_FILLING "********     ****               "
-#define LED_REDUCTION    "********     ****     ****      "
-#define LED_NO_CAL       "********  **  **  **  ** **  ** "
-#define LED_ERROR        "****                            "
+#define LED_32            "01234567890123456789012345678901"
+#define LED_OFF           "                                "
+#define LED_ON            "********************************"
+#define LED_STARTUP       "* * * * * * * * * * * * * * * * "
+#define LED_READY         "********                        "
+#define LED_FIFO_FILLING  "********  **                    "
+#define LED_REDUCTION     "********  **  **                "
+#define LED_NO_CONNECTION "********  **  **  **            "
+#define LED_NO_TIME       "********  **  **  ** **         "
+#define LED_B             "********  **  **  ** ** **      "
+#define LED_NO_CAL        "********  **  **  ** ** ** **   "
 
 /*
  *  On board expected values

@@ -23,6 +23,7 @@ void NTP_offset(void); // Calculate the loop time
 /*
  *  Definitions
  */
-#define _NTP_MASTER_ "NTP_MASTER" // Synchronization message from target
+#define _NTP_MASTER_ "NTP_ASK"    // Ask for a time sync
 #define _NTP_SLAVE_  "NTP_SLAVE"  // Synchronization message from trace
+#define _NTP_OFFSET_ "NTP_OFFSET" // Work out the loop time
 #endif

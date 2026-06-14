@@ -84,6 +84,7 @@ const json_message_t JSON[] = {
     {SHOW + LOCK, "\"MIN_RING_TIME\":",  &json_min_ring_time,         IS_INT32,                 0,                  NONVOL_MIN_RING_TIME,       500,        0 },
     {SHOW + LOCK, "\"NAME_ID\":",        &json_name_id,               IS_INT32,                 &show_names,        NONVOL_NAME_ID,             0,          0 },
     {SHOW + LOCK, "\"NAME_TEXT\":",      (int *)&json_name_text,      IS_TEXT + SSID_SIZE,      &show_names,        NONVOL_NAME_TEXT,           0,          8 },
+    {HIDE,        "\"NTP_ASK\"",         0,                           IS_VOID,                  &NTP_master,        0,                          0,          0 }, // Slave asks for a time sync
     {HIDE,        "\"NTP_MASTER\"",      0,                           IS_VOID,                  &NTP_slave,         0,                          0,          0 }, // Target to Trace NTP
     {HIDE,        "\"NTP_SLAVE\"",       0,                           IS_VOID,                  &NTP_offset,        0,                          0,          0 }, // Trace to Target NTP
     {HIDE + LOCK, "\"OTA\"",             0,                           0,                        &OTA_load_json,     0,                          0,          0 },

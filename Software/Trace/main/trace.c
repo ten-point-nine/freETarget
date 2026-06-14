@@ -52,7 +52,8 @@ extern void gpio_init(void);
 /*
  *  External variables
  */
-extern FIFO_raw_t sample_raw_read[];
+extern FIFO_raw_t   sample_raw_read[];
+extern time_count_t sync_time_remaining;
 
 /*----------------------------------------------------------------
  *
@@ -123,8 +124,8 @@ void trace_init(void)
   /*
    *  Set up the long running timers
    */
-  NTP_ttg();
   ft_timer_new(&keep_alive_timer, NETWORK_TIME_PERIOD, &send_keep_alive, "Keep alive"); // keepalive timer
+  ft_timer_new(&sync_time_remaining, (30 * ONE_SECOND), NULL, "sync_time_remaining");   // Sync to the target (start at 30 seconds)
 
   /*
    * Run the power on self test

@@ -106,25 +106,27 @@ void digital_test(void)
  *-----------------------------------------------------*/
 typedef struct
 {
-  unsigned int state;                          //  Current Running State
-  char        *mask;                           // Status mask associated with the state
+  unsigned int state;                                        //  Current Running State
+  unsigned int invert;                                       // Invert the sense
+  char        *mask;                                         // Status mask associated with the state
 } status_LED_t;
 
 static status_LED_t states[] = {
-    {IN_FATAL_ERROR,  LED_ERROR       }, // Blink the LEDs based on the state
-    {IN_STARTUP,      LED_STARTUP     }, // This table is organized in highest
-    {IN_FIFO_FILLING, LED_FIFO_FILLING}, // to lowest priority.
-    {IN_REDUCTION,    LED_REDUCTION   },
-    {IN_NO_CAL,       LED_NO_CAL      }, // Not calibrated.  Cannot start
-    {IN_OPERATION,    LED_READY       }, // Operation, working, FIFO Data full
-    {0,               0               }
+    {IN_STARTUP,       0,                LED_STARTUP      }, // This table is organized in highest
+    {TARGET_CONNECTED, TARGET_CONNECTED, LED_NO_CONNECTION}, // Not connected to the target
+    {TIME_VALID,       TIME_VALID,       LED_NO_TIME      }, // Not synchronized
+    {IN_FIFO_FILLING,  0,                LED_FIFO_FILLING }, // to lowest priority.
+    {IN_REDUCTION,     0,                LED_REDUCTION    },
+    {IN_NO_CAL,        0,                LED_NO_CAL       }, // Not calibrated.  Cannot start
+    {IN_OPERATION,     0,                LED_READY        }, // Operation, working, FIFO Data full
+    {0,                0,                0                }
 };
 
 void status_LED_timer(void)
 {
   int                 i;
-  static unsigned int status_LED_count = 0;    // Count of the number of times the timer has been called
-  char               *status_LED_mask  = NULL; // Pattern to display
+  static unsigned int status_LED_count = 0;                  // Count of the number of times the timer has been called
+  char               *status_LED_mask  = NULL;               // Pattern to display
 
   /*
    *  Search the list

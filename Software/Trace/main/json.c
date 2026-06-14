@@ -53,6 +53,7 @@ const json_message_t JSON[] = {
     {HIDE, "\"X\":",                &json_x,                         IS_FLOAT,            0,             0,                         0,      0}, // X coordinate of shot
     {HIDE, "\"Y\":",                &json_y,                         IS_FLOAT,            0,             0,                         0,      0}, // Y coordinate of shot
     {HIDE, "\"T\":",                &json_timestamp,                 IS_INT32,            &trace_build,  0,                         0,      0}, // Time stamp of shot
+    {HIDE, "\"NTP_ASK\"",           0,                               IS_VOID,             &NTP_master,   0,                         0,      0}, // Ask to start a time sycn
     {HIDE, "\"NTP_MASTER\"",        0,                               IS_VOID,             &NTP_slave,    0,                         0,      0}, // Target to Trace NTP
     {HIDE, "\"NTP_SLAVE\"",         0,                               IS_VOID,             &NTP_offset,   0,                         0,      0}, // Trace to Target NTP
 
@@ -135,7 +136,10 @@ void trace_json(void *pvParameters)
     while ( serial_available(ALL) != 0 ) // Something waiting for us?
     {
       ch = serial_getch(ALL);
-      DLT(DLT_INFO, printf(" %c %02X ", ch, ch);)
+      if ( is_trace & DLT_DEBUG )
+      {
+        printf("%c", ch);
+      }
 
       /*
        * Parse the stream

@@ -74,7 +74,8 @@ typedef struct
   bool          in_shot;             // In as shot cycle
 } rapid_state_t;
 
-extern int isr_state;
+extern int          isr_state;
+extern time_count_t sync_time_remaining;
 
 volatile unsigned int run_state = 0; // Current operating state
 
@@ -178,6 +179,7 @@ void freeETarget_init(void)
   ft_timer_new(&time_to_go, 0, NULL, "time to go");                                                     // Time remaining in session
   ft_timer_new(&shot_timer, 0, NULL, "shot timer");                                                     // Wait for the shot to arrive
   ft_timer_new(&ring_timer, 0, NULL, "ring timer");                                                     // Wait for the ringing to stop
+  ft_timer_new(&sync_time_remaining, NETWORK_TIME_PERIOD, NULL, "Synchronize time");                    // Start the synch timer
 
   /*
    * Run the power on self test
