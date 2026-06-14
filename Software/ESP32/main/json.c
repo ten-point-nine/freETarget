@@ -32,6 +32,7 @@
 #include "timer.h"
 #include "ota.h"
 #include "calibrate.h"
+#include "NTP.h"
 
 /*
  *  Function Prototypes
@@ -83,6 +84,8 @@ const json_message_t JSON[] = {
     {SHOW + LOCK, "\"MIN_RING_TIME\":",  &json_min_ring_time,         IS_INT32,                 0,                  NONVOL_MIN_RING_TIME,       500,        0 },
     {SHOW + LOCK, "\"NAME_ID\":",        &json_name_id,               IS_INT32,                 &show_names,        NONVOL_NAME_ID,             0,          0 },
     {SHOW + LOCK, "\"NAME_TEXT\":",      (int *)&json_name_text,      IS_TEXT + SSID_SIZE,      &show_names,        NONVOL_NAME_TEXT,           0,          8 },
+    {HIDE,        "\"NTP_MASTER\"",      0,                           IS_VOID,                  &NTP_slave,         0,                          0,          0 }, // Target to Trace NTP
+    {HIDE,        "\"NTP_SLAVE\"",       0,                           IS_VOID,                  &NTP_offset,        0,                          0,          0 }, // Trace to Target NTP
     {HIDE + LOCK, "\"OTA\"",             0,                           0,                        &OTA_load_json,     0,                          0,          0 },
     {SHOW + LOCK, "\"OTA_URL\":",        (int *)&json_ota_url,        IS_TEXT + URL_SIZE,       0,                  NONVOL_OTA_URL,             0,          11},
     {HIDE,        "\"P\"",               0,                           IS_VOID,                  &paper_start,       0,                          0,          0 },
@@ -107,7 +110,6 @@ const json_message_t JSON[] = {
     {SHOW + LOCK, "\"STEP_RAMP\":",      &json_step_ramp,             IS_INT32,                 0,                  NONVOL_STEP_RAMP,           0,          4 },
     {SHOW,        "\"STEP_START\":",     &json_step_start,            IS_INT32,                 0,                  NONVOL_STEP_START,          0,          4 },
     {SHOW + LOCK, "\"STEP_TIME\":",      &json_step_time,             IS_INT32,                 0,                  NONVOL_STEP_TIME,           0,          0 },
-    {HIDE,        "\"SYNC_IN\"",         0,                           IS_VOID,                  &network_time_sync, 0,                          0,          0 },
     {HIDE,        "\"TABATA_ENABLE\":",  &json_tabata_enable,         IS_INT32,                 &json_tabata,       0,                          0,          0 },
     {HIDE,        "\"TABATA_ON\":",      &json_tabata_on,             IS_INT32,                 0,                  NONVOL_TABATA_ON,           7,          16},
     {HIDE,        "\"TABATA_REST\":",    &json_tabata_rest,           IS_INT32,                 0,                  NONVOL_TABATA_REST,         30,         16},
@@ -197,15 +199,7 @@ void freeETarget_json(void *pvParameters)
     {
       from_BlueTooth = serial_available(AUX_PORT); // How much from the BlueTooth port?
       ch             = serial_getch(ALL);
-
-      if ( json_aux_mode != RS485 )                // Not RS485 mode
-      {
-        serial_putch(ch, ALL);                     // Echo back to all ports
-      }
-      else                                         // If in RS485 mode, do not echo back to AUX
-      {
-        serial_putch(ch, SOME);                    // because RS485 diesables receive during transmit
-      }
+      serial_putch(ch, CONSOLE);                   // Echo back to all ports
 
                                                    /*
                                                     * Parse the stream

@@ -37,12 +37,12 @@
 #include "http_client.h"
 #include "BMI270.h"
 #include "IMU.h"
+#include "NTP.h"
 
 /*
  *  Variables
  */
-time_count_t sync_time_remaining; // How long before we have to synch again
-time_count_t keep_alive_timer;    // TCPIP keep alive timer
+time_count_t keep_alive_timer; // TCPIP keep alive timer
 
 /*
  * Function Prototypes
@@ -123,7 +123,7 @@ void trace_init(void)
   /*
    *  Set up the long running timers
    */
-  ft_timer_new(&sync_time_remaining, NETWORK_TIME_PERIOD, NULL, "Synchronize time");    // Start the synch timer
+  NTP_ttg();
   ft_timer_new(&keep_alive_timer, NETWORK_TIME_PERIOD, &send_keep_alive, "Keep alive"); // keepalive timer
 
   /*
@@ -289,18 +289,13 @@ void trace_health_monitor(void)
   /*
    * Check to see how long it's been since we got a time update
    */
-  IF_NOT(TIME_VALID)              // We have not received a sync
+  if ( NTP_ttg() )
   {
-    sync_time_remaining = 0;      // Force a sync
-  }
-  if ( sync_time_remaining == 0 ) // Ask for a refresh
-  {
-    SEND(TARGET, sprintf(_xs, "{\"%s\"}", _SYNC_);)
-    DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "{\"%s\"}", _SYNC_);))
+    NTP_master();
   }
 
   /*
    * All done, return
    */
-  return; // Never get here
+  return;
 }

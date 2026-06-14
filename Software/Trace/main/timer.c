@@ -320,18 +320,10 @@ void show_time(void)
  *
  *-----------------------------------------------------
  *
- * Common timer function
+ * Rest and use the 1us timer in the ESP32
  *
  *---------------------------------------------------*/
 time_count_t run_time_us(void)
 {
   return (esp_timer_get_time() - base_time);
-}
-
-void reset_run_time_us(void)
-{
-  base_time = esp_timer_get_time();
-  run_state |= TIME_VALID;
-  sync_time_remaining = NETWORK_TIME_PERIOD; // Reset the timer
-  return;
 }

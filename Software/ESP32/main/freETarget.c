@@ -43,6 +43,7 @@
 #include "http_services.h"
 #include "OTA.h"
 #include "calibrate.h"
+#include "NTP.h"
 
 /*
  *  Variables
@@ -196,7 +197,7 @@ void freeETarget_init(void)
   shot_in         = 0;            // Clear out any junk
   shot_out        = 0;
   connection_list = CONSOLE;      // The consule is always connected
-  reset_run_time();               // Reset the time of day
+  NTP_ttg();
   time_to_go = 1000 * ONE_SECOND; // Infinite amount of time to start
 
   if ( DIP_SW_A )                 // Switch A pressed
@@ -611,20 +612,17 @@ void start_new_session(int session_type) //
       {
         record[i].session_type = SESSION_EMPTY;
       }
-      shot_in  = 0;
-      shot_out = 0;
-      reset_run_time();
+      shot_in    = 0;
+      shot_out   = 0;
       time_to_go = 1000;
       break;
 
     case SESSION_SIGHT:     // Nothing to do
       time_to_go = 15 * 60; // 15 minute sighting timer
-      reset_run_time();
       break;
 
     case SESSION_MATCH:
       time_to_go = 75 * 60;
-      reset_run_time();
       break;
 
     case SESSION_PRINT + SESSION_EMPTY:

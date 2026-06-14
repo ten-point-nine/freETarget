@@ -28,8 +28,6 @@ void         show_time(void);                                                   
 time_count_t run_time_seconds(void);                                                               // Show how long we have been running for
 time_count_t run_time_ms(void);       // Show how long we have been running for in ms
 time_count_t run_time_us(void);
-void         network_time_sync(void); // Sync the time with the network
-void         reset_run_time(void);    // Reset the clock back to zero
 void         show_timers(void);       // Show the current timers
 
 /*

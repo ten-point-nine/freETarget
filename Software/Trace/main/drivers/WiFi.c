@@ -608,7 +608,6 @@ char WiFi_getch(void)
     if ( errno == ENOTCONN )
     {
       DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Target disconnected");))
-      printf("\r\nthis one\r\n");
       run_state &= ~TARGET_CONNECTED;                       // tried to read, but nothing
     }
     return 0;
@@ -633,7 +632,6 @@ int WiFi_puts(char *s,                                      // String to output
     if ( errno == ENOTCONN )
     {
       run_state &= ~TARGET_CONNECTED; // Tried to send, but nothing went out
-      printf("\r\nputs disconnected\r\n");
     }
     return 0;
   }
@@ -653,7 +651,7 @@ int WiFi_puts(char *s,                                      // String to output
  *
  *
  ***************************************************************************/
-static char *test_s[] = {"{\"ECHO\"}", "{\"VERSION\"}", "{\"SYNC_IN\"}", NULL};
+static char *test_s[] = {"{\"ECHO\"}", "{\"VERSION\"}", "{\"SYNC_IN\"}", "{\"NTP\"}", NULL};
 
 void WiFi_client_test(void) //
 {

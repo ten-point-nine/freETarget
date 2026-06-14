@@ -41,6 +41,7 @@
 #define IN_REDUCTION 0x0020            // The data is being reduced
 #define IN_FATAL_ERR 0x0040            // A fatal error has occured and cannot be fixed
 #define IN_HTTP      0x0080            // The HTTP (JSON) data is being processed
+#define TIME_VALID   0x0100            //  Time base is syncronized
 
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
 #define IF_IN(x)  if ( (run_state & (x)) != 0 )

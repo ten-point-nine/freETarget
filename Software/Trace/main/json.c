@@ -26,6 +26,7 @@
 #include "timer.h"
 #include "BMI270.h"
 #include "imu.h"
+#include "NTP.h"
 
 /*
  *  Function Prototypes
@@ -52,6 +53,8 @@ const json_message_t JSON[] = {
     {HIDE, "\"X\":",                &json_x,                         IS_FLOAT,            0,             0,                         0,      0}, // X coordinate of shot
     {HIDE, "\"Y\":",                &json_y,                         IS_FLOAT,            0,             0,                         0,      0}, // Y coordinate of shot
     {HIDE, "\"T\":",                &json_timestamp,                 IS_INT32,            &trace_build,  0,                         0,      0}, // Time stamp of shot
+    {HIDE, "\"NTP_MASTER\"",        0,                               IS_VOID,             &NTP_slave,    0,                         0,      0}, // Target to Trace NTP
+    {HIDE, "\"NTP_SLAVE\"",         0,                               IS_VOID,             &NTP_offset,   0,                         0,      0}, // Trace to Target NTP
 
     {SHOW, "\"DISTANCE\":",         (int *)&json_distance_to_target, IS_FLOAT,            0,             NONVOL_DISTANCE_TO_TARGET, 10000,  0},
     {SHOW, "\"MUZZLE_VELOCITY\":",  (int *)&json_muzzle_velocity,    IS_FLOAT,            0,             NONVOL_MUZZLE_VELOCITY,    17500,  0},
@@ -129,14 +132,14 @@ void trace_json(void *pvParameters)
     /*
      * See if anything is waiting and if so, add it in
      */
-    while ( (serial_available(CONSOLE) != 0) ) // Something waiting for us?
+    while ( serial_available(ALL) != 0 ) // Something waiting for us?
     {
-      ch = serial_getch(CONSOLE);
-      serial_putch(CONSOLE, ch);               // Echo the character back
+      ch = serial_getch(ALL);
+      DLT(DLT_INFO, printf(" %c %02X ", ch, ch);)
 
-                                               /*
-                                                * Parse the stream
-                                                */
+      /*
+       * Parse the stream
+       */
 
       if ( ch == '\n' ) // New Line
       {
@@ -150,10 +153,6 @@ void trace_json(void *pvParameters)
 
       switch ( ch )
       {
-        case 'Q' & 0x1F: // Synchronize the clocks. Receive a DC1
-          reset_run_time_us();
-          break;
-
         case '}':
           if ( in_JSON != 0 )
           {
@@ -422,16 +421,12 @@ void show_echo(void)
   /*
    * Finish up with the special cases
    */
-  serial_to_all(_xs, EVEN_ODD_END);                                     // End the even odd line
+  serial_to_all(_xs, EVEN_ODD_END);                                            // End the even odd line
   SEND(CONSOLE, sprintf(_xs, "\r\n*** STATUS ***\r\n");)
-  serial_to_all(NULL, EVEN_ODD_BEGIN);                                  // Start over again
+  serial_to_all(NULL, EVEN_ODD_BEGIN);                                         // Start over again
   SEND(CONSOLE, sprintf(_xs, "\"SN\":                %d", json_serial_number);)
-  SEND(CONSOLE, sprintf(_xs, "\"TRACE\":             %d,", is_trace);)  //
-  SEND(CONSOLE, sprintf(_xs, "\"TIME_STAMP\":   %ld,", run_time_us());) // On Time
-                                                                        // WiFi_MAC_address(str_c);
-  // SEND(CONSOLE, sprintf(_xs, "\"WiFi_MAC\":          \"%02X:%02X:%02X:%02X:%02X:%02X\",", str_c[0], str_c[1], str_c[2], str_c[3],
-  // str_c[4],
-  //                   str_c[5]);)
+  SEND(CONSOLE, sprintf(_xs, "\"TRACE\":             %d,", is_trace);)         //
+  SEND(CONSOLE, sprintf(_xs, "\"TIME_STAMP\":   %ld,", run_time_us());)        // On Time
   WiFi_my_IP_address(str_c);
   SEND(CONSOLE, sprintf(_xs, "\"WiFi_IP_ADDRESS\":   \"%s\",", str_c);)
 
