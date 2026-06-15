@@ -220,10 +220,10 @@ void trace_synchronous(void *pvParameters)
  * same timer addess without creating a problem
  *
  *-----------------------------------------------------*/
-int ft_timer_new(time_count_t *new_timer, // Pointer to new down counter
-                 time_count_t  duration,  // Duration of the timer
-                 void *(callback)(),      // What to do when we hit zero
-                 char *name               // Timer name
+bool ft_timer_new(time_count_t *new_timer, // Pointer to new down counter
+                  time_count_t  duration,  // Duration of the timer
+                  void *(callback)(),      // What to do when we hit zero
+                  char *name               // Timer name
 )
 {
   unsigned int i;
@@ -297,7 +297,7 @@ void show_time(void)
 
   while ( serial_available(CONSOLE) == 0 )
   {
-    SEND(CONSOLE, sprintf(_xs, "\r\n%ld us", run_time_us());)
+    SEND(CONSOLE, sprintf(_xs, "\r\n%llu us", run_time_us());)
     vTaskDelay(ONE_SECOND);
   }
 

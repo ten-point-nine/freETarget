@@ -22782,10 +22782,7 @@
                                         "help": "The DHCP server is calculating lease time multiplying the sent\nand received times by this number of seconds per unit.\nThe default is 60, that equals one minute.",
                                         "id": "LWIP_DHCPS_LEASE_UNIT",
                                         "name": "LWIP_DHCPS_LEASE_UNIT",
-                                        "range": [
-                                            1,
-                                            3600
-                                        ],
+                                        "range": null,
                                         "title": "Multiplier for lease time, in seconds",
                                         "type": "int"
                                     },
@@ -22795,10 +22792,7 @@
                                         "help": "The maximum number of DHCP clients that are connected to the server.\nAfter this number is exceeded, DHCP server removes of the oldest device\nfrom it's address pool, without notification.",
                                         "id": "LWIP_DHCPS_MAX_STATION_NUM",
                                         "name": "LWIP_DHCPS_MAX_STATION_NUM",
-                                        "range": [
-                                            1,
-                                            64
-                                        ],
+                                        "range": null,
                                         "title": "Maximum number of stations",
                                         "type": "int"
                                     },

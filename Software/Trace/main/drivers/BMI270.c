@@ -253,7 +253,7 @@ bool BMI270_pull_FIFO(void)
    */
   last_FIFO_read = run_time_us(); // When was the last sample taken
 
-  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "BMI270_FIFO_read(), %ld", last_FIFO_read);))
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "BMI270_FIFO_read(), %llu", last_FIFO_read);))
 
   /*
    *  Read in the next bunch of samples
@@ -332,7 +332,7 @@ bool BMI270_find_index_out(time_count_t shot) // Time shot occured
   real_t       time_delay_s;                  // Time shot occured in micro seconds
   unsigned int sample_delay;
 
-  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "BMI270_find_index_out(%ld)", shot);))
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "BMI270_find_index_out(%llu)", shot);))
 
   if ( shot == 0 )                            // No shot time, just start at the current point in the FIFO
   {
@@ -347,8 +347,8 @@ bool BMI270_find_index_out(time_count_t shot) // Time shot occured
   time_delay_s = (real_t)(last_FIFO_read - shot) / (1000000.0); // Time in microseconds (ago)
   sample_delay = time_delay_s * SAMPLE_RATE;                    // This is how many samples behind
 
-  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "last_FIFO_read:%ld shot:%ld) => time_delay_s %f   sample_delay:%d  %d", last_FIFO_read, shot,
-                                       time_delay_s, sample_delay, sample_delay / RAW_FRAME_COUNT);))
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "last_FIFO_read: %llu shot: %llu) => time_delay_s %7.4f   sample_delay:%u  %u",
+                                       last_FIFO_read, shot, time_delay_s, sample_delay, sample_delay / RAW_FRAME_COUNT);))
 
   /*
    * Figure out what indexes to use

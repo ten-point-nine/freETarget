@@ -105,9 +105,9 @@
 /*
  *  Types
  */
-typedef unsigned char     byte_t;
-typedef volatile long int time_count_t;
-typedef float             real_t;
+typedef unsigned char    byte_t;
+typedef volatile int64_t time_count_t;
+typedef float            real_t;
 
 /*
  * A single sample frame read from the BMI270 from each of the registers.
