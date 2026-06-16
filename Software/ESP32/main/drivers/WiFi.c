@@ -816,6 +816,13 @@ void tcpip_socket_poll_3(void *parameters)
  * and then looks for an empty entry in the socket list. The new socket is now
  * added to the socket list and polled via the functions above.
  *
+ * How it works.
+ *
+ * This function sets up a socket. When a connection is made, a link is made
+ * between the incoming request and one of four available sockets.
+ *
+ * From this point on, the incoming or outgoing data is linked to the sockt
+ *
  *******************************************************************************/
 void tcpip_accept_poll(void *parameters)
 {
@@ -862,17 +869,20 @@ void tcpip_accept_poll(void *parameters)
   bind(listen_sock, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
   listen(listen_sock, 1);
 
+  /*
+   *  Wait here for a socket to be requested
+   */
   while ( 1 )
   {
-    sock = accept(listen_sock, (struct sockaddr *)&source_addr, &addr_len);
-    if ( sock > 0 )
+    sock = accept(listen_sock, (struct sockaddr *)&source_addr, &addr_len); // This is a blocking call
+    if ( sock > 0 )                                                         // Unblocked
     {
       for ( i = 0; i != MAX_SOCKETS; i++ )
       {
-        if ( socket_list[i] == AVAILABLE_SOCKET )
+        if ( socket_list[i] == AVAILABLE_SOCKET )                           // FInd an available socket
         {
           socket_list[i] = sock;
-          WiFi_start_new_connection(sock);
+          and connect to it.WiFi_start_new_connection(sock);
           break;
         }
       }

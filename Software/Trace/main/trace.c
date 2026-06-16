@@ -102,22 +102,23 @@ void trace_init(void)
   /*
    *  Setup the hardware
    */
-  gpio_init();                            // Setup the hardware
-  vTaskDelay(10);                         // Let the hardware settle
-  if ( gpio_get_level(SWITCH_GPIO) == 0 ) // If the button is held down
+  gpio_init();                                   // Setup the hardware
+  vTaskDelay(10);                                // Let the hardware settle
+  if ( gpio_get_level(SWITCH_GPIO) == 0 )        // If the button is held down
   {
-    factory_nonvol(true);                 // Force a re-init
+    factory_nonvol(true);                        // Force a re-init
   }
-  serial_io_init();                       // Setup the console for debug message
-  read_nonvol();                          // Read in the settings
+  serial_io_init();                              // Setup the console for debug message
+  read_nonvol();                                 // Read in the settings
   if ( (json_x_dotdot_offset | json_theta_dot_offset) == 0 )
   {
-    run_state |= IN_NO_CAL;               // The board is not calibrated
+    run_state |= IN_NO_CAL;                      // The board is not calibrated
   }
 
   json_distance_to_target = 10.0;
+  json_NTP_period         = NETWORK_TIME_PERIOD; // Reset the watchdog
 
-  BMI270_init(BMI270_CS);                 // Initialize the BMI270 accelerometer
+  BMI270_init(BMI270_CS);                        // Initialize the BMI270 accelerometer
   WiFi_station_init();
   WiFi_client_init();
 
@@ -125,7 +126,7 @@ void trace_init(void)
    *  Set up the long running timers
    */
   ft_timer_new(&keep_alive_timer, KEEP_ALIVE_TIME_PERIOD, &send_keep_alive, "Keep alive"); // keepalive timer
-  ft_timer_new(&sync_time_remaining, NETWORK_TIME_PERIOD, NULL, "sync_time_remaining");    // Sync to the target (start at 30 seconds)
+  ft_timer_new(&sync_time_remaining, json_NTP_period, NULL, "sync_time_remaining");        // Sync to the target (start at 30 seconds)
 
   /*
    * Run the power on self test

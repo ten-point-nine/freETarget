@@ -105,4 +105,5 @@ EXTERN real_t json_muzzle_velocity;         // Pellet speed
 EXTERN real_t json_x;                       // Location of target shot (X)
 EXTERN real_t json_y;                       // Location of target shot (Y)
 EXTERN int    json_timestamp;               // When shot occured
+EXTERN int    json_NTP_period;              // Time between time synchronization
 #endif

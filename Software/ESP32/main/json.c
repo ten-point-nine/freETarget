@@ -86,6 +86,7 @@ const json_message_t JSON[] = {
     {SHOW + LOCK, "\"NAME_TEXT\":",      (int *)&json_name_text,      IS_TEXT + SSID_SIZE,      &show_names,        NONVOL_NAME_TEXT,           0,          8 },
     {HIDE,        "\"NTP_ASK\"",         0,                           IS_VOID,                  &NTP_master,        0,                          0,          0 }, // Slave asks for a time sync
     {HIDE,        "\"NTP_MASTER\"",      0,                           IS_VOID,                  &NTP_slave,         0,                          0,          0 }, // Target to Trace NTP
+    {HIDE,        "\"NTP_PERIOD\"",       &json_NTP_period,             IS_INT32,                 0,                 0,                          0,          0 }, // Time between sync
     {HIDE,        "\"NTP_SLAVE\"",       0,                           IS_VOID,                  &NTP_offset,        0,                          0,          0 }, // Trace to Target NTP
     {HIDE + LOCK, "\"OTA\"",             0,                           0,                        &OTA_load_json,     0,                          0,          0 },
     {SHOW + LOCK, "\"OTA_URL\":",        (int *)&json_ota_url,        IS_TEXT + URL_SIZE,       0,                  NONVOL_OTA_URL,             0,          11},

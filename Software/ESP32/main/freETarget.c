@@ -147,15 +147,16 @@ void freeETarget_init(void)
   /*
    *  Setup the hardware
    */
-  json_aux_mode = 0;        // Assume the AUX port is not used
-  gpio_init();              // Setup the hardware
-  serial_io_init();         // Setup the console for debug message
-  read_nonvol();            // Read in the settings
-  serial_aux_init();        // Update the serial port if there is a change
-  set_VREF();               // Set the reference voltages
-  DAC_calibrate();          // Adjust the DAC to compensate for voltage drop
-  multifunction_init();     // Override the MFS if we have to
-  get_target_calibration(); // Retrieve the target settings
+  json_aux_mode = 0;                    // Assume the AUX port is not used
+  gpio_init();                          // Setup the hardware
+  serial_io_init();                     // Setup the console for debug message
+  read_nonvol();                        // Read in the settings
+  serial_aux_init();                    // Update the serial port if there is a change
+  set_VREF();                           // Set the reference voltages
+  DAC_calibrate();                      // Adjust the DAC to compensate for voltage drop
+  multifunction_init();                 // Override the MFS if we have to
+  get_target_calibration();             // Retrieve the target settings
+  json_NTP_period = NETWORK_TIME_PERIOD; // Allow the time period to be changed
 
   /*
    * Put up a self test
@@ -179,7 +180,7 @@ void freeETarget_init(void)
   ft_timer_new(&time_to_go, 0, NULL, "time to go");                                           // Time remaining in session
   ft_timer_new(&shot_timer, 0, NULL, "shot timer");                                           // Wait for the shot to arrive
   ft_timer_new(&ring_timer, 0, NULL, "ring timer");                                           // Wait for the ringing to stop
-  ft_timer_new(&sync_time_remaining, NETWORK_TIME_PERIOD, NULL, "synchronize time");          // Start the synch timer
+  ft_timer_new(&sync_time_remaining, json_NTP_period, NULL, "synchronize time");               // Start the synch timer
 
   /*
    * Run the power on self test

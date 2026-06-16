@@ -23,6 +23,7 @@
 #include "timer.h"
 // #include "WiFi.h"
 #include "NTP.h"
+#include "json.h"
 
 /*
  * variables
@@ -102,7 +103,7 @@ void NTP_slave(void)
 {
   NTP_base_time = esp_timer_get_time();                                     // Reset the time
   run_state |= TIME_VALID;                                                  // The trime is valid
-  sync_time_remaining = NETWORK_TIME_PERIOD;                                // Reset the watchdog
+  sync_time_remaining = json_NTP_period;                                    // Reset the watchdog
   SEND(TARGET, sprintf(_xs, "{\"%s\":%'llu}", _NTP_SLAVE_, NTP_base_time);) // Send back the ack
   DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "{\"%s\":%'llu}", _NTP_SLAVE_, NTP_base_time);))
   return;
@@ -127,8 +128,8 @@ void NTP_slave(void)
 void NTP_offset(void)
 {
   NTP_offset_time     = (esp_timer_get_time() - NTP_base_time) / 2;
-  sync_time_remaining = NETWORK_TIME_PERIOD; // Reset the watchdog
-  run_state |= TIME_VALID;                   // Boths sides are happy
+  sync_time_remaining = json_NTP_period; // Reset the watchdog
+  run_state |= TIME_VALID;               // Boths sides are happy
   DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "{\"%s\":%'llu}", _NTP_OFFSET_, NTP_offset_time);))
   return;
 }

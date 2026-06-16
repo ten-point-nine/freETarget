@@ -217,12 +217,10 @@ bool prompt_for_confirm(char *prompt)
  *--------------------------------------------------------------*/
 void hello(void)
 {
-  char str[SHORT_TEXT];
-
   /*
    * Woken up again.  Turn things back on
    */
-  SEND(CONSOLE, sprintf(_xs, "{\"%s\"0, \"NAME\":\"%s\"}", _HELLO_, str);)
+  SEND(CONSOLE, sprintf(_xs, "{\"%s\"}", _HELLO_);)
   return;
 }
 
@@ -246,9 +244,8 @@ extern time_count_64_t keep_alive_timer;
 void send_keep_alive(void)
 {
   static int keep_alive_count = 0;
-  char       str[SHORT_TEXT];
 
-  SEND(TARGET, sprintf(_xs, "{\"KEEP_ALIVE\":%d, \"NAME\":\"%s\"}", keep_alive_count++, str);)
+  SEND(TARGET, sprintf(_xs, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);)
   keep_alive_timer = (time_count_64_t)json_keep_alive * ONE_SECOND;
 
   return;

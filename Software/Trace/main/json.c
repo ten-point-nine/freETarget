@@ -55,6 +55,7 @@ const json_message_t JSON[] = {
     {HIDE, "\"T\":",                &json_timestamp,                 IS_INT32,            &trace_build,  0,                         0,      0}, // Time stamp of shot
     {HIDE, "\"NTP_ASK\"",           0,                               IS_VOID,             &NTP_master,   0,                         0,      0}, // Ask to start a time sycn
     {HIDE, "\"NTP_MASTER\"",        0,                               IS_VOID,             &NTP_slave,    0,                         0,      0}, // Target to Trace NTP
+    {HIDE, "\"NTP_PERIOD\"",        &json_NTP_period,                IS_INT32,            0,             0,                         0,      0}, // Time between sync
     {HIDE, "\"NTP_SLAVE\"",         0,                               IS_VOID,             &NTP_offset,   0,                         0,      0}, // Trace to Target NTP
 
     {SHOW, "\"DISTANCE\":",         (int *)&json_distance_to_target, IS_FLOAT,            0,             NONVOL_DISTANCE_TO_TARGET, 10000,  0},

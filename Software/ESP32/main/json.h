@@ -170,4 +170,6 @@ EXTERN char          json_ota_url[URL_SIZE];         // OTA URL
 EXTERN int           json_lock;                      // Lock the JSON message so it cannot be changed
 EXTERN int           json_OTA_download_size;         // Number of bytes in the download image
 EXTERN real_t        json_sensor_angle_offset;       // Correction to the sensor angle
+EXTERN int           json_NTP_period;                 // Time between NTP syncroinizations
+
 #endif

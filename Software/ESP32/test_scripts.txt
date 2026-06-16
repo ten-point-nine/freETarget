@@ -14,6 +14,9 @@ Reset the target       {"RESET":0}
 Reinitialize the board {"INIT":0}
 
 { "WIFI_SSID": "",  "WIFI_PWD": "", "NAME_ID": 4}
+{"KEEP_ALIVE":60}
+
+10 minutes {"NTP_PERIOD": 1000}
 
 //
 // Witness Paper Settings 
