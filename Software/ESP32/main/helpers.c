@@ -286,7 +286,6 @@ void hello(void)
   set_LED_PWM_now(json_LED_PWM);
   power_save = json_power_save * (time_count_t)ONE_SECOND * 60L;
   run_state &= ~IN_SLEEP; // Out of sleep and back in operation
-  run_state |= IN_OPERATION;
   return;
 }
 
@@ -364,7 +363,6 @@ void bye(unsigned int force_bye) // Set to true to force a shutdown
       set_LED_PWM(0);                      // Going to sleep
       set_status_LED(LED_BYE);
       serial_flush(ALL);                   // Purge the com port
-      run_state &= ~IN_OPERATION;          // Take the system out of operating mode
       run_state |= IN_SLEEP;               // Put it to sleep
       bye_state = BYE_HOLD;
       break;

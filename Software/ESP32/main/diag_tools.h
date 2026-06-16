@@ -29,6 +29,7 @@ void heartbeat(void);                                     // Send out regular st
 void test_build_fake_shots(void);                         // Generate a list of shots
 void generate_fake_shot(void);                            // Generate a string of shots
 void mfs_test_build_json_score(void);                     // Test build_json_score
+void show_running_state(void);                           // Display the running state
 
 /*
  *  Definitions
@@ -156,10 +157,16 @@ void mfs_test_build_json_score(void);                     // Test build_json_sco
 
 typedef struct
 {
-  unsigned int dlt_mask; // ex DLT_CRITICAL
-  char        *dlt_text; // ex "DLT_CRITICAL"
-  char         dlt_id;   // ex C
-} dlt_name_t;            // Names and masks for DLT levels
+  unsigned int dlt_mask;   // ex DLT_CRITICAL
+  char        *dlt_text;   // ex "DLT_CRITICAL"
+  char         dlt_id;     // ex C
+} dlt_name_t;              // Names and masks for DLT levels
+
+typedef struct
+{
+  unsigned int state_mask; // ex IN_OPERATION
+  char        *state_text; // ex "IN_OPERATION"
+} state_name_t;            // Names and masks for state
 
 extern const dlt_name_t dlt_names[];
 

@@ -10,6 +10,8 @@ Dynamic IP { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 1
 { "NAME_ID": 99, "NAME_TEXT":"ALLAN"}
 { "NAME_ID": 101}
 HTTP Trace             {"TRACE":128}
+Debug Trace            {"TRACE":64}
+
 Reset the target       {"RESET":0}
 Reinitialize the board {"INIT":0}
 
@@ -17,8 +19,6 @@ Reinitialize the board {"INIT":0}
 
 {"WIFI_TARGET_IP":"192.168.86.109"}
 
-{ "AUTH_CODE":1234,  "AUTH_CODE":4321}
-{ "AUTH_CODE":1234, "AUTH_CODE":0, "ECHO":0 }
 {"WIFI_SSID":"FSixC! Box FE":, "WIFI_PWD":":1234512345123451234512345"}
 
 Firmware debug trace   { "TRACE":16, "TRACE":32, "TRACE":64, "TEST":142}
@@ -26,7 +26,7 @@ Firmware debug trace   { "TRACE":16, "TRACE":32, "TRACE":64, "TEST":142}
 {"DISTANCE":10.0}
 {"MUZZLE_VELOCITY":175.0}
 {"TRACE_SIZE": 165}
-
+{"TRACE":64, "TEST":60}
 
 {"ECHO":0}
 

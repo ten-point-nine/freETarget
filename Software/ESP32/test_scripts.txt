@@ -30,6 +30,11 @@ Firmware debug trace   { "TRACE":16, "TRACE":32, "TRACE":64, "TEST":142}
 
 Turn on RS488 {"AUX_MODE":8}
 
+Prompt for NTP {"NTP_ASK", "NTP_SLAVE":789}
+Start time     {"NTP_MASTER":123}
+Reply          {"NTP_SLAVE":456}
+
+
 
 //
 // Rapid Fire and Tabata 

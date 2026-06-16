@@ -26,6 +26,7 @@
 #define _HELLO_          "HELLO WORLD"             // Message to send on reconnection
 
 #define NETWORK_TIME_PERIOD (15 * 60 * ONE_SECOND) // Expect a time synch every 15 minutes
+#define KEEP_ALIVE_TIME_PERIOD (10 * 60 * ONE_SECOND) // Expect a time synch every 15 minutes
 
 #define INIT_DONE 0xabcd                           // NON-VOL Initialization complete signature
 #ifndef true
@@ -106,7 +107,8 @@
  *  Types
  */
 typedef unsigned char    byte_t;
-typedef volatile int64_t time_count_t;
+typedef volatile int64_t time_count_64_t; // Time in us
+typedef volatile int32_t time_count_t;    // Time in s
 typedef float            real_t;
 
 /*
@@ -155,25 +157,25 @@ typedef struct
 /*
  *  Global Variables
  */
-EXTERN trace_vector_t trace_vector[2];                              // Space for the trace vector
-EXTERN trace_point_t  trace_point[TRACE_RATE * SAMPLE_PERIOD];      // Space for the trace
-EXTERN char           _xs[1024 + 512];                              // General purpose string buffer
-EXTERN unsigned int   is_trace;                                     // Tracing level(s)
+EXTERN trace_vector_t trace_vector[2];                                 // Space for the trace vector
+EXTERN trace_point_t  trace_point[TRACE_RATE * SAMPLE_PERIOD];         // Space for the trace
+EXTERN char           _xs[1024 + 512];                                 // General purpose string buffer
+EXTERN unsigned int   is_trace;                                        // Tracing level(s)
 
-EXTERN unsigned int board_revision;                                 // Board revision number
-EXTERN unsigned int run_state;                                      // Current running state of the software
+EXTERN unsigned int board_revision;                                    // Board revision number
+EXTERN unsigned int run_state;                                         // Current running state of the software
 
-EXTERN int           sample_in;                                     // Index to entry from sensor (<0 - wraps around)
-EXTERN int           sample_out;                                    // Index to output to application  (<0 - wraps around)
-EXTERN trace_point_t present;                                       // Present sample
-EXTERN trace_point_t previous;                                      // Prior sample
+EXTERN int           sample_in;                                        // Index to entry from sensor (<0 - wraps around)
+EXTERN int           sample_out;                                       // Index to output to application  (<0 - wraps around)
+EXTERN trace_point_t present;                                          // Present sample
+EXTERN trace_point_t previous;                                         // Prior sample
 
 #ifdef TRACE_C
-EXTERN char        *no_yes[]       = {"No", "Yes"};                 // Yes or No
-EXTERN time_count_t session_time[] = {1000 * 60, 15 * 60, 75 * 60}; // Time in each session EMPTY, SIGHT, SCORE // Array of shot records
+EXTERN char           *no_yes[]       = {"No", "Yes"};                 // Yes or No
+EXTERN time_count_64_t session_time[] = {1000 * 60, 15 * 60, 75 * 60}; // Time in each session EMPTY, SIGHT, SCORE // Array of shot records
 #else
-EXTERN char        *no_yes[]; // Yes or No strings
-EXTERN time_count_t session_time[];
+EXTERN char           *no_yes[]; // Yes or No strings
+EXTERN time_count_64_t session_time[];
 #endif
 
 /*

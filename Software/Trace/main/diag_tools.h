@@ -18,6 +18,7 @@ bool factory_test(void);             // Test the hardware in production
 bool do_factory_test(bool test_run); // Carry out the factory test
 void digital_input_test(void);       // Test the digital inputs
 void digital_output_test(void);      // Test the digital outputs
+void show_running_state(void);        // Decode the state and print
 
 /*
  *  Definitions
@@ -90,14 +91,20 @@ void digital_output_test(void);      // Test the digital outputs
 
 typedef struct
 {
-  unsigned int dlt_mask; // ex DLT_CRITICAL
-  char        *dlt_text; // ex "DLT_CRITICAL"
-  char         dlt_id;   // ex C
-} dlt_name_t;            // Names and masks for DLT levels
+  unsigned int dlt_mask;   // ex DLT_CRITICAL
+  char        *dlt_text;   // ex "DLT_CRITICAL"
+  char         dlt_id;     // ex C
+} dlt_name_t;              // Names and masks for DLT levels
+
+typedef struct
+{
+  unsigned int state_mask; // ex IN_OPERATION
+  char        *state_text; // ex "IN_OPERATION"
+} state_name_t;            // Names and masks for state
 
 extern const dlt_name_t dlt_names[];
 
-                         /*
-                          *  Variables
-                          */
+                           /*
+                            *  Variables
+                            */
 #endif

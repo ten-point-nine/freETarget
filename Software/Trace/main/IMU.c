@@ -35,9 +35,9 @@
 /*
  *  Typedefs
  */
-trace_index_t       index_in  = {0, 0}; // Pointer to the input side
-trace_index_t       index_out = {0, 0}; // Pointer to the output side
-extern time_count_t last_FIFO_read;
+trace_index_t          index_in  = {0, 0}; // Pointer to the input side
+trace_index_t          index_out = {0, 0}; // Pointer to the output side
+extern time_count_64_t last_FIFO_read;
 
 /*
  *  Local Functions
@@ -189,7 +189,7 @@ void trace_build(int timestamp) // Build and send a trace
                                 /*
                                  *  Starting points
                                  */
-  BMI270_find_index_out((time_count_t)timestamp);
+  BMI270_find_index_out((time_count_64_t)timestamp);
   working = index_in;
 
   /*

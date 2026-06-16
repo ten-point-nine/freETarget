@@ -430,7 +430,7 @@ void show_echo(void)
   serial_to_all(NULL, EVEN_ODD_BEGIN);                                         // Start over again
   SEND(CONSOLE, sprintf(_xs, "\"SN\":                %d", json_serial_number);)
   SEND(CONSOLE, sprintf(_xs, "\"TRACE\":             %d,", is_trace);)         //
-  SEND(CONSOLE, sprintf(_xs, "\"TIME_STAMP\":   %llu", run_time_us());)        // On Time
+  SEND(CONSOLE, sprintf(_xs, "\"TIME_STAMP\":   %'llu", run_time_us());)       // On Time
   WiFi_my_IP_address(str_c);
   SEND(CONSOLE, sprintf(_xs, "\"WiFi_IP_ADDRESS\":   \"%s\",", str_c);)
 

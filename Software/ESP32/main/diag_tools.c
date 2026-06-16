@@ -94,6 +94,7 @@ static const self_test_t test_list[] = {
     {"Loopback WiFi",                     &WiFi_loopback_test        },
     {"Scan for access points (APs)",      &WiFi_AP_scan_test         },
     {"WiFi Ping Pong test",               &WiFi_pingpong_test        },
+    {"WiFi trace test",                   &WiFi_trace_test           },
     {"- HTTP tests",                      0                          },
     {"DNS Lookup test",                   &http_DNS_test             },
     {"Send to server test",               &http_send_to_server_test  },
@@ -113,6 +114,7 @@ static const self_test_t test_list[] = {
     {"display_all_scores",                &test_display_all_scores   }, // Send fake JSON scores
     {"Rapidfire test",                    &test_rapidfire            },
     {"Calibration test",                  &calibration_test          }, // Generate fake scores and observe the calibration
+    {"Show the running state",            &show_running_state        }, // Show the running state
     {"",                                  0                          }
 };
 
@@ -132,6 +134,19 @@ const dlt_name_t dlt_names[] = {
     {DLT_HEARTBEAT,     "DLT_HEARTBEAT",     'T'}, // Heartbeat tick
     {DLT_AMB,           "DLT_AMB",           'M'}, // Special debug messages
     {0,                 0,                   0  }
+};
+
+const state_name_t state_names[] = {
+    {IN_STARTUP,   "IN_STARTUP"  }, // The software is in initialization
+    {IN_OPERATION, "IN_OPERATION"}, // The software is operational
+    {IN_TEST,      "IN_TEST"     }, // A self test has been selected (Suspend operation)
+    {IN_SLEEP,     "IN_SLEEP"    }, // The unit has powered down
+    {IN_SHOT,      "IN_SHOT"     }, // The target is actively in a shot
+    {IN_REDUCTION, "IN_REDUCTION"}, // The data is being reduced
+    {IN_FATAL_ERR, "IN_FATAL_ERR"}, // A fatal error has occured and cannot be fixed
+    {IN_HTTP,      "IN_HTTP"     }, // The HTTP (JSON) data is being processed
+    {TIME_VALID,   "TIME_VALID"  }, //  Time base is syncronized
+    {0,            0             }
 };
 
 /*-----------------------------------------------------
@@ -173,11 +188,6 @@ void self_test(unsigned int test) // What test to execute
    *  Switch over to test mode
    */
   run_state |= IN_TEST;      // Show the test is running
-
-  while ( run_state & IN_OPERATION )
-  {
-    vTaskDelay(10);          // Wait for everyone else to turn off
-  }
   freeETarget_timer_pause(); // Stop interrupts
 
   /*
@@ -1127,14 +1137,12 @@ static void test_rapidfire(void)
 {
   unsigned int i;
 
-  run_state |= IN_OPERATION;                        // Make sure the software thinks it is running
-  run_state &= ~IN_TEST;                            // and not in a test
-  freeETarget_timer_start();                        // Start interrupts (turned off in self_test())
+  run_state &= ~IN_TEST;     // and not in a test
+  freeETarget_timer_start(); // Start interrupts (turned off in self_test())
 
   i = 0;
   while ( rapid_schedule[i] > 0 )
   {
-    run_state &= ~IN_OPERATION;                     // Exit operation
     SEND(ALL, sprintf(_xs, "\r\nRapid fire test: %.2f seconds  ", rapid_schedule[i]);)
     gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);
     gpio_set_level(CLOCK_START, CLOCK_TRIGGER_ON);  // Generate a 1-0-1 pulse
@@ -1231,5 +1239,37 @@ static void interrupt_face_strike_test(void)
     vTaskDelay(100);
   }
 
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: show_running_status
+ *
+ * @brief:    Show the running status as text
+ *
+ * @return:   None
+ *
+ *----------------------------------------------------------------
+ *
+ * Decode the state and display the text
+ *
+ *--------------------------------------------------------------*/
+void show_running_state(void)
+{
+  int i;
+
+  SEND(ALL, sprintf(_xs, "\r\nRunning State: ");)
+
+  i = 0;
+  while ( state_names[i].state_mask != 0 )
+  {
+    if ( (state_names[i].state_mask & run_state) != 0 )
+    {
+      SEND(ALL, sprintf(_xs, "%s   ", state_names[i].state_text);)
+    }
+    i++;
+  }
+  SEND(ALL, sprintf(_xs, "\r\n%s", _DONE_);)
   return;
 }

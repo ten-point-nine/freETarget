@@ -39,6 +39,8 @@ void WiFi_server_test(void);                   // Server test for diag.c
 void WiFi_station_loopback_test(void);         // Station test for diag.c
 void WiFi_AP_loopback_test(void);              // Access point test for diag.c
 
+void WiFi_trace_test(void);                    // Send messages to the trace device
+
 /*
  * #defines
  */

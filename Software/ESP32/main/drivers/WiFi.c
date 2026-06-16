@@ -1215,3 +1215,83 @@ void WiFi_pingpong_test(void)
 
   return;
 }
+
+/*****************************************************************************
+ *
+ * @function: WiFi_trace_test
+ *
+ * @brief:    Send and receive packets from the trace device for test
+ *
+ * @return:   None
+ *
+ ****************************************************************************
+ *
+ *
+ *
+ ***************************************************************************/
+static char *test_s[] = {"{\"ECHO\"}", "{\"VERSION\"}", "{\"NTP_ASK\"}", "{\"NTP_MASTER\"}", "{\"NTP_SLAVE\"}", NULL};
+
+void WiFi_trace_test(void) //
+{
+  char ch;
+  int  i;
+
+  while ( 1 )
+  {
+    /*
+     *  Prompt for a test number.  Display incoming messages
+     */
+    SEND(CONSOLE, sprintf(_xs, "\r\nChoose test");)
+    i = 0;
+
+    while ( test_s[i] != NULL ) // Display the tests
+    {
+      SEND(CONSOLE, sprintf(_xs, "\r\n%d: %s", i, test_s[i]);)
+      i++;
+    }
+    SEND(CONSOLE, sprintf(_xs, "\r\n");)
+
+    /*
+     * Echo the target back to the console
+     */
+    while ( serial_available(CONSOLE) == 0 )
+    {
+      vTaskDelay(TICK_10ms);
+      while ( serial_available(TCPIP) != 0 )
+      {
+        ch = serial_getch(TCPIP);
+        if ( isprint(ch) )
+        {
+          SEND(CONSOLE, sprintf(_xs, "%c", ch);)
+        }
+        else
+        {
+          SEND(CONSOLE, sprintf(_xs, " 0x%02X ", ch);)
+        }
+      }
+    }
+
+    /*
+     *  Get the test number
+     */
+    ch = serial_getch(CONSOLE); // Get the test number
+    if ( ch == '!' )            // ! => Exit
+    {
+      break;
+    }
+
+    /*
+     *  Send out the test
+     */
+    ch = (ch - '0') % (sizeof(test_s) / sizeof(char *) - 1);
+
+    SEND(CONSOLE, sprintf(_xs, "\r\nSending: %s\r\n", test_s[(int)ch]);) // Send this test
+    SEND(TCPIP, sprintf(_xs, "%s", test_s[(int)ch]);)                    // Send this test
+  }
+
+  /*
+   *  Test done
+   */
+  SEND(CONSOLE, sprintf(_xs, _DONE_);)
+  return;
+}

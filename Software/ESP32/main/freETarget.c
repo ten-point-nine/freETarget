@@ -175,11 +175,11 @@ void freeETarget_init(void)
    */
   ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND, send_keep_alive, "keep alive");                 // Keep alive timer
   ft_timer_new(&power_save, (time_count_t)(json_power_save) * (time_count_t)ONE_SECOND * 60L, &bye_tick, "power save"); // Power save timer
-  ft_timer_new(&time_since_last_shot, HTTP_CLOSE_TIME * 60 * ONE_SECOND, NULL, "time since last shot"); // 15 minutes since last shot
-  ft_timer_new(&time_to_go, 0, NULL, "time to go");                                                     // Time remaining in session
-  ft_timer_new(&shot_timer, 0, NULL, "shot timer");                                                     // Wait for the shot to arrive
-  ft_timer_new(&ring_timer, 0, NULL, "ring timer");                                                     // Wait for the ringing to stop
-  ft_timer_new(&sync_time_remaining, NETWORK_TIME_PERIOD, NULL, "Synchronize time");                    // Start the synch timer
+  ft_timer_new(&HTTP_close_time, HTTP_CLOSE_TIME * 60 * ONE_SECOND, NULL, "HTTP close time"); // 15 minutes since last shot
+  ft_timer_new(&time_to_go, 0, NULL, "time to go");                                           // Time remaining in session
+  ft_timer_new(&shot_timer, 0, NULL, "shot timer");                                           // Wait for the shot to arrive
+  ft_timer_new(&ring_timer, 0, NULL, "ring timer");                                           // Wait for the ringing to stop
+  ft_timer_new(&sync_time_remaining, NETWORK_TIME_PERIOD, NULL, "synchronize time");          // Start the synch timer
 
   /*
    * Run the power on self test
@@ -215,7 +215,9 @@ void freeETarget_init(void)
   /*
    * Start the tasks running
    */
-  run_state &= ~IN_STARTUP; // Exit startup
+  run_state &= ~IN_STARTUP;  // Exit startup
+  run_state |= IN_OPERATION; // In operation
+
   return;
 }
 
@@ -253,7 +255,6 @@ void freeETarget_target_loop(void *arg)
   {
     IF_IN(IN_SLEEP | IN_TEST | IN_FATAL_ERR) // If Not in operation,
     {
-      run_state &= ~IN_OPERATION;            // Exit operation
       IF_IN(IN_FATAL_ERR)                    // Have we deteted a fatal error?
       {
         set_status_LED(LED_FATAL);           // but show something really wrong
@@ -262,18 +263,16 @@ void freeETarget_target_loop(void *arg)
       continue;
     }
 
-    run_state |= IN_OPERATION;               // In operation
-
     /*
      * Cycle through the state machine
      */
     switch ( freETarget_state )
     {
       default:
-      case START:                                                                              // Start of the loop
+      case START:                                                                         // Start of the loop
         DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "state: START");))
-        power_save           = (time_count_t)json_power_save * (time_count_t)ONE_SECOND * 60L; //  Reset the timer
-        time_since_last_shot = HTTP_CLOSE_TIME * 60l * ONE_SECOND;                             // 15 minutes since last shot
+        power_save      = (time_count_t)json_power_save * (time_count_t)ONE_SECOND * 60L; //  Reset the timer
+        HTTP_close_time = HTTP_CLOSE_TIME * 60l * ONE_SECOND;                             // 15 minutes since last shot
         set_mode(); // Set the mode for the next string of shot (ex Tabata or Rapid Fire)
         arm();      // Arm the circuit and check for errors
         set_status_LED(LED_READY);

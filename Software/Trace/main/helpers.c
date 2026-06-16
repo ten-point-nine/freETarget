@@ -241,7 +241,7 @@ void hello(void)
  * Send out the keep alive message and reset the timer
  *
  *--------------------------------------------------------------*/
-extern time_count_t keep_alive_timer;
+extern time_count_64_t keep_alive_timer;
 
 void send_keep_alive(void)
 {
@@ -249,7 +249,7 @@ void send_keep_alive(void)
   char       str[SHORT_TEXT];
 
   SEND(TARGET, sprintf(_xs, "{\"KEEP_ALIVE\":%d, \"NAME\":\"%s\"}", keep_alive_count++, str);)
-  keep_alive_timer = (time_count_t)json_keep_alive * ONE_SECOND;
+  keep_alive_timer = (time_count_64_t)json_keep_alive * ONE_SECOND;
 
   return;
 }
@@ -275,10 +275,10 @@ void echo_serial(int duration, // Duration in clock ticks
                  int out_ports // Where to ouput to
 )
 {
-  unsigned char ch;
-  time_count_t  test_time;
+  unsigned char   ch;
+  time_count_64_t test_time;
 
-  ft_timer_new(&test_time, (time_count_t)duration, NULL, "echo serial");
+  ft_timer_new(&test_time, (time_count_64_t)duration, NULL, "echo serial");
 
   /*
    * Loop and echo the characters
@@ -465,8 +465,8 @@ void watchdog(void)
  *
  *
  *--------------------------------------------------------------*/
-#define OTA_SERIAL_TIMEOUT (time_count_t)10 * ONE_SECOND                   // 10 second timeout
-static time_count_t time_out;                                              // Time out timer
+#define OTA_SERIAL_TIMEOUT (time_count_64_t)10 * ONE_SECOND                // 10 second timeout
+static time_count_64_t time_out;                                           // Time out timer
 
 int get_OTA_serial(int   length,                                           // Maximum number of bytes to read
                    char *s)                                                // Place to save the input data

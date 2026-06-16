@@ -42,7 +42,7 @@
 /*
  *  Variables
  */
-time_count_t keep_alive_timer; // TCPIP keep alive timer
+time_count_64_t keep_alive_timer; // TCPIP keep alive timer
 
 /*
  * Function Prototypes
@@ -52,8 +52,8 @@ extern void gpio_init(void);
 /*
  *  External variables
  */
-extern FIFO_raw_t   sample_raw_read[];
-extern time_count_t sync_time_remaining;
+extern FIFO_raw_t      sample_raw_read[];
+extern time_count_64_t sync_time_remaining;
 
 /*----------------------------------------------------------------
  *
@@ -124,8 +124,8 @@ void trace_init(void)
   /*
    *  Set up the long running timers
    */
-  ft_timer_new(&keep_alive_timer, NETWORK_TIME_PERIOD, &send_keep_alive, "Keep alive"); // keepalive timer
-  ft_timer_new(&sync_time_remaining, (30 * ONE_SECOND), NULL, "sync_time_remaining");   // Sync to the target (start at 30 seconds)
+  ft_timer_new(&keep_alive_timer, KEEP_ALIVE_TIME_PERIOD, &send_keep_alive, "Keep alive"); // keepalive timer
+  ft_timer_new(&sync_time_remaining, NETWORK_TIME_PERIOD, NULL, "sync_time_remaining");    // Sync to the target (start at 30 seconds)
 
   /*
    * Run the power on self test
@@ -163,15 +163,15 @@ void trace_init(void)
  * No one operation should exceed 500ms.
  *
  *---------------------------------------------------------------*/
-int FIFO_pull = 0;                                   // How many FIFO pulls have we done
+int FIFO_pull = 0;                                      // How many FIFO pulls have we done
 
-time_count_t FIFO_time_us;                           // Last pull in microseconds
+time_count_64_t FIFO_time_us;                           // Last pull in microseconds
 
 void trace_loop(void *arg)
 {
   DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "trace_loop()");))
 
-  time_count_t start_time_us = esp_timer_get_time(); // Remember when we got here
+  time_count_64_t start_time_us = esp_timer_get_time(); // Remember when we got here
 
   run_state |= IN_OPERATION;
 

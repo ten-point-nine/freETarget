@@ -27,9 +27,9 @@
 /*
  * variables
  */
-static time_count_t NTP_base_time;       // Time reference
-static time_count_t NTP_offset_time;     // Time difference in the slave
-time_count_t        sync_time_remaining; // How long before we have to synch again
+static time_count_64_t NTP_base_time;       // Time reference
+static time_count_64_t NTP_offset_time;     // Time difference in the slave
+time_count_64_t        sync_time_remaining; // How long before we have to synch again
 
 /*-----------------------------------------------------
  *
@@ -78,16 +78,16 @@ bool NTP_ttg(void)
  *---------------------------------------------------*/
 void NTP_master(void)
 {
-  NTP_base_time = esp_timer_get_time();                                    // Reset the time
-  SEND(TARGET, sprintf(_xs, "{\"%s\":%llu}", _NTP_MASTER_, NTP_base_time);) // Send back the ack
-  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "{\"%s\":%llu}", _NTP_MASTER_, NTP_base_time);))
+  NTP_base_time = esp_timer_get_time();                                      // Reset the time
+  SEND(TARGET, sprintf(_xs, "{\"%s\":%'llu}", _NTP_MASTER_, NTP_base_time);) // Send back the ack
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "{\"%s\":%'llu}", _NTP_MASTER_, NTP_base_time);))
   return;
 }
 
 /*-----------------------------------------------------
  *
  * @function: NTP_slave
- *
+ *35
  * @brief:    Reset the time base when commanded
  *
  * @return:   Nothing
@@ -100,11 +100,11 @@ void NTP_master(void)
  *---------------------------------------------------*/
 void NTP_slave(void)
 {
-  NTP_base_time = esp_timer_get_time();                                   // Reset the time
-  run_state |= TIME_VALID;                                                // The trime is valid
-  sync_time_remaining = NETWORK_TIME_PERIOD;                              // Reset the watchdog
-  SEND(TARGET, sprintf(_xs, "{\"%s\":%llu}", _NTP_SLAVE_, NTP_base_time);) // Send back the ack
-  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "{\"%s\":%llu}", _NTP_SLAVE_, NTP_base_time);))
+  NTP_base_time = esp_timer_get_time();                                     // Reset the time
+  run_state |= TIME_VALID;                                                  // The trime is valid
+  sync_time_remaining = NETWORK_TIME_PERIOD;                                // Reset the watchdog
+  SEND(TARGET, sprintf(_xs, "{\"%s\":%'llu}", _NTP_SLAVE_, NTP_base_time);) // Send back the ack
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "{\"%s\":%'llu}", _NTP_SLAVE_, NTP_base_time);))
   return;
 }
 
@@ -129,6 +129,6 @@ void NTP_offset(void)
   NTP_offset_time     = (esp_timer_get_time() - NTP_base_time) / 2;
   sync_time_remaining = NETWORK_TIME_PERIOD; // Reset the watchdog
   run_state |= TIME_VALID;                   // Boths sides are happy
-  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "{\"%s\":%llu}", _NTP_OFFSET_, NTP_offset_time);))
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "{\"%s\":%'llu}", _NTP_OFFSET_, NTP_offset_time);))
   return;
 }

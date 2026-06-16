@@ -204,7 +204,7 @@ EXTERN volatile unsigned int run_state;                             // IPC state
 EXTERN time_count_t          LED_timer;                             // Turn off the LEDs when not in use
 EXTERN time_count_t          keep_alive;                            // Keep alive timer
 EXTERN time_count_t          power_save;                            // Power save timer
-EXTERN time_count_t          time_since_last_shot;                  // 15 minutes since last shot
+EXTERN time_count_t          HTTP_close_time;                       // 15 minutes since last shot
 EXTERN time_count_t          session_time[];                        // Time in each session
 EXTERN time_count_t          shot_timer;                            // Wait for the sound to hit all sensors
 EXTERN time_count_t          ring_timer;                            // Let the ring on the backstop end

@@ -35,7 +35,7 @@
 #include "BMI270.h"
 #include "IMU.h"
 
-extern volatile time_count_t paper_time;
+extern volatile time_count_64_t paper_time;
 
 static void show_test_help(void);
 
@@ -49,26 +49,27 @@ typedef struct
 } self_test_t;
 
 static const self_test_t test_list[] = {
-    {"Help",                       &show_test_help     },
-    {"Factory test",               &factory_test       },
-    {"- Digital",                  0                   },
-    {"Digital inputs",             &digital_input_test },
-    {"Digital outputs",            &digital_output_test},
-    {"Accelerometer zeroing",      &BMI270_find_zero   },
-    {"Accelerometer oscilliscope", &BMI270_oscilliscope},
-    {"Accelerometer dump",         &BMI270_SPI_dump    },
-    {"- Timer",        0                   },
-    {"Show the current time",      &show_time          },
-    {"- Communications Tests",     0                   },
-        {"Test WiFi as a client",       &WiFi_client_test       },
+    {"Help",                         &show_test_help     },
+    {"Factory test",                 &factory_test       },
+    {"- Digital",                    0                   },
+    {"Digital inputs",               &digital_input_test },
+    {"Digital outputs",              &digital_output_test},
+    {"Accelerometer zeroing",        &BMI270_find_zero   },
+    {"Accelerometer oscilliscope",   &BMI270_oscilliscope},
+    {"Accelerometer dump",           &BMI270_SPI_dump    },
+    {"- Timer",                      0                   },
+    {"Show the current time",        &show_time          },
+    {"- Communications Tests",       0                   },
+    {"Test WiFi as a client",        &WiFi_client_test   },
     //    {"Enable the WiFi Server",       &WiFi_server_test        },
-        {"Scan for access points (APs)", &WiFi_AP_scan_test       },
-    {"- HTTP tests",               0                   },
-    {"- Interrupt Tests",           0                   },
-    {"- Software tests",           0                   },
-    {"IMU test",                   &IMU_test           },
-    {"IMU real-time test",         &IMU_real_time      },
-    {"",                           0                   }
+    {"Scan for access points (APs)", &WiFi_AP_scan_test  },
+    {"- HTTP tests",                 0                   },
+    {"- Interrupt Tests",            0                   },
+    {"- Software tests",             0                   },
+    {"IMU test",                     &IMU_test           },
+    {"IMU real-time test",           &IMU_real_time      },
+    {"Show sensor state",            &show_running_state  },
+    {"",                             0                   }
 };
 
 const dlt_name_t dlt_names[] = {
@@ -83,6 +84,18 @@ const dlt_name_t dlt_names[] = {
     {DLT_VERBOSE,       "DLT_VERBOSE",       'x'}, // Calibration verbose information
     {DLT_AMB,           "DLT_AMB",           'M'}, // Special debug messages
     {0,                 0,                   0  }
+};
+
+const state_name_t state_names[] = {
+    {IN_STARTUP,      "IN_STARTUP"      }, // The software is in initialization
+    {IN_NO_CAL,       "IN_NO_CAL"       }, // The device is not calibrated
+    {IN_FIFO_FILLING, "IN_FIFO_FILLING" }, // The FIFO is being read
+    {IN_REDUCTION,    "IN_REDUCTION"    }, // Reducing the data
+    {IN_OPERATION,    "IN_OPERATION "   }, // Normal operation
+    {IN_TEST,         "IN_TEST"         }, // Executing self test
+    {TIME_VALID,      "TIME_VALID"      }, //  Time base is syncronized
+    {TARGET_CONNECTED, "TARGET_CONNECTED"}, //  The sensor is connected to the target
+    {0,               0                 }
 };
 
 /*-----------------------------------------------------
@@ -424,4 +437,36 @@ bool do_dlt(           //
    */
 
   return false;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: show_running_status
+ *
+ * @brief:    Show the running status as text
+ *
+ * @return:   None
+ *
+ *----------------------------------------------------------------
+ *
+ * Decode the state and display the text
+ *
+ *--------------------------------------------------------------*/
+void show_running_state(void)
+{
+  int i;
+
+  SEND(CONSOLE, sprintf(_xs, "\r\nRunning State: ");)
+
+  i = 0;
+  while ( state_names[i].state_mask != 0 )
+  {
+    if ( (state_names[i].state_mask & run_state) != 0 )
+    {
+      SEND(CONSOLE, sprintf(_xs, "%s   ", state_names[i].state_text);)
+    }
+    i++;
+  }
+  SEND(CONSOLE, sprintf(_xs, "\r\n%s", _DONE_);)
+  return;
 }

@@ -49,14 +49,14 @@ typedef enum
 
 typedef struct
 {
-  char        *name;                     // Name of the task
-  time_count_t cycle_time;               // How long between calls
+  char           *name;                  // Name of the task
+  time_count_64_t cycle_time;            // How long between calls
   void (*f)(void);                       // Function to execute at the cycle time
 } synchronous_task_t;
 
 typedef struct
 {
-  time_count_t *run_time;                // Pointer to running timer
+  time_count_64_t *run_time;             // Pointer to running timer
   void (*callback)(void);                // Function to execute when time hits zero
   char *name;
 } run_time_clock_t;
@@ -65,8 +65,8 @@ typedef struct
  * Local Variables
  */
 static run_time_clock_t timers[N_TIMERS];               // Active timer list (allow only positive time)
-static time_count_t     base_time = 0;                  // Base time to show elapsed time
-time_count_t            time_to_go;                     // Time remaining in event in seconds
+static time_count_64_t  base_time = 0;                  // Base time to show elapsed time
+time_count_64_t         time_to_go;                     // Time remaining in event in seconds
 
 static synchronous_task_t task_list[] = {
     {"Status LED",     BAND_250ms, status_LED_timer    }, // Drive the status LED
@@ -75,7 +75,7 @@ static synchronous_task_t task_list[] = {
     {0,                0,          0                   }
 };
 
-extern time_count_t sync_time_remaining;                // Time waiting for a time update
+extern time_count_64_t sync_time_remaining;             // Time waiting for a time update
 
 /*
  *  Function Prototypes
@@ -220,10 +220,10 @@ void trace_synchronous(void *pvParameters)
  * same timer addess without creating a problem
  *
  *-----------------------------------------------------*/
-bool ft_timer_new(time_count_t *new_timer, // Pointer to new down counter
-                  time_count_t  duration,  // Duration of the timer
-                  void *(callback)(),      // What to do when we hit zero
-                  char *name               // Timer name
+bool ft_timer_new(time_count_64_t *new_timer, // Pointer to new down counter
+                  time_count_64_t  duration,  // Duration of the timer
+                  void *(callback)(),         // What to do when we hit zero
+                  char *name                  // Timer name
 )
 {
   unsigned int i;
@@ -250,23 +250,23 @@ bool ft_timer_new(time_count_t *new_timer, // Pointer to new down counter
   return 0;
 }
 
-int ft_timer_delete(time_count_t *old_timer) // Pointer to new down counter
+int ft_timer_delete(time_count_64_t *old_timer) // Pointer to new down counter
 {
   unsigned int i;
 
-  if ( old_timer == 0 )                      // Null pointer, do nothing
+  if ( old_timer == 0 )                         // Null pointer, do nothing
   {
     return 0;
   }
 
-  *old_timer = 0;                            // Set the timer to zero
+  *old_timer = 0;                               // Set the timer to zero
 
-  for ( i = 0; i != N_TIMERS; i++ )          // Look through the space
+  for ( i = 0; i != N_TIMERS; i++ )             // Look through the space
   {
-    if ( timers[i].run_time == old_timer )   // Found the existing timer
+    if ( timers[i].run_time == old_timer )      // Found the existing timer
     {
-      timers[i].run_time = NULL;             // Remove the pointer
-      timers[i].callback = NULL;             // Clear the callback
+      timers[i].run_time = NULL;                // Remove the pointer
+      timers[i].callback = NULL;                // Clear the callback
       return 1;
     }
   }
@@ -297,7 +297,7 @@ void show_time(void)
 
   while ( serial_available(CONSOLE) == 0 )
   {
-    SEND(CONSOLE, sprintf(_xs, "\r\n%llu us", run_time_us());)
+    SEND(CONSOLE, sprintf(_xs, "\r\n%'llu us", run_time_us());)
     vTaskDelay(ONE_SECOND);
   }
 
@@ -323,7 +323,7 @@ void show_time(void)
  * Rest and use the 1us timer in the ESP32
  *
  *---------------------------------------------------*/
-time_count_t run_time_us(void)
+time_count_64_t run_time_us(void)
 {
   return (esp_timer_get_time() - base_time);
 }

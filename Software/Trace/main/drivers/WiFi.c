@@ -75,10 +75,10 @@ static EventGroupHandle_t           s_wifi_event_group;
 static esp_event_handler_instance_t instance_any_id;
 static esp_event_handler_instance_t instance_got_ip;
 static int                          s_retry_num = 0;
-static esp_netif_ip_info_t          ipInfo;        // IP Address of the access point
-static esp_netif_t                 *sta_netif;     // Station configuration
-static int                          client_socket; // Socket used to talk to the target
-static int                          unget_c = 0;   // Character to unget
+static esp_netif_ip_info_t          ipInfo;            // IP Address of the access point
+static esp_netif_t                 *sta_netif;         // Station configuration
+static int                          client_socket = 0; // Socket used to talk to the target
+static int                          unget_c       = 0; // Character to unget
 
 /*
  * Private Functions
@@ -462,7 +462,11 @@ bool WiFi_client_init(void)
     return true;
   }
 
-  close(client_socket);
+  if ( client_socket > 0 )
+  {
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Closing existing socket");))
+    close(client_socket);
+  }
 
   /*
    *  Not connected, then connect
@@ -638,6 +642,7 @@ int WiFi_puts(char *s,                                      // String to output
 
   return length;                      // Sent it
 }
+
 /*****************************************************************************
  *
  * @function: WiFi_client_test
@@ -651,7 +656,7 @@ int WiFi_puts(char *s,                                      // String to output
  *
  *
  ***************************************************************************/
-static char *test_s[] = {"{\"ECHO\"}", "{\"VERSION\"}", "{\"SYNC_IN\"}", "{\"NTP\"}", NULL};
+static char *test_s[] = {"{\"ECHO\"}", "{\"VERSION\"}", "{\"NTP_ASK\"}", "{\"NTP_MASTER\"}", "{\"NTP_SLAVE\"}", NULL};
 
 void WiFi_client_test(void) //
 {
@@ -673,6 +678,9 @@ void WiFi_client_test(void) //
     }
     SEND(CONSOLE, sprintf(_xs, "\r\n");)
 
+    /*
+     * Echo the target back to the console
+     */
     while ( serial_available(CONSOLE) == 0 )
     {
       vTaskDelay(TICK_10ms);
@@ -690,6 +698,9 @@ void WiFi_client_test(void) //
       }
     }
 
+    /*
+     *  Get the test number
+     */
     ch = serial_getch(CONSOLE); // Get the test number
     if ( ch == '!' )            // ! => Exit
     {
