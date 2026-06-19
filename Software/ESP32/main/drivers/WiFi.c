@@ -78,7 +78,7 @@ static EventGroupHandle_t           s_wifi_event_group;
 static esp_event_handler_instance_t instance_any_id;
 static esp_event_handler_instance_t instance_got_ip;
 static int                          s_retry_num = 0;
-static int                          socket_list[MAX_SOCKETS]; // Space to remember four sockets
+static socket_description_t         socket_list[MAX_SOCKETS]; // Space to remember four sockets
 static esp_netif_ip_info_t          ipInfo;                   // IP Address of the access point
 static int                          dns_valid;                // We have a valid IP address for the URL
 static ip_addr_t                    url_ip_address;           // Address of the server
@@ -331,6 +331,7 @@ void WiFi_station_init(void)
   esp_wifi_set_mode(WIFI_MODE_STA);
   esp_wifi_set_config(WIFI_IF_STA, &WiFi_config);
   esp_wifi_start(); // Start the WiFi
+  esp_wifi_set_ps(WIFI_PS_NONE);
 
   /*
    * Wait here for an event to occur
@@ -586,10 +587,10 @@ static void wifi_set_static_ip(esp_netif_t *netif)
  * to send and receive data
  *
  *******************************************************************************/
-
+#define TCP_SERVER_PERIOD TICK_10ms
 void WiFi_tcp_server_task(void *pvParameters)
 {
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi_tcp_server_task()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi_tcp_server_task(%d)", TCP_SERVER_PERIOD);))
 
   /*
    *  Move data in and out of the TCP queues
@@ -600,7 +601,7 @@ void WiFi_tcp_server_task(void *pvParameters)
     /*
      *  Time out till the next time
      */
-    vTaskDelay(ONE_SECOND / 2);
+    vTaskDelay(TCP_SERVER_PERIOD);
   }
 }
 
@@ -643,17 +644,18 @@ static void tcpip_server_io(void)
   {
     for ( i = 0; i != MAX_SOCKETS; i++ )
     {
-      if ( socket_list[i] > 0 )
+      if ( socket_list[i].handle > 0 )
       {
         buffer_offset = 0;
         while ( buffer_offset < to_send )
         {
-          length = send(socket_list[i], rx_buffer + buffer_offset, to_send - buffer_offset, 0);
+          length = send(socket_list[i].handle, rx_buffer + buffer_offset, to_send - buffer_offset, 0);
           if ( length <= 0 )
           {
-            close(socket_list[i]);
-            socket_list[i]    = AVAILABLE_SOCKET;
-            new_socket_closed = true;
+            close(socket_list[i].handle);
+            socket_list[i].handle = AVAILABLE_SOCKET;
+            socket_list[i].ip[0]  = 0;
+            new_socket_closed     = true;
             break;
           }
           buffer_offset += length;
@@ -668,7 +670,7 @@ static void tcpip_server_io(void)
   {
     for ( i = 0; i != MAX_SOCKETS; i++ )
     {
-      if ( socket_list[i] > 0 )
+      if ( socket_list[i].handle > 0 )
       {
         break;
       }
@@ -724,9 +726,9 @@ void tcpip_socket_poll_0(void *parameters)
 
   while ( 1 )
   {
-    if ( socket_list[0] > 0 )
+    if ( socket_list[0].handle > 0 )
     {
-      length = recv(socket_list[0], rx_buffer, sizeof(rx_buffer), 0);
+      length = recv(socket_list[0].handle, rx_buffer, sizeof(rx_buffer), 0);
       if ( length > 0 )
       {
         tcpip_socket_2_queue(rx_buffer, length);
@@ -745,9 +747,9 @@ void tcpip_socket_poll_1(void *parameters)
 
   while ( 1 )
   {
-    if ( socket_list[1] > 0 )
+    if ( socket_list[1].handle > 0 )
     {
-      length = recv(socket_list[1], rx_buffer, sizeof(rx_buffer), 0);
+      length = recv(socket_list[1].handle, rx_buffer, sizeof(rx_buffer), 0);
       if ( length > 0 )
       {
         tcpip_socket_2_queue(rx_buffer, length);
@@ -766,9 +768,9 @@ void tcpip_socket_poll_2(void *parameters)
 
   while ( 1 )
   {
-    if ( socket_list[2] > 0 )
+    if ( socket_list[2].handle > 0 )
     {
-      length = recv(socket_list[2], rx_buffer, sizeof(rx_buffer), 0);
+      length = recv(socket_list[2].handle, rx_buffer, sizeof(rx_buffer), 0);
       if ( length > 0 )
       {
         tcpip_socket_2_queue(rx_buffer, length);
@@ -787,9 +789,9 @@ void tcpip_socket_poll_3(void *parameters)
 
   while ( 1 )
   {
-    if ( socket_list[3] > 0 )
+    if ( socket_list[3].handle > 0 )
     {
-      length = recv(socket_list[3], rx_buffer, sizeof(rx_buffer), 0);
+      length = recv(socket_list[3].handle, rx_buffer, sizeof(rx_buffer), 0);
       if ( length > 0 )
       {
         tcpip_socket_2_queue(rx_buffer, length);
@@ -838,7 +840,7 @@ void tcpip_accept_poll(void *parameters)
   struct sockaddr_storage source_addr; // Large enough for both IPv4 or IPv6
   socklen_t               addr_len = sizeof(source_addr);
   int                     sock;
-  int                     i;
+  int                     i, j;
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "tcp_accept_poll()");))
 
@@ -847,7 +849,8 @@ void tcpip_accept_poll(void *parameters)
    */
   for ( i = 0; i != MAX_SOCKETS; i++ )
   {
-    socket_list[i] = AVAILABLE_SOCKET;
+    socket_list[i].handle = AVAILABLE_SOCKET; // Make it available
+    socket_list[i].ip[0]  = 0;                // No IP yet
   }
 
   struct sockaddr_in *dest_addr_ip4 = (struct sockaddr_in *)&dest_addr;
@@ -856,11 +859,11 @@ void tcpip_accept_poll(void *parameters)
   dest_addr_ip4->sin_port           = htons(PORT);
   ip_protocol                       = IPPROTO_IP;
 
-  listen_sock = socket(AF_INET, SOCK_STREAM, ip_protocol);
+  listen_sock = socket(AF_INET, SOCK_STREAM, ip_protocol); // WE need to have a socket
   if ( listen_sock < 0 )
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Unable to create socket: errno %d\r\n", errno);))
-    vTaskDelete(NULL);
+    vTaskDelete(NULL);                                     // No sockets?  Cannot run
     return;
   }
 
@@ -879,27 +882,46 @@ void tcpip_accept_poll(void *parameters)
     {
       for ( i = 0; i != MAX_SOCKETS; i++ )
       {
-        if ( socket_list[i] == AVAILABLE_SOCKET )                           // FInd an available socket
+        if ( socket_list[i].handle == AVAILABLE_SOCKET )                    // FInd an available socket
         {
-          socket_list[i] = sock;
-          and connect to it.WiFi_start_new_connection(sock);
+          socket_list[i].handle = sock;                                     //  and connect to it.
+          WiFi_start_new_connection(sock);
           break;
         }
       }
 
       /*
-       * Set tcp keepalive option
+       * Got a socket, and we have enough room to add it
        */
-      setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &keepAlive, sizeof(int));
-      setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE, &keepIdle, sizeof(int));
-      setsockopt(sock, IPPROTO_TCP, TCP_KEEPINTVL, &keepInterval, sizeof(int));
-      setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT, &keepCount, sizeof(int));
-
-      DLT(DLT_INFO, {
+      if ( i != MAX_SOCKETS )
+      {
+        /*
+         *  Is this a duplicate?  ie, the socket dropped and we don't know about it
+         */
         inet_ntoa_r(((struct sockaddr_in *)&source_addr)->sin_addr, addr_str, sizeof(addr_str) - 1);
-        SEND(ALL, sprintf(_xs, "Socket accepted ip address: %s\r\n", addr_str);)
-      })
-      set_status_LED(LED_WIFI_STATION_CN);
+        for ( j = 0; j != MAX_SOCKETS; j++ )
+        {
+          if ( strcmp(&socket_list[j].ip[0], addr_str) == 0 ) // Do we have duplicate?
+          {
+            lwip_close(socket_list[j].handle);                // Close this connection
+            socket_list[j].handle = AVAILABLE_SOCKET;         // Free up the connection
+            socket_list[j].ip[0]  = 0;                        // Forget the IP
+            DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Duplicate socket connection from %s", addr_str);))
+          }
+        }
+        strcpy(&socket_list[i].ip[0], addr_str);              // Remember this IP address
+
+        /*
+         * Set tcp keepalive option
+         */
+        setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &keepAlive, sizeof(int));
+        setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE, &keepIdle, sizeof(int));
+        setsockopt(sock, IPPROTO_TCP, TCP_KEEPINTVL, &keepInterval, sizeof(int));
+        setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT, &keepCount, sizeof(int));
+
+        DLT(DLT_INFO, { SEND(ALL, sprintf(_xs, "Socket accepted ip address: %s\r\n", addr_str);) })
+        set_status_LED(LED_WIFI_STATION_CN);
+      }
     }
   }
 
@@ -936,7 +958,7 @@ static void WiFi_start_new_connection(int sock) // Socket token to use
   connection_list &= ~(TCPIP);
   for ( i = 0; i != MAX_SOCKETS; i++ ) // How many connections do we have?
   {
-    if ( socket_list[i] != AVAILABLE_SOCKET )
+    if ( socket_list[i].handle != AVAILABLE_SOCKET )
     {
       connection_list = (TCPIP_0) << i;
     }
@@ -1013,7 +1035,9 @@ void WiFi_loopback_task(void *parameters)
 
 /*****************************************************************************
  *
- * @function: WiFi_my_IP_address()
+ * @function: WiFi_my_IP_address() // My IP address
+ *            WiFi_remote_IP_address() // URL address
+ *            WiFi_show_connections() // Show devices connected to me
  *
  * @brief:    Return the IP address as a string
  *
@@ -1033,13 +1057,27 @@ bool WiFi_my_IP_address(char *s // Where to return the string
 }
 
 #if ( BUILD_HTTP || BUILD_HTTPS || BUILD_SIMPLE )
-void WiFi_remote_IP_address(char *s // Where to return the string
-)
+void WiFi_remote_IP_address(char *s) // Where to return the string
 {
   sprintf(s, "%d.%d.%d.%d", TO_IP(url_ip_address.u_addr.ip4.addr));
   return;
 }
 #endif
+
+void WiFi_show_connections(void)
+{
+  int i;
+
+  for ( i = 0; i != MAX_SOCKETS; i++ )
+  {
+    if ( socket_list[i].handle > 0 )
+    {
+      SEND(ALL, sprintf(_xs, "\r\n\"Socket\": %d, \"Handle\": %d, \"IP\": \"%s\"", i, socket_list[i].handle, &socket_list[i].ip[0]);)
+    }
+  }
+
+  return;
+}
 
 /*****************************************************************************
  *

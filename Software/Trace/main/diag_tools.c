@@ -34,6 +34,7 @@
 #include "timer.h"
 #include "BMI270.h"
 #include "IMU.h"
+#include "ntp.h"
 
 extern volatile time_count_64_t paper_time;
 
@@ -424,7 +425,7 @@ bool do_dlt(           //
     {
       dlt_id = dlt_names[i].dlt_id;               // Use the Verbose ID
 
-      SEND(CONSOLE, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, run_time_us() / 1000000.);)
+      SEND(CONSOLE, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, (real_t)NTP_time_s()/1000.0);)
 
       return true;                                // Send out the message
     }

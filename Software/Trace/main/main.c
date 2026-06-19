@@ -25,6 +25,7 @@
 #include "wifi.h"
 #include "diag_tools.h"
 #include "http_client.h"
+#include "NTP.h"
 
 /*
  * Task Priorities

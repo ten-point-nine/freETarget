@@ -54,13 +54,14 @@ extern char                 input_JSON[];
 #define MFS_DISPLAY 0x04                               // Display as MFS
 #define IS_FIXED    (1 << 8)                           // The value cannot be changed
 #define IS_FLOAT    (2 << 8)                           // Value is a real_ting point number
-#define IS_INT32    (3 << 8)                           // Value is a 64 bit int
-#define IS_SECRET   (4 << 8)                           // Value is a string but hidden
-#define IS_TEXT     (5 << 8)                           // Value is a string
-#define IS_MFS      (6 << 8)                           // Value is a multifunction switch
-#define IS_TEXT_1   (7 << 8)                           // Used only on first connection
-#define IS_VOID     (8 << 8)                           // Value is a void
-#define IS_TIME     (9 << 8)                           // Value is time
+#define IS_INT32    (3 << 8)                           // Value is a 32 bit int
+#define IS_INT64    (4 << 8)                           // Value is a 64 bit int
+#define IS_SECRET   (5 << 8)                           // Value is a string but hidden
+#define IS_TEXT     (6 << 8)                           // Value is a string
+#define IS_MFS      (7 << 8)                           // Value is a multifunction switch
+#define IS_TEXT_1   (8 << 8)                           // Used only on first connection
+#define IS_VOID     (9 << 8)                           // Value is a void
+#define IS_TIME     (10 << 8)                          // Value is time
 #define IS_ARRAY    (1 << (8 + 4))                     // Value is part of an array
 #define IS_FIRST    (999)                              // Reset the pointers
 #define FLOAT_SCALE 1000.0                             // Floats are stored as 1000x integer

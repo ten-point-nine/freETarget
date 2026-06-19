@@ -44,16 +44,16 @@ static void set_trace(int v);                                                  /
 static void unlock_target(unsigned int password);                              // Unlock the target
 static void lock_target(unsigned int password);                                // Lock the target
 static bool good_input(unsigned int conversion, char next, unsigned int show); // Determine if the input is valid
+void        show_echo(void);                                                   // Display the current settings
+static void show_names(int v);
+static void set_trace(int v);                                                  // Set the trace on and off
+static void set_50m(int x);                                                    // Configure for 50m pistol
 
 /*
  *  Variables
  */
-char input_JSON[EXTRA_LARGE_STRING]; // JSON input buffer
-
-void        show_echo(void);         // Display the current settings
-static void show_names(int v);
-static void set_trace(int v);        // Set the trace on and off
-static void set_50m(int x);          // Configure for 50m pistol
+char                   input_JSON[EXTRA_LARGE_STRING]; // JSON input buffer
+extern time_count_64_t NTP_server_time;                // Time in the server
 
 const json_message_t JSON[] = {
     //  show     token        value stored in RAM             convert                 service fcn()     NONVOL location      Initial Value
@@ -84,10 +84,10 @@ const json_message_t JSON[] = {
     {SHOW + LOCK, "\"MIN_RING_TIME\":",  &json_min_ring_time,         IS_INT32,                 0,                  NONVOL_MIN_RING_TIME,       500,        0 },
     {SHOW + LOCK, "\"NAME_ID\":",        &json_name_id,               IS_INT32,                 &show_names,        NONVOL_NAME_ID,             0,          0 },
     {SHOW + LOCK, "\"NAME_TEXT\":",      (int *)&json_name_text,      IS_TEXT + SSID_SIZE,      &show_names,        NONVOL_NAME_TEXT,           0,          8 },
-    {HIDE,        "\"NTP_ASK\"",         0,                           IS_VOID,                  &NTP_master,        0,                          0,          0 }, // Slave asks for a time sync
-    {HIDE,        "\"NTP_MASTER\"",      0,                           IS_VOID,                  &NTP_slave,         0,                          0,          0 }, // Target to Trace NTP
-    {HIDE,        "\"NTP_PERIOD\"",       &json_NTP_period,             IS_INT32,                 0,                 0,                          0,          0 }, // Time between sync
-    {HIDE,        "\"NTP_SLAVE\"",       0,                           IS_VOID,                  &NTP_offset,        0,                          0,          0 }, // Trace to Target NTP
+    {HIDE,        "\"NTP_ASK\"",         0,                           IS_VOID,                  &NTP_ask,           0,                          0,          0 }, // Ask to start a time sycn
+    {HIDE,        "\"NTP_CLIENT\":",     &NTP_server_time,            IS_INT64,                 &NTP_client,        0,                          0,          0 }, // Trace to Target NTP
+    {SHOW,        "\"NTP_PERIOD\"",      &json_NTP_period,            IS_INT32,                 0,                  0,                          0,          0 }, // Time between sync
+    {HIDE,        "\"NTP_SERVER\"",      0,                           IS_VOID,                  &NTP_server,        0,                          0,          0 }, // Ask the server for time
     {HIDE + LOCK, "\"OTA\"",             0,                           0,                        &OTA_load_json,     0,                          0,          0 },
     {SHOW + LOCK, "\"OTA_URL\":",        (int *)&json_ota_url,        IS_TEXT + URL_SIZE,       0,                  NONVOL_OTA_URL,             0,          11},
     {HIDE,        "\"P\"",               0,                           IS_VOID,                  &paper_start,       0,                          0,          0 },
@@ -297,13 +297,14 @@ void freeETarget_json(void *pvParameters)
  *-----------------------------------------------------*/
 static void handle_json(void)
 {
-  int   x;
-  float f;
-  int   i, j, k;
-  char  s[64];          // Place to store a string
-  int   m;
+  int             x;
+  float           f;
+  int             i, j, k;
+  char            s[64]; // Place to store a string
+  int             m;
+  time_count_64_t x64;   // 64 bit time
 
-  run_state |= IN_HTTP; // Parsing a JON string
+  run_state |= IN_HTTP;  // Parsing a JON string
 
   /*
    * Found out where the braces are, extract the contents.
@@ -381,27 +382,40 @@ static void handle_json(void)
               }
               if ( JSON[j].value != 0 )
               {
-                *JSON[j].value = x;                         // Save the value
+                *JSON[j].value = x;                           // Save the value
               }
               if ( JSON[j].non_vol != 0 )
               {
-                nvs_set_i32(my_handle, JSON[j].non_vol, x); // Store into NON-VOL
+                nvs_set_i32(my_handle, JSON[j].non_vol, x);   // Store into NON-VOL
               }
 
               break;
 
-            case IS_FLOAT:                                  // Convert a floating point number
-
-              f = atof(&input_JSON[i + k]);                 // Float
-              x = f * FLOAT_SCALE;                          // Integer
+            case IS_INT64:                                    // Convert a 64 bit integer
+              sscanf(&input_JSON[i + k], PRId64, &x64);
+              printf("IS_INT64 %s %lld", &input_JSON[i + k], x64);
               if ( JSON[j].value != 0 )
               {
-                *(double *)JSON[j].value = f;               // Working Value
+                *(int64_t *)(JSON[j].value) = x64;            // Save the value
+              }
+              if ( JSON[j].non_vol != 0 )
+              {
+                nvs_set_i64(my_handle, JSON[j].non_vol, x64); // Store into NON-VOL
+              }
+              break;
+
+            case IS_FLOAT:                                    // Convert a floating point number
+
+              f = atof(&input_JSON[i + k]);                   // Float
+              x = f * FLOAT_SCALE;                            // Integer
+              if ( JSON[j].value != 0 )
+              {
+                *(double *)JSON[j].value = f;                 // Working Value
               }
               if ( JSON[j].non_vol != 0 )
               {
                 nvs_set_i32(my_handle, JSON[j].non_vol,
-                            x);                             // Store into NON-VOL as an integer * 1000
+                            x);                               // Store into NON-VOL as an integer * 1000
               }
 
               break;
@@ -509,6 +523,10 @@ void show_echo(void)
           SEND(ALL, sprintf(_xs, "%-18s %d, ", JSON[i].token, *JSON[i].value);)
           break;
 
+        case IS_INT64:
+          SEND(CONSOLE, sprintf(_xs, "%-18s %lld, ", JSON[i].token, *(int64_t *)(JSON[i].value));)
+          break;
+
         case IS_FLOAT:
           SEND(ALL, sprintf(_xs, "%-18s %6.2f, ", JSON[i].token, *(double *)JSON[i].value);)
           break;
@@ -530,6 +548,7 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"RUN_STATE\":         %d,", run_state);)                    // Internal running state is enabled
   SEND(ALL, sprintf(_xs, "\"CONNECTION_LIST\":   %02X,", connection_list);)            // Who is attached
   SEND(ALL, sprintf(_xs, "\"RUNNING_MINUTES\":   %0.2f,", run_time_seconds() / 60.0);) // On Time
+  SEND(ALL, sprintf(_xs, "\"NETWORK_TIME\":      %lld,", NTP_time_us());)              // Network  time
   SEND(ALL, sprintf(_xs, "\"TIME_TO_SLEEP\":     %4.2f,", (float)power_save / (float)(ONE_SECOND * 60));) // How long until we sleep
   SEND(ALL, sprintf(_xs, "\"TEMPERATURE\":       %4.2f,", temperature_C());)                              // Temperature in degrees C
   SEND(ALL, sprintf(_xs, "\"RELATIVE_HUMIDITY\": %4.2f,", humidity_RH());)
@@ -594,10 +613,12 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"BD_REV\":            %d.%d.%d", (revision() / 100), ((revision() % 100) / 10),
                     (revision() % 10));)                                                              // Current board version
   SEND(ALL, sprintf(_xs, "\"SPLINE FIT\":        %s,", calibration_is_valid ? "\"Yes\"" : "\"No\"");) // Current persistent storage version
-                                                                                                      /*
-                                                                                                       *  All done, return
-                                                                                                       */
-  serial_to_all(_xs, EVEN_ODD_END);                                                                   // End the even odd line
+
+  WiFi_show_connections();
+  /*
+   *  All done, return
+   */
+  serial_to_all(_xs, EVEN_ODD_END); // End the even odd line
   SEND(ALL, sprintf(_xs, "}\r\n");)
 
   return;

@@ -293,7 +293,7 @@ void trace_health_monitor(void)
    */
   if ( NTP_ttg() )
   {
-    NTP_master();
+    NTP_ask();
   }
 
   /*

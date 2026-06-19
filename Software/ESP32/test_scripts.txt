@@ -16,7 +16,10 @@ Reinitialize the board {"INIT":0}
 { "WIFI_SSID": "",  "WIFI_PWD": "", "NAME_ID": 4}
 {"KEEP_ALIVE":60}
 
-10 minutes {"NTP_PERIOD": 1000}
+10 minutes {"TRACE":64, "NTP_PERIOD": 1000, "NTP_ASK"}
+Debug and communication trace {"TRACE":64, "TRACE":16}
+Debug trace {"TRACE":64}
+Start an NTP transaction {"NTP_ASK"}
 
 //
 // Witness Paper Settings 
@@ -30,6 +33,7 @@ Practice witness paper { "PAPER_TIME":125, "PAPER_ECO":40, "PAPER_SHOT":4}
 {"WIFI_SSID":"FSixC! Box FE":, "WIFI_PWD":":1234512345123451234512345"}
 
 Firmware debug trace   { "TRACE":16, "TRACE":32, "TRACE":64, "TEST":142}
+Firmware debug trace   {"TRACE":64}
 
 Turn on RS488 {"AUX_MODE":8}
 

@@ -40,11 +40,9 @@ static bool good_input(unsigned int conversion, char next, unsigned int show); /
 /*
  *  Variables
  */
-char input_JSON[EXTRA_LARGE_STRING]; // JSON input buffer
+extern time_count_64_t NTP_server_time; // Time reference
 
-void        show_echo(void);         // Display the current settings
-static void show_names(int v);
-static void set_trace(int v);        // Set the trace on and off
+char input_JSON[EXTRA_LARGE_STRING];    // JSON input buffer
 
 const json_message_t JSON[] = {
     //  show     token               value stored in RAM           convert   service fcn()   NONVOL location         Initial Value
@@ -53,10 +51,10 @@ const json_message_t JSON[] = {
     {HIDE, "\"X\":",                &json_x,                         IS_FLOAT,            0,             0,                         0,      0}, // X coordinate of shot
     {HIDE, "\"Y\":",                &json_y,                         IS_FLOAT,            0,             0,                         0,      0}, // Y coordinate of shot
     {HIDE, "\"T\":",                &json_timestamp,                 IS_INT32,            &trace_build,  0,                         0,      0}, // Time stamp of shot
-    {HIDE, "\"NTP_ASK\"",           0,                               IS_VOID,             &NTP_master,   0,                         0,      0}, // Ask to start a time sycn
-    {HIDE, "\"NTP_MASTER\"",        0,                               IS_VOID,             &NTP_slave,    0,                         0,      0}, // Target to Trace NTP
-    {HIDE, "\"NTP_PERIOD\"",        &json_NTP_period,                IS_INT32,            0,             0,                         0,      0}, // Time between sync
-    {HIDE, "\"NTP_SLAVE\"",         0,                               IS_VOID,             &NTP_offset,   0,                         0,      0}, // Trace to Target NTP
+    {HIDE, "\"NTP_ASK\"",           0,                               IS_VOID,             &NTP_ask,      0,                         0,      0}, // Ask to start a time sycn
+    {HIDE, "\"NTP_CLIENT\":",       &NTP_server_time,                IS_INT64,            &NTP_client,   0,                         0,      0}, // Trace to Target NTP
+    {SHOW, "\"NTP_PERIOD\"",        &json_NTP_period,                IS_INT32,            0,             0,                         0,      0}, // Time between sync
+    {HIDE, "\"NTP_SERVER\"",        0,                               IS_VOID,             &NTP_server,   0,                         0,      0}, // Target to Trace NTP
 
     {SHOW, "\"DISTANCE\":",         (int *)&json_distance_to_target, IS_FLOAT,            0,             NONVOL_DISTANCE_TO_TARGET, 10000,  0},
     {SHOW, "\"MUZZLE_VELOCITY\":",  (int *)&json_muzzle_velocity,    IS_FLOAT,            0,             NONVOL_MUZZLE_VELOCITY,    17500,  0},
@@ -231,11 +229,12 @@ void trace_json(void *pvParameters)
  *-----------------------------------------------------*/
 static void handle_json(void)
 {
-  int   x;
-  float f;
-  int   i, j, k;
-  char  s[64]; // Place to store a string
-  int   m;
+  int     x;
+  int64_t x64;
+  float   f;
+  int     i, j, k;
+  char    s[64]; // Place to store a string
+  int     m;
 
   /*
    * Found out where the braces are, extract the contents.
@@ -295,8 +294,24 @@ static void handle_json(void)
 
               break;
 
+            case IS_INT64:                                  // Convert a 64 bit integer
+              printf("here");
+#if ( 0 )
+              sscanf(&input_JSON[i + k], PRId64, &x64);
+              printf("IS_INT64 %s %lld", &input_JSON[i + k], x64);
+              if ( JSON[j].value != 0 )
+              {
+                *(int64_t *)(JSON[j].value) = x64;                                                                    // Save the value
+              }
+              if ( JSON[j].non_vol != 0 )
+              {
+                nvs_set_i64(my_handle, JSON[j].non_vol, x64);                                                         // Store into NON-VOL
+              }
+#endif
+              break;
+
             case IS_MFS:
-            case IS_INT32:                                  // Convert an integer
+            case IS_INT32:                                                                                            // Convert an integer
 
               if ( (input_JSON[i + k] == '0') && ((input_JSON[i + k + 1] == 'X') || (input_JSON[i + k + 1] == 'x')) ) // Is it Hex?
               {
@@ -414,6 +429,10 @@ void show_echo(void)
           SEND(CONSOLE, sprintf(_xs, "%-18s %d, ", JSON[i].token, *JSON[i].value);)
           break;
 
+        case IS_INT64:
+          SEND(CONSOLE, sprintf(_xs, "%-18s %lld, ", JSON[i].token, *(int64_t *)(JSON[i].value));)
+          break;
+
         case IS_FLOAT:
           SEND(CONSOLE, sprintf(_xs, "%-18s %6.2f, ", JSON[i].token, *(real_t *)JSON[i].value);)
           break;
@@ -438,7 +457,7 @@ void show_echo(void)
   SEND(CONSOLE, sprintf(_xs, "\"WiFi_MODE\":         \"Connected to %s\",", (char *)&json_wifi_ssid);)
 
   SEND(CONSOLE, sprintf(_xs, "\"RUN_STATE\":        0X%04X, ", run_state);)    // Current software version
-
+  SEND(ALL, sprintf(_xs, "\"NETWORK_TIME\":      %lld,", NTP_time_us());)      // Network  time
   trace_statistics();
   SEND(CONSOLE, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);) // Current software version
   SEND(CONSOLE, sprintf(_xs, "\"BOARD REVISION\":   %d, ", board_revision);)   // Current board version

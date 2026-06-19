@@ -796,7 +796,7 @@ void watchdog(void)
    */
   if ( NTP_ttg() )
   {
-    NTP_master();
+    NTP_ask();
   }
 
   /*

@@ -75,10 +75,10 @@ static EventGroupHandle_t           s_wifi_event_group;
 static esp_event_handler_instance_t instance_any_id;
 static esp_event_handler_instance_t instance_got_ip;
 static int                          s_retry_num = 0;
-static esp_netif_ip_info_t          ipInfo;            // IP Address of the access point
-static esp_netif_t                 *sta_netif;         // Station configuration
-static int                          client_socket = 0; // Socket used to talk to the target
-static int                          unget_c       = 0; // Character to unget
+static esp_netif_ip_info_t          ipInfo;                           // IP Address of the access point
+static esp_netif_t                 *sta_netif;                        // Station configuration
+static int                          client_socket = AVAILABLE_SOCKET; // Socket used to talk to the target
+static int                          unget_c       = 0;                // Character to unget
 
 /*
  * Private Functions
@@ -191,6 +191,7 @@ void WiFi_station_init(void)
   esp_wifi_set_mode(WIFI_MODE_STA);
   esp_wifi_set_config(WIFI_IF_STA, &WiFi_config);
   esp_wifi_start(); // Start the WiFi
+  esp_wifi_set_ps(WIFI_PS_NONE);
 
   /*
    * Wait here for an event to occur
@@ -453,6 +454,7 @@ void WiFi_AP_scan_test(void)
 bool WiFi_client_init(void)
 {
   struct sockaddr_in dest_addr;
+  int                i;
 
   /*
    *  Check to see if we are already connected
@@ -462,29 +464,32 @@ bool WiFi_client_init(void)
     return true;
   }
 
-  if ( client_socket > 0 )
-  {
-    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Closing existing socket");))
-    close(client_socket);
-  }
-
   /*
    *  Not connected, then connect
    */
-  memset((void *)&dest_addr, 0, sizeof(dest_addr));
-  dest_addr.sin_len         = sizeof(dest_addr);
-  dest_addr.sin_addr.s_addr = inet_addr(json_wifi_target_ip);
-  dest_addr.sin_family      = AF_INET;
-  dest_addr.sin_port        = lwip_htons(1090);
-
-  /*
-   *   Create the socket
-   */
-  client_socket = lwip_socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-  if ( client_socket < 0 )
+  if ( client_socket <= 0 )
   {
-    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Unable to create socket: errno %d", errno);))
-    return false;
+    memset((void *)&dest_addr, 0, sizeof(dest_addr));
+    dest_addr.sin_len         = sizeof(dest_addr);
+    dest_addr.sin_addr.s_addr = inet_addr(json_wifi_target_ip);
+    dest_addr.sin_family      = AF_INET;
+    dest_addr.sin_port        = lwip_htons(1090);
+
+    /*
+     *   Create the socket
+     */
+    client_socket = lwip_socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+    if ( client_socket < 0 )
+    {
+      DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Unable to create socket: errno %d", errno);))
+      return false;
+    }
+  }
+  else
+  {
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Keeping socket: %d", client_socket);))
+    close(client_socket);
+    vTaskDelay(2);
   }
 
   /*
@@ -492,8 +497,7 @@ bool WiFi_client_init(void)
    */
   if ( lwip_connect(client_socket, (struct sockaddr *)&dest_addr, sizeof(dest_addr)) != 0 )
   {
-    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Socket unable to connect: errno %d", errno);))
-    close(client_socket);
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Socket unable to connect to %s:%d: errno %d", json_wifi_target_ip, 1090, errno);))
     return false;
   }
 
@@ -548,7 +552,7 @@ int WiFi_available(void)
   {
     if ( errno == ENOTCONN )
     {
-      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Target not connected %d", errno);))
+      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "available(): target not connected %d", errno);))
       run_state &= ~TARGET_CONNECTED;                      // Nothing, no connection
     }
     unget_c = 0;
@@ -580,7 +584,7 @@ int WiFi_putch(char ch)
     {
       run_state &= ~TARGET_CONNECTED; // Tried to send, but nothing went out
     }
-    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "disconnected %d", errno);))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "putch(): target not connected %d", errno);))
     printf("\r\nputch\r\n");
 
     return -1;
@@ -611,7 +615,7 @@ char WiFi_getch(void)
   {
     if ( errno == ENOTCONN )
     {
-      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Target disconnected");))
+      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "getch(): target disconnected");))
       run_state &= ~TARGET_CONNECTED;                       // tried to read, but nothing
     }
     return 0;
@@ -636,6 +640,7 @@ int WiFi_puts(char *s,                                      // String to output
     if ( errno == ENOTCONN )
     {
       run_state &= ~TARGET_CONNECTED; // Tried to send, but nothing went out
+      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "puts(): target not connected %d", errno);))
     }
     return 0;
   }
