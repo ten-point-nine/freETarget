@@ -59,16 +59,6 @@ const int uart_xoff_threshold = (128 - 16); // 128 is the size of the hardware F
 
 QueueHandle_t uart_console_queue;
 
-typedef struct queue_struct
-{
-  char queue[1024];                         // Holding queue
-  int  in;                                  // Index of input characters
-  int  out;                                 // Index of output characters
-} queue_struct_t;
-
-// static queue_struct_t in_buffer;            // TCPIP input buffer
-// static queue_struct_t out_buffer;           // TCPIP input buffer
-
 /******************************************************************************
  *
  * @function: serial_io_init
@@ -229,7 +219,8 @@ char serial_getch(int ports) // Bit mask of active ports
    */
   if ( ports & TARGET )
   {
-    return WiFi_getch();
+    ch = WiFi_getch();
+    return ch;
   }
 
   /*

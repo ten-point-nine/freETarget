@@ -425,7 +425,7 @@ bool do_dlt(           //
     {
       dlt_id = dlt_names[i].dlt_id;               // Use the Verbose ID
 
-      SEND(CONSOLE, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, (real_t)NTP_time_s()/1000.0);)
+      SEND(CONSOLE, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, (real_t)NTP_time_ms()/1000.0);)
 
       return true;                                // Send out the message
     }

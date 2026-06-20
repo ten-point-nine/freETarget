@@ -110,7 +110,6 @@ void NTP_server(void)
 {
   NTP_base_time = esp_timer_get_time();                                    // Send the server time
   SEND(TCPIP, sprintf(_xs, "{\"%s\":%lld}", _NTP_CLIENT_, NTP_base_time);) // back to the client
-  printf("printf(%s)", _xs);
   DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "Server time: %lld", NTP_base_time);))
   return;
 }

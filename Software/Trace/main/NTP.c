@@ -87,8 +87,8 @@ bool NTP_ttg(void)
 void NTP_ask(void)
 {
   NTP_start_time = esp_timer_get_time();
-  SEND(TARGET, sprintf(_xs, "{\"%s\"}", _NTP_SERVER_);) // Trigger the server
-  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "NTP_ASK: %s", _NTP_SERVER_);))
+  SEND(TARGET, sprintf(_xs, "{\"%s\"}", _NTP_SERVER_);) // Ask the server
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "NTP_ASK: %lld", NTP_start_time);))
   return;
 }
 
@@ -110,7 +110,7 @@ void NTP_server(void)
 {
   NTP_base_time = esp_timer_get_time();                                     // Send the server time
   SEND(TARGET, sprintf(_xs, "{\"%s\":%lld}", _NTP_CLIENT_, NTP_base_time);) // back to the client
-  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "{\"%s\":%lld}", _NTP_CLIENT_, NTP_base_time);))
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "Server time: %lld", NTP_base_time);))
   return;
 }
 
@@ -134,17 +134,19 @@ void NTP_server(void)
  *---------------------------------------------------*/
 void NTP_client(void)
 {
-  NTP_offset_time     = (esp_timer_get_time() - NTP_base_time) / 2; // The time for the loop
-  NTP_base_time       = NTP_server_time - esp_timer_get_time();     // Time between client and server
-  sync_time_remaining = json_NTP_period;                            // Reset the watchdog
-  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "NTP Base_time :%lld   NTP offset:%lld   NTP network time: %lld", NTP_base_time, NTP_offset_time,
-                                       NTP_time_us());))
+  NTP_offset_time     = (esp_timer_get_time() - NTP_start_time) / 2; // The time for the loop
+  NTP_base_time       = NTP_server_time - esp_timer_get_time();      // Time between client and server
+  sync_time_remaining = json_NTP_period;                             // Reset the watchdog
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "ESP32: %lld  NTP Base_time :%lld   NTP offset:%lld   NTP network time: %lld",
+                                       esp_timer_get_time(), NTP_base_time, NTP_offset_time, NTP_time_us());))
   return;
 }
 
 time_count_64_t NTP_time_us(void)
 {
-  return (esp_timer_get_time() - NTP_base_time + NTP_offset_time);
+  return esp_timer_get_time() // What time is it here
+         + NTP_base_time      // What is the offset to the target
+         + NTP_offset_time;   // The for the message to get here);
 }
 
 time_count_64_t NTP_time_ms(void)

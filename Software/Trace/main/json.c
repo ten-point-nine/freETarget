@@ -135,7 +135,7 @@ void trace_json(void *pvParameters)
     while ( serial_available(ALL) != 0 ) // Something waiting for us?
     {
       ch = serial_getch(ALL);
-      if ( is_trace & DLT_DEBUG )
+      // if ( is_trace & DLT_DEBUG )
       {
         printf("%c", ch);
       }
@@ -181,9 +181,6 @@ void trace_json(void *pvParameters)
           }
           input_JSON[in_JSON] = 0;    // Null terminate
           break;
-
-        case '*':                     // Connected to PC over BT or Wifi
-          POST_version();
 
         case '^':                     // Special case for European keyboards which have a different "*" key
           ch = '"';                   // Convert and fall through
@@ -295,10 +292,13 @@ static void handle_json(void)
               break;
 
             case IS_INT64:                                  // Convert a 64 bit integer
-              printf("here");
-#if ( 0 )
-              sscanf(&input_JSON[i + k], PRId64, &x64);
-              printf("IS_INT64 %s %lld", &input_JSON[i + k], x64);
+              x64 = 0;
+              while ( (input_JSON[i + k] != '}') && (input_JSON[i + k] != ',') && (input_JSON[i + k] != ' ') && (input_JSON[i + k] != 0) )
+              {
+                x64 *= 10l;
+                x64 += input_JSON[i + k] - 0x30l;
+                k++;
+              }
               if ( JSON[j].value != 0 )
               {
                 *(int64_t *)(JSON[j].value) = x64;                                                                    // Save the value
@@ -307,7 +307,6 @@ static void handle_json(void)
               {
                 nvs_set_i64(my_handle, JSON[j].non_vol, x64);                                                         // Store into NON-VOL
               }
-#endif
               break;
 
             case IS_MFS:

@@ -68,6 +68,16 @@
 #define ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_OPEN
 
 /*
+ * Typdef
+ */
+typedef struct queue_struct
+{
+  char queue[1024]; // Holding queue
+  int  in;          // Index of input characters
+  int  out;         // Index of output characters
+} queue_struct_t;
+
+/*
  * Variables
  */
 static wifi_config_t                WiFi_config;
@@ -78,17 +88,15 @@ static int                          s_retry_num = 0;
 static esp_netif_ip_info_t          ipInfo;                           // IP Address of the access point
 static esp_netif_t                 *sta_netif;                        // Station configuration
 static int                          client_socket = AVAILABLE_SOCKET; // Socket used to talk to the target
-static int                          unget_c       = 0;                // Character to unget
 
+static queue_struct_t in_buffer;                                      // TCPIP input buffer
+static queue_struct_t out_buffer;                                     // TCPIP input buffer
 /*
  * Private Functions
  */
 void      WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 esp_err_t esp_base_mac_addr_get(uint8_t *mac);
 
-/*
- * Definitions
- */
 /*****************************************************************************
  *
  * @function: WiFi_reconnect()
@@ -281,19 +289,6 @@ void WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id
       xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     }
   }
-  /*
-   * I am an access point
-   */
-  if ( event_id == WIFI_EVENT_AP_STACONNECTED )
-  {
-    DLT(DLT_COMMUNICATION, SEND(CONSOLE, sprintf(_xs, "AP connected");))
-  }
-
-  if ( event_id == WIFI_EVENT_AP_STADISCONNECTED )
-  {
-    DLT(DLT_COMMUNICATION, SEND(CONSOLE, sprintf(_xs, "AP disconnected");))
-  }
-
   /*
    * All done, return
    */
@@ -513,6 +508,7 @@ bool WiFi_client_init(void)
  *
  * @function: WiFi_available
  *            WiFi_putc
+ *            WiFi_puts
  *            WiFi_getc
  *
  * @brief:    Primitive TCPIP send and receive
@@ -521,52 +517,25 @@ bool WiFi_client_init(void)
  *
  ****************************************************************************
  *
- * Look to see if there is an unget character waiting, if there is, then
- * return 1 to show one character available.
- *
- * If not, read the next character from the queue and remember it.
+ * WiFI_available eturn a difference between the in and out pointers
+ * WiFi_putc - Send a character directly to the LWIP socket
+ * WiFi_puts - Send a string directly to the LWIP socket
+ * WiFi_getts - Pu;; a buffer from the queue
  *
  ***************************************************************************/
-#define UNGET_C 0x100
 
 int WiFi_available(void)
 {
-  char ch;
-  int  length; // Number of characters received
+  int ch;
 
   DLT(DLT_COMMUNICATION, SEND(CONSOLE, sprintf(_xs, "WiFi_available()");))
 
   IF_NOT(TARGET_CONNECTED)
   {
-    unget_c = 0;
     return 0;
   }
 
-  if ( unget_c & UNGET_C )                                 // Is there a character waiting for us?
-  {
-    return 1;                                              // Yes, return 1
-  }
-
-  length = lwip_recv(client_socket, &ch, 1, MSG_DONTWAIT); // Try to read the buffer
-  if ( length < 0 )                                        // Less than 0, no connection
-  {
-    if ( errno == ENOTCONN )
-    {
-      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "available(): target not connected %d", errno);))
-      run_state &= ~TARGET_CONNECTED;                      // Nothing, no connection
-    }
-    unget_c = 0;
-    return 0;
-  }
-
-  if ( (length == 0) || (ch == 0) )                        // There is a connection, but nothing waiting
-  {
-    unget_c = 0;
-    return 0;
-  }
-
-  unget_c = UNGET_C | ch;                                  // Remember what is waiting
-  return 1;
+  return (in_buffer.in != in_buffer.out);
 }
 
 int WiFi_putch(char ch)
@@ -590,49 +559,18 @@ int WiFi_putch(char ch)
     return -1;
   }
 
-  return 1; // Succeeded in sending
+  return 1;                // Succeeded in sending
 }
 
-char WiFi_getch(void)
-{
-  char ch;
-
-  DLT(DLT_COMMUNICATION, SEND(CONSOLE, sprintf(_xs, "WiFi_getch()");))
-
-  IF_NOT(TARGET_CONNECTED)                                  // Not connected
-  {
-    return 0;                                               // Return nothing
-  }
-
-  if ( (unget_c & UNGET_C) != 0 )                           // Is there a character waiting?
-  {
-    ch      = unget_c & ~UNGET_C;
-    unget_c = 0;
-    return ch;                                              // Yes, return it and forget we have anything
-  }
-
-  if ( lwip_recv(client_socket, &ch, 1, MSG_DONTWAIT) < 0 ) // Try  to read the port directly
-  {
-    if ( errno == ENOTCONN )
-    {
-      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "getch(): target disconnected");))
-      run_state &= ~TARGET_CONNECTED;                       // tried to read, but nothing
-    }
-    return 0;
-  }
-
-  return ch;                                                // Got something
-}
-
-int WiFi_puts(char *s,                                      // String to output
-              int   length)                                   // Length of string
+int WiFi_puts(char *s,     // String to output
+              int   length)  // Length of string
 {
 
   DLT(DLT_COMMUNICATION, SEND(CONSOLE, sprintf(_xs, "WiFi_puts(%s)", s);))
 
-  IF_NOT(TARGET_CONNECTED)                                  // Not connected
+  IF_NOT(TARGET_CONNECTED) // Not connected
   {
-    return 0;                                               // Return nothing
+    return 0;              // Return nothing
   }
 
   if ( lwip_send(client_socket, s, length, MSG_DONTWAIT) == 0 )
@@ -648,6 +586,50 @@ int WiFi_puts(char *s,                                      // String to output
   return length;                      // Sent it
 }
 
+char WiFi_getch(void)
+{
+  char ch;
+
+  DLT(DLT_COMMUNICATION, SEND(CONSOLE, sprintf(_xs, "WiFi_getch()");))
+
+  IF_NOT(TARGET_CONNECTED) // Not connected
+  {
+    return 0;              // Return nothing
+  }
+
+  tcpip_queue_2_app(&ch, 1);
+
+  return ch;               // Got something
+}
+
+/*****************************************************************************
+ *
+ * @function: WiFi_client_task
+ *
+ * @brief:    Dedicated task to manage the TCPIP traffic
+ *
+ * @return:   None
+ *
+ ****************************************************************************
+ *
+ *
+ *
+ ***************************************************************************/
+void WiFi_client_task(void *params)
+{
+  char buffer[MEDIUM_TEXT]; // Place to store results
+  int  length;              // Size of transferf
+
+  while ( 1 )
+  {
+    length = lwip_recv(client_socket, buffer, sizeof(buffer), MSG_DONTWAIT);
+    if ( length >= 0 )
+    {
+      tcpip_socket_2_queue(buffer, length);
+    }
+    vTaskDelay(10);
+  }
+}
 /*****************************************************************************
  *
  * @function: WiFi_client_test
@@ -732,4 +714,164 @@ void WiFi_client_test(void) //
    */
   SEND(CONSOLE, sprintf(_xs, _DONE_);)
   return;
+}
+
+/*******************************************************************************
+ *
+ * @function: tcpip_app_2_queue
+ *
+ * @brief:    Put something into the output queue for later transmission
+ *
+ * @return:   Buffer updated
+ *
+ *******************************************************************************
+ *
+ * This function is called by the application to save data into the
+ * TCPIP queue for later output onto the TCPIP channel
+ *
+ ******************************************************************************/
+int tcpip_app_2_queue(char *buffer, // Where to return the bytes
+                      int   length  // Maximum transfer size
+)
+{
+  int bytes_moved;                  // Number of bytes written
+
+  bytes_moved = 0;
+  while ( length != 0 )
+  {
+    out_buffer.queue[out_buffer.in] = *buffer;
+    buffer++;
+    length--;
+    bytes_moved++;
+    out_buffer.in = (out_buffer.in + 1) % sizeof(out_buffer.queue);
+  }
+
+  /*
+   *  All done, return the number of bytes written to the queue
+   */
+  return bytes_moved;
+}
+
+/*******************************************************************************
+ *
+ * @function: tcpip_queue_2_socket
+ *
+ * @brief:    Take waiting bytes out of the queue and into the socket
+ *
+ * @return:   Buffer updated
+ *
+ *******************************************************************************
+ *
+ * This function is the companion to tcpip_app_t_queue that finished sending
+ * the data out to the socket
+ *
+ ******************************************************************************/
+int tcpip_queue_2_socket(char *buffer, // Place to put data
+                         int   length)   // Number of bytes to read
+{
+  int bytes_moved;                     // Number of bytes read from queue
+
+  if ( out_buffer.out == out_buffer.in )
+  {
+    return 0;                          // Nothing to say
+  }
+
+  bytes_moved = 0;
+
+  while ( length != 0 )
+  {
+    *buffer = out_buffer.queue[out_buffer.out];
+    buffer++;
+    length--;
+    bytes_moved++;
+    out_buffer.out = (out_buffer.out + 1) % sizeof(out_buffer.queue);
+    if ( out_buffer.out == out_buffer.in )
+    {
+      break; // RUn out of things to read
+    }
+  }
+
+  /*
+   *  All done, return the number of bytes written to the queue
+   */
+  return bytes_moved;
+}
+
+/*******************************************************************************
+ *
+ * @function: tcpip_queue_2_app
+ *
+ * @brief:    Read data out of the queue and return it to the application
+ *
+ * @return:   Buffer updated
+ *
+ *******************************************************************************
+ *
+ * Characters from the TCPIP input queue are returned to the application
+ *
+ ******************************************************************************/
+int tcpip_queue_2_app(char *buffer, // Where to return the bytes
+                      int   length  // Maximum transfer size
+)
+{
+  int bytes_moved;
+
+  bytes_moved = 0;
+  if ( in_buffer.out == in_buffer.in )
+  {
+    return 0; // Nothing waiting for us
+  }
+
+  while ( length )
+  {
+    *buffer = in_buffer.queue[in_buffer.out];
+    buffer++;
+    length--;
+    bytes_moved++;
+    in_buffer.out = (in_buffer.out + 1) % sizeof(in_buffer.queue);
+    if ( in_buffer.out == in_buffer.in )
+    {
+      break; // Reached the end
+    }
+  }
+
+  return bytes_moved;
+}
+
+/*******************************************************************************
+ *
+ * @function: tcpip_socket_2_queue
+ *
+ * @brief:    Put fresh TCPIP data into the queue for later
+ *
+ * @return:   Input queue updated
+ *
+ *******************************************************************************
+ *
+ * Fresh characters from the TCPIP socket are placed into the input queue
+ *
+ * Used also by HTTP to put client data into the queue
+ *
+ ******************************************************************************/
+int tcpip_socket_2_queue(char *buffer, // Where to return the bytes
+                         int   length)   // Maximum transfer size
+{
+  int bytes_moved;
+
+  bytes_moved = 0;
+  while ( length )
+  {
+    in_buffer.queue[in_buffer.in] = *buffer;
+    buffer++;
+    length--;
+    bytes_moved++;
+    in_buffer.in = (in_buffer.in + 1) % sizeof(in_buffer.queue);
+    if ( in_buffer.out == in_buffer.in )
+    {
+      DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "TCPIP input queue overrun");)) // Reached the end
+      break;
+    }
+  }
+
+  return bytes_moved;
 }

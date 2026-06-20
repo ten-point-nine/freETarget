@@ -650,8 +650,9 @@ static void tcpip_server_io(void)
         while ( buffer_offset < to_send )
         {
           length = send(socket_list[i].handle, rx_buffer + buffer_offset, to_send - buffer_offset, 0);
-          if ( length <= 0 )
+          if ( length < 0 )
           {
+            DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "TCPIP send socket closed to %s ", socket_list[i].ip);))
             close(socket_list[i].handle);
             socket_list[i].handle = AVAILABLE_SOCKET;
             socket_list[i].ip[0]  = 0;

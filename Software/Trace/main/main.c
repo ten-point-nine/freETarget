@@ -86,6 +86,12 @@ void app_main(void)
   }
   vTaskDelay(TICK_10ms);
 
+  if ( xTaskCreate(WiFi_client_task, "WiFi_client_task", K4, NULL, BACKGROUND, NULL) != pdPASS )
+  {
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "trace_json()");))
+  }
+  vTaskDelay(TICK_10ms);
+
   DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "SN:%d Running\r\n", json_serial_number);))
   vTaskDelay(TICK_10ms);
   serial_flush(ALL);
