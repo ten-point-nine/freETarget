@@ -649,8 +649,7 @@ static void tcpip_server_io(void)
         buffer_offset = 0;
         while ( buffer_offset < to_send )
         {
-          length = send(socket_list[i].handle, rx_buffer + buffer_offset, to_send - buffer_offset, MSG_DONTWAIT | MSG_OOB);
-          printf("  %lld  S%d", esp_timer_get_time(), length);
+          length = send(socket_list[i].handle, rx_buffer + buffer_offset, to_send - buffer_offset, 0);
           if ( length < 0 )
           {
             DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "TCPIP send socket closed to %s ", socket_list[i].ip);))
@@ -661,6 +660,7 @@ static void tcpip_server_io(void)
             break;
           }
           buffer_offset += length;
+          send(socket_list[i].handle, NULL, 0, 0); // Flush the transmit queue
         }
       }
     }
@@ -733,7 +733,6 @@ void tcpip_socket_poll_0(void *parameters)
       length = recv(socket_list[0].handle, rx_buffer, sizeof(rx_buffer), 0);
       if ( length > 0 )
       {
-        printf("  %lld  R%d", esp_timer_get_time(), length);
         tcpip_socket_2_queue(rx_buffer, length);
       }
     }

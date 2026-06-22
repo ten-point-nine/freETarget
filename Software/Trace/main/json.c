@@ -125,11 +125,10 @@ int xx =  0;
     /*
      * See if anything is waiting and if so, add it in
      */
-    printf("J%d\r\n", xx++);
     while ( serial_available(ALL) != 0 ) // Something waiting for us?
     {
       ch = serial_getch(ALL);
-      //if ( is_trace & DLT_DEBUG )
+      if ( is_trace & DLT_DEBUG )
       {
         printf("%c", ch);
       }

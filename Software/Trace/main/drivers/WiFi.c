@@ -608,17 +608,11 @@ void WiFi_client_recv(void *params)
   {
     IF(TARGET_CONNECTED)
     {
-      printf("R");
       length = recv(client_socket, rx_buffer, sizeof(rx_buffer), MSG_DONTWAIT | MSG_OOB);
-      printf("#");
       if ( length > 0 )
       {
         tcpip_socket_2_queue(rx_buffer, length);
       }
-    }
-    else
-    {
-      printf("X");
     }
     vTaskDelay(10);
   }
@@ -646,7 +640,6 @@ void WiFi_client_send(void *params)
 
   while ( 1 )
   {
-          printf("S");
     length = tcpip_queue_2_socket(tx_buffer, sizeof(tx_buffer));
 
     if ( length != 0 )
@@ -659,6 +652,7 @@ void WiFi_client_send(void *params)
         }
         DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "WiFi_client_send(): target not connected %d", errno);))
       }
+      lwip_send(client_socket, NULL, 0, 0);
     }
     vTaskDelay(10);
   }
