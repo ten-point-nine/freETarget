@@ -30,20 +30,20 @@
 /*
  * Task Priorities
  */
-#define BACKGROUND 0                // Lowest priority task,  background
-#define POLLING    (BACKGROUND + 4) // Intermittent communications polling
-#define NETWORK    (POLLING + 4)    // Intermittent network polling
-#define TIMED      (NETWORK + 4)    // Scheduled tasks
-#define MUST_RUN   (TIMED + 4)      // This task must run
+#define BACKGROUND 0                          // Lowest priority task,  background
+#define POLLING    (BACKGROUND + 4)           // Intermittent communications polling
+#define NETWORK    (POLLING + 4)              // Intermittent network polling
+#define TIMED      (NETWORK + 4)              // Scheduled tasks
+#define MUST_RUN   (configMAX_PRIORITIES - 1) // This task must run
 #if ( MUST_RUN >= configMAX_PRIORITIES )
 #error MUST_RUN set too high
 #endif
 
-#define K1 1024                     // Kilo Bytes
-#define K2 (K1 * 2)                 // 2 Kilo Bytes
-#define K4 (K1 * 4)                 // 4 Kilo Bytes
-#define K6 (K1 * 6)                 // 6 Kilo Bytes
-#define K8 (K1 * 8)                 // 8 Kilo Bytes
+#define K1 1024                               // Kilo Bytes
+#define K2 (K1 * 2)                           // 2 Kilo Bytes
+#define K4 (K1 * 4)                           // 4 Kilo Bytes
+#define K6 (K1 * 6)                           // 6 Kilo Bytes
+#define K8 (K1 * 8)                           // 8 Kilo Bytes
 StaticTask_t trace_loop_tcb;
 StackType_t  trace_loop_stack[4096];
 
@@ -62,33 +62,41 @@ void app_main(void)
   /*
    * Everything is ready, start the threads.  Low task priority number == low priority
    */
-  if ( xTaskCreate(trace_loop, "trace_loop", K4, NULL, MUST_RUN, NULL) != pdPASS )
+  if ( xTaskCreate(WiFi_client_send, "WiFi_client_send", K4, NULL, MUST_RUN, NULL) != pdPASS )
   {
-    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "trace_loop()");))
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "WiFi_client_send()");))
   }
   vTaskDelay(TICK_10ms);
 
+  if ( xTaskCreate(WiFi_client_recv, "WiFi_client_recv", K6, NULL, MUST_RUN, NULL) != pdPASS )
+  {
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "WiFi_client_recv()");))
+  }
+  vTaskDelay(TICK_10ms);
+
+#if ( 0 )
   if ( xTaskCreate(trace_timers, "trace_timers", K4, NULL, TIMED, NULL) != pdPASS )
   {
     DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "trace_timers()");))
   }
   vTaskDelay(TICK_10ms);
 
-  if ( xTaskCreate(trace_synchronous, "trace_synchronous", K4, NULL, TIMED, NULL) != pdPASS )
+  if ( xTaskCreate(trace_synchronous, "trace_synchronous", K6, NULL, TIMED, NULL) != pdPASS )
   {
     DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "trace_sunchronous()");))
   }
   vTaskDelay(TICK_10ms);
+#endif
 
-  if ( xTaskCreate(trace_json, "trace_json", K4, NULL, BACKGROUND, NULL) != pdPASS )
+  if ( xTaskCreate(trace_json, "trace_json", K6, NULL, BACKGROUND, NULL) != pdPASS )
   {
     DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "trace_json()");))
   }
   vTaskDelay(TICK_10ms);
 
-  if ( xTaskCreate(WiFi_client_task, "WiFi_client_task", K4, NULL, BACKGROUND, NULL) != pdPASS )
+  if ( xTaskCreate(trace_loop, "trace_loop", K6, NULL, MUST_RUN, NULL) != pdPASS )
   {
-    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "trace_json()");))
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "trace_loop()");))
   }
   vTaskDelay(TICK_10ms);
 

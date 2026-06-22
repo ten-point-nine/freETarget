@@ -25,14 +25,61 @@
 #include "NTP.h"
 #include "json.h"
 
+#define RUNNING_SAMPLES 5 // Keep five samples
+
+/*
+ *  Local functions
+ */
+void NTP_time_sort(time_count_64_t in_array[], int size); // Bubbe sort the time
+
 /*
  * variables
  */
-time_count_64_t NTP_start_time;      // When did we start the time sync
-time_count_64_t NTP_base_time;       // Time to add to esp32_timer_get_time() to equal server time
-time_count_64_t NTP_server_time;     // Time the server synchronilzed
-time_count_64_t NTP_offset_time;     // Route time between client and server
-time_count_64_t sync_time_remaining; // How long before we have to synch again
+time_count_64_t NTP_start_time;                    // When did we start the time sync
+time_count_64_t NTP_base_time;                     // Time to add to esp32_timer_get_time() to equal server time
+time_count_64_t NTP_server_time;                   // Time the server synchronilzed
+time_count_64_t NTP_offset_time;                   // Route time between client and server
+time_count_64_t sync_time_remaining;               // How long before we have to synch again
+
+time_count_64_t NTP_offset_array[RUNNING_SAMPLES]; // Array of offsets
+time_count_64_t NTP_base_array[RUNNING_SAMPLES];
+
+bool NTP_fresh_time;                               // Got a new time value
+
+/*-----------------------------------------------------
+ *
+ * @function: NTP_time_us    Time in microseconds
+ *            NTP_time_ms    Time in milliseconds
+ *            NTP_time_s     Time in seconds
+ *
+ * @brief:    Time base with correction to serverf
+ *
+ * @return:   Current time corrected for server
+ *
+ *-----------------------------------------------------
+ *
+ * The time functions NTP_client and NTP_server work
+ * out the time difference between the client and server
+ * and add offsets to the client to agree with the
+ * server
+ *
+ *---------------------------------------------------*/
+time_count_64_t NTP_time_us(void)
+{
+  return esp_timer_get_time() // What time is it here
+         + NTP_base_time      // What is the offset to the target
+         + NTP_offset_time;   // The for the message to get here);
+}
+
+time_count_64_t NTP_time_ms(void)
+{
+  return (NTP_time_us() / 1000);
+}
+
+time_count_64_t NTP_time_s(void)
+{
+  return (NTP_time_us() / 1000000);
+}
 
 /*-----------------------------------------------------
  *
@@ -86,6 +133,7 @@ bool NTP_ttg(void)
  *---------------------------------------------------*/
 void NTP_ask(void)
 {
+  NTP_fresh_time = false;
   NTP_start_time = esp_timer_get_time();
   SEND(TARGET, sprintf(_xs, "{\"%s\"}", _NTP_SERVER_);) // Ask the server
   DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "NTP_ASK: %lld", NTP_start_time);))
@@ -131,30 +179,136 @@ void NTP_server(void)
  * that number to adjust the time to match up with
  * the server.
  *
+ * The client keeps a running list of the last 5
+ * samples, sorts them low to high, and then takes
+ * the middle three samples (discard outliers)
+ * to get an average.
+ *
  *---------------------------------------------------*/
 void NTP_client(void)
 {
+  static int  sample_count = 0; // Number of time samples we have
+  static bool first_pass   = true;
+  int         i;
+
+  if ( first_pass )
+  {
+    for ( i = 0; i != RUNNING_SAMPLES; i++ )
+    {
+      NTP_offset_array[i] = 0;
+      NTP_base_array[i]   = 0;
+      first_pass          = false;
+    }
+  }
+
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "NTP_server_time:%lld", NTP_server_time);))
+
+  /*
+   *  Calculate the new input from the server
+   */
   NTP_offset_time     = (esp_timer_get_time() - NTP_start_time) / 2; // The time for the loop
   NTP_base_time       = NTP_server_time - esp_timer_get_time();      // Time between client and server
   sync_time_remaining = json_NTP_period;                             // Reset the watchdog
-  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "ESP32: %lld  NTP Base_time :%lld   NTP offset:%lld   NTP network time: %lld",
-                                       esp_timer_get_time(), NTP_base_time, NTP_offset_time, NTP_time_us());))
+
+  /*
+   * Sort the new input against the last samples
+   */
+  NTP_offset_array[0] = NTP_offset_time;             // Insert the latest
+  NTP_base_array[0]   = NTP_base_time;
+  NTP_time_sort(&NTP_offset_array, RUNNING_SAMPLES); // Sort the oldest
+  NTP_time_sort(&NTP_base_array, RUNNING_SAMPLES);
+
+                                                     /*
+                                                      *  When we get to the right number of samples
+                                                      */
+  sample_count++;
+  if ( sample_count >= RUNNING_SAMPLES ) // Collected the right number of samples
+  {
+    NTP_offset_time = (NTP_offset_array[1] + NTP_offset_array[2] + NTP_offset_array[3]) / 3;
+    NTP_base_time   = (NTP_base_array[1] + NTP_base_array[2] + NTP_base_array[3]) / 3;
+  }
+
+  if ( is_trace & DLT_DEBUG )
+  {
+    DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "NTP Base_time:%lld   NTP offset:%lld   NTP network time:%lld", NTP_base_time,
+                                         NTP_offset_time, NTP_time_us());))
+    for ( i = 0; i != RUNNING_SAMPLES; i++ )
+    {
+      printf("\r\n%d %lld   %lld", i, NTP_offset_array[i], NTP_base_array[i]);
+    }
+  }
+
+  /*
+   * Finished
+   */
+  NTP_fresh_time = true;
   return;
 }
 
-time_count_64_t NTP_time_us(void)
+/*
+ *  Bubble sort the time
+ */
+void NTP_time_sort(time_count_64_t in_array[], int size)
 {
-  return esp_timer_get_time() // What time is it here
-         + NTP_base_time      // What is the offset to the target
-         + NTP_offset_time;   // The for the message to get here);
+  int             i, j;
+  time_count_64_t temp;
+
+  for ( i = size - 1; i != 0; i-- )
+  {
+    for ( j = 0; j != i; j++ )
+    {
+      if ( in_array[j] > in_array[j + 1] )
+      {
+        temp            = in_array[j];
+        in_array[j]     = in_array[j + 1];
+        in_array[j + 1] = temp;
+      }
+    }
+  }
+
+  /*
+   * Sorted, return
+   */
+  return;
 }
 
-time_count_64_t NTP_time_ms(void)
+/*-----------------------------------------------------
+ *
+ * @function: NTP_test
+ *
+ * @brief:    Periodically ask for an NTP time
+ *
+ * @return:   Nothing
+ *
+ *-----------------------------------------------------
+ *
+ * This test asks for NTP update and records the loop
+ * time
+ *
+ *---------------------------------------------------*/
+void NTP_test(void)
 {
-  return (NTP_time_us() / 1000);
-}
+  int             i;
+  time_count_64_t start;
 
-time_count_64_t NTP_time_s(void)
-{
-  return (NTP_time_us() / 1000000);
+  printf("\r\nNTP_test()");
+
+  for ( i = 0; i != 100; i++ )
+  {
+    start = esp_timer_get_time();
+    printf("\r\n%d ask: %lld", i, start);
+    NTP_ask();
+    while ( NTP_fresh_time == false )
+    {
+      vTaskDelay(5);
+      printf(".");
+    }
+    printf("client: %lld  delay: %lld", esp_timer_get_time(), esp_timer_get_time() - start);
+  }
+
+  /*
+   * Test complete
+   */
+  SEND(CONSOLE, sprintf(_xs, "%s", _DONE_);)
+  return;
 }

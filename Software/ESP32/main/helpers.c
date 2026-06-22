@@ -792,14 +792,6 @@ void watchdog(void)
   }
 
   /*
-   * Check to see how long it's been since we got a time update
-   */
-  if ( NTP_ttg() )
-  {
-    NTP_ask();
-  }
-
-  /*
    *  All done
    */
   return;

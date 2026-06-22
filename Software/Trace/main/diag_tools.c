@@ -69,7 +69,7 @@ static const self_test_t test_list[] = {
     {"- Software tests",             0                   },
     {"IMU test",                     &IMU_test           },
     {"IMU real-time test",           &IMU_real_time      },
-    {"Show sensor state",            &show_running_state  },
+    {"Show sensor state",            &show_running_state },
     {"",                             0                   }
 };
 
@@ -88,15 +88,15 @@ const dlt_name_t dlt_names[] = {
 };
 
 const state_name_t state_names[] = {
-    {IN_STARTUP,      "IN_STARTUP"      }, // The software is in initialization
-    {IN_NO_CAL,       "IN_NO_CAL"       }, // The device is not calibrated
-    {IN_FIFO_FILLING, "IN_FIFO_FILLING" }, // The FIFO is being read
-    {IN_REDUCTION,    "IN_REDUCTION"    }, // Reducing the data
-    {IN_OPERATION,    "IN_OPERATION "   }, // Normal operation
-    {IN_TEST,         "IN_TEST"         }, // Executing self test
-    {TIME_VALID,      "TIME_VALID"      }, //  Time base is syncronized
+    {IN_STARTUP,       "IN_STARTUP"      }, // The software is in initialization
+    {IN_NO_CAL,        "IN_NO_CAL"       }, // The device is not calibrated
+    {IN_FIFO_FILLING,  "IN_FIFO_FILLING" }, // The FIFO is being read
+    {IN_REDUCTION,     "IN_REDUCTION"    }, // Reducing the data
+    {IN_OPERATION,     "IN_OPERATION "   }, // Normal operation
+    {IN_TEST,          "IN_TEST"         }, // Executing self test
+    {TIME_VALID,       "TIME_VALID"      }, //  Time base is syncronized
     {TARGET_CONNECTED, "TARGET_CONNECTED"}, //  The sensor is connected to the target
-    {0,               0                 }
+    {0,                0                 }
 };
 
 /*-----------------------------------------------------
@@ -425,7 +425,7 @@ bool do_dlt(           //
     {
       dlt_id = dlt_names[i].dlt_id;               // Use the Verbose ID
 
-      SEND(CONSOLE, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, (real_t)NTP_time_ms()/1000.0);)
+      SEND(CONSOLE, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, (real_t)NTP_time_ms() / 1000.0);)
 
       return true;                                // Send out the message
     }

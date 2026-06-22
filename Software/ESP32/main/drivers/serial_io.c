@@ -750,7 +750,7 @@ int tcpip_queue_2_socket(char *buffer, // Place to put data
     out_buffer.out = (out_buffer.out + 1) % sizeof(out_buffer.queue);
     if ( out_buffer.out == out_buffer.in )
     {
-      break; // RUn out of things to read
+      break; // Run out of things to read
     }
   }
 

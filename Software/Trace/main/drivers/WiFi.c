@@ -449,7 +449,6 @@ void WiFi_AP_scan_test(void)
 bool WiFi_client_init(void)
 {
   struct sockaddr_in dest_addr;
-  int                i;
 
   /*
    *  Check to see if we are already connected
@@ -526,8 +525,6 @@ bool WiFi_client_init(void)
 
 int WiFi_available(void)
 {
-  int ch;
-
   DLT(DLT_COMMUNICATION, SEND(CONSOLE, sprintf(_xs, "WiFi_available()");))
 
   IF_NOT(TARGET_CONNECTED)
@@ -538,7 +535,7 @@ int WiFi_available(void)
   return (in_buffer.in != in_buffer.out);
 }
 
-int WiFi_putch(char ch)
+int WiFi_putch(char ch)    // Character to output
 {
   DLT(DLT_COMMUNICATION, SEND(CONSOLE, sprintf(_xs, "WiFi_putch(%c)", ch);))
 
@@ -547,19 +544,9 @@ int WiFi_putch(char ch)
     return -1;             // Return a failure
   }
 
-  if ( lwip_send(client_socket, &ch, 1, MSG_DONTWAIT) == 0 )
-  {
-    if ( errno == ENOTCONN )
-    {
-      run_state &= ~TARGET_CONNECTED; // Tried to send, but nothing went out
-    }
-    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "putch(): target not connected %d", errno);))
-    printf("\r\nputch\r\n");
+  tcpip_app_2_queue(&ch, 1);
 
-    return -1;
-  }
-
-  return 1;                // Succeeded in sending
+  return 1;
 }
 
 int WiFi_puts(char *s,     // String to output
@@ -573,17 +560,9 @@ int WiFi_puts(char *s,     // String to output
     return 0;              // Return nothing
   }
 
-  if ( lwip_send(client_socket, s, length, MSG_DONTWAIT) == 0 )
-  {
-    if ( errno == ENOTCONN )
-    {
-      run_state &= ~TARGET_CONNECTED; // Tried to send, but nothing went out
-      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "puts(): target not connected %d", errno);))
-    }
-    return 0;
-  }
+  tcpip_app_2_queue(&s, length);
 
-  return length;                      // Sent it
+  return length;           // Sent it
 }
 
 char WiFi_getch(void)
@@ -604,9 +583,9 @@ char WiFi_getch(void)
 
 /*****************************************************************************
  *
- * @function: WiFi_client_task
+ * @function: WiFi_client_recv
  *
- * @brief:    Dedicated task to manage the TCPIP traffic
+ * @brief:    Manage received packets from the target
  *
  * @return:   None
  *
@@ -615,21 +594,81 @@ char WiFi_getch(void)
  *
  *
  ***************************************************************************/
-void WiFi_client_task(void *params)
+char rx_buffer[256];
+char propeller[] = {'-', '/', '|', '\\'};
+
+void WiFi_client_recv(void *params)
 {
-  char buffer[MEDIUM_TEXT]; // Place to store results
-  int  length;              // Size of transferf
+  int length;
+  int p = 0;
+
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "WiFi_client_recv()");))
 
   while ( 1 )
   {
-    length = lwip_recv(client_socket, buffer, sizeof(buffer), MSG_DONTWAIT);
-    if ( length >= 0 )
+    IF(TARGET_CONNECTED)
     {
-      tcpip_socket_2_queue(buffer, length);
+      printf("R");
+      length = recv(client_socket, rx_buffer, sizeof(rx_buffer), MSG_DONTWAIT | MSG_OOB);
+      printf("#");
+      if ( length > 0 )
+      {
+        tcpip_socket_2_queue(rx_buffer, length);
+      }
+    }
+    else
+    {
+      printf("X");
     }
     vTaskDelay(10);
   }
 }
+
+/*****************************************************************************
+ *
+ * @function: WiFi_client_send
+ *
+ * @brief:    Send packets to the target
+ *
+ * @return:   None
+ *
+ ****************************************************************************
+ *
+ *
+ *
+ ***************************************************************************/
+void WiFi_client_send(void *params)
+{
+  int  length;
+  char tx_buffer[256];
+
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "WiFi_client_send()");))
+
+  while ( 1 )
+  {
+          printf("S");
+    length = tcpip_queue_2_socket(tx_buffer, sizeof(tx_buffer));
+
+    if ( length != 0 )
+    {
+      if ( lwip_send(client_socket, &tx_buffer, length, MSG_DONTWAIT) == 0 )
+      {
+        if ( errno == ENOTCONN )
+        {
+          run_state &= ~TARGET_CONNECTED; // Tried to send, but nothing went out
+        }
+        DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "WiFi_client_send(): target not connected %d", errno);))
+      }
+    }
+    vTaskDelay(10);
+  }
+
+  /*
+   * Done
+   */
+  return;
+}
+
 /*****************************************************************************
  *
  * @function: WiFi_client_test
@@ -787,7 +826,7 @@ int tcpip_queue_2_socket(char *buffer, // Place to put data
     out_buffer.out = (out_buffer.out + 1) % sizeof(out_buffer.queue);
     if ( out_buffer.out == out_buffer.in )
     {
-      break; // RUn out of things to read
+      break; // Run out of things to read
     }
   }
 

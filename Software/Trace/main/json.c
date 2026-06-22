@@ -112,30 +112,24 @@ static bool         not_found;
 static bool         keep_space;         // Set to 1 if keeping spaces
 static bool         got_left_bracket;   // Set to 1 if we have a bracket
 unsigned int        from_BlueTooth = 0; // Count of characters from the BlueTooth port
-
-void trace_json(void *pvParameters)
+int                 i;
+void                trace_json(void *pvParameters)
 {
   char ch;
+int xx =  0;
 
   DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "trace_json()");))
 
   while ( 1 )
   {
-#if ( 0 )
-    IF_NOT(IN_OPERATION)
-    {
-      vTaskDelay(ONE_SECOND);
-      continue;
-    }
-#endif
-
     /*
      * See if anything is waiting and if so, add it in
      */
+    printf("J%d\r\n", xx++);
     while ( serial_available(ALL) != 0 ) // Something waiting for us?
     {
       ch = serial_getch(ALL);
-      // if ( is_trace & DLT_DEBUG )
+      //if ( is_trace & DLT_DEBUG )
       {
         printf("%c", ch);
       }
@@ -202,7 +196,7 @@ void trace_json(void *pvParameters)
       } // End switch
 
     } // End if char available
-    vTaskDelay(TICK_10ms);
+    vTaskDelay(10);
   }
 
   /*
@@ -268,7 +262,6 @@ static void handle_json(void)
 
             case IS_TEXT:                                   // Convert to text
             case IS_SECRET:
-
               while ( input_JSON[i + k] != '"' )            // Skip to the opening quote
               {
                 k++;
@@ -417,7 +410,7 @@ void show_echo(void)
           strcpy(str_c, (char *)(JSON[i].value));
           if ( (JSON[i].convert & IS_MASK) == IS_SECRET )
           {
-            strncpy(str_c, "*************************************************", strlen(str_c));
+//            strncpy(str_c, "*************************************************", strlen(str_c));
           }
 
           SEND(CONSOLE, sprintf(_xs, "%-18s \"%s\", ", JSON[i].token, str_c);)

@@ -164,17 +164,16 @@ void trace_init(void)
  * No one operation should exceed 500ms.
  *
  *---------------------------------------------------------------*/
-int FIFO_pull = 0;                                      // How many FIFO pulls have we done
+int FIFO_pull = 0;            // How many FIFO pulls have we done
 
-time_count_64_t FIFO_time_us;                           // Last pull in microseconds
+time_count_64_t FIFO_time_us; // Last pull in microseconds
 
 void trace_loop(void *arg)
 {
   DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "trace_loop()");))
-
-  time_count_64_t start_time_us = esp_timer_get_time(); // Remember when we got here
-
   run_state |= IN_OPERATION;
+
+   NTP_test();
 
   while ( 1 )
   {
@@ -182,7 +181,7 @@ void trace_loop(void *arg)
     {
       BMI270_pull_FIFO();
       FIFO_pull++;
-      FIFO_time_us = esp_timer_get_time() - start_time_us;
+      FIFO_time_us = NTP_time_us();
     }
     vTaskDelay(TICK_50ms);
   }

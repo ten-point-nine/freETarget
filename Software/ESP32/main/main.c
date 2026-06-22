@@ -61,6 +61,7 @@ void app_main(void)
   /*
    * Everything is ready, start the threads.  Low task priority number == low priority
    */
+  #if(0)
   xTaskCreate(freeETarget_target_loop, "freeETarget_target_loop", K4, NULL, MUST_RUN, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
@@ -72,6 +73,7 @@ void app_main(void)
   xTaskCreate(freeETarget_synchronous, "freeETarget_synchronous", K4, NULL, TIMED, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
+#endif 
 
   xTaskCreate(freeETarget_json, "json_task", K6, NULL, BACKGROUND, NULL);
   serial_flush(ALL);
@@ -96,6 +98,7 @@ void app_main(void)
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 
+  #if(00)
   start_webserver(DEFAULT_HTTP_PORT); // Main port for the web server
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
@@ -106,7 +109,7 @@ void app_main(void)
   freeETarget_timer_init();
   vTaskDelay(TICK_10ms);
   serial_flush(ALL);
-
+#endif
   target_name(&str_c);
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "SN:%d Name: %s Running\r\n", json_serial_number, str_c);))
   vTaskDelay(TICK_10ms);

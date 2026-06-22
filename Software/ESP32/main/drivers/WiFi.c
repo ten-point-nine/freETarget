@@ -649,7 +649,8 @@ static void tcpip_server_io(void)
         buffer_offset = 0;
         while ( buffer_offset < to_send )
         {
-          length = send(socket_list[i].handle, rx_buffer + buffer_offset, to_send - buffer_offset, 0);
+          length = send(socket_list[i].handle, rx_buffer + buffer_offset, to_send - buffer_offset, MSG_DONTWAIT | MSG_OOB);
+          printf("  %lld  S%d", esp_timer_get_time(), length);
           if ( length < 0 )
           {
             DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "TCPIP send socket closed to %s ", socket_list[i].ip);))
@@ -732,6 +733,7 @@ void tcpip_socket_poll_0(void *parameters)
       length = recv(socket_list[0].handle, rx_buffer, sizeof(rx_buffer), 0);
       if ( length > 0 )
       {
+        printf("  %lld  R%d", esp_timer_get_time(), length);
         tcpip_socket_2_queue(rx_buffer, length);
       }
     }
@@ -907,7 +909,7 @@ void tcpip_accept_poll(void *parameters)
             lwip_close(socket_list[j].handle);                // Close this connection
             socket_list[j].handle = AVAILABLE_SOCKET;         // Free up the connection
             socket_list[j].ip[0]  = 0;                        // Forget the IP
-            DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Duplicate socket connection from %s", addr_str);))
+            DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Duplicate socket connection %d from %s", j, addr_str);))
           }
         }
         strcpy(&socket_list[i].ip[0], addr_str);              // Remember this IP address
@@ -969,7 +971,7 @@ static void WiFi_start_new_connection(int sock) // Socket token to use
    *  Inform the PC what is going on
    */
   target_name(str);
-  SEND(ALL, sprintf(_xs, "{\"%s\":%lds, \"NAME\":\"%s\"}", _GREETING_, run_time_seconds(), str);)
+  SEND(ALL, sprintf(_xs, "{\"%s\":%ld, \"NAME\":\"%s\"}", _GREETING_, run_time_seconds(), str);)
 
   for ( i = 0; i != SHOT_SPACE; i++ )
   {

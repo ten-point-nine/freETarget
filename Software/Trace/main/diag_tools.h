@@ -18,7 +18,7 @@ bool factory_test(void);             // Test the hardware in production
 bool do_factory_test(bool test_run); // Carry out the factory test
 void digital_input_test(void);       // Test the digital inputs
 void digital_output_test(void);      // Test the digital outputs
-void show_running_state(void);        // Decode the state and print
+void show_running_state(void);       // Decode the state and print
 
 /*
  *  Definitions
@@ -30,17 +30,18 @@ void show_running_state(void);        // Decode the state and print
  *
  */
 
-#define LED_32            "01234567890123456789012345678901"
-#define LED_OFF           "                                "
-#define LED_ON            "********************************"
-#define LED_STARTUP       "* * * * * * * * * * * * * * * * "
-#define LED_READY         "********                        "
-#define LED_FIFO_FILLING  "********  **                    "
-#define LED_REDUCTION     "********  **  **                "
-#define LED_NO_CONNECTION "********  **  **  **            "
-#define LED_NO_TIME       "********  **  **  ** **         "
-#define LED_B             "********  **  **  ** ** **      "
-#define LED_NO_CAL        "********  **  **  ** ** ** **   "
+#define LED_32            "0123456789012345678901234567890123"
+#define LED_OFF           "                                  "
+#define LED_ON            "**********************************"
+#define LED_STARTUP       "* * * * * * * * * * * * * * * *   "
+#define LED_READY         "********                          "
+#define LED_FIFO_FILLING  "********  **                      "
+#define LED_REDUCTION     "********  **  **                  "
+#define LED_NO_IP         "********  **  **  **              "
+#define LED_NO_CONNECTION "********  **  **  ** **           "
+#define LED_NO_TIME       "********  **  **  ** ** **        "
+#define LED_B             "********  **  **  ** ** ** **     "
+#define LED_NO_CAL        "********  **  **  ** ** ** ** **  "
 
 /*
  *  On board expected values
