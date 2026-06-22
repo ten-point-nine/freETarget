@@ -656,6 +656,7 @@ static void tcpip_server_io(void)
             new_socket_closed = true;
             break;
           }
+          send(socket_list[i], "", 0, 0); // Maks sure it gets pushed out now.
           buffer_offset += length;
         }
       }
