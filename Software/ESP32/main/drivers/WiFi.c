@@ -53,6 +53,8 @@
 #include "nonvol.h"
 #include "serial_io.h"
 #include "timer.h"
+#include "server.h"
+#include "client.h"
 
 #define DEFAULT_IP         192, 168, 10, 9
 #define PORT               1090
@@ -77,11 +79,11 @@ static wifi_config_t                WiFi_config;
 static EventGroupHandle_t           s_wifi_event_group;
 static esp_event_handler_instance_t instance_any_id;
 static esp_event_handler_instance_t instance_got_ip;
-static int                          s_retry_num = 0;\
-static esp_netif_ip_info_t          ipInfo;                   // IP Address of the access point
-static int                          dns_valid;                // We have a valid IP address for the URL
-static ip_addr_t                    url_ip_address;           // Address of the server
-static esp_netif_t                 *sta_netif;                // Station configuration
+static int                          s_retry_num = 0;
+static esp_netif_ip_info_t          ipInfo;         // IP Address of the access point
+static int                          dns_valid;      // We have a valid IP address for the URL
+static ip_addr_t                    url_ip_address; // Address of the server
+static esp_netif_t                 *sta_netif;      // Station configuration
 static bool                         WiFi_initialized = false;
 
 /*
@@ -91,7 +93,7 @@ void        WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
 static void tcpip_server_io(void);                  // Manage TCPIP traffic
 static void dns_found_cb(const char *name, const ip_addr_t *ip_addr, void *callback_arg);
 esp_err_t   esp_base_mac_addr_get(uint8_t *mac);
-static void WiFi_start_new_connection(int sock);    // Socket token to use
+
 static void wifi_set_static_ip(esp_netif_t *netif); // Override the IP address
 
 /*
@@ -649,21 +651,6 @@ void WiFi_remote_IP_address(char *s) // Where to return the string
 }
 #endif
 
-void WiFi_show_connections(void)
-{
-  int i;
-
-  for ( i = 0; i != MAX_SOCKETS; i++ )
-  {
-    if ( socket_list[i].handle > 0 )
-    {
-      SEND(ALL, sprintf(_xs, "\r\n\"Socket\": %d, \"Handle\": %d, \"IP\": \"%s\"", i, socket_list[i].handle, &socket_list[i].ip[0]);)
-    }
-  }
-
-  return;
-}
-
 /*****************************************************************************
  *
  * @function: WiFi_MAC_address()
@@ -689,17 +676,12 @@ void WiFi_MAC_address(char *mac // Where to return the string
  * @return:   None
  *
  ****************************************************************************/
-void WiFi_server_test(void)
-{
-  xTaskCreate(WiFi_tcp_server_task, "WiFi_tcp_server", 4096, NULL, 5, NULL);
-  return;
-}
 
 void WiFi_station_loopback_test(void)
 {
   WiFi_station_init();
   xTaskCreate(WiFi_tcp_server_task, "WiFi_tcp_server", 4096, NULL, 5, NULL);
-  xTaskCreate(tcpip_accept_poll, "tcpip_accept_poll", 4096, NULL, 4, NULL);
+  xTaskCreate(server_accept_poll, "server_accept_poll", 4096, NULL, 4, NULL);
   WiFi_loopback_test();
   return;
 }
@@ -708,7 +690,7 @@ void WiFi_AP_loopback_test(void)
 {
   WiFi_AP_init();
   xTaskCreate(WiFi_tcp_server_task, "WiFi_tcp_server", 4096, NULL, 5, NULL);
-  xTaskCreate(tcpip_accept_poll, "tcpip_accept_poll", 4096, NULL, 4, NULL);
+  xTaskCreate(server_accept_poll, "server_accept_poll", 4096, NULL, 4, NULL);
   WiFi_loopback_test();
   return;
 }

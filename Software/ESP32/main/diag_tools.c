@@ -41,6 +41,8 @@
 #include "ota.h"
 #include "calibrate.h"
 #include "ntp.h"
+#include "server.h"
+#include "client.h"
 
 extern volatile time_count_t paper_time;
 

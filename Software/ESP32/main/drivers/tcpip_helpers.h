@@ -11,10 +11,10 @@
 /*
  * Global functions
  */
-int tcpip_app_2_queue(char *buffer, int length);    // Save for later output to the socket
-int tcpip_queue_2_socket(char *buffer, int length); // Take from queue and put to socket
-int tcpip_socket_2_queue(char *buffer, int length); // Take from socket and queue
-int tcpip_queue_2_app(char *buffer, int length);    // Take from queue and return to application
+int tcpip_app_2_queue(char *buffer, int length);     // Save for later output to the socket
+int tcpip_queue_2_socket(char *buffer, int length);  // Take from queue and put to socket
+int server_socket_2_queue(char *buffer, int length); // Take from socket and queue
+int tcpip_queue_2_app(char *buffer, int length);     // Take from queue and return to application
 
 /*
  * #defines

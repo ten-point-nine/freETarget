@@ -75,19 +75,11 @@
 /*
  * Variables
  */
-static wifi_config_t                WiFi_config;
-static EventGroupHandle_t           s_wifi_event_group;
-static esp_event_handler_instance_t instance_any_id;
-static esp_event_handler_instance_t instance_got_ip;
-static int                          s_retry_num = 0;
-static esp_netif_ip_info_t          ipInfo;                           // IP Address of the access point
-static esp_netif_t                 *sta_netif;                        // Station configuration
 static int                          client_socket = AVAILABLE_SOCKET; // Socket used to talk to the target
 
 /*
  * Private Functions
  */
-void      WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 esp_err_t esp_base_mac_addr_get(uint8_t *mac);
 
 /*****************************************************************************
@@ -122,7 +114,7 @@ bool WiFi_client_init(void)
   {
     memset((void *)&dest_addr, 0, sizeof(dest_addr));
     dest_addr.sin_len         = sizeof(dest_addr);
-    dest_addr.sin_addr.s_addr = inet_addr(json_wifi_target_ip);
+    dest_addr.sin_addr.s_addr = inet_addr(json_remote_ip);
     dest_addr.sin_family      = AF_INET;
     dest_addr.sin_port        = lwip_htons(1090);
 
@@ -148,14 +140,14 @@ bool WiFi_client_init(void)
    */
   if ( lwip_connect(client_socket, (struct sockaddr *)&dest_addr, sizeof(dest_addr)) != 0 )
   {
-    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Socket unable to connect to %s:%d: errno %d", json_wifi_target_ip, 1090, errno);))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Socket unable to connect to %s:%d: errno %d", json_remote_ip, 1090, errno);))
     return false;
   }
 
   /*
    *  Got here, ready to go
    */
-  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Connected to target at: %s:%d", json_wifi_target_ip, 1090);))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Connected to target at: %s:%d", json_remote_ip, 1090);))
   run_state |= SERVER_CONNECTED; // Yay, we're connected
   return true;
 }
@@ -179,7 +171,6 @@ char propeller[] = {'-', '/', '|', '\\'};
 void WiFi_client_recv(void *params)
 {
   int length;
-  int p = 0;
 
   DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "WiFi_client_recv()");))
 
@@ -190,7 +181,7 @@ void WiFi_client_recv(void *params)
       length = recv(client_socket, rx_buffer, sizeof(rx_buffer), MSG_DONTWAIT | MSG_OOB);
       if ( length > 0 )
       {
-        tcpip_socket_2_queue(rx_buffer, length);
+        server_socket_2_queue(rx_buffer, length);
       }
     }
     vTaskDelay(10);
@@ -283,9 +274,9 @@ void WiFi_client_test(void) //
     while ( serial_available(CONSOLE) == 0 )
     {
       vTaskDelay(TICK_10ms);
-      while ( serial_available(TARGET) != 0 )
+      while ( serial_available(CLIENT) != 0 )
       {
-        ch = serial_getch(TARGET);
+        ch = serial_getch(CLIENT);
         if ( isprint(ch) )
         {
           SEND(CONSOLE, sprintf(_xs, "%c", ch);)
@@ -318,7 +309,7 @@ void WiFi_client_test(void) //
     }
 
     SEND(CONSOLE, sprintf(_xs, "\r\nSending: %s\r\n", test_s[(int)ch]);) // Send this test
-    SEND(TARGET, sprintf(_xs, "%s", test_s[(int)ch]);)                   // Send this test
+    SEND(CLIENT, sprintf(_xs, "%s", test_s[(int)ch]);)                   // Send this test
   }
 
   /*

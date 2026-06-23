@@ -478,11 +478,11 @@ static esp_err_t service_get_help(httpd_req_t *req)
  *------------------------------------------------------------*/
 static esp_err_t service_get_json(httpd_req_t *req)
 {
-  char my_name[SHORT_TEXT];               // Target name
+  char my_name[SHORT_TEXT];                // Target name
 
   DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_json(%s)", req->uri);))
-  squish(req->uri, _xs);                  // Go through the uri and keep the argument portion
-  tcpip_socket_2_queue(_xs, strlen(_xs)); // Put the data into the TCPIP queue
+  squish(req->uri, _xs);                   // Go through the uri and keep the argument portion
+  server_socket_2_queue(_xs, strlen(_xs)); // Put the data into the TCPIP queue
 
   /*
    * Set the header to indicate that this is a json request, then wait till it's done

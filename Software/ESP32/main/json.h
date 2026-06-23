@@ -156,8 +156,10 @@ EXTERN int           json_mfs_hold_d;                // Hold D
 EXTERN int           json_mfs_hold_c;                // Hold C
 EXTERN int           json_mfs_select_cd;             // Select C and D operation
 EXTERN int           json_wifi_reset_first;          // Reset the target on first WiFi connection
+
 EXTERN int           json_paper_shot;                // How many shots before advancing paper
 EXTERN int           json_aux_mode;                  // Enable comms from the AUX port
+EXTERN char          json_remote_ip[URL_SIZE];      // Remote server
 EXTERN char          json_remote_url[URL_SIZE];      // Where are the messages going?
 EXTERN int           json_remote_active[URL_SIZE];   // Is there a remote present
 EXTERN char          json_remote_key[URL_SIZE];      // Security key if nessary

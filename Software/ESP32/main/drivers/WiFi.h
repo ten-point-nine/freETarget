@@ -29,13 +29,6 @@ bool WiFi_get_remote_IP(char *url);            // Get the IP address of the remo
 void http_DNS_test(void);                      // Exercise the DNS lookup
 #endif
 
-void tcpip_accept_poll(void *parameters);      // Wait for a socket connection
-void tcpip_socket_poll_0(void *parameters);    // Listen to TCPIP recv calls
-void tcpip_socket_poll_1(void *parameters);    // Listen to TCPIP recv calls
-void tcpip_socket_poll_2(void *parameters);    // Listen to TCPIP recv calls
-void tcpip_socket_poll_3(void *parameters);    // Listen to TCPIP recv calls
-
-void WiFi_server_test(void);                   // Server test for diag.c
 void WiFi_station_loopback_test(void);         // Station test for diag.c
 void WiFi_AP_loopback_test(void);              // Access point test for diag.c
 

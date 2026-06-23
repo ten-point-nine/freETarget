@@ -187,7 +187,7 @@ int tcpip_queue_2_app(char *buffer, // Where to return the bytes
 
 /*******************************************************************************
  *
- * @function: tcpip_socket_2_queue
+ * @function: server_socket_2_queue
  *
  * @brief:    Put fresh TCPIP data into the queue for later
  *
@@ -200,8 +200,8 @@ int tcpip_queue_2_app(char *buffer, // Where to return the bytes
  * Used also by HTTP to put client data into the queue
  *
  ******************************************************************************/
-int tcpip_socket_2_queue(char *buffer, // Where to return the bytes
-                         int   length)   // Maximum transfer size
+int server_socket_2_queue(char *buffer, // Where to return the bytes
+                          int   length)   // Maximum transfer size
 {
   int bytes_moved;
 

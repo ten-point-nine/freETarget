@@ -129,6 +129,7 @@ const json_message_t JSON[] = {
     {SHOW + LOCK, "\"WIFI_IP\":",        (int *)&json_wifi_static_ip, IS_TEXT + IP_SIZE,        0,                  NONVOL_WIFI_IP,             0,          9 },
     {SHOW + LOCK, "\"WIFI_PWD\":",       (int *)&json_wifi_pwd,       IS_SECRET + PWD_SIZE,     0,                  NONVOL_WIFI_PWD,            0,          0 },
     {SHOW + LOCK, "\"WIFI_RESET\":",     &json_wifi_reset_first,      IS_INT32,                 0,                  NONVOL_WIFI_RESET_FIRST,    1,          3 },
+    {SHOW,        "\"WIFI_REMOTE_IP\":", (int *)&json_remote_ip,     IS_TEXT + IP_SIZE,        0,                  NONVOL_REMOTE_IP,           0,          15},
     {SHOW + LOCK, "\"WIFI_SSID\":",      (int *)&json_wifi_ssid,      IS_TEXT + SSID_SIZE,      0,                  NONVOL_WIFI_SSID,           0,          0 },
     {SHOW + LOCK, "\"X_OFFSET\":",       (int *)&json_x_offset,       IS_FLOAT,                 0,                  NONVOL_X_OFFSET,            0,          7 },
     {SHOW + LOCK, "\"Y_OFFSET\":",       (int *)&json_y_offset,       IS_FLOAT,                 0,                  NONVOL_Y_OFFSET,            0,          7 },
