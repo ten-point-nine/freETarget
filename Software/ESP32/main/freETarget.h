@@ -22,28 +22,29 @@
 #define SOFTWARE_VERSION "\"6.5.0 June 14, 2026\""
 #define _DONE_           "\r\nDone\r\n"
 #define _SHOT_           "shot"
-#define _GREETING_       "CONNECTED"   // Message to send on connection
-#define _BYE_            "BYE"         // Message to send on disconnection
-#define _HELLO_          "HELLO WORLD" // Message to send on reconnection
+#define _GREETING_       "CONNECTED"                  // Message to send on connection
+#define _BYE_            "BYE"                        // Message to send on disconnection
+#define _HELLO_          "HELLO WORLD"                // Message to send on reconnection
 
-#define NETWORK_TIME_PERIOD (15 * 60 * ONE_SECOND) // Expect a time synch every 15 minutes
+#define NETWORK_TIME_PERIOD    (15 * 60 * ONE_SECOND) // Expect a time synch every 15 minutes
 #define KEEP_ALIVE_TIME_PERIOD (10 * 60 * ONE_SECOND) // Expect a time synch every 15 minutes
 
-#define INIT_DONE 0xabcd               // NON-VOL Initialization complete signature
+#define INIT_DONE 0xabcd                              // NON-VOL Initialization complete signature
 #ifndef true
 #define true  (1 == 1)
 #define false (0 == 1)
 #endif
 
-#define IN_STARTUP   0x0001            // The software is in initialization
-#define IN_OPERATION 0x0002            // The software is operational
-#define IN_TEST      0x0004            // A self test has been selected (Suspend operation)
-#define IN_SLEEP     0x0008            // The unit has powered down
-#define IN_SHOT      0x0010            // The target is actively in a shot
-#define IN_REDUCTION 0x0020            // The data is being reduced
-#define IN_FATAL_ERR 0x0040            // A fatal error has occured and cannot be fixed
-#define IN_HTTP      0x0080            // The HTTP (JSON) data is being processed
-#define TIME_VALID   0x0100            //  Time base is syncronized
+#define IN_STARTUP       0x0001                       // The software is in initialization
+#define IN_OPERATION     0x0002                       // The software is operational
+#define IN_TEST          0x0004                       // A self test has been selected (Suspend operation)
+#define IN_SLEEP         0x0008                       // The unit has powered down
+#define IN_SHOT          0x0010                       // The target is actively in a shot
+#define IN_REDUCTION     0x0020                       // The data is being reduced
+#define IN_FATAL_ERR     0x0040                       // A fatal error has occured and cannot be fixed
+#define IN_HTTP          0x0080                       // The HTTP (JSON) data is being processed
+#define TIME_VALID       0x0100                       //  Time base is syncronized
+#define SERVER_CONNECTED 0x0200                       // The server is connected
 
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
 #define IF_IN(x)  if ( (run_state & (x)) != 0 )

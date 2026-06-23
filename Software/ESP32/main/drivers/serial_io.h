@@ -44,7 +44,8 @@ void RS485_test(void);                               // Test the RS485 port
 #define TCPIP_1        (TCPIP_0 << 1)                 // 0x40
 #define TCPIP_2        (TCPIP_1 << 1)                 // 0x80
 #define TCPIP_3        (TCPIP_2 << 1)                 // 0x100
-#define HTTP_CONNECTED (TCPIP_3 << 1)                 // 0x200
+#define CLIENT         (TCPIP_3 << 1)                 // 0x200
+#define HTTP_CONNECTED (CLIENT << 1)                  // 0x400
 #define EVEN_ODD_BEGIN (HTTP_CONNECTED << 1)          // Remember to output in even_odd mode
 #define EVEN_ODD_END   (EVEN_ODD_BEGIN << 1)          // Exit even odd mode
 
