@@ -35,8 +35,8 @@
 #include "BMI270.h"
 #include "IMU.h"
 #include "ntp.h"
-
-extern volatile time_count_64_t paper_time;
+#include "client.h"
+#include "server.h"
 
 static void show_test_help(void);
 
@@ -62,7 +62,7 @@ static const self_test_t test_list[] = {
     {"Show the current time",        &show_time          },
     {"- Communications Tests",       0                   },
     {"Test WiFi as a client",        &WiFi_client_test   },
-    //    {"Enable the WiFi Server",       &WiFi_server_test        },
+    //    {"Enable the WiFi Server",       &WiFi_server_test   },
     {"Scan for access points (APs)", &WiFi_AP_scan_test  },
     {"- HTTP tests",                 0                   },
     {"- Interrupt Tests",            0                   },

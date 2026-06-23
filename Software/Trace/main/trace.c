@@ -38,6 +38,8 @@
 #include "BMI270.h"
 #include "IMU.h"
 #include "NTP.h"
+#include "server.h"
+#include "client.h"
 
 /*
  *  Variables
@@ -173,7 +175,7 @@ void trace_loop(void *arg)
   DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "trace_loop()");))
   run_state |= IN_OPERATION;
 
-   NTP_test();
+  NTP_test();
 
   while ( 1 )
   {

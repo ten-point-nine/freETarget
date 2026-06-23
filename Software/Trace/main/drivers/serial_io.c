@@ -32,6 +32,7 @@
 #include "json.h"
 #include "nonvol.h"
 #include "WiFi.h"
+#include "tcpip_helpers.h"
 
 /*
  *  Serial IO port configuration

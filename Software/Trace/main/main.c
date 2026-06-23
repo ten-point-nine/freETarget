@@ -26,6 +26,8 @@
 #include "diag_tools.h"
 #include "http_client.h"
 #include "NTP.h"
+#include "client.h"
+#include "server.h"
 
 /*
  * Task Priorities
@@ -74,7 +76,6 @@ void app_main(void)
   }
   vTaskDelay(TICK_10ms);
 
-#if ( 0 )
   if ( xTaskCreate(trace_timers, "trace_timers", K4, NULL, TIMED, NULL) != pdPASS )
   {
     DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "trace_timers()");))
@@ -86,7 +87,6 @@ void app_main(void)
     DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "trace_sunchronous()");))
   }
   vTaskDelay(TICK_10ms);
-#endif
 
   if ( xTaskCreate(trace_json, "trace_json", K6, NULL, BACKGROUND, NULL) != pdPASS )
   {

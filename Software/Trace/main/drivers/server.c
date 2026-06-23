@@ -68,9 +68,9 @@
 #define WIFI_MAX_RETRY                    3    // Try 3x
 #define ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_OPEN
 
-                                               /*
-                                                * Typdef
-                                                */
+/*
+ * Typdef
+ */
 
 /*
  * Variables
@@ -84,8 +84,8 @@ static esp_netif_ip_info_t          ipInfo;                           // IP Addr
 static esp_netif_t                 *sta_netif;                        // Station configuration
 static int                          client_socket = AVAILABLE_SOCKET; // Socket used to talk to the target
 
-extern queue_struct_t in_buffer;                                      // TCPIP input buffer
-extern queue_struct_t out_buffer;                                     // TCPIP input buffer
+static queue_struct_t in_buffer;                                      // TCPIP input buffer
+static queue_struct_t out_buffer;                                     // TCPIP input buffer
 /*
  * Private Functions
  */
@@ -428,81 +428,72 @@ void WiFi_AP_scan_test(void)
   return;
 }
 
-
 /*****************************************************************************
  *
- * @function: WiFi_available
- *            WiFi_putc
- *            WiFi_puts
- *            WiFi_getc
+ * @function: WiFi_client_init
  *
- * @brief:    Primitive TCPIP send and receive
+ * @brief:    Start a client connection
  *
- * @return:   Number of characters waiting or character
+ * @return:   TRUE if the connection is succesful
  *
  ****************************************************************************
  *
- * WiFI_available eturn a difference between the in and out pointers
- * WiFi_putc - Send a character directly to the LWIP socket
- * WiFi_puts - Send a string directly to the LWIP socket
- * WiFi_getts - Pu;; a buffer from the queue
+ * Create a connection to the target
  *
  ***************************************************************************/
-
-int WiFi_available(void)
+bool WiFi_client_init(void)
 {
-  DLT(DLT_COMMUNICATION, SEND(CONSOLE, sprintf(_xs, "WiFi_available()");))
+  struct sockaddr_in dest_addr;
 
-  IF_NOT(TARGET_CONNECTED)
+  /*
+   *  Check to see if we are already connected
+   */
+  IF(TARGET_CONNECTED)
   {
-    return 0;
+    return true;
   }
 
-  return (in_buffer.in != in_buffer.out);
-}
-
-int WiFi_putch(char ch)    // Character to output
-{
-  DLT(DLT_COMMUNICATION, SEND(CONSOLE, sprintf(_xs, "WiFi_putch(%c)", ch);))
-
-  IF_NOT(TARGET_CONNECTED) // Not connected
+  /*
+   *  Not connected, then connect
+   */
+  if ( client_socket <= 0 )
   {
-    return -1;             // Return a failure
+    memset((void *)&dest_addr, 0, sizeof(dest_addr));
+    dest_addr.sin_len         = sizeof(dest_addr);
+    dest_addr.sin_addr.s_addr = inet_addr(json_wifi_target_ip);
+    dest_addr.sin_family      = AF_INET;
+    dest_addr.sin_port        = lwip_htons(1090);
+
+    /*
+     *   Create the socket
+     */
+    client_socket = lwip_socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+    if ( client_socket < 0 )
+    {
+      DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Unable to create socket: errno %d", errno);))
+      return false;
+    }
+  }
+  else
+  {
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Keeping socket: %d", client_socket);))
+    close(client_socket);
+    vTaskDelay(2);
   }
 
-  tcpip_app_2_queue(&ch, 1);
-
-  return 1;
-}
-
-int WiFi_puts(char *s,     // String to output
-              int   length)  // Length of string
-{
-
-  DLT(DLT_COMMUNICATION, SEND(CONSOLE, sprintf(_xs, "WiFi_puts(%s)", s);))
-
-  IF_NOT(TARGET_CONNECTED) // Not connected
+  /*
+   * Make the connection
+   */
+  if ( lwip_connect(client_socket, (struct sockaddr *)&dest_addr, sizeof(dest_addr)) != 0 )
   {
-    return 0;              // Return nothing
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Socket unable to connect to %s:%d: errno %d", json_wifi_target_ip, 1090, errno);))
+    return false;
   }
 
-  tcpip_app_2_queue(&s, length);
-
-  return length;           // Sent it
-}
-
-char WiFi_getch(void)
-{
-  char ch;
-
-  DLT(DLT_COMMUNICATION, SEND(CONSOLE, sprintf(_xs, "WiFi_getch()");))
-
-  IF_NOT(TARGET_CONNECTED) // Not connected
-  {
-    return 0;              // Return nothing
-  }
-
-  tcpip_queue_2_app(&ch, 1);
-
-  return ch;               // Got something
+  /*
+   *  Got here, ready to go
+   */
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Connected to target at: %s:%d", json_wifi_target_ip, 1090);))
+  run_state |= TARGET_CONNECTED; // Yay, we're connected
+  return true;
 }
