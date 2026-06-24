@@ -283,7 +283,7 @@ void trace_health_monitor(void)
   /*
    *  Check to see if we are connected to the target
    */
-  IF_NOT(TARGET_CONNECTED)
+  IF_NOT(CLIENT_CONNECTED)
   {
     DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Reconnecting to target");))
     WiFi_client_init(); // Try to make a new connection

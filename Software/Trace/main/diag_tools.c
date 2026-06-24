@@ -95,7 +95,7 @@ const state_name_t state_names[] = {
     {IN_OPERATION,     "IN_OPERATION "   }, // Normal operation
     {IN_TEST,          "IN_TEST"         }, // Executing self test
     {TIME_VALID,       "TIME_VALID"      }, //  Time base is syncronized
-    {TARGET_CONNECTED, "TARGET_CONNECTED"}, //  The sensor is connected to the target
+    {CLIENT_CONNECTED, "CLIENT_CONNECTED"}, //  The sensor is connected to the target
     {0,                0                 }
 };
 

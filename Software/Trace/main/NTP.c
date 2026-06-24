@@ -135,7 +135,7 @@ void NTP_ask(void)
 {
   NTP_fresh_time = false;
   NTP_start_time = esp_timer_get_time();
-  SEND(TARGET, sprintf(_xs, "{\"%s\"}", _NTP_SERVER_);) // Ask the server
+  SEND(CLIENT, sprintf(_xs, "{\"%s\"}", _NTP_SERVER_);) // Ask the server
   DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "NTP_ASK: %lld", NTP_start_time);))
   return;
 }
@@ -157,7 +157,7 @@ void NTP_ask(void)
 void NTP_server(void)
 {
   NTP_base_time = esp_timer_get_time();                                     // Send the server time
-  SEND(TARGET, sprintf(_xs, "{\"%s\":%lld}", _NTP_CLIENT_, NTP_base_time);) // back to the client
+  SEND(CLIENT, sprintf(_xs, "{\"%s\":%lld}", _NTP_CLIENT_, NTP_base_time);) // back to the client
   DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "Server time: %lld", NTP_base_time);))
   return;
 }

@@ -26,7 +26,7 @@
 #include "freertos/event_groups.h"
 #include "freertos/task.h"
 #include <string.h>
-#include "mdns.h"
+// #include "mdns.h"
 
 #include "esp_event.h"
 #include "esp_log.h"
@@ -42,11 +42,10 @@
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 
-#include "freETarget.h"
+#include "trace.h"
 #include "helpers.h"
 #include "http_client.h"
 #include "WiFi.h"
-#include "compute_hit.h"
 #include "diag_tools.h"
 #include "http_client.h"
 #include "json.h"
@@ -55,6 +54,7 @@
 #include "timer.h"
 #include "server.h"
 #include "client.h"
+#include "tcpip_helpers.h" 
 
 #define DEFAULT_IP         192, 168, 10, 9
 #define PORT               1090
@@ -80,11 +80,12 @@ static EventGroupHandle_t           s_wifi_event_group;
 static esp_event_handler_instance_t instance_any_id;
 static esp_event_handler_instance_t instance_got_ip;
 static int                          s_retry_num = 0;
-static esp_netif_ip_info_t          ipInfo;         // IP Address of the access point
-static int                          dns_valid;      // We have a valid IP address for the URL
-static ip_addr_t                    url_ip_address; // Address of the server
-static esp_netif_t                 *sta_netif;      // Station configuration
+static esp_netif_ip_info_t          ipInfo;          // IP Address of the access point
+static int                          dns_valid;       // We have a valid IP address for the URL
+static ip_addr_t                    url_ip_address;  // Address of the server
+static esp_netif_t                 *sta_netif;       // Station configuration
 static bool                         WiFi_initialized = false;
+int                                 connection_list; // bitmapof active connections
 
 /*
  * Private Functions
@@ -120,8 +121,6 @@ static void wifi_set_static_ip(esp_netif_t *netif); // Override the IP address
  *******************************************************************************/
 void WiFi_init(void)
 {
-  char str_c[SHORT_TEXT]; // Place to store the target name
-
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi_init()");))
 
   /*
@@ -136,15 +135,17 @@ void WiFi_init(void)
     WiFi_station_init();
   }
 
-  /*
-   * Setup the mDNS service
-   */
+/*
+ * Setup the mDNS service
+ */
+#if ( BUILD_MDNS )
   mdns_init();                   // Initialize the mDNS service
   target_name(str_c);            // Get the target name
   mdns_hostname_set(str_c);      // Set the hostname for the target
   mdns_instance_name_set(str_c); // Set the instance name for the target
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "mDNS service set up for: \"%s\"", str_c);))
+#endif
 
   /*
    *  All done
@@ -220,6 +221,7 @@ void WiFi_reconnect(void)
  *******************************************************************************/
 void WiFi_AP_init(void)
 {
+  #if(0)
   esp_netif_t       *wifiAP;
   wifi_init_config_t WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
@@ -270,9 +272,10 @@ void WiFi_AP_init(void)
   /*
    * Ready to go
    */
-  set_status_LED(LED_WIFI_ACCESS); // I am an access point
+  #endif
   return;
 }
+
 
 /*****************************************************************************
  *
@@ -347,17 +350,14 @@ void WiFi_station_init(void)
     WiFi_my_IP_address(str_c);
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Connected to AP SSID:  \"%s\"", json_wifi_ssid);))
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Using WiFi_IP_ADDRESS: \"%s\"", str_c);))
-    set_status_LED(LED_WIFI_STATION);
   }
   else if ( bits & WIFI_FAIL_BIT )
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to connect to SSID:%s, password:%s", json_wifi_ssid, json_wifi_pwd);))
-    set_status_LED(LED_WIFI_FAULT);
   }
   else
   {
     DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Unexpectged WiFi event");))
-    set_status_LED(LED_WIFI_FAULT);
   }
 
   /*
@@ -483,7 +483,6 @@ void WiFi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id
       {
         xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
       }
-      set_status_LED(LED_WIFI_STATION);
     }
   }
 
@@ -600,18 +599,16 @@ void WiFi_loopback_task(void *parameters)
   char buffer[1024];
   int  i;
 
-  tcpip_app_2_queue("Hello", 5);
-
   while ( 1 )
   {
-    length = tcpip_queue_2_app(buffer, sizeof(buffer));
+    length = server_queue_2_app(buffer, sizeof(buffer));
     if ( length != 0 )
     {
       for ( i = 0; i != length; i++ )
       {
         buffer[i]++; // Add 1 to the input
       }
-      tcpip_app_2_queue(buffer, length);
+      server_app_2_queue(buffer, length);
     }
     vTaskDelay(ONE_SECOND);
   }

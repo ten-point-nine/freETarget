@@ -68,8 +68,8 @@ const json_message_t JSON[] = {
     {SHOW, "\"THETA_DOT_OFFSET\":", &json_theta_dot_offset,          IS_INT32,            0,             NONVOL_THETA_DOT_OFFSET,   0,      0},
     {SHOW, "\"PHI_DOT_OFFSET\":",   &json_phi_dot_offset,            IS_INT32,            0,             NONVOL_PHI_DOT_OFFSET,     0,      0},
 
-    {SHOW, "\"WIFI_TARGET_IP\":",   (int *)&json_wifi_target_ip,     IS_TEXT + IP_SIZE,   0,             NONVOL_WIFI_TARGET_IP,     0,      0},
     {SHOW, "\"WIFI_STATIC_IP\":",   (int *)&json_wifi_static_ip,     IS_TEXT + IP_SIZE,   0,             NONVOL_WIFI_STATIC_IP,     0,      0},
+    {SHOW, "\"WIFI_REMOTE_IP\":",   (int *)&json_wifi_remote_ip,     IS_TEXT + IP_SIZE,   0,             NONVOL_WIFI_REMOTE_IP,     0,      0},
     {SHOW, "\"WIFI_PWD\":",         (int *)&json_wifi_pwd,           IS_TEXT + PWD_SIZE,  0,             NONVOL_WIFI_PWD,           0,      0},
     {SHOW, "\"WIFI_SSID\":",        (int *)&json_wifi_ssid,          IS_TEXT + SSID_SIZE, 0,             NONVOL_WIFI_SSID,          0,      0},
     {SHOW, "\"WIFI_GATEWAY\":",     (int *)&json_wifi_gateway,       IS_TEXT + IP_SIZE,   0,             NONVOL_WIFI_GATEWAY,       0,      0},
@@ -116,7 +116,7 @@ int                 i;
 void                trace_json(void *pvParameters)
 {
   char ch;
-int xx =  0;
+  int  xx = 0;
 
   DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "trace_json()");))
 
@@ -409,7 +409,7 @@ void show_echo(void)
           strcpy(str_c, (char *)(JSON[i].value));
           if ( (JSON[i].convert & IS_MASK) == IS_SECRET )
           {
-//            strncpy(str_c, "*************************************************", strlen(str_c));
+            //            strncpy(str_c, "*************************************************", strlen(str_c));
           }
 
           SEND(CONSOLE, sprintf(_xs, "%-18s \"%s\", ", JSON[i].token, str_c);)

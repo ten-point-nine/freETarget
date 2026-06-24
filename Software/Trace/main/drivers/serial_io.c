@@ -97,7 +97,7 @@ void serial_io_init(void)
 #if ( 0 )
   /*
    *  Prepare the TCPIP queues
-  78 */
+  */
   in_buffer.in   = 0; // Queue pointers
   in_buffer.out  = 0;
   out_buffer.in  = 0; // Queue pointers
@@ -143,9 +143,9 @@ int serial_available(int ports) // Bit mask of active ports
     n_available += length;
   }
 
-  if ( ports & TARGET )
+  if ( ports & (TCPIP | CLIENT) )
   {
-    n_available += WiFi_available();
+    n_available += socket_available();
   }
 
   /*
@@ -173,11 +173,11 @@ void serial_flush(int ports) // active port list
     uart_flush(uart_console);
   }
 
-  if ( ports & TARGET )
+  if ( ports & CLIENT )
   {
-    while ( WiFi_available() > 0 )
+    while ( socket_available() > 0 )
     {
-      WiFi_getch();
+      socket_getch();
     }
   }
   return;
@@ -218,9 +218,9 @@ char serial_getch(int ports) // Bit mask of active ports
   /*
    *  Bring in the TCPIP bytes
    */
-  if ( ports & TARGET )
+  if ( ports & (TCPIP | CLIENT) )
   {
-    ch = WiFi_getch();
+    ch = socket_getch();
     return ch;
   }
 
@@ -261,9 +261,9 @@ void serial_putch(char ch,
     printf("%c", ch); // Must be printf
   }
 
-  if ( ports & TARGET )
+  if ( ports & CLIENT )
   {
-    tcpip_app_2_queue(&ch, 1);
+    server_app_2_queue(&ch, 1);
   }
 
   /*
@@ -355,9 +355,9 @@ void serial_to_all(char *str,        // String to output
     printf("%s", str); // Must be printf
   }
 
-  if ( ports & TARGET )
+  if ( ports & CLIENT )
   {
-    tcpip_app_2_queue(str, strlen(str));
+    server_app_2_queue(str, strlen(str));
   }
 
   /*

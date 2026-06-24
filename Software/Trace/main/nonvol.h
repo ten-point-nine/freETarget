@@ -36,9 +36,9 @@ void nonvol_write_i32(char *name, int *value);    // Write a value to nonvol
 #define NONVOL_KEEP_ALIVE         "KEEP_ALIVE"         // Send out a keep alive at a r
 #define NONVOL_WIFI_SSID          "WIFI_SSID"          // Storage for SSID
 #define NONVOL_WIFI_PWD           "WIFI_PWD"           // Storage for SSID Password
-#define NONVOL_WIFI_GATEWAY     "WIFI_GATEWAY_IP"     // Gateway
+#define NONVOL_WIFI_GATEWAY       "WIFI_GATEWAY_IP"    // Gateway
 #define NONVOL_WIFI_STATIC_IP     "WIFI_STATIC_IP"     // Storage for IP Address
-#define NONVOL_WIFI_TARGET_IP     "WIFI_TARGET_IP"     // Address of the target server
+#define NONVOL_WIFI_REMOTE_IP     "WIFI_REMOTE_IP"     // Address of the target server
 #define NONVOL_WIFI_RESET_FIRST   "WIFI_RESET"         // Reset the target on the first WiFi connction
 #define NONVOL_WIFI_HIDDEN        "WIFI_HIDDEN"        // Hide the SSID if set to 1
 #define NONVOL_OTA_URL            "OTA_URL"            // User supplied name for the target

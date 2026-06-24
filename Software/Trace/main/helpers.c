@@ -245,7 +245,7 @@ void send_keep_alive(void)
 {
   static int keep_alive_count = 0;
 
-  SEND(TARGET, sprintf(_xs, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);)
+  SEND((TCPIP | CLIENT), sprintf(_xs, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);)
   keep_alive_timer = (time_count_64_t)json_keep_alive * ONE_SECOND;
 
   return;

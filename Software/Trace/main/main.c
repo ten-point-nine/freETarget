@@ -64,15 +64,27 @@ void app_main(void)
   /*
    * Everything is ready, start the threads.  Low task priority number == low priority
    */
-  if ( xTaskCreate(WiFi_client_send, "WiFi_client_send", K4, NULL, MUST_RUN, NULL) != pdPASS )
+  if ( xTaskCreate(client_send, "client_send", K4, NULL, MUST_RUN, NULL) != pdPASS )
   {
     DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "WiFi_client_send()");))
   }
   vTaskDelay(TICK_10ms);
 
-  if ( xTaskCreate(WiFi_client_recv, "WiFi_client_recv", K6, NULL, MUST_RUN, NULL) != pdPASS )
+  if ( xTaskCreate(client_recv, "client_recv", K6, NULL, MUST_RUN, NULL) != pdPASS )
   {
     DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "WiFi_client_recv()");))
+  }
+  vTaskDelay(TICK_10ms);
+
+  if ( xTaskCreate(server_send, "server_send", K4, NULL, MUST_RUN, NULL) != pdPASS )
+  {
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "server_send()");))
+  }
+  vTaskDelay(TICK_10ms);
+
+  if ( xTaskCreate(server_receive_poll, "server_receive_poll", K6, NULL, MUST_RUN, NULL) != pdPASS )
+  {
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "server_receive_poll()");))
   }
   vTaskDelay(TICK_10ms);
 

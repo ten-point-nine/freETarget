@@ -41,7 +41,7 @@
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 
-#include "freETarget.h"
+#include "trace.h"
 #include "helpers.h"
 #include "http_client.h"
 #include "WiFi.h"
@@ -52,14 +52,13 @@
 #include "timer.h"
 #include "tcpip_helpers.h"
 #include "server.h"
-#include "compute_hit.h"
 
 #define DEFAULT_IP         192, 168, 10, 9
 #define PORT               1090
 #define KEEPALIVE_IDLE     true
 #define KEEPALIVE_INTERVAL 100
 #define KEEPALIVE_COUNT    50
-#define MAX_SOCKETS        4  // Allow for four sockets
+#define MAX_SOCKETS        1  // Allow for one socket
 #define AVAILABLE_SOCKET   -1 // The socket is unused
 
 /*
@@ -77,14 +76,9 @@
 /*
  * Variables
  */
-static wifi_config_t                WiFi_config;
-static EventGroupHandle_t           s_wifi_event_group;
-static esp_event_handler_instance_t instance_any_id;
-static esp_event_handler_instance_t instance_got_ip;
-static int                          s_retry_num = 0;
-static esp_netif_ip_info_t          ipInfo;                   // IP Address of the access point
-static esp_netif_t                 *sta_netif;                // Station configuration
-static socket_description_t         socket_list[MAX_SOCKETS]; // Space to remember four sockets
+
+static socket_description_t socket_list[MAX_SOCKETS]; // Space to remember four sockets
+extern int                  connection_list;          // bitmap of active connections
 
 /*
  * Private Functions
@@ -142,7 +136,7 @@ void server_send(void *pvParameters)
                                /*
                                 * Out to TCPIP
                                 */
-    to_send = tcpip_queue_2_socket(rx_buffer, sizeof(rx_buffer));
+    to_send = server_queue_2_socket(rx_buffer, sizeof(rx_buffer));
     if ( to_send > 0 )
     {
       for ( i = 0; i != MAX_SOCKETS; i++ )
@@ -178,18 +172,6 @@ void server_send(void *pvParameters)
         if ( socket_list[i].handle > 0 )
         {
           break;
-        }
-      }
-
-      if ( i == MAX_SOCKETS )         // All of them are closed?
-      {
-        if ( json_wifi_ssid[0] != 0 ) //  I'm a station
-        {
-          set_status_LED(LED_WIFI_STATION);
-        }
-        else                          // I'm an access point
-        {
-          set_status_LED(LED_WIFI_ACCESS);
         }
       }
     }
@@ -453,7 +435,6 @@ void server_accept_poll(void *parameters)
         setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT, &keepCount, sizeof(int));
 
         DLT(DLT_INFO, { SEND(ALL, sprintf(_xs, "Socket accepted ip address: %s\r\n", addr_str);) })
-        set_status_LED(LED_WIFI_STATION_CN);
       }
     }
   }
@@ -482,8 +463,7 @@ void server_accept_poll(void *parameters)
  *******************************************************************************/
 static void WiFi_start_new_connection(int sock) // Socket token to use
 {
-  int  i;
-  char str[SHORT_TEXT];
+  int i;
 
   /*
    *  Build up a mask of existing WiFi connections
@@ -493,10 +473,11 @@ static void WiFi_start_new_connection(int sock) // Socket token to use
   {
     if ( socket_list[i].handle != AVAILABLE_SOCKET )
     {
-      connection_list = (TCPIP_0) << i;
+      connection_list = (TCPIP) << i;
     }
   }
 
+#if ( 0 )
   /*
    *  Inform the PC what is going on
    */
@@ -511,6 +492,7 @@ static void WiFi_start_new_connection(int sock) // Socket token to use
       send(sock, _xs, strlen(_xs), 0);
     }
   }
+#endif
 
   /*
    *  All done, return

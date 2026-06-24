@@ -113,7 +113,7 @@ typedef struct
 
 static status_LED_t states[] = {
     {IN_STARTUP,       0,                LED_STARTUP      }, // This table is organized in highest
-    {TARGET_CONNECTED, TARGET_CONNECTED, LED_NO_CONNECTION}, // Not connected to the target
+    {CLIENT_CONNECTED, CLIENT_CONNECTED, LED_NO_CONNECTION}, // Not connected to the target
     {TIME_VALID,       TIME_VALID,       LED_NO_TIME      }, // Not synchronized
     {IN_FIFO_FILLING,  0,                LED_FIFO_FILLING }, // to lowest priority.
     {IN_REDUCTION,     0,                LED_REDUCTION    },

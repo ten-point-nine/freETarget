@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------
  *
- * tcpip_helpers.h
+ * server_helpers.h
  *
  * Header file for TCP/IP helper functions
  *
@@ -11,10 +11,12 @@
 /*
  * Global functions
  */
-int tcpip_app_2_queue(char *buffer, int length);    // Save for later output to the socket
-int tcpip_queue_2_socket(char *buffer, int length); // Take from queue and put to socket
-int tcpip_socket_2_queue(char *buffer, int length); // Take from socket and queue
-int tcpip_queue_2_app(char *buffer, int length);    // Take from queue and return to application
+int server_app_2_queue(char *buffer, int length);    // Save for later output to the socket
+int server_queue_2_socket(char *buffer, int length); // Take from queue and put to socket
+int server_socket_2_queue(char *buffer, int length); // Take from socket and queue
+int server_queue_2_app(char *buffer, int length);    // Take from queue and return to application
+int socket_available(void); // How many characters are available in the socket buffer
+int socket_getch(void);          // Get one character from the socket buffer 
 
 /*
  * #defines
