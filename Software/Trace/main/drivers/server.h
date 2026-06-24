@@ -11,11 +11,17 @@
 /*
  * Global functions
  */
-void WiFi_AP_scan_test(void);          // Scan for access points (APs)
-void WiFi_server_test(void);           // Server test for diag.c
-void WiFi_station_loopback_test(void); // Station test for diag.c
-void WiFi_AP_loopback_test(void);      // Access point test for diag.c
+void WiFi_server_init(void);                 // Start the WiFi server
+void WiFi_station_loopback_test(void);       // Station test for diag.c
 
+void server_send(void *pvParameters);        // Send data to connected clients
+void server_accept_poll(void *parameters);   // Wait for a socket connection
+void server_receive_poll(void *parameters);  // Listen to TCPIP recv calls
+#if ( 0 )
+void server_socket_poll_1(void *parameters); // Listen to TCPIP recv calls
+void server_socket_poll_2(void *parameters); // Listen to TCPIP recv calls
+void server_socket_poll_3(void *parameters); // Listen to TCPIP recv calls
+#endif
 /*
  * #defines
  */

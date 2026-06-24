@@ -75,7 +75,7 @@
 /*
  * Variables
  */
-static int                          client_socket = AVAILABLE_SOCKET; // Socket used to talk to the target
+static int client_socket = AVAILABLE_SOCKET; // Socket used to talk to the target
 
 /*
  * Private Functions
@@ -92,7 +92,7 @@ esp_err_t esp_base_mac_addr_get(uint8_t *mac);
  *
  ****************************************************************************
  *
- * Create a connection to the target
+ * Create a connection to a remote server
  *
  ***************************************************************************/
 bool WiFi_client_init(void)
@@ -147,7 +147,7 @@ bool WiFi_client_init(void)
   /*
    *  Got here, ready to go
    */
-  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Connected to target at: %s:%d", json_remote_ip, 1090);))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Connected to remote at: %s:%d", json_remote_ip, 1090);))
   run_state |= SERVER_CONNECTED; // Yay, we're connected
   return true;
 }
@@ -168,7 +168,7 @@ bool WiFi_client_init(void)
 char rx_buffer[256];
 char propeller[] = {'-', '/', '|', '\\'};
 
-void WiFi_client_recv(void *params)
+void client_recv(void *params)
 {
   int length;
 
@@ -198,34 +198,17 @@ void WiFi_client_recv(void *params)
  *
  ****************************************************************************
  *
+ * This is called periodically from FreeRTOS to bring in the latest
  *
  *
  ***************************************************************************/
-void WiFi_client_send(void *params)
+void client_send(char *buffer, // Data to send
+                      int   length)   // Length of the data
 {
-  int  length;
-  char tx_buffer[256];
 
   DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "WiFi_client_send()");))
 
-  while ( 1 )
-  {
-    length = tcpip_queue_2_socket(tx_buffer, sizeof(tx_buffer));
-
-    if ( length != 0 )
-    {
-      if ( lwip_send(client_socket, &tx_buffer, length, MSG_DONTWAIT) == 0 )
-      {
-        if ( errno == ENOTCONN )
-        {
-          run_state &= ~SERVER_CONNECTED; // Tried to send, but nothing went out
-        }
-        DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "WiFi_client_send(): target not connected %d", errno);))
-      }
-      lwip_send(client_socket, NULL, 0, 0);
-    }
-    vTaskDelay(10);
-  }
+  lwip_send(client_socket, buffer, length, MSG_DONTWAIT);
 
   /*
    * Done

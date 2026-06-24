@@ -669,34 +669,6 @@ void WiFi_MAC_address(char *mac // Where to return the string
 
 /*****************************************************************************
  *
- * @function: WiFi_tests
- *
- * @brief:    A varity of WiFi tests
- *
- * @return:   None
- *
- ****************************************************************************/
-
-void WiFi_station_loopback_test(void)
-{
-  WiFi_station_init();
-  xTaskCreate(WiFi_tcp_server_task, "WiFi_tcp_server", 4096, NULL, 5, NULL);
-  xTaskCreate(server_accept_poll, "server_accept_poll", 4096, NULL, 4, NULL);
-  WiFi_loopback_test();
-  return;
-}
-
-void WiFi_AP_loopback_test(void)
-{
-  WiFi_AP_init();
-  xTaskCreate(WiFi_tcp_server_task, "WiFi_tcp_server", 4096, NULL, 5, NULL);
-  xTaskCreate(server_accept_poll, "server_accept_poll", 4096, NULL, 4, NULL);
-  WiFi_loopback_test();
-  return;
-}
-
-/*****************************************************************************
- *
  * @function: WiFi_AP_scan_test
  *
  * @brief:    Find the APs in the area

@@ -81,15 +81,21 @@ void app_main(void)
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 
-  xTaskCreate(WiFi_tcp_server_task, "WiFi_tcp_server", K4, NULL, NETWORK, NULL);
+  xTaskCreate(server_send, "server_send", K4, NULL, NETWORK, NULL);                 // Send data to connected clients
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
-  xTaskCreate(server_accept_poll, "server_accept_poll", K4, NULL, POLLING, NULL);
+  xTaskCreate(server_accept_poll, "server_accept_poll", K4, NULL, POLLING, NULL);   // Wait for an incoming connection
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
-  xTaskCreate(server_socket_poll_0, "server_socket_poll_0", K4, NULL, POLLING, NULL);
+  xTaskCreate(server_receive_poll, "server_receive_poll", K4, NULL, POLLING, NULL); // Wait for incoming data
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
+
+  xTaskCreate(client_recv, "client_recv", K4, NULL, POLLING, NULL);                 // Wait for incoming data
+  serial_flush(ALL);
+  vTaskDelay(TICK_10ms);
+  
+#if ( 0 )
   xTaskCreate(server_socket_poll_1, "server_socket_poll_1", K4, NULL, POLLING, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
@@ -99,6 +105,7 @@ void app_main(void)
   xTaskCreate(server_socket_poll_3, "server_socket_poll_3", K4, NULL, POLLING, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
+#endif
 
   start_webserver(DEFAULT_HTTP_PORT); // Main port for the web server
   serial_flush(ALL);

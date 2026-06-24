@@ -436,7 +436,7 @@ char serial_getch(int ports) // Bit mask of active ports
   /*
    *  Bring in the TCPIP bytes
    */
-  if ( ports & TCPIP )
+  if ( ports & (TCPIP | CLIENT) )
   {
     if ( tcpip_queue_2_app(&ch, 1) > 0 )
     {
@@ -491,8 +491,8 @@ void serial_putch(char ch,
     uart_write_bytes(uart_aux, (const char *)&ch, 1);
   }
 
-  if ( ports & TCPIP )
-  {
+  if ( ports & (TCPIP | CLIENT) )                // Send it up to the JSON through a common
+  {                                              // link
     tcpip_app_2_queue(&ch, 1);
   }
 
@@ -595,14 +595,14 @@ void serial_to_all(char *str,        // String to output
     uart_write_bytes(uart_aux, (const char *)str, strlen(str));
   }
 
-  if ( ports & TCPIP )
-  {
+  if ( ports & (TCPIP | CLIENT) )                // Send the TCP and Client traffic
+  {                                              // throught the common buffer
     tcpip_app_2_queue(str, strlen(str));
   }
 
-  if ( ports & HTTP_CONNECTED ) // Is there a web server connected?
+  if ( ports & HTTP_CONNECTED )                  // Is there a web server connected?
   {
-    http_send_string(str);      // Yes, send it to the web server
+    http_send_string(str);                       // Yes, send it to the web server
   }
 
   /*

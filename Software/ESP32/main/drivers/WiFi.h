@@ -14,7 +14,6 @@
 void WiFi_init(void);                          // Initialize the WiFi
 void WiFi_AP_init(void);                       // Initialize the WiFi as an Access Point
 void WiFi_station_init(void);                  // Initialize the WiFI as a station
-void WiFi_tcp_server_task(void *pvParameters); // TCP Server task
 void WiFi_loopback_test(void);                 // Loopback the TCPIP channel
 bool WiFi_my_IP_address(char *s);              // Return the current IP address
 void WiFi_remote_IP_address(char *s);          // Return the current gateway address

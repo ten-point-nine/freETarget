@@ -11,10 +11,10 @@
 /*
  * Global functions
  */
-void WiFi_client_init(void);         // Initialize the WiFi client
-void WiFi_client_recv(void *params); // Receive TCIP traffic
-void WiFi_client_send(void *params); // Send TCIP traffic
-void WiFi_client_test(void);         // Send and receive stuff from the target
+bool WiFi_client_init(void);                // Initialize the WiFi client
+void client_recv(void *params);             // Receive TCIP traffic
+void client_send(char *buffer, int length); // Send TCIP traffic
+void WiFi_client_test(void);                // Send and receive stuff from the target
 
 /*
  * #defines
