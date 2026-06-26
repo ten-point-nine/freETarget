@@ -152,7 +152,7 @@ void server_send(void *pvParameters)
           buffer_offset = 0;
           while ( buffer_offset < to_send )
           {
-            length = send(socket_list[i].handle, rx_buffer + buffer_offset, to_send - buffer_offset, 0);
+            length = lwip_send(socket_list[i].handle, rx_buffer + buffer_offset, to_send - buffer_offset, 0);
             if ( length < 0 )
             {
               DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "TCPIP send socket closed to %s ", socket_list[i].ip);))
@@ -163,7 +163,7 @@ void server_send(void *pvParameters)
               break;
             }
             buffer_offset += length;
-            send(socket_list[i].handle, NULL, 0, 0); // Flush the transmit queue
+            lwip_send(socket_list[i].handle, NULL, 0, 0); // Flush the transmit queue
           }
         }
       }
@@ -224,7 +224,7 @@ void server_send(void *pvParameters)
  * for each possible socket.
  *
  *******************************************************************************/
-void server_receive_poll(void *parameters)
+void server_receive(void *parameters)
 {
   int  length;
   char rx_buffer[256];
@@ -336,7 +336,7 @@ void server_socket_poll_3(void *parameters)
 
 /*****************************************************************************
  *
- * @function: server_accept_poll()
+ * @function: server_accept()
  *
  * @brief:    Tasks to poll waiting for an incoming connection
  *
@@ -359,7 +359,7 @@ void server_socket_poll_3(void *parameters)
  * From this point on, the incoming or outgoing data is linked to the sockt
  *
  *******************************************************************************/
-void server_accept_poll(void *parameters)
+void server_accept(void *parameters)
 {
   char                    addr_str[128];
   int                     ip_protocol  = 0;
@@ -375,7 +375,7 @@ void server_accept_poll(void *parameters)
   int                     sock;
   int                     i, j;
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "tcp_accept_poll()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "server_accept()");))
 
   /*
    * Start the server
@@ -422,7 +422,6 @@ void server_accept_poll(void *parameters)
           break;
         }
       }
-
       /*
        * Got a socket, and we have enough room to add it
        */
@@ -507,8 +506,9 @@ static void WiFi_start_new_connection(int sock) // Socket token to use
   {
     if ( (record[i].session_type & SESSION_VALID) != 0 )
     {
-      send_replay(&record[i], i);
-      send(sock, _xs, strlen(_xs), 0);
+      send_replay(&record[i], i);  
+      lwip_send(sock, _xs, strlen(_xs), 0);
+      lwip_send(sock, NULL, 0, 0);
     }
   }
 
