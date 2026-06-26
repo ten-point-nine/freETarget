@@ -102,7 +102,7 @@ bool WiFi_client_init(void)
   /*
    *  Check to see if we are already connected
    */
-  IF_IN(SERVER_CONNECTED)
+  IF(CLIENT_CONNECTED)
   {
     return true;
   }
@@ -114,7 +114,7 @@ bool WiFi_client_init(void)
   {
     memset((void *)&dest_addr, 0, sizeof(dest_addr));
     dest_addr.sin_len         = sizeof(dest_addr);
-    dest_addr.sin_addr.s_addr = inet_addr(json_remote_ip);
+    dest_addr.sin_addr.s_addr = inet_addr(json_wifi_server_ip);
     dest_addr.sin_family      = AF_INET;
     dest_addr.sin_port        = lwip_htons(1090);
 
@@ -140,14 +140,14 @@ bool WiFi_client_init(void)
    */
   if ( lwip_connect(client_socket, (struct sockaddr *)&dest_addr, sizeof(dest_addr)) != 0 )
   {
-    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Socket unable to connect to %s:%d: errno %d", json_remote_ip, 1090, errno);))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Socket unable to connect to %s:%d: errno %d", json_server_IP, 1090, errno);))
     return false;
   }
 
   /*
    *  Got here, ready to go
    */
-  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Connected to remote at: %s:%d", json_remote_ip, 1090);))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Connected to remote at: %s:%d", json_server_IP, 1090);))
   run_state |= SERVER_CONNECTED; // Yay, we're connected
   return true;
 }
@@ -176,7 +176,7 @@ void client_recv(void *params)
 
   while ( 1 )
   {
-    IF_IN(SERVER_CONNECTED)
+    IF(CLIENT_CONNECTED)
     {
       length = recv(client_socket, rx_buffer, sizeof(rx_buffer), MSG_DONTWAIT | MSG_OOB);
       if ( length > 0 )
@@ -202,13 +202,14 @@ void client_recv(void *params)
  *
  *
  ***************************************************************************/
-void client_send(char *buffer, // Data to send
-                      int   length)   // Length of the data
+void client_send(char *buffer,                            // Data to send
+                 int   length)                              // Length of the data
 {
 
   DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "WiFi_client_send()");))
 
-  lwip_send(client_socket, buffer, length, MSG_DONTWAIT);
+  lwip_send(client_socket, buffer, length, MSG_DONTWAIT); // Send the packet
+  lwip_send(client_socket, NULL, 0, 0);                   // and flush
 
   /*
    * Done
@@ -285,7 +286,7 @@ void WiFi_client_test(void) //
      */
     ch = (ch - '0') % (sizeof(test_s) / sizeof(char *) - 1);
 
-    IF_NOT(SERVER_CONNECTED)                                             // Not connected
+    IF_NOT(CLIENT_CONNECTED)                                             // Not connected
     {
       SEND(CONSOLE, sprintf(_xs, "\r\nTarget not connected");)           // Send this test
       break;                                                             // Return nothing

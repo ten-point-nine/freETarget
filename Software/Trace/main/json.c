@@ -69,7 +69,7 @@ const json_message_t JSON[] = {
     {SHOW, "\"PHI_DOT_OFFSET\":",   &json_phi_dot_offset,            IS_INT32,            0,             NONVOL_PHI_DOT_OFFSET,     0,      0},
 
     {SHOW, "\"WIFI_STATIC_IP\":",   (int *)&json_wifi_static_ip,     IS_TEXT + IP_SIZE,   0,             NONVOL_WIFI_STATIC_IP,     0,      0},
-    {SHOW, "\"WIFI_REMOTE_IP\":",   (int *)&json_wifi_remote_ip,     IS_TEXT + IP_SIZE,   0,             NONVOL_WIFI_REMOTE_IP,     0,      0},
+    {SHOW, "\"WIFI_SERVER_IP\":",   (int *)&json_wifi_server_ip,     IS_TEXT + IP_SIZE,   0,             NONVOL_WIFI_SERVER_IP,     0,      0},
     {SHOW, "\"WIFI_PWD\":",         (int *)&json_wifi_pwd,           IS_TEXT + PWD_SIZE,  0,             NONVOL_WIFI_PWD,           0,      0},
     {SHOW, "\"WIFI_SSID\":",        (int *)&json_wifi_ssid,          IS_TEXT + SSID_SIZE, 0,             NONVOL_WIFI_SSID,          0,      0},
     {SHOW, "\"WIFI_GATEWAY\":",     (int *)&json_wifi_gateway,       IS_TEXT + IP_SIZE,   0,             NONVOL_WIFI_GATEWAY,       0,      0},
@@ -128,7 +128,7 @@ void                trace_json(void *pvParameters)
     while ( serial_available(ALL) != 0 ) // Something waiting for us?
     {
       ch = serial_getch(ALL);
-      if ( is_trace & DLT_DEBUG )
+      //   if ( is_trace & DLT_DEBUG )
       {
         printf("%c", ch);
       }
@@ -195,7 +195,7 @@ void                trace_json(void *pvParameters)
       } // End switch
 
     } // End if char available
-    vTaskDelay(10);
+    vTaskDelay(TICK_10ms);
   }
 
   /*
@@ -259,6 +259,11 @@ static void handle_json(void)
               x = 0;
               break;
 
+            case IS_TEXT_1:
+              if ( hamming_weight(connection_list) > 1 )
+              {
+                break;
+              }
             case IS_TEXT:                                   // Convert to text
             case IS_SECRET:
               while ( input_JSON[i + k] != '"' )            // Skip to the opening quote
@@ -409,7 +414,7 @@ void show_echo(void)
           strcpy(str_c, (char *)(JSON[i].value));
           if ( (JSON[i].convert & IS_MASK) == IS_SECRET )
           {
-            //            strncpy(str_c, "*************************************************", strlen(str_c));
+            strncpy(str_c, "*************************************************", strlen(str_c));
           }
 
           SEND(CONSOLE, sprintf(_xs, "%-18s \"%s\", ", JSON[i].token, str_c);)

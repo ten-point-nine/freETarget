@@ -42,15 +42,16 @@
 #define IN_FATAL_ERROR   (IN_OPERATION << 1)          // A fatal error has occured and cannot be fixed
 #define IN_TEST          (IN_FATAL_ERROR << 1)        // Running a test
 #define CLIENT_CONNECTED (IN_TEST << 1)               // We are connected to the target
-#define TIME_VALID       (CLIENT_CONNECTED << 1)      // The timebase is valid
+#define SERVER_CONNECTED (CLIENT_CONNECTED << 1)      // We are connected to the target
+#define TIME_VALID       (SERVER_CONNECTED << 1)      // The timebase is valid
 
-#define IF(x)     if ( (run_state & (x)) != 0 )
-#define IF_NOT(x) if ( (run_state & (x)) == 0 )
-#define set_status_LED(x)  // Placeholder for setting the status LED 
+#define IF(x)             if ( (run_state & (x)) != 0 )
+#define IF_NOT(x)         if ( (run_state & (x)) == 0 )
+#define set_status_LED(x)                             // Placeholder for setting the status LED
 
 #define SEND(who, message) {message} serial_to_all(_xs, who);
 
-#define BUILD_MDNS (0 == 1) // MDNS not supported
+#define BUILD_MDNS (0 == 1)                           // MDNS not supported
 
 /*
  * Options

@@ -33,6 +33,8 @@
 #include "nonvol.h"
 #include "WiFi.h"
 #include "tcpip_helpers.h"
+#include "server.h"
+#include "client.h" 
 
 /*
  *  Serial IO port configuration
@@ -97,7 +99,7 @@ void serial_io_init(void)
 #if ( 0 )
   /*
    *  Prepare the TCPIP queues
-  */
+   */
   in_buffer.in   = 0; // Queue pointers
   in_buffer.out  = 0;
   out_buffer.in  = 0; // Queue pointers
@@ -261,9 +263,14 @@ void serial_putch(char ch,
     printf("%c", ch); // Must be printf
   }
 
+  if ( ports & TCPIP )
+  {
+    server_send(&ch, 1);
+  }
+
   if ( ports & CLIENT )
   {
-    server_app_2_queue(&ch, 1);
+    client_send(&ch, 1);
   }
 
   /*
@@ -355,9 +362,14 @@ void serial_to_all(char *str,        // String to output
     printf("%s", str); // Must be printf
   }
 
+  if ( ports & TCPIP )
+  {
+    server_send(str, strlen(str));
+  }
+
   if ( ports & CLIENT )
   {
-    server_app_2_queue(str, strlen(str));
+    client_send(str, strlen(str));
   }
 
   /*

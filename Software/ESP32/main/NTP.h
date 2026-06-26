@@ -22,6 +22,7 @@ bool NTP_ttg(void);    // TRUE if we need an NTP refresh
 void NTP_server(void); // Originating signal to start time sync
 void NTP_client(void); // Receiving signal to syncronize time
 void NTP_ask(void);    // Begin to calculate the loop time
+void NTP_test(void); // Keep asking for NTP time 
 
 /*
  *  Definitions

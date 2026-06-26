@@ -33,15 +33,72 @@ real_t SQ(real_t a)    // Square
 {
   return a * a;
 }
+/*-----------------------------------------------------
+ *
+ * @function: target_name
+ *
+ * @brief: Determine the target name and return
+ *
+ * @return: Target name returned via pointer
+ *
+ *-----------------------------------------------------
+ *
+ * Depending on the settings, determine the target name
+ * and return it to the caller
+ *
+ * To set the target name, the following rules apply:
+ *
+ * {"NAME_ID":0-20} Pre defined names
+ * {"NAME_ID":99, "NAME_TEXT":"myTargetName"}
+ *
+ *
+ *-----------------------------------------------------*/
+const char *names[] = {"TARGET",                                                                                         //  0
+                       "1",      "2",      "3",       "4",      "5",       "6",       "7",      "8",     "9",      "10", //  1
+                       "DOC",    "DOPEY",  "HAPPY",   "GRUMPY", "BASHFUL", "SNEEZEY", "SLEEPY",                          // 11
+                       "RUDOLF", "DONNER", "BLITZEN", "DASHER", "PRANCER", "VIXEN",   "COMET",  "CUPID", "DUNDER",       // 18
+                       "ODIN",   "WODEN",  "THOR",    "BALDAR", "TEST",                                                  // 26
+                       0};
 
-real_t F_ABS(real_t x) // Floating point absolute value
+void target_name(char *name_space)
 {
-  if ( x < 0 )
+
+  if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF) )
   {
-    x = -x;
+    switch ( json_name_id )
+    {
+      case JSON_NAME_TEXT:
+        sprintf(name_space, "FET-%s", json_name_text);      // Name - FET-MyTargetName
+        break;
+
+      case JSON_NAME_CLIENT:
+        sprintf(name_space, "%s", json_name_text);          // Name - MyTargetName
+        break;
+
+      case JSON_NAME_SN:
+        sprintf(name_space, "FET-%d", json_serial_number);  // Name - serial Number
+        break;
+
+      default:
+        if ( (json_name_id < 0) || (json_name_id > 26) )    // Check for limits
+        {
+          json_name_id = 0;
+        }
+        sprintf(name_space, "FET-%s", names[json_name_id]); // Name - FET-TARGET, FET-2, etc.
+        break;
+    }
   }
-  return x;
+  else
+  {
+    sprintf(name_space, "FET-%d", my_ring);
+  }
+
+  /*
+   * All done, return
+   */
+  return;
 }
+
 /*-----------------------------------------------------
  *
  * @function: to_int

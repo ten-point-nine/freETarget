@@ -848,7 +848,7 @@ void disable_face_strike_interrupt(void)
  *  saves them into the record structure to be reduced later
  *  on.
  *
- *  The conditional IF_IN(IN_SHOT) is used to discard shots that
+ *  The conditional IF(IN_SHOT) is used to discard shots that
  *  are present while the target is not available for use.  For
  *  example IN_SHOT will be invalid while in rapid fire if the
  *  shot falls outside of the shot time
@@ -860,7 +860,7 @@ void aquire(void)
    * Pull in the data amd save it in the record array
    */
   read_timers(&record[shot_in].timer_count[0]);                 // Record this count
-  IF_IN(IN_SHOT)                                                // Only record the shot if we are actually expecting a shot
+  IF(IN_SHOT)                                                   // Only record the shot if we are actually expecting a shot
   {
     record[shot_in].shot_time     = run_time_ms() - shot_start; // Capture the time into the shot
     record[shot_in].network_time  = run_time_us();              // Record the network time

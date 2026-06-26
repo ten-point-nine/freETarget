@@ -13,7 +13,7 @@
  */
 time_count_64_t NTP_time_us(void); // Coordinated time in us
 time_count_64_t NTP_time_ms(void); // Coordinated time in ms
-time_count_64_t NTP_time_s(void);  // Coordinated time in secpmds
+time_count_64_t NTP_time_s(void);  // Coordinated time in seconds
 
 /*
  * function Prototypes

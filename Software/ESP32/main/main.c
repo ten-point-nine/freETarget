@@ -81,6 +81,7 @@ void app_main(void)
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
 
+  #if(0)
   xTaskCreate(server_send, "server_send", K4, NULL, NETWORK, NULL);                 // Send data to connected clients
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
@@ -90,10 +91,13 @@ void app_main(void)
   xTaskCreate(server_receive_poll, "server_receive_poll", K4, NULL, POLLING, NULL); // Wait for incoming data
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
+#endif 
 
+#if(0)
   xTaskCreate(client_recv, "client_recv", K4, NULL, POLLING, NULL);                 // Wait for incoming data
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
+  #endif 
   
 #if ( 0 )
   xTaskCreate(server_socket_poll_1, "server_socket_poll_1", K4, NULL, POLLING, NULL);

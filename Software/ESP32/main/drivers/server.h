@@ -17,6 +17,7 @@ void WiFi_station_loopback_test(void);       // Station test for diag.c
 void server_send(void *pvParameters);        // Send data to connected clients
 void server_accept_poll(void *parameters);   // Wait for a socket connection
 void server_receive_poll(void *parameters);  // Listen to TCPIP recv calls
+                   // Flush the server input buffers
 #if ( 0 )
 void server_socket_poll_1(void *parameters); // Listen to TCPIP recv calls
 void server_socket_poll_2(void *parameters); // Listen to TCPIP recv calls

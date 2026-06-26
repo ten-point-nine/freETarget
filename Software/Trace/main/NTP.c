@@ -291,6 +291,11 @@ void NTP_test(void)
   int             i;
   time_count_64_t start;
 
+  IF_NOT(CLIENT_CONNECTED)
+  {
+    return;
+  }
+
   printf("\r\nNTP_test()");
 
   for ( i = 0; i != 100; i++ )

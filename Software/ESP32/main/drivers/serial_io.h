@@ -11,25 +11,20 @@
 /*
  * Global functions
  */
-void serial_io_init(void);                            // Initialize the Console Port
-void serial_aux_init(void);                           // Initialize the AUX port
-void serial_to_all(char *s, int ports);               // Multipurpose driver
-void serial_putch(char ch, int ports);                // Output a single character
-char serial_getch(int ports);                         // Read the selected port
-int  serial_available(int ports);                     // Find out how much is waiting for us
-int  serial_who(void);                                // Determine WHO is trying to talk to us
-void serial_flush(int ports);                         // Get rid of everything
-int  tcpip_app_2_queue(char *buffer, int length);     // Save for later output to the socket
-int  tcpip_queue_2_socket(char *buffer, int length);  // Take from queue and put to socket
-int  server_socket_2_queue(char *buffer, int length); // Take from socket and queue
-int  tcpip_queue_2_app(char *buffer, int length);     // Take from queue and return to application
-void aux_port_loopback_test(void);                    // Loopback the AUX port
-int  get_string(char destination[], int size);        // Collect a string from the input ports
-void serial_bt_config(unsigned int baud_rate);        // Initialize the Bluetooth port for operational configuration
-void check_new_connection(void);                      // Check to see if a new connection has been made
-void RS485_transmit(int new_state);                   // Control the RS485 transmitter
-void RS485_transmit_off(void);                        // Turn off the RS485 transmitter after a delay
-void RS485_test(void);                                // Test the RS485 port
+void serial_io_init(void);                     // Initialize the Console Port
+void serial_aux_init(void);                    // Initialize the AUX port
+void serial_to_all(char *s, int ports);        // Multipurpose driver
+void serial_putch(char ch, int ports);         // Output a single character
+char serial_getch(int ports);                  // Read the selected port
+void serial_flush(int ports);                  // Get rid of everything
+int  serial_available(int ports);              // Find out how much is waiting for us
+void aux_port_loopback_test(void);             // Loopback the AUX port
+int  get_string(char destination[], int size); // Collect a string from the input ports
+void serial_bt_config(unsigned int baud_rate); // Initialize the Bluetooth port for operational configuration
+void check_new_connection(void);               // Check to see if a new connection has been made
+void RS485_transmit(int new_state);            // Control the RS485 transmitter
+void RS485_transmit_off(void);                 // Turn off the RS485 transmitter after a delay
+void RS485_test(void);                         // Test the RS485 port
 
 /*
  *  Definitions
@@ -53,6 +48,8 @@ void RS485_test(void);                                // Test the RS485 port
 #define SOME     (CONSOLE | TCPIP)
 #define TCPIP    (TCPIP_0 | TCPIP_1 | TCPIP_2 | TCPIP_3)
 #define ALL      (CONSOLE | AUX_PORT | TCPIP | HTTP_CONNECTED)
+
+#define DEFAULT_BAUD_RATE 115200
 
 /*
  *  Global Variables

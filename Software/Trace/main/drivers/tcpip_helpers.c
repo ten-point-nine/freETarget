@@ -56,7 +56,6 @@
 /*
  * Variables
  */
-
 queue_struct_t in_buffer;  // TCPIP input buffer
 queue_struct_t out_buffer; // TCPIP input buffer
 
@@ -147,6 +146,44 @@ int server_queue_2_socket(char *buffer, // Place to put data
 
 /*******************************************************************************
  *
+ * @function: server_socket_2_queue
+ *
+ * @brief:    Put fresh TCPIP data into the queue for later
+ *
+ * @return:   Input queue updated
+ *
+ *******************************************************************************
+ *
+ * Fresh characters from the TCPIP socket are placed into the input queue
+ *
+ * Used also by HTTP to put client data into the queue
+ *
+ ******************************************************************************/
+int server_socket_2_queue(char *buffer, // Where to return the bytes
+                          int   length)   // Maximum transfer size
+{
+  int bytes_moved;
+
+  bytes_moved = 0;
+  while ( length )
+  {
+    in_buffer.queue[in_buffer.in] = *buffer;
+    buffer++;
+    length--;
+    bytes_moved++;
+    in_buffer.in = (in_buffer.in + 1) % sizeof(in_buffer.queue);
+    if ( in_buffer.out == in_buffer.in )
+    {
+      DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "TCPIP input queue overrun");)) // Reached the end
+      break;
+    }
+  }
+
+  return bytes_moved;
+}
+
+/*******************************************************************************
+ *
  * @function: server_queue_2_app
  *
  * @brief:    Read data out of the queue and return it to the application
@@ -180,44 +217,6 @@ int server_queue_2_app(char *buffer, // Where to return the bytes
     if ( in_buffer.out == in_buffer.in )
     {
       break; // Reached the end
-    }
-  }
-
-  return bytes_moved;
-}
-
-/*******************************************************************************
- *
- * @function: server_socket_2_queue
- *
- * @brief:    Put fresh TCPIP data into the queue for later
- *
- * @return:   Input queue updated
- *
- *******************************************************************************
- *
- * Fresh characters from the TCPIP socket are placed into the input queue
- *
- * Used also by HTTP to put client data into the queue
- *
- ******************************************************************************/
-int server_socket_2_queue(char *buffer, // Where to return the bytes
-                          int   length)   // Maximum transfer size
-{
-  int bytes_moved;
-
-  bytes_moved = 0;
-  while ( length )
-  {
-    in_buffer.queue[in_buffer.in] = *buffer;
-    buffer++;
-    length--;
-    bytes_moved++;
-    in_buffer.in = (in_buffer.in + 1) % sizeof(in_buffer.queue);
-    if ( in_buffer.out == in_buffer.in )
-    {
-      DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "TCPIP input queue overrun");)) // Reached the end
-      break;
     }
   }
 

@@ -39,6 +39,7 @@
 #define BAND_500ms  (TICK_10ms * 50)     // vTaskDelay in 500 ms
 #define BAND_1000ms (TICK_10ms * 100)    // vTaskDelay in 1000 ms
 #define BAND_60s    ((BAND_1000ms) * 60) // vTaskDelay in 1 minute
+#define BAND_10m    ((BAND_60s) * 10)    // vTaskDelay in 10 minutes
 
 typedef enum
 {

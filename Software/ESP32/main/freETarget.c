@@ -147,15 +147,15 @@ void freeETarget_init(void)
   /*
    *  Setup the hardware
    */
-  json_aux_mode = 0;                    // Assume the AUX port is not used
-  gpio_init();                          // Setup the hardware
-  serial_io_init();                     // Setup the console for debug message
-  read_nonvol();                        // Read in the settings
-  serial_aux_init();                    // Update the serial port if there is a change
-  set_VREF();                           // Set the reference voltages
-  DAC_calibrate();                      // Adjust the DAC to compensate for voltage drop
-  multifunction_init();                 // Override the MFS if we have to
-  get_target_calibration();             // Retrieve the target settings
+  json_aux_mode = 0;                     // Assume the AUX port is not used
+  gpio_init();                           // Setup the hardware
+  serial_io_init();                      // Setup the console for debug message
+  read_nonvol();                         // Read in the settings
+  serial_aux_init();                     // Update the serial port if there is a change
+  set_VREF();                            // Set the reference voltages
+  DAC_calibrate();                       // Adjust the DAC to compensate for voltage drop
+  multifunction_init();                  // Override the MFS if we have to
+  get_target_calibration();              // Retrieve the target settings
   json_NTP_period = NETWORK_TIME_PERIOD; // Allow the time period to be changed
 
   /*
@@ -180,7 +180,7 @@ void freeETarget_init(void)
   ft_timer_new(&time_to_go, 0, NULL, "time to go");                                           // Time remaining in session
   ft_timer_new(&shot_timer, 0, NULL, "shot timer");                                           // Wait for the shot to arrive
   ft_timer_new(&ring_timer, 0, NULL, "ring timer");                                           // Wait for the ringing to stop
-  ft_timer_new(&sync_time_remaining, json_NTP_period, NULL, "synchronize time");               // Start the synch timer
+  ft_timer_new(&sync_time_remaining, json_NTP_period, NULL, "synchronize time");              // Start the synch timer
 
   /*
    * Run the power on self test
@@ -242,23 +242,23 @@ void freeETarget_target_loop(void *arg)
 
   set_status_LED(LED_READY);
 
-  if ( (PCNT_HIGH_GPIO & board_mask)         // Are the PCNT HIGH counters provided
-       && (json_pcnt_latency != 0) )         // If the second set of timers has been enabled
+  if ( (PCNT_HIGH_GPIO & board_mask)      // Are the PCNT HIGH counters provided
+       && (json_pcnt_latency != 0) )      // If the second set of timers has been enabled
   {
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initializing PCNT high inputs");))
-    gpio_init_single(PCNT_HI);               // Program the port
+    gpio_init_single(PCNT_HI);            // Program the port
   }
 
   start_new_session(0);
-  shot_number = 1;                           // Start counting shots at 1
+  shot_number = 1;                        // Start counting shots at 1
 
   while ( 1 )
   {
-    IF_IN(IN_SLEEP | IN_TEST | IN_FATAL_ERR) // If Not in operation,
+    IF(IN_SLEEP | IN_TEST | IN_FATAL_ERR) // If Not in operation,
     {
-      IF_IN(IN_FATAL_ERR)                    // Have we deteted a fatal error?
+      IF(IN_FATAL_ERR)                    // Have we deteted a fatal error?
       {
-        set_status_LED(LED_FATAL);           // but show something really wrong
+        set_status_LED(LED_FATAL);        // but show something really wrong
       }
       vTaskDelay(ONE_SECOND);
       continue;

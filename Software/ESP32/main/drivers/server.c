@@ -142,7 +142,7 @@ void server_send(void *pvParameters)
                                /*
                                 * Out to TCPIP
                                 */
-    to_send = tcpip_queue_2_socket(rx_buffer, sizeof(rx_buffer));
+    to_send = server_queue_2_socket(rx_buffer, sizeof(rx_buffer));
     if ( to_send > 0 )
     {
       for ( i = 0; i != MAX_SOCKETS; i++ )

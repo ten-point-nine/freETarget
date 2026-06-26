@@ -76,7 +76,6 @@ static esp_err_t service_get_help(httpd_req_t *req);                            
 static esp_err_t service_get_menu(httpd_req_t *req);                                   // Control back channel
 static esp_err_t service_get_who(httpd_req_t *req);                                    // Target information page
 static esp_err_t service_get_FreeETarget_png(httpd_req_t *req);                        // Icon for the FreeETarget page
-static esp_err_t service_get_json(httpd_req_t *req);                                   // Webb ased JSON interface
 static esp_err_t service_get_events(httpd_req_t *req);                                 // Get shot events
 static esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err);       // Create a URL not found handler
 static esp_err_t service_post_post(httpd_req_t *req);
@@ -91,7 +90,6 @@ const my_uri_t uri_list[] = {
 
     {DEFAULT_HTTP_PORT, "Help menu",           {"/help", HTTP_GET, service_get_help, NULL}                        },
     {DEFAULT_HTTP_PORT, "Target info",         {"/who", HTTP_GET, service_get_who, NULL}                          },
-    {DEFAULT_HTTP_PORT, "JSON command line",   {"/json", HTTP_GET, service_get_json, NULL}                        },
     {DEFAULT_HTTP_PORT, "",                    {"/favicon.ico", HTTP_GET, service_get_FreeETarget_png, NULL}      },
 
     {EVENT_HTTP_PORT,   "Target control menu", {"/", HTTP_GET, service_get_menu, (void *)&event_menu_ctx}         }, // Control back channel
@@ -457,52 +455,7 @@ static esp_err_t service_get_help(httpd_req_t *req)
   return ESP_OK;
 }
 
-/*----------------------------------------------------------------
- *
- * @function: service_get_json
- *
- * @brief:    Emulate the json commands over a USB or TCPIP connection
- *
- * @return:   esp_err_t, error type
- *
- *---------------------------------------------------------------
- *
- * The input from the client is of the form:
- *
- * json?{"ECHO":1}
- *
- * The function extracts the {"ECHO":1} and puts it into the
- * TCPIP queue.  Executing the vTaskDelay function transfers
- * control to json.c where the data is processed.
- *
- *------------------------------------------------------------*/
-static esp_err_t service_get_json(httpd_req_t *req)
-{
-  char my_name[SHORT_TEXT];                // Target name
-
-  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_json(%s)", req->uri);))
-  squish(req->uri, _xs);                   // Go through the uri and keep the argument portion
-  server_socket_2_queue(_xs, strlen(_xs)); // Put the data into the TCPIP queue
-
-  /*
-   * Set the header to indicate that this is a json request, then wait till it's done
-   */
-  target_name(&my_name);       // Get the target name
-  httpd_resp_set_hdr(req, "get_json", my_name);
-  http_send_string_start(req); // Start sending a string to the client
-  do
-  {
-    vTaskDelay(ONE_SECOND);    // Give up time for the data to be processed
-  } while ( (run_state & IN_HTTP) == IN_HTTP ); // Wait until the queue is not full
-
-  http_send_string_end(); // Stop sending a string to the client
-
-  /*
-   * All done, return
-   */
-  return ESP_OK;
-}
-
+\
 /*----------------------------------------------------------------
  *
  * @function: service_get_FreeETarget_png

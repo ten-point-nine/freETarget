@@ -89,7 +89,7 @@ EXTERN int    json_name_id;                 // Name Identifier
 EXTERN int    json_serial_number;           // EIN
 EXTERN int    json_trace_size;              // Size of trace to be sent to the client in mm
 EXTERN int    json_keep_alive;              // Keepalive period
-EXTERN char   json_wifi_remote_ip[IP_SIZE]; // server IP assigned to the target
+EXTERN char   json_wifi_server_ip[IP_SIZE]; // server IP assigned to the target
 EXTERN char   json_wifi_static_ip[IP_SIZE]; // Static IP assigned to the trace sensor
 EXTERN char   json_wifi_ssid[SSID_SIZE];    // Text of WiFI SSID
 EXTERN char   json_wifi_pwd[PWD_SIZE];      // Text of WiFI password

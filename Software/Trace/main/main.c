@@ -62,23 +62,20 @@ void app_main(void)
   trace_init();
 
   /*
-   * Everything is ready, start the threads.  Low task priority number == low priority
+   *  Start the client receive task
    */
-  if ( xTaskCreate(client_send, "client_send", K4, NULL, MUST_RUN, NULL) != pdPASS )
-  {
-    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "WiFi_client_send()");))
-  }
-  vTaskDelay(TICK_10ms);
-
   if ( xTaskCreate(client_recv, "client_recv", K6, NULL, MUST_RUN, NULL) != pdPASS )
   {
     DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "WiFi_client_recv()");))
   }
   vTaskDelay(TICK_10ms);
 
-  if ( xTaskCreate(server_send, "server_send", K4, NULL, MUST_RUN, NULL) != pdPASS )
+  /*
+   *  Start the server tasks
+   */
+  if ( xTaskCreate(server_accept_poll, "server_accept_poll", K6, NULL, MUST_RUN, NULL) != pdPASS )
   {
-    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "server_send()");))
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "server_accept_poll()");))
   }
   vTaskDelay(TICK_10ms);
 
@@ -88,6 +85,9 @@ void app_main(void)
   }
   vTaskDelay(TICK_10ms);
 
+  /*
+   *  Start the timer tasks
+   */
   if ( xTaskCreate(trace_timers, "trace_timers", K4, NULL, TIMED, NULL) != pdPASS )
   {
     DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "trace_timers()");))
@@ -100,18 +100,27 @@ void app_main(void)
   }
   vTaskDelay(TICK_10ms);
 
+  /*
+   *  Start the JSON processing task
+   */
   if ( xTaskCreate(trace_json, "trace_json", K6, NULL, BACKGROUND, NULL) != pdPASS )
   {
     DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "trace_json()");))
   }
   vTaskDelay(TICK_10ms);
 
+  /*
+   *  Finally, start the trace loop
+   */
   if ( xTaskCreate(trace_loop, "trace_loop", K6, NULL, MUST_RUN, NULL) != pdPASS )
   {
     DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "trace_loop()");))
   }
   vTaskDelay(TICK_10ms);
 
+  /*
+   *  Indicate that the system is running
+   */
   DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "SN:%d Running\r\n", json_serial_number);))
   vTaskDelay(TICK_10ms);
   serial_flush(ALL);

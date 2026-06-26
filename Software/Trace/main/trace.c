@@ -121,8 +121,8 @@ void trace_init(void)
   json_NTP_period         = NETWORK_TIME_PERIOD; // Reset the watchdog
 
   BMI270_init(BMI270_CS);                        // Initialize the BMI270 accelerometer
-  WiFi_station_init();
-  WiFi_client_init();
+  WiFi_station_init();                           // Connect to an SSID
+  WiFi_client_init();                            // Initialize the WiFi client
 
   /*
    *  Set up the long running timers

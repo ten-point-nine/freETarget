@@ -115,71 +115,34 @@ void WiFi_remote_IP_address(char *s              // Where to return the string
  * to send and receive data
  *
  *******************************************************************************/
-#define TCP_SERVER_PERIOD TICK_10ms
-void server_send(void *pvParameters)
+void server_send(char *buffer, int length)
 {
-  int  length;
-  char rx_buffer[128];
-  int  to_send;
-  int  i;
-  int  buffer_offset;
-  bool new_socket_closed;
-
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi_tcp_server_task(%d)", TCP_SERVER_PERIOD);))
+  int i;
 
   /*
    *  Move data in and out of the TCP queues
    */
-  while ( 1 )
+  for ( i = 0; i != MAX_SOCKETS; i++ )
   {
-    new_socket_closed = false; // Was a socket closed this cycle?
-                               /*
-                                * Out to TCPIP
-                                */
-    to_send = server_queue_2_socket(rx_buffer, sizeof(rx_buffer));
-    if ( to_send > 0 )
+    if ( socket_list[i].handle > 0 )
     {
-      for ( i = 0; i != MAX_SOCKETS; i++ )
+      length = send(socket_list[i].handle, buffer, length, MSG_DONTWAIT);
+      if ( length < 0 )
       {
-        if ( socket_list[i].handle > 0 )
-        {
-          buffer_offset = 0;
-          while ( buffer_offset < to_send )
-          {
-            length = send(socket_list[i].handle, rx_buffer + buffer_offset, to_send - buffer_offset, 0);
-            if ( length < 0 )
-            {
-              DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "TCPIP send socket closed to %s ", socket_list[i].ip);))
-              close(socket_list[i].handle);
-              socket_list[i].handle = AVAILABLE_SOCKET;
-              socket_list[i].ip[0]  = 0;
-              new_socket_closed     = true;
-              break;
-            }
-            buffer_offset += length;
-            send(socket_list[i].handle, NULL, 0, 0); // Flush the transmit queue
-          }
-        }
+        DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "TCPIP send socket closed to %s ", socket_list[i].ip);))
+        close(socket_list[i].handle);
+        socket_list[i].handle = AVAILABLE_SOCKET;
+        socket_list[i].ip[0]  = 0;
+        break;
       }
+      send(socket_list[i].handle, NULL, 0, 0); // Flush the transmit queue
     }
-    /*
-     *  See if all of the sockets are closed
-     */
-    if ( new_socket_closed )
-    {
-      for ( i = 0; i != MAX_SOCKETS; i++ )
-      {
-        if ( socket_list[i].handle > 0 )
-        {
-          break;
-        }
-      }
-    }
-    vTaskDelay(TCP_SERVER_PERIOD);
   }
+
   /*
    *  All done
    */
+
   return;
 }
 
@@ -326,8 +289,7 @@ void server_socket_poll_3(void *parameters)
  *
  ******************************************************************************
  *
- * Once the WiFi has been set up, the target waits here for an incoming
- * connection.
+ * INitialize the server and wait for a connection to be requested
  *
  * Once the connection has been made, the function determines the socket address
  * and then looks for an empty entry in the socket list. The new socket is now

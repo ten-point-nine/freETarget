@@ -65,7 +65,7 @@ queue_struct_t out_buffer; // TCPIP input buffer
 
 /*******************************************************************************
  *
- * @function: tcpip_app_2_queue
+ * @function: server_app_2_queue
  *
  * @brief:    Put something into the output queue for later transmission
  *
@@ -77,11 +77,11 @@ queue_struct_t out_buffer; // TCPIP input buffer
  * TCPIP queue for later output onto the TCPIP channel
  *
  ******************************************************************************/
-int tcpip_app_2_queue(char *buffer, // Where to return the bytes
-                      int   length  // Maximum transfer size
+int server_app_2_queue(char *buffer, // Where to return the bytes
+                       int   length  // Maximum transfer size
 )
 {
-  int bytes_moved;                  // Number of bytes written
+  int bytes_moved;                   // Number of bytes written
 
   bytes_moved = 0;
   while ( length != 0 )
@@ -101,7 +101,7 @@ int tcpip_app_2_queue(char *buffer, // Where to return the bytes
 
 /*******************************************************************************
  *
- * @function: tcpip_queue_2_socket
+ * @function: server_queue_2_socket
  *
  * @brief:    Take waiting bytes out of the queue and into the socket
  *
@@ -109,18 +109,18 @@ int tcpip_app_2_queue(char *buffer, // Where to return the bytes
  *
  *******************************************************************************
  *
- * This function is the companion to tcpip_app_t_queue that finished sending
+ * This function is the companion to server_app_t_queue that finished sending
  * the data out to the socket
  *
  ******************************************************************************/
-int tcpip_queue_2_socket(char *buffer, // Place to put data
-                         int   length)   // Number of bytes to read
+int server_queue_2_socket(char *buffer, // Place to put data
+                          int   length)   // Number of bytes to read
 {
-  int bytes_moved;                     // Number of bytes read from queue
+  int bytes_moved;                      // Number of bytes read from queue
 
   if ( out_buffer.out == out_buffer.in )
   {
-    return 0;                          // Nothing to say
+    return 0;                           // Nothing to say
   }
 
   bytes_moved = 0;
@@ -146,7 +146,7 @@ int tcpip_queue_2_socket(char *buffer, // Place to put data
 
 /*******************************************************************************
  *
- * @function: tcpip_queue_2_app
+ * @function: server_queue_2_app
  *
  * @brief:    Read data out of the queue and return it to the application
  *
@@ -157,8 +157,8 @@ int tcpip_queue_2_socket(char *buffer, // Place to put data
  * Characters from the TCPIP input queue are returned to the application
  *
  ******************************************************************************/
-int tcpip_queue_2_app(char *buffer, // Where to return the bytes
-                      int   length  // Maximum transfer size
+int server_queue_2_app(char *buffer, // Where to return the bytes
+                       int   length  // Maximum transfer size
 )
 {
   int bytes_moved;
@@ -221,4 +221,27 @@ int server_socket_2_queue(char *buffer, // Where to return the bytes
   }
 
   return bytes_moved;
+}
+
+/*******************************************************************************
+ *
+ * @function: server_flush      // Empty the input queue
+ *            server_available  // Find out if there is anything waiting 
+ *
+ * @brief:    Throw everything out of the input queue
+ *
+ * @return:   Input queue flushed
+ *
+ *******************************************************************************
+ *
+ ******************************************************************************/
+void server_flush(void)
+{
+  in_buffer.in  = 0;
+  in_buffer.out = 0;
+}
+
+int server_available(int port)
+{
+  return (in_buffer.in != in_buffer.out);
 }

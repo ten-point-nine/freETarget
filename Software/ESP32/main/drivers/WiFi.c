@@ -596,28 +596,30 @@ void WiFi_loopback_test(void)
 
 void WiFi_loopback_task(void *parameters)
 {
+#if ( 0 )
   int  length;
   char buffer[1024];
   int  i;
 
-  tcpip_app_2_queue("Hello", 5);
+  server_app_2_queue("Hello", 5);
 
   while ( 1 )
   {
-    length = tcpip_queue_2_app(buffer, sizeof(buffer));
+    length = server_queue_2_app(buffer, sizeof(buffer));
     if ( length != 0 )
     {
       for ( i = 0; i != length; i++ )
       {
         buffer[i]++; // Add 1 to the input
       }
-      tcpip_app_2_queue(buffer, length);
+      server_app_2_queue(buffer, length);
     }
     vTaskDelay(ONE_SECOND);
   }
-  /*
-   *  Never get here
-   */
+/*
+ *  Never get here
+ */
+#endif
 }
 
 /*****************************************************************************

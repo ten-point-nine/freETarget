@@ -43,6 +43,7 @@
 #include "ntp.h"
 #include "server.h"
 #include "client.h"
+#include "serial_io.h"
 
 extern volatile time_count_t paper_time;
 

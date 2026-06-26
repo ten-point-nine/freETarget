@@ -102,7 +102,7 @@ bool WiFi_client_init(void)
   /*
    *  Check to see if we are already connected
    */
-  IF_NOT(CLIENT_CONNECTED)
+  IF_IN(CLIENT_CONNECTED)
   {
     return true;
   }
@@ -114,7 +114,7 @@ bool WiFi_client_init(void)
   {
     memset((void *)&dest_addr, 0, sizeof(dest_addr));
     dest_addr.sin_len         = sizeof(dest_addr);
-    dest_addr.sin_addr.s_addr = inet_addr(json_wifi_remote_ip);
+    dest_addr.sin_addr.s_addr = inet_addr(json_wifi_server_ip);
     dest_addr.sin_family      = AF_INET;
     dest_addr.sin_port        = lwip_htons(1090);
 
@@ -128,26 +128,20 @@ bool WiFi_client_init(void)
       return false;
     }
   }
-  else
-  {
-    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Keeping socket: %d", client_socket);))
-    close(client_socket);
-    vTaskDelay(2);
-  }
 
   /*
    * Make the connection
    */
   if ( lwip_connect(client_socket, (struct sockaddr *)&dest_addr, sizeof(dest_addr)) != 0 )
   {
-    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Socket unable to connect to %s:%d: errno %d", json_wifi_remote_ip, 1090, errno);))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Socket unable to connect to %s:%d: errno %d", json_wifi_server_ip, 1090, errno);))
     return false;
   }
 
   /*
    *  Got here, ready to go
    */
-  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Connected to remote at: %s:%d", json_wifi_remote_ip, 1090);))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Connected to remote at: %s:%d", json_wifi_server_ip, 1090);))
   run_state |= CLIENT_CONNECTED; // Yay, we're connected
   return true;
 }
@@ -166,7 +160,6 @@ bool WiFi_client_init(void)
  *
  ***************************************************************************/
 char rx_buffer[256];
-char propeller[] = {'-', '/', '|', '\\'};
 
 void client_recv(void *params)
 {
@@ -202,13 +195,14 @@ void client_recv(void *params)
  *
  *
  ***************************************************************************/
-void client_send(char *buffer, // Data to send
-                 int   length)   // Length of the data
+void client_send(char *buffer,                            // Data to send
+                 int   length)                              // Length of the data
 {
 
   DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "WiFi_client_send()");))
 
-  lwip_send(client_socket, buffer, length, MSG_DONTWAIT);
+  lwip_send(client_socket, buffer, length, MSG_DONTWAIT); // Send the packet
+  lwip_send(client_socket, NULL, 0, 0);                   // and flush
 
   /*
    * Done

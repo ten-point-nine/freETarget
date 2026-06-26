@@ -45,9 +45,10 @@
 #define IN_HTTP          0x0080                       // The HTTP (JSON) data is being processed
 #define TIME_VALID       0x0100                       //  Time base is syncronized
 #define SERVER_CONNECTED 0x0200                       // The server is connected
+#define CLIENT_CONNECTED 0x0400                       // The client is connected
 
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
-#define IF_IN(x)  if ( (run_state & (x)) != 0 )
+#define IF(x)  if ( (run_state & (x)) != 0 )
 
 #define SEND(who, message) {message} serial_to_all(_xs, who);
 

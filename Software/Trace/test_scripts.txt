@@ -11,7 +11,7 @@ Dynamic IP { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 1
 { "NAME_ID": 101}
 HTTP Trace             {"TRACE":128}
 Debug Trace            {"TRACE":64}
-
+Remote {"WIFI_SERVER_IP":"192.168.86.109"}
 Reset the target       {"RESET":0}
 Reinitialize the board {"INIT":0}
 

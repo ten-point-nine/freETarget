@@ -72,7 +72,8 @@ void nonvol_write_i32(char *name, int *value);    // Write a value to nonvol
 #define NONVOL_WIFI_IP             "WIFI_IP"             // Storage forIP Address
 #define NONVOL_WIFI_GATEWAY        "WIFI_GATEWAY"        // Storage for Gateway mask
 #define NONVOL_WIFI_RESET_FIRST    "WIFI_RESET"          // Reset the target on the first WiFi connction
-#define NONVOL_WIFI_RESET_FIRST    "WIFI_RESET"          // Reset the target on the first WiFi connction
+#define NONVOL_WIFI_STATIC_IP      "WIFI_STATIC_IP"      // Static IP configuration
+#define NONVOL_WIFI_SERVER_IP      "WIFI_SERVER_IP"      // IP address of server
 #define NONVOL_X_OFFSET            "X_OFFSET"            // Offset added to sensors to adjust centre horizontally
 #define NONVOL_Y_OFFSET            "Y_OFFSET"            // Offset added to sensors to adjust centre vertically
 #define NONVOL_Z_OFFSET            "Z_OFFSET"            // Distance from sensor plane to paper plane
