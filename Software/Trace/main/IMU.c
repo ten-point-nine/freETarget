@@ -23,6 +23,7 @@
 #include "gpio.h"
 #include "helpers.h"
 #include "BMI270.h"
+#include "ICM45686.h"
 #include "spi.h"
 #include "nonvol.h"
 #include "IMU.h"
@@ -102,7 +103,12 @@ void IMU_real_time(void)
 
   while ( 1 )
   {
+#if USE_BMI270
     BMI270_convert_to_g(&sample_raw_read[working.outer].f[working.inner], &current);
+#endif
+#if USE_ICM45686
+    ICM45686_convert_to_g(&sample_raw_read[working.outer].f[working.inner], &current);
+#endif
     current.rho   = previous.rho + (current.rho_dot / SAMPLE_RATE);
     current.theta = previous.theta + (current.theta_dot / SAMPLE_RATE);
     current.phi   = previous.phi + (current.phi_dot / SAMPLE_RATE);
@@ -189,9 +195,13 @@ void trace_build(int timestamp) // Build and send a trace
                                 /*
                                  *  Starting points
                                  */
+#if USE_BMI270
   BMI270_find_index_out((time_count_64_t)timestamp);
+#endif
+#if USE_ICMM45686
+  ICM45686_find_index_out((time_count_64_t)timestamp);
+#endif
   working = index_in;
-
   /*
    *  Work throught the follow through
    */
@@ -204,7 +214,7 @@ void trace_build(int timestamp) // Build and send a trace
 
   for ( i = 0, j = 0; i < FOLLOW_THROUGH * SAMPLE_RATE; i++ )
   {
-    BMI270_convert_to_g(&sample_raw_read[working.outer].f[working.inner], &current);
+    ICM45686_convert_to_g(&sample_raw_read[working.outer].f[working.inner], &current);
     current.rho   = previous.rho + (current.rho_dot / SAMPLE_RATE);
     current.theta = previous.theta + (current.theta_dot / SAMPLE_RATE);
     current.phi   = previous.phi + (current.phi_dot / SAMPLE_RATE);
@@ -234,7 +244,7 @@ void trace_build(int timestamp) // Build and send a trace
 
   for ( i = (APPROACH * SAMPLE_RATE) - 1, j = (APPROACH * TRACE_RATE) - 1; i >= 0; i-- )
   {
-    BMI270_convert_to_g(&sample_raw_read[working.outer].f[working.inner], &current);
+    ICM45686_convert_to_g(&sample_raw_read[working.outer].f[working.inner], &current);
     current.rho   = previous.rho - (current.rho_dot / SAMPLE_RATE);
     current.theta = previous.theta - (current.theta_dot / SAMPLE_RATE);
     current.phi   = previous.phi - (current.phi_dot / SAMPLE_RATE);

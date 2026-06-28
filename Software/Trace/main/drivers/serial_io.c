@@ -60,6 +60,8 @@ const int uart_console_size   = (1024 * 2);
 const int uart_xon_threshold  = 16;         // When to turn on the XON flow control
 const int uart_xoff_threshold = (128 - 16); // 128 is the size of the hardware FIFO
 
+int connection_list; 
+
 QueueHandle_t uart_console_queue;
 
 /******************************************************************************

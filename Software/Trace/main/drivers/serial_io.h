@@ -39,5 +39,5 @@ void check_new_connection(void);                    // Check to see if a new con
 /*
  *  Global Variables
  */
-
+extern int connection_list; // Bitmap of connections 
 #endif

@@ -319,7 +319,7 @@ void server_accept_poll(void *parameters)
   int                     sock;
   int                     i, j;
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "tcp_accept_poll()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "server_accept_poll()");))
 
   /*
    * Start the server

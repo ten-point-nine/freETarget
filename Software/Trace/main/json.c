@@ -25,6 +25,7 @@
 #include "wifi.h"
 #include "timer.h"
 #include "BMI270.h"
+#include "ICM45686.h"
 #include "imu.h"
 #include "NTP.h"
 
@@ -232,30 +233,30 @@ static void handle_json(void)
   not_found = true;
   k         = 0;
 
-  for ( i = 0; i != got_right_bracket; i++ )                // Go across the JSON input
+  for ( i = 0; i != got_right_bracket; i++ )      // Go across the JSON input
   {
-    j = 0;                                                  // Index across the JSON token table
+    j = 0;                                        // Index across the JSON token table
 
-    while ( (JSON[j].token != 0) )                          // Cycle through the tokens
+    while ( (JSON[j].token != 0) )                // Cycle through the tokens
     {
       x = 0;
       if ( JSON[j].token != 0 )
       {
-        k = instr(&input_JSON[i], JSON[j].token);           // Compare the input against the list of JSON tags
-        if ( k > 0 )                                        // Non zero, found something
+        k = instr(&input_JSON[i], JSON[j].token); // Compare the input against the list of JSON tags
+        if ( k > 0 )                              // Non zero, found something
         {
-          not_found = false;                                // Read and convert the JSON value
+          not_found = false;                      // Read and convert the JSON value
           if ( good_input(JSON[j].convert, input_JSON[i + k], JSON[j].show) == false )
           {
             SEND(CONSOLE, sprintf(_xs, "\r\nInvalid input or locked: {%s}\r\n", input_JSON);)
-            break;                                          // Invalid input
+            break;                                // Invalid input
           }
 
           switch ( JSON[j].convert & IS_MASK )
           {
             default:
-            case IS_VOID:                                   // Void, default to zero
-            case IS_FIXED:                                  // Fixed cannot be changed
+            case IS_VOID:                         // Void, default to zero
+            case IS_FIXED:                        // Fixed cannot be changed
               x = 0;
               break;
 

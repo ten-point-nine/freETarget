@@ -1,14 +1,14 @@
 /******************************************************************************
  *
- * file: BMI270_define.h
+ * file: ICM45686-define.h
  *
- * Definition file for BMI270 fixed definitions
+ * Definition file for ICM45686  fixed definitions
  *
  *****************************************************************************
  *
- * This file contains the driver for the BMI270 3-axis accelerometer.  The
+ * This file contains the driver for the ICM45686 3-axis accelerometer.  The
  * driver is written to be as generic as possible and should work with any
- * implementation of the BMI270.
+ * implementation of the ICM45686.
  *
  * See:
  *
@@ -23,10 +23,11 @@
  * the I2C driver does not work with interrupts.
  *
  *****************************************************************************/
-#ifndef _BMI_define_h_
-#define _BMI_define_h_
+#ifndef _ICM_DEFINE_H_
+#define _ICM_DEFINE_H_
 
-#if USE_BMI270
+#if USE_ICM45686
+
 /*
  * Definitions
  */
@@ -79,9 +80,8 @@
 
 #define ACC_BANDWIDTH 0x01 // OSR1 mode
 
-
 /*
- *  Understanding the BMI270 settings
+ *  Understanding the ICM45686 settings
  *
  * odr - Output Data Rate       This is the rate at which samples are generated at the output point
  * bwp - Bandwidth Coefficient  This is a hardware averaging that is applied BEFORE the odr
@@ -90,9 +90,10 @@
  */
 
 /*
- * BMI270 Register Addresses
+ * ICM45686 Register Addresses
  */
-#define CHIP_ID         0x00
+#define WHO_AM_I        0x72                    // Chip ID register
+#define WHO_I_SHOULD_BE 0xE9                    // Expected device ID
 #define ACCEL_X         0x0C                    // Acceleration X, Y, Z  Gyro X, Y, Z
 #define SENSORTIME_0    0x18                    // Sensor time register
 #define INT_STATUS_1    0x1D                    // Interrupt status register
@@ -210,7 +211,7 @@ typedef struct
 {
   int address; // Register being accessed
   int value;   // Value to be written to the register
-} BMI270_config_t;
+} ICM45686_config_t;
 
 /*
  * Function Prototypes
@@ -222,9 +223,9 @@ typedef struct
 /*
  * Variables
  */
-static spi_device_handle_t BMI270_handle; // Handle for the SPI device
+static spi_device_handle_t ICM45686_handle; // Handle for the SPI device
 
-static spi_device_interface_config_t BMI270_spi_config = {
+static spi_device_interface_config_t ICM45686_spi_config = {
     // Configuration for the SPI device
     .command_bits     = 0,                   // No command phase
     .address_bits     = 8,                   //
@@ -236,14 +237,14 @@ static spi_device_interface_config_t BMI270_spi_config = {
     .cs_ena_posttrans = 0,                   // No post-transaction CS activation
     .clock_speed_hz   = 10 * 1000 * 1000,    // 2 MHz clock speed (do not set higher than 2 MHz)
     .input_delay_ns   = 0,                   // No input delay
-    .spics_io_num     = BMI270_CS,           // CS pin
+    .spics_io_num     = ICM45686_CS,         // CS pin
     .flags            = SPI_DEVICE_NO_DUMMY, // No special flags
     .queue_size       = 1,
     .pre_cb           = NULL,                // Callback to be called before a transmission is started.
     .post_cb          = NULL                 // Callback to be called after a transmission has completed.
 };
 
-static const BMI270_config_t BMI270_config[] = {
+static const ICM45686_config_t ICM45686_config[] = {
     //    {CMD,           soft_reset                                                               }, // CMD, Clear the settings
     {ACC_CONF,      acc_odr | acc_bwp | acc_filter_perf                                      },
     {ACC_RANGE,     acc_range_2g                                                             }, // ACC_RANGE +/-2g
@@ -266,14 +267,14 @@ static const BMI270_config_t BMI270_config[] = {
 };
 
 /*
- * @name  Global array that stores the configuration file of BMI270
+ * @name  Global array that stores the configuration file of ICM45686
  *
  * Copyright Bosch
  *
  *
  * See
  *
- * https://github.com/boschsensortec/BMI270_SensorAPI/blob/master/bmi270_maximum_fifo.c
+ * https://github.com/boschsensortec/ICM45686_SensorAPI/blob/master/bmi270_maximum_fifo.c
  *
  */
 static const uint8_t bmi270_maximum_fifo_config_file[] = { // 22 x 15 = 330 bytes  -> 2640 bits (13.2ms)
@@ -297,4 +298,4 @@ static const uint8_t bmi270_maximum_fifo_config_file[] = { // 22 x 15 = 330 byte
     0x7e, 0x82, 0xe1, 0x7f, 0xf2, 0x7f, 0x98, 0x2e, 0x6a, 0xd6, 0x21, 0x30, 0x23, 0x2e, 0x61, 0xf5, 0xeb, 0x2c, 0xe1, 0x6f};
 
 #endif
-#endif 
+#endif

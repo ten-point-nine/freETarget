@@ -29,10 +29,7 @@
 
 #define SHOT_TIME_TO_SECONDS(x) ((real_t)(x)) / 1000000.0
 
-real_t SQ(real_t a)    // Square
-{
-  return a * a;
-}
+#if BUILD_TARGET 
 /*-----------------------------------------------------
  *
  * @function: target_name
@@ -98,6 +95,7 @@ void target_name(char *name_space)
    */
   return;
 }
+#endif 
 
 /*-----------------------------------------------------
  *

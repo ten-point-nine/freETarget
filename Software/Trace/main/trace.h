@@ -19,6 +19,11 @@
 #define EXTERN extern
 #endif
 
+#define USE_ICM45686 (1 == 1)                         // Use the ICM45686 sensor
+#define USE_BMI270   (0 == 1)                         // Use the BMI270 sensor
+#define BUILD_TRACE  (1 == 1)                         // Build the trace module
+#define BUILD_TARGET (0 == 1)                         // Build the target module
+
 #define SOFTWARE_VERSION "\"1.0.0 June 13, 2026\""
 #define _DONE_           "\r\nDone\r\n"
 #define _GREETING_       "CONNECTED"                  // Message to send on connection

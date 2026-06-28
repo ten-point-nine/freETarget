@@ -1,14 +1,14 @@
 /******************************************************************************
  *
- * file: BMI270.c
+ * file: ICM45686.c
  *
- * Bosch BMI270 3-axis accelerometer driver
+ * Bosch ICM45686 3-axis accelerometer driver
  *
  *****************************************************************************
  *
- * This file contains the driver for the BMI270 3-axis accelerometer.  The
+ * This file contains the driver for the ICM45686 3-axis accelerometer.  The
  * driver is written to be as generic as possible and should work with any
- * implementation of the BMI270.
+ * implementation of the ICM45686.
  *
  * See:
  *
@@ -31,15 +31,14 @@
 #include "diag_tools.h"
 #include "gpio.h"
 #include "helpers.h"
-#include "BMI270.h"
 #include "ICM45686.h"
-#include "BMI270_define.h"
+#include "ICM45686-define.h"
 #include "spi.h"
 #include "nonvol.h"
 #include "IMU.h"
 #include "timer.h"
 
-#if USE_BMI270
+#if USE_ICM45686
 
 /*
  * Definitions
@@ -62,9 +61,9 @@ FIFO_raw_t sample_raw_read[SAMPLE_BUFFER_COUNT]; // Space for 10 seconds of data
 
 /*----------------------------------------------------------------
  *
- * @function: BMI270_init()
+ * @function: ICM45686_init()
  *
- * @brief:    Initalize the BMI270
+ * @brief:    Initalize the ICM45686
  *
  * @return: None
  *
@@ -73,59 +72,60 @@ FIFO_raw_t sample_raw_read[SAMPLE_BUFFER_COUNT]; // Space for 10 seconds of data
  * Setup the accelerometer from the table
  *
  *--------------------------------------------------------------*/
-void BMI270_init(unsigned int BMI270_gpio)
+void ICM45686_init(unsigned int ICM45686_gpio)
 {
   spi_transaction_t transaction;
   int               i;
 
-  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "BMI270_init()");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "ICM45686_init()");))
   PAUSE("Ready")
 
-  BMI270_spi_config.spics_io_num = BMI270_gpio;
+  ICM45686_spi_config.spics_io_num = ICM45686_gpio;
 
   /*
    * Add the accelerometer to the bus
    */
-  if ( spi_bus_add_device(SPI2_HOST, &BMI270_spi_config, &BMI270_handle) != ESP_OK ) // Add the SPI device to the bus
+  if ( spi_bus_add_device(SPI2_HOST, &ICM45686_spi_config, &ICM45686_handle) != ESP_OK ) // Add the SPI device to the bus
   {
-    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to add BMI270 device to SPI bus");))
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to add ICM45686 device to SPI bus");))
   }
 
-                                                                                     /*
-                                                                                      * Read the device ID
-                                                                                      */
+                                                                                         /*
+                                                                                          * Read the device ID
+                                                                                          */
 
-  memset(&transaction, 0, sizeof(transaction));     // Clear the transaction structure
-  transaction.addr      = 0x80 | CHIP_ID;           // Register address to read from
-  transaction.length    = 2 * 8;                    // Transmit length in bits
-  transaction.tx_buffer = NULL;                     // Transmit buffer not used
-  transaction.rxlength  = 2 * 8;                    // Receive length in bits
-  transaction.flags     = SPI_TRANS_USE_RXDATA;     // Indicate that this is a read operation
+  memset(&transaction, 0, sizeof(transaction));       // Clear the transaction structure
+  transaction.addr      = 0x80 | WHO_AM_I;            // Register address to read from
+  transaction.length    = 2 * 8;                      // Transmit length in bits
+  transaction.tx_buffer = NULL;                       // Transmit buffer not used
+  transaction.rxlength  = 2 * 8;                      // Receive length in bits
+  transaction.flags     = SPI_TRANS_USE_RXDATA;       // Indicate that this is a read operation
 
-  spi_device_transmit(BMI270_handle, &transaction); // Dummy read to put into SPI mode
+  spi_device_transmit(ICM45686_handle, &transaction); // Dummy read to put into SPI mode
   PAUSE("CHIP_ID")
-  spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+  spi_device_transmit(ICM45686_handle, &transaction); // Transmit the transaction
 
-  if ( transaction.rx_data[1] != 0x24 )             // Check the device ID
+  if ( transaction.rx_data[0] != WHO_I_SHOULD_BE )    // Check the device ID
   {
-    DLT(DLT_FATAL, SEND(CONSOLE, sprintf(_xs, "Failed to read BMI270 device ID: 0x%02X", transaction.rx_data[1]);))
+    DLT(DLT_FATAL, SEND(CONSOLE, sprintf(_xs, "Failed to read ICM45686 device ID: 0x%02X", transaction.rx_data[0]);))
+    return;
   }
   else
   {
-    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "BMI270 device ID: 0x%02X", transaction.rx_data[1]);))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "ICM45686 device ID: 0x%02X", transaction.rx_data[1]);))
   }
-  vTaskDelay(1);                                    /*
-                                                     * Reset the device
-                                                     */
-#if ( 0 )                                           // Do not enable
+  vTaskDelay(1);                                      /*
+                                                       * Reset the device
+                                                       */
+#if ( 0 )                                             // Do not enable
   PAUSE("Sending CMD- -0xB6")
-  memset(&transaction, 0, sizeof(transaction));     // Clear the transaction structure
-  transaction.addr      = CMD;                      // Disable the accelerometer before programming the API
-  transaction.tx_buffer = 0xB6;                     // Soft Reset
-  transaction.length    = 8;                        // Transmit length in bits
-  transaction.rxlength  = 0;                        // Receive length in bits
-  transaction.flags     = SPI_TRANS_USE_TXDATA;     // Indicate that this is a read operation
-  spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+  memset(&transaction, 0, sizeof(transaction));       // Clear the transaction structure
+  transaction.addr      = CMD;                        // Disable the accelerometer before programming the API
+  transaction.tx_buffer = 0xB6;                       // Soft Reset
+  transaction.length    = 8;                          // Transmit length in bits
+  transaction.rxlength  = 0;                          // Receive length in bits
+  transaction.flags     = SPI_TRANS_USE_TXDATA;       // Indicate that this is a read operation
+  spi_device_transmit(ICM45686_handle, &transaction); // Transmit the transaction
   vTaskDelay(1);
 #endif
 
@@ -139,7 +139,7 @@ void BMI270_init(unsigned int BMI270_gpio)
   transaction.length    = 8;                                           // Transmit length in bits
   transaction.rxlength  = 0;                                           // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_TXDATA;                        // Indicate that this is a read operation
-  spi_device_transmit(BMI270_handle, &transaction);                    // Transmit the transaction
+  spi_device_transmit(ICM45686_handle, &transaction);                  // Transmit the transaction
   vTaskDelay(1);                                                       // Wait 450us
 
   PAUSE("sending INIT_CONTROL = 0")
@@ -149,7 +149,7 @@ void BMI270_init(unsigned int BMI270_gpio)
   transaction.length    = 8;                                           // Transmit length in bits
   transaction.rxlength  = 0;                                           // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_TXDATA;                        // Indicate that this is a read operation
-  spi_device_transmit(BMI270_handle, &transaction);                    // Transmit the transaction
+  spi_device_transmit(ICM45686_handle, &transaction);                  // Transmit the transaction
   vTaskDelay(1);
 
   PAUSE("sending INIT_DATA")
@@ -159,7 +159,7 @@ void BMI270_init(unsigned int BMI270_gpio)
   transaction.length    = sizeof(bmi270_maximum_fifo_config_file) * 8; // Transmit length in bits
   transaction.rxlength  = 0;                                           // Indicate that this is a read operation
   transaction.flags     = 0;                                           // Use default flags for a large write operation
-  spi_device_transmit(BMI270_handle, &transaction);                    // Transmit the transaction
+  spi_device_transmit(ICM45686_handle, &transaction);                  // Transmit the transaction
   vTaskDelay(1);
 
   PAUSE("Sending INIT_CONTROL = 1")
@@ -169,21 +169,21 @@ void BMI270_init(unsigned int BMI270_gpio)
   transaction.length    = 8;                                           // Transmit length in bits
   transaction.rxlength  = 0;                                           // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_TXDATA;                        // Indicate that this is a read operation
-  spi_device_transmit(BMI270_handle, &transaction);                    // Transmit the transaction
+  spi_device_transmit(ICM45686_handle, &transaction);                  // Transmit the transaction
   vTaskDelay(1);
 
   /*
    *  Make sure the API is properly initialized
    */
   PAUSE("Verifying initialization")
-  memset(&transaction, 0, sizeof(transaction));     // Clear the transaction structure
-  transaction.addr      = 0x80 | INTERNAL_STATUS;   // Read the internal status register to check if the API is properly initialized
-  transaction.tx_buffer = NULL;                     // Transmit buffer not used
-  transaction.length    = 2 * 8;                    // Transmit length in bits
-  transaction.rxlength  = 2 * 8;                    // Receive length in bits
-  transaction.flags     = SPI_TRANS_USE_RXDATA;     // Indicate that this is a read operation
-  spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
-  if ( transaction.rx_data[1] != 0x1 )              // Check the device ID
+  memset(&transaction, 0, sizeof(transaction));       // Clear the transaction structure
+  transaction.addr      = 0x80 | INTERNAL_STATUS;     // Read the internal status register to check if the API is properly initialized
+  transaction.tx_buffer = NULL;                       // Transmit buffer not used
+  transaction.length    = 2 * 8;                      // Transmit length in bits
+  transaction.rxlength  = 2 * 8;                      // Receive length in bits
+  transaction.flags     = SPI_TRANS_USE_RXDATA;       // Indicate that this is a read operation
+  spi_device_transmit(ICM45686_handle, &transaction); // Transmit the transaction
+  if ( transaction.rx_data[1] != 0x1 )                // Check the device ID
   {
     DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Initialization failed: 0x%02X", transaction.rx_data[1]);))
   }
@@ -194,17 +194,17 @@ void BMI270_init(unsigned int BMI270_gpio)
    */
 
   i = 0;
-  while ( BMI270_config[i].address != 0x00 )          // Loop through the configuration table until the end is reached
+  while ( ICM45686_config[i].address != 0x00 )          // Loop through the configuration table until the end is reached
   {
-    memset(&transaction, 0, sizeof(transaction));     // Clear the transaction structure
-    transaction.addr      = BMI270_config[i].address; // Register address to write to
-    transaction.tx_buffer = BMI270_config[i].value;   // Send the value to be written to the register
-    transaction.length    = 1 * 8;                    // Transmit length in bits
-    transaction.rxlength  = 0 * 8;                    // Receive length in bits
-    transaction.flags     = SPI_TRANS_USE_TXDATA;     // Indicate that this is a read operation
+    memset(&transaction, 0, sizeof(transaction));       // Clear the transaction structure
+    transaction.addr      = ICM45686_config[i].address; // Register address to write to
+    transaction.tx_buffer = ICM45686_config[i].value;   // Send the value to be written to the register
+    transaction.length    = 1 * 8;                      // Transmit length in bits
+    transaction.rxlength  = 0 * 8;                      // Receive length in bits
+    transaction.flags     = SPI_TRANS_USE_TXDATA;       // Indicate that this is a read operation
     PAUSE("Sending register value");
-    DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "register 0x%02X: 0x%02X", BMI270_config[i].address, BMI270_config[i].value);))
-    spi_device_transmit(BMI270_handle, &transaction); // Transmit the transaction
+    DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "register 0x%02X: 0x%02X", ICM45686_config[i].address, ICM45686_config[i].value);))
+    spi_device_transmit(ICM45686_handle, &transaction); // Transmit the transaction
     vTaskDelay(2);
     i++;
   }
@@ -213,13 +213,13 @@ void BMI270_init(unsigned int BMI270_gpio)
    * All done, return
    */
   PAUSE("Finished")
-  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "BMI270 initialization successful.  Sample Rate: %d", SAMPLE_RATE);))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "ICM45686 initialization successful.  Sample Rate: %d", SAMPLE_RATE);))
   return;
 }
 
 /*----------------------------------------------------------------
  *
- * @function: BMI270_pull_FIFO
+ * @function: ICM45686_pull_FIFO
  *
  * @brief:    Pull all of the samples out of the FIFO and store them in the sample buffer
  *
@@ -237,7 +237,7 @@ void BMI270_init(unsigned int BMI270_gpio)
  * the next time the watermark interrupt is fired.
  *
  *---------------------------------------------------------------*/
-bool BMI270_pull_FIFO(void)
+bool ICM45686_pull_FIFO(void)
 {
   spi_transaction_t transaction;
   static bool       return_value = false; // Return TRUE if the FIFO is completely full of data
@@ -255,7 +255,7 @@ bool BMI270_pull_FIFO(void)
    */
   last_FIFO_read = run_time_us(); // When was the last sample taken
 
-  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "BMI270_FIFO_read(), %'llu", last_FIFO_read);))
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "ICM45686_FIFO_read(), %'llu", last_FIFO_read);))
 
   /*
    *  Read in the next bunch of samples
@@ -267,7 +267,7 @@ bool BMI270_pull_FIFO(void)
   transaction.rx_buffer = &sample_raw_read[index_in.outer].dummy;
   transaction.rxlength  = sizeof(FIFO_raw_t) * 8; // Receive length in bits
   transaction.flags     = 0;                      // Indicate that this is a read operation
-  spi_device_transmit(BMI270_handle, &transaction);
+  spi_device_transmit(ICM45686_handle, &transaction);
   trace_FIFO_next(&index_in);
   if ( index_in.outer == index_out.outer )        // Wrapped around the buffer is full
   {
@@ -284,7 +284,7 @@ bool BMI270_pull_FIFO(void)
   transaction.length    = 3 * 8;                // Transmit length in bits
   transaction.rxlength  = 1 * 8;                // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_RXDATA; // Read into the four byte pointer
-  spi_device_transmit(BMI270_handle, &transaction);
+  spi_device_transmit(ICM45686_handle, &transaction);
 
   /*
    *  All done, return
@@ -294,7 +294,7 @@ bool BMI270_pull_FIFO(void)
 
 /*----------------------------------------------------------------
  *
- * @function: BMI270_find_index_out
+ * @function: ICM45686_find_index_out
  *
  * @brief:    Find the place corresponding to the shot sample
  *
@@ -329,14 +329,14 @@ bool BMI270_pull_FIFO(void)
  *     |       1510 back in time          |
  *
  *---------------------------------------------------------------*/
-bool BMI270_find_index_out(time_count_64_t shot) // Time shot occured
+bool ICM45686_find_index_out(time_count_64_t shot) // Time shot occured
 {
-  real_t       time_delay_s;                     // Time shot occured in micro seconds
+  real_t       time_delay_s;                       // Time shot occured in micro seconds
   unsigned int sample_delay;
 
-  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "BMI270_find_index_out(%'llu)", shot);))
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "ICM45686_find_index_out(%'llu)", shot);))
 
-  if ( shot == 0 )                               // No shot time, just start at the current point in the FIFO
+  if ( shot == 0 )                                 // No shot time, just start at the current point in the FIFO
   {
     index_out.inner = 0;
     index_out.outer = 0;
@@ -373,35 +373,35 @@ bool BMI270_find_index_out(time_count_64_t shot) // Time shot occured
 
 /*----------------------------------------------------------------
  *
- * @function: BMI270_read_raw_accel()
+ * @function: ICM45686_read_raw_accel()
  *
- * @brief:    Read acceleration data from the BMI270
+ * @brief:    Read acceleration data from the ICM45686
  *
  * @return:   Acceleration in FIFO format
  *
  *----------------------------------------------------------------
  *
- * The Acceleration data is read from the BMI270 in 6 bytes,
+ * The Acceleration data is read from the ICM45686 in 6 bytes,
  * with the X, Y, and Z axis data each consisting of a low byte
  * followed by a high byte. The raw acceleration data is stored
  * in the provided sample structure.
  *
  * IMPORTANT
  *
- * The BMI270 brings the acceleration in as LSB and MSB.
+ * The ICM45686 brings the acceleration in as LSB and MSB.
  * ie, the bytes need to be swapped before use.
  *
- * The function collects information from the BMI270 registers
+ * The function collects information from the ICM45686 registers
  * and scrambles it into the FIFO format for use by the rest of the program.\
  *
  *--------------------------------------------------------------*/
-void BMI270_read_raw_accel(FIFO_raw_frame_t *sample) // Returned values
+void ICM45686_read_raw_accel(FIFO_raw_frame_t *sample) // Returned values
 {
   spi_transaction_t    transaction;
   register_raw_frame_t raw_frame;
 
   /*
-   * Prepare and read a single sample directly from the BMI270
+   * Prepare and read a single sample directly from the ICM45686
    */
   memset(&transaction, 0x00, sizeof(transaction));            // Clear the transaction structure
   transaction.addr      = 0x80 | ACCEL_X;                     // Start at Accel Acceleration Data and read all 6 bytes in one transaction
@@ -410,7 +410,7 @@ void BMI270_read_raw_accel(FIFO_raw_frame_t *sample) // Returned values
   transaction.rxlength  = (sizeof(register_raw_frame_t)) * 8; // Don't count the empty
   transaction.rx_buffer = &raw_frame.dummy;                   // Receive buffer to store the raw acceleration data
   transaction.flags     = 0;
-  spi_device_transmit(BMI270_handle, &transaction);           // Transmit the transaction
+  spi_device_transmit(ICM45686_handle, &transaction);         // Transmit the transaction
 
   DLT(DLT_DEBUG,
       SEND(CONSOLE,
@@ -435,9 +435,9 @@ void BMI270_read_raw_accel(FIFO_raw_frame_t *sample) // Returned values
 
 /*----------------------------------------------------------------
  *
- * @function: BMI270_find_zero()
+ * @function: ICM45686_find_zero()
  *
- * @brief:    Determine the resting g levels for the BMI270
+ * @brief:    Determine the resting g levels for the ICM45686
  *
  * @return: None
  *
@@ -454,12 +454,12 @@ void BMI270_read_raw_accel(FIFO_raw_frame_t *sample) // Returned values
  *--------------------------------------------------------------*/
 #define NUM_ZERO_SAMPLES 200
 
-void BMI270_find_zero(bool ask_for_confirm) // Ask for save confirmation)
+void ICM45686_find_zero(bool ask_for_confirm) // Ask for save confirmation)
 {
-  unsigned int     i;                       // Loop counter
-  FIFO_raw_frame_t BMI270_FIFO_raw;         // Read in the order the FIFO returns data
+  unsigned int     i;                         // Loop counter
+  FIFO_raw_frame_t ICM45686_FIFO_raw;         // Read in the order the FIFO returns data
 
-  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "BMI270_find_zero()");))
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "ICM45686_find_zero()");))
 
   run_state |= IN_TEST;
 
@@ -478,14 +478,14 @@ void BMI270_find_zero(bool ask_for_confirm) // Ask for save confirmation)
    */
   for ( i = 0; i != NUM_ZERO_SAMPLES; i++ )
   {
-    BMI270_read_raw_accel(&BMI270_FIFO_raw);          // Take a sample of the raw acceleration data
-    json_x_dotdot_offset += BMI270_FIFO_raw.x_dotdot; // Accumulate the X-axis raw acceleration data
-    json_y_dotdot_offset += BMI270_FIFO_raw.y_dotdot; // Accumulate the Y-axis raw acceleration data
-    json_z_dotdot_offset += BMI270_FIFO_raw.z_dotdot; // Accumulate the Z-axis raw acceleration data
-    json_rho_dot_offset += BMI270_FIFO_raw.rho_dot;
-    json_theta_dot_offset += BMI270_FIFO_raw.theta_dot;
-    json_phi_dot_offset += BMI270_FIFO_raw.phi_dot;
-    printf("  %04X", BMI270_FIFO_raw.x_dotdot);
+    ICM45686_read_raw_accel(&ICM45686_FIFO_raw);        // Take a sample of the raw acceleration data
+    json_x_dotdot_offset += ICM45686_FIFO_raw.x_dotdot; // Accumulate the X-axis raw acceleration data
+    json_y_dotdot_offset += ICM45686_FIFO_raw.y_dotdot; // Accumulate the Y-axis raw acceleration data
+    json_z_dotdot_offset += ICM45686_FIFO_raw.z_dotdot; // Accumulate the Z-axis raw acceleration data
+    json_rho_dot_offset += ICM45686_FIFO_raw.rho_dot;
+    json_theta_dot_offset += ICM45686_FIFO_raw.theta_dot;
+    json_phi_dot_offset += ICM45686_FIFO_raw.phi_dot;
+    printf("  %04X", ICM45686_FIFO_raw.x_dotdot);
     vTaskDelay(2);
   }
 
@@ -552,7 +552,7 @@ void BMI270_find_zero(bool ask_for_confirm) // Ask for save confirmation)
 
 /*----------------------------------------------------------------
  *
- * @function: BMI270_convert_to_g()
+ * @function: ICM45686_convert_to_g()
  *
  * @brief:    Convert raw acceleration data to g
  *
@@ -571,8 +571,8 @@ void BMI270_find_zero(bool ask_for_confirm) // Ask for save confirmation)
 #define GYRO_DEAD_BAND  0.0001
 #define CAL_SCALE       1.0
 
-void BMI270_convert_to_g(FIFO_raw_frame_t *sample,                                              // 16 bit numbers read from BBMI270
-                         trace_vector_t   *vector                                               // Working values
+void ICM45686_convert_to_g(FIFO_raw_frame_t *sample,                                            // 16 bit numbers read from BICM45686
+                           trace_vector_t   *vector                                             // Working values
 )
 {
   vector->x_dotdot = CAL_SCALE * (real_t)(sample->x_dotdot - json_x_dotdot_offset) * G_PER_LSB; // Convert raw X-axis data to g
@@ -616,7 +616,7 @@ void BMI270_convert_to_g(FIFO_raw_frame_t *sample,                              
 
 /*----------------------------------------------------------------
  *
- * @function: BMI270_oscilliscope()
+ * @function: ICM45686_oscilliscope()
  *
  * @brief:    Create a real time oscilliscope for the accelerometer
  *
@@ -624,10 +624,10 @@ void BMI270_convert_to_g(FIFO_raw_frame_t *sample,                              
  *
  *----------------------------------------------------------------
  *
- * Poll the BMI270 and print out the acceleration data
+ * Poll the ICM45686 and print out the acceleration data
  *
  *--------------------------------------------------------------*/
-void BMI270_oscilliscope(void)
+void ICM45686_oscilliscope(void)
 {
   real_t           vector_magnitude; // Magnitude of the acceleration vector
   trace_vector_t   trace_vector;
@@ -638,8 +638,8 @@ void BMI270_oscilliscope(void)
   {
     if ( pause == false )
     {
-      BMI270_read_raw_accel(&sample);
-      BMI270_convert_to_g(&sample, &trace_vector);        // Convert raw data to g
+      ICM45686_read_raw_accel(&sample);
+      ICM45686_convert_to_g(&sample, &trace_vector);      // Convert raw data to g
 
       vector_magnitude = sqrt(SQ(trace_vector.x_dotdot) + SQ(trace_vector.y_dotdot) +
                               SQ(trace_vector.z_dotdot)); // Calculate the magnitude of the acceleration
@@ -677,9 +677,9 @@ void BMI270_oscilliscope(void)
 
 /*----------------------------------------------------------------
  *
- * @function: BMI270_dump()
+ * @function: ICM45686_dump()
  *
- * @brief:    Dump the contents of the BMI270 registers
+ * @brief:    Dump the contents of the ICM45686 registers
  *
  * @return:   None
  *
@@ -692,7 +692,7 @@ void BMI270_oscilliscope(void)
  *--------------------------------------------------------------*/
 #define HEADER "\r\n\n          0    1    2    3      4    5    6    7      8    9    A    B      C    D    E    F"
 
-void BMI270_SPI_dump(void)
+void ICM45686_SPI_dump(void)
 {
   int               address;        // Display address
   int               i;              // Index
@@ -712,7 +712,7 @@ void BMI270_SPI_dump(void)
     transaction.rxlength  = 2 * 8;                                  // Receive length in bits
     transaction.flags     = SPI_TRANS_USE_RXDATA;                   // Indicate that this is a read operation
 
-    spi_device_transmit(BMI270_handle, &transaction);               // Transmit the transaction
+    spi_device_transmit(ICM45686_handle, &transaction);             // Transmit the transaction
 
     if ( (address % 0x40) == 0x00 )
     {

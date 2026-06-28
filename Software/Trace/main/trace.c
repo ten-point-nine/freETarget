@@ -36,6 +36,7 @@
 #include "diag_tools.h"
 #include "http_client.h"
 #include "BMI270.h"
+#include "ICM45686.h"
 #include "IMU.h"
 #include "NTP.h"
 #include "server.h"
@@ -120,9 +121,16 @@ void trace_init(void)
   json_distance_to_target = 10.0;
   json_NTP_period         = NETWORK_TIME_PERIOD; // Reset the watchdog
 
+#if USE_BMI270
   BMI270_init(BMI270_CS);                        // Initialize the BMI270 accelerometer
+#endif
+#if USE_ICM45686
+  ICM45686_init(BMI270_CS);                      // Initialize the ICM45686 accelerometer
+#endif
+#if(0)
   WiFi_station_init();                           // Connect to an SSID
   WiFi_client_init();                            // Initialize the WiFi client
+#endif 
 
   /*
    *  Set up the long running timers
@@ -179,9 +187,14 @@ void trace_loop(void *arg)
 
   while ( 1 )
   {
-    if ( gpio_get_level(BMI270_INTERRUPT) == 0 )
+    if ( gpio_get_level(IMU_INTERRUPT) == 0 )
     {
+#if USE_BMI270
       BMI270_pull_FIFO();
+#endif
+#if USE_ICM45686
+      ICM45686_pull_FIFO();
+#endif
       FIFO_pull++;
       FIFO_time_us = NTP_time_us();
     }
@@ -247,7 +260,12 @@ void trace_push_button(void)
       {
         run_state |= IN_FIFO_FILLING;     // Reset the FIFO
         vTaskDelay(ONE_SECOND);
+#if USE_BMI270
         BMI270_find_zero(false);          // Long push, automatically save
+#endif
+#if USE_ICM45686
+        ICM45686_find_zero(false);        // Long push, automatically save
+#endif
         time_tick = 0;
       }
     }

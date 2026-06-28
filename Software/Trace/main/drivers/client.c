@@ -102,7 +102,7 @@ bool WiFi_client_init(void)
   /*
    *  Check to see if we are already connected
    */
-  IF_IN(CLIENT_CONNECTED)
+  IF(CLIENT_CONNECTED)
   {
     return true;
   }

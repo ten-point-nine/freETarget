@@ -85,7 +85,6 @@ static int                          dns_valid;       // We have a valid IP addre
 static ip_addr_t                    url_ip_address;  // Address of the server
 static esp_netif_t                 *sta_netif;       // Station configuration
 static bool                         WiFi_initialized = false;
-int                                 connection_list; // bitmapof active connections
 
 /*
  * Private Functions
@@ -274,8 +273,8 @@ void WiFi_AP_init(void)
    */
   set_status_LED(LED_WIFI_ACCESS); // I am an access point
   return;
+  #endif 
 }
-
 
 /*****************************************************************************
  *
@@ -369,6 +368,7 @@ void WiFi_station_init(void)
   return;
 }
 
+#if(0)
 /*****************************************************************************
  *
  * @function: WiFi_get_remote_IP()
@@ -436,6 +436,7 @@ static void dns_found_cb(const char      *name,        // Name of dns search
 
   return;
 }
+#endif 
 
 /*****************************************************************************
  *
@@ -589,13 +590,7 @@ static void wifi_set_static_ip(esp_netif_t *netif)
  * The waiting task copies the input to the output of the synchronous IO
  *
  *******************************************************************************/
-void WiFi_loopback_task(void *parameters);
 
-void WiFi_loopback_test(void)
-{
-  xTaskCreate(WiFi_loopback_task, "WiFi_loopback_task", 4096, NULL, 5, NULL);
-  return;
-}
 
 void WiFi_loopback_task(void *parameters)
 {
@@ -621,6 +616,11 @@ void WiFi_loopback_task(void *parameters)
    */
 }
 
+void WiFi_loopback_test(void)
+{
+  xTaskCreate(WiFi_loopback_task, "WiFi_loopback_task", 4096, NULL, 5, NULL);
+  return;
+}
 /*****************************************************************************
  *
  * @function: WiFi_my_IP_address() // My IP address
@@ -633,8 +633,7 @@ void WiFi_loopback_task(void *parameters)
  *
  ****************************************************************************/
 #define TO_IP(x) ((int)x) & 0xff, ((int)x >> 8) & 0xff, ((int)x >> 16) & 0xff, ((int)x >> 24) & 0xff
-bool WiFi_my_IP_address(char *s // Where to return the string
-)
+bool WiFi_my_IP_address(char *s) // Where to return the string
 {
   sprintf(s, "%d.%d.%d.%d", TO_IP(ipInfo.ip.addr));
 

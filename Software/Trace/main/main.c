@@ -64,6 +64,7 @@ void app_main(void)
   /*
    *  Start the client receive task
    */
+  #if(0)
   if ( xTaskCreate(client_recv, "client_recv", K6, NULL, MUST_RUN, NULL) != pdPASS )
   {
     DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "WiFi_client_recv()");))
@@ -84,6 +85,7 @@ void app_main(void)
     DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "server_receive_poll()");))
   }
   vTaskDelay(TICK_10ms);
+#endif 
 
   /*
    *  Start the timer tasks

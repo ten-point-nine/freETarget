@@ -33,6 +33,7 @@
 #include "json.h"
 #include "timer.h"
 #include "BMI270.h"
+#include "ICM45686.h"
 #include "IMU.h"
 #include "ntp.h"
 #include "client.h"
@@ -50,27 +51,34 @@ typedef struct
 } self_test_t;
 
 static const self_test_t test_list[] = {
-    {"Help",                         &show_test_help     },
-    {"Factory test",                 &factory_test       },
-    {"- Digital",                    0                   },
-    {"Digital inputs",               &digital_input_test },
-    {"Digital outputs",              &digital_output_test},
-    {"Accelerometer zeroing",        &BMI270_find_zero   },
-    {"Accelerometer oscilliscope",   &BMI270_oscilliscope},
-    {"Accelerometer dump",           &BMI270_SPI_dump    },
-    {"- Timer",                      0                   },
-    {"Show the current time",        &show_time          },
-    {"- Communications Tests",       0                   },
-    {"Test WiFi as a client",        &WiFi_client_test   },
+    {"Help",                         &show_test_help       },
+    {"Factory test",                 &factory_test         },
+    {"- Digital",                    0                     },
+    {"Digital inputs",               &digital_input_test   },
+    {"Digital outputs",              &digital_output_test  },
+#if USE_ICM45686
+    {"Accelerometer zeroing",        &ICM45686_find_zero   },
+    {"Accelerometer oscilliscope",   &ICM45686_oscilliscope},
+    {"Accelerometer dump",           &ICM45686_SPI_dump    },
+#endif
+#if USE_BMI270
+    {"Accelerometer zeroing",        &BMI270_find_zero     },
+    {"Accelerometer oscilliscope",   &BMI270_oscilliscope  },
+    {"Accelerometer dump",           &BMI270_SPI_dump      },
+#endif
+    {"- Timer",                      0                     },
+    {"Show the current time",        &show_time            },
+    {"- Communications Tests",       0                     },
+    {"Test WiFi as a client",        &WiFi_client_test     },
     //    {"Enable the WiFi Server",       &WiFi_server_test   },
-    {"Scan for access points (APs)", &WiFi_AP_scan_test  },
-    {"- HTTP tests",                 0                   },
-    {"- Interrupt Tests",            0                   },
-    {"- Software tests",             0                   },
-    {"IMU test",                     &IMU_test           },
-    {"IMU real-time test",           &IMU_real_time      },
-    {"Show sensor state",            &show_running_state },
-    {"",                             0                   }
+    {"Scan for access points (APs)", &WiFi_AP_scan_test    },
+    {"- HTTP tests",                 0                     },
+    {"- Interrupt Tests",            0                     },
+    {"- Software tests",             0                     },
+    {"IMU test",                     &IMU_test             },
+    {"IMU real-time test",           &IMU_real_time        },
+    {"Show sensor state",            &show_running_state   },
+    {"",                             0                     }
 };
 
 const dlt_name_t dlt_names[] = {
