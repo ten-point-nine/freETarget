@@ -9,6 +9,7 @@
 #ifndef _TRACE_H
 #define _TRACE_H
 
+#include "product.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "serial_io.h"
@@ -19,16 +20,10 @@
 #define EXTERN extern
 #endif
 
-#define USE_ICM45686 (1 == 1)                         // Use the ICM45686 sensor
-#define USE_BMI270   (0 == 1)                         // Use the BMI270 sensor
-#define BUILD_TRACE  (1 == 1)                         // Build the trace module
-#define BUILD_TARGET (0 == 1)                         // Build the target module
-
-#define SOFTWARE_VERSION "\"1.0.0 June 13, 2026\""
-#define _DONE_           "\r\nDone\r\n"
-#define _GREETING_       "CONNECTED"                  // Message to send on connection
-#define _BYE_            "BYE"                        // Message to send on disconnection
-#define _HELLO_          "HELLO WORLD"                // Message to send on reconnection
+#define _DONE_     "\r\nDone\r\n"
+#define _GREETING_ "CONNECTED"                        // Message to send on connection
+#define _BYE_      "BYE"                              // Message to send on disconnection
+#define _HELLO_    "HELLO WORLD"                      // Message to send on reconnection
 
 #define NETWORK_TIME_PERIOD    (15 * 60 * ONE_SECOND) // Expect a time synch every 15 minutes
 #define KEEP_ALIVE_TIME_PERIOD (10 * 60 * ONE_SECOND) // Expect a time synch every 15 minutes
@@ -46,7 +41,9 @@
 #define IN_OPERATION     (IN_REDUCTION << 1)          // FIFO has data, unit has been zeroed
 #define IN_FATAL_ERROR   (IN_OPERATION << 1)          // A fatal error has occured and cannot be fixed
 #define IN_TEST          (IN_FATAL_ERROR << 1)        // Running a test
-#define CLIENT_CONNECTED (IN_TEST << 1)               // We are connected to the target
+#define AP_ACTIVE        (IN_TEST << 1)               // Access Point is active
+#define STATION_ACTIVE   (AP_ACTIVE << 1)             // Station is active
+#define CLIENT_CONNECTED (STATION_ACTIVE << 1)        // We are connected to the target
 #define SERVER_CONNECTED (CLIENT_CONNECTED << 1)      // We are connected to the target
 #define TIME_VALID       (SERVER_CONNECTED << 1)      // The timebase is valid
 
@@ -55,8 +52,6 @@
 #define set_status_LED(x)                             // Placeholder for setting the status LED
 
 #define SEND(who, message) {message} serial_to_all(_xs, who);
-
-#define BUILD_MDNS (0 == 1)                           // MDNS not supported
 
 /*
  * Options

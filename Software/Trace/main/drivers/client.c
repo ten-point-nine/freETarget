@@ -84,7 +84,7 @@ esp_err_t esp_base_mac_addr_get(uint8_t *mac);
 
 /*****************************************************************************
  *
- * @function: WiFi_client_init
+ * @function: client_init
  *
  * @brief:    Start a client connection
  *
@@ -95,7 +95,7 @@ esp_err_t esp_base_mac_addr_get(uint8_t *mac);
  * Create a connection to a remote server
  *
  ***************************************************************************/
-bool WiFi_client_init(void)
+bool client_init(void)
 {
   struct sockaddr_in dest_addr;
 

@@ -3,7 +3,7 @@
 //
 Static IP  { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING", "WIFI_IP":"192.168.86.109" }
 Static IP  { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"NEXUS", "WIFI_IP":"192.168.86.109" }
-Static IP  { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"62I", "WIFI_IP":"192.168.86.111" }
+Static IP  { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"TRACE", "WIFI_STATIC_IP":"192.168.86.111" }
 Static IP  { "WIFI_SSID": "FET-WIFI",  "WIFI_PWD": "Mar1noni$"}
 Default IP { "WIFI_SSID": "", "WIFI_IP":"192.168.0.103", "WIFI_GATEWAY":"192.168.0.1" }
 Dynamic IP { "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING"}
@@ -17,7 +17,7 @@ Reinitialize the board {"INIT":0}
 
 { "WIFI_SSID": "",  "WIFI_PWD": "", "NAME_ID": 4}
 
-{"WIFI_TARGET_IP":"192.168.86.109"}
+{"WIFI_SERVER_IP":"192.168.86.109"}
 
 {"WIFI_SSID":"FSixC! Box FE":, "WIFI_PWD":":1234512345123451234512345"}
 

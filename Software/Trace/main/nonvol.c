@@ -176,8 +176,8 @@ void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calib
   {
     switch ( JSON[i].convert & IS_MASK )
     {
-      case IS_VOID:   // Variable does not contain anything
-      case IS_FIXED:  // Variable cannot be overwritten                                    // MFS initialized from MFS entry
+      case IS_VOID:  // Variable does not contain anything
+      case IS_FIXED: // Variable cannot be overwritten                                    // MFS initialized from MFS entry
         break;
 
       case IS_TEXT:
@@ -208,10 +208,14 @@ void factory_nonvol(bool do_calibration) // TRUE if we are doing a factory calib
     }
     i++;
   }
-
   /*
-   * Initialization complete.  Mark the init done
+   *  Special cases
    */
+  nvs_set_str(my_handle, NONVOL_WIFI_SSID, "undefined"); // Force the WiFi SSID to be undefined
+
+                                                         /*
+                                                          * Initialization complete.  Mark the init done
+                                                          */
   nvs_set_i32(my_handle, NONVOL_PS_VERSION, PS_VERSION); // Write in the version number
   nvs_set_i32(my_handle, NONVOL_INIT, INIT_DONE);
   if ( nvs_commit(my_handle) )
@@ -294,8 +298,8 @@ void update_nonvol(unsigned int current_version) // Version present in persisten
         DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Updating PS%d", version);))
         switch ( JSON[i].convert & IS_MASK )
         {
-          case IS_VOID:   // Variable does not contain anything
-          case IS_FIXED:  // Variable cannot be overwritten                                    // MFS initialized from MFS entry
+          case IS_VOID:  // Variable does not contain anything
+          case IS_FIXED: // Variable cannot be overwritten                                    // MFS initialized from MFS entry
             break;
 
           case IS_TEXT:

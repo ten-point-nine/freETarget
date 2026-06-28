@@ -40,6 +40,7 @@ void nonvol_write_i32(char *name, int *value);    // Write a value to nonvol
 #define NONVOL_WIFI_STATIC_IP     "WIFI_STATIC_IP"     // Storage for IP Address
 #define NONVOL_WIFI_SERVER_IP     "WIFI_SERVER_IP"     // Address of the target server
 #define NONVOL_WIFI_RESET_FIRST   "WIFI_RESET"         // Reset the target on the first WiFi connction
+#define NONVOL_WIFI_CHANNEL       "WIFI_CHANNEL"       // Setup the wifi channel
 #define NONVOL_WIFI_HIDDEN        "WIFI_HIDDEN"        // Hide the SSID if set to 1
 #define NONVOL_OTA_URL            "OTA_URL"            // User supplied name for the target
 #define NONVOL_REMOTE_ACTIVE      "REMOTE_ACTIVE"      // Send score to a remote server

@@ -54,7 +54,7 @@
 #include "timer.h"
 #include "server.h"
 #include "client.h"
-#include "tcpip_helpers.h" 
+#include "tcpip_helpers.h"
 
 #define DEFAULT_IP         192, 168, 10, 9
 #define PORT               1090
@@ -80,10 +80,10 @@ static EventGroupHandle_t           s_wifi_event_group;
 static esp_event_handler_instance_t instance_any_id;
 static esp_event_handler_instance_t instance_got_ip;
 static int                          s_retry_num = 0;
-static esp_netif_ip_info_t          ipInfo;          // IP Address of the access point
-static int                          dns_valid;       // We have a valid IP address for the URL
-static ip_addr_t                    url_ip_address;  // Address of the server
-static esp_netif_t                 *sta_netif;       // Station configuration
+static esp_netif_ip_info_t          ipInfo;         // IP Address of the access point
+static int                          dns_valid;      // We have a valid IP address for the URL
+static ip_addr_t                    url_ip_address; // Address of the server
+static esp_netif_t                 *sta_netif;      // Station configuration
 static bool                         WiFi_initialized = false;
 
 /*
@@ -122,10 +122,18 @@ void WiFi_init(void)
 {
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "WiFi_init()");))
 
-  /*
-   * Initialize the WiFI
-   */
-  if ( json_wifi_ssid[0] == 0 ) // The SSID is undefined
+/*
+ * Initialize the WiFI
+ */
+#if ( INCLUDE_WIFI_AP == 0 )                // If WiFi AP is not included
+  if ( json_wifi_ssid[0] == 0 )             // The SSID is undefined
+  {
+    strcpy(json_wifi_ssid, "default_ssid"); // Set a default SSID
+  }
+  WiFi_station_init();
+
+#else
+  if ( json_wifi_ssid[0] == 0 ) // The SSID is undefined, must be an Access Point
   {
     WiFi_AP_init();
   }
@@ -133,11 +141,12 @@ void WiFi_init(void)
   {
     WiFi_station_init();
   }
+#endif
 
 /*
  * Setup the mDNS service
  */
-#if ( BUILD_MDNS )
+#if ( INCLUDE_MDNS )
   mdns_init();                   // Initialize the mDNS service
   target_name(str_c);            // Get the target name
   mdns_hostname_set(str_c);      // Set the hostname for the target
@@ -220,7 +229,6 @@ void WiFi_reconnect(void)
  *******************************************************************************/
 void WiFi_AP_init(void)
 {
-  #if(0)
   esp_netif_t       *wifiAP;
   wifi_init_config_t WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
@@ -272,8 +280,8 @@ void WiFi_AP_init(void)
    * Ready to go
    */
   set_status_LED(LED_WIFI_ACCESS); // I am an access point
+  run_state |= AP_ACTIVE;
   return;
-  #endif 
 }
 
 /*****************************************************************************
@@ -350,6 +358,7 @@ void WiFi_station_init(void)
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Connected to AP SSID:  \"%s\"", json_wifi_ssid);))
     DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Using WiFi_IP_ADDRESS: \"%s\"", str_c);))
     set_status_LED(LED_WIFI_STATION);
+    run_state |= STATION_ACTIVE;
   }
   else if ( bits & WIFI_FAIL_BIT )
   {
@@ -368,7 +377,6 @@ void WiFi_station_init(void)
   return;
 }
 
-#if(0)
 /*****************************************************************************
  *
  * @function: WiFi_get_remote_IP()
@@ -436,7 +444,6 @@ static void dns_found_cb(const char      *name,        // Name of dns search
 
   return;
 }
-#endif 
 
 /*****************************************************************************
  *
@@ -590,7 +597,6 @@ static void wifi_set_static_ip(esp_netif_t *netif)
  * The waiting task copies the input to the output of the synchronous IO
  *
  *******************************************************************************/
-
 
 void WiFi_loopback_task(void *parameters)
 {

@@ -121,16 +121,12 @@ void trace_init(void)
   json_distance_to_target = 10.0;
   json_NTP_period         = NETWORK_TIME_PERIOD; // Reset the watchdog
 
-#if USE_BMI270
-  BMI270_init(BMI270_CS);                        // Initialize the BMI270 accelerometer
+  IMU_INIT(BMI270_CS);                           // Initialize the BMI270 accelerometer
+  WiFi_init();                                  // Startup the WiFi module
+
+#if INCLUDE_CLIENT
+  client_init();                            // Initialize the WiFi client
 #endif
-#if USE_ICM45686
-  ICM45686_init(BMI270_CS);                      // Initialize the ICM45686 accelerometer
-#endif
-#if(0)
-  WiFi_station_init();                           // Connect to an SSID
-  WiFi_client_init();                            // Initialize the WiFi client
-#endif 
 
   /*
    *  Set up the long running timers
@@ -304,7 +300,7 @@ void trace_health_monitor(void)
   IF_NOT(CLIENT_CONNECTED)
   {
     DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Reconnecting to target");))
-    WiFi_client_init(); // Try to make a new connection
+    client_init(); // Try to make a new connection
   }
 
   /*

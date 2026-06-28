@@ -94,6 +94,8 @@ EXTERN char   json_wifi_static_ip[IP_SIZE]; // Static IP assigned to the trace s
 EXTERN char   json_wifi_ssid[SSID_SIZE];    // Text of WiFI SSID
 EXTERN char   json_wifi_pwd[PWD_SIZE];      // Text of WiFI password
 EXTERN char   json_wifi_gateway[PWD_SIZE];  // Gateway for WiFi
+EXTERN int    json_wifi_channel;            // WiFi channel
+EXTERN int    json_wifi_hidden;             // WiFi hidden flag
 EXTERN int    json_remote_modes;            // What modes are available to talk to a remote server
 EXTERN int    json_x_dotdot_offset;         // Correction applied to readings
 EXTERN int    json_y_dotdot_offset;

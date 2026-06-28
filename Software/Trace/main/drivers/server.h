@@ -11,10 +11,11 @@
 /*
  * Global functions
  */
-void server_accept_poll(void *parameters);   // Wait for a socket connection
-//void server_send(void *pvParameters);        // Send data to connected clients
-//void server_send(void *pvParameters);        // Send data to connected clients
-void server_send(char * buffer, int length);  // Send data to connected clients
+void server_accept_poll(void *parameters); // Initialize and wait for a socket connection
+
+// void server_send(void *pvParameters);        // Send data to connected clients
+// void server_send(void *pvParameters);        // Send data to connected clients
+void server_send(char *buffer, int length);  // Send data to connected clients
 void server_receive_poll(void *parameters);  // Listen to TCPIP recv calls
 
 void server_accept_poll(void *parameters);   // Wait for a socket connection

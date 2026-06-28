@@ -94,11 +94,14 @@ const json_message_t JSON[] = {
     {SHOW + LOCK, "\"PAPER_ECO\":",      &json_paper_eco,             IS_INT32,            0,                NONVOL_PAPER_ECO,           0,          0 },
     {SHOW + LOCK, "\"PAPER_SHOT\":",     &json_paper_shot,            IS_INT32,            0,                NONVOL_PAPER_SHOT,          0,          5 },
     {SHOW + LOCK, "\"PAPER_TIME\":",     &json_paper_time,            IS_INT32,            0,                NONVOL_PAPER_TIME,          500,        0 },
+
+    {SHOW,        "\"WIFI_CHANNEL\":",   &json_wifi_channel,          IS_INT32,            0,                NONVOL_WIFI_CHANNEL,        0,          0 },
     {SHOW,        "\"WIFI_STATIC_IP\":", (int *)&json_wifi_static_ip, IS_TEXT + IP_SIZE,   0,                NONVOL_WIFI_STATIC_IP,      0,          0 },
+    {SHOW,        "\"WIFI_GATEWAY\":",   (int *)&json_wifi_gateway,   IS_TEXT + IP_SIZE,   0,                NONVOL_WIFI_GATEWAY,        0,          0 },
+    {SHOW,        "\"WIFI_HIDDEN\":",    &json_wifi_hidden,           IS_INT32,            0,                NONVOL_WIFI_HIDDEN,         0,          0 },
     {SHOW,        "\"WIFI_SERVER_IP\":", (int *)&json_wifi_server_ip, IS_TEXT + IP_SIZE,   0,                NONVOL_WIFI_SERVER_IP,      0,          0 },
     {SHOW,        "\"WIFI_PWD\":",       (int *)&json_wifi_pwd,       IS_TEXT + PWD_SIZE,  0,                NONVOL_WIFI_PWD,            0,          0 },
     {SHOW,        "\"WIFI_SSID\":",      (int *)&json_wifi_ssid,      IS_TEXT + SSID_SIZE, 0,                NONVOL_WIFI_SSID,           0,          0 },
-    {SHOW,        "\"WIFI_GATEWAY\":",   (int *)&json_wifi_gateway,   IS_TEXT + IP_SIZE,   0,                NONVOL_WIFI_GATEWAY,        0,          0 },
 
     {HIDE,        "\"RESET\"",           0,                           IS_VOID,             &esp_restart,     0,                          0,          0 },
     {HIDE,        "\"SN\":",             &json_serial_number,         IS_FIXED,            0,                NONVOL_SERIAL_NO,           0xffff,     0 },

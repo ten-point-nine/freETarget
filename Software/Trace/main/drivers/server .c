@@ -399,6 +399,7 @@ void server_accept_poll(void *parameters)
         DLT(DLT_INFO, { SEND(ALL, sprintf(_xs, "Socket accepted ip address: %s\r\n", addr_str);) })
       }
     }
+    vTaskDelay(10);
   }
 
   /*

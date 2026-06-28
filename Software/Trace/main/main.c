@@ -64,28 +64,34 @@ void app_main(void)
   /*
    *  Start the client receive task
    */
-  #if(0)
-  if ( xTaskCreate(client_recv, "client_recv", K6, NULL, MUST_RUN, NULL) != pdPASS )
+  IF(STATION_ACTIVE | AP_ACTIVE)
   {
-    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "WiFi_client_recv()");))
-  }
-  vTaskDelay(TICK_10ms);
+    if ( xTaskCreate(client_recv, "client_recv", K6, NULL, MUST_RUN, NULL) != pdPASS )
+    {
+      DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "WiFi_client_recv()");))
+    }
+    vTaskDelay(TICK_10ms);
 
-  /*
-   *  Start the server tasks
-   */
-  if ( xTaskCreate(server_accept_poll, "server_accept_poll", K6, NULL, MUST_RUN, NULL) != pdPASS )
-  {
-    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "server_accept_poll()");))
-  }
-  vTaskDelay(TICK_10ms);
+    /*
+     *  Start the server tasks
+     */
 
-  if ( xTaskCreate(server_receive_poll, "server_receive_poll", K6, NULL, MUST_RUN, NULL) != pdPASS )
-  {
-    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "server_receive_poll()");))
+    if ( xTaskCreate(server_accept_poll, "server_accept_poll", K6, NULL, MUST_RUN, NULL) != pdPASS )
+    {
+      DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "server_accept_poll()");))
+    }
+    vTaskDelay(TICK_10ms);
+
+    if ( xTaskCreate(server_receive_poll, "server_receive_poll", K6, NULL, MUST_RUN, NULL) != pdPASS )
+    {
+      DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "server_receive_poll()");))
+    }
+    vTaskDelay(TICK_10ms);
   }
-  vTaskDelay(TICK_10ms);
-#endif 
+  else
+  {
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "No WiFi mode active");))
+  }
 
   /*
    *  Start the timer tasks
