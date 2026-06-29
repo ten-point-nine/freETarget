@@ -84,7 +84,7 @@ esp_err_t esp_base_mac_addr_get(uint8_t *mac);
 
 /*****************************************************************************
  *
- * @function: WiFi_client_init
+ * @function: client_init
  *
  * @brief:    Start a client connection
  *
@@ -95,9 +95,11 @@ esp_err_t esp_base_mac_addr_get(uint8_t *mac);
  * Create a connection to a remote server
  *
  ***************************************************************************/
-bool WiFi_client_init(void)
+bool client_init(void)
 {
   struct sockaddr_in dest_addr;
+
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "client_init(%s)", json_wifi_server_ip);))
 
   /*
    *  Check to see if we are already connected
@@ -154,7 +156,7 @@ bool WiFi_client_init(void)
 
 /*****************************************************************************
  *
- * @function: WiFi_client_recv
+ * @function: client_recv
  *
  * @brief:    Manage received packets from the target
  *
@@ -166,13 +168,12 @@ bool WiFi_client_init(void)
  *
  ***************************************************************************/
 char rx_buffer[256];
-char propeller[] = {'-', '/', '|', '\\'};
 
 void client_recv(void *params)
 {
   int length;
 
-  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "WiFi_client_recv()");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "client_recv()");))
 
   while ( 1 )
   {

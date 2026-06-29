@@ -12,6 +12,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "serial_io.h"
+#include "product.h"
 
 #ifdef FREETARGET_C
 #define EXTERN
@@ -19,12 +20,11 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"6.5.0 June 14, 2026\""
-#define _DONE_           "\r\nDone\r\n"
-#define _SHOT_           "shot"
-#define _GREETING_       "CONNECTED"                  // Message to send on connection
-#define _BYE_            "BYE"                        // Message to send on disconnection
-#define _HELLO_          "HELLO WORLD"                // Message to send on reconnection
+#define _DONE_     "\r\nDone\r\n"
+#define _SHOT_     "shot"
+#define _GREETING_ "CONNECTED"                        // Message to send on connection
+#define _BYE_      "BYE"                              // Message to send on disconnection
+#define _HELLO_    "HELLO WORLD"                      // Message to send on reconnection
 
 #define NETWORK_TIME_PERIOD    (15 * 60 * ONE_SECOND) // Expect a time synch every 15 minutes
 #define KEEP_ALIVE_TIME_PERIOD (10 * 60 * ONE_SECOND) // Expect a time synch every 15 minutes
@@ -48,7 +48,7 @@
 #define CLIENT_CONNECTED 0x0400                       // The client is connected
 
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
-#define IF(x)  if ( (run_state & (x)) != 0 )
+#define IF(x)     if ( (run_state & (x)) != 0 )
 
 #define SEND(who, message) {message} serial_to_all(_xs, who);
 
@@ -236,6 +236,5 @@ void         tabata_task(void);                   // Run the TABATA timersArm th
 void         rapid_fire_task(void);               // Run the Rapid Fire state machine
 sensor_ID_t *find_sensor(unsigned int run_mask);  // Locate the sensor settings for the run_latch
 void         start_new_session(int session_type); // Start a new shooting session
-bool         prompt_for_confirm(void);            // Prompt for a confirmation
 
 #endif

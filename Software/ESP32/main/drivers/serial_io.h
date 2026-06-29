@@ -49,11 +49,11 @@ void RS485_test(void);                         // Test the RS485 port
 #define TCPIP    (TCPIP_0 | TCPIP_1 | TCPIP_2 | TCPIP_3)
 #define ALL      (CONSOLE | AUX_PORT | TCPIP | HTTP_CONNECTED)
 
-#define DEFAULT_BAUD_RATE 115200
+#define DEFAULT_BAUD_RATE 115200             // Standard development baud rate for the console port
+#define MAX_BAUD_RATE     921600             // Maximum baud rate for the console port
 
 /*
  *  Global Variables
  */
-extern unsigned int connection_list;
-
+extern unsigned int connection_list; // Bitmap of connections 
 #endif

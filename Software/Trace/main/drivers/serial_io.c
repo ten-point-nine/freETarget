@@ -79,7 +79,7 @@ QueueHandle_t uart_console_queue;
  *
  * IMPORTANT
  *
- * The basic 115200, N, 8, 1 is set up by th3 ESP32 boot prom, and this
+ * The basic DEFAULT_BAUD_RATE, N, 8, 1 is set up by th3 ESP32 boot prom, and this
  * function exists to add in the parts needed for the target.
  *
  ******************************************************************************/

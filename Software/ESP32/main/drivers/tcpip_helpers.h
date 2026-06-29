@@ -15,8 +15,9 @@ int  server_app_2_queue(char *buffer, int length);    // Save for later output t
 int  server_queue_2_socket(char *buffer, int length); // Take from queue and put to socket
 int  server_socket_2_queue(char *buffer, int length); // Take from socket and queue
 int  server_queue_2_app(char *buffer, int length);    // Take from queue and return to application
-void server_flush(void);                              // Flush the server input queue
-int  server_available(int port);                      // Find out if there is data waiting
+void socket_flush(void);                              // Flush the server input queue
+int  socket_available(int port);                      // Find out if there is data waiting
+int socket_getch(void);          // Get one character from the socket buffer 
 
 /*
  * #defines

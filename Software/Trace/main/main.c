@@ -66,16 +66,18 @@ void app_main(void)
    */
   IF(STATION_ACTIVE | AP_ACTIVE)
   {
-    if ( xTaskCreate(client_recv, "client_recv", K6, NULL, MUST_RUN, NULL) != pdPASS )
+#if BUILD_CLIENT
+    if ( xTaskCreate(client_recv, "client_recv", K6, NULL, POLLING, NULL) != pdPASS )
     {
-      DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "WiFi_client_recv()");))
+      DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "client_recv()");))
     }
     vTaskDelay(TICK_10ms);
+#endif
 
     /*
      *  Start the server tasks
      */
-
+#if BUILD_SERVER
     if ( xTaskCreate(server_accept_poll, "server_accept_poll", K6, NULL, MUST_RUN, NULL) != pdPASS )
     {
       DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "server_accept_poll()");))
@@ -87,6 +89,7 @@ void app_main(void)
       DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start %s", "server_receive_poll()");))
     }
     vTaskDelay(TICK_10ms);
+#endif
   }
   else
   {

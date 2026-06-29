@@ -45,7 +45,8 @@
 /*
  *  Variables
  */
-time_count_64_t keep_alive_timer; // TCPIP keep alive timer
+time_count_64_t       keep_alive_timer; // TCPIP keep alive timer
+volatile unsigned int run_state;        // Current running state of the software
 
 /*
  * Function Prototypes
@@ -122,10 +123,10 @@ void trace_init(void)
   json_NTP_period         = NETWORK_TIME_PERIOD; // Reset the watchdog
 
   IMU_INIT(BMI270_CS);                           // Initialize the BMI270 accelerometer
-  WiFi_init();                                  // Startup the WiFi module
+  WiFi_init();                                   // Startup the WiFi module
 
 #if INCLUDE_CLIENT
-  client_init();                            // Initialize the WiFi client
+  client_init();                                 // Initialize the WiFi client
 #endif
 
   /*

@@ -43,6 +43,7 @@ extern const json_message_t JSON[];
 #ifdef JSON_C
 #define EXTERN
 #else
+#undef EXTERN
 #define EXTERN extern
 extern const json_message_t JSON[];
 extern char                 input_JSON[];

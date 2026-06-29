@@ -90,9 +90,8 @@ const uart_config_t uart_BT_INIT_9600_config = {.baud_rate           = 9600,
                                                 .rx_flow_ctrl_thresh = 122,
                                                 .source_clk          = UART_SCLK_DEFAULT};
 
-unsigned int connection_list; // Bitmask of existing connections
 time_count_t RS485_timer = 0; // Timer to turn off RS485 transmitter
-
+unsigned int connection_list; // Bitmap of connections
 /******************************************************************************
  *
  * @function: serial_io_init
@@ -284,9 +283,9 @@ int serial_available(int ports) // Bit mask of active ports
     n_available += length;
   }
 
-  if ( ports & (TCPIP | CLIENT ))
+  if ( ports & (TCPIP | CLIENT) )
   {
-    n_available += server_available(ports);
+    n_available += socket_available(ports);
   }
 
   /*
@@ -316,12 +315,10 @@ void serial_flush(int ports) // active port list
 
   if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
   {
-    uart_flush(uart_aux);
-  }
-
-  if ( ports & TCPIP )
-  {
-    server_flush();
+    while ( socket_available(ports) > 0 )
+    {
+      socket_getch();
+    }
   }
   return;
 }
@@ -718,7 +715,7 @@ void aux_port_loopback_test(void)
   }
 
   SEND(ALL, sprintf(_xs, "\r\nAUX Serial Port Loopback.  Make sure AUX port is looped back");)
-  if ( prompt_for_confirm() == false )
+  if ( prompt_for_confirm("Loopback the AUX port?") == false )
   {
     SEND(ALL, sprintf(_xs, "\r\nAborting configuration");)
     return;
@@ -796,10 +793,9 @@ void RS485_test(void)
  * variables need to be cleared
  *
  ******************************************************************************/
-static unsigned int old_connection_list = 0;    // Previous connection mask
-
 void check_new_connection(void)
 {
+  static unsigned int old_connection_list = 0;
 
   if ( old_connection_list == connection_list ) // Has anything changed?
   {

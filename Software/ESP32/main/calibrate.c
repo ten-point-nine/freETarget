@@ -323,7 +323,7 @@ static void perform_calibration(bool use_CSV)
 
   SEND(ALL, sprintf(_xs, "\r\n\r\nCalibration complete. ");)
 
-  SEND(ALL, sprintf(_xs, "\r\nCommit the calibration?");) if ( prompt_for_confirm() == true )
+  if ( prompt_for_confirm("Commit the calibration?") == true )
   {
     commit_calibration();                // Commit the calibration to NONVOL
     SEND(ALL, sprintf(_xs, "\r\nCalibration committed to NONVOL.\r\n ");)
@@ -1247,9 +1247,7 @@ void void_calibration(bool confirm) // TRUE if unconditionally voiding
   {
     DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "clear_calibration()");))
 
-    SEND(ALL, sprintf(_xs, "Do you want to void the calibration?");)
-
-    if ( prompt_for_confirm() == false )
+    if ( prompt_for_confirm("Do you want to void the calibration?") == false )
     {
       return;
     }

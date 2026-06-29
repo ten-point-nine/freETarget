@@ -99,6 +99,8 @@ bool client_init(void)
 {
   struct sockaddr_in dest_addr;
 
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "client_init(%s:%d)", json_server_IP, PORT);))
+
   /*
    *  Check to see if we are already connected
    */
@@ -114,7 +116,7 @@ bool client_init(void)
   {
     memset((void *)&dest_addr, 0, sizeof(dest_addr));
     dest_addr.sin_len         = sizeof(dest_addr);
-    dest_addr.sin_addr.s_addr = inet_addr(json_wifi_server_ip);
+    dest_addr.sin_addr.s_addr = inet_addr(json_server_IP);
     dest_addr.sin_family      = AF_INET;
     dest_addr.sin_port        = lwip_htons(1090);
 
@@ -134,21 +136,21 @@ bool client_init(void)
    */
   if ( lwip_connect(client_socket, (struct sockaddr *)&dest_addr, sizeof(dest_addr)) != 0 )
   {
-    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Socket unable to connect to %s:%d: errno %d", json_wifi_server_ip, 1090, errno);))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Socket unable to connect to %s:%d: errno %d", json_server_IP, 1090, errno);))
     return false;
   }
 
   /*
    *  Got here, ready to go
    */
-  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Connected to remote at: %s:%d", json_wifi_server_ip, 1090);))
-  run_state |= CLIENT_CONNECTED; // Yay, we're connected
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Connected to remote at: %s:%d", json_server_IP, 1090);))
+  run_state |= SERVER_CONNECTED; // Yay, we're connected
   return true;
 }
 
 /*****************************************************************************
  *
- * @function: WiFi_client_recv
+ * @function: client_recv
  *
  * @brief:    Manage received packets from the target
  *
@@ -165,7 +167,7 @@ void client_recv(void *params)
 {
   int length;
 
-  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "WiFi_client_recv()");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "client_recv()");))
 
   while ( 1 )
   {

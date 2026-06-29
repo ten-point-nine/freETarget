@@ -31,10 +31,7 @@
 #include "NTP.h"
 
 #define SHOT_TIME_TO_SECONDS(x) ((real_t)(x)) / 1000000.0
-real_t SQ(real_t a)
-{
-  return a * a;
-}
+
 /*-----------------------------------------------------
  *
  * @function: target_name
@@ -228,11 +225,11 @@ bool contains(char *source,                    // Source string
  * @return:   TRUE if the confirmation is Yes
  *
  *--------------------------------------------------------------*/
-bool prompt_for_confirm(void)
+bool prompt_for_confirm(char *prompt)
 {
   unsigned char ch;
 
-  SEND(ALL, sprintf(_xs, "\r\nConfirm Y/N?");)
+  SEND(ALL, sprintf(_xs, "\r\n%s. Confirm Y/N?", prompt);)
 
   /*
    * Loop and wait for a confirmation
@@ -1032,4 +1029,64 @@ real_t radians_to_degrees(real_t radians)
 real_t degrees_to_radians(real_t degrees)
 {
   return (degrees / 180.0 * PI);
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: check_for_exit
+ *
+ * @brief:    Check for an exit command on the serial port
+ *
+ * @return:   Character read from the serial port
+ *
+ *----------------------------------------------------------------
+ *
+ * Checks to see if there is something waiting, and if so
+ * it is read and returned.  If there is nothing waiting, then
+ * 0 is returned.
+ *
+ *--------------------------------------------------------------*/
+
+unsigned char check_for_exit(void)
+{
+  if ( serial_available(CONSOLE) != 0 )
+  {
+    return serial_getch(CONSOLE);
+  }
+
+  return 0;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: pause
+ *
+ * @brief:    Puase execution until a space bar is pressed
+ *
+ * @return:   Nothing
+ *
+ *---------------------------------------------------------------
+ *
+ * Stay here forever until a space bar has been pressed
+ *
+ *--------------------------------------------------------------*/
+void pause(void)
+{
+  SEND(CONSOLE, sprintf(_xs, "Paused press space to continue");)
+  while ( 1 )
+  {
+    if ( serial_available(CONSOLE) )
+    {
+      if ( serial_getch(CONSOLE) == ' ' )
+      {
+        return;
+      }
+    }
+    vTaskDelay(10);
+  }
+}
+
+real_t SQ(real_t x)
+{
+  return x * x;
 }

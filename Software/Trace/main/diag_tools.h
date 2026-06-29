@@ -33,7 +33,7 @@ void show_running_state(void);       // Decode the state and print
 #define LED_32            "0123456789012345678901234567890123"
 #define LED_OFF           "                                  "
 #define LED_ON            "**********************************"
-#define LED_STARTUP       "* * * * * * * * * * * * * * * *   "
+#define LED_STARTUP       "* * * * * * * * * * * * * * * * * "
 #define LED_READY         "********                          "
 #define LED_FIFO_FILLING  "********  **                      "
 #define LED_REDUCTION     "********  **  **                  "

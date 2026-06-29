@@ -69,9 +69,9 @@ const json_message_t JSON[] = {
     {SHOW, "\"THETA_DOT_OFFSET\":", &json_theta_dot_offset,          IS_INT32,            0,             NONVOL_THETA_DOT_OFFSET,   0,      0},
     {SHOW, "\"PHI_DOT_OFFSET\":",   &json_phi_dot_offset,            IS_INT32,            0,             NONVOL_PHI_DOT_OFFSET,     0,      0},
 
-    {SHOW, "\"WIFI_STATIC_IP\":",   (int *)&json_wifi_static_ip,     IS_TEXT + IP_SIZE,   0,             NONVOL_WIFI_STATIC_IP,    0,      0},
+    {SHOW, "\"WIFI_STATIC_IP\":",   (int *)&json_wifi_static_ip,     IS_TEXT + IP_SIZE,   0,             NONVOL_WIFI_STATIC_IP,     0,      0},
     {SHOW, "\"WIFI_GATEWAY\":",     (int *)&json_wifi_gateway,       IS_TEXT + IP_SIZE,   0,             NONVOL_WIFI_GATEWAY,       0,      0},
-    {SHOW, "\"WIFI_SERVER_IP\":",   (int *)&json_wifi_server_ip,     IS_TEXT + IP_SIZE,   0,             NONVOL_WIFI_SERVER_IP,     0,      0},
+    {SHOW, "\"WIFI_SERVER_IP\":",   (int *)&json_server_IP,          IS_TEXT + IP_SIZE,   0,             NONVOL_WIFI_SERVER_IP,     0,      0},
     {SHOW, "\"WIFI_PWD\":",         (int *)&json_wifi_pwd,           IS_TEXT + PWD_SIZE,  0,             NONVOL_WIFI_PWD,           0,      0},
     {SHOW, "\"WIFI_SSID\":",        (int *)&json_wifi_ssid,          IS_TEXT + SSID_SIZE, 0,             NONVOL_WIFI_SSID,          0,      0},
 
@@ -334,12 +334,10 @@ static void handle_json(void)
               x = f * FLOAT_SCALE;                          // Integer
               if ( JSON[j].value != 0 )
               {
-                printf("f %f", f);
                 *(double *)JSON[j].value = f;               // Working Value
               }
               if ( JSON[j].non_vol != 0 )
               {
-                printf("nonvol %d", x);
                 nvs_set_i32(my_handle, JSON[j].non_vol,
                             x);                             // Store into NON-VOL as an integer * 1000
               }

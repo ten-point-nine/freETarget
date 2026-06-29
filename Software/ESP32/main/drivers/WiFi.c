@@ -55,6 +55,7 @@
 #include "timer.h"
 #include "server.h"
 #include "client.h"
+#include "tcpip_helpers.h"
 
 #define DEFAULT_IP         192, 168, 10, 9
 #define PORT               1090
@@ -136,15 +137,17 @@ void WiFi_init(void)
     WiFi_station_init();
   }
 
-  /*
-   * Setup the mDNS service
-   */
+/*
+ * Setup the mDNS service
+ */
+#if ( INCLUDE_MDNS )
   mdns_init();                   // Initialize the mDNS service
   target_name(str_c);            // Get the target name
   mdns_hostname_set(str_c);      // Set the hostname for the target
   mdns_instance_name_set(str_c); // Set the instance name for the target
 
   DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "mDNS service set up for: \"%s\"", str_c);))
+#endif
 
   /*
    *  All done

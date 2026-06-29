@@ -319,7 +319,14 @@ void server_accept_poll(void *parameters)
   int                     sock;
   int                     i, j;
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "server_accept_poll()");))
+  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "server_accept_poll(%d)", PORT);))
+
+  IF_NOT(STATION_ACTIVE)
+  {
+    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "WiFi not connected, cannot start server_accept_poll()");))
+    vTaskDelete(NULL);
+    return;
+  }
 
   /*
    * Start the server

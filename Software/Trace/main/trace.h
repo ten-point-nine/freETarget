@@ -167,7 +167,7 @@ EXTERN char           _xs[1024 + 512];                                 // Genera
 EXTERN unsigned int   is_trace;                                        // Tracing level(s)
 
 EXTERN unsigned int board_revision;                                    // Board revision number
-EXTERN unsigned int run_state;                                         // Current running state of the software
+EXTERN volatile unsigned int run_state;                                         // Current running state of the software
 
 EXTERN int           sample_in;                                        // Index to entry from sensor (<0 - wraps around)
 EXTERN int           sample_out;                                       // Index to output to application  (<0 - wraps around)

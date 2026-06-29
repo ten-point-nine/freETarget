@@ -226,7 +226,7 @@ int server_socket_2_queue(char *buffer, // Where to return the bytes
 /*******************************************************************************
  *
  * @function: server_flush      // Empty the input queue
- *            server_available  // Find out if there is anything waiting 
+ *            server_available  // Find out if there is anything waiting
  *
  * @brief:    Throw everything out of the input queue
  *
@@ -235,13 +235,42 @@ int server_socket_2_queue(char *buffer, // Where to return the bytes
  *******************************************************************************
  *
  ******************************************************************************/
-void server_flush(void)
+void socket_flush(void)
 {
   in_buffer.in  = 0;
   in_buffer.out = 0;
 }
 
-int server_available(int port)
+int socket_available(int port)
 {
   return (in_buffer.in != in_buffer.out);
+}
+
+
+/*******************************************************************************
+ *
+ * @function: socket_getch
+ *
+ * @brief:    Get one character from the TCPIP socket buffer
+ *
+ * @return:   Next character in the socket buffer, or 0 if none available
+ *
+ *******************************************************************************
+ *
+ * The next character in the TCPIP socket buffer is returned.
+ * If no characters are available, 0 is returned.
+ *
+ ******************************************************************************/
+int socket_getch(void)
+{
+  char ch;
+
+  if ( in_buffer.in == in_buffer.out )
+  {
+    return 0; // No characters available
+  }
+
+  ch            = in_buffer.queue[in_buffer.out];
+  in_buffer.out = (in_buffer.out + 1) % sizeof(in_buffer.queue);
+  return ch;
 }
