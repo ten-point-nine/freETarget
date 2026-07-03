@@ -92,6 +92,8 @@ const json_message_t JSON[] = {
     {SHOW + LOCK, "\"PCNT_LATENCY\":",   &json_pcnt_latency,          IS_INT32,                 0,                  NONVOL_PCNT_LATENCY,        0,          1 },
     {SHOW + LOCK, "\"POWER_SAVE\":",     &json_power_save,            IS_INT32,                 0,                  NONVOL_POWER_SAVE,          0,          0 },
     {HIDE,        "\"RAPID_COUNT\":",    &json_rapid_count,           IS_INT32,                 0,                  0,                          0,          0 },
+    {SHOW,        "\"RAPID_EVENT\":",    &json_rapid_event,           IS_INT32,                 0,                  NONVOL_RAPID_EVENT,         0,          17},
+    {HIDE,        "\"RAPID_TIME\":",     &json_rapid_time,            IS_INT32,                 0,                  0,                          0,          0 },
     {HIDE,        "\"RAPID_ENABLE\":",   &json_rapid_enable,          IS_INT32,                 0,                  0,                          0,          0 },
     {HIDE,        "\"RAPID_TIME\":",     &json_rapid_time,            IS_INT32,                 0,                  0,                          0,          0 },
     {HIDE,        "\"RAPID_WAIT\":",     &json_rapid_wait,            IS_INT32,                 0,                  0,                          0,          0 },
@@ -108,7 +110,6 @@ const json_message_t JSON[] = {
     {SHOW,        "\"STEP_START\":",     &json_step_start,            IS_INT32,                 0,                  NONVOL_STEP_START,          0,          4 },
     {SHOW + LOCK, "\"STEP_TIME\":",      &json_step_time,             IS_INT32,                 0,                  NONVOL_STEP_TIME,           0,          0 },
     {HIDE,        "\"TABATA_ENABLE\":",  &json_tabata_enable,         IS_INT32,                 &json_tabata,       0,                          0,          0 },
-
     {HIDE,        "\"TABATA_ON\":",      &json_tabata_on,             IS_INT32,                 0,                  NONVOL_TABATA_ON,           7,          16},
     {HIDE,        "\"TABATA_REST\":",    &json_tabata_rest,           IS_INT32,                 0,                  NONVOL_TABATA_REST,         30,         16},
     {HIDE,        "\"TABATA_WARN_ON\":", &json_tabata_warn_on,        IS_INT32,                 0,                  NONVOL_TABATA_WARN_ON,      3,          16},

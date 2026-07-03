@@ -124,6 +124,7 @@ EXTERN int           json_tabata_warn_on;            // Time to turn on the warn
 EXTERN int           json_rapid_enable;              // Rapid Fire enabled
 EXTERN unsigned long json_rapid_on;                  // Rapid Fire ON timer
 EXTERN int           json_rapid_count;               // Number of expected shots
+EXTERN int           json_rapid_event;               // What event are we currently handling
 EXTERN int           json_vset_PWM;                  // Voltage PWM count
 EXTERN real_t        json_vset;                      // Desired voltage setpont
 EXTERN int           json_follow_through;            // Follow through timer

@@ -8,7 +8,7 @@
 #ifndef _NONVOL_H
 #define _NONVOL_H
 
-#define PS_VERSION   16                                   // Persistent storage version
+#define PS_VERSION   17                                   // Persistent storage version
 #define PS_UNINIT(x) (((x) == 0xABAB) || ((x) == 0xFFFF)) // Uninitilized value
 
 #define NAME_SPACE "freETarget"
@@ -41,6 +41,7 @@ void nonvol_write_i32(char *name, int *value);    // Write a value to nonvol
 #define NONVOL_WEST_X              "WEST_X"              // Offset applied to West sensor
 #define NONVOL_WEST_Y              "WEST_Y"
 #define NONVOL_POWER_SAVE          "POWER_SAVE"          // Power saver time
+#define NONVOL_RAPID_EVENT         "RAPID_EVENT"         // What event are we currently handling
 #define NONVOL_NAME_ID             "NAME_ID"             // Name Identifier
 #define NONVOL_1_RINGx10           "RINGx10"             // Size of the 1 ring in mm
 #define NONVOL_LED_PWM             "LED_PWM"             // LED PWM value
