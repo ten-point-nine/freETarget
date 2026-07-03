@@ -199,11 +199,15 @@ namespace freETarget {
                 int rapidFire = rdr.GetInt32(14);
                 int rf_numberOfShots = rdr.GetInt32(15);
                 int rf_timePerSerie = rdr.GetInt32(16);
-                int rf_timePerShot = rdr.GetInt32(17);
-                int rf_pauseTime = rdr.GetInt32(18);
+                decimal rf_timePerShot = rdr.GetDecimal(17);
+                decimal rf_pauseTime = rdr.GetDecimal(18);
                 int rf_loadTime = rdr.GetInt32(19);
 
                 Type target_type= Type.GetType(target);
+                if(target_type == null) {
+                    Console.WriteLine("Could not find target with name " + target);
+                    continue;
+                }
                 targets.aTarget target_class = (targets.aTarget)Activator.CreateInstance(target_type,new object[] { caliber });
 
                 System.Drawing.Color color = System.Drawing.Color.FromName(colorText);

@@ -49,15 +49,15 @@ namespace freETarget {
 
         public int RF_TimePerSerie { get; set; } //4,6,8,10,20,150
 
-        public int RF_TimePerShot { get; set; } //3
+        public decimal RF_TimePerShot { get; set; } //3
 
-        public int RF_TimeBetweenShots { get; set; } //7
+        public decimal RF_TimeBetweenShots { get; set; } //7
 
         public int RF_LoadTime { get; set; } //60
 
         public Event(long id, string name, bool decimalScoring, EventType type, int numberOfShots, targets.aTarget target, int minutes, decimal caliber, 
             int final_seriesShots, int seriesSeconds, int shotsInSeries, int shotsInSingle, int singleSeconds, Color tabColor, bool rapidFire, int rf_numberOfShots, 
-            int rf_timePerSerie, int rf_timePerShot, int rf_timeBetweenShots, int rf_loadTime)  {
+            int rf_timePerSerie, decimal rf_timePerShot, decimal rf_timeBetweenShots, int rf_loadTime)  {
             this.ID = id;
             this.Name = name;
             this.DecimalScoring = decimalScoring;

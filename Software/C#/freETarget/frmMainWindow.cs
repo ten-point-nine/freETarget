@@ -1821,7 +1821,7 @@ namespace freETarget {
                     commModule.sendData(sb.ToString());
                     log("Sending: " + sb.ToString());
                     this.RFduelCounter++;
-                    rapidFireTimer.Interval = (this.currentSession.eventType.RF_TimeBetweenShots + this.currentSession.eventType.RF_TimePerShot) * 1000;
+                    rapidFireTimer.Interval = (int)((this.currentSession.eventType.RF_TimeBetweenShots + this.currentSession.eventType.RF_TimePerShot) * 1000);
                 } else if (this.currentSession.eventType.RF_TimePerSerie > 0) {
                     //normal rapid fire
                     Console.WriteLine("ATTENTION");
@@ -1834,7 +1834,7 @@ namespace freETarget {
                     Console.WriteLine(sb.ToString());
                     commModule.sendData(sb.ToString());
                     log("Sending: " + sb.ToString());
-                    rapidFireTimer.Interval = (this.currentSession.eventType.RF_TimeBetweenShots + this.currentSession.eventType.RF_TimePerSerie) * 1000;
+                    rapidFireTimer.Interval = (int)((this.currentSession.eventType.RF_TimeBetweenShots + this.currentSession.eventType.RF_TimePerSerie) * 1000);
                 } else {
                     Console.WriteLine("rapid fire misconfiguration");
                     log("rapid fire misconfiguration");

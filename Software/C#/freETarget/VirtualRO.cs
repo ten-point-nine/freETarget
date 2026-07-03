@@ -217,10 +217,10 @@ namespace freETarget {
                     speakCommand(speach);
                     if (this.session.eventType.RF_TimePerShot > 0) {
                         //duel
-                        nextCommand = DateTime.Now + TimeSpan.FromSeconds((ev.RF_TimeBetweenShots + ev.RF_TimePerShot) * ev.RF_NumberOfShots);
+                        nextCommand = DateTime.Now + TimeSpan.FromSeconds((double)(ev.RF_TimeBetweenShots + ev.RF_TimePerShot) * ev.RF_NumberOfShots);
                     } else {
                         //rapid fire
-                        nextCommand = DateTime.Now + TimeSpan.FromSeconds(ev.RF_TimeBetweenShots + ev.RF_TimePerSerie);
+                        nextCommand = DateTime.Now + TimeSpan.FromSeconds((double)(ev.RF_TimeBetweenShots + ev.RF_TimePerSerie));
                     }
                     RFseriesStartCommand = true;
                     command = "Attent";

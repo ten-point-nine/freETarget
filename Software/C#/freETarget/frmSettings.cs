@@ -672,13 +672,13 @@ namespace freETarget
 
             if (txtRFtimePerShot.Text.Length == 0) {
                 err += " * 'Rapid Fire: Time per shot' is required." + Environment.NewLine;
-            } else if (!validNumber(txtRFtimePerShot.Text)) {
+            } else if (!validDecimal(txtRFtimePerShot.Text)) {
                 err += " * 'Rapid Fire: Time per shot' field is not a number." + Environment.NewLine;
             }
 
             if (txtRFpauseTime.Text.Length == 0) {
                 err += " * 'Rapid Fire: Pause time' is required." + Environment.NewLine;
-            } else if (!validNumber(txtRFpauseTime.Text)) {
+            } else if (!validDecimal(txtRFpauseTime.Text)) {
                 err += " * 'Rapid Fire: Pause time' field is not a number." + Environment.NewLine;
             }
 
@@ -719,8 +719,8 @@ namespace freETarget
             bool ev_rapidFire = chkRapidFire.Checked;
             int ev_RF_numberOfShots = Int32.Parse(txtRFNrShots.Text, CultureInfo.InvariantCulture);
             int ev_RF_timePerSerie = Int32.Parse(txtRFtimePerSerie.Text, CultureInfo.InvariantCulture);
-            int ev_RF_timePerShot = Int32.Parse(txtRFtimePerShot.Text, CultureInfo.InvariantCulture);
-            int ev_RF_pauseTime = Int32.Parse(txtRFpauseTime.Text, CultureInfo.InvariantCulture);
+            decimal ev_RF_timePerShot = Decimal.Parse(txtRFtimePerShot.Text, CultureInfo.InvariantCulture);
+            decimal ev_RF_pauseTime = Decimal.Parse(txtRFpauseTime.Text, CultureInfo.InvariantCulture);
             int ev_RF_loadTime = Int32.Parse(txtRFloadTime.Text, CultureInfo.InvariantCulture);
 
             if (lstbEvents.SelectedItem != null) {
