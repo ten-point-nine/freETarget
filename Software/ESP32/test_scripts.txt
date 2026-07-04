@@ -40,8 +40,8 @@ ISSF 50m Rapid Fire       Five shots into a single target            {"TRACE":64
 ISSF 25m Standard Pistol  Five shots into a single target            {"TRACE":64, "EVENT":"Rapid Fire ISSF", "RAPID_COUNT":5, "RAPID_TIME":30,  "RAPID_WAIT":5, "RAPID_ENABLE":1}
 NRA Sport Pistol ON         One shot into a single target, repeat 5x {"TRACE":8,  "EVENT":"Rapid Fire Sport Pistol", "RAPID_COUNT":5, "RAPID_TIME":3, "RAPID_WAIT":7, "RAPID_ENABLE":1}
 NRA Sport Pistol OFF        One shot into a single target, repeat 5x {"TRACE":64, "EVENT":"Rapid Fire Sport Pistol", "RAPID_COUNT":5, "RAPID_TIME":3, "RAPID_WAIT":7, "RAPID_ENABLE":0}
-Tabata                      Tabata timing                            {"TRACE":64, "EVENT":"Tabata", "RAPID_COUNT":45, "RAPID_TIME":3, "RAPID_WAIT":7, "RAPID_ENABLE":1}
-
+Tabata                      Tabata timing                            {"TRACE":64, "EVENT":"Tabata", "RAPID_COUNT":45, "RAPID_TIME":7, "RAPID_WAIT":3, "RAPID_ENABLE":1}
+Done {"RAPID_ENABLE":0}
 
 Turn Tabata on by switch   {"MFS_TAP_1":6}
 

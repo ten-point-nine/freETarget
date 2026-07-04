@@ -288,11 +288,6 @@ void freeETarget_target_loop(void *arg)
         set_mode(); // Set the mode for the next string of shot (ex Tabata or Rapid Fire)
         arm();      // Arm the circuit and check for errors
         set_status_LED(LED_READY);
-
-        if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
-        {
-          set_status_LED(LED_RAPID_ON);                                      // Show that the target is available for use
-        }
         freETarget_state = WAIT;
         DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "state: WAIT");))
         break;
@@ -343,14 +338,7 @@ unsigned int set_mode(void)
     record[i].face_strike = 100; // Disable face strikes
   }
 
-  if ( json_tabata_enable )      // If the Tabata or rapid fire is enabled,
-  {
-    set_LED_PWM_now(0);          // Turn off the LEDs
-  } // Until the session starts
-  else
-  {
-    set_LED_PWM(json_LED_PWM); // Keep the LEDs ON
-  }
+  set_LED_PWM(json_LED_PWM);     // Keep the LEDs ON
 
   /*
    * Proceed to the WAITing state
@@ -379,21 +367,16 @@ unsigned int arm(void)
 {
   DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "arm()");))
 
-  face_strike = 0;                                                       // Reset the face strike count
-  enable_face_strike_interrupt();                                        // Enable the face strike interrupt
+  face_strike = 0;                // Reset the face strike count
+  enable_face_strike_interrupt(); // Enable the face strike interrupt
   stop_timers();
-  arm_timers();                                                          // Arm the counters
-  shot_start = run_time_ms();                                            // Remember when we started
+  arm_timers();                   // Arm the counters
+  shot_start = run_time_ms();     // Remember when we started
 
-  sensor_status = is_running();                                          // and immediatly read the status
-  if ( sensor_status == 0 )                                              // After arming, the sensor status should be zero
+  sensor_status = is_running();   // and immediatly read the status
+  if ( sensor_status == 0 )       // After arming, the sensor status should be zero
   {
-    if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
-    {
-      set_status_LED(LED_RAPID_ON);                                      // Show that we are ready
-    }
-
-    return WAIT;                                                         // Fall through to WAIT
+    return WAIT;                  // Fall through to WAIT
   }
 
   /*
@@ -519,25 +502,21 @@ unsigned int reduce(void)
         /*
          *  Advance the paper
          */
-        if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )                                 // Has the witness paper been enabled?
+        if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )                 // Has the witness paper been enabled?
         {
-          if ( (json_paper_eco == 0)                                               // PAPER_ECO turned off
-               || (record[shot_out].radius < (json_paper_eco / 2))                 // Inside the black (radius)
-               || (paper_shot_out > FORCE_PAPER_MOVE) )                            // Too many misses
+          if ( (json_paper_eco == 0)                               // PAPER_ECO turned off
+               || (record[shot_out].radius < (json_paper_eco / 2)) // Inside the black (radius)
+               || (paper_shot_out > FORCE_PAPER_MOVE) )            // Too many misses
           {
-            paper_shot++;                                                          //
+            paper_shot++;                                          //
             DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", record[shot_out].radius, json_paper_eco / 2,
                                              paper_shot, json_paper_shot);))
-            if ( (paper_shot >= json_paper_shot)                                   // Have met the number of good shots?
-                 || (paper_shot_out >= FORCE_PAPER_MOVE) )                         // Or we just shot too many bad ones?
+            if ( (paper_shot >= json_paper_shot)                   // Have met the number of good shots?
+                 || (paper_shot_out >= FORCE_PAPER_MOVE) )         // Or we just shot too many bad ones?
             {
-              if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
-              {
-                set_status_LED(LED_RAPID_ON);                                      // Show that the target cannot be used
-              }
-              paper_start();                                                       // Roll the paper
-              paper_shot     = 0;                                                  // And start over
-              paper_shot_out = 0;                                                  // Reset the outside shots
+              paper_start();                                       // Roll the paper
+              paper_shot     = 0;                                  // And start over
+              paper_shot_out = 0;                                  // Reset the outside shots
             }
           }
           else
@@ -743,13 +722,13 @@ const rapid_state_t rapid_state_sport[] = {
     {&all_done,            ONE_SECOND, LED_RAPID_WARN, 0,        "ALL_DONE",      0,       &always_true, 0, 0}  // 8 Event finished, turn off
 };
 
+static real_t tabata_rapid_wait;
+
 const rapid_state_t tabata_rapid_state[] = {
-    {&all_done,         ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_IDLE",  0,       &always_true, 1, 1}, // 0 Wait for json_tabata_enable
-    {&json_rapid_wait,  ONE_SECOND, LED_TABATA_WARN, LED_RAMP, "TABATA_BEGIN", 0,       &always_true, 2, 2}, // 1 Wait for json_tabata_enable
-    {&json_rapid_on,    ONE_SECOND, LED_TABATA_ON,   LED_ON,   "TABATA_ON",    IN_SHOT, &always_true, 3, 3}, // 2 Wait for json_tabata_enable
-    {&json_rapid_wait,  ONE_SECOND, LED_TABATA_WARN, LED_DARK, "TABATA_END",   0,       &always_true, 4, 4}, // 4 Wait for json_tabata_enable
-    {&json_rapid_count, ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_REST",  0,       &always_true, 5, 5}, // 4 Fake the rest period
-    {&all_done,         ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_START", 0,       &always_true, 1, 1}  // 5 Start/End of state machine
+    {&all_done,          ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_IDLE",  0,       &always_true, 1, 1}, // 0 Wait for json_tabata_enable
+    {&json_rapid_wait,   ONE_SECOND, LED_TABATA_WARN, LED_RAMP, "TABATA_BEGIN", 0,       &always_true, 2, 2}, // 1 Wait for json_tabata_enable
+    {&json_rapid_time,   ONE_SECOND, LED_TABATA_ON,   LED_ON,   "TABATA_ON",    IN_SHOT, &always_true, 3, 3}, // 2 Wait for json_tabata_enable
+    {&tabata_rapid_wait, ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_REST",  0,       &always_true, 1, 1}, // 4 Fake the rest period
 };
 
 const char *rapid_state_names[] = {"Rapid Fire ISSF", "Rapid Fire Sport Pistol", "Tabata"};
@@ -770,10 +749,15 @@ void timed_event_task(void)
 
   IF_NOT(IN_OPERATION) return;
 
-  /*
-   * Exit if Rapid fire has not been enabled
-   */
-  if ( json_rapid_enable == false )
+                                            /*
+                                             * Exit if Rapid fire has not been enabled
+                                             */
+  if ( (last_enable & (last_enable ^ json_rapid_enable)) == 1 )       // Go from enabled to disabled
+  {
+    last_enable = 0;
+  }
+
+  if ( json_rapid_enable == false )                                   // Nothing to do if Rapid fire is not enabled
   {
     last_enable = 0;
     return;
@@ -794,13 +778,11 @@ void timed_event_task(void)
     {
       rapid_state = rapid_state_ISSF;
     }
-    event_timer = ((int)*(rapid_state->timer)) * ONE_SECOND;
-    rapid_index = 0;                                                   // Start at the beginning of the state machine
-    shot_start  = shot_in;                                             // Remember how many shots have been fired so far
-    printf("Starting rapid fire: json_event: %s, json_rapid_count: %d, json_rapid_wait: %f\n", json_event, json_rapid_count,
-           json_rapid_wait);
-
+    event_timer         = ((int)*(rapid_state->timer)) * ONE_SECOND;
+    rapid_index         = 0;                                           // Start at the beginning of the state machine
+    shot_start          = shot_in;                                     // Remember how many shots have been fired so far
     adjusted_rapid_wait = (json_rapid_wait * ONE_SECOND) - grace_time; // Corrected rapid wait time
+    tabata_rapid_wait   = (real_t)json_rapid_count;                    // Fake the rest period using the number of expected shots
     shot_string         = json_rapid_count;                            // Number of expected shots
   }
   last_enable = json_rapid_enable;
@@ -856,9 +838,6 @@ void timed_event_task(void)
    */
   if ( rapid_index == 0 )
   {
-    DLT(DLT_DEBUG,
-        SEND(ALL, sprintf(_xs, "Rapid fire complete: rapid_count: %d, json_rapid_count: %d\r\n", shot_in - shot_start, json_rapid_count);))
-
     while ( (shot_in - shot_start) < json_rapid_count )    // Send incomplete as misses
     {
       record[shot_in].shot_time     = 0;                   // Fake the time

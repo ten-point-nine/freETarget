@@ -282,7 +282,7 @@ void set_status_LED(char new_state[]          // New LED colours
   /*
    *   Check to see if tabata enabled is present.  If so, change from flashing green to flashing yellow
    */
-  if ( json_tabata_enable == 1 )
+  if ( json_rapid_enable == 1 )
   {
     if ( new_state[0] == 'g' )
     {

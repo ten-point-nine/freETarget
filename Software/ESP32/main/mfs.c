@@ -59,7 +59,6 @@ const mfs_action_t  mfs_action[] = {
     {PAPER_SHOT,     mfs_paper_shot,            "PAPER SHOT"    }, // Advance paper the distance of one shot
     {PC_TEST,        mfs_test_build_json_score, "PC TEST"       }, // Send a test shot to the PC
     {TARGET_OFF,     mfs_off,                   "TARGET OFF"    }, // Turn the target on or off
-    {TOGGLE_TABATA,  mfs_tabata,                "TOGGLE TABATA" }, // Start or stop a Tabata session
     {NO_ACTION,      NULL,                      "NO ACTION"     }, // No action on C & D inputs
     {TARGET_TYPE,    NULL,                      "TARGET TYPE"   }, // Put the target type into the send score
     {SHOOTER_LEVEL,  NULL,                      "SHOOTER_LEVEL" }, // Shooter experiance level
@@ -429,13 +428,6 @@ static void mfs_paper_shot(void)
 static void mfs_off(void)
 {
   bye(true);                                // Stay in the Bye state until a wake up event comes along
-  return;
-}
-
-void mfs_tabata(void)
-{
-  json_tabata_enable = !json_tabata_enable; // Toggle the state of the Tabata session
-  json_tabata(json_tabata_enable);
   return;
 }
 
