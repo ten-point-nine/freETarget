@@ -115,43 +115,43 @@ void freeETarget_init(void)
 
 #if TRACE_APPLICATION
   is_trace |= DLT_APPLICATION;   // Enable application tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT APPLICATON enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT APPLICATON enabled");))
 #endif
 #if TRACE_COMMUNICATION
   is_trace |= DLT_COMMUNICATION; // Enable application tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT COMMUNICATION enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT COMMUNICATION enabled");))
 #endif
 #if TRACE_DIAGNOSTICS
   is_trace |= DLT_DIAG;          // Enable diagnostics tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT DIAGNOSTICS enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT DIAGNOSTICS enabled");))
 #endif
 #if TRACE_DEBUG
   is_trace |= DLT_DEBUG;         // Enable debug tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT DEBUG enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT DEBUG enabled");))
 #endif
 #if TRACE_SCORE
   is_trace |= DLT_SCORE;         // Enable score tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT SCORE enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT SCORE enabled");))
 #endif
 #if TRACE_HTTP
   is_trace |= DLT_HTTP;          // Enable HTTP tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT HTTP enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT HTTP enabled");))
 #endif
 #if TRACE_OTA
   is_trace |= DLT_OTA;           // Enable OTA tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT OTA enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT OTA enabled");))
 #endif
 #if TRACE_HEARTBEAT
   is_trace |= DLT_HEARTBEAT;     // Enable heartbeat tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT HEARTBEAT enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT HEARTBEAT enabled");))
 #endif
 #if TRACE_CALIBRATION
   is_trace |= DLT_CALIBRATION;   // Enable calibration tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT CALIBRATION enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT CALIBRATION enabled");))
 #endif
 #if TRACE_VERBOSE
   is_trace |= DLT_VERBOSE;       // Enable verbose messages
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT VERBOSE enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT VERBOSE enabled");))
 #endif
 
   /*
@@ -197,7 +197,7 @@ void freeETarget_init(void)
   POST_counters();            // POST counters does not return if there is an error
   if ( check_12V() == false ) // Verify the 12 volt supply
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "12V supply not present");))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "12V supply not present");))
   }
 
   /*
@@ -245,14 +245,14 @@ unsigned int location;      // Sensor location
 
 void freeETarget_target_loop(void *arg)
 {
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "freeETarget_target_loop()");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "freeETarget_target_loop()");))
 
   set_status_LED(LED_READY);
 
   if ( (PCNT_HIGH_GPIO & board_mask)         // Are the PCNT HIGH counters provided
        && (json_pcnt_latency != 0) )         // If the second set of timers has been enabled
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initializing PCNT high inputs");))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Initializing PCNT high inputs");))
     gpio_init_single(PCNT_HI);               // Program the port
   }
 
@@ -282,14 +282,14 @@ void freeETarget_target_loop(void *arg)
     {
       default:
       case START:                                                                              // Start of the loop
-        DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "state: START");))
+        DLT(DLT_APPLICATION, SEND(CONSOLE, sprintf(_xs, "state: START");))
         power_save           = (time_count_t)json_power_save * (time_count_t)ONE_SECOND * 60L; //  Reset the timer
         time_since_last_shot = HTTP_CLOSE_TIME * 60l * ONE_SECOND;                             // 15 minutes since last shot
         set_mode(); // Set the mode for the next string of shot (ex Tabata or Rapid Fire)
         arm();      // Arm the circuit and check for errors
         set_status_LED(LED_READY);
         freETarget_state = WAIT;
-        DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "state: WAIT");))
+        DLT(DLT_APPLICATION, SEND(CONSOLE, sprintf(_xs, "state: WAIT");))
         break;
 
       case WAIT:
@@ -297,7 +297,7 @@ void freeETarget_target_loop(void *arg)
         break;
 
       case REDUCE:
-        DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "state: REDUCE");))
+        DLT(DLT_APPLICATION, SEND(CONSOLE, sprintf(_xs, "state: REDUCE");))
         reduce();
         freETarget_state = START;
         break;
@@ -331,7 +331,7 @@ unsigned int set_mode(void)
 {
   unsigned int i;
 
-  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "set_mode()");))
+  DLT(DLT_APPLICATION, SEND(CONSOLE, sprintf(_xs, "set_mode()");))
 
   for ( i = 0; i != SHOT_SPACE; i++ )
   {
@@ -365,7 +365,7 @@ unsigned int set_mode(void)
  *--------------------------------------------------------------*/
 unsigned int arm(void)
 {
-  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "arm()");))
+  DLT(DLT_APPLICATION, SEND(CONSOLE, sprintf(_xs, "arm()");))
 
   face_strike = 0;                // Reset the face strike count
   enable_face_strike_interrupt(); // Enable the face strike interrupt
@@ -469,7 +469,7 @@ unsigned int reduce(void)
    */
   while ( shot_out != shot_in ) // Process the shots on the queue
   {
-    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "shot_in: %d,  shot_out:%d", shot_in, shot_out);))
+    DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "shot_in: %d,  shot_out:%d", shot_in, shot_out);))
     DLT(DLT_DEBUG, show_sensor_status(record[shot_out].sensor_status);)
 
     if ( (record[shot_out].sensor_status & 0x0f) != 0x0f )
@@ -509,8 +509,8 @@ unsigned int reduce(void)
                || (paper_shot_out > FORCE_PAPER_MOVE) )            // Too many misses
           {
             paper_shot++;                                          //
-            DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", record[shot_out].radius, json_paper_eco / 2,
-                                             paper_shot, json_paper_shot);))
+            DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", record[shot_out].radius, json_paper_eco / 2,
+                                                 paper_shot, json_paper_shot);))
             if ( (paper_shot >= json_paper_shot)                   // Have met the number of good shots?
                  || (paper_shot_out >= FORCE_PAPER_MOVE) )         // Or we just shot too many bad ones?
             {
@@ -522,8 +522,8 @@ unsigned int reduce(void)
           else
           {
             paper_shot_out++;                                      // Outside of the desired radius, keep track of the misses
-            DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Radius: %4.2f/%d bad shot: %d/%d", record[shot_out].radius, json_paper_eco / 2,
-                                             paper_shot, json_paper_shot);))
+            DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "Radius: %4.2f/%d bad shot: %d/%d", record[shot_out].radius, json_paper_eco / 2,
+                                                 paper_shot, json_paper_shot);))
           }
         }
       }
@@ -545,7 +545,7 @@ unsigned int reduce(void)
    */
   while ( ring_timer > 0 ) // Wait here to make sure the ringing has stopped
   {
-    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "ring_timer: %ld", ring_timer);))
+    DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "ring_timer: %ld", ring_timer);))
     vTaskDelay(10);
   }
 
@@ -592,7 +592,7 @@ void start_new_session(int session_type) //
 {
   unsigned int i;
 
-  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "start_new_session(%d)", session_type);))
+  DLT(DLT_APPLICATION, SEND(CONSOLE, sprintf(_xs, "start_new_session(%d)", session_type);))
 
   switch ( session_type & (~SESSION_VALID) )
   {
@@ -704,7 +704,8 @@ const rapid_state_t rapid_state_ISSF[] = {
     {&go_wait,         ONE_SECOND, LED_RAPID_OFF,  LED_DARK, "RAPID_ENABLED", 0,       &always_true, 2, 2}, // 1 Wait for json_rapid_enable
     {&json_rapid_wait, ONE_SECOND, LED_RAPID_WARN, LED_ON,   "RAPID_WAIT",    0,       &always_true, 3, 3}, // 2 Warn the shooter the event is enabled
     {&json_rapid_time, ONE_SECOND, LED_RAPID_ON,   LED_ON,   "RAPID_ON",      IN_SHOT, &always_true, 4, 4}, // 3 Turn the timer on for the event
-    {&all_done,        ONE_SECOND, LED_RAPID_OFF,  LED_DARK, "ALL_DONE",      0,       &always_true, 0, 0}  // 4 Event finished, turn off
+    {&grace_time,      TICK_10ms,  LED_RAPID_OFF,  LED_DARK, "RAPID_GRACE",   IN_SHOT, &always_true, 5, 5}, // 5 Delay for the grace period
+    {&all_done,        ONE_SECOND, LED_RAPID_OFF,  LED_DARK, "ALL_DONE",      0,       &always_true, 0, 0}  // 5 Event finished, turn off
 };
 
 static real_t adjusted_rapid_wait;
@@ -722,16 +723,17 @@ const rapid_state_t rapid_state_sport[] = {
     {&all_done,            ONE_SECOND, LED_RAPID_WARN, 0,        "ALL_DONE",      0,       &always_true, 0, 0}  // 8 Event finished, turn off
 };
 
-static real_t tabata_rapid_wait;
+static real_t tabata_alert = 4.0;
 
 const rapid_state_t tabata_rapid_state[] = {
-    {&all_done,          ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_IDLE",  0,       &always_true, 1, 1}, // 0 Wait for json_tabata_enable
-    {&json_rapid_wait,   ONE_SECOND, LED_TABATA_WARN, LED_RAMP, "TABATA_BEGIN", 0,       &always_true, 2, 2}, // 1 Wait for json_tabata_enable
-    {&json_rapid_time,   ONE_SECOND, LED_TABATA_ON,   LED_ON,   "TABATA_ON",    IN_SHOT, &always_true, 3, 3}, // 2 Wait for json_tabata_enable
-    {&tabata_rapid_wait, ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_REST",  0,       &always_true, 1, 1}, // 4 Fake the rest period
+    {&all_done,        ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_IDLE",  0,       &always_true, 1, 1}, // 0 Wait for json_tabata_enable
+    {&tabata_alert,    ONE_SECOND, LED_TABATA_WARN, LED_RAMP, "TABATA_BEGIN", 0,       &always_true, 2, 2}, // 1 Wait for json_tabata_enable
+    {&json_rapid_time, ONE_SECOND, LED_TABATA_ON,   LED_ON,   "TABATA_ON",    IN_SHOT, &always_true, 3, 3}, // 2 Wait for json_tabata_enable
+    {&grace_time,      TICK_10ms,  LED_TABATA_OFF,  LED_DARK, "TABATA_GRACE", IN_SHOT, &always_true, 4, 4}, // 3 Delay for the grace period
+    {&json_rapid_wait, ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_REST",  0,       &always_true, 1, 1}, // 4 Fake the rest period
 };
 
-const char *rapid_state_names[] = {"Rapid Fire ISSF", "Rapid Fire Sport Pistol", "Tabata"};
+const char *rapid_state_names[] = {"Rapid Fire", "Sport Pistol", "Tabata"};
 
 const rapid_state_t *rapid_state_list[] = {
     &rapid_state_ISSF,
@@ -754,7 +756,7 @@ void timed_event_task(void)
                                              */
   if ( (last_enable & (last_enable ^ json_rapid_enable)) == 1 )       // Go from enabled to disabled
   {
-    last_enable = 0;
+    DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "Rapid fire disabled");))
   }
 
   if ( json_rapid_enable == false )                                   // Nothing to do if Rapid fire is not enabled
@@ -767,8 +769,8 @@ void timed_event_task(void)
   {
     for ( i = 0; i < sizeof(rapid_state_list) / sizeof(rapid_state_list[0]); i++ )
     {
-      printf("\r\n%s %s ", json_event, rapid_state_names[i]);
-      if ( stricmp(json_event, rapid_state_names[i]) == 0 )
+      printf("\r\n%s", json_event);
+      if ( contains(json_event, rapid_state_names[i]) )
       {
         rapid_state = rapid_state_list[i];
         break;
@@ -776,13 +778,16 @@ void timed_event_task(void)
     }
     if ( rapid_state == NULL )
     {
-      rapid_state = rapid_state_ISSF;
+      i           = 0;
+      rapid_state = &rapid_state_list[i];
     }
+
+    DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "Starting: %s", rapid_state_names[i]);))
+
     event_timer         = ((int)*(rapid_state->timer)) * ONE_SECOND;
     rapid_index         = 0;                                           // Start at the beginning of the state machine
     shot_start          = shot_in;                                     // Remember how many shots have been fired so far
     adjusted_rapid_wait = (json_rapid_wait * ONE_SECOND) - grace_time; // Corrected rapid wait time
-    tabata_rapid_wait   = (real_t)json_rapid_count;                    // Fake the rest period using the number of expected shots
     shot_string         = json_rapid_count;                            // Number of expected shots
   }
   last_enable = json_rapid_enable;
@@ -852,8 +857,8 @@ void timed_event_task(void)
     json_rapid_enable = 0;
   }
 
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "State: %s,  time: %ld, LED: \"%s\", IN_SHOT: %d", (rapid_state + rapid_index)->message,
-                                   event_timer, (rapid_state + rapid_index)->status_LED, (rapid_state + rapid_index)->in_shot);))
+  DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "State: %s,  time: %ld, LED: \"%s\", IN_SHOT: %d", (rapid_state + rapid_index)->message,
+                                            event_timer, (rapid_state + rapid_index)->status_LED, (rapid_state + rapid_index)->in_shot);))
   /*
    * All done.
    */

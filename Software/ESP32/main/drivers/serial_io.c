@@ -144,7 +144,7 @@ void serial_io_init(void)
   /*
    * All done, return
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Console port initialized");)) return;
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Console port initialized");)) return;
 }
 
 /******************************************************************************
@@ -173,7 +173,7 @@ void serial_aux_init(void)
    */
   if ( (json_aux_mode & AUX_PORT) == 0 )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX Port not enabled");))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "AUX Port not enabled");))
     return;
   }
 
@@ -190,26 +190,26 @@ void serial_aux_init(void)
   {
     default:
     case AUX:
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX port enabled");))
+      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "AUX port enabled");))
       uart_param_config(uart_aux, &uart_aux_config);                     // 115200 baud rate
       RS485_transmit(RS485_TRANSMIT);                                    // Turn off the RS485 receiver
       break;
 
     case BLUETOOTH:
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BLUETOOTH port enabled");))
+      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "BLUETOOTH port enabled");))
       uart_param_config(uart_aux, &uart_BT_config);                      // 115200 baud rate
       RS485_transmit(RS485_TRANSMIT);                                    // Turn off the RS485 receiver
       break;
 
     case RS485:
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RS485 port enabled");))
+      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "RS485 port enabled");))
       uart_param_config(uart_aux, &uart_aux_config);                     // 115200 baud rate
       ft_timer_new(&RS485_timer, 0, &RS485_transmit_off, "RS485 timer"); // Prime the RS485 timer
       RS485_transmit(RS485_RECEIVE);                                     // Ensure we are in recei
       break;
 
     case ETHERNET:
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "ETHERNET port enabled");))
+      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "ETHERNET port enabled");))
       uart_param_config(uart_aux, &uart_aux_config);                     // 115200 baud rate
       RS485_transmit(RS485_TRANSMIT);                                    // Ensure we are in recei
       break;
@@ -252,7 +252,7 @@ void serial_bt_config(unsigned int baud_rate) // Program port for Bluetooth init
   /*
    * All done, return
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "serial_bt_config(%d)\r\n", baud_rate);))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "serial_bt_config(%d)\r\n", baud_rate);))
   return;
 }
 
@@ -832,7 +832,7 @@ int tcpip_socket_2_queue(char *buffer, // Where to return the bytes
     in_buffer.in = (in_buffer.in + 1) % sizeof(in_buffer.queue);
     if ( in_buffer.out == in_buffer.in )
     {
-      DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "TCPIP input queue overrun\r\n");)) // Reached the end
+      DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "TCPIP input queue overrun\r\n");)) // Reached the end
       break;
     }
   }

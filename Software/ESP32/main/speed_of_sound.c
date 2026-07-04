@@ -129,8 +129,8 @@ real_t speed_of_sound(real_t temperature,      // Current temperature in degrees
 
   speed_mmPuS = speed_MPS * TO_MM / TO_US; // Convert down to mm/us
 
-  DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "Temperature: %4.2fC Humidity: %4.2f%% Speed of Sound: %4.2fmm/us", temperature, relative_humidity,
-                                  speed_mmPuS);))
+  DLT(DLT_DIAG, SEND(CONSOLE, sprintf(_xs, "Temperature: %4.2fC Humidity: %4.2f%% Speed of Sound: %4.2fmm/us", temperature,
+                                      relative_humidity, speed_mmPuS);))
 
   /*
    * @return the speed of sound

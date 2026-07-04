@@ -206,17 +206,11 @@ bool contains(char *source,                    // Source string
     source++;                                  // Move to the next character in the source string
   }
 
-  /*
-   * Reached the end of the comparison string. Check that we arrived at a NULL
-   */
-  if ( *match == 0 ) // Reached the end of the comparison string
-  {
-    return true;
-  }
-
-  return false;      // The strings are different
+                                               /*
+                                                * Reached the end of the comparison string. Check that we arrived at a NULL
+                                                */
+  return *match == 0;
 }
-
 /*
  *  Case-insensitive string comparison
  */
@@ -782,7 +776,7 @@ void watchdog(void)
   char        str_c[SHORT_TEXT];
   static bool wifi_is_connected = false;
 
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "watchdog()");))
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "watchdog()");))
 
   /*
    *  Check to see if we have a connection to the WiFi
@@ -793,7 +787,7 @@ void watchdog(void)
     {
       if ( WiFi_my_IP_address(str_c) == false ) // Find our IP address
       {
-        DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Trying to connect to access point");))
+        DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "Trying to connect to access point");))
         set_status_LED(LED_WIFI_FAULT);         // Empty
         WiFi_reconnect();
       }

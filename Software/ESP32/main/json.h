@@ -56,11 +56,10 @@ extern char                 input_JSON[];
 #define IS_FLOAT    (2 << 8)                           // Value is a real_ting point number
 #define IS_INT32    (3 << 8)                           // Value is a 64 bit int
 #define IS_SECRET   (4 << 8)                           // Value is a string but hidden
-#define IS_TEXT     (5 << 8)                           // Value is a string
-#define IS_MFS      (6 << 8)                           // Value is a multifunction switch
-#define IS_TEXT_1   (7 << 8)                           // Used only on first connection
-#define IS_VOID     (8 << 8)                           // Value is a void
-#define IS_TIME     (9 << 8)                           // Value is time
+#define IS_MFS      (5 << 8)                           // Value is a multifunction switch
+#define IS_VOID     (6 << 8)                           // Value is a void
+#define IS_TEXT     (7 << 8)                           // Value is a string
+#define IS_TIME     (8 << 8)                           // Value is time
 #define IS_ARRAY    (1 << (8 + 4))                     // Value is part of an array
 #define IS_FIRST    (999)                              // Reset the pointers
 #define FLOAT_SCALE 1000.0                             // Floats are stored as 1000x integer

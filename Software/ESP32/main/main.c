@@ -108,7 +108,7 @@ void app_main(void)
   serial_flush(ALL);
 
   target_name(&str_c);
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "SN:%d Name: %s Running\r\n", json_serial_number, str_c);))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "SN:%d Name: %s Running\r\n", json_serial_number, str_c);))
   vTaskDelay(TICK_10ms);
   serial_flush(ALL);
 }

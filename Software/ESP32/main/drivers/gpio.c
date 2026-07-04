@@ -576,7 +576,7 @@ void paper_start(void)
    */
   if ( IS_DC_WITNESS ) // DC motor,
   {
-    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "DC motor start: %d ms", json_paper_time);))
+    DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "DC motor start: %d ms", json_paper_time);))
     DCmotor_on_off(true, json_paper_time);
   }
 
@@ -621,13 +621,13 @@ void paper_drive_tick(void)
   {
     if ( motor_running )
     {
-      DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "paper_time: %ld", paper_time);))
+      DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "paper_time: %ld", paper_time);))
     }
     if ( paper_time <= 0 ) // Ran out of time, stop the motor
     {
       if ( motor_running == true )
       {
-        DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "DC motor stopped");))
+        DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "DC motor stopped");))
         paper_stop();      // Motor OFF
       }
     }
@@ -778,7 +778,7 @@ void stepper_pulse(void)
     step_time = json_step_time;
   }
 
-  DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "step_time %d   step_count: %d", step_time, step_count);))
+  DLT(DLT_DIAG, SEND(CONSOLE, sprintf(_xs, "step_time %d   step_count: %d", step_time, step_count);))
   ft_timer_new(&paper_time, MS_TO_TICKS(step_time), NULL, "step_time");
 
   if ( step_count != 0 )
@@ -864,7 +864,7 @@ void aquire(void)
   record[shot_in].face_strike   = face_strike;                // Record if it's a face strike
   record[shot_in].sensor_status = is_running();               // Record the sensor status
 
-  IF_NOT(IN_SHOT)                                              // Only record the shot if we are actually expecting a shot
+  IF_NOT(IN_SHOT)                                             // Only record the shot if we are actually expecting a shot
   {
     record[shot_in].miss = 1;                                 // Mark the shot as a miss
   }

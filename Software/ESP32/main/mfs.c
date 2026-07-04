@@ -92,7 +92,7 @@ const mfs_action_t  mfs_action[] = {
 void multifunction_init(void)
 {
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Multifunction_init()");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Multifunction_init()");))
 
   /*
    * Check to see if the DIP switch has been overwritten
@@ -346,7 +346,7 @@ static void sw_state(unsigned int action)
 {
   mfs_action_t *mfs_ptr;
 
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Switch action: %d", action);))
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "Switch action: %d", action);))
 
   mfs_ptr = mfs_find(action);
   if ( (mfs_ptr != NULL) && (mfs_ptr->fcn != NULL) )
@@ -372,7 +372,7 @@ static void mfs_on(void)
 
 static void mfs_paper_feed(void)                               // Feed paper so long as the switch is pressed
 {
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "mfs_paper_feed()");))
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "mfs_paper_feed()");))
 
   /*
    *  Advance paper using the DC motor
@@ -405,7 +405,7 @@ static void mfs_paper_feed(void)                               // Feed paper so 
   /*
    *  End of action
    */
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, _DONE_);))
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, _DONE_);))
 
   return;
 }
@@ -427,7 +427,7 @@ static void mfs_paper_shot(void)
 
 static void mfs_off(void)
 {
-  bye(true);                                // Stay in the Bye state until a wake up event comes along
+  bye(true); // Stay in the Bye state until a wake up event comes along
   return;
 }
 
@@ -444,7 +444,7 @@ static void mfs_led_adjust(void)
     json_LED_PWM = 0;
   }
 
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "mfs_led_adjust: %d%%", json_LED_PWM);))
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "mfs_led_adjust: %d%%", json_LED_PWM);))
   set_LED_PWM_now(json_LED_PWM); // Set the brightness
   nvs_set_i32(my_handle, NONVOL_LED_PWM, json_LED_PWM);
   nvs_commit(my_handle);
