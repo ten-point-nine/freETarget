@@ -876,6 +876,7 @@ bool do_dlt(           //
  *
  *--------------------------------------------------------------*/
 static char *run_state_text[] = {"IN_STARTUP", "IN_OPERATION", "IN_TEST", "IN_SLEEP", "IN_SHOT", "IN_REDUCTION", 0};
+
 void         heartbeat(void)
 {
   char s[128];

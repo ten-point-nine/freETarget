@@ -36,13 +36,13 @@ Turn on RS488 {"AUX_MODE":8}
 //
 Output for Rapid Fire  { "MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":24}
 LED control { "MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":24}
-ISSF 50m Rapid Fire       Five shots into a single target          {"TRACE":64, "RAPID_EVENT":0, "RAPID_COUNT":5, "RAPID_TIME":8,   "RAPID_WAIT":5, "RAPID_ENABLE":1}
-ISSF 25m Standard Pistol  Five shots into a single target          {"TRACE":64, "RAPID_EVENT":0, "RAPID_COUNT":5, "RAPID_TIME":30,  "RAPID_WAIT":5, "RAPID_ENABLE":1}
-NRA Sport Pistol          One shot into a single target, repeat 5x {"TRACE":64, "RAPID_EVENT":1, "RAPID_COUNT":5, "RAPID_TIME":330, "RAPID_WAIT":7, "RAPID_ENABLE":1}
-NRA Sport Pistol          One shot into a single target, repeat 5x {"TRACE":64, "RAPID_EVENT":1, "RAPID_COUNT":5, "RAPID_TIME":300, "RAPID_WAIT":7, "RAPID_ENABLE":0}
-Tabata Practice  {"TABATA_WARN_ON": 5, "TABATA_ON":7, "TABATA_REST":30, "TABATA_ENABLE":1}
-Tabata End       {"TABATA_ENABLE":0}
-Tabata Restart   {"TABATA_ENABLE":1}
+ISSF 50m Rapid Fire       Five shots into a single target            {"TRACE":64, "EVENT":"Rapid Fire ISSF", "RAPID_COUNT":5, "RAPID_TIME":8,   "RAPID_WAIT":5, "RAPID_ENABLE":1}
+ISSF 25m Standard Pistol  Five shots into a single target            {"TRACE":64, "EVENT":"Rapid Fire ISSF", "RAPID_COUNT":5, "RAPID_TIME":30,  "RAPID_WAIT":5, "RAPID_ENABLE":1}
+NRA Sport Pistol ON         One shot into a single target, repeat 5x {"TRACE":8,  "EVENT":"Rapid Fire Sport Pistol", "RAPID_COUNT":5, "RAPID_TIME":3, "RAPID_WAIT":7, "RAPID_ENABLE":1}
+NRA Sport Pistol OFF        One shot into a single target, repeat 5x {"TRACE":64, "EVENT":"Rapid Fire Sport Pistol", "RAPID_COUNT":5, "RAPID_TIME":3, "RAPID_WAIT":7, "RAPID_ENABLE":0}
+Tabata                      Tabata timing                            {"TRACE":64, "EVENT":"Tabata", "RAPID_COUNT":45, "RAPID_TIME":3, "RAPID_WAIT":7, "RAPID_ENABLE":1}
+
+
 Turn Tabata on by switch   {"MFS_TAP_1":6}
 
 //

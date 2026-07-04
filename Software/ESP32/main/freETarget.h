@@ -125,7 +125,7 @@
 #define SCORE_HTTP       "{S?TXPOE}"  // HTTP score elements
 #define SCORE_HTTP_PRIME "{#}"        // HTTP Prime the client
 #define SCORE_HTTP_TEST  "{$}"        // HTTP Test the client
-#define SCORE_SEND_MISS  "{SMT}n"     // Send a miss
+#define SCORE_SEND_MISS  "{SM}n"      // Send a miss
 
 #define HTTP_CLOSE_TIME 15l           // Time to close the HTTP connection after the last shot
 
@@ -134,9 +134,9 @@
 /*
  *  Types
  */
-typedef unsigned char byte_t;
-typedef volatile long time_count_t;
-typedef double        real_t;
+typedef unsigned char    byte_t;
+typedef volatile int32_t time_count_t;
+typedef double           real_t;
 
 typedef struct sensor_ID
 {
@@ -204,6 +204,7 @@ EXTERN time_count_t          time_since_last_shot;                  // 15 minute
 EXTERN time_count_t          session_time[];                        // Time in each session
 EXTERN time_count_t          shot_timer;                            // Wait for the sound to hit all sensors
 EXTERN time_count_t          ring_timer;                            // Let the ring on the backstop end
+EXTERN time_count_t          event_timer;                           // Rapid fire or Tabata timer
 EXTERN shot_record_t         record[SHOT_SPACE];
 #ifdef FREETARGET_C
 EXTERN char        *no_yes[]       = {"No", "Yes"};                 // Yes or No
@@ -223,8 +224,7 @@ void         hello(void);                         // Say Hello World
 void         bye(unsigned int force_bye);         // Shut down and say goodbye
 void         polled_target_test(void);            // Test the target aquisition software
 void         interrupt_target_test(void);         // Test the target aquisition software
-void         tabata_task(void);                   // Run the TABATA timersArm the Tabata counter
-void         rapid_fire_task(void);               // Run the Rapid Fire state machine
+void         timed_event_task(void);              // Run the Rapid Fire state machine
 sensor_ID_t *find_sensor(unsigned int run_mask);  // Locate the sensor settings for the run_latch
 void         start_new_session(int session_type); // Start a new shooting session
 bool         prompt_for_confirm(void);            // Prompt for a confirmation

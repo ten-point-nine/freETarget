@@ -50,13 +50,16 @@
 unsigned int number_of_connections = 0; // How many people are connected to me?
 
                                         // Keep alive timer
-time_count_t tabata_timer;           // Free running statsecondse timer
-time_count_t rapid_timer;            // Timer used for rapid fire ecents
-                                     // Timer to reset LED status
-int go_dark     = 10l;               // Go dark for 10
-int go_wait     = 3l;                // Wait for the PC to catchup
-int all_done    = 0l;                // All finished
-int always_true = true;
+time_count_t tabata_timer; // Free running statsecondse timer
+time_count_t event_timer;  // Timer used for rapid fire ecents
+time_count_t event_timer;  // Rapid fire or Tabata timer
+
+                           // Timer to reset LED status
+real_t go_dark     = 10l;            // Go dark for 10
+real_t go_wait     = 3l;             // Wait for the PC to catchup
+real_t grace_time  = 30;             // ISSF grace time for in flight shots (30 x 10ms)
+real_t all_done    = 0l;             // All finished
+int    always_true = 0;              // Force exit condition to be true
 
 static enum {
   START = 0,                         // 0 et the operating mode
@@ -66,12 +69,15 @@ static enum {
 
 typedef struct
 {
-  volatile int *timer;               // Timer used to control state length (from json.c)
-  char         *status_LED;          // Status LED output
-  int           LED_bright;          // Brightness of target LED
-  char         *message;             // Message to be sent to PC
-  bool          in_shot;             // In a shot cycle
-  int           next_state;          // Where to go next
+  real_t *timer;                     // Timer used to control state length (from json.c)
+  int     time_scale;                // Scaling factor for the timer (e.g. ONE_SECOND or TEN_MILLISECONDS)
+  char   *status_LED;                // Status LED output
+  int     LED_bright;                // Brightness of target LED
+  char   *message;                   // Message to be sent to PC
+  int     in_shot;                   // In a shot cycle
+  int    *exit_condition;            // Pointer to the exit condition (0 == exit)
+  int     next_true;                 // Where to go next if the exit condition is true
+  int     next_false;                // Where to go if the exit condition is false
 } rapid_state_t;
 
 #define NEXT_CONTINUE 0              // Continue to the next state
@@ -183,6 +189,7 @@ void freeETarget_init(void)
   ft_timer_new(&time_to_go, 0, NULL, "time to go");                                                     // Time remaining in session
   ft_timer_new(&shot_timer, 0, NULL, "shot timer");                                                     // Wait for the shot to arrive
   ft_timer_new(&ring_timer, 0, NULL, "ring timer");                                                     // Wait for the ringing to stop
+  ft_timer_new(&event_timer, 0, NULL, "event timer"); // Timed event, ex rapid fire or tabata
 
   /*
    * Run the power on self test
@@ -251,6 +258,7 @@ void freeETarget_target_loop(void *arg)
 
   start_new_session(0);
   shot_number = 1;                           // Start counting shots at 1
+  run_state |= IN_SHOT;                      // Default to IN_SHOT unless a timed event overrides it
 
   while ( 1 )
   {
@@ -286,7 +294,6 @@ void freeETarget_target_loop(void *arg)
           set_status_LED(LED_RAPID_ON);                                      // Show that the target is available for use
         }
         freETarget_state = WAIT;
-        json_rapid_count = 0;                                                // Rapid count is set when rapid fire is enabled
         DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "state: WAIT");))
         break;
 
@@ -376,7 +383,6 @@ unsigned int arm(void)
   enable_face_strike_interrupt();                                        // Enable the face strike interrupt
   stop_timers();
   arm_timers();                                                          // Arm the counters
-  run_state |= IN_SHOT;
   shot_start = run_time_ms();                                            // Remember when we started
 
   sensor_status = is_running();                                          // and immediatly read the status
@@ -662,11 +668,25 @@ void start_new_session(int session_type) //
 
 /*----------------------------------------------------------------
  *
- * @function: tabata_task
+ * @function: timed_fire
  *
- * @brief:   Implement a Tabata timer for training
+ * @brief:    Start or stop a timed fire session
  *
- * @return:  Time that the current TABATA state == TABATA_ON
+ * @return:   Nothing
+ *
+ *----------------------------------------------------------------
+ *
+ * This is a synchronous task that is called every 500ms (1/2 second)
+ *
+ * This is a state machine to control the LEDs and timers for
+ * the rapid fire event.
+ *
+ * Test Message
+ * {"RAPID_TIME":20, "RAPID_COUNT":10, "RAPID_WAIT":5, "RAPID_ENABLE":1}
+ * {"RAPID_TIME":10, "RAPID_COUNT":10, "RAPID_WAIT":0,  "RAPID_ENABLE":1}
+ * {"RAPID_TIME":20, "RAPID_COUNT":5,  "RAPID_WAIT":0,  "RAPID_ENABLE":1}
+ * {"RAPID_TIME":30, "RAPID_COUNT":5,  "RAPID_WAIT":5,  "RAPID_ENABLE":1}
+ * {"MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":22, "RAPID_TIME":10, "RAPID_COUNT":5,  "RAPID_WAIT":5,  "RAPID_ENABLE":1}
  *
  *----------------------------------------------------------------
  *
@@ -695,139 +715,58 @@ void start_new_session(int session_type) //
  *  {"TABATA_WARN_ON": 3, "TABATA_ON":12, "TABATA_REST":25, "TABATA_ENABLE":1}
  *  {"TABATA_ENABLE":0}
  *-------------------------------------------------------------*/
-#define LED_RAMP 2
+
+#define LED_DARK 0
 #define LED_ON   1
-#define LED_OFF  0
-
-const rapid_state_t tabata_state[] = {
-    // Time in state         Status LEDs     target LED  Message     IN_SHOT Next State
-    {&all_done,            LED_TABATA_OFF,  LED_OFF,  "TABATA_IDLE",  false, NEXT_CONTINUE}, // 0 Wait for json_tabata_enable
-    {&json_tabata_warn_on, LED_TABATA_WARN, LED_RAMP, "TABATA_BEGIN", false, NEXT_CONTINUE}, // 1 Wait for json_tabata_enable
-    {&json_tabata_on,      LED_TABATA_ON,   LED_ON,   "TABATA_ON",    true,  NEXT_CONTINUE}, // 3 Wait for json_tabata_enable
-    {&json_tabata_warn_on, LED_TABATA_WARN, LED_OFF,  "TABATA_END",   false, NEXT_CONTINUE}, // 1 Wait for json_tabata_enable
-    {&json_tabata_rest,    LED_TABATA_OFF,  LED_OFF,  "TABATA_REST",  false, NEXT_CONTINUE}, // 4 Turn the timer on for the event
-    {&all_done,            LED_TABATA_OFF,  LED_OFF,  "TABATA_START", false, NEXT_START   }  // 5 Start/End of state machine
-};
-
-void tabata_task(void)
-{
-  static int tabata_state_machine = 0;                                                       // State machine index
-
-  IF_NOT(IN_OPERATION) return;
-
-  /*
-   * Exit if Tabata has not been enabled
-   */
-  if ( json_tabata_enable == false )
-  {
-    tabata_state_machine = 0;      // Reset the Tabata state machine (incremented on entry)
-    run_state &= ~IN_SHOT;         // Take it out of a shot if it was in one
-    freETarget_state = START;      // Force the freeTarget state machine back to start
-    set_LED_PWM_now(json_LED_PWM); // Turn the lights back on
-    return;
-  }
-
-  /*
-   *  Execute the state machine
-   */
-
-  if ( tabata_timer == 0 )                                // Time to go to the next state?
-  {
-    tabata_state_machine++;                               // Next state
-    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "State: %s time: %d", tabata_state[tabata_state_machine].message,
-                                     *tabata_state[tabata_state_machine].timer);))
-
-    if ( *tabata_state[tabata_state_machine].timer == 0 ) // Reached the end of the state machine
-    {
-      tabata_state_machine = 1;                           // Go back to the beginning
-    }
-    ft_timer_new(&tabata_timer, (*tabata_state[tabata_state_machine].timer) * ONE_SECOND, NULL, "tabata timer");
-    set_status_LED(tabata_state[tabata_state_machine].status_LED);
-    switch ( tabata_state[tabata_state_machine].LED_bright )
-    {
-      case LED_RAMP:
-        set_LED_PWM_now(10);                                  // Ramp the lights on
-        break;
-
-      case LED_ON:
-        set_LED_PWM_now(json_LED_PWM);                        // Turn on the lights
-        break;
-
-      case LED_OFF:
-        set_LED_PWM_now(0);                                   // Turn off the lights
-        break;
-    }
-
-    if ( tabata_state[tabata_state_machine].in_shot == true ) // Is the target ready to accept a shot?
-    {
-      run_state |= IN_SHOT;                                   // Yes, set it so
-      shot_start = run_time_ms();                             // and remember this time
-    }
-    else
-    {
-      run_state &= ~IN_SHOT;
-    }
-  }
-
-  /*
-   * All done.
-   */
-  return;
-}
-
-/*----------------------------------------------------------------
- *
- * @function: rapid_fire
- *
- * @brief:    Start or stop a rapid fire session
- *
- * @return:   Nothing
- *
- *----------------------------------------------------------------
- *
- * This is a synchronous task that is called every 500ms (1/2 second)
- *
- * This is a state machine to control the LEDs and timers for
- * the rapid fire event.
- *
- * Test Message
- * {"RAPID_TIME":20, "RAPID_COUNT":10, "RAPID_WAIT":5, "RAPID_ENABLE":1}
- * {"RAPID_TIME":10, "RAPID_COUNT":10, "RAPID_WAIT":0,  "RAPID_ENABLE":1}
- * {"RAPID_TIME":20, "RAPID_COUNT":5,  "RAPID_WAIT":0,  "RAPID_ENABLE":1}
- * {"RAPID_TIME":30, "RAPID_COUNT":5,  "RAPID_WAIT":5,  "RAPID_ENABLE":1}
- * {"MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":22, "RAPID_TIME":10, "RAPID_COUNT":5,  "RAPID_WAIT":5,  "RAPID_ENABLE":1}
- *
- *--------------------------------------------------------------*/                                       // 100 signals random time, %10 is the duration
+#define LED_RAMP 2
 
 const rapid_state_t rapid_state_ISSF[] = {
-    // Time in state   Status LEDs     LED  Message IN_SHOT Score
-    //                               Brightness
-    {&all_done,        LED_RAPID_OFF,  0, "RAPID_IDLE",    0,       NEXT_CONTINUE}, // 0 Do nothing
-    {&go_wait,         LED_RAPID_OFF,  0, "RAPID_ENABLED", 0,       NEXT_CONTINUE}, // 1 Wait for json_rapid_enable
-    {&json_rapid_wait, LED_RAPID_WARN, 1, "RAPID_WAIT",    0,       NEXT_CONTINUE}, // 2 Warn the shooter the event is enabled
-    {&json_rapid_time, LED_RAPID_ON,   1, "RAPID_ON",      IN_SHOT, NEXT_CONTINUE}, // 3 Turn the timer on for the event
-    {&all_done,        LED_RAPID_WARN, 0, "ALL_DONE",      0,       NEXT_START   }  // 4 Event finished, turn off
+    {&all_done,        ONE_SECOND, LED_RAPID_OFF,  LED_DARK, "RAPID_IDLE",    0,       &always_true, 1, 1}, // 0 Do nothing
+    {&go_wait,         ONE_SECOND, LED_RAPID_OFF,  LED_DARK, "RAPID_ENABLED", 0,       &always_true, 2, 2}, // 1 Wait for json_rapid_enable
+    {&json_rapid_wait, ONE_SECOND, LED_RAPID_WARN, LED_ON,   "RAPID_WAIT",    0,       &always_true, 3, 3}, // 2 Warn the shooter the event is enabled
+    {&json_rapid_time, ONE_SECOND, LED_RAPID_ON,   LED_ON,   "RAPID_ON",      IN_SHOT, &always_true, 4, 4}, // 3 Turn the timer on for the event
+    {&all_done,        ONE_SECOND, LED_RAPID_OFF,  LED_DARK, "ALL_DONE",      0,       &always_true, 0, 0}  // 4 Event finished, turn off
 };
 
+static real_t adjusted_rapid_wait;
+static int    shot_string; // How many shots are we expecting                                                      // Rapid time
+                           // adjusted for 300ms turn time
 const rapid_state_t rapid_state_sport[] = {
-    // Time in state   Status LEDs     LED  Message IN_SHOT Score
-    //                               Brightness
-    {&all_done,        LED_RAPID_OFF,  0, "RAPID_IDLE",    0,       NEXT_CONTINUE}, // 0 Do nothing
-    {&go_wait,         LED_RAPID_OFF,  0, "RAPID_ENABLED", 0,       NEXT_CONTINUE}, // 1 Wait for json_rapid_enable
-    {&json_rapid_wait, LED_RAPID_WARN, 1, "RAPID_WAIT",    0,       NEXT_CONTINUE}, // 2 Warn the shooter the event is enabled
-    {&json_rapid_time, LED_RAPID_ON,   1, "RAPID_ON",      IN_SHOT, NEXT_LOOP_1  }, // 4 Go back one step
-    {&all_done,        LED_RAPID_WARN, 0, "ALL_DONE",      0,       NEXT_START   }  // 4 Event finished, turn off
+    {&all_done,            ONE_SECOND, LED_RAPID_OFF,  LED_DARK, "SPORT_IDLE",    0,       &always_true, 1, 1}, // 0 Do nothing
+    {&go_wait,             ONE_SECOND, LED_RAPID_OFF,  LED_DARK, "SPORT_ENABLED", 0,       &always_true, 2, 2}, // 1 Wait for json_rapid_enable
+    {&json_rapid_wait,     ONE_SECOND, LED_RAPID_WARN, LED_ON,   "SPORT_WAIT",    0,       &always_true, 3, 3}, // 2 Warn the shooter the event is enabled
+    {&json_rapid_time,     ONE_SECOND, LED_RAPID_ON,   LED_ON,   "SPORT_ON",      IN_SHOT, &always_true, 4, 4}, // 3 turn the timer on for the event
+    {&grace_time,          TICK_10ms,  LED_RAPID_WARN, LED_DARK, "SPORT_GRACE",   IN_SHOT, &shot_string, 5, 5}, // 4 Delay for the grace period
+    {&adjusted_rapid_wait, 1,          LED_RAPID_WARN, LED_ON,   "SPORT_WAIT",    0,       &always_true, 6, 3}, // 5 Warn the event is enabled
+    {&json_rapid_time,     ONE_SECOND, LED_RAPID_ON,   LED_ON,   "SPORT_ON",      IN_SHOT, &always_true, 7, 4}, // 6 turn the timer on for the event
+    {&grace_time,          TICK_10ms,  LED_RAPID_WARN, LED_DARK, "SPORT_GRACE",   IN_SHOT, &shot_string, 8, 5}, // 7 Delay for the grace period
+    {&all_done,            ONE_SECOND, LED_RAPID_WARN, 0,        "ALL_DONE",      0,       &always_true, 0, 0}  // 8 Event finished, turn off
 };
 
-const rapid_state_t *rapid_state_list[] = {&rapid_state_ISSF, &rapid_state_sport}; // List of rapid state tables
+const rapid_state_t tabata_rapid_state[] = {
+    {&all_done,         ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_IDLE",  0,       &always_true, 1, 1}, // 0 Wait for json_tabata_enable
+    {&json_rapid_wait,  ONE_SECOND, LED_TABATA_WARN, LED_RAMP, "TABATA_BEGIN", 0,       &always_true, 2, 2}, // 1 Wait for json_tabata_enable
+    {&json_rapid_on,    ONE_SECOND, LED_TABATA_ON,   LED_ON,   "TABATA_ON",    IN_SHOT, &always_true, 3, 3}, // 2 Wait for json_tabata_enable
+    {&json_rapid_wait,  ONE_SECOND, LED_TABATA_WARN, LED_DARK, "TABATA_END",   0,       &always_true, 4, 4}, // 4 Wait for json_tabata_enable
+    {&json_rapid_count, ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_REST",  0,       &always_true, 5, 5}, // 4 Fake the rest period
+    {&all_done,         ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_START", 0,       &always_true, 1, 1}  // 5 Start/End of state machine
+};
 
-void rapid_fire_task(void)
+const char *rapid_state_names[] = {"Rapid Fire ISSF", "Rapid Fire Sport Pistol", "Tabata"};
+
+const rapid_state_t *rapid_state_list[] = {
+    &rapid_state_ISSF,
+    &rapid_state_sport,
+    &tabata_rapid_state,
+}; // List of rapid state tables
+
+void timed_event_task(void)
 {
-
-  static unsigned int   shot_start;                                                //  Remember how many shots have been fired so far
-  static rapid_state_t *rapid_state = rapid_state_ISSF;                            // What state table to use
-  static unsigned int   rapid_index;                                               // Index of the current state
-  time_count_t          time_to_go;                                                // Time in this cycle
+  static unsigned int   shot_start;         //  Remember how many shots have been fired so far
+  static rapid_state_t *rapid_state = NULL; // What state table to use
+  static unsigned int   rapid_index;        // Index of the current state
+  static int            last_enable;        // Enabled state from last iteraton
+  int                   i;
 
   IF_NOT(IN_OPERATION) return;
 
@@ -836,87 +775,106 @@ void rapid_fire_task(void)
    */
   if ( json_rapid_enable == false )
   {
-    json_rapid_event %= sizeof(rapid_state_list) / sizeof(rapid_state);
-    rapid_state = rapid_state_list[json_rapid_event]; // Remember to reset the rapid event
-    time_to_go  = *(rapid_state->timer) * ONE_SECOND;
-    if ( time_to_go > 100 )                           // Determine if the time needs to be scaled by 100
-    {
-      time_to_go /= 100;
-    }
-    ft_timer_new(&rapid_timer, time_to_go, NULL, "rapid timer()");
-    rapid_index = 0;                                  // Start at the beginning of the state machine
-    shot_start  = shot_in;                            // Remember how many shots have been fired so far
+    last_enable = 0;
     return;
   }
+
+  if ( (json_rapid_enable & (last_enable ^ json_rapid_enable)) == 1 ) // Go from disabled to enabled
+  {
+    for ( i = 0; i < sizeof(rapid_state_list) / sizeof(rapid_state_list[0]); i++ )
+    {
+      printf("\r\n%s %s ", json_event, rapid_state_names[i]);
+      if ( stricmp(json_event, rapid_state_names[i]) == 0 )
+      {
+        rapid_state = rapid_state_list[i];
+        break;
+      }
+    }
+    if ( rapid_state == NULL )
+    {
+      rapid_state = rapid_state_ISSF;
+    }
+    event_timer = ((int)*(rapid_state->timer)) * ONE_SECOND;
+    rapid_index = 0;                                                   // Start at the beginning of the state machine
+    shot_start  = shot_in;                                             // Remember how many shots have been fired so far
+    printf("Starting rapid fire: json_event: %s, json_rapid_count: %d, json_rapid_wait: %f\n", json_event, json_rapid_count,
+           json_rapid_wait);
+
+    adjusted_rapid_wait = (json_rapid_wait * ONE_SECOND) - grace_time; // Corrected rapid wait time
+    shot_string         = json_rapid_count;                            // Number of expected shots
+  }
+  last_enable = json_rapid_enable;
 
   /*
    *  Execute the state machine
    */
-  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "TTG: %ld", rapid_timer);))
-  if ( rapid_timer == 0 )                                                             // Time to go to the next state?
+  if ( event_timer != 0 ) // Time has not yet elapsed
   {
-    switch ( (rapid_state + rapid_index)->next_state )                                // Where do we go next
+    return;
+  }
+
+  /*
+   *  Go to the next state in the rapid fire sequence
+   */
+  if ( *((rapid_state + rapid_index)->exit_condition) != 0 ) // Decrement the exit condition if it is not zero
+  {
+    (*((rapid_state + rapid_index)->exit_condition))--;
+  }
+
+  if ( *((rapid_state + rapid_index)->exit_condition) == 0 ) // Pick the next state based on the exit condition
+  {
+    rapid_index = (rapid_state + rapid_index)->next_true;
+  }
+  else
+  {
+    rapid_index = (rapid_state + rapid_index)->next_false;
+  }
+
+  event_timer = ((int)*(rapid_state + rapid_index)->timer) * (rapid_state + rapid_index)->time_scale; // New time
+
+  switch ( (rapid_state + rapid_index)->LED_bright )                         // Set the LED brightness based on the state
+  {
+    case LED_RAMP:
+      set_LED_PWM_now(10);                                                   // Ramp the lights on
+      break;
+
+    case LED_ON:
+      set_LED_PWM_now(json_LED_PWM);                                         // Turn on the lights
+      break;
+
+    case LED_DARK:
+      set_LED_PWM_now(0);                                                    // Turn off the lights
+      break;
+  }
+
+  set_status_LED((rapid_state + rapid_index)->status_LED);                   // Set the red and green light s
+
+  run_state = (run_state & ~IN_SHOT) | (rapid_state + rapid_index)->in_shot; // Update the IN_SHOT state
+
+  /*
+   *  Check to see if we have reached the end of the timed fire event
+   */
+  if ( rapid_index == 0 )
+  {
+    DLT(DLT_DEBUG,
+        SEND(ALL, sprintf(_xs, "Rapid fire complete: rapid_count: %d, json_rapid_count: %d\r\n", shot_in - shot_start, json_rapid_count);))
+
+    while ( (shot_in - shot_start) < json_rapid_count )    // Send incomplete as misses
     {
-      case NEXT_CONTINUE:
-        rapid_index++;                                                                // Next state index
-        break;
-
-      case NEXT_LOOP_1:                                                               // Go back one step
-      case NEXT_LOOP_2:                                                               // Go back two steps
-        json_rapid_count--;                                                           // Decrement the rapid count
-        if ( json_rapid_count != 0 )
-        {
-          rapid_index -= ((rapid_state + rapid_index)->next_state - NEXT_LOOP_1 + 1); // Go back one step in the state machine
-        }
-        else
-        {
-          rapid_index++;                                                              // Fall through to the next state
-        }
-        break;
-
-      case NEXT_START:                                                                // End of the rapid fire sequence
-        rapid_index = 0;                                                              // Restart the state machine
-        break;
+      record[shot_in].shot_time     = 0;                   // Fake the time
+      record[shot_in].shot          = shot_in;             // Fake a shot number
+      record[shot_in].sensor_status = 0;                   // Fake the sensor status
+      record[shot_in].miss          = 1;                   // No face strike
+      build_json_score(&record[shot_in], SCORE_SEND_MISS); // Build the JSON for the miss
+      serial_to_all(_xs, ALL);
+      shot_in  = (shot_in + 1) % SHOT_SPACE;
+      shot_out = shot_in;
     }
+    json_rapid_enable = 0;
+  }
 
-                                                                                      /*
-                                                                                       *  Update the timer to the next state
-                                                                                       */
-
-    time_to_go = *(rapid_state + rapid_index)->timer * ONE_SECOND;
-    printf("\nRapid timer: %ld\n", time_to_go);
-    if ( time_to_go > 100 ) // Determine if the time needs to be scaled by 100
-    {
-      time_to_go /= 100;
-    }
-    rapid_timer = time_to_go;
-
-    set_status_LED((rapid_state + rapid_index)->status_LED);
-    run_state = (run_state & ~IN_SHOT) | (rapid_state + rapid_index)->in_shot; // Update the IN_SHOT state
-
-    /*
-     *  Check to see if we have reached the end of the rapid fire event
-     */
-    if ( (rapid_state + rapid_index)->next_state == NEXT_START )
-    {
-      SEND(ALL, sprintf(_xs, "Rapid fire complete: rapid_count: %d, json_rapid_count: %d\r\n", shot_in - shot_start, json_rapid_count);)
-      rapid_index = 0;                                       // Restart the state machine
-
-      while ( (shot_in - shot_start) < json_rapid_count )    // Send incomplete as misses
-      {
-        record[shot_in].shot_time     = 0;                   // Fake the time
-        record[shot_in].shot          = shot_in;             // Fake a shot number
-        record[shot_in].sensor_status = 0;                   // Fake the sensor status
-        record[shot_in].miss          = 1;                   // No face strike
-        build_json_score(&record[shot_in], SCORE_SEND_MISS); // Build the JSON for the miss
-        serial_to_all(_xs, ALL);
-        shot_in = (shot_in + 1) % SHOT_SPACE;
-      }
-    }
-    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "State: %s,  time: %ld, LED: \"%s\"", (rapid_state + rapid_index)->message, time_to_go,
-                                     (rapid_state + rapid_index)->status_LED);))
-  } // End of rapid fire state machine
-
+  DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "State: %s,  time: %ld, LED: \"%s\", IN_SHOT: %d", (rapid_state + rapid_index)->message,
+                                   event_timer, (rapid_state + rapid_index)->status_LED, (rapid_state + rapid_index)->in_shot);))
   /*
    * All done.
    */
@@ -1014,7 +972,7 @@ void interrupt_target_test(void)
       SEND(ALL, sprintf(_xs, "\r\n");)
       for ( i = 0; i != 8; i++ )
       {
-        SEND(ALL, sprintf(_xs, "%s:%5d  ", find_sensor(1 << i)->long_name, record[shot_out].timer_count[i]);)
+        SEND(ALL, sprintf(_xs, "%s:%ld  ", find_sensor(1 << i)->long_name, record[shot_out].shot_time);)
       }
       shot_out = (shot_out + 1) % SHOT_SPACE;
     }
@@ -1109,18 +1067,17 @@ void generate_fake_shot(void)
         {
           for ( i = N; i <= W; i++ )           // Loop through the sensors to compute the time counts
           {
-            distance = sqrt((SQ(x - s[i].x_mm) + SQ(y - s[i].y_mm)));
-            record[shot_in].timer_count[i] =
-                (int)(SHOT_TIME * OSCILLATOR_MHZ) - (distance / 0.35 * OSCILLATOR_MHZ); // Fake the travel time in
+            distance                  = sqrt((SQ(x - s[i].x_mm) + SQ(y - s[i].y_mm)));
+            record[shot_in].shot_time = (int)(SHOT_TIME * OSCILLATOR_MHZ) - (distance / 0.35 * OSCILLATOR_MHZ); // Fake the travel time in
           }
 
           record[shot_in].shot          = shot_in;
-          record[shot_in].face_strike   = 0;                                            // No face strikes
-          record[shot_in].sensor_status = 0x0f;                                         // All sensors valid
-          ring_timer                    = json_min_ring_time * ONE_SECOND / 1000;       // Reset the ring timer
+          record[shot_in].face_strike   = 0;                                                                    // No face strikes
+          record[shot_in].sensor_status = 0x0f;                                                                 // All sensors valid
+          ring_timer                    = json_min_ring_time * ONE_SECOND / 1000;                               // Reset the ring timer
           shot_in                       = (shot_in + 1) % SHOT_SPACE;
 
-          reduce();                                                                     // Process the shot
+          reduce();                                                                                             // Process the shot
           vTaskDelay(ONE_SECOND * 2);
         }
       }

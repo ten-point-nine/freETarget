@@ -187,8 +187,7 @@ int instr(char *s1, // Source string
  *
  *-----------------------------------------------------*/
 bool contains(char *source,                    // Source string
-              char *match                      // Comparison string
-)
+              char *match)                     // Comparison string
 {
   char *start;
 
@@ -216,6 +215,23 @@ bool contains(char *source,                    // Source string
   }
 
   return false;      // The strings are different
+}
+
+/*
+ *  Case-insensitive string comparison
+ */
+int stricmp(const char *s1, const char *s2)
+{
+  while ( *s1 && *s2 )
+  {
+    if ( toupper((unsigned char)*s1) != toupper((unsigned char)*s2) )
+    {
+      return -1;
+    }
+    s1++;
+    s2++;
+  }
+  return (*s2 == 0) ? 0 : -1;
 }
 
 /*----------------------------------------------------------------

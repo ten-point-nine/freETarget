@@ -118,9 +118,9 @@ EXTERN int           json_z_offset;                  // Distance between paper a
 EXTERN int           json_paper_eco;                 // Do not advance witness paper if shot is greater than json_paper_eco
 EXTERN int           json_target_type;               // Modify the location based on a target type (0 == regular 1 bull target)
 EXTERN int           json_tabata_enable;             // Enable the Tabata timer
-EXTERN int           json_tabata_on;                 // Tabata ON timer
-EXTERN int           json_tabata_rest;               // Tabata OFF timer
-EXTERN int           json_tabata_warn_on;            // Time to turn on the warning
+EXTERN real_t        json_tabata_on;                 // Tabata ON timer
+EXTERN real_t        json_tabata_rest;               // Tabata OFF timer
+EXTERN real_t        json_tabata_warn_on;            // Time to turn on the warning
 EXTERN int           json_rapid_enable;              // Rapid Fire enabled
 EXTERN unsigned long json_rapid_on;                  // Rapid Fire ON timer
 EXTERN int           json_rapid_count;               // Number of expected shots
@@ -130,9 +130,9 @@ EXTERN real_t        json_vset;                      // Desired voltage setpont
 EXTERN int           json_follow_through;            // Follow through timer
 EXTERN int           json_keep_alive;                // Keepalive period
 EXTERN int           json_face_strike;               // Number of cycles to accept a face strike
-EXTERN int           json_rapid_time;                // When will the rapid fire event end
+EXTERN real_t        json_rapid_time;                // When will the rapid fire event end
+EXTERN real_t        json_rapid_wait;                // Delay applied to rapid fire
 EXTERN int           json_wifi_channel;              // Channel assigned to this SSID
-EXTERN int           json_rapid_wait;                // Delay applied to rapid fire
 EXTERN int           json_wifi_dhcp;                 // TRUE if the DHCP server is enabled
 EXTERN char          json_wifi_static_ip[IP_SIZE];   // Static IP assigned to the target
 EXTERN char          json_wifi_gateway[IP_SIZE];     // Text of WiFI gateway mask
