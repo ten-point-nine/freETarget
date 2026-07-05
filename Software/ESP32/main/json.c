@@ -354,7 +354,7 @@ static void handle_json(void)
                 s[m] = 0;                                   // Null terminate
                 k++;
               }
-              
+
               if ( JSON[j].value != 0 )
               {
                 strcpy((char *)JSON[j].value, s);           // Save the value
@@ -369,7 +369,7 @@ static void handle_json(void)
 
             case IS_MFS:
             case IS_INT32:                                  // Convert an integer
-
+            case IS_DELTA:
               if ( (input_JSON[i + k] == '0') && ((input_JSON[i + k + 1] == 'X') || (input_JSON[i + k + 1] == 'x')) ) // Is it Hex?
               {
                 x = (to_int(input_JSON[i + k + 2]) << 4) + to_int(input_JSON[i + k + 3]);
@@ -378,29 +378,37 @@ static void handle_json(void)
               {
                 x = atoi(&input_JSON[i + k]);
               }
+
               if ( JSON[j].value != 0 )
               {
-                *JSON[j].value = x;                         // Save the value
+                if ( (JSON[j].convert & IS_MASK & IS_DELTA) == 0 ) // Not a delta
+                {
+                  *JSON[j].value = x;                              // Save the value
+                }
+                else
+                {
+                  *JSON[j].value += x;                             // Add the delta
+                }
               }
               if ( JSON[j].non_vol != 0 )
               {
-                nvs_set_i32(my_handle, JSON[j].non_vol, x); // Store into NON-VOL
+                nvs_set_i32(my_handle, JSON[j].non_vol, x);        // Store into NON-VOL
               }
 
               break;
 
-            case IS_FLOAT:                                  // Convert a floating point number
+            case IS_FLOAT:                                         // Convert a floating point number
 
-              f = atof(&input_JSON[i + k]);                 // Float
-              x = f * FLOAT_SCALE;                          // Integer
+              f = atof(&input_JSON[i + k]);                        // Float
+              x = f * FLOAT_SCALE;                                 // Integer
               if ( JSON[j].value != 0 )
               {
-                *(double *)JSON[j].value = f;               // Working Value
+                *(double *)JSON[j].value = f;                      // Working Value
               }
               if ( JSON[j].non_vol != 0 )
               {
                 nvs_set_i32(my_handle, JSON[j].non_vol,
-                            x);                             // Store into NON-VOL as an integer * 1000
+                            x);                                    // Store into NON-VOL as an integer * 1000
               }
 
               break;

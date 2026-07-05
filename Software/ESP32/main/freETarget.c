@@ -80,6 +80,13 @@ typedef struct
   int     next_false;                // Where to go if the exit condition is false
 } rapid_state_t;
 
+typedef struct
+{
+  char          *event;              // What event are we shooting
+  rapid_state_t *rapid_state;        // State machine for this event
+  int            relay;              // How many shots in the relay
+} course_of_fire_t;
+
 #define NEXT_CONTINUE 0              // Continue to the next state
 #define NEXT_START    1              // Go to the start state
 #define NEXT_LOOP_1   2              // Loop back one step
@@ -152,6 +159,10 @@ void freeETarget_init(void)
 #if TRACE_VERBOSE
   is_trace |= DLT_VERBOSE;       // Enable verbose messages
   DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT VERBOSE enabled");))
+#endif
+#if TRACE_RAPID_FIRE
+  is_trace |= DLT_RAPID_FIRE;    // Enable rapid fire tracing
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT RAPID FIRE enabled");))
 #endif
 
   /*
@@ -704,7 +715,7 @@ const rapid_state_t rapid_state_ISSF[] = {
     {&go_wait,         ONE_SECOND, LED_RAPID_OFF,  LED_DARK, "RAPID_ENABLED", 0,       &always_true, 2, 2}, // 1 Wait for json_rapid_enable
     {&json_rapid_wait, ONE_SECOND, LED_RAPID_WARN, LED_ON,   "RAPID_WAIT",    0,       &always_true, 3, 3}, // 2 Warn the shooter the event is enabled
     {&json_rapid_time, ONE_SECOND, LED_RAPID_ON,   LED_ON,   "RAPID_ON",      IN_SHOT, &always_true, 4, 4}, // 3 Turn the timer on for the event
-    {&grace_time,      TICK_10ms,  LED_RAPID_OFF,  LED_DARK, "RAPID_GRACE",   IN_SHOT, &always_true, 5, 5}, // 5 Delay for the grace period
+    {&grace_time,      TICK_10ms,  LED_RAPID_OFF,  LED_DARK, "RAPID_GRACE",   IN_SHOT, &always_true, 5, 5}, // 4 Delay for the grace period
     {&all_done,        ONE_SECOND, LED_RAPID_OFF,  LED_DARK, "ALL_DONE",      0,       &always_true, 0, 0}  // 5 Event finished, turn off
 };
 
@@ -712,34 +723,27 @@ static real_t adjusted_rapid_wait;
 static int    shot_string; // How many shots are we expecting                                                      // Rapid time
                            // adjusted for 300ms turn time
 const rapid_state_t rapid_state_sport[] = {
-    {&all_done,            ONE_SECOND, LED_RAPID_OFF,  LED_DARK, "SPORT_IDLE",    0,       &always_true, 1, 1}, // 0 Do nothing
-    {&go_wait,             ONE_SECOND, LED_RAPID_OFF,  LED_DARK, "SPORT_ENABLED", 0,       &always_true, 2, 2}, // 1 Wait for json_rapid_enable
-    {&json_rapid_wait,     ONE_SECOND, LED_RAPID_WARN, LED_ON,   "SPORT_WAIT",    0,       &always_true, 3, 3}, // 2 Warn the shooter the event is enabled
-    {&json_rapid_time,     ONE_SECOND, LED_RAPID_ON,   LED_ON,   "SPORT_ON",      IN_SHOT, &always_true, 4, 4}, // 3 turn the timer on for the event
-    {&grace_time,          TICK_10ms,  LED_RAPID_WARN, LED_DARK, "SPORT_GRACE",   IN_SHOT, &shot_string, 5, 5}, // 4 Delay for the grace period
-    {&adjusted_rapid_wait, 1,          LED_RAPID_WARN, LED_ON,   "SPORT_WAIT",    0,       &always_true, 6, 3}, // 5 Warn the event is enabled
-    {&json_rapid_time,     ONE_SECOND, LED_RAPID_ON,   LED_ON,   "SPORT_ON",      IN_SHOT, &always_true, 7, 4}, // 6 turn the timer on for the event
-    {&grace_time,          TICK_10ms,  LED_RAPID_WARN, LED_DARK, "SPORT_GRACE",   IN_SHOT, &shot_string, 8, 5}, // 7 Delay for the grace period
-    {&all_done,            ONE_SECOND, LED_RAPID_WARN, 0,        "ALL_DONE",      0,       &always_true, 0, 0}  // 8 Event finished, turn off
+    {&all_done,        ONE_SECOND, LED_RAPID_OFF,  LED_OFF,  "SPORT_IDLE",  0,       &always_true, 1, 1}, // 0 Do nothing
+    {&json_rapid_wait, ONE_SECOND, LED_RAPID_WARN, LED_ON,   "SPORT_WAIT",  0,       &always_true, 2, 2}, // 2 Warn the shooter the event is enabled
+    {&json_rapid_time, ONE_SECOND, LED_RAPID_ON,   LED_ON,   "SPORT_ON",    IN_SHOT, &always_true, 3, 3}, // 3 turn the timer on for the event
+    {&grace_time,      TICK_10ms,  LED_RAPID_WARN, LED_ON,   "SPORT_GRACE", IN_SHOT, &shot_string, 4, 4}, // 4 Delay for the grace period
+    {&all_done,        ONE_SECOND, LED_RAPID_WARN, LED_DARK, "ALL_DONE",    0,       &always_true, 0, 0}  // 8 Event finished, turn off
 };
-
-static real_t tabata_alert = 4.0;
 
 const rapid_state_t tabata_rapid_state[] = {
     {&all_done,        ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_IDLE",  0,       &always_true, 1, 1}, // 0 Wait for json_tabata_enable
-    {&tabata_alert,    ONE_SECOND, LED_TABATA_WARN, LED_RAMP, "TABATA_BEGIN", 0,       &always_true, 2, 2}, // 1 Wait for json_tabata_enable
+    {&json_rapid_wait, ONE_SECOND, LED_TABATA_WARN, LED_RAMP, "TABATA_BEGIN", 0,       &always_true, 2, 2}, // 1 Wait for json_tabata_enable
     {&json_rapid_time, ONE_SECOND, LED_TABATA_ON,   LED_ON,   "TABATA_ON",    IN_SHOT, &always_true, 3, 3}, // 2 Wait for json_tabata_enable
     {&grace_time,      TICK_10ms,  LED_TABATA_OFF,  LED_DARK, "TABATA_GRACE", IN_SHOT, &always_true, 4, 4}, // 3 Delay for the grace period
-    {&json_rapid_wait, ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_REST",  0,       &always_true, 1, 1}, // 4 Fake the rest period
+    {&all_done,        ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_DONE",  0,       &shot_string, 0, 2}, // 4 Fake the rest period
 };
 
-const char *rapid_state_names[] = {"Rapid Fire", "Sport Pistol", "Tabata"};
-
-const rapid_state_t *rapid_state_list[] = {
-    &rapid_state_ISSF,
-    &rapid_state_sport,
-    &tabata_rapid_state,
-}; // List of rapid state tables
+const course_of_fire_t course_of_fire[] = {
+    {"RFP", &rapid_state_ISSF,   5},
+    {"SPP", &rapid_state_sport,  0},
+    {"TBT", &tabata_rapid_state, 0},
+    {NULL,  0,                   0}
+};
 
 void timed_event_task(void)
 {
@@ -756,7 +760,7 @@ void timed_event_task(void)
                                              */
   if ( (last_enable & (last_enable ^ json_rapid_enable)) == 1 )       // Go from enabled to disabled
   {
-    DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "Rapid fire disabled");))
+    DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "Timed fire ended");))
   }
 
   if ( json_rapid_enable == false )                                   // Nothing to do if Rapid fire is not enabled
@@ -767,29 +771,40 @@ void timed_event_task(void)
 
   if ( (json_rapid_enable & (last_enable ^ json_rapid_enable)) == 1 ) // Go from disabled to enabled
   {
-    for ( i = 0; i < sizeof(rapid_state_list) / sizeof(rapid_state_list[0]); i++ )
+    i = 0;
+    while ( course_of_fire[i].event != NULL )
     {
-      printf("\r\n%s", json_event);
-      if ( contains(json_event, rapid_state_names[i]) )
+      if ( contains(json_event, course_of_fire[i].event) )
       {
-        rapid_state = rapid_state_list[i];
+        rapid_state = course_of_fire[i].rapid_state;
         break;
       }
+      i++;
     }
+
     if ( rapid_state == NULL )
     {
       i           = 0;
-      rapid_state = &rapid_state_list[i];
+      rapid_state = course_of_fire[i].rapid_state;
     }
 
-    DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "Starting: %s", rapid_state_names[i]);))
+    DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "Starting: %s, Shots: %d, Wait: %4.2f, On: %4.2f", course_of_fire[i].event,
+                                              course_of_fire[i].relay, json_rapid_wait, json_rapid_time);))
 
     event_timer         = ((int)*(rapid_state->timer)) * ONE_SECOND;
     rapid_index         = 0;                                           // Start at the beginning of the state machine
     shot_start          = shot_in;                                     // Remember how many shots have been fired so far
     adjusted_rapid_wait = (json_rapid_wait * ONE_SECOND) - grace_time; // Corrected rapid wait time
-    shot_string         = json_rapid_count;                            // Number of expected shots
+    if ( course_of_fire[i].relay != 0 )                                // Number of expected shots
+    {
+      shot_string = course_of_fire[i].relay;                           // Number of expected shots
+    }
+    else
+    {
+      shot_string = json_rapid_count;                                  // Fallback to the default number of expected shots
+    }
   }
+
   last_enable = json_rapid_enable;
 
   /*
@@ -843,22 +858,26 @@ void timed_event_task(void)
    */
   if ( rapid_index == 0 )
   {
-    while ( (shot_in - shot_start) < json_rapid_count )    // Send incomplete as misses
+    while ( (shot_in - shot_start) < shot_string )         // Send incomplete as misses
     {
       record[shot_in].shot_time     = 0;                   // Fake the time
       record[shot_in].shot          = shot_in;             // Fake a shot number
       record[shot_in].sensor_status = 0;                   // Fake the sensor status
       record[shot_in].miss          = 1;                   // No face strike
+      record[shot_in].shot_time     = run_time_ms() - shot_start;
       build_json_score(&record[shot_in], SCORE_SEND_MISS); // Build the JSON for the miss
       serial_to_all(_xs, ALL);
-      shot_in  = (shot_in + 1) % SHOT_SPACE;
-      shot_out = shot_in;
+      shot_in = (shot_in + 1) % SHOT_SPACE;
     }
-    json_rapid_enable = 0;
+    if ( json_rapid_enable != 0 )
+    {
+      json_rapid_enable -= 1;                              // Decriment shots remaining
+    }
   }
 
   DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "State: %s,  time: %ld, LED: \"%s\", IN_SHOT: %d", (rapid_state + rapid_index)->message,
                                             event_timer, (rapid_state + rapid_index)->status_LED, (rapid_state + rapid_index)->in_shot);))
+
   /*
    * All done.
    */
