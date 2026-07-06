@@ -1812,10 +1812,10 @@ namespace freETarget {
                     //duel
                     Console.WriteLine("LOAD");
                     StringBuilder sb = new StringBuilder("{");
-                    sb.Append("\"RAPID_COUNT\": 1 , ");
-                    sb.Append("\"RAPID_WAIT\":" + this.currentSession.eventType.RF_TimeBetweenShots + ", ");
-                    sb.Append("\"RAPID_TIME\":" + this.currentSession.eventType.RF_TimePerShot + ", ");
-                    sb.Append("\"RAPID_ENABLE\": 1");
+                    sb.Append("\"RAPID_COUNT\":1, ");
+                    sb.Append("\"RAPID_WAIT\":" + this.currentSession.eventType.RF_TimeBetweenShots.ToString(CultureInfo.InvariantCulture) + ", ");
+                    sb.Append("\"RAPID_TIME\":" + this.currentSession.eventType.RF_TimePerShot.ToString(CultureInfo.InvariantCulture) + ", ");
+                    sb.Append("\"RAPID_ENABLE\":1");
                     sb.Append(" }");
                     Console.WriteLine(sb.ToString());
                     commModule.sendData(sb.ToString());
@@ -1826,10 +1826,10 @@ namespace freETarget {
                     //normal rapid fire
                     Console.WriteLine("ATTENTION");
                     StringBuilder sb = new StringBuilder("{");
-                    sb.Append("\"RAPID_COUNT\":" + this.currentSession.eventType.RF_NumberOfShots + ", ");
-                    sb.Append("\"RAPID_WAIT\":" + this.currentSession.eventType.RF_TimeBetweenShots + ", ");
-                    sb.Append("\"RAPID_TIME\":" + this.currentSession.eventType.RF_TimePerSerie + ", ");
-                    sb.Append("\"RAPID_ENABLE\": 1");
+                    sb.Append("\"RAPID_COUNT\":" + this.currentSession.eventType.RF_NumberOfShots.ToString(CultureInfo.InvariantCulture) + ", ");
+                    sb.Append("\"RAPID_WAIT\":" + this.currentSession.eventType.RF_TimeBetweenShots.ToString(CultureInfo.InvariantCulture) + ", ");
+                    sb.Append("\"RAPID_TIME\":" + this.currentSession.eventType.RF_TimePerSerie.ToString(CultureInfo.InvariantCulture) + ", ");
+                    sb.Append("\"RAPID_ENABLE\":1");
                     sb.Append(" }");
                     Console.WriteLine(sb.ToString());
                     commModule.sendData(sb.ToString());
@@ -1848,10 +1848,10 @@ namespace freETarget {
                     //duel
                     if (RFduelCounter < this.currentSession.eventType.RF_NumberOfShots) {
                         StringBuilder sb = new StringBuilder("{");
-                        sb.Append("\"RAPID_COUNT\": 1 , ");
-                        sb.Append("\"RAPID_WAIT\":" + this.currentSession.eventType.RF_TimeBetweenShots + ", ");
-                        sb.Append("\"RAPID_TIME\":" + this.currentSession.eventType.RF_TimePerShot + ", ");
-                        sb.Append("\"RAPID_ENABLE\": 1");
+                        sb.Append("\"RAPID_COUNT\":1, ");
+                        sb.Append("\"RAPID_WAIT\":" + this.currentSession.eventType.RF_TimeBetweenShots.ToString(CultureInfo.InvariantCulture) + ", ");
+                        sb.Append("\"RAPID_TIME\":" + this.currentSession.eventType.RF_TimePerShot.ToString(CultureInfo.InvariantCulture) + ", ");
+                        sb.Append("\"RAPID_ENABLE\":1");
                         sb.Append(" }");
                         Console.WriteLine(sb.ToString());
                         commModule.sendData(sb.ToString());
@@ -1880,7 +1880,7 @@ namespace freETarget {
                 btnStart.Enabled = true;
                 rapidFireTimer.Stop();
                 StringBuilder sb = new StringBuilder("{");
-                sb.Append("\"RAPID_ENABLE\": 0 }");
+                sb.Append("\"RAPID_ENABLE\":0 }");
                 Console.WriteLine(sb.ToString());
                 commModule.sendData(sb.ToString());
                 log("Sending: " + sb.ToString());
