@@ -93,6 +93,7 @@ const json_message_t JSON[] = {
     {SHOW + LOCK, "\"POWER_SAVE\":",     &json_power_save,            IS_INT32,               0,                  NONVOL_POWER_SAVE,          0,          0 },
     {HIDE,        "\"RAPID_COUNT\":",    &json_rapid_count,           IS_INT32,               0,                  0,                          0,          0 },
     {HIDE,        "\"RAPID_ENABLE\":",   &json_rapid_enable,          IS_INT32,               0,                  0,                          0,          0 },
+    {SHOW,        "\"RAPID_REPEAT\":",   &json_rapid_repeat,          IS_INT32,               0,                  NONVOL_RAPID_REPEAT,        0,          17},
     {HIDE,        "\"RAPID_TIME\":",     &json_rapid_time,            IS_FLOAT,               0,                  0,                          0,          0 },
     {HIDE,        "\"RAPID_WAIT\":",     &json_rapid_wait,            IS_FLOAT,               0,                  0,                          0,          0 },
     {SHOW + LOCK, "\"REMOTE_ACTIVE\":",  &json_remote_active,         IS_INT32,               0,                  NONVOL_REMOTE_ACTIVE,       0,          8 },

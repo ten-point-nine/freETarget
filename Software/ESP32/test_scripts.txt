@@ -38,10 +38,13 @@ Output for Rapid Fire  { "MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":24}
 LED control { "MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":24}
 ISSF 50m Rapid Fire       Five shots into a single target            {"TRACE":2048, "EVENT":"RFP Allan", "RAPID_COUNT":5,  "RAPID_TIME":8,   "RAPID_WAIT":5, "RAPID_ENABLE":0}
 ISSF 50m Rapid Fire       Five shots into a single target            {"TRACE":2048,  "EVENT":"RFP Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":8, "RAPID_ENABLE": 1 }
-
-ISSF 50m Rapid Fire       Five shots into a single target            {"TRACE":2048, "EVENT":"Rapid Fire 8S",      "RAPID_COUNT":5,  "RAPID_TIME":8,   "RAPID_WAIT":5, "RAPID_ENABLE":1}ISSF 25m Standard Pistol  Five shots into a single target            {"RAPID_ENABLE":0} {"TRACE":2048, "EVENT":"Rapid Fire 30s",     "RAPID_COUNT":5,  "RAPID_TIME":30,  "RAPID_WAIT":5, "RAPID_ENABLE":1}
-NRA Sport Pistol ON         One shot into a single target, repeat 5x {"TRACE":2048, "EVENT":"Sport Pistol Allan", "RAPID_COUNT":5,  "RAPID_TIME":3,   "RAPID_WAIT":7, "RAPID_ENABLE":1}
-NRA Sport Pistol OFF        One shot into a single target, repeat 5x {"TRACE":2048, "EVENT":"Sport Pistol Betty", "RAPID_COUNT":5,  "RAPID_TIME":3,   "RAPID_WAIT":7, "RAPID_ENABLE":0}
+ISSF 50m Rapid Fire       No Trace                                   {"TRACE":2048, "EVENT":"RFP Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":8, "RAPID_ENABLE": 1 }
+ISSF 50m Rapid Fire       Five shots into a single target            {"TRACE":2048, "EVENT":"Rapid Fire 8S",      "RAPID_COUNT":5,  "RAPID_TIME":8,   "RAPID_WAIT":5, "RAPID_ENABLE":1}ISSF 25m Standard Pistol  Five shots into a single target           
+ {"RAPID_REPEAT":5} 
+ {"TRACE":2048, "EVENT":"Rapid Fire 30s",     "RAPID_COUNT":5,  "RAPID_TIME":30,  "RAPID_WAIT":5, "RAPID_ENABLE":1}
+ 
+NRA Sport Pistol ON         One shot into a single target, repeat 5x {"TRACE":2048, "EVENT":"SPP Allan", "RAPID_COUNT":1,  "RAPID_TIME":3,   "RAPID_WAIT":7, "RAPID_ENABLE":1}
+NRA Sport Pistol OFF        One shot into a single target, repeat 5x {"TRACE":2048, "EVENT":"SPP Betty", "RAPID_COUNT":1,  "RAPID_TIME":3,   "RAPID_WAIT":7, "RAPID_ENABLE":0}
 
 NRA Sport Pistol ON         One shot into a single target, repeat 5x {"RAPID_COUNT":1,  "RAPID_TIME":3,   "RAPID_WAIT":7, "RAPID_ENABLE":1}
 Tabata                      Tabata timing                            {"TRACE":2048, {"EVENT":"Tabata",  "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":7, "RAPID_ENABLE": 1 }

@@ -19,7 +19,7 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"6.4.1 July 1, 2026\""
+#define SOFTWARE_VERSION "\"6.4.1 July 6, 2026\""
 #define _DONE_           "\r\nDone\r\n"
 #define _SHOT_           "shot"
 #define _GREETING_       "CONNECTED"   // Message to send on connection
@@ -125,7 +125,7 @@
 #define SCORE_HTTP       "{S?TXPOE}"  // HTTP score elements
 #define SCORE_HTTP_PRIME "{#}"        // HTTP Prime the client
 #define SCORE_HTTP_TEST  "{$}"        // HTTP Test the client
-#define SCORE_SEND_MISS  "{SM}n"      // Send a miss
+#define SCORE_SEND_MISS  "{SMTX}n"     // Send a miss
 
 #define HTTP_CLOSE_TIME 15l           // Time to close the HTTP connection after the last shot
 
@@ -194,7 +194,6 @@ EXTERN unsigned int          is_trace;                              // Tracing l
 EXTERN unsigned int          shot_in;                               // Index into the shot array (The shot that has JUST arrived)
 EXTERN unsigned int          shot_out;                              // Index into the shot array (Last shot processed)
 EXTERN unsigned int          shot_number;                           // Current shot number
-EXTERN time_count_t          shot_start;                            // Time when shot become valid
 EXTERN time_count_t          power_save;                            // Power down timer
 EXTERN volatile unsigned int run_state;                             // IPC states
 EXTERN time_count_t          LED_timer;                             // Turn off the LEDs when not in use

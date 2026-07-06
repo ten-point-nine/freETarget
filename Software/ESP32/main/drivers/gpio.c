@@ -859,20 +859,24 @@ void aquire(void)
   /*
    * Pull in the data amd save it in the record array
    */
-  read_timers(&record[shot_in].timer_count[0]);               // Record this count
-  record[shot_in].shot_time     = run_time_ms() - shot_start; // Capture the time into the shot
-  record[shot_in].face_strike   = face_strike;                // Record if it's a face strike
-  record[shot_in].sensor_status = is_running();               // Record the sensor status
+  read_timers(&record[shot_in].timer_count[0]);      // Record this count
+  record[shot_in].shot_time     = run_time_ms();     // Capture the time into the shot
+  record[shot_in].face_strike   = face_strike;       // Record if it's a face strike
+  record[shot_in].sensor_status = is_running();      // Record the sensor status
 
-  IF_NOT(IN_SHOT)                                             // Only record the shot if we are actually expecting a shot
+  IF_IN(IN_SHOT)                                     // Only record the shot if we are actually expecting a shot
   {
-    record[shot_in].miss = 1;                                 // Mark the shot as a miss
+    if ( record[shot_in].sensor_status == RUN_MASK ) // All sensors have picked up a signal
+    {
+      record[shot_in].miss = 0;                      // Show as a valid shot
+    }
+    shot_in = (shot_in + 1) % SHOT_SPACE;            // Prepare for the next shot
   }
 
-                                                              /*
-                                                               * All done for now
-                                                               */
-  shot_in = (shot_in + 1) % SHOT_SPACE; // Prepare for the next shot
+                                                     /*
+                                                      * All done for now
+                                                      */
+
   return;
 }
 

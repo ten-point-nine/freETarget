@@ -121,6 +121,7 @@ EXTERN int    json_z_offset;                  // Distance between paper and sens
 EXTERN int    json_paper_eco;                 // Do not advance witness paper if shot is greater than json_paper_eco
 EXTERN int    json_target_type;               // Modify the location based on a target type (0 == regular 1 bull target)
 EXTERN int    json_rapid_enable;              // Rapid Fire enabled
+EXTERN int    json_rapid_repeat;              // Rapid Fire repeat_count
 EXTERN real_t json_rapid_on;                  // Rapid Fire ON timer
 EXTERN int    json_rapid_count;               // Number of expected shots
 EXTERN int    json_rapid_event;               // What event are we currently handling
