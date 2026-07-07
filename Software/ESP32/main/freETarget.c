@@ -85,6 +85,7 @@ typedef struct
   char          *event;              // What event are we shooting
   rapid_state_t *rapid_state;        // State machine for this event
   int            relay;              // How many shots in the relay
+  void (*start_up)(void);            // Function to call to start the relay
 } course_of_fire_t;
 
 #define NEXT_CONTINUE 0              // Continue to the next state
@@ -710,10 +711,8 @@ const rapid_state_t rapid_state_sport[] = {
     {&go_wait,             ONE_SECOND, LED_RAPID_OFF,  LED_DARK, "SPORT_ENABLED", 0,       &always_true, 2, 2}, // 1 Wait for json_rapid_enable
     {&json_rapid_wait,     ONE_SECOND, LED_RAPID_WARN, LED_ON,   "SPORT_WAIT_1",  0,       &always_true, 3, 3}, // 2 Warn the shooter
     {&json_rapid_time,     ONE_SECOND, LED_RAPID_ON,   LED_ON,   "SPORT_ON_1",    IN_SHOT, &always_true, 4, 4}, // 3 turn the timer on for the event
-    {&grace_time,          TICK_10ms,  LED_RAPID_WARN, LED_DARK, "SPORT_GRACE_1", IN_SHOT, &cycle_count, 5, 5}, // 4 Delay for the grace period
-    {&adjusted_rapid_wait, 1,          LED_RAPID_WARN, LED_ON,   "SPORT_WAIT_2",  0,       &always_true, 6, 6}, // 5 Warn the event is enabled
-    {&json_rapid_time,     ONE_SECOND, LED_RAPID_ON,   LED_ON,   "SPORT_ON_2",    IN_SHOT, &always_true, 7, 7}, // 6 turn the timer on for the event
-    {&grace_time,          TICK_10ms,  LED_RAPID_WARN, LED_DARK, "SPORT_GRACE_2", IN_SHOT, &cycle_count, 8, 5}, // 7 Delay for the grace period
+    {&grace_time,          TICK_10ms,  LED_RAPID_WARN, LED_ON,   "SPORT_GRACE_1", IN_SHOT, &always_true, 5, 5}, // 4 Delay for the grace period
+    {&adjusted_rapid_wait, 1,          LED_RAPID_WARN, LED_ON,   "SPORT_WAIT_2",  0,       &cycle_count, 6, 3}, // 5 Warn the event is enabled
     {&all_done,            ONE_SECOND, LED_RAPID_WARN, 0,        "ALL_DONE",      0,       &always_true, 0, 0}  // 8 Event finished, turn off
 };
 
@@ -726,11 +725,40 @@ const rapid_state_t tabata_rapid_state[] = {
     {&all_done,        ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_DONE",  0,       &always_true, 0, 1}, // 4 Fake the rest period
 };
 
+static void start_rapid_fire(void)
+{
+  //  {"RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 1 }
+  real_t temp;
+
+  temp = (real_t)json_rapid_time;             // Total event time
+  temp -= json_rapid_count * json_rapid_wait; // Subtract the total wait time between shots
+  temp /= json_rapid_count;                   // Calculate the average time per shot
+  json_rapid_time = temp;                     // Update the rapid time with the calculated average per shot
+  return;
+}
+
+static void start_sport_pistol(void)
+{
+  //  {"RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 1 }
+  real_t temp;
+
+  temp = (real_t)json_rapid_time;             // Total event time
+  temp -= json_rapid_count * json_rapid_wait; // Subtract the total wait time between shots
+  temp /= json_rapid_count;                   // Calculate the average time per shot
+  json_rapid_time = temp;                     // Update the rapid time with the calculated average per shot
+  return;
+}
+
+static void start_tabata(void)
+{
+  return;
+}
+
 const course_of_fire_t course_of_fire[] = {
-    {"RFP", &rapid_state_ISSF,   5},
-    {"SPP", &rapid_state_sport,  5},
-    {"TBT", &tabata_rapid_state, 0},
-    {NULL,  0,                   0}
+    {"RFP", &rapid_state_ISSF, 5, start_rapid_fire},
+    {"SPP", &rapid_state_sport, 5, start_sport_pistol},
+    {"TBT", &tabata_rapid_state, 0, start_tabata},
+    {NULL, 0, 0}
 };
 
 void timed_event_task(void)
@@ -794,7 +822,13 @@ void timed_event_task(void)
       shot_string = json_rapid_count;                                  // Fallback to the default number of expected shots
     }
     cycle_count = shot_string;                                         // Initialize the cycle count with the number of expected shots
-    DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "Starting: %s, cycle_count: %d, Wait: %4.2f, On: %4.2f\r\n", course_of_fire[i].event,
+    run_state |= IN_RAPID;
+
+    if ( course_of_fire[i].start_up != NULL )
+    {
+      course_of_fire[i].start_up();
+    }
+    DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "Starting: %s, cycle_count: %d, Wait: %4.2f, On: %4.2f", course_of_fire[i].event,
                                               cycle_count, json_rapid_wait, json_rapid_time);))
   }
 
@@ -858,8 +892,8 @@ void timed_event_task(void)
       record[j].miss          = 1;                                           // Assume we miss
       record[j].shot_time     = run_time_ms();
       record[j].face_strike   = 0;                                           // Reset face strike
-      record[j].x_mm          = DIAMETER / 2;                                // Reset x coordinate to be way off
-      record[j].y_mm          = DIAMETER / 2;                                // Reset y coordinate to be way off
+      record[j].x_mm          = DIAMETER;                                    // Reset x coordinate to be way off
+      record[j].y_mm          = DIAMETER;                                    // Reset y coordinate to be way off
       j                       = (j + 1) % SHOT_SPACE;
     }
   }
@@ -870,21 +904,22 @@ void timed_event_task(void)
    */
   if ( rapid_index == 0 )
   {
-    DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "Finshed ");))
-    i = shot_string - (shot_in - first_shot);                     // However many shots are missing
-    if ( i != 0 )                                                 // Did we shoot all of the shots?
+    i = shot_string - (shot_in - first_shot);               // However many shots are missing
+    if ( i != 0 )                                           // Did we shoot all of the shots?
     {
-      for ( j = 0; j < shot_string; j++ )                         // Look through all of the shots
+      for ( j = 0; j < shot_string; j++ )                   // Look through all of the shots
       {
-        if ( record[first_shot].miss == 1 )                       // Is this a miss?
+        if ( record[first_shot].miss == 1 )                 // Is this a miss?
         {
-          build_json_score(&record[first_shot], SCORE_SEND_MISS); // Build the JSON for the miss
-                                                                  //   serial_to_all(_xs, ALL);
-          first_shot = (first_shot + 1) % SHOT_SPACE;             // Go onto the next one
+          build_json_score(&record[first_shot], SCORE_USB); // Build the JSON for the miss
+          serial_to_all(_xs, ALL);
+          vTaskDelay(2);
+          first_shot = (first_shot + 1) % SHOT_SPACE;       // Go onto the next one
         }
       }
     }
-    json_rapid_enable = 0;
+    json_rapid_enable = 0;                                  // No longer enabled
+    run_state &= ~IN_RAPID;                                 //
   }
 
   DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "State: %s,  time: %ld, LED: \"%s\", IN_SHOT: %d", (rapid_state + rapid_index)->message,

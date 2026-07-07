@@ -40,6 +40,7 @@
 #define IN_REDUCTION 0x0020            // The data is being reduced
 #define IN_FATAL_ERR 0x0040            // A fatal error has occured and cannot be fixed
 #define IN_HTTP      0x0080            // The HTTP (JSON) data is being processed
+#define IN_RAPID     0x0100            // The target is in rapid fire mode, ignore json
 
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
 #define IF_IN(x)  if ( (run_state & (x)) != 0 )
@@ -125,7 +126,7 @@
 #define SCORE_HTTP       "{S?TXPOE}"  // HTTP score elements
 #define SCORE_HTTP_PRIME "{#}"        // HTTP Prime the client
 #define SCORE_HTTP_TEST  "{$}"        // HTTP Test the client
-#define SCORE_SEND_MISS  "{SMTX}n"     // Send a miss
+#define SCORE_SEND_MISS  "{SMTX}"     // Send a miss
 
 #define HTTP_CLOSE_TIME 15l           // Time to close the HTTP connection after the last shot
 

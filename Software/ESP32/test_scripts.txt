@@ -43,6 +43,9 @@ ISSF 50m Rapid Fire       Five shots into a single target            {"TRACE":20
  {"RAPID_REPEAT":5} 
  {"TRACE":2048, "EVENT":"Rapid Fire 30s",     "RAPID_COUNT":5,  "RAPID_TIME":30,  "RAPID_WAIT":5, "RAPID_ENABLE":1}
  
+ {"TRACE":2048, "EVENT":"Rapid Fire 8S", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 1 }
+
+
 NRA Sport Pistol ON         One shot into a single target, repeat 5x {"TRACE":2048, "EVENT":"SPP Allan", "RAPID_COUNT":1,  "RAPID_TIME":3,   "RAPID_WAIT":7, "RAPID_ENABLE":1}
 NRA Sport Pistol OFF        One shot into a single target, repeat 5x {"TRACE":2048, "EVENT":"SPP Betty", "RAPID_COUNT":1,  "RAPID_TIME":3,   "RAPID_WAIT":7, "RAPID_ENABLE":0}
 
