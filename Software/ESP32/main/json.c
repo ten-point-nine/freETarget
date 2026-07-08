@@ -363,7 +363,7 @@ static void handle_json(void)
                 k++;
               }
 
-              if ( JSON[j].value != 0 )
+              if ( JSON[j].value != NULL )
               {
                 strcpy((char *)JSON[j].value, s);           // Save the value
               }

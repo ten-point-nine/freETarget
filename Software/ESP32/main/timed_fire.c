@@ -66,8 +66,7 @@ static real_t all_done    = 0l;            // All finished
 int           always_true = 0;             // Force exit condition to be true
 
 static real_t         adjusted_rapid_wait; // Time interval removing grace period
-static int            shot_string;         // How many shots are we expecting
-static int            cycle_count;
+static int            cycle_count;         // How many have we received
 static rapid_state_t *rapid_state = NULL;  // What state table to use
 static unsigned int   rapid_index;         // Index of the current state
 
@@ -127,7 +126,8 @@ static void start_sport_pistol(void)
 
 static void start_tabata(void)
 {
-  // {"TRACE" : 2048, "EVENT" : "TBT Allan", "RAPID_COUNT" : 5, "RAPID_WAIT" : 7, "RAPID_TIME" : 50, "RAPID_ENABLE" : 1}
+  // {"TRACE":2048, "TRACE":8, "TRACE":64,"EVENT":"TBT Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":7, "RAPID_ENABLE": 1 }
+  // {              "EVENT":"TBT Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":7, "RAPID_ENABLE": 1 }
   return;
 }
 
@@ -181,11 +181,9 @@ static void timed_fire_exit(void);            // Handle the exit of the timed fi
 
 void timed_event_task(void)
 {
-
   /*
    *  Check exit conditions
    */
-
   if ( timed_fire_active() == false )
   {
     return;
@@ -258,7 +256,7 @@ static bool timed_fire_active(void)
 static bool timed_fire_start_new_cycle(void)
 {
   static int last_enable = 0;
-  int        i, j;
+  int        i;
 
   /*
    * See if there is a transition to ON
@@ -293,7 +291,7 @@ static bool timed_fire_start_new_cycle(void)
 
   if ( course_of_fire[i].start_up != NULL )
   {
-    course_of_fire[i].start_up();
+    course_of_fire[i].start_up(); // Perform the start-up action for this state machine
   }
 
   /*
@@ -305,25 +303,27 @@ static bool timed_fire_start_new_cycle(void)
   shot_out            = 0;
   adjusted_rapid_wait = (json_rapid_wait * ONE_SECOND) - grace_time; // Corrected rapid wait time
   cycle_count         = json_rapid_count;                            // Initialize the cycle count with the number of expected shots
-  shot_string         = cycle_count;
-  // run_state |= IN_RAPID;                                             // In rapid fire mode
 
-  for ( j = shot_in; j != cycle_count; j++ )
+  DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "Starting: %s, cycle_count: %d, Wait: %4.2f, On: %4.2f", course_of_fire[i].event,
+                                            cycle_count, json_rapid_wait, json_rapid_time);))
+
+                                                                     /*
+                                                                      * Force all shots to miss
+                                                                      */
+  for ( i = 0; i != json_rapid_count; i++ )
   {
-    record[j].shot          = j;        // Fake a shot number
-    record[j].sensor_status = 0;        // Clear th
-    record[j].miss          = 1;        // Assume we miss
-    record[j].shot_time     = run_time_ms();
-    record[j].face_strike   = 0;        // Reset face strike
-    record[j].x_mm          = DIAMETER; // Reset x coordinate to be way off
-    record[j].y_mm          = DIAMETER; // Reset y coordinate to be way off
+    record[i].shot          = i;        // Fake a shot number
+    record[i].sensor_status = 0;        // Clear th
+    record[i].miss          = 1;        // Assume we miss
+    record[i].shot_time     = run_time_ms();
+    record[i].face_strike   = 0;        // Reset face strike
+    record[i].x_mm          = DIAMETER; // Reset x coordinate to be way off
+    record[i].y_mm          = DIAMETER; // Reset y coordinate to be way off
   }
 
   /*
    *  All done, exit
    */
-  DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "Starting: %s, cycle_count: %d, Wait: %4.2f, On: %4.2f", course_of_fire[i].event,
-                                            cycle_count, json_rapid_wait, json_rapid_time);))
 
   last_enable = json_rapid_enable;
   return true;
@@ -428,19 +428,21 @@ static void timed_fire_exit(void)
   /*
    *  Handle any missed shots
    */
-  for ( j = 0; j < shot_string; j = (j + 1) % SHOT_SPACE ) // Look through all of the shots
+  for ( j = 0; j < json_rapid_count; j = (j + 1) % SHOT_SPACE ) // Look through all of the shots
   {
     if ( record[j].miss == 1 )
     {
-      build_json_score(&record[j], SCORE_USB);             // Build the JSON for the miss
+      build_json_score(&record[j], SCORE_USB);                  // Build the JSON for the miss
       serial_to_all(_xs, ALL);
       vTaskDelay(2);
     }
   }
 
-                                                           /*
-                                                            *  Finished the timed fire event
-                                                            */
+  /*
+   *  Finished the timed fire event
+   */
+  shot_in  = 0;
+  shot_out = 0;
   run_state &= ~IN_RAPID;
   json_rapid_enable = 0; // No longer enabled
   return;
