@@ -40,7 +40,7 @@
 #define IN_REDUCTION 0x0020            // The data is being reduced
 #define IN_FATAL_ERR 0x0040            // A fatal error has occured and cannot be fixed
 #define IN_HTTP      0x0080            // The HTTP (JSON) data is being processed
-#define IN_RAPID     0x0100            // The target is in rapid fire mode, ignore json
+#define IN_RAPID     0x0100            // The target is in rapid fire mode
 
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
 #define IF_IN(x)  if ( (run_state & (x)) != 0 )
@@ -204,7 +204,6 @@ EXTERN time_count_t          time_since_last_shot;                  // 15 minute
 EXTERN time_count_t          session_time[];                        // Time in each session
 EXTERN time_count_t          shot_timer;                            // Wait for the sound to hit all sensors
 EXTERN time_count_t          ring_timer;                            // Let the ring on the backstop end
-EXTERN time_count_t          event_timer;                           // Rapid fire or Tabata timer
 EXTERN shot_record_t         record[SHOT_SPACE];
 #ifdef FREETARGET_C
 EXTERN char        *no_yes[]       = {"No", "Yes"};                 // Yes or No

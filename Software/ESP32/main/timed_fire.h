@@ -9,9 +9,7 @@
 #ifndef _TIMED_FIRE_H
 #define _TIMED_FIRE _H
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "serial_io.h"
+extern time_count_t event_timer; // Timer used for rapid fire events
 
 /*
  * timed fire functions

@@ -186,15 +186,6 @@ void freeETarget_json(void *pvParameters)
       continue;
     }
 
-    IF_IN(IN_RAPID)
-    {
-      vTaskDelay(ONE_SECOND);
-      while ( (serial_available(ALL) != 0) ) // Something waiting for us?
-      {
-        serial_getch(ALL);
-      }
-    }
-
     /*
      * See if anything is waiting and if so, add it in
      */

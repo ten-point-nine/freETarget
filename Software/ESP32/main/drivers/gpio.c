@@ -280,19 +280,6 @@ void set_status_LED(char new_state[]          // New LED colours
   old_state = new_state;
 
   /*
-   *   Check to see if tabata enabled is present.  If so, change from flashing green to flashing yellow
-   */
-  if ( json_rapid_enable == 1 )
-  {
-    if ( new_state[0] == 'g' )
-    {
-      printf("Tabata enabled, changing flashing green to flashing yellow\r\n");
-      new_state[0] = 'y';
-      printf("New state: %s\r\n", new_state);
-    }
-  }
-
-  /*
    * Decode the calling string into a list of pixels
    */
   for ( i = 0; i != N_SERIAL_LED; i++ )
