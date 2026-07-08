@@ -63,13 +63,16 @@ time_count_t event_timer; // Timer used for rapid fire ecents
 static real_t go_wait     = 3l;            // Wait for the PC to catchup
 static real_t grace_time  = 30;            // ISSF grace time for in flight shots (30 x 10ms)
 static real_t all_done    = 0l;            // All finished
-int           always_true = 0;             // Force exit condition to be true
+static int    always_true = 0;             // Force exit condition to be true (time ran out)
 
 static real_t         adjusted_rapid_wait; // Time interval removing grace period
 static int            cycle_count;         // How many have we received
 static rapid_state_t *rapid_state = NULL;  // What state table to use
 static unsigned int   rapid_index;         // Index of the current state
 
+/*
+ * State tables for timed fire events
+ */
 const rapid_state_t rapid_state_ISSF[] = {
     {&all_done,        ONE_SECOND, LED_RAPID_OFF,  LED_RAMP, "RAPID_IDLE",    0,       &always_true, 1, 1, 0}, // 0 Do nothing
     {&go_wait,         ONE_SECOND, LED_RAPID_OFF,  LED_RAMP, "RAPID_ENABLED", 0,       &always_true, 2, 2, 0}, // 1 Wait for json_rapid_enable
@@ -98,15 +101,14 @@ const rapid_state_t tabata_rapid_state[] = {
     {&all_done,        ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_DONE",  0,       &always_true, 0, 1, 0}, // 4 Fake the rest period
 };
 
+/*
+ * Functions to start timed fire events
+ */
 static void start_rapid_fire(void)
 {
-  //  {"TRACE":2048, "EVENT":"RFP Allan", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 1 }
-  real_t temp;
-
-  temp = (real_t)json_rapid_time;             // Total event time
-  temp -= json_rapid_count * json_rapid_wait; // Subtract the total wait time between shots
-  temp /= json_rapid_count;                   // Calculate the average time per shot
-  json_rapid_time = temp;                     // Update the rapid time with the calculated average per shot
+  //  {"TRACE":2048, "EVENT":"RFP Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":8, "RAPID_ENABLE": 1 }
+  //  {              "EVENT":"RFP Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":8, "RAPID_ENABLE": 1 }
+  json_rapid_count = 5; // Expect five shots in this one session
   return;
 }
 
@@ -127,10 +129,14 @@ static void start_sport_pistol(void)
 static void start_tabata(void)
 {
   // {"TRACE":2048, "TRACE":8, "TRACE":64,"EVENT":"TBT Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":7, "RAPID_ENABLE": 1 }
+  // {"TRACE":2048, "EVENT":"TBT Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":7, "RAPID_ENABLE": 1 }
   // {              "EVENT":"TBT Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":7, "RAPID_ENABLE": 1 }
   return;
 }
 
+/*
+ * Course of fire definitions
+ */
 const course_of_fire_t course_of_fire[] = {
     {"RFP", &rapid_state_ISSF,   start_rapid_fire  },
     {"SPP", &rapid_state_sport,  start_sport_pistol},
