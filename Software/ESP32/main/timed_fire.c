@@ -69,6 +69,7 @@ static real_t         adjusted_rapid_wait; // Time interval removing grace perio
 static int            cycle_count;         // How many have we received
 static rapid_state_t *rapid_state = NULL;  // What state table to use
 static unsigned int   rapid_index;         // Index of the current state
+static int            last_enable = 0;
 
 /*
  * State tables for timed fire events
@@ -114,7 +115,7 @@ static void start_rapid_fire(void)
 
 static void start_sport_pistol(void)
 {
-  //  {"TRACE":2048, "EVENT":"SPP Allan", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 1 }
+  //  {"TRACE":2048, "TRACE":8, "TRACE":64, "EVENT":"SPP Allan", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 1 }
   //  {"EVENT":"SPP Allan", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 1 }
   //  {"EVENT":"SPP Allan", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 0 }
   real_t temp;
@@ -261,15 +262,13 @@ static bool timed_fire_active(void)
  * ------------------------------------------------------------*/
 static bool timed_fire_start_new_cycle(void)
 {
-  static int last_enable = 0;
-  int        i;
+  int i;
 
   /*
    * See if there is a transition to ON
    */
   if ( (json_rapid_enable & (last_enable ^ json_rapid_enable)) == 0 )
   {
-    last_enable = json_rapid_enable;
     return false;
   }
 
@@ -451,5 +450,7 @@ static void timed_fire_exit(void)
   shot_out = 0;
   run_state &= ~IN_RAPID;
   json_rapid_enable = 0; // No longer enabled
+  last_enable       = 0;
+  DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "Timed fire event ended");))
   return;
 }
