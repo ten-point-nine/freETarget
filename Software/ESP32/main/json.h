@@ -60,14 +60,13 @@ extern char                 input_JSON[];
 #define IS_VOID     (6 << 8)                           // Value is a void
 #define IS_TEXT     (7 << 8)                           // Value is a string
 #define IS_TIME     (8 << 8)                           // Value is time
-#define IS_DELTA    (9 << 8)                           // Value is a change in value
 #define IS_ARRAY    (1 << (8 + 4))                     // Value is part of an array
 #define IS_FIRST    (999)                              // Reset the pointers
 #define FLOAT_SCALE 1000.0                             // Floats are stored as 1000x integer
 
-#define IS_MASK     (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED | IS_MFS | IS_TIME | IS_DELTA)
+#define IS_MASK     (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED | IS_MFS | IS_TIME)
 #define real_t_MASK ((~IS_MASK) & 0xFF)                // Scaling factor 8 bits
-#if ( ((IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED | IS_MFS | IS_TIME | IS_DELTA) & IS_ARRAY) != 0 )
+#if ( ((IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED | IS_MFS | IS_TIME) & IS_ARRAY) != 0 )
 #error "IS_ARRAY overlaps with existing type definitions"
 #endif
 

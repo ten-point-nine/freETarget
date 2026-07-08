@@ -91,11 +91,10 @@ const json_message_t JSON[] = {
     {SHOW + LOCK, "\"PAPER_TIME\":",     &json_paper_time,            IS_INT32,               0,                  NONVOL_PAPER_TIME,          500,        0 },
     {SHOW + LOCK, "\"PCNT_LATENCY\":",   &json_pcnt_latency,          IS_INT32,               0,                  NONVOL_PCNT_LATENCY,        0,          1 },
     {SHOW + LOCK, "\"POWER_SAVE\":",     &json_power_save,            IS_INT32,               0,                  NONVOL_POWER_SAVE,          0,          0 },
-    {HIDE,        "\"RAPID_COUNT\":",    &json_rapid_count,           IS_INT32,               0,                  0,                          0,          0 },
-    {HIDE,        "\"RAPID_ENABLE\":",   &json_rapid_enable,          IS_INT32,               0,                  0,                          0,          0 },
-    {SHOW,        "\"RAPID_REPEAT\":",   &json_rapid_repeat,          IS_INT32,               0,                  NONVOL_RAPID_REPEAT,        0,          17},
-    {HIDE,        "\"RAPID_TIME\":",     &json_rapid_time,            IS_FLOAT,               0,                  0,                          0,          0 },
-    {HIDE,        "\"RAPID_WAIT\":",     &json_rapid_wait,            IS_FLOAT,               0,                  0,                          0,          0 },
+    {SHOW,        "\"RAPID_COUNT\":",    &json_rapid_count,           IS_INT32,               0,                  0,                          0,          0 },
+    {SHOW,        "\"RAPID_ENABLE\":",   &json_rapid_enable,          IS_INT32,               0,                  0,                          0,          0 },
+    {SHOW,        "\"RAPID_TIME\":",     &json_rapid_time,            IS_FLOAT,               0,                  0,                          0,          0 },
+    {SHOW,        "\"RAPID_WAIT\":",     &json_rapid_wait,            IS_FLOAT,               0,                  0,                          0,          0 },
     {SHOW + LOCK, "\"REMOTE_ACTIVE\":",  &json_remote_active,         IS_INT32,               0,                  NONVOL_REMOTE_ACTIVE,       0,          8 },
     {SHOW + LOCK, "\"REMOTE_KEY\":",     &json_remote_key,            IS_TEXT + KEY_SIZE,     0,                  NONVOL_REMOTE_KEY,          0,          8 },
     {SHOW + LOCK, "\"REMOTE_URL\":",     (int *)&json_remote_url,     IS_TEXT + URL_SIZE,     0,                  NONVOL_REMOTE_URL,          0,          8 },
@@ -184,6 +183,14 @@ void freeETarget_json(void *pvParameters)
     {
       vTaskDelay(ONE_SECOND);
       continue;
+    }
+
+    IF_IN(IN_RAPID) // Ignore anything coming in while in rapid mode
+    {
+      while ( serial_available(ALL) != 0 )
+      {
+        ch = serial_getch(ALL);
+      }
     }
 
     /*
@@ -370,7 +377,6 @@ static void handle_json(void)
 
             case IS_MFS:
             case IS_INT32:                                  // Convert an integer
-            case IS_DELTA:
               if ( (input_JSON[i + k] == '0') && ((input_JSON[i + k + 1] == 'X') || (input_JSON[i + k + 1] == 'x')) ) // Is it Hex?
               {
                 x = (to_int(input_JSON[i + k + 2]) << 4) + to_int(input_JSON[i + k + 3]);
@@ -382,34 +388,27 @@ static void handle_json(void)
 
               if ( JSON[j].value != 0 )
               {
-                if ( (JSON[j].convert & IS_MASK & IS_DELTA) == 0 ) // Not a delta
-                {
-                  *JSON[j].value = x;                              // Save the value
-                }
-                else
-                {
-                  *JSON[j].value += x;                             // Add the delta
-                }
+                *JSON[j].value = x;                         // Save the value
               }
               if ( JSON[j].non_vol != 0 )
               {
-                nvs_set_i32(my_handle, JSON[j].non_vol, x);        // Store into NON-VOL
+                nvs_set_i32(my_handle, JSON[j].non_vol, x); // Store into NON-VOL
               }
 
               break;
 
-            case IS_FLOAT:                                         // Convert a floating point number
+            case IS_FLOAT:                                  // Convert a floating point number
 
-              f = atof(&input_JSON[i + k]);                        // Float
-              x = f * FLOAT_SCALE;                                 // Integer
+              f = atof(&input_JSON[i + k]);                 // Float
+              x = f * FLOAT_SCALE;                          // Integer
               if ( JSON[j].value != 0 )
               {
-                *(double *)JSON[j].value = f;                      // Working Value
+                *(double *)JSON[j].value = f;               // Working Value
               }
               if ( JSON[j].non_vol != 0 )
               {
                 nvs_set_i32(my_handle, JSON[j].non_vol,
-                            x);                                    // Store into NON-VOL as an integer * 1000
+                            x);                             // Store into NON-VOL as an integer * 1000
               }
 
               break;

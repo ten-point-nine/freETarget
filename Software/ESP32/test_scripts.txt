@@ -27,7 +27,7 @@ Practice witness paper { "PAPER_TIME":125, "PAPER_ECO":40, "PAPER_SHOT":4}
 {"WIFI_SSID":"FSixC! Box FE":, "WIFI_PWD":":1234512345123451234512345"}
 
 Firmware debug trace   { "TRACE":16, "TRACE":32, "TRACE":64, "TEST":142}
-Calculation debug trace { "TRACE":8, "TRACE":64}
+Calculation debug trace {"TRACE": 2048, "TRACE":8, "TRACE":64}
 Rapid Fire {"TRACE":2048}
 Turn on RS488 {"AUX_MODE":8}
 

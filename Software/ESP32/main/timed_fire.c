@@ -115,6 +115,7 @@ static void start_sport_pistol(void)
 {
   //  {"TRACE":2048, "EVENT":"SPP Allan", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 1 }
   //  {"EVENT":"SPP Allan", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 1 }
+  //  {"EVENT":"SPP Allan", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 0 }
   real_t temp;
 
   temp = (real_t)json_rapid_time;             // Total event time
@@ -268,6 +269,8 @@ static bool timed_fire_start_new_cycle(void)
     return false;
   }
 
+  run_state |= IN_RAPID;
+
   /*
    * Look for the state machine
    */
@@ -303,17 +306,17 @@ static bool timed_fire_start_new_cycle(void)
   adjusted_rapid_wait = (json_rapid_wait * ONE_SECOND) - grace_time; // Corrected rapid wait time
   cycle_count         = json_rapid_count;                            // Initialize the cycle count with the number of expected shots
   shot_string         = cycle_count;
-  //run_state |= IN_RAPID;                                             // In rapid fire mode
+  // run_state |= IN_RAPID;                                             // In rapid fire mode
 
   for ( j = shot_in; j != cycle_count; j++ )
   {
-    record[j].shot          = j;                                     // Fake a shot number
-    record[j].sensor_status = 0;                                     // Clear th
-    record[j].miss          = 1;                                     // Assume we miss
+    record[j].shot          = j;        // Fake a shot number
+    record[j].sensor_status = 0;        // Clear th
+    record[j].miss          = 1;        // Assume we miss
     record[j].shot_time     = run_time_ms();
-    record[j].face_strike   = 0;                                     // Reset face strike
-    record[j].x_mm          = DIAMETER;                              // Reset x coordinate to be way off
-    record[j].y_mm          = DIAMETER;                              // Reset y coordinate to be way off
+    record[j].face_strike   = 0;        // Reset face strike
+    record[j].x_mm          = DIAMETER; // Reset x coordinate to be way off
+    record[j].y_mm          = DIAMETER; // Reset y coordinate to be way off
   }
 
   /*
@@ -435,10 +438,10 @@ static void timed_fire_exit(void)
     }
   }
 
-  /*
-   *  Finished the timed fire event
-   */
- // run_state &= ~IN_RAPID;
+                                                           /*
+                                                            *  Finished the timed fire event
+                                                            */
+  run_state &= ~IN_RAPID;
   json_rapid_enable = 0; // No longer enabled
   return;
 }
