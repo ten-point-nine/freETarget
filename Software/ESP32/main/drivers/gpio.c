@@ -858,9 +858,10 @@ void aquire(void)
 
   shot_in = (shot_in + 1) % SHOT_SPACE;          // Prepare for the next shot
 
-                                                 /*
-                                                  * All done for now
-                                                  */
+  /*
+   * All done for now
+   */
+  run_state |= IN_AQUIRE; // Show that we have aquired the data
 
   return;
 }

@@ -41,6 +41,7 @@
 #define IN_FATAL_ERR 0x0040            // A fatal error has occured and cannot be fixed
 #define IN_HTTP      0x0080            // The HTTP (JSON) data is being processed
 #define IN_RAPID     0x0100            // The target is in rapid fire mode
+#define IN_AQUIRE    0x0200            // The target is aquiring the data from the counters
 
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
 #define IF_IN(x)  if ( (run_state & (x)) != 0 )

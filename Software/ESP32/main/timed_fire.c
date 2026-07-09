@@ -44,7 +44,6 @@ typedef struct
   int    *exit_condition;     // Pointer to the exit condition (0 == exit)
   int     zero;               // Where to go next if the exit condition is zero
   int     not_zero;           // Where to go if the exit condition is non-zero
-  bool    inc_shot;           // TRUE if missed shots are incremented
 } rapid_state_t;
 
 typedef struct
@@ -52,6 +51,7 @@ typedef struct
   char          *event;       // What event are we shooting
   rapid_state_t *rapid_state; // State machine for this event
   void (*start_up)(void);     // Function to call to start the relay
+  char score_mode;            // What score mode to use for this event
 } course_of_fire_t;
 
 /*
@@ -69,37 +69,39 @@ static real_t         adjusted_rapid_wait; // Time interval removing grace perio
 static int            cycle_count;         // How many have we received
 static rapid_state_t *rapid_state = NULL;  // What state table to use
 static unsigned int   rapid_index;         // Index of the current state
-static int            last_enable = 0;
+static int            last_enable  = 0;
+static int            last_shot_in = 0;    // What was the last shot in?
+static char           score_mode;          // What score mode are we in?
 
 /*
  * State tables for timed fire events
  */
 const rapid_state_t rapid_state_ISSF[] = {
-    {&all_done,        ONE_SECOND, LED_RAPID_OFF,  LED_RAMP, "RAPID_IDLE",    0,       &always_true, 1, 1, 0}, // 0 Do nothing
-    {&go_wait,         ONE_SECOND, LED_RAPID_OFF,  LED_RAMP, "RAPID_ENABLED", 0,       &always_true, 2, 2, 0}, // 1 Wait for json_rapid_enable
-    {&json_rapid_wait, ONE_SECOND, LED_RAPID_WARN, LED_ON,   "RAPID_WAIT",    0,       &always_true, 3, 3, 0}, // 2 The event is enabled
-    {&json_rapid_time, ONE_SECOND, LED_RAPID_ON,   LED_ON,   "RAPID_ON",      IN_SHOT, &always_true, 4, 4, 0}, // 3 Turn the timer on for the event
-    {&grace_time,      TICK_10ms,  LED_RAPID_OFF,  LED_RAMP, "RAPID_GRACE",   IN_SHOT, &always_true, 5, 5, 1}, // 4 Delay for the grace period
-    {&all_done,        ONE_SECOND, LED_RAPID_OFF,  LED_RAMP, "ALL_DONE",      0,       &always_true, 0, 0, 0}  // 5 Event finished, turn off
+    {&all_done,        ONE_SECOND, LED_RAPID_OFF,  LED_RAMP, "RAPID_IDLE",    0,       &always_true, 1, 1}, // 0 Do nothing
+    {&go_wait,         ONE_SECOND, LED_RAPID_OFF,  LED_RAMP, "RAPID_ENABLED", 0,       &always_true, 2, 2}, // 1 Wait for json_rapid_enable
+    {&json_rapid_wait, ONE_SECOND, LED_RAPID_WARN, LED_ON,   "RAPID_WAIT",    0,       &always_true, 3, 3}, // 2 The event is enabled
+    {&json_rapid_time, ONE_SECOND, LED_RAPID_ON,   LED_ON,   "RAPID_ON",      IN_SHOT, &always_true, 4, 4}, // 3 Timer on for the event
+    {&grace_time,      TICK_10ms,  LED_RAPID_OFF,  LED_RAMP, "RAPID_GRACE",   IN_SHOT, &always_true, 5, 5}, // 4 Delay for the grace period
+    {&all_done,        ONE_SECOND, LED_RAPID_OFF,  LED_RAMP, "ALL_DONE",      0,       &always_true, 0, 0}  // 5 Event finished, turn off
 };
 
 const rapid_state_t rapid_state_sport[] = {
-    {&all_done,            ONE_SECOND, LED_RAPID_OFF,  LED_RAMP, "SPORT_IDLE",    0,       &always_true, 1, 1, 0}, // 0 Do nothing
-    {&go_wait,             ONE_SECOND, LED_RAPID_OFF,  LED_RAMP, "SPORT_ENABLED", 0,       &always_true, 2, 2, 0}, // 1 Wait for json_rapid_enable
-    {&json_rapid_wait,     ONE_SECOND, LED_RAPID_WARN, LED_RAMP, "SPORT_WAIT_1",  0,       &always_true, 3, 3, 0}, // 2 Warn the shooter
-    {&json_rapid_time,     ONE_SECOND, LED_RAPID_ON,   LED_ON,   "SPORT_ON_1",    IN_SHOT, &always_true, 4, 4, 0}, // 3 turn the timer on for the event
-    {&grace_time,          TICK_10ms,  LED_RAPID_WARN, LED_ON,   "SPORT_GRACE_1", IN_SHOT, &always_true, 5, 5, 1}, // 4 Delay for the grace period
-    {&adjusted_rapid_wait, 1,          LED_RAPID_WARN, LED_RAMP, "SPORT_WAIT_2",  0,       &cycle_count, 6, 3, 0}, // 5 Warn the event is enabled
-    {&all_done,            ONE_SECOND, LED_RAPID_WARN, LED_RAMP, "ALL_DONE",      0,       &always_true, 0, 0, 0}  // 8 Event finished, turn off
+    {&all_done,            ONE_SECOND, LED_RAPID_OFF,  LED_RAMP, "SPORT_IDLE",    0,       &always_true, 1, 1}, // 0 Do nothing
+    {&go_wait,             ONE_SECOND, LED_RAPID_OFF,  LED_RAMP, "SPORT_ENABLED", 0,       &always_true, 2, 2}, // 1 Wait for json_rapid_enable
+    {&json_rapid_wait,     ONE_SECOND, LED_RAPID_WARN, LED_RAMP, "SPORT_WAIT_1",  0,       &always_true, 3, 3}, // 2 Warn the shooter
+    {&json_rapid_time,     ONE_SECOND, LED_RAPID_ON,   LED_ON,   "SPORT_ON_1",    IN_SHOT, &always_true, 4, 4}, // 3 Timer on for the event
+    {&grace_time,          TICK_10ms,  LED_RAPID_WARN, LED_ON,   "SPORT_GRACE_1", IN_SHOT, &always_true, 5, 5}, // 4 Delay for the grace period
+    {&adjusted_rapid_wait, 1,          LED_RAPID_WARN, LED_RAMP, "SPORT_WAIT_2",  0,       &cycle_count, 6, 3}, // 5 Warn the event is enabled
+    {&all_done,            ONE_SECOND, LED_RAPID_WARN, LED_RAMP, "ALL_DONE",      0,       &always_true, 0, 0}  // 8 Event finished, turn off
 };
 
 const rapid_state_t tabata_rapid_state[] = {
     //                                                                                       next    T  F
-    {&all_done,        ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_IDLE",  0,       &always_true, 1, 1, 0}, // 0 Wait for json_tabata_enable
-    {&json_rapid_wait, ONE_SECOND, LED_TABATA_WARN, LED_RAMP, "TABATA_BEGIN", 0,       &always_true, 2, 2, 0}, // 1 Wait for json_tabata_enable
-    {&json_rapid_time, ONE_SECOND, LED_TABATA_ON,   LED_ON,   "TABATA_ON",    IN_SHOT, &always_true, 3, 3, 0}, // 2 Wait for json_tabata_enable
-    {&grace_time,      TICK_10ms,  LED_TABATA_OFF,  LED_DARK, "TABATA_GRACE", IN_SHOT, &cycle_count, 4, 4, 1}, // 3 Delay for the grace period
-    {&all_done,        ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_DONE",  0,       &always_true, 0, 1, 0}, // 4 Fake the rest period
+    {&all_done,        ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_IDLE",  0,       &always_true, 1, 1}, // 0 Wait for json_tabata_enable
+    {&json_rapid_wait, ONE_SECOND, LED_TABATA_WARN, LED_RAMP, "TABATA_BEGIN", 0,       &always_true, 2, 2}, // 1 Wait for json_tabata_enable
+    {&json_rapid_time, ONE_SECOND, LED_TABATA_ON,   LED_ON,   "TABATA_ON",    IN_SHOT, &always_true, 3, 3}, // 2 Wait for json_tabata_enable
+    {&grace_time,      TICK_10ms,  LED_TABATA_OFF,  LED_DARK, "TABATA_GRACE", IN_SHOT, &cycle_count, 4, 4}, // 3 Delay for the grace period
+    {&all_done,        ONE_SECOND, LED_TABATA_OFF,  LED_DARK, "TABATA_DONE",  0,       &always_true, 0, 1}, // 4 Fake the rest period
 };
 
 /*
@@ -107,17 +109,19 @@ const rapid_state_t tabata_rapid_state[] = {
  */
 static void start_rapid_fire(void)
 {
-  //  {"TRACE":2048, "EVENT":"RFP Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":8, "RAPID_ENABLE": 1 }
-  //  {              "EVENT":"RFP Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":8, "RAPID_ENABLE": 1 }
+  //  {"TRACE":2048, "PAPER_TIME":0, "EVENT":"RFP Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":8, "RAPID_ENABLE": 1 }
+  //  {              "PAPER_TIME":0, "EVENT":"RFP Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":8, "RAPID_ENABLE": 1 }
   json_rapid_count = 5; // Expect five shots in this one session
   return;
 }
 
 static void start_sport_pistol(void)
 {
-  //  {"TRACE":2048, "TRACE":8, "TRACE":64, "EVENT":"SPP Allan", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 1 }
-  //  {"EVENT":"SPP Allan", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 1 }
-  //  {"EVENT":"SPP Allan", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 0 }
+  //  {"TRACE":2048, "TRACE":8, "TRACE":64, "PAPER_TIME":0, "EVENT":"SPP Allan", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50,
+  //  "RAPID_ENABLE": 1 }
+  //  {"TRACE":2048, "PAPER_TIME":0, "EVENT":"SPP Allan", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 1 }
+  //  {"PAPER_TIME":0, "EVENT":"SPP Allan", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 1 }
+  //  {"PAPER_TIME":0, "EVENT":"SPP Allan", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 0 }
   real_t temp;
 
   temp = (real_t)json_rapid_time;             // Total event time
@@ -129,9 +133,10 @@ static void start_sport_pistol(void)
 
 static void start_tabata(void)
 {
-  // {"TRACE":2048, "TRACE":8, "TRACE":64,"EVENT":"TBT Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":7, "RAPID_ENABLE": 1 }
-  // {"TRACE":2048, "EVENT":"TBT Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":7, "RAPID_ENABLE": 1 }
-  // {              "EVENT":"TBT Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":7, "RAPID_ENABLE": 1 }
+  // {"PAPER_TIME":0, "TRACE":2048, "TRACE":8, "TRACE":64,"EVENT":"TBT Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":7,
+  // "RAPID_ENABLE": 1 }
+  // {"PAPER_TIME":0, "TRACE":2048, "EVENT":"TBT Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":7, "RAPID_ENABLE": 1 }
+  // {"PAPER_TIME":0, "EVENT":"TBT Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":7, "RAPID_ENABLE": 1 }
   return;
 }
 
@@ -139,10 +144,10 @@ static void start_tabata(void)
  * Course of fire definitions
  */
 const course_of_fire_t course_of_fire[] = {
-    {"RFP", &rapid_state_ISSF,   start_rapid_fire  },
-    {"SPP", &rapid_state_sport,  start_sport_pistol},
-    {"TBT", &tabata_rapid_state, start_tabata      },
-    {NULL,  0,                   0                 }
+    {"RFP", &rapid_state_ISSF, &start_rapid_fire, 'E'}, // Rapid fire pistol
+    {"SPP", &rapid_state_sport, &start_sport_pistol, 'D'}, // Sport pistol
+    {"TBT", &tabata_rapid_state, &start_tabata, 'D'}, // Tabata training
+    {NULL, 0, 0}
 };
 
 /*
@@ -185,7 +190,6 @@ static void timed_fire_exit(void);            // Handle the exit of the timed fi
  * tabata_rapid_state - Standard tabata training sequence
  *
  * ------------------------------------------------------------*/
-
 void timed_event_task(void)
 {
   /*
@@ -297,6 +301,7 @@ static bool timed_fire_start_new_cycle(void)
   if ( course_of_fire[i].start_up != NULL )
   {
     course_of_fire[i].start_up(); // Perform the start-up action for this state machine
+    score_mode = course_of_fire[i].score_mode;
   }
 
   /*
@@ -305,7 +310,6 @@ static bool timed_fire_start_new_cycle(void)
   event_timer         = ((int)*(rapid_state->timer)) * ONE_SECOND;
   rapid_index         = 0;                                           // Start at the beginning of the state machine
   shot_in             = 0;                                           // Start at the beginning of the shot sequence
-  shot_out            = 0;
   adjusted_rapid_wait = (json_rapid_wait * ONE_SECOND) - grace_time; // Corrected rapid wait time
   cycle_count         = json_rapid_count;                            // Initialize the cycle count with the number of expected shots
 
@@ -317,13 +321,13 @@ static bool timed_fire_start_new_cycle(void)
                                                                       */
   for ( i = 0; i != json_rapid_count; i++ )
   {
-    record[i].shot          = i;        // Fake a shot number
-    record[i].sensor_status = 0;        // Clear th
-    record[i].miss          = 1;        // Assume we miss
-    record[i].shot_time     = run_time_ms();
-    record[i].face_strike   = 0;        // Reset face strike
-    record[i].x_mm          = DIAMETER; // Reset x coordinate to be way off
-    record[i].y_mm          = DIAMETER; // Reset y coordinate to be way off
+    record[i].shot          = i;             // Fake a shot number (build_json_score adds 1 to this, so the first shot will be 1)
+    record[i].sensor_status = 0;             // Clear th
+    record[i].miss          = 1;             // Assume we miss
+    record[i].shot_time     = run_time_ms(); // Updated at the end of the event, so we have a time for the miss
+    record[i].face_strike   = 0;             // Reset face strike
+    record[i].x_mm          = DIAMETER;      // Reset x coordinate to be way off
+    record[i].y_mm          = DIAMETER;      // Reset y coordinate to be way off
   }
 
   /*
@@ -350,10 +354,9 @@ static bool timed_fire_start_new_cycle(void)
  * and set up the new cycle
  *
  * ------------------------------------------------------------*/
-
 static void timed_fire_next_state(void)
 {
-  static int last_shot_in;                                   // What was the last shot in?
+  static int last_run_state = 0;
 
   if ( *((rapid_state + rapid_index)->exit_condition) != 0 ) // Decrement the exit condition if it is not zero
   {
@@ -393,15 +396,29 @@ static void timed_fire_next_state(void)
 
   run_state = (run_state & ~IN_SHOT) | (rapid_state + rapid_index)->in_shot; // Update the IN_SHOT state
 
-  if ( (rapid_state + rapid_index)->inc_shot != 0 )                          // Should the shot count have been incremented?
+  if ( (run_state ^ last_run_state) & IN_SHOT )                              // Look for a transition in the IN_SHOT state
   {
-    if ( shot_in <= last_shot_in )                                           // Has a new shot been fired?
+    if ( run_state & IN_SHOT )                                               // Transition TO IN_SHOT, so reset the aquire flag
     {
-      shot_in++;                                                             // Fake a missed shot
+      run_state &= ~IN_AQUIRE; // Reset the aquire flag, so we will aquire the shot when it happens
     }
-    last_shot_in = shot_in;                                                  // Update the last shot in count
+    else                       // Transition out of IN_SHOT, so show that we have already aquired this shot, so we don't report the miss
+    {
+      if ( score_mode == 'D' ) // Report missed During the event
+      {
+        record[shot_in].shot_time = run_time_ms();
+        build_json_score(&record[shot_in], SCORE_USB); // Build the JSON for the miss
+        serial_to_all(_xs, ALL);
+        shot_in  = (shot_in + 1) % SHOT_SPACE;         // Move to the next shot
+        shot_out = shot_in;                            // Show that we have already aquired this shot, so we don't report the miss
+      }
+    }
   }
+  last_run_state = run_state;
 
+  /*
+   *  All done
+   */
   return;
 }
 
@@ -423,9 +440,10 @@ static void timed_fire_next_state(void)
  * ------------------------------------------------------------*/
 static void timed_fire_exit(void)
 {
-  int i, j;
-
-  if ( rapid_index != 0 )
+  /*
+   * Check to see if we are at the last state
+   */
+  if ( rapid_index != 0 ) // Not at the end of the state machine, so nothing to do
   {
     return;
   }
@@ -433,13 +451,15 @@ static void timed_fire_exit(void)
   /*
    *  Handle any missed shots
    */
-  for ( j = 0; j < json_rapid_count; j = (j + 1) % SHOT_SPACE ) // Look through all of the shots
+  if ( score_mode == 'E' )                           // Report missed
   {
-    if ( record[j].miss == 1 )
+    while ( shot_in != json_rapid_count )            // Look through all of the shots
     {
-      build_json_score(&record[j], SCORE_USB);                  // Build the JSON for the miss
+      record[shot_in].shot_time = run_time_ms();
+      build_json_score(&record[shot_in], SCORE_USB); // Build the JSON for the miss
       serial_to_all(_xs, ALL);
-      vTaskDelay(2);
+      shot_in  = (shot_in + 1) % SHOT_SPACE;         // Move to the next shot
+      shot_out = shot_in;                            // Show that we have already aquired this shot, so we don't report the miss
     }
   }
 
