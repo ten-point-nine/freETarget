@@ -187,10 +187,16 @@ void freeETarget_json(void *pvParameters)
 
     IF_IN(IN_RAPID) // Ignore anything coming in while in rapid mode
     {
-      while ( serial_available(ALL) != 0 )
+      if ( serial_available(ALL) != 0 )
       {
-        ch = serial_getch(ALL);
+        DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Input ignored during rapid fire");))
+        while ( serial_available(ALL) != 0 )
+        {
+          ch = serial_getch(ALL);
+        }
       }
+      vTaskDelay(TICK_10ms);
+      continue;
     }
 
     /*

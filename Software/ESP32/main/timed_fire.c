@@ -28,11 +28,17 @@
 #define LED_RAMP 2
 
 /*
+ * Function prototypes
+ */
+static bool timed_fire_active(void);          // TRUE if the timed fire event is active
+static bool timed_fire_start_new_cycle(void); // TRUE if a new timed fire cycle is starting
+static void timed_fire_next_state(void);      // Start the next state in the timed fire sequence
+static void timed_fire_exit(void);            // Handle the exit of the timed fire event
+static void timed_fire_event_override(void);  // Change settings based on the event name (e.g. shot count override in the event name)
+
+/*
  *  Variables
  */
-
-// Keep alive timer
-
 typedef struct
 {
   real_t *timer;              // Timer used to control state length (from json.c)
@@ -69,8 +75,7 @@ static real_t         adjusted_rapid_wait; // Time interval removing grace perio
 static int            cycle_count;         // How many have we received
 static rapid_state_t *rapid_state = NULL;  // What state table to use
 static unsigned int   rapid_index;         // Index of the current state
-static int            last_enable  = 0;
-static int            last_shot_in = 0;    // What was the last shot in?
+static int            last_enable = 0;
 static char           score_mode;          // What score mode are we in?
 
 /*
@@ -81,8 +86,9 @@ const rapid_state_t rapid_state_ISSF[] = {
     {&go_wait,         ONE_SECOND, LED_RAPID_OFF,  LED_RAMP, "RAPID_ENABLED", 0,       &always_true, 2, 2}, // 1 Wait for json_rapid_enable
     {&json_rapid_wait, ONE_SECOND, LED_RAPID_WARN, LED_ON,   "RAPID_WAIT",    0,       &always_true, 3, 3}, // 2 The event is enabled
     {&json_rapid_time, ONE_SECOND, LED_RAPID_ON,   LED_ON,   "RAPID_ON",      IN_SHOT, &always_true, 4, 4}, // 3 Timer on for the event
-    {&grace_time,      TICK_10ms,  LED_RAPID_OFF,  LED_RAMP, "RAPID_GRACE",   IN_SHOT, &always_true, 5, 5}, // 4 Delay for the grace period
-    {&all_done,        ONE_SECOND, LED_RAPID_OFF,  LED_RAMP, "ALL_DONE",      0,       &always_true, 0, 0}  // 5 Event finished, turn off
+    {&grace_time,      TICK_10ms,  LED_RAPID_WARN, LED_RAMP, "RAPID_GRACE",   IN_SHOT, &always_true, 5, 5}, // 4 Delay for the grace period
+    {&json_rapid_wait, ONE_SECOND, LED_RAPID_WARN, LED_RAMP, "RAPID_EXIT",    0,       &always_true, 6, 6}, // 5 Keep the RED light on for a while
+    {&all_done,        ONE_SECOND, LED_RAPID_OFF,  LED_RAMP, "ALL_DONE",      0,       &always_true, 0, 0}  // 6 Event finished, turn off
 };
 
 const rapid_state_t rapid_state_sport[] = {
@@ -109,10 +115,16 @@ const rapid_state_t tabata_rapid_state[] = {
  */
 static void start_rapid_fire(void)
 {
+  //  {"ATHLETE":"Allan Brown", "EVENT":"RFP", "TARGET_NAME":"freETarget.targets.AirPistol"}
+  //  {"ATHLETE":"Allan Brown", "EVENT":"RFP -n4", "TARGET_NAME":"freETarget.targets.AirPistol"}
+  //  {"TRACE":2048, "RAPID_COUNT":1, "RAPID_WAIT":20, "RAPID_TIME":240, "RAPID_ENABLE": 1 }
+  //  {"TRACE":2048, "PAPER_TIME":0, "EVENT":"RFP -n4 Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":8, "RAPID_ENABLE": 1 }
   //  {"TRACE":2048, "PAPER_TIME":0, "EVENT":"RFP Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":8, "RAPID_ENABLE": 1 }
   //  {              "PAPER_TIME":0, "EVENT":"RFP Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":8, "RAPID_ENABLE": 1 }
-  json_rapid_count = 5; // Expect five shots in this one session
-  return;
+
+  json_rapid_count = 5;        // Expect five shots in this one session
+
+  timed_fire_event_override(); // Look for a shot count in the event name
 }
 
 static void start_sport_pistol(void)
@@ -123,6 +135,8 @@ static void start_sport_pistol(void)
   //  {"PAPER_TIME":0, "EVENT":"SPP Allan", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 1 }
   //  {"PAPER_TIME":0, "EVENT":"SPP Allan", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 0 }
   real_t temp;
+
+  timed_fire_event_override();                // Look for a shot count in the event name
 
   temp = (real_t)json_rapid_time;             // Total event time
   temp -= json_rapid_count * json_rapid_wait; // Subtract the total wait time between shots
@@ -137,6 +151,7 @@ static void start_tabata(void)
   // "RAPID_ENABLE": 1 }
   // {"PAPER_TIME":0, "TRACE":2048, "EVENT":"TBT Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":7, "RAPID_ENABLE": 1 }
   // {"PAPER_TIME":0, "EVENT":"TBT Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":7, "RAPID_ENABLE": 1 }
+  timed_fire_event_override(); // Look for a shot count in the event name
   return;
 }
 
@@ -144,19 +159,11 @@ static void start_tabata(void)
  * Course of fire definitions
  */
 const course_of_fire_t course_of_fire[] = {
-    {"RFP", &rapid_state_ISSF, &start_rapid_fire, 'E'}, // Rapid fire pistol
-    {"SPP", &rapid_state_sport, &start_sport_pistol, 'D'}, // Sport pistol
-    {"TBT", &tabata_rapid_state, &start_tabata, 'D'}, // Tabata training
-    {NULL, 0, 0}
+    {"RFP", &rapid_state_ISSF,   &start_rapid_fire,   'E'}, // Rapid fire pistol
+    {"SPP", &rapid_state_sport,  &start_sport_pistol, 'D'}, // Sport pistol
+    {"TBT", &tabata_rapid_state, &start_tabata,       'D'}, // Tabata training
+    {NULL,  0,                   0,                   0  }
 };
-
-/*
- * Function prototypes
- */
-static bool timed_fire_active(void);          // TRUE if the timed fire event is active
-static bool timed_fire_start_new_cycle(void); // TRUE if a new timed fire cycle is starting
-static void timed_fire_next_state(void);      // Start the next state in the timed fire sequence
-static void timed_fire_exit(void);            // Handle the exit of the timed fire event
 
 /*----------------------------------------------------------------
  *
@@ -326,8 +333,8 @@ static bool timed_fire_start_new_cycle(void)
     record[i].miss          = 1;             // Assume we miss
     record[i].shot_time     = run_time_ms(); // Updated at the end of the event, so we have a time for the miss
     record[i].face_strike   = 0;             // Reset face strike
-    record[i].x_mm          = DIAMETER;      // Reset x coordinate to be way off
-    record[i].y_mm          = DIAMETER;      // Reset y coordinate to be way off
+    record[i].x_mm          = 1000;          // Reset x coordinate to be way off
+    record[i].y_mm          = 1000;          // Reset y coordinate to be way off
   }
 
   /*
@@ -377,40 +384,46 @@ static void timed_fire_next_state(void)
    */
   event_timer = ((int)*(rapid_state + rapid_index)->timer) * (rapid_state + rapid_index)->time_scale; // New time
 
-  switch ( (rapid_state + rapid_index)->LED_bright )                         // Set the LED brightness based on the state
+  switch ( (rapid_state + rapid_index)->LED_bright )       // Set the LED brightness based on the state
   {
     case LED_RAMP:
-      set_LED_PWM_now(10);                                                   // Ramp the lights on
+      set_LED_PWM_now(10);                                 // Ramp the lights on
       break;
 
     case LED_ON:
-      set_LED_PWM_now(json_LED_PWM);                                         // Turn on the lights
+      set_LED_PWM_now(json_LED_PWM);                       // Turn on the lights
       break;
 
     case LED_DARK:
-      set_LED_PWM_now(0);                                                    // Turn off the lights
+      set_LED_PWM_now(0);                                  // Turn off the lights
       break;
   }
 
-  set_status_LED((rapid_state + rapid_index)->status_LED);                   // Set the red and green light s
+  set_status_LED((rapid_state + rapid_index)->status_LED); // Set the red and green light s
 
+  /*
+   * Update the run state
+   */
   run_state = (run_state & ~IN_SHOT) | (rapid_state + rapid_index)->in_shot; // Update the IN_SHOT state
 
   if ( (run_state ^ last_run_state) & IN_SHOT )                              // Look for a transition in the IN_SHOT state
   {
     if ( run_state & IN_SHOT )                                               // Transition TO IN_SHOT, so reset the aquire flag
     {
-      run_state &= ~IN_AQUIRE; // Reset the aquire flag, so we will aquire the shot when it happens
+      run_state &= ~IN_AQUIRE;   // Reset the aquire flag, so we will aquire the shot when it happens
     }
-    else                       // Transition out of IN_SHOT, so show that we have already aquired this shot, so we don't report the miss
+    else                         // Transition out of IN_SHOT, so show that we have already aquired this shot, so we don't report the miss
     {
-      if ( score_mode == 'D' ) // Report missed During the event
+      IF_NOT(IN_AQUIRE)          // We didn't aquire the shot, so we have to report the miss
       {
-        record[shot_in].shot_time = run_time_ms();
-        build_json_score(&record[shot_in], SCORE_USB); // Build the JSON for the miss
-        serial_to_all(_xs, ALL);
-        shot_in  = (shot_in + 1) % SHOT_SPACE;         // Move to the next shot
-        shot_out = shot_in;                            // Show that we have already aquired this shot, so we don't report the miss
+        if ( score_mode == 'D' ) // Report missed During the event
+        {
+          record[shot_in].shot_time = run_time_ms();
+          build_json_score(&record[shot_in], SCORE_USB); // Build the JSON for the miss
+          serial_to_all(_xs, ALL);
+          shot_in  = (shot_in + 1) % SHOT_SPACE;         // Move to the next shot
+          shot_out = shot_in;                            // Show that we have already aquired this shot, so we don't report the miss
+        }
       }
     }
   }
@@ -469,8 +482,42 @@ static void timed_fire_exit(void)
   shot_in  = 0;
   shot_out = 0;
   run_state &= ~IN_RAPID;
-  json_rapid_enable = 0; // No longer enabled
+  json_rapid_enable = 0;                    // No longer enabled
   last_enable       = 0;
   DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "Timed fire event ended");))
+  return;
+}
+
+static void timed_fire_event_override(void) // Look for overides in the event name
+{
+  int i;
+  /*
+   *  Look for a change in the shot count
+   */
+  for ( i = 0; json_event[i] != 0; i++ )
+  {
+    if ( json_event[i] == '-' ) // Got an option tag
+    {
+      i++;
+      switch ( json_event[i] )
+      {
+        case 'N':               // Rapid fire override
+        case 'n':               // Rapid fire override
+          i++;                  // Move to the numeric part of the option
+          json_rapid_count = atoi(&json_event[i]);
+          i++;                  // Move past the number
+          DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "Override json_rapid_count: %d", json_rapid_count);))
+          break;
+
+        default:
+          DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Unknown option: %c", json_event[i]);))
+          break;
+      }
+    }
+  }
+
+  /*
+   *  Finished processing event overrides
+   */
   return;
 }
