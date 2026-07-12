@@ -83,9 +83,9 @@
  *  A sample buffer is the space to store a single FIFO pull
  *  A trace is the path drawn by the gun on the target
  */
-#define AVAILABLE_FIFO (6 * 1024)                          // (6144) 6K FIFO available
+#define AVAILABLE_FIFO (8 * 1024)                          // (8192) 8K FIFO available
 
-#define RAW_FRAME_SIZE  (6 * 2)                            // (12)   6 entries @ 2 bytes per entry
+#define RAW_FRAME_SIZE  (1 + (6 * 2) + 1 + 2)              // (16)   8 entries @ 2 bytes per entry
 #define RAW_FRAME_COUNT (400)                              // (400)  entries in the FIFO
 
 #define WATERMARK (RAW_FRAME_SIZE * (RAW_FRAME_COUNT + 2)) // (4800 + 2 sample buffer) Use 75% of the FIFO
@@ -98,7 +98,7 @@
 #define FOLLOW_THROUGH 2                                   // Go forwards 2 seconds
 #define OVERSAMPLE     (SAMPLE_RATE / TRACE_RATE)          // Only send 1/8 samples
 
-#define SAMPLE_RATE   (1600)                               // Output Data Rate samples per second
+#define SAMPLE_RATE   (800)                               // Output Data Rate samples per second
 #define SAMPLE_PERIOD (APPROACH + FOLLOW_THROUGH)          // Accumulate sampls for 8 seconds
 #define SAMPLE_BUFFER_COUNT                                                                                                                \
   (((SAMPLE_RATE * SAMPLE_PERIOD) / RAW_FRAME_COUNT) + 1)  // Number of frames needed to store the approach and follow through
@@ -166,8 +166,8 @@ EXTERN trace_point_t  trace_point[TRACE_RATE * SAMPLE_PERIOD];         // Space 
 EXTERN char           _xs[1024 + 512];                                 // General purpose string buffer
 EXTERN unsigned int   is_trace;                                        // Tracing level(s)
 
-EXTERN unsigned int board_revision;                                    // Board revision number
-EXTERN volatile unsigned int run_state;                                         // Current running state of the software
+EXTERN unsigned int          board_revision;                           // Board revision number
+EXTERN volatile unsigned int run_state;                                // Current running state of the software
 
 EXTERN int           sample_in;                                        // Index to entry from sensor (<0 - wraps around)
 EXTERN int           sample_out;                                       // Index to output to application  (<0 - wraps around)

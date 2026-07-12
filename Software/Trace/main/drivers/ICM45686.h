@@ -42,15 +42,18 @@
 /*
  * A single sample frame as read from the FIFO
  */
-typedef struct      // A single raw frame as read from the FIFO
+typedef struct         // A single raw frame as read from the FIFO
 {
-  int16_t rho_dot;
-  int16_t theta_dot;
-  int16_t phi_dot;  // Z axis rotation speed
-  int16_t x_dotdot; // Sample frame from ICM45686
+  int8_t  header;      // Header byte for the FIFO frame, not used in this program
+  int16_t x_dotdot;    // Sample frame from ICM45686
   int16_t y_dotdot;
   int16_t z_dotdot;
-} FIFO_raw_frame_t; // Value read from sensor
+  int16_t rho_dot;
+  int16_t theta_dot;
+  int16_t phi_dot;     // Z axis rotation speed
+  int8_t  temperature; // Temperature data from ICM45686
+  int16_t timestamp;   // Timestamp for the sample, not used in this program
+} FIFO_raw_frame_t;    // Value read from sensor
 
 /*
  * A large buffer to hold an entire WATERMARK of samples
@@ -85,6 +88,6 @@ void ICM45686_FIFO_read(void);                                                //
 void ICM45686_SPI_dump(void);                                                 // Dump the ICM45686 registers using SPI.
 bool ICM45686_get_next_raw_sample(FIFO_raw_frame_t *sample);                  // Pull out the next sample
 bool ICM45686_find_index_out(time_count_64_t shot);                           // Set the starting point in the list
-
+void ICM45686_read_temperature(void);                                         // Read the temperature data from the ICM45686
 #endif
 #endif

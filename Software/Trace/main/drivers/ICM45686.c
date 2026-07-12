@@ -114,79 +114,6 @@ void ICM45686_init(unsigned int ICM45686_gpio)
   {
     DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "ICM45686 device ID: 0x%02X", transaction.rx_data[1]);))
   }
-  vTaskDelay(1);                                      /*
-                                                       * Reset the device
-                                                       */
-#if ( 0 )                                             // Do not enable
-  PAUSE("Sending CMD- -0xB6")
-  memset(&transaction, 0, sizeof(transaction));       // Clear the transaction structure
-  transaction.addr      = CMD;                        // Disable the accelerometer before programming the API
-  transaction.tx_buffer = 0xB6;                       // Soft Reset
-  transaction.length    = 8;                          // Transmit length in bits
-  transaction.rxlength  = 0;                          // Receive length in bits
-  transaction.flags     = SPI_TRANS_USE_TXDATA;       // Indicate that this is a read operation
-  spi_device_transmit(ICM45686_handle, &transaction); // Transmit the transaction
-  vTaskDelay(1);
-#endif
-
-  /*
-   * Programming the API
-   */
-  PAUSE("Sending PWR_CONF")
-  memset(&transaction, 0, sizeof(transaction));                        // Clear the transaction structure
-  transaction.addr      = PWR_CONF;                                    // Disable the accelerometer before programming the API
-  transaction.tx_buffer = 0;                                           // Disable the
-  transaction.length    = 8;                                           // Transmit length in bits
-  transaction.rxlength  = 0;                                           // Receive length in bits
-  transaction.flags     = SPI_TRANS_USE_TXDATA;                        // Indicate that this is a read operation
-  spi_device_transmit(ICM45686_handle, &transaction);                  // Transmit the transaction
-  vTaskDelay(1);                                                       // Wait 450us
-
-  PAUSE("sending INIT_CONTROL = 0")
-  memset(&transaction, 0, sizeof(transaction));                        // Clear the transaction structure
-  transaction.addr      = INIT_CTRL;                                   // Prepare the configuration file for the API programming
-  transaction.tx_buffer = 0;                                           // Transmit buffer
-  transaction.length    = 8;                                           // Transmit length in bits
-  transaction.rxlength  = 0;                                           // Receive length in bits
-  transaction.flags     = SPI_TRANS_USE_TXDATA;                        // Indicate that this is a read operation
-  spi_device_transmit(ICM45686_handle, &transaction);                  // Transmit the transaction
-  vTaskDelay(1);
-
-  PAUSE("sending INIT_DATA")
-  memset(&transaction, 0, sizeof(transaction));                        // Clear the transaction structure
-  transaction.addr      = INIT_DATA;                                   // Prepare the configuration file for the API programming
-  transaction.tx_buffer = &bmi270_maximum_fifo_config_file;            // Transmit the configuration file for the API programming
-  transaction.length    = sizeof(bmi270_maximum_fifo_config_file) * 8; // Transmit length in bits
-  transaction.rxlength  = 0;                                           // Indicate that this is a read operation
-  transaction.flags     = 0;                                           // Use default flags for a large write operation
-  spi_device_transmit(ICM45686_handle, &transaction);                  // Transmit the transaction
-  vTaskDelay(1);
-
-  PAUSE("Sending INIT_CONTROL = 1")
-  memset(&transaction, 0, sizeof(transaction));                        // Clear the transaction structure
-  transaction.addr      = INIT_CTRL;                                   // Start the processor going
-  transaction.tx_buffer = 1;                                           // Complete the API programming
-  transaction.length    = 8;                                           // Transmit length in bits
-  transaction.rxlength  = 0;                                           // Receive length in bits
-  transaction.flags     = SPI_TRANS_USE_TXDATA;                        // Indicate that this is a read operation
-  spi_device_transmit(ICM45686_handle, &transaction);                  // Transmit the transaction
-  vTaskDelay(1);
-
-  /*
-   *  Make sure the API is properly initialized
-   */
-  PAUSE("Verifying initialization")
-  memset(&transaction, 0, sizeof(transaction));       // Clear the transaction structure
-  transaction.addr      = 0x80 | INTERNAL_STATUS;     // Read the internal status register to check if the API is properly initialized
-  transaction.tx_buffer = NULL;                       // Transmit buffer not used
-  transaction.length    = 2 * 8;                      // Transmit length in bits
-  transaction.rxlength  = 2 * 8;                      // Receive length in bits
-  transaction.flags     = SPI_TRANS_USE_RXDATA;       // Indicate that this is a read operation
-  spi_device_transmit(ICM45686_handle, &transaction); // Transmit the transaction
-  if ( transaction.rx_data[1] != 0x1 )                // Check the device ID
-  {
-    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Initialization failed: 0x%02X", transaction.rx_data[1]);))
-  }
   vTaskDelay(1);
 
   /*
@@ -278,12 +205,12 @@ bool ICM45686_pull_FIFO(void)
   /*
    *  Reset the interrupt status
    */
-  memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure{"TEST":24}
-  transaction.addr      = 0x80 | INT_STATUS_1;  // Point to the FIFO read regisetrt
-  transaction.tx_buffer = NULL;                 // Transmit buffer not used
-  transaction.length    = 3 * 8;                // Transmit length in bits
+  memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure
+  transaction.addr      = 0x80 | INT1_STATUS0;  // Point to the FIFO read regisetr
+  transaction.tx_buffer = 0;                    // Transmit buffer not used
+  transaction.length    = 1 * 8;                // Transmit length in bits
   transaction.rxlength  = 1 * 8;                // Receive length in bits
-  transaction.flags     = SPI_TRANS_USE_RXDATA; // Read into the four byte pointer
+  transaction.flags     = SPI_TRANS_USE_TXDATA; // Read into the four byte pointer
   spi_device_transmit(ICM45686_handle, &transaction);
 
   /*
@@ -427,6 +354,51 @@ void ICM45686_read_raw_accel(FIFO_raw_frame_t *sample) // Returned values
   sample->theta_dot = raw_frame.theta_dot;
   sample->phi_dot   = raw_frame.phi_dot;
 
+  /*
+   *  All done
+   */
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: ICM45686_read_temperature()
+ *
+ * @brief:    Read temperature data from the ICM45686
+ *
+ * @return:   Temperature in FIFO format
+ *
+ *----------------------------------------------------------------
+ *
+ * The Temperature data is read from the ICM45686 in 2 bytes,
+ * with the temperature data consisting of a high byte followed by a low byte.
+ *
+ * {"TEST":43}
+ *
+ *--------------------------------------------------------------*/
+void ICM45686_read_temperature(void) // Returned values
+{
+  spi_transaction_t transaction;
+  real_t            temp_raw;        // Signed raw temperature value from the sensor
+  real_t            temp_celsius;
+
+  /*
+   * Prepare and read a single sample directly from the ICM45686
+   */
+  memset(&transaction, 0, sizeof(transaction));                              // Clear the transaction structure
+  transaction.addr      = 0x80 | TEMP_DATA1_UI;                              // Register address to read from
+  transaction.length    = 3 * 8;                                             // Transmit length in bits
+  transaction.tx_buffer = NULL;                                              // Transmit buffer not used
+  transaction.rxlength  = 3 * 8;                                             // Receive length in bits
+  transaction.flags     = SPI_TRANS_USE_RXDATA;                              // Indicate that this is a read operation
+
+  spi_device_transmit(ICM45686_handle, &transaction);                        // Transmit the transaction
+  SEND(CONSOLE, sprintf(_xs, "Temperature: 0x%02X %02X %02X", transaction.rx_data[0], transaction.rx_data[1], transaction.rx_data[2]);)
+  temp_raw =
+      -(32768.0 - ((transaction.rx_data[1] << 8) | transaction.rx_data[0])); // Combine the two bytes into a single raw temperature value
+  temp_celsius = (temp_raw / 128.0) + 25.0; // Convert the raw temperature value to degrees Celsius using the formula from the datasheet
+
+  SEND(CONSOLE, sprintf(_xs, "\r\nTemperature: %6.2f (%6.2f °C)", temp_raw, temp_celsius);)
   /*
    *  All done
    */
@@ -691,7 +663,9 @@ void ICM45686_oscilliscope(void)
  *
  *--------------------------------------------------------------*/
 #define HEADER "\r\n\n          0    1    2    3      4    5    6    7      8    9    A    B      C    D    E    F"
-
+#define TO_16(x)                                                                                                                           \
+  (((registers[(x)] << 8) |                                                                                                                \
+    registers[(x) + 1]))            // Convert two bytes to a 16 bit value, with the first byte as the MSB and the second byte as the LSB
 void ICM45686_SPI_dump(void)
 {
   int               address;        // Display address
@@ -699,51 +673,59 @@ void ICM45686_SPI_dump(void)
   uint8_t           registers[128]; // Copy of registers
   spi_transaction_t transaction;
 
-  /*
-   * Read and print the values of all registers
-   */
-  for ( address = 0x00; address <= 0x7F; address++ )                // Loop through all the registers from 0x00 to 0x7F
+                                    /*
+                                     * Read and print the values of all registers
+                                     */
+  memset(&registers, 0xAB, sizeof(registers));                    // Clear the registers array
+  for ( address = 0x00; address <= 127; address++ )               // Loop through all the registers from 0x00 to 0x7F
   {
+    memset(&transaction, 0, sizeof(transaction));                 // Clear the transaction structure
+    transaction.addr      = 0x80 | address;                       // Register address to read from
+    transaction.length    = 3 * 8;                                // Transmit length in bits
+    transaction.tx_buffer = NULL;                                 // Transmit buffer not used
+    transaction.rxlength  = 3 * 8;                                // Receive length in bits
+    transaction.rx_buffer = NULL;                                 // Use the pointer as the destination for the read data
+    transaction.flags     = SPI_TRANS_USE_RXDATA;                 // Indicate that this is a read operation;
 
-    memset(&transaction, 0, sizeof(transaction));                   // Clear the transaction structure
-    transaction.addr      = 0x80 | address;                         // Register address to read from
-    transaction.length    = 2 * 8;                                  // Transmit length in bits
-    transaction.tx_buffer = NULL;                                   // Transmit buffer not used
-    transaction.rxlength  = 2 * 8;                                  // Receive length in bits
-    transaction.flags     = SPI_TRANS_USE_RXDATA;                   // Indicate that this is a read operation
+    spi_device_transmit(ICM45686_handle, &transaction);           // Transmit the transaction
+    registers[address] = transaction.rx_data[1];                  // Store the value read from the register in the registers array
+  }
 
-    spi_device_transmit(ICM45686_handle, &transaction);             // Transmit the transaction
-
+  for ( address = 0x00; address < sizeof(registers); address++ ) // Loop through all the registers from 0x00 to 0x7F
+  {
     if ( (address % 0x40) == 0x00 )
     {
-      SEND(CONSOLE, sprintf(_xs, HEADER);)                          // Print the register address at the start of each line
+      SEND(CONSOLE, sprintf(_xs, HEADER);)                        // Print the register address at the start of each line
     }
     if ( (address & 0x0F) == 0x00 )
     {
-      SEND(CONSOLE, sprintf(_xs, "\n0x%02X: ", address);)           // Print the register address at the start of each line
+      SEND(CONSOLE, sprintf(_xs, "\n0x%02X: ", address);)         // Print the register address at the start of each line
     }
     if ( (address % 4) == 0x00 )
     {
       SEND(CONSOLE, sprintf(_xs, "  ");)
     }
-    SEND(CONSOLE, sprintf(_xs, "0x%02X ", transaction.rx_data[1]);) // Print the value read from the register}
-    registers[address] = transaction.rx_data[1];
+    SEND(CONSOLE, sprintf(_xs, "0x%02X ", registers[address]);)   // Print the value read from the register
   }
 
-                                                                    /*
-                                                                     *  Display known values
-                                                                     */
+                                                                  /*
+                                                                   *  Display known values
+                                                                   */
   SEND(CONSOLE, sprintf(_xs, "\r\n");)
-  SEND(CONSOLE, sprintf(_xs, "\r\n0x18: Sensor time: %d", (registers[0x1A] << 16) | (registers[0x19] << 8) | registers[18]);)
-  SEND(CONSOLE, sprintf(_xs, "\r\n0x22: Temperature: %4.2f", (23.0 + (1 / 512.0) * ((registers[0x23] << 8) + registers[0x22])));)
-  SEND(CONSOLE, sprintf(_xs, "\r\n0x24: FIFO length: %d", ((registers[0x25] << 8) + registers[0x24]));)
-  SEND(CONSOLE, sprintf(_xs, "\r\n0x0C: ACC X: %04X", ((registers[0x0D] << 8) | registers[0x0C]));)
-  SEND(CONSOLE, sprintf(_xs, "\r\n0x0E: ACC Y: %04X", ((registers[0x0F] << 8) | registers[0x0E]));)
-  SEND(CONSOLE, sprintf(_xs, "\r\n0x10: ACC Z: %04X", ((registers[0x11] << 8) | registers[0x10]));)
-  SEND(CONSOLE, sprintf(_xs, "\r\n0x12: GYRO X: %04X", ((registers[0x13] << 8) | registers[0x12]));)
-  SEND(CONSOLE, sprintf(_xs, "\r\n0x14: GYRO Y: %04X", ((registers[0x15] << 8) | registers[0x14]));)
-  SEND(CONSOLE, sprintf(_xs, "\r\n0x16: GYRO Z: %04X", ((registers[0x17] << 8) | registers[0x16]));)
+  printf("%02X %02X", TEMP_DATA0_UI, registers[TEMP_DATA0_UI]);
+  printf("  %02X %02X  ", TEMP_DATA1_UI, registers[TEMP_DATA1_UI]);
 
+  printf("%d %f", TO_16(TEMP_DATA1_UI), (real_t)TO_16(TEMP_DATA1_UI) / 128.0 + 25.0);
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x22: Temperature: %4.2f", ((real_t)TO_16(TEMP_DATA1_UI)) / 128.0 + 25.0);)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x24: FIFO length: %d", ((registers[0x25] << 8) + registers[0x24]));)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x0C: ACC X: %04X", TO_16(ACCEL_X));)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x0E: ACC Y: %04X", TO_16(ACCEL_X + 2));)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x10: ACC Z: %04X", TO_16(ACCEL_X + 4));)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x12: GYRO X: %04X", TO_16(ACCEL_X + 6));)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x14: GYRO Y: %04X", TO_16(ACCEL_X + 8));)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x16: GYRO Z: %04X", TO_16(ACCEL_X + 10));)
+
+  return;
   /*
    *  Display the contents of the FIFO loop
    */
