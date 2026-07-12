@@ -133,7 +133,7 @@ static spi_device_interface_config_t ICM45686_spi_config = {
     // Configuration for the SPI device
     .command_bits     = 0,                   // No command phase
     .address_bits     = 8,                   //
-    .dummy_bits       = 8,                   // No dummy bits
+    .dummy_bits       = 0,                   // No dummy bits
     .mode             = 0,                   // SPI mode 0
     .clock_source     = SPI_CLK_SRC_DEFAULT, // Use default clock source
     .duty_cycle_pos   = 128,                 // 50% duty cycle
