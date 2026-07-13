@@ -88,7 +88,7 @@
 #define accel_fifo_odr_dec  (0 << 0)  // Decimation for accel,
 
 #define SREG_CTRL            0x67     // System Register Control.
-#define sreg_data_endian_sel (0 << 1) // Data Endian Selection (only applies to FIFO data), 0 = little endian, 1 = big endian
+#define sreg_data_endian_sel (1 << 1) // Data Endian Selection (only applies to FIFO data), 0 = little endian, 1 = big endian
 
 #define WHO_AM_I        0x72          // Chip ID register
 #define WHO_I_SHOULD_BE 0xE9          // Expected device ID

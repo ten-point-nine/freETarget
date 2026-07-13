@@ -42,15 +42,18 @@
 /*
  * A single sample frame as read from the FIFO
  */
-typedef struct      // A single raw frame as read from the FIFO
+typedef struct       // A single raw frame as read from the FIFO
 {
-  int16_t rho_dot;
-  int16_t theta_dot;
-  int16_t phi_dot;  // Z axis rotation speed
-  int16_t x_dotdot; // Sample frame from BMI270
+  int8_t  header;    // Header byte for the FIFO frame, not used in this program
+  int16_t x_dotdot;  // Sample frame from BMI270
   int16_t y_dotdot;
   int16_t z_dotdot;
-} FIFO_raw_frame_t; // Value read from sensor
+  int16_t rho_dot;
+  int16_t theta_dot;
+  int16_t phi_dot;   // Z axis rotation speed
+  int8_t  temperature;
+  int16_t timestamp; // Timestamp for the sample, not used in this program
+} FIFO_raw_frame_t;  // Value read from sensor
 
 /*
  * A large buffer to hold an entire WATERMARK of samples
@@ -86,5 +89,5 @@ void BMI270_SPI_dump(void);                                                 // D
 bool BMI270_get_next_raw_sample(FIFO_raw_frame_t *sample);                  // Pull out the next sample
 bool BMI270_find_index_out(time_count_64_t shot);                           // Set the starting point in the list
 
-#endif 
-#endif 
+#endif
+#endif
