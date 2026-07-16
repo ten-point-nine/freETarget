@@ -367,17 +367,19 @@ int serial_who(void)
  *
  *
  ********************************************************************************/
-void serial_flush(int ports // active port list
-)
+void serial_flush(int ports) // active port list
 {
   if ( ports & CONSOLE )
   {
     uart_flush(uart_console);
   }
 
-  if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
+  if ( (ports & json_aux_mode & AUX_LISTEN) == 0 )
   {
-    uart_flush(uart_aux);
+    if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
+    {
+      uart_flush(uart_aux);
+    }
   }
 
   if ( ports & TCPIP )
@@ -479,565 +481,568 @@ void serial_putch(char ch,
    */
   if ( ports & CONSOLE )
   {
-    printf("%c", ch);                            // Must be printf
+    printf("%c", ch);                              // Must be printf
   }
 
-  if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
+  if ( (ports & json_aux_mode & AUX_LISTEN) == 0 )
   {
-    if ( ports & RS485 )                         // Is this RS488?
+    if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
     {
-      RS485_transmit(RS485_TRANSMIT);            // Set RS485 to transmit
+      if ( ports & RS485 )                         // Is this RS488?
+      {
+        RS485_transmit(RS485_TRANSMIT);            // Set RS485 to transmit
+      }
+      uart_write_bytes(uart_aux, (const char *)&ch, 1);
     }
-    uart_write_bytes(uart_aux, (const char *)&ch, 1);
   }
+    if ( ports & TCPIP )
+    {
+      tcpip_app_2_queue(&ch, 1);
+    }
 
-  if ( ports & TCPIP )
-  {
-    tcpip_app_2_queue(&ch, 1);
-  }
-
-  /*
-   * All done
-   */
-  return;
-}
-/*******************************************************************************
- *
- * @function: serial_to_all
- *
- * @brief:    Send a string to the available serial ports
- *
- * @return:   None
- *
- *******************************************************************************
- *
- * Send a string to all of the serial devices that are
- * in use.
- *
- ******************************************************************************/
-void serial_to_all(char *str,        // String to output
-                   int   ports       // List of ports to output to
-)
-{
-  static bool even_odd_mode = 0;     // Are we concatinating output?
-  static bool even_odd      = false; // Set the even odd flag to odd (fiest half)
-  static int  line_count    = 0;     // How many lines have we output
-  static char e_o_line[SHORT_TEXT];  // Place to store even odd srring
-
-  /*
-   * Check to see if we have a control message coming
-   */
-  if ( (ports & EVEN_ODD_BEGIN) != 0 ) // Begin concatination
-  {
-    even_odd_mode = true;
-    even_odd      = false;
-    e_o_line[0]   = 0;
-    line_count    = 0;
+    /*
+     * All done
+     */
     return;
   }
-
-  if ( (ports & EVEN_ODD_END) != 0 ) // End concatination
+  /*******************************************************************************
+   *
+   * @function: serial_to_all
+   *
+   * @brief:    Send a string to the available serial ports
+   *
+   * @return:   None
+   *
+   *******************************************************************************
+   *
+   * Send a string to all of the serial devices that are
+   * in use.
+   *
+   ******************************************************************************/
+  void serial_to_all(char *str,        // String to output
+                     int   ports       // List of ports to output to
+  )
   {
-    even_odd_mode = false;           // And send out the last
-    return;
-  }
+    static bool even_odd_mode = 0;     // Are we concatinating output?
+    static bool even_odd      = false; // Set the even odd flag to odd (fiest half)
+    static int  line_count    = 0;     // How many lines have we output
+    static char e_o_line[SHORT_TEXT];  // Place to store even odd srring
 
-  /*
-   *See if we need to concatinate alternate calls
-   */
-  if ( even_odd_mode == true ) // Concatination mode
-  {
-    if ( even_odd == false )
+    /*
+     * Check to see if we have a control message coming
+     */
+    if ( (ports & EVEN_ODD_BEGIN) != 0 ) // Begin concatination
     {
-      strcpy(e_o_line, str);
-      strncat(e_o_line, "                                                                            ", SHORT_TEXT - strlen(e_o_line));
-      e_o_line[50] = 0;
-      even_odd     = true;
-      return; // Remember the first half of the line and return
+      even_odd_mode = true;
+      even_odd      = false;
+      e_o_line[0]   = 0;
+      line_count    = 0;
+      return;
     }
 
-    strcat(e_o_line, str);
-    strcat(e_o_line, "\r\n");
-    strcpy(str, e_o_line);
-    line_count++;
-    if ( (line_count % 4) == 0 ) // Split up every 4 lines of output
+    if ( (ports & EVEN_ODD_END) != 0 ) // End concatination
     {
-      strcat(str, "\r\n");
+      even_odd_mode = false;           // And send out the last
+      return;
     }
-    even_odd = false;
-  }
-  else                           // Normal mode
-  {
-    if ( even_odd == true )      // Is half a message waiting to come from last time?
+
+    /*
+     *See if we need to concatinate alternate calls
+     */
+    if ( even_odd_mode == true ) // Concatination mode
     {
-      strcat(e_o_line, "\r\n");  // Yes, put in a new line
-      strcat(e_o_line, str);     // Add the new to the old
-      strcpy(str, e_o_line);     // Put it back into the calling line
+      if ( even_odd == false )
+      {
+        strcpy(e_o_line, str);
+        strncat(e_o_line, "                                                                            ", SHORT_TEXT - strlen(e_o_line));
+        e_o_line[50] = 0;
+        even_odd     = true;
+        return; // Remember the first half of the line and return
+      }
+
+      strcat(e_o_line, str);
+      strcat(e_o_line, "\r\n");
+      strcpy(str, e_o_line);
+      line_count++;
+      if ( (line_count % 4) == 0 ) // Split up every 4 lines of output
+      {
+        strcat(str, "\r\n");
+      }
       even_odd = false;
     }
-  }
-
-  /*
-   * Output to the devices
-   */
-  if ( ports & CONSOLE )
-  {
-    printf("%s", str);                           // Must be printf
-  }
-
-  if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
-  {
-    if ( ports & RS485 )                         // Is this RS488?
+    else                           // Normal mode
     {
-      RS485_transmit(RS485_TRANSMIT);            // Set RS485 to transmit
-      RS485_timer += RS485_TRANSMIT_TIME;        // Extend the timer for a string
-    }
-    uart_write_bytes(uart_aux, (const char *)str, strlen(str));
-  }
-
-  if ( ports & TCPIP )
-  {
-    tcpip_app_2_queue(str, strlen(str));
-  }
-
-  if ( ports & HTTP_CONNECTED ) // Is there a web server connected?
-  {
-    http_send_string(str);      // Yes, send it to the web server
-  }
-
-  /*
-   * All done
-   */
-  return;
-}
-/*******************************************************************************
- *
- * @function: RS485_transmit
- *
- * @brief:    Turn off the RS485 transmitter
- *
- * @return:   None
- *
- *******************************************************************************
- *
- * Control the RS485 transmit line. Only change the state if it is different
- *
- * If the board is not using RS485 communications, set the driver to TRANSMIT
- * so that it doesn't collide with the AUX port
- *
- * Version 6.2 controls the MAX485 directly through GPIO 9, whereas everything
- * before that uses one to the MFS output lines
- *
- ******************************************************************************/
-void RS485_transmit_off(void) // Called from timer to put the timer back in receive
-{
-  RS485_transmit(RS485_RECEIVE);
-  return;
-}
-
-void RS485_transmit(int new_state)
-{
-  static int old_state = -1;
-
-  /*
-   *  Yes RS485 is enabled
-   */
-  if ( new_state == old_state ) // No change, do nothing
-  {
-    return;
-  }
-
-  old_state = new_state;
-
-  /*
-   * Check to see if we are even using RS485
-   */
-  if ( (json_aux_mode & RS485) == 0 )              // Not operating in RS485 mode?
-  {
-    gpio_set_level(RS485_CONTROL, RS485_TRANSMIT); // Set RS485 to transmit so as to avoid contention on the RX line
-    return;
-  }
-
-  if ( (json_mfs_hold_c == RS485_SELECT) || (json_mfs_hold_d == RS485_SELECT) ) // Are we using MFS to drive the RS485 transmit?
-  {
-    mfs_RS485_control(new_state);                                               // Control RS485 via MFS
-  }
-  else
-  {
-    gpio_set_level(RS485_CONTROL, new_state);                                   // Set RS485 to transmit
-  }
-
-  if ( new_state == RS485_TRANSMIT )                                            // Is it transmit?
-  {
-    RS485_timer = RS485_TRANSMIT_TIME;                                          // Set timer to turn off transmitter
-  }
-
-  /*
-   * All done
-   */
-  return;
-}
-
-/*******************************************************************************
- *
- * @function: tcpip_app_2_queue
- *
- * @brief:    Put something into the output queue for later transmission
- *
- * @return:   Buffer updated
- *
- *******************************************************************************
- *
- * This function is called by the application to save data into the
- * TCPIP queue for later output onto the TCPIP channel
- *
- ******************************************************************************/
-int tcpip_app_2_queue(char *buffer, // Where to return the bytes
-                      int   length  // Maximum transfer size
-)
-{
-  int bytes_moved;                  // Number of bytes written
-
-  bytes_moved = 0;
-  while ( length != 0 )
-  {
-    out_buffer.queue[out_buffer.in] = *buffer;
-    buffer++;
-    length--;
-    bytes_moved++;
-    out_buffer.in = (out_buffer.in + 1) % sizeof(out_buffer.queue);
-  }
-
-  /*
-   *  All done, return the number of bytes written to the queue
-   */
-  return bytes_moved;
-}
-
-/*******************************************************************************
- *
- * @function: tcpip_queue_2_socket
- *
- * @brief:    Take waiting bytes out of the queue and into the socket
- *
- * @return:   Buffer updated
- *
- *******************************************************************************
- *
- * This function is the companion to tcpip_app_t_queue that finished sending
- * the data out to the socket
- *
- ******************************************************************************/
-int tcpip_queue_2_socket(char *buffer, // Place to put data
-                         int   length  // Number of bytes to read
-)
-{
-  int bytes_moved;                     // Number of bytes read from queue
-
-  if ( out_buffer.out == out_buffer.in )
-  {
-    return 0;                          // Nothing to say
-  }
-
-  bytes_moved = 0;
-
-  while ( length != 0 )
-  {
-    *buffer = out_buffer.queue[out_buffer.out];
-    buffer++;
-    length--;
-    bytes_moved++;
-    out_buffer.out = (out_buffer.out + 1) % sizeof(out_buffer.queue);
-    if ( out_buffer.out == out_buffer.in )
-    {
-      break; // RUn out of things to read
-    }
-  }
-
-  /*
-   *  All done, return the number of bytes written to the queue
-   */
-  return bytes_moved;
-}
-
-/*******************************************************************************
- *
- * @function: tcpip_queue_2_app
- *
- * @brief:    Read data out of the queue and return it to the application
- *
- * @return:   Buffer updated
- *
- *******************************************************************************
- *
- * Characters from the TCPIP input queue are returned to the application
- *
- ******************************************************************************/
-int tcpip_queue_2_app(char *buffer, // Where to return the bytes
-                      int   length  // Maximum transfer size
-)
-{
-  int bytes_moved;
-
-  bytes_moved = 0;
-  if ( in_buffer.out == in_buffer.in )
-  {
-    return 0; // Nothing waiting for us
-  }
-
-  while ( length )
-  {
-    *buffer = in_buffer.queue[in_buffer.out];
-    buffer++;
-    length--;
-    bytes_moved++;
-    in_buffer.out = (in_buffer.out + 1) % sizeof(in_buffer.queue);
-    if ( in_buffer.out == in_buffer.in )
-    {
-      break; // Reached the end
-    }
-  }
-
-  return bytes_moved;
-}
-
-/*******************************************************************************
- *
- * @function: tcpip_socket_2_queue
- *
- * @brief:    Put fresh TCPIP data into the queue for later
- *
- * @return:   Input queue updated
- *
- *******************************************************************************
- *
- * Fresh characters from the TCPIP socket are placed into the input queue
- *
- * Used also by HTTP to put client data into the queue
- *
- ******************************************************************************/
-int tcpip_socket_2_queue(char *buffer, // Where to return the bytes
-                         int   length  // Maximum transfer size
-)
-{
-  int bytes_moved;
-
-  bytes_moved = 0;
-  while ( length )
-  {
-    in_buffer.queue[in_buffer.in] = *buffer;
-    buffer++;
-    length--;
-    bytes_moved++;
-    in_buffer.in = (in_buffer.in + 1) % sizeof(in_buffer.queue);
-    if ( in_buffer.out == in_buffer.in )
-    {
-      DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "TCPIP input queue overrun\r\n");)) // Reached the end
-      break;
-    }
-  }
-
-  return bytes_moved;
-}
-
-/*******************************************************************************
- *
- * @function: get_string
- *
- * @brief:    Read a text string from the available ports
- *
- * @return:   Number of characters entered
- *
- *******************************************************************************
- *
- * Stay in a loop waiting for characters to arrive on any of the serial input
- * streams.  Collect each character as it arrives and return when a CR or LF
- * has been received.
- *
- ******************************************************************************/
-int get_string(char destination[], int size)
-{
-  int ch; // Input character
-  int i;  // Input index
-
-  i              = 0;
-  destination[0] = 0;
-  serial_flush(ALL);
-
-  while ( 1 )
-  {
-    while ( serial_available(ALL) != 0 )
-    {
-      ch = serial_getch(ALL);
-      SEND(ALL, sprintf(_xs, "%c", ch);) // Echo the input
-
-      switch ( ch )
+      if ( even_odd == true )      // Is half a message waiting to come from last time?
       {
-        case 8:                          // Backspace
-          i--;
-          if ( i < 0 )
-          {
-            i = 0;
-          }
-          destination[i] = 0;
-          break;
-
-          //        case '\r':       // Enter Commented out since PC Client does not allow
-          //        case '\n':       // newline as an input terminator
-        case '!':        // Bang!
-          return i;
-
-        case 'C' & 0x1F: // Control C, exit
-        case 0x1B:       // Escape
-          destination[0] = 0;
-          return 0;      // Remove anything we got
-
-        default:
-          destination[i] = ch;
-          if ( i < size )
-          {
-            i++;
-          }
-          destination[i] = 0;
-          break;
+        strcat(e_o_line, "\r\n");  // Yes, put in a new line
+        strcat(e_o_line, str);     // Add the new to the old
+        strcpy(str, e_o_line);     // Put it back into the calling line
+        even_odd = false;
       }
     }
-    vTaskDelay(10);
+
+    /*
+     * Output to the devices
+     */
+    if ( ports & CONSOLE )
+    {
+      printf("%s", str);                             // Must be printf
+    }
+
+    if ( (ports & json_aux_mode & AUX_LISTEN) == 0 )
+    {
+      if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
+      {
+        if ( ports & RS485 )                         // Is this RS488?
+        {
+          RS485_transmit(RS485_TRANSMIT);            // Set RS485 to transmit
+          RS485_timer += RS485_TRANSMIT_TIME;        // Extend the timer for a string
+        }
+        uart_write_bytes(uart_aux, (const char *)str, strlen(str));
+      }
+    }
+
+    if ( ports & TCPIP )
+    {
+      tcpip_app_2_queue(str, strlen(str));
+    }
+
+    if ( ports & HTTP_CONNECTED ) // Is there a web server connected?
+    {
+      http_send_string(str);      // Yes, send it to the web server
+    }
+
+    /*
+     * All done
+     */
+    return;
   }
-}
-
-/*******************************************************************************
- *
- * @function: aux_port_loopback_test
- *
- * @brief:    Loopback between AUX and console
- *
- * @return:   None
- *
- *******************************************************************************
- *
- * Output to the AUX port, read back the results and send them to the console
- *
- ******************************************************************************/
-void aux_port_loopback_test(void)
-{
-  unsigned char test[] = "PASS - This is the loopback test";
-  unsigned int  i;
-  unsigned char ch;
-  time_count_t  test_time;
-
-  /*
-   * Abort the test if the AUX port is not available
-   */
-  if ( (json_aux_mode & AUX_PORT) == 0 )
+  /*******************************************************************************
+   *
+   * @function: RS485_transmit
+   *
+   * @brief:    Turn off the RS485 transmitter
+   *
+   * @return:   None
+   *
+   *******************************************************************************
+   *
+   * Control the RS485 transmit line. Only change the state if it is different
+   *
+   * If the board is not using RS485 communications, set the driver to TRANSMIT
+   * so that it doesn't collide with the AUX port
+   *
+   * Version 6.2 controls the MAX485 directly through GPIO 9, whereas everything
+   * before that uses one to the MFS output lines
+   *
+   ******************************************************************************/
+  void RS485_transmit_off(void) // Called from timer to put the timer back in receive
   {
-    SEND(ALL, sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_MODE\": 2} to enable");)
+    RS485_transmit(RS485_RECEIVE);
+    return;
+  }
+
+  void RS485_transmit(int new_state)
+  {
+    static int old_state = -1;
+
+    /*
+     *  Yes RS485 is enabled
+     */
+    if ( new_state == old_state ) // No change, do nothing
+    {
+      return;
+    }
+
+    old_state = new_state;
+
+    /*
+     * Check to see if we are even using RS485
+     */
+    if ( (json_aux_mode & RS485) == 0 )              // Not operating in RS485 mode?
+    {
+      gpio_set_level(RS485_CONTROL, RS485_TRANSMIT); // Set RS485 to transmit so as to avoid contention on the RX line
+      return;
+    }
+
+    if ( (json_mfs_hold_c == RS485_SELECT) || (json_mfs_hold_d == RS485_SELECT) ) // Are we using MFS to drive the RS485 transmit?
+    {
+      mfs_RS485_control(new_state);                                               // Control RS485 via MFS
+    }
+    else
+    {
+      gpio_set_level(RS485_CONTROL, new_state);                                   // Set RS485 to transmit
+    }
+
+    if ( new_state == RS485_TRANSMIT )                                            // Is it transmit?
+    {
+      RS485_timer = RS485_TRANSMIT_TIME;                                          // Set timer to turn off transmitter
+    }
+
+    /*
+     * All done
+     */
+    return;
+  }
+
+  /*******************************************************************************
+   *
+   * @function: tcpip_app_2_queue
+   *
+   * @brief:    Put something into the output queue for later transmission
+   *
+   * @return:   Buffer updated
+   *
+   *******************************************************************************
+   *
+   * This function is called by the application to save data into the
+   * TCPIP queue for later output onto the TCPIP channel
+   *
+   ******************************************************************************/
+  int tcpip_app_2_queue(char *buffer, // Where to return the bytes
+                        int   length  // Maximum transfer size
+  )
+  {
+    int bytes_moved;                  // Number of bytes written
+
+    bytes_moved = 0;
+    while ( length != 0 )
+    {
+      out_buffer.queue[out_buffer.in] = *buffer;
+      buffer++;
+      length--;
+      bytes_moved++;
+      out_buffer.in = (out_buffer.in + 1) % sizeof(out_buffer.queue);
+    }
+
+    /*
+     *  All done, return the number of bytes written to the queue
+     */
+    return bytes_moved;
+  }
+
+  /*******************************************************************************
+   *
+   * @function: tcpip_queue_2_socket
+   *
+   * @brief:    Take waiting bytes out of the queue and into the socket
+   *
+   * @return:   Buffer updated
+   *
+   *******************************************************************************
+   *
+   * This function is the companion to tcpip_app_t_queue that finished sending
+   * the data out to the socket
+   *
+   ******************************************************************************/
+  int tcpip_queue_2_socket(char *buffer, // Place to put data
+                           int   length  // Number of bytes to read
+  )
+  {
+    int bytes_moved;                     // Number of bytes read from queue
+
+    if ( out_buffer.out == out_buffer.in )
+    {
+      return 0;                          // Nothing to say
+    }
+
+    bytes_moved = 0;
+
+    while ( length != 0 )
+    {
+      *buffer = out_buffer.queue[out_buffer.out];
+      buffer++;
+      length--;
+      bytes_moved++;
+      out_buffer.out = (out_buffer.out + 1) % sizeof(out_buffer.queue);
+      if ( out_buffer.out == out_buffer.in )
+      {
+        break; // RUn out of things to read
+      }
+    }
+
+    /*
+     *  All done, return the number of bytes written to the queue
+     */
+    return bytes_moved;
+  }
+
+  /*******************************************************************************
+   *
+   * @function: tcpip_queue_2_app
+   *
+   * @brief:    Read data out of the queue and return it to the application
+   *
+   * @return:   Buffer updated
+   *
+   *******************************************************************************
+   *
+   * Characters from the TCPIP input queue are returned to the application
+   *
+   ******************************************************************************/
+  int tcpip_queue_2_app(char *buffer, // Where to return the bytes
+                        int   length)  // Maximum transfer size
+  {
+    int bytes_moved;
+
+    bytes_moved = 0;
+    if ( in_buffer.out == in_buffer.in )
+    {
+      return 0; // Nothing waiting for us
+    }
+
+    while ( length )
+    {
+      *buffer = in_buffer.queue[in_buffer.out];
+      buffer++;
+      length--;
+      bytes_moved++;
+      in_buffer.out = (in_buffer.out + 1) % sizeof(in_buffer.queue);
+      if ( in_buffer.out == in_buffer.in )
+      {
+        break; // Reached the end
+      }
+    }
+
+    return bytes_moved;
+  }
+
+  /*******************************************************************************
+   *
+   * @function: tcpip_socket_2_queue
+   *
+   * @brief:    Put fresh TCPIP data into the queue for later
+   *
+   * @return:   Input queue updated
+   *
+   *******************************************************************************
+   *
+   * Fresh characters from the TCPIP socket are placed into the input queue
+   *
+   * Used also by HTTP to put client data into the queue
+   *
+   ******************************************************************************/
+  int tcpip_socket_2_queue(char *buffer, // Where to return the bytes
+                           int   length)  // Maximum transfer size
+  {
+    int bytes_moved;
+
+    bytes_moved = 0;
+    while ( length )
+    {
+      in_buffer.queue[in_buffer.in] = *buffer;
+      buffer++;
+      length--;
+      bytes_moved++;
+      in_buffer.in = (in_buffer.in + 1) % sizeof(in_buffer.queue);
+      if ( in_buffer.out == in_buffer.in )
+      {
+        DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "TCPIP input queue overrun\r\n");)) // Reached the end
+        break;
+      }
+    }
+
+    return bytes_moved;
+  }
+
+  /*******************************************************************************
+   *
+   * @function: get_string
+   *
+   * @brief:    Read a text string from the available ports
+   *
+   * @return:   Number of characters entered
+   *
+   *******************************************************************************
+   *
+   * Stay in a loop waiting for characters to arrive on any of the serial input
+   * streams.  Collect each character as it arrives and return when a CR or LF
+   * has been received.
+   *
+   ******************************************************************************/
+  int get_string(char destination[], int size)
+  {
+    int ch; // Input character
+    int i;  // Input index
+
+    i              = 0;
+    destination[0] = 0;
+    serial_flush(ALL);
+
+    while ( 1 )
+    {
+      while ( serial_available(ALL) != 0 )
+      {
+        ch = serial_getch(ALL);
+        SEND(ALL, sprintf(_xs, "%c", ch);) // Echo the input
+
+        switch ( ch )
+        {
+          case 8:                          // Backspace
+            i--;
+            if ( i < 0 )
+            {
+              i = 0;
+            }
+            destination[i] = 0;
+            break;
+
+            //        case '\r':       // Enter Commented out since PC Client does not allow
+            //        case '\n':       // newline as an input terminator
+          case '!':        // Bang!
+            return i;
+
+          case 'C' & 0x1F: // Control C, exit
+          case 0x1B:       // Escape
+            destination[0] = 0;
+            return 0;      // Remove anything we got
+
+          default:
+            destination[i] = ch;
+            if ( i < size )
+            {
+              i++;
+            }
+            destination[i] = 0;
+            break;
+        }
+      }
+      vTaskDelay(10);
+    }
+  }
+
+  /*******************************************************************************
+   *
+   * @function: aux_port_loopback_test
+   *
+   * @brief:    Loopback between AUX and console
+   *
+   * @return:   None
+   *
+   *******************************************************************************
+   *
+   * Output to the AUX port, read back the results and send them to the console
+   *
+   ******************************************************************************/
+  void aux_port_loopback_test(void)
+  {
+    unsigned char test[] = "PASS - This is the loopback test";
+    unsigned int  i;
+    unsigned char ch;
+    time_count_t  test_time;
+
+    /*
+     * Abort the test if the AUX port is not available
+     */
+    if ( (json_aux_mode & AUX_PORT) == 0 )
+    {
+      SEND(ALL, sprintf(_xs, "\r\nAUX port not enabled.  Use {\"AUX_MODE\": 2} to enable");)
+      SEND(ALL, sprintf(_xs, _DONE_);)
+      return;
+    }
+
+    SEND(ALL, sprintf(_xs, "\r\nAUX Serial Port Loopback.  Make sure AUX port is looped back");)
+    if ( prompt_for_confirm() == false )
+    {
+      SEND(ALL, sprintf(_xs, "\r\nAborting configuration");)
+      return;
+    }
+
+    /*
+     * Send out the AUX port, back in, and then to the console
+     */
+    ft_timer_new(&test_time, ONE_SECOND * 10, NULL, "serial port test"); // 10 second timeout
+    for ( i = 0; i != sizeof(test); i++ )
+    {
+      serial_putch(test[i], AUX);                                        // Output to the AUX Port
+
+      while ( serial_available(AUX) == 0 )
+      {
+        vTaskDelay(1);                                                   // Wait for it to come back
+        if ( test_time == 0 )
+        {
+          SEND(ALL, sprintf(_xs, "\r\nTest failed, no input from AUX\r\n");)
+          return;
+        }
+      }
+
+      ch = serial_getch(AUX);
+      serial_putch(CONSOLE, ch);
+    }
+
+    /*
+     *  The test is over
+     */
+    ft_timer_delete(&test_time);
     SEND(ALL, sprintf(_xs, _DONE_);)
     return;
   }
 
-  SEND(ALL, sprintf(_xs, "\r\nAUX Serial Port Loopback.  Make sure AUX port is looped back");)
-  if ( prompt_for_confirm() == false )
+  /*******************************************************************************
+   *
+   * @function: RS485_test
+   *
+   * @brief:    Test the AUX port in RS485 mode
+   *
+   * @return:   None
+   *
+   *******************************************************************************
+   *
+   * Output to the AUX port, read back the results and send them to the console
+   *
+   ******************************************************************************/
+  void RS485_test(void)
   {
-    SEND(ALL, sprintf(_xs, "\r\nAborting configuration");)
+    int i;
+
+    for ( i = 0; i != 512; i++ )
+    {
+      SEND(RS485, sprintf(_xs, " %d ", i);)
+      vTaskDelay(1);
+    }
+
+    SEND(ALL, sprintf(_xs, _DONE_);)
+
     return;
   }
 
-  /*
-   * Send out the AUX port, back in, and then to the console
-   */
-  ft_timer_new(&test_time, ONE_SECOND * 10, NULL, "serial port test"); // 10 second timeout
-  for ( i = 0; i != sizeof(test); i++ )
-  {
-    serial_putch(test[i], AUX);                                        // Output to the AUX Port
+  /*******************************************************************************
+   *
+   * @function: check_new_connection
+   *
+   * @brief:    Look to see if anybody new has connected
+   *
+   * @return:   None
+   *
+   *******************************************************************************
+   *
+   * Check to see if there is a new connection, and if so, check to see if the
+   * variables need to be cleared
+   *
+   ******************************************************************************/
+  static unsigned int old_connection_list = 0;    // Previous connection mask
 
-    while ( serial_available(AUX) == 0 )
+  void check_new_connection(void)
+  {
+
+    if ( old_connection_list == connection_list ) // Has anything changed?
     {
-      vTaskDelay(1);                                                   // Wait for it to come back
-      if ( test_time == 0 )
-      {
-        SEND(ALL, sprintf(_xs, "\r\nTest failed, no input from AUX\r\n");)
-        return;
-      }
+      return;                                     // No, do nothing
+    }
+    old_connection_list = connection_list;
+
+    /*
+     *  Count up the number of connections
+     */
+    if ( hamming_weight(connection_list) > 1 ) // Do we have more than one connection?
+    {
+      return;                                  // Yes, then return
     }
 
-    ch = serial_getch(AUX);
-    serial_putch(CONSOLE, ch);
+    start_new_session(json_session_type);
+
+    /*
+     *  All done, return
+     */
+    return;
   }
-
-  /*
-   *  The test is over
-   */
-  ft_timer_delete(&test_time);
-  SEND(ALL, sprintf(_xs, _DONE_);)
-  return;
-}
-
-/*******************************************************************************
- *
- * @function: RS485_test
- *
- * @brief:    Test the AUX port in RS485 mode
- *
- * @return:   None
- *
- *******************************************************************************
- *
- * Output to the AUX port, read back the results and send them to the console
- *
- ******************************************************************************/
-void RS485_test(void)
-{
-  int i;
-
-  for ( i = 0; i != 512; i++ )
-  {
-    SEND(RS485, sprintf(_xs, " %d ", i);)
-    vTaskDelay(1);
-  }
-
-  SEND(ALL, sprintf(_xs, _DONE_);)
-
-  return;
-}
-
-/*******************************************************************************
- *
- * @function: check_new_connection
- *
- * @brief:    Look to see if anybody new has connected
- *
- * @return:   None
- *
- *******************************************************************************
- *
- * Check to see if there is a new connection, and if so, check to see if the
- * variables need to be cleared
- *
- ******************************************************************************/
-static unsigned int old_connection_list = 0;    // Previous connection mask
-
-void check_new_connection(void)
-{
-
-  if ( old_connection_list == connection_list ) // Has anything changed?
-  {
-    return;                                     // No, do nothing
-  }
-  old_connection_list = connection_list;
-
-  /*
-   *  Count up the number of connections
-   */
-  if ( hamming_weight(connection_list) > 1 ) // Do we have more than one connection?
-  {
-    return;                                  // Yes, then return
-  }
-
-  start_new_session(json_session_type);
-
-  /*
-   *  All done, return
-   */
-  return;
-}

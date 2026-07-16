@@ -727,6 +727,8 @@ static void set_trace(int trace)                     // Trace mask on or off
  *-----------------------------------------------------*/
 static void set_50m(int x)
 {
+  int temp;
+
   json_paper_time = 0;
   nvs_set_i32(my_handle, NONVOL_PAPER_TIME, json_paper_time);
 
@@ -738,6 +740,10 @@ static void set_50m(int x)
 
   json_z_offset = 18;
   nvs_set_i32(my_handle, NONVOL_Z_OFFSET, json_z_offset);
+
+  json_vref_lo = 3.00; // Set the target reference voltage to 3.0 volts
+  temp         = json_vref_lo * FLOAT_SCALE;
+  nvs_set_i32(my_handle, NONVOL_VREF_LO, temp);
 
   /*
    *  Save the changes
