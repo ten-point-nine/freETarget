@@ -32,66 +32,70 @@
  *
  * ICM45686 Register Addresses
  */
-#define ACCEL_X 0x00                     // Acceleration X, Y, Z  Gyro X, Y, Z
+#define ACCEL_DATA_X1_UI 0x00             // Acceleration X, Y, Z  Gyro X, Y, Z
 
-#define TEMP_DATA1_UI 0x0C               // Temperature data, High byte
-#define TEMP_DATA0_UI 0x0D               // Temperature data, Low byte
+#define TEMP_DATA1_UI 0x0C                // Temperature data, High byte
+#define TEMP_DATA0_UI 0x0D                // Temperature data, Low byte
 
-#define PWR_MGMT0  0x10                  // Power Management 0
-#define gyro_mode  (3 << 2)              // Gyro mode, 0 = off, 1 = standby, 2 = low power, 3 = low noise
-#define accel_mode (3 << 0)              // Accel mode, 0 = off, 1 = standby, 2 = low power, 3 = low noise
+#define PWR_MGMT0  0x10                   // Power Management 0
+#define gyro_mode  (3 << 2)               // Gyro mode, 0 = off, 1 = standby, 2 = low power, 3 = low noise
+#define accel_mode (3 << 0)               // Accel mode, 0 = off, 1 = standby, 2 = low power, 3 = low noise
 
-#define FIFO_COUNT_0            0x12     // LSB of FIFO length
-#define FIFO_COUNT_1            0x13     // MSB of FIFO length
-#define FIFO_DATA               0x14     // FIFO data register
-#define INT1_CONFIG_0           0x16     // Interrupt 1 configuration
-#define int1_status_en_fifo_ths (1 << 1) // Enable FIFO threshold interrupt
+#define FIFO_COUNT_0 0x12                 // LSB of FIFO length
+#define FIFO_COUNT_1 0x13                 // MSB of FIFO length
+#define FIFO_DATA    0x14                 // FIFO data register
 
-#define INT1_CONFIG_2 0x18               // Interrupt 1 configuration 2
-#define int1_drive    (0 << 2)           // Drive mode, 0 = push-pull, 1 = open drain
-#define int1_mode     (1 << 1)           // Interrupt mode, 0 = pulsed, 1 = latched
-#define int1_polarity (0 << 0)           // Interrupt polarity, 0 = active low, 1 = active high
+#define INT1_CONFIG_0            0x16     // Interrupt 1 configuration
+#define int1_status_en_fifo_ths  (1 << 1) // Enable FIFO threshold interrupt
+#define int1_status_en_fifo_full (0 << 0) // Enable FIFO full interrupt status
 
-#define INT1_STATUS0         0x19        // Interrupt 1 status 0
-#define int1_status_fifo_ths (1 << 1)    // FIFO threshold interrupt status
+#define INT1_CONFIG_2 0x18                // Interrupt 1 configuration 2
+#define int1_drive    (0 << 2)            // Drive mode, 0 = push-pull, 1 = open drain
+#define int1_mode     (1 << 1)            // Interrupt mode, 0 = pulsed, 1 = latched
+#define int1_polarity (0 << 0)            // Interrupt polarity, 0 = active low, 1 = active high
 
-#define ACCEL_CONFIG0   0x1B             // Acceleration Configuration
-#define accel_ui_fs_sel (4 << 4)         // Full Scale Selection, 0 = 32g, 1 = 16, 2 = 8, 3 = 4, 4 = 2
-#define accel_odr       (5 << 0)         // Output Data Rate 5 = 1600 Hz
+#define INT1_STATUS0         0x19         // Interrupt 1 status 0
+#define int1_status_fifo_ths (1 << 1)     // FIFO threshold interrupt status
 
-#define GYRO_CONFIG0 0x1C                // Gyro Configuration
+#define ACCEL_CONFIG0   0x1B              // Acceleration Configuration
+#define accel_ui_fs_sel (4 << 4)          // Full Scale Selection, 0 = 32g, 1 = 16, 2 = 8, 3 = 4, 4 = 2
+#define accel_odr       (5 << 0)          // Output Data Rate 5 = 1600 Hz
+
+#define GYRO_CONFIG0 0x1C                 // Gyro Configuration
 #define gyro_ui_fs_sel                                                                                                                     \
   (7 << 4) // Full Scale Selection, 0 = 4000 dps, 1 = 2000 dps, 2 = 1000, 3 = 500, 4 = 250, 5 = 125, 6 = 62.5, 7 = 31.25, 8 = 15.62
 #define gyro_odr                                                                                                                           \
   (5 << 0) // Output Data Rate, 3 = 6.4k, 4 = 3.2k, 5 = 1.6k, 6 = 800, 7 = 400, 8 = 200, 9 = 100, A = 50, B = 25, C = 12.5, D = 6.25, E
            // = 3.12, F = 1.56
 
-#define FIFO_CONFIG0 0x1D             // FIFO Configuration
-#define fifo_mode    (1 << 6)         // Stream mode, 0 = disabled, 1 = overwrite old data when full, 2 = stop when full
-#define fifo_depth   (0x1F << 0)      // 1F = 8k bytes
+#define FIFO_CONFIG0 0x1D                   // FIFO Configuration
+#define fifo_mode    (1 << 6)               // Stream mode, 0 = disabled, 1 = overwrite old data when full, 2 = stop when full
+#define fifo_depth   ((8 * 1024 / 256) - 1) // 256 bytes per count
 
-#define FIFO_CONFIG1_0 0x1E           // Watermark low
-#define FIFO_CONFIG1_1 0x1F           // Watermark high
+#define FIFO_CONFIG1_0 0x1E                 // Watermark low
+#define FIFO_CONFIG1_1 0x1F                 // Watermark high
 
-#define FIFO_CONFIG2     0x20         // FIFO Configuration 2
-#define fifo_flush       (1 << 7)     // Flush FIFO when set to 1
-#define fifo_wr_wm_gt_th (1 << 3)     // Set the FIFO watermark interrupt when the FIFO count is greater than the FIFO_WTM registers
+#define FIFO_CONFIG2     0x20               // FIFO Configuration 2
+#define fifo_flush       (0 << 7)           // Flush FIFO when set to 1
+#define fifo_wr_wm_gt_th (1 << 3)           // Set the FIFO watermark interrupt when the FIFO count is greater than the FIFO_WTM registers
 
-#define FIFO_CONFIG3  0x21            // FIFO Configuration 3
-#define fifo_gyro_en  (1 << 2)        // Gyro data enabled in FIFO
-#define fifo_accel_en (1 << 1)        // Accel data enabled in FIFO
+#define FIFO_CONFIG3  0x21                  // FIFO Configuration 3
+#define fifo_gyro_en  (1 << 2)              // Gyro data enabled in FIFO
+#define fifo_accel_en (1 << 1)              // Accel data enabled in FIFO
+#define fifo_if_en    (1 << 0)              // FIFO Enabled
 
-#define FIFO_CONFIG4 0x22             // FIFO Configuration 4
+#define FIFO_CONFIG4       0x22             // FIFO Configuration 4
+#define fifo_tmst_fsync_en (1 << 1)         // Insert timestamp into FIFO data
 
-#define ODR_DECIMATE_CONFIG 0x28      // Decimation configuration for the FIFO
-#define gyro_fifo_odr_dec   (0 << 4)  // Decimation for gyro, 0 = no decimation, 1 = 2, 2 = 4, 3 = 8, 4 = 16
-#define accel_fifo_odr_dec  (0 << 0)  // Decimation for accel,
+#define ODR_DECIMATE_CONFIG 0x28            // Decimation configuration for the FIFO
+#define gyro_fifo_odr_dec   (0 << 4)        // Decimation for gyro, 0 = no decimation, 1 = 2, 2 = 4, 3 = 8, 4 = 16
+#define accel_fifo_odr_dec  (0 << 0)        // Decimation for accel,
 
-#define SREG_CTRL            0x67     // System Register Control.
-#define sreg_data_endian_sel (1 << 1) // Data Endian Selection (only applies to FIFO data), 0 = little endian, 1 = big endian
+#define SREG_CTRL            0x67           // System Register Control.
+#define sreg_data_endian_sel (0 << 1)       // Data Endian Selection (only applies to FIFO data), 0 = little endian, 1 = big endian
 
-#define WHO_AM_I        0x72          // Chip ID register
-#define WHO_I_SHOULD_BE 0xE9          // Expected device ID
+#define WHO_AM_I        0x72                // Chip ID register
+#define WHO_I_SHOULD_BE 0xE9                // Expected device ID
 
 /*
  * Definitions
@@ -149,20 +153,21 @@ static spi_device_interface_config_t ICM45686_spi_config = {
 };
 
 static const ICM45686_config_t ICM45686_config[] = {
-    {SREG_CTRL,           sreg_data_endian_sel                  }, // Data Endian Selection, 0 = little endian, 1 = big endian
-    {INT1_CONFIG_0,       int1_status_en_fifo_ths               },
-    {INT1_CONFIG_2,       int1_drive | int1_mode | int1_polarity},
-    {ACCEL_CONFIG0,       accel_ui_fs_sel | accel_odr           },
-    {GYRO_CONFIG0,        gyro_ui_fs_sel | gyro_odr             },
-    {FIFO_CONFIG0,        fifo_mode | fifo_depth                },
-    {FIFO_CONFIG1_0,      WATERMARK & 0x00ff                    },
-    {FIFO_CONFIG1_1,      (WATERMARK >> 8) & 0x00ff             },
-    {FIFO_CONFIG2,        fifo_flush | fifo_wr_wm_gt_th         }, // FIFO Configuration 2
-    {FIFO_CONFIG3,        fifo_gyro_en | fifo_accel_en          }, // FIFO Configuration 3
-    {FIFO_CONFIG4,        0                                     },
-    {ODR_DECIMATE_CONFIG, gyro_fifo_odr_dec | accel_fifo_odr_dec},
-    {PWR_MGMT0,           gyro_mode | accel_mode                }, // Gyro and Accel mode
-    {0,                   0                                     }
+    {INT1_CONFIG_2,       int1_drive | int1_mode | int1_polarity   },
+    {INT1_CONFIG_0,       int1_status_en_fifo_ths                  },
+    {ACCEL_CONFIG0,       accel_ui_fs_sel | accel_odr              },
+    {GYRO_CONFIG0,        gyro_ui_fs_sel | gyro_odr                },
+    {FIFO_CONFIG0,        fifo_mode | fifo_depth                   },
+    {FIFO_CONFIG1_0,      400 & 0x00ff                             },
+    {FIFO_CONFIG1_1,      (400 >> 8) & 0x00ff                      },
+    //   {FIFO_CONFIG2,        fifo_flush                                  }, // Flush FIFO when set to 1,
+    {FIFO_CONFIG2,        fifo_wr_wm_gt_th                         }, // FIFO watermark interrupt when FIFO count is greater than FIFO_WTM registers
+    {FIFO_CONFIG3,        fifo_gyro_en | fifo_accel_en | fifo_if_en}, // FIFO Configuration 3
+    {FIFO_CONFIG4,        fifo_tmst_fsync_en                       },
+    {ODR_DECIMATE_CONFIG, gyro_fifo_odr_dec | accel_fifo_odr_dec   },
+    {PWR_MGMT0,           gyro_mode | accel_mode                   }, // Gyro and Accel mode
+    //     {SREG_CTRL,           sreg_data_endian_sel                     }, // Data Endian Selection, 0 = little endian, 1 = big endian
+    {0,                   0                                        }
 };
 
 #endif

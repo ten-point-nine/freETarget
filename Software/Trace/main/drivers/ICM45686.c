@@ -51,9 +51,9 @@
 /*
  *  Variables
  */
-time_count_64_t last_FIFO_read;                  // Remember when we took the last sample
+time_count_64_t last_FIFO_read;                // Remember when we took the last sample
 
-FIFO_raw_t sample_raw_read[SAMPLE_BUFFER_COUNT]; // Space for 10 seconds of data
+FIFO_packet_t FIFO_queue[SAMPLE_BUFFER_COUNT]; // Space for 10 seconds of data
 
 /*
  *  Local Functions
@@ -166,8 +166,9 @@ void ICM45686_init(unsigned int ICM45686_gpio)
  *---------------------------------------------------------------*/
 bool ICM45686_pull_FIFO(void)
 {
-  spi_transaction_t transaction;
-  static bool       return_value = false; // Return TRUE if the FIFO is completely full of data
+  spi_transaction_t      transaction;
+  static bool            return_value = false; // Return TRUE if the FIFO is completely full of data
+  static time_count_64_t delta_time   = 0;
 
   /*
    *  Check to see if we need to suspend the logging
@@ -182,22 +183,23 @@ bool ICM45686_pull_FIFO(void)
    */
   last_FIFO_read = run_time_us(); // When was the last sample taken
 
-  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "ICM45686_FIFO_read(), %'llu", last_FIFO_read);))
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "ICM45686_pull_FIFO(), %'llu, delta: %'llu", last_FIFO_read, last_FIFO_read - delta_time);))
+  delta_time = last_FIFO_read;
 
   /*
    *  Read in the next bunch of samples
    */
-  memset(&transaction, 0, sizeof(transaction));   // Clear the transaction structure{"TEST":24}
-  transaction.addr      = 0x80 | FIFO_DATA;       // Point to the FIFO read regisetrt
-  transaction.tx_buffer = NULL;                   // Transmit buffer not used
-  transaction.length    = sizeof(FIFO_raw_t) * 8; // Transmit length in bits
-  transaction.rx_buffer = &sample_raw_read[index_in.outer].dummy;
-  transaction.rxlength  = sizeof(FIFO_raw_t) * 8; // Receive length in bits
-  transaction.flags     = 0;                      // Indicate that this is a read operation
+  memset(&transaction, 0, sizeof(transaction));      // Clear the transaction structure{"TEST":24}
+  transaction.addr      = 0x80 | FIFO_DATA;          // Point to the FIFO read regisetrt
+  transaction.tx_buffer = NULL;                      // Transmit buffer not used
+  transaction.length    = sizeof(FIFO_packet_t) * 8; // Transmit length in bits
+  transaction.rx_buffer = &FIFO_queue[index_in.outer];
+  transaction.rxlength  = sizeof(FIFO_packet_t) * 8; // Receive length in bits
+  transaction.flags     = 0;                         // Indicate that this is a read operation
   spi_device_transmit(ICM45686_handle, &transaction);
   trace_FIFO_next(&index_in);
 
-  if ( index_in.outer == index_out.outer )        // Wrapped around the buffer is full
+  if ( index_in.outer == index_out.outer )           // Wrapped around the buffer is full
   {
     return_value = true;
     run_state &= ~IN_FIFO_FILLING;
@@ -208,7 +210,7 @@ bool ICM45686_pull_FIFO(void)
    */
   memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure
   transaction.addr      = 0x80 | INT1_STATUS0;  // Point to the FIFO read regisetr
-  transaction.tx_buffer = 0;                    // Transmit buffer not used
+  transaction.tx_buffer = 0xAB;                 // Send a zero
   transaction.length    = 1 * 8;                // Transmit length in bits
   transaction.rxlength  = 1 * 8;                // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_TXDATA; // Read into the four byte pointer
@@ -218,6 +220,117 @@ bool ICM45686_pull_FIFO(void)
    *  All done, return
    */
   return return_value;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: ICM45686_test_FIFO
+ *
+ * @brief:    Pull out the FIFO samples for testing
+ *
+ * @return:   NONE
+ *
+ *----------------------------------------------------------------
+ *
+ * This function is called if the FIFO watermark is reached.
+ *
+ * By the time we get here there are AT LEAST WATERMARK bytes of
+ * samples in the FIFO.  The function will read one WATERMARKs
+ * number of cycles and save them into memory.
+ *
+ * There may be samples left in the FIFO, but we will get them
+ * the next time the watermark interrupt is fired.
+ *
+ *---------------------------------------------------------------*/
+#define TO_16A(x) ((int16_t)(((x)[1] << 8) | (x)[0])) // Convert two bytes to a 16-bit integer
+
+char *to_bin(uint8_t value)                           // Convert a byte to a binary string
+{
+  static char str[9];
+  int         i;
+
+  /*
+   *  Convert a byte to a binary string
+   **/
+  for ( i = 0; i != 8; i++ )
+  {
+    str[7 - i] = (value & (1 << i)) ? '1' : '0';
+  }
+  str[8] = 0;
+  return str;
+}
+
+void ICM45686_dump_FIFO(void)
+{
+  spi_transaction_t transaction;
+  int               i;
+  FIFO_single_t     sample;
+
+  memset(&FIFO_queue[0], 0xAB, sizeof(FIFO_packet_t) * 8); // Clear the sample buffer
+  memset(&transaction, 0, sizeof(transaction));            // Clear the transaction structure
+  transaction.addr      = 0x80 | FIFO_DATA;                // Point to the FIFO read regisetrt
+  transaction.tx_buffer = NULL;                            // Transmit buffer not used
+  transaction.length    = sizeof(FIFO_packet_t) * 8;       // Transmit length in bits
+  transaction.rx_buffer = &FIFO_queue[0];
+  transaction.rxlength  = sizeof(FIFO_packet_t) * 8;       // Receive length in bits
+  transaction.flags     = 0;                               // Indicate that this is a read operation
+  spi_device_transmit(ICM45686_handle, &transaction);
+
+  /*
+   * Extract the data
+   */
+  #if(0)
+  for ( i = 0; i != 10; i++ )
+  {
+    sample.header      = FIFO_queue[0].f[i].buffer[0]; // Header byte for the FIFO frame, not used in this program
+    sample.x_dotdot    = (FIFO_queue[0].f[i].buffer[2] << 8) + FIFO_queue[0].f[i].buffer[1];   // Sample frame from ICM_45686
+    sample.y_dotdot    = (FIFO_queue[0].f[i].buffer[4] << 8) + FIFO_queue[0].f[i].buffer[3];   // Sample frame from ICM_45686
+    sample.z_dotdot    = (FIFO_queue[0].f[i].buffer[6] << 8) + FIFO_queue[0].f[i].buffer[5];   // Sample frame from ICM_45686
+    sample.rho_dot     = (FIFO_queue[0].f[i].buffer[8] << 8) + FIFO_queue[0].f[i].buffer[7];   // Sample frame from ICM_45686
+    sample.theta_dot   = (FIFO_queue[0].f[i].buffer[10] << 8) + FIFO_queue[0].f[i].buffer[9];  // Sample frame from ICM_45686
+    sample.phi_dot     = (FIFO_queue[0].f[i].buffer[12] << 8) + FIFO_queue[0].f[i].buffer[11]; // Z axis rotation speed
+    sample.temperature = FIFO_queue[0].f[i].buffer[13];                                        // Temperature data from ICM_45686
+    sample.timestamp =
+        (FIFO_queue[0].f[i].buffer[15] << 8) + FIFO_queue[0].f[i].buffer[14]; // Timestamp for the sample, not used in this program
+
+    printf("\r\ni:%d H: %s, X..: %04x, Y..: %04x, Z..: %04x, RHO.: %04x, THETA.: %04x, PHI.: %04x, TEMP: %02x, TS: %04x", i,
+           to_bin(sample.header & 0xff), (sample.x_dotdot & 0xffff), (sample.y_dotdot & 0xffff), (sample.z_dotdot & 0xffff),
+           (sample.rho_dot & 0xffff), (sample.theta_dot & 0xffff), (sample.phi_dot & 0xffff), (sample.temperature & 0xff),
+           (sample.timestamp & 0xffff));
+  }
+#endif 
+  /*
+   *  Display the leaving state
+   */
+  for ( i = 0; i != 10; i++ )
+  {
+    memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure
+    transaction.addr      = 0x80 | FIFO_COUNT_0;  // Point to the FIFO read regisetrt
+    transaction.tx_buffer = NULL;                 // Transmit buffer not used
+    transaction.length    = 2 * 8;                // Transmit length in bits
+    transaction.rx_buffer = NULL;
+    transaction.rxlength  = 2 * 8;                // Receive length in bits
+    transaction.flags     = SPI_TRANS_USE_RXDATA; // Indicate that this is a read operation
+    spi_device_transmit(ICM45686_handle, &transaction);
+    printf("\r\nFIFO_COUNT_TOTAL: %d", (transaction.rx_data[1] << 8) | transaction.rx_data[0]);
+
+    memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure
+    transaction.addr      = 0x80 | INT1_STATUS0;  // Point to the FIFO read regisetrt
+    transaction.tx_buffer = NULL;                 // Transmit buffer not used
+    transaction.length    = 1 * 8;                // Transmit length in bits
+    transaction.rx_buffer = NULL;
+    transaction.rxlength  = 1 * 8;                // Receive length in bits
+    transaction.flags     = SPI_TRANS_USE_RXDATA; // Indicate that this is a read operation
+    spi_device_transmit(ICM45686_handle, &transaction);
+    printf("\r\nINT1_STATUS0: %02x", transaction.rx_data[0]);
+    printf("\r\nIMU_INTERRUPT: %s", gpio_get_level(IMU_INTERRUPT) == 0 ? "ACTIVE" : "INACTIVE");
+    printf("\r\n");
+    vTaskDelay(1);
+  }
+  /*
+   *  All done, return
+   */
+  return;
 }
 
 /*----------------------------------------------------------------
@@ -323,7 +436,7 @@ bool ICM45686_find_index_out(time_count_64_t shot) // Time shot occured
  * and scrambles it into the FIFO format for use by the rest of the program.\
  *
  *--------------------------------------------------------------*/
-void ICM45686_read_raw_accel(FIFO_raw_frame_t *sample) // Returned values
+void ICM45686_read_raw_accel(register_single_t *sample) // Returned values
 {
   spi_transaction_t    transaction;
   register_raw_frame_t raw_frame;
@@ -332,11 +445,11 @@ void ICM45686_read_raw_accel(FIFO_raw_frame_t *sample) // Returned values
    * Prepare and read a single sample directly from the ICM45686
    */
   memset(&transaction, 0x00, sizeof(transaction));            // Clear the transaction structure
-  transaction.addr      = 0x80 | ACCEL_X;                     // Start at Accel Acceleration Data and read all 6 bytes in one transaction
+  transaction.addr      = 0x80 | ACCEL_DATA_X1_UI;            // Start at Accel Acceleration Data and read all 6 bytes in one transaction
   transaction.length    = (sizeof(register_raw_frame_t)) * 8; // Transmit length in bits (less the empty)
   transaction.tx_buffer = NULL;                               // Send dummy data to read the acceleration data
   transaction.rxlength  = (sizeof(register_raw_frame_t)) * 8; // Don't count the empty
-  transaction.rx_buffer = &raw_frame.dummy;                   // Receive buffer to store the raw acceleration data
+  transaction.rx_buffer = &raw_frame;                         // Receive buffer to store the raw acceleration data
   transaction.flags     = 0;
   spi_device_transmit(ICM45686_handle, &transaction);         // Transmit the transaction
 
@@ -355,9 +468,10 @@ void ICM45686_read_raw_accel(FIFO_raw_frame_t *sample) // Returned values
   sample->theta_dot = raw_frame.theta_dot;
   sample->phi_dot   = raw_frame.phi_dot;
 
-  /*
-   *  All done
-   */
+/*
+ *  All done
+ */
+#endif
   return;
 }
 
@@ -429,8 +543,8 @@ void ICM45686_read_temperature(void) // Returned values
 
 void ICM45686_find_zero(bool ask_for_confirm) // Ask for save confirmation)
 {
-  unsigned int     i;                         // Loop counter
-  FIFO_raw_frame_t ICM45686_FIFO_raw;         // Read in the order the FIFO returns data
+  unsigned int      i;                        // Loop counter
+  register_single_t ICM45686_register_raw;    // Read in the order the FIFO returns data
 
   DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "ICM45686_find_zero()");))
 
@@ -451,14 +565,13 @@ void ICM45686_find_zero(bool ask_for_confirm) // Ask for save confirmation)
    */
   for ( i = 0; i != NUM_ZERO_SAMPLES; i++ )
   {
-    ICM45686_read_raw_accel(&ICM45686_FIFO_raw);        // Take a sample of the raw acceleration data
-    json_x_dotdot_offset += ICM45686_FIFO_raw.x_dotdot; // Accumulate the X-axis raw acceleration data
-    json_y_dotdot_offset += ICM45686_FIFO_raw.y_dotdot; // Accumulate the Y-axis raw acceleration data
-    json_z_dotdot_offset += ICM45686_FIFO_raw.z_dotdot; // Accumulate the Z-axis raw acceleration data
-    json_rho_dot_offset += ICM45686_FIFO_raw.rho_dot;
-    json_theta_dot_offset += ICM45686_FIFO_raw.theta_dot;
-    json_phi_dot_offset += ICM45686_FIFO_raw.phi_dot;
-    printf("  %04X", ICM45686_FIFO_raw.x_dotdot);
+    ICM45686_read_raw_accel(&ICM45686_register_raw);        // Take a sample of the raw acceleration data
+    json_x_dotdot_offset += ICM45686_register_raw.x_dotdot; // Accumulate the X-axis raw acceleration data
+    json_y_dotdot_offset += ICM45686_register_raw.y_dotdot; // Accumulate the Y-axis raw acceleration data
+    json_z_dotdot_offset += ICM45686_register_raw.z_dotdot; // Accumulate the Z-axis raw acceleration data
+    json_rho_dot_offset += ICM45686_register_raw.rho_dot;
+    json_theta_dot_offset += ICM45686_register_raw.theta_dot;
+    json_phi_dot_offset += ICM45686_register_raw.phi_dot;
     vTaskDelay(2);
   }
 
@@ -477,8 +590,8 @@ void ICM45686_find_zero(bool ask_for_confirm) // Ask for save confirmation)
    */
   DLT(DLT_INFO,
       SEND(CONSOLE, sprintf(_xs, "Zero - X_..: 0X%04X  Y_..: 0X%04X  Z_..: 0X%04X   rho_.: 0X%04X   theta_.: 0X%04X  phi_.: 0X%04X ",
-                            json_x_dotdot_offset, json_y_dotdot_offset, json_z_dotdot_offset, json_rho_dot_offset, json_rho_dot_offset,
-                            json_rho_dot_offset);))
+                            (json_x_dotdot_offset & 0xffff), (json_y_dotdot_offset & 0xffff), (json_z_dotdot_offset & 0xffff),
+                            (json_rho_dot_offset & 0xffff), (json_theta_dot_offset & 0xffff), (json_phi_dot_offset & 0xffff));))
 
   if ( ask_for_confirm == true )
   {
@@ -519,7 +632,6 @@ void ICM45686_find_zero(bool ask_for_confirm) // Ask for save confirmation)
    */
   run_state &= ~IN_TEST;
   SEND(CONSOLE, sprintf(_xs, _DONE_);)
-
   return;
 }
 
@@ -545,55 +657,56 @@ void ICM45686_find_zero(bool ask_for_confirm) // Ask for save confirmation)
 #define CAL_SCALE       1.0
 #define SWAP_ENDIAN(x)  (((x << 8) & 0xFF00) | ((x >> 8) & 0x00FF))
 
-void ICM45686_convert_to_g(FIFO_raw_frame_t *sample, // 16 bit numbers read from BICM45686
-                           trace_vector_t   *vector  // Working values
+void ICM45686_convert_to_g(register_single_t *sample, // 16 bit numbers read from BICM45686
+                           trace_vector_t    *vector  // Working values
 )
 {
   /*
    *  Swap the endians
    */
+  /*
   sample->x_dotdot  = SWAP_ENDIAN(sample->x_dotdot);
   sample->y_dotdot  = SWAP_ENDIAN(sample->y_dotdot);
   sample->z_dotdot  = SWAP_ENDIAN(sample->z_dotdot);
   sample->rho_dot   = SWAP_ENDIAN(sample->rho_dot);
   sample->theta_dot = SWAP_ENDIAN(sample->theta_dot);
   sample->phi_dot   = SWAP_ENDIAN(sample->phi_dot);
-  vector->x_dotdot  = CAL_SCALE * (real_t)(sample->x_dotdot - json_x_dotdot_offset) * G_PER_LSB; // Convert raw X-axis data to g
+  */
+  vector->x_dotdot = CAL_SCALE * (real_t)(sample->x_dotdot - json_x_dotdot_offset) * G_PER_LSB; // Convert raw X-axis data to g
   if ( F_ABS(vector->x_dotdot) < ACCEL_DEAD_BAND )
   {
     vector->x_dotdot = 0;
   }
 
-  vector->y_dotdot = CAL_SCALE * (real_t)(sample->y_dotdot - json_y_dotdot_offset) * G_PER_LSB;  // Convert raw Y-axis data to g
+  vector->y_dotdot = CAL_SCALE * (real_t)(sample->y_dotdot - json_y_dotdot_offset) * G_PER_LSB; // Convert raw Y-axis data to g
   if ( F_ABS(vector->y_dotdot) < ACCEL_DEAD_BAND )
   {
     vector->y_dotdot = 0;
   }
 
-  vector->z_dotdot = CAL_SCALE * (real_t)(sample->z_dotdot - json_z_dotdot_offset) * G_PER_LSB;  // Convert raw Z-axis data to g
+  vector->z_dotdot = CAL_SCALE * (real_t)(sample->z_dotdot - json_z_dotdot_offset) * G_PER_LSB; // Convert raw Z-axis data to g
   if ( F_ABS(vector->z_dotdot) < ACCEL_DEAD_BAND )
   {
     vector->z_dotdot = 0;
   }
 
-  vector->rho_dot = (real_t)(sample->rho_dot - json_rho_dot_offset) * GYRO_PER_LSB;              // Convert raw X-axis data to g
+  vector->rho_dot = (real_t)(sample->rho_dot - json_rho_dot_offset) * GYRO_PER_LSB;             // Convert raw X-axis data to g
   if ( F_ABS(vector->rho_dot) < GYRO_DEAD_BAND )
   {
     vector->rho_dot = 0;
   }
 
-  vector->theta_dot = (real_t)(sample->theta_dot - json_theta_dot_offset) * GYRO_PER_LSB;        // Convert raw X-axis data to g
+  vector->theta_dot = (real_t)(sample->theta_dot - json_theta_dot_offset) * GYRO_PER_LSB;       // Convert raw X-axis data to g
   if ( F_ABS(vector->theta_dot) < GYRO_DEAD_BAND )
   {
     vector->theta_dot = 0;
   }
 
-  vector->phi_dot = (real_t)(sample->phi_dot - json_phi_dot_offset) * GYRO_PER_LSB;              // Convert raw X-axis data to g
+  vector->phi_dot = (real_t)(sample->phi_dot - json_phi_dot_offset) * GYRO_PER_LSB;             // Convert raw X-axis data to g
   if ( F_ABS(vector->phi_dot) < GYRO_DEAD_BAND )
   {
     vector->phi_dot = 0;
   }
-
   return;
 }
 
@@ -612,11 +725,12 @@ void ICM45686_convert_to_g(FIFO_raw_frame_t *sample, // 16 bit numbers read from
  *--------------------------------------------------------------*/
 void ICM45686_oscilliscope(void)
 {
-  real_t           vector_magnitude; // Magnitude of the acceleration vector
-  trace_vector_t   trace_vector;
-  FIFO_raw_frame_t sample;
-  bool             pause = false;
+  real_t            vector_magnitude; // Magnitude of the acceleration vector
+  trace_vector_t    trace_vector;
+  register_single_t sample;
+  bool              pause = false;
 
+  memset(&trace_vector, 0, sizeof(trace_vector));
   while ( 1 )
   {
     if ( pause == false )
@@ -682,31 +796,27 @@ void ICM45686_oscilliscope(void)
 void ICM45686_SPI_dump(void)
 {
   int               address;        // Display address
-  int               i;              // Index
   uint8_t           registers[128]; // Copy of registers
   spi_transaction_t transaction;
 
                                     /*
                                      * Read and print the values of all registers
                                      */
-  memset(&registers, 0xAB, sizeof(registers));        // Clear the registers array
-  memset(&transaction, 0, sizeof(transaction));       // Clear the transaction structure
-  transaction.addr      = 0x80 | 0;                   // Register address to read from
-  transaction.length    = (FIFO_DATA) * 8;            // Transmit length in bits
-  transaction.tx_buffer = NULL;                       // Transmit buffer not used
-  transaction.rxlength  = (FIFO_DATA) * 8;            // Receive length in bits
-  transaction.rx_buffer = &registers[0];              // Use the pointer as the destination for the read data
-  transaction.flags     = 0;                          // Indicate that this is a read operation;
-  spi_device_transmit(ICM45686_handle, &transaction); // Transmit the transaction
+  memset(&registers, 0xAB, sizeof(registers));                   // Clear the registers array
+  memset(&transaction, 0, sizeof(transaction));                  // Clear the transaction structure
 
-  memset(&transaction, 0, sizeof(transaction));       // Clear the transaction structure
-  transaction.addr      = 0x80 | (FIFO_DATA + 1);     // Read from one after the FIFO data register to get the rest of the registers
-  transaction.length    = (128 - FIFO_DATA) * 8;      // Transmit length in bits
-  transaction.tx_buffer = NULL;                       // Transmit buffer not used
-  transaction.rxlength  = (128 - FIFO_DATA) * 8;      // Receive length in bits
-  transaction.rx_buffer = &registers[FIFO_DATA + 1];  // Use the pointer as the destination for the read data
-  transaction.flags     = 0;                          // Indicate that this is a read operation;
-  spi_device_transmit(ICM45686_handle, &transaction); // Transmit the transaction
+  for ( address = 0; address != 0x80; address++ )
+  {
+    transaction.addr      = 0x80 | address;                      // Register address to read from
+    transaction.length    = (1) * 8;                             // Transmit length in bits
+    transaction.tx_buffer = NULL;                                // Transmit buffer not used
+    transaction.rxlength  = (1) * 8;                             // Receive length in bits
+    transaction.rx_buffer = NULL;                                // Use the pointer as the destination for the read data
+    transaction.flags     = SPI_TRANS_USE_RXDATA;                // Indicate that this is a read operation;
+    spi_device_transmit(ICM45686_handle, &transaction);          // Transmit the transaction
+
+    registers[address] = transaction.rx_data[0];
+  }
 
   for ( address = 0x00; address < sizeof(registers); address++ ) // Loop through all the registers from 0x00 to 0x7F
   {
@@ -729,33 +839,31 @@ void ICM45686_SPI_dump(void)
                                                                   *  Display known values
                                                                   */
   SEND(CONSOLE, sprintf(_xs, "\r\n");)
-  printf("%d %f", TO_16(TEMP_DATA1_UI), (real_t)TO_16(TEMP_DATA1_UI) / 128.0 + 25.0);
   SEND(CONSOLE, sprintf(_xs, "\r\n0x22: Temperature: %4.2f", ((real_t)TO_16(TEMP_DATA1_UI)) / 128.0 + 25.0);)
   SEND(CONSOLE, sprintf(_xs, "\r\n0x24: FIFO length: %d", ((registers[0x25] << 8) + registers[0x24]));)
-  SEND(CONSOLE, sprintf(_xs, "\r\n0x0C: ACC X: %04X", TO_16(ACCEL_X));)
-  SEND(CONSOLE, sprintf(_xs, "\r\n0x0E: ACC Y: %04X", TO_16(ACCEL_X + 2));)
-  SEND(CONSOLE, sprintf(_xs, "\r\n0x10: ACC Z: %04X", TO_16(ACCEL_X + 4));)
-  SEND(CONSOLE, sprintf(_xs, "\r\n0x12: GYRO X: %04X", TO_16(ACCEL_X + 6));)
-  SEND(CONSOLE, sprintf(_xs, "\r\n0x14: GYRO Y: %04X", TO_16(ACCEL_X + 8));)
-  SEND(CONSOLE, sprintf(_xs, "\r\n0x16: GYRO Z: %04X", TO_16(ACCEL_X + 10));)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x0C: ACC X: %04X", TO_16(ACCEL_DATA_X1_UI));)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x0E: ACC Y: %04X", TO_16(ACCEL_DATA_X1_UI + 2));)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x10: ACC Z: %04X", TO_16(ACCEL_DATA_X1_UI + 4));)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x12: GYRO X: %04X", TO_16(ACCEL_DATA_X1_UI + 6));)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x14: GYRO Y: %04X", TO_16(ACCEL_DATA_X1_UI + 8));)
+  SEND(CONSOLE, sprintf(_xs, "\r\n0x16: GYRO Z: %04X", TO_16(ACCEL_DATA_X1_UI + 10));)
 
-  /*
-   *  Display the contents of the FIFO loop
-   */
+/*
+ *  Display the contents of the FIFO loop
+ */
+#if ( 0 )
   SEND(CONSOLE, sprintf(_xs, "\r\n");)
   for ( i = 0; i != SAMPLE_BUFFER_COUNT; i++ )
   {
     SEND(CONSOLE, sprintf(_xs, "\r\nBuffer: %d   ", i);)
-    SEND(CONSOLE, sprintf(_xs, "Header: %02X   ", sample_raw_read[i].f[0].header);)
-    SEND(CONSOLE, sprintf(_xs, "x_dotdot: %04X   y_dotdot: %04X   z_dotdot:%04X    ", sample_raw_read[i].f[0].x_dotdot,
-                          sample_raw_read[i].f[0].y_dotdot, sample_raw_read[i].f[0].z_dotdot);)
-    SEND(CONSOLE, sprintf(_xs, "rho_dot: %04X   theta_dot: %04X    phi_dot: %04X", sample_raw_read[i].f[0].rho_dot,
-                          sample_raw_read[i].f[0].theta_dot, sample_raw_read[i].f[0].phi_dot);)
-    SEND(CONSOLE,
-         sprintf(_xs, "temperature: %02X   timestamp: %04X", sample_raw_read[i].f[0].temperature, sample_raw_read[i].f[0].timestamp);)
+    SEND(CONSOLE, sprintf(_xs, "Header: %02X   ", FIFO_queue[i].f[0].header);)
+    SEND(CONSOLE, sprintf(_xs, "x_dotdot: %04X   y_dotdot: %04X   z_dotdot:%04X    ", FIFO_queue[i].f[0].x_dotdot,
+                          FIFO_queue[i].f[0].y_dotdot, FIFO_queue[i].f[0].z_dotdot);)
+    SEND(CONSOLE, sprintf(_xs, "rho_dot: %04X   theta_dot: %04X    phi_dot: %04X", FIFO_queue[i].f[0].rho_dot, FIFO_queue[i].f[0].theta_dot,
+                          FIFO_queue[i].f[0].phi_dot);)
+    SEND(CONSOLE, sprintf(_xs, "temperature: %02X   timestamp: %04X", FIFO_queue[i].f[0].temperature, FIFO_queue[i].f[0].timestamp);)
   }
+#endif
   SEND(CONSOLE, sprintf(_xs, _DONE_);)
   return;
 }
-
-#endif

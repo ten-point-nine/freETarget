@@ -22,7 +22,6 @@
 #include "diag_tools.h"
 #include "gpio.h"
 #include "helpers.h"
-#include "BMI270.h"
 #include "ICM45686.h"
 #include "spi.h"
 #include "nonvol.h"
@@ -43,7 +42,7 @@ extern time_count_64_t last_FIFO_read;
 /*
  *  Local Functions
  */
-extern FIFO_raw_t sample_raw_read[SAMPLE_BUFFER_COUNT]; // Space for 10 seconds of data
+extern FIFO_packet_t FIFO_queue[SAMPLE_BUFFER_COUNT]; // Space for 10 seconds of data
 
 /*----------------------------------------------------------------
  *
@@ -81,6 +80,7 @@ void IMU_test(void)
  *---------------------------------------------------------------*/
 void IMU_real_time(void)
 {
+#if ( 0 )
   trace_index_t  working;  // Working data point
   trace_vector_t current;  // Current computed location
   trace_vector_t previous; // Last computed location
@@ -147,6 +147,7 @@ void IMU_real_time(void)
    *  All done, return
    */
   SEND(CONSOLE, sprintf(_xs, "\r\n%s", _DONE_);)
+#endif
   return;
 }
 
@@ -214,7 +215,7 @@ void trace_build(int timestamp) // Build and send a trace
 
   for ( i = 0, j = 0; i < FOLLOW_THROUGH * SAMPLE_RATE; i++ )
   {
-    ICM45686_convert_to_g(&sample_raw_read[working.outer].f[working.inner], &current);
+    ICM45686_convert_to_g(&FIFO_queue[working.outer].f[working.inner], &current);
     current.rho   = previous.rho + (current.rho_dot / SAMPLE_RATE);
     current.theta = previous.theta + (current.theta_dot / SAMPLE_RATE);
     current.phi   = previous.phi + (current.phi_dot / SAMPLE_RATE);
@@ -244,7 +245,7 @@ void trace_build(int timestamp) // Build and send a trace
 
   for ( i = (APPROACH * SAMPLE_RATE) - 1, j = (APPROACH * TRACE_RATE) - 1; i >= 0; i-- )
   {
-    ICM45686_convert_to_g(&sample_raw_read[working.outer].f[working.inner], &current);
+    // ICM45686_convert_to_g(&FIFO_queue[working.outer].f[working.inner], &current);
     current.rho   = previous.rho - (current.rho_dot / SAMPLE_RATE);
     current.theta = previous.theta - (current.theta_dot / SAMPLE_RATE);
     current.phi   = previous.phi - (current.phi_dot / SAMPLE_RATE);
@@ -393,15 +394,15 @@ void trace_send(int oversample)            // Build and send a trace
  * inner points to an individual sample in the FIFO input buffer
  *
  *--------------------------------------------------------------*/
-static bool FIFO_full = false;  // Is the FIFO full
+static bool FIFO_full = false; // Is the FIFO full
 
-FIFO_raw_frame_t *trace_first() // Find the oldest sample in the FIFO buffer
+FIFO_raw_t *trace_first()   // Find the oldest sample in the FIFO buffer
 {
-  index_out = index_in;         // Start at oldest sample in the FIFO buffer
-  return &sample_raw_read[index_out.outer].f[index_out.inner];
+  index_out = index_in;        // Start at oldest sample in the FIFO buffer
+  return &FIFO_queue[index_out.outer].f[index_out.inner];
 }
 
-FIFO_raw_frame_t *trace_next(trace_index_t *index)
+FIFO_raw_t *trace_next(trace_index_t *index)
 {
   /*
    *  Move to the next sample in the FIFO buffer
@@ -424,33 +425,33 @@ FIFO_raw_frame_t *trace_next(trace_index_t *index)
     return NULL;                                                              // No more data
   }
 
-  return &sample_raw_read[index->outer].f[index->inner];
+  return &FIFO_queue[index->outer].f[index->inner];
 }
 
-FIFO_raw_frame_t *trace_previous(trace_index_t *index)
+FIFO_raw_t *trace_previous(trace_index_t *index)
 {
   index->outer--;         // Go backwards
   if ( index->outer < 0 ) // Wrap around
   {
-    index->outer = RAW_FRAME_COUNT - 1;
+    index->outer = SAMPLE_BUFFER_COUNT - 1;
     index->inner--;
     if ( index->inner < 0 )
     {
-      index->inner = SAMPLE_BUFFER_COUNT - 1;
+      index->inner = RAW_FRAME_COUNT - 1;
     }
   }
 
-  return &sample_raw_read[index->outer].f[index->inner];
+  return &FIFO_queue[index->outer].f[index->inner];
 }
 
-FIFO_raw_frame_t *trace_FIFO_next(trace_index_t *index)
+FIFO_raw_t *trace_FIFO_next(trace_index_t *index)
 {
   index->outer = ((index->outer) + 1) % SAMPLE_BUFFER_COUNT;
   if ( index_out.outer == index_in.outer ) // Wrapped around, the buffer is full
   {
     FIFO_full = true;                      // Remember we have wrapped around and the FIFO is full
   }
-  return &sample_raw_read[index->outer].f[0];
+  return &FIFO_queue[index->outer].f[0];
 }
 
 bool trace_ready(void)

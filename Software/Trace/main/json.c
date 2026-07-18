@@ -24,7 +24,6 @@
 #include "serial_io.h"
 #include "wifi.h"
 #include "timer.h"
-#include "BMI270.h"
 #include "ICM45686.h"
 #include "imu.h"
 #include "NTP.h"

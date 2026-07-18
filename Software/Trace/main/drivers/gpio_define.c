@@ -30,7 +30,6 @@
 #include "gpio_define.h"
 #include "serial_io.h"
 #include "spi.h"
-#include "BMI270.h"
 
 #define BOARD_REVISION 0 // Board revision via GPIO define entry #0
 

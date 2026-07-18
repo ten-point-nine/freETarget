@@ -35,7 +35,6 @@
 #include "WiFi.h"
 #include "diag_tools.h"
 #include "http_client.h"
-#include "BMI270.h"
 #include "ICM45686.h"
 #include "IMU.h"
 #include "NTP.h"
@@ -116,6 +115,7 @@ void trace_init(void)
   read_nonvol();                                 // Read in the settings
   if ( (json_x_dotdot_offset | json_theta_dot_offset) == 0 )
   {
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Board is not calibrated");))
     run_state |= IN_NO_CAL;                      // The board is not calibrated
   }
 
@@ -180,21 +180,18 @@ void trace_loop(void *arg)
   DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "trace_loop()");))
   run_state |= IN_OPERATION;
 
-  NTP_test();
+  // NTP_test();
 
   while ( 1 )
   {
+#if ( 0 )
     if ( gpio_get_level(IMU_INTERRUPT) == 0 )
     {
-#if USE_BMI270
-      BMI270_pull_FIFO();
-#endif
-#if USE_ICM45686
       ICM45686_pull_FIFO();
-#endif
       FIFO_pull++;
       FIFO_time_us = NTP_time_us();
     }
+#endif
     vTaskDelay(TICK_50ms);
   }
 

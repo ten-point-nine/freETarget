@@ -32,7 +32,6 @@
 #include "gpio_define.h"
 #include "json.h"
 #include "timer.h"
-#include "BMI270.h"
 #include "ICM45686.h"
 #include "IMU.h"
 #include "ntp.h"
@@ -62,6 +61,7 @@ static const self_test_t test_list[] = {
     {"Accelerometer oscilliscope",   &ICM45686_oscilliscope    },
     {"Accelerometer dump",           &ICM45686_SPI_dump        },
     {"Read temperature",             &ICM45686_read_temperature},
+    {"Dump FIFO",                    &ICM45686_dump_FIFO       },
 #endif
 #if USE_BMI270
     {"Accelerometer zeroing",        &BMI270_find_zero         },
@@ -314,12 +314,23 @@ void digital_input_test(void)
   {
     if ( gpio_get_level(SWITCH_GPIO) == 0 )
     {
-      SEND(CONSOLE, sprintf(_xs, "\r\nON");)
+      SEND(CONSOLE, sprintf(_xs, "\r\nSwitch  ON");)
       gpio_set_level(STATUS_LED, 0); // Turn the LED on
     }
     else
     {
-      SEND(CONSOLE, sprintf(_xs, "\r\nOFF");)
+      SEND(CONSOLE, sprintf(_xs, "\r\nSwitch OFF");)
+      gpio_set_level(STATUS_LED, 1); // Turn the LED off
+    }
+
+    if ( gpio_get_level(IMU_INTERRUPT) == 0 )
+    {
+      SEND(CONSOLE, sprintf(_xs, "   IMU_INTERRUPT ON");)
+      gpio_set_level(STATUS_LED, 0); // Turn the LED on
+    }
+    else
+    {
+      SEND(CONSOLE, sprintf(_xs, "   IMU_INTERRUPT OFF");)
       gpio_set_level(STATUS_LED, 1); // Turn the LED off
     }
 

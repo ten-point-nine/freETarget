@@ -83,28 +83,28 @@
  *  A sample buffer is the space to store a single FIFO pull
  *  A trace is the path drawn by the gun on the target
  */
-#define AVAILABLE_FIFO (8 * 1024)                          // (8192) 8K FIFO available
+#define AVAILABLE_FIFO (8 * 1024)                                // (8192) 8K FIFO available
 
-#define RAW_FRAME_SIZE  (1 + (6 * 2) + 1 + 2)              // (16)   8 entries @ 2 bytes per entry
-#define RAW_FRAME_COUNT (400)                              // (400)  entries in the FIFO
+#define RAW_FRAME_SIZE  (1 + (6 * 2) + 1 + 2)                    // (16)   8 entries @ 2 bytes per entry
+#define RAW_FRAME_COUNT (200)                                    // (400)  entries in the FIFO
 
-#define WATERMARK (RAW_FRAME_SIZE * (RAW_FRAME_COUNT + 2)) // (4800 + 2 sample buffer) Use 75% of the FIFO
+#define WATERMARK (RAW_FRAME_COUNT)                              // Generate a watermark based on the raw frame count
 
-#if ( WATERMARK > (AVAILABLE_FIFO * 8 / 10) )              // If the watermark is over 80% of the FIFO
+#if ( (WATERMARK * RAW_FRAME_SIZE) > (AVAILABLE_FIFO * 9 / 10) ) // If the watermark is over 90% of the FIFO
 #error "WATERMARK IS TOO HIGH"
 #endif
 
-#define APPROACH       5                                   // Go back in time 5 seconds
-#define FOLLOW_THROUGH 2                                   // Go forwards 2 seconds
-#define OVERSAMPLE     (SAMPLE_RATE / TRACE_RATE)          // Only send 1/8 samples
+#define APPROACH       5                                         // Go back in time 5 seconds
+#define FOLLOW_THROUGH 2                                         // Go forwards 2 seconds
+#define OVERSAMPLE     (SAMPLE_RATE / TRACE_RATE)                // Only send 1/8 samples
 
-#define SAMPLE_RATE   (800)                               // Output Data Rate samples per second
-#define SAMPLE_PERIOD (APPROACH + FOLLOW_THROUGH)          // Accumulate sampls for 8 seconds
+#define SAMPLE_RATE   (800)                                      // Output Data Rate samples per second
+#define SAMPLE_PERIOD (APPROACH + FOLLOW_THROUGH)                // Accumulate sampls for 8 seconds
 #define SAMPLE_BUFFER_COUNT                                                                                                                \
-  (((SAMPLE_RATE * SAMPLE_PERIOD) / RAW_FRAME_COUNT) + 1)  // Number of frames needed to store the approach and follow through
+  (((SAMPLE_RATE * SAMPLE_PERIOD) / RAW_FRAME_COUNT) + 1)        // Number of frames needed to store the approach and follow through
 
-#define TRACE_RATE        (100)                            // Trace points per
-#define TRACE_FRAME_SIZE  (2 * 4)                          // (24) 6 entries at 4 bytes (32 bits) each
+#define TRACE_RATE        (100)                                  // Trace points per
+#define TRACE_FRAME_SIZE  (2 * 4)                                // (24) 6 entries at 4 bytes (32 bits) each
 #define TRACE_MEMORY_SIZE (TRACE_RATE * SAMPLE_PERIOD * TRACE_FRAME_SIZE) // (96000)
 
 /*
