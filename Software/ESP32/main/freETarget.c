@@ -568,6 +568,7 @@ void start_new_session(int session_type) //
   unsigned int i;
 
   DLT(DLT_APPLICATION, SEND(CONSOLE, sprintf(_xs, "start_new_session(%d)", session_type);))
+  event_override();                      // Look for any event overrides in the event name
 
   switch ( session_type & (~SESSION_VALID) )
   {

@@ -124,7 +124,7 @@ static void start_rapid_fire(void)
 
   json_rapid_count = 5;        // Expect five shots in this one session
 
-  timed_fire_event_override(); // Look for a shot count in the event name
+  event_override(); // Look for a shot count in the event name
 }
 
 static void start_sport_pistol(void)
@@ -136,7 +136,7 @@ static void start_sport_pistol(void)
   //  {"PAPER_TIME":0, "EVENT":"SPP Allan", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 0 }
   real_t temp;
 
-  timed_fire_event_override();                // Look for a shot count in the event name
+  event_override();                // Look for a shot count in the event name
 
   temp = (real_t)json_rapid_time;             // Total event time
   temp -= json_rapid_count * json_rapid_wait; // Subtract the total wait time between shots
@@ -151,7 +151,7 @@ static void start_tabata(void)
   // "RAPID_ENABLE": 1 }
   // {"PAPER_TIME":0, "TRACE":2048, "EVENT":"TBT Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":7, "RAPID_ENABLE": 1 }
   // {"PAPER_TIME":0, "EVENT":"TBT Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":7, "RAPID_ENABLE": 1 }
-  timed_fire_event_override(); // Look for a shot count in the event name
+  event_override(); // Look for a shot count in the event name
   return;
 }
 
@@ -488,36 +488,3 @@ static void timed_fire_exit(void)
   return;
 }
 
-static void timed_fire_event_override(void) // Look for overides in the event name
-{
-  int i;
-  /*
-   *  Look for a change in the shot count
-   */
-  for ( i = 0; json_event[i] != 0; i++ )
-  {
-    if ( json_event[i] == '-' ) // Got an option tag
-    {
-      i++;
-      switch ( json_event[i] )
-      {
-        case 'N':               // Rapid fire override
-        case 'n':               // Rapid fire override
-          i++;                  // Move to the numeric part of the option
-          json_rapid_count = atoi(&json_event[i]);
-          i++;                  // Move past the number
-          DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "Override json_rapid_count: %d", json_rapid_count);))
-          break;
-
-        default:
-          DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Unknown option: %c", json_event[i]);))
-          break;
-      }
-    }
-  }
-
-  /*
-   *  Finished processing event overrides
-   */
-  return;
-}

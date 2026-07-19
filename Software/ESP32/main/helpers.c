@@ -1040,3 +1040,72 @@ real_t degrees_to_radians(real_t degrees)
 {
   return (degrees / 180.0 * PI);
 }
+
+/*----------------------------------------------------------------
+ *
+ * @function: event_override
+ *
+ * @brief:    Look for overrides in the event name
+ *
+ * @return:   void
+ *
+ *----------------------------------------------------------------
+ *
+ * The user can create temporary overrides for an event by
+ * * adding a '-' followed by an option character in the event name.
+ *
+ * -E<num> : Override the eco settingsx
+ * -N<num> : Override the rapid fire shot count with <num>
+ * -P<num> : Override paper time
+ *
+ *--------------------------------------------------------------*/
+typedef struct
+{
+  char  option;       // Letter option, ex 'E' for eco, 'N' for rapid count, 'P' for paper time
+  char *json_text;    // Pointer to the JSON string representing the option
+  int  *json_overide; // Pointer to the variable to store the override value
+} event_override_t;
+
+static event_override_t event_override_options[] = {
+    // Global instance to store the current event overrides
+    {'E', "json_paper_eco",   &json_paper_eco  },
+    {'N', "json_rapid_count", &json_rapid_count},
+    {'P', "json_paper_time",  &json_paper_time },
+    {0,   NULL,               NULL             }
+};
+
+void event_override(void) // Look for overides in the event name
+{
+  int i, j;
+  /*
+   *  Look for a change in the shot count
+   */
+  i = 0;
+  while ( json_event[i] != 0 )
+  {
+    if ( json_event[i] == '-' ) // Got an option tag
+    {
+      i++;                      // Advance past the '-' character
+      j = 0;
+      while ( event_override_options[j].option != 0 )
+      {
+        if ( json_event[i] == event_override_options[j].option )
+        {
+          i++;                  // Move to the numeric part of the option
+          *(event_override_options[j].json_overide) = atoi(&json_event[i]);
+          i++;                  // Move past the number (mostly for negative numbers)
+          DLT(DLT_APPLICATION, SEND(CONSOLE, sprintf(_xs, "Override %s: %d", event_override_options[j].json_text,
+                                                     *(event_override_options[j].json_overide));))
+          break;
+        }
+        j++;
+      }
+    }
+    i++; // Move to the next character in the JSON event string
+  }
+
+  /*
+   *  Finished processing event overrides
+   */
+  return;
+}
