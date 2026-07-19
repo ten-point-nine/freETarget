@@ -96,9 +96,9 @@ void ICM45686_init(unsigned int ICM45686_gpio)
 
   memset(&transaction, 0, sizeof(transaction));       // Clear the transaction structure
   transaction.addr      = 0x80 | WHO_AM_I;            // Register address to read from
-  transaction.length    = 2 * 8;                      // Transmit length in bits
+  transaction.length    = 1 * 8;                      // Transmit length in bits
   transaction.tx_buffer = NULL;                       // Transmit buffer not used
-  transaction.rxlength  = 2 * 8;                      // Receive length in bits
+  transaction.rxlength  = 1 * 8;                      // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_RXDATA;       // Indicate that this is a read operation
 
   spi_device_transmit(ICM45686_handle, &transaction); // Dummy read to put into SPI mode
@@ -112,7 +112,7 @@ void ICM45686_init(unsigned int ICM45686_gpio)
   }
   else
   {
-    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "ICM45686 device ID: 0x%02X", transaction.rx_data[1]);))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "ICM45686 device ID: 0x%02X", transaction.rx_data[0]);))
   }
   vTaskDelay(1);
 
@@ -264,7 +264,6 @@ void ICM45686_dump_FIFO(void)
 {
   spi_transaction_t transaction;
   int               i;
-  FIFO_single_t     sample;
 
   memset(&FIFO_queue[0], 0xAB, sizeof(FIFO_packet_t) * 8); // Clear the sample buffer
   memset(&transaction, 0, sizeof(transaction));            // Clear the transaction structure
