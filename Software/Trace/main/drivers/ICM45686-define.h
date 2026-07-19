@@ -155,7 +155,7 @@ static spi_device_interface_config_t ICM45686_spi_config = {
 
 static const ICM45686_config_t ICM45686_config[] = {
     {INT1_CONFIG_2,       int1_drive | int1_mode | int1_polarity             },
-    {INT1_CONFIG_0,       int1_status_en_fifo_ths | 0x80 }, //int1_status_en_reset_done},
+    {INT1_CONFIG_0,       int1_status_en_fifo_ths | 0x80}, //int1_status_en_reset_done},
     {ACCEL_CONFIG0,       accel_ui_fs_sel | accel_odr                        },
     {GYRO_CONFIG0,        gyro_ui_fs_sel | gyro_odr                          },
     {FIFO_CONFIG0,        fifo_mode | fifo_depth                             },

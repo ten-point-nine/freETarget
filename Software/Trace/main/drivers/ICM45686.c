@@ -210,7 +210,7 @@ bool ICM45686_pull_FIFO(void)
    */
   memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure
   transaction.addr      = 0x80 | INT1_STATUS0;  // Point to the FIFO read regisetr
-  transaction.tx_buffer = 0xAB;                 // Send a zero
+  transaction.tx_buffer = 0;                    // Send a zero
   transaction.length    = 1 * 8;                // Transmit length in bits
   transaction.rxlength  = 1 * 8;                // Receive length in bits
   transaction.flags     = SPI_TRANS_USE_TXDATA; // Read into the four byte pointer
@@ -275,10 +275,10 @@ void ICM45686_dump_FIFO(void)
   transaction.flags     = 0;                               // Indicate that this is a read operation
   spi_device_transmit(ICM45686_handle, &transaction);
 
-  /*
-   * Extract the data
-   */
-  #if(0)
+/*
+ * Extract the data
+ */
+#if ( 0 )
   for ( i = 0; i != 10; i++ )
   {
     sample.header      = FIFO_queue[0].f[i].buffer[0]; // Header byte for the FIFO frame, not used in this program
@@ -297,34 +297,49 @@ void ICM45686_dump_FIFO(void)
            (sample.rho_dot & 0xffff), (sample.theta_dot & 0xffff), (sample.phi_dot & 0xffff), (sample.temperature & 0xff),
            (sample.timestamp & 0xffff));
   }
-#endif 
+#endif
   /*
    *  Display the leaving state
    */
   for ( i = 0; i != 10; i++ )
   {
-    memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure
-    transaction.addr      = 0x80 | FIFO_COUNT_0;  // Point to the FIFO read regisetrt
-    transaction.tx_buffer = NULL;                 // Transmit buffer not used
-    transaction.length    = 2 * 8;                // Transmit length in bits
+    memset(&transaction, 0, sizeof(transaction));   // Clear the transaction structure
+    transaction.addr      = 0x80 | FIFO_COUNT_0;    // Point to the FIFO read regisetrt
+    transaction.tx_buffer = NULL;                   // Transmit buffer not used
+    transaction.length    = 2 * 8;                  // Transmit length in bits
     transaction.rx_buffer = NULL;
-    transaction.rxlength  = 2 * 8;                // Receive length in bits
-    transaction.flags     = SPI_TRANS_USE_RXDATA; // Indicate that this is a read operation
+    transaction.rxlength  = 2 * 8;                  // Receive length in bits
+    transaction.flags     = SPI_TRANS_USE_RXDATA;   // Indicate that this is a read operation
     spi_device_transmit(ICM45686_handle, &transaction);
     printf("\r\nFIFO_COUNT_TOTAL: %d", (transaction.rx_data[1] << 8) | transaction.rx_data[0]);
 
-    memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure
-    transaction.addr      = 0x80 | INT1_STATUS0;  // Point to the FIFO read regisetrt
-    transaction.tx_buffer = NULL;                 // Transmit buffer not used
-    transaction.length    = 1 * 8;                // Transmit length in bits
+    memset(&transaction, 0, sizeof(transaction));   // Clear the transaction structure
+    transaction.addr      = 0x80 | INT1_STATUS0;    // Point to the FIFO read regisetrt
+    transaction.tx_buffer = NULL;                   // Transmit buffer not used
+    transaction.length    = 1 * 8;                  // Transmit length in bits
     transaction.rx_buffer = NULL;
-    transaction.rxlength  = 1 * 8;                // Receive length in bits
-    transaction.flags     = SPI_TRANS_USE_RXDATA; // Indicate that this is a read operation
+    transaction.rxlength  = 1 * 8;                  // Receive length in bits
+    transaction.flags     = SPI_TRANS_USE_RXDATA;   // Indicate that this is a read operation
     spi_device_transmit(ICM45686_handle, &transaction);
     printf("\r\nINT1_STATUS0: %02x", transaction.rx_data[0]);
     printf("\r\nIMU_INTERRUPT: %s", gpio_get_level(IMU_INTERRUPT) == 0 ? "ACTIVE" : "INACTIVE");
     printf("\r\n");
-    vTaskDelay(1);
+
+    if ( transaction.rx_data[0] != 0 )              // Reset status
+    {
+      memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure
+      transaction.addr      = 0x80 | INT1_STATUS0;  // Point to the FIFO read regisetrt
+      transaction.tx_buffer = 0;                    // Transmit buffer not used
+      transaction.length    = 1 * 8;                // Transmit length in bits
+      transaction.rx_buffer = NULL;
+      transaction.rxlength  = 1 * 8;                // Receive length in bits
+      transaction.flags     = SPI_TRANS_USE_TXDATA; // Indicate that this is a read operation
+      spi_device_transmit(ICM45686_handle, &transaction);
+      printf("\r\nINT1_STATUS0: %02x", transaction.rx_data[0]);
+      printf("\r\nIMU_INTERRUPT: %s", gpio_get_level(IMU_INTERRUPT) == 0 ? "ACTIVE" : "INACTIVE");
+      printf("\r\n");
+      vTaskDelay(1);
+    }
   }
   /*
    *  All done, return
