@@ -43,6 +43,7 @@
 #include "http_services.h"
 #include "OTA.h"
 #include "calibrate.h"
+#include "timed_fire.h"
 
 /*
  *  Variables
@@ -50,13 +51,6 @@
 unsigned int number_of_connections = 0; // How many people are connected to me?
 
                                         // Keep alive timer
-time_count_t tabata_timer;           // Free running statsecondse timer
-time_count_t rapid_timer;            // Timer used for rapid fire ecents
-                                     // Timer to reset LED status
-int go_dark     = 10l;               // Go dark for 10
-int go_wait     = 3l;                // Wait for the PC to catchup
-int all_done    = 0l;                // All finished
-int always_true = true;
 
 static enum {
   START = 0,                         // 0 et the operating mode
@@ -64,14 +58,10 @@ static enum {
   REDUCE                             // 2 Reduce the data and send the score
 } freETarget_state;
 
-typedef struct
-{
-  volatile int *timer;               // Timer used to control state length
-  char         *status_LED;          // Status LED output
-  int           LED_bright;          // Brightness of target LED
-  char         *message;             // Message to be sent to PC
-  bool          in_shot;             // In as shot cycle
-} rapid_state_t;
+#define NEXT_CONTINUE 0              // Continue to the next state
+#define NEXT_START    1              // Go to the start state
+#define NEXT_LOOP_1   2              // Loop back one step
+#define NEXT_LOOP_2   3              // Loop back two steps
 
 extern int isr_state;
 
@@ -103,43 +93,47 @@ void freeETarget_init(void)
 
 #if TRACE_APPLICATION
   is_trace |= DLT_APPLICATION;   // Enable application tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT APPLICATON enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT APPLICATON enabled");))
 #endif
 #if TRACE_COMMUNICATION
   is_trace |= DLT_COMMUNICATION; // Enable application tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT COMMUNICATION enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT COMMUNICATION enabled");))
 #endif
 #if TRACE_DIAGNOSTICS
   is_trace |= DLT_DIAG;          // Enable diagnostics tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT DIAGNOSTICS enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT DIAGNOSTICS enabled");))
 #endif
 #if TRACE_DEBUG
   is_trace |= DLT_DEBUG;         // Enable debug tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT DEBUG enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT DEBUG enabled");))
 #endif
 #if TRACE_SCORE
   is_trace |= DLT_SCORE;         // Enable score tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT SCORE enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT SCORE enabled");))
 #endif
 #if TRACE_HTTP
   is_trace |= DLT_HTTP;          // Enable HTTP tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT HTTP enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT HTTP enabled");))
 #endif
 #if TRACE_OTA
   is_trace |= DLT_OTA;           // Enable OTA tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT OTA enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT OTA enabled");))
 #endif
 #if TRACE_HEARTBEAT
   is_trace |= DLT_HEARTBEAT;     // Enable heartbeat tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT HEARTBEAT enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT HEARTBEAT enabled");))
 #endif
 #if TRACE_CALIBRATION
   is_trace |= DLT_CALIBRATION;   // Enable calibration tracing
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT CALIBRATION enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT CALIBRATION enabled");))
 #endif
 #if TRACE_VERBOSE
   is_trace |= DLT_VERBOSE;       // Enable verbose messages
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "DLT VERBOSE enabled");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT VERBOSE enabled");))
+#endif
+#if TRACE_RAPID_FIRE
+  is_trace |= DLT_RAPID_FIRE;    // Enable rapid fire tracing
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "DLT RAPID FIRE enabled");))
 #endif
 
   /*
@@ -177,6 +171,7 @@ void freeETarget_init(void)
   ft_timer_new(&time_to_go, 0, NULL, "time to go");                                                     // Time remaining in session
   ft_timer_new(&shot_timer, 0, NULL, "shot timer");                                                     // Wait for the shot to arrive
   ft_timer_new(&ring_timer, 0, NULL, "ring timer");                                                     // Wait for the ringing to stop
+  ft_timer_new(&event_timer, 0, NULL, "event timer"); // Timed event, ex rapid fire or tabata
 
   /*
    * Run the power on self test
@@ -184,7 +179,7 @@ void freeETarget_init(void)
   POST_counters();            // POST counters does not return if there is an error
   if ( check_12V() == false ) // Verify the 12 volt supply
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "12V supply not present");))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "12V supply not present");))
   }
 
   /*
@@ -232,19 +227,20 @@ unsigned int location;      // Sensor location
 
 void freeETarget_target_loop(void *arg)
 {
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "freeETarget_target_loop()");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "freeETarget_target_loop()");))
 
   set_status_LED(LED_READY);
 
   if ( (PCNT_HIGH_GPIO & board_mask)         // Are the PCNT HIGH counters provided
        && (json_pcnt_latency != 0) )         // If the second set of timers has been enabled
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Initializing PCNT high inputs");))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Initializing PCNT high inputs");))
     gpio_init_single(PCNT_HI);               // Program the port
   }
 
   start_new_session(0);
   shot_number = 1;                           // Start counting shots at 1
+  run_state |= IN_SHOT;                      // Default to IN_SHOT unless a timed event overrides it
 
   while ( 1 )
   {
@@ -268,20 +264,14 @@ void freeETarget_target_loop(void *arg)
     {
       default:
       case START:                                                                              // Start of the loop
-        DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "state: START");))
+        DLT(DLT_APPLICATION, SEND(CONSOLE, sprintf(_xs, "state: START");))
         power_save           = (time_count_t)json_power_save * (time_count_t)ONE_SECOND * 60L; //  Reset the timer
         time_since_last_shot = HTTP_CLOSE_TIME * 60l * ONE_SECOND;                             // 15 minutes since last shot
         set_mode(); // Set the mode for the next string of shot (ex Tabata or Rapid Fire)
         arm();      // Arm the circuit and check for errors
         set_status_LED(LED_READY);
-
-        if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
-        {
-          set_status_LED(LED_RAPID_ON);                                      // Show that the target is available for use
-        }
         freETarget_state = WAIT;
-        json_rapid_count = 0;
-        DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "state: WAIT");))
+        DLT(DLT_APPLICATION, SEND(CONSOLE, sprintf(_xs, "state: WAIT");))
         break;
 
       case WAIT:
@@ -289,7 +279,7 @@ void freeETarget_target_loop(void *arg)
         break;
 
       case REDUCE:
-        DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "state: REDUCE");))
+        DLT(DLT_APPLICATION, SEND(CONSOLE, sprintf(_xs, "state: REDUCE");))
         reduce();
         freETarget_state = START;
         break;
@@ -323,21 +313,14 @@ unsigned int set_mode(void)
 {
   unsigned int i;
 
-  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "set_mode()");))
+  DLT(DLT_APPLICATION, SEND(CONSOLE, sprintf(_xs, "set_mode()");))
 
   for ( i = 0; i != SHOT_SPACE; i++ )
   {
     record[i].face_strike = 100; // Disable face strikes
   }
 
-  if ( json_tabata_enable )      // If the Tabata or rapid fire is enabled,
-  {
-    set_LED_PWM_now(0);          // Turn off the LEDs
-  } // Until the session starts
-  else
-  {
-    set_LED_PWM(json_LED_PWM); // Keep the LEDs ON
-  }
+  set_LED_PWM(json_LED_PWM);     // Keep the LEDs ON
 
   /*
    * Proceed to the WAITing state
@@ -364,24 +347,17 @@ unsigned int set_mode(void)
  *--------------------------------------------------------------*/
 unsigned int arm(void)
 {
-  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "arm()");))
+  DLT(DLT_APPLICATION, SEND(CONSOLE, sprintf(_xs, "arm()");))
 
-  face_strike = 0;                                                       // Reset the face strike count
-  enable_face_strike_interrupt();                                        // Enable the face strike interrupt
+  face_strike = 0;                // Reset the face strike count
+  enable_face_strike_interrupt(); // Enable the face strike interrupt
   stop_timers();
-  arm_timers();                                                          // Arm the counters
-  run_state |= IN_SHOT;
-  shot_start = run_time_ms();                                            // Remember when we started
+  arm_timers();                   // Arm the counters
 
-  sensor_status = is_running();                                          // and immediatly read the status
-  if ( sensor_status == 0 )                                              // After arming, the sensor status should be zero
+  sensor_status = is_running();   // and immediatly read the status
+  if ( sensor_status == 0 )       // After arming, the sensor status should be zero
   {
-    if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
-    {
-      set_status_LED(LED_RAPID_ON);                                      // Show that we are ready
-    }
-
-    return WAIT;                                                         // Fall through to WAIT
+    return WAIT;                  // Fall through to WAIT
   }
 
   /*
@@ -474,7 +450,7 @@ unsigned int reduce(void)
    */
   while ( shot_out != shot_in ) // Process the shots on the queue
   {
-    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "shot_in: %d,  shot_out:%d", shot_in, shot_out);))
+    DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "shot_in: %d,  shot_out:%d", shot_in, shot_out);))
     DLT(DLT_DEBUG, show_sensor_status(record[shot_out].sensor_status);)
 
     if ( (record[shot_out].sensor_status & 0x0f) != 0x0f )
@@ -485,9 +461,10 @@ unsigned int reduce(void)
     {
       location = compute_hit(&record[shot_out]); // Compute the score
 
-      /*
-       *  Delay for a follow through
-       */
+                                                 /*
+                                                  *  Delay for a follow through
+                                                  */
+
       if ( location != MISS ) // Was it a miss or face strike?
       {
         prepare_score(&record[shot_out], shot_out, NOT_MISSED_SHOT);
@@ -507,32 +484,28 @@ unsigned int reduce(void)
         /*
          *  Advance the paper
          */
-        if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )                                 // Has the witness paper been enabled?
+        if ( IS_DC_WITNESS || IS_STEPPER_WITNESS )                 // Has the witness paper been enabled?
         {
-          if ( (json_paper_eco == 0)                                               // PAPER_ECO turned off
-               || (record[shot_out].radius < (json_paper_eco / 2))                 // Inside the black (radius)
-               || (paper_shot_out > FORCE_PAPER_MOVE) )                            // Too many misses
+          if ( (json_paper_eco == 0)                               // PAPER_ECO turned off
+               || (record[shot_out].radius < (json_paper_eco / 2)) // Inside the black (radius)
+               || (paper_shot_out > FORCE_PAPER_MOVE) )            // Too many misses
           {
-            paper_shot++;                                                          //
-            DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", record[shot_out].radius, json_paper_eco / 2,
-                                             paper_shot, json_paper_shot);))
-            if ( (paper_shot >= json_paper_shot)                                   // Have met the number of good shots?
-                 || (paper_shot_out >= FORCE_PAPER_MOVE) )                         // Or we just shot too many bad ones?
+            paper_shot++;                                          //
+            DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "Radius: %4.2f/%d good shot: %d/%d", record[shot_out].radius, json_paper_eco / 2,
+                                                 paper_shot, json_paper_shot);))
+            if ( (paper_shot >= json_paper_shot)                   // Have met the number of good shots?
+                 || (paper_shot_out >= FORCE_PAPER_MOVE) )         // Or we just shot too many bad ones?
             {
-              if ( (json_rapid_enable == false) && (json_tabata_enable == false) ) // If rapid fire is not enabled
-              {
-                set_status_LED(LED_RAPID_ON);                                      // Show that the target cannot be used
-              }
-              paper_start();                                                       // Roll the paper
-              paper_shot     = 0;                                                  // And start over
-              paper_shot_out = 0;                                                  // Reset the outside shots
+              paper_start();                                       // Roll the paper
+              paper_shot     = 0;                                  // And start over
+              paper_shot_out = 0;                                  // Reset the outside shots
             }
           }
           else
           {
             paper_shot_out++;                                      // Outside of the desired radius, keep track of the misses
-            DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Radius: %4.2f/%d bad shot: %d/%d", record[shot_out].radius, json_paper_eco / 2,
-                                             paper_shot, json_paper_shot);))
+            DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "Radius: %4.2f/%d bad shot: %d/%d", record[shot_out].radius, json_paper_eco / 2,
+                                                 paper_shot, json_paper_shot);))
           }
         }
       }
@@ -545,8 +518,8 @@ unsigned int reduce(void)
           prepare_score(&record[shot_out], shot_out, MISSED_SHOT); // Show a miss
         }
       }
+      shot_out = (shot_out + 1) % SHOT_SPACE;                      // Increment to the next shot
     }
-    shot_out = (shot_out + 1) % SHOT_SPACE;                        // Increment to the next shot
   }
 
   /*
@@ -554,7 +527,7 @@ unsigned int reduce(void)
    */
   while ( ring_timer > 0 ) // Wait here to make sure the ringing has stopped
   {
-    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "ring_timer: %ld", ring_timer);))
+    DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "ring_timer: %ld", ring_timer);))
     vTaskDelay(10);
   }
 
@@ -563,14 +536,7 @@ unsigned int reduce(void)
                             */
   run_state &= ~IN_REDUCTION;
 
-  if ( tabata_timer == 0 )
-  {
-    return START;
-  }
-  else
-  {
-    return WAIT;
-  }
+  return START;
 }
 
 /*----------------------------------------------------------------
@@ -601,7 +567,8 @@ void start_new_session(int session_type) //
 {
   unsigned int i;
 
-  DLT(DLT_APPLICATION, SEND(ALL, sprintf(_xs, "start_new_session(%d)", session_type);))
+  DLT(DLT_APPLICATION, SEND(CONSOLE, sprintf(_xs, "start_new_session(%d)", session_type);))
+  event_override();                      // Look for any event overrides in the event name
 
   switch ( session_type & (~SESSION_VALID) )
   {
@@ -650,239 +617,6 @@ void start_new_session(int session_type) //
 
   /*
    *  All done, return
-   */
-  return;
-}
-
-/*----------------------------------------------------------------
- *
- * @function: tabata_task
- *
- * @brief:   Implement a Tabata timer for training
- *
- * @return:  Time that the current TABATA state == TABATA_ON
- *
- *----------------------------------------------------------------
- *
- * This is a synchronous task that is called every 500ms (1/2 second)
- *
- * A Tabata timer is used to train for specific durations or time
- * of events.  For example in shooting the target should be aquired
- * and shot within a TBD seconds.
- *
- * This function turns on the LEDs for a configured time and
- * then turns them off for another configured time and repeated
- * for a configured number of cycles
- *
- * OFF - 2 Second Warning - 2 Second Off - ON
- *
- * Tabata differs from Rapid Fire in that Tabata will run
- * indefinitly
- *
- * Test JSON
- * {"TABATA_WARN_ON": 1, "TABATA_ON":7, "TABATA_REST":30, "TABATA_ENABLE":1}
- * {"TABATA_WARN_ON": 5, "TABATA_ON":7, "TABATA_REST":30, "TABATA_ENABLE":1}
- * {"MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":22}
- *
- * Test 10.9
- *
- *  {"TABATA_WARN_ON": 3, "TABATA_ON":12, "TABATA_REST":25, "TABATA_ENABLE":1}
- *  {"TABATA_ENABLE":0}
- *-------------------------------------------------------------*/
-#define LED_RAMP 2
-#define LED_ON   1
-#define LED_OFF  0
-
-const rapid_state_t tabata_state[] = {
-    // Time in state         Status LEDs     target LED  Message     IN_SHOT
-    {&all_done,            LED_TABATA_OFF,  LED_OFF,  "TABATA_IDLE",  false}, // 0 Wait for json_tabata_enable
-    {&json_tabata_warn_on, LED_TABATA_WARN, LED_RAMP, "TABATA_BEGIN", false}, // 1 Wait for json_tabata_enable
-    {&json_tabata_on,      LED_TABATA_ON,   LED_ON,   "TABATA_ON",    true }, // 3 Wait for json_tabata_enable
-    {&json_tabata_warn_on, LED_TABATA_WARN, LED_OFF,  "TABATA_END",   false}, // 1 Wait for json_tabata_enable
-    {&json_tabata_rest,    LED_TABATA_OFF,  LED_OFF,  "TABATA_REST",  false}, // 4 Turn the timer on for the event
-    {&all_done,            LED_TABATA_OFF,  LED_OFF,  "TABATA_START", false}  // 5 Start/End of state machine
-};
-
-void tabata_task(void)
-{
-  static int tabata_state_machine = 0;                                        // State machine index
-
-  IF_NOT(IN_OPERATION) return;
-
-  /*
-   * Exit if Tabata has not been enabled
-   */
-  if ( json_tabata_enable == false )
-  {
-    if ( tabata_state_machine != 0 ) // Reset the state machine
-    {
-      tabata_state_machine = 0;      // Reset the Tabata state machine (incremented on entry)
-      run_state &= ~IN_SHOT;         // Take it out of a shot if it was in one
-      freETarget_state = START;      // Force the freeTarget state machine back to start
-      set_LED_PWM_now(json_LED_PWM); // Turn the lights back on
-      SEND(ALL, sprintf(_xs, "{\"TABATA_OFF\": 0}\r\n");)
-    }
-    return;
-  }
-  /*
-   *  Execute the state machine
-   */
-
-  if ( tabata_timer == 0 )                                // Time to go to the next state?
-  {
-    tabata_state_machine++;                               // Next state
-    SEND(ALL, sprintf(_xs, "{\"%s\": %d}\r\n", tabata_state[tabata_state_machine].message, *tabata_state[tabata_state_machine].timer);)
-
-    if ( *tabata_state[tabata_state_machine].timer == 0 ) // Reached the end of the state machine
-    {
-      tabata_state_machine = 1;                           // Go back to the beginning
-    }
-    ft_timer_new(&tabata_timer, (*tabata_state[tabata_state_machine].timer) * ONE_SECOND, NULL, "tabata timer");
-    set_status_LED(tabata_state[tabata_state_machine].status_LED);
-    switch ( tabata_state[tabata_state_machine].LED_bright )
-    {
-      case LED_RAMP:
-        set_LED_PWM_now(10);                                  // Ramp the lights on
-        break;
-
-      case LED_ON:
-        set_LED_PWM_now(json_LED_PWM);                        // Turn on the lights
-        break;
-
-      case LED_OFF:
-        set_LED_PWM_now(0);                                   // Turn off the lights
-        break;
-    }
-
-    if ( tabata_state[tabata_state_machine].in_shot == true ) // Is the target ready to accept a shot?
-    {
-      run_state |= IN_SHOT;                                   // Yes, set it so
-      shot_start = run_time_ms();                             // and remember this time
-    }
-    else
-    {
-      run_state &= ~IN_SHOT;
-    }
-  }
-
-  /*
-   * All done.
-   */
-  return;
-}
-
-/*----------------------------------------------------------------
- *
- * @function: rapid_fire
- *
- * @brief:    Start or stop a rapid fire session
- *
- * @return:   Nothing
- *
- *----------------------------------------------------------------
- *
- * This is a synchronous task that is called every 500ms (1/2 second)
- *
- * This is a state machine to control the LEDs and timers for
- * the rapid fire event.
- *
- * Test Message
- * {"RAPID_TIME":20, "RAPID_COUNT":10, "RAPID_WAIT":5, "RAPID_ENABLE":1}
- * {"RAPID_TIME":10, "RAPID_COUNT":10, "RAPID_WAIT":0,  "RAPID_ENABLE":1}
- * {"RAPID_TIME":20, "RAPID_COUNT":5,  "RAPID_WAIT":0,  "RAPID_ENABLE":1}
- * {"RAPID_TIME":30, "RAPID_COUNT":5,  "RAPID_WAIT":5,  "RAPID_ENABLE":1}
- * {"MFS_HOLD_C":18, "MFS_HOLD_D":20, "MFS_SELECT_CD":22, "RAPID_TIME":10, "RAPID_COUNT":5,  "RAPID_WAIT":5,  "RAPID_ENABLE":1}
- *
- *--------------------------------------------------------------*/                                       // 100 signals random time, %10 is the duration
-
-const rapid_state_t rapid_state[] = {
-    // Time in state   Status LEDs     LED  Message IN_SHOT Score
-    //                               Brightness
-    {&all_done,        LED_RAPID_OFF,  0, "RAPID_IDLE",    false}, // 0 Do nothing
-    {&go_wait,         LED_RAPID_OFF,  0, "RAPID_ENABLED", false}, // 1 Wait for json_rapid_enable
-    {&json_rapid_wait, LED_RAPID_WARN, 1, "RAPID_WAIT",    false}, // 2 Warn the shooter the event is enabled
-    {&json_rapid_time, LED_RAPID_ON,   1, "RAPID_ON",      true }, // 4 Turn the timer on for the event
-    {&go_dark,         LED_RAPID_OFF,  0, "RAPID_OFF",     false}, // 5 Event finished, turn off
-    {&all_done,        LED_RAPID_OFF,  1, "SLOW_FIRE",     true }  // 6 End of state machine
-};
-
-void rapid_fire_task(void)
-{
-  static unsigned int rapid_state_machine = 0;                  // State machine index
-  static unsigned int rapid_count;                              //  Number of shots received during rapid fire
-
-  IF_NOT(IN_OPERATION) return;
-
-  /*
-   * Exit if Rapid fire has not been enabled
-   */
-
-  if ( json_rapid_enable == false )
-  {
-    if ( rapid_state_machine != 0 )  // Reset the state machine
-    {
-      rapid_state_machine = 0;       // Reset the Tabata state machine (incremented on entry)
-      run_state &= ~IN_SHOT;         // Take it out of a shot if it was in one
-      freETarget_state = START;      // Force the freeTarget state machine back to start
-      set_LED_PWM_now(json_LED_PWM); // Turn the lights back on
-    }
-    return;
-  }
-
-                                     /*
-                                      *  Execute the state machine
-                                      */
-
-  if ( rapid_timer == 0 )                                                          // Time to go to the next state?
-  {
-    rapid_state_machine++;                                                         // Next state
-    SEND(ALL, sprintf(_xs, "\r\n{\"%s\": %d, \"LED\": \"%s\"}", rapid_state[rapid_state_machine].message,
-                      *rapid_state[rapid_state_machine].timer, rapid_state[rapid_state_machine].status_LED);)
-
-    if ( *rapid_state[rapid_state_machine].timer == 0 )                            // Reached the end of the state machine
-    {
-      set_status_LED(LED_RAPID_OFF);                                               // Turn off the Lights
-      set_LED_PWM_now(json_LED_PWM);                                               // Turn off the lights
-
-      printf("\r\nRapid fire complete: rapid_count: %d, json_rapid_count: %d\r\n", rapid_count, json_rapid_count);
-
-      while ( rapid_count < json_rapid_count )                                     // Send incomplete as misses
-      {
-        record[rapid_count].shot_time     = 0;                                     // Fake the time
-        record[rapid_count].shot          = rapid_count;                           // Fake a shot number
-        record[rapid_count].sensor_status = 0;                                     // Fake the sensor status
-        record[rapid_count].miss          = 1;                                     // No face strike
-        build_json_score(&record[rapid_count], SCORE_SEND_MISS);                   // Build the JSON for the miss
-        serial_to_all(_xs, ALL);
-        rapid_count = (rapid_count + 1) % SHOT_SPACE;
-      }
-
-      rapid_state_machine = 1;                                                     // Go back to the beginning
-      rapid_timer         = 0;                                                     // Reset the timer
-      json_rapid_enable   = 0;                                                     // Turn off the rapid cycle
-      json_rapid_count    = 0;                                                     // No more shots expected
-    }
-    else
-    {
-      ft_timer_new(&rapid_timer, (*rapid_state[rapid_state_machine].timer) * ONE_SECOND, NULL, "rapid timer");
-      set_status_LED(rapid_state[rapid_state_machine].status_LED);
-      set_LED_PWM_now(rapid_state[rapid_state_machine].LED_bright * json_LED_PWM); // Control the lights
-
-      if ( rapid_state[rapid_state_machine].in_shot == true )                      // Remember the shot count when we go into
-      {                                                                            // rapid fire so that we can detect misses
-        rapid_count = shot_in;
-        run_state |= IN_SHOT;                                                      // See if we are expecting a shot
-        shot_start = run_time_ms();                                                // and remember this time
-      }
-      else
-      {
-        run_state &= ~IN_SHOT;
-      }
-    }
-  }
-
-  /*
-   * All done.
    */
   return;
 }
@@ -978,7 +712,7 @@ void interrupt_target_test(void)
       SEND(ALL, sprintf(_xs, "\r\n");)
       for ( i = 0; i != 8; i++ )
       {
-        SEND(ALL, sprintf(_xs, "%s:%5d  ", find_sensor(1 << i)->long_name, record[shot_out].timer_count[i]);)
+        SEND(ALL, sprintf(_xs, "%s:%ld  ", find_sensor(1 << i)->long_name, record[shot_out].shot_time);)
       }
       shot_out = (shot_out + 1) % SHOT_SPACE;
     }
@@ -1073,18 +807,17 @@ void generate_fake_shot(void)
         {
           for ( i = N; i <= W; i++ )           // Loop through the sensors to compute the time counts
           {
-            distance = sqrt((SQ(x - s[i].x_mm) + SQ(y - s[i].y_mm)));
-            record[shot_in].timer_count[i] =
-                (int)(SHOT_TIME * OSCILLATOR_MHZ) - (distance / 0.35 * OSCILLATOR_MHZ); // Fake the travel time in
+            distance                  = sqrt((SQ(x - s[i].x_mm) + SQ(y - s[i].y_mm)));
+            record[shot_in].shot_time = (int)(SHOT_TIME * OSCILLATOR_MHZ) - (distance / 0.35 * OSCILLATOR_MHZ); // Fake the travel time in
           }
 
           record[shot_in].shot          = shot_in;
-          record[shot_in].face_strike   = 0;                                            // No face strikes
-          record[shot_in].sensor_status = 0x0f;                                         // All sensors valid
-          ring_timer                    = json_min_ring_time * ONE_SECOND / 1000;       // Reset the ring timer
+          record[shot_in].face_strike   = 0;                                                                    // No face strikes
+          record[shot_in].sensor_status = 0x0f;                                                                 // All sensors valid
+          ring_timer                    = json_min_ring_time * ONE_SECOND / 1000;                               // Reset the ring timer
           shot_in                       = (shot_in + 1) % SHOT_SPACE;
 
-          reduce();                                                                     // Process the shot
+          reduce();                                                                                             // Process the shot
           vTaskDelay(ONE_SECOND * 2);
         }
       }

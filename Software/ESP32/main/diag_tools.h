@@ -126,12 +126,13 @@ void mfs_test_build_json_score(void);                     // Test build_json_sco
 #define DLT_HTTP          (DLT_SCORE << 1)         // Log HTTP requests
 #define DLT_OTA           (DLT_HTTP << 1)          // Log OTA requests
 #define DLT_CALIBRATION   (DLT_OTA << 1)           // Debug the calibraition software
+#define DLT_RAPID_FIRE    (DLT_CALIBRATION << 1)   // Debug the Rapid Fire  software
 #define DLT_HEARTBEAT     (0x2000)                 // Kick out the time to see if we are alive
 #define DLT_VERBOSE       (0x4000)                 // Turn on verbose tracing
 #define DLT_AMB           (0x8000)                 // Special Debug DLT
 
 #if ( (DLT_APPLICATION | DLT_COMMUNICATION | DLT_DIAG | DLT_DEBUG | DLT_SCORE | DLT_HTTP | DLT_OTA | DLT_CALIBRATION | DLT_HEARTBEAT |     \
-       DLT_VERBOSE) &                                                                                                                      \
+       DLT_VERBOSE | DLT_RAPID_FIRE) &                                                                                                     \
       (DLT_HEARTBEAT | DLT_VERBOSE | DLT_AMB) != 0 )
 #error "DLT levels overlapPlease choose other values for the DLT levels."
 #endif
@@ -149,6 +150,7 @@ void mfs_test_build_json_score(void);                     // Test build_json_sco
 #define TRACE_HEARTBEAT     (0 == 1)
 #define TRACE_CALIBRATION   (0 == 1)
 #define TRACE_VERBOSE       (0 == 1)
+#define TRACE_RAPID_FIRE    (0 == 1)
 
 // clang-format off
 #define DLT(level, z) if ( do_dlt(level) )  { z }                                                                                                                       \

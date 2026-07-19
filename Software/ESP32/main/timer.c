@@ -75,9 +75,8 @@ static synchronous_task_t task_list[] = {
     {BAND_10ms,   multifunction_switch_tick}, // Look for MFS changes
     {BAND_10ms,   multifunction_switch     },
     {BAND_10ms,   paper_drive_tick         }, // Drive the paper drive motor
+    {BAND_100ms,  timed_event_task         }, // Manage the rapid fire timer
     {BAND_500ms,  toggle_status_LEDs       }, // Blink the LEDs
-    {BAND_500ms,  tabata_task              }, // Manage the Tabata timer
-    {BAND_500ms,  rapid_fire_task          }, // Manage the rapid fire timer
     {BAND_1000ms, check_12V                }, // Monitor the 12V supply
     {BAND_1000ms, check_new_connection     }, // Check for a new WiFi connection
     {BAND_60s,    watchdog                 }, // Watchdog monitor
@@ -123,7 +122,7 @@ const timer_config_t config = {
 
 void freeETarget_timer_init(void)
 {
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "freeETarget_timer_init()");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "freeETarget_timer_init()");))
   timer_init(TIMER_GROUP_0, TIMER_1, &config);
   timer_set_counter_value(TIMER_GROUP_0, TIMER_1, 0);    // Start the timer at 0
   timer_set_alarm_value(TIMER_GROUP_0, TIMER_1, ONE_MS); // Trigger on this value
@@ -269,7 +268,7 @@ void freeETarget_timers(void *pvParameters)
 {
   unsigned int i;
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "freeETarget_timers()");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "freeETarget_timers()");))
 
   /*
    *  Decrement the timers on a 10ms (100Hz) interval
@@ -329,7 +328,7 @@ void freeETarget_synchronous(void *pvParameters)
   unsigned int old_run_state = 0;
   unsigned int i; // Index into the task list
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "freeETarget_synchronous()");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "freeETarget_synchronous()");))
 
   while ( 1 )
   {
@@ -413,7 +412,7 @@ int ft_timer_new(time_count_t *new_timer, // Pointer to new down counter
       return 1;
     }
   }
-  DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "No space for new timer");))
+  DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "No space for new timer");))
 
   return 0;
 }

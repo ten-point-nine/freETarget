@@ -20,7 +20,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-//#include <sys/param.h>
+// #include <sys/param.h>
 #include "esp_http_server.h"
 #include "esp_event.h"
 #include "esp_netif.h"
@@ -84,14 +84,14 @@ httpd_handle_t start_webserver(unsigned int port // Port to use for the web serv
   config.server_port      = port;
   config.lru_purge_enable = true;
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "start_webserver(port: %d)", config.server_port);))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "start_webserver(port: %d)", config.server_port);))
 
   /*
    * Start the web server
    */
   if ( httpd_start(&server, &config) == ESP_OK ) // Create the server
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Registering URI handlers using port %d", port);))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Registering URI handlers using port %d", port);))
     register_services(server, port);
     httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
     server_count++;                              // Increment the number of servers started
@@ -102,7 +102,7 @@ httpd_handle_t start_webserver(unsigned int port // Port to use for the web serv
   /*
    *  Got here because we could not start the server
    */
-  DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Error starting server!");))
+  DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Error starting server!");))
   return NULL;
 }
 
@@ -132,11 +132,11 @@ void disconnect_handler(void            *arg,        // Arguments that we got
     if ( stop_webserver(*server) == ESP_OK )
     {
       *server = NULL;
-      DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Web server stopped");))
+      DLT(DLT_HTTP, SEND(CONSOLE, sprintf(_xs, "Web server stopped");))
     }
     else
     {
-      DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Web server failed to stop");))
+      DLT(DLT_HTTP, SEND(CONSOLE, sprintf(_xs, "Web server failed to stop");))
     }
   }
 }
@@ -164,12 +164,12 @@ void connect_handler(void            *arg,        //
   httpd_handle_t *server = (httpd_handle_t *)arg;
   if ( *server == NULL )
   {
-    DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Starting webserver");))
+    DLT(DLT_HTTP, SEND(CONSOLE, sprintf(_xs, "Starting webserver");))
     *server = start_webserver(DEFAULT_HTTP_PORT);
   }
   else
   {
-    DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Could not start webserver");))
+    DLT(DLT_HTTP, SEND(CONSOLE, sprintf(_xs, "Could not start webserver");))
   }
 
   /*
@@ -202,7 +202,7 @@ static esp_err_t stop_webserver(httpd_handle_t server)
  *------------------------------------------------------------*/
 esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
 {
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "http_404_error_handler: %s", req->uri);))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "http_404_error_handler: %s", req->uri);))
 
   sprintf(_xs, "Error 404. Service not found: %s", req->uri); // Error reported to the user
 

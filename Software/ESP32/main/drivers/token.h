@@ -11,6 +11,7 @@
 #ifdef TOKEN_C
 #define EXTERN
 #else
+#undef EXTERN
 #define EXTERN extern
 #endif
 

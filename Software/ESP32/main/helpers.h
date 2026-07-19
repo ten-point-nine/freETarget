@@ -14,6 +14,7 @@
 void         target_name(char *name_space);                             // Return target name
 int          to_int(char h);                                            // Convert char to integer ('A' = 0x0A)
 int          instr(char *s1, char *s2);                                 // Compare two strings
+int          stricmp(const char *s1, const char *s2);                   // Case-insensitive string comparison
 bool         contains(char *s1, char *s2);                              // Return true if s1 contains s2
 bool         prompt_for_confirm(void);                                  // Prompt for confirmation
 void         get_number(char *prompt, real_t *value);                   // Get a number from the user
@@ -34,7 +35,7 @@ real_t       radians_to_degrees(real_t radians);                        // Conve
 real_t       degrees_to_radians(real_t degrees);                        // Convert degrees to readians
 void         no_singularity(real_t *a, real_t *b, real_t *c);           // Prevent singularities
 real_t       SQ(real_t a);                                              // Square a number
-
+void         event_override(void);                                      // Look for overides in the event name
 /*
  * Global helper variables
  */

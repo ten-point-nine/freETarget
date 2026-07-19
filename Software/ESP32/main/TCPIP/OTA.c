@@ -104,31 +104,31 @@ void OTA_load(void)
   /*
    *  Start
    */
-  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "OTA_load()");))
+  DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "OTA_load()");))
   set_status_LED(LED_OTA_DOWNLOAD);
 
   if ( boot_partition == NULL )
   {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Boot partition not available");))
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Boot partition not available");))
     return;
   }
 
   if ( running_partition == NULL )
   {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Running partition not available");))
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Running partition not available");))
     return;
   }
 
 #if ( 0 )
   if ( boot_partition != running_partition )
   {
-    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Configured OTA boot partition at offset 0x%08" PRIx32 ", but running from offset 0x%08" PRIx32,
-                                   configured->address, running->address);))
+    DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "Configured OTA boot partition at offset 0x%08" PRIx32 ", but running from offset 0x%08" PRIx32,
+                                       configured->address, running->address);))
     DLT(DLT_INFO,
         SEND(ALL, sprintf(_xs, "(This can happen if either the OTA boot data or preferred boot image become corrupted somehow.)");))
   }
-  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Running partition type %d subtype %d (offset 0x%08" PRIx32 ")", running->type, running->subtype,
-                                 running->address);))
+  DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "Running partition type %d subtype %d (offset 0x%08" PRIx32 ")", running->type, running->subtype,
+                                     running->address);))
 #endif
 
   /*
@@ -137,7 +137,7 @@ void OTA_load(void)
   sprintf(download_url, "%s/freeETarget.bin", json_ota_url);
   config.url = download_url;
 
-  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "OTA download URL: \"%s\"", config.url);))
+  DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "OTA download URL: \"%s\"", config.url);))
 
   client = esp_http_client_init(&config);
 
@@ -156,8 +156,8 @@ void OTA_load(void)
    */
   update_partition = esp_ota_get_next_update_partition(NULL);
   assert(update_partition != NULL);
-  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Writing to partition subtype %d at offset 0x%" PRIx32, update_partition->subtype,
-                                 update_partition->address);))
+  DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "Writing to partition subtype %d at offset 0x%" PRIx32, update_partition->subtype,
+                                     update_partition->address);))
 
   esp_http_client_fetch_headers(client);
 #if ( OTA_FETCH_HEADER == true )
@@ -175,7 +175,7 @@ void OTA_load(void)
     OTA_halt_process(LED_OTA_FAILED_CONNECT, "esp_ota_begin failed");
   }
 
-  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "esp_ota_begin succeeded");))
+  DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "esp_ota_begin succeeded");))
 
   /*
    * Loop here and bring in the file
@@ -240,14 +240,14 @@ void OTA_load(void)
 
   esp_http_client_cleanup(client);
   set_status_LED(LED_OTA_FINSHED); // Show we are part way done
-  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Total Write binary data length: %d", binary_file_length);))
+  DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "Total Write binary data length: %d", binary_file_length);))
 
   if ( esp_ota_end(update_handle) != ESP_OK )
   {
     OTA_halt_process(LED_OTA_FATAL, "Failed to complete OTA update");
   }
 
-  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "esp_ota_end succesful");))
+  DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "esp_ota_end succesful");))
 
   /*
    * Looks good, setup the registers
@@ -325,28 +325,28 @@ void OTA_serial(unsigned int OTA_download_size) // Size of the incoming file
   /*
    *  Start, check that the partitions are available
    */
-  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "OTA_serial(%d)", OTA_download_size);))
+  DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "OTA_serial(%d)", OTA_download_size);))
   set_status_LED(LED_OTA_DOWNLOAD);
 
   if ( boot_partition == NULL )
   {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "{\"RESPONSE\": \"FAIL> Boot partition not available\"}");))
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "{\"RESPONSE\": \"FAIL> Boot partition not available\"}");))
     return;
   }
 
   if ( running_partition == NULL )
   {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "{\"RESPONSE\": \"FAIL> Running partition not available\"}");))
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "{\"RESPONSE\": \"FAIL> Running partition not available\"}");))
     return;
   }
 
 #if ( 0 )
   if ( boot_partition != running_partition )
   {
-    DLT(DLT_OTA, SEND(ALL, sprintf(_xs,
-                                   "{\"RESPONSE\": \"INFO> Configured OTA boot partition at offset 0x%08" PRIx32
-                                   ", but running from offset 0x%08\"}" PRIx32,
-                                   configured->address, running->address);))
+    DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs,
+                                       "{\"RESPONSE\": \"INFO> Configured OTA boot partition at offset 0x%08" PRIx32
+                                       ", but running from offset 0x%08\"}" PRIx32,
+                                       configured->address, running->address);))
         SEND(LAST, sprintf(_xs, "(This can happen if either the OTA boot data or preferred boot image become corrupted somehow.)");))
   }
   DLT(DLT_OTA, SEND(LAST, sprintf(_xs, "{\"RESPONSE\": \"INFO> Running partition type %d subtype %d (offset 0x%08" PRIx32 ")\"}",
@@ -355,8 +355,8 @@ void OTA_serial(unsigned int OTA_download_size) // Size of the incoming file
 
   update_partition = esp_ota_get_next_update_partition(NULL);
   assert(update_partition != NULL);
-  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"INFO> Writing to partition subtype %d at offset 0x%" PRIx32,
-                                 update_partition->subtype, update_partition->address);))
+  DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "{\"RESPONSE\":\"INFO> Writing to partition subtype %d at offset 0x%" PRIx32,
+                                     update_partition->subtype, update_partition->address);))
   /*
    *  Prepare for the update
    */
@@ -368,7 +368,7 @@ void OTA_serial(unsigned int OTA_download_size) // Size of the incoming file
     OTA_halt_process(LED_OTA_FAILED_CONNECT, "esp_ota_begin failed");
   }
 
-  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"INFO> esp_ota_begin succeeded\"}");))
+  DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "{\"RESPONSE\":\"INFO> esp_ota_begin succeeded\"}");))
 
   /*
    *  Acknowledge the request and send the packet size
@@ -425,7 +425,7 @@ void OTA_serial(unsigned int OTA_download_size) // Size of the incoming file
    *  The download is complete, make sure we have the complete file
    */
   set_status_LED(LED_OTA_FINSHED); // Show we are part way done
-  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"INFO> Total Write binary data length: %d\"}", bytes_received);))
+  DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "{\"RESPONSE\":\"INFO> Total Write binary data length: %d\"}", bytes_received);))
 
   if ( esp_ota_end(update_handle) != ESP_OK )
   {
@@ -434,14 +434,14 @@ void OTA_serial(unsigned int OTA_download_size) // Size of the incoming file
     OTA_halt_process(LED_OTA_FATAL, "Failed to complete OTA update");
   }
 
-  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"INFO> esp_ota_end succesful\"}");))
+  DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "{\"RESPONSE\":\"INFO> esp_ota_end succesful\"}");))
 
   /*
    * Looks good, setup the registers
    */
   if ( esp_ota_set_boot_partition(update_partition) != ESP_OK )
   {
-    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"FAIL> Failed to set boot partition\"}");))
+    DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "{\"RESPONSE\":\"FAIL> Failed to set boot partition\"}");))
     vTaskDelay(10); // Wait for the message to leave the buffer
     OTA_halt_process(LED_OTA_FATAL, "esp_ota_set_boot_partition failed");
   }
@@ -449,7 +449,7 @@ void OTA_serial(unsigned int OTA_download_size) // Size of the incoming file
   /*
    *  All done, halt and wait for the user to restart
    */
-  DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "{\"RESPONSE\":\"PASS> Cycle power to start new firmware\"}");))
+  DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "{\"RESPONSE\":\"PASS> Cycle power to start new firmware\"}");))
   vTaskDelay(10);                                                       // Wait for the message to leave the buffer
   OTA_halt_process(LED_OTA_READY, "Cycle power to start new firmware"); // Reboot the system
   return;
@@ -491,7 +491,7 @@ static void OTA_check_header(char                  *ota_write_data,    // Data r
    */
   if ( data_read < sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t) )
   {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "{\"RESPONSE\": \"FAIL> OTA data size too small\"}");))
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "{\"RESPONSE\": \"FAIL> OTA data size too small\"}");))
     OTA_halt_process(LED_OTA_FATAL, "OTA data size too small");
   }
 
@@ -499,11 +499,11 @@ static void OTA_check_header(char                  *ota_write_data,    // Data r
    *  Extract the data and print it out
    */
   memcpy(&new_app_info, &ota_write_data[sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t)], sizeof(esp_app_desc_t));
-  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "New firmware version: %s", new_app_info.version);))
+  DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "New firmware version: %s", new_app_info.version);))
 
   if ( esp_ota_get_partition_description(running_partition, &running_app_info) == ESP_OK )
   {
-    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Running firmware version: %s", running_app_info.version);))
+    DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "Running firmware version: %s", running_app_info.version);))
   }
 
   last_invalid_app = esp_ota_get_last_invalid_partition();
@@ -511,7 +511,7 @@ static void OTA_check_header(char                  *ota_write_data,    // Data r
   {
     if ( esp_ota_get_partition_description(last_invalid_app, &invalid_app_info) == ESP_OK )
     {
-      DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Last invalid firmware version: %s", invalid_app_info.version);))
+      DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "Last invalid firmware version: %s", invalid_app_info.version);))
     }
 
     if ( memcmp(invalid_app_info.version, new_app_info.version, sizeof(new_app_info.version)) == 0 )
@@ -528,7 +528,7 @@ static void OTA_check_header(char                  *ota_write_data,    // Data r
   {
     if ( new_app_info.version[i] < running_app_info.version[i] )
     {
-      DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "{\"RESPOSE\":\"FAIL> New version is older thatn the running version.\"}");))
+      DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "{\"RESPOSE\":\"FAIL> New version is older thatn the running version.\"}");))
       vTaskDelay(10);                                            // Wait for the message to leave the buffer
       OTA_halt_process(LED_OTA_FATAL, "New version is older than running version. Abandoning the update.");
     }
@@ -542,7 +542,7 @@ static void OTA_check_header(char                  *ota_write_data,    // Data r
   /*
    *  Got to the end and identical all the way along
    */
-  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "{\"RESPOSE\":\"FAIL> New version is older thatn the running version.\"}");))
+  DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "{\"RESPOSE\":\"FAIL> New version is older thatn the running version.\"}");))
   vTaskDelay(10); // Wait for the message to leave the buffer
   OTA_halt_process(LED_OTA_FATAL, "New version is the same as running version. Abandoning the update.");
 }
@@ -687,7 +687,7 @@ static void OTA_halt_process(char *LED_status,   // Indicator sent to LEDs
 {
   set_status_LED(LED_status);
 
-  DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "%s", error_message);))
+  DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "%s", error_message);))
 
   serial_flush(ALL);                       // Purge anthing that may be present
 
@@ -698,7 +698,7 @@ static void OTA_halt_process(char *LED_status,   // Indicator sent to LEDs
          || (DIP_SW_B == 1)                // Switch B pressed
          || (serial_available(ALL) != 0) ) // Something on the serial port
     {
-      DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Restarting target");))
+      DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Restarting target");))
       esp_restart();
     }
   }
@@ -737,17 +737,17 @@ void OTA_get_versions(char *running_version, // Current running version
    */
   sprintf(download_url, "%s/freeETarget.bin", json_ota_url);
   config.url = download_url;
-  DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "\r\nOTA download URL: \"%s\"", config.url);))
+  DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "\r\nOTA download URL: \"%s\"", config.url);))
 
   client = esp_http_client_init(&config);
   if ( client == NULL )
   {
-    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Cannot start HTTP connection");))
+    DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "Cannot start HTTP connection");))
     return;
   }
   if ( esp_http_client_open(client, 0) != ESP_OK )
   {
-    DLT(DLT_OTA, SEND(ALL, sprintf(_xs, "Cannot start HTTP connection");))
+    DLT(DLT_OTA, SEND(CONSOLE, sprintf(_xs, "Cannot start HTTP connection");))
     return;
   }
 

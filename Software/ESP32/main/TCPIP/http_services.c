@@ -137,7 +137,7 @@ void register_services(httpd_handle_t server, // Pointer to active server
     if ( uri_list[i].port == port ) // Only register the services for this port
     {
       httpd_register_uri_handler(server, &uri_list[i].uri_struct);
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Registering %s on port %d", uri_list[i].uri_struct.uri, uri_list[i].port);))
+      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Registering %s on port %d", uri_list[i].uri_struct.uri, uri_list[i].port);))
     }
 
     i++;
@@ -164,7 +164,7 @@ static esp_err_t service_get_FreeETarget(httpd_req_t *req)
   const char *resp_str;            // Reply to server
   char        my_name[SHORT_TEXT]; // Temporary string
 
-  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_FreeETarget(%s)", req->uri);))
+  DLT(DLT_HTTP, SEND(CONSOLE, sprintf(_xs, "service_get_FreeETarget(%s)", req->uri);))
 
   /*
    * Do the things we need to do to start a session
@@ -177,7 +177,7 @@ static esp_err_t service_get_FreeETarget(httpd_req_t *req)
    */
   target_name(my_name);                             // Get the target name
   resp_str = (const char *)&FreeETarget_html_start; // point to the target HTML file
-  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "reply(%s)", my_name);))
+  DLT(DLT_HTTP, SEND(CONSOLE, sprintf(_xs, "reply(%s)", my_name);))
   httpd_resp_set_hdr(req, "get_FreeETarget", my_name);
   httpd_resp_send(req, resp_str, SIZEOF_FreeETarget_HTML);
 
@@ -206,7 +206,7 @@ static esp_err_t service_get_events(httpd_req_t *req)
 {
   char str[MEDIUM_TEXT]; // Temporary
 
-  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_events(%s) event_mode: %d", req->uri, event_mode);))
+  DLT(DLT_HTTP, SEND(CONSOLE, sprintf(_xs, "service_get_events(%s) event_mode: %d", req->uri, event_mode);))
 
   /*
    *  First time through, send an empty score
@@ -237,24 +237,24 @@ static esp_err_t service_get_events(httpd_req_t *req)
     {
       default:
       case IDLE:                                          // If the event is idle, then do nothing
-        DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Shooting event idle");))
+        DLT(DLT_HTTP, SEND(CONSOLE, sprintf(_xs, "Shooting event idle");))
         strcpy(str, "event:idle\n");                      // Send an idle message
         break;                                            // Return and wait for the next shot
 
       case START:                                         // If the event is starting
-        DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Shooting event started");))
+        DLT(DLT_HTTP, SEND(CONSOLE, sprintf(_xs, "Shooting event started");))
         strcpy(str, "event:start\nid:\ndata: ");          // Send a start message
         event_mode = AUTO;                                // Set the mode to auto refresh
         break;
 
       case CLOSE:                                         // If the event is done
-        DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Shooting event closed");))
+        DLT(DLT_HTTP, SEND(CONSOLE, sprintf(_xs, "Shooting event closed");))
         strcpy(str, "event:close\nid:\ndata: ");          // Send a close message
         break;
 
       case SINGLE:                                        // If the event is in single shot mode
       case AUTO:                                          // If the event is in auto mode
-        DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Shooting event auto mode");))
+        DLT(DLT_HTTP, SEND(CONSOLE, sprintf(_xs, "Shooting event auto mode");))
         strcpy(str, "event:new_shotData\nid:\ndata: ");
         build_json_score(&record[http_shot], SCORE_HTTP); // Send the new shot
         http_shot = (http_shot + 1) % SHOT_SPACE;         // and bump up next one
@@ -269,7 +269,7 @@ static esp_err_t service_get_events(httpd_req_t *req)
   strcat(str, "\n\n");
   httpd_resp_set_hdr(req, "application/json", "new_shotData");
   httpd_resp_set_type(req, "text/event-stream");
-  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "event(%s)", str);))
+  DLT(DLT_HTTP, SEND(CONSOLE, sprintf(_xs, "event(%s)", str);))
   httpd_resp_send(req, str, strlen(str));
 
   /*
@@ -353,7 +353,7 @@ static esp_err_t service_get_menu(httpd_req_t *req)
   int  session_type;                                  // Index into the session_type array
   int  i;                                             // Loop index
 
-  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_menu(%s)", req->uri);))
+  DLT(DLT_HTTP, SEND(CONSOLE, sprintf(_xs, "service_get_menu(%s)", req->uri);))
 
                                                       /*
                                                        *  Decode the command line arguements if there are any
@@ -375,7 +375,7 @@ static esp_err_t service_get_menu(httpd_req_t *req)
         start_new_session(check_mask & SIGHT);      // Start a new session
       }
 
-      DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "Setting event_mode: %d check_mask: %d", event_mode, check_mask);))
+      DLT(DLT_HTTP, SEND(CONSOLE, sprintf(_xs, "Setting event_mode: %d check_mask: %d", event_mode, check_mask);))
     }
     i++;
   }
@@ -413,7 +413,7 @@ static esp_err_t service_get_help(httpd_req_t *req)
   char        my_name[SHORT_TEXT]; // Temporary string
   int         i, j;
 
-  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_help(%s)", req->uri);))
+  DLT(DLT_HTTP, SEND(CONSOLE, sprintf(_xs, "service_get_help(%s)", req->uri);))
 
   /*
    *  Send the reply to the client
@@ -421,7 +421,7 @@ static esp_err_t service_get_help(httpd_req_t *req)
   target_name(my_name);                      // Get the target name
   resp_str = (const char *)&help_html_start; // point to the target HTML file
   httpd_resp_set_hdr(req, "get_help", my_name);
-  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "reply(%s)", my_name);))
+  DLT(DLT_HTTP, SEND(CONSOLE, sprintf(_xs, "reply(%s)", my_name);))
   httpd_resp_send_chunk(req, resp_str, SIZEOF_help_HTML);
 
   /*
@@ -480,7 +480,7 @@ static esp_err_t service_get_json(httpd_req_t *req)
 {
   char my_name[SHORT_TEXT];               // Target name
 
-  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_json(%s)", req->uri);))
+  DLT(DLT_HTTP, SEND(CONSOLE, sprintf(_xs, "service_get_json(%s)", req->uri);))
   squish(req->uri, _xs);                  // Go through the uri and keep the argument portion
   tcpip_socket_2_queue(_xs, strlen(_xs)); // Put the data into the TCPIP queue
 
@@ -520,7 +520,7 @@ static esp_err_t service_get_FreeETarget_png(httpd_req_t *req)
   const char *resp_str;                           // Reply to server
   char        my_name[SHORT_TEXT];                // Target name
 
-  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_FreeETargetIcon_png(%s)", req->uri);))
+  DLT(DLT_HTTP, SEND(CONSOLE, sprintf(_xs, "service_get_FreeETargetIcon_png(%s)", req->uri);))
 
   target_name(my_name);
   resp_str = (const char *)FreeETarget_png_start; // point to the target json file
@@ -632,7 +632,7 @@ static esp_err_t service_get_who(httpd_req_t *req)
   esp_app_desc_t         running_app_info;
   static int             cycle_count = 0;
 
-  DLT(DLT_HTTP, SEND(ALL, sprintf(_xs, "service_get_who(%s)", req->uri);))
+  DLT(DLT_HTTP, SEND(CONSOLE, sprintf(_xs, "service_get_who(%s)", req->uri);))
 
   esp_ota_get_partition_description(running_partition, &running_app_info);
 
