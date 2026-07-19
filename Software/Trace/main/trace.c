@@ -184,18 +184,15 @@ void trace_loop(void *arg)
 
   while ( 1 )
   {
-#if ( 0 )
     if ( gpio_get_level(IMU_INTERRUPT) == 0 )
     {
+      printf("%lld\n", NTP_time_us());
       ICM45686_pull_FIFO();
       FIFO_pull++;
       FIFO_time_us = NTP_time_us();
+      vTaskDelay(TICK_50ms);
     }
-#endif
-    vTaskDelay(TICK_50ms);
   }
-
-  return;                   // Never get here
 }
 
 void trace_statistics(void) // Display the FIFO diagnostics
@@ -254,12 +251,7 @@ void trace_push_button(void)
       {
         run_state |= IN_FIFO_FILLING;     // Reset the FIFO
         vTaskDelay(ONE_SECOND);
-#if USE_BMI270
-        BMI270_find_zero(false);          // Long push, automatically save
-#endif
-#if USE_ICM45686
         ICM45686_find_zero(false);        // Long push, automatically save
-#endif
         time_tick = 0;
       }
     }

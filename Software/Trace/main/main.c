@@ -36,7 +36,7 @@
 #define POLLING    (BACKGROUND + 4)           // Intermittent communications polling
 #define NETWORK    (POLLING + 4)              // Intermittent network polling
 #define TIMED      (NETWORK + 4)              // Scheduled tasks
-#define MUST_RUN   (configMAX_PRIORITIES - 1) // This task must run
+#define MUST_RUN   (TIMED + 4) // This task must run
 #if ( MUST_RUN >= configMAX_PRIORITIES )
 #error MUST_RUN set too high
 #endif

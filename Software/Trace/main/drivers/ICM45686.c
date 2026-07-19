@@ -58,6 +58,7 @@ FIFO_packet_t FIFO_queue[SAMPLE_BUFFER_COUNT]; // Space for 10 seconds of data
 /*
  *  Local Functions
  */
+static void ICM45686_clear_int1_status0(); // Reset the interrupt pending bits.
 
 /*----------------------------------------------------------------
  *
@@ -208,13 +209,7 @@ bool ICM45686_pull_FIFO(void)
   /*
    *  Reset the interrupt status
    */
-  memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure
-  transaction.addr      = 0x80 | INT1_STATUS0;  // Point to the FIFO read regisetr
-  transaction.tx_buffer = 0;                    // Send a zero
-  transaction.length    = 1 * 8;                // Transmit length in bits
-  transaction.rxlength  = 1 * 8;                // Receive length in bits
-  transaction.flags     = SPI_TRANS_USE_TXDATA; // Read into the four byte pointer
-  spi_device_transmit(ICM45686_handle, &transaction);
+  ICM45686_clear_int1_status0(); // Reset the interrupt pending bits
 
   /*
    *  All done, return
@@ -327,6 +322,8 @@ void ICM45686_dump_FIFO(void)
 
     if ( transaction.rx_data[0] != 0 )              // Reset status
     {
+      ICM45686_clear_int1_status0();
+
       memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure
       transaction.addr      = 0x80 | INT1_STATUS0;  // Point to the FIFO read regisetrt
       transaction.tx_buffer = 0;                    // Transmit buffer not used
@@ -341,6 +338,7 @@ void ICM45686_dump_FIFO(void)
       vTaskDelay(1);
     }
   }
+
   /*
    *  All done, return
    */
@@ -790,7 +788,7 @@ void ICM45686_oscilliscope(void)
 
 /*----------------------------------------------------------------
  *
- * @function: ICM45686_dump()
+ * @function: ICM45686_SPI_dump()
  *
  * @brief:    Dump the contents of the ICM45686 registers
  *
@@ -879,5 +877,37 @@ void ICM45686_SPI_dump(void)
   }
 #endif
   SEND(CONSOLE, sprintf(_xs, _DONE_);)
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: ICM45686_clear_int1_status0()
+ *
+ * @brief:    Clear the INT1_STATUS0 register if it indicates a reset status
+ *
+ * @return:   None
+ *
+ *----------------------------------------------------------------
+ *
+ * This function resets the interrupt pending bits in the
+ * INT1_STATUS0 register by writing a zero to it.
+ *
+ *--------------------------------------------------------------*/
+static void ICM45686_clear_int1_status0()
+{
+  spi_transaction_t transaction;
+
+  DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "ICM45686_clear_int1_status0()");))
+
+  memset(&transaction, 0, sizeof(transaction)); // Clear the transaction structure
+  transaction.addr      = 0x80 | INT1_STATUS0;  // Point to the FIFO read regisetrt
+  transaction.tx_buffer = 0;                    // Send a zero
+  transaction.length    = 1 * 8;                // Transmit length in bits
+  transaction.rx_buffer = NULL;
+  transaction.rxlength  = 1 * 8;                // Receive length in bits
+  transaction.flags     = SPI_TRANS_USE_TXDATA; // Indicate that this is a read operation
+  spi_device_transmit(ICM45686_handle, &transaction);
+
   return;
 }
