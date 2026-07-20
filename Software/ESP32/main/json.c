@@ -156,7 +156,7 @@ void freeETarget_json(void *pvParameters)
       continue;
     }
 
-    IF_IN(IN_RAPID) // Ignore anything coming in while in rapid mode
+    IF(IN_RAPID) // Ignore anything coming in while in rapid mode
     {
       if ( serial_available(ALL) != 0 )
       {
@@ -722,6 +722,8 @@ static void set_trace(int trace)                     // Trace mask on or off
  *-----------------------------------------------------*/
 static void set_50m(int x)
 {
+  int temp;
+  
   json_paper_time = 0;
   nvs_set_i32(my_handle, NONVOL_PAPER_TIME, json_paper_time);
 

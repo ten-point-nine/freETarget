@@ -153,7 +153,7 @@ bool client_init(void)
   run_state |= SERVER_CONNECTED; // Yay, we're connected
   return true;
 }
-
+HTTP_CONNECTED
 /*****************************************************************************
  *
  * @function: client_recv
@@ -179,10 +179,10 @@ void client_recv(void *params)
   {
     IF(CLIENT_CONNECTED)
     {
-      length = recv(client_socket, rx_buffer, sizeof(rx_buffer), MSG_DONTWAIT | MSG_OOB);
+      length = lwip_recv(client_socket, (void*) &rx_buffer[0], sizeof(rx_buffer), MSG_DONTWAIT | MSG_OOB);
       if ( length > 0 )
       {
-        server_socket_2_queue(rx_buffer, length);
+        server_socket_2_queue(&rx_buffer[0], length);
       }
     }
     vTaskDelay(10);

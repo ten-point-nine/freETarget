@@ -35,25 +35,27 @@ void RS485_test(void);                         // Test the RS485 port
 #define BLUETOOTH      (AUX << 1)                     // 0x4
 #define RS485          (BLUETOOTH << 1)               // 0x8
 #define ETHERNET       (RS485 << 1)                   // 0x10
-#define TCPIP_0        (ETHERNET << 1)                // 0x20
-#define TCPIP_1        (TCPIP_0 << 1)                 // 0x40
-#define TCPIP_2        (TCPIP_1 << 1)                 // 0x80
-#define TCPIP_3        (TCPIP_2 << 1)                 // 0x100
-#define CLIENT         (TCPIP_3 << 1)                 // 0x200
-#define HTTP_CONNECTED (CLIENT << 1)                  // 0x400
-#define EVEN_ODD_BEGIN (HTTP_CONNECTED << 1)          // Remember to output in even_odd mode
-#define EVEN_ODD_END   (EVEN_ODD_BEGIN << 1)          // Exit even odd mode
+#define AUX_LISTEN     (ETHERNET << 1)                // 0x20
+#define TCPIP_0        (AUX_LISTEN << 1)              // 0x40
+#define TCPIP_1        (TCPIP_0 << 1)                 // 0x80
+#define TCPIP_2        (TCPIP_1 << 1)                 // 0x100
+#define TCPIP_3        (TCPIP_2 << 1)                 // 0x200
+#define CLIENT         (TCPIP_3 << 1)                 // 0x400
+#define SERVER         (CLIENT << 1)                  // 0x800
+#define HTTP           (SERVER << 1)                  // 0x1000
+#define EVEN_ODD_BEGIN (HTTP << 1)                    // 0x2000 Remember to output in even_odd mode
+#define EVEN_ODD_END   (EVEN_ODD_BEGIN << 1)          // 0x4000 Exit even odd mode
 
 #define AUX_PORT (AUX | BLUETOOTH | RS485 | ETHERNET) // 0xE
 #define SOME     (CONSOLE | TCPIP)
 #define TCPIP    (TCPIP_0 | TCPIP_1 | TCPIP_2 | TCPIP_3)
-#define ALL      (CONSOLE | AUX_PORT | TCPIP | HTTP_CONNECTED)
+#define ALL      (CONSOLE | AUX_PORT | TCPIP | HTTP)
 
-#define DEFAULT_BAUD_RATE 115200             // Standard development baud rate for the console port
-#define MAX_BAUD_RATE     921600             // Maximum baud rate for the console port
+#define DEFAULT_BAUD_RATE 115200                      // Standard development baud rate for the console port
+#define MAX_BAUD_RATE     921600                      // Maximum baud rate for the console port
 
 /*
  *  Global Variables
  */
-extern unsigned int connection_list; // Bitmap of connections 
+extern unsigned int connection_list; // Bitmap of connections
 #endif

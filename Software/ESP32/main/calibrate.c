@@ -323,17 +323,17 @@ static void perform_calibration(bool use_CSV)
 
   SEND(ALL, sprintf(_xs, "\r\n\r\nCalibration complete. ");)
 
-  SEND(ALL, sprintf(_xs, "\r\nCommit the calibration?");) if ( prompt_for_confirm() == true )
-  {
-    commit_calibration();                // Commit the calibration to NONVOL
-    SEND(ALL, sprintf(_xs, "\r\nCalibration committed to NONVOL.\r\n ");)
-  }
-  else
-  {
-    SEND(ALL, sprintf(_xs, "\r\nCalibration not committed. No changes made.\r\n");)
-  }
+   if ( prompt_for_confirm("Commit the calibration?") == true )
+   {
+     commit_calibration();               // Commit the calibration to NONVOL
+     SEND(ALL, sprintf(_xs, "\r\nCalibration committed to NONVOL.\r\n ");)
+   }
+   else
+   {
+     SEND(ALL, sprintf(_xs, "\r\nCalibration not committed. No changes made.\r\n");)
+   }
 
-  return;
+   return;
 }
 /*----------------------------------------------------------------
  *
@@ -1247,9 +1247,7 @@ void void_calibration(bool confirm) // TRUE if unconditionally voiding
   {
     DLT(DLT_CALIBRATION, SEND(CONSOLE, sprintf(_xs, "clear_calibration()");))
 
-    SEND(ALL, sprintf(_xs, "Do you want to void the calibration?");)
-
-    if ( prompt_for_confirm() == false )
+    if ( prompt_for_confirm("Do you want to void the calibration?") == false )
     {
       return;
     }
@@ -1502,7 +1500,7 @@ static bool read_target_scan_CSV(int sample_size)
 
     DLT(DLT_CALIBRATION | DLT_VERBOSE,
         SEND(CONSOLE, sprintf(_xs, " CSV %d : X: %4.2f  Y: %4.2f  Rho: %4.2f  Angle: %4.2f", i, target_scan[i].x_mm, target_scan[i].y_mm,
-                          target_scan[i].rho, target_scan[i].angle);))
+                              target_scan[i].rho, target_scan[i].angle);))
     i++;
   }
 
@@ -1527,7 +1525,7 @@ static bool read_target_scan_CSV(int sample_size)
   for ( i = 0; i < sample_size; i++ )
   {
     DLT(DLT_CALIBRATION | DLT_VERBOSE, SEND(CONSOLE, sprintf(_xs, "CSV %d : X: %4.2f  Y: %4.2f  Rho: %4.2f", i, target_scan[i].x_mm,
-                                                         target_scan[i].y_mm, target_scan[i].rho);))
+                                                             target_scan[i].y_mm, target_scan[i].rho);))
   }
 
   /*

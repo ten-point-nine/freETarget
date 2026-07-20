@@ -835,7 +835,7 @@ void disable_face_strike_interrupt(void)
  *  saves them into the record structure to be reduced later
  *  on.
  *
- *  The conditional IF_IN(IN_SHOT) is used to discard shots that
+ *  The conditional IF(IN_SHOT) is used to discard shots that
  *  are present while the target is not available for use.  For
  *  example IN_SHOT will be invalid while in rapid fire if the
  *  shot falls outside of the shot time
@@ -851,7 +851,7 @@ void aquire(void)
   record[shot_in].face_strike   = face_strike;   // Record if it's a face strike
   record[shot_in].sensor_status = is_running();  // Record the sensor status
 
-  IF_IN(IN_SHOT)                                 // Only record the shot if we are actually expecting a shot
+  IF(IN_SHOT)                                    // Only record the shot if we are actually expecting a shot
   {
     record[shot_in].miss = 0;                    // Show as a valid shot
   }

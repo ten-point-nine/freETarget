@@ -20,29 +20,32 @@
 #define EXTERN extern
 #endif
 
-#define SOFTWARE_VERSION "\"6.4.2 July 19, 2026\""
 #define _DONE_           "\r\nDone\r\n"
 #define _SHOT_           "shot"
-#define _GREETING_       "CONNECTED"   // Message to send on connection
-#define _BYE_            "BYE"         // Message to send on disconnection
-#define _HELLO_          "HELLO WORLD" // Message to send on reconnection
+#define _GREETING_       "CONNECTED"             // Message to send on connection
+#define _BYE_            "BYE"                   // Message to send on disconnection
+#define _HELLO_          "HELLO WORLD"           // Message to send on reconnection
 
-#define INIT_DONE 0xabcd                              // NON-VOL Initialization complete signature
+#define INIT_DONE 0xabcd                         // NON-VOL Initialization complete signature
 #ifndef true
 #define true  (1 == 1)
 #define false (0 == 1)
 #endif
 
-#define IN_STARTUP   0x0001            // The software is in initialization
-#define IN_OPERATION 0x0002            // The software is operational
-#define IN_TEST      0x0004            // A self test has been selected (Suspend operation)
-#define IN_SLEEP     0x0008            // The unit has powered down
-#define IN_SHOT      0x0010            // The target is actively in a shot
-#define IN_REDUCTION 0x0020            // The data is being reduced
-#define IN_FATAL_ERR 0x0040            // A fatal error has occured and cannot be fixed
-#define IN_HTTP      0x0080            // The HTTP (JSON) data is being processed
-#define IN_RAPID     0x0100            // The target is in rapid fire mode
-#define IN_AQUIRE    0x0200            // The target is aquiring the data from the counters
+#define IN_STARTUP       (0x0001)                  // The software is in initialization
+#define IN_OPERATION     (IN_STARTUP << 1)       // The software is operational
+#define IN_TEST          (IN_OPERATION << 1)     // A self test has been selected (Suspend operation)
+#define IN_SLEEP         (IN_TEST << 1)          // The unit has powered down
+#define IN_SHOT          (IN_SLEEP << 1)         // The target is actively in a shot
+#define IN_REDUCTION     (IN_SHOT << 1)          // The data is being reduced
+#define IN_FATAL_ERR     (IN_REDUCTION << 1)     // A fatal error has occured and cannot be fixed
+#define IN_HTTP          (IN_FATAL_ERR << 1)     // The HTTP (JSON) data is being processed
+#define IN_RAPID         (IN_HTTP << 1)          // The target is in rapid fire mode
+#define IN_AQUIRE        (IN_RAPID << 1)         // The target is aquiring the data from the counters
+#define TIME_VALID       (IN_AQUIRE << 1)        // NTP time is valid
+#define CLIENT_CONNECTED (TIME_VALID << 1)       // A client is connected to us
+#define SERVER_CONNECTED (CLIENT_CONNECTED << 1) // We are connected to a server
+#define HTTP_CONNECTED   (SERVER_CONNECTED << 1) // We are connected via HTTP
 
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
 #define IF(x)     if ( (run_state & (x)) != 0 )
@@ -231,6 +234,5 @@ void         interrupt_target_test(void);         // Test the target aquisition 
 void         timed_event_task(void);              // Run the Rapid Fire state machine
 sensor_ID_t *find_sensor(unsigned int run_mask);  // Locate the sensor settings for the run_latch
 void         start_new_session(int session_type); // Start a new shooting session
-bool         prompt_for_confirm(void);            // Prompt for a confirmation
 
 #endif

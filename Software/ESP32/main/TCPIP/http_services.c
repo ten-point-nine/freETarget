@@ -455,7 +455,6 @@ static esp_err_t service_get_help(httpd_req_t *req)
   return ESP_OK;
 }
 
-\
 /*----------------------------------------------------------------
  *
  * @function: service_get_FreeETarget_png

@@ -415,7 +415,7 @@ void serial_putch(char ch,
    */
   if ( ports & CONSOLE )
   {
-    printf("%c", ch);                            // Must be printf
+    printf("%c", ch);                              // Must be printf
   }
 
   if ( (ports & json_aux_mode & AUX_LISTEN) == 0 )
@@ -430,8 +430,8 @@ void serial_putch(char ch,
     }
   }
 
-  if ( ports & CLIENT )                          // Send it up to the JSON through a common
-  {                                              // link
+  if ( ports & CLIENT )                            // Send it up to the JSON through a common
+  {                                                // link
     client_send(&ch, 1);
   }
 
@@ -521,30 +521,30 @@ void serial_to_all(char *str,        // String to output
    */
   if ( ports & CONSOLE )
   {
-    printf("%s", str);                           // Must be printf
+    printf("%s", str);                             // Must be printf
   }
 
-    if ( (ports & json_aux_mode & AUX_LISTEN) == 0 )
+  if ( (ports & json_aux_mode & AUX_LISTEN) == 0 )
+  {
+    if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
     {
-      if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
+      if ( ports & RS485 )                         // Is this RS488?
       {
-        if ( ports & RS485 )                         // Is this RS488?
-        {
-          RS485_transmit(RS485_TRANSMIT);            // Set RS485 to transmit
-          RS485_timer += RS485_TRANSMIT_TIME;        // Extend the timer for a string
-        }
-        uart_write_bytes(uart_aux, (const char *)str, strlen(str));
+        RS485_transmit(RS485_TRANSMIT);            // Set RS485 to transmit
+        RS485_timer += RS485_TRANSMIT_TIME;        // Extend the timer for a string
       }
+      uart_write_bytes(uart_aux, (const char *)str, strlen(str));
     }
+  }
 
-  if ( ports & (TCPIP | CLIENT) )                // Send the TCP and Client traffic
-  {                                              // throught the common buffer
+  if ( ports & (TCPIP | CLIENT) )                  // Send the TCP and Client traffic
+  {                                                // throught the common buffer
     server_app_2_queue(str, strlen(str));
   }
 
-  if ( ports & HTTP_CONNECTED )                  // Is there a web server connected?
+  if ( ports & HTTP_CONNECTED )                    // Is there a web server connected?
   {
-    http_send_string(str);                       // Yes, send it to the web server
+    http_send_string(str);                         // Yes, send it to the web server
   }
 
   /*
