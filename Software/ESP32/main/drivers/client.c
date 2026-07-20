@@ -153,7 +153,7 @@ bool client_init(void)
   run_state |= SERVER_CONNECTED; // Yay, we're connected
   return true;
 }
-HTTP_CONNECTED
+
 /*****************************************************************************
  *
  * @function: client_recv

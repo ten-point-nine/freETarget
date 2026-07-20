@@ -122,9 +122,9 @@ static void start_rapid_fire(void)
   //  {"TRACE":2048, "PAPER_TIME":0, "EVENT":"RFP Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":8, "RAPID_ENABLE": 1 }
   //  {              "PAPER_TIME":0, "EVENT":"RFP Allan", "RAPID_COUNT": 1 , "RAPID_WAIT":3, "RAPID_TIME":8, "RAPID_ENABLE": 1 }
 
-  json_rapid_count = 5;        // Expect five shots in this one session
+  json_rapid_count = 5; // Expect five shots in this one session
 
-  event_override(); // Look for a shot count in the event name
+  event_override();     // Look for a shot count in the event name
 }
 
 static void start_sport_pistol(void)
@@ -136,7 +136,7 @@ static void start_sport_pistol(void)
   //  {"PAPER_TIME":0, "EVENT":"SPP Allan", "RAPID_COUNT":5, "RAPID_WAIT":7, "RAPID_TIME":50, "RAPID_ENABLE": 0 }
   real_t temp;
 
-  event_override();                // Look for a shot count in the event name
+  event_override();                           // Look for a shot count in the event name
 
   temp = (real_t)json_rapid_time;             // Total event time
   temp -= json_rapid_count * json_rapid_wait; // Subtract the total wait time between shots
@@ -320,7 +320,7 @@ static bool timed_fire_start_new_cycle(void)
   adjusted_rapid_wait = (json_rapid_wait * ONE_SECOND) - grace_time; // Corrected rapid wait time
   cycle_count         = json_rapid_count;                            // Initialize the cycle count with the number of expected shots
 
-  DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "Starting: %s, cycle_count: %d, Wait: %4.2f, On: %4.2f", course_of_fire[i].event,
+  DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "Starting: %s, cycle_count: %d, Wait: %d, On: %d", course_of_fire[i].event,
                                             cycle_count, json_rapid_wait, json_rapid_time);))
 
                                                                      /*
@@ -482,9 +482,8 @@ static void timed_fire_exit(void)
   shot_in  = 0;
   shot_out = 0;
   run_state &= ~IN_RAPID;
-  json_rapid_enable = 0;                    // No longer enabled
+  json_rapid_enable = 0; // No longer enabled
   last_enable       = 0;
   DLT(DLT_RAPID_FIRE, SEND(CONSOLE, sprintf(_xs, "Timed fire event ended");))
   return;
 }
-

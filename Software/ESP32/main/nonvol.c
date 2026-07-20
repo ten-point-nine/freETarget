@@ -333,7 +333,7 @@ void init_nonvol(int verify) // Verification code entered by user
     return;
   }
 
-  factory_nonvol(prompt_for_confirm(r\nReset Serial Number")); // Reset to factory defaults and prompt for serial number
+  factory_nonvol(prompt_for_confirm("\r\nReset Serial Number")); // Reset to factory defaults and prompt for serial number
 
   /*
    * All done, return

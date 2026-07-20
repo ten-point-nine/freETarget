@@ -225,7 +225,7 @@ static esp_err_t service_get_events(httpd_req_t *req)
             && (event_mode != CLOSE) )                    // or the event has finished
     {
       vTaskDelay(ONE_SECOND);
-      if ( HTTP_close_time == 0 )                         // Has the timer run out
+      if ( time_since_last_shot == 0)
       {
         event_mode = CLOSE;                               // Close the target
       }

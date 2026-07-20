@@ -131,7 +131,7 @@ EXTERN real_t        json_vset;                      // Desired voltage setpont
 EXTERN int           json_follow_through;            // Follow through timer
 EXTERN int           json_keep_alive;                // Keepalive period
 EXTERN int           json_face_strike;               // Number of cycles to accept a face strike
-EXTERN int           json_rapid_time;                // When will the rapid fire event end
+EXTERN int        json_rapid_time;                // When will the rapid fire event end
 EXTERN int           json_wifi_channel;              // Channel assigned to this SSID
 EXTERN int           json_rapid_wait;                // Delay applied to rapid fire
 EXTERN int           json_wifi_dhcp;                 // TRUE if the DHCP server is enabled

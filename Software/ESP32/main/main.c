@@ -60,10 +60,9 @@ void app_main(void)
    */
   freeETarget_init();
 
-/*
- * Everything is ready, start the threads.  Low task priority number == low priority
- */
-#if ( 0 )
+  /*
+   * Everything is ready, start the threads.  Low task priority number == low priority
+   */
   xTaskCreate(freeETarget_target_loop, "freeETarget_target_loop", K4, NULL, MUST_RUN, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
@@ -75,7 +74,6 @@ void app_main(void)
   xTaskCreate(freeETarget_synchronous, "freeETarget_synchronous", K4, NULL, TIMED, NULL);
   serial_flush(ALL);
   vTaskDelay(TICK_10ms);
-#endif
 
   xTaskCreate(freeETarget_json, "json_task", K6, NULL, BACKGROUND, NULL);
   serial_flush(ALL);
