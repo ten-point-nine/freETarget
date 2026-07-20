@@ -129,7 +129,7 @@ void serial_io_init(void)
   /*
    * All done, return
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Console port initialized");)) return;
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Console port initialized");)) return;
 }
 
 /******************************************************************************
@@ -158,7 +158,7 @@ void serial_aux_init(void)
    */
   if ( (json_aux_mode & AUX_PORT) == 0 )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX Port not enabled");))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "AUX Port not enabled");))
     return;
   }
 
@@ -175,27 +175,27 @@ void serial_aux_init(void)
   {
     default:
     case AUX:
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "AUX port enabled");))
-      uart_param_config(uart_aux, &uart_aux_config);                     // DEFAULT_BAUD_RATE baud rate
+      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "AUX port enabled");))
+      uart_param_config(uart_aux, &uart_aux_config);                     // 115200 baud rate
       RS485_transmit(RS485_TRANSMIT);                                    // Turn off the RS485 receiver
       break;
 
     case BLUETOOTH:
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "BLUETOOTH port enabled");))
-      uart_param_config(uart_aux, &uart_BT_config);                      // DEFAULT_BAUD_RATE baud rate
+      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "BLUETOOTH port enabled");))
+      uart_param_config(uart_aux, &uart_BT_config);                      // 115200 baud rate
       RS485_transmit(RS485_TRANSMIT);                                    // Turn off the RS485 receiver
       break;
 
     case RS485:
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "RS485 port enabled");))
+      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "RS485 port enabled");))
       uart_param_config(uart_aux, &uart_aux_config);                     // DEFAULT_BAUD_RATE baud rate
       ft_timer_new(&RS485_timer, 0, &RS485_transmit_off, "RS485 timer"); // Prime the RS485 timer
       RS485_transmit(RS485_RECEIVE);                                     // Ensure we are in recei
       break;
 
     case ETHERNET:
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "ETHERNET port enabled");))
-      uart_param_config(uart_aux, &uart_aux_config);                     // DEFAULT_BAUD_RATE baud rate
+      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "ETHERNET port enabled");))
+      uart_param_config(uart_aux, &uart_aux_config);                     // 115200 baud rate
       RS485_transmit(RS485_TRANSMIT);                                    // Ensure we are in recei
       break;
   }
@@ -237,7 +237,7 @@ void serial_bt_config(unsigned int baud_rate) // Program port for Bluetooth init
   /*
    * All done, return
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "serial_bt_config(%d)\r\n", baud_rate);))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "serial_bt_config(%d)\r\n", baud_rate);))
   return;
 }
 
@@ -260,7 +260,8 @@ void serial_bt_config(unsigned int baud_rate) // Program port for Bluetooth init
  * function serial_getch().
  *
  ******************************************************************************/
-int serial_available(int ports) // Bit mask of active ports
+int serial_available(int ports // Bit mask of active ports
+)
 {
   int n_available;
   int length;
@@ -417,18 +418,16 @@ void serial_putch(char ch,
     printf("%c", ch);                            // Must be printf
   }
 
-  if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
+  if ( (ports & json_aux_mode & AUX_LISTEN) == 0 )
   {
-    if ( ports & RS485 )                         // Is this RS488?
+    if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
     {
-      RS485_transmit(RS485_TRANSMIT);            // Set RS485 to transmit
+      if ( ports & RS485 )                         // Is this RS488?
+      {
+        RS485_transmit(RS485_TRANSMIT);            // Set RS485 to transmit
+      }
+      uart_write_bytes(uart_aux, (const char *)&ch, 1);
     }
-    uart_write_bytes(uart_aux, (const char *)&ch, 1);
-  }
-
-  if ( ports & TCPIP )                           // Send it up to the JSON through a common
-  {                                              // link
-    server_app_2_queue(&ch, 1);
   }
 
   if ( ports & CLIENT )                          // Send it up to the JSON through a common
@@ -525,15 +524,18 @@ void serial_to_all(char *str,        // String to output
     printf("%s", str);                           // Must be printf
   }
 
-  if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
-  {
-    if ( ports & RS485 )                         // Is this RS488?
+    if ( (ports & json_aux_mode & AUX_LISTEN) == 0 )
     {
-      RS485_transmit(RS485_TRANSMIT);            // Set RS485 to transmit
-      RS485_timer += RS485_TRANSMIT_TIME;        // Extend the timer for a string
+      if ( (ports & json_aux_mode & AUX_PORT) != 0 ) // Is there hardware on the Aux port?
+      {
+        if ( ports & RS485 )                         // Is this RS488?
+        {
+          RS485_transmit(RS485_TRANSMIT);            // Set RS485 to transmit
+          RS485_timer += RS485_TRANSMIT_TIME;        // Extend the timer for a string
+        }
+        uart_write_bytes(uart_aux, (const char *)str, strlen(str));
+      }
     }
-    uart_write_bytes(uart_aux, (const char *)str, strlen(str));
-  }
 
   if ( ports & (TCPIP | CLIENT) )                // Send the TCP and Client traffic
   {                                              // throught the common buffer

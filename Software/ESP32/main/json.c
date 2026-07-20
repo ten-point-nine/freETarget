@@ -156,6 +156,20 @@ void freeETarget_json(void *pvParameters)
       continue;
     }
 
+    IF_IN(IN_RAPID) // Ignore anything coming in while in rapid mode
+    {
+      if ( serial_available(ALL) != 0 )
+      {
+        DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Input ignored during rapid fire");))
+        while ( serial_available(ALL) != 0 )
+        {
+          ch = serial_getch(ALL);
+        }
+      }
+      vTaskDelay(TICK_10ms);
+      continue;
+    }
+
     /*
      * See if anything is waiting and if so, add it in
      */
@@ -163,7 +177,15 @@ void freeETarget_json(void *pvParameters)
     {
       from_BlueTooth = serial_available(AUX_PORT); // How much from the BlueTooth port?
       ch             = serial_getch(ALL);
-      serial_putch(ch, CONSOLE);                   // Echo back to all ports
+
+      if ( json_aux_mode != RS485 )                // Not RS485 mode
+      {
+        serial_putch(ch, ALL);                     // Echo back to all ports
+      }
+      else                                         // If in RS485 mode, do not echo back to AUX
+      {
+        serial_putch(ch, SOME);                    // because RS485 diesables receive during transmit
+      }
 
                                                    /*
                                                     * Parse the stream
@@ -181,22 +203,23 @@ void freeETarget_json(void *pvParameters)
 
       switch ( ch )
       {
-        case '}':
-          if ( in_JSON != 0 )
-          {
-            got_left_bracket  = false;
-            got_right_bracket = in_JSON;
-            handle_json(); // Fall through to manage the JSON message
-            vTaskDelay(TICK_10ms);
-            serial_flush(ALL);
-          }
-
         case '{':
           in_JSON           = 0;
           input_JSON[0]     = 0;
           got_right_bracket = 0;
           got_left_bracket  = true;
           keep_space        = 0;
+          break;
+
+        case '}':
+          if ( in_JSON != 0 )
+          {
+            got_left_bracket  = false;
+            got_right_bracket = in_JSON;
+            handle_json();         // Fall through to manage the JSON message
+            vTaskDelay(TICK_10ms);
+            serial_flush(ALL);
+          }
           break;
 
         case 0x08:                 // Backspace
@@ -711,6 +734,10 @@ static void set_50m(int x)
   json_z_offset = 18;
   nvs_set_i32(my_handle, NONVOL_Z_OFFSET, json_z_offset);
 
+  json_vref_lo = 3.00; // Set the target reference voltage to 3.0 volts
+  temp         = json_vref_lo * FLOAT_SCALE;
+  nvs_set_i32(my_handle, NONVOL_VREF_LO, temp);
+
   /*
    *  Save the changes
    */
@@ -883,7 +910,7 @@ bool json_find_first(void) // Find the first element starting with [
 {
   int i;
   next_value = 0;
-  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "json_find_first()");))
+  DLT(DLT_CALIBRATION, SEND(CONSOLE, sprintf(_xs, "json_find_first()");))
 
   /*
    *  Find the start of the JSON
@@ -902,7 +929,7 @@ bool json_find_first(void) // Find the first element starting with [
    *  Found it, advance and return
    */
   next_value++; // Skip past the opening [
-  DLT(DLT_CALIBRATION, SEND(ALL, sprintf(_xs, "Start of array @%d characters", next_value);))
+  DLT(DLT_CALIBRATION, SEND(CONSOLE, sprintf(_xs, "Start of array @%d characters", next_value);))
   return true;  // Show we have something
 }
 

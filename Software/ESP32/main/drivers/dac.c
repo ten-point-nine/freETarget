@@ -129,7 +129,7 @@ static void DAC_write_MCP4728(real_t volts[]) // What value are we setting it to
   {
     if ( volts[i] > VREF_EXT )
     {
-      DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "VREF %d out of range:%4.2f)", i, volts[i]);))
+      DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "VREF %d out of range:%4.2f)", i, volts[i]);))
       volts[i] = VREF_EXT - 0.5;
     }
     if ( volts[i] > max )
@@ -148,7 +148,7 @@ static void DAC_write_MCP4728(real_t volts[]) // What value are we setting it to
     v_source = V_EXTERNAL; // Otherwise
     v_ref    = VREF_EXT;   // Default to 5.0 volts
   }
-  DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "DAC v_source:%d  v_ref:%4.2f)", v_source, v_ref);))
+  DLT(DLT_DIAG, SEND(CONSOLE, sprintf(_xs, "DAC v_source:%d  v_ref:%4.2f)", v_source, v_ref);))
 
   /*
    *  Fill up the I2C buffer
@@ -156,7 +156,7 @@ static void DAC_write_MCP4728(real_t volts[]) // What value are we setting it to
   for ( i = 0; i != 4; i++ )
   {
     scaled_value = ((int)(volts[i] / v_ref * DAC_FS)) & 0xfff; // Figure the bits to send
-    DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "DAC_write(channel:%d Volts:%4.2f scale:%d)", i + 1, volts[i], scaled_value);))
+    DLT(DLT_DIAG, SEND(CONSOLE, sprintf(_xs, "DAC_write(channel:%d Volts:%4.2f scale:%d)", i + 1, volts[i], scaled_value);))
     data[(i * 3) + 0] = DAC_MCP4728_WRITE                      // Write
                         + ((i & 0x3) << 1)                     // Channel
                         + 1;                                   // UDAC = 1  update automatically
@@ -198,7 +198,7 @@ static void DAC_write_MCP4725(real_t volts[]) // What value are we setting it to
 
   if ( volts[0] > VREF_MCP4725 )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "VREF out of range:%4.2f)", volts[0]);))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "VREF out of range:%4.2f)", volts[0]);))
     volts[0] = VREF_MCP4725 - 0.25;
   }
 
@@ -308,8 +308,8 @@ void DAC_calibrate(void) // Desired setpoint voltage
         break;
       }
       DAC_write_MCP4725(&volts[VREF_LO]);
-      DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "vref:%f  DAC:%f vref_measure:%f  vref_adjust:%f ", json_vref_lo, json_vref_lo + vref_adjust,
-                                      v_measure, vref_adjust);))
+      DLT(DLT_DIAG, SEND(CONSOLE, sprintf(_xs, "vref:%f  DAC:%f vref_measure:%f  vref_adjust:%f ", json_vref_lo, json_vref_lo + vref_adjust,
+                                          v_measure, vref_adjust);))
       vTaskDelay(ONE_SECOND / 25);
       i--;
       if ( i == 0 )
@@ -317,18 +317,18 @@ void DAC_calibrate(void) // Desired setpoint voltage
         break;
       }
     }
-    DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "vref:%f   vref_measure:%f ", json_vref_lo, v_measure);))
+    DLT(DLT_DIAG, SEND(CONSOLE, sprintf(_xs, "vref:%f   vref_measure:%f ", json_vref_lo, v_measure);))
   }
   else
   {
-    DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "Vref feedback not available on this board ");))
+    DLT(DLT_DIAG, SEND(CONSOLE, sprintf(_xs, "Vref feedback not available on this board ");))
   }
 
   /*
    *  All done, return
    */
 
-  DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "vref:%f   vref_measure:%f ", json_vref_lo, v_measure);))
+  DLT(DLT_DIAG, SEND(CONSOLE, sprintf(_xs, "vref:%f   vref_measure:%f ", json_vref_lo, v_measure);))
   return;
 }
 

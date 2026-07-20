@@ -133,6 +133,7 @@ const dlt_name_t dlt_names[] = {
     {DLT_HTTP,          "DLT_HTTP",          'H'}, // Log HTTP events
     {DLT_OTA,           "DLT_OTA",           'O'}, // Log HTTP events
     {DLT_CALIBRATION,   "DLT_CALIBRATION",   'X'}, // Calibration information
+    {DLT_RAPID_FIRE,    "DLT_RAPID_FIRE",    'R'}, // Rapid fire debugging information
     {DLT_VERBOSE,       "DLT_VERBOSE",       'x'}, // Calibration verbose information
     {DLT_HEARTBEAT,     "DLT_HEARTBEAT",     'T'}, // Heartbeat tick
     {DLT_AMB,           "DLT_AMB",           'M'}, // Special debug messages
@@ -622,7 +623,7 @@ bool POST_counters(void)
 {
   unsigned int i;                      // Iteration counter
   unsigned int count, toggle, running; // Cycle counter
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "POST_counters()");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "POST_counters()");))
 
   /*
    *  Test 1, Make sure we can turn off the reference clock
@@ -641,7 +642,7 @@ bool POST_counters(void)
 
   if ( count != 0 )
   {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Reference clock cannot be stopped");))
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Reference clock cannot be stopped");))
     set_diag_LED(LED_FAIL_CLOCK_STOP, 10);
     run_state |= IN_FATAL_ERR;
   }
@@ -663,7 +664,7 @@ bool POST_counters(void)
 
   if ( count == 0 )
   {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Reference clock cannot be started");))
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Reference clock cannot be started");))
     set_diag_LED(LED_FAIL_CLOCK_START, 10);
     run_state |= IN_FATAL_ERR;
   }
@@ -677,7 +678,7 @@ bool POST_counters(void)
 
   if ( running != 0 )
   {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Stuck bit in run latch: ");))
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Stuck bit in run latch: ");))
     for ( i = N; i <= W; i++ )
     {
       if ( running & s[i].low_sense.run_mask )
@@ -705,7 +706,7 @@ bool POST_counters(void)
   gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);
   if ( (is_running() & RUN_MASK) != RUN_MASK )
   {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "Failed to start clock in run latch: %02X", is_running());))
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to start clock in run latch: %02X", is_running());))
     set_diag_LED(LED_FAIL_RUN_STUCK, 10);
     run_state |= IN_FATAL_ERR;
   }
@@ -783,7 +784,7 @@ void show_sensor_fault(unsigned int sensor_status)
   {
     if ( (sensor_status & (1 << i)) == 0 )
     {
-      DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "Sensor %s failed", find_sensor(1 << i)->long_name);))
+      DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "Sensor %s failed", find_sensor(1 << i)->long_name);))
       set_diag_LED(find_sensor(1 << i)->diag_LED, 2);
     }
   }
@@ -850,7 +851,7 @@ bool do_dlt(           //
     {
       dlt_id = dlt_names[i].dlt_id;               // Use the Verbose ID
 
-      SEND(ALL, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, (real_t)NTP_time_ms() / 1000.0);)
+      SEND(ALL, sprintf(_xs, "\r\n%c (%.3f) ", dlt_id, run_time_ms() / 1000.);)
       if ( level & DLT_FATAL )
       {
         SEND(ALL, sprintf(_xs, "  FATAL");)
@@ -889,7 +890,8 @@ bool do_dlt(           //
  *
  *--------------------------------------------------------------*/
 static char *run_state_text[] = {"IN_STARTUP", "IN_OPERATION", "IN_TEST", "IN_SLEEP", "IN_SHOT", "IN_REDUCTION", 0};
-void         heartbeat(void)
+
+void heartbeat(void)
 {
   char s[128];
   int  i;
@@ -906,7 +908,7 @@ void         heartbeat(void)
     i++;
   }
 
-  DLT(DLT_HEARTBEAT, SEND(ALL, sprintf(_xs, "Heartbeat: 60s  run_state: 0X%02X%s", run_state, s);))
+  DLT(DLT_HEARTBEAT, SEND(CONSOLE, sprintf(_xs, "Heartbeat: 60s  run_state: 0X%02X%s", run_state, s);))
 
   return;
 }
@@ -1140,12 +1142,14 @@ static void test_rapidfire(void)
 {
   unsigned int i;
 
-  run_state &= ~IN_TEST;     // and not in a test
-  freeETarget_timer_start(); // Start interrupts (turned off in self_test())
+  run_state |= IN_OPERATION;                        // Make sure the software thinks it is running
+  run_state &= ~IN_TEST;                            // and not in a test
+  freeETarget_timer_start();                        // Start interrupts (turned off in self_test())
 
   i = 0;
   while ( rapid_schedule[i] > 0 )
   {
+    run_state &= ~IN_OPERATION;                     // Exit operation
     SEND(ALL, sprintf(_xs, "\r\nRapid fire test: %.2f seconds  ", rapid_schedule[i]);)
     gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);
     gpio_set_level(CLOCK_START, CLOCK_TRIGGER_ON);  // Generate a 1-0-1 pulse

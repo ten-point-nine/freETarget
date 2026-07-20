@@ -14,6 +14,7 @@
 void         target_name(char *name_space);                             // Return target name
 int          to_int(char h);                                            // Convert char to integer ('A' = 0x0A)
 int          instr(char *s1, char *s2);                                 // Compare two strings
+int          stricmp(const char *s1, const char *s2);                   // Case-insensitive string comparison
 bool         contains(char *s1, char *s2);                              // Return true if s1 contains s2
 bool prompt_for_confirm(char *prompt);                              // Prompt for confirmation
 unsigned char check_for_exit(void);                        // Check if an exit condition has been met
@@ -36,7 +37,8 @@ real_t       atan2_degrees(real_t y, real_t x);                     // atan2 fun
 real_t       radians_to_degrees(real_t radians);                    // Convert radians to degrees
 real_t       degrees_to_radians(real_t degrees);                    // Convert degrees to readians
 void         no_singularity(real_t *a, real_t *b, real_t *c);       // Prevent singularities                                        // Square a number
-
+real_t       SQ(real_t a);                                              // Square a number
+void         event_override(void);                                      // Look for overides in the event name
 /*
  * Global helper variables
  */

@@ -280,19 +280,6 @@ void set_status_LED(char new_state[]          // New LED colours
   old_state = new_state;
 
   /*
-   *   Check to see if tabata enabled is present.  If so, change from flashing green to flashing yellow
-   */
-  if ( json_tabata_enable == 1 )
-  {
-    if ( new_state[0] == 'g' )
-    {
-      printf("Tabata enabled, changing flashing green to flashing yellow\r\n");
-      new_state[0] = 'y';
-      printf("New state: %s\r\n", new_state);
-    }
-  }
-
-  /*
    * Decode the calling string into a list of pixels
    */
   for ( i = 0; i != N_SERIAL_LED; i++ )
@@ -576,7 +563,7 @@ void paper_start(void)
    */
   if ( IS_DC_WITNESS ) // DC motor,
   {
-    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "DC motor start: %d ms", json_paper_time);))
+    DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "DC motor start: %d ms", json_paper_time);))
     DCmotor_on_off(true, json_paper_time);
   }
 
@@ -621,13 +608,13 @@ void paper_drive_tick(void)
   {
     if ( motor_running )
     {
-      DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "paper_time: %ld", paper_time);))
+      DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "paper_time: %ld", paper_time);))
     }
     if ( paper_time <= 0 ) // Ran out of time, stop the motor
     {
       if ( motor_running == true )
       {
-        DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "DC motor stopped");))
+        DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "DC motor stopped");))
         paper_stop();      // Motor OFF
       }
     }
@@ -778,7 +765,7 @@ void stepper_pulse(void)
     step_time = json_step_time;
   }
 
-  DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "step_time %d   step_count: %d", step_time, step_count);))
+  DLT(DLT_DIAG, SEND(CONSOLE, sprintf(_xs, "step_time %d   step_count: %d", step_time, step_count);))
   ft_timer_new(&paper_time, MS_TO_TICKS(step_time), NULL, "step_time");
 
   if ( step_count != 0 )
@@ -848,7 +835,7 @@ void disable_face_strike_interrupt(void)
  *  saves them into the record structure to be reduced later
  *  on.
  *
- *  The conditional IF(IN_SHOT) is used to discard shots that
+ *  The conditional IF_IN(IN_SHOT) is used to discard shots that
  *  are present while the target is not available for use.  For
  *  example IN_SHOT will be invalid while in rapid fire if the
  *  shot falls outside of the shot time
@@ -859,19 +846,23 @@ void aquire(void)
   /*
    * Pull in the data amd save it in the record array
    */
-  read_timers(&record[shot_in].timer_count[0]);                 // Record this count
-  IF(IN_SHOT)                                                   // Only record the shot if we are actually expecting a shot
+  read_timers(&record[shot_in].timer_count[0]);  // Record this count
+  record[shot_in].shot_time     = run_time_ms(); // Capture the time into the shot
+  record[shot_in].face_strike   = face_strike;   // Record if it's a face strike
+  record[shot_in].sensor_status = is_running();  // Record the sensor status
+
+  IF_IN(IN_SHOT)                                 // Only record the shot if we are actually expecting a shot
   {
-    record[shot_in].shot_time     = run_time_ms() - shot_start; // Capture the time into the shot
-    record[shot_in].network_time  = run_time_us();              // Record the network time
-    record[shot_in].face_strike   = face_strike;                // Record if it's a face strike
-    record[shot_in].sensor_status = is_running();               // Record the sensor status
-    shot_in                       = (shot_in + 1) % SHOT_SPACE; // Prepare for the next shot
+    record[shot_in].miss = 0;                    // Show as a valid shot
   }
+
+  shot_in = (shot_in + 1) % SHOT_SPACE;          // Prepare for the next shot
 
   /*
    * All done for now
    */
+  run_state |= IN_AQUIRE; // Show that we have aquired the data
+
   return;
 }
 

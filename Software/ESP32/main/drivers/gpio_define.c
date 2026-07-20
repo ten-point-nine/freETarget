@@ -252,7 +252,7 @@ void gpio_init(void)
 {
   int i;
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "gpio_init()");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "gpio_init()");))
 
   gpio_install_isr_service(0); // Install the ISR service for later
 
@@ -276,7 +276,7 @@ void gpio_init(void)
   /*
    *  All done, return
    */
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "GPIO complete");))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "GPIO complete");))
   vTaskDelay(10);
   return;
 }
@@ -301,12 +301,12 @@ void gpio_init_single(unsigned int type)                                        
       switch ( ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->type )
       {
         default:
-          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "GPIO not found: %d", i);))
+          DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "GPIO not found: %d", i);))
           break;
 
         case DIGITAL_IO_IN:
         case PCNT_HI:
-          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Digital input: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
+          DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Digital input: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
           gpio_set_direction(gpio_table[i].gpio_number, GPIO_MODE_INPUT);
           gpio_set_pull_mode(gpio_table[i].gpio_number, GPIO_PULLUP_ONLY);
 
@@ -320,38 +320,38 @@ void gpio_init_single(unsigned int type)                                        
           break;
 
         case DIGITAL_IO_OUT:
-          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Digital output: (%d) %s = %d", gpio_table[i].gpio_number, gpio_table[i].gpio_name,
-                                          ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->initial_value);))
+          DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Digital output: (%d) %s = %d", gpio_table[i].gpio_number, gpio_table[i].gpio_name,
+                                              ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->initial_value);))
           gpio_set_direction(gpio_table[i].gpio_number, ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->mode);
           gpio_set_pull_mode(gpio_table[i].gpio_number, GPIO_PULLUP_PULLDOWN);
           gpio_set_level(gpio_table[i].gpio_number, ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->initial_value);
           break;
 
         case PWM_OUT:
-          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "PWM output: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
+          DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "PWM output: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
           pwm_init(((const PWM_struct_t *)(gpio_table[i].gpio_uses))->pwm_channel, gpio_table[i].gpio_number);
           break;
 
         case I2C_PORT:
-          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "I2C: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
+          DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "I2C: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
           i2c_init(((I2C_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SDA,
                    ((I2C_struct_t *)(gpio_table[i].gpio_uses))->gpio_number_SCL);
           break;
 
         case LED_STRIP:
-          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "LED driver: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
+          DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "LED driver: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
           status_LED_init(gpio_table[i].gpio_number);
           break;
 
         case PCNT:
-          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "pcnt: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
+          DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "pcnt: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
           pcnt_init_FT(((const PCNT_struct_t *)(gpio_table[i].gpio_uses))->pcnt_unit,
                        ((const PCNT_struct_t *)(gpio_table[i].gpio_uses))->pcnt_control,
                        ((const PCNT_struct_t *)(gpio_table[i].gpio_uses))->pcnt_signal);
           break;
 
         case ANALOG_IO:
-          DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Analog Input: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
+          DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Analog Input: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
           adc_init(((const ADC_struct_t *)(gpio_table[i].gpio_uses))->adc_channel,
                    ((const ADC_struct_t *)(gpio_table[i].gpio_uses))->adc_attenuation);
           break;

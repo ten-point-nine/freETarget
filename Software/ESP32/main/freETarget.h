@@ -20,14 +20,12 @@
 #define EXTERN extern
 #endif
 
-#define _DONE_     "\r\nDone\r\n"
-#define _SHOT_     "shot"
-#define _GREETING_ "CONNECTED"                        // Message to send on connection
-#define _BYE_      "BYE"                              // Message to send on disconnection
-#define _HELLO_    "HELLO WORLD"                      // Message to send on reconnection
-
-#define NETWORK_TIME_PERIOD    (15 * 60 * ONE_SECOND) // Expect a time synch every 15 minutes
-#define KEEP_ALIVE_TIME_PERIOD (10 * 60 * ONE_SECOND) // Expect a time synch every 15 minutes
+#define SOFTWARE_VERSION "\"6.4.2 July 19, 2026\""
+#define _DONE_           "\r\nDone\r\n"
+#define _SHOT_           "shot"
+#define _GREETING_       "CONNECTED"   // Message to send on connection
+#define _BYE_            "BYE"         // Message to send on disconnection
+#define _HELLO_          "HELLO WORLD" // Message to send on reconnection
 
 #define INIT_DONE 0xabcd                              // NON-VOL Initialization complete signature
 #ifndef true
@@ -35,17 +33,16 @@
 #define false (0 == 1)
 #endif
 
-#define IN_STARTUP       0x0001                       // The software is in initialization
-#define IN_OPERATION     0x0002                       // The software is operational
-#define IN_TEST          0x0004                       // A self test has been selected (Suspend operation)
-#define IN_SLEEP         0x0008                       // The unit has powered down
-#define IN_SHOT          0x0010                       // The target is actively in a shot
-#define IN_REDUCTION     0x0020                       // The data is being reduced
-#define IN_FATAL_ERR     0x0040                       // A fatal error has occured and cannot be fixed
-#define IN_HTTP          0x0080                       // The HTTP (JSON) data is being processed
-#define TIME_VALID       0x0100                       //  Time base is syncronized
-#define SERVER_CONNECTED 0x0200                       // The server is connected
-#define CLIENT_CONNECTED 0x0400                       // The client is connected
+#define IN_STARTUP   0x0001            // The software is in initialization
+#define IN_OPERATION 0x0002            // The software is operational
+#define IN_TEST      0x0004            // A self test has been selected (Suspend operation)
+#define IN_SLEEP     0x0008            // The unit has powered down
+#define IN_SHOT      0x0010            // The target is actively in a shot
+#define IN_REDUCTION 0x0020            // The data is being reduced
+#define IN_FATAL_ERR 0x0040            // A fatal error has occured and cannot be fixed
+#define IN_HTTP      0x0080            // The HTTP (JSON) data is being processed
+#define IN_RAPID     0x0100            // The target is in rapid fire mode
+#define IN_AQUIRE    0x0200            // The target is aquiring the data from the counters
 
 #define IF_NOT(x) if ( (run_state & (x)) == 0 )
 #define IF(x)     if ( (run_state & (x)) != 0 )
@@ -127,12 +124,12 @@
 
 #define SCORE_ALL        "{S?TXPHOE}" // shot / miss / target / time / x-y / radius-angle / North-East-South-West / target type
 #define SCORE_USB        "{S?TX}"     // USB score elements
-#define SCORE_TCPIP      "{S?TNXE}"   // TCP score elements
+#define SCORE_TCPIP      "{S?TXE}"    // TCP score elements
 #define SCORE_BLUETOOTH  "{S?TX}"     // Bluetooth score elements
 #define SCORE_HTTP       "{S?TXPOE}"  // HTTP score elements
 #define SCORE_HTTP_PRIME "{#}"        // HTTP Prime the client
 #define SCORE_HTTP_TEST  "{$}"        // HTTP Test the client
-#define SCORE_SEND_MISS  "{SMT}n"     // Send a miss
+#define SCORE_SEND_MISS  "{SMTX}"     // Send a miss
 
 #define HTTP_CLOSE_TIME 15l           // Time to close the HTTP connection after the last shot
 
@@ -203,13 +200,12 @@ EXTERN unsigned int          is_trace;                              // Tracing l
 EXTERN unsigned int          shot_in;                               // Index into the shot array (The shot that has JUST arrived)
 EXTERN unsigned int          shot_out;                              // Index into the shot array (Last shot processed)
 EXTERN unsigned int          shot_number;                           // Current shot number
-EXTERN time_count_t          shot_start;                            // Time when shot become valid
 EXTERN time_count_t          power_save;                            // Power down timer
 EXTERN volatile unsigned int run_state;                             // IPC states
 EXTERN time_count_t          LED_timer;                             // Turn off the LEDs when not in use
 EXTERN time_count_t          keep_alive;                            // Keep alive timer
 EXTERN time_count_t          power_save;                            // Power save timer
-EXTERN time_count_t          HTTP_close_time;                       // 15 minutes since last shot
+EXTERN time_count_t          time_since_last_shot;                  // 15 minutes since last shot
 EXTERN time_count_t          session_time[];                        // Time in each session
 EXTERN time_count_t          shot_timer;                            // Wait for the sound to hit all sensors
 EXTERN time_count_t          ring_timer;                            // Let the ring on the backstop end
@@ -232,9 +228,9 @@ void         hello(void);                         // Say Hello World
 void         bye(unsigned int force_bye);         // Shut down and say goodbye
 void         polled_target_test(void);            // Test the target aquisition software
 void         interrupt_target_test(void);         // Test the target aquisition software
-void         tabata_task(void);                   // Run the TABATA timersArm the Tabata counter
-void         rapid_fire_task(void);               // Run the Rapid Fire state machine
+void         timed_event_task(void);              // Run the Rapid Fire state machine
 sensor_ID_t *find_sensor(unsigned int run_mask);  // Locate the sensor settings for the run_latch
 void         start_new_session(int session_type); // Start a new shooting session
+bool         prompt_for_confirm(void);            // Prompt for a confirmation
 
 #endif

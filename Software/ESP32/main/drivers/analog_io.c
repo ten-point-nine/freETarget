@@ -121,7 +121,7 @@ void adc_init(unsigned int adc_channel,    // What ADC channel are we accessing
 
   if ( ret != ESP_OK )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Calibration failed %d", ret);))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Calibration failed %d", ret);))
   }
 
   /*
@@ -161,7 +161,7 @@ static bool adc_calibration_init(int                adc,         // Which ADC (1
    */
   if ( adc_cali_create_scheme_curve_fitting(&adc_calibration_config[adc][channel], out_handle) != ESP_OK )
   {
-    DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "ADC%d channel %d: Calibration failed", adc, channel);))
+    DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "ADC%d channel %d: Calibration failed", adc, channel);))
     return false;
   }
 
@@ -270,7 +270,7 @@ void set_LED_PWM_now(int new_LED_percent // Desired LED level (0-100%)
     return;
   }
 
-  DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);))
+  DLT(DLT_DIAG, SEND(CONSOLE, sprintf(_xs, "new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);))
 
   pwm_set(LED_PWM, new_LED_percent); // Write the value out
 
@@ -288,7 +288,7 @@ void set_LED_PWM         // Theatre lighting
     return;
   }
 
-  DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);))
+  DLT(DLT_DIAG, SEND(CONSOLE, sprintf(_xs, "new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);))
 
   /*
    * Loop and ramp the LED  PWM up or down slowly
@@ -401,8 +401,8 @@ unsigned int revision(void)
   board_version = version[index];                   // Get the board revision number
   board_mask    = 1 << index;                       // Set the mask for the board revision
 
-  DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Board Version: %d.%d.%d  Board Mask: 0X%04X", (board_version / 100), ((board_version % 100) / 10),
-                                  (board_version % 10), board_mask);))
+  DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Board Version: %d.%d.%d  Board Mask: 0X%04X", (board_version / 100),
+                                      ((board_version % 100) / 10), (board_version % 10), board_mask);))
   return board_version;
 }
 
@@ -609,18 +609,18 @@ void set_VREF(void)
 
   if ( MCP4728 )
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Set VREF_LO: %4.2f   VREF_HI: %4.2f", json_vref_lo, json_vref_hi);))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Set VREF_LO: %4.2f   VREF_HI: %4.2f", json_vref_lo, json_vref_hi);))
   }
   else
   {
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Set VREF_LO: %4.2f", json_vref_lo);))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Set VREF_LO: %4.2f", json_vref_lo);))
   }
 
   if ( MCP4728 ) // Check for four channel DAC
   {
     if ( json_vref_lo >= json_vref_hi )
     {
-      DLT(DLT_CRITICAL, SEND(ALL, sprintf(_xs, "ERROR: json_vref_lo or json_vref_hi are out of order.");))
+      DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "ERROR: json_vref_lo or json_vref_hi are out of order.");))
     }
   }
 
@@ -636,7 +636,7 @@ void set_VREF(void)
   if ( MCP4725 )
   {
     DAC_calibrate(); // Adjust the DAC output
-    DLT(DLT_INFO, SEND(ALL, sprintf(_xs, "Read VREF_LO: %4.2f", vref_measure());))
+    DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Read VREF_LO: %4.2f", vref_measure());))
   }
 
   return;
