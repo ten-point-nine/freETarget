@@ -11,6 +11,8 @@ This repository contains the PC software for such a target, for Windows, Linux a
 
 It is a new edition of the Windows application of the freETarget project. It reads the same database, so sessions and settings can be taken along.
 
+![The main window of freETarget during a pistol practice session: the target with ten shots, the score, the statistics and the list of shots](Screenshot.png)
+
 **What it can do**
 
 - Practice, match and final events for air pistol and air rifle, and a number of other targets; own events can be added
