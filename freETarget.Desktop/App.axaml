@@ -1,0 +1,39 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="freETarget.Desktop.App"
+             Name="freETarget"
+             RequestedThemeVariant="Default">
+             <!-- "Default" follows the light or dark appearance of the operating system. the setting "theme" can force one of them, see ThemeSetting -->
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <!-- the colors of the application that are not part of the Fluent theme, for both appearances -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="PanelBrush" Color="#F3F3F3" />
+                    <SolidColorBrush x:Key="LineBrush" Color="#C8C8C8" />
+                    <SolidColorBrush x:Key="HintBackgroundBrush" Color="#FFFFE1" />
+                    <SolidColorBrush x:Key="HintTextBrush" Color="#000000" />
+                    <SolidColorBrush x:Key="MutedTextBrush" Color="#606060" />
+                    <SolidColorBrush x:Key="WarningTextBrush" Color="#8B0000" />
+                    <SolidColorBrush x:Key="ErrorTextBrush" Color="#C00000" />
+                    <SolidColorBrush x:Key="SelectedEventBorderBrush" Color="#000000" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="PanelBrush" Color="#2B2B2B" />
+                    <SolidColorBrush x:Key="LineBrush" Color="#4D4D4D" />
+                    <SolidColorBrush x:Key="HintBackgroundBrush" Color="#45452C" />
+                    <SolidColorBrush x:Key="HintTextBrush" Color="#F5F5DC" />
+                    <SolidColorBrush x:Key="MutedTextBrush" Color="#A8A8A8" />
+                    <SolidColorBrush x:Key="WarningTextBrush" Color="#FFB4A8" />
+                    <SolidColorBrush x:Key="ErrorTextBrush" Color="#FF7B72" />
+                    <SolidColorBrush x:Key="SelectedEventBorderBrush" Color="#FFFFFF" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
+</Application>

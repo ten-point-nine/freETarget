@@ -1,0 +1,124 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:freETarget.Desktop"
+        x:Class="freETarget.Desktop.MainWindow"
+        Title="freETarget"
+        Icon="/Assets/app.ico"
+        Width="1200" Height="820" MinWidth="900" MinHeight="620"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Styles>
+        <!-- compact rows in the shot and series lists -->
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="8,2" />
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto,Auto">
+
+        <!-- toolbar: connection, menu, export and one button per active event -->
+        <Border Grid.Row="0" Padding="8" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,0,1" Background="{DynamicResource PanelBrush}">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8">
+                    <Button x:Name="btnConnect" Content="Connect" MinWidth="110" HorizontalContentAlignment="Center" FontWeight="SemiBold" />
+                    <DropDownButton x:Name="btnMenu" Content="Menu">
+                        <DropDownButton.Flyout>
+                            <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                <MenuItem x:Name="mnuSettings" Header="Settings" />
+                                <MenuItem x:Name="mnuJournal" Header="Journal" ToolTip.Tip="The saved sessions: details, diary, report, statistics" />
+                                <MenuItem x:Name="mnuResume" Header="Resume" IsEnabled="False" ToolTip.Tip="Continue a saved session of this event" />
+                                <MenuItem x:Name="mnuCalibration" Header="Calibration" IsEnabled="False" />
+                                <MenuItem x:Name="mnuTargetSettings" Header="Target settings" IsEnabled="False" ToolTip.Tip="Settings that are stored in the target" />
+                                <MenuItem x:Name="mnuTerminal" Header="Terminal" IsEnabled="False" ToolTip.Tip="What the target sends, and commands to send to it by hand" />
+                                <Separator />
+                                <MenuItem x:Name="mnuTheme" Header="Appearance">
+                                    <MenuItem x:Name="mnuThemeSystem" Header="Same as system" ToggleType="Radio" GroupName="theme" />
+                                    <MenuItem x:Name="mnuThemeLight" Header="Light" ToggleType="Radio" GroupName="theme" />
+                                    <MenuItem x:Name="mnuThemeDark" Header="Dark" ToggleType="Radio" GroupName="theme" />
+                                </MenuItem>
+                            </MenuFlyout>
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
+                    <Button x:Name="btnExport" Content="Export" ToolTip.Tip="Write the report of this session as PDF and open it. Print it from the viewer." />
+                </StackPanel>
+                <TextBlock x:Name="txtTime" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="12,0,4,0" />
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="24,0,0,0">
+                    <StackPanel x:Name="eventTabs" Orientation="Horizontal" Spacing="4" />
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,360">
+
+            <!-- zoom of the target -->
+            <Slider x:Name="trkZoom" Grid.Column="0" Orientation="Vertical" Margin="6,12" TickFrequency="1" IsSnapToTickEnabled="True"
+                    ToolTip.Tip="Zoom" />
+
+            <Grid Grid.Column="1" RowDefinitions="*,Auto" Margin="4,8">
+                <local:TargetView x:Name="targetView" />
+                <Border x:Name="hintBox" IsVisible="False" Background="{DynamicResource HintBackgroundBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" Padding="10,6"
+                        HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,16,0,0">
+                    <TextBlock x:Name="txtHint" Foreground="{DynamicResource HintTextBrush}" />
+                </Border>
+                <Button x:Name="btnStart" Grid.Row="1" Content="START" IsVisible="False" HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center" FontSize="18" FontWeight="Bold" Margin="0,6,0,0" />
+            </Grid>
+
+            <!-- session data -->
+            <Border Grid.Column="2" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1,0,0,0" Padding="10">
+                <DockPanel>
+                    <Border DockPanel.Dock="Top" Background="Black" CornerRadius="4" Padding="8,4">
+                        <TextBlock x:Name="txtClock" Text="" Foreground="White" FontSize="46" FontWeight="Bold" HorizontalAlignment="Center"
+                                   FontFamily="Menlo, Consolas, DejaVu Sans Mono, monospace" MinHeight="60" />
+                    </Border>
+
+                    <TextBlock x:Name="txtSessionName" DockPanel.Dock="Top" FontSize="18" FontWeight="Bold" Margin="0,10,0,6" TextTrimming="CharacterEllipsis" />
+
+                    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" Margin="0,0,0,8">
+                        <TextBlock Grid.Row="0" Text="Last shot" VerticalAlignment="Center" Margin="0,0,12,0" />
+                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                            <TextBlock x:Name="txtLastShot" FontSize="34" FontWeight="Bold" />
+                            <TextBlock x:Name="txtLastArrow" FontSize="34" />
+                        </StackPanel>
+                        <TextBlock Grid.Row="1" Text="Total" VerticalAlignment="Center" Margin="0,0,12,0" />
+                        <TextBlock x:Name="txtTotal" Grid.Row="1" Grid.Column="1" FontSize="20" FontWeight="SemiBold" />
+                        <TextBlock Grid.Row="2" Text="Mean radius" Margin="0,8,12,0" />
+                        <TextBlock x:Name="txtMeanRadius" Grid.Row="2" Grid.Column="1" Margin="0,8,0,0" />
+                        <TextBlock Grid.Row="3" Text="Windage" Margin="0,2,12,0" />
+                        <TextBlock x:Name="txtWindage" Grid.Row="3" Grid.Column="1" Margin="0,2,0,0" />
+                        <TextBlock Grid.Row="4" Text="Elevation" Margin="0,2,12,0" />
+                        <TextBlock x:Name="txtElevation" Grid.Row="4" Grid.Column="1" Margin="0,2,0,0" />
+                        <TextBlock Grid.Row="5" Text="Group size" Margin="0,2,12,0" />
+                        <TextBlock x:Name="txtMaxSpread" Grid.Row="5" Grid.Column="1" Margin="0,2,0,0" />
+                    </Grid>
+
+                    <DockPanel DockPanel.Dock="Bottom" Height="190">
+                        <DockPanel DockPanel.Dock="Top" Margin="0,8,0,4">
+                            <Button x:Name="btnAllShots" DockPanel.Dock="Right" Content="Show all" Padding="8,2" IsEnabled="False" />
+                            <TextBlock Text="Series" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <ListBox x:Name="seriesList" FontFamily="Menlo, Consolas, DejaVu Sans Mono, monospace" FontSize="12"
+                                 ToolTip.Tip="Select a series to show only its shots on the target" />
+                    </DockPanel>
+
+                    <TextBlock DockPanel.Dock="Top" Text="Shots" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <ListBox x:Name="shotsList" FontFamily="Menlo, Consolas, DejaVu Sans Mono, monospace" FontSize="14" />
+                </DockPanel>
+            </Border>
+        </Grid>
+
+        <!-- messages -->
+        <TextBox x:Name="txtOutput" Grid.Row="2" Height="110" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" FontSize="11"
+                 FontFamily="Menlo, Consolas, DejaVu Sans Mono, monospace" BorderThickness="0,1,0,0" CornerRadius="0" />
+
+        <!-- status bar -->
+        <Border Grid.Row="3" Padding="8,4" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0" Background="{DynamicResource PanelBrush}">
+            <DockPanel>
+                <TextBlock x:Name="txtVersion" DockPanel.Dock="Right" Foreground="{DynamicResource MutedTextBrush}" />
+                <Ellipse x:Name="connectionStatus" DockPanel.Dock="Left" Width="12" Height="12" Fill="Gray" Margin="0,0,8,0" VerticalAlignment="Center" />
+                <TextBlock x:Name="statusText" Text="Not connected" TextTrimming="CharacterEllipsis" />
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

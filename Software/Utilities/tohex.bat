@@ -1,1 +1,0 @@
-python bin2hexp.py -o freeETarget.hex -b ..\esp32\build\freeEtarget.bin -V 60001
