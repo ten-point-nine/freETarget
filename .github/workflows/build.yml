@@ -5,6 +5,7 @@
 # - every push and pull request (except changes to the documentation only): tests and packages.
 #   the packages can be downloaded from the page of the workflow run ("Artifacts")
 # - a tag that starts with "pc-v" (for example pc-v4.12.2): the packages are also attached to a release
+#   and get the version of the tag. its major number has to be the one of the project file
 # - can be started by hand from the "Actions" page
 
 name: Build
@@ -83,9 +84,14 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      # the desktop application and the target simulator
+      # the desktop application and the target simulator. a release gets the version of its tag,
+      # everything else the version of the project file
       - name: Package
-        run: packaging/package.sh ${{ matrix.runtime }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/pc-v* ]]; then
+            export FET_VERSION="${GITHUB_REF_NAME#pc-v}"
+          fi
+          packaging/package.sh ${{ matrix.runtime }}
 
       - uses: actions/upload-artifact@v4
         with:

@@ -13,6 +13,9 @@
 #   all      freETarget-simulator-<version>-<runtime>.zip (.tar.gz on Linux)
 #            a folder with the single program TargetSimulator.Tcp
 #
+# The version is the <Version> of the project file of the application. The environment variable
+# FET_VERSION replaces it (same major number only), that is how a release gets the version of its tag.
+#
 # The packages contain the .NET runtime, nothing has to be installed to run them.
 # Any platform can be built on any platform, with one exception: the macOS application is only
 # complete (icon, ad-hoc signature) when it is built on macOS.
@@ -34,12 +37,27 @@ esac
 cd "$(dirname "$0")/.."
 
 PROJECT="freETarget.Desktop/freETarget.Desktop.csproj"
-# the version of the project file. its major number is also the version of the database the application needs,
-# so it is not taken from a tag or an argument
+# the version of the project file
 VERSION="$(sed -n 's/.*<Version>\(.*\)<\/Version>.*/\1/p' "$PROJECT" | head -1)"
 if [ -z "$VERSION" ]; then
     echo "no <Version> found in $PROJECT" >&2
     exit 1
+fi
+
+# a release gives its own version in FET_VERSION (the build workflow takes it from the tag pc-v<version>).
+# the major number is the version of the database the application needs, a different one would make
+# the application ask every user to overwrite their database. it can only be changed in the project file
+if [ -n "${FET_VERSION:-}" ]; then
+    if ! [[ "$FET_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "FET_VERSION '$FET_VERSION' is not a version like 4.12.2" >&2
+        exit 1
+    fi
+    if [ "${FET_VERSION%%.*}" != "${VERSION%%.*}" ]; then
+        echo "FET_VERSION '$FET_VERSION' has another major number than the <Version> $VERSION in $PROJECT." >&2
+        echo "the major number is the version of the database, change it in the project file if that is intended" >&2
+        exit 1
+    fi
+    VERSION="$FET_VERSION"
 fi
 
 DIST="$PWD/dist"
@@ -66,7 +84,7 @@ package_app() {
 
     echo "== publishing $NAME"
     dotnet publish "$PROJECT" --configuration Release --runtime "$RID" --self-contained true \
-        -p:DebugType=none -p:DebugSymbols=false --output "$STAGE/publish" --nologo
+        -p:Version="$VERSION" -p:DebugType=none -p:DebugSymbols=false --output "$STAGE/publish" --nologo
 
     # debug files of native libraries are not needed to run the application
     find "$STAGE/publish" -name '*.pdb' -delete
@@ -127,7 +145,7 @@ package_simulator() {
     echo "== publishing $NAME"
     dotnet publish TargetSimulator.Tcp/TargetSimulator.Tcp.csproj --configuration Release --runtime "$RID" --self-contained true \
         -p:PublishSingleFile=true -p:PublishTrimmed=true -p:InvariantGlobalization=true \
-        -p:DebugType=none -p:DebugSymbols=false --output "$STAGE/$FOLDER" --nologo
+        -p:Version="$VERSION" -p:DebugType=none -p:DebugSymbols=false --output "$STAGE/$FOLDER" --nologo
     find "$STAGE/$FOLDER" -name '*.pdb' -delete
 
     case "$RID" in

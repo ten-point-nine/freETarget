@@ -49,8 +49,8 @@ packaging/package.sh osx-arm64 [app|simulator]     # result in dist/, ignored by
 - Targets: `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, `osx-arm64`. Each gets two self-contained packages: the application and the simulator (one trimmed single-file program).
 - Every target can be cross-built from any system. The macOS packages are only complete when built on macOS: the icon (`sips`, `iconutil`) and the signature (`codesign`) need tools that exist only there.
 - macOS packages are signed ad hoc only, by decision: no Apple developer certificate, no notarization. The ad-hoc signature is not optional, macOS refuses to start unsigned Apple Silicon programs at all. Users have to allow the application once; `README.md` explains how. Do not add certificate signing without being asked.
-- The package version is the `<Version>` of `freETarget.Desktop/freETarget.Desktop.csproj`, never a tag: its major number is the database version the application demands (see Storage).
-- A release is made by pushing a tag `pc-v<version>`; the workflow attaches the twelve packages to it.
+- The package version is the `<Version>` of `freETarget.Desktop/freETarget.Desktop.csproj`, unless the environment variable `FET_VERSION` gives another one. Its major number is the database version the application demands (see Storage), so `package.sh` refuses a `FET_VERSION` whose major number differs from the project file: a new database version is only made by editing the project file.
+- A release is made by pushing a tag `pc-v<version>` (three numbers, for example `pc-v4.13.0`); the workflow sets `FET_VERSION` from the tag and attaches the twelve packages to the release. The `<Version>` of the project file is what local builds and builds without a tag show, it does not have to be raised for a release with the same major number.
 
 ### Not there yet
 
