@@ -129,7 +129,7 @@ namespace freETarget {
                     pProcess.StartInfo.Arguments = "-p "+com+" -b " + baud+ " " +
                         "--before default_reset " +
                         "--after hard_reset " +
-                        "--chip esp32s3 write_flash --flash_mode dio --flash_freq 80m --flash_size 8MB " + additionalFilesPath + " 0x10000 " + filePath;
+                        " write_flash --flash_mode dio --flash_freq 80m --flash_size 8MB " + additionalFilesPath + " 0x10000 " + filePath;
                 }
                 //pProcess.StartInfo.Arguments = "-?";
                 pProcess.StartInfo.UseShellExecute = false;

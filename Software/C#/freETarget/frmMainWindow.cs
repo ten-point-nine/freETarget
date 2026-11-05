@@ -206,7 +206,9 @@ namespace freETarget {
                     Console.WriteLine(ex.Message);
                     logFile = null;
                 } finally {
-                    log.Close();
+                    if (log != null) {
+                        log.Close();
+                    }
                 }
 
             } else {
@@ -475,10 +477,10 @@ namespace freETarget {
                     para = new comms.TcpOpenParams();
                     ((comms.TcpOpenParams)para).IP = Settings.Default.TcpIP;
                     ((comms.TcpOpenParams)para).port = Settings.Default.TcpPort;
-                    String ssid = getWifiSSID();
-                    if (!ssid.StartsWith(FET_SSID_PREFIX)) {
-                        log("Current Wi-Fi network(" + ssid + ") is not a freETarget SSID.");
-                    }
+                    //String ssid = getWifiSSID();
+                    //if (!ssid.StartsWith(FET_SSID_PREFIX)) {
+                    //    log("Current Wi-Fi network(" + ssid + ") is not a freETarget SSID.");
+                    //}
 
                 }
 
@@ -1608,7 +1610,7 @@ namespace freETarget {
         }
 
         private void imgLogo_Click(object sender, EventArgs e) {
-            MessageBox.Show("Copyright (c) 2020-2024 Azmodan -> youtube.com/ArmeVechi");
+            MessageBox.Show("Copyright (c) 2020-2026 Azmodan -> youtube.com/ArmeVechi");
         }
 
         private void btnArduino_Click(object sender, EventArgs e) {
@@ -1750,10 +1752,10 @@ namespace freETarget {
                 log("Reconnect succesfull.");
                 this.reconnectTimer.Enabled = false;
                 connectionStatus.BackColor = Color.Green;
-                String ssid = getWifiSSID();
-                if (!ssid.StartsWith(FET_SSID_PREFIX)) {
-                    MessageBox.Show("Current Wi-Fi network(" + ssid + ") is not a freETarget SSID. It should start with 'FET-'", "Wrong WiFi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
+                //String ssid = getWifiSSID();
+                //if (!ssid.StartsWith(FET_SSID_PREFIX)) {
+                //    log("Current Wi-Fi network(" + ssid + ") is not a freETarget SSID. It should start with 'FET-'");
+                //}
             } catch (Exception) {
                 Console.WriteLine("Reconnect failed.");
                 log("Reconnect failed.");

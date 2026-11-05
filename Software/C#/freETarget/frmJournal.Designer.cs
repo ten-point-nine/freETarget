@@ -47,6 +47,7 @@
             this.btnClose = new System.Windows.Forms.Button();
             this.tabDetails = new System.Windows.Forms.TabControl();
             this.tabSessionList = new System.Windows.Forms.TabPage();
+            this.btnQRCode = new System.Windows.Forms.Button();
             this.btnImport = new System.Windows.Forms.Button();
             this.btnExport = new System.Windows.Forms.Button();
             this.btnGraph = new System.Windows.Forms.Button();
@@ -196,6 +197,7 @@
             // 
             // tabSessionList
             // 
+            this.tabSessionList.Controls.Add(this.btnQRCode);
             this.tabSessionList.Controls.Add(this.btnImport);
             this.tabSessionList.Controls.Add(this.btnExport);
             this.tabSessionList.Controls.Add(this.btnGraph);
@@ -212,6 +214,20 @@
             this.tabSessionList.TabIndex = 0;
             this.tabSessionList.Text = "Sessions";
             this.tabSessionList.UseVisualStyleBackColor = true;
+            // 
+            // btnQRCode
+            // 
+            this.btnQRCode.Enabled = false;
+            this.btnQRCode.Image = ((System.Drawing.Image)(resources.GetObject("btnQRCode.Image")));
+            this.btnQRCode.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnQRCode.Location = new System.Drawing.Point(167, 33);
+            this.btnQRCode.Name = "btnQRCode";
+            this.btnQRCode.Size = new System.Drawing.Size(346, 23);
+            this.btnQRCode.TabIndex = 9;
+            this.btnQRCode.Text = "Share on Shotmetrix";
+            this.btnQRCode.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btnQRCode.UseVisualStyleBackColor = true;
+            this.btnQRCode.Click += new System.EventHandler(this.btnQRCode_Click);
             // 
             // btnImport
             // 
@@ -270,10 +286,10 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pGridSession.DisabledItemForeColor = System.Drawing.SystemColors.ControlText;
-            this.pGridSession.Location = new System.Drawing.Point(165, 36);
+            this.pGridSession.Location = new System.Drawing.Point(165, 62);
             this.pGridSession.Name = "pGridSession";
             this.pGridSession.PropertySort = System.Windows.Forms.PropertySort.Categorized;
-            this.pGridSession.Size = new System.Drawing.Size(349, 468);
+            this.pGridSession.Size = new System.Drawing.Size(349, 442);
             this.pGridSession.TabIndex = 4;
             this.pGridSession.ToolbarVisible = false;
             // 
@@ -654,5 +670,6 @@
         private System.Windows.Forms.Button btnGraph;
         private System.Windows.Forms.Button btnImport;
         private System.Windows.Forms.Button btnExport;
+        private System.Windows.Forms.Button btnQRCode;
     }
 }

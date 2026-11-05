@@ -358,3 +358,4 @@ healthchecksdb
 .bak
 /Software/C#/freETarget/copy2.png
 /Software/ESP32/build
+/Software/C#/freETarget/Secrets.cs

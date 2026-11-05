@@ -54,11 +54,17 @@
     <ApplicationIcon>app3.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BouncyCastle.Cryptography, Version=2.0.0.0, Culture=neutral, PublicKeyToken=072edcf4a5328938, processorArchitecture=MSIL">
+      <HintPath>packages\BouncyCastle.Cryptography.2.7.0\lib\net461\BouncyCastle.Cryptography.dll</HintPath>
+    </Reference>
     <Reference Include="PdfSharp, Version=1.50.5147.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
       <HintPath>packages\PDFsharp.1.50.5147\lib\net20\PdfSharp.dll</HintPath>
     </Reference>
     <Reference Include="PdfSharp.Charting, Version=1.50.5147.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
       <HintPath>packages\PDFsharp.1.50.5147\lib\net20\PdfSharp.Charting.dll</HintPath>
+    </Reference>
+    <Reference Include="QrCodeGenerator, Version=3.2.1.0, Culture=neutral, PublicKeyToken=6aa6bd7a159d47c2, processorArchitecture=MSIL">
+      <HintPath>packages\Net.Codecrete.QrCodeGenerator.3.2.1\lib\netstandard2.0\QrCodeGenerator.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -109,6 +115,12 @@
     <Compile Include="frmArduino.Designer.cs">
       <DependentUpon>frmArduino.cs</DependentUpon>
     </Compile>
+    <Compile Include="frmQRcode.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmQRcode.Designer.cs">
+      <DependentUpon>frmQRcode.cs</DependentUpon>
+    </Compile>
     <Compile Include="frmResumeSession.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -129,7 +141,9 @@
     </Compile>
     <Compile Include="PDFGenerator.cs" />
     <Compile Include="ReverseTextReader.cs" />
+    <Compile Include="Secrets.cs" />
     <Compile Include="Settings.cs" />
+    <Compile Include="ShotmetrixQrCode.cs" />
     <Compile Include="StorageController.cs" />
     <Compile Include="targets\B2at10m.cs" />
     <Compile Include="targets\B3at10m.cs" />
@@ -187,6 +201,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmMainWindow.resx">
       <DependentUpon>frmMainWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmQRcode.resx">
+      <DependentUpon>frmQRcode.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmResumeSession.resx">
       <DependentUpon>frmResumeSession.cs</DependentUpon>

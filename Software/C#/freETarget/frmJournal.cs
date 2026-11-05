@@ -322,6 +322,7 @@ namespace freETarget {
             btnLoadSession.Enabled = input;
             btnPrint.Enabled = input;
             btnGraph.Enabled = input;
+            btnQRCode.Enabled = input;
             if (clearSession) {
                 if (!input) {
                     currentSession = null;
@@ -576,6 +577,17 @@ namespace freETarget {
                     }
                 }
             }
+        }
+
+        private void btnQRCode_Click(object sender, EventArgs e) {
+            frmQRcode QRcode = new frmQRcode();
+            if (currentSession != null) {
+                QRcode.initPage(currentSession);
+                QRcode.ShowDialog();
+            } else {
+                MessageBox.Show("No session selected", "Error generating QR code", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+                
         }
     }
 }
