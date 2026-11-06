@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("ten-point-nine")]
 [assembly: AssemblyProduct("freETarget")]
-[assembly: AssemblyCopyright("Copyright ©  2020-2024 Azmodan")]
+[assembly: AssemblyCopyright("Copyright ©  2020-2026 Azmodan")]
 [assembly: AssemblyTrademark("https://free-e-target.com/")]
 [assembly: AssemblyCulture("")]
 
